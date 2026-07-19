@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（M0 收尾会话）
+> 最后更新：2026-07-20（Lane-CON 桌面平台产品设计会话）
 
 ## 里程碑状态
 
@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | tracking-only | — | 依赖台账见 DEVELOPMENT-PLAN §2；九组依赖全未交付 |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux 产品切片已记录；九组后端依赖全未交付，implementation 未启动 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -42,22 +42,22 @@
 |---|---|---|
 | P0 | 1（+1 证据性质） | **F-003**（迁移已落地 2026-07-20，待 M1 runner 负例复验后关闭）；F-001（证据缺口，随 M1~M6 消解） |
 | P1 | 4 | F-011（M5）、F-014（M4）、F-023（M4）、F-017（M6）；另 F-015 持续收敛 |
-| 漂移 | 2 开放 | D-001/D-004（排 M1）；D-006 部分处置（绝对 `$id` 已移除，统一策略待 M1）；D-002/D-003/D-005 已闭合 |
+| 漂移 | 2 开放 | D-001/D-004（排 M1）；D-006 部分处置；D-002/D-003/D-005/D-007~D-010 已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | 待启动（**下一个**） | `lane/ctr` | M1：F-003 迁移 + codegen（`docs/prompts/lane-ctr.md`） |
+| Lane-CTR 契约与生成 | 待启动（**下一个**） | `lane/ctr` | M1：F-003 runner/codegen 复验 + `$id` 收敛（`docs/prompts/lane-ctr.md`） |
 | Lane-CFR 符合性与工具 | 待启动（可与 CTR 并行） | `lane/cfr` | M1：runner 执行能力（`docs/prompts/lane-cfr.md`） |
 | Lane-KRN 内核主线 | 阻塞于 M1 | `lane/krn` | — |
 | Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | 仅台账 | — | 维护依赖表 |
+| Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；实现 gate 未通过 |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-m0-handoff.md](../checkpoints/20260720-m0-handoff.md)（M0 交接：提交清单、注入演练输出、并行会话改动提醒）
-2. [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md)（M0 出口评审：验收清单逐项）
-3. —
+1. [20260720-lane-con-platform-design-handoff.md](../checkpoints/20260720-lane-con-platform-design-handoff.md)（macOS/Linux 产品设计、治理例外、验证与剩余 gates）
+2. [20260720-m0-handoff.md](../checkpoints/20260720-m0-handoff.md)（M0 交接：提交清单、注入演练输出、并行会话改动提醒）
+3. [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md)（M0 出口评审：验收清单逐项）
