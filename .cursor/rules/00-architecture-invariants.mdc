@@ -1,0 +1,25 @@
+---
+description: CognitiveOS 架构不变量（观察/提议/授权/执行/验证分离）
+alwaysApply: true
+---
+
+# 架构不变量
+
+## 必须做
+
+- 观察、提议、授权、执行、验证五种职责分离实现：概率组件（LLM/检索/ranker）只能产出 candidate/proposal；授权、CAS、状态迁移、硬预算、幂等、fencing 与最终提交由确定性代码执行（`crates/cognitive-kernel`）。
+- 五个执行生命周期状态机（agent-execution / task / loop / effect / verification，见 `specs/transitions/`）各自独立建模与持久化；完成只能由验收 authority 推进。
+- ContextView 是非 authority 的投影：展示与推理输入可用，授权与提交决策不可依赖（REQ-CTX-*）。
+- OperationDescriptor（能做什么的描述）与 AuthorizationCapability（被允许做什么）严格分开建类型、分开校验（REQ-CAP-*、REQ-EFF-*）。
+- Task 完成证明只来自 authority 状态、Effect、Verification 与事件（REQ-TASK-*、`remote-completed-not-acceptance.json`）。
+
+## 禁止做
+
+- 禁止合并任意两个状态机、禁止在模型输出路径上直接改 authority 状态。
+- 禁止把 receipt、远端 completed、模型自述当作完成证据。
+- 禁止让 Shell/Console/SDK 客户端充当 authority（它们只消费投影）。
+
+## 完成前检查
+
+- 新增代码路径中每个"写 authority 状态"的调用点都在确定性代码内且经过集中 transition 入口。
+- 概率组件的输出类型名含 candidate/proposal 语义，不含 decision/commit 语义。

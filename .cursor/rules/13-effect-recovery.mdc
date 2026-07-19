@@ -1,0 +1,27 @@
+---
+description: Effect 协议、幂等与恢复纪律
+globs: "crates/cognitive-kernel/**,crates/cognitive-store/**,crates/cognitive-runtime/**"
+alwaysApply: false
+---
+
+# Effect 与恢复纪律
+
+## 必须做
+
+- 幂等键稳定且绑定 Intent：timeout/重试不得更换幂等键（REQ-EFF-*；`eff-crash-001.json`）。
+- `OUTCOME_UNKNOWN` 是一等状态：只能经对账（reconcile）分流到确认成功/确认未执行/quarantine（`EFFECT_RECOVERY_QUARANTINED`），无直达 VERIFIED/COMMITTED 路径（`docs/standards/state-and-transition-contract.md`）。
+- 同键异参必须以 `EFFECT_IDEMPOTENCY_CONFLICT` 拒绝，不去重、不执行（`effect-idempotency-conflict.json`）。
+- 补偿动作需要独立授权（新 Intent + 新 capability 校验），不继承原授权。
+- 恢复严格按白皮书 §16.6 顺序：fence 旧 epoch → 重放已提交历史 → 对账在途 Effect → 重授权 → 重解析 Context → 恢复 Loop；顺序不得调换。
+- 三个 crash point（`eff-crash-001..003.json`：dispatch 前/中/后）各有故障注入测试（M4 起强制）。
+
+## 禁止做
+
+- 禁止把 unknown outcome 静默当成功或失败；禁止恢复时新建幂等键重试。
+- 禁止在 Effect 未闭合时推进 Task 完成（`shell-cancel-semantics-005.json`、`effect-state-closure-008.json`）。
+- 禁止用 wall clock 或 UUID 字典序做权威排序（用 logical_version/epoch，ADR-0005）。
+
+## 完成前检查
+
+- 每条新迁移在 `specs/transitions/effect.transitions.json` 有对应条目；guard 引用的错误码已登记。
+- 崩溃/恢复相关变更附故障注入测试与证据路径（`artifacts/evidence/faults/`）。

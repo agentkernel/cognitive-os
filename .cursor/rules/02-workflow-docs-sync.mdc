@@ -1,0 +1,23 @@
+---
+description: 会话协议、文档联动与进度更新义务
+alwaysApply: true
+---
+
+# 工作流与文档联动
+
+## 必须做
+
+- **会话开始**：读 `AGENTS.md` → `docs/plan/PROGRESS.md` → 最近一份 `docs/checkpoints/*-handoff.md` → 确认当前车道与任务边界（`docs/plan/PARALLEL-LANES.md`）后再动手。
+- **会话结束**（或上下文接近极限时提前执行）：更新 PROGRESS → 写 handoff（已完成/未完成 REQ、提交哈希、测试与证据状态、未决风险与漂移、下一步入口与建议提示词路径，模板 `docs/checkpoints/TEMPLATE.md`）→ 提交。交接文档是跨会话唯一记忆载体，禁止依赖对话历史承载工程状态。
+- 语义型/结构型变更执行 `docs/standards/docs-sync-contract.md` 的同批联动义务（registry/schema/vector/实现/测试/matrix/台账/受影响产品文档）。
+- 每次合并更新 `docs/plan/PROGRESS.md`；触碰 F/IMP 条目时同步 `docs/traceability/findings-ledger.md`。
+- 提交/PR 关联 REQ-ID、F/IMP 条目或文档条目；确无关联时在提交信息写明原因。
+
+## 禁止做
+
+- 禁止跨车道修改他人车道所属 crate/package（所有权表见 `docs/plan/PARALLEL-LANES.md`）；接口变更只能经 Lane-CTR 契约流程。
+- 禁止不写 handoff 就结束多文件/多提交会话。
+
+## 完成前检查
+
+- PROGRESS 已反映本次状态变化；影响面扫描（REQ-ID/错误码/schema `$id`/锚点全仓 grep）结果写入 PR 描述。

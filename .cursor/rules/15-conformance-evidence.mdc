@@ -1,0 +1,26 @@
+---
+description: 符合性结果口径与证据纪律
+globs: "conformance/**,crates/cognitive-conformance/**,tools/**,tests/**"
+alwaysApply: false
+---
+
+# 符合性与证据纪律
+
+## 必须做
+
+- schema-valid ≠ pass：runner 必须真实执行向量 `input` 并与 `expected` 比对可观察结果，保留证据（`conformance/README.md` Running 节）。
+- 结果五态：`pass` / `fail` / `not-applicable` / `documented-degradation`（执行后四态）+ `not-run`（报告级，未执行）；口径见 `docs/standards/conformance-evidence.md`。
+- 证据以 digest 引用：profile manifest 的 `test_runs[].suite_digest` 与 `result_ref` 指向 `artifacts/evidence/` 下产物；证据文件本身不入库。
+- 未实现的测试层保持 `not-run`，样例 manifest 中未交付 Profile 保持 `planned`。
+- runner 自检：M1 起必须包含"故意错误实现"用例，证明仅 schema-valid 不能 pass。
+
+## 禁止做
+
+- 禁止改写向量、删除负例或放宽 `expected` 来迎合实现（漂移走台账 + 最小修正流程）。
+- 禁止把 `not-run`/`planned` 呈现为任何形式的通过或符合。
+- 禁止手工编造 conformance-report / profile manifest 内容（一律由 runner 生成）。
+
+## 完成前检查
+
+- `cargo run -p cognitive-conformance --bin conformance-runner` 输出与向量集一致（计数、分层）。
+- `pnpm run check:consistency` 全绿：每个向量 `requirement_ids` 与错误码在 registry 存在。

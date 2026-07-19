@@ -1,0 +1,26 @@
+---
+description: Rust 内核代码纪律（依赖方向、panic、状态迁移、事务边界）
+globs: "**/*.rs"
+alwaysApply: false
+---
+
+# Rust 内核纪律
+
+## 必须做
+
+- 依赖方向固定：`cognitive-contracts` → `cognitive-domain` → 端口 trait（`cognitive-kernel` 定义）→ 适配器（`cognitive-store`/`cognitive-runtime`）→ 应用（`apps/kernel-server`、`apps/admin-cli`）。新增依赖前对照 `Cargo.toml` 注释。
+- ID 一律 newtype 包装（M2 起自 schema 生成），不裸传 String/Uuid。
+- 状态迁移只经集中 transition 入口，消费 `specs/transitions/*.json` 的表数据；非法迁移返回 registry 中登记的错误码（如 `STATE_CONFLICT`），状态保持不变。
+- SQLite 事务边界：authority 状态与事件在同一事务原子提交；提交失败 fail-closed（`STATE_STORE_UNAVAILABLE`），禁止内存缓冲已"承诺"的写。
+- 库代码错误一律 `Result` + `thiserror`；workspace lints 已 deny `unwrap/expect/panic`（测试模块可 allow）。
+
+## 禁止做
+
+- `cognitive-domain` 与 `cognitive-kernel` 禁止依赖 HTTP、SQLite 具体类型、tokio 运行时细节或任何模型 SDK。
+- 确定性门禁路径（授权/CAS/预算/幂等/fencing/提交）禁止调用模型或任何概率组件。
+- 禁止在多处复制状态机常量/迁移表（单一来源：`specs/transitions/`）。
+
+## 完成前检查
+
+- `cargo build --workspace && cargo test --workspace && cargo clippy --workspace` 全绿。
+- 新公开 API 有文档注释并注明对应 REQ-ID 域。
