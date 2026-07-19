@@ -1,0 +1,22 @@
+{
+  "id": "AGENT-OOB-001",
+  "title": "out-of-band workspace edit triggers reconciliation instead of silent adoption",
+  "version": "0.1",
+  "layer": "agent-installation",
+  "profiles": ["agent_compatibility"],
+  "requirement_ids": [
+    "REQ-AGENT-OOB-001"
+  ],
+  "input": {
+    "scenario": "a governed memory projection file in the agent workspace is edited out-of-band; the agent performs its first read after the digest drift"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "digest_drift_detected": true,
+    "edit_ingested_as_candidate": true,
+    "silent_overwrite_either_side": false,
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence. File-as-truth agents keep user-editable projections; out-of-band edits are external observations, not authoritative writes."
+}

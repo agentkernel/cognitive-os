@@ -206,6 +206,12 @@ requirements:
   status: specified
   tests:
   - PERF-REPORT-CONTRACT-001
+- id: REQ-PERF-004
+  owner: performance
+  owner_spec: CognitiveOS-Architecture.md#performance-contract
+  status: specified
+  tests:
+  - PERF-REPORT-CONTRACT-001
 - id: REQ-KNOW-001
   owner: knowledge-compilation
   owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
@@ -331,6 +337,12 @@ requirements:
   status: specified
   tests:
   - AGENT-BYPASS-002
+- id: REQ-AGENT-OOB-001
+  owner: agent-adapter
+  owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+  status: specified
+  tests:
+  - AGENT-OOB-001
 - id: REQ-AGENT-COMPLETE-001
   owner: agent-completion
   owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
@@ -361,6 +373,12 @@ requirements:
   status: specified
   tests:
   - MEM-ADMISSION-001
+- id: REQ-MEM-ADMIT-002
+  owner: governed-memory
+  owner_spec: specs/governed-memory/README.md#3-写入与准入
+  status: specified
+  tests:
+  - MEM-RYW-001
 - id: REQ-MEM-PROMOTE-001
   owner: governed-memory
   owner_spec: specs/governed-memory/README.md#4-晋升冲突与修改
@@ -775,6 +793,12 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-012
+  owner: context
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - CTX-RENDER-001
 - id: REQ-DISC-PRIVACY-001
   owner: disc-privacy
   owner_spec: specs/cognitive-discovery/README.md

@@ -1,4 +1,4 @@
-﻿{
+{
   "id": "MEM-INVALIDATION-003",
   "title": "source revocation invalidates derived indexes summaries and caches",
   "version": "0.1",

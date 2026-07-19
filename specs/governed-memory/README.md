@@ -16,6 +16,10 @@
 
 [REQ-MEM-ADMIT-001] 非 working 的持久 memory **MUST** 由目标 scope authority 准入；Agent **MUST NOT** 直接发布长期事实。
 
+准入不要求同步阻塞写路径：验证、语义 lint 与 authority 决定可以异步执行。准入完成前，候选以写入者所在 Activity/Conversation 的私有工作集条目形式存在。
+
+[REQ-MEM-ADMIT-002] 准入 **MAY** 异步执行；未决候选 **MUST** 对其写入者立即可读（read-your-write），且 **MUST NOT** 跨 ResourceScope、跨 Conversation 或对其他主体可见；准入失败的候选 **MUST** 被标记并隔离而非静默丢弃。该语义是 C1 Memory Adapter 适配的默认要求（见 agent-compatibility companion §4）。
+
 Authority 按 kind 分离：Activity owner 管 working；Conversation authority 管 conversation；subject/data authority 管主体长期记忆；knowledge authority 管发布知识；world authority 管当前状态；audit authority 管系统审计。
 
 ## 4. 晋升、冲突与修改

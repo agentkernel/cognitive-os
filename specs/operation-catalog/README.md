@@ -22,6 +22,8 @@ Operation 注册、更新、健康变化和下线形成版本化 `OperationCatal
 
 [REQ-CAT-BIND-001] InvocationBinding **MUST** 固定 catalog snapshot、descriptor/endpoint/schema digest、health epoch 与参数类型；漂移必须重绑定并重新授权。
 
+批量/脚本式调用的合法形态是经已登记的 proxy 端点（Tool Adapter 暴露的批量接口）：每个被代理的调用仍逐一经过 discover 可见性、授权与审计，批量性只优化传输与上下文成本，不豁免任何门禁（见 agent-compatibility companion §4）。
+
 ## 4. 安全探索
 Descriptor 声明 validate-only、dry-run、plan、cost estimate、explain-precondition、query/reconcile。高风险路径优先建立低风险证据，并独立处理 semantic intent、candidate、planner selection 与 authorized Intent。
 

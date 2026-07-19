@@ -1,0 +1,22 @@
+{
+  "id": "CTX-RENDER-001",
+  "title": "deterministic render keeps byte-stable prefix under unchanged bindings",
+  "version": "0.1",
+  "layer": "context-semantic",
+  "profiles": ["context_virtualization"],
+  "requirement_ids": [
+    "REQ-CTX-012"
+  ],
+  "input": {
+    "scenario": "same ContextView rendered twice under identical object versions, target profile and renderer version; then one unrelated object is added and the view is re-resolved"
+  },
+  "expected": {
+    "outcome": "allowed",
+    "repeat_render_digest_equal": true,
+    "existing_item_relative_order_preserved": true,
+    "per_activity_reordering_observed": false,
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence. Prefix stability preserves provider prompt/KV cache reuse within an unchanged Conversation binding."
+}

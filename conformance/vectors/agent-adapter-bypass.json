@@ -1,4 +1,4 @@
-﻿{
+{
   "id": "AGENT-BYPASS-002",
   "title": "network secret tool bypass and self-completion are rejected",
   "version": "0.1",

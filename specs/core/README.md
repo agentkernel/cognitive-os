@@ -307,6 +307,12 @@ untrusted_input 层包含用户、网页、工具和远端 Agent 内容，必须
 
 [REQ-CTX-011] 非确定性 discover/rank/transform **MUST** 记录候选 digest、策略版本、输入版本和选择理由。
 
+### 6.6 确定性渲染与前缀稳定
+
+渲染是解析的最后可观测阶段，其输出直接决定下游推理缓存（供应商 prompt/KV cache）能否复用。缓存绑定语义（同 Conversation、绑定未变化时可复用）只有在渲染前缀稳定时才产生实际收益。
+
+[REQ-CTX-012] 渲染 **MUST** 是确定性的：相同输入对象版本、相同 target profile、相同 renderer 版本下，输出 **MUST** 字节级一致；分区顺序与分区内条目排序 **MUST** 稳定，新增无关对象 **MUST NOT** 改变已有条目的相对顺序。实现 **MUST NOT** 以逐 Activity 重排渲染的方式使同 Conversation 未变绑定下的缓存复用失效。
+
 ## 7. Event Protocol
 
 Event 是不可变的已发生事实通知，不是命令，也不取代权威状态。

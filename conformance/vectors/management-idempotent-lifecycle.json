@@ -1,4 +1,4 @@
-﻿{
+{
   "id": "MGMT-IDEM-006",
   "title": "Install and stop management effects are idempotent",
   "version": "0.1",

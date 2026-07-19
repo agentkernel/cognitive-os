@@ -1,0 +1,23 @@
+{
+  "id": "MEM-RYW-001",
+  "title": "pending candidate is writer-visible but denied across Conversation before admission",
+  "version": "0.1",
+  "layer": "governed-memory",
+  "profiles": ["governed_memory"],
+  "requirement_ids": [
+    "REQ-MEM-ADMIT-002"
+  ],
+  "input": {
+    "scenario": "agent writes a memory candidate whose admission is still pending; the writer re-reads it in the same Activity, then a different Conversation attempts to read the same candidate"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "CONTEXT_AUTH_DENIED",
+    "writer_read_your_write": true,
+    "cross_conversation_visible": false,
+    "failed_admission_quarantined": true,
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence. Admission may be asynchronous; pending candidates must stay private to the writing Activity/Conversation working set."
+}

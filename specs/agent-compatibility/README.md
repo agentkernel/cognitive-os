@@ -27,6 +27,12 @@
 ## 4. Adapter Interface Family
 Identity Adapter 不信任 Agent 自报 user/role；Memory Adapter 把 search/get/add/update/delete 映射为 resolve/expand/propose/admit/invalidate/tombstone；Tool Adapter 把 list/call 映射为 discover/describe/bind 与 Intent/Effect；Completion Adapter 只产生 `CANDIDATE_COMPLETE`；Checkpoint Adapter 保存行动级事实和 pending Effect；Sandbox Adapter 中介 filesystem/network/subprocess/secrets/device/model/MCP/A2A/IPC。
 
+Memory Adapter 的默认适配语义包括异步准入 + read-your-write（`REQ-MEM-ADMIT-002`）：`memory.add/update` 不得把写路径同步阻塞在含模型调用的准入上；未决候选对写入者立即可读、跨 scope 不可见。legacy Agent 的 file-as-truth 工作区文件是受治理对象的投影：带外（out-of-band）人工编辑按外部观察处理。
+
+[REQ-AGENT-OOB-001] workspace 投影文件的带外修改 **MUST** 被检测（digest 漂移）并 ingest 为候选、按策略准入或标记冲突；实现 **MUST NOT** 静默覆盖任何一侧（受治理对象或带外编辑），首次读取 **MUST** 触发对账而非静默采用。
+
+Tool Adapter 的批量形态：脚本经 RPC 批量调用工具必须经**已登记的 proxy 端点**（Tool Adapter 自身暴露的批量接口），逐调用保留授权与审计，批量性只体现在传输与上下文成本上，不构成门禁豁免；未登记 tool proxy 仍按 §5 作为绕过拒绝。
+
 [REQ-AGENT-ADAPTER-001] C1+ 的所有已声明跨边界 I/O **MUST** 经过 adapter 和本地 authorization，且 adapter failure **MUST** fail closed 或降低兼容声明。
 
 [REQ-AGENT-COMPLETE-001] Agent 的 done/success/completed/final_answer **MUST NOT** 直接推进 Task 到 `COMPLETED`。

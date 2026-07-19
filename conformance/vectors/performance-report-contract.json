@@ -1,4 +1,4 @@
-﻿{
+{
   "id": "PERF-REPORT-CONTRACT-001",
   "title": "Reject performance reports that mask tails or omit reproducibility inputs",
   "version": "0.1",
@@ -9,7 +9,8 @@
   "requirement_ids": [
     "REQ-PERF-001",
     "REQ-PERF-002",
-    "REQ-PERF-003"
+    "REQ-PERF-003",
+    "REQ-PERF-004"
   ],
   "input": {
     "schema": "../../specs/schemas/performance-report.schema.json",
@@ -88,6 +89,48 @@
         }
       ],
       "safety_failures": [],
+      "governance_overhead": {
+        "ungoverned_baseline": "baseline-v1",
+        "gate_latency_ms": {
+          "authorization": {
+            "p50": 0.2,
+            "p95": 0.8,
+            "p99": 1.5
+          },
+          "context_resolution": {
+            "p50": 4,
+            "p95": 11,
+            "p99": 20
+          },
+          "effect_protocol": {
+            "p50": 1.1,
+            "p95": 3.2,
+            "p99": 6.4
+          }
+        },
+        "cache_hit_preservation_ratio": 0.97,
+        "extra_persistence_per_governed_call": {
+          "writes": 2,
+          "bytes": 1840
+        },
+        "approval": {
+          "latency_ms": {
+            "p50": 4200,
+            "p95": 60000,
+            "p99": 180000
+          },
+          "throughput_per_hour": 40,
+          "rubber_stamp_rate": 0.05,
+          "retry_after_deny_rate": 0.1
+        },
+        "overhead_share_by_risk_class": [
+          {
+            "risk_class": "R1",
+            "latency_percent": 2.5,
+            "cost_percent": 1.8
+          }
+        ]
+      },
       "tail_latency_disclosed": true
     }
   },
@@ -95,6 +138,8 @@
     "schema_valid": true,
     "universal_composite_required": false,
     "tail_percentiles_preserved": true,
-    "mechanism_latency_separated": true
+    "mechanism_latency_separated": true,
+    "governance_overhead_reported": true,
+    "ungoverned_baseline_declared": true
   }
 }

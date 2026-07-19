@@ -1,4 +1,4 @@
-﻿{
+{
   "id": "AGENT-RECOVERY-003",
   "title": "pending effect is reconciled before loop resume",
   "version": "0.1",
