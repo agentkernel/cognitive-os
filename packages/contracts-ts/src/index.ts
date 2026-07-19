@@ -13,6 +13,7 @@
 export * from "./bundle.js";
 export * from "./canonical.js";
 export * from "./generated/index.js";
+export * from "./projection.js";
 
 /** Encoding profile implemented by this package. */
 export const ENCODING_PROFILE = "cognitiveos.canonical-json/0.1";

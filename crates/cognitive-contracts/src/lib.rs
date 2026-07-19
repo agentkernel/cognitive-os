@@ -14,6 +14,7 @@
 pub mod bundle;
 pub mod canonical;
 pub mod generated;
+pub mod projection;
 
 /// Encoding profile implemented by [`canonical`].
 pub const ENCODING_PROFILE: &str = "cognitiveos.canonical-json/0.1";
