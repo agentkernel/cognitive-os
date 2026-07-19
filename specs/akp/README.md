@@ -166,3 +166,15 @@ AKP 可传递或引用 package/installation/compatibility、memory candidate/adm
 [REQ-AKP-ECO-002] `resolve_delta` **MUST** 携带 base view、ActivityContext、父预算、attempt high-watermark 与 expansion kind；跨传输恢复不得扩大原绑定。
 
 [REQ-AKP-ECO-003] semantic unavailable、no authorized candidate、not discoverable、catalog stale 与 outcome unknown **MUST** 保持不同错误语义；网关不得用空成功替代。
+
+
+## 13. Shell、意图与观察协议映射
+AKP 可传递 `UserIntentRecord`、`IntentInterpretation`、`IntentAdmissionDecision`、`ShellActionProposal`、`ShellCommandPreview`、`TargetResolution`、`WatchSubscription` 与 `ShellStatusView`。操作族为 `intent.record|interpret|admit|supersede`、`shell.preview|submit|attach|control` 和 `watch.open|ack|resume|close`。
+
+[REQ-AKP-SHELL-001] `shell.submit` **MUST** 固定 channel、proposal/preview digest、resolved target strong refs、expected versions、contract epoch、idempotency key 与 authorization/approval refs；接收方不得重新解释原始自然语言来改变已确认动作。
+
+[REQ-AKP-SHELL-002] `watch.resume` **MUST** 携带 subscription、snapshot version、last acknowledged cursor 与 dedupe window；cursor 过期或不可连续恢复时返回 `WATCH_CURSOR_STALE` 并要求新的授权 snapshot，不得静默丢失 governed event。
+
+[REQ-AKP-SHELL-003] Shell control 结果 **MUST** 区分 accepted、cancel_pending、cancelled、too_late、runtime_terminated、writer_fenced、outcome_unknown、quarantined、verified 与 committed；transport close 或 client exit 不映射为 cancel/commit。
+
+[REQ-AKP-INTENT-001] 意图修正 **MUST** 携带 parent/supersedes digest 与新 contract epoch；旧 epoch 的 proposal/dispatch 由接收端 fencing 拒绝，未决 Effect 保留原 key 对账。

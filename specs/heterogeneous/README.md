@@ -129,3 +129,9 @@ unknown hardware outcome 按 Effect 协议 reconcile；设备 reset 不能自动
 
 [REQ-HET-CONF-001] 声明 **MUST** 列出支持资源、operation/precision、校准方法、误差证据、驻留域、fallback 与未认证用途。
 
+
+
+## Shell 与用户旅程映射
+Shell 可 inspect/drain/migrate resource，但 placement 迁移是新 decision，必须保持 handles、residency、calibration 和 fallback。
+
+[REQ-HET-SHELL-001] Shell 资源控制 **MUST** 固定 graph/placement epoch 并在 drift、health 或 target 变化后重新预览授权。

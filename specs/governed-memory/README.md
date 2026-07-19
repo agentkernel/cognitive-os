@@ -32,3 +32,9 @@ Authority 按 kind 分离：Activity owner 管 working；Conversation authority 
 
 ## 6. 读取和符合性
 召回重新检查 ActorChain、Conversation/ResourceScope、purpose、freshness、policy/revocation 与当前 authority。高风险 claim 应 authority refresh，不得只依赖 memory recall。测试覆盖直接长期写、跨 scope 原地晋升、冲突覆盖、跨 Conversation 污染、撤销缓存绕过和派生删除。
+
+
+## Shell 与用户旅程映射
+Shell 可 inspect/propose/invalidate memory，但自然语言“记住”只产生 MemoryCandidate；history/undo 不能绕过 retention、authority 或派生 closure。
+
+[REQ-MEM-SHELL-001] Shell memory 操作 **MUST** 使用目标 scope admission/authorization 并显示来源、有效期、冲突和持久化范围。

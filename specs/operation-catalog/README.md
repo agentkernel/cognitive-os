@@ -27,3 +27,9 @@ Descriptor 声明 validate-only、dry-run、plan、cost estimate、explain-preco
 
 ## 5. 指标与符合性
 报告 correct-operation top-1/top-k、schema-compatible rate、prohibited exposure、effect confusion、false no-tool、unnecessary high-risk、dry-run disagreement、post-selection auth rejection、verifier failure、repeat discovery 与 latency/cost。测试相似 read/refund、catalog stale、descriptor rug pull 与 capability confusion。
+
+
+## Shell 与用户旅程映射
+Shell 动词映射先经 Catalog match/dry-run/preview，再固定 Descriptor；同义词不能抹平 effect/risk class。
+
+[REQ-CAT-SHELL-001] 自然语言操作选择 **MUST** 固定 match report、descriptor digest 与 effect/risk 差异，目标或 catalog 漂移触发重新预览。

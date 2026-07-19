@@ -1,0 +1,21 @@
+{
+  "id": "LOOP-GATE-001",
+  "title": "Declarative contract scenario for REQ-RUN-005",
+  "version": "0.1",
+  "layer": "contract-traceability",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-RUN-005"
+  ],
+  "input": {
+    "owner_spec": "specs/schemas/loop-checkpoint.schema.json",
+    "requirement_status": "specified"
+  },
+  "expected": {
+    "requirement_semantics_enforced": true,
+    "evidence_required_for_pass": true,
+    "schema_parse_alone_is_not_pass": true
+  }
+}

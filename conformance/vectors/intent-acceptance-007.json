@@ -1,0 +1,24 @@
+{
+  "id": "INTENT-ACCEPTANCE-007",
+  "title": "Require intent-bound evidence for completion",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-INTENT-ACCEPT-001",
+    "REQ-SHELL-STATUS-001"
+  ],
+  "input": {
+    "agent_reports_completed": true,
+    "task_state": "CANDIDATE_COMPLETE",
+    "verification": "inconclusive",
+    "acceptance_decision": false
+  },
+  "expected": {
+    "task_state": "CANDIDATE_COMPLETE",
+    "display_completed": false,
+    "next_gate": "verification_or_acceptance"
+  }
+}

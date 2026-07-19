@@ -1,0 +1,29 @@
+{
+  "id": "SHELL-EXECUTION-MIGRATION-009",
+  "title": "Migrate execution without confusing runtime and logical identity",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital",
+    "distributed"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-CONTROL-001",
+    "REQ-RUN-STATE-001",
+    "REQ-SHELL-WATCH-001"
+  ],
+  "input": {
+    "execution_state": "CHECKPOINTED",
+    "source_runtime": "runtime://node-a/7",
+    "target_runtime": "runtime://node-b/2",
+    "pending_effects_reconciled": true,
+    "new_fencing_epoch": 12
+  },
+  "expected": {
+    "execution_identity_stable": true,
+    "source_writer_fenced": true,
+    "target_state": "RECOVERING",
+    "task_completed": false,
+    "watch_continuity_from_authorized_snapshot": true
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch-subscription.schema.json",
+  "title": "CognitiveOS WatchSubscription",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "subscription_id",
+    "actor_chain_digest",
+    "resource_scope_ref",
+    "purpose",
+    "selector",
+    "visible_fields",
+    "event_types",
+    "snapshot_version",
+    "cursor",
+    "high_watermark",
+    "dedupe_window",
+    "budget",
+    "expires_at",
+    "backpressure"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.watch-subscription/0.1"
+    },
+    "subscription_id": {
+      "type": "string",
+      "pattern": "^wsub_[A-Za-z0-9._-]{8,128}$"
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "resource_scope_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selector": {
+      "type": "string",
+      "minLength": 1
+    },
+    "visible_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "event_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "snapshot_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cursor": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "high_watermark": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "dedupe_window": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "backpressure": {
+      "enum": [
+        "bounded_block",
+        "disconnect_resume",
+        "spill",
+        "coalesce_non_authoritative"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

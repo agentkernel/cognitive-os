@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shell-command-preview.schema.json",
+  "title": "CognitiveOS ShellCommandPreview",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "proposal_ref",
+    "proposal_digest",
+    "target_refs",
+    "changes",
+    "assumptions",
+    "ambiguities",
+    "risk_class",
+    "cost_bound",
+    "authorization_requirements",
+    "verification",
+    "cancellation",
+    "compensation",
+    "expires_at",
+    "preview_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.shell-command-preview/0.1"
+    },
+    "proposal_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "proposal_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "target_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      },
+      "minItems": 1
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ambiguities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "cost_bound": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "authorization_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cancellation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "compensation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "preview_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "additionalProperties": false
+}

@@ -650,3 +650,20 @@ CognitiveResourceManifest 与 ContextViewDelta 绑定 ActivityContext、ActorCha
 [REQ-GOV-MEM-001] 持久 memory 写入、晋升、冲突裁决、删除与派生失效 **MUST** 经目标 scope authority、版本和审计；不得原地改标签跨 scope。
 
 [REQ-GOV-DISC-001] discovery、expand 和 delta **MUST** 继承 ActivityContext 并重新执行正文授权，且 **MUST NOT** 扩大 purpose、scope、audience、egress 或 hard budget。
+
+
+## 21. Agent Shell 双通道与人机意图协议
+
+Agent Shell 是参考客户端，不是 authority。普通任务通道绑定 AuthenticationSession、ConversationBinding、ActorChain、UserIntentRecord 与 TaskContract；特权管理通道绑定独立 PrivilegedManagementSession、ManagementActionProposal 和必要 approval。共享 parser/SMS 的输出仍为 candidate，两个通道的 secret、cache、ContextView 和审计绑定必须隔离。
+
+`UserIntentRecord` 固定原始表达及输入引用；`IntentInterpretation` 保存结构化目标、scope、constraints、forbidden、assumptions、ambiguities、information gaps、acceptance candidate 和来源 digest。用户接受、拒绝或修正必须形成 authority decision；修正以 `supersedes` 新版本表达，不能原地修改历史。
+
+`ShellActionProposal` 固定 channel、intent/contract、TargetSelector 与 resolved targets、action、parameters digest、expected versions、effect/risk、budget/deadline、egress、idempotency key、preview digest、confirmation/approval policy 和 verification/compensation refs。自然语言文本、alias、列表顺序和“最近对象”不能充当稳定目标。
+
+[REQ-SHELL-UX-001] Shell **MUST** 在执行有状态操作前向有权用户展示安全可理解的目标、变更、假设/歧义、风险、费用、数据出域、批准、验证及取消/补偿边界；确认只适用于固定 proposal/preview digest。
+
+[REQ-SHELL-AMBIGUITY-001] 多目标、目标漂移或物质歧义 **MUST** 返回结构化 clarification；拒绝响应不得泄露不可发现对象。只读低风险默认值也必须记录，且不得扩大 scope。
+
+[REQ-SHELL-ATTACH-001] attach/watch **MUST** 重新认证并按当前 ActorChain、Conversation/ResourceScope、purpose、policy/revocation 逐对象授权；它可恢复观察 cursor，但 **MUST NOT** 转移 execution ownership、capability 或 privileged session。
+
+[REQ-SHELL-CORRECTION-001] 用户修正正在运行的目标时，系统 **MUST** 先提交 superseding contract/epoch，阻止旧版本新 dispatch，并将既有 Activity/Effect 分类为 safely-cancelled、must-reconcile、must-complete、compensate 或 quarantine 后再继续。

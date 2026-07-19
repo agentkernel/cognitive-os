@@ -1,0 +1,28 @@
+{
+  "id": "EFFECT-STATE-CLOSURE-008",
+  "title": "Reject illegal effect commit transitions",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-EFF-STATE-001"
+  ],
+  "input": {
+    "effect_state": "OUTCOME_UNKNOWN",
+    "requested_transition": "COMMITTED"
+  },
+  "expected": {
+    "decision": "deny",
+    "error": {
+      "code": "EFFECT_OUTCOME_UNKNOWN",
+      "category": "effect"
+    },
+    "allowed_exits": [
+      "RECONCILED",
+      "COMPENSATING",
+      "QUARANTINED"
+    ]
+  }
+}

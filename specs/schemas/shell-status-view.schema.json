@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shell-status-view.schema.json",
+  "title": "CognitiveOS ShellStatusView",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "view_id",
+    "target_ref",
+    "target_version",
+    "derived_from_refs",
+    "status",
+    "reason_code",
+    "waiting_on",
+    "next_gate",
+    "remaining_budget",
+    "deadline",
+    "safe_exit_state",
+    "available_actions",
+    "as_of",
+    "view_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.shell-status-view/0.1"
+    },
+    "view_id": {
+      "type": "string",
+      "pattern": "^ssv_[A-Za-z0-9._-]{8,128}$"
+    },
+    "target_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "target_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "derived_from_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      },
+      "minItems": 1
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "runnable",
+        "waiting",
+        "blocked",
+        "cancel_pending",
+        "outcome_unknown",
+        "quarantined",
+        "candidate_complete",
+        "completed",
+        "failed",
+        "cancelled",
+        "escalated"
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "waiting_on": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "next_gate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remaining_budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "safe_exit_state": {
+      "enum": [
+        "available",
+        "pending",
+        "unavailable",
+        "unknown"
+      ]
+    },
+    "available_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "view_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "additionalProperties": false
+}

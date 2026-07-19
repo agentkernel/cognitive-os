@@ -2,18 +2,25 @@
 
 This directory contains machine-readable conformance vectors. It is a data package, not an executable runner, and its presence does not claim that any implementation or Profile conforms.
 
-## Nine test layers
+## Fifteen test layers
 
-1. **Wire/Schema** validates required fields, canonical encoding inputs, digests, versions, and fail-closed handling.
-2. **State-machine** covers legal and illegal transitions, terminal states, replay, CAS, and conflicts.
-3. **Effect/Recovery** covers idempotency, receipts, unknown outcomes, compensation, and the three mandatory crash points.
-4. **Security negative** covers cross-tenant access, capability amplification, expired authority, schema drift, URI-as-authorization, injection, and egress violations.
-5. **Context/Semantic** covers required-set completeness, trust labels, loss declarations, freshness, hard budgets, conflicts, and interference regressions.
-6. **Harness/Loop** covers TaskContract gates, progress evidence, bounded retries, checkpoints, recovery, verifier reports, and evidence closure.
-7. **Knowledge compilation** covers claim provenance, source invalidation, bounded recompilation, self-corroboration, deletion closure, and persistent poisoning.
-8. **Performance contract** validates reproducibility manifests, units, denominators, confidence intervals, p50/p95/p99 disclosure, SLO binding, and mechanism/model latency separation.
-9. **Management Shell** covers privileged-session binding and expiry, fail-closed authorization gates, untrusted-text isolation, independent approval, idempotent effects, crash reconciliation, and deterministic fallback.
+1. Wire/schema and version negotiation.
+2. State-machine, CAS and conflict handling.
+3. Effect, idempotency and crash recovery.
+4. Security negatives and information-flow isolation.
+5. Context resolution and semantic boundaries.
+6. Harness, Loop, progress and Verification.
+7. Knowledge compilation and invalidation.
+8. Performance and reproducibility contracts.
+9. Privileged management session and deterministic fallback.
+10. Agent installation, adapters and sandbox interception.
+11. Governed memory admission and lifecycle.
+12. Cognitive discovery, delta and stagnation.
+13. Operation catalog lifecycle, match and binding.
+14. Semantic mediation and CRB hard-bound enforcement.
+15. User intent, Agent Shell target/preview/channel/control/watch and acceptance semantics.
 
+测试层编号是单一累积分类，不表示存在 runner、实现或通过结果。
 ## Manifests and status language
 
 A conformance claim is represented by `specs/schemas/profile-manifest.schema.json`. A manifest pins the specification, requirement and schema bundle digests, encoding/canonicalization profile, suite digest, implementation version, results, degradations, and evidence. Profile values have distinct meanings:
@@ -50,12 +57,7 @@ python scripts-or-your-runner.py  # repository currently provides no runner
 
 Do not report a vector as passed merely because the JSON parses. A runner must execute the stated input against an implementation, compare the observable result with `expected`, preserve evidence, and report pass, fail, not-applicable, or documented-degradation for each applicable requirement.
 
-## Fourteen test layers
-原九层继续有效，并增加：
-10. **Agent installation/adapter**：package provenance、C0—C3 feature matrix、sandbox interception、Conversation isolation、completion candidate 与 recovery reconciliation。
-11. **Governed memory**：candidate admission、跨 scope promotion、conflict preservation、retention/deletion、derived invalidation。
-12. **Cognitive discovery**：manifest discover/read separation、candidate admission、delta scope/budget、stagnation 与 existence privacy。
-13. **Operation catalog**：snapshot lifecycle、summary/descriptor binding、effect-class ambiguity、dry-run 与 catalog drift。
-14. **Semantic mediation/CRB**：soft-signal isolation、deterministic envelope、fallback、egress、parent budget 和 hard-bound enforcement。
 
-五个新 Profile 的 declarative vectors 仍只是场景数据，不表示安装器、Memory Service、Catalog、SMS、CRB 或测试 runner 已实现。每个新 vector 的 requirement/error 必须存在于 registry，profile manifest 必须分别声明 Profile 状态、C0—C3 feature matrix、semantic service level 与 degradation。
+## Shell and intent assets
+
+User-intent, Shell proposal/preview and watch schemas define machine contracts. Shell/intent/lifecycle vectors cover ambiguity, correction fencing, channel isolation, detach/attach, cancellation, watch replay, acceptance and Effect-state closure. They are declarative scenarios, not a Shell or runner.

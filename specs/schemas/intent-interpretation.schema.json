@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "intent-interpretation.schema.json",
+  "title": "CognitiveOS IntentInterpretation",
+  "type": "object",
+  "required": [
+    "metadata",
+    "intent_ref",
+    "status",
+    "objectives",
+    "constraints",
+    "forbidden",
+    "assumptions",
+    "ambiguities",
+    "information_gaps",
+    "interpretation_digest"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "intent_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "clarification_required",
+        "accepted",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ambiguities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "material",
+          "question"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "material": {
+            "type": "boolean"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "information_gaps": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "supersedes_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "interpretation_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ambiguities": {
+            "contains": {
+              "properties": {
+                "material": {
+                  "const": true
+                }
+              },
+              "required": [
+                "material"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "clarification_required"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

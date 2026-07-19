@@ -1,0 +1,28 @@
+{
+  "id": "SHELL-TARGET-AMBIGUITY-001",
+  "title": "Reject ambiguous natural-language process target",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-TARGET-001",
+    "REQ-SHELL-AMBIGUITY-001"
+  ],
+  "input": {
+    "selector": "stop it",
+    "visible_candidates": [
+      "execution://a",
+      "execution://b"
+    ]
+  },
+  "expected": {
+    "decision": "clarification_required",
+    "error": {
+      "code": "SHELL_TARGET_AMBIGUOUS",
+      "category": "shell"
+    },
+    "dispatch": false
+  }
+}

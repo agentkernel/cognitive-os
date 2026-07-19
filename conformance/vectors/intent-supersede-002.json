@@ -1,0 +1,27 @@
+{
+  "id": "INTENT-SUPERSEDE-002",
+  "title": "Fence old work after user intent correction",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-INTENT-SUPERSEDE-001",
+    "REQ-SHELL-CORRECTION-001",
+    "REQ-AKP-INTENT-001"
+  ],
+  "input": {
+    "old_contract_epoch": 4,
+    "new_contract_epoch": 5,
+    "pending_effect": true
+  },
+  "expected": {
+    "old_epoch_new_dispatch_rejected": true,
+    "pending_effect_action": "reconcile_before_continue",
+    "error": {
+      "code": "INTENT_VERSION_SUPERSEDED",
+      "category": "intent"
+    }
+  }
+}

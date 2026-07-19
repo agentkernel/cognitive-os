@@ -71,19 +71,15 @@ errors:
 - code: KNOWLEDGE_MAINTENANCE_BOUNDED
   category: knowledge
   retryable: false
-  description: Knowledge maintenance reached a declared recursion
-  object: null
-  retry: null
-  time: null
-  or cost bound.: null
+  description: >-
+    Knowledge maintenance reached a declared recursion, object, retry, time,
+    or cost bound.
 - code: PERFORMANCE_REPORT_INCOMPLETE
   category: performance
   retryable: false
-  description: A performance report omits reproducibility
-  denominator: null
-  confidence: null
-  safety: null
-  or tail-latency data.: null
+  description: >-
+    A performance report omits reproducibility, denominator, confidence,
+    safety, or tail-latency data.
 - code: MANAGEMENT_SESSION_EXPIRED
   category: auth
   retryable: true
@@ -102,16 +98,14 @@ errors:
 - code: MANAGEMENT_SCOPE_MISMATCH
   category: auth
   retryable: false
-  description: Management action domain
-  action: null
-  or resource lies outside the session scope.: null
+  description: >-
+    Management action domain, action, or resource lies outside the session scope.
 - code: MANAGEMENT_SELF_AUTHORIZATION_DENIED
   category: auth
   retryable: false
-  description: Shell or workload attempted to sign
-  elevate: null
-  self-authorize: null
-  or alter authoritative audit state.: null
+  description: >-
+    Shell or workload attempted to sign, elevate, self-authorize, or alter
+    authoritative audit state.
 - code: MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED
   category: auth
   retryable: true
@@ -177,3 +171,40 @@ errors:
   category: semantic
   retryable: false
   description: Semantic-service hard budget is exhausted.
+
+- code: SHELL_TARGET_AMBIGUOUS
+  category: shell
+  retryable: true
+  description: Target selector resolved to multiple visible objects and requires clarification.
+- code: SHELL_TARGET_NOT_FOUND
+  category: shell
+  retryable: true
+  description: No authorized discoverable target matches the selector.
+- code: SHELL_PREVIEW_STALE
+  category: shell
+  retryable: true
+  description: Target, policy, contract, catalog, or proposal changed after preview.
+- code: INTENT_CLARIFICATION_REQUIRED
+  category: intent
+  retryable: true
+  description: Material intent ambiguity must be resolved by the intent authority.
+- code: INTENT_VERSION_SUPERSEDED
+  category: intent
+  retryable: true
+  description: Proposal references a superseded intent or TaskContract epoch.
+- code: CANCEL_PENDING
+  category: lifecycle
+  retryable: true
+  description: Cancellation was accepted but remote work or effects are not yet closed.
+- code: CANCEL_TOO_LATE
+  category: lifecycle
+  retryable: false
+  description: Target passed its cancellable boundary and requires reconciliation or completion.
+- code: WATCH_CURSOR_STALE
+  category: watch
+  retryable: true
+  description: Event continuity cannot be established from the supplied cursor; obtain a new authorized snapshot.
+- code: SHELL_CHANNEL_BINDING_MISMATCH
+  category: auth
+  retryable: false
+  description: Task and management channel credentials or contexts were mixed.

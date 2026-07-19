@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shell-action-proposal.schema.json",
+  "title": "CognitiveOS ShellActionProposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "channel",
+    "intent_ref",
+    "task_contract_ref",
+    "target_resolution",
+    "action",
+    "parameters_digest",
+    "expected_versions",
+    "effect_class",
+    "risk_class",
+    "budget",
+    "deadline",
+    "idempotency_key",
+    "actor_chain_digest",
+    "activity_context_ref",
+    "preview_digest",
+    "proposal_digest",
+    "confirmation_required",
+    "independent_approval_required"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.shell-action-proposal/0.1"
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^sap_[A-Za-z0-9._-]{8,128}$"
+    },
+    "channel": {
+      "enum": [
+        "task",
+        "management"
+      ]
+    },
+    "intent_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "task_contract_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "management_session_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "target_resolution": {
+      "type": "object",
+      "required": [
+        "selector_text",
+        "resolution_status",
+        "candidate_count",
+        "resolved_targets"
+      ],
+      "properties": {
+        "selector_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resolution_status": {
+          "enum": [
+            "unique",
+            "not_found",
+            "ambiguous",
+            "stale"
+          ]
+        },
+        "candidate_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resolved_targets": {
+          "type": "array",
+          "items": {
+            "$ref": "common-defs.schema.json#/$defs/strongRef"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "resolution_status": {
+                "const": "unique"
+              }
+            },
+            "required": [
+              "resolution_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "candidate_count": {
+                "const": 1
+              },
+              "resolved_targets": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.:-]{2,127}$"
+    },
+    "parameters_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "expected_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "effect_class": {
+      "enum": [
+        "pure",
+        "local_ephemeral",
+        "governed_external",
+        "emergency_safety"
+      ]
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "egress": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 8
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "preview_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "approval_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "proposal_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "confirmation_required": {
+      "type": "boolean"
+    },
+    "confirmation_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "independent_approval_required": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "channel": {
+            "const": "management"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      },
+      "then": {
+        "required": [
+          "management_session_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "confirmation_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "confirmation_required"
+        ]
+      },
+      "then": {
+        "required": [
+          "confirmation_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "enum": [
+              "R2",
+              "R3"
+            ]
+          }
+        },
+        "required": [
+          "risk_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "independent_approval_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "approval_refs"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,21 @@
+{
+  "id": "CAP-LEASE-003",
+  "title": "Declarative contract scenario for REQ-CAP-003",
+  "version": "0.1",
+  "layer": "contract-traceability",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-CAP-003"
+  ],
+  "input": {
+    "owner_spec": "CognitiveOS-Architecture.md#capability-protocol",
+    "requirement_status": "specified"
+  },
+  "expected": {
+    "requirement_semantics_enforced": true,
+    "evidence_required_for_pass": true,
+    "schema_parse_alone_is_not_pass": true
+  }
+}

@@ -29,3 +29,9 @@ ResolutionAttempt 保存 query/candidate fingerprint、信息增益、缺口/冲
 
 ## 5. 符合性
 测试 discover/read 分离、delta scope expansion、累计预算、authority refresh、重复查询、撤销后 expandable ref 失效、跨 Conversation reuse 与存在性侧信道。
+
+
+## Shell 与用户旅程映射
+Shell discover/expand 使用绑定当前 ActivityContext 的 manifest；alias 和最近对象仅是 TargetSelector candidate。
+
+[REQ-DISC-SHELL-001] Shell 目标发现 **MUST** 保持 discover/read/action 分离，歧义与隐藏对象使用不泄露存在性的安全表示。

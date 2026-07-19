@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "user-intent-record.schema.json",
+  "title": "CognitiveOS UserIntentRecord",
+  "type": "object",
+  "required": [
+    "metadata",
+    "actor_chain_digest",
+    "conversation_or_scope_ref",
+    "input_refs",
+    "raw_expression",
+    "recorded_at",
+    "intent_digest"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "conversation_or_scope_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "input_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "raw_expression": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "intent_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,21 @@
+{
+  "id": "CVM-STALE-001",
+  "title": "Declarative contract scenario for REQ-PROFILE-CVM-001",
+  "version": "0.1",
+  "layer": "contract-traceability",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-PROFILE-CVM-001"
+  ],
+  "input": {
+    "owner_spec": "CognitiveOS-Architecture.md#context-virtualization-profile",
+    "requirement_status": "specified"
+  },
+  "expected": {
+    "requirement_semantics_enforced": true,
+    "evidence_required_for_pass": true,
+    "schema_parse_alone_is_not_pass": true
+  }
+}

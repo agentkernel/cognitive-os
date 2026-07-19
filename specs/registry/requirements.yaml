@@ -451,3 +451,1026 @@ requirements:
   status: specified
   tests:
   - DISC-DELTA-SCOPE-003
+- id: REQ-ADDR-001
+  owner: addr-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-ADDR-002
+  owner: addr-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AGENT-COMPAT-001
+  owner: agent-compat
+  owner_spec: specs/agent-compatibility/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AGENT-INSTALL-002
+  owner: agent-install
+  owner_spec: specs/agent-compatibility/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AGENT-SHELL-001
+  owner: agent-shell
+  owner_spec: specs/agent-compatibility/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-CAN-001
+  owner: akp-can
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-CONF-001
+  owner: akp-conf
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-CONT-001
+  owner: akp-cont
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-ECO-001
+  owner: akp-eco
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-ECO-002
+  owner: akp-eco
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-ECO-003
+  owner: akp-eco
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-ENV-001
+  owner: akp-env
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-ENV-002
+  owner: akp-env
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-IDEM-001
+  owner: akp-idem
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-INTENT-001
+  owner: akp-intent
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - INTENT-SUPERSEDE-002
+- id: REQ-AKP-MGMT-001
+  owner: akp-mgmt
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-MGMT-002
+  owner: akp-mgmt
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-MGMT-003
+  owner: akp-mgmt
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-RES-001
+  owner: akp-res
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-SEC-001
+  owner: akp-sec
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-SHELL-001
+  owner: akp-shell
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-SHELL-002
+  owner: akp-shell
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SHELL-WATCH-RESUME-006
+- id: REQ-AKP-SHELL-003
+  owner: akp-shell
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SHELL-CANCEL-SEMANTICS-005
+- id: REQ-AKP-STR-001
+  owner: akp-str
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-STR-002
+  owner: akp-str
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AKP-VER-001
+  owner: akp-ver
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AUDIT-001
+  owner: audit-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AUDIT-002
+  owner: audit-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-AUTH-001
+  owner: auth-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CAP-004
+  owner: cap-004
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CAP-005
+  owner: cap-005
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CAT-SHELL-001
+  owner: cat-shell
+  owner_spec: specs/operation-catalog/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-CTX-001
+  owner: charter-ctx
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-DET-001
+  owner: charter-det
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-HIER-001
+  owner: charter-hier
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-OBJ-001
+  owner: charter-obj
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-PROTO-001
+  owner: charter-proto
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CHARTER-STATE-001
+  owner: charter-state
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CONF-002
+  owner: conf-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CONF-004
+  owner: conf-004
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CONF-005
+  owner: conf-005
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CONF-006
+  owner: conf-006
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CORE-CANDIDATE-001
+  owner: core-candidate
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CORE-DELTA-001
+  owner: core-delta
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CORE-MEDIATION-001
+  owner: core-mediation
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CORE-OPS-001
+  owner: core-ops
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CORE-OPS-002
+  owner: core-ops
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-002
+  owner: ctx-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-003
+  owner: ctx-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-006
+  owner: ctx-006
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-007
+  owner: ctx-007
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-009
+  owner: ctx-009
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-010
+  owner: ctx-010
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-CTX-011
+  owner: ctx-011
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DISC-PRIVACY-001
+  owner: disc-privacy
+  owner_spec: specs/cognitive-discovery/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DISC-SHELL-001
+  owner: disc-shell
+  owner_spec: specs/cognitive-discovery/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-BUD-001
+  owner: dist-bud
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-CONF-001
+  owner: dist-conf
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-DEL-001
+  owner: dist-del
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-MBX-001
+  owner: dist-mbx
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-MBX-002
+  owner: dist-mbx
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-OBJ-001
+  owner: dist-obj
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-PART-001
+  owner: dist-part
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-REC-001
+  owner: dist-rec
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-SEC-001
+  owner: dist-sec
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-DIST-SHELL-001
+  owner: dist-shell
+  owner_spec: specs/distributed/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EFF-002
+  owner: eff-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EFF-003
+  owner: eff-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EFF-005
+  owner: eff-005
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EFF-007
+  owner: eff-007
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EFF-STATE-001
+  owner: eff-state
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - EFFECT-STATE-CLOSURE-008
+- id: REQ-EMB-ACT-001
+  owner: emb-act
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-CONF-001
+  owner: emb-conf
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-FRAME-001
+  owner: emb-frame
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-LOOP-001
+  owner: emb-loop
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-LOOP-002
+  owner: emb-loop
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-SAFE-001
+  owner: emb-safe
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-SEC-001
+  owner: emb-sec
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-SHELL-001
+  owner: emb-shell
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-STATE-001
+  owner: emb-state
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-TIME-001
+  owner: emb-time
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EMB-UNC-001
+  owner: emb-unc
+  owner_spec: specs/embodied/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-ERR-001
+  owner: err-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-ERR-002
+  owner: err-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EVT-002
+  owner: evt-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EVT-003
+  owner: evt-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EVT-004
+  owner: evt-004
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-EVT-005
+  owner: evt-005
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOV-DISC-001
+  owner: gov-disc
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOV-MEM-001
+  owner: gov-mem
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GW-001
+  owner: gw-001
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GW-002
+  owner: gw-002
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GW-003
+  owner: gw-003
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GW-004
+  owner: gw-004
+  owner_spec: specs/akp/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-CAL-001
+  owner: het-cal
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-CONF-001
+  owner: het-conf
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-DATA-001
+  owner: het-data
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-DRIFT-001
+  owner: het-drift
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-ERR-001
+  owner: het-err
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-FB-001
+  owner: het-fb
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-HDL-001
+  owner: het-hdl
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-LIFE-001
+  owner: het-life
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-OBS-001
+  owner: het-obs
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-OPS-001
+  owner: het-ops
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-PLC-001
+  owner: het-plc
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-PLC-002
+  owner: het-plc
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-RG-001
+  owner: het-rg
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-SEC-001
+  owner: het-sec
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-HET-SHELL-001
+  owner: het-shell
+  owner_spec: specs/heterogeneous/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-INTENT-ACCEPT-001
+  owner: intent-accept
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - INTENT-ACCEPTANCE-007
+- id: REQ-INTENT-ADMISSION-001
+  owner: intent-admission
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-INTENT-RECORD-001
+  owner: intent-record
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-INTENT-SUPERSEDE-001
+  owner: intent-supersede
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - INTENT-SUPERSEDE-002
+- id: REQ-KNOW-007
+  owner: know-007
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-KNOW-008
+  owner: know-008
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-KNOW-009
+  owner: know-009
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-CAN-001
+  owner: learn-can
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-CAND-001
+  owner: learn-cand
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-CAND-002
+  owner: learn-cand
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-CONF-001
+  owner: learn-conf
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-DATA-001
+  owner: learn-data
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-FAIL-001
+  owner: learn-fail
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-MEM-001
+  owner: learn-mem
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-MEM-002
+  owner: learn-mem
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-MEM-003
+  owner: learn-mem
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-MEM-004
+  owner: learn-mem
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-MEM-005
+  owner: learn-mem
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-OFF-001
+  owner: learn-off
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-RBK-001
+  owner: learn-rbk
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-REL-001
+  owner: learn-rel
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-SEC-001
+  owner: learn-sec
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-SHD-001
+  owner: learn-shd
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-LEARN-SHELL-001
+  owner: learn-shell
+  owner_spec: specs/learning/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-MEM-MUTATE-001
+  owner: mem-mutate
+  owner_spec: specs/governed-memory/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-MEM-SHELL-001
+  owner: mem-shell
+  owner_spec: specs/governed-memory/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-OBJ-002
+  owner: obj-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-OBJ-003
+  owner: obj-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-OP-001
+  owner: op-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-OP-002
+  owner: op-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-PROTO-002
+  owner: proto-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-PROTO-003
+  owner: proto-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-PROTO-004
+  owner: proto-004
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-REC-001
+  owner: rec-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-REC-002
+  owner: rec-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RES-002
+  owner: res-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RES-003
+  owner: res-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-001
+  owner: run-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-002
+  owner: run-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-003
+  owner: run-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-007
+  owner: run-007
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-008
+  owner: run-008
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-RUN-STATE-001
+  owner: run-state
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+  - SHELL-EXECUTION-MIGRATION-009
+- id: REQ-SCOPE-001
+  owner: scope-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-SCOPE-002
+  owner: scope-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-SEC-001
+  owner: sec-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-SEM-SHELL-001
+  owner: sem-shell
+  owner_spec: specs/semantic-mediation/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-SHELL-AMBIGUITY-001
+  owner: shell-ambiguity
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SHELL-TARGET-AMBIGUITY-001
+- id: REQ-SHELL-ATTACH-001
+  owner: shell-attach
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SHELL-DETACH-ATTACH-004
+- id: REQ-SHELL-CHANNEL-001
+  owner: shell-channel
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SHELL-CHANNEL-ISOLATION-003
+- id: REQ-SHELL-CONTROL-001
+  owner: shell-control
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SHELL-CANCEL-SEMANTICS-005
+  - SHELL-EXECUTION-MIGRATION-009
+- id: REQ-SHELL-CORRECTION-001
+  owner: shell-correction
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - INTENT-SUPERSEDE-002
+- id: REQ-SHELL-DETACH-001
+  owner: shell-detach
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SHELL-DETACH-ATTACH-004
+- id: REQ-SHELL-PREVIEW-001
+  owner: shell-preview
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-SHELL-STATUS-001
+  owner: shell-status
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - INTENT-ACCEPTANCE-007
+- id: REQ-SHELL-TARGET-001
+  owner: shell-target
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SHELL-TARGET-AMBIGUITY-001
+- id: REQ-SHELL-UX-001
+  owner: shell-ux
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  status: specified
+  tests:
+  - SHELL-CHANNEL-ISOLATION-003
+- id: REQ-SHELL-WATCH-001
+  owner: shell-watch
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SHELL-WATCH-RESUME-006
+  - SHELL-EXECUTION-MIGRATION-009
+- id: REQ-STATE-001
+  owner: state-001
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-STATE-002
+  owner: state-002
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-STATE-005
+  owner: state-005
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001

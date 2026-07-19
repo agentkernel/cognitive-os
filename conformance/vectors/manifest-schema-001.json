@@ -1,0 +1,21 @@
+{
+  "id": "MANIFEST-SCHEMA-001",
+  "title": "Declarative contract scenario for REQ-CONF-001",
+  "version": "0.1",
+  "layer": "contract-traceability",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-CONF-001"
+  ],
+  "input": {
+    "owner_spec": "specs/schemas/profile-manifest.schema.json",
+    "requirement_status": "specified"
+  },
+  "expected": {
+    "requirement_semantics_enforced": true,
+    "evidence_required_for_pass": true,
+    "schema_parse_alone_is_not_pass": true
+  }
+}

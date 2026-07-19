@@ -1,0 +1,26 @@
+{
+  "id": "SHELL-CHANNEL-ISOLATION-003",
+  "title": "Keep task and privileged channels isolated",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-CHANNEL-001",
+    "REQ-SHELL-UX-001"
+  ],
+  "input": {
+    "task_conversation_credential": true,
+    "requested_action": "system.configure",
+    "privileged_session": false
+  },
+  "expected": {
+    "decision": "deny",
+    "error": {
+      "code": "SHELL_CHANNEL_BINDING_MISMATCH",
+      "category": "auth"
+    },
+    "management_context_leaked": false
+  }
+}

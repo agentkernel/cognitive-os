@@ -1,0 +1,21 @@
+{
+  "id": "CTX-VIEW-001",
+  "title": "Declarative contract scenario for REQ-CTX-005",
+  "version": "0.1",
+  "layer": "contract-traceability",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-CTX-005"
+  ],
+  "input": {
+    "owner_spec": "specs/schemas/context-view.schema.json",
+    "requirement_status": "specified"
+  },
+  "expected": {
+    "requirement_semantics_enforced": true,
+    "evidence_required_for_pass": true,
+    "schema_parse_alone_is_not_pass": true
+  }
+}

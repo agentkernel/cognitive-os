@@ -43,6 +43,7 @@
         "EXECUTED",
         "OUTCOME_UNKNOWN",
         "NOT_EXECUTED",
+        "RECONCILED",
         "VERIFIED",
         "VERIFY_FAILED",
         "COMPENSATING",

@@ -5,6 +5,10 @@
   "required": [
     "metadata",
     "task_ref",
+    "contract_epoch",
+    "intent_acceptance_ref",
+    "intent_interpretation_ref",
+    "user_intent_ref",
     "objective",
     "scope",
     "conditions",
@@ -169,6 +173,19 @@
         "additionalProperties": false
       },
       "minItems": 0
+    },
+    "user_intent_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "intent_interpretation_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "intent_acceptance_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "contract_epoch": {
+      "type": "integer",
+      "minimum": 1
     }
   },
   "additionalProperties": false

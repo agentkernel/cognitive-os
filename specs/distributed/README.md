@@ -118,3 +118,9 @@ authority 可达且 quorum 成立时按正常 CAS 提交。
 [REQ-DIST-SEC-001] 实现 **MUST** 测试 split brain、时钟偏移、撤销延迟、消息重复/乱序、孤儿 Effect 与恢复竞态。
 
 [REQ-DIST-REC-001] 恢复 **MUST** 在新写前完成 fencing、mailbox cursor 恢复和未决 Effect 对账。
+
+
+## Shell 与用户旅程映射
+远程 attach/watch/control 每 hop 重新认证；cancel 与 fencing、mailbox 消息和 Effect 对账分别观察。
+
+[REQ-DIST-SHELL-001] 分布式 Shell 控制 **MUST** 固定 authority/epoch/target version，分区时不得以本地 UI 状态推断远端停止或提交。

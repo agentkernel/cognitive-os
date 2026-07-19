@@ -1,0 +1,24 @@
+{
+  "id": "SHELL-DETACH-ATTACH-004",
+  "title": "Detach does not cancel or restore privilege",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-DETACH-001",
+    "REQ-SHELL-ATTACH-001"
+  ],
+  "input": {
+    "shell_exit": true,
+    "task_state": "ACTIVE",
+    "old_privileged_session": "expired",
+    "reattached_with_authentication": true
+  },
+  "expected": {
+    "task_cancelled": false,
+    "watch_restored_from_cursor": true,
+    "privileged_authority_restored": false
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "SHELL-WATCH-RESUME-006",
+  "title": "Resume watch without duplicates or silent gaps",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-WATCH-001",
+    "REQ-AKP-SHELL-002"
+  ],
+  "input": {
+    "snapshot_version": 8,
+    "last_ack_cursor": 41,
+    "server_min_cursor": 50
+  },
+  "expected": {
+    "resume_from_41": false,
+    "error": {
+      "code": "WATCH_CURSOR_STALE",
+      "category": "watch"
+    },
+    "required_action": "authorized_new_snapshot",
+    "silent_gap": false
+  }
+}

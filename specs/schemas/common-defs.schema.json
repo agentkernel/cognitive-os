@@ -257,7 +257,13 @@
             "memory",
             "catalog",
             "semantic",
-            "discovery"
+            "discovery",
+            "knowledge",
+            "performance",
+            "shell",
+            "intent",
+            "lifecycle",
+            "watch"
           ]
         },
         "stage": {

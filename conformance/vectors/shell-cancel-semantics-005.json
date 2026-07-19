@@ -1,0 +1,27 @@
+{
+  "id": "SHELL-CANCEL-SEMANTICS-005",
+  "title": "Distinguish cancellation from effect closure",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-SHELL-CONTROL-001",
+    "REQ-AKP-SHELL-003"
+  ],
+  "input": {
+    "cancel_requested": true,
+    "remote_execution_confirmed_stopped": false,
+    "effect_state": "OUTCOME_UNKNOWN"
+  },
+  "expected": {
+    "status": "cancel_pending",
+    "error": {
+      "code": "CANCEL_PENDING",
+      "category": "lifecycle"
+    },
+    "task_cancelled": false,
+    "required_action": "reconcile"
+  }
+}

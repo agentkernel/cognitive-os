@@ -122,3 +122,9 @@ OUTCOME_UNKNOWN 物理效果不得盲重发；先观察设备与世界状态并 
 [REQ-EMB-SEC-001] 实现 **MUST** 测试断网、时钟偏差、坐标错误、单位错误、传感器欺骗、watchdog 触发和 actuator stuck。
 
 [REQ-EMB-CONF-001] 符合性声明 **MUST** 列出适用行业标准、hazard analysis、时限证据、认证边界、已知失效模式与测试引用。
+
+
+## Shell 与用户旅程映射
+Shell 的 stop/kill 不能替代 safety stop；用户只能请求有界 setpoint、技能取消或 emergency action。
+
+[REQ-EMB-SHELL-001] 具身 Shell **MUST** 分别显示 cancellation、控制器状态、watchdog 与 physical safe-state 证据，且普通/管理通道均不能扩大 safety envelope。
