@@ -1,0 +1,36 @@
+{
+  "id": "MGMT-IDEM-006",
+  "title": "Install and stop management effects are idempotent",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-IDEM-001",
+    "REQ-MGMT-EFFECT-001"
+  ],
+  "input": {
+    "operations": [
+      {
+        "action": "agent.install",
+        "parameters_digest": "sha256:11111111",
+        "idempotency_key": "install-pkg-42-v3",
+        "repetitions": 2
+      },
+      {
+        "action": "execution.stop",
+        "parameters_digest": "sha256:22222222",
+        "idempotency_key": "stop-exec-77-v9",
+        "repetitions": 2
+      }
+    ]
+  },
+  "expected": {
+    "unique_effects": 2,
+    "duplicate_effects": 0,
+    "same_key_same_parameters_returns_same_effect_or_equivalent_result": true,
+    "same_key_different_parameters": "reject",
+    "reconcile_and_verification_required_before_commit": true
+  }
+}

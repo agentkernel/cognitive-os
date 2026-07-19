@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "privileged-management-session.schema.json",
+  "title": "CognitiveOS PrivilegedManagementSession",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "object_version",
+    "management_domain",
+    "session_authority",
+    "human_principal",
+    "actor_chain_digest",
+    "authentication_context_ref",
+    "activity_context_ref",
+    "scope",
+    "risk_ceiling",
+    "policy_version",
+    "revocation_epoch",
+    "issued_at",
+    "last_activity_at",
+    "idle_timeout_seconds",
+    "absolute_expires_at",
+    "state",
+    "session_digest",
+    "authority_signature"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.privileged-management-session/0.1"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^pms_[A-Za-z0-9._-]{8,128}$"
+    },
+    "object_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "management_domain": {
+      "type": "string",
+      "pattern": "^cognitiveos\\.management(?:\\.[a-z0-9_-]+)*$"
+    },
+    "session_authority": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "human_principal": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "authentication_context_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "activity_context_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "domains",
+        "actions",
+        "resources"
+      ],
+      "properties": {
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^cognitiveos\\.management(?:\\.[a-z0-9_-]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.:-]{2,127}$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk_ceiling": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revocation_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "idle_timeout_seconds": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 3600
+    },
+    "absolute_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state": {
+      "enum": [
+        "pending",
+        "active",
+        "expired",
+        "revoked",
+        "closed"
+      ]
+    },
+    "step_up_methods": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "conversation_isolation_key": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "session_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "authority_signature": {
+      "type": "string",
+      "minLength": 16
+    }
+  },
+  "additionalProperties": false
+}

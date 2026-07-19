@@ -1,0 +1,30 @@
+{
+  "id": "EMB-STALE-002",
+  "title": "Reject stale embodied observation",
+  "version": "0.1",
+  "layer": "context-semantic",
+  "profiles": [
+    "embodied_safety"
+  ],
+  "requirement_ids": [
+    "REQ-PROFILE-EMB-001"
+  ],
+  "input": {
+    "observation": {
+      "subject": "sensor://robot-7/proximity",
+      "observed_at": "2026-07-18T12:00:00.000Z",
+      "valid_until": "2026-07-18T12:00:00.050Z"
+    },
+    "actuation_time": "2026-07-18T12:00:00.120Z",
+    "proposed_action": "move_forward"
+  },
+  "expected": {
+    "decision": "safe_stop",
+    "error": {
+      "code": "PROFILE_EMBODIED_OBSERVATION_STALE",
+      "category": "profile"
+    },
+    "actuation_allowed": false,
+    "refresh_required": true
+  }
+}

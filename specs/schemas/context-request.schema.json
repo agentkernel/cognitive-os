@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContextRequest",
+  "type": "object",
+  "required": [
+    "metadata",
+    "purpose",
+    "perspective",
+    "budget",
+    "priority",
+    "required",
+    "forbidden",
+    "freshness",
+    "sensitivity",
+    "target_profile",
+    "allow_partial"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ContextRequest"
+            }
+          }
+        }
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "perspective": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Perspective",
+      "type": "object",
+      "required": [
+        "principal",
+        "task",
+        "episode"
+      ],
+      "properties": {
+        "principal": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "task": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "episode": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "priority": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Required context item",
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "min_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "max_age_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "forbidden": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minProperties": 1
+      },
+      "minItems": 0
+    },
+    "freshness": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Freshness rules",
+      "type": "object",
+      "required": [],
+      "properties": {
+        "world_max_age_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "knowledge_max_age_s": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "sensitivity": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Sensitivity boundary",
+      "type": "object",
+      "required": [
+        "max_input",
+        "egress"
+      ],
+      "properties": {
+        "max_input": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "egress": {
+          "enum": [
+            "none",
+            "same_tenant",
+            "approved_peers"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "target_profile": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Render target",
+      "type": "object",
+      "required": [
+        "kind",
+        "schema"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "structured",
+            "llm",
+            "human"
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_revision": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "allow_partial": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

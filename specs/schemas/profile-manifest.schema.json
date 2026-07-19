@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CognitiveOS Profile Manifest",
+  "type": "object",
+  "required": [
+    "cognitiveos_conformance"
+  ],
+  "properties": {
+    "cognitiveos_conformance": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Conformance declaration",
+      "type": "object",
+      "required": [
+        "spec",
+        "implementation",
+        "profiles",
+        "encodings",
+        "guarantees",
+        "test_runs",
+        "known_degradations",
+        "evidence_refs",
+        "performance_reports"
+      ],
+      "properties": {
+        "spec": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Pinned specification",
+          "type": "object",
+          "required": [
+            "id",
+            "version",
+            "requirement_set_digest",
+            "schema_bundle_digest"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requirement_set_digest": {
+              "$ref": "common-defs.schema.json#/$defs/digest"
+            },
+            "schema_bundle_digest": {
+              "$ref": "common-defs.schema.json#/$defs/digest"
+            }
+          },
+          "additionalProperties": false
+        },
+        "implementation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profiles": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Profile status",
+          "type": "object",
+          "required": [
+            "core_digital",
+            "distributed",
+            "embodied_safety",
+            "heterogeneous_cim",
+            "controlled_learning",
+            "context_virtualization",
+            "harnessed_autonomous_execution",
+            "intelligent_management_shell"
+          ],
+          "properties": {
+            "core_digital": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "distributed": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "embodied_safety": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "heterogeneous_cim": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "controlled_learning": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "context_virtualization": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "harnessed_autonomous_execution": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "intelligent_management_shell": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "encodings": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Encoding",
+            "type": "object",
+            "required": [
+              "canonicalization",
+              "digest"
+            ],
+            "properties": {
+              "canonicalization": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "$ref": "common-defs.schema.json#/$defs/digest"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "protocol_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "guarantees": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Guarantees",
+          "type": "object",
+          "required": [
+            "event_delivery",
+            "state_conflict",
+            "effect_recovery"
+          ],
+          "properties": {
+            "event_delivery": {
+              "enum": [
+                "at_least_once",
+                "at_most_once"
+              ]
+            },
+            "state_conflict": {
+              "enum": [
+                "compare_and_swap",
+                "transactional",
+                "equivalent_conflict_detection"
+              ]
+            },
+            "effect_recovery": {
+              "const": "reconcile_or_quarantine"
+            }
+          },
+          "additionalProperties": false
+        },
+        "harness": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Harness claim",
+          "type": "object",
+          "required": [
+            "evidence_level",
+            "task_contract_coverage",
+            "verifier_coverage",
+            "environment_fingerprint",
+            "episode_retention",
+            "unreplayable_factors"
+          ],
+          "properties": {
+            "evidence_level": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "H0",
+                    "H1",
+                    "H2",
+                    "H3"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "task_contract_coverage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "verifier_coverage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "environment_fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "episode_retention": {
+              "type": "string",
+              "minLength": 1
+            },
+            "unreplayable_factors": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "test_runs": {
+          "type": "array",
+          "items": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Test run",
+            "type": "object",
+            "required": [
+              "suite",
+              "suite_digest",
+              "result_ref",
+              "status"
+            ],
+            "properties": {
+              "suite": {
+                "type": "string",
+                "minLength": 1
+              },
+              "suite_digest": {
+                "$ref": "common-defs.schema.json#/$defs/digest"
+              },
+              "result_ref": {
+                "type": "string",
+                "format": "uri-reference",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "partial"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "known_degradations": {
+          "type": "array",
+          "items": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Known degradation",
+            "type": "object",
+            "required": [
+              "requirement",
+              "reason",
+              "evidence_ref"
+            ],
+            "properties": {
+              "requirement": {
+                "type": "string",
+                "pattern": "^REQ-[A-Z0-9-]+$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_ref": {
+                "type": "string",
+                "format": "uri-reference",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "performance_reports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "report_ref",
+              "schema_version",
+              "report_digest"
+            ],
+            "properties": {
+              "report_ref": {
+                "type": "string",
+                "format": "uri-reference",
+                "minLength": 1
+              },
+              "schema_version": {
+                "const": "cognitiveos.performance-report/0.1"
+              },
+              "report_digest": {
+                "$ref": "common-defs.schema.json#/$defs/digest"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,27 @@
+{
+  "id": "STATE-CAS-002",
+  "title": "Reject stale compare-and-swap",
+  "version": "0.1",
+  "layer": "state-machine",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-STATE-003"
+  ],
+  "input": {
+    "operation": "write",
+    "state_ref": "state://tenant-a/task/42",
+    "expected_version": 12,
+    "authoritative_version": 13
+  },
+  "expected": {
+    "decision": "reject",
+    "error": {
+      "code": "STATE_CONFLICT",
+      "category": "state"
+    },
+    "write_applied": false,
+    "audit_required": true
+  }
+}

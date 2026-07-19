@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuthorizationCapability",
+  "type": "object",
+  "required": [
+    "metadata",
+    "issuer",
+    "subject",
+    "audience",
+    "purpose",
+    "resource",
+    "actions",
+    "parameter_binding",
+    "lease",
+    "delegation",
+    "revocation",
+    "digest",
+    "signature"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "AuthorizationCapability"
+            }
+          }
+        }
+      ]
+    },
+    "issuer": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "audience": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resource": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "parameter_binding": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "lease": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Capability lease",
+      "type": "object",
+      "required": [
+        "not_before",
+        "expires"
+      ],
+      "properties": {
+        "not_before": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "delegation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Delegation bounds",
+      "type": "object",
+      "required": [
+        "depth_remaining",
+        "parent_digest"
+      ],
+      "properties": {
+        "depth_remaining": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parent_digest": {
+          "oneOf": [
+            {
+              "$ref": "common-defs.schema.json#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "revocation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Revocation",
+      "type": "object",
+      "required": [
+        "epoch",
+        "list_ref"
+      ],
+      "properties": {
+        "epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "list_ref": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

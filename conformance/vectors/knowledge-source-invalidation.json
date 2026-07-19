@@ -1,0 +1,31 @@
+{
+  "id": "KNOW-INVALIDATION-001",
+  "title": "Source revocation invalidates all derived knowledge",
+  "version": "0.1",
+  "layer": "context-semantic",
+  "profiles": [
+    "controlled_learning"
+  ],
+  "requirement_ids": [
+    "REQ-KNOW-001",
+    "REQ-KNOW-002",
+    "REQ-KNOW-006"
+  ],
+  "input": {
+    "source_event": "revoked",
+    "derived_claims": [
+      "claim:a",
+      "claim:b"
+    ],
+    "derived_artifacts": [
+      "index:x",
+      "cache:y"
+    ]
+  },
+  "expected": {
+    "claims_state": "STALE",
+    "artifacts_invalidated": true,
+    "recompile_bounded": true,
+    "audit_closure": true
+  }
+}

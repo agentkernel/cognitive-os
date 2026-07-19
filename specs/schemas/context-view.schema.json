@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContextView",
+  "type": "object",
+  "required": [
+    "metadata",
+    "request_ref",
+    "complete",
+    "loaded",
+    "rejected",
+    "loss_declaration",
+    "pinned_versions",
+    "cost",
+    "activity_bound"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ContextView"
+            }
+          }
+        }
+      ]
+    },
+    "request_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "loaded": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Loaded context item",
+        "type": "object",
+        "required": [
+          "item_id",
+          "object_ref",
+          "representation",
+          "trust_level",
+          "role",
+          "cost"
+        ],
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "object_ref": {
+            "$ref": "common-defs.schema.json#/$defs/strongRef"
+          },
+          "representation": {
+            "enum": [
+              "structured",
+              "text",
+              "binary_ref"
+            ]
+          },
+          "trust_level": {
+            "enum": [
+              "control",
+              "authoritative",
+              "verified",
+              "untrusted"
+            ]
+          },
+          "role": {
+            "enum": [
+              "control",
+              "authoritative_state",
+              "evidence",
+              "working",
+              "untrusted_input"
+            ]
+          },
+          "cost": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Item cost",
+            "type": "object",
+            "required": [
+              "bytes"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "tokens": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Rejected candidate",
+        "type": "object",
+        "required": [
+          "candidate_ref",
+          "reason"
+        ],
+        "properties": {
+          "candidate_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "loss_declaration": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Loss declaration",
+        "type": "object",
+        "required": [
+          "source",
+          "transform",
+          "omitted_classes",
+          "verification"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "transform": {
+            "type": "string",
+            "minLength": 1
+          },
+          "omitted_classes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "verification": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "pinned_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "string",
+            "minLength": 1
+          }
+        ]
+      }
+    },
+    "cost": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Resolution cost",
+      "type": "object",
+      "required": [
+        "bytes",
+        "resolve_ms"
+      ],
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resolve_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "money_microunits": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "activity_bound": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LoopCheckpoint",
+  "type": "object",
+  "required": [
+    "metadata",
+    "task_contract_ref",
+    "iteration",
+    "phase",
+    "observation_refs",
+    "context_view_ref",
+    "action_or_effect_refs",
+    "progress",
+    "remaining_budget",
+    "next_gate",
+    "continuation_conditions"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "LoopCheckpoint"
+            }
+          }
+        }
+      ]
+    },
+    "task_contract_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "iteration": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase": {
+      "enum": [
+        "OBSERVE",
+        "ORIENT",
+        "DECIDE",
+        "ACT",
+        "VERIFY",
+        "DIAGNOSE",
+        "WAITING"
+      ]
+    },
+    "observation_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "context_view_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "proposal_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "action_or_effect_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "progress": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Progress evidence",
+      "type": "object",
+      "required": [
+        "status",
+        "evidence_refs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "none",
+            "advanced",
+            "uncertain",
+            "blocked"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "delta_ref": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "failure_attribution_ref": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "remaining_budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "next_gate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "continuation_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

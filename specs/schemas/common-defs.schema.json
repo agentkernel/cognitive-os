@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common-defs.schema.json",
+  "title": "CognitiveOS Common Definitions",
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{8,64}$"
+    },
+    "uriRef": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "strongRef": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Strong object reference",
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "digest"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Provenance",
+      "type": "object",
+      "required": [
+        "created_by",
+        "source_refs"
+      ],
+      "properties": {
+        "created_by": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "validTime": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Validity interval",
+      "type": "object",
+      "required": [
+        "from",
+        "until"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "until": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Lineage",
+      "type": "object",
+      "required": [
+        "parents",
+        "transform"
+      ],
+      "properties": {
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "transform": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Core metadata",
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "schema_version",
+        "object_version",
+        "owner",
+        "authority",
+        "provenance",
+        "sensitivity",
+        "valid_time",
+        "content_digest",
+        "lineage"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+/[0-9]+\\.[0-9]+$"
+        },
+        "object_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "owner": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "authority": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "valid_time": {
+          "$ref": "#/$defs/validTime"
+        },
+        "content_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        }
+      },
+      "additionalProperties": false
+    },
+    "budget": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Bounded resources",
+      "type": "object",
+      "required": [],
+      "properties": {
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semantic_calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tool_calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wall_time_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "money_microunits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "egress_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attention_slots": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "error": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Machine error",
+      "type": "object",
+      "required": [
+        "code",
+        "category",
+        "stage",
+        "retryable"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$"
+        },
+        "category": {
+          "enum": [
+            "state",
+            "context",
+            "auth",
+            "effect",
+            "protocol",
+            "resource",
+            "profile"
+          ]
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "details_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uri-reference",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Effect",
+  "type": "object",
+  "required": [
+    "metadata",
+    "intent_ref",
+    "state",
+    "executor",
+    "attempt",
+    "idempotency_key",
+    "parameters_digest",
+    "authorization_digest",
+    "observed_outcome",
+    "verification",
+    "decision",
+    "event_refs"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "Effect"
+            }
+          }
+        }
+      ]
+    },
+    "intent_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "state": {
+      "enum": [
+        "PROPOSED",
+        "AUTHORIZED",
+        "DENIED",
+        "EXECUTING",
+        "EXECUTED",
+        "OUTCOME_UNKNOWN",
+        "NOT_EXECUTED",
+        "VERIFIED",
+        "VERIFY_FAILED",
+        "COMPENSATING",
+        "COMMITTED",
+        "ABORTED",
+        "QUARANTINED"
+      ]
+    },
+    "executor": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parameters_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "authorization_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "receipt_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "observed_outcome": {
+      "enum": [
+        "not_observed",
+        "succeeded",
+        "failed",
+        "unknown"
+      ]
+    },
+    "verification": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Effect verification",
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "passed",
+            "failed",
+            "unresolved"
+          ]
+        },
+        "report_ref": {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "enum": [
+        "pending",
+        "commit",
+        "abort",
+        "compensate",
+        "quarantine"
+      ]
+    },
+    "event_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": false
+}

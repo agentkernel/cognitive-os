@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "management-action-proposal.schema.json",
+  "title": "CognitiveOS ManagementActionProposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "object_version",
+    "session_ref",
+    "management_domain",
+    "action",
+    "target_refs",
+    "parameters_digest",
+    "expected_versions",
+    "idempotency_key",
+    "risk_class",
+    "actor_chain_digest",
+    "activity_context_ref",
+    "policy_version",
+    "created_at",
+    "expires_at",
+    "proposal_digest",
+    "revocation_epoch",
+    "step_up_required",
+    "independent_approval_required"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.management-action-proposal/0.1"
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^map_[A-Za-z0-9._-]{8,128}$"
+    },
+    "object_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "session_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "management_domain": {
+      "type": "string",
+      "pattern": "^cognitiveos\\.management(?:\\.[a-z0-9_-]+)*$"
+    },
+    "action": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.:-]{2,127}$"
+    },
+    "target_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "parameters_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "expected_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 256
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "activity_context_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "step_up_required": {
+      "type": "boolean"
+    },
+    "independent_approval_required": {
+      "type": "boolean"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "proposal_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "revocation_epoch": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

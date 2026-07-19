@@ -1,0 +1,54 @@
+{
+  "id": "MGMT-SESSION-DENY-002",
+  "title": "Deny expired and revoked sessions without losing pending effects",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-SESSION-002",
+    "REQ-MGMT-SESSION-003",
+    "REQ-MGMT-SESSION-LIFECYCLE-001"
+  ],
+  "input": {
+    "cases": [
+      {
+        "name": "absolute_expiry",
+        "session_state": "expired",
+        "pending_effect_ref": "effect://management/configure-17"
+      },
+      {
+        "name": "immediate_revocation",
+        "session_state": "revoked",
+        "pending_effect_ref": "effect://management/install-23"
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "name": "absolute_expiry",
+        "new_proposal_decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_SESSION_EXPIRED",
+          "category": "auth"
+        }
+      },
+      {
+        "name": "immediate_revocation",
+        "new_proposal_decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_SESSION_REVOKED",
+          "category": "auth"
+        }
+      }
+    ],
+    "new_effects_created": false,
+    "pending_effects_retained": true,
+    "pending_effects_auto_committed": false,
+    "reconciliation_uses_original_idempotency_and_effect_records": true,
+    "resume_requires_new_authenticated_session_version": true,
+    "audit_required": true
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "management-approval-decision.schema.json",
+  "title": "CognitiveOS ManagementApprovalDecision",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "decision_id",
+    "object_version",
+    "proposal_ref",
+    "proposal_digest",
+    "session_ref",
+    "decision",
+    "deciding_authority",
+    "approver_principal",
+    "approver_actor_chain_digest",
+    "policy_version",
+    "risk_class",
+    "challenge_digest",
+    "decided_at",
+    "expires_at",
+    "decision_digest",
+    "authority_signature"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.management-approval-decision/0.1"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^mad_[A-Za-z0-9._-]{8,128}$"
+    },
+    "object_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "proposal_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "proposal_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "session_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "decision": {
+      "enum": [
+        "approve",
+        "deny",
+        "challenge",
+        "expired"
+      ]
+    },
+    "deciding_authority": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "approver_principal": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "approver_actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "independent_from_proposer": {
+      "type": "boolean"
+    },
+    "step_up_method": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "challenge_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "safe_reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]+$"
+      },
+      "uniqueItems": true
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decision_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "authority_signature": {
+      "type": "string",
+      "minLength": 16
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "enum": [
+              "R2",
+              "R3"
+            ]
+          },
+          "decision": {
+            "const": "approve"
+          }
+        },
+        "required": [
+          "risk_class",
+          "decision"
+        ]
+      },
+      "then": {
+        "required": [
+          "independent_from_proposer"
+        ],
+        "properties": {
+          "independent_from_proposer": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

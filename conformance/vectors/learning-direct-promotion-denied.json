@@ -1,0 +1,39 @@
+{
+  "id": "LEARN-PROMOTE-005",
+  "title": "Deny direct episode promotion",
+  "version": "0.1",
+  "layer": "harness-loop",
+  "profiles": [
+    "controlled_learning"
+  ],
+  "requirement_ids": [
+    "REQ-PROFILE-LEARN-001"
+  ],
+  "input": {
+    "candidate_ref": "memory://tenant-a/episodes/99/candidate-policy",
+    "source": "episode://tenant-a/99",
+    "requested_target": "policy://tenant-a/production/refund",
+    "evidence": {
+      "offline_evaluation": false,
+      "shadow": false,
+      "canary": false,
+      "approval": false,
+      "rollback_plan": false
+    }
+  },
+  "expected": {
+    "decision": "deny",
+    "error": {
+      "code": "PROFILE_LEARNING_PROMOTION_DENIED",
+      "category": "profile"
+    },
+    "production_changed": false,
+    "required_pipeline": [
+      "evaluate",
+      "simulate",
+      "shadow",
+      "canary",
+      "release_approval"
+    ]
+  }
+}

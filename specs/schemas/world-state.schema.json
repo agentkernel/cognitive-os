@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorldState",
+  "type": "object",
+  "required": [
+    "metadata",
+    "domain",
+    "base_version",
+    "high_watermark",
+    "projection_version",
+    "observations",
+    "freshness",
+    "digest"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "WorldState"
+            }
+          }
+        }
+      ]
+    },
+    "domain": {
+      "const": "world"
+    },
+    "base_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "high_watermark": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "projection_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "World observation",
+        "type": "object",
+        "required": [
+          "subject",
+          "value_ref",
+          "observed_at",
+          "valid_until",
+          "source",
+          "calibration_ref"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "value_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "calibration_ref": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri-reference",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "freshness": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Freshness",
+      "type": "object",
+      "required": [
+        "evaluated_at",
+        "stale"
+      ],
+      "properties": {
+        "evaluated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stale": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,36 @@
+{
+  "id": "MGMT-RECOVERY-007",
+  "title": "Reconcile a persisted management effect after shell crash",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-EFFECT-001",
+    "REQ-MGMT-RECOVERY-001",
+    "REQ-MGMT-SESSION-LIFECYCLE-001"
+  ],
+  "input": {
+    "shell_crash_after_dispatch": true,
+    "persisted_intent": true,
+    "effect_state": "EXECUTING",
+    "receipt_persisted": false,
+    "idempotency_key": "install-runtime-9-v1",
+    "original_writer_epoch": 4
+  },
+  "expected": {
+    "shell_completion_is_commit": false,
+    "effect_state_before_recovery": "OUTCOME_UNKNOWN",
+    "error": {
+      "code": "EFFECT_OUTCOME_UNKNOWN",
+      "category": "effect"
+    },
+    "pending_effect_retained": true,
+    "recovery_rebuilds_from_persisted_intent_effect_and_verification": true,
+    "old_writer_fenced": true,
+    "required_action": "reconcile_or_quarantine",
+    "original_idempotency_key_reused": true,
+    "report_success_before_verification": false
+  }
+}

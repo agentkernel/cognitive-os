@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Intent",
+  "type": "object",
+  "required": [
+    "metadata",
+    "task_ref",
+    "action",
+    "parameters_digest",
+    "target",
+    "expected_state_version",
+    "capability_refs",
+    "effect_class",
+    "deadline",
+    "idempotency_key",
+    "postconditions",
+    "compensation"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "Intent"
+            }
+          }
+        }
+      ]
+    },
+    "task_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parameters_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "target": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "expected_state_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "capability_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      },
+      "minItems": 1
+    },
+    "effect_class": {
+      "enum": [
+        "pure",
+        "local_ephemeral",
+        "governed_external",
+        "emergency_safety"
+      ]
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 8
+    },
+    "postconditions": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Contract condition",
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "acceptance",
+              "stop",
+              "escalation",
+              "wait",
+              "constraint"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verifier_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "machine_expression": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "compensation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Compensation policy",
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "intent_required",
+            "manual"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

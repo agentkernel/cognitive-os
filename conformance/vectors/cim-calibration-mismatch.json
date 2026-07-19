@@ -1,0 +1,33 @@
+{
+  "id": "CIM-CAL-003",
+  "title": "Reject mismatched CIM calibration",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "heterogeneous_cim"
+  ],
+  "requirement_ids": [
+    "REQ-PROFILE-HET-001"
+  ],
+  "input": {
+    "placement": {
+      "resource": "cim://edge-a/array-4",
+      "calibration_ref": "calibration://edge-a/array-4/v7",
+      "certified_max_error": 0.015
+    },
+    "resource_runtime": {
+      "calibration_ref": "calibration://edge-a/array-4/v8",
+      "observed_error": 0.012
+    },
+    "workload_class": "authorization"
+  },
+  "expected": {
+    "decision": "reject_placement",
+    "error": {
+      "code": "PROFILE_CIM_CALIBRATION_MISMATCH",
+      "category": "profile"
+    },
+    "fallback_required": true,
+    "approximate_result_usable": false
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delegation",
+  "type": "object",
+  "required": [
+    "metadata",
+    "delegator",
+    "delegate",
+    "task_ref",
+    "parent_capability_ref",
+    "child_capability_ref",
+    "budget_grant",
+    "data_visibility",
+    "deadline",
+    "depth"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "Delegation"
+            }
+          }
+        }
+      ]
+    },
+    "delegator": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "delegate": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "task_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "parent_capability_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "child_capability_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "budget_grant": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "data_visibility": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "public",
+          "internal",
+          "confidential",
+          "restricted"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

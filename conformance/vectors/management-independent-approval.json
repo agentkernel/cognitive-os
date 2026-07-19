@@ -1,0 +1,49 @@
+{
+  "id": "MGMT-APPROVAL-005",
+  "title": "Require independent approval for R2 and R3 actions",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-APPROVAL-001"
+  ],
+  "input": {
+    "cases": [
+      {
+        "risk_class": "R2",
+        "approval_source": "proposal_workload",
+        "independent_from_proposer": false
+      },
+      {
+        "risk_class": "R3",
+        "approval_source": "proposal_workload_model",
+        "independent_from_proposer": false
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "risk_class": "R2",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        }
+      },
+      {
+        "risk_class": "R3",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        }
+      }
+    ],
+    "self_approval_accepted": false,
+    "dispatches": 0,
+    "independent_signed_decision_required": true
+  }
+}

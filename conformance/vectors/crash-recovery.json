@@ -1,0 +1,64 @@
+{
+  "id": "RECOVERY-CRASH-006",
+  "title": "Recover all required effect crash points",
+  "version": "0.1",
+  "layer": "effect-recovery",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-EFF-006",
+    "REQ-RUN-006"
+  ],
+  "input": {
+    "scenarios": [
+      {
+        "id": "EFF-CRASH-001",
+        "crash_point": "intent_persisted_before_call",
+        "durable": [
+          "intent"
+        ],
+        "executor_observation": "not_called"
+      },
+      {
+        "id": "EFF-CRASH-002",
+        "crash_point": "executed_before_receipt_persisted",
+        "durable": [
+          "intent",
+          "dispatch"
+        ],
+        "executor_observation": "executed"
+      },
+      {
+        "id": "EFF-CRASH-003",
+        "crash_point": "verified_before_commit",
+        "durable": [
+          "intent",
+          "receipt",
+          "verification"
+        ],
+        "executor_observation": "executed"
+      }
+    ]
+  },
+  "expected": {
+    "scenario_results": [
+      {
+        "id": "EFF-CRASH-001",
+        "action": "dispatch_once_with_original_idempotency_key",
+        "duplicate_effect": false
+      },
+      {
+        "id": "EFF-CRASH-002",
+        "action": "reconcile_then_persist_receipt",
+        "duplicate_effect": false
+      },
+      {
+        "id": "EFF-CRASH-003",
+        "action": "commit_state_and_event_without_reexecution",
+        "duplicate_effect": false
+      }
+    ],
+    "audit_chain_closed": true
+  }
+}

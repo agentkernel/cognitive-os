@@ -1,0 +1,27 @@
+{
+  "id": "KNOW-POISON-001",
+  "title": "Generated content cannot self-corroborate or publish",
+  "version": "0.1",
+  "layer": "security-negative",
+  "profiles": [
+    "controlled_learning"
+  ],
+  "requirement_ids": [
+    "REQ-KNOW-003",
+    "REQ-KNOW-004"
+  ],
+  "input": {
+    "evidence_trust": "untrusted",
+    "generated_claims": [
+      "claim:a",
+      "claim:a-rewrite"
+    ],
+    "requested_action": "publish",
+    "corroboration_lineage": "same-generated-source"
+  },
+  "expected": {
+    "decision": "quarantine",
+    "self_corroboration_accepted": false,
+    "control_interpretation": false
+  }
+}

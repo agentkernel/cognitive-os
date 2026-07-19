@@ -1,0 +1,100 @@
+{
+  "id": "PERF-REPORT-CONTRACT-001",
+  "title": "Reject performance reports that mask tails or omit reproducibility inputs",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-PERF-001",
+    "REQ-PERF-002",
+    "REQ-PERF-003"
+  ],
+  "input": {
+    "schema": "../../specs/schemas/performance-report.schema.json",
+    "report": {
+      "schema_version": "cognitiveos.performance-report/0.1",
+      "benchmark_manifest": {
+        "workload": {
+          "distribution": "fixed-task-suite-v1"
+        },
+        "model": {
+          "provider": "example",
+          "model": "fixed",
+          "revision": "sha256:example",
+          "sampling": {
+            "temperature": 0
+          }
+        },
+        "hardware_topology": {
+          "cpu": "fixed",
+          "nodes": 1
+        },
+        "concurrency": 4,
+        "datasets": [
+          {
+            "id": "suite",
+            "version": "1"
+          }
+        ],
+        "fault_profile": {
+          "name": "none"
+        },
+        "risk_class": "R1",
+        "samples": 100,
+        "confidence_interval": {
+          "level": 0.95,
+          "method": "bootstrap"
+        },
+        "baselines": [
+          "baseline-v1"
+        ],
+        "ablations": [
+          "no-context-cache"
+        ],
+        "latency_boundaries": {
+          "mechanism": "kernel gates only",
+          "model_tool_network": "separately measured"
+        },
+        "execution_state": "warm"
+      },
+      "slo_profile": {
+        "id": "core-r1",
+        "version": "1",
+        "window": "2026-07-18T00:00:00Z/2026-07-18T01:00:00Z"
+      },
+      "metrics": [
+        {
+          "name": "context_resolution_latency",
+          "category": "context",
+          "unit": "ms",
+          "numerator": 100,
+          "denominator": 100,
+          "window": {
+            "start": "2026-07-18T00:00:00Z",
+            "end": "2026-07-18T01:00:00Z"
+          },
+          "p50": 12,
+          "p95": 35,
+          "p99": 61,
+          "sample_count": 100,
+          "confidence_interval": {
+            "level": 0.95,
+            "low": 10,
+            "high": 15,
+            "method": "bootstrap"
+          }
+        }
+      ],
+      "safety_failures": [],
+      "tail_latency_disclosed": true
+    }
+  },
+  "expected": {
+    "schema_valid": true,
+    "universal_composite_required": false,
+    "tail_percentiles_preserved": true,
+    "mechanism_latency_separated": true
+  }
+}

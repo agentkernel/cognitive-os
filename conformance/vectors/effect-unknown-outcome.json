@@ -1,0 +1,32 @@
+{
+  "id": "EFF-UNK-003",
+  "title": "Reconcile unknown effect outcome",
+  "version": "0.1",
+  "layer": "effect-recovery",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-EFF-004"
+  ],
+  "input": {
+    "effect_state": "EXECUTING",
+    "disconnect_after_dispatch": true,
+    "receipt_persisted": false,
+    "idempotency_key": "refund-42-attempt-1",
+    "executor_query_result": "indeterminate"
+  },
+  "expected": {
+    "effect_state": "QUARANTINED",
+    "error": {
+      "code": "EFFECT_OUTCOME_UNKNOWN",
+      "category": "effect"
+    },
+    "blind_retry": false,
+    "report_success": false,
+    "required_actions": [
+      "reconcile",
+      "human_or_authority_resolution"
+    ]
+  }
+}

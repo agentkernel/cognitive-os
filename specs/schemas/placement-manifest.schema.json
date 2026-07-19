@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PlacementManifest",
+  "type": "object",
+  "required": [
+    "metadata",
+    "resource_graph_ref",
+    "placement_version",
+    "assignments",
+    "residency_policy",
+    "fallbacks"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "PlacementManifest"
+            }
+          }
+        }
+      ]
+    },
+    "resource_graph_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "placement_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assignments": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Assignment",
+        "type": "object",
+        "required": [
+          "workload",
+          "resource",
+          "calibration_ref",
+          "approximation_envelope"
+        ],
+        "properties": {
+          "workload": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "resource": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "calibration_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "approximation_envelope": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Approximation envelope",
+            "type": "object",
+            "required": [
+              "metric",
+              "maximum"
+            ],
+            "properties": {
+              "metric": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maximum": {
+                "type": "number",
+                "minimum": 0
+              },
+              "certified_for": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "residency_policy": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Residency rule",
+        "type": "object",
+        "required": [
+          "data_class",
+          "allowed_regions"
+        ],
+        "properties": {
+          "data_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed_regions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "fallbacks": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Fallback",
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "trigger"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "trigger": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

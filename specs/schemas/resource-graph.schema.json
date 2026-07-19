@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResourceGraph",
+  "type": "object",
+  "required": [
+    "metadata",
+    "graph_version",
+    "nodes",
+    "edges",
+    "calibrations"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ResourceGraph"
+            }
+          }
+        }
+      ]
+    },
+    "graph_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Resource node",
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "trust_domain",
+          "residency",
+          "capabilities"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "cpu",
+              "gpu",
+              "cim",
+              "storage",
+              "network",
+              "sensor",
+              "actuator"
+            ]
+          },
+          "trust_domain": {
+            "type": "string",
+            "minLength": 1
+          },
+          "residency": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Resource edge",
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "kind"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "compute_on",
+              "transfer",
+              "observe",
+              "actuate",
+              "fallback"
+            ]
+          },
+          "max_latency_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "bandwidth_bytes_s": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "calibrations": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Calibration",
+        "type": "object",
+        "required": [
+          "id",
+          "resource_ref",
+          "version",
+          "valid_from",
+          "valid_until",
+          "error_envelope"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "resource_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error_envelope": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Error envelope",
+            "type": "object",
+            "required": [
+              "metric",
+              "maximum"
+            ],
+            "properties": {
+              "metric": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maximum": {
+                "type": "number",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "id": "KNOW-MAINTENANCE-001",
+  "title": "Knowledge maintenance stops at declared bounds",
+  "version": "0.1",
+  "layer": "harness-loop",
+  "profiles": [
+    "controlled_learning"
+  ],
+  "requirement_ids": [
+    "REQ-KNOW-005"
+  ],
+  "input": {
+    "object_limit": 100,
+    "attempted_objects": 101,
+    "retry_limit": 3
+  },
+  "expected": {
+    "state": "QUARANTINED",
+    "unbounded_retry": false,
+    "last_safe_version_preserved": true
+  }
+}

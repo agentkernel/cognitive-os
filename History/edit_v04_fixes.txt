@@ -1,0 +1,3 @@
+﻿# Fix for Edit 9 in the original script: update the search string
+# The original search used a table row format, but section 4.3 uses bold paragraphs
+# Replace the failing Edit 9 code with this corrected version

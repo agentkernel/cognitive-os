@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Event",
+  "type": "object",
+  "required": [
+    "metadata",
+    "event_type",
+    "source",
+    "subject",
+    "correlation_id",
+    "causation_id",
+    "event_time",
+    "ingest_time",
+    "schema_digest",
+    "deadline",
+    "delivery_class",
+    "ack",
+    "backpressure",
+    "immutable"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "Event"
+            }
+          }
+        }
+      ]
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]+$"
+    },
+    "source": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "causation_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uri-reference",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ingest_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "schema_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "deadline": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "delivery_class": {
+      "enum": [
+        "at_most_once",
+        "at_least_once"
+      ]
+    },
+    "ack": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Ack policy",
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "explicit"
+          ]
+        },
+        "consumer_offset": {
+          "enum": [
+            "none",
+            "optional",
+            "required"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "backpressure": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Backpressure policy",
+      "type": "object",
+      "required": [
+        "mode",
+        "overflow"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "bounded_block",
+            "reject",
+            "spill"
+          ]
+        },
+        "overflow": {
+          "enum": [
+            "reject",
+            "spill",
+            "drop_telemetry"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "payload": {},
+    "payload_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "immutable": {
+      "const": true
+    }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "required": [
+        "payload"
+      ]
+    },
+    {
+      "required": [
+        "payload_ref"
+      ]
+    }
+  ]
+}

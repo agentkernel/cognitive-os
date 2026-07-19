@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cognitiveos.performance-report/0.1",
+  "title": "CognitiveOS Performance Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_manifest",
+    "slo_profile",
+    "metrics",
+    "safety_failures",
+    "tail_latency_disclosed"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.performance-report/0.1"
+    },
+    "benchmark_manifest": {
+      "type": "object",
+      "required": [
+        "workload",
+        "execution_state",
+        "model",
+        "hardware_topology",
+        "concurrency",
+        "datasets",
+        "fault_profile",
+        "risk_class",
+        "samples",
+        "confidence_interval",
+        "baselines",
+        "ablations",
+        "latency_boundaries"
+      ],
+      "properties": {
+        "workload": {
+          "type": "object"
+        },
+        "model": {
+          "type": "object",
+          "required": [
+            "provider",
+            "model",
+            "revision",
+            "sampling"
+          ]
+        },
+        "hardware_topology": {
+          "type": "object"
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "version"
+            ]
+          }
+        },
+        "fault_profile": {
+          "type": "object"
+        },
+        "risk_class": {
+          "enum": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ]
+        },
+        "samples": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "confidence_interval": {
+          "type": "object",
+          "required": [
+            "level",
+            "method"
+          ]
+        },
+        "baselines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ablations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "latency_boundaries": {
+          "type": "object",
+          "required": [
+            "mechanism",
+            "model_tool_network"
+          ]
+        },
+        "execution_state": {
+          "enum": [
+            "warm",
+            "cold",
+            "mixed"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "slo_profile": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "window"
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "unit",
+          "numerator",
+          "denominator",
+          "window",
+          "p50",
+          "p95",
+          "p99",
+          "sample_count",
+          "confidence_interval"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "context",
+              "execution_loop",
+              "effects",
+              "recovery_distributed",
+              "embodied_heterogeneous",
+              "security_knowledge",
+              "cost_energy"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "numerator": {
+            "type": [
+              "number",
+              "integer"
+            ]
+          },
+          "denominator": {
+            "type": [
+              "number",
+              "integer"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "window": {
+            "type": "object",
+            "required": [
+              "start",
+              "end"
+            ]
+          },
+          "p50": {
+            "type": "number"
+          },
+          "p95": {
+            "type": "number"
+          },
+          "p99": {
+            "type": "number"
+          },
+          "sample_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "confidence_interval": {
+            "type": "object",
+            "required": [
+              "level",
+              "low",
+              "high",
+              "method"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "safety_failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "class",
+          "count"
+        ]
+      }
+    },
+    "tail_latency_disclosed": {
+      "const": true
+    },
+    "composite_score": {
+      "type": "object",
+      "required": [
+        "value",
+        "non_masking_statement"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "non_masking_statement": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

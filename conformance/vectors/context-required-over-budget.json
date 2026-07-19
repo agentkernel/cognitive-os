@@ -1,0 +1,43 @@
+{
+  "id": "CTX-REQ-007",
+  "title": "Fail required context over hard budget",
+  "version": "0.1",
+  "layer": "context-semantic",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-CTX-004",
+    "REQ-RES-001"
+  ],
+  "input": {
+    "allow_partial": false,
+    "hard_budget": {
+      "context_bytes": 4096,
+      "input_tokens": 512
+    },
+    "required_items": [
+      {
+        "ref": "state://tenant-a/task/42?version=12",
+        "bytes": 3300,
+        "tokens": 430
+      },
+      {
+        "ref": "knowledge://tenant-a/policy/refund?version=8",
+        "bytes": 1700,
+        "tokens": 240
+      }
+    ]
+  },
+  "expected": {
+    "decision": "error",
+    "error": {
+      "code": "CONTEXT_BUDGET_EXCEEDED",
+      "category": "context"
+    },
+    "context_view_emitted": false,
+    "missing_items": [
+      "knowledge://tenant-a/policy/refund?version=8"
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "CAP-ATTEN-004",
+  "title": "Reject capability amplification",
+  "version": "0.1",
+  "layer": "security-negative",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-CAP-002"
+  ],
+  "input": {
+    "parent": {
+      "audience": "service://tenant-a/payments",
+      "actions": [
+        "refund"
+      ],
+      "parameter_binding": {
+        "max_amount_minor": 5000
+      },
+      "expires": "2026-07-18T12:05:00Z",
+      "depth_remaining": 1
+    },
+    "derived": {
+      "audience": "service://tenant-a/payments",
+      "actions": [
+        "refund"
+      ],
+      "parameter_binding": {
+        "max_amount_minor": 7500
+      },
+      "expires": "2026-07-18T12:05:00Z",
+      "depth_remaining": 0
+    }
+  },
+  "expected": {
+    "decision": "deny",
+    "error": {
+      "code": "AUTH_CAPABILITY_ATTENUATION_VIOLATION",
+      "category": "auth"
+    },
+    "violations": [
+      "parameter_binding.max_amount_minor"
+    ],
+    "audit_required": true
+  }
+}

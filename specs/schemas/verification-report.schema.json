@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VerificationReport",
+  "type": "object",
+  "required": [
+    "metadata",
+    "subject_ref",
+    "verifier",
+    "verifier_version",
+    "criteria",
+    "status",
+    "evidence_refs",
+    "fixed_post_state",
+    "completed_at"
+  ],
+  "properties": {
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "common-defs.schema.json#/$defs/metadata"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "VerificationReport"
+            }
+          }
+        }
+      ]
+    },
+    "subject_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "verifier": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "verifier_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Criterion result",
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "indeterminate"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri-reference",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "indeterminate"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "fixed_post_state": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,37 @@
+{
+  "id": "MGMT-FALLBACK-008",
+  "title": "Keep deterministic CLI and API usable with shell disabled",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital",
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-FALLBACK-001"
+  ],
+  "input": {
+    "intelligent_shell_status": "disabled",
+    "model_available": false,
+    "domain_agents_ready": false,
+    "authenticated_human": true,
+    "path": "deterministic_cli_api",
+    "requested_operations": [
+      "session.create_restricted",
+      "status.inspect",
+      "capability.revoke",
+      "execution.stop",
+      "effect.reconcile",
+      "gateway.configure",
+      "diagnostics.configure"
+    ]
+  },
+  "expected": {
+    "management_api_available": true,
+    "deterministic_cli_available": true,
+    "all_requested_operations_reachable": true,
+    "model_required": false,
+    "domain_agent_required": false,
+    "same_authorization_effect_and_audit_gates": true
+  }
+}

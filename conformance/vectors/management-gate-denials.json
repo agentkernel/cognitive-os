@@ -1,0 +1,54 @@
+{
+  "id": "MGMT-GATE-DENY-003",
+  "title": "Fail closed on scope mismatch and missing step-up",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-SESSION-002",
+    "REQ-MGMT-GATE-001"
+  ],
+  "input": {
+    "cases": [
+      {
+        "name": "resource_outside_scope",
+        "session_state": "active",
+        "scope_match": false,
+        "step_up_required": false
+      },
+      {
+        "name": "step_up_unsatisfied",
+        "session_state": "active",
+        "scope_match": true,
+        "step_up_required": true,
+        "step_up_satisfied": false
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "name": "resource_outside_scope",
+        "decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_SCOPE_MISMATCH",
+          "category": "auth"
+        }
+      },
+      {
+        "name": "step_up_unsatisfied",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_STEP_UP_REQUIRED",
+          "category": "auth"
+        }
+      }
+    ],
+    "dispatches": 0,
+    "effects_created": false,
+    "fail_closed": true,
+    "audit_required": true
+  }
+}

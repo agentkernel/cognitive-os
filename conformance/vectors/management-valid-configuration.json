@@ -1,0 +1,54 @@
+{
+  "id": "MGMT-CONFIG-001",
+  "title": "Commit an approved privileged configuration change",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital",
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-SESSION-001",
+    "REQ-MGMT-GATE-001",
+    "REQ-MGMT-EFFECT-001"
+  ],
+  "input": {
+    "session": {
+      "state": "active",
+      "authority_signature_valid": true,
+      "actor_chain_match": true,
+      "activity_context_match": true,
+      "scope_match": true,
+      "risk_within_ceiling": true,
+      "policy_version_match": true,
+      "revocation_epoch_match": true
+    },
+    "proposal": {
+      "action": "system.configure",
+      "risk_class": "R1",
+      "expected_version": 7,
+      "idempotency_key": "cfg-network-42-v7",
+      "step_up_required": false,
+      "independent_approval_required": false
+    },
+    "approval": {
+      "decision": "approve",
+      "proposal_digest_match": true,
+      "signed_by": "authority://platform/management-session"
+    }
+  },
+  "expected": {
+    "decision": "authorize",
+    "effect_flow": [
+      "PROPOSED",
+      "AUTHORIZED",
+      "EXECUTED",
+      "RECONCILED",
+      "VERIFIED",
+      "COMMITTED"
+    ],
+    "new_version": 8,
+    "per_operation_audit": true,
+    "task_completed_after_authority_commit": true
+  }
+}
