@@ -41,7 +41,7 @@
 | F-029 | P2 | 无受版本控制的里程碑/ADR 入口 | closed-by-M0 | 本次交付 `docs/plan/`、`docs/adr/0001~0006`、`docs/checkpoints/`、本台账 | — |
 | F-030 | P2 | 高级 Profile 应继续延后 | closed-by-plan | DEVELOPMENT-PLAN：distributed/多 Agent/具身/学习列 M9~M11，不阻塞 v0.1；具身无独立安全证据前仅 experimental | — |
 
-**开放 P0 汇总**：F-003（阻断 M1 出口/tracer bullet 入口）。F-001 为证据缺口性质（随 M1~M6 消解，不单独阻断）。
+**开放 P0 汇总**：F-003（阻断 M1 出口/tracer bullet 入口；2026-07-20 Lane-CTR 后合同层义务全部完成，唯一剩余 gate = Lane-CFR runner 真实执行负例向量）。F-001 为证据缺口性质（随 M1~M6 消解，不单独阻断）。
 **开放 P1 汇总**：F-011（M5）、F-014（M4）、F-023（M4）、F-017（M6）、F-015（持续）。
 **tracer bullet 入口 gate**（审查 §1.2"F-002~F-010 类合同缺口收敛"）：F-002/004/005/006/007/008/009/010 已由 1.0.1 关闭且待 M1 负例复验；F-003 为唯一残余 → **M1 完成 = tracer bullet 入口开启**。
 
@@ -56,7 +56,7 @@
 | IMP-05 | 审批子系统（分级确认/防疲劳） | 文本已应用（§12.12）；机器合同未登记（=F-011） | M5（R1 最低集）；R2/R3 后置 |
 | IMP-06 | R0 薄路径合法降级形态 | 已应用（§20.5 降级映射+不可降级边界） | M6 readiness case |
 | IMP-07 | Effect/恢复/fencing 形式化验证承诺 | 承诺挂 §21 Phase 4；v2.0 义务化 | M4 交付七性质模型 |
-| IMP-08 | 对象本体分层（最小核心 14 对象） | 已应用（附录 A.1–A.3） | M1 生成器优先序 |
+| IMP-08 | 对象本体分层（最小核心 14 对象） | 已应用（附录 A.1–A.3）；**M1 生成器已交付**（2026-07-20 Lane-CTR：`contracts-codegen` 按 A.1 优先序生成 14 对象 ↔ 17 schema + `$ref` 闭包 2 份，Rust/TS 双侧入库、CI regenerate-and-diff 门生效，映射表见 ADR-0006 Delivery record） | 生成器优先序已落地；其余对象族随消费里程碑 |
 | IMP-09 | 验证带宽=部署一级约束 | 已应用（§2.2、§19.7） | M5/M6 验收口径 |
 | IMP-10 | 参考文献补全 | 已应用（附录 C.5） | — |
 | IMP-11 | 带外修改对账路径 | 已登记（REQ-AGENT-OOB-001、`agent-out-of-band-reconciliation.json`） | M6 |
