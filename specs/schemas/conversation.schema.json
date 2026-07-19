@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/conversation/0.1",
+  "$id": "conversation.schema.json",
   "title": "Conversation",
   "description": "CognitiveOS v0.1 Draft persistent interaction resource scope, distinct from authentication and runtime sessions.",
   "type": "object",

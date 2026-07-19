@@ -35,19 +35,20 @@ fn load_schemas() -> HashMap<String, Value> {
         if path.extension().is_some_and(|ext| ext == "json") {
             let raw = fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-            let mut doc: Value = serde_json::from_str(&raw)
+            let doc: Value = serde_json::from_str(&raw)
                 .unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
-            // Normalize the top-level `$id` away so every relative `$ref`
-            // resolves from the containing file (conformance/README.md
-            // convention) regardless of the historical mixed `$id` styles
-            // (drift D-001/D-006; unified by the $id policy batch).
-            if let Some(obj) = doc.as_object_mut() {
-                obj.remove("$id");
-            }
             let name = path
                 .file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_default();
+            // $id policy (D-001/D-006 closure): $id == file name, so every
+            // relative `$ref` resolves from the containing schema file and
+            // the file name is the retrieval URI.
+            assert_eq!(
+                doc.get("$id").and_then(Value::as_str),
+                Some(name.as_str()),
+                "{name}: schema $id must equal its file name"
+            );
             out.insert(name, doc);
         }
     }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/governance-domain-context/0.1",
+  "$id": "governance-domain-context.schema.json",
   "title": "GovernanceDomainContext",
   "description": "CognitiveOS v0.1 Draft normative tenant or platform governance evaluation context.",
   "type": "object",

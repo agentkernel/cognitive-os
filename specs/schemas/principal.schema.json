@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/principal/0.1",
+  "$id": "principal.schema.json",
   "title": "Principal",
   "description": "CognitiveOS v0.1 Draft normative authenticated and auditable subject.",
   "type": "object",

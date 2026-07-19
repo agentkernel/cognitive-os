@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/object-reference/0.1",
+  "$id": "object-reference.schema.json",
   "title": "ObjectReference",
   "description": "CognitiveOS v0.1 Draft normative strong and weak object reference contract.",
   "oneOf": [

@@ -52,16 +52,16 @@ function loadSchemas(): SchemaDoc[] {
 }
 
 /**
- * Register every schema under its file name as retrieval URI so each
- * relative `$ref` resolves from the containing schema file
- * (`conformance/README.md` convention; schema `$id` policy D-001/D-006).
+ * $id policy (D-001/D-006 closure): every schema declares `$id` equal to its
+ * file name, so each relative `$ref` resolves from the containing schema
+ * file (`conformance/README.md` convention) and `$id` is the retrieval URI.
  */
 function buildAjv(schemas: SchemaDoc[]): Ajv2020 {
   const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });
   addFormats(ajv);
   for (const schema of schemas) {
-    const { $id: _ignored, ...withoutId } = schema.doc;
-    ajv.addSchema(withoutId, schema.name);
+    assert.equal(schema.doc["$id"], schema.name, `${schema.name}: $id must equal file name`);
+    ajv.addSchema(schema.doc);
   }
   return ajv;
 }

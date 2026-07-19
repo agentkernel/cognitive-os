@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/activity-context/0.1",
+  "$id": "activity-context.schema.json",
   "title": "ActivityContext",
   "description": "CognitiveOS v0.1 Draft activity-level governance package that can only narrow its execution context. Creation is two-phase: the ActivityContext is created first (without context_view_ref), the ContextRequest binds this ActivityContext, and the resolved ContextView is then bound once via compare-and-set; re-binding a different view to the same activity is forbidden.",
   "type": "object",

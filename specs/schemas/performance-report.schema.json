@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "cognitiveos.performance-report/0.1",
+  "$id": "performance-report.schema.json",
   "title": "CognitiveOS Performance Report",
   "type": "object",
   "required": [

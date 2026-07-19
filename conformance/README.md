@@ -56,6 +56,8 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 There is currently no conformance runner in this repository. `vectors/*.json` are declarative inputs and expected outcomes for runner authors. At minimum, consumers can parse every JSON document, validate schemas against JSON Schema draft 2020-12, resolve every relative `$ref` from the containing schema, parse both YAML registries, and verify that each vector's `requirement_ids` and error codes exist in the registries.
 
+Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
+
 Example validation with suitable Python packages installed:
 
 ```powershell

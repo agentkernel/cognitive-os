@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/execution-context/0.1",
+  "$id": "execution-context.schema.json",
   "title": "ExecutionContext",
   "description": "CognitiveOS v0.1 Draft execution-level fixed governance package.",
   "type": "object",

@@ -55,11 +55,10 @@ check('parse registries (%d)' % len(registries), len(registries) == 3, 'expected
 # ---------- 2. Meta-schema validation and $ref resolution ----------
 resources = []
 for name, doc in schemas.items():
+    # $id policy (D-001/D-006): $id == file name, so the file name is the
+    # single retrieval URI; no legacy absolute-URL aliases.
     res = Resource.from_contents(doc, default_specification=DRAFT202012)
     resources.append((name, res))
-    if '$id' in doc:
-        resources.append((doc['$id'], res))
-    resources.append(('https://schemas.cognitiveos.dev/governance/' + name, res))
 registry = Registry().with_resources(resources)
 
 meta_ok = True
