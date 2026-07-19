@@ -10,6 +10,7 @@
  * `docs/adr/0006-code-generation-policy.md`; CI regenerates and diffs).
  */
 
+export * from "./bundle.js";
 export * from "./canonical.js";
 export * from "./generated/index.js";
 

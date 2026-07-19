@@ -64,17 +64,33 @@ moves to `implemented` only when every applicable MUST has passing evidence
 or a justified `not-applicable` (four-state status language,
 `conformance/README.md`).
 
-## 6. Provisional M0 digests
+## 6. Registered set and bundle digests (M1)
 
-Until the M1 bundle-manifest standard lands, the sample manifest pins:
-`requirement_set_digest` = digest of the canonical JSON projection of
-`specs/registry/requirements.yaml` under domain `spec-set/0.1`;
-`schema_bundle_digest` = digest of a canonical manifest
-`{"assets":[{id, content_digest}...]}` (sorted by id, per-schema canonical
-content digests) under domain `schema-bundle/0.1`
-(`canonical-encoding-and-digest.md` section 13). These are provisional
-operational digests of the reference pipeline, not registered specification
-set digests; M1 replaces them with the registered bundle procedure.
+The sample manifest pins digests computed by the registered
+`canonical-encoding-and-digest.md` section 13 procedure (implemented twin in
+`cognitive_contracts::bundle` / `@cognitiveos/contracts-ts` `bundle`;
+consumed by `cognitive-conformance::registered_digests`). A manifest entry
+per logical asset carries `{id, version, media_type, content_digest}` in
+deterministic sorted order (by id, duplicates rejected):
+
+1. `schema_bundle_digest` (domain `schema-bundle/0.1`): assets are the
+   `specs/schemas/*.json` files; asset id = file name (== schema `$id`),
+   media type `application/schema+json`, content digest = canonical bytes of
+   the parsed schema under the same domain.
+2. `requirement_set_digest` (domain `spec-set/0.1`): assets are the
+   specification set beyond schemas — the three registries
+   (`specs/registry/*.yaml`, digested over the canonical JSON projection of
+   the parsed YAML, media type `application/yaml`) and the five transition
+   tables (`specs/transitions/*.transitions.json`, media type
+   `application/json`); asset id = repo-relative path.
+
+Per-asset content digests use their bundle's own domain; nested digests are
+computed before the manifest digest (section 13 nested-verification order).
+Per-asset SemVer source: the registered assets do not yet declare individual
+SemVer, so the suite machine version `0.1.0-draft.1` is applied to every
+asset (registered drift D-011, findings ledger) until a per-asset version is
+registered. This replaces the provisional M0 recipe (bare
+`{id, content_digest}` list; `requirements.yaml` hashed alone).
 
 ## 7. Agent-benefit claims
 

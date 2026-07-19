@@ -11,6 +11,7 @@
 //! Normative sources: `docs/standards/canonical-encoding-and-digest.md`
 //! (`cognitiveos.canonical-json/0.1`), ADR-0004, ADR-0005, ADR-0006.
 
+pub mod bundle;
 pub mod canonical;
 pub mod generated;
 

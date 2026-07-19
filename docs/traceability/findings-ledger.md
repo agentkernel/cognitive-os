@@ -82,6 +82,7 @@
 | D-008 | Console 产品追踪在 F-003 单轨迁移落地后仍称 legacy metadata/strongRef 双轨尚未迁移 | 2026-07-20 对齐 findings-ledger：迁移已落地但 F-003 仍待 M1 runner 负例、codegen 与 legacy `$defs` 决策复验 | closed-by-doc-repair |
 | D-009 | Lane-CON 与 DEVELOPMENT-PLAN 的实现 gate 指向已不存在的 `PRODUCT-DESIGN §12.6 POC-01~12` | 2026-07-20 改指 `docs/platforms/README.md#console-实现-gate` 及各平台可定位的 Open PoC/GA gate；仍要求真实 API，禁止 mock 冒充 | closed-by-doc-repair |
 | D-010 | F-003 结构变更后，PRODUCT-DESIGN 缺少 docs-sync-contract §2.8 要求的文首漂移登记节/标注 | 2026-07-20 恢复漂移登记节并记录 F-003、D-005/D-007、D-009 影响；不改变 normative 资产 | closed-by-doc-repair |
+| D-011 | `canonical-encoding-and-digest.md` §13 要求 bundle manifest 每资产携带 SemVer，但已登记规范资产（schema/registry/transition）均未声明**每资产** SemVer——标准与资产之间的登记缺口 | M1 Lane-CTR 登记并最小修正：注册式 bundle 程序对每资产统一施加套件机器版本 `0.1.0-draft.1`（`cognitive_contracts::bundle::SPEC_SUITE_VERSION`，双语言常量一致），依据与口径写入 `conformance-evidence.md` §6；待任一资产真实分岔版本时再登记每资产版本（属修正型变更）。原编号 D-007 与 Lane-CON 同日条目撞号，后合并方（CTR）改号为 D-011 | closed-by-M1（决策落档） |
 
 ## 四、复验方法备注
 
