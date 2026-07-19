@@ -131,5 +131,166 @@
       "minItems": 0
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "COMMITTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "observed_outcome": {
+            "const": "succeeded"
+          },
+          "verification": {
+            "properties": {
+              "status": {
+                "const": "passed"
+              }
+            },
+            "required": [
+              "status",
+              "report_ref"
+            ]
+          },
+          "decision": {
+            "const": "commit"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "VERIFIED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "verification": {
+            "properties": {
+              "status": {
+                "const": "passed"
+              }
+            },
+            "required": [
+              "status",
+              "report_ref"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "VERIFY_FAILED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "verification": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "failed",
+                  "unresolved"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "decision": {
+            "enum": [
+              "pending",
+              "abort",
+              "compensate",
+              "quarantine"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "OUTCOME_UNKNOWN"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "observed_outcome": {
+            "enum": [
+              "not_observed",
+              "unknown"
+            ]
+          },
+          "verification": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "pending",
+                  "unresolved"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "decision": {
+            "enum": [
+              "pending",
+              "compensate",
+              "quarantine"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "COMPENSATING"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "compensate"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "QUARANTINED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "quarantine"
+          }
+        }
+      }
+    }
+  ]
 }

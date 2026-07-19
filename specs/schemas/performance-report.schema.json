@@ -119,7 +119,76 @@
         "id",
         "version",
         "window"
-      ]
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "window": {
+          "type": "string"
+        },
+        "thresholds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "metric",
+              "comparator",
+              "value",
+              "release_gate"
+            ],
+            "properties": {
+              "metric": {
+                "type": "string"
+              },
+              "comparator": {
+                "enum": [
+                  "lte",
+                  "gte",
+                  "lt",
+                  "gt"
+                ]
+              },
+              "value": {
+                "type": "number"
+              },
+              "percentile": {
+                "enum": [
+                  "p50",
+                  "p95",
+                  "p99"
+                ]
+              },
+              "risk_class": {
+                "enum": [
+                  "R0",
+                  "R1",
+                  "R2",
+                  "R3"
+                ]
+              },
+              "workload_family": {
+                "type": "string"
+              },
+              "release_gate": {
+                "type": "boolean"
+              },
+              "on_breach": {
+                "enum": [
+                  "block_release",
+                  "downgrade_to_experimental",
+                  "alert_only"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
     },
     "metrics": {
       "type": "array",
@@ -154,6 +223,7 @@
               "embodied_heterogeneous",
               "security_knowledge",
               "governance_overhead",
+              "agent_benefit",
               "cost_energy"
             ]
           },
@@ -321,6 +391,175 @@
     },
     "tail_latency_disclosed": {
       "const": true
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "arms",
+        "primary_endpoint",
+        "paired",
+        "claim_level",
+        "preregistration_ref"
+      ],
+      "properties": {
+        "arms": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "arm_id",
+              "arm_kind",
+              "description"
+            ],
+            "properties": {
+              "arm_id": {
+                "type": "string"
+              },
+              "arm_kind": {
+                "enum": [
+                  "native_baseline",
+                  "governance_only",
+                  "optimized",
+                  "ablation"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "manifest_delta": {
+                "type": "string"
+              },
+              "report_ref": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "primary_endpoint": {
+          "type": "string"
+        },
+        "paired": {
+          "type": "boolean"
+        },
+        "workload_family": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "endpoint",
+              "arm_a",
+              "arm_b",
+              "relative_change_percent",
+              "confidence_interval",
+              "effect_size"
+            ],
+            "properties": {
+              "endpoint": {
+                "type": "string"
+              },
+              "arm_a": {
+                "type": "string"
+              },
+              "arm_b": {
+                "type": "string"
+              },
+              "relative_change_percent": {
+                "type": "number"
+              },
+              "absolute_change": {
+                "type": "number"
+              },
+              "confidence_interval": {
+                "type": "object",
+                "required": [
+                  "level",
+                  "low",
+                  "high",
+                  "method"
+                ]
+              },
+              "effect_size": {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sample_count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "ablation_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "mechanism",
+              "endpoint",
+              "contribution_percent",
+              "confidence_interval"
+            ],
+            "properties": {
+              "mechanism": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "contribution_percent": {
+                "type": "number"
+              },
+              "confidence_interval": {
+                "type": "object",
+                "required": [
+                  "level",
+                  "low",
+                  "high",
+                  "method"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "claim_level": {
+          "enum": [
+            "hypothesis",
+            "non_inferiority",
+            "significant_benefit"
+          ]
+        },
+        "preregistration_ref": {
+          "type": "string"
+        },
+        "excluded_samples_declared": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     },
     "composite_score": {
       "type": "object",

@@ -1,0 +1,48 @@
+{
+  "id": "GW-REMOTE-COMPLETE-001",
+  "title": "Remote task completed is evidence, never local acceptance",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital",
+    "akp"
+  ],
+  "requirement_ids": [
+    "REQ-GW-002",
+    "REQ-INTENT-ACCEPT-001"
+  ],
+  "input": {
+    "local_task": {
+      "ref": "task://tenant-a/task-88",
+      "state": "ACTIVE",
+      "task_contract_version": 3,
+      "acceptance_authority": "authority://tenant-a/task-acceptance"
+    },
+    "remote_report": {
+      "protocol": "a2a",
+      "remote_task_state": "completed",
+      "artifact_ref": "artifact://remote-org/result-17",
+      "artifact_signature_valid": true
+    },
+    "local_verification": {
+      "requested": false,
+      "verification_report_present": false
+    }
+  },
+  "expected": {
+    "local_task_state": "ACTIVE",
+    "acceptance_committed": false,
+    "remote_completed_treated_as": "observation_evidence",
+    "transition_to_completed_requires": [
+      "fixed post-state",
+      "verification_report PASSED and current",
+      "acceptance authority decision"
+    ],
+    "candidate_complete_allowed_only_with_completion_claim_and_fixed_post_state": true,
+    "error_if_forced": {
+      "code": "STATE_CONFLICT",
+      "category": "state"
+    },
+    "audit_required": true
+  }
+}

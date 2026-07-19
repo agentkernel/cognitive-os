@@ -101,7 +101,64 @@
             "additionalProperties": false
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "control"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "trust_level": {
+                  "const": "control"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "authoritative_state"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "trust_level": {
+                  "enum": [
+                    "authoritative",
+                    "control"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "trust_level": {
+                  "const": "untrusted"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "role": {
+                  "enum": [
+                    "untrusted_input",
+                    "evidence",
+                    "working"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
       "minItems": 0
     },

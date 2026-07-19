@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.cognitiveos.dev/governance/activity-context/0.1",
   "title": "ActivityContext",
-  "description": "CognitiveOS v0.1 Draft activity-level governance package that can only narrow its execution context.",
+  "description": "CognitiveOS v0.1 Draft activity-level governance package that can only narrow its execution context. Creation is two-phase: the ActivityContext is created first (without context_view_ref), the ContextRequest binds this ActivityContext, and the resolved ContextView is then bound once via compare-and-set; re-binding a different view to the same activity is forbidden.",
   "type": "object",
-  "required": ["header", "scope_domain", "activity_id", "execution_context_ref", "execution_id", "task_ref", "episode_ref", "actor_chain_digest", "purpose", "resource_scope_ref", "context_view_ref", "capability_refs", "budget_ref", "started_at"],
+  "required": ["header", "scope_domain", "activity_id", "execution_context_ref", "execution_id", "task_ref", "episode_ref", "actor_chain_digest", "purpose", "resource_scope_ref", "capability_refs", "budget_ref", "started_at"],
   "properties": {
     "header": { "$ref": "governed-object-header.schema.json" },
     "scope_domain": { "enum": ["tenant", "platform"] },

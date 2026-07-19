@@ -1,8 +1,8 @@
 {
   "id": "EFF-CRASH-002",
-  "title": "Declarative contract scenario for REQ-EFF-006",
-  "version": "0.1",
-  "layer": "contract-traceability",
+  "title": "Crash after external execution, before receipt persisted: reconcile, never blind-retry",
+  "version": "0.2",
+  "layer": "effect-recovery",
   "profiles": [
     "core_digital"
   ],
@@ -10,12 +10,35 @@
     "REQ-EFF-006"
   ],
   "input": {
-    "owner_spec": "CognitiveOS-Architecture.md#core-effect-protocol",
-    "requirement_status": "specified"
+    "pre_crash": {
+      "intent": {
+        "ref": "intent://tenant-a/intent-702",
+        "persisted": true,
+        "idempotency_key": "refund-43-attempt-1",
+        "parameter_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "effect_state": "EXECUTING",
+      "dispatch_sent": true,
+      "external_side_effect_occurred": true,
+      "receipt_persisted": false
+    },
+    "crash_point": "after_execution_before_receipt",
+    "recovery": {
+      "new_fencing_epoch_installed": true,
+      "executor_supports_query": true,
+      "executor_query_result": "executed_with_original_key"
+    }
   },
   "expected": {
-    "requirement_semantics_enforced": true,
-    "evidence_required_for_pass": true,
-    "schema_parse_alone_is_not_pass": true
+    "recovered_effect_state_before_reconcile": "OUTCOME_UNKNOWN",
+    "action": "reconcile_then_persist_receipt",
+    "reconciliation_result": "executed",
+    "post_reconcile_state": "RECONCILED",
+    "blind_retry": false,
+    "new_idempotency_key_created": false,
+    "duplicate_effect": false,
+    "reported_success_without_reconciliation": false,
+    "next_gate": "verification_against_fixed_post_state",
+    "audit_chain_closed": true
   }
 }

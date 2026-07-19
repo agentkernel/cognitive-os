@@ -14,13 +14,13 @@ requirements:
   - SCHEMA-VERSION-001
 - id: REQ-STATE-003
   owner: state
-  owner_spec: CognitiveOS-Architecture.md#state-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - STATE-CAS-002
 - id: REQ-STATE-004
   owner: state
-  owner_spec: CognitiveOS-Architecture.md#state-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - RECOVERY-CRASH-006
@@ -32,7 +32,7 @@ requirements:
   - CTX-SCHEMA-001
 - id: REQ-CTX-004
   owner: context
-  owner_spec: CognitiveOS-Architecture.md#context-resolution-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CTX-REQ-007
@@ -44,7 +44,7 @@ requirements:
   - CTX-VIEW-001
 - id: REQ-CTX-008
   owner: context
-  owner_spec: CognitiveOS-Architecture.md#context-engineering
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CTX-TRUST-004
@@ -62,13 +62,13 @@ requirements:
   - CAP-BIND-001
 - id: REQ-CAP-002
   owner: capability
-  owner_spec: CognitiveOS-Architecture.md#capability-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CAP-ATTEN-004
 - id: REQ-CAP-003
   owner: capability
-  owner_spec: CognitiveOS-Architecture.md#capability-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CAP-LEASE-003
@@ -80,13 +80,13 @@ requirements:
   - EFF-FLOW-001
 - id: REQ-EFF-004
   owner: effect
-  owner_spec: CognitiveOS-Architecture.md#core-effect-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - EFF-UNK-003
 - id: REQ-EFF-006
   owner: effect
-  owner_spec: CognitiveOS-Architecture.md#core-effect-protocol
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - EFF-CRASH-001
@@ -118,13 +118,13 @@ requirements:
   - LOOP-VERIFY-003
 - id: REQ-RES-001
   owner: resource
-  owner_spec: CognitiveOS-Architecture.md#resources
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CTX-REQ-007
 - id: REQ-SEC-002
   owner: security
-  owner_spec: CognitiveOS-Architecture.md#threats
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CTX-TRUST-004
@@ -142,40 +142,41 @@ requirements:
   - MANIFEST-STATUS-003
 - id: REQ-PROFILE-CORE-001
   owner: profile-core
-  owner_spec: CognitiveOS-Architecture.md#core-digital-profile
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - PROFILE-CORE-001
 - id: REQ-PROFILE-DIST-001
   owner: profile-distributed
-  owner_spec: CognitiveOS-Architecture.md#distributed-profile
+  owner_spec: specs/distributed/README.md
   status: specified
   tests:
   - PROFILE-DIST-001
 - id: REQ-PROFILE-EMB-001
   owner: profile-embodied
-  owner_spec: CognitiveOS-Architecture.md#embodied-safety-profile
+  owner_spec: specs/embodied/README.md
   status: specified
   tests:
   - EMB-STALE-002
 - id: REQ-PROFILE-HET-001
   owner: profile-heterogeneous-cim
-  owner_spec: specs/schemas/placement-manifest.schema.json
+  owner_spec: specs/heterogeneous/README.md
   status: specified
   tests:
   - CIM-CAL-003
 - id: REQ-PROFILE-LEARN-001
   owner: profile-controlled-learning
-  owner_spec: CognitiveOS-Architecture.md#controlled-learning-profile
+  owner_spec: specs/learning/README.md
   status: specified
   tests:
   - LEARN-PROMOTE-005
 - id: REQ-PROFILE-CVM-001
   owner: profile-context-virtualization
-  owner_spec: CognitiveOS-Architecture.md#context-virtualization-profile
+  owner_spec: specs/core/README.md
   status: specified
   tests:
   - CVM-STALE-001
+  - CTX-REVOKE-CACHE-001
 - id: REQ-PROFILE-HARNESS-001
   owner: profile-harness
   owner_spec: specs/schemas/profile-manifest.schema.json
@@ -196,7 +197,7 @@ requirements:
   - PERF-REPORT-CONTRACT-001
 - id: REQ-PERF-002
   owner: performance
-  owner_spec: CognitiveOS-Architecture.md#performance-contract
+  owner_spec: conformance/README.md
   status: specified
   tests:
   - PERF-REPORT-CONTRACT-001
@@ -208,7 +209,13 @@ requirements:
   - PERF-REPORT-CONTRACT-001
 - id: REQ-PERF-004
   owner: performance
-  owner_spec: CognitiveOS-Architecture.md#performance-contract
+  owner_spec: conformance/README.md
+  status: specified
+  tests:
+  - PERF-REPORT-CONTRACT-001
+- id: REQ-PERF-005
+  owner: performance
+  owner_spec: docs/evaluation/agent-benefit-benchmark.md
   status: specified
   tests:
   - PERF-REPORT-CONTRACT-001
@@ -655,6 +662,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - CTX-REVOKE-CACHE-001
 - id: REQ-CAT-SHELL-001
   owner: cat-shell
   owner_spec: specs/operation-catalog/README.md
@@ -757,6 +765,8 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - CTX-RANK-AUTH-001
+  - GOBJ-TENANT-LATERAL-001
 - id: REQ-CTX-003
   owner: ctx-003
   owner_spec: specs/core/README.md
@@ -877,6 +887,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - EFF-IDEM-CONFLICT-001
 - id: REQ-EFF-003
   owner: eff-003
   owner_spec: specs/core/README.md
@@ -1027,6 +1038,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - GOBJ-TENANT-LATERAL-001
 - id: REQ-GOBJ-REF-001
   owner: governed-object-contract
   owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
@@ -1040,6 +1052,12 @@ requirements:
   tests:
   - SPEC-CONTRACT-COVERAGE-001
 - id: REQ-GOBJ-REF-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-REF-004
   owner: governed-object-contract
   owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
   status: specified
@@ -1159,6 +1177,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - GW-REMOTE-COMPLETE-001
 - id: REQ-GW-003
   owner: gw-003
   owner_spec: specs/akp/README.md
@@ -1267,6 +1286,7 @@ requirements:
   status: specified
   tests:
   - INTENT-ACCEPTANCE-007
+  - GW-REMOTE-COMPLETE-001
 - id: REQ-INTENT-ADMISSION-001
   owner: intent-admission
   owner_spec: specs/core/README.md
@@ -1471,6 +1491,12 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-REC-003
+  owner: rec-003
+  owner_spec: specs/core/README.md
+  status: specified
+  tests:
+  - STATE-STORE-DEGRADE-001
 - id: REQ-RES-002
   owner: res-002
   owner_spec: specs/core/README.md

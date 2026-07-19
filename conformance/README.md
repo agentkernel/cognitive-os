@@ -25,7 +25,7 @@ This directory contains machine-readable conformance vectors. It is a data packa
 
 A conformance claim is represented by `specs/schemas/profile-manifest.schema.json`. A manifest pins the specification, requirement and schema bundle digests, encoding/canonicalization profile, suite digest, implementation version, results, degradations, and evidence. Profile values have distinct meanings:
 
-- `implemented`: all applicable MUST requirements have passing evidence or an itemized documented degradation.
+- `implemented`: every applicable MUST requirement has passing behavioral evidence or a justified `not-applicable` determination. A documented degradation on an applicable MUST does not preserve `implemented`: it must either shrink the declared scope so the requirement becomes not-applicable, or downgrade the profile claim to `experimental`. Safety-negative requirements can never be degraded away.
 - `planned`: intended future work; excluded from conformance coverage.
 - `experimental`: available for evaluation but excluded from conformance coverage.
 - `unsupported`: no support is claimed.
@@ -41,6 +41,14 @@ The management error codes used by expected denials are registered in `specs/reg
 ## Performance and knowledge assets
 
 `specs/schemas/performance-report.schema.json` defines the report contract. `vectors/performance-report-contract.json` is a declarative schema example; knowledge vectors exercise invalidation, poisoning isolation, and bounded maintenance. These files are evidence formats and test cases, not measured implementation results. A profile manifest uses `cognitiveos_conformance.performance_reports` to reference digest-pinned reports.
+
+The following registered requirements are normatively owned by this document (metric semantics and the BenchmarkManifest input list are described informatively in the whitepaper §19.4):
+
+[REQ-PERF-002] An implementation MAY publish profile-specific dashboards or multi-objective Pareto frontiers, but it MUST NOT use a single universal composite score to mask safety failures, denial paths, p95/p99 tail latency, risk-class breakdowns, or unknown-outcome counts.
+
+[REQ-PERF-004] Performance claims for governed workloads MUST report the Governance overhead metric family (authorization / context-resolution / effect-protocol stage latencies, cache-hit preservation ratio, extra persistence per governed call, approval latency and rubber-stamp rate, overhead share of end-to-end latency and cost by risk class) and MUST declare the ungoverned baseline used; if governance overhead data is missing, the report MUST NOT claim that governance overhead is negligible.
+
+Agent benefit claims are additionally governed by [REQ-PERF-005] in [docs/evaluation/agent-benefit-benchmark.md](../docs/evaluation/agent-benefit-benchmark.md): a claim of significant agent benefit MUST be supported by the four-arm (native / governance-only / optimized / ablation) design with preregistered thresholds, and non-inferiority MUST NOT be reported as performance improvement.
 
 The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_conformance`. Legacy `agentos.*` or `agentos_conformance` documents require an explicit old schema/adapter and cannot be silently mixed.
 

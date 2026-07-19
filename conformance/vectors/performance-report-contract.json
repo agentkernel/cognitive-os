@@ -10,7 +10,8 @@
     "REQ-PERF-001",
     "REQ-PERF-002",
     "REQ-PERF-003",
-    "REQ-PERF-004"
+    "REQ-PERF-004",
+    "REQ-PERF-005"
   ],
   "input": {
     "schema": "../../specs/schemas/performance-report.schema.json",
@@ -131,7 +132,94 @@
           }
         ]
       },
+      "comparison": {
+        "arms": [
+          {
+            "arm_id": "A",
+            "arm_kind": "native_baseline",
+            "description": "reference agent bare run without CognitiveOS",
+            "manifest_delta": "no governance, native tool access"
+          },
+          {
+            "arm_id": "B",
+            "arm_kind": "governance_only",
+            "description": "same agent installed at C1 with semantic optimizations disabled",
+            "manifest_delta": "governance path on, SMS/semantic retrieval off"
+          },
+          {
+            "arm_id": "C",
+            "arm_kind": "optimized",
+            "description": "B plus deterministic catalog prefilter",
+            "manifest_delta": "operation catalog semantic matching enabled"
+          },
+          {
+            "arm_id": "D1",
+            "arm_kind": "ablation",
+            "description": "C minus catalog prefilter",
+            "manifest_delta": "catalog prefilter disabled"
+          }
+        ],
+        "primary_endpoint": "verified_task_completion_rate",
+        "paired": true,
+        "workload_family": [
+          "W1_software_engineering",
+          "W2_knowledge_assistant"
+        ],
+        "results": [
+          {
+            "endpoint": "verified_task_completion_rate",
+            "arm_a": "B",
+            "arm_b": "C",
+            "relative_change_percent": 12.0,
+            "absolute_change": 0.08,
+            "confidence_interval": {
+              "level": 0.95,
+              "low": 3.1,
+              "high": 21.4,
+              "method": "bootstrap"
+            },
+            "effect_size": {
+              "kind": "paired_relative_change",
+              "value": 0.12
+            },
+            "sample_count": 100
+          }
+        ],
+        "ablation_results": [
+          {
+            "mechanism": "catalog_prefilter",
+            "endpoint": "verified_task_completion_rate",
+            "contribution_percent": 9.5,
+            "confidence_interval": {
+              "level": 0.95,
+              "low": 1.2,
+              "high": 17.8,
+              "method": "bootstrap"
+            }
+          }
+        ],
+        "claim_level": "non_inferiority",
+        "preregistration_ref": "sha256:cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34",
+        "excluded_samples_declared": true
+      },
       "tail_latency_disclosed": true
+    },
+    "negative_case": {
+      "description": "benefit claim without governance-only baseline arm or preregistration",
+      "report_fragment": {
+        "comparison": {
+          "arms": [
+            {
+              "arm_id": "C",
+              "arm_kind": "optimized",
+              "description": "optimized arm only"
+            }
+          ],
+          "primary_endpoint": "verified_task_completion_rate",
+          "paired": false,
+          "claim_level": "significant_benefit"
+        }
+      }
     }
   },
   "expected": {
@@ -140,6 +228,17 @@
     "tail_percentiles_preserved": true,
     "mechanism_latency_separated": true,
     "governance_overhead_reported": true,
-    "ungoverned_baseline_declared": true
+    "ungoverned_baseline_declared": true,
+    "comparison_arms_include_native_and_governance_only": true,
+    "claim_level_bound_to_preregistered_thresholds": true,
+    "negative_case_result": {
+      "decision": "reject",
+      "error": {
+        "code": "PERFORMANCE_REPORT_INCOMPLETE",
+        "category": "performance"
+      },
+      "benefit_claim_accepted": false,
+      "reason": "missing native_baseline and governance_only arms, missing preregistration_ref"
+    }
   }
 }

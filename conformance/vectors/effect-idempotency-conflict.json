@@ -1,0 +1,42 @@
+{
+  "id": "EFF-IDEM-CONFLICT-001",
+  "title": "Reject idempotency key reuse with different parameters",
+  "version": "0.1",
+  "layer": "effect-recovery",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-EFF-002"
+  ],
+  "input": {
+    "existing_effect": {
+      "ref": "effect://tenant-a/effect-501",
+      "idempotency_key": "refund-42-attempt-1",
+      "parameter_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "state": "EXECUTING"
+    },
+    "new_request": {
+      "operation": "payments.refund",
+      "idempotency_key": "refund-42-attempt-1",
+      "parameter_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "amount_minor": 9900
+    }
+  },
+  "expected": {
+    "decision": "reject",
+    "error": {
+      "code": "EFFECT_IDEMPOTENCY_CONFLICT",
+      "category": "effect"
+    },
+    "new_effect_created": false,
+    "existing_effect_state_unchanged": true,
+    "deduplicated_as_same_effect": false,
+    "silent_parameter_overwrite": false,
+    "required_actions": [
+      "use a new idempotency key for a genuinely different action",
+      "or reconcile the existing effect first"
+    ],
+    "audit_required": true
+  }
+}

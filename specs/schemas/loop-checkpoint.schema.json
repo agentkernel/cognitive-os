@@ -142,6 +142,63 @@
         "minLength": 1
       },
       "minItems": 1
+    },
+    "event_high_watermark": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Last consumed committed-event position; recovery replays committed history from here."
+    },
+    "fencing_epoch": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Epoch under which this checkpoint was taken; recovery must install a newer epoch before resuming."
+    },
+    "pending_effects": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "effect_ref",
+          "state",
+          "idempotency_key"
+        ],
+        "properties": {
+          "effect_ref": {
+            "type": "string",
+            "format": "uri-reference",
+            "minLength": 1
+          },
+          "state": {
+            "enum": [
+              "PROPOSED",
+              "AUTHORIZED",
+              "EXECUTING",
+              "EXECUTED",
+              "OUTCOME_UNKNOWN",
+              "RECONCILED",
+              "VERIFIED",
+              "VERIFY_FAILED",
+              "COMPENSATING"
+            ]
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Typed pending-Effect inventory; recovery must reconcile these before the loop resumes."
+    },
+    "pinned_environment_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Digest or version pins for policy, schema bundle, renderer, model, verifier and environment at checkpoint time; recovery revalidates continuation against current versions."
     }
   },
   "additionalProperties": false

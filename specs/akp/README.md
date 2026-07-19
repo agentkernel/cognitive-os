@@ -69,7 +69,7 @@ outcome_unknown 必须映射 Core Effect 对账，不得包装成普通超时。
 
 重试必须复用稳定 idempotency key、参数 digest 和授权绑定。
 
-同一 key 不同参数返回 IDEMPOTENCY_CONFLICT。
+同一 key 不同参数必须拒绝，返回已登记机器码 `EFFECT_IDEMPOTENCY_CONFLICT`（见 [errors.yaml](../registry/errors.yaml) 与 Core REQ-EFF-002）。
 
 [REQ-AKP-IDEM-001] governed operation **MUST** 声明幂等支持和 key 作用域；未知 outcome 时不得创建新 key 盲重试。
 

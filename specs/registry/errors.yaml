@@ -8,6 +8,10 @@ errors:
   category: state
   retryable: true
   description: Observation is outside its declared validity interval.
+- code: STATE_STORE_UNAVAILABLE
+  category: state
+  retryable: true
+  description: The authoritative commit path cannot persist state or events; governed writes must fail closed instead of buffering commits in memory.
 - code: CONTEXT_INCOMPLETE
   category: context
   retryable: true
@@ -36,6 +40,10 @@ errors:
   category: effect
   retryable: false
   description: Recovery cannot safely determine or compensate outcome.
+- code: EFFECT_IDEMPOTENCY_CONFLICT
+  category: effect
+  retryable: false
+  description: An idempotency key was reused with different parameters; the request must be rejected, not deduplicated or executed.
 - code: PROTOCOL_MAPPING_INCOMPLETE
   category: protocol
   retryable: false

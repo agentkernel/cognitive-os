@@ -51,6 +51,8 @@ Schema registration does not claim implementation or conformance. A claim MUST p
 
 The legacy `common-defs.schema.json#/$defs/strongRef` uses `version` and `digest`; it is not this contract. Migration MUST explicitly map them to `object_version` and `content_digest` and verify the digest.
 
+[REQ-GOBJ-REF-004] Default digest projection: unless an object family registers a more specific projection, `content_digest` is computed over the canonical bytes ([canonical-encoding-and-digest](./canonical-encoding-and-digest.md)) of the schema-valid object with exactly these JSON Pointer paths declared `digest_excluded`: the object's own `content_digest` field (`/metadata/content_digest` for common-defs metadata objects, `/header/content_digest` for GovernedObjectHeader objects) and its own `signature` field if present. No other path is excluded by default. This registration satisfies the canonical standard's requirement that self-referential fields be excluded by a named contract, not by convention; object families whose digest must cover additional derived stores register their own projection with a new version.
+
 ## 4. Binding consistency
 
 [REQ-GOBJ-BIND-001] ConversationBinding MUST fix Conversation version, participant relation version, history scope, and working scope. These MUST share the Conversation governance domain and tenant. Stale participant, policy, membership, or revocation versions require reauthorization.
@@ -59,7 +61,7 @@ The legacy `common-defs.schema.json#/$defs/strongRef` uses `version` and `digest
 
 [REQ-GOBJ-BIND-003] Each Activity MUST select exactly one ConversationBinding or `kind=non_conversational` ResourceScope. It MUST NOT infer a recent Conversation from authentication/runtime sessions, caches, preferences, or prior Activities.
 
-[REQ-GOBJ-BIND-004] ExecutionContext MUST NOT widen AgentExecutionBinding. ActivityContext MUST NOT widen ExecutionContext, ActorChain, purpose, ResourceScope, capabilities, or governance versions. ContextViews, Effects, audit events, and derivatives MUST trace to ActivityContext.
+[REQ-GOBJ-BIND-004] ExecutionContext MUST NOT widen AgentExecutionBinding. ActivityContext MUST NOT widen ExecutionContext, ActorChain, purpose, ResourceScope, capabilities, or governance versions. ContextViews, Effects, audit events, and derivatives MUST trace to ActivityContext. ActivityContext creation is two-phase: it is created without `context_view_ref`, the ContextRequest binds the ActivityContext, and the resolved ContextView is bound exactly once via compare-and-set before any governed proposal in that Activity; re-binding a different view to the same Activity is forbidden (new resolution requires a delta bound to the same base view or a new Activity).
 
 [REQ-GOBJ-BIND-005] Reusing an AgentExecution for another Conversation is allowed only at an Activity boundary after checkpoint, pending-Effect reconciliation, working-state isolation, governance and ActorChain revalidation, context resolution, and binding/fencing epoch advance.
 

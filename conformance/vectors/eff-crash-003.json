@@ -1,8 +1,8 @@
 {
   "id": "EFF-CRASH-003",
-  "title": "Declarative contract scenario for REQ-EFF-006",
-  "version": "0.1",
-  "layer": "contract-traceability",
+  "title": "Crash after verification, before commit: commit from evidence, never re-execute",
+  "version": "0.2",
+  "layer": "effect-recovery",
   "profiles": [
     "core_digital"
   ],
@@ -10,12 +10,40 @@
     "REQ-EFF-006"
   ],
   "input": {
-    "owner_spec": "CognitiveOS-Architecture.md#core-effect-protocol",
-    "requirement_status": "specified"
+    "pre_crash": {
+      "intent": {
+        "ref": "intent://tenant-a/intent-703",
+        "persisted": true,
+        "idempotency_key": "refund-44-attempt-1"
+      },
+      "effect_state": "VERIFIED",
+      "verification_report": {
+        "ref": "verification://tenant-a/vr-90",
+        "result": "PASSED",
+        "fixed_post_state_version": 13,
+        "persisted": true
+      },
+      "commit_event_appended": false
+    },
+    "crash_point": "after_verification_before_commit",
+    "recovery": {
+      "new_fencing_epoch_installed": true,
+      "replay_committed_history": true,
+      "fixed_post_state_still_version": 13
+    }
   },
   "expected": {
-    "requirement_semantics_enforced": true,
-    "evidence_required_for_pass": true,
-    "schema_parse_alone_is_not_pass": true
+    "recovered_effect_state": "VERIFIED",
+    "verification_still_current_check_performed": true,
+    "action": "commit_state_and_event_without_reexecution",
+    "external_action_reexecuted": false,
+    "duplicate_effect": false,
+    "post_recovery_state": "COMMITTED",
+    "if_post_state_changed": {
+      "verification_state": "EXPIRED",
+      "commit_blocked": true,
+      "required_action": "re-verify against new fixed post-state or abort"
+    },
+    "audit_chain_closed": true
   }
 }

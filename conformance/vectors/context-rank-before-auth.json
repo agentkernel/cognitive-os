@@ -1,0 +1,48 @@
+{
+  "id": "CTX-RANK-AUTH-001",
+  "title": "Unauthorized object bodies never reach the ranker",
+  "version": "0.1",
+  "layer": "security-negative",
+  "profiles": [
+    "core_digital",
+    "context_virtualization"
+  ],
+  "requirement_ids": [
+    "REQ-CTX-002"
+  ],
+  "input": {
+    "context_request": {
+      "purpose": "answer_customer_question",
+      "tenant": "tenant-a",
+      "actor_chain_digest": "sha256:aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11",
+      "ranker": "semantic_cross_encoder_v3"
+    },
+    "discovered_candidates": [
+      {
+        "ref": "knowledge://tenant-a/policy/refund?version=8",
+        "read_authorized_for_actor": true
+      },
+      {
+        "ref": "memory://tenant-a/user-b/private-notes?version=2",
+        "read_authorized_for_actor": false
+      }
+    ],
+    "ranker_invocation_requested": true
+  },
+  "expected": {
+    "decision": "rank_only_authorized_candidates",
+    "ranker_input_refs": [
+      "knowledge://tenant-a/policy/refund?version=8"
+    ],
+    "unauthorized_body_exposed_to_ranker": false,
+    "unauthorized_item_result": {
+      "loaded": false,
+      "error": {
+        "code": "CONTEXT_AUTH_DENIED",
+        "category": "auth"
+      }
+    },
+    "rank_score_cannot_restore_denied_item": true,
+    "audit_required": true
+  }
+}

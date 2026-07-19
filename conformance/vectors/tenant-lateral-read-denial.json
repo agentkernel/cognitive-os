@@ -1,0 +1,49 @@
+{
+  "id": "GOBJ-TENANT-LATERAL-001",
+  "title": "Shared tenant membership does not grant lateral body read",
+  "version": "0.1",
+  "layer": "security-negative",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-GOBJ-HEADER-001",
+    "REQ-CTX-002"
+  ],
+  "input": {
+    "tenant": "tenant-a",
+    "requesting_principal": {
+      "id": "principal://tenant-a/user-b",
+      "membership_valid": true,
+      "roles": [
+        "member"
+      ]
+    },
+    "target_object": {
+      "ref": "memory://tenant-a/user-c/subject-profile?version=5",
+      "owner": "principal://tenant-a/user-c",
+      "resource_scope": "scope://tenant-a/user-c/personal",
+      "share_grant_present": false
+    },
+    "request": {
+      "operation": "read_body",
+      "purpose": "browse",
+      "claimed_basis": "same_tenant_membership"
+    }
+  },
+  "expected": {
+    "decision": "deny",
+    "error": {
+      "code": "CONTEXT_AUTH_DENIED",
+      "category": "auth"
+    },
+    "body_disclosed": false,
+    "existence_leak_beyond_policy": false,
+    "membership_alone_grants_read": false,
+    "allowed_paths": [
+      "explicit ShareGrant from scope authority",
+      "policy-based per-object authorization"
+    ],
+    "audit_required": true
+  }
+}

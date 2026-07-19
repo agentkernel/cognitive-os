@@ -139,7 +139,7 @@ fallback 失败不得再次静默降低精度或扩大出域。
 
 ## 9. 失败、安全与符合性
 
-错误包括 RESOURCE_UNAVAILABLE、HANDLE_STALE、PLACEMENT_CONFLICT、RESIDENCY_DENIED、CALIBRATION_EXPIRED、DRIFT_EXCEEDED、ERROR_BOUND_EXCEEDED、FALLBACK_FAILED。
+错误包括 RESOURCE_UNAVAILABLE、HANDLE_STALE、PLACEMENT_CONFLICT、RESIDENCY_DENIED、CALIBRATION_EXPIRED、DRIFT_EXCEEDED、ERROR_BOUND_EXCEEDED、FALLBACK_FAILED。上述名称是本规范的语义类别；机器登记码以 [errors.yaml](../registry/errors.yaml) 为准（当前该域仅登记 `PROFILE_CIM_CALIBRATION_MISMATCH`），未登记名称属待登记类别，实现不得将其当作已注册机器资产引用（与 Core §13 边界规则一致）。
 
 unknown hardware outcome 按 Effect 协议 reconcile；设备 reset 不能自动证明 kernel 未执行。
 

@@ -1,0 +1,68 @@
+{
+  "id": "STATE-STORE-DEGRADE-001",
+  "title": "Commit-path storage failure fails closed and preserves inspect/stop paths",
+  "version": "0.1",
+  "layer": "effect-recovery",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-REC-003"
+  ],
+  "input": {
+    "fault": {
+      "kind": "storage_unavailable",
+      "mode": "disk_full_or_read_only",
+      "affected": [
+        "event_log",
+        "state_snapshots",
+        "effect_records"
+      ]
+    },
+    "pending_work": [
+      {
+        "kind": "governed_write",
+        "operation": "task.update",
+        "expected_version": 12
+      },
+      {
+        "kind": "effect_dispatch",
+        "operation": "payments.refund",
+        "intent_persisted": false
+      }
+    ],
+    "management_requests": [
+      "inspect",
+      "stop",
+      "revoke",
+      "reconcile_pending_effects",
+      "audit_export"
+    ]
+  },
+  "expected": {
+    "governed_write_result": {
+      "decision": "reject",
+      "error": {
+        "code": "STATE_STORE_UNAVAILABLE",
+        "category": "state"
+      },
+      "buffered_in_memory_as_committed": false
+    },
+    "new_effect_dispatch_result": {
+      "dispatched": false,
+      "reason": "intent must be durably persisted before execution"
+    },
+    "already_executing_effects": "reconcile_or_quarantine_after_recovery",
+    "read_only_inspection_available": true,
+    "deterministic_stop_and_revoke_available": true,
+    "committed_history_lost": false,
+    "telemetry_loss_affects_authoritative_state": false,
+    "recovery_requires": [
+      "storage restored",
+      "recovery barrier",
+      "replay committed history to high watermark",
+      "reconcile pending effects"
+    ],
+    "audit_required": true
+  }
+}

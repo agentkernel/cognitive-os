@@ -71,6 +71,42 @@
     },
     "promotion_from": {
       "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "pending_visibility": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Read-your-write working-set binding before admission (REQ-MEM-ADMIT-002)",
+      "type": "object",
+      "required": [
+        "visibility",
+        "writer_principal_ref"
+      ],
+      "properties": {
+        "visibility": {
+          "enum": [
+            "writer_private"
+          ]
+        },
+        "writer_principal_ref": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "activity_ref": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "conversation_ref": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "trust_role": {
+          "enum": [
+            "working",
+            "untrusted_input"
+          ]
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

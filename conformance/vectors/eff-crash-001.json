@@ -1,8 +1,8 @@
 {
   "id": "EFF-CRASH-001",
-  "title": "Declarative contract scenario for REQ-EFF-006",
-  "version": "0.1",
-  "layer": "contract-traceability",
+  "title": "Crash after Intent persisted, before dispatch: recover without duplicate effect",
+  "version": "0.2",
+  "layer": "effect-recovery",
   "profiles": [
     "core_digital"
   ],
@@ -10,12 +10,32 @@
     "REQ-EFF-006"
   ],
   "input": {
-    "owner_spec": "CognitiveOS-Architecture.md#core-effect-protocol",
-    "requirement_status": "specified"
+    "pre_crash": {
+      "intent": {
+        "ref": "intent://tenant-a/intent-701",
+        "persisted": true,
+        "idempotency_key": "refund-42-attempt-1",
+        "parameter_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "expected_state_version": 12
+      },
+      "effect_state": "AUTHORIZED",
+      "dispatch_sent": false,
+      "external_side_effect_occurred": false
+    },
+    "crash_point": "after_intent_persisted_before_dispatch",
+    "recovery": {
+      "new_fencing_epoch_installed": true,
+      "replay_committed_history": true
+    }
   },
   "expected": {
-    "requirement_semantics_enforced": true,
-    "evidence_required_for_pass": true,
-    "schema_parse_alone_is_not_pass": true
+    "recovered_effect_state": "AUTHORIZED",
+    "reconciliation_result": "not_executed_confirmed_or_no_dispatch_record",
+    "action": "dispatch_once_with_original_idempotency_key",
+    "idempotency_key_reused": true,
+    "new_idempotency_key_created": false,
+    "duplicate_effect": false,
+    "intent_reauthorized_under_new_epoch": true,
+    "audit_chain_closed": true
   }
 }

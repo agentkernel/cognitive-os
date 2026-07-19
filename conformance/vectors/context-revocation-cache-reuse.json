@@ -1,0 +1,56 @@
+{
+  "id": "CTX-REVOKE-CACHE-001",
+  "title": "Cached ContextView and derived caches cannot bypass revocation",
+  "version": "0.1",
+  "layer": "security-negative",
+  "profiles": [
+    "core_digital",
+    "context_virtualization"
+  ],
+  "requirement_ids": [
+    "REQ-PROFILE-CVM-001",
+    "REQ-CAP-005"
+  ],
+  "input": {
+    "cached_context_view": {
+      "view_ref": "context://tenant-a/view/9f31?version=1",
+      "cache_binding": {
+        "tenant": "tenant-a",
+        "actor_chain_digest": "sha256:aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11",
+        "conversation": "conversation://tenant-a/conv-7",
+        "purpose": "draft_reply",
+        "revocation_version": 41
+      },
+      "loaded_items": [
+        "knowledge://tenant-a/policy/refund?version=8"
+      ]
+    },
+    "revocation_event": {
+      "kind": "capability_revoked",
+      "target": "knowledge://tenant-a/policy/refund",
+      "new_revocation_version": 42
+    },
+    "subsequent_request": {
+      "same_activity_class": true,
+      "requested_via": "cache_lookup",
+      "declared_revocation_version": 41
+    }
+  },
+  "expected": {
+    "cache_hit_served": false,
+    "decision": "revalidate_or_reresolve",
+    "error": {
+      "code": "CONTEXT_AUTH_DENIED",
+      "category": "auth"
+    },
+    "revoked_body_reexposed": false,
+    "derived_caches_invalidated": [
+      "kv_cache",
+      "prompt_cache",
+      "embedding_result",
+      "summary"
+    ],
+    "authorization_skipped_on_cache_hit": false,
+    "audit_required": true
+  }
+}

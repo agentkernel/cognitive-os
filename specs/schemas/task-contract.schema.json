@@ -125,13 +125,10 @@
     },
     "allowed_state_domains": {
       "type": "array",
+      "description": "Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.",
       "items": {
-        "enum": [
-          "world",
-          "task",
-          "agent",
-          "session"
-        ]
+        "type": "string",
+        "minLength": 1
       },
       "minItems": 1,
       "uniqueItems": true
@@ -188,5 +185,25 @@
       "minimum": 1
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "description": "A TaskContract must declare at least one acceptance condition so completion is decidable.",
+      "properties": {
+        "conditions": {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "acceptance"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      }
+    }
+  ]
 }
