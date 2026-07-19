@@ -14,7 +14,9 @@
     },
     "strongRef": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "title": "Strong object reference",
+      "title": "Strong object reference (legacy)",
+      "deprecated": true,
+      "description": "Legacy shape retained only for explicit legacy adapters (governed-object-contract section 3). New and migrated contracts reference object-reference.schema.json#/$defs/strongReference; the legacy `version`/`digest` fields map to `object_version`/`content_digest` and the digest must be verified during mapping.",
       "type": "object",
       "required": [
         "id",
@@ -117,7 +119,9 @@
     },
     "metadata": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "title": "Core metadata",
+      "title": "Core metadata (legacy)",
+      "deprecated": true,
+      "description": "Legacy governance envelope retained only for explicit legacy adapters (governed-object-contract section 6). New and migrated contracts carry a GovernedObjectHeader (governed-object-header.schema.json) under the `header` property; legacy objects missing scope_domain, tenant ownership, ResourceScope, owner, or authority enter quarantine per REQ-GOBJ-MIG-002 and are never silently bridged.",
       "type": "object",
       "required": [
         "id",

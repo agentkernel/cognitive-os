@@ -3,7 +3,7 @@
   "title": "MemoryObject",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "memory_kind",
     "governance_scope",
     "purpose",
@@ -19,8 +19,8 @@
     "invalidates"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "memory_kind": {
       "enum": [

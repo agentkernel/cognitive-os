@@ -3,7 +3,7 @@
   "title": "WorldState",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "domain",
     "base_version",
     "high_watermark",
@@ -13,10 +13,10 @@
     "digest"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {

@@ -4,7 +4,7 @@
   "title": "CognitiveOS UserIntentRecord",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "actor_chain_digest",
     "conversation_or_scope_ref",
     "input_refs",
@@ -13,8 +13,8 @@
     "intent_digest"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "actor_chain_digest": {
       "$ref": "common-defs.schema.json#/$defs/digest"

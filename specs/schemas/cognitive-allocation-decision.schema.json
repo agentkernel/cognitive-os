@@ -3,7 +3,7 @@
   "title": "CognitiveAllocationDecision",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "activity_context_ref",
     "information_gap_ref",
     "decision",
@@ -13,14 +13,14 @@
     "hard_ceiling_ref"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "activity_context_ref": {
       "$ref": "common-defs.schema.json#/$defs/uriRef"
     },
     "information_gap_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "decision": {
       "enum": [

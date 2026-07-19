@@ -3,7 +3,7 @@
   "title": "ContextRequestAdmission",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "candidate_ref",
     "activity_context_ref",
     "decision",
@@ -12,14 +12,14 @@
     "budget_ceiling"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "candidate_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "admitted_request_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "activity_context_ref": {
       "$ref": "common-defs.schema.json#/$defs/uriRef"

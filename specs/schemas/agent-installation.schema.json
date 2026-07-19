@@ -3,7 +3,7 @@
   "title": "AgentInstallation",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "package_ref",
     "adapter_digest",
     "sandbox_digest",
@@ -16,11 +16,11 @@
     "state"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "package_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "adapter_digest": {
       "$ref": "common-defs.schema.json#/$defs/digest"
@@ -29,7 +29,7 @@
       "$ref": "common-defs.schema.json#/$defs/digest"
     },
     "compatibility_report_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "profile_ceiling": {
       "enum": [

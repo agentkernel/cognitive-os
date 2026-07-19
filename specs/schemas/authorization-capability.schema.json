@@ -3,7 +3,7 @@
   "title": "AuthorizationCapability",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "issuer",
     "subject",
     "audience",
@@ -18,10 +18,10 @@
     "signature"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {

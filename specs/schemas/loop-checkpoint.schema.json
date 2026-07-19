@@ -3,7 +3,7 @@
   "title": "LoopCheckpoint",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "task_contract_ref",
     "iteration",
     "phase",
@@ -16,10 +16,10 @@
     "continuation_conditions"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -31,7 +31,7 @@
       ]
     },
     "task_contract_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "iteration": {
       "type": "integer",
@@ -66,7 +66,7 @@
       "minItems": 0
     },
     "context_view_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "proposal_ref": {
       "type": "string",

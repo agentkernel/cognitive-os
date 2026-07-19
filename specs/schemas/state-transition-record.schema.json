@@ -22,8 +22,8 @@
     "committed_at": {"type": "string", "format": "date-time"},
     "table_version": {"type": "string", "minLength": 1},
     "table_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
-    "evidence_refs": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/strongRef"}, "uniqueItems": true},
-    "event_ref": {"$ref": "common-defs.schema.json#/$defs/strongRef"},
+    "evidence_refs": {"type": "array", "items": {"$ref": "object-reference.schema.json#/$defs/strongReference"}, "uniqueItems": true},
+    "event_ref": {"$ref": "object-reference.schema.json#/$defs/strongReference"},
     "metadata": {"type": "object", "additionalProperties": true}
   },
   "additionalProperties": false

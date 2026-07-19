@@ -3,17 +3,17 @@
   "title": "ResourceGraph",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "graph_version",
     "nodes",
     "edges",
     "calibrations"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {

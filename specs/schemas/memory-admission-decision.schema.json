@@ -3,7 +3,7 @@
   "title": "MemoryAdmissionDecision",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "candidate_ref",
     "decision",
     "target_scope",
@@ -11,11 +11,11 @@
     "policy_version"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "candidate_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "decision": {
       "enum": [

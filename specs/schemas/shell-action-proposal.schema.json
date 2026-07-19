@@ -76,7 +76,7 @@
         "resolved_targets": {
           "type": "array",
           "items": {
-            "$ref": "common-defs.schema.json#/$defs/strongRef"
+            "$ref": "object-reference.schema.json#/$defs/strongReference"
           }
         }
       },

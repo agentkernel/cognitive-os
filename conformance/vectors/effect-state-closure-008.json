@@ -20,7 +20,9 @@
       "category": "effect"
     },
     "allowed_exits": [
-      "RECONCILED",
+      "RECONCILED"
+    ],
+    "post_reconcile_exits_when_still_unknown": [
       "COMPENSATING",
       "QUARANTINED"
     ]

@@ -3,7 +3,7 @@
   "title": "Effect",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "intent_ref",
     "state",
     "executor",
@@ -17,10 +17,10 @@
     "event_refs"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -32,7 +32,7 @@
       ]
     },
     "intent_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "state": {
       "enum": [
@@ -88,9 +88,23 @@
         "unknown"
       ]
     },
+    "reconciliation_result": {
+      "description": "Persisted reconciliation outcome (Core section 9.5); mirrors the effect.transitions.json guards reconciliation_result_equals_*. Absent before reconciliation completes.",
+      "enum": [
+        "executed",
+        "not_executed",
+        "still_unknown"
+      ]
+    },
+    "reconciliation_report_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
     "verification": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "title": "Effect verification",
+      "title": "Effect verification standing",
+      "description": "Projection of the current Verification standing for this Effect. The VerificationReport is immutable (status passed|failed|indeterminate); expiry is a Verification lifecycle fact (verification.transitions.json PASSED->EXPIRED) projected here as `expired`, and the commit guard verification_still_current rejects non-current reports.",
       "type": "object",
       "required": [
         "status"
@@ -101,7 +115,8 @@
             "pending",
             "passed",
             "failed",
-            "unresolved"
+            "unresolved",
+            "expired"
           ]
         },
         "report_ref": {
@@ -144,7 +159,14 @@
       "then": {
         "properties": {
           "observed_outcome": {
-            "const": "succeeded"
+            "enum": [
+              "succeeded",
+              "unknown",
+              "not_observed"
+            ]
+          },
+          "reconciliation_result": {
+            "const": "executed"
           },
           "verification": {
             "properties": {
@@ -160,7 +182,25 @@
           "decision": {
             "const": "commit"
           }
+        },
+        "required": [
+          "reconciliation_result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "RECONCILED"
+          }
         }
+      },
+      "then": {
+        "required": [
+          "reconciliation_result",
+          "reconciliation_report_ref"
+        ]
       }
     },
     {
@@ -173,6 +213,9 @@
       },
       "then": {
         "properties": {
+          "reconciliation_result": {
+            "const": "executed"
+          },
           "verification": {
             "properties": {
               "status": {
@@ -184,7 +227,10 @@
               "report_ref"
             ]
           }
-        }
+        },
+        "required": [
+          "reconciliation_result"
+        ]
       }
     },
     {
@@ -197,12 +243,16 @@
       },
       "then": {
         "properties": {
+          "reconciliation_result": {
+            "const": "executed"
+          },
           "verification": {
             "properties": {
               "status": {
                 "enum": [
                   "failed",
-                  "unresolved"
+                  "unresolved",
+                  "expired"
                 ]
               }
             },
@@ -218,7 +268,10 @@
               "quarantine"
             ]
           }
-        }
+        },
+        "required": [
+          "reconciliation_result"
+        ]
       }
     },
     {
@@ -257,6 +310,29 @@
               "quarantine"
             ]
           }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "PROPOSED",
+              "AUTHORIZED",
+              "DENIED",
+              "EXECUTING",
+              "EXECUTED",
+              "OUTCOME_UNKNOWN"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "reconciliation_result"
+          ]
         }
       }
     },

@@ -3,18 +3,18 @@
   "title": "OperationMatchReport",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "catalog_snapshot_ref",
     "semantic_intent_digest",
     "candidates",
     "resolution"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "catalog_snapshot_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "semantic_intent_digest": {
       "$ref": "common-defs.schema.json#/$defs/digest"
@@ -32,7 +32,7 @@
         ],
         "properties": {
           "summary_ref": {
-            "$ref": "common-defs.schema.json#/$defs/strongRef"
+            "$ref": "object-reference.schema.json#/$defs/strongReference"
           },
           "schema_compatible": {
             "type": "boolean"

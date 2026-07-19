@@ -3,7 +3,7 @@
   "title": "AgentCompatibilityReport",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "package_ref",
     "profile",
     "features",
@@ -12,11 +12,11 @@
     "max_verified_risk"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "package_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "profile": {
       "enum": [

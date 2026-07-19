@@ -3,7 +3,7 @@
   "title": "ContextView",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "request_ref",
     "complete",
     "loaded",
@@ -14,10 +14,10 @@
     "activity_bound"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -29,7 +29,7 @@
       ]
     },
     "request_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "complete": {
       "type": "boolean"
@@ -55,7 +55,7 @@
             "minLength": 1
           },
           "object_ref": {
-            "$ref": "common-defs.schema.json#/$defs/strongRef"
+            "$ref": "object-reference.schema.json#/$defs/strongReference"
           },
           "representation": {
             "enum": [

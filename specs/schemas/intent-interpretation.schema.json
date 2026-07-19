@@ -4,7 +4,7 @@
   "title": "CognitiveOS IntentInterpretation",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "intent_ref",
     "status",
     "objectives",
@@ -16,11 +16,11 @@
     "interpretation_digest"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "intent_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "status": {
       "enum": [

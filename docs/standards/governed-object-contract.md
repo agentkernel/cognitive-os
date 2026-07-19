@@ -51,6 +51,8 @@ Schema registration does not claim implementation or conformance. A claim MUST p
 
 The legacy `common-defs.schema.json#/$defs/strongRef` uses `version` and `digest`; it is not this contract. Migration MUST explicitly map them to `object_version` and `content_digest` and verify the digest.
 
+Migration status: the registered schema suite itself no longer uses the legacy shapes. All `specs/schemas/` contracts that previously referenced `common-defs.schema.json#/$defs/metadata` now carry a `GovernedObjectHeader` under the `header` property, and every `common-defs.schema.json#/$defs/strongRef` reference is replaced by `object-reference.schema.json#/$defs/strongReference`. The legacy `metadata`/`strongRef` definitions remain in `common-defs.schema.json` marked `deprecated`, reachable only through explicit legacy adapters under Section 6; they MUST NOT be referenced by new or migrated contracts.
+
 [REQ-GOBJ-REF-004] Default digest projection: unless an object family registers a more specific projection, `content_digest` is computed over the canonical bytes ([canonical-encoding-and-digest](./canonical-encoding-and-digest.md)) of the schema-valid object with exactly these JSON Pointer paths declared `digest_excluded`: the object's own `content_digest` field (`/metadata/content_digest` for common-defs metadata objects, `/header/content_digest` for GovernedObjectHeader objects) and its own `signature` field if present. No other path is excluded by default. This registration satisfies the canonical standard's requirement that self-referential fields be excluded by a named contract, not by convention; object families whose digest must cover additional derived stores register their own projection with a new version.
 
 ## 4. Binding consistency

@@ -3,7 +3,7 @@
   "title": "Intent",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "task_ref",
     "action",
     "parameters_digest",
@@ -17,10 +17,10 @@
     "compensation"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -32,7 +32,7 @@
       ]
     },
     "task_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "action": {
       "type": "string",
@@ -53,7 +53,7 @@
     "capability_refs": {
       "type": "array",
       "items": {
-        "$ref": "common-defs.schema.json#/$defs/strongRef"
+        "$ref": "object-reference.schema.json#/$defs/strongReference"
       },
       "minItems": 1
     },

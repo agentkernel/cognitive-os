@@ -3,7 +3,7 @@
   "title": "OperationCatalogSnapshot",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "authority_ref",
     "snapshot_version",
     "summary_refs",
@@ -11,8 +11,8 @@
     "expires_at"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "authority_ref": {
       "$ref": "common-defs.schema.json#/$defs/uriRef"
@@ -24,7 +24,7 @@
     "summary_refs": {
       "type": "array",
       "items": {
-        "$ref": "common-defs.schema.json#/$defs/strongRef"
+        "$ref": "object-reference.schema.json#/$defs/strongReference"
       }
     },
     "health_epoch": {

@@ -3,7 +3,7 @@
   "title": "CognitiveResourceManifest",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "activity_context_ref",
     "governance_scope",
     "purpose",
@@ -16,8 +16,8 @@
     "expires_at"
   ],
   "properties": {
-    "metadata": {
-      "$ref": "common-defs.schema.json#/$defs/metadata"
+    "header": {
+      "$ref": "governed-object-header.schema.json"
     },
     "activity_context_ref": {
       "$ref": "common-defs.schema.json#/$defs/uriRef"

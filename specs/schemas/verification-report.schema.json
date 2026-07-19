@@ -3,7 +3,7 @@
   "title": "VerificationReport",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "subject_ref",
     "verifier",
     "verifier_version",
@@ -14,10 +14,10 @@
     "completed_at"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -99,7 +99,7 @@
       "minItems": 0
     },
     "fixed_post_state": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "completed_at": {
       "type": "string",

@@ -3,7 +3,7 @@
   "title": "TaskContract",
   "type": "object",
   "required": [
-    "metadata",
+    "header",
     "task_ref",
     "contract_epoch",
     "intent_acceptance_ref",
@@ -19,10 +19,10 @@
     "allowed_tools"
   ],
   "properties": {
-    "metadata": {
+    "header": {
       "allOf": [
         {
-          "$ref": "common-defs.schema.json#/$defs/metadata"
+          "$ref": "governed-object-header.schema.json"
         },
         {
           "properties": {
@@ -172,13 +172,13 @@
       "minItems": 0
     },
     "user_intent_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "intent_interpretation_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "intent_acceptance_ref": {
-      "$ref": "common-defs.schema.json#/$defs/strongRef"
+      "$ref": "object-reference.schema.json#/$defs/strongReference"
     },
     "contract_epoch": {
       "type": "integer",

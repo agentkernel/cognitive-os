@@ -2,7 +2,7 @@ version: '0.1'
 requirements:
 - id: REQ-OBJ-001
   owner: core-object
-  owner_spec: specs/schemas/common-defs.schema.json
+  owner_spec: specs/schemas/governed-object-header.schema.json
   status: specified
   tests:
   - SCHEMA-META-001

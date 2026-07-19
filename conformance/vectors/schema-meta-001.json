@@ -10,7 +10,7 @@
     "REQ-OBJ-001"
   ],
   "input": {
-    "owner_spec": "specs/schemas/common-defs.schema.json",
+    "owner_spec": "specs/schemas/governed-object-header.schema.json",
     "requirement_status": "specified"
   },
   "expected": {
