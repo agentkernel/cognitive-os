@@ -1,0 +1,16 @@
+# Rust
+/target/
+
+# Node / TypeScript
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Run evidence artifacts are never committed; the README explaining the layout is.
+/artifacts/evidence/*
+!/artifacts/evidence/README.md
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log

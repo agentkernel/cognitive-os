@@ -1,0 +1,16 @@
+[package]
+name = "cognitive-domain"
+description = "Five execution lifecycle state machines and pure domain invariants (no I/O dependencies)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Dependency rule (see .cursor/rules/10-rust-kernel.mdc): this crate may depend
+# on cognitive-contracts only. No HTTP, no SQLite, no model SDKs, no tokio.
+[dependencies]
+cognitive-contracts = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

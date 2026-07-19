@@ -1,0 +1,20 @@
+{
+  "name": "@cognitiveos/sdk-ts",
+  "version": "0.0.1",
+  "private": true,
+  "description": "TypeScript SDK for CognitiveOS clients (task + management channels; M0 skeleton)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"dist/**/*.test.js\""
+  },
+  "dependencies": {
+    "@cognitiveos/contracts-ts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

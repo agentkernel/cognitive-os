@@ -1,0 +1,19 @@
+{
+  "name": "@cognitiveos/agent-shell",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Task Shell client (proposal/preview/attach/cancel; never an authority; M0 skeleton)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"dist/**/*.test.js\""
+  },
+  "dependencies": {
+    "@cognitiveos/sdk-ts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

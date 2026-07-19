@@ -1,0 +1,16 @@
+[package]
+name = "cognitive-runtime"
+description = "Operation executor, sandbox/adapter ports and the Harness Loop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
+cognitive-kernel = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

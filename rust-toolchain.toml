@@ -1,0 +1,5 @@
+# Pinned Rust toolchain for the CognitiveOS reference implementation.
+# Recorded in docs/adr/0001-rust-typescript.md. Update deliberately, not implicitly.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]

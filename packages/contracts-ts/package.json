@@ -1,0 +1,20 @@
+{
+  "name": "@cognitiveos/contracts-ts",
+  "version": "0.0.1",
+  "private": true,
+  "description": "TypeScript machine contracts: canonical JSON (cognitiveos.canonical-json/0.1), domain-separated digests, golden fixtures",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"dist/**/*.test.js\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

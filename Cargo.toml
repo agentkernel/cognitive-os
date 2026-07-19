@@ -1,0 +1,50 @@
+# CognitiveOS reference implementation — Rust virtual workspace (M0 skeleton).
+# Dependency direction is fixed: contracts -> domain -> ports (traits) -> adapters/apps.
+# See .cursor/rules/10-rust-kernel.mdc and docs/adr/0001-rust-typescript.md.
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/cognitive-contracts",
+    "crates/cognitive-domain",
+    "crates/cognitive-store",
+    "crates/cognitive-kernel",
+    "crates/cognitive-runtime",
+    "crates/cognitive-management",
+    "crates/cognitive-akp",
+    "crates/cognitive-conformance",
+    "apps/kernel-server",
+    "apps/admin-cli",
+]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.97"
+publish = false
+# License: intentionally not declared yet; recorded as an open decision in
+# docs/plan/DEVELOPMENT-PLAN.md (pending-decisions).
+
+[workspace.dependencies]
+cognitive-contracts = { path = "crates/cognitive-contracts" }
+cognitive-domain = { path = "crates/cognitive-domain" }
+cognitive-store = { path = "crates/cognitive-store" }
+cognitive-kernel = { path = "crates/cognitive-kernel" }
+cognitive-runtime = { path = "crates/cognitive-runtime" }
+cognitive-management = { path = "crates/cognitive-management" }
+cognitive-akp = { path = "crates/cognitive-akp" }
+cognitive-conformance = { path = "crates/cognitive-conformance" }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_json_canonicalizer = "0.3.2"
+sha2 = "0.10"
+thiserror = "2.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

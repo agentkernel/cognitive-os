@@ -1,0 +1,16 @@
+[package]
+name = "cognitive-management"
+description = "Management API, privileged sessions, proposals/approvals and the deterministic fallback path"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
+cognitive-kernel = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

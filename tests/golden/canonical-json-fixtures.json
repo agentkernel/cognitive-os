@@ -1,0 +1,160 @@
+{
+  "fixture_set": "CognitiveOS canonical JSON golden fixtures",
+  "version": "0.1.0",
+  "encoding_profile": "cognitiveos.canonical-json/0.1",
+  "digest_domain": "conformance-fixture/0.1",
+  "generator": "packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
+  "positive": [
+    {
+      "id": "empty-object",
+      "description": "Smallest object; digest exercises domain separation prefix",
+      "input_json": "{}",
+      "expected_canonical_text": "{}",
+      "expected_canonical_utf8_hex": "7b7d",
+      "expected_digest": "sha256:afe7f2caf764925434f6e6d4fdee9c6bbb0520f8b67e74a0567c9f4f838274c2"
+    },
+    {
+      "id": "key-ordering-utf16",
+      "description": "JCS member ordering by UTF-16 code units (RFC 8785 3.2.3 style example)",
+      "input_json": "{\"\\u20ac\":\"Euro Sign\",\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\\ud83d\\ude00\":\"Emoji: Grinning Face\",\"\\u0080\":\"Control\",\"\\u00f6\":\"Latin Small Letter O With Diaeresis\"}",
+      "expected_canonical_text": "{\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\":\"Control\",\"ö\":\"Latin Small Letter O With Diaeresis\",\"€\":\"Euro Sign\",\"😀\":\"Emoji: Grinning Face\"}",
+      "expected_canonical_utf8_hex": "7b225c72223a2243617272696167652052657475726e222c2231223a224f6e65222c22c280223a22436f6e74726f6c222c22c3b6223a224c6174696e20536d616c6c204c6574746572204f205769746820446961657265736973222c22e282ac223a224575726f205369676e222c22f09f9880223a22456d6f6a693a204772696e6e696e672046616365227d",
+      "expected_digest": "sha256:cd1a80ce557bb546ce5e45a58875315bdeee95d7142e8657a13d7d42665f7b1a"
+    },
+    {
+      "id": "string-escaping",
+      "description": "JCS string escaping: quotes, backslash, solidus, control characters",
+      "input_json": "{\"a\\\"b\":\"c\\\\d\",\"tab\":\"\\t\",\"newline\":\"\\n\",\"control\":\"\\u0001\",\"slash\":\"/\"}",
+      "expected_canonical_text": "{\"a\\\"b\":\"c\\\\d\",\"control\":\"\\u0001\",\"newline\":\"\\n\",\"slash\":\"/\",\"tab\":\"\\t\"}",
+      "expected_canonical_utf8_hex": "7b22615c2262223a22635c5c64222c22636f6e74726f6c223a225c7530303031222c226e65776c696e65223a225c6e222c22736c617368223a222f222c22746162223a225c74227d",
+      "expected_digest": "sha256:7ea21b9d285cbc64f243ad27ecaaf73050fc553e9a80d5539e1a752e79aa09b8"
+    },
+    {
+      "id": "non-ascii-unicode",
+      "description": "CJK, emoji surrogate pair and combining mark survive untouched",
+      "input_json": "{\"cjk\":\"寒水骏河\",\"emoji\":\"😀\",\"combining\":\"e\\u0301\"}",
+      "expected_canonical_text": "{\"cjk\":\"寒水骏河\",\"combining\":\"é\",\"emoji\":\"😀\"}",
+      "expected_canonical_utf8_hex": "7b22636a6b223a22e5af92e6b0b4e9aa8fe6b2b3222c22636f6d62696e696e67223a2265cc81222c22656d6f6a69223a22f09f9880227d",
+      "expected_digest": "sha256:533eecaa05e0f6e79af0a3612dd62ec473ca50599279fca5f2bd6359e6e493b4"
+    },
+    {
+      "id": "normalization-distinction",
+      "description": "NFC and NFD spellings stay distinct: no Unicode normalization",
+      "input_json": "{\"nfc\":\"\\u00e9\",\"nfd\":\"e\\u0301\"}",
+      "expected_canonical_text": "{\"nfc\":\"é\",\"nfd\":\"é\"}",
+      "expected_canonical_utf8_hex": "7b226e6663223a22c3a9222c226e6664223a2265cc81227d",
+      "expected_digest": "sha256:55bad4efdd4f878797373ec85464aa2e79fbfb8e97f64a242e37177ebf18fb7a"
+    },
+    {
+      "id": "numbers-integers-and-fractions",
+      "description": "I-JSON safe integers, fractions and exponent forms (ECMAScript ToString)",
+      "input_json": "[0,1,-1,100000000,9007199254740991,-9007199254740991,0.1,0.5,1e21,1e-9,3.141592653589793,1e2]",
+      "expected_canonical_text": "[0,1,-1,100000000,9007199254740991,-9007199254740991,0.1,0.5,1e+21,1e-9,3.141592653589793,100]",
+      "expected_canonical_utf8_hex": "5b302c312c2d312c3130303030303030302c393030373139393235343734303939312c2d393030373139393235343734303939312c302e312c302e352c31652b32312c31652d392c332e3134313539323635333538393739332c3130305d",
+      "expected_digest": "sha256:5f5969974b4d5334449c07f2a06c73a49aa1530aaad13bf374e9bcef16e66292"
+    },
+    {
+      "id": "negative-zero",
+      "description": "Negative zero serializes as 0 (standard section 5)",
+      "input_json": "{\"z\":-0}",
+      "expected_canonical_text": "{\"z\":0}",
+      "expected_canonical_utf8_hex": "7b227a223a307d",
+      "expected_digest": "sha256:8e228442afff0a608d75ba903b7dec4c895c223bc98d2c49bda4f6aa690ee12f"
+    },
+    {
+      "id": "timestamp-fraction-strings",
+      "description": "Canonical RFC 3339 UTC timestamp strings pass through byte-exactly",
+      "input_json": "{\"t1\":\"2026-07-19T11:02:03Z\",\"t2\":\"2026-07-19T11:02:03.1234Z\"}",
+      "expected_canonical_text": "{\"t1\":\"2026-07-19T11:02:03Z\",\"t2\":\"2026-07-19T11:02:03.1234Z\"}",
+      "expected_canonical_utf8_hex": "7b227431223a22323032362d30372d31395431313a30323a30335a222c227432223a22323032362d30372d31395431313a30323a30332e313233345a227d",
+      "expected_digest": "sha256:725502917dbff3bd9e7058c8f90285331f88fea373276fabf038316cd0d1027d"
+    },
+    {
+      "id": "null-vs-missing",
+      "description": "Explicit null is preserved; a missing member simply does not appear",
+      "input_json": "{\"present\":null}",
+      "expected_canonical_text": "{\"present\":null}",
+      "expected_canonical_utf8_hex": "7b2270726573656e74223a6e756c6c7d",
+      "expected_digest": "sha256:ad7495493ba29d22c688e361910f3c2aa77acb9683ffbf8f5a509c5e6effa51c"
+    },
+    {
+      "id": "nested-values",
+      "description": "Nested objects/arrays with mixed types and reordered keys",
+      "input_json": "{\"b\":[{\"y\":2,\"x\":1},[],[false,null,\"\"]],\"a\":{\"nested\":{\"deep\":true}}}",
+      "expected_canonical_text": "{\"a\":{\"nested\":{\"deep\":true}},\"b\":[{\"x\":1,\"y\":2},[],[false,null,\"\"]]}",
+      "expected_canonical_utf8_hex": "7b2261223a7b226e6573746564223a7b2264656570223a747275657d7d2c2262223a5b7b2278223a312c2279223a327d2c5b5d2c5b66616c73652c6e756c6c2c22225d5d7d",
+      "expected_digest": "sha256:4b2592bb7e21013fbc116d682ffa38acbe79f758f26c91fd8209b01c03b3ac6d"
+    },
+    {
+      "id": "whitespace-insensitivity",
+      "description": "Source whitespace and key order do not survive canonicalization",
+      "input_json": "  {\n  \"b\" :\t2 ,\n  \"a\" : [ 1 ,\n 2 ] }  ",
+      "expected_canonical_text": "{\"a\":[1,2],\"b\":2}",
+      "expected_canonical_utf8_hex": "7b2261223a5b312c325d2c2262223a327d",
+      "expected_digest": "sha256:a56ccff779b26f5963d8c5b0f232535ef2579b4b83d6609d03937559acd47ea9"
+    },
+    {
+      "id": "signature-preimage",
+      "description": "Signature input preimage with domain and algorithm separation",
+      "input_json": "{\"action\":\"approve\",\"proposal\":\"mp-1\"}",
+      "expected_canonical_text": "{\"action\":\"approve\",\"proposal\":\"mp-1\"}",
+      "expected_canonical_utf8_hex": "7b22616374696f6e223a22617070726f7665222c2270726f706f73616c223a226d702d31227d",
+      "expected_digest": "sha256:4475e33ce657ff53556b7d138cacac1c8e54dff51cd888b02f1ed650e1a10fda",
+      "signature": {
+        "domain": "akp-payload/0.2",
+        "algorithm": "ed25519",
+        "expected_signature_input_hex": "436f676e69746976654f532d5369676e61747572652d56310a616b702d7061796c6f61642f302e320065643235353139007b22616374696f6e223a22617070726f7665222c2270726f706f73616c223a226d702d31227d"
+      }
+    }
+  ],
+  "negative": [
+    {
+      "id": "duplicate-member-names",
+      "description": "Same member name twice is rejected, not last-write-wins",
+      "input_json": "{\"a\":1,\"a\":2}",
+      "expected_rejection": "duplicate-member-name"
+    },
+    {
+      "id": "byte-order-mark",
+      "description": "UTF-8 BOM before the document is rejected",
+      "input_bytes_hex": "efbbbf7b7d",
+      "expected_rejection": "bom"
+    },
+    {
+      "id": "invalid-utf8-bytes",
+      "description": "Non-UTF-8 input bytes are rejected before parsing",
+      "input_bytes_hex": "22ff22",
+      "expected_rejection": "invalid-utf8"
+    },
+    {
+      "id": "unsafe-integer-literal",
+      "description": "Exact integer 2^53 exceeds the I-JSON safe range",
+      "input_json": "{\"n\":9007199254740992}",
+      "expected_rejection": "unsafe-integer"
+    },
+    {
+      "id": "nan-literal",
+      "description": "NaN is not JSON",
+      "input_json": "{\"n\":NaN}",
+      "expected_rejection": "invalid-json"
+    },
+    {
+      "id": "lone-surrogate-escape",
+      "description": "Unpaired surrogate escape cannot form well-formed Unicode",
+      "input_json": "\"\\ud800\"",
+      "expected_rejection": "invalid-json"
+    },
+    {
+      "id": "unescaped-control-character",
+      "description": "Raw control character inside a string is invalid JSON",
+      "input_bytes_hex": "2261016222",
+      "expected_rejection": "invalid-json"
+    },
+    {
+      "id": "trailing-content",
+      "description": "Content after the top-level value is rejected",
+      "input_json": "{} x",
+      "expected_rejection": "invalid-json"
+    }
+  ]
+}

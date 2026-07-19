@@ -1,0 +1,19 @@
+[package]
+name = "cognitive-kernel"
+description = "Authority, CAS, capabilities, budgets, context gate, Effect protocol, checkpoint/recovery (deterministic core)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Deterministic core: may depend on contracts and domain only. It defines
+# port traits (store, clock, sandbox, ...) that adapters implement.
+# No HTTP, no SQLite, no model SDKs — probabilistic components may only
+# produce candidates upstream of this crate.
+[dependencies]
+cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,19 @@
+[package]
+name = "cognitive-store"
+description = "SQLite repositories, append-only event log, outbox and snapshots (adapter implementing kernel ports)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Adapter layer: implements port traits defined by cognitive-kernel.
+# The SQLite dependency (rusqlite, WAL mode per ADR-0002) is added in M2
+# together with the first repository implementation.
+[dependencies]
+cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
+cognitive-kernel = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

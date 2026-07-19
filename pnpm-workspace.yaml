@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+  - apps/agent-shell
+  - tools
+# apps/cognitiveos-console is a planned product-design folder (no package.json);
+# it is intentionally NOT part of the pnpm workspace until its lane is activated.

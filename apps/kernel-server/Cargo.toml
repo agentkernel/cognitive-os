@@ -1,0 +1,21 @@
+[package]
+name = "kernel-server"
+description = "Single-node composition root with MANAGEMENT_READY / USER_READY / OPERATIONAL readiness grading"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Composition root: the only Rust binary allowed to depend on every layer.
+# Tokio and the HTTP/SSE stack are added in M5 (docs/adr/0003-json-http-sse.md).
+[dependencies]
+cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
+cognitive-store = { workspace = true }
+cognitive-kernel = { workspace = true }
+cognitive-runtime = { workspace = true }
+cognitive-management = { workspace = true }
+cognitive-akp = { workspace = true }
+
+[lints]
+workspace = true

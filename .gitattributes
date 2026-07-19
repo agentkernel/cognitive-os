@@ -1,0 +1,8 @@
+# Normalize all text to LF on checkout and in the repository.
+# Byte-exact comparisons in CI (gen-matrix --check, golden emitters) depend
+# on stable line endings across Windows and Linux runners.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary

@@ -1,0 +1,23 @@
+[package]
+name = "cognitive-conformance"
+description = "Static conformance asset enumeration and vector runner (M0: enumerate-only, every result not-run)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+cognitive-contracts = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# Archived-but-stable YAML parser, used read-only for the registries.
+# Revisit the dependency choice with the M1 runner delivery.
+serde_yaml = "0.9"
+thiserror = { workspace = true }
+
+[[bin]]
+name = "conformance-runner"
+path = "src/main.rs"
+
+[lints]
+workspace = true
