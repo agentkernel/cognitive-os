@@ -34,6 +34,8 @@
 
 Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/implemented/unsupported`。Windows v1 当前 Profile 为 `planned`；Console `not-implemented`；相关既有 vectors 在 M0 runner 中为 `not-run`，产品级端到端证据为 `none`。仓库其他参考实现骨架不改变该结论。
 
+macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../../docs/platforms/README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
+
 ## 2. v2 产品要求
 
 | ID | 原子要求 | Contract | Implementation | Evidence | 主要规格 |
@@ -94,12 +96,12 @@ Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/imp
 
 本节只登记发现，不修改上游资产。
 
-### `CONSOLE-V2-BLK-001` Effect transition 版本与 schema 冲突
+### `CONSOLE-V2-BLK-001` Effect transition 版本与 schema 漂移（已关闭）
 
 - `specs/transitions/effect.transitions.json` 为 `0.2`；
-- `specs/schemas/state-transition-table.schema.json` 把 version 固定为 `0.1`；
-- 因此 Effect table 不能通过登记的通用 table schema。
-- 影响：涉及 Effect 状态的产品验收保持 `blocked`，不能称五表全部 schema-valid。
+- `specs/schemas/state-transition-table.schema.json` 已按 D-005 接受 `0.1/0.2`；
+- Effect table 的该项 schema-version 冲突已关闭。D-001/D-006 的全局 `$id`/版本策略仍待 M1，不能据此声称行为测试已执行。
+- 影响：`BLK-001` 不再阻断 Console；相关行为仍由 `BLK-011/012/013` 和 M1 runner 证据约束。
 
 ### `CONSOLE-V2-BLK-002` Signed proposal/display contract 不闭合
 
@@ -159,8 +161,9 @@ Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/imp
 
 ### `CONSOLE-V2-BLK-013` Governed object 双轨
 
-- `docs/traceability/findings-ledger.md` 的 F-003 仍为开放 P0：legacy metadata/strongRef 与 GovernedObjectHeader 双轨尚未完成 schema 迁移。
-- 影响：阻断 M1 出口，也阻断 Console 对所有对象统一承诺 tenant/scope/authority/strong ref header；客户端必须保留原形并拒绝猜测转换。
+- `docs/traceability/findings-ledger.md` 的 F-003 当前为 `partially-closed`：36 份 schema 已迁移到 GovernedObjectHeader/ObjectReference，legacy `$defs` 保留但零引用。
+- M1 仍须完成 runner 负例复验、codegen 对齐和 legacy `$defs` 移除决策。
+- 影响：仍阻断 M1 出口及 Console 对统一 header 行为的已验证声明；客户端不得把 schema 迁移落地误写为实现或执行证据。
 
 ### `CONSOLE-V2-BLK-014` State-store 降级下的 stop/revoke 授权语义
 
@@ -180,7 +183,7 @@ Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/imp
 | `004` | `UNASSIGNED — Console/Contracts` | target/version/digest 变化使旧 preview/gate 失效 | `conformance/vectors/intent-supersede-002.json` (`not-run`) | `BLK-002/011` |
 | `005` | `UNASSIGNED — Console` | Agent 文本/local cache 声称完成时 UI 保持 authority 状态 | future `CONSOLE-AUTHORITY-UI-002` (`none`) | `BLK-011/013` |
 | `006` | `UNASSIGNED — Runtime/Console` | 停止 PID 只改变 Runtime 呈现，不改变 AgentExecution/Task | future `CONSOLE-RUNTIME-SEPARATION-001` (`none`) | `BLK-011` |
-| `007` | `UNASSIGNED — Runtime/Console` | 五登记状态域独立显示且非法聚合状态被拒绝 | future `CONSOLE-STATE-TRACKS-001` (`none`) | `BLK-001/011/013` |
+| `007` | `UNASSIGNED — Runtime/Console` | 五登记状态域独立显示且非法聚合状态被拒绝 | future `CONSOLE-STATE-TRACKS-001` (`none`) | `BLK-011/013` |
 | `008` | `UNASSIGNED — Task/Console` | 缺 current Verification 或 AcceptanceDecision 时禁止显示 COMPLETED | `conformance/vectors/intent-acceptance-007.json` (`not-run`) | `BLK-011/013` |
 | `009` | `UNASSIGNED — Runtime/Console` | 每个控制动作显示正确 target/不保证事项，互不替代 | `conformance/vectors/shell-cancel-semantics-005.json` (`not-run`) | `BLK-011` |
 | `010` | `UNASSIGNED — Watch/Console` | gap/stale/权限变化均先 resnapshot，重复事件去重 | `conformance/vectors/shell-watch-resume-006.json` (`not-run`) | `BLK-010/011` |
@@ -197,7 +200,7 @@ Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/imp
 | `021` | `UNASSIGNED — Identity` | Console 无 password verifier/hash；全部登录由节点返回 session | future `CONSOLE-LOCAL-AUTH-001` (`none`) | `BLK-007` |
 | `022` | `UNASSIGNED — Windows integration` | renderer 无 Service Manager/进程/密钥权限，仅 allowlist IPC 可达 | future `CONSOLE-WIN-SERVICE-001` (`none`) | `BLK-006` |
 | `023` | `UNASSIGNED — Recovery` | state/audit 持久化失败时普通 governed write/new Effect 全拒绝 | `conformance/vectors/state-store-degradation.json` (`not-run`) | `BLK-009/014` |
-| `024` | `UNASSIGNED — Effect/Console` | unknown 时换 key/盲重试拒绝，原 binding 对账；NOT_EXECUTED 不进入 commit | `conformance/vectors/effect-unknown-outcome.json`, `effect-idempotency-conflict.json` (`not-run`) | `BLK-001/012` |
+| `024` | `UNASSIGNED — Effect/Console` | unknown 时换 key/盲重试拒绝，原 binding 对账；NOT_EXECUTED 不进入 commit | `conformance/vectors/effect-unknown-outcome.json`, `effect-idempotency-conflict.json` (`not-run`) | `BLK-012` |
 | `025` | `UNASSIGNED — Task` | lease 到期仅在安全检查点确认暂停，之前保持 pause pending | future `CONSOLE-LEASE-PAUSE-001` (`none`) | `BLK-005` |
 | `026` | `UNASSIGNED — Console design` | 每个通用状态 fixture 呈现正确标题、动作禁用和 live announcement | future `CONSOLE-PAGE-STATES-001` (`none`) | — |
 | `027` | `UNASSIGNED — Content design` | zh-CN/en 主标签用户化，机器 enum/ref/error 无信息损失 | future `CONSOLE-I18N-TERMS-001` (`none`) | — |

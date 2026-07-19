@@ -134,6 +134,8 @@
 
 依据 `apps/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）与 §20.3（后端依赖结论）。**M0 仅建立依赖追踪**；每组依赖 = 对应机器契约 + 后端能力交付 + gate 通过后，才启动相应 Console 里程碑。
 
+2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。平台入口见 [`docs/platforms/README.md`](../platforms/README.md)。
+
 | # | §20.3 依赖组 | 提供方里程碑 | 状态 |
 |---|---|---|---|
 | 1 | Shell/Management/Watch API 与 AKP envelope/transport | M5 | 未交付 |
@@ -146,7 +148,7 @@
 | 8 | native-app auth redirect/PKCE、offline lease、deep-link、IdP/push/config/update/health | M6+（部署基建） | 未交付 |
 | 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 骨架已有（not-run） |
 
-激活规则：依赖组 1/2/7 交付并过 M5 出口评审后可启动 Console "MVP Desktop 只读监督"里程碑规划；此前 Lane-CON 只维护本表。**Console PoC（PRODUCT-DESIGN §12.6 POC-01~12）可在 M5 后用真实 API 做，不得用 mock 冒充。**
+激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](../platforms/README.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
 
 ## 3. IMP-01~18 与 F-001~F-030 → 里程碑映射
 

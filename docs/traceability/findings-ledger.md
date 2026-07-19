@@ -78,6 +78,10 @@
 | D-004 | conformance README 15 层中第 7 层（知识编译）与第 8 层（性能）无专属向量 `layer` slug：知识类向量落在 `harness-loop`/`context-semantic`/`security-negative`，性能合同向量落在 `wire-schema` | 登记；runner 骨架如实呈现（layer 7/8 vectors=0 + 跨切片计数）；M1 runner 交付时与 Lane-CFR 决定是否补 slug（属修正型变更） | open → M1 |
 | D-005 | `state-transition-table.schema.json` 钉 `version: const "0.1"`，但 1.0.1 修订后 `effect.transitions.json` 已升 `version: "0.2"`（关闭 F-005/F-006 时未同步表 schema）→ effect 迁移表对表 schema 校验失败 | **M0 最小修正已闭合**：const 放宽为 `enum ["0.1","0.2"]`（修正型变更，不改语义；提交说明注明）；M1 合同收敛时随 D-001 统一版本策略 | closed-by-M0 |
 | D-006 | schema `$id` 三种风格并存：13 份治理对象 schema 用绝对 URL `$id`（`https://schemas.cognitiveos.dev/...`），`state-transition-table` 用相对文件名 `$id`，`profile-manifest`/`effect` 等缺 `$id`；绝对 `$id` 与 conformance README"相对 `$ref` 从所在文件解析"的规则冲突（会劫持 base URI） | 登记（并入 D-001 处置）；tools 检查按 README 规则以文件名为检索 URI 注册（剥离顶层 `$id`），不改 schema 本体；**2026-07-20 迁移批次已移除全部绝对 URL `$id`**（现状：仅 `common-defs` 带相对文件名 `$id`，其余无 `$id`）；M1 定统一策略（是否全量补相对 `$id`） | partially-closed → M1 |
+| D-007 | Console `PRODUCT-DESIGN.md` 与 `requirements-traceability.md` 在 D-005 关闭后仍称 transition table schema 只接受 `0.1` | 2026-07-20 对齐机器事实：登记 schema 已接受 `0.1/0.2`，保留 D-005 作为已关闭历史，不再列为 Console blocker | closed-by-doc-repair |
+| D-008 | Console 产品追踪在 F-003 单轨迁移落地后仍称 legacy metadata/strongRef 双轨尚未迁移 | 2026-07-20 对齐 findings-ledger：迁移已落地但 F-003 仍待 M1 runner 负例、codegen 与 legacy `$defs` 决策复验 | closed-by-doc-repair |
+| D-009 | Lane-CON 与 DEVELOPMENT-PLAN 的实现 gate 指向已不存在的 `PRODUCT-DESIGN §12.6 POC-01~12` | 2026-07-20 改指 `docs/platforms/README.md#console-实现-gate` 及各平台可定位的 Open PoC/GA gate；仍要求真实 API，禁止 mock 冒充 | closed-by-doc-repair |
+| D-010 | F-003 结构变更后，PRODUCT-DESIGN 缺少 docs-sync-contract §2.8 要求的文首漂移登记节/标注 | 2026-07-20 恢复漂移登记节并记录 F-003、D-005/D-007、D-009 影响；不改变 normative 资产 | closed-by-doc-repair |
 
 ## 四、复验方法备注
 

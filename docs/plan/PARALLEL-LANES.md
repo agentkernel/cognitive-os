@@ -15,7 +15,7 @@
 | **Lane-TSC** TS 客户端 | sdk-ts、admin-cli 交互层、agent-shell | CTR golden 对齐后与 KRN 并行；M5 集成 | [prompts/lane-tsc.md](../prompts/lane-tsc.md) |
 | **Lane-RUN** 运行时与管理面 | runtime、management、akp、kernel-server | M4 出口（tracer bullet 后） | [prompts/lane-run.md](../prompts/lane-run.md) |
 | **Lane-DOC** 文档与计划维护 | 标准/计划/台账/白皮书对齐；可随各车道 PR 附带 | 持续 | [prompts/lane-doc.md](../prompts/lane-doc.md) |
-| **Lane-CON** Console 产品 | 远期占位：仅维护依赖台账（DEVELOPMENT-PLAN §2 Console 节） | 后端 gate 通过后激活 | [prompts/lane-con.md](../prompts/lane-con.md) |
+| **Lane-CON** Console 产品 | 激活前仅 informative 产品研究/设计与依赖台账；实现仍由后端 gate 阻断 | 文档例外已批准；实现须后端 gate | [prompts/lane-con.md](../prompts/lane-con.md) |
 
 ```mermaid
 flowchart LR
@@ -37,6 +37,12 @@ flowchart LR
 5. 一律经 PR + CI 门禁合并（两 OS 全绿 + DoD 清单）；禁止直接推 main。
 6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
 
+### 2.1 Lane-CON 激活前文档例外
+
+2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `docs/platforms/` 与 `apps/cognitiveos-console/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。
+
+该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../platforms/README.md#console-实现-gate) 为准。
+
 ## 3. 所有权表（当前）
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
@@ -47,7 +53,7 @@ flowchart LR
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（待建） | 阻塞于 CTR |
 | `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `lane/run`（待建） | 阻塞于 M4 |
 | `docs/`（standards/plan/traceability/checkpoints/prompts）、根 README/AGENTS | Lane-DOC | 随车道 PR | 持续 |
-| `apps/cognitiveos-console/` | Lane-CON | — | 仅台账，禁止改写产品文档正文 |
+| `apps/cognitiveos-console/`、`docs/platforms/` | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效；实现未激活 |
 | `specs/registry/`、`specs/transitions/`、`conformance/vectors/` | 契约资产：变更一律经 Lane-CTR（向量增补可经 Lane-CFR），走 docs-sync-contract 流程 | — | — |
 
 ## 4. 里程碑 ↔ 车道对照

@@ -8,6 +8,14 @@
 >
 > Console 状态：`planned`。文档存在不表示实现已提供、测试已执行或 Profile 已符合。
 
+## 漂移登记
+
+| 日期 | 变更/发现 | 受影响章节 | 处置 |
+|---|---|---|---|
+| 2026-07-20 | F-003 governed-object 单轨迁移已落地，仍待 M1 runner/codegen 复验 | §20.3、产品追踪 BLK-013 | 更正为 `partially-closed`，不宣称行为已验证 |
+| 2026-07-20 | D-005 已使 transition table schema 接受 `0.1/0.2` | §20.3、产品追踪 BLK-001 | 移除过时 blocker，保留已关闭历史 |
+| 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`docs/platforms/`](../../docs/platforms/README.md#console-实现-gate) 的可定位平台 gate |
+
 ## 0. v2 文档地图
 
 | 文档 | 负责内容 |
@@ -21,6 +29,7 @@
 | [产品要求与追踪](./docs/requirements-traceability.md) | `CONSOLE-V2-*`、旧 ID 映射、三维状态与上游阻断 |
 | [路线图](./docs/roadmap.md) | 非 Windows v1 feature briefs |
 | [决策记录](./docs/decision-log.md) | 已确认和被替代的产品决策 |
+| [桌面平台产品设计](../../docs/platforms/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
 
 ## 1. 当前产品基线
 
@@ -34,7 +43,7 @@
 - 导航：工作、任务、Agent、收件箱、记录、系统；
 - 当前技术：Tauri 2 + React/TypeScript 为候选，尚未形成批准 ADR。
 
-Windows v1 的详细范围以 [windows-v1-scope.md](./docs/windows-v1-scope.md) 为准。macOS/Linux、移动、远程/多节点、完整治理、Memory、Knowledge、Multi-Agent 和 R2/R3 均在 [roadmap.md](./docs/roadmap.md) 中，不是首版已冻结能力。
+Windows v1 的详细范围以 [windows-v1-scope.md](./docs/windows-v1-scope.md) 为准。macOS 与受限 Linux 已有独立的 `planned/blocked` 产品切片，但不属于 Windows v1，也不表示实现车道已激活；移动、远程/多节点、完整治理、Memory、Knowledge、Multi-Agent 和 R2/R3 仍见 [roadmap.md](./docs/roadmap.md)。
 
 ## 2. 状态与事实来源
 
@@ -120,6 +129,7 @@ Windows v1 是当前唯一冻结的 Console 产品切片：
 7. Multi-Agent / Distributed。
 
 每个 phase 的不可变边界和进入门禁见 [roadmap.md](./docs/roadmap.md)。
+macOS/Linux 已确认的平台产品决策、支持边界和 Open PoC/GA gates 见 [桌面平台产品设计](../../docs/platforms/README.md)；这些文档属于激活前 informative 例外，不改变实现 gate。
 
 ### 17.4 Release gate
 
@@ -131,6 +141,8 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - 安全、故障、Narrator/键盘/High Contrast/reduced-motion 测试已执行；
 - 真实证据证明无错误完成声明、无跨用户/channel 泄露、无重复 Effect；
 - Tauri 2 + React/TypeScript（或替代方案）ADR 已批准。
+
+跨平台 Console 实现还必须满足 [平台实现 gate](../../docs/platforms/README.md#console-实现-gate)，且目标平台 PoC 使用真实 API/真实 OS 行为留证。
 
 ---
 
@@ -160,7 +172,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - 遥测/崩溃服务提供方、数据驻留和 retention；
 - 远程/企业节点信任与 IdP；
 - R2/R3 的 authority-owned browser 与原生可信面取舍；
-- 非 Windows 平台支持矩阵。
+- 非 GA 桌面、移动与远程平台支持矩阵。
 
 这些选择不能改变 [决策记录](./docs/decision-log.md) 中已确认的 authority、risk、状态和隔离边界。
 
@@ -180,12 +192,12 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 
 已确认的上游一致性阻断包括：
 
-1. Effect transition 为 `0.2`，通用 transition schema 固定 `0.1`；
+1. Effect transition 为 `0.2`，通用 transition schema 已接受 `0.1/0.2`；D-005 已关闭，统一版本策略仍排 M1；
 2. Management proposal 有 digest，但 signed/canonical display 字段不闭合；
 3. Core error prose 与通用 error schema 的字段不闭合；
 4. readiness、监督 lease、Windows Service 和本地账号合同缺失；
 5. Effect `still_unknown` 后的 safe retry/resume 没有明确 transition；
-6. findings-ledger F-003 的 legacy metadata/strongRef 与 GovernedObjectHeader 双轨仍是开放 P0；
+6. findings-ledger F-003 单轨迁移已落地，但仍待 M1 runner 负例、codegen 与 legacy `$defs` 处置复验；
 7. state-store 降级 vector 无条件要求 stop/revoke 可用，但预授权/fencing/audit emergency 合同尚未闭合。
 
 详细证据和影响见 [上游阻断登记](./docs/requirements-traceability.md#3-上游阻断登记)。在对应 contract、implementation 和 executed evidence 闭合前，Console 保持 `planned/blocked`，不得包装成已实现的 CognitiveOS 管理能力。
