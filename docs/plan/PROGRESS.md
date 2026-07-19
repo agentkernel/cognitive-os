@@ -58,6 +58,6 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md)（M0 出口评审 + 交接）
-2. —
+1. [20260720-m0-handoff.md](../checkpoints/20260720-m0-handoff.md)（M0 交接：提交清单、注入演练输出、并行会话改动提醒）
+2. [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md)（M0 出口评审：验收清单逐项）
 3. —
