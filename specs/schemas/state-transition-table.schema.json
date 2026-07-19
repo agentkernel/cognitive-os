@@ -6,7 +6,7 @@
   "required": ["domain", "version", "status", "initial_state", "states", "terminal_states", "transitions"],
   "properties": {
     "domain": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
-    "version": {"const": "0.1"},
+    "version": {"enum": ["0.1", "0.2"]},
     "status": {"const": "Draft"},
     "initial_state": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
     "states": {

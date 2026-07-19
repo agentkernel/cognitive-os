@@ -1,0 +1,110 @@
+# CI gate for the CognitiveOS reference implementation.
+# Definition of Done requires this workflow green on BOTH OSes (AGENTS.md).
+name: CI
+
+on:
+  push:
+    branches: ["main", "lane/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      # Toolchains ---------------------------------------------------------
+      - name: Set up Rust (pinned by rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+
+      - name: Set up pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # TypeScript side ------------------------------------------------------
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript packages
+        run: pnpm -r build
+
+      - name: Test TypeScript packages
+        run: pnpm -r test
+
+      # Rust side ------------------------------------------------------------
+      - name: Build Rust workspace
+        run: cargo build --workspace --locked
+
+      - name: Test Rust workspace
+        run: cargo test --workspace --locked
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: rustfmt check
+        run: cargo fmt --all -- --check
+
+      # Static consistency (registry <-> schema <-> vector <-> docs) ---------
+      - name: Consistency check (orphans, links, matrix, ledger)
+        run: node tools/src/check-consistency.mjs
+
+      - name: Traceability matrix freshness
+        run: node tools/src/gen-matrix.mjs --check
+
+      # Conformance runner skeleton (enumerate-only, all not-run) ------------
+      - name: Run conformance runner (not-run report + sample manifest)
+        run: cargo run --locked -p cognitive-conformance --bin conformance-runner
+
+      - name: Validate sample profile manifest against schema
+        run: node tools/src/validate-manifest.mjs
+
+      - name: Assert every vector is reported not-run (no fake claims)
+        run: |
+          node -e "
+            const r = require('./artifacts/evidence/conformance/conformance-report.json');
+            if (r.summary.total_vectors < 1) throw new Error('no vectors enumerated');
+            if (r.summary['not-run'] !== r.summary.total_vectors) throw new Error('M0 runner must report every vector not-run');
+            if (r.summary.pass !== 0) throw new Error('M0 runner cannot report pass');
+            console.log('runner report honest:', r.summary.total_vectors, 'vectors all not-run');
+          "
+
+      # Cross-language golden digest gate (ADR-0004 compliance check) --------
+      - name: Cross-language golden digest comparison
+        run: |
+          mkdir -p artifacts/evidence/golden
+          cargo run --locked -q -p cognitive-contracts --example emit_golden > artifacts/evidence/golden/rust-digests.json
+          node packages/contracts-ts/dist/emit-golden.js > artifacts/evidence/golden/ts-digests.json
+          node -e "
+            const fs = require('fs');
+            const rust = fs.readFileSync('artifacts/evidence/golden/rust-digests.json', 'utf-8');
+            const ts = fs.readFileSync('artifacts/evidence/golden/ts-digests.json', 'utf-8');
+            if (rust !== ts) { console.error('RUST:', rust); console.error('TS  :', ts); throw new Error('cross-language golden digests diverge'); }
+            console.log('golden digests byte-identical across Rust and TypeScript');
+          "
+
+      - name: Upload evidence artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-${{ matrix.os }}
+          path: artifacts/evidence/
+          retention-days: 14

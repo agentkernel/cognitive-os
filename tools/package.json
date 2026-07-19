@@ -1,0 +1,18 @@
+{
+  "name": "@cognitiveos/repo-tools",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Static consistency checks and traceability matrix generator (CI-enforced; see docs/standards/docs-sync-contract.md)",
+  "type": "module",
+  "scripts": {
+    "build": "node --check src/check-consistency.mjs && node --check src/gen-matrix.mjs && node --check src/lib.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "check": "node src/check-consistency.mjs",
+    "gen-matrix": "node src/gen-matrix.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.5.0"
+  }
+}
