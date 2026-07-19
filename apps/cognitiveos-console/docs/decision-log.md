@@ -177,3 +177,14 @@
 - “Console 直接承载共享节点子进程” → 独立 Windows Service。
 - “任意首个连接者成为 Owner” → 一次性本机 secret 领取。
 - “产品依赖”单一标签 → contract / implementation / evidence 三维状态。
+
+## 6. 独立桌面平台决策
+
+2026-07-20 在 Lane-CON 激活前 informative 文档例外内确认 macOS v1 与 Linux v1 产品方向。平台决策使用独立 namespace，不改写本文件既有 `CONSOLE-V2-DEC-*`：
+
+- `CONSOLE-MAC-V1-DEC-*` 与完整范围见 [macOS v1 产品设计](../../../docs/platforms/macos-product-design.md)；
+- `CONSOLE-LNX-V1-DEC-*` 与完整范围见 [Linux v1 产品设计](../../../docs/platforms/linux-product-design.md)；
+- 两平台统一决策索引见 [平台产品决策记录](../../../docs/platforms/platform-decision-log.md)；
+- Windows 可复用/适配/替换/阻断关系见 [桌面 parity matrix](../../../docs/platforms/desktop-parity-matrix.md)。
+
+这些决策是 accepted product direction，但 machine contract、implementation、executed evidence 和 Profile conformance 均未闭合。它们不改变 `CONSOLE-V2-DEC-002` 的事实：Windows v1 仍是 Windows 产品切片；macOS/Linux 是独立、后置且当前 blocked 的平台切片。

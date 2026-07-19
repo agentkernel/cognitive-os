@@ -52,21 +52,31 @@
 
 ### Phase C — macOS 与受限 Linux
 
-用户价值：把已验证的 Windows 操作模型扩展到其他桌面平台。
+用户价值：把 Windows 已确认的任务与治理语义适配到两个独立、明确受限的平台产品切片。详细规格：
+
+- [macOS v1 产品设计](../../../docs/platforms/macos-product-design.md)
+- [Linux v1 产品设计](../../../docs/platforms/linux-product-design.md)
+- [桌面 parity matrix](../../../docs/platforms/desktop-parity-matrix.md)
+
+产品范围：
+
+- macOS：Universal 2、macOS 14+ 设计候选、Developer ID 签名并公证 PKG、machine daemon + per-user broker；
+- Linux：仅 Ubuntu 24.04 LTS x86_64、stock GNOME/Wayland、官网 `.deb`、24 个月且不越过 security floor；
+- 两平台 Profile 均为 `planned`，implementation 未提供、test 未执行。
 
 不可变边界：
 
 - 不宣称像素一致；保持语义、状态和安全门禁一致；
 - 平台证据不得外推；
-- Linux 只支持经过 WebKitGTK、keyring、通知、Orca、更新和 security floor 验证的发行版/桌面环境。
+- Console/broker/helper 非 authority/IdP/node/final arbiter；
+- Linux 不简称为泛化“Linux 支持”，macOS 不承诺 Apple 固定生命周期；
+- WebKit、secure storage、notification、helper、update 和 accessibility 必须按平台独立验证。
 
 进入门禁：
 
-- 平台安装/签名/公证/更新/恢复；
-- secure storage 与无持久 credential 降级；
-- AT/键盘/High Contrast；
-- Service/daemon 生命周期与权限模型；
-- 两次框架升级演练。
+- 通用 Console 依赖组 1/2/7 + M5 出口；
+- [目标平台 Open PoC/GA gates](../../../docs/platforms/README.md#console-实现-gate) 使用真实 API/真实 OS 行为留证；
+- 平台安装/签名/更新/恢复、secure storage、AT/键盘/contrast/motion、daemon/helper 权限、两次升级演练均通过。
 
 ### Phase D — Mobile Remote Companion
 
@@ -224,7 +234,7 @@
 
 在对应 phase 进入研究前，不把以下内容写成最终 UI：
 
-- macOS/Linux 导航和系统集成；
+- macOS/Linux 已确认切片之外的 distro/desktop/package、富内容和扩展系统集成；
 - 移动底部导航与完整页面；
 - R2/R3 浏览器还是原生可信面；
 - Knowledge 图引擎；
