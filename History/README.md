@@ -8,6 +8,7 @@
 | `AgentOS-Architecture copy.md` | 中间编辑副本 | `../CognitiveOS-Architecture.md`（当前版本） |
 | `AgentOS-Architecture copy 2.md` | v0.4 编辑基线 | `../CognitiveOS-Architecture.md`（当前版本） |
 | `AgentOS：从第一性原理到认知操作系统.md` | 第一性原理早期论述 | `../CognitiveOS-Architecture.md`（当前版本） |
+| `CognitiveOS-Development-Plan.md` | 开发计划 v1.0 Draft（M0—M11 实现规划初稿，未启动执行） | `../CognitiveOS-Architecture.md` §21 路线图（1.0.0）；实现启动时可参照 `../CognitiveOS-Review-Conclusions.md` §5 恢复里程碑衔接 |
 | `edit_v04.py` | v0.4 文档迁移脚本 | 当前文档与 Git 历史 |
 | `fix_edits.py` | v0.4 修补脚本 | 当前文档与 Git 历史 |
 | `edit_v04_fixes.txt` | v0.4 编辑修复记录 | 当前文档版本说明 |
