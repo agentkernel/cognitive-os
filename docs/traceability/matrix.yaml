@@ -1,0 +1,3315 @@
+version: "0.1"
+generated_by: tools/src/gen-matrix.mjs (registry-derived; impl/evidence/docs fields are hand-maintained and preserved)
+field_semantics:
+  registry_tests: test IDs mapped in specs/registry/requirements.yaml
+  vectors: conformance vector files whose requirement_ids include this REQ (derived)
+  impl: implementation module paths (hand-maintained from M1)
+  impl_tests: unit/integration/fault test paths (hand-maintained)
+  evidence: artifacts/evidence digests or checkpoint references (hand-maintained)
+  docs: standard/ADR/plan sections normatively touching this REQ (hand-maintained)
+requirements:
+  - id: REQ-OBJ-001
+    owner: core-object
+    owner_spec: specs/schemas/common-defs.schema.json
+    status: specified
+    registry_tests:
+      - SCHEMA-META-001
+    vectors:
+      - conformance/vectors/schema-meta-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROTO-001
+    owner: core-protocol
+    owner_spec: specs/schemas/common-defs.schema.json
+    status: specified
+    registry_tests:
+      - SCHEMA-VERSION-001
+    vectors:
+      - conformance/vectors/schema-version-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-STATE-003
+    owner: state
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - STATE-CAS-002
+    vectors:
+      - conformance/vectors/state-conflict.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-STATE-004
+    owner: state
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - RECOVERY-CRASH-006
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-001
+    owner: context
+    owner_spec: specs/schemas/context-request.schema.json
+    status: specified
+    registry_tests:
+      - CTX-SCHEMA-001
+    vectors:
+      - conformance/vectors/ctx-schema-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-004
+    owner: context
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CTX-REQ-007
+    vectors:
+      - conformance/vectors/context-required-over-budget.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-005
+    owner: context
+    owner_spec: specs/schemas/context-view.schema.json
+    status: specified
+    registry_tests:
+      - CTX-VIEW-001
+    vectors:
+      - conformance/vectors/ctx-view-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-008
+    owner: context
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CTX-TRUST-004
+    vectors:
+      - conformance/vectors/prompt-injection-isolation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EVT-001
+    owner: event
+    owner_spec: specs/schemas/event.schema.json
+    status: specified
+    registry_tests:
+      - EVT-SCHEMA-001
+    vectors:
+      - conformance/vectors/evt-schema-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAP-001
+    owner: capability
+    owner_spec: specs/schemas/authorization-capability.schema.json
+    status: specified
+    registry_tests:
+      - CAP-BIND-001
+    vectors:
+      - conformance/vectors/cap-bind-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAP-002
+    owner: capability
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CAP-ATTEN-004
+    vectors:
+      - conformance/vectors/capability-attenuation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAP-003
+    owner: capability
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CAP-LEASE-003
+    vectors:
+      - conformance/vectors/cap-lease-003.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-001
+    owner: effect
+    owner_spec: specs/schemas/intent.schema.json
+    status: specified
+    registry_tests:
+      - EFF-FLOW-001
+    vectors:
+      - conformance/vectors/eff-flow-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-004
+    owner: effect
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - EFF-UNK-003
+    vectors:
+      - conformance/vectors/effect-unknown-outcome.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-006
+    owner: effect
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - EFF-CRASH-001
+      - EFF-CRASH-002
+      - EFF-CRASH-003
+    vectors:
+      - conformance/vectors/crash-recovery.json
+      - conformance/vectors/eff-crash-001.json
+      - conformance/vectors/eff-crash-002.json
+      - conformance/vectors/eff-crash-003.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-004
+    owner: runtime
+    owner_spec: specs/schemas/task-contract.schema.json
+    status: specified
+    registry_tests:
+      - LOOP-CONTRACT-001
+    vectors:
+      - conformance/vectors/loop-contract-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-005
+    owner: runtime
+    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    status: specified
+    registry_tests:
+      - LOOP-GATE-001
+    vectors:
+      - conformance/vectors/loop-gate-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-006
+    owner: runtime
+    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    status: specified
+    registry_tests:
+      - RECOVERY-CRASH-006
+    vectors:
+      - conformance/vectors/crash-recovery.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-009
+    owner: runtime
+    owner_spec: specs/schemas/verification-report.schema.json
+    status: specified
+    registry_tests:
+      - LOOP-VERIFY-003
+    vectors:
+      - conformance/vectors/loop-verify-003.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RES-001
+    owner: resource
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CTX-REQ-007
+    vectors:
+      - conformance/vectors/context-required-over-budget.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEC-002
+    owner: security
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CTX-TRUST-004
+    vectors:
+      - conformance/vectors/prompt-injection-isolation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-001
+    owner: conformance
+    owner_spec: specs/schemas/profile-manifest.schema.json
+    status: specified
+    registry_tests:
+      - MANIFEST-SCHEMA-001
+    vectors:
+      - conformance/vectors/manifest-schema-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-003
+    owner: conformance
+    owner_spec: specs/schemas/profile-manifest.schema.json
+    status: specified
+    registry_tests:
+      - MANIFEST-STATUS-003
+    vectors:
+      - conformance/vectors/manifest-status-003.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-CORE-001
+    owner: profile-core
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - PROFILE-CORE-001
+    vectors:
+      - conformance/vectors/profile-core-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-DIST-001
+    owner: profile-distributed
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - PROFILE-DIST-001
+    vectors:
+      - conformance/vectors/profile-dist-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-EMB-001
+    owner: profile-embodied
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - EMB-STALE-002
+    vectors:
+      - conformance/vectors/stale-embodied-observation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-HET-001
+    owner: profile-heterogeneous-cim
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - CIM-CAL-003
+    vectors:
+      - conformance/vectors/cim-calibration-mismatch.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-LEARN-001
+    owner: profile-controlled-learning
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - LEARN-PROMOTE-005
+    vectors:
+      - conformance/vectors/learning-direct-promotion-denied.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-CVM-001
+    owner: profile-context-virtualization
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CVM-STALE-001
+      - CTX-REVOKE-CACHE-001
+    vectors:
+      - conformance/vectors/context-revocation-cache-reuse.json
+      - conformance/vectors/cvm-stale-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-HARNESS-001
+    owner: profile-harness
+    owner_spec: specs/schemas/profile-manifest.schema.json
+    status: specified
+    registry_tests:
+      - HARNESS-MANIFEST-001
+    vectors:
+      - conformance/vectors/harness-manifest-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROFILE-HARNESS-002
+    owner: profile-harness
+    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    status: specified
+    registry_tests:
+      - HARNESS-EPISODE-002
+    vectors:
+      - conformance/vectors/harness-episode-002.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PERF-001
+    owner: performance
+    owner_spec: specs/schemas/performance-report.schema.json
+    status: specified
+    registry_tests:
+      - PERF-REPORT-CONTRACT-001
+    vectors:
+      - conformance/vectors/performance-report-contract.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PERF-002
+    owner: performance
+    owner_spec: conformance/README.md
+    status: specified
+    registry_tests:
+      - PERF-REPORT-CONTRACT-001
+    vectors:
+      - conformance/vectors/performance-report-contract.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PERF-003
+    owner: performance
+    owner_spec: specs/schemas/performance-report.schema.json
+    status: specified
+    registry_tests:
+      - PERF-REPORT-CONTRACT-001
+    vectors:
+      - conformance/vectors/performance-report-contract.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PERF-004
+    owner: performance
+    owner_spec: conformance/README.md
+    status: specified
+    registry_tests:
+      - PERF-REPORT-CONTRACT-001
+    vectors:
+      - conformance/vectors/performance-report-contract.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PERF-005
+    owner: performance
+    owner_spec: docs/evaluation/agent-benefit-benchmark.md
+    status: specified
+    registry_tests:
+      - PERF-REPORT-CONTRACT-001
+    vectors:
+      - conformance/vectors/performance-report-contract.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-001
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-INVALIDATION-001
+    vectors:
+      - conformance/vectors/knowledge-source-invalidation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-002
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-INVALIDATION-001
+    vectors:
+      - conformance/vectors/knowledge-source-invalidation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-003
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-POISON-001
+    vectors:
+      - conformance/vectors/knowledge-poisoning-isolation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-004
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-POISON-001
+    vectors:
+      - conformance/vectors/knowledge-poisoning-isolation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-005
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-MAINTENANCE-001
+    vectors:
+      - conformance/vectors/knowledge-maintenance-bounded.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-006
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - KNOW-INVALIDATION-001
+    vectors:
+      - conformance/vectors/knowledge-source-invalidation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-SESSION-001
+    owner: management-session
+    owner_spec: specs/schemas/privileged-management-session.schema.json
+    status: specified
+    registry_tests:
+      - MGMT-CONFIG-001
+    vectors:
+      - conformance/vectors/management-valid-configuration.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-SESSION-002
+    owner: management-session
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    status: specified
+    registry_tests:
+      - MGMT-SESSION-DENY-002
+      - MGMT-GATE-DENY-003
+    vectors:
+      - conformance/vectors/management-gate-denials.json
+      - conformance/vectors/management-session-denials.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-SESSION-003
+    owner: management-session
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    status: specified
+    registry_tests:
+      - MGMT-SESSION-DENY-002
+    vectors:
+      - conformance/vectors/management-session-denials.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-GATE-001
+    owner: management-gate
+    owner_spec: specs/schemas/management-action-proposal.schema.json
+    status: specified
+    registry_tests:
+      - MGMT-CONFIG-001
+      - MGMT-GATE-DENY-003
+    vectors:
+      - conformance/vectors/management-gate-denials.json
+      - conformance/vectors/management-valid-configuration.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-APPROVAL-001
+    owner: management-approval
+    owner_spec: specs/schemas/management-approval-decision.schema.json
+    status: specified
+    registry_tests:
+      - MGMT-APPROVAL-005
+    vectors:
+      - conformance/vectors/management-independent-approval.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-AUTHZ-001
+    owner: management-authorization
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    status: specified
+    registry_tests:
+      - MGMT-AUTHZ-004
+    vectors:
+      - conformance/vectors/management-untrusted-self-authorization.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-TRUST-001
+    owner: management-trust
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    status: specified
+    registry_tests:
+      - MGMT-AUTHZ-004
+    vectors:
+      - conformance/vectors/management-untrusted-self-authorization.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-EFFECT-001
+    owner: management-effect
+    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    status: specified
+    registry_tests:
+      - MGMT-CONFIG-001
+      - MGMT-IDEM-006
+      - MGMT-RECOVERY-007
+    vectors:
+      - conformance/vectors/management-idempotent-lifecycle.json
+      - conformance/vectors/management-shell-crash-reconciliation.json
+      - conformance/vectors/management-valid-configuration.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-IDEM-001
+    owner: management-effect
+    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    status: specified
+    registry_tests:
+      - MGMT-IDEM-006
+    vectors:
+      - conformance/vectors/management-idempotent-lifecycle.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-RECOVERY-001
+    owner: management-recovery
+    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    status: specified
+    registry_tests:
+      - MGMT-RECOVERY-007
+    vectors:
+      - conformance/vectors/management-shell-crash-reconciliation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-FALLBACK-001
+    owner: management-fallback
+    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    status: specified
+    registry_tests:
+      - MGMT-FALLBACK-008
+    vectors:
+      - conformance/vectors/management-deterministic-fallback.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MGMT-SESSION-LIFECYCLE-001
+    owner: management-session
+    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    status: specified
+    registry_tests:
+      - MGMT-SESSION-DENY-002
+      - MGMT-RECOVERY-007
+    vectors:
+      - conformance/vectors/management-session-denials.json
+      - conformance/vectors/management-shell-crash-reconciliation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-INSTALL-001
+    owner: agent-installation
+    owner_spec: specs/schemas/agent-installation.schema.json
+    status: specified
+    registry_tests:
+      - AGENT-INSTALL-001
+    vectors:
+      - conformance/vectors/agent-installation-verification.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-ADAPTER-001
+    owner: agent-adapter
+    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    status: specified
+    registry_tests:
+      - AGENT-BYPASS-002
+    vectors:
+      - conformance/vectors/agent-adapter-bypass.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-OOB-001
+    owner: agent-adapter
+    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    status: specified
+    registry_tests:
+      - AGENT-OOB-001
+    vectors:
+      - conformance/vectors/agent-out-of-band-reconciliation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-COMPLETE-001
+    owner: agent-completion
+    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    status: specified
+    registry_tests:
+      - AGENT-BYPASS-002
+    vectors:
+      - conformance/vectors/agent-adapter-bypass.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-SANDBOX-001
+    owner: agent-sandbox
+    owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+    status: specified
+    registry_tests:
+      - AGENT-BYPASS-002
+    vectors:
+      - conformance/vectors/agent-adapter-bypass.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-RECOVERY-001
+    owner: agent-recovery
+    owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+    status: specified
+    registry_tests:
+      - AGENT-RECOVERY-003
+    vectors:
+      - conformance/vectors/agent-recovery-reconciliation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-OBJECT-001
+    owner: governed-memory
+    owner_spec: specs/schemas/memory-object.schema.json
+    status: specified
+    registry_tests:
+      - MEM-ADMISSION-001
+    vectors:
+      - conformance/vectors/memory-admission-denied.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-ADMIT-001
+    owner: governed-memory
+    owner_spec: specs/governed-memory/README.md#3-写入与准入
+    status: specified
+    registry_tests:
+      - MEM-ADMISSION-001
+    vectors:
+      - conformance/vectors/memory-admission-denied.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-ADMIT-002
+    owner: governed-memory
+    owner_spec: specs/governed-memory/README.md#3-写入与准入
+    status: specified
+    registry_tests:
+      - MEM-RYW-001
+    vectors:
+      - conformance/vectors/memory-read-your-write.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-PROMOTE-001
+    owner: governed-memory
+    owner_spec: specs/governed-memory/README.md#4-晋升冲突与修改
+    status: specified
+    registry_tests:
+      - MEM-PROMOTION-002
+    vectors:
+      - conformance/vectors/memory-cross-scope-promotion.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-DELETE-001
+    owner: governed-memory
+    owner_spec: specs/governed-memory/README.md#5-失效遗忘与删除
+    status: specified
+    registry_tests:
+      - MEM-INVALIDATION-003
+    vectors:
+      - conformance/vectors/memory-derived-invalidation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-MANIFEST-001
+    owner: cognitive-discovery
+    owner_spec: specs/schemas/cognitive-resource-manifest.schema.json
+    status: specified
+    registry_tests:
+      - DISC-DISCOVER-READ-001
+    vectors:
+      - conformance/vectors/discovery-read-separation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-ADMIT-001
+    owner: cognitive-discovery
+    owner_spec: specs/schemas/context-request-admission.schema.json
+    status: specified
+    registry_tests:
+      - DISC-ADMISSION-002
+    vectors:
+      - conformance/vectors/context-candidate-admission.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-DELTA-001
+    owner: cognitive-discovery
+    owner_spec: specs/schemas/context-view-delta.schema.json
+    status: specified
+    registry_tests:
+      - DISC-DELTA-SCOPE-003
+    vectors:
+      - conformance/vectors/context-delta-scope.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-STAGNATION-001
+    owner: cognitive-discovery
+    owner_spec: specs/cognitive-discovery/README.md#4-停滞与错误隐私
+    status: specified
+    registry_tests:
+      - DISC-STAGNATION-004
+    vectors:
+      - conformance/vectors/context-resolution-stagnation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAT-LIFECYCLE-001
+    owner: operation-catalog
+    owner_spec: specs/schemas/operation-catalog-snapshot.schema.json
+    status: specified
+    registry_tests:
+      - CAT-STALE-001
+    vectors:
+      - conformance/vectors/catalog-stale-binding.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAT-DISCOVER-001
+    owner: operation-catalog
+    owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+    status: specified
+    registry_tests:
+      - CAT-EFFECT-CONFUSION-002
+    vectors:
+      - conformance/vectors/catalog-effect-confusion.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAT-MATCH-001
+    owner: operation-catalog
+    owner_spec: specs/schemas/operation-match-report.schema.json
+    status: specified
+    registry_tests:
+      - CAT-EFFECT-CONFUSION-002
+    vectors:
+      - conformance/vectors/catalog-effect-confusion.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAT-BIND-001
+    owner: operation-catalog
+    owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+    status: specified
+    registry_tests:
+      - CAT-STALE-001
+    vectors:
+      - conformance/vectors/catalog-stale-binding.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEM-SOFT-001
+    owner: semantic-mediation
+    owner_spec: specs/semantic-mediation/README.md#1-sms-边界
+    status: specified
+    registry_tests:
+      - SEM-FALLBACK-001
+    vectors:
+      - conformance/vectors/semantic-fallback-bounds.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEM-ENVELOPE-001
+    owner: semantic-mediation
+    owner_spec: specs/schemas/semantic-service-manifest.schema.json
+    status: specified
+    registry_tests:
+      - SEM-FALLBACK-001
+    vectors:
+      - conformance/vectors/semantic-fallback-bounds.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEM-FALLBACK-001
+    owner: semantic-mediation
+    owner_spec: specs/semantic-mediation/README.md#3-降级
+    status: specified
+    registry_tests:
+      - SEM-FALLBACK-001
+    vectors:
+      - conformance/vectors/semantic-fallback-bounds.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CRB-BOUND-001
+    owner: cognitive-resource-broker
+    owner_spec: specs/schemas/cognitive-allocation-decision.schema.json
+    status: specified
+    registry_tests:
+      - SEM-FALLBACK-001
+    vectors:
+      - conformance/vectors/semantic-fallback-bounds.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CRB-ACCOUNT-001
+    owner: cognitive-resource-broker
+    owner_spec: specs/semantic-mediation/README.md#4-cognitive-resource-broker
+    status: specified
+    registry_tests:
+      - DISC-DELTA-SCOPE-003
+    vectors:
+      - conformance/vectors/context-delta-scope.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-ADDR-001
+    owner: addr-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-ADDR-002
+    owner: addr-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-COMPAT-001
+    owner: agent-compat
+    owner_spec: specs/agent-compatibility/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-INSTALL-002
+    owner: agent-install
+    owner_spec: specs/agent-compatibility/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AGENT-SHELL-001
+    owner: agent-shell
+    owner_spec: specs/agent-compatibility/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-CAN-001
+    owner: akp-can
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-CONF-001
+    owner: akp-conf
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-CONT-001
+    owner: akp-cont
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-ECO-001
+    owner: akp-eco
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-ECO-002
+    owner: akp-eco
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-ECO-003
+    owner: akp-eco
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-ENV-001
+    owner: akp-env
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-ENV-002
+    owner: akp-env
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-IDEM-001
+    owner: akp-idem
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-INTENT-001
+    owner: akp-intent
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - INTENT-SUPERSEDE-002
+    vectors:
+      - conformance/vectors/intent-supersede-002.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-MGMT-001
+    owner: akp-mgmt
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-MGMT-002
+    owner: akp-mgmt
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-MGMT-003
+    owner: akp-mgmt
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-RES-001
+    owner: akp-res
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-SEC-001
+    owner: akp-sec
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-SHELL-001
+    owner: akp-shell
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-SHELL-002
+    owner: akp-shell
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SHELL-WATCH-RESUME-006
+    vectors:
+      - conformance/vectors/shell-watch-resume-006.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-SHELL-003
+    owner: akp-shell
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SHELL-CANCEL-SEMANTICS-005
+    vectors:
+      - conformance/vectors/shell-cancel-semantics-005.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-STR-001
+    owner: akp-str
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-STR-002
+    owner: akp-str
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AKP-VER-001
+    owner: akp-ver
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AUDIT-001
+    owner: audit-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AUDIT-002
+    owner: audit-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-AUTH-001
+    owner: auth-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAP-004
+    owner: cap-004
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAP-005
+    owner: cap-005
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - CTX-REVOKE-CACHE-001
+    vectors:
+      - conformance/vectors/context-revocation-cache-reuse.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CAT-SHELL-001
+    owner: cat-shell
+    owner_spec: specs/operation-catalog/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-CTX-001
+    owner: charter-ctx
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-DET-001
+    owner: charter-det
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-HIER-001
+    owner: charter-hier
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-OBJ-001
+    owner: charter-obj
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-PROTO-001
+    owner: charter-proto
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CHARTER-STATE-001
+    owner: charter-state
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-002
+    owner: conf-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-004
+    owner: conf-004
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-005
+    owner: conf-005
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CONF-006
+    owner: conf-006
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CORE-CANDIDATE-001
+    owner: core-candidate
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CORE-DELTA-001
+    owner: core-delta
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CORE-MEDIATION-001
+    owner: core-mediation
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CORE-OPS-001
+    owner: core-ops
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CORE-OPS-002
+    owner: core-ops
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-002
+    owner: ctx-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - CTX-RANK-AUTH-001
+      - GOBJ-TENANT-LATERAL-001
+    vectors:
+      - conformance/vectors/context-rank-before-auth.json
+      - conformance/vectors/spec-contract-coverage.json
+      - conformance/vectors/tenant-lateral-read-denial.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-003
+    owner: ctx-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-006
+    owner: ctx-006
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-007
+    owner: ctx-007
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-009
+    owner: ctx-009
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-010
+    owner: ctx-010
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-011
+    owner: ctx-011
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-CTX-012
+    owner: context
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - CTX-RENDER-001
+    vectors:
+      - conformance/vectors/context-render-stability.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-PRIVACY-001
+    owner: disc-privacy
+    owner_spec: specs/cognitive-discovery/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DISC-SHELL-001
+    owner: disc-shell
+    owner_spec: specs/cognitive-discovery/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-BUD-001
+    owner: dist-bud
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-CONF-001
+    owner: dist-conf
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-DEL-001
+    owner: dist-del
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-MBX-001
+    owner: dist-mbx
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-MBX-002
+    owner: dist-mbx
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-OBJ-001
+    owner: dist-obj
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-PART-001
+    owner: dist-part
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-REC-001
+    owner: dist-rec
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-SEC-001
+    owner: dist-sec
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-DIST-SHELL-001
+    owner: dist-shell
+    owner_spec: specs/distributed/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-002
+    owner: eff-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - EFF-IDEM-CONFLICT-001
+    vectors:
+      - conformance/vectors/effect-idempotency-conflict.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-003
+    owner: eff-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-005
+    owner: eff-005
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-007
+    owner: eff-007
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EFF-STATE-001
+    owner: eff-state
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - EFFECT-STATE-CLOSURE-008
+    vectors:
+      - conformance/vectors/effect-state-closure-008.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-ACT-001
+    owner: emb-act
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-CONF-001
+    owner: emb-conf
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-FRAME-001
+    owner: emb-frame
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-LOOP-001
+    owner: emb-loop
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-LOOP-002
+    owner: emb-loop
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-SAFE-001
+    owner: emb-safe
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-SEC-001
+    owner: emb-sec
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-SHELL-001
+    owner: emb-shell
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-STATE-001
+    owner: emb-state
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-TIME-001
+    owner: emb-time
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EMB-UNC-001
+    owner: emb-unc
+    owner_spec: specs/embodied/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-ERR-001
+    owner: err-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-ERR-002
+    owner: err-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EVT-002
+    owner: evt-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EVT-003
+    owner: evt-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EVT-004
+    owner: evt-004
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-EVT-005
+    owner: evt-005
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-ID-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-DOMAIN-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-TENANT-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-HEADER-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - GOBJ-TENANT-LATERAL-001
+    vectors:
+      - conformance/vectors/tenant-lateral-read-denial.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-REF-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-REF-002
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-REF-003
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-REF-004
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-BIND-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-BIND-002
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-BIND-003
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-BIND-004
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-BIND-005
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-AUTHDEL-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-AUTHDEL-002
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-AUTHDEL-003
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-MIG-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#6-migration
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-MIG-002
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#6-migration
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-MIG-003
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#6-migration
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-MIG-004
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#6-migration
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-VALID-001
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-VALID-002
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOBJ-VALID-003
+    owner: governed-object-contract
+    owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors: []
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOV-DISC-001
+    owner: gov-disc
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GOV-MEM-001
+    owner: gov-mem
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GW-001
+    owner: gw-001
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GW-002
+    owner: gw-002
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - GW-REMOTE-COMPLETE-001
+    vectors:
+      - conformance/vectors/remote-completed-not-acceptance.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GW-003
+    owner: gw-003
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-GW-004
+    owner: gw-004
+    owner_spec: specs/akp/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-CAL-001
+    owner: het-cal
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-CONF-001
+    owner: het-conf
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-DATA-001
+    owner: het-data
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-DRIFT-001
+    owner: het-drift
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-ERR-001
+    owner: het-err
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-FB-001
+    owner: het-fb
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-HDL-001
+    owner: het-hdl
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-LIFE-001
+    owner: het-life
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-OBS-001
+    owner: het-obs
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-OPS-001
+    owner: het-ops
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-PLC-001
+    owner: het-plc
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-PLC-002
+    owner: het-plc
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-RG-001
+    owner: het-rg
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-SEC-001
+    owner: het-sec
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-HET-SHELL-001
+    owner: het-shell
+    owner_spec: specs/heterogeneous/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-INTENT-ACCEPT-001
+    owner: intent-accept
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - INTENT-ACCEPTANCE-007
+      - GW-REMOTE-COMPLETE-001
+    vectors:
+      - conformance/vectors/intent-acceptance-007.json
+      - conformance/vectors/remote-completed-not-acceptance.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-INTENT-ADMISSION-001
+    owner: intent-admission
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-INTENT-RECORD-001
+    owner: intent-record
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-INTENT-SUPERSEDE-001
+    owner: intent-supersede
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - INTENT-SUPERSEDE-002
+    vectors:
+      - conformance/vectors/intent-supersede-002.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-007
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-008
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-KNOW-009
+    owner: knowledge-compilation
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-CAN-001
+    owner: learn-can
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-CAND-001
+    owner: learn-cand
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-CAND-002
+    owner: learn-cand
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-CONF-001
+    owner: learn-conf
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-DATA-001
+    owner: learn-data
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-FAIL-001
+    owner: learn-fail
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-MEM-001
+    owner: learn-mem
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-MEM-002
+    owner: learn-mem
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-MEM-003
+    owner: learn-mem
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-MEM-004
+    owner: learn-mem
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-MEM-005
+    owner: learn-mem
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-OFF-001
+    owner: learn-off
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-RBK-001
+    owner: learn-rbk
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-REL-001
+    owner: learn-rel
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-SEC-001
+    owner: learn-sec
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-SHD-001
+    owner: learn-shd
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-LEARN-SHELL-001
+    owner: learn-shell
+    owner_spec: specs/learning/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-MUTATE-001
+    owner: mem-mutate
+    owner_spec: specs/governed-memory/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-MEM-SHELL-001
+    owner: mem-shell
+    owner_spec: specs/governed-memory/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-OBJ-002
+    owner: obj-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-OBJ-003
+    owner: obj-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-OP-001
+    owner: op-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-OP-002
+    owner: op-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROTO-002
+    owner: proto-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROTO-003
+    owner: proto-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-PROTO-004
+    owner: proto-004
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-REC-001
+    owner: rec-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-REC-002
+    owner: rec-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-REC-003
+    owner: rec-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - STATE-STORE-DEGRADE-001
+    vectors:
+      - conformance/vectors/state-store-degradation.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RES-002
+    owner: res-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RES-003
+    owner: res-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-001
+    owner: run-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-002
+    owner: run-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-003
+    owner: run-003
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-007
+    owner: run-007
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-008
+    owner: run-008
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-RUN-STATE-001
+    owner: run-state
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+      - SHELL-EXECUTION-MIGRATION-009
+    vectors:
+      - conformance/vectors/shell-execution-migration-009.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SCOPE-001
+    owner: scope-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SCOPE-002
+    owner: scope-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEC-001
+    owner: sec-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SEM-SHELL-001
+    owner: sem-shell
+    owner_spec: specs/semantic-mediation/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-AMBIGUITY-001
+    owner: shell-ambiguity
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - SHELL-TARGET-AMBIGUITY-001
+    vectors:
+      - conformance/vectors/shell-target-ambiguity-001.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-ATTACH-001
+    owner: shell-attach
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - SHELL-DETACH-ATTACH-004
+    vectors:
+      - conformance/vectors/shell-detach-attach-004.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-CHANNEL-001
+    owner: shell-channel
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SHELL-CHANNEL-ISOLATION-003
+    vectors:
+      - conformance/vectors/shell-channel-isolation-003.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-CONTROL-001
+    owner: shell-control
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SHELL-CANCEL-SEMANTICS-005
+      - SHELL-EXECUTION-MIGRATION-009
+    vectors:
+      - conformance/vectors/shell-cancel-semantics-005.json
+      - conformance/vectors/shell-execution-migration-009.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-CORRECTION-001
+    owner: shell-correction
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - INTENT-SUPERSEDE-002
+    vectors:
+      - conformance/vectors/intent-supersede-002.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-DETACH-001
+    owner: shell-detach
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SHELL-DETACH-ATTACH-004
+    vectors:
+      - conformance/vectors/shell-detach-attach-004.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-PREVIEW-001
+    owner: shell-preview
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-STATUS-001
+    owner: shell-status
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - INTENT-ACCEPTANCE-007
+    vectors:
+      - conformance/vectors/intent-acceptance-007.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-TARGET-001
+    owner: shell-target
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SHELL-TARGET-AMBIGUITY-001
+    vectors:
+      - conformance/vectors/shell-target-ambiguity-001.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-UX-001
+    owner: shell-ux
+    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    status: specified
+    registry_tests:
+      - SHELL-CHANNEL-ISOLATION-003
+    vectors:
+      - conformance/vectors/shell-channel-isolation-003.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-SHELL-WATCH-001
+    owner: shell-watch
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SHELL-WATCH-RESUME-006
+      - SHELL-EXECUTION-MIGRATION-009
+    vectors:
+      - conformance/vectors/shell-execution-migration-009.json
+      - conformance/vectors/shell-watch-resume-006.json
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-STATE-001
+    owner: state-001
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-STATE-002
+    owner: state-002
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
+  - id: REQ-STATE-005
+    owner: state-005
+    owner_spec: specs/core/README.md
+    status: specified
+    registry_tests:
+      - SPEC-CONTRACT-COVERAGE-001
+    vectors:
+      - conformance/vectors/spec-contract-coverage.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
