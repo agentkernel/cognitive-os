@@ -1,0 +1,17 @@
+{
+  "id": "AGENT-RECOVERY-003",
+  "title": "pending effect is reconciled before loop resume",
+  "requirement_ids": [
+    "REQ-AGENT-RECOVERY-001"
+  ],
+  "input": {
+    "scenario": "pending effect is reconciled before loop resume"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "EFFECT_OUTCOME_UNKNOWN",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

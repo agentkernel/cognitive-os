@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OperationSummary",
+  "type": "object",
+  "required": [
+    "metadata",
+    "operation_id",
+    "semantic_name",
+    "short_description",
+    "input_types",
+    "output_types",
+    "effect_class",
+    "risk_class",
+    "realtime_class",
+    "descriptor_version",
+    "descriptor_digest",
+    "availability"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "operation_id": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "semantic_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "short_description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "effect_class": {
+      "enum": [
+        "pure",
+        "local_ephemeral",
+        "governed_external",
+        "emergency_safety"
+      ]
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "realtime_class": {
+      "type": "string"
+    },
+    "descriptor_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "descriptor_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "availability": {
+      "enum": [
+        "available",
+        "degraded",
+        "unavailable",
+        "retired"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

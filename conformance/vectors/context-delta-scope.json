@@ -1,0 +1,18 @@
+{
+  "id": "DISC-DELTA-SCOPE-003",
+  "title": "delta cannot expand scope or reset parent budget",
+  "requirement_ids": [
+    "REQ-DISC-DELTA-001",
+    "REQ-CRB-ACCOUNT-001"
+  ],
+  "input": {
+    "scenario": "delta cannot expand scope or reset parent budget"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "CONTEXT_AUTH_DENIED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

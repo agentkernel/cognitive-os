@@ -1,0 +1,17 @@
+{
+  "id": "DISC-DISCOVER-READ-001",
+  "title": "discoverable reference does not grant body read",
+  "requirement_ids": [
+    "REQ-DISC-MANIFEST-001"
+  ],
+  "input": {
+    "scenario": "discoverable reference does not grant body read"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "RESOURCE_NOT_DISCOVERABLE",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

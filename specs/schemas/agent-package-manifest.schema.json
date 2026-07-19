@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentPackageManifest",
+  "type": "object",
+  "required": [
+    "metadata",
+    "package_id",
+    "publisher",
+    "package_version",
+    "artifact_digest",
+    "signature_ref",
+    "provenance_ref",
+    "supported_protocols",
+    "runtime",
+    "io_declarations",
+    "sandbox_requirements"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "package_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "publisher": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "signature_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "provenance_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "supported_protocols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "checkpoint",
+        "cancellation",
+        "hidden_remote_state"
+      ],
+      "properties": {
+        "checkpoint": {
+          "type": "boolean"
+        },
+        "cancellation": {
+          "type": "boolean"
+        },
+        "hidden_remote_state": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "io_declarations": {
+      "type": "object",
+      "properties": {
+        "network": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filesystem": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandbox_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

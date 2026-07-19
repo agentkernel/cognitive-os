@@ -1,0 +1,17 @@
+{
+  "id": "MEM-PROMOTION-002",
+  "title": "in-place cross-scope relabel is rejected",
+  "requirement_ids": [
+    "REQ-MEM-PROMOTE-001"
+  ],
+  "input": {
+    "scenario": "in-place cross-scope relabel is rejected"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "MEMORY_SCOPE_PROMOTION_REQUIRED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

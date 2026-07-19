@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CognitiveAllocationDecision",
+  "type": "object",
+  "required": [
+    "metadata",
+    "activity_context_ref",
+    "information_gap_ref",
+    "decision",
+    "reservation",
+    "allowed_egress",
+    "reason_codes",
+    "hard_ceiling_ref"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "information_gap_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "decision": {
+      "enum": [
+        "admitted",
+        "denied",
+        "wait",
+        "degrade",
+        "escalate"
+      ]
+    },
+    "selected_resolver": {
+      "type": "string"
+    },
+    "reservation": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "allowed_egress": {
+      "enum": [
+        "none",
+        "same_tenant",
+        "approved_peers"
+      ]
+    },
+    "verifier_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "fallback": {
+      "type": "string"
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "hard_ceiling_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    }
+  },
+  "additionalProperties": false
+}

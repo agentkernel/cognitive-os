@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CognitiveResourceManifest",
+  "type": "object",
+  "required": [
+    "metadata",
+    "activity_context_ref",
+    "governance_scope",
+    "purpose",
+    "domains",
+    "expandable_refs",
+    "query_capabilities",
+    "budget_summary",
+    "policy_version",
+    "revocation_version",
+    "expires_at"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "governance_scope": {
+      "$ref": "common-defs.schema.json#/$defs/governanceScope"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "expandable_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "query_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budget_summary": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revocation_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

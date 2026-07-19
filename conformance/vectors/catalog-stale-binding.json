@@ -1,0 +1,18 @@
+{
+  "id": "CAT-STALE-001",
+  "title": "descriptor drift forces rediscovery and reauthorization",
+  "requirement_ids": [
+    "REQ-CAT-LIFECYCLE-001",
+    "REQ-CAT-BIND-001"
+  ],
+  "input": {
+    "scenario": "descriptor drift forces rediscovery and reauthorization"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "CATALOG_VERSION_STALE",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

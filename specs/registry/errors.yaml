@@ -1,27 +1,179 @@
-version: "0.1"
+version: '0.1'
 errors:
-  - {code: STATE_CONFLICT, category: state, retryable: true, description: Expected state version differs from authoritative version.}
-  - {code: STATE_STALE_OBSERVATION, category: state, retryable: true, description: Observation is outside its declared validity interval.}
-  - {code: CONTEXT_INCOMPLETE, category: context, retryable: true, description: Required context set cannot be closed.}
-  - {code: CONTEXT_BUDGET_EXCEEDED, category: context, retryable: false, description: Hard budget cannot contain required context.}
-  - {code: CONTEXT_AUTH_DENIED, category: auth, retryable: false, description: Context item is not authorized for principal and purpose.}
-  - {code: AUTH_CAPABILITY_ATTENUATION_VIOLATION, category: auth, retryable: false, description: Derived capability expands a parent bound.}
-  - {code: AUTH_CAPABILITY_EXPIRED, category: auth, retryable: true, description: Capability lease is not currently valid.}
-  - {code: EFFECT_OUTCOME_UNKNOWN, category: effect, retryable: true, description: Execution may have occurred and requires reconciliation or quarantine.}
-  - {code: EFFECT_RECOVERY_QUARANTINED, category: effect, retryable: false, description: Recovery cannot safely determine or compensate outcome.}
-  - {code: PROTOCOL_MAPPING_INCOMPLETE, category: protocol, retryable: false, description: External protocol state has no lossless CognitiveOS mapping.}
-  - {code: PROTOCOL_SCHEMA_DIGEST_MISMATCH, category: protocol, retryable: true, description: Payload schema differs from pinned digest.}
-  - {code: RESOURCE_BUDGET_EXHAUSTED, category: resource, retryable: false, description: A deterministic hard resource limit was reached.}
-  - {code: PROFILE_CIM_CALIBRATION_MISMATCH, category: profile, retryable: true, description: Placement calibration does not match the certified resource calibration.}
-  - {code: PROFILE_LEARNING_PROMOTION_DENIED, category: profile, retryable: false, description: Learning candidate lacks evaluated and approved release evidence.}
-  - {code: PROFILE_EMBODIED_OBSERVATION_STALE, category: profile, retryable: true, description: Embodied observation is too stale for safe actuation.}
-  - {code: KNOWLEDGE_SOURCE_INVALIDATED, category: knowledge, retryable: true, description: A source change invalidated dependent claims and requires bounded recompilation.}
-  - {code: KNOWLEDGE_POISON_QUARANTINED, category: knowledge, retryable: false, description: Untrusted or self-corroborating generated knowledge was quarantined.}
-  - {code: KNOWLEDGE_MAINTENANCE_BOUNDED, category: knowledge, retryable: false, description: Knowledge maintenance reached a declared recursion, object, retry, time, or cost bound.}
-  - {code: PERFORMANCE_REPORT_INCOMPLETE, category: performance, retryable: false, description: A performance report omits reproducibility, denominator, confidence, safety, or tail-latency data.}
-  - {code: MANAGEMENT_SESSION_EXPIRED, category: auth, retryable: true, description: Privileged management session exceeded its idle or absolute expiry and requires a newly authenticated session.}
-  - {code: MANAGEMENT_SESSION_REVOKED, category: auth, retryable: false, description: Privileged management session was revoked and cannot authorize new management work.}
-  - {code: MANAGEMENT_STEP_UP_REQUIRED, category: auth, retryable: true, description: Management action requires a policy-approved step-up reauthentication before authorization.}
-  - {code: MANAGEMENT_SCOPE_MISMATCH, category: auth, retryable: false, description: Management action domain, action, or resource lies outside the session scope.}
-  - {code: MANAGEMENT_SELF_AUTHORIZATION_DENIED, category: auth, retryable: false, description: Shell or workload attempted to sign, elevate, self-authorize, or alter authoritative audit state.}
-  - {code: MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED, category: auth, retryable: true, description: Management action requires a valid approval from an authority independent of the proposing workload.}
+- code: STATE_CONFLICT
+  category: state
+  retryable: true
+  description: Expected state version differs from authoritative version.
+- code: STATE_STALE_OBSERVATION
+  category: state
+  retryable: true
+  description: Observation is outside its declared validity interval.
+- code: CONTEXT_INCOMPLETE
+  category: context
+  retryable: true
+  description: Required context set cannot be closed.
+- code: CONTEXT_BUDGET_EXCEEDED
+  category: context
+  retryable: false
+  description: Hard budget cannot contain required context.
+- code: CONTEXT_AUTH_DENIED
+  category: auth
+  retryable: false
+  description: Context item is not authorized for principal and purpose.
+- code: AUTH_CAPABILITY_ATTENUATION_VIOLATION
+  category: auth
+  retryable: false
+  description: Derived capability expands a parent bound.
+- code: AUTH_CAPABILITY_EXPIRED
+  category: auth
+  retryable: true
+  description: Capability lease is not currently valid.
+- code: EFFECT_OUTCOME_UNKNOWN
+  category: effect
+  retryable: true
+  description: Execution may have occurred and requires reconciliation or quarantine.
+- code: EFFECT_RECOVERY_QUARANTINED
+  category: effect
+  retryable: false
+  description: Recovery cannot safely determine or compensate outcome.
+- code: PROTOCOL_MAPPING_INCOMPLETE
+  category: protocol
+  retryable: false
+  description: External protocol state has no lossless CognitiveOS mapping.
+- code: PROTOCOL_SCHEMA_DIGEST_MISMATCH
+  category: protocol
+  retryable: true
+  description: Payload schema differs from pinned digest.
+- code: RESOURCE_BUDGET_EXHAUSTED
+  category: resource
+  retryable: false
+  description: A deterministic hard resource limit was reached.
+- code: PROFILE_CIM_CALIBRATION_MISMATCH
+  category: profile
+  retryable: true
+  description: Placement calibration does not match the certified resource calibration.
+- code: PROFILE_LEARNING_PROMOTION_DENIED
+  category: profile
+  retryable: false
+  description: Learning candidate lacks evaluated and approved release evidence.
+- code: PROFILE_EMBODIED_OBSERVATION_STALE
+  category: profile
+  retryable: true
+  description: Embodied observation is too stale for safe actuation.
+- code: KNOWLEDGE_SOURCE_INVALIDATED
+  category: knowledge
+  retryable: true
+  description: A source change invalidated dependent claims and requires bounded recompilation.
+- code: KNOWLEDGE_POISON_QUARANTINED
+  category: knowledge
+  retryable: false
+  description: Untrusted or self-corroborating generated knowledge was quarantined.
+- code: KNOWLEDGE_MAINTENANCE_BOUNDED
+  category: knowledge
+  retryable: false
+  description: Knowledge maintenance reached a declared recursion
+  object: null
+  retry: null
+  time: null
+  or cost bound.: null
+- code: PERFORMANCE_REPORT_INCOMPLETE
+  category: performance
+  retryable: false
+  description: A performance report omits reproducibility
+  denominator: null
+  confidence: null
+  safety: null
+  or tail-latency data.: null
+- code: MANAGEMENT_SESSION_EXPIRED
+  category: auth
+  retryable: true
+  description: Privileged management session exceeded its idle or absolute expiry
+    and requires a newly authenticated session.
+- code: MANAGEMENT_SESSION_REVOKED
+  category: auth
+  retryable: false
+  description: Privileged management session was revoked and cannot authorize new
+    management work.
+- code: MANAGEMENT_STEP_UP_REQUIRED
+  category: auth
+  retryable: true
+  description: Management action requires a policy-approved step-up reauthentication
+    before authorization.
+- code: MANAGEMENT_SCOPE_MISMATCH
+  category: auth
+  retryable: false
+  description: Management action domain
+  action: null
+  or resource lies outside the session scope.: null
+- code: MANAGEMENT_SELF_AUTHORIZATION_DENIED
+  category: auth
+  retryable: false
+  description: Shell or workload attempted to sign
+  elevate: null
+  self-authorize: null
+  or alter authoritative audit state.: null
+- code: MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED
+  category: auth
+  retryable: true
+  description: Management action requires a valid approval from an authority independent
+    of the proposing workload.
+- code: AGENT_PACKAGE_VERIFICATION_FAILED
+  category: agent
+  retryable: false
+  description: Package digest, signature, provenance, or manifest verification failed.
+- code: AGENT_ADAPTER_BYPASS_DETECTED
+  category: agent
+  retryable: false
+  description: A declared mediated boundary was bypassed or could not be observed.
+- code: AGENT_COMPATIBILITY_DEGRADED
+  category: agent
+  retryable: false
+  description: Compatibility evidence supports only a lower profile.
+- code: MEMORY_ADMISSION_DENIED
+  category: memory
+  retryable: false
+  description: Memory candidate was not admitted by target scope authority.
+- code: MEMORY_SCOPE_PROMOTION_REQUIRED
+  category: memory
+  retryable: false
+  description: Cross-scope memory movement requires a new object and admission.
+- code: MEMORY_DERIVATION_INVALIDATED
+  category: memory
+  retryable: true
+  description: Source change invalidated memory derivatives.
+- code: RESOURCE_NOT_DISCOVERABLE
+  category: discovery
+  retryable: false
+  description: Resource is not discoverable in the current bound manifest.
+- code: CONTEXT_RESOLUTION_STAGNATED
+  category: discovery
+  retryable: false
+  description: Bounded resolution attempts made no admissible information gain.
+- code: CATALOG_VERSION_STALE
+  category: catalog
+  retryable: true
+  description: Catalog snapshot or descriptor binding is stale.
+- code: CATALOG_MATCH_INCONCLUSIVE
+  category: catalog
+  retryable: false
+  description: Operation candidates cannot be safely disambiguated.
+- code: NO_AUTHORIZED_OPERATION_CANDIDATE
+  category: catalog
+  retryable: false
+  description: No operation candidate is both visible and authorized.
+- code: SEMANTIC_SERVICE_UNAVAILABLE
+  category: semantic
+  retryable: true
+  description: Semantic service is unavailable; this is not a no-result response.
+- code: SEMANTIC_MATCH_INCONCLUSIVE
+  category: semantic
+  retryable: false
+  description: Semantic mediation could not produce a safe selection.
+- code: MODEL_EGRESS_DENIED
+  category: semantic
+  retryable: false
+  description: Selected semantic provider violates egress or residency policy.
+- code: SEMANTIC_BUDGET_EXHAUSTED
+  category: semantic
+  retryable: false
+  description: Semantic-service hard budget is exhausted.

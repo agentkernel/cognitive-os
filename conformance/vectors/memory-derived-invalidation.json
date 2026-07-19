@@ -1,0 +1,17 @@
+{
+  "id": "MEM-INVALIDATION-003",
+  "title": "source revocation invalidates derived indexes summaries and caches",
+  "requirement_ids": [
+    "REQ-MEM-DELETE-001"
+  ],
+  "input": {
+    "scenario": "source revocation invalidates derived indexes summaries and caches"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "MEMORY_DERIVATION_INVALIDATED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

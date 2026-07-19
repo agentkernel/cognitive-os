@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InformationGap",
+  "type": "object",
+  "required": [
+    "metadata",
+    "claim_or_decision_ref",
+    "missing_information_type",
+    "why_required",
+    "required_authority_class",
+    "acceptable_evidence",
+    "freshness_ms",
+    "resolution_deadline",
+    "risk_if_missing",
+    "prior_attempt_refs"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "claim_or_decision_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "missing_information_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "why_required": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_authority_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "acceptable_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "freshness_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "resolution_deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_if_missing": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prior_attempt_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    }
+  },
+  "additionalProperties": false
+}

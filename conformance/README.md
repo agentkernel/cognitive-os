@@ -49,3 +49,13 @@ python scripts-or-your-runner.py  # repository currently provides no runner
 ```
 
 Do not report a vector as passed merely because the JSON parses. A runner must execute the stated input against an implementation, compare the observable result with `expected`, preserve evidence, and report pass, fail, not-applicable, or documented-degradation for each applicable requirement.
+
+## Fourteen test layers
+原九层继续有效，并增加：
+10. **Agent installation/adapter**：package provenance、C0—C3 feature matrix、sandbox interception、Conversation isolation、completion candidate 与 recovery reconciliation。
+11. **Governed memory**：candidate admission、跨 scope promotion、conflict preservation、retention/deletion、derived invalidation。
+12. **Cognitive discovery**：manifest discover/read separation、candidate admission、delta scope/budget、stagnation 与 existence privacy。
+13. **Operation catalog**：snapshot lifecycle、summary/descriptor binding、effect-class ambiguity、dry-run 与 catalog drift。
+14. **Semantic mediation/CRB**：soft-signal isolation、deterministic envelope、fallback、egress、parent budget 和 hard-bound enforcement。
+
+五个新 Profile 的 declarative vectors 仍只是场景数据，不表示安装器、Memory Service、Catalog、SMS、CRB 或测试 runner 已实现。每个新 vector 的 requirement/error 必须存在于 registry，profile manifest 必须分别声明 Profile 状态、C0—C3 feature matrix、semantic service level 与 degradation。

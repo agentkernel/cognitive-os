@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OperationMatchReport",
+  "type": "object",
+  "required": [
+    "metadata",
+    "catalog_snapshot_ref",
+    "semantic_intent_digest",
+    "candidates",
+    "resolution"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "catalog_snapshot_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "semantic_intent_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "summary_ref",
+          "schema_compatible",
+          "effect_difference",
+          "risk_difference",
+          "uncertainties"
+        ],
+        "properties": {
+          "summary_ref": {
+            "$ref": "common-defs.schema.json#/$defs/strongRef"
+          },
+          "schema_compatible": {
+            "type": "boolean"
+          },
+          "effect_difference": {
+            "type": "string"
+          },
+          "risk_difference": {
+            "type": "string"
+          },
+          "uncertainties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "resolution": {
+      "enum": [
+        "selected_candidate",
+        "inconclusive",
+        "no_authorized_candidate",
+        "dry_run_required",
+        "escalate"
+      ]
+    },
+    "selected_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    }
+  },
+  "additionalProperties": false
+}

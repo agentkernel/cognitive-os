@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MemoryObject",
+  "type": "object",
+  "required": [
+    "metadata",
+    "memory_kind",
+    "governance_scope",
+    "purpose",
+    "retention",
+    "source_evidence_refs",
+    "conflict_refs",
+    "admission_status",
+    "observed_at",
+    "ingested_at",
+    "confidence",
+    "representation_refs",
+    "supersedes",
+    "invalidates"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "memory_kind": {
+      "enum": [
+        "working",
+        "episode",
+        "conversation",
+        "task",
+        "subject",
+        "procedural",
+        "semantic",
+        "world_observation",
+        "system"
+      ]
+    },
+    "governance_scope": {
+      "$ref": "common-defs.schema.json#/$defs/governanceScope"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retention": {
+      "$ref": "common-defs.schema.json#/$defs/retention"
+    },
+    "source_evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "conflict_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "admission_status": {
+      "enum": [
+        "proposed",
+        "quarantined",
+        "admitted",
+        "invalidated",
+        "expired",
+        "tombstoned"
+      ]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ingested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "confidence": {
+      "type": "object",
+      "required": [
+        "method",
+        "assessor"
+      ],
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "assessor": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "claim_ref": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "representation_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      },
+      "minItems": 1
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "invalidates": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    }
+  },
+  "additionalProperties": false
+}

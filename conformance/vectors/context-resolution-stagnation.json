@@ -1,0 +1,17 @@
+{
+  "id": "DISC-STAGNATION-004",
+  "title": "repeated no-gain resolution exits to escalation",
+  "requirement_ids": [
+    "REQ-DISC-STAGNATION-001"
+  ],
+  "input": {
+    "scenario": "repeated no-gain resolution exits to escalation"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "CONTEXT_RESOLUTION_STAGNATED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

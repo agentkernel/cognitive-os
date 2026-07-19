@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OperationCatalogSnapshot",
+  "type": "object",
+  "required": [
+    "metadata",
+    "authority_ref",
+    "snapshot_version",
+    "summary_refs",
+    "health_epoch",
+    "expires_at"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "authority_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "snapshot_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "summary_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      }
+    },
+    "health_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

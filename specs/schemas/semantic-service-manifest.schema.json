@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SemanticServiceManifest",
+  "type": "object",
+  "required": [
+    "metadata",
+    "level",
+    "providers",
+    "fallback_order",
+    "max_risk_use",
+    "soft_signal_only"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "level": {
+      "enum": [
+        "unsupported",
+        "basic",
+        "vector",
+        "model_assisted",
+        "llm_mediated"
+      ]
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "residency",
+          "retention"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "residency": {
+            "type": "string"
+          },
+          "retention": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "fallback_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "max_risk_use": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "soft_signal_only": {
+      "const": true
+    }
+  },
+  "additionalProperties": false
+}

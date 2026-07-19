@@ -1,321 +1,453 @@
-version: "0.1"
+version: '0.1'
 requirements:
-  - id: REQ-OBJ-001
-    owner: core-object
-    owner_spec: "specs/schemas/common-defs.schema.json"
-    status: specified
-    tests:
-      - SCHEMA-META-001
-  - id: REQ-PROTO-001
-    owner: core-protocol
-    owner_spec: "specs/schemas/common-defs.schema.json"
-    status: specified
-    tests:
-      - SCHEMA-VERSION-001
-  - id: REQ-STATE-003
-    owner: state
-    owner_spec: "CognitiveOS-Architecture.md#state-protocol"
-    status: specified
-    tests:
-      - STATE-CAS-002
-  - id: REQ-STATE-004
-    owner: state
-    owner_spec: "CognitiveOS-Architecture.md#state-protocol"
-    status: specified
-    tests:
-      - RECOVERY-CRASH-006
-  - id: REQ-CTX-001
-    owner: context
-    owner_spec: "specs/schemas/context-request.schema.json"
-    status: specified
-    tests:
-      - CTX-SCHEMA-001
-  - id: REQ-CTX-004
-    owner: context
-    owner_spec: "CognitiveOS-Architecture.md#context-resolution-protocol"
-    status: specified
-    tests:
-      - CTX-REQ-007
-  - id: REQ-CTX-005
-    owner: context
-    owner_spec: "specs/schemas/context-view.schema.json"
-    status: specified
-    tests:
-      - CTX-VIEW-001
-  - id: REQ-CTX-008
-    owner: context
-    owner_spec: "CognitiveOS-Architecture.md#context-engineering"
-    status: specified
-    tests:
-      - CTX-TRUST-004
-  - id: REQ-EVT-001
-    owner: event
-    owner_spec: "specs/schemas/event.schema.json"
-    status: specified
-    tests:
-      - EVT-SCHEMA-001
-  - id: REQ-CAP-001
-    owner: capability
-    owner_spec: "specs/schemas/authorization-capability.schema.json"
-    status: specified
-    tests:
-      - CAP-BIND-001
-  - id: REQ-CAP-002
-    owner: capability
-    owner_spec: "CognitiveOS-Architecture.md#capability-protocol"
-    status: specified
-    tests:
-      - CAP-ATTEN-004
-  - id: REQ-CAP-003
-    owner: capability
-    owner_spec: "CognitiveOS-Architecture.md#capability-protocol"
-    status: specified
-    tests:
-      - CAP-LEASE-003
-  - id: REQ-EFF-001
-    owner: effect
-    owner_spec: "specs/schemas/intent.schema.json"
-    status: specified
-    tests:
-      - EFF-FLOW-001
-  - id: REQ-EFF-004
-    owner: effect
-    owner_spec: "CognitiveOS-Architecture.md#core-effect-protocol"
-    status: specified
-    tests:
-      - EFF-UNK-003
-  - id: REQ-EFF-006
-    owner: effect
-    owner_spec: "CognitiveOS-Architecture.md#core-effect-protocol"
-    status: specified
-    tests:
-      - EFF-CRASH-001
-      - EFF-CRASH-002
-      - EFF-CRASH-003
-  - id: REQ-RUN-004
-    owner: runtime
-    owner_spec: "specs/schemas/task-contract.schema.json"
-    status: specified
-    tests:
-      - LOOP-CONTRACT-001
-  - id: REQ-RUN-005
-    owner: runtime
-    owner_spec: "specs/schemas/loop-checkpoint.schema.json"
-    status: specified
-    tests:
-      - LOOP-GATE-001
-  - id: REQ-RUN-006
-    owner: runtime
-    owner_spec: "specs/schemas/loop-checkpoint.schema.json"
-    status: specified
-    tests:
-      - RECOVERY-CRASH-006
-  - id: REQ-RUN-009
-    owner: runtime
-    owner_spec: "specs/schemas/verification-report.schema.json"
-    status: specified
-    tests:
-      - LOOP-VERIFY-003
-  - id: REQ-RES-001
-    owner: resource
-    owner_spec: "CognitiveOS-Architecture.md#resources"
-    status: specified
-    tests:
-      - CTX-REQ-007
-  - id: REQ-SEC-002
-    owner: security
-    owner_spec: "CognitiveOS-Architecture.md#threats"
-    status: specified
-    tests:
-      - CTX-TRUST-004
-  - id: REQ-CONF-001
-    owner: conformance
-    owner_spec: "specs/schemas/profile-manifest.schema.json"
-    status: specified
-    tests:
-      - MANIFEST-SCHEMA-001
-  - id: REQ-CONF-003
-    owner: conformance
-    owner_spec: "specs/schemas/profile-manifest.schema.json"
-    status: specified
-    tests:
-      - MANIFEST-STATUS-003
-  - id: REQ-PROFILE-CORE-001
-    owner: profile-core
-    owner_spec: "CognitiveOS-Architecture.md#core-digital-profile"
-    status: specified
-    tests:
-      - PROFILE-CORE-001
-  - id: REQ-PROFILE-DIST-001
-    owner: profile-distributed
-    owner_spec: "CognitiveOS-Architecture.md#distributed-profile"
-    status: specified
-    tests:
-      - PROFILE-DIST-001
-  - id: REQ-PROFILE-EMB-001
-    owner: profile-embodied
-    owner_spec: "CognitiveOS-Architecture.md#embodied-safety-profile"
-    status: specified
-    tests:
-      - EMB-STALE-002
-  - id: REQ-PROFILE-HET-001
-    owner: profile-heterogeneous-cim
-    owner_spec: "specs/schemas/placement-manifest.schema.json"
-    status: specified
-    tests:
-      - CIM-CAL-003
-  - id: REQ-PROFILE-LEARN-001
-    owner: profile-controlled-learning
-    owner_spec: "CognitiveOS-Architecture.md#controlled-learning-profile"
-    status: specified
-    tests:
-      - LEARN-PROMOTE-005
-  - id: REQ-PROFILE-CVM-001
-    owner: profile-context-virtualization
-    owner_spec: "CognitiveOS-Architecture.md#context-virtualization-profile"
-    status: specified
-    tests:
-      - CVM-STALE-001
-  - id: REQ-PROFILE-HARNESS-001
-    owner: profile-harness
-    owner_spec: "specs/schemas/profile-manifest.schema.json"
-    status: specified
-    tests:
-      - HARNESS-MANIFEST-001
-  - id: REQ-PROFILE-HARNESS-002
-    owner: profile-harness
-    owner_spec: "specs/schemas/loop-checkpoint.schema.json"
-    status: specified
-    tests:
-      - HARNESS-EPISODE-002
-  - id: REQ-PERF-001
-    owner: performance
-    owner_spec: "specs/schemas/performance-report.schema.json"
-    status: specified
-    tests:
-      - PERF-REPORT-CONTRACT-001
-  - id: REQ-PERF-002
-    owner: performance
-    owner_spec: "CognitiveOS-Architecture.md#performance-contract"
-    status: specified
-    tests:
-      - PERF-REPORT-CONTRACT-001
-  - id: REQ-PERF-003
-    owner: performance
-    owner_spec: "specs/schemas/performance-report.schema.json"
-    status: specified
-    tests:
-      - PERF-REPORT-CONTRACT-001
-  - id: REQ-KNOW-001
-    owner: knowledge-compilation
-    owner_spec: "RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation"
-    status: specified
-    tests:
-      - KNOW-INVALIDATION-001
-  - id: REQ-KNOW-002
-    owner: knowledge-compilation
-    owner_spec: "RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation"
-    status: specified
-    tests:
-      - KNOW-INVALIDATION-001
-  - id: REQ-KNOW-003
-    owner: knowledge-compilation
-    owner_spec: "specs/learning/README.md#5-受治理知识编译"
-    status: specified
-    tests:
-      - KNOW-POISON-001
-  - id: REQ-KNOW-004
-    owner: knowledge-compilation
-    owner_spec: "specs/learning/README.md#5-受治理知识编译"
-    status: specified
-    tests:
-      - KNOW-POISON-001
-  - id: REQ-KNOW-005
-    owner: knowledge-compilation
-    owner_spec: "specs/learning/README.md#5-受治理知识编译"
-    status: specified
-    tests:
-      - KNOW-MAINTENANCE-001
-  - id: REQ-KNOW-006
-    owner: knowledge-compilation
-    owner_spec: "RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation"
-    status: specified
-    tests:
-      - KNOW-INVALIDATION-001
-  - id: REQ-MGMT-SESSION-001
-    owner: management-session
-    owner_spec: specs/schemas/privileged-management-session.schema.json
-    status: specified
-    tests:
-      - MGMT-CONFIG-001
-  - id: REQ-MGMT-SESSION-002
-    owner: management-session
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
-    status: specified
-    tests:
-      - MGMT-SESSION-DENY-002
-      - MGMT-GATE-DENY-003
-  - id: REQ-MGMT-SESSION-003
-    owner: management-session
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
-    status: specified
-    tests:
-      - MGMT-SESSION-DENY-002
-  - id: REQ-MGMT-GATE-001
-    owner: management-gate
-    owner_spec: specs/schemas/management-action-proposal.schema.json
-    status: specified
-    tests:
-      - MGMT-CONFIG-001
-      - MGMT-GATE-DENY-003
-  - id: REQ-MGMT-APPROVAL-001
-    owner: management-approval
-    owner_spec: specs/schemas/management-approval-decision.schema.json
-    status: specified
-    tests:
-      - MGMT-APPROVAL-005
-  - id: REQ-MGMT-AUTHZ-001
-    owner: management-authorization
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
-    status: specified
-    tests:
-      - MGMT-AUTHZ-004
-  - id: REQ-MGMT-TRUST-001
-    owner: management-trust
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
-    status: specified
-    tests:
-      - MGMT-AUTHZ-004
-  - id: REQ-MGMT-EFFECT-001
-    owner: management-effect
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
-    status: specified
-    tests:
-      - MGMT-CONFIG-001
-      - MGMT-IDEM-006
-      - MGMT-RECOVERY-007
-  - id: REQ-MGMT-IDEM-001
-    owner: management-effect
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
-    status: specified
-    tests:
-      - MGMT-IDEM-006
-  - id: REQ-MGMT-RECOVERY-001
-    owner: management-recovery
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
-    status: specified
-    tests:
-      - MGMT-RECOVERY-007
-  - id: REQ-MGMT-FALLBACK-001
-    owner: management-fallback
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
-    status: specified
-    tests:
-      - MGMT-FALLBACK-008
-  - id: REQ-MGMT-SESSION-LIFECYCLE-001
-    owner: management-session
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
-    status: specified
-    tests:
-      - MGMT-SESSION-DENY-002
-      - MGMT-RECOVERY-007
+- id: REQ-OBJ-001
+  owner: core-object
+  owner_spec: specs/schemas/common-defs.schema.json
+  status: specified
+  tests:
+  - SCHEMA-META-001
+- id: REQ-PROTO-001
+  owner: core-protocol
+  owner_spec: specs/schemas/common-defs.schema.json
+  status: specified
+  tests:
+  - SCHEMA-VERSION-001
+- id: REQ-STATE-003
+  owner: state
+  owner_spec: CognitiveOS-Architecture.md#state-protocol
+  status: specified
+  tests:
+  - STATE-CAS-002
+- id: REQ-STATE-004
+  owner: state
+  owner_spec: CognitiveOS-Architecture.md#state-protocol
+  status: specified
+  tests:
+  - RECOVERY-CRASH-006
+- id: REQ-CTX-001
+  owner: context
+  owner_spec: specs/schemas/context-request.schema.json
+  status: specified
+  tests:
+  - CTX-SCHEMA-001
+- id: REQ-CTX-004
+  owner: context
+  owner_spec: CognitiveOS-Architecture.md#context-resolution-protocol
+  status: specified
+  tests:
+  - CTX-REQ-007
+- id: REQ-CTX-005
+  owner: context
+  owner_spec: specs/schemas/context-view.schema.json
+  status: specified
+  tests:
+  - CTX-VIEW-001
+- id: REQ-CTX-008
+  owner: context
+  owner_spec: CognitiveOS-Architecture.md#context-engineering
+  status: specified
+  tests:
+  - CTX-TRUST-004
+- id: REQ-EVT-001
+  owner: event
+  owner_spec: specs/schemas/event.schema.json
+  status: specified
+  tests:
+  - EVT-SCHEMA-001
+- id: REQ-CAP-001
+  owner: capability
+  owner_spec: specs/schemas/authorization-capability.schema.json
+  status: specified
+  tests:
+  - CAP-BIND-001
+- id: REQ-CAP-002
+  owner: capability
+  owner_spec: CognitiveOS-Architecture.md#capability-protocol
+  status: specified
+  tests:
+  - CAP-ATTEN-004
+- id: REQ-CAP-003
+  owner: capability
+  owner_spec: CognitiveOS-Architecture.md#capability-protocol
+  status: specified
+  tests:
+  - CAP-LEASE-003
+- id: REQ-EFF-001
+  owner: effect
+  owner_spec: specs/schemas/intent.schema.json
+  status: specified
+  tests:
+  - EFF-FLOW-001
+- id: REQ-EFF-004
+  owner: effect
+  owner_spec: CognitiveOS-Architecture.md#core-effect-protocol
+  status: specified
+  tests:
+  - EFF-UNK-003
+- id: REQ-EFF-006
+  owner: effect
+  owner_spec: CognitiveOS-Architecture.md#core-effect-protocol
+  status: specified
+  tests:
+  - EFF-CRASH-001
+  - EFF-CRASH-002
+  - EFF-CRASH-003
+- id: REQ-RUN-004
+  owner: runtime
+  owner_spec: specs/schemas/task-contract.schema.json
+  status: specified
+  tests:
+  - LOOP-CONTRACT-001
+- id: REQ-RUN-005
+  owner: runtime
+  owner_spec: specs/schemas/loop-checkpoint.schema.json
+  status: specified
+  tests:
+  - LOOP-GATE-001
+- id: REQ-RUN-006
+  owner: runtime
+  owner_spec: specs/schemas/loop-checkpoint.schema.json
+  status: specified
+  tests:
+  - RECOVERY-CRASH-006
+- id: REQ-RUN-009
+  owner: runtime
+  owner_spec: specs/schemas/verification-report.schema.json
+  status: specified
+  tests:
+  - LOOP-VERIFY-003
+- id: REQ-RES-001
+  owner: resource
+  owner_spec: CognitiveOS-Architecture.md#resources
+  status: specified
+  tests:
+  - CTX-REQ-007
+- id: REQ-SEC-002
+  owner: security
+  owner_spec: CognitiveOS-Architecture.md#threats
+  status: specified
+  tests:
+  - CTX-TRUST-004
+- id: REQ-CONF-001
+  owner: conformance
+  owner_spec: specs/schemas/profile-manifest.schema.json
+  status: specified
+  tests:
+  - MANIFEST-SCHEMA-001
+- id: REQ-CONF-003
+  owner: conformance
+  owner_spec: specs/schemas/profile-manifest.schema.json
+  status: specified
+  tests:
+  - MANIFEST-STATUS-003
+- id: REQ-PROFILE-CORE-001
+  owner: profile-core
+  owner_spec: CognitiveOS-Architecture.md#core-digital-profile
+  status: specified
+  tests:
+  - PROFILE-CORE-001
+- id: REQ-PROFILE-DIST-001
+  owner: profile-distributed
+  owner_spec: CognitiveOS-Architecture.md#distributed-profile
+  status: specified
+  tests:
+  - PROFILE-DIST-001
+- id: REQ-PROFILE-EMB-001
+  owner: profile-embodied
+  owner_spec: CognitiveOS-Architecture.md#embodied-safety-profile
+  status: specified
+  tests:
+  - EMB-STALE-002
+- id: REQ-PROFILE-HET-001
+  owner: profile-heterogeneous-cim
+  owner_spec: specs/schemas/placement-manifest.schema.json
+  status: specified
+  tests:
+  - CIM-CAL-003
+- id: REQ-PROFILE-LEARN-001
+  owner: profile-controlled-learning
+  owner_spec: CognitiveOS-Architecture.md#controlled-learning-profile
+  status: specified
+  tests:
+  - LEARN-PROMOTE-005
+- id: REQ-PROFILE-CVM-001
+  owner: profile-context-virtualization
+  owner_spec: CognitiveOS-Architecture.md#context-virtualization-profile
+  status: specified
+  tests:
+  - CVM-STALE-001
+- id: REQ-PROFILE-HARNESS-001
+  owner: profile-harness
+  owner_spec: specs/schemas/profile-manifest.schema.json
+  status: specified
+  tests:
+  - HARNESS-MANIFEST-001
+- id: REQ-PROFILE-HARNESS-002
+  owner: profile-harness
+  owner_spec: specs/schemas/loop-checkpoint.schema.json
+  status: specified
+  tests:
+  - HARNESS-EPISODE-002
+- id: REQ-PERF-001
+  owner: performance
+  owner_spec: specs/schemas/performance-report.schema.json
+  status: specified
+  tests:
+  - PERF-REPORT-CONTRACT-001
+- id: REQ-PERF-002
+  owner: performance
+  owner_spec: CognitiveOS-Architecture.md#performance-contract
+  status: specified
+  tests:
+  - PERF-REPORT-CONTRACT-001
+- id: REQ-PERF-003
+  owner: performance
+  owner_spec: specs/schemas/performance-report.schema.json
+  status: specified
+  tests:
+  - PERF-REPORT-CONTRACT-001
+- id: REQ-KNOW-001
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+  status: specified
+  tests:
+  - KNOW-INVALIDATION-001
+- id: REQ-KNOW-002
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+  status: specified
+  tests:
+  - KNOW-INVALIDATION-001
+- id: REQ-KNOW-003
+  owner: knowledge-compilation
+  owner_spec: specs/learning/README.md#5-受治理知识编译
+  status: specified
+  tests:
+  - KNOW-POISON-001
+- id: REQ-KNOW-004
+  owner: knowledge-compilation
+  owner_spec: specs/learning/README.md#5-受治理知识编译
+  status: specified
+  tests:
+  - KNOW-POISON-001
+- id: REQ-KNOW-005
+  owner: knowledge-compilation
+  owner_spec: specs/learning/README.md#5-受治理知识编译
+  status: specified
+  tests:
+  - KNOW-MAINTENANCE-001
+- id: REQ-KNOW-006
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+  status: specified
+  tests:
+  - KNOW-INVALIDATION-001
+- id: REQ-MGMT-SESSION-001
+  owner: management-session
+  owner_spec: specs/schemas/privileged-management-session.schema.json
+  status: specified
+  tests:
+  - MGMT-CONFIG-001
+- id: REQ-MGMT-SESSION-002
+  owner: management-session
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+  status: specified
+  tests:
+  - MGMT-SESSION-DENY-002
+  - MGMT-GATE-DENY-003
+- id: REQ-MGMT-SESSION-003
+  owner: management-session
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+  status: specified
+  tests:
+  - MGMT-SESSION-DENY-002
+- id: REQ-MGMT-GATE-001
+  owner: management-gate
+  owner_spec: specs/schemas/management-action-proposal.schema.json
+  status: specified
+  tests:
+  - MGMT-CONFIG-001
+  - MGMT-GATE-DENY-003
+- id: REQ-MGMT-APPROVAL-001
+  owner: management-approval
+  owner_spec: specs/schemas/management-approval-decision.schema.json
+  status: specified
+  tests:
+  - MGMT-APPROVAL-005
+- id: REQ-MGMT-AUTHZ-001
+  owner: management-authorization
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+  status: specified
+  tests:
+  - MGMT-AUTHZ-004
+- id: REQ-MGMT-TRUST-001
+  owner: management-trust
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+  status: specified
+  tests:
+  - MGMT-AUTHZ-004
+- id: REQ-MGMT-EFFECT-001
+  owner: management-effect
+  owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+  status: specified
+  tests:
+  - MGMT-CONFIG-001
+  - MGMT-IDEM-006
+  - MGMT-RECOVERY-007
+- id: REQ-MGMT-IDEM-001
+  owner: management-effect
+  owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+  status: specified
+  tests:
+  - MGMT-IDEM-006
+- id: REQ-MGMT-RECOVERY-001
+  owner: management-recovery
+  owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+  status: specified
+  tests:
+  - MGMT-RECOVERY-007
+- id: REQ-MGMT-FALLBACK-001
+  owner: management-fallback
+  owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+  status: specified
+  tests:
+  - MGMT-FALLBACK-008
+- id: REQ-MGMT-SESSION-LIFECYCLE-001
+  owner: management-session
+  owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+  status: specified
+  tests:
+  - MGMT-SESSION-DENY-002
+  - MGMT-RECOVERY-007
+- id: REQ-AGENT-INSTALL-001
+  owner: agent-installation
+  owner_spec: specs/schemas/agent-installation.schema.json
+  status: specified
+  tests:
+  - AGENT-INSTALL-001
+- id: REQ-AGENT-ADAPTER-001
+  owner: agent-adapter
+  owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+  status: specified
+  tests:
+  - AGENT-BYPASS-002
+- id: REQ-AGENT-COMPLETE-001
+  owner: agent-completion
+  owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+  status: specified
+  tests:
+  - AGENT-BYPASS-002
+- id: REQ-AGENT-SANDBOX-001
+  owner: agent-sandbox
+  owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+  status: specified
+  tests:
+  - AGENT-BYPASS-002
+- id: REQ-AGENT-RECOVERY-001
+  owner: agent-recovery
+  owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+  status: specified
+  tests:
+  - AGENT-RECOVERY-003
+- id: REQ-MEM-OBJECT-001
+  owner: governed-memory
+  owner_spec: specs/schemas/memory-object.schema.json
+  status: specified
+  tests:
+  - MEM-ADMISSION-001
+- id: REQ-MEM-ADMIT-001
+  owner: governed-memory
+  owner_spec: specs/governed-memory/README.md#3-写入与准入
+  status: specified
+  tests:
+  - MEM-ADMISSION-001
+- id: REQ-MEM-PROMOTE-001
+  owner: governed-memory
+  owner_spec: specs/governed-memory/README.md#4-晋升冲突与修改
+  status: specified
+  tests:
+  - MEM-PROMOTION-002
+- id: REQ-MEM-DELETE-001
+  owner: governed-memory
+  owner_spec: specs/governed-memory/README.md#5-失效遗忘与删除
+  status: specified
+  tests:
+  - MEM-INVALIDATION-003
+- id: REQ-DISC-MANIFEST-001
+  owner: cognitive-discovery
+  owner_spec: specs/schemas/cognitive-resource-manifest.schema.json
+  status: specified
+  tests:
+  - DISC-DISCOVER-READ-001
+- id: REQ-DISC-ADMIT-001
+  owner: cognitive-discovery
+  owner_spec: specs/schemas/context-request-admission.schema.json
+  status: specified
+  tests:
+  - DISC-ADMISSION-002
+- id: REQ-DISC-DELTA-001
+  owner: cognitive-discovery
+  owner_spec: specs/schemas/context-view-delta.schema.json
+  status: specified
+  tests:
+  - DISC-DELTA-SCOPE-003
+- id: REQ-DISC-STAGNATION-001
+  owner: cognitive-discovery
+  owner_spec: specs/cognitive-discovery/README.md#4-停滞与错误隐私
+  status: specified
+  tests:
+  - DISC-STAGNATION-004
+- id: REQ-CAT-LIFECYCLE-001
+  owner: operation-catalog
+  owner_spec: specs/schemas/operation-catalog-snapshot.schema.json
+  status: specified
+  tests:
+  - CAT-STALE-001
+- id: REQ-CAT-DISCOVER-001
+  owner: operation-catalog
+  owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+  status: specified
+  tests:
+  - CAT-EFFECT-CONFUSION-002
+- id: REQ-CAT-MATCH-001
+  owner: operation-catalog
+  owner_spec: specs/schemas/operation-match-report.schema.json
+  status: specified
+  tests:
+  - CAT-EFFECT-CONFUSION-002
+- id: REQ-CAT-BIND-001
+  owner: operation-catalog
+  owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+  status: specified
+  tests:
+  - CAT-STALE-001
+- id: REQ-SEM-SOFT-001
+  owner: semantic-mediation
+  owner_spec: specs/semantic-mediation/README.md#1-sms-边界
+  status: specified
+  tests:
+  - SEM-FALLBACK-001
+- id: REQ-SEM-ENVELOPE-001
+  owner: semantic-mediation
+  owner_spec: specs/schemas/semantic-service-manifest.schema.json
+  status: specified
+  tests:
+  - SEM-FALLBACK-001
+- id: REQ-SEM-FALLBACK-001
+  owner: semantic-mediation
+  owner_spec: specs/semantic-mediation/README.md#3-降级
+  status: specified
+  tests:
+  - SEM-FALLBACK-001
+- id: REQ-CRB-BOUND-001
+  owner: cognitive-resource-broker
+  owner_spec: specs/schemas/cognitive-allocation-decision.schema.json
+  status: specified
+  tests:
+  - SEM-FALLBACK-001
+- id: REQ-CRB-ACCOUNT-001
+  owner: cognitive-resource-broker
+  owner_spec: specs/semantic-mediation/README.md#4-cognitive-resource-broker
+  status: specified
+  tests:
+  - DISC-DELTA-SCOPE-003

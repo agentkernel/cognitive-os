@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MemoryCandidate",
+  "type": "object",
+  "required": [
+    "metadata",
+    "memory_kind",
+    "governance_scope",
+    "purpose",
+    "retention",
+    "source_evidence_refs",
+    "conflict_refs",
+    "admission_status",
+    "content_ref",
+    "target_scope"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "memory_kind": {
+      "enum": [
+        "working",
+        "episode",
+        "conversation",
+        "task",
+        "subject",
+        "procedural",
+        "semantic",
+        "world_observation",
+        "system"
+      ]
+    },
+    "governance_scope": {
+      "$ref": "common-defs.schema.json#/$defs/governanceScope"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retention": {
+      "$ref": "common-defs.schema.json#/$defs/retention"
+    },
+    "source_evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "conflict_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "admission_status": {
+      "enum": [
+        "proposed",
+        "quarantined",
+        "admitted",
+        "invalidated",
+        "expired",
+        "tombstoned"
+      ]
+    },
+    "content_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "target_scope": {
+      "$ref": "common-defs.schema.json#/$defs/governanceScope"
+    },
+    "promotion_from": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    }
+  },
+  "additionalProperties": false
+}

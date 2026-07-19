@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContextViewDelta",
+  "type": "object",
+  "required": [
+    "metadata",
+    "base_view_ref",
+    "activity_context_ref",
+    "information_gap_ref",
+    "expansion_kind",
+    "added_refs",
+    "removed_refs",
+    "replacement_refs",
+    "complete",
+    "cumulative_cost",
+    "expandable_refs"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "base_view_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "information_gap_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "expansion_kind": {
+      "enum": [
+        "content_expand",
+        "relation_expand",
+        "authority_refresh"
+      ]
+    },
+    "added_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      }
+    },
+    "removed_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    },
+    "replacement_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/strongRef"
+      }
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "cumulative_cost": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "expandable_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      }
+    }
+  },
+  "additionalProperties": false
+}

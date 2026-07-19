@@ -19,7 +19,9 @@
         "test_runs",
         "known_degradations",
         "evidence_refs",
-        "performance_reports"
+        "performance_reports",
+        "agent_compatibility",
+        "semantic_service"
       ],
       "properties": {
         "spec": {
@@ -66,7 +68,12 @@
             "controlled_learning",
             "context_virtualization",
             "harnessed_autonomous_execution",
-            "intelligent_management_shell"
+            "intelligent_management_shell",
+            "agent_compatibility",
+            "governed_memory",
+            "cognitive_discovery",
+            "operation_catalog",
+            "semantic_mediation"
           ],
           "properties": {
             "core_digital": {
@@ -126,6 +133,46 @@
               ]
             },
             "intelligent_management_shell": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "agent_compatibility": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "governed_memory": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "cognitive_discovery": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "operation_catalog": {
+              "enum": [
+                "implemented",
+                "planned",
+                "unsupported",
+                "experimental"
+              ]
+            },
+            "semantic_mediation": {
               "enum": [
                 "implemented",
                 "planned",
@@ -351,6 +398,86 @@
             "additionalProperties": false
           },
           "minItems": 0
+        },
+        "agent_compatibility": {
+          "type": "object",
+          "required": [
+            "max_profile",
+            "max_verified_risk",
+            "feature_matrix"
+          ],
+          "properties": {
+            "max_profile": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "C0",
+                    "C1",
+                    "C2",
+                    "C3"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "max_verified_risk": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "R0",
+                    "R1",
+                    "R2",
+                    "R3"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "feature_matrix": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "supported",
+                  "degraded",
+                  "unsupported"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "semantic_service": {
+          "type": "object",
+          "required": [
+            "level",
+            "manifest_ref"
+          ],
+          "properties": {
+            "level": {
+              "enum": [
+                "unsupported",
+                "basic",
+                "vector",
+                "model_assisted",
+                "llm_mediated"
+              ]
+            },
+            "manifest_ref": {
+              "oneOf": [
+                {
+                  "$ref": "common-defs.schema.json#/$defs/uriRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

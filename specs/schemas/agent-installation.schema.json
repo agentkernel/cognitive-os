@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentInstallation",
+  "type": "object",
+  "required": [
+    "metadata",
+    "package_ref",
+    "adapter_digest",
+    "sandbox_digest",
+    "compatibility_report_ref",
+    "profile_ceiling",
+    "capability_ceiling_ref",
+    "test_evidence_refs",
+    "degradations",
+    "rollback_ref",
+    "state"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "package_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "adapter_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "sandbox_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "compatibility_report_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "profile_ceiling": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ]
+    },
+    "capability_ceiling_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "test_evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      },
+      "minItems": 1
+    },
+    "degradations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "state": {
+      "enum": [
+        "committed",
+        "disabled",
+        "removing",
+        "removed",
+        "quarantined"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

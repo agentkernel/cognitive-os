@@ -1,0 +1,20 @@
+{
+  "id": "SEM-FALLBACK-001",
+  "title": "fallback preserves required scope risk budget and egress",
+  "requirement_ids": [
+    "REQ-SEM-SOFT-001",
+    "REQ-SEM-ENVELOPE-001",
+    "REQ-SEM-FALLBACK-001",
+    "REQ-CRB-BOUND-001"
+  ],
+  "input": {
+    "scenario": "fallback preserves required scope risk budget and egress"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "SEMANTIC_SERVICE_UNAVAILABLE",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentCompatibilityReport",
+  "type": "object",
+  "required": [
+    "metadata",
+    "package_ref",
+    "profile",
+    "features",
+    "hidden_state",
+    "negative_test_refs",
+    "max_verified_risk"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "package_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "profile": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ]
+    },
+    "features": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "enum": [
+          "supported",
+          "degraded",
+          "unsupported"
+        ]
+      }
+    },
+    "hidden_state": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "negative_test_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      },
+      "minItems": 1
+    },
+    "max_verified_risk": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

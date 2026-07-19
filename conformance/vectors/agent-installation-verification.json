@@ -1,0 +1,17 @@
+{
+  "id": "AGENT-INSTALL-001",
+  "title": "invalid signature prevents installation commit",
+  "requirement_ids": [
+    "REQ-AGENT-INSTALL-001"
+  ],
+  "input": {
+    "scenario": "invalid signature prevents installation commit"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "AGENT_PACKAGE_VERIFICATION_FAILED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

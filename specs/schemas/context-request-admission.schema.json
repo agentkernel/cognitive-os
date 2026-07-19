@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContextRequestAdmission",
+  "type": "object",
+  "required": [
+    "metadata",
+    "candidate_ref",
+    "activity_context_ref",
+    "decision",
+    "modification_reasons",
+    "policy_version",
+    "budget_ceiling"
+  ],
+  "properties": {
+    "metadata": {
+      "$ref": "common-defs.schema.json#/$defs/metadata"
+    },
+    "candidate_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "admitted_request_ref": {
+      "$ref": "common-defs.schema.json#/$defs/strongRef"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "decision": {
+      "enum": [
+        "admitted",
+        "denied",
+        "review"
+      ]
+    },
+    "modification_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "budget_ceiling": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,19 @@
+{
+  "id": "AGENT-BYPASS-002",
+  "title": "network secret tool bypass and self-completion are rejected",
+  "requirement_ids": [
+    "REQ-AGENT-ADAPTER-001",
+    "REQ-AGENT-COMPLETE-001",
+    "REQ-AGENT-SANDBOX-001"
+  ],
+  "input": {
+    "scenario": "network secret tool bypass and self-completion are rejected"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "AGENT_ADAPTER_BYPASS_DETECTED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}

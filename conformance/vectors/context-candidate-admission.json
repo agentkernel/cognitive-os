@@ -1,0 +1,17 @@
+{
+  "id": "DISC-ADMISSION-002",
+  "title": "candidate scope is narrowed before execution",
+  "requirement_ids": [
+    "REQ-DISC-ADMIT-001"
+  ],
+  "input": {
+    "scenario": "candidate scope is narrowed before execution"
+  },
+  "expected": {
+    "outcome": "denied_or_controlled_fallback",
+    "error_code": "CONTEXT_AUTH_DENIED",
+    "authority_unchanged": true,
+    "capability_expanded": false
+  },
+  "notes": "Declarative scenario; not implementation evidence."
+}
