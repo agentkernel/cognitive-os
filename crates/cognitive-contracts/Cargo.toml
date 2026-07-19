@@ -13,5 +13,10 @@ serde_json_canonicalizer = { workspace = true }
 sha2 = { workspace = true }
 thiserror = { workspace = true }
 
+[dev-dependencies]
+# Contract-layer schema re-verification only (F-003 negative coverage).
+# Not a runner: vector execution capability is Lane-CFR's M1 deliverable.
+jsonschema = { version = "0.47", default-features = false }
+
 [lints]
 workspace = true

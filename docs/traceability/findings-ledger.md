@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|
 | F-001 | P0 | 无实现、无 runner、无已执行测试证据 | open（性质：证据缺口，随实现消解） | M0 已建 runner 骨架（全 `not-run`，不构成证据）；执行能力 M1 | 关闭路径贯穿 M1~M6；不阻断 M1 启动（M1 正是其闭合手段） |
 | F-002 | P0 | 17 条 REQ 的 owner_spec 指向 informative 白皮书 | closed-by-1.0.1 | 抽查 `specs/registry/requirements.yaml`：owner_spec 现指向 schema/companion（如 REQ-STATE-003 → `specs/core/README.md`，REQ-CTX-001 → `context-request.schema.json`）；REQ-PERF-002/004 归属 `conformance/README.md`、REQ-PERF-005 归属 `docs/evaluation/agent-benefit-benchmark.md`（文内显式 owner 声明） | — |
-| F-003 | P0 | 治理对象双轨：legacy metadata/strongRef 与 GovernedObjectHeader 并存 | **partially-closed（迁移已落地，待 M1 复验）** | 2026-07-20 单轨迁移落地：36 份 schema + registry owner_spec + 2 向量改指 GovernedObjectHeader/ObjectReference，`common-defs` 的 legacy `metadata`/`strongRef` 定义保留但**零引用**（`tools/static_check.py` 检查 5 强制禁引用，全过）；白皮书/Review-Conclusions/core README 同批对齐。M1 出口仍需：runner 负例复验 + codegen 对齐 + legacy `$defs` 移除决策 | M1 出口复验后关闭（tracer bullet 入口 gate 组成部分） |
+| F-003 | P0 | 治理对象双轨：legacy metadata/strongRef 与 GovernedObjectHeader 并存 | **partially-closed（合同层复验已完成）** | 迁移落地（2026-07-20，`c190d7b`：36 份 schema + registry owner_spec + 2 向量改指，legacy 定义零引用）。M1 Lane-CTR 收尾（2026-07-20）：①迁移批次两份向量调整核验**合法**——schema-meta-001 跟随 registry owner_spec 同批改指；effect-state-closure-008 对齐 `effect.transitions.json` v0.2 机器真相（OUTCOME_UNKNOWN 直接出口仅 RECONCILED；COMPENSATING/QUARANTINED 属 reconcile 后 still_unknown 路径），deny 期望与错误码未动、无负例删除；②新增负例向量 GOBJ-LEGACY-METADATA-001 / GOBJ-LEGACY-STRONGREF-001（双轨形态必须被拒；registry 已映射；状态 not-run）；③合同层可执行复验：`crates/cognitive-contracts/tests/schema_contract.rs` 与 `packages/contracts-ts/src/schema-contract.test.ts` 双侧证明 56 schema 可编译、负例实例被拒、迁移正例通过；④legacy `$defs` 决策 = **保留**（deprecated、零引用，仅作 §6 legacy adapter 的版本钉扎映射源，REQ-GOBJ-REF-003/REQ-GOBJ-MIG-001 的被引用物；引用禁令由 static_check 检查 5 + 双侧合同测试守护）。M1 出口仍需：runner 真实执行负例向量（Lane-CFR）+ codegen 对齐 | M1 出口复验后关闭（tracer bullet 入口 gate 组成部分） |
 | F-004 | P0 | ActivityContext↔ContextView 创建环；ContextRequest 缺租户/ActorChain 治理字段 | closed-by-1.0.1 | `context-request.schema.json` 现含治理字段；启动环由 admission（`context-request-admission.schema.json`）拆解；M1 复验负例向量 | M1 复验项 |
 | F-005 | P0 | Effect 三处真相重复；`COMMITTED+unknown+pending` 反例 schema-valid | closed-by-1.0.1 | `effect.schema.json` 加约束 + `effect.transitions.json` 收口；向量 `effect-state-closure-008.json`（REQ-EFF-STATE-001）为负例 | M1 复验项 |
 | F-006 | P0 | ABORTED 终态掩盖外部残留副作用 | closed-by-1.0.1 | effect 迁移表含 reconciliation 语义（`metadata.reconciliation_result`）；`effect-unknown-outcome.json` 覆盖 | M1 复验项 |
@@ -41,7 +41,7 @@
 | F-029 | P2 | 无受版本控制的里程碑/ADR 入口 | closed-by-M0 | 本次交付 `docs/plan/`、`docs/adr/0001~0006`、`docs/checkpoints/`、本台账 | — |
 | F-030 | P2 | 高级 Profile 应继续延后 | closed-by-plan | DEVELOPMENT-PLAN：distributed/多 Agent/具身/学习列 M9~M11，不阻塞 v0.1；具身无独立安全证据前仅 experimental | — |
 
-**开放 P0 汇总**：F-003（阻断 M1 出口/tracer bullet 入口）。F-001 为证据缺口性质（随 M1~M6 消解，不单独阻断）。
+**开放 P0 汇总**：F-003（阻断 M1 出口/tracer bullet 入口；2026-07-20 Lane-CTR 后合同层义务全部完成，唯一剩余 gate = Lane-CFR runner 真实执行负例向量）。F-001 为证据缺口性质（随 M1~M6 消解，不单独阻断）。
 **开放 P1 汇总**：F-011（M5）、F-014（M4）、F-023（M4）、F-017（M6）、F-015（持续）。
 **tracer bullet 入口 gate**（审查 §1.2"F-002~F-010 类合同缺口收敛"）：F-002/004/005/006/007/008/009/010 已由 1.0.1 关闭且待 M1 负例复验；F-003 为唯一残余 → **M1 完成 = tracer bullet 入口开启**。
 
@@ -56,7 +56,7 @@
 | IMP-05 | 审批子系统（分级确认/防疲劳） | 文本已应用（§12.12）；机器合同未登记（=F-011） | M5（R1 最低集）；R2/R3 后置 |
 | IMP-06 | R0 薄路径合法降级形态 | 已应用（§20.5 降级映射+不可降级边界） | M6 readiness case |
 | IMP-07 | Effect/恢复/fencing 形式化验证承诺 | 承诺挂 §21 Phase 4；v2.0 义务化 | M4 交付七性质模型 |
-| IMP-08 | 对象本体分层（最小核心 14 对象） | 已应用（附录 A.1–A.3） | M1 生成器优先序 |
+| IMP-08 | 对象本体分层（最小核心 14 对象） | 已应用（附录 A.1–A.3）；**M1 生成器已交付**（2026-07-20 Lane-CTR：`contracts-codegen` 按 A.1 优先序生成 14 对象 ↔ 17 schema + `$ref` 闭包 2 份，Rust/TS 双侧入库、CI regenerate-and-diff 门生效，映射表见 ADR-0006 Delivery record） | 生成器优先序已落地；其余对象族随消费里程碑 |
 | IMP-09 | 验证带宽=部署一级约束 | 已应用（§2.2、§19.7） | M5/M6 验收口径 |
 | IMP-10 | 参考文献补全 | 已应用（附录 C.5） | — |
 | IMP-11 | 带外修改对账路径 | 已登记（REQ-AGENT-OOB-001、`agent-out-of-band-reconciliation.json`） | M6 |
@@ -72,16 +72,17 @@
 
 | # | 漂移 | 处置 | 状态 |
 |---|---|---|---|
-| D-001 | `specs/schemas/profile-manifest.schema.json` 与 `effect.schema.json` 缺顶层 `$id`（其余 54 份风格亦不统一：三种 `$id` 风格并存） | 登记；**不在 M0 改写**（避免动 digest 基线）；随 M1 合同收敛统一（Lane-CTR，与 F-003 迁移同批） | open → M1 |
+| D-001 | `specs/schemas/profile-manifest.schema.json` 与 `effect.schema.json` 缺顶层 `$id`（其余 54 份风格亦不统一：三种 `$id` 风格并存） | **M1 Lane-CTR 已闭合（2026-07-20）**：56 份 schema 全量统一为 `$id` = 文件名（43 份改写：13 绝对 URL 替换、29 补齐、1 非常规值替换；13 份原本已合规）；`check-consistency.mjs` 新增 `$id` 策略红灯并移除剥离 `$id` 兼容层；策略写入 `conformance/README.md` 与 `.cursor/rules/12`；双侧合同测试断言策略 | closed-by-M1 |
 | D-002 | `conformance/README.md` 执行结果四态（pass/fail/not-applicable/documented-degradation）与开发提示词五态（+not-run）措辞差 | 非漂移：`not-run` 定义为**报告级**状态，收口于 `docs/standards/conformance-evidence.md` §2；向量与 README 不改 | closed（术语收口） |
 | D-003 | 计数漂移：审查文档写"约 270 REQ"，实测 273；白皮书/提示词写"约 56 schema"，实测 56 | 采纳 IMP-17：PROGRESS 只用实测数；历史文档不回改 | closed（口径固定） |
 | D-004 | conformance README 15 层中第 7 层（知识编译）与第 8 层（性能）无专属向量 `layer` slug：知识类向量落在 `harness-loop`/`context-semantic`/`security-negative`，性能合同向量落在 `wire-schema` | 登记；runner 骨架如实呈现（layer 7/8 vectors=0 + 跨切片计数）；M1 runner 交付时与 Lane-CFR 决定是否补 slug（属修正型变更） | open → M1 |
 | D-005 | `state-transition-table.schema.json` 钉 `version: const "0.1"`，但 1.0.1 修订后 `effect.transitions.json` 已升 `version: "0.2"`（关闭 F-005/F-006 时未同步表 schema）→ effect 迁移表对表 schema 校验失败 | **M0 最小修正已闭合**：const 放宽为 `enum ["0.1","0.2"]`（修正型变更，不改语义；提交说明注明）；M1 合同收敛时随 D-001 统一版本策略 | closed-by-M0 |
-| D-006 | schema `$id` 三种风格并存：13 份治理对象 schema 用绝对 URL `$id`（`https://schemas.cognitiveos.dev/...`），`state-transition-table` 用相对文件名 `$id`，`profile-manifest`/`effect` 等缺 `$id`；绝对 `$id` 与 conformance README"相对 `$ref` 从所在文件解析"的规则冲突（会劫持 base URI） | 登记（并入 D-001 处置）；tools 检查按 README 规则以文件名为检索 URI 注册（剥离顶层 `$id`），不改 schema 本体；**2026-07-20 迁移批次已移除全部绝对 URL `$id`**（现状：仅 `common-defs` 带相对文件名 `$id`，其余无 `$id`）；M1 定统一策略（是否全量补相对 `$id`） | partially-closed → M1 |
+| D-006 | schema `$id` 三种风格并存：13 份治理对象 schema 用绝对 URL `$id`（`https://schemas.cognitiveos.dev/...`），`state-transition-table` 用相对文件名 `$id`，`profile-manifest`/`effect` 等缺 `$id`；绝对 `$id` 与 conformance README"相对 `$ref` 从所在文件解析"的规则冲突（会劫持 base URI） | 并入 D-001 处置；**M1 Lane-CTR 已闭合（2026-07-20）**：统一策略落地 = 全量相对文件名 `$id`（`$id` == 文件名），绝对 URL 全部移除，`static_check.py` 同批删除 `schemas.cognitiveos.dev` 别名注册 | closed-by-M1 |
 | D-007 | Console `PRODUCT-DESIGN.md` 与 `requirements-traceability.md` 在 D-005 关闭后仍称 transition table schema 只接受 `0.1` | 2026-07-20 对齐机器事实：登记 schema 已接受 `0.1/0.2`，保留 D-005 作为已关闭历史，不再列为 Console blocker | closed-by-doc-repair |
 | D-008 | Console 产品追踪在 F-003 单轨迁移落地后仍称 legacy metadata/strongRef 双轨尚未迁移 | 2026-07-20 对齐 findings-ledger：迁移已落地但 F-003 仍待 M1 runner 负例、codegen 与 legacy `$defs` 决策复验 | closed-by-doc-repair |
 | D-009 | Lane-CON 与 DEVELOPMENT-PLAN 的实现 gate 指向已不存在的 `PRODUCT-DESIGN §12.6 POC-01~12` | 2026-07-20 改指 `docs/platforms/README.md#console-实现-gate` 及各平台可定位的 Open PoC/GA gate；仍要求真实 API，禁止 mock 冒充 | closed-by-doc-repair |
 | D-010 | F-003 结构变更后，PRODUCT-DESIGN 缺少 docs-sync-contract §2.8 要求的文首漂移登记节/标注 | 2026-07-20 恢复漂移登记节并记录 F-003、D-005/D-007、D-009 影响；不改变 normative 资产 | closed-by-doc-repair |
+| D-011 | `canonical-encoding-and-digest.md` §13 要求 bundle manifest 每资产携带 SemVer，但已登记规范资产（schema/registry/transition）均未声明**每资产** SemVer——标准与资产之间的登记缺口 | M1 Lane-CTR 登记并最小修正：注册式 bundle 程序对每资产统一施加套件机器版本 `0.1.0-draft.1`（`cognitive_contracts::bundle::SPEC_SUITE_VERSION`，双语言常量一致），依据与口径写入 `conformance-evidence.md` §6；待任一资产真实分岔版本时再登记每资产版本（属修正型变更）。原编号 D-007 与 Lane-CON 同日条目撞号，后合并方（CTR）改号为 D-011 | closed-by-M1（决策落档） |
 
 ## 四、复验方法备注
 

@@ -45,14 +45,19 @@ try {
 const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });
 addFormats(ajv);
 for (const schema of schemas) {
-  // Repository convention (conformance/README.md "Running"): every relative
-  // $ref resolves FROM THE CONTAINING SCHEMA FILE. Some schemas carry an
-  // absolute $id whose base URI would hijack that resolution (registered
-  // drift D-001, unified in M1), so registration strips the top-level $id
-  // and uses the file name as the retrieval URI.
+  // $id policy (D-001/D-006 closure): every schema declares a top-level $id
+  // exactly equal to its file name, so every relative $ref resolves FROM THE
+  // CONTAINING SCHEMA FILE (conformance/README.md "Running") and the $id is
+  // the retrieval URI — no stripping compatibility layer.
+  if (schema.doc.$id !== schema.name) {
+    fail(
+      schema.path,
+      `schema $id must equal its file name (got ${JSON.stringify(schema.doc.$id)})`,
+    );
+    continue;
+  }
   try {
-    const { $id: _ignored, ...withoutId } = schema.doc;
-    ajv.addSchema(withoutId, schema.name);
+    ajv.addSchema(schema.doc);
   } catch (err) {
     fail(schema.path, `schema failed to register: ${err.message}`);
   }

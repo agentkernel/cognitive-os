@@ -1,0 +1,100 @@
+{
+  "id": "GOBJ-LEGACY-STRONGREF-001",
+  "title": "Legacy common-defs strongRef shape is rejected where an ObjectReference strong reference is required",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-GOBJ-REF-001",
+    "REQ-GOBJ-MIG-001"
+  ],
+  "input": {
+    "validate_against": "specs/schemas/effect.schema.json",
+    "object": {
+      "header": {
+        "id": "01890a5d-ac96-774b-bcce-b302099a8057",
+        "type": "Effect",
+        "schema_version": "cognitiveos.effect/0.2",
+        "object_version": 3,
+        "scope_domain": "tenant",
+        "tenant_id": "01890a5d-ac96-774b-bcce-b302099a8058",
+        "resource_scope_ref": {
+          "kind": "strong",
+          "id": "01890a5d-ac96-774b-bcce-b302099a8059",
+          "object_version": 1,
+          "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "owner_ref": {
+          "kind": "strong",
+          "id": "01890a5d-ac96-774b-bcce-b302099a805a",
+          "object_version": 1,
+          "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "authority_ref": {
+          "kind": "strong",
+          "id": "01890a5d-ac96-774b-bcce-b302099a805b",
+          "object_version": 1,
+          "content_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "policy_refs": [],
+        "purpose_constraints": [
+          "task-execution"
+        ],
+        "sensitivity": "internal",
+        "compartments": [],
+        "retention": {
+          "policy": "default-90d",
+          "expires_at": null,
+          "legal_hold": false
+        },
+        "provenance": {
+          "created_by": "kernel://effect-authority",
+          "source_refs": []
+        },
+        "lineage": {
+          "parents": [],
+          "transform": "created"
+        },
+        "content_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "created_at": "2026-07-20T00:00:00Z",
+        "valid_time": {
+          "from": "2026-07-20T00:00:00Z",
+          "until": null
+        }
+      },
+      "intent_ref": {
+        "id": "intent://tenant-a/payments/int-0001",
+        "version": 4,
+        "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "state": "PROPOSED",
+      "executor": "executor://payments",
+      "attempt": 1,
+      "idempotency_key": "idem-0001-key",
+      "parameters_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "authorization_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "observed_outcome": "not_observed",
+      "verification": {
+        "status": "pending"
+      },
+      "decision": "pending",
+      "event_refs": []
+    }
+  },
+  "expected": {
+    "schema_valid": false,
+    "decision": "deny",
+    "error": {
+      "code": "SCHEMA_MISMATCH",
+      "category": "protocol"
+    },
+    "legacy_reference_bridged_silently": false,
+    "strong_reference_contract_required": true,
+    "rejection_reasons": [
+      "strong reference requires exactly `kind`, `id`, `object_version`, `content_digest`",
+      "legacy `version`/`digest` members must be mapped by an explicit version-pinned adapter, never accepted in place"
+    ]
+  }
+}

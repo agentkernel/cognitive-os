@@ -2080,7 +2080,9 @@ requirements:
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - GOBJ-TENANT-LATERAL-001
+      - GOBJ-LEGACY-METADATA-001
     vectors:
+      - conformance/vectors/governed-object-legacy-metadata-001.json
       - conformance/vectors/tenant-lateral-read-denial.json
     impl: []
     impl_tests: []
@@ -2092,7 +2094,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
-    vectors: []
+      - GOBJ-LEGACY-STRONGREF-001
+    vectors:
+      - conformance/vectors/governed-object-legacy-strongref-001.json
     impl: []
     impl_tests: []
     evidence: []
@@ -2224,7 +2228,11 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
-    vectors: []
+      - GOBJ-LEGACY-METADATA-001
+      - GOBJ-LEGACY-STRONGREF-001
+    vectors:
+      - conformance/vectors/governed-object-legacy-metadata-001.json
+      - conformance/vectors/governed-object-legacy-strongref-001.json
     impl: []
     impl_tests: []
     evidence: []

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "authorization-capability.schema.json",
   "title": "AuthorizationCapability",
   "type": "object",
   "required": [

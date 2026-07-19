@@ -1,6 +1,6 @@
 {
   "fixture_set": "CognitiveOS canonical JSON golden fixtures",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "encoding_profile": "cognitiveos.canonical-json/0.1",
   "digest_domain": "conformance-fixture/0.1",
   "generator": "packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
@@ -136,6 +136,12 @@
       "id": "nan-literal",
       "description": "NaN is not JSON",
       "input_json": "{\"n\":NaN}",
+      "expected_rejection": "invalid-json"
+    },
+    {
+      "id": "infinity-literal",
+      "description": "Infinity is not JSON (section 5 non-finite rejection)",
+      "input_json": "{\"n\":Infinity}",
       "expected_rejection": "invalid-json"
     },
     {

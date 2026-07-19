@@ -1039,12 +1039,14 @@ requirements:
   tests:
   - SPEC-CONTRACT-COVERAGE-001
   - GOBJ-TENANT-LATERAL-001
+  - GOBJ-LEGACY-METADATA-001
 - id: REQ-GOBJ-REF-001
   owner: governed-object-contract
   owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - GOBJ-LEGACY-STRONGREF-001
 - id: REQ-GOBJ-REF-002
   owner: governed-object-contract
   owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
@@ -1117,6 +1119,8 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - GOBJ-LEGACY-METADATA-001
+  - GOBJ-LEGACY-STRONGREF-001
 - id: REQ-GOBJ-MIG-002
   owner: governed-object-contract
   owner_spec: docs/standards/governed-object-contract.md#6-migration

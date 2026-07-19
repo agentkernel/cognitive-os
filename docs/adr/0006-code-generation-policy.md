@@ -72,3 +72,35 @@ From M1: CI "regenerate and diff" job green; every generated file carries a
 header whose schema digest matches the source schema; grep for the
 generation header in hand-edited hunks is part of code review
 (`.cursor/rules/12-schemas-protocol.mdc` checklist).
+
+## Delivery record (M1, Lane-CTR)
+
+The generator is the committed custom binary
+`crates/cognitive-contracts/src/bin/contracts-codegen.rs` (single source for
+both target languages; the typify / json-schema-to-typescript candidates were
+rejected because neither covers both languages and neither pins deterministic
+committed output with digest headers). Facts of the delivered pipeline:
+
+1. Input: the IMP-08 minimal core object set (appendix A.1, 14 objects)
+   mapped to 17 registered schemas plus the transitive `$ref` closure
+   (19 files; the closure adds actor-chain and conversation-binding). A.1
+   objects without a same-named document schema map to their closest
+   registered machine surface (mapping table in the generator header).
+2. Output: `crates/cognitive-contracts/src/generated/` and
+   `packages/contracts-ts/src/generated/`, one module per schema, namespaced
+   re-exports. Every file header carries source path + canonical schema
+   content digest (domain `schema-bundle/0.1`, identical to the
+   schema-bundle manifest per-asset digest) + generator version.
+3. Bindings are shape-level: `if`/`then` conditionals, `allOf` const
+   refinements, `contains`, and cross-field constraints remain enforced by
+   JSON Schema validation; the generator fails loudly on constructs outside
+   its supported subset. Deprecated legacy `$defs` (common-defs
+   metadata/strongRef) are excluded by policy (F-003).
+4. Regeneration procedure:
+   `cargo run -p cognitive-contracts --bin contracts-codegen && cargo fmt --all`.
+   CI runs exactly this and fails on a dirty diff.
+5. Header digests are additionally verified without regeneration by
+   `crates/cognitive-contracts/tests/generated_types.rs`
+   (`generated_headers_pin_current_schema_digests`).
+6. Remaining object families follow their consuming milestones (unchanged
+   from the Consequences section).

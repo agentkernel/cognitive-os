@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/resource-scope/0.1",
+  "$id": "resource-scope.schema.json",
   "title": "ResourceScope",
   "description": "CognitiveOS v0.1 Draft governed visibility, derivation, retention, and promotion boundary.",
   "type": "object",

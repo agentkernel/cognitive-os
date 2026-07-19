@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/authorization-delegation/0.1",
+  "$id": "authorization-delegation.schema.json",
   "title": "AuthorizationDelegation",
   "description": "CognitiveOS v0.1 Draft authorization attenuation object. This is not the Distributed Profile task/budget/lease Delegation contract.",
   "type": "object",

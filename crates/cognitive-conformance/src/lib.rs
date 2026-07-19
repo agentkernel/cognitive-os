@@ -136,6 +136,8 @@ pub enum RunnerError {
         what: String,
         source: cognitive_contracts::canonical::CanonicalError,
     },
+    #[error("bundle manifest construction failed for {what}: {reason}")]
+    Bundle { what: String, reason: String },
 }
 
 /// One enumerated vector (parsed metadata only; inputs are not executed).
@@ -359,46 +361,43 @@ pub fn human_summary(report: &ConformanceReport) -> String {
     out
 }
 
-/// Compute the provisional-M0 digests used by the sample profile manifest.
+/// Compute the registered set/bundle digests pinned by the sample profile
+/// manifest (`docs/standards/canonical-encoding-and-digest.md` section 13
+/// procedure implemented by `cognitive_contracts::bundle`; recipe documented
+/// in `docs/standards/conformance-evidence.md` section 6):
 ///
-/// Provisional recipe (documented in `docs/standards/conformance-evidence.md`
-/// section 6; superseded by the M1 bundle manifest standard):
-/// - `requirement_set_digest`: canonical JSON of the parsed
-///   `specs/registry/requirements.yaml`, domain `spec-set/0.1`;
-/// - `schema_bundle_digest`: canonical JSON manifest
-///   `{"assets": [{"id": <file name>, "content_digest": <digest>} ...]}`
-///   sorted by id, where each content digest covers the canonical bytes of
-///   the parsed schema, all under domain `schema-bundle/0.1`.
-pub fn provisional_digests(repo_root: &Path) -> Result<(String, String), RunnerError> {
+/// - `schema_bundle_digest`: manifest over every `specs/schemas/*.json`
+///   asset (id = file name == `$id`, suite version, schema media type,
+///   per-asset canonical content digest), domain `schema-bundle/0.1`;
+/// - `requirement_set_digest`: manifest over the specification set beyond
+///   schemas — the three registries (canonical JSON projection of the parsed
+///   YAML) and the five transition tables (id = repo-relative path), domain
+///   `spec-set/0.1`.
+///
+/// This replaces the provisional M0 recipe (bare `{id, content_digest}`
+/// list; requirements.yaml hashed alone).
+pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerError> {
+    use cognitive_contracts::bundle::{
+        self, BundleAsset, MEDIA_TYPE_JSON, MEDIA_TYPE_SCHEMA_JSON, MEDIA_TYPE_YAML,
+        SCHEMA_BUNDLE_DOMAIN, SPEC_SET_DOMAIN, SPEC_SUITE_VERSION,
+    };
     use cognitive_contracts::canonical;
 
-    let req_path = repo_root
-        .join("specs")
-        .join("registry")
-        .join("requirements.yaml");
-    let req_raw = fs::read_to_string(&req_path).map_err(|source| RunnerError::Io {
-        path: req_path.clone(),
-        source,
-    })?;
-    let req_value: serde_json::Value =
-        serde_yaml::from_str(&req_raw).map_err(|err| RunnerError::InvalidRegistry {
-            path: req_path.clone(),
-            reason: err.to_string(),
-        })?;
-    let req_canonical = canonical::canonical_bytes_of_value(&req_value).map_err(|source| {
-        RunnerError::Canonical {
-            what: req_path.display().to_string(),
+    let read = |path: &Path| -> Result<String, RunnerError> {
+        fs::read_to_string(path).map_err(|source| RunnerError::Io {
+            path: path.to_path_buf(),
             source,
+        })
+    };
+    let bundle_err = |what: &str| {
+        let what = what.to_owned();
+        move |err: bundle::BundleError| RunnerError::Bundle {
+            what,
+            reason: err.to_string(),
         }
-    })?;
-    let requirement_set_digest =
-        canonical::digest(&req_canonical, "spec-set/0.1").map_err(|source| {
-            RunnerError::Canonical {
-                what: "requirement set".to_owned(),
-                source,
-            }
-        })?;
+    };
 
+    // Schema bundle assets: every registered schema, id = file name ($id).
     let schema_dir = repo_root.join("specs").join("schemas");
     let entries = fs::read_dir(&schema_dir).map_err(|source| RunnerError::Io {
         path: schema_dir.clone(),
@@ -416,46 +415,86 @@ pub fn provisional_digests(repo_root: &Path) -> Result<(String, String), RunnerE
         }
     }
     schema_files.sort();
-
-    let mut assets = Vec::with_capacity(schema_files.len());
-    for path in schema_files {
-        let raw = fs::read_to_string(&path).map_err(|source| RunnerError::Io {
-            path: path.clone(),
-            source,
-        })?;
-        let value = canonical::parse_strict(&raw).map_err(|source| RunnerError::Canonical {
-            what: path.display().to_string(),
-            source,
-        })?;
+    let mut schema_assets = Vec::with_capacity(schema_files.len());
+    for path in &schema_files {
+        let value =
+            canonical::parse_strict(&read(path)?).map_err(|source| RunnerError::Canonical {
+                what: path.display().to_string(),
+                source,
+            })?;
         let bytes =
             canonical::canonical_bytes(&value).map_err(|source| RunnerError::Canonical {
                 what: path.display().to_string(),
                 source,
             })?;
-        let content_digest = canonical::digest(&bytes, "schema-bundle/0.1").map_err(|source| {
+        let content_digest = canonical::digest(&bytes, SCHEMA_BUNDLE_DOMAIN).map_err(|source| {
             RunnerError::Canonical {
                 what: path.display().to_string(),
                 source,
             }
         })?;
-        let id = path
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        assets.push(serde_json::json!({ "id": id, "content_digest": content_digest }));
+        schema_assets.push(BundleAsset {
+            id: path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default(),
+            version: SPEC_SUITE_VERSION.to_owned(),
+            media_type: MEDIA_TYPE_SCHEMA_JSON.to_owned(),
+            content_digest,
+        });
     }
-    let manifest = serde_json::json!({ "assets": assets });
-    let manifest_canonical = canonical::canonical_bytes_of_value(&manifest).map_err(|source| {
-        RunnerError::Canonical {
-            what: "schema bundle manifest".to_owned(),
-            source,
-        }
-    })?;
-    let schema_bundle_digest = canonical::digest(&manifest_canonical, "schema-bundle/0.1")
-        .map_err(|source| RunnerError::Canonical {
-            what: "schema bundle manifest".to_owned(),
-            source,
+    let schema_bundle_digest = bundle::manifest_digest(&schema_assets, SCHEMA_BUNDLE_DOMAIN)
+        .map_err(bundle_err("schema bundle manifest"))?;
+
+    // Specification-set assets: registries (YAML -> canonical JSON
+    // projection) + transition tables, ids = repo-relative paths.
+    let mut set_assets: Vec<BundleAsset> = Vec::new();
+    for registry in ["requirements.yaml", "errors.yaml", "state-domains.yaml"] {
+        let path = repo_root.join("specs").join("registry").join(registry);
+        let value: serde_json::Value =
+            serde_yaml::from_str(&read(&path)?).map_err(|err| RunnerError::InvalidRegistry {
+                path: path.clone(),
+                reason: err.to_string(),
+            })?;
+        let content_digest = bundle::asset_content_digest(&value, SPEC_SET_DOMAIN)
+            .map_err(bundle_err(&path.display().to_string()))?;
+        set_assets.push(BundleAsset {
+            id: format!("specs/registry/{registry}"),
+            version: SPEC_SUITE_VERSION.to_owned(),
+            media_type: MEDIA_TYPE_YAML.to_owned(),
+            content_digest,
+        });
+    }
+    for domain in ["agent-execution", "effect", "loop", "task", "verification"] {
+        let path = repo_root
+            .join("specs")
+            .join("transitions")
+            .join(format!("{domain}.transitions.json"));
+        let value =
+            canonical::parse_strict(&read(&path)?).map_err(|source| RunnerError::Canonical {
+                what: path.display().to_string(),
+                source,
+            })?;
+        let bytes =
+            canonical::canonical_bytes(&value).map_err(|source| RunnerError::Canonical {
+                what: path.display().to_string(),
+                source,
+            })?;
+        let content_digest = canonical::digest(&bytes, SPEC_SET_DOMAIN).map_err(|source| {
+            RunnerError::Canonical {
+                what: path.display().to_string(),
+                source,
+            }
         })?;
+        set_assets.push(BundleAsset {
+            id: format!("specs/transitions/{domain}.transitions.json"),
+            version: SPEC_SUITE_VERSION.to_owned(),
+            media_type: MEDIA_TYPE_JSON.to_owned(),
+            content_digest,
+        });
+    }
+    let requirement_set_digest = bundle::manifest_digest(&set_assets, SPEC_SET_DOMAIN)
+        .map_err(bundle_err("specification set manifest"))?;
 
     Ok((requirement_set_digest, schema_bundle_digest))
 }
@@ -467,7 +506,7 @@ pub fn sample_profile_manifest(
     repo_root: &Path,
     encoding_digest: &str,
 ) -> Result<serde_json::Value, RunnerError> {
-    let (requirement_set_digest, schema_bundle_digest) = provisional_digests(repo_root)?;
+    let (requirement_set_digest, schema_bundle_digest) = registered_digests(repo_root)?;
     let mut profiles = serde_json::Map::new();
     for key in PROFILE_KEYS {
         profiles.insert(

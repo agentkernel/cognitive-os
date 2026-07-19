@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/agent-execution-binding/0.1",
+  "$id": "agent-execution-binding.schema.json",
   "title": "AgentExecutionBinding",
   "description": "CognitiveOS v0.1 Draft immutable governance binding for one logical AgentExecution identity.",
   "type": "object",

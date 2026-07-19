@@ -1,0 +1,461 @@
+{
+  "fixture_set": "CognitiveOS digest projection, set manifest and validation golden fixtures",
+  "version": "0.1.0",
+  "encoding_profile": "cognitiveos.canonical-json/0.1",
+  "generator": "packages/contracts-ts/src/dev/generate-fixtures.ts projection (verify with Rust twin before committing)",
+  "projection_positive": [
+    {
+      "id": "projection-self-fields-excluded",
+      "description": "Digest projection removes exactly the declared self digest and signature paths; the embedded content digest verifies against the projection",
+      "object": {
+        "header": {
+          "id": "01890a5d-ac96-774b-bcce-b302099a8070",
+          "type": "MemoryObject",
+          "object_version": 2,
+          "content_digest": "sha256:fe1d69ef42e3ecdc6c23c16a99e15d45dd4c7653e77b01fab97d2f5292936416"
+        },
+        "body": {
+          "text": "governed content",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "signature": "detached-signature-placeholder"
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_projection_canonical_text": "{\"body\":{\"tags\":[\"a\",\"b\"],\"text\":\"governed content\"},\"header\":{\"id\":\"01890a5d-ac96-774b-bcce-b302099a8070\",\"object_version\":2,\"type\":\"MemoryObject\"}}",
+      "expected_projection_canonical_utf8_hex": "7b22626f6479223a7b2274616773223a5b2261222c2262225d2c2274657874223a22676f7665726e656420636f6e74656e74227d2c22686561646572223a7b226964223a2230313839306135642d616339362d373734622d626363652d623330323039396138303730222c226f626a6563745f76657273696f6e223a322c2274797065223a224d656d6f72794f626a656374227d7d",
+      "expected_digest": "sha256:fe1d69ef42e3ecdc6c23c16a99e15d45dd4c7653e77b01fab97d2f5292936416",
+      "expected_verification": "accept"
+    },
+    {
+      "id": "projection-pointer-escaping",
+      "description": "JSON Pointer ~1 escaping addresses a member name containing a solidus",
+      "object": {
+        "a/b": {
+          "content_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "kept": 1
+      },
+      "digest_excluded": [
+        "/a~1b/content_digest"
+      ],
+      "domain": "governed-object-content/0.1",
+      "expected_projection_canonical_text": "{\"a/b\":{},\"kept\":1}",
+      "expected_projection_canonical_utf8_hex": "7b22612f62223a7b7d2c226b657074223a317d",
+      "expected_digest": "sha256:2bba3fcad96342b987199bde4bcf6d487d0db771371331c4b2734fb33609d1a5"
+    },
+    {
+      "id": "projection-absent-excluded-path-noop",
+      "description": "A declared excluded path that is absent removes nothing (signature excluded `if present`)",
+      "object": {
+        "header": {
+          "id": "x"
+        },
+        "body": 1
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "expected_projection_canonical_text": "{\"body\":1,\"header\":{\"id\":\"x\"}}",
+      "expected_projection_canonical_utf8_hex": "7b22626f6479223a312c22686561646572223a7b226964223a2278227d7d",
+      "expected_digest": "sha256:13121b8d9d1057a5e45d7a8603e8988f645ad99e13688678813c9d035fc267ff"
+    }
+  ],
+  "projection_negative": [
+    {
+      "id": "projection-wrong-self-field-inclusion",
+      "description": "Declared digest was computed WITH the self digest field included; verification fails closed",
+      "object": {
+        "header": {
+          "id": "01890a5d-ac96-774b-bcce-b302099a8070",
+          "type": "MemoryObject",
+          "object_version": 2,
+          "content_digest": "sha256:0e0d708db683594b3ae10daa7a0542c2fadf377fb8125fa062ed0f071720b76d"
+        },
+        "body": {
+          "text": "governed content",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "signature": "detached-signature-placeholder"
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_rejection": "digest-mismatch"
+    },
+    {
+      "id": "projection-wrong-self-field-exclusion",
+      "description": "Declared digest was computed with an undeclared path additionally excluded; verification fails closed",
+      "object": {
+        "header": {
+          "id": "01890a5d-ac96-774b-bcce-b302099a8070",
+          "type": "MemoryObject",
+          "object_version": 2,
+          "content_digest": "sha256:5b4826624a671606629555c01f22b8bd1c480ebd8b2d2baa4c7a601be4975a71"
+        },
+        "body": {
+          "text": "governed content",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "signature": "detached-signature-placeholder"
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_rejection": "digest-mismatch"
+    },
+    {
+      "id": "projection-wrong-domain",
+      "description": "Declared digest was computed under a different domain; verification fails closed",
+      "object": {
+        "header": {
+          "id": "01890a5d-ac96-774b-bcce-b302099a8070",
+          "type": "MemoryObject",
+          "object_version": 2,
+          "content_digest": "sha256:a267bb0527d9993f18e64fd0669360092f817d68af9b1c87d53f0d435e2ccdf8"
+        },
+        "body": {
+          "text": "governed content",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "signature": "detached-signature-placeholder"
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_rejection": "digest-mismatch"
+    },
+    {
+      "id": "projection-inserted-defaults",
+      "description": "Declared digest was computed after inserting a schema default; verifiers never insert defaults (section 7)",
+      "object": {
+        "header": {
+          "id": "01890a5d-ac96-774b-bcce-b302099a8070",
+          "type": "MemoryObject",
+          "object_version": 2,
+          "content_digest": "sha256:fe6db2eba540158f9be6f0d10733957285b85edeaf654f3bb41dfcca6ca701bf"
+        },
+        "body": {
+          "text": "governed content",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "signature": "detached-signature-placeholder"
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_rejection": "digest-mismatch"
+    },
+    {
+      "id": "projection-missing-digest",
+      "description": "No digest value at the declared self-digest pointer",
+      "object": {
+        "header": {
+          "id": "x"
+        },
+        "body": 1
+      },
+      "digest_excluded": [
+        "/header/content_digest",
+        "/signature"
+      ],
+      "domain": "governed-object-content/0.1",
+      "digest_pointer": "/header/content_digest",
+      "expected_rejection": "missing-digest"
+    }
+  ],
+  "set_manifest_positive": [
+    {
+      "id": "set-manifest-schema-bundle",
+      "description": "Schema-bundle manifest: entries sorted by asset id, exact canonical bytes, domain schema-bundle/0.1",
+      "assets": [
+        {
+          "id": "beta.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        {
+          "id": "alpha.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "domain": "schema-bundle/0.1",
+      "expected_manifest_canonical_text": "{\"assets\":[{\"content_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"id\":\"alpha.schema.json\",\"media_type\":\"application/schema+json\",\"version\":\"0.1.0-draft.1\"},{\"content_digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"id\":\"beta.schema.json\",\"media_type\":\"application/schema+json\",\"version\":\"0.1.0-draft.1\"}]}",
+      "expected_manifest_canonical_utf8_hex": "7b22617373657473223a5b7b22636f6e74656e745f646967657374223a227368613235363a61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c226964223a22616c7068612e736368656d612e6a736f6e222c226d656469615f74797065223a226170706c69636174696f6e2f736368656d612b6a736f6e222c2276657273696f6e223a22302e312e302d64726166742e31227d2c7b22636f6e74656e745f646967657374223a227368613235363a62626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262222c226964223a22626574612e736368656d612e6a736f6e222c226d656469615f74797065223a226170706c69636174696f6e2f736368656d612b6a736f6e222c2276657273696f6e223a22302e312e302d64726166742e31227d5d7d",
+      "expected_digest": "sha256:697338b6399fc638a10d35b333221880f5f4850de0f69574a177ec398f6cc683"
+    },
+    {
+      "id": "set-manifest-spec-set-domain-separation",
+      "description": "The same assets under spec-set/0.1 produce a different digest (domain separation)",
+      "assets": [
+        {
+          "id": "beta.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        {
+          "id": "alpha.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "domain": "spec-set/0.1",
+      "expected_manifest_canonical_text": "{\"assets\":[{\"content_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"id\":\"alpha.schema.json\",\"media_type\":\"application/schema+json\",\"version\":\"0.1.0-draft.1\"},{\"content_digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"id\":\"beta.schema.json\",\"media_type\":\"application/schema+json\",\"version\":\"0.1.0-draft.1\"}]}",
+      "expected_manifest_canonical_utf8_hex": "7b22617373657473223a5b7b22636f6e74656e745f646967657374223a227368613235363a61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c226964223a22616c7068612e736368656d612e6a736f6e222c226d656469615f74797065223a226170706c69636174696f6e2f736368656d612b6a736f6e222c2276657273696f6e223a22302e312e302d64726166742e31227d2c7b22636f6e74656e745f646967657374223a227368613235363a62626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262222c226964223a22626574612e736368656d612e6a736f6e222c226d656469615f74797065223a226170706c69636174696f6e2f736368656d612b6a736f6e222c2276657273696f6e223a22302e312e302d64726166742e31227d5d7d",
+      "expected_digest": "sha256:7a6bfa08499f40ae3f7960af8b31ac5920b0d0c3ecec7f8e5a377521ac53bdae"
+    }
+  ],
+  "set_manifest_negative": [
+    {
+      "id": "set-manifest-duplicate-asset-id",
+      "description": "Two assets sharing one logical id make the manifest ambiguous",
+      "assets": [
+        {
+          "id": "alpha.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "id": "alpha.schema.json",
+          "version": "0.1.0-draft.1",
+          "media_type": "application/schema+json",
+          "content_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ],
+      "domain": "schema-bundle/0.1",
+      "expected_rejection": "duplicate-asset-id"
+    },
+    {
+      "id": "set-manifest-empty",
+      "description": "A manifest must cover at least one asset",
+      "assets": [],
+      "domain": "schema-bundle/0.1",
+      "expected_rejection": "empty-bundle"
+    }
+  ],
+  "timestamp_positive": [
+    "2026-07-19T11:02:03Z",
+    "2026-07-19T11:02:03.1234Z",
+    "0001-01-01T00:00:00Z",
+    "2026-12-31T23:59:59.999999999Z"
+  ],
+  "timestamp_negative": [
+    {
+      "value": "2026-07-19T11:02:03+02:00",
+      "reason": "numeric offset"
+    },
+    {
+      "value": "2026-07-19T11:02:03-00:00",
+      "reason": "negative zero offset"
+    },
+    {
+      "value": "2026-07-19T11:02:03",
+      "reason": "local time without zone"
+    },
+    {
+      "value": "2026-07-19 11:02:03Z",
+      "reason": "space separator"
+    },
+    {
+      "value": "2026-07-19t11:02:03Z",
+      "reason": "lowercase t"
+    },
+    {
+      "value": "2026-07-19T11:02:03z",
+      "reason": "lowercase z"
+    },
+    {
+      "value": "2026-07-19T23:59:60Z",
+      "reason": "leap second"
+    },
+    {
+      "value": "2026-07-19T11:02:03.1230Z",
+      "reason": "trailing zero in fraction"
+    },
+    {
+      "value": "2026-07-19T11:02:03.000Z",
+      "reason": "zero fraction must be omitted"
+    },
+    {
+      "value": "2026-07-19T11:02:03.Z",
+      "reason": "empty fraction"
+    },
+    {
+      "value": "2026-07-19T11:02:03.1234567890Z",
+      "reason": "fraction longer than 9 digits"
+    }
+  ],
+  "digest_string_positive": [
+    "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  ],
+  "digest_string_negative": [
+    {
+      "value": "SHA256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "reason": "uppercase algorithm label"
+    },
+    {
+      "value": "sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "reason": "uppercase hex"
+    },
+    {
+      "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "reason": "truncated hex"
+    },
+    {
+      "value": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "reason": "overlong hex"
+    },
+    {
+      "value": "sha512:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "reason": "unregistered algorithm label"
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "reason": "missing algorithm label"
+    }
+  ],
+  "extension_positive": [
+    {
+      "id": "extension-known-critical-and-unknown-noncritical",
+      "object": {
+        "extensions": [
+          {
+            "id": "x-supported",
+            "critical": true
+          },
+          {
+            "id": "x-unknown-noncritical",
+            "critical": false
+          }
+        ],
+        "payload": {
+          "ok": true
+        }
+      },
+      "supported": [
+        "x-supported"
+      ]
+    }
+  ],
+  "extension_negative": [
+    {
+      "id": "extension-unknown-critical",
+      "description": "Unknown critical extension fails closed before payload processing",
+      "object": {
+        "extensions": [
+          {
+            "id": "x-unknown",
+            "critical": true
+          }
+        ],
+        "payload": {
+          "ok": true
+        }
+      },
+      "supported": [
+        "x-supported"
+      ],
+      "expected_rejection": "critical-extension-unknown"
+    },
+    {
+      "id": "extension-malformed-entry",
+      "description": "An unverifiable extension entry is treated as critical (fail closed)",
+      "object": {
+        "extensions": [
+          {
+            "id": "x-supported"
+          }
+        ],
+        "payload": {
+          "ok": true
+        }
+      },
+      "supported": [
+        "x-supported"
+      ],
+      "expected_rejection": "critical-extension-unknown"
+    }
+  ],
+  "schema_digest": [
+    {
+      "id": "schema-digest-pinned",
+      "description": "Pinned schema digest matches the canonical bytes of the schema in use",
+      "schema": {
+        "$id": "tiny.schema.json",
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "domain": "schema-bundle/0.1",
+      "pinned_schema_digest": "sha256:fc9b07e136b4c0ba4be13c3e0d892f4d774b7078860be907741bea1f33fb0317",
+      "expected": "accept"
+    },
+    {
+      "id": "schema-digest-altered",
+      "description": "Pinned digest was taken from an ALTERED schema (rug pull); verification fails closed before use",
+      "schema": {
+        "$id": "tiny.schema.json",
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "domain": "schema-bundle/0.1",
+      "pinned_schema_digest": "sha256:95ab0771cd2b83e0fce79286e89d1dfc5aa7e900f0909daab97c23f70fa3c429",
+      "expected": "reject",
+      "expected_rejection": "digest-mismatch"
+    }
+  ]
+}

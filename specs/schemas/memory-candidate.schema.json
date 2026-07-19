@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "memory-candidate.schema.json",
   "title": "MemoryCandidate",
   "type": "object",
   "required": [

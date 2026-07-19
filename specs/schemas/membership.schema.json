@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.cognitiveos.dev/governance/membership/0.1",
+  "$id": "membership.schema.json",
   "title": "Membership",
   "description": "CognitiveOS v0.1 Draft normative time-bounded Principal-to-Tenant relationship.",
   "type": "object",

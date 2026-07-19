@@ -64,6 +64,13 @@ jobs:
       - name: rustfmt check
         run: cargo fmt --all -- --check
 
+      # Schema-binding drift gate (ADR-0006 item 4): regenerate and diff -----
+      - name: Regenerate schema bindings and diff (codegen drift gate)
+        run: |
+          cargo run --locked -q -p cognitive-contracts --bin contracts-codegen
+          cargo fmt --all
+          git diff --exit-code -- crates/cognitive-contracts/src/generated packages/contracts-ts/src/generated
+
       # Static consistency (registry <-> schema <-> vector <-> docs) ---------
       - name: Consistency check (orphans, links, matrix, ledger)
         run: node tools/src/check-consistency.mjs
