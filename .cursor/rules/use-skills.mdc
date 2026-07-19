@@ -1,0 +1,23 @@
+---
+description: Auto-route dev tasks to installed .cursor/skills (design, UI, motion, testing, review). Proactively load the matching skill before working.
+alwaysApply: true
+---
+
+# 自动按需调用技能 · Auto-use installed skills
+
+Skills live in `.cursor/skills/`. When a task matches a trigger below, **proactively read that skill's `SKILL.md` (and its references as needed) and follow it BEFORE writing code** — do not wait for the user to type `/skill`. Load skills just-in-time, skip skills irrelevant to the task, and combine them when several apply.
+
+| Trigger (EN / 中文) | Skill to load |
+|---|---|
+| Build or change UI: component, page, layout, form, dashboard, styling (React/TSX/CSS/Tailwind), especially under `apps/**` · 界面 / 组件 / 页面 / 表单 / 仪表盘 / 样式 | `frontend-design` + `ui-design-brain` |
+| Animation, transition, micro-interaction, hover / loading / scroll effect, motion · 动效 / 动画 / 过渡 / 交互反馈 | `motion-design` |
+| Write or run UI tests, verify behavior in a real browser, Playwright · 测试 / 端到端 / 浏览器验证 | `webapp-testing` |
+| Review code, a PR, or a diff; pre-merge; security / correctness pass · 代码评审 / 审查 / PR / 合并前检查 | `code-review` |
+| Author or update a Cursor skill, capture repo conventions as a skill · 新建 / 编写技能 | `skill-creator` |
+
+## Rules of engagement
+
+- Follow each skill's own constraints and quality gates instead of generic defaults; this is what avoids templated "AI slop" output.
+- Prefer these grounded patterns over guessing. For UI work, apply `frontend-design` (aesthetic direction) and `ui-design-brain` (component best practices) together.
+- Only load what the task needs — do not read every skill on every task.
+- Manual invocation still works anytime: `/skill-name` or `@skill-name`.
