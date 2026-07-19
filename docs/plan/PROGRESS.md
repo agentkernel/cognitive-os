@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CON 桌面平台产品设计会话）
+> 最后更新：2026-07-20（Lane-CON 移动平台产品设计提示词）
 
 ## 里程碑状态
 
@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux 产品切片已记录；九组后端依赖全未交付，implementation 未启动 |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux 产品切片已记录；iOS/Android 设计提示词已提供但尚未执行；implementation 未启动 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -54,10 +54,10 @@
 | Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；实现 gate 未通过 |
+| Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；iOS/Android 提示词待执行；实现 gate 未通过 |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-con-platform-design-handoff.md](../checkpoints/20260720-lane-con-platform-design-handoff.md)（macOS/Linux 产品设计、治理例外、验证与剩余 gates）
-2. [20260720-m0-handoff.md](../checkpoints/20260720-m0-handoff.md)（M0 交接：提交清单、注入演练输出、并行会话改动提醒）
-3. [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md)（M0 出口评审：验收清单逐项）
+1. [20260720-lane-con-mobile-design-prompt-handoff.md](../checkpoints/20260720-lane-con-mobile-design-prompt-handoff.md)（iOS/Android 产品设计提示词、验证与下一步入口）
+2. [20260720-lane-con-platform-design-handoff.md](../checkpoints/20260720-lane-con-platform-design-handoff.md)（macOS/Linux 产品设计、治理例外、验证与剩余 gates）
+3. [20260720-m0-handoff.md](../checkpoints/20260720-m0-handoff.md)（M0 交接：提交清单、注入演练输出、并行会话改动提醒）
