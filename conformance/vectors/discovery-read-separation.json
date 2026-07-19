@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "DISC-DISCOVER-READ-001",
   "title": "discoverable reference does not grant body read",
+  "version": "0.1",
+  "layer": "cognitive-discovery",
+  "profiles": ["cognitive_discovery"],
   "requirement_ids": [
     "REQ-DISC-MANIFEST-001"
   ],

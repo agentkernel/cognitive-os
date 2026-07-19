@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/agent-execution-binding/0.1",
+  "title": "AgentExecutionBinding",
+  "description": "CognitiveOS v0.1 Draft immutable governance binding for one logical AgentExecution identity.",
+  "type": "object",
+  "required": ["scope_domain", "execution_id", "governance_context", "actor_chain", "initiating_subject_ref", "effective_subject_ref", "workload_subject_ref", "membership_version", "policy_version", "revocation_version", "capability_refs", "fencing_epoch"],
+  "properties": {
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "execution_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "governance_context": { "$ref": "governance-domain-context.schema.json" },
+    "actor_chain": { "$ref": "actor-chain.schema.json" },
+    "initiating_subject_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "effective_subject_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "workload_subject_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "conversation_binding": { "$ref": "conversation-binding.schema.json" },
+    "non_conversational_scope_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "task_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "membership_version": { "type": "integer", "minimum": 0 },
+    "policy_version": { "type": "integer", "minimum": 0 },
+    "revocation_version": { "type": "integer", "minimum": 0 },
+    "capability_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "uniqueItems": true },
+    "fencing_epoch": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } },
+    { "not": { "required": ["conversation_binding", "non_conversational_scope_ref"] } }
+  ],
+  "additionalProperties": false
+}

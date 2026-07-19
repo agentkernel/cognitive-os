@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/object-reference/0.1",
+  "title": "ObjectReference",
+  "description": "CognitiveOS v0.1 Draft normative strong and weak object reference contract.",
+  "oneOf": [
+    { "$ref": "#/$defs/strongReference" },
+    { "$ref": "#/$defs/weakReference" }
+  ],
+  "$defs": {
+    "uuidV7": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "strongReference": {
+      "type": "object",
+      "required": ["kind", "id", "object_version", "content_digest"],
+      "properties": {
+        "kind": { "const": "strong" },
+        "id": { "$ref": "#/$defs/uuidV7" },
+        "object_version": { "type": "integer", "minimum": 1 },
+        "content_digest": { "$ref": "common-defs.schema.json#/$defs/digest" }
+      },
+      "additionalProperties": false
+    },
+    "freshness": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["latest_authorized", "max_age", "not_older_than", "minimum_version"] },
+        "max_age_ms": { "type": "integer", "minimum": 0 },
+        "not_older_than": { "type": "string", "format": "date-time" },
+        "minimum_object_version": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        { "if": { "properties": { "mode": { "const": "max_age" } }, "required": ["mode"] }, "then": { "required": ["max_age_ms"] } },
+        { "if": { "properties": { "mode": { "const": "not_older_than" } }, "required": ["mode"] }, "then": { "required": ["not_older_than"] } },
+        { "if": { "properties": { "mode": { "const": "minimum_version" } }, "required": ["mode"] }, "then": { "required": ["minimum_object_version"] } }
+      ],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "required": ["strategy", "resolve_at", "pin_result", "on_unavailable"],
+      "properties": {
+        "strategy": { "enum": ["authority_current", "authority_as_of", "local_authorized_cache"] },
+        "resolve_at": { "enum": ["read", "activity_start", "authorization", "commit"] },
+        "as_of": { "type": "string", "format": "date-time" },
+        "resolver_policy_ref": { "$ref": "common-defs.schema.json#/$defs/uriRef" },
+        "pin_result": { "const": true },
+        "on_unavailable": { "enum": ["fail_closed", "use_fresh_authorized_cache"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "strategy": { "const": "authority_as_of" } }, "required": ["strategy"] }, "then": { "required": ["as_of"] } }
+      ],
+      "additionalProperties": false
+    },
+    "weakReference": {
+      "type": "object",
+      "required": ["kind", "id", "freshness", "resolution"],
+      "properties": {
+        "kind": { "const": "weak" },
+        "id": { "$ref": "#/$defs/uuidV7" },
+        "freshness": { "$ref": "#/$defs/freshness" },
+        "resolution": { "$ref": "#/$defs/resolution" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

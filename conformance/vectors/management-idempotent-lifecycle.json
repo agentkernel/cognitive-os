@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "MGMT-IDEM-006",
   "title": "Install and stop management effects are idempotent",
   "version": "0.1",
@@ -14,13 +14,13 @@
     "operations": [
       {
         "action": "agent.install",
-        "parameters_digest": "sha256:11111111",
+        "parameters_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "idempotency_key": "install-pkg-42-v3",
         "repetitions": 2
       },
       {
         "action": "execution.stop",
-        "parameters_digest": "sha256:22222222",
+        "parameters_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "idempotency_key": "stop-exec-77-v9",
         "repetitions": 2
       }

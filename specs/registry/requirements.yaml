@@ -220,19 +220,19 @@ requirements:
   - KNOW-INVALIDATION-001
 - id: REQ-KNOW-003
   owner: knowledge-compilation
-  owner_spec: specs/learning/README.md#5-受治理知识编译
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - KNOW-POISON-001
 - id: REQ-KNOW-004
   owner: knowledge-compilation
-  owner_spec: specs/learning/README.md#5-受治理知识编译
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - KNOW-POISON-001
 - id: REQ-KNOW-005
   owner: knowledge-compilation
-  owner_spec: specs/learning/README.md#5-受治理知识编译
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - KNOW-MAINTENANCE-001
@@ -979,6 +979,138 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-ID-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-DOMAIN-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-TENANT-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-HEADER-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-REF-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-REF-002
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-REF-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#3-strong-and-weak-references
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-BIND-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-BIND-002
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-BIND-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-BIND-004
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-BIND-005
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#4-binding-consistency
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-AUTHDEL-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-AUTHDEL-002
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-AUTHDEL-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#5-authorization-delegation-boundary
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-MIG-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#6-migration
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-MIG-002
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#6-migration
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-MIG-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#6-migration
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-MIG-004
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#6-migration
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-VALID-001
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-VALID-002
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
+- id: REQ-GOBJ-VALID-003
+  owner: governed-object-contract
+  owner_spec: docs/standards/governed-object-contract.md#7-validation-and-conformance
+  status: specified
+  tests:
+  - SPEC-CONTRACT-COVERAGE-001
 - id: REQ-GOV-DISC-001
   owner: gov-disc
   owner_spec: RFC-0001-cognitiveos-governance-context-access.md
@@ -1130,20 +1262,20 @@ requirements:
   tests:
   - INTENT-SUPERSEDE-002
 - id: REQ-KNOW-007
-  owner: know-007
-  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
 - id: REQ-KNOW-008
-  owner: know-008
-  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
 - id: REQ-KNOW-009
-  owner: know-009
-  owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+  owner: knowledge-compilation
+  owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001

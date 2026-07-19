@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/governed-object-header/0.1",
+  "title": "GovernedObjectHeader",
+  "description": "CognitiveOS v0.1 Draft normative metadata and governance header.",
+  "type": "object",
+  "required": ["id", "type", "schema_version", "object_version", "scope_domain", "resource_scope_ref", "owner_ref", "authority_ref", "policy_refs", "purpose_constraints", "sensitivity", "compartments", "retention", "provenance", "lineage", "content_digest", "created_at", "valid_time"],
+  "properties": {
+    "id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "type": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]{1,127}$" },
+    "schema_version": { "type": "string", "pattern": "^cognitiveos\\.[a-z0-9.-]+/[0-9]+\\.[0-9]+$" },
+    "object_version": { "type": "integer", "minimum": 1 },
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "resource_scope_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "owner_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "authority_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "policy_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "uniqueItems": true },
+    "purpose_constraints": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "sensitivity": { "enum": ["public", "internal", "confidential", "restricted"] },
+    "compartments": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "retention": { "$ref": "common-defs.schema.json#/$defs/retention" },
+    "provenance": { "$ref": "common-defs.schema.json#/$defs/provenance" },
+    "lineage": { "$ref": "common-defs.schema.json#/$defs/lineage" },
+    "content_digest": { "$ref": "common-defs.schema.json#/$defs/digest" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "valid_time": { "$ref": "common-defs.schema.json#/$defs/validTime" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

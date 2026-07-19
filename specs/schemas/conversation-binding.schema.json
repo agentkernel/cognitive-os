@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/conversation-binding/0.1",
+  "title": "ConversationBinding",
+  "description": "CognitiveOS v0.1 Draft fixed Conversation, participant relation, history scope, and working scope binding.",
+  "type": "object",
+  "required": ["scope_domain", "conversation_ref", "participant_relation_version", "history_scope_ref", "working_scope_ref"],
+  "properties": {
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "conversation_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "participant_relation_version": { "type": "integer", "minimum": 1 },
+    "history_scope_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "working_scope_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

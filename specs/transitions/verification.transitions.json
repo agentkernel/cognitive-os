@@ -1,0 +1,18 @@
+{
+  "domain": "verification",
+  "version": "0.1",
+  "status": "Draft",
+  "initial_state": "NOT_REQUESTED",
+  "states": ["NOT_REQUESTED", "PENDING", "EVIDENCE_READY", "PASSED", "FAILED", "INCONCLUSIVE", "EXPIRED"],
+  "terminal_states": ["FAILED", "INCONCLUSIVE", "EXPIRED"],
+  "transitions": [
+    {"from":"NOT_REQUESTED","to":"PENDING","reason_codes":["VERIFICATION_REQUESTED"],"guards":["subject_and_criteria_fixed","verifier_version_fixed","post_state_version_fixed"],"required_evidence":["verification_request","fixed_post_state"]},
+    {"from":"PENDING","to":"EVIDENCE_READY","reason_codes":["EVIDENCE_COLLECTION_COMPLETED"],"guards":["evidence_set_closed","evidence_authorized","evidence_fresh_for_fixed_post_state"],"required_evidence":["evidence_bundle"]},
+    {"from":"EVIDENCE_READY","to":"PASSED","reason_codes":["CRITERIA_PASSED"],"guards":["all_required_criteria_pass","fixed_post_state_unchanged","verifier_authorized"],"required_evidence":["verification_report"]},
+    {"from":"EVIDENCE_READY","to":"FAILED","reason_codes":["CRITERIA_FAILED"],"guards":["one_or_more_required_criteria_fail","verifier_authorized"],"required_evidence":["verification_report"]},
+    {"from":"EVIDENCE_READY","to":"INCONCLUSIVE","reason_codes":["EVIDENCE_INSUFFICIENT","EVIDENCE_CONFLICT","VERIFIER_INDETERMINATE"],"guards":["pass_or_fail_not_established"],"required_evidence":["verification_report"]},
+    {"from":"PENDING","to":"EXPIRED","reason_codes":["FIXED_POST_STATE_CHANGED","VERIFICATION_DEADLINE_EXCEEDED"],"guards":["original_binding_no_longer_current"],"required_evidence":["state_change_event_or_deadline_record"]},
+    {"from":"EVIDENCE_READY","to":"EXPIRED","reason_codes":["FIXED_POST_STATE_CHANGED","EVIDENCE_EXPIRED"],"guards":["original_binding_no_longer_current"],"required_evidence":["state_change_event_or_expiry_record"]},
+    {"from":"PASSED","to":"EXPIRED","reason_codes":["FIXED_POST_STATE_CHANGED","EVIDENCE_INVALIDATED","VERIFIER_VERSION_REVOKED"],"guards":["passed_binding_no_longer_current"],"required_evidence":["invalidation_event"]}
+  ]
+}

@@ -4,10 +4,10 @@
 
 | 归档制品 | 先前角色/版本 | 当前规范替代 |
 |---|---|---|
-| `AgentOS-Architecture.md` | 早期总体架构草案（约 v0.2） | `../CognitiveOS-Architecture.md` v0.6 |
-| `AgentOS-Architecture copy.md` | 中间编辑副本 | `../CognitiveOS-Architecture.md` v0.6 |
-| `AgentOS-Architecture copy 2.md` | v0.4 编辑基线 | `../CognitiveOS-Architecture.md` v0.6 |
-| `AgentOS：从第一性原理到认知操作系统.md` | 第一性原理早期论述 | `../CognitiveOS-Architecture.md` v0.6 |
+| `AgentOS-Architecture.md` | 早期总体架构草案（约 v0.2） | `../CognitiveOS-Architecture.md`（当前版本） |
+| `AgentOS-Architecture copy.md` | 中间编辑副本 | `../CognitiveOS-Architecture.md`（当前版本） |
+| `AgentOS-Architecture copy 2.md` | v0.4 编辑基线 | `../CognitiveOS-Architecture.md`（当前版本） |
+| `AgentOS：从第一性原理到认知操作系统.md` | 第一性原理早期论述 | `../CognitiveOS-Architecture.md`（当前版本） |
 | `edit_v04.py` | v0.4 文档迁移脚本 | 当前文档与 Git 历史 |
 | `fix_edits.py` | v0.4 修补脚本 | 当前文档与 Git 历史 |
 | `edit_v04_fixes.txt` | v0.4 编辑修复记录 | 当前文档版本说明 |

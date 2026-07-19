@@ -1,0 +1,32 @@
+version: '0.1'
+status: Draft
+open_registry: true
+domain_name_closed_enum: false
+table_schema: specs/schemas/state-transition-table.schema.json
+request_schema: specs/schemas/state-transition-request.schema.json
+record_schema: specs/schemas/state-transition-record.schema.json
+domains:
+  - domain: agent-execution
+    class: execution-lifecycle
+    authority_role: execution-authority
+    table: specs/transitions/agent-execution.transitions.json
+  - domain: task
+    class: execution-lifecycle
+    authority_role: task-acceptance-authority
+    table: specs/transitions/task.transitions.json
+  - domain: loop
+    class: execution-lifecycle
+    authority_role: execution-authority
+    table: specs/transitions/loop.transitions.json
+  - domain: effect
+    class: execution-lifecycle
+    authority_role: effect-authority
+    table: specs/transitions/effect.transitions.json
+  - domain: verification
+    class: execution-lifecycle
+    authority_role: verification-authority
+    table: specs/transitions/verification.transitions.json
+extension_rules:
+  - New authority-managed domains may be registered without changing the JSON schemas.
+  - Each domain identifies one write authority or an explicit consensus or arbitration protocol.
+  - Domain-specific states are closed only by the referenced versioned transition table.

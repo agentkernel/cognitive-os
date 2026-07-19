@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "MEM-ADMISSION-001",
   "title": "model summary cannot directly publish long-term memory",
+  "version": "0.1",
+  "layer": "governed-memory",
+  "profiles": ["governed_memory"],
   "requirement_ids": [
     "REQ-MEM-OBJECT-001",
     "REQ-MEM-ADMIT-001"

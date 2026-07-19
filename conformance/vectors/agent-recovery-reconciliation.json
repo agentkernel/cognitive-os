@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "AGENT-RECOVERY-003",
   "title": "pending effect is reconciled before loop resume",
+  "version": "0.1",
+  "layer": "agent-installation",
+  "profiles": ["agent_compatibility"],
   "requirement_ids": [
     "REQ-AGENT-RECOVERY-001"
   ],

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state-transition-record.schema.json",
+  "title": "Committed State Transition Record",
+  "type": "object",
+  "required": ["record_id", "request_ref", "domain", "subject_ref", "before_state", "after_state", "expected_version", "before_version", "after_version", "reason", "causation", "actor_ref", "authority_ref", "requested_at", "committed_at", "table_version", "table_digest", "evidence_refs"],
+  "properties": {
+    "record_id": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "request_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "domain": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "subject_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "before_state": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "after_state": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "expected_version": {"type": "integer", "minimum": 0},
+    "before_version": {"type": "integer", "minimum": 0},
+    "after_version": {"type": "integer", "minimum": 1},
+    "reason": {"$ref": "state-transition-request.schema.json#/$defs/reason"},
+    "causation": {"$ref": "state-transition-request.schema.json#/$defs/causation"},
+    "actor_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "authority_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "committed_at": {"type": "string", "format": "date-time"},
+    "table_version": {"type": "string", "minLength": 1},
+    "table_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "evidence_refs": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/strongRef"}, "uniqueItems": true},
+    "event_ref": {"$ref": "common-defs.schema.json#/$defs/strongRef"},
+    "metadata": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": false
+}

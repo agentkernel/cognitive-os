@@ -44,6 +44,22 @@ errors:
   category: protocol
   retryable: true
   description: Payload schema differs from pinned digest.
+- code: VERSION_UNSUPPORTED
+  category: protocol
+  retryable: false
+  description: Requested protocol or specification set major version is outside the supported compatibility window.
+- code: CRITICAL_EXTENSION_UNKNOWN
+  category: protocol
+  retryable: false
+  description: An unknown critical extension was present and must be rejected before payload processing.
+- code: SCHEMA_MISMATCH
+  category: protocol
+  retryable: true
+  description: Object does not validate against the selected digest-pinned schema.
+- code: DIGEST_MISMATCH
+  category: protocol
+  retryable: false
+  description: Recomputed canonical digest differs from the pinned or declared digest.
 - code: RESOURCE_BUDGET_EXHAUSTED
   category: resource
   retryable: false

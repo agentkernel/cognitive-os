@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "MEM-INVALIDATION-003",
   "title": "source revocation invalidates derived indexes summaries and caches",
+  "version": "0.1",
+  "layer": "governed-memory",
+  "profiles": ["governed_memory"],
   "requirement_ids": [
     "REQ-MEM-DELETE-001"
   ],

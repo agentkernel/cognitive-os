@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "MEM-PROMOTION-002",
   "title": "in-place cross-scope relabel is rejected",
+  "version": "0.1",
+  "layer": "governed-memory",
+  "profiles": ["governed_memory"],
   "requirement_ids": [
     "REQ-MEM-PROMOTE-001"
   ],

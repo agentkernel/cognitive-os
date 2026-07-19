@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "AGENT-BYPASS-002",
   "title": "network secret tool bypass and self-completion are rejected",
+  "version": "0.1",
+  "layer": "agent-installation",
+  "profiles": ["agent_compatibility"],
   "requirement_ids": [
     "REQ-AGENT-ADAPTER-001",
     "REQ-AGENT-COMPLETE-001",

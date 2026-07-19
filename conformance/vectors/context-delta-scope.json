@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "DISC-DELTA-SCOPE-003",
   "title": "delta cannot expand scope or reset parent budget",
+  "version": "0.1",
+  "layer": "cognitive-discovery",
+  "profiles": ["cognitive_discovery", "semantic_mediation"],
   "requirement_ids": [
     "REQ-DISC-DELTA-001",
     "REQ-CRB-ACCOUNT-001"

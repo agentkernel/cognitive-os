@@ -39,13 +39,21 @@
     },
     "phase": {
       "enum": [
+        "START",
         "OBSERVE",
+        "RESOLVE",
         "ORIENT",
         "DECIDE",
         "ACT",
         "VERIFY",
+        "CONTINUE",
         "DIAGNOSE",
-        "WAITING"
+        "WAIT",
+        "QUARANTINE",
+        "RECONCILE",
+        "ESCALATE",
+        "STOP",
+        "END"
       ]
     },
     "observation_refs": {

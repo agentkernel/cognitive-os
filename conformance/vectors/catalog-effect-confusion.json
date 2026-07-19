@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "CAT-EFFECT-CONFUSION-002",
   "title": "similar tools with different effects are not top-1 executed",
+  "version": "0.1",
+  "layer": "operation-catalog",
+  "profiles": ["operation_catalog"],
   "requirement_ids": [
     "REQ-CAT-DISCOVER-001",
     "REQ-CAT-MATCH-001"

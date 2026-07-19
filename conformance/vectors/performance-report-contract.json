@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "PERF-REPORT-CONTRACT-001",
   "title": "Reject performance reports that mask tails or omit reproducibility inputs",
   "version": "0.1",
@@ -22,7 +22,7 @@
         "model": {
           "provider": "example",
           "model": "fixed",
-          "revision": "sha256:example",
+          "revision": "sha256:ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12",
           "sampling": {
             "temperature": 0
           }

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state-transition-table.schema.json",
+  "title": "State Transition Table",
+  "type": "object",
+  "required": ["domain", "version", "status", "initial_state", "states", "terminal_states", "transitions"],
+  "properties": {
+    "domain": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "version": {"const": "0.1"},
+    "status": {"const": "Draft"},
+    "initial_state": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "states": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "terminal_states": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "transitions": {"type": "array", "items": {"$ref": "#/$defs/transition"}, "minItems": 1}
+  },
+  "$defs": {
+    "transition": {
+      "type": "object",
+      "required": ["from", "to", "reason_codes", "guards", "required_evidence"],
+      "properties": {
+        "from": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+        "to": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+        "reason_codes": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "guards": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "required_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "metadata": {"type": "object", "minProperties": 1, "additionalProperties": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

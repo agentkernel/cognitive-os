@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state-transition-request.schema.json",
+  "title": "State Transition Request",
+  "type": "object",
+  "required": ["request_id", "domain", "subject_ref", "from", "to", "expected_version", "before_version", "after_version", "reason", "causation", "actor_ref", "authority_ref", "requested_at", "table_version", "table_digest"],
+  "properties": {
+    "request_id": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "domain": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "subject_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "from": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "to": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "expected_version": {"type": "integer", "minimum": 0},
+    "before_version": {"type": "integer", "minimum": 0},
+    "after_version": {"type": "integer", "minimum": 1},
+    "reason": {"$ref": "#/$defs/reason"},
+    "causation": {"$ref": "#/$defs/causation"},
+    "actor_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "authority_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "table_version": {"type": "string", "minLength": 1},
+    "table_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "evidence_refs": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/strongRef"}, "uniqueItems": true},
+    "metadata": {"type": "object", "additionalProperties": true}
+  },
+  "$defs": {
+    "reason": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "causation": {
+      "type": "object",
+      "required": ["causation_id", "correlation_id"],
+      "properties": {
+        "causation_id": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+        "correlation_id": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+        "request_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

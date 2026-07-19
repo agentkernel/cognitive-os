@@ -35,7 +35,7 @@ ResourceGraph 节点描述 compute、memory、storage、sensor/actuator gateway 
 
 节点字段包括 kind、vendor/model、firmware/driver、supported operations、precision、capacity、residency、isolation、health、thermal、endurance 和 certification envelope。
 
-图是版本化观察/策略输入，不因资源自报而自动成为 authority。
+图是版本化观察/策略输入，不因资源自报而自动成为 authority。机器 schema：[resource-graph.schema.json](../schemas/resource-graph.schema.json)、[placement-manifest.schema.json](../schemas/placement-manifest.schema.json)。
 
 [REQ-HET-RG-001] 每次受治理 placement **MUST** 固定 ResourceGraph 版本、节点/路径健康度与策略 digest。
 

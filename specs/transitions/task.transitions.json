@@ -1,0 +1,28 @@
+{
+  "domain": "task",
+  "version": "0.1",
+  "status": "Draft",
+  "initial_state": "DRAFT",
+  "states": ["DRAFT", "READY", "ACTIVE", "BLOCKED", "CANDIDATE_COMPLETE", "COMPLETED", "FAILED", "CANCELLED", "ESCALATED"],
+  "terminal_states": ["COMPLETED", "FAILED", "CANCELLED", "ESCALATED"],
+  "transitions": [
+    {"from":"DRAFT","to":"READY","reason_codes":["CONTRACT_ACCEPTED"],"guards":["task_contract_complete","acceptance_criteria_fixed"],"required_evidence":["task_contract"]},
+    {"from":"READY","to":"ACTIVE","reason_codes":["EXECUTION_STARTED"],"guards":["execution_admitted","dependencies_satisfied"],"required_evidence":["execution_binding"]},
+    {"from":"ACTIVE","to":"BLOCKED","reason_codes":["DEPENDENCY_PENDING","APPROVAL_PENDING","RESOURCE_UNAVAILABLE"],"guards":["blocking_condition_recorded"],"required_evidence":["blocking_condition"]},
+    {"from":"BLOCKED","to":"ACTIVE","reason_codes":["DEPENDENCY_SATISFIED","APPROVAL_GRANTED","RESOURCE_AVAILABLE"],"guards":["blocking_condition_cleared","authorization_current"],"required_evidence":["unblock_event"]},
+    {"from":"ACTIVE","to":"CANDIDATE_COMPLETE","reason_codes":["COMPLETION_CLAIMED"],"guards":["required_effects_closed","verification_requested_for_fixed_post_state"],"required_evidence":["completion_claim","fixed_post_state"]},
+    {"from":"CANDIDATE_COMPLETE","to":"COMPLETED","reason_codes":["ACCEPTANCE_GRANTED"],"guards":["acceptance_authority_matches","verification_passed_and_current","fixed_post_state_unchanged"],"required_evidence":["verification_report","acceptance_decision"]},
+    {"from":"CANDIDATE_COMPLETE","to":"ACTIVE","reason_codes":["VERIFICATION_FAILED","VERIFICATION_EXPIRED","MORE_WORK_REQUIRED"],"guards":["retry_allowed","work_remains_actionable"],"required_evidence":["verification_report"]},
+    {"from":"CANDIDATE_COMPLETE","to":"BLOCKED","reason_codes":["VERIFICATION_INCONCLUSIVE","DEPENDENCY_PENDING"],"guards":["blocking_condition_recorded"],"required_evidence":["verification_report","blocking_condition"]},
+    {"from":"ACTIVE","to":"FAILED","reason_codes":["UNRECOVERABLE_FAILURE","ACCEPTANCE_IMPOSSIBLE"],"guards":["failure_is_terminal"],"required_evidence":["failure_report"]},
+    {"from":"BLOCKED","to":"FAILED","reason_codes":["DEADLINE_EXCEEDED","DEPENDENCY_FAILED"],"guards":["recovery_or_extension_denied"],"required_evidence":["failure_report"]},
+    {"from":"CANDIDATE_COMPLETE","to":"FAILED","reason_codes":["ACCEPTANCE_FAILED_TERMINAL"],"guards":["retry_not_allowed"],"required_evidence":["verification_report","acceptance_decision"]},
+    {"from":"READY","to":"CANCELLED","reason_codes":["CANCELLATION_CONFIRMED"],"guards":["cancellation_authorized"],"required_evidence":["cancellation_decision"]},
+    {"from":"ACTIVE","to":"CANCELLED","reason_codes":["CANCELLATION_CONFIRMED"],"guards":["cancellation_authorized","pending_effects_closed_or_quarantined"],"required_evidence":["cancellation_decision"]},
+    {"from":"BLOCKED","to":"CANCELLED","reason_codes":["CANCELLATION_CONFIRMED"],"guards":["cancellation_authorized","pending_effects_closed_or_quarantined"],"required_evidence":["cancellation_decision"]},
+    {"from":"CANDIDATE_COMPLETE","to":"CANCELLED","reason_codes":["CANCELLATION_CONFIRMED"],"guards":["cancellation_authorized","acceptance_not_committed"],"required_evidence":["cancellation_decision"]},
+    {"from":"ACTIVE","to":"ESCALATED","reason_codes":["AUTHORITY_ESCALATION","RISK_ESCALATION"],"guards":["escalation_target_identified"],"required_evidence":["escalation_record"]},
+    {"from":"BLOCKED","to":"ESCALATED","reason_codes":["BLOCK_UNRESOLVED","AUTHORITY_ESCALATION"],"guards":["escalation_target_identified"],"required_evidence":["escalation_record"]},
+    {"from":"CANDIDATE_COMPLETE","to":"ESCALATED","reason_codes":["ACCEPTANCE_DISPUTED"],"guards":["escalation_target_identified"],"required_evidence":["escalation_record"]}
+  ]
+}

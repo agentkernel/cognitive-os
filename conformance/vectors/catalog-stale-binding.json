@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "CAT-STALE-001",
   "title": "descriptor drift forces rediscovery and reauthorization",
+  "version": "0.1",
+  "layer": "operation-catalog",
+  "profiles": ["operation_catalog"],
   "requirement_ids": [
     "REQ-CAT-LIFECYCLE-001",
     "REQ-CAT-BIND-001"

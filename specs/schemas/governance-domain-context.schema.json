@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/governance-domain-context/0.1",
+  "title": "GovernanceDomainContext",
+  "description": "CognitiveOS v0.1 Draft normative tenant or platform governance evaluation context.",
+  "type": "object",
+  "required": ["scope_domain", "policy_version", "revocation_version", "trust_domain", "evaluated_at", "authority_ref"],
+  "properties": {
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "membership_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "membership_version": { "type": "integer", "minimum": 0 },
+    "policy_version": { "type": "integer", "minimum": 0 },
+    "revocation_version": { "type": "integer", "minimum": 0 },
+    "region": { "type": "string", "minLength": 1 },
+    "trust_domain": { "type": "string", "minLength": 1 },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "authority_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id", "membership_version"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "anyOf": [{ "required": ["tenant_id"] }, { "required": ["membership_ref"] }, { "required": ["membership_version"] }] } } }
+  ],
+  "additionalProperties": false
+}

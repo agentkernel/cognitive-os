@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/actor-chain/0.1",
+  "title": "ActorChain",
+  "description": "CognitiveOS v0.1 Draft immutable ordered authorization actor chain.",
+  "type": "object",
+  "required": ["scope_domain", "initiating_principal_ref", "effective_subject_ref", "workload_principal_ref", "delegation_refs", "chain_digest"],
+  "properties": {
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "initiating_principal_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "effective_subject_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "workload_principal_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "device_principal_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "delegation_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "uniqueItems": true },
+    "chain_digest": { "$ref": "common-defs.schema.json#/$defs/digest" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

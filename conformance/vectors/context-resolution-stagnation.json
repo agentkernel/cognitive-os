@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "DISC-STAGNATION-004",
   "title": "repeated no-gain resolution exits to escalation",
+  "version": "0.1",
+  "layer": "cognitive-discovery",
+  "profiles": ["cognitive_discovery"],
   "requirement_ids": [
     "REQ-DISC-STAGNATION-001"
   ],

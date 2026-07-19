@@ -41,6 +41,8 @@ Identity Adapter 不信任 Agent 自报 user/role；Memory Adapter 把 search/ge
 ## 6. 符合性
 声明固定 package/adapter/sandbox/schema/suite digest、C0—C3 feature matrix、最高已验证 R 等级、degradation 与 rollback evidence。C0—C3 和 R0—R3 必须分别报告。
 
+机器 schema：[agent-package-manifest.schema.json](../schemas/agent-package-manifest.schema.json)、[agent-installation.schema.json](../schemas/agent-installation.schema.json)、[agent-compatibility-report.schema.json](../schemas/agent-compatibility-report.schema.json)。
+
 
 ## Shell 与用户旅程映射
 Agent adapter 暴露的 start/pause/resume/cancel/checkpoint/status 必须映射到 Core lifecycle；宿主 PID 终止不能伪报 Task 完成。

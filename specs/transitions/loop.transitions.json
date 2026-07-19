@@ -1,0 +1,33 @@
+{
+  "domain": "loop",
+  "version": "0.1",
+  "status": "Draft",
+  "initial_state": "START",
+  "states": ["START", "OBSERVE", "RESOLVE", "ORIENT", "DECIDE", "ACT", "VERIFY", "CONTINUE", "DIAGNOSE", "WAIT", "QUARANTINE", "RECONCILE", "ESCALATE", "STOP", "END"],
+  "terminal_states": ["END"],
+  "transitions": [
+    {"from":"START","to":"OBSERVE","reason_codes":["LOOP_STARTED"],"guards":["task_contract_pinned","loop_budget_available"],"required_evidence":["loop_checkpoint_or_start_record"]},
+    {"from":"OBSERVE","to":"RESOLVE","reason_codes":["EVIDENCE_OBSERVED","VIEW_STALE"],"guards":["observation_recorded"],"required_evidence":["observation_refs"]},
+    {"from":"RESOLVE","to":"ORIENT","reason_codes":["CONTEXT_COMPLETE"],"guards":["required_context_closed","context_authorized"],"required_evidence":["context_view"]},
+    {"from":"RESOLVE","to":"WAIT","reason_codes":["DEPENDENCY_PENDING","BUDGET_RESERVATION_PENDING"],"guards":["wait_condition_recorded"],"required_evidence":["wait_condition"]},
+    {"from":"RESOLVE","to":"ESCALATE","reason_codes":["REQUIRED_CONTEXT_DENIED","CONFLICT_UNRESOLVED"],"guards":["escalation_target_identified"],"required_evidence":["resolution_failure"]},
+    {"from":"ORIENT","to":"DECIDE","reason_codes":["ORIENTATION_COMPLETE"],"guards":["decision_inputs_fixed"],"required_evidence":["orientation_record"]},
+    {"from":"DECIDE","to":"ACT","reason_codes":["OPERATION_ADMITTED"],"guards":["proposal_bounded","authorization_granted","hard_budget_available"],"required_evidence":["operation_proposal","authorization_decision"]},
+    {"from":"ACT","to":"OBSERVE","reason_codes":["NEW_EVIDENCE_AVAILABLE"],"guards":["effect_state_recorded"],"required_evidence":["effect_or_event_refs"]},
+    {"from":"ACT","to":"VERIFY","reason_codes":["PROGRESS_CLAIMED","COMPLETION_CLAIMED"],"guards":["fixed_post_state_available"],"required_evidence":["fixed_post_state","verification_request"]},
+    {"from":"VERIFY","to":"CONTINUE","reason_codes":["PROGRESS_VERIFIED"],"guards":["loop_budget_remaining","task_not_accepted"],"required_evidence":["verification_report"]},
+    {"from":"VERIFY","to":"STOP","reason_codes":["ACCEPTANCE_PASSED"],"guards":["task_acceptance_committed"],"required_evidence":["acceptance_decision"]},
+    {"from":"VERIFY","to":"DIAGNOSE","reason_codes":["VERIFICATION_FAILED","STAGNATION_DETECTED","VERIFICATION_INCONCLUSIVE"],"guards":["diagnostic_budget_available"],"required_evidence":["verification_report"]},
+    {"from":"CONTINUE","to":"OBSERVE","reason_codes":["NEXT_ITERATION"],"guards":["loop_budget_remaining"],"required_evidence":["loop_checkpoint"]},
+    {"from":"DIAGNOSE","to":"RESOLVE","reason_codes":["NEW_STRATEGY_SELECTED","NEW_EVIDENCE_REQUIRED"],"guards":["strategy_within_contract"],"required_evidence":["diagnostic_report"]},
+    {"from":"DIAGNOSE","to":"WAIT","reason_codes":["DEPENDENCY_PENDING","APPROVAL_PENDING"],"guards":["wait_condition_recorded"],"required_evidence":["wait_condition"]},
+    {"from":"DIAGNOSE","to":"ESCALATE","reason_codes":["AMBIGUITY_UNRESOLVED","RISK_ESCALATION"],"guards":["escalation_target_identified"],"required_evidence":["diagnostic_report","escalation_record"]},
+    {"from":"DIAGNOSE","to":"QUARANTINE","reason_codes":["UNSAFE_UNKNOWN"],"guards":["normal_iteration_disabled"],"required_evidence":["quarantine_decision"]},
+    {"from":"WAIT","to":"RESOLVE","reason_codes":["WAIT_CONDITION_CLEARED"],"guards":["external_event_matches_wait_condition"],"required_evidence":["unblock_event"]},
+    {"from":"QUARANTINE","to":"RECONCILE","reason_codes":["EXPLICIT_RECOVERY_STARTED"],"guards":["reconciliation_authorized"],"required_evidence":["reconciliation_request"]},
+    {"from":"RECONCILE","to":"RESOLVE","reason_codes":["RECONCILED_AND_REAUTHORIZED"],"guards":["unknowns_resolved","authorization_revalidated"],"required_evidence":["reconciliation_report","authorization_decision"]},
+    {"from":"RECONCILE","to":"ESCALATE","reason_codes":["RECONCILIATION_UNRESOLVED"],"guards":["escalation_target_identified"],"required_evidence":["reconciliation_report"]},
+    {"from":"ESCALATE","to":"END","reason_codes":["LOOP_ESCALATED"],"guards":["handoff_recorded"],"required_evidence":["escalation_record"]},
+    {"from":"STOP","to":"END","reason_codes":["LOOP_STOPPED"],"guards":["stop_reason_recorded"],"required_evidence":["stop_record"]}
+  ]
+}

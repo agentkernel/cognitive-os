@@ -1,6 +1,9 @@
-{
+﻿{
   "id": "SEM-FALLBACK-001",
   "title": "fallback preserves required scope risk budget and egress",
+  "version": "0.1",
+  "layer": "semantic-mediation",
+  "profiles": ["semantic_mediation"],
   "requirement_ids": [
     "REQ-SEM-SOFT-001",
     "REQ-SEM-ENVELOPE-001",

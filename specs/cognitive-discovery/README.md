@@ -30,6 +30,8 @@ ResolutionAttempt 保存 query/candidate fingerprint、信息增益、缺口/冲
 ## 5. 符合性
 测试 discover/read 分离、delta scope expansion、累计预算、authority refresh、重复查询、撤销后 expandable ref 失效、跨 Conversation reuse 与存在性侧信道。
 
+机器 schema：[cognitive-resource-manifest.schema.json](../schemas/cognitive-resource-manifest.schema.json)、[information-gap.schema.json](../schemas/information-gap.schema.json)、[context-request-admission.schema.json](../schemas/context-request-admission.schema.json)、[context-view-delta.schema.json](../schemas/context-view-delta.schema.json)。
+
 
 ## Shell 与用户旅程映射
 Shell discover/expand 使用绑定当前 ActivityContext 的 manifest；alias 和最近对象仅是 TargetSelector candidate。

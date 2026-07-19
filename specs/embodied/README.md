@@ -93,7 +93,7 @@ emergency_safety 可先执行后记录，仅用于减轻迫近风险且不得扩
 
 [REQ-EMB-ACT-001] governed physical effect **MUST** 按 Intent→Authorize→Safety Admit→Execute→Observe→Verify→Commit 治理。
 
-[REQ-EFF-007] emergency 路径 **MUST** fail safe，普通认知活动不得覆盖最终执行器仲裁。
+[REQ-EFF-007] emergency 路径 **MUST** fail safe，普通认知活动不得覆盖最终执行器仲裁。（复述；权威定义见 [Core §9.4](../core/README.md)）
 
 ## 7. 安全域
 

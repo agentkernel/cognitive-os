@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/conversation/0.1",
+  "title": "Conversation",
+  "description": "CognitiveOS v0.1 Draft persistent interaction resource scope, distinct from authentication and runtime sessions.",
+  "type": "object",
+  "required": ["header", "scope_domain", "state", "participants", "task_refs", "current_turn", "retention"],
+  "properties": {
+    "header": { "$ref": "governed-object-header.schema.json" },
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "state": { "enum": ["open", "suspended", "closed", "archived", "revoked"] },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["principal_ref", "relation", "relation_version", "joined_at", "policy_refs"],
+        "properties": {
+          "principal_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+          "relation": { "enum": ["owner", "contributor", "observer", "agent", "reviewer"] },
+          "relation_version": { "type": "integer", "minimum": 1 },
+          "joined_at": { "type": "string", "format": "date-time" },
+          "valid_until": { "type": ["string", "null"], "format": "date-time" },
+          "policy_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "uniqueItems": true }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "task_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "uniqueItems": true },
+    "current_turn": { "type": "integer", "minimum": 0 },
+    "retention": { "$ref": "common-defs.schema.json#/$defs/retention" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

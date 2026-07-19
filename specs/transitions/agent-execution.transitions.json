@@ -1,0 +1,29 @@
+{
+  "domain": "agent-execution",
+  "version": "0.1",
+  "status": "Draft",
+  "initial_state": "CREATED",
+  "states": ["CREATED", "ADMITTED", "RUNNABLE", "WAITING", "CHECKPOINTED", "RECOVERING", "SUSPENDED", "QUARANTINED", "TERMINATED"],
+  "terminal_states": ["TERMINATED"],
+  "transitions": [
+    {"from":"CREATED","to":"ADMITTED","reason_codes":["ADMISSION_GRANTED"],"guards":["tenant_and_actor_binding_valid","policy_and_budget_admitted"],"required_evidence":["admission_decision"]},
+    {"from":"ADMITTED","to":"RUNNABLE","reason_codes":["SCHEDULING_ENABLED"],"guards":["fencing_epoch_current","required_capabilities_valid"],"required_evidence":["execution_binding"]},
+    {"from":"RUNNABLE","to":"WAITING","reason_codes":["DEPENDENCY_PENDING","BUDGET_RESERVATION_PENDING","BACKPRESSURE"],"guards":["continuation_persistable"],"required_evidence":["wait_condition"]},
+    {"from":"WAITING","to":"RUNNABLE","reason_codes":["DEPENDENCY_SATISFIED","BUDGET_RESERVED","BACKPRESSURE_CLEARED"],"guards":["wait_condition_cleared","authorization_revalidated"],"required_evidence":["unblock_event"]},
+    {"from":"RUNNABLE","to":"CHECKPOINTED","reason_codes":["CHECKPOINT_REQUESTED","HANDOFF_REQUESTED"],"guards":["continuation_closed","pending_effects_recorded"],"required_evidence":["checkpoint"]},
+    {"from":"CHECKPOINTED","to":"RECOVERING","reason_codes":["RESUME_REQUESTED","FAILOVER_STARTED"],"guards":["checkpoint_digest_valid","new_fencing_epoch_installed"],"required_evidence":["checkpoint","fencing_decision"]},
+    {"from":"RECOVERING","to":"RUNNABLE","reason_codes":["RECOVERY_COMPLETED"],"guards":["pending_effects_reconciled","authorization_revalidated","continuation_versions_current"],"required_evidence":["recovery_report"]},
+    {"from":"RUNNABLE","to":"SUSPENDED","reason_codes":["PAUSE_REQUESTED","POLICY_SUSPENDED"],"guards":["new_activity_dispatch_disabled"],"required_evidence":["suspension_decision"]},
+    {"from":"SUSPENDED","to":"ADMITTED","reason_codes":["READMISSION_REQUESTED"],"guards":["fresh_admission_required"],"required_evidence":["admission_decision"]},
+    {"from":"RUNNABLE","to":"QUARANTINED","reason_codes":["UNSAFE_UNKNOWN","RECOVERY_BARRIER"],"guards":["normal_dispatch_disabled"],"required_evidence":["quarantine_decision"]},
+    {"from":"QUARANTINED","to":"RECOVERING","reason_codes":["RECONCILIATION_COMPLETED"],"guards":["pending_effects_reconciled","reauthorization_granted"],"required_evidence":["reconciliation_report","authorization_decision"]},
+    {"from":"CREATED","to":"TERMINATED","reason_codes":["CREATION_ABORTED"],"guards":["no_governed_activity_started"],"required_evidence":["termination_decision"]},
+    {"from":"ADMITTED","to":"TERMINATED","reason_codes":["TERMINATION_REQUESTED","ADMISSION_REVOKED"],"guards":["pending_effects_closed_or_transferred"],"required_evidence":["termination_decision"]},
+    {"from":"RUNNABLE","to":"TERMINATED","reason_codes":["TERMINATION_REQUESTED","FATAL_FAILURE"],"guards":["writer_fenced","pending_effects_closed_or_quarantined"],"required_evidence":["termination_decision"]},
+    {"from":"WAITING","to":"TERMINATED","reason_codes":["TERMINATION_REQUESTED","DEADLINE_EXCEEDED"],"guards":["writer_fenced","pending_effects_closed_or_quarantined"],"required_evidence":["termination_decision"]},
+    {"from":"CHECKPOINTED","to":"TERMINATED","reason_codes":["HANDOFF_COMPLETED","TERMINATION_REQUESTED"],"guards":["checkpoint_retention_decided"],"required_evidence":["termination_decision"]},
+    {"from":"RECOVERING","to":"TERMINATED","reason_codes":["RECOVERY_FAILED"],"guards":["writer_fenced","pending_effects_quarantined"],"required_evidence":["recovery_report","termination_decision"]},
+    {"from":"SUSPENDED","to":"TERMINATED","reason_codes":["TERMINATION_REQUESTED"],"guards":["pending_effects_closed_or_quarantined"],"required_evidence":["termination_decision"]},
+    {"from":"QUARANTINED","to":"TERMINATED","reason_codes":["QUARANTINE_CLOSED"],"guards":["pending_effects_closed_or_transferred"],"required_evidence":["quarantine_disposition"]}
+  ]
+}

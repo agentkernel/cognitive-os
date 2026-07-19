@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/membership/0.1",
+  "title": "Membership",
+  "description": "CognitiveOS v0.1 Draft normative time-bounded Principal-to-Tenant relationship.",
+  "type": "object",
+  "required": ["header", "scope_domain", "tenant_id", "principal_ref", "status", "role_bindings", "attributes", "valid_from", "relation_version"],
+  "properties": {
+    "header": { "$ref": "governed-object-header.schema.json" },
+    "scope_domain": { "const": "tenant" },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "principal_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "status": { "enum": ["invited", "active", "suspended", "revoked", "expired"] },
+    "role_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "policy_ref"],
+        "properties": {
+          "role": { "type": "string", "minLength": 1 },
+          "policy_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
+        },
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
+    "attributes": { "type": "object", "additionalProperties": true },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "relation_version": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

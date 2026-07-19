@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/execution-context/0.1",
+  "title": "ExecutionContext",
+  "description": "CognitiveOS v0.1 Draft execution-level fixed governance package.",
+  "type": "object",
+  "required": ["header", "scope_domain", "execution_binding", "authentication_context_ref", "policy_bundle_digest", "environment_digest"],
+  "properties": {
+    "header": { "$ref": "governed-object-header.schema.json" },
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "execution_binding": { "$ref": "agent-execution-binding.schema.json" },
+    "authentication_context_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "task_contract_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "checkpoint_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "policy_bundle_digest": { "$ref": "common-defs.schema.json#/$defs/digest" },
+    "environment_digest": { "$ref": "common-defs.schema.json#/$defs/digest" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

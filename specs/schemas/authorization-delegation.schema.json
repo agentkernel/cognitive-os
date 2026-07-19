@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.cognitiveos.dev/governance/authorization-delegation/0.1",
+  "title": "AuthorizationDelegation",
+  "description": "CognitiveOS v0.1 Draft authorization attenuation object. This is not the Distributed Profile task/budget/lease Delegation contract.",
+  "type": "object",
+  "required": ["header", "scope_domain", "issuer_ref", "subject_ref", "governance_context", "audience", "purposes", "resource_scope_refs", "actions", "parameter_constraints", "valid_until", "depth_remaining", "revocation_ref"],
+  "properties": {
+    "header": { "$ref": "governed-object-header.schema.json" },
+    "scope_domain": { "enum": ["tenant", "platform"] },
+    "tenant_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "issuer_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "subject_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "governance_context": { "$ref": "governance-domain-context.schema.json" },
+    "audience": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "purposes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "resource_scope_refs": { "type": "array", "items": { "$ref": "object-reference.schema.json#/$defs/strongReference" }, "minItems": 1, "uniqueItems": true },
+    "actions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "parameter_constraints": { "type": "object", "additionalProperties": true },
+    "valid_until": { "type": "string", "format": "date-time" },
+    "depth_remaining": { "type": "integer", "minimum": 0 },
+    "revocation_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "parent_delegation_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
+  },
+  "allOf": [
+    { "if": { "properties": { "scope_domain": { "const": "tenant" } }, "required": ["scope_domain"] }, "then": { "required": ["tenant_id"] } },
+    { "if": { "properties": { "scope_domain": { "const": "platform" } }, "required": ["scope_domain"] }, "then": { "not": { "required": ["tenant_id"] } } }
+  ],
+  "additionalProperties": false
+}

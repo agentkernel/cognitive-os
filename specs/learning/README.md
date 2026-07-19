@@ -68,17 +68,7 @@ MemoryObject 区分 observation、episode summary、decision、procedure、prefe
 
 知识发布遵循 `Evidence -> ClaimCandidate -> KnowledgeCandidate -> AdmissionDecision -> Published KnowledgeObject -> ContextView`。`KnowledgeCompilationProfile` 固定抽取、去重、冲突、citation、deterministic/policy/semantic/security lint、模型/provider/sampling 与渲染版本。
 
-[REQ-KNOW-001] 发布 KnowledgeClaim **MUST** 保存 claim-level provenance、evidence refs、`supports|contradicts|supersedes|derived_from` 依赖、scope 与 valid time。
-
-[REQ-KNOW-002] source/claim 更新、撤销、删除或许可变化 **MUST** 沿依赖图传播 invalidation，并使派生 object/index/cache 失效或标 stale。
-
-[REQ-KNOW-003] `Ingest` **MUST** 隔离不可信 Evidence；`Query` **MUST** 在候选泄露前过滤并逐对象授权；`Lint` **MUST** 覆盖 deterministic、policy、semantic、security 四层。
-
-[REQ-KNOW-004] 模型输出、自生成改写、循环引用和同源摘要 **MUST NOT** 形成独立 corroboration 或直接发布。
-
-[REQ-KNOW-005] 维护 loop **MUST** 有时间、费用、对象数、递归和重试上界；超界 **MUST** stale/quarantine，而非无限自修。
-
-[REQ-KNOW-006] source removal **MUST** 传播到允许删除的派生物并保留最小 tombstone；legal hold **MUST NOT** 被解释为 Query 授权。
+REQ-KNOW-001–REQ-KNOW-009 的权威规范定义位于 [RFC-0001 §9](../../RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation)，本节不再重复定义：claim 级 provenance 与依赖边（001）、失效沿依赖图传播（002）、`Ingest` 隔离不可信内容（003）、生成内容不得自我佐证或直接发布（004）、维护 loop 有界且超界 stale/quarantine（005）、source 删除与 legal hold 的派生闭合（006）、`Query` 泄露前过滤与逐对象授权（007）、`Lint` 四层覆盖（008）、知识编译符合性负例（009）。声明 `controlled_learning` Profile 且涉及知识编译的实现 **MUST** 一并满足上述条目。
 
 ## 6. 发布阶段
 
