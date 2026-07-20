@@ -272,10 +272,15 @@ requirements:
       - MANIFEST-SCHEMA-001
     vectors:
       - conformance/vectors/manifest-schema-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
-    docs: []
+    impl:
+      - crates/cognitive-conformance/src/lib.rs
+      - tools/src/validate-manifest.mjs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260720-m1-milestone-review.md
+    docs:
+      - docs/standards/conformance-evidence.md
   - id: REQ-CONF-003
     owner: conformance
     owner_spec: specs/schemas/profile-manifest.schema.json
@@ -284,10 +289,14 @@ requirements:
       - MANIFEST-STATUS-003
     vectors:
       - conformance/vectors/manifest-status-003.json
-    impl: []
-    impl_tests: []
-    evidence: []
-    docs: []
+    impl:
+      - crates/cognitive-conformance/src/lib.rs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260720-m1-milestone-review.md
+    docs:
+      - docs/standards/conformance-evidence.md
   - id: REQ-PROFILE-CORE-001
     owner: profile-core
     owner_spec: specs/core/README.md
@@ -1429,10 +1438,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
-    docs: []
+    impl:
+      - crates/cognitive-conformance/src/lib.rs
+      - crates/cognitive-contracts/src/bundle.rs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260720-m1-milestone-review.md
+    docs:
+      - docs/standards/conformance-evidence.md
   - id: REQ-CONF-004
     owner: conf-004
     owner_spec: specs/core/README.md
