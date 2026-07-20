@@ -7,7 +7,12 @@ name = "admin-cli"
 version = "0.0.1"
 dependencies = [
  "cognitive-contracts",
+ "cognitive-domain",
+ "cognitive-kernel",
  "cognitive-management",
+ "cognitive-store",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -175,6 +180,10 @@ dependencies = [
  "cognitive-contracts",
  "cognitive-domain",
  "cognitive-kernel",
+ "cognitive-store",
+ "serde",
+ "serde_json",
+ "tempfile",
  "thiserror",
 ]
 

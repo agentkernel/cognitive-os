@@ -643,10 +643,17 @@ requirements:
     vectors:
       - conformance/vectors/management-gate-denials.json
       - conformance/vectors/management-session-denials.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-management/src/session.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
+    notes: "M5 batch 1: expired/revoked/absolute-expiry sessions denied with the registered codes before any read or write
+      (Rust behavior tests); session issue/renewal lifecycle is the Management API batch; vector execution stays with
+      Lane-CFR."
   - id: REQ-MGMT-SESSION-003
     owner: management-session
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
@@ -655,10 +662,15 @@ requirements:
       - MGMT-SESSION-DENY-002
     vectors:
       - conformance/vectors/management-session-denials.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-management/src/session.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
+    notes: "M5 batch 1: revoked session denies new management work immediately (MANAGEMENT_SESSION_REVOKED), pending effects
+      retained untouched."
   - id: REQ-MGMT-GATE-001
     owner: management-gate
     owner_spec: specs/schemas/management-action-proposal.schema.json
@@ -671,10 +683,18 @@ requirements:
       - conformance/vectors/management-approval-missing-confirmation.json
       - conformance/vectors/management-gate-denials.json
       - conformance/vectors/management-valid-configuration.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-management/src/session.rs
+      - crates/cognitive-management/src/plane.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
+    notes: "M5 batch 1: scope-mismatch deny and step-up challenge primitives fail closed with dispatches=0
+      (MGMT-GATE-DENY-003 shapes); proposal/approval flow (MGMT-CONFIG-001, R1 confirmation) is the Management API
+      batch."
   - id: REQ-MGMT-APPROVAL-001
     owner: management-approval
     owner_spec: specs/schemas/management-approval-decision.schema.json
@@ -767,10 +787,18 @@ requirements:
       - MGMT-FALLBACK-008
     vectors:
       - conformance/vectors/management-deterministic-fallback.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-management/src/plane.rs
+      - apps/admin-cli/src/main.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
+    notes: "M5 batch 1: inspect/stop/revoke/reconcile run with no model (library + spawned-binary e2e against the real
+      SQLite store; zero-call model probe); gateway/diagnostics configure verbs and the HTTP Management API are the next
+      batch; vector execution stays with Lane-CFR."
   - id: REQ-MGMT-SESSION-LIFECYCLE-001
     owner: management-session
     owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
@@ -781,10 +809,17 @@ requirements:
     vectors:
       - conformance/vectors/management-session-denials.json
       - conformance/vectors/management-shell-crash-reconciliation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-management/src/session.rs
+      - crates/cognitive-management/src/plane.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
+    notes: "M5 batch 1: expired/revoked sessions block new proposals/dispatches while pending effects and intents stay
+      untouched; a new session reconciles with the ORIGINAL idempotency and effect records (Rust behavior test);
+      renewal/re-authentication flow is the Management API batch."
   - id: REQ-AGENT-INSTALL-001
     owner: agent-installation
     owner_spec: specs/schemas/agent-installation.schema.json
