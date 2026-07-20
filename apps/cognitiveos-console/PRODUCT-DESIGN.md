@@ -30,7 +30,7 @@
 | [路线图](../../clients/pc/plan/roadmap.md) | 非 Windows v1 feature briefs |
 | [决策记录](../../clients/pc/docs/product/decision-log.md) | 已确认和被替代的产品决策 |
 | [桌面平台产品设计](../../docs/platforms/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
-| [Agent Hub / 直连接管](./docs/agent-hub/README.md) | Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级/Adapter、威胁模型与受 gate 阻断的开发计划（informative） |
+| [Agent Hub / 直连接管](../../clients/agent-hub/docs/README.md) | Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级/Adapter、威胁模型与受 gate 阻断的开发计划（informative） |
 
 ## 1. 当前产品基线
 

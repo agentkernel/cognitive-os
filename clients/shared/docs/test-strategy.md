@@ -23,4 +23,4 @@
 
 ## 3. 与 gate 的关系
 
-测试分层不改变实现 gate：任何客户端实现里程碑仍须满足 [Console 实现 gate](../../../docs/platforms/README.md#console-实现-gate)（Agent Hub 另加其 [GOVERNANCE §7](../../../apps/cognitiveos-console/docs/agent-hub/GOVERNANCE.md#7-实现-gate不可跳过)）。在 gate 通过前，本文所列各层保持 `not-run`/`planned`，不得虚报。
+测试分层不改变实现 gate：任何客户端实现里程碑仍须满足 [Console 实现 gate](../../../docs/platforms/README.md#console-实现-gate)（Agent Hub 另加其 [GOVERNANCE §7](../../agent-hub/docs/GOVERNANCE.md#7-实现-gate不可跳过)）。在 gate 通过前，本文所列各层保持 `not-run`/`planned`，不得虚报。

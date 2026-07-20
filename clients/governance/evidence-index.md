@@ -6,7 +6,7 @@
 
 | 证据域 | 指针（迁移前现址） | 状态 |
 |---|---|---|
-| Agent Hub Open PoC / implementation / Profile | [agent-hub evidence-index](../../apps/cognitiveos-console/docs/agent-hub/traceability/evidence-index.md) | implementation `not-implemented`；Open PoC 全 `not-run`；evidence `none`；Profile `not implemented` |
+| Agent Hub Open PoC / implementation / Profile | [agent-hub evidence-index](../agent-hub/docs/traceability/evidence-index.md) | implementation `not-implemented`；Open PoC 全 `not-run`；evidence `none`；Profile `not implemented` |
 | macOS PoC（`MAC-POC-01..12`） | [macOS 产品设计 §13](../pc/docs/platforms/macos/macos-product-design.md#13-open-poc-and-ga-gates) | 全部 `not-run`；evidence `none` |
 | Linux PoC（`LNX-POC-01..12`） | [Linux 产品设计 §13](../pc/docs/platforms/linux/linux-product-design.md#13-open-poc-and-ga-gates) | 全部 `not-run`；evidence `none` |
 | iPhone PoC（`IOS-POC-01..18`） | [iPhone 产品设计 §18](../mobile/ios/docs/ios-product-design.md#18-open-poc-与-ga-gates) | 全部 `not-run`；evidence `none` |

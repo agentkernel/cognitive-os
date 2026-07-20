@@ -20,7 +20,7 @@
 
 ## 3. Agent Hub gate
 
-- [Agent Hub 实现 gate（GOVERNANCE §7）](../../apps/cognitiveos-console/docs/agent-hub/GOVERNANCE.md#7-实现-gate不可跳过)：Console gate 全项 + Paseo/AGPL 法务 gate（`POC-LIC-001..003` 全部 `not-run`）+ Tier 1 provider 一手接口核验。
+- [Agent Hub 实现 gate（GOVERNANCE §7）](../agent-hub/docs/GOVERNANCE.md#7-实现-gate不可跳过)：Console gate 全项 + Paseo/AGPL 法务 gate（`POC-LIC-001..003` 全部 `not-run`）+ Tier 1 provider 一手接口核验。
 
 ## 4. GO / NO-GO 记录
 

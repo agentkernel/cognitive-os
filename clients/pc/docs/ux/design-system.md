@@ -6,7 +6,7 @@
 >
 > 品牌关键词：亲和易懂、未来感、强大可控
 >
-> Agent Hub 关系：Agent Hub 复用本设计系统，并额外要求 Direct/Governed 模式、接管层级与事实来源的视觉不可混同（见 [agent-hub/product/states-content-and-accessibility.md](../../../../apps/cognitiveos-console/docs/agent-hub/product/states-content-and-accessibility.md)）；不新增并列设计系统。
+> Agent Hub 关系：Agent Hub 复用本设计系统，并额外要求 Direct/Governed 模式、接管层级与事实来源的视觉不可混同（见 [agent-hub/product/states-content-and-accessibility.md](../../../agent-hub/docs/product/states-content-and-accessibility.md)）；不新增并列设计系统。
 
 本文定义可进入原型的设计方向，不声称 token 已通过视觉回归、WCAG 或品牌审批。实现前必须在真实 WebView2、Windows High Contrast 和中英文内容上验证。
 

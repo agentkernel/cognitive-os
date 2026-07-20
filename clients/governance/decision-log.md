@@ -22,6 +22,6 @@
 | Console v2（Windows） | [decision-log](../pc/docs/product/decision-log.md) | `CONSOLE-V2-DEC-*`（17 项实测） | B2（已落位） |
 | 桌面平台（macOS/Linux） | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md) | `CONSOLE-MAC-V1-DEC-*`（11）/`CONSOLE-LNX-V1-DEC-*`（11） | B2（已落位） |
 | 移动平台（iPhone/Android） | [mobile-platform-decision-log](../mobile/shared/docs/mobile-platform-decision-log.md) | `CONSOLE-IOS-V1-DEC-*`（16）/`CONSOLE-AND-V1-DEC-*`（16） | B3（已落位） |
-| Agent Hub | [decisions/decision-log](../../apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md) | `CONSOLE-AGENTHUB-V1-DEC-*`（26） | B5 |
+| Agent Hub | [decisions/decision-log](../agent-hub/docs/decisions/decision-log.md) | `CONSOLE-AGENTHUB-V1-DEC-*`（26） | B5（已落位） |
 
 产品决策的新增/替代仍写入各自 canonical 文件并遵循其 `superseded` 规则；本日志只登记 `clients/` 结构与治理决策。

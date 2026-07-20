@@ -5,7 +5,7 @@
 > 日期：2026-07-20
 > 状态：Windows/macOS/Linux 均为产品设计；本表不构成实现或跨平台符合性声明
 >
-> Agent Hub：第三方 Agent Direct Takeover 的桌面接管能力差异见 [agent-hub-platform-parity.md](../../../../docs/platforms/agent-hub-platform-parity.md)，为本表补充，不改写此处条目。
+> Agent Hub：第三方 Agent Direct Takeover 的桌面接管能力差异见 [agent-hub-platform-parity.md](../../../agent-hub/docs/platforms/agent-hub-platform-parity.md)，为本表补充，不改写此处条目。
 
 分类：
 

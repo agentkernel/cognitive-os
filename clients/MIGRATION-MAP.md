@@ -70,11 +70,11 @@
 
 | old | new | 批次 | 状态 |
 |---|---|---|---|
-| `apps/cognitiveos-console/docs/agent-hub/**`（41 文件，14 子目录结构原样） | `clients/agent-hub/docs/**` | B5 | pending-B5 |
-| `docs/plan/agent-hub-development-plan.md` | `clients/agent-hub/plan/agent-hub-development-plan.md` | B5 | pending-B5 |
-| `docs/plan/agent-hub/*`（24 文件：README/progress/milestones/dependency-dag/evidence-index/risk-register + 12 宏车道 + 6 Adapter） | `clients/agent-hub/plan/*` | B5 | pending-B5 |
-| `docs/prompts/agent-hub/*`（19 文件：README + 12 宏车道 + 6 Adapter） | `clients/agent-hub/prompts/*` | B5 | pending-B5 |
-| `docs/platforms/agent-hub-platform-parity.md` | `clients/agent-hub/docs/platforms/agent-hub-platform-parity.md` | B5 | pending-B5 |
+| `apps/cognitiveos-console/docs/agent-hub/**`（41 文件，14 子目录结构原样） | `clients/agent-hub/docs/**` | B5 | done |
+| `docs/plan/agent-hub-development-plan.md` | `clients/agent-hub/plan/agent-hub-development-plan.md` | B5 | done |
+| `docs/plan/agent-hub/*`（24 文件：README/progress/milestones/dependency-dag/evidence-index/risk-register + 12 宏车道 + 6 Adapter） | `clients/agent-hub/plan/*` | B5 | done |
+| `docs/prompts/agent-hub/*`（19 文件：README + 12 宏车道 + 6 Adapter） | `clients/agent-hub/prompts/*` | B5 | done |
+| `docs/platforms/agent-hub-platform-parity.md` | `clients/agent-hub/docs/platforms/agent-hub-platform-parity.md` | B5 | done |
 
 ### 2.6 B6 gate canonical 迁移
 

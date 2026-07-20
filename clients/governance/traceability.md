@@ -21,11 +21,11 @@
 | `CONSOLE-AND-V1-PRD-*` | 40 | [android-product-design](../mobile/android/docs/android-product-design.md) | B3（已落位） |
 | `CONSOLE-AND-V1-DEC-*` | 16 | [mobile-platform-decision-log](../mobile/shared/docs/mobile-platform-decision-log.md) | B3（已落位） |
 | `POC-001..018`（Android） / `AND-TM-*` | 18 / 22 | android-product-design §18 / 威胁模型节 | B3 |
-| `CONSOLE-AGENTHUB-V1-PRD-*` | 28 | [product-requirements](../../apps/cognitiveos-console/docs/agent-hub/traceability/product-requirements.md) | B5 |
-| `CONSOLE-AGENTHUB-V1-DEC-*` | 26 | [agent-hub decision-log](../../apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md) | B5 |
-| `CONSOLE-AGENTHUB-V1-TM-*` | 21 | [threat-model](../../apps/cognitiveos-console/docs/agent-hub/security/threat-model.md) | B5 |
-| `POC-LIC/PROC/TERM/SESS/FILE/CRED…-*`（Agent Hub Open PoC 族） | 28（evidence-index 汇总，全部 `not-run`） | [agent-hub evidence-index](../../apps/cognitiveos-console/docs/agent-hub/traceability/evidence-index.md) | B5 |
-| `AH-<lane>-<seq>` + `AH-R*` + `AH-M0..M6` | 68 个唯一值（任务/风险/里程碑） | [agent-hub 计划树](../../docs/plan/agent-hub/README.md) 各文件 | B5 |
+| `CONSOLE-AGENTHUB-V1-PRD-*` | 28 | [product-requirements](../agent-hub/docs/traceability/product-requirements.md) | B5（已落位） |
+| `CONSOLE-AGENTHUB-V1-DEC-*` | 26 | [agent-hub decision-log](../agent-hub/docs/decisions/decision-log.md) | B5（已落位） |
+| `CONSOLE-AGENTHUB-V1-TM-*` | 21 | [threat-model](../agent-hub/docs/security/threat-model.md) | B5（已落位） |
+| `POC-LIC/PROC/TERM/SESS/FILE/CRED…-*`（Agent Hub Open PoC 族） | 28（evidence-index 汇总，全部 `not-run`） | [agent-hub evidence-index](../agent-hub/docs/traceability/evidence-index.md) | B5（已落位） |
+| `AH-<lane>-<seq>` + `AH-R*` + `AH-M0..M6` | 68 个唯一值（任务/风险/里程碑） | [agent-hub 计划树](../agent-hub/plan/README.md) 各文件 | B5（已落位） |
 | `CLIENTS-DEC-*` | 1 | [decision-log.md](decision-log.md)（本域 canonical） | B1（已落位） |
 
 注：`CONSOLE-AGENTHUB-V1-TM-*` 实测 21 项（TM-001..TM-021）；上一会话 handoff 记为 20 项，属计数漂移，以实测为准。旧 `CONSOLE-PRD-001..034`、`A-01..34` 已停止新增和复用（映射见 requirements-traceability §5）。

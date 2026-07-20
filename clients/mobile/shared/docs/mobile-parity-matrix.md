@@ -6,7 +6,7 @@
 >
 > 状态：Windows、macOS、Linux、iPhone 与 Android phone 均为产品设计；本文不构成实现、测试或 Profile 符合性声明
 >
-> Agent Hub：第三方 Agent Direct Takeover 的移动 companion 差异见 [agent-hub-platform-parity.md](../../../../docs/platforms/agent-hub-platform-parity.md)，为本表补充，不改写此处条目或既有移动 canonical 决策。
+> Agent Hub：第三方 Agent Direct Takeover 的移动 companion 差异见 [agent-hub-platform-parity.md](../../../agent-hub/docs/platforms/agent-hub-platform-parity.md)，为本表补充，不改写此处条目或既有移动 canonical 决策。
 
 本文建立 Windows/macOS/Linux 到 iPhone/Android phone 的逐项对等关系。基线为 [Windows 产品决策](../../../pc/docs/product/decision-log.md)、[桌面平台产品决策](../../../pc/docs/platforms/platform-decision-log.md)、[桌面 parity matrix](../../../pc/docs/platforms/desktop-parity-matrix.md)、[iPhone-only v1 产品设计](../../ios/docs/ios-product-design.md)与 [Android phone v1 产品设计](../../android/docs/android-product-design.md)。
 

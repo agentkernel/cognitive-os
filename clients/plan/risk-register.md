@@ -2,7 +2,7 @@
 
 > 类别：plan risk register ｜ owner：Lane-CON ｜ 日期：2026-07-20
 >
-> 只登记 clients/ 迁移与结构风险；产品/技术风险归各产品文档与 [agent-hub risk-register](../../docs/plan/agent-hub/risk-register.md)（B5 迁移前现址）。
+> 只登记 clients/ 迁移与结构风险；产品/技术风险归各产品文档与 [agent-hub risk-register](../agent-hub/plan/risk-register.md)。
 
 | # | 风险 | 影响 | 对冲 | 状态 |
 |---|---|---|---|---|

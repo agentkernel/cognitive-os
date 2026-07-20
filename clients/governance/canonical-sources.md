@@ -14,9 +14,9 @@
 | iPhone / Android 产品设计 | `clients/mobile/{ios,android}/docs/*.md` | [ios](../mobile/ios/docs/ios-product-design.md) / [android](../mobile/android/docs/android-product-design.md) | B3（已落位） |
 | 移动 parity | `clients/mobile/shared/docs/mobile-parity-matrix.md` | [mobile-parity-matrix](../mobile/shared/docs/mobile-parity-matrix.md) | B3（已落位） |
 | 共用测试策略 / 遥测脱敏留存政策 | `clients/shared/docs/test-strategy.md`、`.../telemetry-evidence/telemetry-redaction-retention-policy.md` | 缺口（B4 新建） | B4 |
-| Agent Hub 各专题（产品/架构/安全/协作/平台/决策/追踪/adapter/来源/模板） | `clients/agent-hub/docs/**` 各文件 | [apps/cognitiveos-console/docs/agent-hub/](../../apps/cognitiveos-console/docs/agent-hub/README.md) | B5 |
-| Agent Hub 计划 / 提示词 | `clients/agent-hub/plan/**`、`clients/agent-hub/prompts/**` | [docs/plan/agent-hub/](../../docs/plan/agent-hub/README.md)、[docs/prompts/agent-hub/](../../docs/prompts/agent-hub/README.md) | B5 |
-| Agent Hub 平台 parity | `clients/agent-hub/docs/platforms/agent-hub-platform-parity.md` | [agent-hub-platform-parity](../../docs/platforms/agent-hub-platform-parity.md) | B5 |
+| Agent Hub 各专题（产品/架构/安全/协作/平台/决策/追踪/adapter/来源/模板） | `clients/agent-hub/docs/**` 各文件 | [agent-hub/docs](../agent-hub/docs/README.md) | B5（已落位） |
+| Agent Hub 计划 / 提示词 | `clients/agent-hub/plan/**`、`clients/agent-hub/prompts/**` | [plan](../agent-hub/plan/README.md)、[prompts](../agent-hub/prompts/README.md) | B5（已落位） |
+| Agent Hub 平台 parity | `clients/agent-hub/docs/platforms/agent-hub-platform-parity.md` | [agent-hub-platform-parity](../agent-hub/docs/platforms/agent-hub-platform-parity.md) | B5（已落位） |
 | 客户端实现 gate | `clients/governance/readiness-gates.md` | [docs/platforms/README.md#console-实现-gate](../../docs/platforms/README.md#console-实现-gate) | B6 |
 | 客户端结构决策（`CLIENTS-DEC-*`） | `clients/governance/decision-log.md` | [decision-log.md](decision-log.md) | B1（已落位） |
 | readiness 双结论 | `clients/READINESS.md` | [READINESS.md](../READINESS.md) | B1（已落位） |

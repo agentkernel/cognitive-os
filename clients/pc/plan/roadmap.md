@@ -1,4 +1,4 @@
-# CognitiveOS Console v2 — 路线图与未来 Feature Brief
+﻿# CognitiveOS Console v2 — 路线图与未来 Feature Brief
 
 > 状态：Product roadmap hypotheses
 >
@@ -6,7 +6,7 @@
 >
 > 规则：本页保留未来价值、不可变边界和进入门禁，不冻结未经验证的页面布局。
 >
-> Agent Hub 关系：Direct Takeover 与第三方 Agent 接管是一条独立于本路线图的产品线，其里程碑/DAG/gate 在 [agent-hub/planning/README.md](../../../apps/cognitiveos-console/docs/agent-hub/planning/README.md) 与 [docs/plan/agent-hub-development-plan.md](../../../docs/plan/agent-hub-development-plan.md)，同样受 Console/M5/平台/AGPL gate 阻断。
+> Agent Hub 关系：Direct Takeover 与第三方 Agent 接管是一条独立于本路线图的产品线，其里程碑/DAG/gate 在 [agent-hub/planning/README.md](../../agent-hub/docs/planning/README.md) 与 [docs/plan/agent-hub-development-plan.md](../../agent-hub/plan/agent-hub-development-plan.md)，同样受 Console/M5/平台/AGPL gate 阻断。
 
 ## 1. 排序原则
 
