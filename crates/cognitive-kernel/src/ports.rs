@@ -66,6 +66,10 @@ pub struct ObjectAdmission {
     pub event: EventDraft,
     /// Outbox rows to insert in the same transaction.
     pub outbox: Vec<OutboxDraft>,
+    /// Writer fencing epoch (F-014): when set, the adapter MUST verify it
+    /// against the current epoch INSIDE the transaction and reject stale
+    /// writers with a conflict. `None` = unfenced M2 path.
+    pub fencing_epoch: Option<i64>,
 }
 
 /// Compare-and-set update of one governed object row.
@@ -155,6 +159,10 @@ pub struct TransitionCommit {
     pub budget: Option<BudgetCas>,
     /// Outbox rows (same transaction).
     pub outbox: Vec<OutboxDraft>,
+    /// Writer fencing epoch (F-014): when set, the adapter MUST verify it
+    /// against the current epoch INSIDE the transaction and reject stale
+    /// writers with a conflict. `None` = unfenced M2 path.
+    pub fencing_epoch: Option<i64>,
 }
 
 /// Receipt of one committed admission or transition.
@@ -256,6 +264,103 @@ pub trait AuthorityStore {
         outbox_sequence: i64,
         dispatched_at: &WallTimestamp,
     ) -> Result<(), StorePortError>;
+}
+
+/// One persisted Intent row (immutable once inserted; the storage layer
+/// forbids UPDATE/DELETE exactly like the event log). The idempotency key
+/// is unique across the store: key stability and same-key conflict
+/// detection are structural (REQ-EFF-001/002,
+/// `docs/standards/intent-effect-idempotency.md` sections 2-3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct IntentRow {
+    /// Intent identity.
+    pub intent_id: ObjectId,
+    /// Stable idempotency key of the logical effect attempt chain.
+    pub idempotency_key: String,
+    /// Canonical parameter digest (comparison basis, never source bytes).
+    pub parameters_digest: String,
+    /// Operation action name.
+    pub action: String,
+    /// Target URI.
+    pub target: String,
+    /// Effect object this intent is bound to.
+    pub effect_object_id: ObjectId,
+    /// CAS version of the fixed pre-state.
+    pub expected_state_version: Version,
+    /// Revocation epoch of the authorization binding.
+    pub grant_epoch: i64,
+    /// Capability set version of the authorization binding.
+    pub capability_set_version: i64,
+    /// Canonical JSON of the full intent value (evidence).
+    pub canonical_json: String,
+}
+
+/// M4 protocol persistence port: intents, fencing epochs and in-flight
+/// enumeration. Implemented alongside [`AuthorityStore`] by the store
+/// adapter; the intent insert commits atomically with its event
+/// (REQ-EFF-001: no Intent, no dispatch).
+pub trait ProtocolStore {
+    /// Insert an intent row and append its event in ONE transaction. A
+    /// duplicate `intent_id`/`effect_object_id` is a conflict; a duplicate
+    /// `idempotency_key` is a conflict the caller maps to idempotent-replay
+    /// or `EFFECT_IDEMPOTENCY_CONFLICT` per parameter digest.
+    fn insert_intent(
+        &self,
+        intent: &IntentRow,
+        event: &EventDraft,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// Load the intent bound to an idempotency key.
+    fn load_intent_by_key(&self, key: &str) -> Result<Option<IntentRow>, StorePortError>;
+
+    /// Load the intent bound to an effect object.
+    fn load_intent_for_effect(
+        &self,
+        effect_object_id: &ObjectId,
+    ) -> Result<Option<IntentRow>, StorePortError>;
+
+    /// Current fencing epoch of this authority store (starts at 1).
+    fn current_fencing_epoch(&self) -> Result<i64, StorePortError>;
+
+    /// Advance the fencing epoch by exactly one and return the new value
+    /// (recovery step 2; old-epoch writers are fenced from that instant).
+    fn advance_fencing_epoch(&self) -> Result<i64, StorePortError>;
+
+    /// Enumerate governed objects of `domain` currently in any of `states`
+    /// (recovery step 5: find in-flight Effects to reconcile).
+    fn list_objects_in_states(
+        &self,
+        domain: LifecycleDomain,
+        states: &[StateName],
+    ) -> Result<Vec<StoredObject>, StorePortError>;
+
+    /// Append one checkpoint row (append-only, like events). The adapter
+    /// MUST verify `fencing_epoch` against the current epoch INSIDE the
+    /// transaction and reject stale writers (F-014 checkpoint sink).
+    fn append_checkpoint(&self, checkpoint: &CheckpointRow) -> Result<(), StorePortError>;
+
+    /// Load the newest checkpoint of one loop object.
+    fn latest_checkpoint(
+        &self,
+        loop_object_id: &ObjectId,
+    ) -> Result<Option<CheckpointRow>, StorePortError>;
+}
+
+/// One persisted loop checkpoint (recovery-stable facts of
+/// `loop-checkpoint.schema.json`: event high-watermark, fencing epoch,
+/// version pins — REQ-RUN-006, F-010).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CheckpointRow {
+    /// Checkpoint identity.
+    pub checkpoint_id: ObjectId,
+    /// Loop object this checkpoint belongs to.
+    pub loop_object_id: ObjectId,
+    /// Event-log high watermark consumed at checkpoint time.
+    pub event_high_watermark: i64,
+    /// Fencing epoch the checkpoint was taken under.
+    pub fencing_epoch: i64,
+    /// Canonical JSON of the checkpoint value (pins and pending effects).
+    pub canonical_json: String,
 }
 
 /// Failure of an infrastructure port (clock, ID generation). The kernel

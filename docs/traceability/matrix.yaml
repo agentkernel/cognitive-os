@@ -200,10 +200,17 @@ requirements:
       - EFF-FLOW-001
     vectors:
       - conformance/vectors/eff-flow-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/effects.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+      - crates/cognitive-store/tests/m4_tracer_bullet.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: Intent persisted atomically with its event before any dispatch (fail-before-effect); Rust behavior tests
+      executed; vector execution stays with Lane-CFR."
   - id: REQ-EFF-004
     owner: effect
     owner_spec: specs/core/README.md
@@ -212,10 +219,17 @@ requirements:
       - EFF-UNK-003
     vectors:
       - conformance/vectors/effect-unknown-outcome.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/effects.rs
+      - crates/cognitive-kernel/src/recovery.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+      - crates/cognitive-store/tests/m4_recovery.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: OUTCOME_UNKNOWN never blind-retried or reported success; reconcile-or-quarantine only exits, original key
+      bound; behavior tests executed."
   - id: REQ-EFF-006
     owner: effect
     owner_spec: specs/core/README.md
@@ -229,10 +243,16 @@ requirements:
       - conformance/vectors/eff-crash-001.json
       - conformance/vectors/eff-crash-002.json
       - conformance/vectors/eff-crash-003.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/recovery.rs
+      - crates/cognitive-store/src/faults.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_recovery.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: all three crash points covered by drop-and-reopen WAL fault injection (CrashHarness); single dispatch with
+      original key, reconcile-not-retry, commit-from-evidence; behavior tests executed."
   - id: REQ-RUN-004
     owner: runtime
     owner_spec: specs/schemas/task-contract.schema.json
@@ -265,10 +285,16 @@ requirements:
       - RECOVERY-CRASH-006
     vectors:
       - conformance/vectors/crash-recovery.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/recovery.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_recovery.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: LoopCheckpoint recovery-stable facts persisted (watermark/epoch) and validated at resume; full loop
+      resumption orchestration lands with the M5 runtime."
   - id: REQ-RUN-009
     owner: runtime
     owner_spec: specs/schemas/verification-report.schema.json
@@ -1895,10 +1921,16 @@ requirements:
     vectors:
       - conformance/vectors/effect-idempotency-conflict.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/effects.rs
+      - crates/cognitive-kernel/src/executor.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: stable key + canonical parameter digest + authorization digest + fencing token on every call;
+      same-key/different-digest rejected EFFECT_IDEMPOTENCY_CONFLICT (no dedup, no overwrite); behavior tests executed."
   - id: REQ-EFF-003
     owner: eff-003
     owner_spec: specs/core/README.md
@@ -1919,10 +1951,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/effects.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: compensation requires a fresh independent grant and separate intent/key; reuse of the original grant
+      refused; behavior tests executed."
   - id: REQ-EFF-007
     owner: eff-007
     owner_spec: specs/core/README.md
@@ -1944,10 +1981,17 @@ requirements:
     vectors:
       - conformance/vectors/effect-state-closure-008.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/engine.rs
+      - crates/cognitive-kernel/src/effects.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+      - crates/cognitive-kernel/tests/engine_gate.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: M2 exhaustive illegal-edge rejection + M4 protocol layer (no commit past RECONCILED/verification, no rekey
+      retry); rejections carry current state and safe exits.
   - id: REQ-EMB-ACT-001
     owner: emb-act
     owner_spec: specs/embodied/README.md
@@ -2693,10 +2737,17 @@ requirements:
       - conformance/vectors/intent-acceptance-007.json
       - conformance/vectors/remote-completed-not-acceptance.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/effects.rs
+      - crates/cognitive-kernel/src/engine.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_effects.rs
+      - crates/cognitive-store/tests/m4_tracer_bullet.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: completion only via verification + acceptance authority guards (receipt/remote-completed/model narrative
+      underivable); full UserIntentRecord/interpretation binding lands with M5 shell."
   - id: REQ-INTENT-ADMISSION-001
     owner: intent-admission
     owner_spec: specs/core/README.md
@@ -3090,10 +3141,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/recovery.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_recovery.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: recovery fences the old writer (epoch advance, every sink checks) and reconciles possibly-executed Effects
+      before anything resumes; order-pinned sequencer; behavior tests executed."
   - id: REQ-REC-002
     owner: rec-002
     owner_spec: specs/core/README.md
@@ -3102,10 +3158,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/recovery.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m4_recovery.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
+    notes: "M4: replay reproduces committed history byte-stably and re-executes nothing (executor ledger asserted across
+      crash boundaries)."
   - id: REQ-REC-003
     owner: rec-003
     owner_spec: specs/core/README.md

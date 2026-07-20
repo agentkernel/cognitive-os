@@ -1,4 +1,4 @@
-//! M2 acceptance suite (DEVELOPMENT-PLAN M2 判据 1-5 + crash consistency),
+﻿//! M2 acceptance suite (DEVELOPMENT-PLAN M2 判据 1-5 + crash consistency),
 //! executed against the real SQLite (WAL) authority store through the
 //! deterministic kernel gate.
 //!
@@ -140,6 +140,7 @@ fn seed(store: &SqliteAuthorityStore, id: &ObjectId, domain: LifecycleDomain, at
                 canonical_json,
             },
             outbox: vec![],
+            fencing_epoch: None,
         })
         .unwrap();
 }
@@ -187,6 +188,7 @@ fn edge_command(
         evidence,
         budget: None,
         outbox_destinations: vec![],
+        fencing_epoch: None,
     }
 }
 
@@ -365,6 +367,7 @@ fn drive_reference_history(path: &Path) -> SqliteAuthorityStore {
                     authority_ref: uri("authority://tenant-test/state-authority"),
                     correlation_id: uri("corr://m2/replay"),
                     outbox_destinations: vec!["watch://status".to_owned()],
+                    fencing_epoch: None,
                 })
                 .unwrap();
         }
@@ -712,6 +715,7 @@ fn criterion_6_read_only_store_fails_closed_and_keeps_reads_available() {
         authority_ref: uri("authority://tenant-test/state-authority"),
         correlation_id: uri("corr://m2/degraded"),
         outbox_destinations: vec![],
+        fencing_epoch: None,
     };
     let rejection = engine.admit_object(&admission).expect_err("degraded admit");
     assert_eq!(rejection.registered().code, "STATE_STORE_UNAVAILABLE");

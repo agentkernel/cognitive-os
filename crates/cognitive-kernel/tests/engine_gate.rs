@@ -405,6 +405,7 @@ fn command(
         evidence,
         budget: None,
         outbox_destinations: vec!["watch://status".to_owned()],
+        fencing_epoch: None,
     }
 }
 
@@ -832,6 +833,7 @@ fn admission_uses_initial_state_and_rejects_duplicates() {
         authority_ref: uri("authority://tenant-test/verification-authority"),
         correlation_id: uri("corr://test/chain-2"),
         outbox_destinations: vec![],
+        fencing_epoch: None,
     };
     let admitted = engine.admit_object(&cmd).unwrap();
     assert_eq!(admitted.initial_state.as_str(), "NOT_REQUESTED");
@@ -863,6 +865,7 @@ fn replay_projection_is_deterministic_and_barriers_on_corruption() {
                     authority_ref: uri("authority://tenant-test/task-acceptance"),
                     correlation_id: uri("corr://test/replay"),
                     outbox_destinations: vec![],
+                    fencing_epoch: None,
                 };
                 engine.admit_object(&admit).unwrap();
             }

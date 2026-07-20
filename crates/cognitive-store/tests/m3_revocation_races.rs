@@ -1,4 +1,4 @@
-//! F-007 behavioral evidence: capability revocation races against the
+﻿//! F-007 behavioral evidence: capability revocation races against the
 //! Effect lifecycle, executed through the real deterministic gate and the
 //! SQLite authority store (M3; `docs/standards/authn-authz-capability.md`
 //! section 3: long-running dispatch paths re-validate capability at
@@ -121,6 +121,7 @@ fn seed_effect(store: &SqliteAuthorityStore, id: &ObjectId, at: &str) {
                 canonical_json,
             },
             outbox: vec![],
+            fencing_epoch: None,
         })
         .unwrap();
 }
@@ -228,6 +229,7 @@ fn effect_command(
         evidence,
         budget: None,
         outbox_destinations: vec![],
+        fencing_epoch: None,
     }
 }
 

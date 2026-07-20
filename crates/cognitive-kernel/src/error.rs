@@ -128,6 +128,33 @@ pub const CONTEXT_RESOLUTION_STAGNATED: RegisteredError = RegisteredError {
     retryable: false,
 };
 
+/// `EFFECT_IDEMPOTENCY_CONFLICT`: an idempotency key was reused with
+/// different parameters; the request must be rejected, not deduplicated or
+/// executed.
+pub const EFFECT_IDEMPOTENCY_CONFLICT: RegisteredError = RegisteredError {
+    code: "EFFECT_IDEMPOTENCY_CONFLICT",
+    category: "effect",
+    retryable: false,
+};
+
+/// `EFFECT_RECOVERY_QUARANTINED`: recovery cannot safely determine or
+/// compensate outcome.
+pub const EFFECT_RECOVERY_QUARANTINED: RegisteredError = RegisteredError {
+    code: "EFFECT_RECOVERY_QUARANTINED",
+    category: "effect",
+    retryable: false,
+};
+
+/// `NO_AUTHORIZED_OPERATION_CANDIDATE`: no operation candidate is both
+/// visible and authorized (M4 admission matrix: an operation whose executor
+/// is neither queryable nor idempotent has no safe recovery closure and is
+/// not an admissible candidate for governed_external dispatch, F-023).
+pub const NO_AUTHORIZED_OPERATION_CANDIDATE: RegisteredError = RegisteredError {
+    code: "NO_AUTHORIZED_OPERATION_CANDIDATE",
+    category: "catalog",
+    retryable: false,
+};
+
 /// Typed cause of a rejected governed operation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RejectionKind {
@@ -264,6 +291,9 @@ mod tests {
             AUTH_CAPABILITY_ATTENUATION_VIOLATION,
             AUTH_CAPABILITY_EXPIRED,
             CONTEXT_RESOLUTION_STAGNATED,
+            EFFECT_IDEMPOTENCY_CONFLICT,
+            EFFECT_RECOVERY_QUARANTINED,
+            NO_AUTHORIZED_OPERATION_CANDIDATE,
         ] {
             let marker = format!("- code: {}", expected.code);
             let start = registry

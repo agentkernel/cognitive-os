@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CTR M4 前评估批：渲染域并入 D-017、membership 绑定 defer 至 M5 消费方、D-018 事件 envelope 升格正式裁决为 decided；零 schema/向量/钉扎变化）
+> 最后更新：2026-07-20（Lane-KRN M4 批会话：Intent/Effect 协议、幂等、F-023 准入矩阵、F-014 sink fencing、三 crash point 故障注入、恢复八步、tracer bullet 竖切；并行合并 Lane-CTR M4 前评估批 PR #11——渲染域并入 D-017、membership defer 至 M5、D-018 裁决 decided——后合并方 KRN 解决本页冲突）
 
 ## 里程碑状态
 
@@ -11,7 +11,7 @@
 | M1 合同收敛与 Runner | **done** | [20260720-m1-milestone-review.md](../checkpoints/20260720-m1-milestone-review.md) | CTR 契约批（F-003 收尾、$id 统一、codegen、bundle digest、golden §14）+ CFR runner 批（静态合同执行 25 pass、错误实现自检 fail、F-003 关闭、D-004/D-012 闭合）。**M2 入口 gate 开启；tracer bullet 入口 gate（F-002~F-010 类合同收敛）开启**（M4 入口另需 M2/M3 行为验收） |
 | M2 对象/状态/事件内核 | **done** | [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md) | KRN 内核批（三 crate 实现 + 六判据行为测试，PR #4）+ CFR 行为执行批（runner 行为模式：3 向量对真实 kernel/store 行为执行 pass、只读降级子集落档、gate-bypass 错误实现自检 12/12 fail）。**M3 入口 gate 的 M2 出口分量达成** |
 | M3 治理链与 Context | **done** | [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md) | KRN M3 批（六步授权门、capability 算术、九阶段管线、治理缓存键、确定性渲染、F-007 双竞态，PR #9）+ CFR 行为执行扩展批（8 向量脱 not-run + CTX-TRUST-004 静态→行为升级、治理类自检 20/20 fail）。**M4 入口 gate（tracer bullet；F-002~F-010 类全收敛）逐条核验通过 → 开启**（评审 §7） |
-| M4 Intent/Effect 与恢复 + tracer bullet | not-started | — | **入口 gate 已开**（M3 review §7 逐条核验：F-002~F-010 无开放项，F-006/F-008(disk-full)/F-010 行为项 = M4 自身验收交付物；F-014/F-023 已排入 M4 范围）；建议提示词 docs/prompts/milestone-m4.md / lane-krn.md |
+| M4 Intent/Effect 与恢复 + tracer bullet | **impl 批已交付**（出口评审待 CFR effect-recovery 向量执行） | — | Lane-KRN 已交付 Intent 持久化+幂等（同键异参拒）/ OperationDescriptor 准入矩阵（F-023）/ Effect 协议驱动（sanctioned guard 派生收口）/ 全 sink fencing 矩阵（F-014，4 端逐端负例）/ 恢复八步（顺序钉扎）/ 三 crash point 故障注入框架 / **tracer bullet 正+负链跑通**（[20260720-lane-krn-m4-handoff.md](../checkpoints/20260720-lane-krn-m4-handoff.md)）；eff-crash 组向量保持 not-run 诚实口径，行为执行批归 Lane-CFR，之后做 M4 出口评审 |
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
@@ -22,8 +22,8 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **60**；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | **24**（matrix impl/impl_tests 已回填：REQ-CONF-001/002/003（M1 CFR）+ REQ-STATE-002/003、REQ-EVT-004、REQ-REC-003、REQ-GOBJ-ID-001（M2 KRN）+ REQ-CAP-001/002/003/005、REQ-CTX-002/004/005/006/007/008/011/012、REQ-SEC-001/002、REQ-DISC-STAGNATION-001、REQ-PROFILE-CVM-001（M3 KRN，附 Rust 行为测试证据）；其余待各车道证据口径回填） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 12 向量**（M2 3：CAS/effect 闭包/task 强推，被测 = kernel+store 权威路径；M3 9：横向越权/衰减/撤销缓存/rank 前授权/超预算/渲染稳定/停滞/候选收窄/注入隔离，被测 = authz/context/context_cache/capability 面；另 state-store-degradation M2 只读子集落档）+ 内核 Rust 行为测试 77 项（KRN M2 51 + M3 26）；静态合同层：27/81 向量 pass；**均不构成 Profile 覆盖声明**（conformance-evidence §2）；TS 客户端 79 项包内单元测试为实现测试，不计向量执行 |
+| 实现已提供（构建通过且有实现代码的 REQ） | **34**（matrix impl/impl_tests 已回填：REQ-CONF-001/002/003（M1 CFR）+ REQ-STATE-002/003、REQ-EVT-004、REQ-REC-003、REQ-GOBJ-ID-001（M2 KRN）+ REQ-CAP-001/002/003/005、REQ-CTX-002/004/005/006/007/008/011/012、REQ-SEC-001/002、REQ-DISC-STAGNATION-001、REQ-PROFILE-CVM-001（M3 KRN）+ REQ-EFF-001/002/004/005/006、REQ-EFF-STATE-001、REQ-REC-001/002、REQ-RUN-006、REQ-INTENT-ACCEPT-001（M4 KRN，附 Rust 行为测试证据）；其余待各车道证据口径回填） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 12 向量**（M2 3 + M3 9，见各批 handoff；另 state-store-degradation M2 只读子集落档）+ 内核 Rust 行为测试 93 项（KRN M2 51 + M3 26 + M4 16：三 crash point/幂等冲突/unknown 分流/补偿独立授权/sink fencing 矩阵/恢复八步/tracer bullet 正负链）；静态合同层：27/81 向量 pass；**均不构成 Profile 覆盖声明**（conformance-evidence §2）；TS 客户端 79 项包内单元测试为实现测试，不计向量执行 |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`） |
 
 ## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-20 Lane-CFR M3 行为批）
@@ -52,7 +52,7 @@
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M4 前评估批已交付**（本页所在 PR） | `lane/ctr` | 三项契约评估收敛（KRN M3 handoff §4 + D-018 触发成熟）：① 渲染 digest 域 `cognitiveos.impl.context-render/0.1` **并入 D-017**（同框架逐条复核成立，deferred-to-v0.2，触发条件扩展含 llm/human 渲染 profile 跨端契约）；② membership 生成绑定 **defer 至 M5 消费方出现**（M3 只消费 MembershipFacts 快照、无 wire 形状手写者；"consuming milestones"条款口径；届时 CORE_SET 30→31 一行 + 双计数钉扎）；③ **D-018 正式裁决 decided**（组装点/字段来源/digest 域/排期见台账，零 schema 修正需求）。**零资产变化**：schema/向量/registry/钉扎全不动（60/81、81/39/42、self-check 20）；纯 docs 批。M5 落地清单：RUN 主导 envelope 组装器 + KRN 协作（outbox 补充字段若需）+ CTR 届时加 membership 绑定 |
 | Lane-CFR 符合性与工具 | **M3 行为执行扩展批已交付**（本页所在 PR） | `lane/cfr` | 已完成：runner M3 行为门（被测 = `authz`/`context`/`context_cache`/`capability` 真实面；8 向量脱 not-run + CTX-TRUST-004 静态→行为升级；DISC-DELTA-SCOPE-003 如实 not-run 附 M5 理由）、治理类错误实现自检（八种反模式 → 对应向量翻 fail，合计 20/20）、钉扎同批调整（ci.yml 81/39/0/0/0/42 + self-check ≥20、runner_execution.rs 8 测试、check-consistency REQ 引用正则修正——向量 id `CTX-REQ-007` 尾段误报，负向后视断言修正 + 注入演练复绿）、台账升级（F-007/F-018/F-021 → verified-by-vector）、M3 出口评审 + M4 入口 gate 判定。**触碰通告**：`crates/cognitive-conformance/**`（+behavior_m3 模块）、`.github/workflows/ci.yml`（钉扎计数）、`tools/src/check-consistency.mjs`（正则修正）、`conformance/README.md`（Running 节） |
-| Lane-KRN 内核主线 | M3 批已合并（PR #9）；**M4 入口 gate 已开**（M3 review §7） | `lane/krn` | M4 Intent/Effect 与恢复 + tracer bullet（`docs/prompts/milestone-m4.md` / `lane-krn.md`；第一动作 = 读 `intent-effect-idempotency.md` 全文，先写「同键异参 EFFECT_IDEMPOTENCY_CONFLICT 拒绝」与「eff-crash-001 dispatch 前崩溃恢复」失败测试） |
+| Lane-KRN 内核主线 | **M4 批已交付**（本页所在 PR） | `lane/krn` | 已完成：`cognitive-kernel::{executor,effects,recovery}`（Intent 持久化一事务 + canonical 参数 digest + 同键异参 `EFFECT_IDEMPOTENCY_CONFLICT`；OperationDescriptor≠Capability 分型 + F-023 准入矩阵 `NO_AUTHORIZED_OPERATION_CANDIDATE`；effect 表全 guard 的 sanctioned 派生收口；恢复八步顺序钉扎 + checkpoint 事实校验）、`cognitive-store::faults`（CrashHarness 三 crash point + ScriptedExecutor sink 侧 fencing）+ intents/fencing/checkpoints 表（append-only + 事务内 epoch 校验）；F-014 sink 矩阵 4 端逐端负例；M4 判据 16 项行为测试 + **tracer bullet 正/负链**（evidence 再生成命令见 handoff）。**触碰通告**：kernel 端口结构新增 `fencing_epoch` 字段（M2/M3 构造点全量更新）、`crates/cognitive-conformance/src/exec/behavior.rs` 3 处 `fencing_epoch: None` 机械兼容补丁（runner 行为不变，钉扎 81/39/42 + self-check 20/20 本地复验）、`engine.rs` 记录组装换 CTR 生成绑定（canonical 字节不变）。M5 待 M4 出口评审 |
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
@@ -60,6 +60,6 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-ctr-m4-eval-handoff.md](../checkpoints/20260720-lane-ctr-m4-eval-handoff.md)（Lane-CTR M4 前评估批：渲染域并入 D-017、membership defer 至 M5、D-018 裁决 decided + M5 落地清单）
-2. [20260720-lane-cfr-m3-handoff.md](../checkpoints/20260720-lane-cfr-m3-handoff.md)（Lane-CFR M3 行为执行扩展批：9 向量行为执行、治理自检 20/20、台账升级、M3 出口评审 + M4 gate 判定）
-3. [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md)（M3 出口评审：7 判据 + 范围项逐条证据，GO → M4，tracer bullet 入口 gate 开启）
+1. [20260720-lane-krn-m4-handoff.md](../checkpoints/20260720-lane-krn-m4-handoff.md)（Lane-KRN M4 批：Intent/Effect 协议、幂等、F-023 准入矩阵、F-014 sink fencing 矩阵、恢复八步、三 crash point 故障注入框架、tracer bullet 正负链、CFR effect-recovery 候选清单）
+2. [20260720-lane-ctr-m4-eval-handoff.md](../checkpoints/20260720-lane-ctr-m4-eval-handoff.md)（Lane-CTR M4 前评估批：渲染域并入 D-017、membership defer 至 M5、D-018 裁决 decided + M5 落地清单）
+3. [20260720-lane-cfr-m3-handoff.md](../checkpoints/20260720-lane-cfr-m3-handoff.md)（Lane-CFR M3 行为执行扩展批：9 向量行为执行、治理自检 20/20、台账升级、M3 出口评审 + M4 gate 判定）
