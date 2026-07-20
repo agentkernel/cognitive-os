@@ -912,10 +912,20 @@ fn store_degradation_probe() -> Result<Value, ExecError> {
     let digest_before = replay_projection(&harness.store)
         .map_err(|err| env_err(format!("replay before degradation: {err}")))?
         .digest;
-    let db_path = harness.db_path.clone();
     let clock = FixedClock::new()?;
     let ids = SeqIds(AtomicU64::new(9000));
-    drop(harness);
+    // Close the writer connection but KEEP the temp directory guard alive:
+    // dropping the whole harness would delete the database out from under
+    // the reopen below (Linux deletes it for real; Windows only masks the
+    // failure because the in-use delete is silently skipped).
+    let KernelHarness {
+        _dir: _dir_guard,
+        db_path,
+        store,
+        clock: _,
+        ids: _,
+    } = harness;
+    drop(store);
 
     // Degraded volume model: the same database opened read-only.
     let degraded = SqliteAuthorityStore::open_read_only(&db_path)
