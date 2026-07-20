@@ -2,7 +2,7 @@
 
 > 类别：informative security design ｜ 日期：2026-07-20 ｜ canonical owner：Lane-CON
 >
-> 每条威胁按统一字段记录：asset / attacker / entry / trust boundary / prevention / detection / failure mode / recovery / owner / oracle / evidence。当前所有 evidence 为 `none`；prevention/detection 描述的是设计意图，不是已实现防护。威胁记录模板见 [../templates/threat-record.md](../templates/threat-record.md)。
+> 每条威胁按统一字段记录：asset / attacker / entry / trust boundary / prevention / detection / failure mode / recovery / owner / oracle / evidence。**21 项威胁已规范登记；oracle/evidence 全 not-run / none**——禁止表述为「21 威胁项实测」。prevention/detection 描述的是设计意图，不是已实现防护。oracle 设计摘要见 [threat-test-oracles.md](./threat-test-oracles.md)。威胁记录模板见 [../templates/threat-record.md](../templates/threat-record.md)。
 
 ## 1. 信任边界总览
 
@@ -270,4 +270,4 @@
 
 ## 3. Open PoC 与 oracle 状态
 
-所有威胁的 oracle 均为未来测试要求；对应 Open PoC 列在 [../traceability/evidence-index.md](../traceability/evidence-index.md)，当前状态一律 `not-run / evidence none`。任何 prevention/detection 描述都不得被引用为“已实现”或“已验证”。
+所有威胁的 oracle 均为未来测试要求；对应 Open PoC 列在 [../traceability/evidence-index.md](../traceability/evidence-index.md)（含 2026-07-21 正式登记的 planned：POC-HOST-001 / POC-TERM-003 / POC-PROC-005 / POC-RELAY-005 / POC-GOV-001），当前状态一律 `not-run` 或 `planned`，evidence `none`。任何 prevention/detection 描述都不得被引用为“已实现”或“已验证”。
