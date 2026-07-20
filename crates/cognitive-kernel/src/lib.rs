@@ -74,8 +74,9 @@ pub use ports::{
     TaskContractRow, UserIntentRecordRow,
 };
 pub use recovery::{
-    EffectDisposition, RECOVERY_ORDER, RecoveryError, RecoveryReport, RecoverySequencer,
-    RecoveryStep, run_recovery, validate_checkpoint,
+    ContextRebinding, EffectDisposition, RECOVERY_ORDER, ReauthorizationObligation, RecoveryError,
+    RecoveryReport, RecoverySequencer, RecoveryStep, reauthorization_satisfied, run_recovery,
+    validate_checkpoint,
 };
 pub use replay::{ReplayError, ReplayedProjection, replay_projection};
 
