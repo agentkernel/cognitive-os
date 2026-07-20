@@ -40,6 +40,12 @@ serde_json = "1.0"
 serde_json_canonicalizer = "0.3.2"
 sha2 = "0.10"
 thiserror = "2.0"
+# M2 store adapter (ADR-0002: SQLite WAL). `bundled` compiles the pinned
+# SQLite C source so CI needs no system SQLite on either OS.
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+# RFC 9562 UUIDv7 generation (ADR-0005), adapter layer only.
+uuid = { version = "1.24", features = ["v7"] }
+tempfile = "3"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
