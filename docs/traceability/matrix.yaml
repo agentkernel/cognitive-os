@@ -261,10 +261,18 @@ requirements:
       - LOOP-CONTRACT-001
     vectors:
       - conformance/vectors/loop-contract-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/intent_chain.rs
+      - crates/cognitive-kernel/src/harness.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_intent_chain.rs
+      - crates/cognitive-store/tests/m5_harness.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5 kernel side: TaskContract minting refuses contracts without a decidable acceptance condition; loop start
+      refuses uncontracted loops and pins the durable contract (generated-binding parse); versioned epochs per task.
+      Cross-boundary runtime orchestration = M5 Lane-RUN."
   - id: REQ-RUN-005
     owner: runtime
     owner_spec: specs/schemas/loop-checkpoint.schema.json
@@ -273,10 +281,16 @@ requirements:
       - LOOP-GATE-001
     vectors:
       - conformance/vectors/loop-gate-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/harness.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_harness.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5 kernel side: begin_iteration is the per-iteration hard-precondition gate (monotonic accounting,
+      checkpoint-bound continuation, budget reload + same-transaction debit, max_iterations ceiling as registered
+      RESOURCE_BUDGET_EXHAUSTED denial), fail closed. Wait/escalate/terminate policy on rejection = M5 Lane-RUN."
   - id: REQ-RUN-006
     owner: runtime
     owner_spec: specs/schemas/loop-checkpoint.schema.json
@@ -287,14 +301,18 @@ requirements:
       - conformance/vectors/crash-recovery.json
     impl:
       - crates/cognitive-kernel/src/recovery.rs
+      - crates/cognitive-kernel/src/harness.rs
       - crates/cognitive-store/src/sqlite.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_recovery.rs
+      - crates/cognitive-store/tests/m5_harness.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
-    notes: "M4: LoopCheckpoint recovery-stable facts persisted (watermark/epoch) and validated at resume; full loop
-      resumption orchestration lands with the M5 runtime."
+    notes: "M4: LoopCheckpoint recovery-stable facts persisted (watermark/epoch) and validated at resume. M5: a continuing
+      loop cannot begin its next iteration without a durable checkpoint (evidence-bound gate); full loop resumption
+      orchestration lands with the M5 runtime."
   - id: REQ-RUN-009
     owner: runtime
     owner_spec: specs/schemas/verification-report.schema.json
@@ -2761,7 +2779,8 @@ requirements:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
     notes: "M4: completion only via verification + acceptance authority guards (receipt/remote-completed/model narrative
-      underivable); full UserIntentRecord/interpretation binding lands with M5 shell."
+      underivable). M5: the chain objects now persist kernel-side (TaskContract binds record/interpretation/acceptance
+      strong refs); surfacing the chain binding at Task COMPLETED display = M5 Lane-RUN shell."
   - id: REQ-INTENT-ADMISSION-001
     owner: intent-admission
     owner_spec: specs/core/README.md
@@ -2770,10 +2789,18 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/intent_chain.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_intent_chain.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5: interpretation is a persisted probabilistic candidate; recorded status derives deterministically from
+      material-ambiguity facts (schema conditional); admission requires the registered intent authority's digest-bound
+      acceptance - material ambiguity denies with INTENT_CLARIFICATION_REQUIRED, never top-1; Rust behavior tests
+      executed; vector execution stays with Lane-CFR."
   - id: REQ-INTENT-RECORD-001
     owner: intent-record
     owner_spec: specs/core/README.md
@@ -2782,10 +2809,17 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/intent_chain.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_intent_chain.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5: UserIntentRecord fixed durably (append-only triggers, atomic with its provenance event, generated-binding
+      schema shape) BEFORE any semantic interpretation; interpretation against an unfixed record refuses; corrections
+      never overwrite; Rust behavior tests executed."
   - id: REQ-INTENT-SUPERSEDE-001
     owner: intent-supersede
     owner_spec: specs/core/README.md
@@ -2795,10 +2829,19 @@ requirements:
     vectors:
       - conformance/vectors/intent-supersede-002.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/intent_chain.rs
+      - crates/cognitive-kernel/src/effects.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_intent_chain.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5: user correction mints a superseding record/interpretation/contract (epoch CAS N->N+1, prior rows never
+      rewritten); mint AND dispatch fence old-epoch bindings with INTENT_VERSION_SUPERSEDED (zero execution); pending
+      old-epoch work classified per RFC-0001 categories (must-reconcile before continue); intent-supersede-002 expected
+      semantics covered by Rust behavior tests; vector execution stays with Lane-CFR."
   - id: REQ-KNOW-007
     owner: knowledge-compilation
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
@@ -3159,11 +3202,15 @@ requirements:
       - crates/cognitive-kernel/src/recovery.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_recovery.rs
+      - crates/cognitive-store/tests/m5_recovery_governance.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
     notes: "M4: recovery fences the old writer (epoch advance, every sink checks) and reconciles possibly-executed Effects
-      before anything resumes; order-pinned sequencer; behavior tests executed."
+      before anything resumes; order-pinned sequencer; behavior tests executed. M5: steps 6/7 upgraded to orchestrable
+      facts - the report carries reauthorization obligations (durable pre-crash bindings) and the context rebinding; a
+      pre-crash grant fails the dispatch guard closed, a pre-crash cache binding is refused and purged by key."
   - id: REQ-REC-002
     owner: rec-002
     owner_spec: specs/core/README.md
@@ -3268,10 +3315,17 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/harness.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_harness.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5 kernel side: progress is a typed durable fact (advanced/none/uncertain/blocked) - advanced REQUIRES evidence
+      references (a bare claim is unrecordable); stagnation arithmetic is a pure fold over the append-only rows; stale
+      writers fenced in-transaction; Rust behavior tests executed."
   - id: REQ-RUN-008
     owner: run-008
     owner_spec: specs/core/README.md
@@ -3280,10 +3334,16 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/harness.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m5_harness.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
+    notes: "M5 kernel side: retry accounting is action-fingerprint-scoped over non-advancing facts; admit_retry denies at
+      the contract's max_retries with the registered hard-limit code (count bound; time/cost bounds ride the same
+      hard-budget ledger). Attribution-boundary orchestration = M5 Lane-RUN."
   - id: REQ-RUN-STATE-001
     owner: run-state
     owner_spec: specs/core/README.md
