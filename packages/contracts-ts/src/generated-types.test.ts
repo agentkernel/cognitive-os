@@ -69,13 +69,13 @@ test("generated literal unions reject wrong states at compile time", () => {
   assert.ok(effect.verification.status);
 });
 
-test("SCHEMA_DIGESTS constants match the live schema files (28 generated modules)", () => {
+test("SCHEMA_DIGESTS constants match the live schema files (30 generated modules)", () => {
   // Gap 5 of the 20260720 lane-tsc handoff: the digest is a RUNTIME
   // constant clients pin envelope `schema_digest` with; it must equal the
   // re-derived canonical digest of the live schema (the schema-bundle
   // manifest per-asset recipe).
   const entries = Object.entries(SCHEMA_DIGESTS);
-  assert.equal(entries.length, 28, "generated schema module count drifted");
+  assert.equal(entries.length, 30, "generated schema module count drifted");
   for (const [file, pinned] of entries) {
     const raw = readFileSync(path.join(REPO_ROOT, "specs", "schemas", file), "utf-8");
     const live = digest(canonicalize(raw), "schema-bundle/0.1");

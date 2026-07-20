@@ -66,7 +66,15 @@ const GENERATOR_VERSION: &str = "0.2.0";
 /// shell-status-view, watch-subscription, user-intent-record) and the AKP
 /// wire shapes registered by D-013/D-014/D-015 (akp-request-envelope,
 /// akp-result-envelope, akp-stream-frame, shell-control-request).
-const CORE_SET: [&str; 26] = [
+///
+/// Extension (20260720 Lane-KRN M2 gap batch, same clause): the transition
+/// wire pair consumed by the kernel's centralized transition gate
+/// (state-transition-request, state-transition-record — KRN M2 handoff
+/// section 4 item 1; the kernel currently hand-assembles these shapes in
+/// `engine.rs` and swaps to the bindings under Lane-KRN ownership).
+/// Input-set extension only: rendering semantics unchanged, so the
+/// generator version stays 0.2.0 (existing module bodies do not change).
+const CORE_SET: [&str; 28] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -93,6 +101,8 @@ const CORE_SET: [&str; 26] = [
     "akp-result-envelope.schema.json",
     "akp-stream-frame.schema.json",
     "shell-control-request.schema.json",
+    "state-transition-request.schema.json",
+    "state-transition-record.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,

@@ -29,6 +29,8 @@ pub mod shell_action_proposal;
 pub mod shell_command_preview;
 pub mod shell_control_request;
 pub mod shell_status_view;
+pub mod state_transition_record;
+pub mod state_transition_request;
 pub mod task_contract;
 pub mod user_intent_record;
 pub mod watch_subscription;
@@ -37,7 +39,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 28] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 30] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -133,6 +135,14 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 28] = [
     (
         "shell-status-view.schema.json",
         "sha256:d4cf8856c906db93052aaebc1f3cfa59a49fa7a242b31bbea3a3d7205fcb12ab",
+    ),
+    (
+        "state-transition-record.schema.json",
+        "sha256:520f8b1bddb55b64c9bdc489ef971cbe22cad3bb281527e1d83e240c18c7429c",
+    ),
+    (
+        "state-transition-request.schema.json",
+        "sha256:d63cb89d20e15ad9cd0ee43d0e8b6df21dec463dede71613759f20e5fdf95f59",
     ),
     (
         "task-contract.schema.json",
