@@ -39,21 +39,21 @@ flowchart LR
 
 ### 2.1 Lane-CON 激活前文档例外
 
-2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `docs/platforms/` 与 `apps/cognitiveos-console/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。
+2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `clients/**`（客户端项目根，ADR-0007：PC/mobile/shared/Agent Hub 文档、治理件、计划与提示词，含 `clients/agent-hub/{docs,plan,prompts}/`）以及兼容 stub `apps/cognitiveos-console/`、`docs/platforms/`、`docs/clients/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。
 
-该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../platforms/README.md#console-实现-gate) 为准。
+该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../../clients/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
 ## 3. 所有权表（当前）
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
-| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr`（待建） | 未启动（下一个） |
-| `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `lane/cfr`（待建） | 未启动 |
-| `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（待建） | 阻塞于 M1 |
-| `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc` | 客户端骨架已交付（20260720）；M5 集成待 Lane-RUN gate |
-| `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `lane/run`（待建） | 阻塞于 M4 |
+| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr`（已建，worktree） | F-011 R1 登记批已交付；M5 合同入口已开 |
+| `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `lane/cfr`（已建，worktree） | M4 行为执行已交付；clients 自动防漂移任务待领取 |
+| `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
+| `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |
+| `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `lane/run`（待建） | M5 入口 gate 已开，可启动 |
 | `docs/`（standards/plan/traceability/checkpoints/prompts）、根 README/AGENTS | Lane-DOC | 随车道 PR | 持续 |
-| `apps/cognitiveos-console/`、`docs/platforms/` | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效；实现未激活 |
+| `clients/**`、`apps/cognitiveos-console/`（stub）、`docs/platforms/`（stub）、`docs/clients/`（stub） | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效（§2.1）；实现未激活；Agent Hub 另需 AGPL 法务 gate |
 | `specs/registry/`、`specs/transitions/`、`conformance/vectors/` | 契约资产：变更一律经 Lane-CTR（向量增补可经 Lane-CFR），走 docs-sync-contract 流程 | — | — |
 
 ## 4. 里程碑 ↔ 车道对照
