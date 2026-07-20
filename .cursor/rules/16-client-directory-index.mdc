@@ -1,0 +1,31 @@
+---
+description: PC、手机 companion、共享 SDK/契约与 Agent Hub 客户端目录索引防漂移
+alwaysApply: true
+---
+
+# 客户端目录索引维护
+
+## 触发条件
+
+以下任一变化必须触发本规则：PC 或手机客户端目录新增/更名/删除；共享 SDK/契约目录变化；`docs/platforms/` 或 Agent Hub 客户端目录变化；implementation/evidence/Profile 状态变化；canonical 入口、owner 车道或上游 gate 变化。
+
+## 同批义务
+
+- 同一 PR 更新唯一 canonical 索引 `docs/clients/README.md`、相关目录说明/必要 README、`docs/README.md` 入口，以及受影响的状态、gate、PROGRESS 或 handoff。
+- 状态严格区分“规范已登记 / 实现已提供 / 测试已执行 / Profile 已符合”；未启动用 `planned`、`blocked`、`not-implemented`，未执行用 `none`/`not-run`。
+- 保留既有产品 ID、Markdown anchor 与 canonical 职责；其他文档只链接，不复制 canonical 正文形成并行事实源。
+- 全程并入 `docs/standards/docs-sync-contract.md`；语义/结构型变更继续履行其更高档联动义务。
+
+## 所有权
+
+- 产品和客户端目录说明归 Lane-CON，治理由 Lane-DOC 协作。
+- 不跨车道修改 Lane-TSC/Lane-CTR/Lane-RUN 所属 crate/package；接口或代码目录变更仍走所属车道契约流程。
+- 后端 gate 未过时只维护 informative 索引/说明，禁止客户端代码、脚手架或 mock。
+
+## 完成前检查
+
+1. 用实测目录清单逐项对照索引；所有 literal path 必须存在，未分配手机代码载体只写“无独立代码目录”，不得虚构路径。
+2. 每项 platform、role、status、owner、canonical 入口、gate 与 README 状态非空；目录存在不得写成实现已提供。
+3. 确认没有第二份 canonical 客户端目录索引，且相对链接、既有 anchor 可达。
+4. 运行 `pnpm run check:consistency` 与 `git diff --check`；静态通过不得写成客户端实现、PoC 或 Profile 证据。
+5. 专用自动校验交付前执行 `docs/clients/README.md#9-持续维护与手动-gate`；工具化后续任务须经 Lane-CFR 所有权确认并回写 PROGRESS/handoff。
