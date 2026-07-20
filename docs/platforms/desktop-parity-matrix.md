@@ -141,7 +141,7 @@ Windows v1 的 `CONSOLE-V2-*`、legacy `CONSOLE-PRD-*`/`A-*` 映射，以及 `PR
 - Console 依赖组 1/2/7 与 M5 出口未交付；
 - supervision lease、claim、readiness、notification、platform update 等 machine contract 未登记；
 - Console implementation 未提供；
-- 74 个既有向量均 `not-run`，平台产品测试 evidence 为 `none`；
+- 76 个既有向量均 `not-run`，平台产品测试 evidence 为 `none`；
 - Tauri/原生 shell 技术 ADR 未批准。
 
 macOS 特有阻断：

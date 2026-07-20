@@ -78,39 +78,51 @@
 - [目标平台 Open PoC/GA gates](../../../docs/platforms/README.md#console-实现-gate) 使用真实 API/真实 OS 行为留证；
 - 平台安装/签名/更新/恢复、secure storage、AT/键盘/contrast/motion、daemon/helper 权限、两次升级演练均通过。
 
-### Phase D — Mobile Remote Companion
+<a id="phase-d--mobile-remote-companion"></a>
+### Phase D — Mobile Restricted Console
+
+产品方向已经按 iPhone 与 Android phone 分别冻结：
+
+- [iPhone-only v1 产品设计](../../../docs/platforms/ios-product-design.md)
+- [Android phone v1 产品设计](../../../docs/platforms/android-product-design.md)
+- [移动 parity matrix](../../../docs/platforms/mobile-parity-matrix.md)
+- [移动平台决策记录](../../../docs/platforms/mobile-platform-decision-log.md)
 
 首要任务：
 
-- Chat；
-- 任务监督；
-- 收件箱/通知深链；
-- 受限单对象查看。
+- Conversation/Task 创建、监督、纠偏、请求暂停与安全对账；
+- 在单一活动账号下选择 authority 返回的 tenant/node；
+- 分离查看 Task、Loop、AgentExecution、Effect、Verification 五个 authority lifecycle 域，以及独立远端 Runtime projection；Runtime stop 不推进 Task 或 Effect；
+- 处理 R0/R1、`CANDIDATE_COMPLETE`、`OUTCOME_UNKNOWN` 与 Inbox；
+- 使用 authority catalog/package ref 管理远端 Agent install、upgrade、rollback、uninstall。
 
 明确不做：
 
 - 本地节点托管；
-- 本地 Agent package 安装；
+- 手机下载、解释、执行、缓存或转发 Agent executable/package；
 - 任意系统进程管理；
 - 无限后台 watch；
+- R2/R3、通知 action 批准或离线控制队列；
+- iPad/tablet/foldable/watch/widget/Live Activity 的 v1 GA；
 - 大规模审计、图谱或批量运维。
 
 不可变边界：
 
-- push 只做脱敏 hint；
-- 回前台后 resnapshot；
-- force-quit/无 GMS/系统通知关闭的不可达场景必须可见；
-- R2/R3 不从通知直接批准；
-- 移动端能力由平台和远端 authority 决定，不因窄屏复用而出现。
+- App、APNs/FCM、系统通知、生物识别和 integrity signal 都不是 authority 或完成证据；
+- push 只携 opaque hint，唯一 action 是打开 App；回前台后重新认证并 resnapshot；
+- supervision lease 只在前台、已解锁、session/watch/UI fresh 时续；后台、锁屏、进程死亡、force-quit/force-stop 停止续租；
+- R1 使用 digest-bound device key signature，系统生物识别只解锁 key，authority 最终决定；
+- acquisition 仅向远端 node 提交 authority package ref，移动端无 executable bytes；
+- 移动端能力由平台和远端 authority 决定，不因窄屏、MDM 或本地 risk signal 扩大。
 
 进入门禁：
 
-- APNs/FCM/无 GMS 策略；
-- cold/warm deep link；
-- 后台/terminated 恢复；
-- store policy；
-- VoiceOver/TalkBack；
-- 设备绑定与远程 session revoke。
+- 通用 Console 依赖组 1/2/7 + M5 出口；
+- account/device/session/push/lease/R1/floor/revoke 等移动 carrier 已登记；
+- iOS 与 Android 各自 Open PoC/GA gates 使用真实设备、真实商店和真实 OS 行为留证；
+- Public/managed 独立身份、App Store/Google Play policy、动态代码边界和更新恢复闭合；
+- VoiceOver/TalkBack 与其他已列辅助技术完成核心旅程；
+- 设备绑定、远程 revoke、丢失/换机/restore、security floor 与商店审核延迟均有执行证据。
 
 ### Phase E — 完整治理工作区
 
@@ -235,7 +247,7 @@
 在对应 phase 进入研究前，不把以下内容写成最终 UI：
 
 - macOS/Linux 已确认切片之外的 distro/desktop/package、富内容和扩展系统集成；
-- 移动底部导航与完整页面；
+- iPad/tablet/foldable/watch/widget/Live Activity 的导航与完整页面；
 - R2/R3 浏览器还是原生可信面；
 - Knowledge 图引擎；
 - Audit export 格式；

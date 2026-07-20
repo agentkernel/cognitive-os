@@ -1,13 +1,13 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CTR M1 契约批会话）
+> 最后更新：2026-07-20（Lane-CON iPhone/Android phone 产品设计）
 
 ## 里程碑状态
 
 | 里程碑 | 状态 | 出口评审 | 备注 |
 |---|---|---|---|
-| M0 工程基线与开发体系 | **done** | [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md) | 本页所在提交 |
+| M0 工程基线与开发体系 | **done** | [20260720-m0-milestone-review.md](../checkpoints/20260720-m0-milestone-review.md) | 以该 milestone review 为稳定证据入口 |
 | M1 合同收敛与 Runner | **in-progress** | — | Lane-CTR 契约批已交付（F-003 收尾、$id 统一、codegen、注册式 bundle digest、golden §14 全覆盖）；Runner 执行能力待 Lane-CFR |
 | M2 对象/状态/事件内核 | not-started | — | 依赖 M1 |
 | M3 治理链与 Context | not-started | — | 依赖 M2 |
@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux 产品切片已记录；iOS/Android 设计提示词已提供但尚未执行；implementation 未启动 |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux/iPhone/Android phone 产品切片已记录；四个平台 implementation 均未启动，平台测试未执行，Profile 未符合 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -48,16 +48,16 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **M1 契约批已交付**（本页所在 PR） | `lane/ctr` | 已完成 F-003 收尾 / D-001·D-006 `$id` 统一 / ADR-0006 codegen / §13 bundle digest / golden §14；**触碰通告（CFR 合并前须 rebase）**：`tools/src/check-consistency.mjs`（移除剥离 `$id` 兼容层 + 新增 `$id`==文件名红灯）、`tools/static_check.py`（向量计数 76、删除绝对 URL 别名注册）、`.github/workflows/ci.yml`（新增 codegen regenerate-and-diff 步骤）、`crates/cognitive-conformance/src/lib.rs`（provisional_digests → registered_digests，非 runner 执行逻辑） |
+| Lane-CTR 契约与生成 | **M1 契约批已交付**（merge `b626e88`） | `lane/ctr` | 已完成 F-003 收尾 / D-001·D-006 `$id` 统一 / ADR-0006 codegen / §13 bundle digest / golden §14；**触碰通告（CFR 合并前须 rebase）**：`tools/src/check-consistency.mjs`（移除剥离 `$id` 兼容层 + 新增 `$id`==文件名红灯）、`tools/static_check.py`（向量计数 76、删除绝对 URL 别名注册）、`.github/workflows/ci.yml`（新增 codegen regenerate-and-diff 步骤）、`crates/cognitive-conformance/src/lib.rs`（provisional_digests → registered_digests，非 runner 执行逻辑） |
 | Lane-CFR 符合性与工具 | 待启动（可与 CTR 并行） | `lane/cfr` | M1：runner 执行能力（`docs/prompts/lane-cfr.md`）；开工前先 rebase 上述 CTR 触碰点 |
 | Lane-KRN 内核主线 | 阻塞于 M1 | `lane/krn` | — |
 | Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；iOS/Android 提示词待执行；实现 gate 未通过 |
+| Lane-CON Console | tracking-only 文档例外 | — | iPhone/Android phone 独立产品设计、移动决策索引与 parity matrix 已记录；实现 gate 未通过 |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-ctr-handoff.md](../checkpoints/20260720-lane-ctr-handoff.md)（Lane-CTR M1 契约批：F-003 收尾、$id 统一、codegen、bundle digest、golden §14、触碰点清单）
-2. [20260720-lane-con-mobile-design-prompt-handoff.md](../checkpoints/20260720-lane-con-mobile-design-prompt-handoff.md)（iOS/Android 产品设计提示词、验证与下一步入口）
-3. [20260720-lane-con-platform-design-handoff.md](../checkpoints/20260720-lane-con-platform-design-handoff.md)（macOS/Linux 产品设计、治理例外、验证与剩余 gates）
+1. [20260720-lane-con-mobile-product-design-handoff.md](../checkpoints/20260720-lane-con-mobile-product-design-handoff.md)（iPhone/Android phone 产品设计、决策、parity、验证与剩余 gates）
+2. [20260720-lane-ctr-handoff.md](../checkpoints/20260720-lane-ctr-handoff.md)（Lane-CTR M1 契约批：F-003 收尾、`$id` 统一、codegen、bundle digest、golden §14、触碰点清单）
+3. [20260720-lane-con-mobile-design-prompt-handoff.md](../checkpoints/20260720-lane-con-mobile-design-prompt-handoff.md)（iOS/Android 产品设计提示词、验证与下一步入口）

@@ -12,7 +12,7 @@ CognitiveOS Console（工作名）是面向 Agent 操作者的可视化客户端
 - 交互方向：对话主画布 + 可折叠任务/上下文侧栏；
 - 当前状态：`planned`。
 
-macOS 与受限 Linux 已形成独立的 `planned/blocked` 产品切片；它们不是 Windows v1 能力，也不表示 Console 实现已启动。iOS、Android、远程/多节点、完整企业治理、Memory、Knowledge、Multi-Agent 和 R2/R3 仍属于后续路线图。
+macOS、受限 Linux、iPhone 与列名 Android phone 已形成独立的 `planned/blocked` 产品切片；它们不是 Windows v1 能力，也不表示 Console 实现已启动。移动 v1 是受限远程 Console：支持 Conversation/Task、监督纠偏、tenant/node 选择和远端 Agent 生命周期，但手机不承载 node/daemon/authority，且只执行 authority 判定的 R0/R1。完整企业治理、Memory、Knowledge、Multi-Agent 和 R2/R3 仍属于后续路线图。
 
 ## 状态声明
 
@@ -37,7 +37,7 @@ macOS 与受限 Linux 已形成独立的 `planned/blocked` 产品切片；它们
 - [产品要求与追踪](./docs/requirements-traceability.md)：v2 ID、旧 ID 映射和上游阻断；
 - [路线图](./docs/roadmap.md)：非 Windows v1 feature briefs；
 - [决策记录](./docs/decision-log.md)：本轮已确认和被替代的产品决策。
-- [桌面平台产品设计](../../docs/platforms/README.md)：macOS/Linux 范围、要求、决策、parity matrix 和真实 PoC gate。
+- [跨平台产品设计](../../docs/platforms/README.md)：macOS/Linux/iPhone/Android phone 范围、要求、决策、parity matrix 和真实 PoC gate。
 
 ## 技术状态
 
