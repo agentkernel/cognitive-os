@@ -138,3 +138,10 @@ Extension driven by the Lane-TSC client families
    state-transition-record, the transition wire pair consumed by the
    kernel's centralized transition gate (30 schema modules per language).
    Rendering semantics unchanged; generator version stays 0.2.0.
+7. Input-set extension (20260720 Lane-CTR F-011 batch, same clause): +
+   management-approval-request / management-approval-decision, the R1
+   structured-confirmation pair whose consuming milestone (M5 Lane-RUN
+   management plane) is gated on exactly this registration and starts
+   immediately after it — a definite named consumer, in contrast with the
+   membership case deferred on the same day for having only a conditional
+   consumer (32 schema modules per language; rendering unchanged, 0.2.0).

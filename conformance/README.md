@@ -49,7 +49,7 @@ The registry status `specified` means a normative requirement and its test mappi
 
 ## Intelligent Management Shell assets
 
-`specs/schemas/privileged-management-session.schema.json`, `management-action-proposal.schema.json`, and `management-approval-decision.schema.json` define the signed session, proposal, and approval data contracts. The `management-*.json` vectors are declarative scenarios for the optional `intelligent_management_shell` profile, including negative authorization cases and deterministic fallback behavior. They do not provide or imply a Shell, Management API, CLI, test runner, or conforming implementation.
+`specs/schemas/privileged-management-session.schema.json`, `management-action-proposal.schema.json`, `management-approval-request.schema.json` (the OS-issued tiered confirmation challenge, F-011 R1 registration), and `management-approval-decision.schema.json` define the signed session, proposal, approval-request, and approval data contracts. The `management-*.json` vectors are declarative scenarios for the optional `intelligent_management_shell` profile (the R1 structured-confirmation vectors additionally apply to `core_digital`), including negative authorization cases and deterministic fallback behavior. They do not provide or imply a Shell, Management API, CLI, test runner, or conforming implementation.
 
 The management error codes used by expected denials are registered in `specs/registry/errors.yaml`. Every vector ID is mapped from its normative `REQ-MGMT-*` entries in `specs/registry/requirements.yaml`; a runner must verify those gates and observable outcomes rather than treating a schema-valid document as a pass.
 
