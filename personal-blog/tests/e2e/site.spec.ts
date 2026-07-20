@@ -39,7 +39,10 @@ test("language switching uses an equivalent registry route and shared anchors", 
   await languageSwitch.click();
   await expect(page).toHaveURL(/\/en\/cognitiveos\/verifiable-agent-actions$/);
   await expect(
-    page.getByRole("link", { name: "Open intent-effect in the Chinese article" }),
+    page.getByRole("link", {
+      name: "Open Intent, Effect, and reconciliation in the Chinese article",
+      exact: true,
+    }),
   ).toHaveAttribute(
     "href",
     "/zh/cognitiveos/verifiable-agent-actions#intent-effect",
@@ -204,8 +207,20 @@ test("long-form typography keeps a comfortable measure and rhythm", async ({
   expect(readingMetrics.fontSize).toBeGreaterThanOrEqual(18);
   expect(readingMetrics.lineHeightRatio).toBeGreaterThanOrEqual(1.65);
   await expect(
-    page.getByRole("link", { name: "Intent, Effect, and reconciliation" }),
+    page.getByRole("link", {
+      name: "Intent, Effect, and reconciliation",
+      exact: true,
+    }),
   ).toBeVisible();
+  const articleNavigation = page.getByRole("navigation", {
+    name: "Article navigation",
+  });
+  await expect(
+    articleNavigation.getByRole("link", { name: "Back to CognitiveOS" }),
+  ).toBeVisible();
+  await expect(
+    articleNavigation.getByRole("link", { name: "Back to top" }),
+  ).toHaveAttribute("href", "#article-top");
 });
 
 test("public routes have no console or page errors", async ({ page }) => {
@@ -305,9 +320,21 @@ test("sample pages are noindex and invalid routes are 404", async ({ page, reque
 
 test("tables, code, and footnotes stay contained on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], {
+    origin: "http://127.0.0.1:3100",
+  });
   await page.goto("/en/articles/testing-bilingual-content");
+  const mobileToc = page.locator("details.mobile-article-toc");
+  await expect(mobileToc).toBeVisible();
+  await mobileToc.locator("summary").click();
+  await expect(
+    mobileToc.getByRole("link", { name: "Translation identity", exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".table-scroll")).toBeVisible();
   await expect(page.locator("pre[tabindex='0']")).toBeVisible();
+  const copyButton = page.getByRole("button", { name: "复制代码 / Copy code" });
+  await copyButton.click();
+  await expect(copyButton).toContainText("Copied");
   await expect(page.locator("[data-footnotes='true']")).toBeVisible();
   await expect(page.locator("[data-footnote-backref]")).toBeVisible();
   await expectNoPageOverflow(page);

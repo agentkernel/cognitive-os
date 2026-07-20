@@ -26,10 +26,13 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm test:content
-pnpm build
+pnpm check
 pnpm exec playwright install chromium
-pnpm test:e2e
+pnpm test:e2e:against-build
 ```
+
+For a standalone browser run, use `pnpm test:e2e`; it creates one production
+build before starting Playwright.
 
 The nested `pnpm-workspace.yaml` is the workspace boundary. Do not install from the parent repository.
 

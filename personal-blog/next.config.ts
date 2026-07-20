@@ -18,6 +18,7 @@ export default withMDX({
     root: process.cwd(),
   },
   experimental: {
+    cpus: 2,
     globalNotFound: true,
   },
 });

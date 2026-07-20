@@ -101,6 +101,10 @@ export default async function HomePage({
           <span>{locale === "zh" ? "技术写作" : "TECHNICAL WRITING"}</span>
           <h2 id="home-articles">{dictionary.home.articlesHeading}</h2>
           <p>{dictionary.home.articlesDescription}</p>
+          <Link className="section-index-link" href={pagePath(locale, "articles")}>
+            {dictionary.home.allArticles}
+            <span aria-hidden="true">→</span>
+          </Link>
         </header>
         <ContentList
           entries={recentArticles}
@@ -118,6 +122,10 @@ export default async function HomePage({
           <span>{locale === "zh" ? "项目证据" : "PROJECT EVIDENCE"}</span>
           <h2 id="home-projects">{dictionary.home.projectsHeading}</h2>
           <p>{dictionary.home.projectsDescription}</p>
+          <Link className="section-index-link" href={pagePath(locale, "projects")}>
+            {dictionary.home.allProjects}
+            <span aria-hidden="true">→</span>
+          </Link>
         </header>
         <ContentList
           entries={projects}

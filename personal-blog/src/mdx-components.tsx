@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentPropsWithoutRef } from "react";
+import { CodeBlock } from "@/components/content/code-block";
 import { ArticleSnapshot, SampleNotice } from "@/components/content/content-callouts";
 import { GovernedFlowThread } from "@/components/content/governed-flow-thread";
 import {
@@ -29,13 +30,7 @@ const sharedComponents: MDXComponents = {
       <table {...props} />
     </div>
   ),
-  pre: (props: ComponentPropsWithoutRef<"pre">) => (
-    <pre
-      {...props}
-      tabIndex={0}
-      aria-label="Scrollable code block / 可滚动代码块"
-    />
-  ),
+  pre: CodeBlock,
 };
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {

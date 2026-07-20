@@ -19,7 +19,8 @@
 - Two locally stored AI-generated abstract visuals in AVIF/WebP plus a local
   PNG Open Graph asset and provenance records.
 - Locally bundled OFL-1.1 Source Serif 4, Recursive, and Noto Serif SC fonts.
-- Responsive code blocks, GFM tables, footnotes, and mobile diagram summaries.
+- Responsive code blocks with copy feedback, GFM tables, footnotes, mobile
+  article indexes, article-footer navigation, and mobile diagram summaries.
 
 ## Executed checks
 
@@ -30,9 +31,12 @@
 - Vitest: 2 files, 9 tests
 - content checks: 4 paired article entries, 4 paired projects, 18 traced facts
   per sourcebook
-- static import/boundary checks: 16 MDX imports, 3 intentional Client
+- static import/boundary checks: 16 MDX imports, 4 intentional Client
   Components
 - Next.js production build: 34 generated static/SSG routes
+- static generation capped at two workers to avoid Windows worker resource
+  crashes; Playwright starts the already completed build rather than rebuilding
+  it a second time
 
 `pnpm test:e2e` passed 16 Chromium scenarios:
 
@@ -48,7 +52,7 @@
 - browser console/page-error checks
 - reduced-motion and forced-colors behavior
 - RSS, sitemap, robots, sample noindex, and invalid-route 404s
-- mobile GFM table, code block, and footnote containment
+- mobile GFM table, code-copy feedback, article index, and footnote containment
 - axe WCAG A/AA scans for home and flagship routes
 
 Screenshots were generated under the ignored directory:

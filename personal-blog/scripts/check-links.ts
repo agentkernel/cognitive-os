@@ -77,12 +77,16 @@ for (const filePath of sourceFiles) {
 const allowedClientFiles = new Set([
   "src/app/[locale]/error.tsx",
   "src/app/global-error.tsx",
+  "src/components/content/code-block.tsx",
   "src/components/navigation/mobile-navigation.tsx",
 ]);
 for (const file of clientFiles) {
   invariant(allowedClientFiles.has(file), `Unexpected client component: ${file}`);
 }
-invariant(clientFiles.length === allowedClientFiles.size, "Expected only navigation and errors to be client-side.");
+invariant(
+  clientFiles.length === allowedClientFiles.size,
+  "Expected only declared interaction and error files to be client-side.",
+);
 
 console.log(
   `Link and boundary checks passed: ${registeredMdx.size} static MDX imports, ${clientFiles.length} intentional client files.`,

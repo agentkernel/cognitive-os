@@ -82,6 +82,37 @@ function anchorLabel(anchor: string, locale: Locale): string {
   );
 }
 
+function ArticleTocLinks({
+  anchors,
+  locale,
+  alternatePath,
+}: {
+  anchors: readonly string[];
+  locale: Locale;
+  alternatePath: string;
+}) {
+  return (
+    <ol>
+      {anchors.map((anchor) => (
+        <li key={anchor}>
+          <a href={`#${anchor}`}>{anchorLabel(anchor, locale)}</a>
+          <Link
+            href={`${alternatePath}#${anchor}`}
+            hrefLang={locale === "zh" ? "en" : "zh-CN"}
+            aria-label={
+              locale === "zh"
+                ? `在英文文章中打开 ${anchorLabel(anchor, locale)}`
+                : `Open ${anchorLabel(anchor, locale)} in the Chinese article`
+            }
+          >
+            {locale === "zh" ? "EN" : "中"}
+          </Link>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export function ArticleShell({
   locale,
   entry,
@@ -101,6 +132,11 @@ export function ArticleShell({
     currentPage === "cognitiveos"
       ? `/${locale}/cognitiveos/${frontmatter.slug}`
       : `/${locale}/${currentPage}/${frontmatter.slug}`;
+  const contentStatus = frontmatter.placeholder
+    ? dictionary.sample
+    : locale === "zh"
+      ? "研究综合"
+      : "Research synthesis";
 
   const structuredData =
     !frontmatter.placeholder && frontmatter.kind === "cognitiveos"
@@ -122,7 +158,7 @@ export function ArticleShell({
       : null;
 
   const articleContent = (
-    <article className="article-page">
+    <article className="article-page" id="article-top">
         <nav className="breadcrumbs" aria-label={locale === "zh" ? "面包屑" : "Breadcrumbs"}>
           <Link href={pagePath(locale, "home")}>{dictionary.nav.home}</Link>
           <span aria-hidden="true">/</span>
@@ -132,9 +168,13 @@ export function ArticleShell({
         </nav>
         <header className="article-header">
           <div className="article-header__copy">
-            <p className="eyebrow">
-              {frontmatter.placeholder ? dictionary.sample : sectionLabel}
-            </p>
+            <div className="article-header__meta">
+              <span>{sectionLabel}</span>
+              <time dateTime={frontmatter.publishedAt}>
+                {frontmatter.publishedAt}
+              </time>
+              <span>{contentStatus}</span>
+            </div>
             <h1>{frontmatter.title}</h1>
             <p className="article-deck">{frontmatter.description}</p>
           </div>
@@ -151,6 +191,14 @@ export function ArticleShell({
         </header>
         <div className="article-grid">
           <div className="article-body prose">
+            <details className="mobile-article-toc">
+              <summary>{locale === "zh" ? "本页目录" : "On this page"}</summary>
+              <ArticleTocLinks
+                anchors={frontmatter.anchors}
+                locale={locale}
+                alternatePath={alternatePath}
+              />
+            </details>
             <Component />
           </div>
           <aside className="evidence-rail" aria-label={dictionary.evidenceRail}>
@@ -173,7 +221,7 @@ export function ArticleShell({
               </div>
               <div>
                 <dt>{locale === "zh" ? "内容状态" : "Content status"}</dt>
-                <dd>{frontmatter.placeholder ? dictionary.sample : "Research synthesis"}</dd>
+                <dd>{contentStatus}</dd>
               </div>
               <div>
                 <dt>{locale === "zh" ? "许可" : "License"}</dt>
@@ -182,27 +230,33 @@ export function ArticleShell({
             </dl>
             <nav aria-label={locale === "zh" ? "文章目录" : "On this page"}>
               <span>{locale === "zh" ? "共享锚点" : "Shared anchors"}</span>
-              <ol>
-                {frontmatter.anchors.map((anchor) => (
-                  <li key={anchor}>
-                    <a href={`#${anchor}`}>{anchorLabel(anchor, locale)}</a>
-                    <Link
-                      href={`${alternatePath}#${anchor}`}
-                      hrefLang={locale === "zh" ? "en" : "zh-CN"}
-                      aria-label={
-                        locale === "zh"
-                          ? `在英文文章中打开 ${anchor}`
-                          : `Open ${anchor} in the Chinese article`
-                      }
-                    >
-                      {locale === "zh" ? "EN" : "中"}
-                    </Link>
-                  </li>
-                ))}
-              </ol>
+              <ArticleTocLinks
+                anchors={frontmatter.anchors}
+                locale={locale}
+                alternatePath={alternatePath}
+              />
             </nav>
           </aside>
         </div>
+        <nav
+          className="article-footer-navigation"
+          aria-label={locale === "zh" ? "文章后续导航" : "Article navigation"}
+        >
+          <Link href={sectionPath}>
+            <span aria-hidden="true">←</span>
+            {locale === "zh" ? `返回${sectionLabel}` : `Back to ${sectionLabel}`}
+          </Link>
+          <Link
+            href={alternatePath}
+            hrefLang={locale === "zh" ? "en" : "zh-CN"}
+          >
+            {dictionary.languageSwitch}
+          </Link>
+          <a href="#article-top">
+            {locale === "zh" ? "返回顶部" : "Back to top"}
+            <span aria-hidden="true">↑</span>
+          </a>
+        </nav>
     </article>
   );
 

@@ -33,8 +33,10 @@ const dictionaries = {
       featuredMeta: "代表作 · CognitiveOS · 研究快照 b626e88",
       projectsHeading: "案例与工具",
       projectsDescription: "示例案例按问题、约束、方案、结果与反思组织。",
+      allProjects: "查看全部案例",
       articlesHeading: "近期文章",
       articlesDescription: "长文提供完整论证；短记只处理一个问题，并明确证据边界。",
+      allArticles: "查看全部文章",
       aboutHeading: "写作者说明",
       aboutDescription: "当前身份与经历均为占位；方法与内容边界保持公开。",
       aboutLink: "查看方法与示例时间线",
@@ -128,9 +130,11 @@ const dictionaries = {
       projectsHeading: "Cases and tools",
       projectsDescription:
         "Sample cases are structured as problem, constraints, approach, outcome, and reflection.",
+      allProjects: "Browse all cases",
       articlesHeading: "Recent writing",
       articlesDescription:
         "Long-form work carries the full argument; each short note handles one question and names its evidence boundary.",
+      allArticles: "Browse all writing",
       aboutHeading: "About this writer",
       aboutDescription:
         "Identity and experience remain placeholders; the working method and content boundaries stay explicit.",
