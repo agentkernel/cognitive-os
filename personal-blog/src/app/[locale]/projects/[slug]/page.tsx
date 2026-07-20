@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleShell } from "@/components/content/article-shell";
 import { locales, otherLocale, requireLocale } from "@/i18n/config";
-import { projectPath } from "@/i18n/routes";
-import { getProject, projectSlugs } from "@/lib/content/registry";
+import { contentPath } from "@/i18n/routes";
+import {
+  getProject,
+  getProjectSummary,
+  getTranslationSummary,
+  projectSlugs,
+} from "@/lib/content/registry";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
 export function generateStaticParams() {
@@ -22,8 +27,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale: rawLocale, slug } = await params;
   const locale = requireLocale(rawLocale);
-  const entry = getProject(locale, slug);
+  const entry = getProjectSummary(locale, slug);
   if (!entry) {
+    notFound();
+  }
+  const alternateLocale = otherLocale(locale);
+  const alternate = getTranslationSummary(entry, alternateLocale);
+  if (!alternate) {
     notFound();
   }
 
@@ -31,8 +41,8 @@ export async function generateMetadata({
     locale,
     title: entry.frontmatter.title,
     description: entry.frontmatter.description,
-    path: projectPath(locale, slug),
-    alternatePath: projectPath(otherLocale(locale), slug),
+    path: contentPath(locale, entry.frontmatter),
+    alternatePath: contentPath(alternateLocale, alternate.frontmatter),
     noIndex: true,
   });
 }
@@ -44,8 +54,13 @@ export default async function ProjectPage({
 }) {
   const { locale: rawLocale, slug } = await params;
   const locale = requireLocale(rawLocale);
-  const entry = getProject(locale, slug);
+  const entry = await getProject(locale, slug);
   if (!entry) {
+    notFound();
+  }
+  const alternateLocale = otherLocale(locale);
+  const alternate = getTranslationSummary(entry, alternateLocale);
+  if (!alternate) {
     notFound();
   }
 
@@ -53,8 +68,8 @@ export default async function ProjectPage({
     <ArticleShell
       locale={locale}
       entry={entry}
-      alternatePath={projectPath(otherLocale(locale), slug)}
-      currentPage="projects"
+      alternatePath={contentPath(alternateLocale, alternate.frontmatter)}
+      currentPage="lab"
     />
   );
 }

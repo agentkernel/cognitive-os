@@ -1,7 +1,16 @@
 import { z } from "zod";
 
 const localeSchema = z.enum(["zh-CN", "en"]);
-const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00Z`);
+    return (
+      Number.isFinite(date.valueOf()) &&
+      date.toISOString().slice(0, 10) === value
+    );
+  }, "Expected a real ISO calendar date.");
 const anchorSchema = z.string().regex(/^[a-z][a-z0-9-]*$/);
 
 const heroSchema = z
@@ -63,6 +72,14 @@ export const articleFrontmatterSchema = commonSchema
     claimLevel: z.enum(["sample", "normative-synthesis"]).optional(),
   })
   .superRefine((value, context) => {
+    if (value.updatedAt && value.updatedAt < value.publishedAt) {
+      context.addIssue({
+        code: "custom",
+        path: ["updatedAt"],
+        message: "updatedAt cannot be earlier than publishedAt.",
+      });
+    }
+
     if (value.status === "sample" && !value.placeholder) {
       context.addIssue({
         code: "custom",
@@ -98,7 +115,16 @@ export const projectFrontmatterSchema = commonSchema
       z.literal("reflection"),
     ]),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (value.updatedAt && value.updatedAt < value.publishedAt) {
+      context.addIssue({
+        code: "custom",
+        path: ["updatedAt"],
+        message: "updatedAt cannot be earlier than publishedAt.",
+      });
+    }
+  });
 
 export type ArticleFrontmatter = z.infer<typeof articleFrontmatterSchema>;
 export type ProjectFrontmatter = z.infer<typeof projectFrontmatterSchema>;

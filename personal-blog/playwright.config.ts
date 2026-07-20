@@ -16,7 +16,7 @@ export default defineConfig({
     ["html", { outputFolder: "artifacts/evidence/playwright-report", open: "never" }],
   ],
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: "http://127.0.0.1:3101",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
@@ -30,9 +30,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm start",
-    url: "http://127.0.0.1:3100/zh",
-    reuseExistingServer: !process.env.CI,
+    command: "pnpm exec next start --port 3101",
+    url: "http://127.0.0.1:3101/zh",
+    reuseExistingServer: false,
     timeout: 120_000,
     stdout: "pipe",
     stderr: "pipe",

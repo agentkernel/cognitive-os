@@ -21,19 +21,19 @@ async function walk(directory: string): Promise<string[]> {
 
 const root = process.cwd();
 const content = await loadDiskContent();
-const registrySource = await readFile(
-  resolve(root, "src", "lib", "content", "registry.ts"),
+const loaderSource = await readFile(
+  resolve(root, "src", "lib", "content", "loaders.ts"),
   "utf8",
 );
 const registeredMdx = new Set(
-  [...registrySource.matchAll(/from "@content\/([^"]+\.mdx)"/g)].map((match) =>
+  [...loaderSource.matchAll(/import\("@content\/([^"]+\.mdx)"\)/g)].map((match) =>
     match[1].replaceAll("/", "\\"),
   ),
 );
 
 for (const entry of content) {
   const relativePath = relative(resolve(root, "content"), entry.filePath);
-  invariant(registeredMdx.has(relativePath), `MDX file is missing from static registry: ${relativePath}`);
+  invariant(registeredMdx.has(relativePath), `MDX file is missing from the static loader map: ${relativePath}`);
 
   const ids = bodyHeadingIds(entry.source);
   invariant(new Set(ids).size === ids.length, `${relativePath} contains duplicate heading IDs.`);
@@ -44,7 +44,7 @@ for (const entry of content) {
 
 invariant(
   registeredMdx.size === content.length,
-  `Registry imports ${registeredMdx.size} MDX files, but disk contains ${content.length}.`,
+  `Loader map imports ${registeredMdx.size} MDX files, but disk contains ${content.length}.`,
 );
 
 const sourceFiles = (
@@ -77,7 +77,7 @@ for (const filePath of sourceFiles) {
 const allowedClientFiles = new Set([
   "src/app/[locale]/error.tsx",
   "src/app/global-error.tsx",
-  "src/components/content/code-block.tsx",
+  "src/components/content/article-interactions.tsx",
   "src/components/navigation/mobile-navigation.tsx",
 ]);
 for (const file of clientFiles) {
@@ -89,5 +89,5 @@ invariant(
 );
 
 console.log(
-  `Link and boundary checks passed: ${registeredMdx.size} static MDX imports, ${clientFiles.length} intentional client files.`,
+  `Link and boundary checks passed: ${registeredMdx.size} static MDX loaders, ${clientFiles.length} intentional client files.`,
 );

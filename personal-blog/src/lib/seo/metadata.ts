@@ -24,10 +24,14 @@ export function createLocalizedMetadata({
   const origin = getSiteOrigin();
   const alternateLocale = locale === "zh" ? "en" : "zh";
   const effectiveNoIndex = noIndex || !hasPublishableOrigin();
+  const brandedTitle =
+    title === "CognitiveOS Research"
+      ? title
+      : `${title} · CognitiveOS Research`;
 
   return {
     metadataBase: origin,
-    title,
+    title: brandedTitle,
     description,
     alternates: {
       canonical: path,
@@ -49,10 +53,10 @@ export function createLocalizedMetadata({
       type,
       locale: locale === "zh" ? "zh_CN" : "en_US",
       alternateLocale: locale === "zh" ? ["en_US"] : ["zh_CN"],
-      title,
+      title: brandedTitle,
       description,
       url: path,
-      siteName: locale === "zh" ? "未署名的系统设计笔记" : "Unsigned System Design Notes",
+      siteName: "CognitiveOS Research",
       images: [
         {
           url: "/images/og/system-notebook.png",
@@ -60,14 +64,14 @@ export function createLocalizedMetadata({
           height: 630,
           alt:
             locale === "zh"
-              ? "抽象系统设计笔记封面"
-              : "Abstract system design notebook cover",
+              ? "CognitiveOS Research：蓝色证据路径经过确定性门槛，铜色虚线表示未知结果"
+              : "CognitiveOS Research: a blue evidence trace passes deterministic gates while a copper dashed branch marks an unknown outcome",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: brandedTitle,
       description,
       images: ["/images/og/system-notebook.png"],
     },

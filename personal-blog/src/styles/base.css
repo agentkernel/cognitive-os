@@ -1,0 +1,228 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+  background: var(--surface-canvas);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: clip;
+  color: var(--text-primary);
+  background:
+    linear-gradient(
+      90deg,
+      transparent calc(50% - 0.5px),
+      color-mix(in oklab, var(--text-primary) 3%, transparent) 50%,
+      transparent calc(50% + 0.5px)
+    ),
+    var(--surface-canvas);
+  font-family: var(--font-reading);
+  font-size: var(--text-base);
+  font-optical-sizing: auto;
+  line-height: 1.72;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  color: inherit;
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+::selection {
+  color: var(--surface-canvas);
+  background: var(--signal-trace);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-light);
+  outline-offset: 4px;
+}
+
+.prose pre:focus-visible,
+.code-block__copy:focus-visible,
+.error-panel button:focus-visible {
+  outline: 2px solid var(--focus-dark);
+  box-shadow: 0 0 0 5px var(--signal-trace);
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 200;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  transform: translateY(-170%);
+  display: inline-flex;
+  align-items: center;
+  color: var(--surface-raised);
+  background: var(--text-primary);
+  font: 650 var(--text-xs) / 1 var(--font-ui);
+  transition: transform var(--duration-standard) var(--ease-trace);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--signal-trace);
+  font: 680 var(--text-xs) / 1.4 var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--signal-trace);
+  font: 650 var(--text-sm) / 1.4 var(--font-ui);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+  transition: text-decoration-color var(--duration-quick) var(--ease-trace);
+}
+
+.text-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html:lang(zh-CN) .locale-copy--en,
+html:lang(en) .locale-copy--zh {
+  display: none;
+}
+
+.not-found {
+  display: grid;
+  width: min(calc(100% - 2 * var(--page-gutter)), 900px);
+  min-height: 72vh;
+  margin: 0 auto;
+  padding-block: var(--space-2xl);
+  align-content: center;
+}
+
+html:lang(zh-CN) .not-found__en,
+html:lang(en) .not-found__zh {
+  display: none;
+}
+
+.not-found h1,
+.error-panel h1 {
+  max-width: 16ch;
+  margin: 0;
+  font: 600 var(--text-3xl) / 1.02 var(--font-display);
+  letter-spacing: -0.035em;
+}
+
+.not-found p,
+.error-panel p {
+  max-width: 50ch;
+  color: var(--text-secondary);
+}
+
+.not-found__links,
+.error-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--space-md);
+  gap: var(--space-sm);
+}
+
+.not-found__links a,
+.error-panel__actions a,
+.error-panel__actions button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  padding-inline: 1rem;
+  border: 1px solid var(--border-control);
+  font: 650 var(--text-sm) / 1 var(--font-ui);
+}
+
+.error-panel {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  padding: var(--page-gutter);
+  place-items: center;
+  background: var(--surface-canvas);
+}
+
+.error-panel > div {
+  width: min(100%, 640px);
+  padding-top: var(--space-lg);
+  border-top: 4px solid var(--signal-exception);
+}
+
+.error-panel__actions button {
+  color: var(--surface-raised);
+  background: var(--text-primary);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

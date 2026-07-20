@@ -4,13 +4,8 @@ import { PageScaffold } from "@/components/layout/page-scaffold";
 import { JsonLd } from "@/components/seo/json-ld";
 import { otherLocale, requireLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { articlePath, flagshipPath, pagePath } from "@/i18n/routes";
-import {
-  getFlagship,
-  listArticles,
-  type ArticleEntry,
-  type ProjectEntry,
-} from "@/lib/content/registry";
+import { contentPath, pagePath } from "@/i18n/routes";
+import { listPublishedContent } from "@/lib/content/registry";
 import { absoluteUrl, createLocalizedMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata({
@@ -36,15 +31,15 @@ export default async function ArticlesPage({
 }) {
   const locale = requireLocale((await params).locale);
   const dictionary = getDictionary(locale);
-  const entries = listArticles(locale);
-  const flagship = getFlagship(locale);
-  const sampleEntries = entries.filter(
-    (entry) => entry.frontmatter.kind === "article",
-  );
+  const entries = listPublishedContent(locale);
   const alternatePath = pagePath(otherLocale(locale), "articles");
 
   return (
-    <PageScaffold locale={locale} currentPage="articles" alternatePath={alternatePath}>
+    <PageScaffold
+      locale={locale}
+      currentPage="articles"
+      alternatePath={alternatePath}
+    >
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -53,45 +48,31 @@ export default async function ArticlesPage({
           description: dictionary.articles.description,
           inLanguage: locale === "zh" ? "zh-CN" : "en",
           url: absoluteUrl(pagePath(locale, "articles")),
-          hasPart: [
-            {
-              "@type": "TechArticle",
-              headline: flagship.frontmatter.title,
-              url: absoluteUrl(flagshipPath(locale)),
-            },
-          ],
+          hasPart: entries.map((entry) => ({
+            "@type": "TechArticle",
+            headline: entry.frontmatter.title,
+            url: absoluteUrl(contentPath(locale, entry.frontmatter)),
+          })),
         }}
       />
       <div className="page-shell">
         <header className="page-intro">
-          <h1>{dictionary.articles.title}</h1>
+          <div>
+            <p className="eyebrow">
+              {locale === "zh" ? "已发布研究" : "PUBLISHED RESEARCH"}
+            </p>
+            <h1>{dictionary.articles.title}</h1>
+          </div>
           <p>{dictionary.articles.description}</p>
         </header>
-        <section className="home-section" aria-labelledby="featured-essay">
+        <section className="essay-index" aria-labelledby="published-essays">
           <header>
-            <span>{locale === "zh" ? "已发布研究" : "PUBLISHED RESEARCH"}</span>
-            <h2 id="featured-essay">{dictionary.articles.featuredHeading}</h2>
+            <h2 id="published-essays">{dictionary.articles.featuredHeading}</h2>
             <p>{dictionary.articles.featuredDescription}</p>
           </header>
           <ContentList
-            entries={[flagship]}
-            resolveHref={() => flagshipPath(locale)}
-            actionLabel={dictionary.articles.read}
-            sampleLabel={dictionary.sample}
-            headingLevel="h3"
-          />
-        </section>
-        <section className="home-section" aria-labelledby="sample-notes">
-          <header>
-            <span>{locale === "zh" ? "结构示例" : "STRUCTURE SAMPLES"}</span>
-            <h2 id="sample-notes">{dictionary.articles.sampleHeading}</h2>
-            <p>{dictionary.articles.sampleDescription}</p>
-          </header>
-          <ContentList
-            entries={sampleEntries}
-            resolveHref={(entry: ArticleEntry | ProjectEntry) =>
-              articlePath(locale, entry.frontmatter.slug)
-            }
+            entries={entries}
+            resolveHref={(entry) => contentPath(locale, entry.frontmatter)}
             actionLabel={dictionary.articles.read}
             sampleLabel={dictionary.sample}
             headingLevel="h3"

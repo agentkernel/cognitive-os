@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleShell } from "@/components/content/article-shell";
 import { locales, otherLocale, requireLocale } from "@/i18n/config";
-import { articlePath } from "@/i18n/routes";
-import { articleSlugs, getArticle } from "@/lib/content/registry";
+import { contentPath } from "@/i18n/routes";
+import {
+  articleSlugs,
+  getArticle,
+  getArticleSummary,
+  getTranslationSummary,
+} from "@/lib/content/registry";
+import { isPublishableFrontmatter } from "@/lib/content/publication";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
 export function generateStaticParams() {
@@ -22,8 +28,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale: rawLocale, slug } = await params;
   const locale = requireLocale(rawLocale);
-  const entry = getArticle(locale, slug);
+  const entry = getArticleSummary(locale, slug);
   if (!entry) {
+    notFound();
+  }
+  const alternateLocale = otherLocale(locale);
+  const alternate = getTranslationSummary(entry, alternateLocale);
+  if (!alternate) {
     notFound();
   }
 
@@ -31,9 +42,9 @@ export async function generateMetadata({
     locale,
     title: entry.frontmatter.title,
     description: entry.frontmatter.description,
-    path: articlePath(locale, slug),
-    alternatePath: articlePath(otherLocale(locale), slug),
-    noIndex: true,
+    path: contentPath(locale, entry.frontmatter),
+    alternatePath: contentPath(alternateLocale, alternate.frontmatter),
+    noIndex: !isPublishableFrontmatter(entry.frontmatter),
     type: "article",
   });
 }
@@ -45,8 +56,13 @@ export default async function ArticlePage({
 }) {
   const { locale: rawLocale, slug } = await params;
   const locale = requireLocale(rawLocale);
-  const entry = getArticle(locale, slug);
+  const entry = await getArticle(locale, slug);
   if (!entry) {
+    notFound();
+  }
+  const alternateLocale = otherLocale(locale);
+  const alternate = getTranslationSummary(entry, alternateLocale);
+  if (!alternate) {
     notFound();
   }
 
@@ -54,8 +70,10 @@ export default async function ArticlePage({
     <ArticleShell
       locale={locale}
       entry={entry}
-      alternatePath={articlePath(otherLocale(locale), slug)}
-      currentPage="articles"
+      alternatePath={contentPath(alternateLocale, alternate.frontmatter)}
+      currentPage={
+        isPublishableFrontmatter(entry.frontmatter) ? "articles" : "lab"
+      }
     />
   );
 }

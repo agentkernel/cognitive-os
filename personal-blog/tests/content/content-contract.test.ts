@@ -47,11 +47,36 @@ describe("bilingual content contract", () => {
         new Set(["zh-CN", "en"]),
       );
       expect(pair[0].frontmatter.kind, key).toBe(pair[1].frontmatter.kind);
+      expect(pair[0].frontmatter.status, key).toBe(pair[1].frontmatter.status);
+      expect(pair[0].frontmatter.placeholder, key).toBe(
+        pair[1].frontmatter.placeholder,
+      );
+      if (
+        pair[0].frontmatter.kind !== "project" &&
+        pair[1].frontmatter.kind !== "project"
+      ) {
+        expect(pair[0].frontmatter.featured, key).toBe(
+          pair[1].frontmatter.featured,
+        );
+      }
+      expect(pair[0].frontmatter.updatedAt, key).toBe(
+        pair[1].frontmatter.updatedAt,
+      );
       expect(pair[0].frontmatter.pairingSnapshot, key).toBe(
         pair[1].frontmatter.pairingSnapshot,
       );
       expect(pair[0].frontmatter.anchors, key).toEqual(pair[1].frontmatter.anchors);
     }
+  });
+
+  it("keeps localized route identities unique", async () => {
+    const entries = await loadDiskContent();
+    const identities = entries.map(
+      (entry) =>
+        `${entry.frontmatter.kind}:${entry.frontmatter.locale}:${entry.frontmatter.slug}`,
+    );
+
+    expect(new Set(identities).size).toBe(identities.length);
   });
 
   it("keeps explicit body anchors synchronized with frontmatter", async () => {

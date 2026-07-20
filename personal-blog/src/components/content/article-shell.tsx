@@ -2,19 +2,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { cognitiveOsSnapshot } from "@/data/cognitiveos";
 import { CognitiveOsManualSidebar } from "@/components/cognitiveos/manual-sidebar";
+import { ArticleInteractions } from "@/components/content/article-interactions";
 import { JsonLd } from "@/components/seo/json-ld";
 import { PageScaffold } from "@/components/layout/page-scaffold";
 import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { pagePath } from "@/i18n/routes";
+import { formatDate } from "@/i18n/format";
+import {
+  cognitiveOsSourcesPath,
+  contentPath,
+  pagePath,
+} from "@/i18n/routes";
 import type { ArticleEntry, ProjectEntry } from "@/lib/content/registry";
+import { isPublishableFrontmatter } from "@/lib/content/publication";
 import { absoluteUrl } from "@/lib/seo/metadata";
 
 type ArticleShellProps = {
   locale: Locale;
   entry: ArticleEntry | ProjectEntry;
   alternatePath: string;
-  currentPage: "articles" | "projects" | "cognitiveos";
+  currentPage: "articles" | "lab" | "cognitiveos";
 };
 
 const anchorLabels: Record<Locale, Record<string, string>> = {
@@ -99,6 +106,7 @@ function ArticleTocLinks({
           <Link
             href={`${alternatePath}#${anchor}`}
             hrefLang={locale === "zh" ? "en" : "zh-CN"}
+            lang={locale === "zh" ? "en" : "zh-CN"}
             aria-label={
               locale === "zh"
                 ? `在英文文章中打开 ${anchorLabel(anchor, locale)}`
@@ -122,16 +130,13 @@ export function ArticleShell({
   const dictionary = getDictionary(locale);
   const { frontmatter, Component } = entry;
   const sectionLabel =
-    currentPage === "projects"
-      ? dictionary.nav.projects
+    currentPage === "lab"
+      ? dictionary.nav.lab
       : currentPage === "cognitiveos"
         ? dictionary.nav.cognitiveos
         : dictionary.nav.articles;
   const sectionPath = pagePath(locale, currentPage);
-  const canonicalPath =
-    currentPage === "cognitiveos"
-      ? `/${locale}/cognitiveos/${frontmatter.slug}`
-      : `/${locale}/${currentPage}/${frontmatter.slug}`;
+  const canonicalPath = contentPath(locale, frontmatter);
   const contentStatus = frontmatter.placeholder
     ? dictionary.sample
     : locale === "zh"
@@ -139,7 +144,7 @@ export function ArticleShell({
       : "Research synthesis";
 
   const structuredData =
-    !frontmatter.placeholder && frontmatter.kind === "cognitiveos"
+    isPublishableFrontmatter(frontmatter) && frontmatter.kind !== "project"
       ? {
           "@context": "https://schema.org",
           "@type": "TechArticle",
@@ -158,7 +163,7 @@ export function ArticleShell({
       : null;
 
   const articleContent = (
-    <article className="article-page" id="article-top">
+    <ArticleInteractions>
         <nav className="breadcrumbs" aria-label={locale === "zh" ? "面包屑" : "Breadcrumbs"}>
           <Link href={pagePath(locale, "home")}>{dictionary.nav.home}</Link>
           <span aria-hidden="true">/</span>
@@ -171,12 +176,22 @@ export function ArticleShell({
             <div className="article-header__meta">
               <span>{sectionLabel}</span>
               <time dateTime={frontmatter.publishedAt}>
-                {frontmatter.publishedAt}
+                {formatDate(frontmatter.publishedAt, locale)}
               </time>
               <span>{contentStatus}</span>
             </div>
             <h1>{frontmatter.title}</h1>
             <p className="article-deck">{frontmatter.description}</p>
+            {frontmatter.kind !== "project" ? (
+              <ul
+                className="article-tags"
+                aria-label={locale === "zh" ? "主题标签" : "Topic tags"}
+              >
+                {frontmatter.tags.map((tag) => (
+                  <li key={tag}>{tag}</li>
+                ))}
+              </ul>
+            ) : null}
           </div>
           <div className="article-hero">
             <Image
@@ -184,8 +199,12 @@ export function ArticleShell({
               alt={frontmatter.hero.alt}
               width={1600}
               height={900}
-              priority={frontmatter.kind === "cognitiveos"}
-              sizes="(max-width: 980px) calc(100vw - 48px), 34vw"
+              preload={frontmatter.kind === "cognitiveos"}
+              sizes={
+                currentPage === "cognitiveos"
+                  ? "(max-width: 1100px) calc(100vw - 32px), (max-width: 1500px) calc(100vw - 320px), 1100px"
+                  : "(max-width: 1100px) calc(100vw - 32px), 34vw"
+              }
             />
           </div>
         </header>
@@ -215,19 +234,43 @@ export function ArticleShell({
                 <dt>{locale === "zh" ? "发布日期" : "Published"}</dt>
                 <dd>
                   <time dateTime={frontmatter.publishedAt}>
-                    {frontmatter.publishedAt}
+                    {formatDate(frontmatter.publishedAt, locale)}
                   </time>
                 </dd>
               </div>
+              {frontmatter.updatedAt ? (
+                <div>
+                  <dt>{locale === "zh" ? "更新日期" : "Updated"}</dt>
+                  <dd>
+                    <time dateTime={frontmatter.updatedAt}>
+                      {formatDate(frontmatter.updatedAt, locale)}
+                    </time>
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt>{locale === "zh" ? "内容状态" : "Content status"}</dt>
                 <dd>{contentStatus}</dd>
               </div>
+              {frontmatter.kind !== "project" ? (
+                <div>
+                  <dt>{locale === "zh" ? "主题" : "Topic"}</dt>
+                  <dd>{frontmatter.primaryTopic}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt>{locale === "zh" ? "许可" : "License"}</dt>
                 <dd>{frontmatter.hero.license}</dd>
               </div>
             </dl>
+            {frontmatter.kind === "cognitiveos" ? (
+              <Link
+                className="evidence-rail__source"
+                href={cognitiveOsSourcesPath(locale)}
+              >
+                {dictionary.cognitiveos.sources}
+              </Link>
+            ) : null}
             <nav aria-label={locale === "zh" ? "文章目录" : "On this page"}>
               <span>{locale === "zh" ? "共享锚点" : "Shared anchors"}</span>
               <ArticleTocLinks
@@ -246,9 +289,21 @@ export function ArticleShell({
             <span aria-hidden="true">←</span>
             {locale === "zh" ? `返回${sectionLabel}` : `Back to ${sectionLabel}`}
           </Link>
+          {frontmatter.kind === "cognitiveos" ? (
+            <Link href={cognitiveOsSourcesPath(locale)}>
+              {dictionary.nav.sources}
+              <span aria-hidden="true">↗</span>
+            </Link>
+          ) : (
+            <Link href={pagePath(locale, "cognitiveos")}>
+              {dictionary.nav.cognitiveos}
+              <span aria-hidden="true">↗</span>
+            </Link>
+          )}
           <Link
             href={alternatePath}
             hrefLang={locale === "zh" ? "en" : "zh-CN"}
+            lang={locale === "zh" ? "en" : "zh-CN"}
           >
             {dictionary.languageSwitch}
           </Link>
@@ -257,7 +312,7 @@ export function ArticleShell({
             <span aria-hidden="true">↑</span>
           </a>
         </nav>
-    </article>
+    </ArticleInteractions>
   );
 
   return (

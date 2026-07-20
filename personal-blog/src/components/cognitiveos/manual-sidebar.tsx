@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { cognitiveOsSnapshot } from "@/data/cognitiveos";
 import type { Locale } from "@/i18n/config";
-import { flagshipPath, pagePath } from "@/i18n/routes";
+import {
+  cognitiveOsSourcesPath,
+  flagshipPath,
+  pagePath,
+} from "@/i18n/routes";
 
 type ManualSidebarProps = {
   locale: Locale;
-  active: "overview" | "flagship";
+  active: "overview" | "flagship" | "sources";
 };
 
 type SidebarItem = {
@@ -22,6 +26,7 @@ type SidebarGroup = {
 function groups(locale: Locale, active: ManualSidebarProps["active"]): SidebarGroup[] {
   const overview = pagePath(locale, "cognitiveos");
   const flagship = flagshipPath(locale);
+  const sources = cognitiveOsSourcesPath(locale);
   const zh = locale === "zh";
 
   return [
@@ -37,6 +42,11 @@ function groups(locale: Locale, active: ManualSidebarProps["active"]): SidebarGr
           label: zh ? "完整设计说明" : "Full design guide",
           href: flagship,
           current: active === "flagship",
+        },
+        {
+          label: zh ? "来源与修订账本" : "Sources and revisions",
+          href: sources,
+          current: active === "sources",
         },
       ],
     },

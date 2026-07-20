@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { Locale } from "@/i18n/config";
 import { otherLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -27,6 +27,13 @@ export function MobileNavigation({
   const panelRef = useRef<HTMLDivElement>(null);
   const dictionary = getDictionary(locale);
 
+  const close = useCallback((restoreFocus = true) => {
+    setOpen(false);
+    if (restoreFocus) {
+      requestAnimationFrame(() => triggerRef.current?.focus());
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -34,12 +41,22 @@ export function MobileNavigation({
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const background = Array.from(
+      document.querySelectorAll<HTMLElement>("main, footer"),
+    ).map((element) => ({
+      element,
+      inert: element.inert,
+      ariaHidden: element.getAttribute("aria-hidden"),
+    }));
+    for (const item of background) {
+      item.element.inert = true;
+      item.element.setAttribute("aria-hidden", "true");
+    }
     closeRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpen(false);
-        triggerRef.current?.focus();
+        close();
         return;
       }
 
@@ -67,13 +84,17 @@ export function MobileNavigation({
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      for (const item of background) {
+        item.element.inert = item.inert;
+        if (item.ariaHidden === null) {
+          item.element.removeAttribute("aria-hidden");
+        } else {
+          item.element.setAttribute("aria-hidden", item.ariaHidden);
+        }
+      }
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
-
-  const close = () => {
-    setOpen(false);
-  };
+  }, [close, open]);
 
   return (
     <div className="mobile-navigation">
@@ -96,7 +117,7 @@ export function MobileNavigation({
             type="button"
             className="mobile-navigation__backdrop"
             aria-label={dictionary.closeMenu}
-            onClick={close}
+            onClick={() => close()}
           />
           <div
             ref={panelRef}
@@ -112,7 +133,7 @@ export function MobileNavigation({
                 ref={closeRef}
                 type="button"
                 aria-label={dictionary.closeMenu}
-                onClick={close}
+                onClick={() => close()}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M5 5l14 14M19 5L5 19" />
@@ -125,7 +146,7 @@ export function MobileNavigation({
                   key={link.key}
                   href={link.href}
                   aria-current={link.key === currentPage ? "page" : undefined}
-                  onClick={close}
+                  onClick={() => close()}
                 >
                   {link.label}
                 </Link>
@@ -135,7 +156,8 @@ export function MobileNavigation({
               className="mobile-navigation__language"
               href={alternatePath}
               hrefLang={otherLocale(locale) === "zh" ? "zh-CN" : "en"}
-              onClick={close}
+              lang={otherLocale(locale) === "zh" ? "zh-CN" : "en"}
+              onClick={() => close()}
             >
               {dictionary.languageSwitch}
             </Link>

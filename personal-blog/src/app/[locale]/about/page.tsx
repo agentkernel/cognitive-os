@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { authorProfile, sampleTimeline } from "@content/data/profile";
+import Link from "next/link";
 import { PageScaffold } from "@/components/layout/page-scaffold";
 import { otherLocale, requireLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { pagePath } from "@/i18n/routes";
+import { cognitiveOsSourcesPath, pagePath } from "@/i18n/routes";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata({
@@ -19,7 +19,6 @@ export async function generateMetadata({
     description: dictionary.about.description,
     path: pagePath(locale, "about"),
     alternatePath: pagePath(otherLocale(locale), "about"),
-    noIndex: true,
   });
 }
 
@@ -33,71 +32,65 @@ export default async function AboutPage({
   const alternatePath = pagePath(otherLocale(locale), "about");
 
   return (
-    <PageScaffold locale={locale} currentPage="about" alternatePath={alternatePath}>
+    <PageScaffold
+      locale={locale}
+      currentPage="about"
+      alternatePath={alternatePath}
+    >
       <div className="page-shell">
         <header className="page-intro">
-          <h1>{dictionary.about.title}</h1>
           <div>
-            <p>{dictionary.about.description}</p>
-            <p className="eyebrow">{dictionary.sample}</p>
+            <p className="eyebrow">
+              {locale === "zh" ? "方法与边界" : "METHOD & BOUNDARIES"}
+            </p>
+            <h1>{dictionary.about.title}</h1>
           </div>
+          <p>{dictionary.about.description}</p>
         </header>
 
-        <section className="home-section" aria-labelledby="about-profile">
-          <header>
-            <span>{locale === "zh" ? "资料" : "PROFILE"}</span>
-            <h2 id="about-profile">{authorProfile.name[locale]}</h2>
-          </header>
-          <div className="profile-panel">
-            <div className="profile-initials" aria-hidden="true">
-              {authorProfile.initials}
-            </div>
-            <div>
-              <p className="eyebrow">{dictionary.sample}</p>
-              <h2>{authorProfile.title[locale]}</h2>
-              <p>{authorProfile.bio[locale]}</p>
-              <p>{authorProfile.location[locale]}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="home-section" aria-labelledby="about-method">
-          <header>
-            <span>{locale === "zh" ? "工作方法" : "WORKING METHOD"}</span>
-            <h2 id="about-method">{dictionary.about.methodHeading}</h2>
-          </header>
-          <div className="home-about">
+        <section className="method-lead" aria-labelledby="method-first">
+          <p className="method-lead__index" aria-hidden="true">
+            01
+          </p>
+          <div>
+            <h2 id="method-first">{dictionary.about.methodHeading}</h2>
             <p>{dictionary.about.method}</p>
           </div>
         </section>
 
-        <section className="home-section" aria-labelledby="about-timeline">
+        <section className="method-grid" aria-labelledby="method-principles">
           <header>
-            <span>{locale === "zh" ? "示例时间线" : "SAMPLE TIMELINE"}</span>
-            <h2 id="about-timeline">{dictionary.about.timelineHeading}</h2>
+            <p className="eyebrow">
+              {locale === "zh" ? "公开承诺" : "PUBLIC COMMITMENTS"}
+            </p>
+            <h2 id="method-principles">{dictionary.about.principlesHeading}</h2>
           </header>
-          <ol className="timeline">
-            {sampleTimeline.map((entry) => (
-              <li key={entry.id}>
-                <time>{entry.period}</time>
-                <div>
-                  <p className="eyebrow">{dictionary.sample}</p>
-                  <h3>{entry.title[locale]}</h3>
-                  <p>{entry.detail[locale]}</p>
-                </div>
+          <ol>
+            {dictionary.about.principles.map((principle, index) => (
+              <li key={principle}>
+                <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                <p>{principle}</p>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className="home-section" aria-labelledby="about-contact">
-          <header>
-            <span>{locale === "zh" ? "联系占位" : "CONTACT PLACEHOLDER"}</span>
-            <h2 id="about-contact">{dictionary.about.contactHeading}</h2>
-          </header>
-          <div className="home-about">
-            <p>{dictionary.about.contact}</p>
-          </div>
+        <section className="method-notes">
+          <article aria-labelledby="author-position">
+            <p className="eyebrow">{locale === "zh" ? "作者" : "AUTHOR"}</p>
+            <h2 id="author-position">{dictionary.about.authorHeading}</h2>
+            <p>{dictionary.about.author}</p>
+          </article>
+          <article aria-labelledby="current-boundary">
+            <p className="eyebrow">
+              {locale === "zh" ? "研究边界" : "RESEARCH BOUNDARY"}
+            </p>
+            <h2 id="current-boundary">{dictionary.about.boundaryHeading}</h2>
+            <p>{dictionary.about.boundary}</p>
+            <Link className="text-link" href={cognitiveOsSourcesPath(locale)}>
+              {dictionary.home.sourcesAction}
+            </Link>
+          </article>
         </section>
       </div>
     </PageScaffold>

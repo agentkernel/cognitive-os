@@ -14,21 +14,15 @@ type SiteHeaderProps = {
 export function SiteHeader({ locale, currentPage, alternatePath }: SiteHeaderProps) {
   const dictionary = getDictionary(locale);
   const links: Array<{ key: PageKey; label: string; href: string }> = [
-    { key: "home", label: dictionary.nav.home, href: pagePath(locale, "home") },
-    {
-      key: "articles",
-      label: dictionary.nav.articles,
-      href: pagePath(locale, "articles"),
-    },
-    {
-      key: "projects",
-      label: dictionary.nav.projects,
-      href: pagePath(locale, "projects"),
-    },
     {
       key: "cognitiveos",
       label: dictionary.nav.cognitiveos,
       href: pagePath(locale, "cognitiveos"),
+    },
+    {
+      key: "articles",
+      label: dictionary.nav.articles,
+      href: pagePath(locale, "articles"),
     },
     { key: "about", label: dictionary.nav.about, href: pagePath(locale, "about") },
   ];
@@ -37,7 +31,7 @@ export function SiteHeader({ locale, currentPage, alternatePath }: SiteHeaderPro
     <header className="site-header">
       <div className="site-header__inner">
         <Link className="site-mark" href={pagePath(locale, "home")} aria-label={dictionary.siteName}>
-          <span aria-hidden="true">SD</span>
+          <span aria-hidden="true">CO</span>
           <strong>{dictionary.siteShortName}</strong>
         </Link>
         <nav className="desktop-navigation" aria-label={locale === "zh" ? "主导航" : "Primary"}>

@@ -1,6 +1,6 @@
 import { locales, isLocale } from "@/i18n/config";
-import { flagshipPath, pagePath } from "@/i18n/routes";
-import { listArticles } from "@/lib/content/registry";
+import { contentPath, pagePath } from "@/i18n/routes";
+import { listPublishedContent } from "@/lib/content/registry";
 import { absoluteUrl } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
@@ -29,9 +29,10 @@ export async function GET(
   }
 
   const locale = rawLocale;
-  const entries = listArticles(locale).filter((entry) => !entry.frontmatter.placeholder);
-  const title =
-    locale === "zh" ? "未署名的系统设计笔记" : "Unsigned System Design Notes";
+  const entries = listPublishedContent(locale).filter(
+    (entry) => entry.frontmatter.kind !== "project",
+  );
+  const title = "CognitiveOS Research";
   const description =
     locale === "zh"
       ? "关于可验证 Agent、可靠系统与工程边界的文章。"
@@ -40,7 +41,7 @@ export async function GET(
   const homeUrl = absoluteUrl(pagePath(locale, "home"));
   const items = entries
     .map((entry) => {
-      const url = absoluteUrl(flagshipPath(locale));
+      const url = absoluteUrl(contentPath(locale, entry.frontmatter));
       return [
         "<item>",
         `<title>${escapeXml(entry.frontmatter.title)}</title>`,

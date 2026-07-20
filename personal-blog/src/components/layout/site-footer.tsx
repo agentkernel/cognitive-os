@@ -12,10 +12,12 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <nav aria-label={locale === "zh" ? "页脚导航" : "Footer navigation"}>
           <Link href={pagePath(locale, "articles")}>{dictionary.nav.articles}</Link>
           <Link href={pagePath(locale, "cognitiveos")}>{dictionary.nav.cognitiveos}</Link>
+          <Link href={pagePath(locale, "about")}>{dictionary.nav.about}</Link>
+          <Link href={pagePath(locale, "lab")}>{dictionary.nav.lab}</Link>
           <Link href={`/${locale}/rss.xml`}>RSS</Link>
         </nav>
       </div>
-      <small>© 2026 · UNLICENSED</small>
+      <small>© 2026 · CognitiveOS Research · UNLICENSED</small>
     </footer>
   );
 }

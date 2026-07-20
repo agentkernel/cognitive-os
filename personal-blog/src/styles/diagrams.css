@@ -1,0 +1,285 @@
+.semantic-diagram {
+  margin: var(--space-xl) 0;
+  scroll-margin-top: 96px;
+  border-top: 1px solid var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.diagram-heading {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: baseline;
+  padding: 1rem 0;
+  gap: 1rem;
+}
+
+.diagram-heading span {
+  color: var(--signal-trace);
+  font: var(--text-xs) / 1 var(--font-data);
+}
+
+.diagram-heading h3 {
+  margin: 0;
+  font: 650 var(--text-lg) / 1.3 var(--font-ui);
+}
+
+.diagram-canvas {
+  padding: clamp(1rem, 2.5vw, 2rem);
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  overscroll-behavior-inline: contain;
+}
+
+.diagram-svg {
+  width: 100%;
+  min-width: 960px;
+  height: auto;
+}
+
+.diagram-svg text {
+  fill: var(--text-primary);
+  font: 20px var(--font-ui);
+}
+
+.diagram-svg--dense text {
+  font-size: 18px;
+}
+
+.diagram-plane rect,
+.diagram-lane > rect {
+  fill: none;
+  stroke: var(--border-control);
+  stroke-width: 2;
+}
+
+.diagram-plane-label text,
+.diagram-kicker {
+  fill: var(--text-secondary) !important;
+  font: 650 16px var(--font-data) !important;
+  letter-spacing: 0.04em;
+}
+
+.diagram-node rect {
+  fill: var(--surface-canvas);
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.diagram-node.proposal rect {
+  stroke-dasharray: 8 6;
+}
+
+.diagram-node.authority rect {
+  fill: var(--surface-trace);
+  stroke: var(--signal-trace);
+  stroke-width: 3;
+}
+
+.diagram-node.unresolved rect {
+  fill: var(--surface-exception);
+  stroke: var(--signal-exception);
+  stroke-width: 3;
+  stroke-dasharray: 10 7;
+}
+
+.diagram-crosscut rect {
+  fill: color-mix(in oklab, var(--signal-trace) 9%, transparent);
+  stroke: var(--signal-trace);
+  stroke-width: 2;
+  stroke-dasharray: 8 7;
+}
+
+.diagram-crosscut text {
+  fill: var(--signal-trace);
+  font: 700 17px var(--font-data);
+}
+
+.diagram-safety rect {
+  fill: var(--surface-exception);
+  stroke: var(--signal-exception);
+  stroke-width: 3;
+}
+
+.diagram-safety path,
+.diagram-arrow,
+.diagram-thread,
+.diagram-return {
+  fill: none;
+  stroke: var(--signal-trace);
+  stroke-width: 3;
+}
+
+.diagram-safety text {
+  fill: var(--signal-exception);
+  font: 650 18px var(--font-ui);
+}
+
+.diagram-arrow-head {
+  fill: none;
+  stroke: var(--signal-trace);
+  stroke-width: 3;
+}
+
+.diagram-boundary line {
+  stroke: var(--text-primary);
+  stroke-width: 6;
+}
+
+.diagram-boundary text {
+  fill: var(--text-primary);
+  font: 700 15px var(--font-data);
+}
+
+.diagram-unknown,
+.diagram-discrepancy {
+  fill: none;
+  stroke: var(--signal-exception);
+  stroke-width: 4;
+  stroke-dasharray: 11 8;
+}
+
+.diagram-lane circle {
+  fill: var(--signal-trace);
+}
+
+.diagram-lane .unresolved circle,
+.unresolved-text {
+  fill: var(--signal-exception) !important;
+}
+
+.diagram-core-stage rect {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+}
+
+.diagram-mobile-summary {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: diagram-stage;
+}
+
+.semantic-diagram--summary .diagram-mobile-summary {
+  display: grid;
+}
+
+.diagram-mobile-summary li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  min-height: 48px;
+  margin: 0;
+  padding: 0.75rem 0;
+  gap: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font: var(--text-xs) / 1.5 var(--font-data);
+  counter-increment: diagram-stage;
+}
+
+.diagram-mobile-summary li::before {
+  color: var(--signal-trace);
+  content: counter(diagram-stage, decimal-leading-zero);
+}
+
+.semantic-diagram figcaption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
+  padding: 0.9rem 0;
+  gap: 1.5rem;
+  color: var(--text-secondary);
+  font: var(--text-sm) / 1.55 var(--font-ui);
+}
+
+.semantic-diagram figcaption small {
+  font: var(--text-xs) / 1.5 var(--font-data);
+  text-align: right;
+}
+
+.diagram-full-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--signal-trace);
+  font: 650 var(--text-sm) / 1.4 var(--font-ui);
+}
+
+.diagram-transcript {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+.diagram-transcript summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding-inline: 0.5rem;
+  cursor: pointer;
+  color: var(--signal-trace);
+  font-weight: 650;
+}
+
+.diagram-transcript summary:hover,
+.diagram-transcript[open] summary {
+  color: var(--signal-trace-strong);
+  background: var(--surface-trace);
+}
+
+.diagram-transcript p {
+  max-width: 74ch;
+  margin: 0.5rem 0 1rem;
+}
+
+.visual-atlas {
+  max-width: none;
+  padding: var(--space-xl) 0;
+}
+
+.visual-atlas__header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
+  align-items: end;
+  margin-bottom: var(--space-lg);
+  gap: var(--space-lg);
+}
+
+.visual-atlas__header h2 {
+  margin: 0;
+}
+
+.visual-atlas__header > p:last-child {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 1100px) {
+  .semantic-diagram--full .diagram-canvas {
+    display: none;
+  }
+
+  .semantic-diagram--full .diagram-mobile-summary {
+    display: grid;
+  }
+
+  .visual-atlas__header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .semantic-diagram figcaption {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .semantic-diagram figcaption small {
+    text-align: left;
+  }
+}

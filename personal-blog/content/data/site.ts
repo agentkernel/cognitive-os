@@ -17,6 +17,14 @@ export function hasPublishableOrigin(): boolean {
   const origin = getSiteOrigin();
   return (
     origin.protocol === "https:" &&
+    origin.username === "" &&
+    origin.password === "" &&
+    origin.pathname === "/" &&
+    origin.search === "" &&
+    origin.hash === "" &&
+    origin.hostname !== "localhost" &&
+    origin.hostname !== "127.0.0.1" &&
+    origin.hostname !== "::1" &&
     origin.hostname !== "example.com" &&
     origin.hostname !== "www.example.com" &&
     !origin.hostname.endsWith(".invalid")

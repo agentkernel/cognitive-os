@@ -1,6 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { localizedPath } from "@/i18n/routes";
+import {
+  articlePath,
+  contentPath,
+  flagshipPath,
+  localizedPath,
+  pagePath,
+  projectPath,
+} from "@/i18n/routes";
+import { hasPublishableOrigin } from "@content/data/site";
 import { articleFrontmatterSchema } from "@/lib/content/schema";
+import { isPublishableFrontmatter } from "@/lib/content/publication";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
 const originalOrigin = process.env.NEXT_PUBLIC_SITE_URL;
@@ -26,9 +35,42 @@ describe("localized route identity", () => {
       localizedPath("zh", { kind: "flagship" }, "verification-acceptance"),
     ).toBe("/zh/cognitiveos/verifiable-agent-actions#verification-acceptance");
   });
+
+  it("keeps research, lab, and content paths behind one route contract", () => {
+    expect(pagePath("zh", "lab")).toBe("/zh/lab");
+    expect(
+      contentPath("en", {
+        kind: "cognitiveos",
+        slug: "verifiable-agent-actions",
+      }),
+    ).toBe(flagshipPath("en"));
+    expect(
+      contentPath("zh", {
+        kind: "article",
+        slug: "testing-bilingual-content",
+      }),
+    ).toBe(articlePath("zh", "testing-bilingual-content"));
+    expect(
+      contentPath("en", {
+        kind: "project",
+        slug: "evidence-first-cli",
+      }),
+    ).toBe(projectPath("en", "evidence-first-cli"));
+  });
 });
 
 describe("metadata indexing policy", () => {
+  it("accepts only a clean HTTPS origin for publication", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://research.example.dev";
+    expect(hasPublishableOrigin()).toBe(true);
+
+    process.env.NEXT_PUBLIC_SITE_URL = "https://research.example.dev/path";
+    expect(hasPublishableOrigin()).toBe(false);
+
+    process.env.NEXT_PUBLIC_SITE_URL = "https://localhost";
+    expect(hasPublishableOrigin()).toBe(false);
+  });
+
   it("emits exact canonical and hreflang values", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://notes.example.dev";
     const metadata = createLocalizedMetadata({
@@ -73,6 +115,42 @@ describe("metadata indexing policy", () => {
 });
 
 describe("article schema policy", () => {
+  it("publishes real research while keeping samples out of publication feeds", () => {
+    const published = articleFrontmatterSchema.parse({
+      schemaVersion: 1,
+      kind: "article",
+      locale: "en",
+      translationKey: "real-research",
+      slug: "real-research",
+      title: "A real systems research article",
+      description:
+        "A complete description for a real systems research article publication test.",
+      publishedAt: "2026-07-20",
+      status: "published",
+      placeholder: false,
+      featured: false,
+      pairingSnapshot: "real-research-v1",
+      primaryTopic: "system-design",
+      tags: ["system-design"],
+      hero: {
+        src: "/images/projects/constraint-map.svg",
+        alt: "Abstract constraint map",
+        license: "UNLICENSED",
+        provenance: "Local",
+      },
+      anchors: ["example"],
+    });
+    const sample = articleFrontmatterSchema.parse({
+      ...published,
+      status: "sample",
+      placeholder: true,
+      claimLevel: "sample",
+    });
+
+    expect(isPublishableFrontmatter(published)).toBe(true);
+    expect(isPublishableFrontmatter(sample)).toBe(false);
+  });
+
   it("rejects sample status without placeholder", () => {
     const result = articleFrontmatterSchema.safeParse({
       schemaVersion: 1,
@@ -99,5 +177,41 @@ describe("article schema policy", () => {
       claimLevel: "sample",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("rejects impossible dates and backwards revisions", () => {
+    const base = {
+      schemaVersion: 1,
+      kind: "article",
+      locale: "en",
+      translationKey: "invalid-date",
+      slug: "invalid-date",
+      title: "Invalid date article",
+      description:
+        "This object intentionally violates the publication date contract.",
+      publishedAt: "2026-99-99",
+      updatedAt: "2025-01-01",
+      status: "published",
+      placeholder: false,
+      featured: false,
+      pairingSnapshot: "invalid-date-v1",
+      primaryTopic: "testing",
+      tags: ["testing"],
+      hero: {
+        src: "/images/projects/constraint-map.svg",
+        alt: "Abstract image",
+        license: "UNLICENSED",
+        provenance: "Local",
+      },
+      anchors: ["example"],
+    };
+
+    expect(articleFrontmatterSchema.safeParse(base).success).toBe(false);
+    expect(
+      articleFrontmatterSchema.safeParse({
+        ...base,
+        publishedAt: "2026-07-20",
+      }).success,
+    ).toBe(false);
   });
 });

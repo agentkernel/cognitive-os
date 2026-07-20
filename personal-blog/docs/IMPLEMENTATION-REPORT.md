@@ -1,141 +1,116 @@
-# Personal blog implementation report
+# CognitiveOS Research implementation report
 
-- Completed: 2026-07-20
+- Refactor completed: 2026-07-20
 - Site root: `personal-blog/`
-- Parent source snapshot: `b626e88be3b985399051e6e7624223b9cb38e7c6`
+- Parent research snapshot: `b626e88be3b985399051e6e7624223b9cb38e7c6`
 - Deployment performed: no
+- CognitiveOS normative assets changed: none
 
 ## Delivered
 
-- Next.js 16.2 App Router site with complete `/zh` and `/en` navigation.
-- Local, Zod-validated MDX with explicit bilingual registry and shared anchors.
-- Home, article, project, CognitiveOS, and about pages; RSS, sitemap, robots,
-  metadata, hreflang, Open Graph, JSON-LD, 404, error, and empty states.
-- One complete bilingual CognitiveOS article, three paired sample articles,
-  four paired sample projects, a placeholder profile, and a sample timeline.
-- Two complete CognitiveOS research sourcebooks with 18 traced facts each.
-- Five responsive semantic React/SVG diagrams with captions and text
-  alternatives.
-- A compact, explicitly non-live Governed Flow Thread gives the homepage a
-  subject-specific visual and semantic signature.
-- Two locally stored AI-generated abstract visuals in AVIF/WebP plus a local
-  PNG Open Graph asset and provenance records.
-- Locally bundled OFL-1.1 Source Serif 4, Recursive, and Noto Serif SC fonts.
-- Responsive code blocks with copy feedback, GFM tables, footnotes, mobile
-  article indexes, article-footer navigation, and mobile diagram summaries.
+- Repositioned the site from an unsigned portfolio prototype to a bilingual
+  CognitiveOS research publication with an understated author position.
+- Rebuilt the primary journey around one thesis, one Governed Flow Thread
+  signature, the flagship essay, a visual research atlas, and a public source
+  ledger.
+- Removed placeholder identity, timeline, articles, and projects from the
+  primary experience. All seven paired sample sets now live under noindex Lab;
+  the legacy Projects index redirects there.
+- Added `/{locale}/cognitiveos/sources`, publishing both 18-fact sourcebooks,
+  snapshot hashes, source tiers, open discrepancies, and wording guardrails.
+- Split the former 2,286-line stylesheet into Tailwind v4 semantic tokens,
+  base, shell, content, and diagram layers. Restored list markers, persistent
+  prose links, fluid type/spacing, touch targets, dark-surface focus, and
+  readable diagram fallbacks.
+- Kept full diagrams in the wide Research atlas. Long-form MDX uses compact
+  summaries linked to the corresponding atlas figure.
+- Replaced the all-MDX registry with a metadata-only manifest and a static,
+  per-entry loader map. Publication, localized content paths, RSS, sitemap,
+  metadata, and translation pairing share one contract.
+- Added locale-aware dates, visible topic tags, source links, improved article
+  follow-up navigation, stricter ISO date/origin validation, and article-level
+  JSON-LD for every publishable research item.
+- Hardened the mobile drawer with viewport-correct backdrop behavior, short
+  screen scrolling, background inerting, focus trap, Escape support, and focus
+  restoration for every close path.
+- Localized code/table accessible names and added hydration-gated copy
+  enhancement. Static content stays usable before JavaScript.
+- Added CSP, frame denial, nosniff, referrer, permissions, COOP/CORP, and
+  conditional HSTS response headers.
+- Reduced the Chinese font path from two global full faces to one 400 face used
+  only by long-form prose; shell and navigation use system CJK fonts.
 
 ## Executed checks
 
-`pnpm check` passed:
+`pnpm check` / its constituent commands:
 
-- ESLint CLI
-- strict `tsc --noEmit`
-- Vitest: 2 files, 9 tests
-- content checks: 4 paired article entries, 4 paired projects, 18 traced facts
-  per sourcebook
-- static import/boundary checks: 16 MDX imports, 4 intentional Client
-  Components
-- Next.js production build: 34 generated static/SSG routes
-- static generation capped at two workers to avoid Windows worker resource
-  crashes; Playwright starts the already completed build rather than rebuilding
-  it a second time
-- development-route smoke check: `/zh/cognitiveos` and `/zh/articles` return
-  200; an unknown locale and unknown article return 404 without relying on
-  `dynamicParams=false`
+- ESLint: passed with no warnings.
+- strict `tsc --noEmit`: passed.
+- Vitest: 2 files, 14 tests passed.
+- content contract: 4 paired article sets, 4 paired project sets, 18 facts per
+  sourcebook.
+- boundary check: 16 statically mapped MDX loaders and exactly 4 intentional
+  Client Components.
+- Next.js production build: passed; 38 generated static/SSG pages.
 
-`pnpm test:e2e` passed 17 Chromium scenarios:
+`pnpm test:e2e:against-build`:
 
-- permanent root redirect
-- keyboard skip link and primary navigation
-- compact homepage Governed Flow semantics
-- equivalent-language routing and anchors
-- flagship semantics and all five diagrams
-- responsive CognitiveOS manual sidebar and compact mobile index
-- local generated images and local font requests
-- mobile-menu focus trap, Escape, and focus return
-- 375, 768, and 1440 viewport screenshots and overflow checks
-- enforced long-form line measure, font size, and line-height checks
-- browser console/page-error checks
-- reduced-motion and forced-colors behavior
-- RSS, sitemap, robots, sample noindex, and invalid-route 404s
-- mobile GFM table, code-copy feedback, article index, and footnote containment
-- axe WCAG A/AA scans for home and flagship routes
+- 22/22 Chromium scenarios passed in the production build.
+- Covered root redirect, primary product journey, Lab isolation, keyboard
+  navigation, shared bilingual anchors, source/manual navigation, mobile
+  drawer close paths, copy feedback, responsive diagrams, reduced motion,
+  forced colors, security headers, RSS/sitemap/robots, and invalid routes.
+- Automated axe scans passed for Home, Essays, Research, Sources, Method, Lab,
+  flagship, and sample-detail templates with WCAG 2.0/2.1/2.2 A/AA tags.
+- Responsive overflow/screenshots passed at 375, 768, 1024, and 1440 CSS
+  pixels.
 
-Screenshots were generated under the ignored directory:
+Generated evidence remains ignored:
 
-- `artifacts/evidence/screenshots/home-375.png`
-- `artifacts/evidence/screenshots/home-768.png`
-- `artifacts/evidence/screenshots/home-1440.png`
-- `artifacts/evidence/screenshots/article-375.png`
-- `artifacts/evidence/screenshots/article-1440.png`
-- `artifacts/evidence/screenshots/cognitiveos-overview-375.png`
-- `artifacts/evidence/screenshots/cognitiveos-overview-1440.png`
+- `artifacts/evidence/screenshots/`
+- `artifacts/evidence/playwright-results/`
+- `artifacts/evidence/playwright-report/`
 
-## Independent-root proof
+This is executed local evidence, not Profile-conformance evidence.
 
-The source tree was copied to a newly created directory outside the repository.
-From that directory, the following completed successfully:
+## Publication and evidence boundary
 
-- `pnpm install --frozen-lockfile`
-- workspace-root resolution to the isolated directory
-- lint
-- strict typecheck
-- 9 Vitest tests
-- content and import-boundary checks
-- 33-route production build
-
-The temporary copy was removed after the successful run. The parent workspace
-listing did not include `personal-blog`, and the final parent-only Git status
-was clean.
-
-## Placeholder material
-
-The following remain intentionally marked `placeholder: true`, visibly labeled
-as “示例内容 / Sample content,” `noindex`, and excluded from RSS/sitemap:
-
-- author identity, location, contact, and timeline
-- three ordinary technical articles
-- four project case studies
-
-No real employer, client, award, revenue, user-count, or performance claim was
-invented. No `Person` structured data is emitted.
-
-## CognitiveOS evidence boundary
-
-The content is pinned to the parent snapshot above:
+The site still reports the pinned snapshot:
 
 - 273 specified requirements
-- 55 registered errors
-- 56 schemas with filename `$id` values
+- 55 registered error codes
+- 56 schemas
 - 76 declarative vectors, all `not-run`
 - 0 REQ-level implementation claims
 - 0 behavior-executed vectors
 - 0 conformant Profiles
 
-M1 is in progress. Lane-CTR contract artifacts exist, but they are not promoted
-to REQ-level implementation, executed-vector, or Profile-conformance claims.
+The UI refactor does not change those facts and does not read the parent
+repository at build or runtime. Sourcebooks remain local, pinned research
+copies.
 
-## Vercel setup
+## Deployment
 
-1. Import the parent repository without changing its workspace files.
-2. Set Root Directory to `personal-blog`.
-3. Use Node.js 22 and the package-pinned pnpm 10.33.2.
-4. Install with `pnpm install --frozen-lockfile`.
-5. Build with `pnpm build`.
-6. Set `NEXT_PUBLIC_SITE_URL` to the final HTTPS origin.
-7. Leave Vercel Analytics disabled unless the owner explicitly opts in.
+1. Use `personal-blog` as the deployment root.
+2. Use Node.js 22 and pinned pnpm 10.33.2.
+3. Install with `pnpm install --frozen-lockfile`.
+4. Build with `pnpm build`.
+5. Set `NEXT_PUBLIC_SITE_URL` to the final clean HTTPS origin.
+6. Leave analytics disabled unless explicitly approved.
 
-Until a valid HTTPS origin is configured, metadata remains `noindex` and
-`robots.txt` disallows crawling.
+Without a valid HTTPS origin, metadata remains `noindex` and robots disallows
+crawling.
 
-## Remaining risks and manual work
+## Remaining risk and manual work
 
-- Replace all placeholder identity and project material with owner-approved
-  facts before treating the site as a real portfolio.
-- Choose a repository/content license; the project currently remains private
-  and `UNLICENSED`.
-- Confirm publication rights under the image-generation service terms.
-- Complete the documented NVDA/real-browser, 200–400% zoom, pronunciation, and
-  final human translation review after identity replacement.
-- `globalNotFound` is a documented Next.js experimental convention and should
-  be rechecked during future Next upgrades.
+- The project is `UNLICENSED`; choose public code/content terms before release.
+- Confirm image-generation publication rights.
+- Execute the documented NVDA/real-browser, 200–400% zoom, pronunciation, and
+  human bilingual review; automated axe does not replace them.
+- Root CI still excludes this isolated workspace. `.github/workflows/` belongs
+  to Lane-CFR and was intentionally not changed.
+- `globalNotFound` remains an experimental Next.js convention and should be
+  rechecked during framework upgrades.
+- Next 16.2.10 currently carries a moderate indirect PostCSS advisory; no
+  untrusted CSS ingestion path exists, but the dependency should be updated
+  with the next safe Next.js patch.

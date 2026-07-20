@@ -5,6 +5,9 @@ import {
   standardContextStages,
 } from "@/data/cognitiveos";
 import type { Locale } from "@/i18n/config";
+import { pagePath } from "@/i18n/routes";
+
+type DiagramMode = "full" | "summary";
 
 type DiagramFrameProps = {
   id: string;
@@ -13,6 +16,8 @@ type DiagramFrameProps = {
   source: string;
   longText: string;
   mobileItems: readonly string[];
+  mode: DiagramMode;
+  fullHref: string;
   children: React.ReactNode;
 };
 
@@ -23,15 +28,30 @@ function DiagramFrame({
   source,
   longText,
   mobileItems,
+  mode,
+  fullHref,
   children,
 }: DiagramFrameProps) {
   return (
-    <figure className="semantic-diagram" aria-labelledby={`${id}-caption`}>
+    <figure
+      id={id}
+      className={`semantic-diagram semantic-diagram--${mode}`}
+      aria-labelledby={`${id}-caption`}
+    >
       <div className="diagram-heading">
         <span aria-hidden="true">FIG.</span>
         <h3>{title}</h3>
       </div>
-      <div className="diagram-canvas">{children}</div>
+      {mode === "full" ? (
+        <div
+          className="diagram-canvas"
+          role="region"
+          aria-label={title}
+          tabIndex={0}
+        >
+          {children}
+        </div>
+      ) : null}
       <ol className="diagram-mobile-summary" aria-label={title}>
         {mobileItems.map((item) => (
           <li key={item}>{item}</li>
@@ -41,6 +61,11 @@ function DiagramFrame({
         <span>{caption}</span>
         <small>{source}</small>
       </figcaption>
+      {mode === "summary" ? (
+        <a className="diagram-full-link" href={fullHref}>
+          Open full diagram / 打开宽版图解
+        </a>
+      ) : null}
       <details className="diagram-transcript">
         <summary>{title} — text alternative</summary>
         <p>{longText}</p>
@@ -49,7 +74,13 @@ function DiagramFrame({
   );
 }
 
-export function OverallArchitectureDiagram({ locale }: { locale: Locale }) {
+export function OverallArchitectureDiagram({
+  locale,
+  mode = "full",
+}: {
+  locale: Locale;
+  mode?: DiagramMode;
+}) {
   const zh = locale === "zh";
   const layers = zh
     ? [
@@ -98,6 +129,8 @@ export function OverallArchitectureDiagram({ locale }: { locale: Locale }) {
           ? ["横切：Context Engineering", "独立：实时安全内核"]
           : ["Cross-cutting: Context Engineering", "Separate: real-time safety kernel"]),
       ]}
+      mode={mode}
+      fullHref={`${pagePath(locale, "cognitiveos")}#overall-${locale}`}
     >
       <svg
         className="diagram-svg"
@@ -155,7 +188,13 @@ export function OverallArchitectureDiagram({ locale }: { locale: Locale }) {
   );
 }
 
-export function AuthorityBoundaryDiagram({ locale }: { locale: Locale }) {
+export function AuthorityBoundaryDiagram({
+  locale,
+  mode = "full",
+}: {
+  locale: Locale;
+  mode?: DiagramMode;
+}) {
   const zh = locale === "zh";
   const proposal = zh
     ? ["LLM 候选", "检索集合", "排序 / 摘要", "操作匹配提议"]
@@ -184,6 +223,8 @@ export function AuthorityBoundaryDiagram({ locale }: { locale: Locale }) {
           : "On the left, LLMs, retrievers, and rankers produce candidates or proposals. Across the authority boundary, schema, authorization, CAS, transitions, hard budgets, idempotency, fencing, and commit gates check the input. The left side cannot emit authorization decisions or commits."
       }
       mobileItems={[...proposal, "↓ authority boundary", ...authority]}
+      mode={mode}
+      fullHref={`${pagePath(locale, "cognitiveos")}#boundary-${locale}`}
     >
       <svg
         className="diagram-svg"
@@ -234,7 +275,13 @@ export function AuthorityBoundaryDiagram({ locale }: { locale: Locale }) {
   );
 }
 
-export function GovernedFlowDiagram({ locale }: { locale: Locale }) {
+export function GovernedFlowDiagram({
+  locale,
+  mode = "full",
+}: {
+  locale: Locale;
+  mode?: DiagramMode;
+}) {
   const zh = locale === "zh";
   const labels = zh
     ? ["Context", "提议", "持久 Intent", "授权", "Effect", "对账", "验证", "验收"]
@@ -265,6 +312,8 @@ export function GovernedFlowDiagram({ locale }: { locale: Locale }) {
           ? "未知分支：OUTCOME_UNKNOWN → 对账 → 补偿 / 隔离"
           : "Unknown branch: OUTCOME_UNKNOWN → Reconcile → compensation / quarantine",
       ]}
+      mode={mode}
+      fullHref={`${pagePath(locale, "cognitiveos")}#flow-${locale}`}
     >
       <svg
         className="diagram-svg"
@@ -312,7 +361,13 @@ export function GovernedFlowDiagram({ locale }: { locale: Locale }) {
   );
 }
 
-export function LifecycleDomainsDiagram({ locale }: { locale: Locale }) {
+export function LifecycleDomainsDiagram({
+  locale,
+  mode = "full",
+}: {
+  locale: Locale;
+  mode?: DiagramMode;
+}) {
   const zh = locale === "zh";
   return (
     <DiagramFrame
@@ -340,6 +395,8 @@ export function LifecycleDomainsDiagram({ locale }: { locale: Locale }) {
       mobileItems={lifecycleDomains.map(
         (domain) => `${domain.id}: ${domain.states.join(" → ")}`,
       )}
+      mode={mode}
+      fullHref={`${pagePath(locale, "cognitiveos")}#lifecycles-${locale}`}
     >
       <svg
         className="diagram-svg diagram-svg--dense"
@@ -386,7 +443,13 @@ export function LifecycleDomainsDiagram({ locale }: { locale: Locale }) {
   );
 }
 
-export function ContextPipelineDiagram({ locale }: { locale: Locale }) {
+export function ContextPipelineDiagram({
+  locale,
+  mode = "full",
+}: {
+  locale: Locale;
+  mode?: DiagramMode;
+}) {
   const zh = locale === "zh";
   const standardLabels = zh
     ? [
@@ -426,6 +489,8 @@ export function ContextPipelineDiagram({ locale }: { locale: Locale }) {
           (stage, index) => `${index + 1}. ${stage} · Core: ${coreContextStages[index]}`,
         ),
       ]}
+      mode={mode}
+      fullHref={`${pagePath(locale, "cognitiveos")}#context-pipeline-${locale}`}
     >
       <svg
         className="diagram-svg diagram-svg--dense"

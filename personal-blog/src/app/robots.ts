@@ -6,13 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   const publishable = hasPublishableOrigin();
   return {
     rules: publishable
-      ? [
-          {
-            userAgent: "*",
-            allow: "/",
-            disallow: ["/zh/about", "/en/about", "/zh/projects", "/en/projects"],
-          },
-        ]
+      ? [{ userAgent: "*", allow: "/" }]
       : [{ userAgent: "*", disallow: "/" }],
     sitemap: absoluteUrl("/sitemap.xml"),
     host: publishable ? absoluteUrl("/") : undefined,

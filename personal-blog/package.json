@@ -25,7 +25,8 @@
     "test:content": "tsx scripts/check-content.ts && tsx scripts/check-links.ts",
     "test:e2e": "pnpm build && playwright test",
     "test:e2e:against-build": "playwright test",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:content && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:content && pnpm build",
+    "verify": "pnpm check && pnpm test:e2e:against-build"
   },
   "dependencies": {
     "@fontsource-variable/recursive": "5.3.0",

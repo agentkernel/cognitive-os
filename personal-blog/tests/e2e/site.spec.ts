@@ -15,6 +15,47 @@ test("root uses a permanent explicit redirect", async ({ request }) => {
   expect(response.headers().location).toBe("/zh");
 });
 
+test("primary journey presents CognitiveOS research without sample material", async ({
+  page,
+}) => {
+  await page.goto("/zh");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Agent 可以提出完成，但不能自行决定完成。",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("示例内容", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "主导航" }).getByRole("link", {
+      name: "项目",
+    }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Lab" })).toHaveAttribute(
+    "href",
+    "/zh/lab",
+  );
+});
+
+test("lab contains samples but stays outside publication surfaces", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/en/lab");
+  await expect(page.getByRole("heading", { level: 1, name: "Lab" })).toBeVisible();
+  await expect(page.getByText("Sample content", { exact: true }).first()).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex.*follow/,
+  );
+
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  const rss = await (await request.get("/en/rss.xml")).text();
+  expect(sitemap).not.toContain("/lab");
+  expect(sitemap).not.toContain("/projects/");
+  expect(rss).not.toContain("designing-failure-semantics");
+});
+
 test("keyboard navigation reaches the skip link and primary route", async ({ page }) => {
   await page.goto("/zh");
   await page.keyboard.press("Tab");
@@ -22,7 +63,10 @@ test("keyboard navigation reaches the skip link and primary route", async ({ pag
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 
-  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "文章" }).focus();
+  await page
+    .getByRole("navigation", { name: "主导航" })
+    .getByRole("link", { name: "Essays" })
+    .focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/zh\/articles$/);
 });
@@ -70,7 +114,9 @@ test("flagship renders complete governance semantics and five diagrams", async (
   await expect(page.getByText("CANDIDATE_COMPLETE", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("OUTCOME_UNKNOWN", { exact: false }).first()).toBeVisible();
   await expect(page.locator("figure.semantic-diagram")).toHaveCount(5);
-  await expect(page.getByText("Never live progress")).toBeVisible();
+  await expect(
+    page.getByText("Never live progress", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".article-snapshot")).toContainText("b626e88");
   await expect(page.locator(".article-snapshot")).toContainText("76");
   await expect(page.locator(".article-snapshot")).toContainText(
@@ -130,12 +176,12 @@ test("CognitiveOS uses a responsive manual-style sidebar", async ({ page }) => {
   }
 });
 
-test("generated visuals and licensed fonts are served locally", async ({ page }) => {
-  await page.goto("/zh");
-  await expect(page.locator('img[src*="governed-trace-hero"]').first()).toBeVisible();
-  await page.goto("/en/cognitiveos");
+test("research visual and licensed reading fonts are served locally", async ({
+  page,
+}) => {
+  await page.goto("/en/cognitiveos/verifiable-agent-actions");
   await expect(
-    page.locator('img[src*="orthogonal-lifecycles-hero"]').first(),
+    page.locator('img[src*="governed-trace-hero"]').first(),
   ).toBeVisible();
 
   const localAssets = await page.evaluate(async () => {
@@ -171,8 +217,59 @@ test("mobile navigation traps focus and closes with Escape", async ({ page }) =>
   await expectNoPageOverflow(page);
 });
 
+test("every mobile navigation close path returns focus and keeps content reachable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 520 });
+  await page.goto("/en");
+  const trigger = page.getByRole("button", { name: "Open navigation" });
+
+  await trigger.click();
+  await page.getByRole("button", { name: "Close navigation" }).last().click();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  const hitTarget = await page.evaluate(() => {
+    const element = document.elementFromPoint(340, 260) as HTMLElement | null;
+    return {
+      tag: element?.tagName,
+      className: element?.className,
+      parentClassName: element?.parentElement?.className,
+    };
+  });
+  expect(hitTarget).toEqual({
+    tag: "BUTTON",
+    className: "mobile-navigation__backdrop",
+    parentClassName: "mobile-navigation__layer",
+  });
+  await page.mouse.click(340, 260);
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  const panel = page.getByRole("dialog", { name: "Mobile navigation" });
+  await expect(panel).toHaveCSS("overflow-y", "auto");
+});
+
+test("prose restores list markers, persistent links, and readable diagram fallbacks", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.goto("/en/cognitiveos/verifiable-agent-actions");
+
+  const orderedList = page.locator(".prose > ol").first();
+  await expect(orderedList).toHaveCSS("list-style-type", "decimal");
+
+  const proseLink = page.locator(".prose a").first();
+  if ((await proseLink.count()) > 0) {
+    await expect(proseLink).not.toHaveCSS("text-decoration-line", "none");
+  }
+
+  await expect(page.locator(".semantic-diagram .diagram-canvas").first()).toBeHidden();
+  await expect(page.locator(".semantic-diagram .diagram-mobile-summary").first()).toBeVisible();
+});
+
 test("responsive screenshots stay within the page viewport", async ({ page }) => {
-  for (const width of [375, 768, 1440]) {
+  for (const width of [375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
     await page.goto("/zh");
     await expectNoPageOverflow(page);
@@ -226,7 +323,7 @@ test("long-form typography keeps a comfortable measure and rhythm", async ({
     name: "Article navigation",
   });
   await expect(
-    articleNavigation.getByRole("link", { name: "Back to CognitiveOS" }),
+    articleNavigation.getByRole("link", { name: "Back to Research" }),
   ).toBeVisible();
   await expect(
     articleNavigation.getByRole("link", { name: "Back to top" }),
@@ -260,7 +357,7 @@ test("reduced motion removes meaningful transition duration", async ({ browser }
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.goto("/en");
-  const duration = await page.locator(".primary-link").evaluate((element) => {
+  const duration = await page.locator(".primary-action").evaluate((element) => {
     const style = getComputedStyle(element);
     const toMilliseconds = (value: string) => {
       const first = value.split(",")[0].trim();
@@ -282,7 +379,7 @@ test("forced-colors mode preserves a visible focus indicator", async ({ page }) 
   await page.emulateMedia({ forcedColors: "active" });
   await page.goto("/en");
   const primaryLink = page.getByRole("link", {
-    name: "Read the CognitiveOS flagship",
+    name: "Read the full design guide",
   });
   await primaryLink.focus();
   const focusStyle = await primaryLink.evaluate((element) => {
@@ -318,6 +415,21 @@ test("RSS, sitemap, and robots expose only safe publication surfaces", async ({
   expect(await robots.text()).toContain("Disallow: /");
 });
 
+test("production responses include the static security baseline", async ({
+  request,
+}) => {
+  const response = await request.get("/en");
+  expect(response.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response.headers()["x-frame-options"]).toBe("DENY");
+  expect(response.headers()["referrer-policy"]).toBe(
+    "strict-origin-when-cross-origin",
+  );
+  expect(response.headers()["permissions-policy"]).toContain("camera=()");
+  expect(response.headers()["content-security-policy"]).toContain(
+    "frame-ancestors 'none'",
+  );
+});
+
 test("sample pages are noindex and invalid routes are 404", async ({ page, request }) => {
   await page.goto("/en/articles/designing-failure-semantics");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
@@ -331,7 +443,7 @@ test("sample pages are noindex and invalid routes are 404", async ({ page, reque
 test("tables, code, and footnotes stay contained on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"], {
-    origin: "http://127.0.0.1:3100",
+    origin: "http://127.0.0.1:3101",
   });
   await page.goto("/en/articles/testing-bilingual-content");
   const mobileToc = page.locator("details.mobile-article-toc");
@@ -342,19 +454,39 @@ test("tables, code, and footnotes stay contained on mobile", async ({ page }) =>
   ).toBeVisible();
   await expect(page.locator(".table-scroll")).toBeVisible();
   await expect(page.locator("pre[tabindex='0']")).toBeVisible();
-  const copyButton = page.getByRole("button", { name: "复制代码 / Copy code" });
+  const copyButton = page.locator("[data-copy-code]").first();
+  await expect(copyButton).toHaveAccessibleName("Copy");
+  await expect(copyButton).toHaveAttribute("data-copy-ready", "true");
   await copyButton.click();
+  await expect(copyButton).toHaveAttribute("data-copy-state", "copied");
   await expect(copyButton).toContainText("Copied");
   await expect(page.locator("[data-footnotes='true']")).toBeVisible();
   await expect(page.locator("[data-footnote-backref]")).toBeVisible();
   await expectNoPageOverflow(page);
 });
 
-test("home and flagship pass automated WCAG A and AA checks", async ({ page }) => {
-  for (const path of ["/en", "/zh/cognitiveos/verifiable-agent-actions"]) {
+test("all publication templates pass automated WCAG A and AA checks", async ({
+  page,
+}) => {
+  for (const path of [
+    "/en",
+    "/en/articles",
+    "/en/cognitiveos",
+    "/en/cognitiveos/sources",
+    "/en/about",
+    "/en/lab",
+    "/en/cognitiveos/verifiable-agent-actions",
+    "/en/articles/testing-bilingual-content",
+  ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .withTags([
+        "wcag2a",
+        "wcag2aa",
+        "wcag21a",
+        "wcag21aa",
+        "wcag22aa",
+      ])
       .analyze();
     expect(results.violations, path).toEqual([]);
   }
