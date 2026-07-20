@@ -83,6 +83,51 @@ pub const DIGEST_MISMATCH: RegisteredError = RegisteredError {
     retryable: false,
 };
 
+/// `CONTEXT_AUTH_DENIED`: context item is not authorized for principal and
+/// purpose (also the isomorphic protected-read denial shape, M3 gate).
+pub const CONTEXT_AUTH_DENIED: RegisteredError = RegisteredError {
+    code: "CONTEXT_AUTH_DENIED",
+    category: "auth",
+    retryable: false,
+};
+
+/// `CONTEXT_INCOMPLETE`: required context set cannot be closed.
+pub const CONTEXT_INCOMPLETE: RegisteredError = RegisteredError {
+    code: "CONTEXT_INCOMPLETE",
+    category: "context",
+    retryable: true,
+};
+
+/// `CONTEXT_BUDGET_EXCEEDED`: hard budget cannot contain required context.
+pub const CONTEXT_BUDGET_EXCEEDED: RegisteredError = RegisteredError {
+    code: "CONTEXT_BUDGET_EXCEEDED",
+    category: "context",
+    retryable: false,
+};
+
+/// `AUTH_CAPABILITY_ATTENUATION_VIOLATION`: derived capability expands a
+/// parent bound.
+pub const AUTH_CAPABILITY_ATTENUATION_VIOLATION: RegisteredError = RegisteredError {
+    code: "AUTH_CAPABILITY_ATTENUATION_VIOLATION",
+    category: "auth",
+    retryable: false,
+};
+
+/// `AUTH_CAPABILITY_EXPIRED`: capability lease is not currently valid.
+pub const AUTH_CAPABILITY_EXPIRED: RegisteredError = RegisteredError {
+    code: "AUTH_CAPABILITY_EXPIRED",
+    category: "auth",
+    retryable: true,
+};
+
+/// `CONTEXT_RESOLUTION_STAGNATED`: bounded resolution attempts made no
+/// admissible information gain.
+pub const CONTEXT_RESOLUTION_STAGNATED: RegisteredError = RegisteredError {
+    code: "CONTEXT_RESOLUTION_STAGNATED",
+    category: "discovery",
+    retryable: false,
+};
+
 /// Typed cause of a rejected governed operation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RejectionKind {
@@ -213,6 +258,12 @@ mod tests {
             EFFECT_OUTCOME_UNKNOWN,
             RESOURCE_BUDGET_EXHAUSTED,
             DIGEST_MISMATCH,
+            CONTEXT_AUTH_DENIED,
+            CONTEXT_INCOMPLETE,
+            CONTEXT_BUDGET_EXCEEDED,
+            AUTH_CAPABILITY_ATTENUATION_VIOLATION,
+            AUTH_CAPABILITY_EXPIRED,
+            CONTEXT_RESOLUTION_STAGNATED,
         ] {
             let marker = format!("- code: {}", expected.code);
             let start = registry
