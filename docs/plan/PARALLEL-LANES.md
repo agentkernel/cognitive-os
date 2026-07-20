@@ -50,7 +50,7 @@ flowchart LR
 | `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr`（待建） | 未启动（下一个） |
 | `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `lane/cfr`（待建） | 未启动 |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（待建） | 阻塞于 M1 |
-| `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（待建） | 阻塞于 CTR |
+| `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc` | 客户端骨架已交付（20260720）；M5 集成待 Lane-RUN gate |
 | `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `lane/run`（待建） | 阻塞于 M4 |
 | `docs/`（standards/plan/traceability/checkpoints/prompts）、根 README/AGENTS | Lane-DOC | 随车道 PR | 持续 |
 | `apps/cognitiveos-console/`、`docs/platforms/` | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效；实现未激活 |

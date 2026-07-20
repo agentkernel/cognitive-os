@@ -13,7 +13,9 @@
 
 import { CLIENT_CHANNELS } from "@cognitiveos/sdk-ts";
 
-/** Shell verbs planned for M5. */
+export * from "./session.js";
+
+/** Shell verbs (the CLI front end binds them at M5). */
 export const SHELL_VERBS = ["propose", "preview", "attach", "detach", "cancel", "watch"] as const;
 
 /** The Shell binds the task channel only; management uses admin-cli/Console. */
