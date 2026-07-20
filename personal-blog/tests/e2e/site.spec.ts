@@ -27,6 +27,16 @@ test("keyboard navigation reaches the skip link and primary route", async ({ pag
   await expect(page).toHaveURL(/\/zh\/articles$/);
 });
 
+test("homepage carries the compact governed-flow signature", async ({ page }) => {
+  await page.goto("/en");
+  const compactFlow = page.locator(".governed-thread--compact");
+  await expect(compactFlow).toBeVisible();
+  await expect(compactFlow.locator("ol > li")).toHaveCount(8);
+  await expect(compactFlow).toContainText("Never live progress");
+  await expect(compactFlow).toContainText("OUTCOME_UNKNOWN");
+  await expectNoPageOverflow(page);
+});
+
 test("language switching uses an equivalent registry route and shared anchors", async ({
   page,
 }) => {

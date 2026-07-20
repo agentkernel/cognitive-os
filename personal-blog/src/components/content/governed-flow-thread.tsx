@@ -23,13 +23,22 @@ const stages = {
   ],
 } as const;
 
-export function GovernedFlowThread({ locale }: { locale: Locale }) {
+export function GovernedFlowThread({
+  locale,
+  variant = "full",
+}: {
+  locale: Locale;
+  variant?: "full" | "compact";
+}) {
   const zh = locale === "zh";
   return (
-    <aside className="governed-thread" aria-labelledby={`flow-thread-${locale}`}>
+    <aside
+      className={`governed-thread governed-thread--${variant}`}
+      aria-labelledby={`flow-thread-${locale}-${variant}`}
+    >
       <header>
         <p>{zh ? "静态语义模型" : "Static semantic model"}</p>
-        <h2 id={`flow-thread-${locale}`}>Governed Flow Thread</h2>
+        <h2 id={`flow-thread-${locale}-${variant}`}>Governed Flow Thread</h2>
         <span>{zh ? "不是实时进度" : "Never live progress"}</span>
       </header>
       <ol>

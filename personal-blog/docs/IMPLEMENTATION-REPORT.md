@@ -16,6 +16,8 @@
 - Two complete CognitiveOS research sourcebooks with 18 traced facts each.
 - Five responsive semantic React/SVG diagrams with captions and text
   alternatives.
+- A compact, explicitly non-live Governed Flow Thread gives the homepage a
+  subject-specific visual and semantic signature.
 - Two locally stored AI-generated abstract visuals in AVIF/WebP plus a local
   PNG Open Graph asset and provenance records.
 - Locally bundled OFL-1.1 Source Serif 4, Recursive, and Noto Serif SC fonts.
@@ -38,10 +40,11 @@
   crashes; Playwright starts the already completed build rather than rebuilding
   it a second time
 
-`pnpm test:e2e` passed 16 Chromium scenarios:
+`pnpm test:e2e` passed 17 Chromium scenarios:
 
 - permanent root redirect
 - keyboard skip link and primary navigation
+- compact homepage Governed Flow semantics
 - equivalent-language routing and anchors
 - flagship semantics and all five diagrams
 - responsive CognitiveOS manual sidebar and compact mobile index

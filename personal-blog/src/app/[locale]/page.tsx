@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { authorProfile } from "@content/data/profile";
 import { ContentList } from "@/components/content/content-list";
+import { GovernedFlowThread } from "@/components/content/governed-flow-thread";
 import { PageScaffold } from "@/components/layout/page-scaffold";
 import { JsonLd } from "@/components/seo/json-ld";
 import { otherLocale, requireLocale } from "@/i18n/config";
@@ -94,6 +95,13 @@ export default async function HomePage({
               : "Local AI-generated abstraction · no text, logo, or fake UI · AVIF/WebP"}
           </figcaption>
         </figure>
+      </section>
+
+      <section
+        className="home-flow-section"
+        aria-label={locale === "zh" ? "受治理任务线摘要" : "Governed flow summary"}
+      >
+        <GovernedFlowThread locale={locale} variant="compact" />
       </section>
 
       <section className="home-section" aria-labelledby="home-articles">
