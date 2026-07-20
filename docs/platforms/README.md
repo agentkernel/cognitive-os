@@ -19,6 +19,7 @@
 - [桌面平台产品决策记录](./platform-decision-log.md)
 - [移动平台产品决策记录](./mobile-platform-decision-log.md)
 - [Windows v1 产品设计](../../apps/cognitiveos-console/docs/windows-v1-scope.md)
+- [Agent Hub 平台 parity](./agent-hub-platform-parity.md)：Direct Takeover 接管能力的跨平台差异（canonical 设计在 [apps/cognitiveos-console/docs/agent-hub/](../../apps/cognitiveos-console/docs/agent-hub/README.md)）
 
 ## 共同不可降级边界
 

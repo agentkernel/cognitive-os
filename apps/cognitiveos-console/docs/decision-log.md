@@ -5,6 +5,8 @@
 > 日期：2026-07-20
 >
 > 地位：Informative。本文记录 Console 产品层决策，不新增或修改 CognitiveOS 的 REQ、schema、transition table 或 conformance vector。
+>
+> Agent Hub 关系：Agent Hub 决策用独立 `CONSOLE-AGENTHUB-V1-DEC-*` 命名空间，记录于 [agent-hub/decisions/decision-log.md](./agent-hub/decisions/decision-log.md)，沿用本文 `CONSOLE-V2-DEC-*` 基线（如 persona、两模式区分），不改写或重编号本文决策。
 
 ## 1. 使用方式
 

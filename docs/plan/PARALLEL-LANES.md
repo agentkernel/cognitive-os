@@ -39,9 +39,9 @@ flowchart LR
 
 ### 2.1 Lane-CON 激活前文档例外
 
-2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `docs/platforms/` 与 `apps/cognitiveos-console/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。
+2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `docs/platforms/` 与 `apps/cognitiveos-console/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。同一例外覆盖 Agent Hub / 直连接管的 canonical 文档（`apps/cognitiveos-console/docs/agent-hub/`）及其开发计划与提示词（`docs/plan/agent-hub/`、`docs/plan/agent-hub-development-plan.md`、`docs/prompts/agent-hub/`）。
 
-该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../platforms/README.md#console-实现-gate) 为准。
+该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../platforms/README.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
 ## 3. 所有权表（当前）
 
@@ -53,7 +53,7 @@ flowchart LR
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（待建） | 阻塞于 CTR |
 | `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `lane/run`（待建） | 阻塞于 M4 |
 | `docs/`（standards/plan/traceability/checkpoints/prompts）、根 README/AGENTS | Lane-DOC | 随车道 PR | 持续 |
-| `apps/cognitiveos-console/`、`docs/platforms/` | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效；实现未激活 |
+| `apps/cognitiveos-console/`、`docs/platforms/`、`docs/plan/agent-hub*`、`docs/prompts/agent-hub/` | Lane-CON（治理文件由 Lane-DOC 协作） | — | informative 文档例外有效；实现未激活；Agent Hub 另需 AGPL 法务 gate |
 | `specs/registry/`、`specs/transitions/`、`conformance/vectors/` | 契约资产：变更一律经 Lane-CTR（向量增补可经 Lane-CFR），走 docs-sync-contract 流程 | — | — |
 
 ## 4. 里程碑 ↔ 车道对照

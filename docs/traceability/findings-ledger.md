@@ -65,7 +65,7 @@
 | IMP-14 | 意图澄清义务按 profile 裁剪 | 已应用（§6.9；R0 放宽为预览义务） | M5 验收（`task-loop-verification.md` §2） |
 | IMP-15 | C2 生态差距承认与激励 | 已应用（§5.2/§21） | — |
 | IMP-16 | 主文档瘦身 | 长期编辑纪律 | Lane-DOC 持续 |
-| IMP-17 | 计数必须每轮实测 | v2.0 revised 采纳 | PROGRESS 一律实测数（本轮：273 REQ/55 码/56 schema/74 向量） |
+| IMP-17 | 计数必须每轮实测 | v2.0 revised 采纳 | PROGRESS 一律实测数（本轮：273 REQ/55 码/56 schema/76 向量） |
 | IMP-18 | 收益声明合同（REQ-PERF-005） | 已登记（四臂+预注册） | M7+ 实测；此前只可声明 hypothesis/non_inferiority |
 
 ## 三、漂移登记（M0 盘点新发现）
@@ -83,6 +83,7 @@
 | D-009 | Lane-CON 与 DEVELOPMENT-PLAN 的实现 gate 指向已不存在的 `PRODUCT-DESIGN §12.6 POC-01~12` | 2026-07-20 改指 `docs/platforms/README.md#console-实现-gate` 及各平台可定位的 Open PoC/GA gate；仍要求真实 API，禁止 mock 冒充 | closed-by-doc-repair |
 | D-010 | F-003 结构变更后，PRODUCT-DESIGN 缺少 docs-sync-contract §2.8 要求的文首漂移登记节/标注 | 2026-07-20 恢复漂移登记节并记录 F-003、D-005/D-007、D-009 影响；不改变 normative 资产 | closed-by-doc-repair |
 | D-011 | `canonical-encoding-and-digest.md` §13 要求 bundle manifest 每资产携带 SemVer，但已登记规范资产（schema/registry/transition）均未声明**每资产** SemVer——标准与资产之间的登记缺口 | M1 Lane-CTR 登记并最小修正：注册式 bundle 程序对每资产统一施加套件机器版本 `0.1.0-draft.1`（`cognitive_contracts::bundle::SPEC_SUITE_VERSION`，双语言常量一致），依据与口径写入 `conformance-evidence.md` §6；待任一资产真实分岔版本时再登记每资产版本（属修正型变更）。原编号 D-007 与 Lane-CON 同日条目撞号，后合并方（CTR）改号为 D-011 | closed-by-M1（决策落档） |
+| D-012 | 向量计数漂移：`AGENTS.md` 目录地图、`DEVELOPMENT-PLAN.md` §M1 范围、本台账 IMP-17 摘要行仍写 74 向量，实测（`pnpm run check:consistency`）为 76，PROGRESS 与 platforms/README 已用 76 | 2026-07-20 Lane-CON 最小修正：三处 74→76 对齐实测（`check-consistency: 273 REQ/55 码/56 schema/76 向量`）；仅修正型文档变更，不改 normative 资产；历史 checkpoint/评审快照按 IMP-17 不回改 | closed-by-doc-repair |
 
 ## 四、复验方法备注
 

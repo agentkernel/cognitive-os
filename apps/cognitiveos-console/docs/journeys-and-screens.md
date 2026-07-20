@@ -5,6 +5,8 @@
 > 范围：Windows v1
 >
 > 约束：页面只显示 authority projection；产品 ID 不等于已登记机器合同
+>
+> Agent Hub 关系：本文覆盖 Governed Windows v1 旅程。Direct Takeover 与第三方 Agent 接管旅程/页面在 [agent-hub/product/journeys-and-screens.md](./agent-hub/product/journeys-and-screens.md)，使用独立 `CONSOLE-AGENTHUB-V1-JRN/PAGE-*` ID，不与本文 `CONSOLE-V2-*` 混编。
 
 ## 1. 旅程规格模板
 

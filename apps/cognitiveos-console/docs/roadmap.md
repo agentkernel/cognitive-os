@@ -5,6 +5,8 @@
 > 基线：Windows v1 见 [windows-v1-scope.md](./windows-v1-scope.md)
 >
 > 规则：本页保留未来价值、不可变边界和进入门禁，不冻结未经验证的页面布局。
+>
+> Agent Hub 关系：Direct Takeover 与第三方 Agent 接管是一条独立于本路线图的产品线，其里程碑/DAG/gate 在 [agent-hub/planning/README.md](./agent-hub/planning/README.md) 与 [docs/plan/agent-hub-development-plan.md](../../../docs/plan/agent-hub-development-plan.md)，同样受 Console/M5/平台/AGPL gate 阻断。
 
 ## 1. 排序原则
 

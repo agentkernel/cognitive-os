@@ -5,6 +5,8 @@
 > 日期：2026-07-20
 >
 > 状态：Windows、macOS、Linux、iPhone 与 Android phone 均为产品设计；本文不构成实现、测试或 Profile 符合性声明
+>
+> Agent Hub：第三方 Agent Direct Takeover 的移动 companion 差异见 [agent-hub-platform-parity.md](./agent-hub-platform-parity.md)，为本表补充，不改写此处条目或既有移动 canonical 决策。
 
 本文建立 Windows/macOS/Linux 到 iPhone/Android phone 的逐项对等关系。基线为 [Windows 产品决策](../../apps/cognitiveos-console/docs/decision-log.md)、[桌面平台产品决策](./platform-decision-log.md)、[桌面 parity matrix](./desktop-parity-matrix.md)、[iPhone-only v1 产品设计](./ios-product-design.md)与 [Android phone v1 产品设计](./android-product-design.md)。
 

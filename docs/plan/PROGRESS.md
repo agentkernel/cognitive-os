@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-DOC/Lane-CON Agent Hub 安全直连接管提示词；隔离 `personal-blog` CognitiveOS Research 重构）
+> 最后更新：2026-07-20（Lane-CON Agent Hub 直连接管 canonical 文档体系 + Master/12 宏车道/6 Adapter 开发计划 + 18 份提示词落地；74→76 向量计数漂移登记修正 D-012；隔离 `personal-blog` CognitiveOS Research 重构）
 
 ## 里程碑状态
 
@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux/iPhone/Android phone 产品切片已记录；Agent Hub 两模式提示词已加入 Paseo 类接管、独立文档治理、分计划/进度表和 gate 后多代理开发协议；客户端 implementation 均未启动，平台测试未执行，Profile 未符合 |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux/iPhone/Android phone 产品切片已记录；Agent Hub 直连接管 canonical 文档（两部署模式、L1–L8 接管层级、6 Tier 1 dossier、能力矩阵、4 来源 ledger、20 威胁项、决策/追踪）+ Master/12 宏车道/6 Adapter 开发计划 + 18 份 blocked 提示词已落地；客户端 implementation 均未启动，平台测试未执行，Open PoC 全 not-run，Profile 未符合 |
 
 ## 隔离产品子工程
 
@@ -60,13 +60,13 @@
 | Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | — | iPhone/Android phone 独立产品设计已记录；Agent Hub 安全直连接管/完整治理及 gate 后多代理开发提示词已提供、产品决策尚未执行；实现 gate 未通过 |
+| Lane-CON Console | tracking-only 文档例外 | — | iPhone/Android phone 独立产品设计已记录；Agent Hub 直连接管 canonical 文档体系 + 开发计划/提示词已落地（`apps/cognitiveos-console/docs/agent-hub/`、`docs/plan/agent-hub*`、`docs/prompts/agent-hub/`），全部 `blocked`；实现 gate 未通过（另加 Paseo/AGPL 法务 gate） |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
-2. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
-3. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 初版产品设计、第三方 Agent 适配与开发任务编排提示词）
+1. [20260720-lane-con-agent-hub-design-handoff.md](../checkpoints/20260720-lane-con-agent-hub-design-handoff.md)（Agent Hub 直连接管 canonical 文档体系、Adapter 研究、威胁模型、开发计划/提示词与 74→76 计数修正）
+2. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
+3. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
 
 ## 客户端目录治理交付
 

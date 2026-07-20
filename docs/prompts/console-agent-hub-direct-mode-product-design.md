@@ -1,5 +1,13 @@
 # CognitiveOS Console Agent Hub 直连接管模式产品设计与任务编排提示词
 
+> 状态（2026-07-20）：**已执行**。本提示词已产出 canonical 文档体系，不再作为事实源。事实与决策改以以下为准：
+> - canonical 文档：[apps/cognitiveos-console/docs/agent-hub/README.md](../../apps/cognitiveos-console/docs/agent-hub/README.md)
+> - 已冻结决策：[apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md](../../apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md)
+> - 来源 ledger：[apps/cognitiveos-console/docs/agent-hub/sources/README.md](../../apps/cognitiveos-console/docs/agent-hub/sources/README.md)
+> - 开发计划：[docs/plan/agent-hub-development-plan.md](../plan/agent-hub-development-plan.md)
+>
+> 下文保留原始提示词内容，仅作历史入口；如与 canonical 文档冲突，以 canonical 文档为准。
+>
 > 用法：将下方提示词全文粘贴到新的 Cursor Agent 会话，工作目录设为仓库根 `agent-kernel`。
 >
 > 目标：对 PC 与手机端“Agent Hub / 直连接管模式”做全方位产品、体验、架构、安全与平台设计，并编排后续开发任务。只区分“无 CognitiveOS 的安全直连接管”与“完整 CognitiveOS 治理”两种部署条件；不存在 `cognitive-kernel` 中间模式。

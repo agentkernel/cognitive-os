@@ -5,6 +5,8 @@
 > 地位：Informative product traceability
 >
 > 规则：本文件不新增 CognitiveOS normative `REQ-*`，也不把文件存在误写为实现或测试证据。
+>
+> Agent Hub 关系：Agent Hub 产品要求用独立 `CONSOLE-AGENTHUB-V1-PRD-*` 命名空间，追踪见 [agent-hub/traceability/product-requirements.md](./agent-hub/traceability/product-requirements.md)，同样不进入 normative registry，不与本文 `CONSOLE-V2-*` 混编。
 
 ## 1. 三维状态
 

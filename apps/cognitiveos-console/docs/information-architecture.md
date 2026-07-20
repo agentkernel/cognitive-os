@@ -3,6 +3,8 @@
 > 范围：Windows v1
 >
 > 原则：任务语言优先，机器语义可追溯；角色与 readiness 决定落点，不授予权限
+>
+> Agent Hub 关系：本文的六分组导航不变；Agent Hub 专属 shell 与手机 companion 导航在 [agent-hub/product/product-design.md](./agent-hub/product/product-design.md#6-信息架构pc) 与 [agent-hub/product/journeys-and-screens.md](./agent-hub/product/journeys-and-screens.md)，为扩展视图，不改写此处一级入口。
 
 ## 1. 导航模型
 
