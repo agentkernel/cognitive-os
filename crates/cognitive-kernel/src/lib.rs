@@ -25,6 +25,7 @@ pub mod effects;
 pub mod engine;
 pub mod error;
 pub mod executor;
+pub mod harness;
 pub mod intent_chain;
 pub mod ports;
 pub mod recovery;
@@ -59,6 +60,7 @@ pub use error::{RegisteredError, RejectionKind, TransitionRejection};
 pub use executor::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
+pub use harness::{ContractFacts, LoopDriver, ProgressStatus, StagnationFacts};
 pub use intent_chain::{
     AcceptanceCommand, AdmittedInterpretation, AmbiguityFact, GovernanceSeed,
     InterpretationCandidate, PendingWork, PendingWorkDisposition, SupersedeCommand,
