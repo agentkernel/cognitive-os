@@ -18,6 +18,7 @@ use crate::error::ManagementDenial;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_domain::WallTimestamp;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 /// Session lifecycle state (schema `state` enum).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -450,6 +451,146 @@ impl PrivilegedManagementSession {
         }
         Ok(())
     }
+}
+
+impl PrivilegedManagementSession {
+    pub fn canonical_json(&self) -> Result<Vec<u8>, ManagementDenial> {
+        let value = serde_json::json!({
+            "schema_version":SCHEMA_VERSION,"session_id":self.session_id,"object_version":self.object_version,
+            "management_domain":self.management_domain,"session_authority":self.session_authority,"human_principal":self.human_principal,
+            "actor_chain_digest":self.actor_chain_digest,"authentication_context_ref":self.authentication_context_ref,"activity_context_ref":self.activity_context_ref,
+            "scope":{"domains":self.scope.domains,"actions":self.scope.actions,"resources":self.scope.resources},
+            "risk_ceiling":match self.risk_ceiling{RiskClass::R0=>"R0",RiskClass::R1=>"R1",RiskClass::R2=>"R2",RiskClass::R3=>"R3"},
+            "policy_version":self.policy_version,"revocation_epoch":self.revocation_epoch,"issued_at":self.issued_at.as_str(),"last_activity_at":self.last_activity_at.as_str(),
+            "idle_timeout_seconds":self.idle_timeout_seconds,"absolute_expires_at":self.absolute_expires_at.as_str(),
+            "state":match self.state{SessionState::Pending=>"pending",SessionState::Active=>"active",SessionState::Expired=>"expired",SessionState::Revoked=>"revoked",SessionState::Closed=>"closed"},
+            "step_up_methods":self.step_up_methods,"session_digest":self.session_digest,"authority_signature":self.authority_signature
+        });
+        cognitive_contracts::canonical::canonical_bytes_of_value(&value)
+            .map_err(|e| denial(format!("canonical session encoding failed: {e}")))
+    }
+    fn authorize_lifecycle(&self, now: &WallTimestamp) -> Result<(), ManagementDenial> {
+        match self.state {
+            SessionState::Revoked => {
+                return Err(ManagementDenial::new(
+                    RegisteredErrorCode::ManagementSessionRevoked,
+                    "session revoked",
+                ));
+            }
+            SessionState::Active => {}
+            _ => {
+                return Err(ManagementDenial::new(
+                    RegisteredErrorCode::ManagementSessionExpired,
+                    "session is not active",
+                ));
+            }
+        }
+        if now.instant_key() >= self.absolute_expires_at.instant_key()
+            || seconds_between(&self.last_activity_at, now) >= self.idle_timeout_seconds
+        {
+            return Err(ManagementDenial::new(
+                RegisteredErrorCode::ManagementSessionExpired,
+                "session idle or absolute expiry passed",
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct ManagementSessionArchive {
+    current: BTreeMap<String, PrivilegedManagementSession>,
+    canonical_versions: BTreeMap<String, Vec<Vec<u8>>>,
+}
+
+impl ManagementSessionArchive {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn issue(
+        &mut self,
+        value: &Value,
+    ) -> Result<PrivilegedManagementSession, ManagementDenial> {
+        let session = PrivilegedManagementSession::from_json_value(value)?;
+        if self.current.contains_key(&session.session_id) {
+            return Err(denial("session_id already exists".to_owned()));
+        }
+        self.store(session.clone())?;
+        Ok(session)
+    }
+    pub fn renew(
+        &mut self,
+        id: &str,
+        now: &WallTimestamp,
+        expires: &WallTimestamp,
+    ) -> Result<PrivilegedManagementSession, ManagementDenial> {
+        let mut session = self
+            .current
+            .get(id)
+            .cloned()
+            .ok_or_else(|| denial("unknown session".to_owned()))?;
+        session.authorize_lifecycle(now)?;
+        if expires.instant_key() <= now.instant_key() {
+            return Err(denial("renewal expiry must be future".to_owned()));
+        }
+        session.object_version += 1;
+        session.last_activity_at = now.clone();
+        session.absolute_expires_at = expires.clone();
+        self.store(session.clone())?;
+        Ok(session)
+    }
+    pub fn revoke(
+        &mut self,
+        id: &str,
+        _now: &WallTimestamp,
+    ) -> Result<PrivilegedManagementSession, ManagementDenial> {
+        let mut session = self
+            .current
+            .get(id)
+            .cloned()
+            .ok_or_else(|| denial("unknown session".to_owned()))?;
+        session.object_version += 1;
+        session.state = SessionState::Revoked;
+        self.store(session.clone())?;
+        Ok(session)
+    }
+    pub fn authorize_current(&self, id: &str, now: &WallTimestamp) -> Result<(), ManagementDenial> {
+        self.current
+            .get(id)
+            .ok_or_else(|| denial("unknown session".to_owned()))?
+            .authorize_lifecycle(now)
+    }
+    pub fn canonical(&self, id: &str) -> Option<&[u8]> {
+        self.canonical_versions.get(id)?.last().map(Vec::as_slice)
+    }
+    fn store(&mut self, session: PrivilegedManagementSession) -> Result<(), ManagementDenial> {
+        let canonical = session.canonical_json()?;
+        self.canonical_versions
+            .entry(session.session_id.clone())
+            .or_default()
+            .push(canonical);
+        self.current.insert(session.session_id.clone(), session);
+        Ok(())
+    }
+}
+
+fn seconds_between(start: &WallTimestamp, end: &WallTimestamp) -> i64 {
+    fn scalar(value: &WallTimestamp) -> i64 {
+        let text = value.as_str();
+        let y: i64 = text[0..4].parse().unwrap_or(0);
+        let m: i64 = text[5..7].parse().unwrap_or(1);
+        let d: i64 = text[8..10].parse().unwrap_or(1);
+        let y0 = y - i64::from(m <= 2);
+        let era = y0.div_euclid(400);
+        let yoe = y0 - era * 400;
+        let mp = m + if m > 2 { -3 } else { 9 };
+        let days = era * 146097 + (yoe * 365 + yoe / 4 - yoe / 100) + (153 * mp + 2) / 5 + d - 1;
+        days * 86400
+            + text[11..13].parse::<i64>().unwrap_or(0) * 3600
+            + text[14..16].parse::<i64>().unwrap_or(0) * 60
+            + text[17..19].parse::<i64>().unwrap_or(0)
+    }
+    scalar(end).saturating_sub(scalar(start))
 }
 
 /// `^[a-z][a-z0-9_.:-]{2,127}$` (schema scope action pattern).
