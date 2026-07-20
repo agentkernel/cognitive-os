@@ -45,7 +45,7 @@ use crate::executor::{
 };
 use crate::ports::{
     AuthorityStore, Clock, EventDraft, IdGenerator, IntentRow, PortFailure, ProtocolStore,
-    StorePortError,
+    StorePortError, TaskBinding,
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
@@ -57,7 +57,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 /// Digest domain for protocol evidence values (registered example domain
 /// for governed object content, `canonical-encoding-and-digest.md` §9).
-const EVIDENCE_DIGEST_DOMAIN: &str = "governed-object-content/0.1";
+pub(crate) const EVIDENCE_DIGEST_DOMAIN: &str = "governed-object-content/0.1";
 
 // ---------------------------------------------------------------------
 // F-023: OperationDescriptor and the admission matrix
@@ -188,7 +188,7 @@ pub fn acquire_lease<S: ProtocolStore>(store: &S) -> Result<WriterLease, Transit
     Ok(WriterLease { epoch })
 }
 
-fn store_rejection(err: StorePortError) -> TransitionRejection {
+pub(crate) fn store_rejection(err: StorePortError) -> TransitionRejection {
     match err {
         StorePortError::Conflict { detail } => TransitionRejection {
             kind: RejectionKind::StoreConflict,
@@ -209,7 +209,7 @@ fn store_rejection(err: StorePortError) -> TransitionRejection {
     }
 }
 
-fn port_rejection(what: &str, err: PortFailure) -> TransitionRejection {
+pub(crate) fn port_rejection(what: &str, err: PortFailure) -> TransitionRejection {
     TransitionRejection {
         kind: RejectionKind::StoreUnavailable,
         detail: format!("{what} unavailable: {}", err.detail),
@@ -279,6 +279,11 @@ pub struct IntentCommand {
     pub authority_ref: UriRef,
     /// Correlation chain.
     pub correlation_id: UriRef,
+    /// Task/contract-epoch binding (M5 intent chain). When set, minting
+    /// verifies the epoch is CURRENT and persists the binding; stale
+    /// epochs are fenced with `INTENT_VERSION_SUPERSEDED`
+    /// (REQ-INTENT-SUPERSEDE-001). `None` = pre-M5 unbound intent.
+    pub task_binding: Option<TaskBinding>,
 }
 
 /// Outcome of intent minting.
@@ -344,6 +349,13 @@ where
         .into());
     }
 
+    // M5 correction fencing: a proposal bound to a superseded contract
+    // epoch cannot mint an intent (REQ-INTENT-SUPERSEDE-001, vector
+    // `intent-supersede-002`: old_epoch_new_dispatch_rejected).
+    if let Some(binding) = &cmd.task_binding {
+        crate::intent_chain::verify_task_binding_current(store, binding)?;
+    }
+
     let digest = parameters_digest(&cmd.parameters)?;
 
     // Idempotency arithmetic on the DURABLE record, not on memory.
@@ -366,7 +378,7 @@ where
     }
 
     let minted_at = clock.now().map_err(|err| port_rejection("clock", err))?;
-    let intent_value = json!({
+    let mut intent_value = json!({
         "intent_id": cmd.intent_id.as_str(),
         "action": cmd.descriptor.action,
         "operation_id": cmd.descriptor.operation_id,
@@ -380,6 +392,10 @@ where
         "capability_set_version": cmd.capability_set_version,
         "minted_at": minted_at.as_str(),
     });
+    if let (Some(binding), Some(object)) = (&cmd.task_binding, intent_value.as_object_mut()) {
+        object.insert("task_ref".to_owned(), json!(binding.task_ref));
+        object.insert("contract_epoch".to_owned(), json!(binding.contract_epoch));
+    }
     let canonical_json = canonical_text(&intent_value)?;
     let row = IntentRow {
         intent_id: cmd.intent_id.clone(),
@@ -391,6 +407,7 @@ where
         expected_state_version: cmd.expected_state_version,
         grant_epoch: cmd.grant_epoch,
         capability_set_version: cmd.capability_set_version,
+        task_binding: cmd.task_binding.clone(),
         canonical_json: canonical_json.clone(),
     };
 
@@ -436,7 +453,7 @@ where
     Ok(MintedIntent::Persisted(row))
 }
 
-fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
+pub(crate) fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
     let bytes = canonical::canonical_bytes_of_value(value).map_err(|err| ProtocolDenial {
         registered: STATE_CONFLICT,
         detail: format!("canonical encoding failed: {err}"),
@@ -447,7 +464,7 @@ fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
     })
 }
 
-fn strong_ref(
+pub(crate) fn strong_ref(
     id: &ObjectId,
     version: i64,
     content: &str,
@@ -716,6 +733,14 @@ where
                 detail: "no durable intent for effect: dispatch refused (fail-before-effect)"
                     .to_owned(),
             })?;
+
+        // M5 correction fencing at the DISPATCH sink: an intent minted
+        // under a contract epoch that has since been superseded is refused
+        // BEFORE any transition commit or external call — zero execution
+        // (REQ-INTENT-SUPERSEDE-001, vector `intent-supersede-002`).
+        if let Some(binding) = &intent.task_binding {
+            crate::intent_chain::verify_task_binding_current(self.store, binding)?;
+        }
 
         let current_epoch = self
             .store

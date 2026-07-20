@@ -116,6 +116,57 @@ pub enum EffectDisposition {
     },
 }
 
+/// Step 6 fact: one continuation whose pre-crash authorization binding is
+/// NOT admissible material for post-recovery work. The obligation carries
+/// the governance versions the durable intent was minted under; the
+/// runtime must present a grant that is CURRENT
+/// ([`reauthorization_satisfied`]) before the effect protocol's
+/// `capability_and_revocation_current` guard will pass again.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReauthorizationObligation {
+    /// Effect whose continuation needs fresh authorization.
+    pub effect_object_id: ObjectId,
+    /// Original idempotency key (continuations bind this key).
+    pub idempotency_key: String,
+    /// Revocation epoch the pre-crash grant was decided under.
+    pub grant_epoch: i64,
+    /// Capability set version the pre-crash grant was decided under.
+    pub capability_set_version: i64,
+}
+
+/// Step 7 fact: the governance rebinding recovery installed. Every
+/// context artifact cached under a binding older than `new_epoch` is
+/// unreachable by key construction (M3 `ContextViewCache`): a continuation
+/// declaring its pre-crash binding is refused and purged
+/// (`ContextViewCache::serve_declared`), and fresh resolution under the
+/// current binding is the only path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContextRebinding {
+    /// Epoch the crashed writer's context artifacts were bound under.
+    pub fenced_epoch: i64,
+    /// Epoch continuations must re-resolve under.
+    pub new_epoch: i64,
+}
+
+/// Step 6 arithmetic for the runtime: a continuation's fresh grant
+/// satisfies one reauthorization obligation only when it was decided
+/// under the CURRENT governance facts (and its lease is valid now) —
+/// the M3 revalidation applied to a recovery continuation.
+pub fn reauthorization_satisfied(
+    obligation: &ReauthorizationObligation,
+    grant: &crate::authz::AuthorizationGrant,
+    currency: &crate::effects::GovernanceCurrency,
+    now: &cognitive_domain::WallTimestamp,
+) -> bool {
+    let _ = obligation;
+    crate::authz::capability_and_revocation_current(
+        grant,
+        currency.revocation_epoch,
+        currency.capability_set_version,
+        now,
+    )
+}
+
 /// Report of one completed recovery run (evidence).
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecoveryReport {
@@ -129,6 +180,11 @@ pub struct RecoveryReport {
     pub projection_digest: String,
     /// Per-effect dispositions from step 5.
     pub reconciled: Vec<(ObjectId, EffectDisposition)>,
+    /// Step 6 facts: continuations that must present fresh authorization
+    /// (empty when nothing was in flight).
+    pub reauthorization_obligations: Vec<ReauthorizationObligation>,
+    /// Step 7 fact: the governance rebinding continuations resolve under.
+    pub context_rebinding: ContextRebinding,
     /// Steps in the order they actually ran (must equal [`RECOVERY_ORDER`]).
     pub step_order: Vec<RecoveryStep>,
     /// Checkpoints validated at step 8.
@@ -254,6 +310,7 @@ where
     let in_flight =
         store.list_objects_in_states(LifecycleDomain::Effect, &[executing, unknown, authorized])?;
     let mut reconciled = Vec::new();
+    let mut reauthorization_obligations = Vec::new();
     for effect in &in_flight {
         let disposition = match effect.state.as_str() {
             // Crash point 1: intent persisted, dispatch never recorded.
@@ -306,19 +363,40 @@ where
                 )));
             }
         };
+        // Every continuation that is not terminally closed must present
+        // fresh authorization before it can proceed (step 6 input).
+        if !matches!(disposition, EffectDisposition::ReconciledNotExecuted)
+            && let Some(intent) = store.load_intent_for_effect(&effect.object_id)?
+        {
+            reauthorization_obligations.push(ReauthorizationObligation {
+                effect_object_id: effect.object_id.clone(),
+                idempotency_key: intent.idempotency_key,
+                grant_epoch: intent.grant_epoch,
+                capability_set_version: intent.capability_set_version,
+            });
+        }
         reconciled.push((effect.object_id.clone(), disposition));
     }
     sequencer.advance(RecoveryStep::ReconcileEffects)?;
     step_order.push(RecoveryStep::ReconcileEffects);
 
-    // 6. Re-authorize: stale grants cannot continue (M3 revalidation is
-    // epoch-keyed; continuations must obtain fresh grants through the
-    // authz gate — recorded as a step fact here).
+    // 6. Re-authorize: stale grants cannot continue. The obligations
+    // (durable intent bindings of every non-terminal continuation) are
+    // the step fact; the teeth are the effect protocol's
+    // capability_and_revocation_current guard, which the runtime can only
+    // satisfy with grants that pass [`reauthorization_satisfied`] against
+    // the CURRENT governance currency.
     sequencer.advance(RecoveryStep::Reauthorize)?;
     step_order.push(RecoveryStep::Reauthorize);
 
     // 7. Re-resolve Context: stale cache bindings cannot hit under the
-    // advanced epoch (M3 governance-bound keys).
+    // advanced epoch (M3 governance-bound keys). The rebinding fact tells
+    // continuations which epoch their declared bindings are checked
+    // against (`ContextViewCache::serve_declared` refuses and purges).
+    let context_rebinding = ContextRebinding {
+        fenced_epoch: crashed_lease.epoch,
+        new_epoch,
+    };
     sequencer.advance(RecoveryStep::ReresolveContext)?;
     step_order.push(RecoveryStep::ReresolveContext);
 
@@ -352,6 +430,8 @@ where
         replayed_events: projection.event_count,
         projection_digest: projection.digest,
         reconciled,
+        reauthorization_obligations,
+        context_rebinding,
         step_order,
         resumable_loops: resumable,
     })

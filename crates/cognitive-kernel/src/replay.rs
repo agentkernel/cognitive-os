@@ -16,6 +16,20 @@ use crate::ports::{AuthorityStore, StorePortError};
 /// audit/provenance event — it advances no object state and replay folds
 /// it as provenance only).
 pub const EVENT_TYPE_INTENT_PERSISTED: &str = "cognitiveos.intent.persisted";
+
+/// Event type appended when a UserIntentRecord is fixed (M5 intent chain;
+/// provenance only, REQ-INTENT-RECORD-001).
+pub const EVENT_TYPE_USER_INTENT_RECORDED: &str = "cognitiveos.user-intent.recorded";
+
+/// Event type appended when an IntentInterpretation candidate is persisted
+/// (M5 intent chain; provenance only — a candidate advances no authority
+/// state, REQ-INTENT-ADMISSION-001).
+pub const EVENT_TYPE_INTERPRETATION_RECORDED: &str = "cognitiveos.intent-interpretation.recorded";
+
+/// Event type appended when a TaskContract is minted or superseded (M5
+/// intent chain; provenance only — the contract-epoch CAS lives in the
+/// contract table, REQ-INTENT-SUPERSEDE-001).
+pub const EVENT_TYPE_TASK_CONTRACT_MINTED: &str = "cognitiveos.task-contract.minted";
 use cognitive_contracts::canonical;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -129,10 +143,22 @@ pub fn replay_projection<S: AuthorityStore>(store: &S) -> Result<ReplayedProject
                 )));
             }
 
-            // Provenance-only events fold no state (the intent event is
-            // keyed by the intent's own identity).
+            // Provenance-only events fold no state (each is keyed by its
+            // own record identity, not a lifecycle object).
             if event_type == EVENT_TYPE_INTENT_PERSISTED {
                 str_field(&event, "idempotency_key", sequence)?;
+                continue;
+            }
+            if event_type == EVENT_TYPE_USER_INTENT_RECORDED {
+                str_field(&event, "intent_digest", sequence)?;
+                continue;
+            }
+            if event_type == EVENT_TYPE_INTERPRETATION_RECORDED {
+                str_field(&event, "interpretation_digest", sequence)?;
+                continue;
+            }
+            if event_type == EVENT_TYPE_TASK_CONTRACT_MINTED {
+                int_field(&event, "contract_epoch", sequence)?;
                 continue;
             }
 

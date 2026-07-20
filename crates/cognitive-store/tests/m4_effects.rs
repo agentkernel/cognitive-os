@@ -562,6 +562,7 @@ fn criterion_5_compensation_requires_independent_authorization() {
         expected_state_version: Version::INITIAL,
         grant_epoch: 41,
         capability_set_version: 7,
+        task_binding: None,
         canonical_json: "{\"compensation\":true}".to_owned(),
     };
     let refused = driver

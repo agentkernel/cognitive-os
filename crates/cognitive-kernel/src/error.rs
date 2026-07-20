@@ -155,6 +155,25 @@ pub const NO_AUTHORIZED_OPERATION_CANDIDATE: RegisteredError = RegisteredError {
     retryable: false,
 };
 
+/// `INTENT_CLARIFICATION_REQUIRED`: material intent ambiguity must be
+/// resolved by the intent authority (M5 deterministic admission gate:
+/// a candidate carrying a material ambiguity is never promoted top-1,
+/// REQ-INTENT-ADMISSION-001).
+pub const INTENT_CLARIFICATION_REQUIRED: RegisteredError = RegisteredError {
+    code: "INTENT_CLARIFICATION_REQUIRED",
+    category: "intent",
+    retryable: true,
+};
+
+/// `INTENT_VERSION_SUPERSEDED`: proposal references a superseded intent or
+/// TaskContract epoch (M5 correction fencing: dispatches bound to an old
+/// contract epoch are rejected, REQ-INTENT-SUPERSEDE-001).
+pub const INTENT_VERSION_SUPERSEDED: RegisteredError = RegisteredError {
+    code: "INTENT_VERSION_SUPERSEDED",
+    category: "intent",
+    retryable: true,
+};
+
 /// Typed cause of a rejected governed operation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RejectionKind {
@@ -294,6 +313,8 @@ mod tests {
             EFFECT_IDEMPOTENCY_CONFLICT,
             EFFECT_RECOVERY_QUARANTINED,
             NO_AUTHORIZED_OPERATION_CANDIDATE,
+            INTENT_CLARIFICATION_REQUIRED,
+            INTENT_VERSION_SUPERSEDED,
         ] {
             let marker = format!("- code: {}", expected.code);
             let start = registry
