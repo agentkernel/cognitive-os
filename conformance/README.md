@@ -69,8 +69,9 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 ## Running
 
-The reference runner is `crates/cognitive-conformance` (M3 capability:
-static-contract execution plus kernel-behavioral execution).
+The reference runner is `crates/cognitive-conformance` (M4 capability:
+static-contract execution plus kernel-behavioral execution, including
+fault-injected crash recovery).
 `vectors/*.json` stay declarative inputs and expected outcomes usable by
 any runner author.
 
@@ -90,8 +91,12 @@ governance/context vectors behaviorally against the
 `authz`/`context`/`context_cache`/`capability` surface (lateral-read denial
 isomorphism, attenuation arithmetic, revocation-bound caches,
 filter-before-rank, budget fail-closed, prefix-stable render, bounded
-stagnation, candidate narrowing, prompt-injection isolation), and writes a
-five-state machine report plus the sample profile manifest to
+stagnation, candidate narrowing, prompt-injection isolation), executes the
+M4 effect/recovery vectors through the public fault-injection framework
+(`cognitive_store::faults`: CrashHarness drop-and-reopen crashes and a
+scripted external executor — three crash points, unknown-outcome
+quarantine, idempotency-conflict refusal, reconcile-before-resume), and
+writes a five-state machine report plus the sample profile manifest to
 `artifacts/evidence/conformance/` (gitignored). Vectors whose expectations
 require runtime behavior of later milestones are reported `not-run` with a
 recorded reason (`docs/standards/conformance-evidence.md` section 2). A
@@ -99,9 +104,11 @@ recorded reason (`docs/standards/conformance-evidence.md` section 2). A
 conformance claim.
 
 `--self-check` executes a deliberately wrong implementation (schema-valid
-outputs, wrong behavior: a gate-bypassing direct store writer and
-governance anti-patterns such as rank-before-auth and stale cache serving)
-and exits non-zero unless the runner fails every corrupted vector
+outputs, wrong behavior: a gate-bypassing direct store writer, governance
+anti-patterns such as rank-before-auth and stale cache serving, and
+effect/recovery anti-patterns such as fresh-key re-minting after a crash
+and blind re-dispatch on unknown outcome) and exits non-zero unless the
+runner fails every corrupted vector
 (`docs/standards/conformance-evidence.md` section 3).
 
 Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.

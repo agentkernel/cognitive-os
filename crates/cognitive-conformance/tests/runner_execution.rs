@@ -31,13 +31,12 @@ fn repo_root() -> PathBuf {
 /// Reference-run distribution over the committed 81-vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
-/// 2026-07-20 Lane-CFR M3 batch: eight governance/context vectors leave
-/// not-run (behavioral execution against the M3 kernel surface) and
-/// CTX-TRUST-004 upgrades from the static gate to behavioral execution,
-/// so pass 31 -> 39, not-run 50 -> 42.
+/// 2026-07-20 Lane-CFR M4 batch: seven effect/recovery vectors leave
+/// not-run (behavioral execution through the fault-injection framework),
+/// so pass 39 -> 46, not-run 42 -> 35.
 const TOTAL: usize = 81;
-const PASS: usize = 39;
-const NOT_RUN: usize = 42;
+const PASS: usize = 46;
+const NOT_RUN: usize = 35;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
@@ -57,6 +56,17 @@ const BEHAVIORAL_M3: [(&str, &str); 9] = [
     ("DISC-STAGNATION-004", "StagnationBehavior"),
     ("DISC-ADMISSION-002", "CandidateAdmissionBehavior"),
     ("CTX-TRUST-004", "TrustPlaneBehavior"),
+];
+
+/// The M4 effect/recovery behavioral executions and their report modes.
+const BEHAVIORAL_M4: [(&str, &str); 7] = [
+    ("EFF-CRASH-001", "CrashPoint1Behavior"),
+    ("EFF-CRASH-002", "CrashPoint2Behavior"),
+    ("EFF-CRASH-003", "CrashPoint3Behavior"),
+    ("RECOVERY-CRASH-006", "CrashRecoveryBehavior"),
+    ("EFF-UNK-003", "UnknownOutcomeBehavior"),
+    ("EFF-IDEM-CONFLICT-001", "IdempotencyConflictBehavior"),
+    ("AGENT-RECOVERY-003", "RecoveryReconciliationBehavior"),
 ];
 
 #[test]
@@ -201,6 +211,62 @@ fn m3_behavioral_vectors_execute_against_the_governance_surface() {
     );
 }
 
+/// M4 effect/recovery behavioral executions run through the public
+/// fault-injection framework — the execution record must say so, every one
+/// must pass, and the degradation vector must carry the executed fencing
+/// subset.
+#[test]
+fn m4_behavioral_vectors_execute_through_the_fault_framework() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    for (id, mode) in BEHAVIORAL_M4 {
+        let outcome = outcomes
+            .iter()
+            .find(|o| o.id == id)
+            .unwrap_or_else(|| panic!("{id} missing from corpus"));
+        assert_eq!(
+            outcome.result,
+            "pass",
+            "{id} must pass behaviorally: {:?}",
+            outcome.execution.as_ref().map(|e| &e.mismatches)
+        );
+        let record = outcome.execution.as_ref().expect("execution record");
+        assert_eq!(format!("{:?}", record.mode), mode);
+        assert!(
+            record.implementation.contains("faults"),
+            "{id} implementation label must name the fault-injection surface, got {}",
+            record.implementation
+        );
+    }
+    // The degradation vector stays not-run but now carries the executed M4
+    // fencing subset alongside the M1 static and M2 read-only subsets.
+    let degradation = outcomes
+        .iter()
+        .find(|o| o.id == "STATE-STORE-DEGRADE-001")
+        .expect("vector present");
+    assert_eq!(degradation.result, "not-run");
+    let assertions = degradation
+        .partial_contract_assertions
+        .as_ref()
+        .expect("partial contract assertions recorded");
+    let fencing = assertions
+        .pointer("/m4_behavioral_fencing_subset")
+        .expect("fencing subset recorded");
+    assert!(
+        fencing.get("probe_error").is_none(),
+        "fencing probe failed: {fencing}"
+    );
+    for key in ["stale_epoch_write_rejected", "current_epoch_write_commits"] {
+        assert_eq!(
+            fencing.get(key).and_then(serde_json::Value::as_bool),
+            Some(true),
+            "fencing subset assertion {key} does not hold"
+        );
+    }
+}
+
 /// M2 behavioral executions run against the real kernel/store authority
 /// path — the execution record must say so, and every one must pass.
 #[test]
@@ -328,9 +394,10 @@ fn wrong_implementation_is_failed_by_the_runner() {
         report.corrupted_but_still_passing
     );
     // Every observably corrupted gate must be represented and flipped
-    // (M2: gate-bypassing store writer; M3: governance anti-patterns).
-    assert_eq!(report.must_flip.len(), 20, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 20);
+    // (M2: gate-bypassing store writer; M3: governance anti-patterns;
+    // M4: effect/recovery anti-patterns).
+    assert_eq!(report.must_flip.len(), 27, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 27);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -353,6 +420,13 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "CTX-RENDER-001",
         "DISC-STAGNATION-004",
         "DISC-ADMISSION-002",
+        "EFF-CRASH-001",
+        "EFF-CRASH-002",
+        "EFF-CRASH-003",
+        "RECOVERY-CRASH-006",
+        "EFF-UNK-003",
+        "EFF-IDEM-CONFLICT-001",
+        "AGENT-RECOVERY-003",
     ] {
         assert!(
             report.flipped_to_fail.iter().any(|f| f == id),

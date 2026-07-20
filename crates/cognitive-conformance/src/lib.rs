@@ -447,16 +447,18 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
         runner: RunnerInfo {
             name: "cognitive-conformance",
             version: env!("CARGO_PKG_VERSION"),
-            capability: "static-contract + kernel-behavioral execution (M2/M3)",
+            capability: "static-contract + kernel-behavioral execution (M2/M3/M4)",
         },
-        note: "M3 runner: statically decidable vectors are executed against deterministic \
+        note: "M4 runner: statically decidable vectors are executed against deterministic \
                reference gates grounded in registered machine assets; the M2 kernel-backed \
                vectors run behaviorally against cognitive-kernel over the SQLite WAL authority \
-               store, and the M3 governance/context vectors run behaviorally against the \
-               authz/context/context_cache/capability surface. Remaining behavioral layers \
-               stay not-run with recorded reasons. A pass is scoped to its execution mode and \
-               is never a Profile claim; schema-valid parsing alone is never a pass \
-               (conformance/README.md; docs/standards/conformance-evidence.md).",
+               store, the M3 governance/context vectors against the \
+               authz/context/context_cache/capability surface, and the M4 effect/recovery \
+               vectors through the public fault-injection framework (CrashHarness + \
+               ScriptedExecutor). Remaining behavioral layers stay not-run with recorded \
+               reasons. A pass is scoped to its execution mode and is never a Profile claim; \
+               schema-valid parsing alone is never a pass (conformance/README.md; \
+               docs/standards/conformance-evidence.md).",
         layers,
         cross_cutting,
         vectors: outcomes,
@@ -468,7 +470,7 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
 pub fn human_summary(report: &ConformanceReport) -> String {
     let mut out = String::new();
     out.push_str(
-        "CognitiveOS conformance runner (M3: static-contract + kernel-behavioral execution)\n",
+        "CognitiveOS conformance runner (M4: static-contract + kernel-behavioral execution)\n",
     );
     out.push_str(&format!(
         "Vectors enumerated: {} | pass {} | fail {} | not-applicable {} | documented-degradation {} | not-run {}\n",

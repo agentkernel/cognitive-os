@@ -32,6 +32,9 @@ use std::path::{Path, PathBuf};
 mod behavior;
 /// M3 behavioral execution against the governance/context kernel surface.
 mod behavior_m3;
+/// M4 behavioral execution: effect protocol and crash recovery through the
+/// public fault-injection framework.
+mod behavior_m4;
 
 /// Implementation selector for vector execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -110,6 +113,27 @@ pub enum ExecutionMode {
     /// injection isolated by the real pipeline and control-plane gates
     /// (REQ-CTX-008, REQ-SEC-002).
     TrustPlaneBehavior,
+    /// M4 behavioral: crash after intent persisted, before dispatch —
+    /// recover to a single original-key dispatch (REQ-EFF-006).
+    CrashPoint1Behavior,
+    /// M4 behavioral: crash after external execution, before the receipt —
+    /// reconcile, never blind-retry (REQ-EFF-006).
+    CrashPoint2Behavior,
+    /// M4 behavioral: crash after verification, before commit — commit
+    /// from evidence without re-execution (REQ-EFF-006).
+    CrashPoint3Behavior,
+    /// M4 behavioral: the three crash points aggregated
+    /// (REQ-EFF-006, REQ-RUN-006).
+    CrashRecoveryBehavior,
+    /// M4 behavioral: unknown outcome reconciles under the original key and
+    /// quarantines when unresolvable (REQ-EFF-004).
+    UnknownOutcomeBehavior,
+    /// M4 behavioral: same key + different canonical parameters is refused
+    /// with the registered conflict code (REQ-EFF-002).
+    IdempotencyConflictBehavior,
+    /// M4 behavioral: pending effects are reconciled before any loop
+    /// resume (REQ-AGENT-RECOVERY-001).
+    RecoveryReconciliationBehavior,
 }
 
 /// Execution plan for one vector, decided by structural classification.
@@ -391,6 +415,15 @@ const CANDIDATE_ADMISSION_VECTOR_ID: &str = "DISC-ADMISSION-002";
 /// Delta consumption is an M5 runtime path: no kernel API exists to
 /// execute `context-delta-scope` against, so it stays not-run honestly.
 const DELTA_SCOPE_VECTOR_ID: &str = "DISC-DELTA-SCOPE-003";
+/// M4 effect/recovery behavioral executions (KRN M4 handoff candidate
+/// list; the fault-injection framework is public for exactly this reuse).
+const CRASH_1_VECTOR_ID: &str = "EFF-CRASH-001";
+const CRASH_2_VECTOR_ID: &str = "EFF-CRASH-002";
+const CRASH_3_VECTOR_ID: &str = "EFF-CRASH-003";
+const CRASH_RECOVERY_VECTOR_ID: &str = "RECOVERY-CRASH-006";
+const UNKNOWN_OUTCOME_VECTOR_ID: &str = "EFF-UNK-003";
+const IDEMPOTENCY_CONFLICT_VECTOR_ID: &str = "EFF-IDEM-CONFLICT-001";
+const RECOVERY_RECONCILIATION_VECTOR_ID: &str = "AGENT-RECOVERY-003";
 /// Behavioral vector that receives recorded partial contract assertions
 /// (M1 static side + M2 real read-only degradation subset; never a pass —
 /// disk-full and dispatch/stop/revoke expectations are M4/M5 behavior).
@@ -465,6 +498,24 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         DELTA_SCOPE_VECTOR_ID => ExecutionPlan::NotRun {
             reason: "delta consumption is an M5 runtime path; no kernel API exists to \
                      execute this scenario against (KRN M3 handoff; honest not-run)"
+                .to_owned(),
+        },
+        CRASH_1_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CrashPoint1Behavior),
+        CRASH_2_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CrashPoint2Behavior),
+        CRASH_3_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CrashPoint3Behavior),
+        CRASH_RECOVERY_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CrashRecoveryBehavior),
+        UNKNOWN_OUTCOME_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::UnknownOutcomeBehavior),
+        IDEMPOTENCY_CONFLICT_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::IdempotencyConflictBehavior)
+        }
+        RECOVERY_RECONCILIATION_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::RecoveryReconciliationBehavior)
+        }
+        STORE_DEGRADATION_VECTOR_ID => ExecutionPlan::NotRun {
+            reason: "disk-full fault mode and management stop/revoke expectations are \
+                     M4-deferred (no portable disk-full injection) and M5 management plane; \
+                     the read-only degradation and fencing subsets are executed for real and \
+                     recorded under partial_contract_assertions"
                 .to_owned(),
         },
         _ => ExecutionPlan::NotRun {
@@ -1053,6 +1104,21 @@ fn execute_gate(
             behavior_m3::candidate_admission_behavior(ctx, vector, kind)
         }
         ExecutionMode::TrustPlaneBehavior => behavior_m3::trust_plane_behavior(ctx, vector, kind),
+        ExecutionMode::CrashPoint1Behavior => behavior_m4::eff_crash_1_behavior(ctx, vector, kind),
+        ExecutionMode::CrashPoint2Behavior => behavior_m4::eff_crash_2_behavior(ctx, vector, kind),
+        ExecutionMode::CrashPoint3Behavior => behavior_m4::eff_crash_3_behavior(ctx, vector, kind),
+        ExecutionMode::CrashRecoveryBehavior => {
+            behavior_m4::crash_recovery_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::UnknownOutcomeBehavior => {
+            behavior_m4::unknown_outcome_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::IdempotencyConflictBehavior => {
+            behavior_m4::idempotency_conflict_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::RecoveryReconciliationBehavior => {
+            behavior_m4::recovery_reconciliation_behavior(ctx, vector, kind)
+        }
     }
 }
 
@@ -1083,6 +1149,8 @@ pub fn execute_vector(
                     "static_contract": store_degradation_assertions(ctx),
                     "m2_behavioral_read_only_subset":
                         behavior::store_degradation_behavioral_subset(),
+                    "m4_behavioral_fencing_subset":
+                        behavior_m4::store_degradation_m4_fencing_subset(),
                 }));
             }
             outcome
@@ -1172,7 +1240,7 @@ pub struct SelfCheckReport {
 /// rank-before-auth, stale cache serving, silent truncation, unbounded
 /// retry, reshuffling render, content-claimed control plane, accepted
 /// amplification).
-const CORRUPTED_MODES: [ExecutionMode; 14] = [
+const CORRUPTED_MODES: [ExecutionMode; 21] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::CasBehavior,
@@ -1187,6 +1255,13 @@ const CORRUPTED_MODES: [ExecutionMode; 14] = [
     ExecutionMode::StagnationBehavior,
     ExecutionMode::CandidateAdmissionBehavior,
     ExecutionMode::TrustPlaneBehavior,
+    ExecutionMode::CrashPoint1Behavior,
+    ExecutionMode::CrashPoint2Behavior,
+    ExecutionMode::CrashPoint3Behavior,
+    ExecutionMode::CrashRecoveryBehavior,
+    ExecutionMode::UnknownOutcomeBehavior,
+    ExecutionMode::IdempotencyConflictBehavior,
+    ExecutionMode::RecoveryReconciliationBehavior,
 ];
 
 /// Run the self-check: the deliberately wrong implementation must fail every
@@ -1238,7 +1313,10 @@ pub fn self_check(
              unauthorized bodies, serves revocation-stale cache entries, silently truncates \
              over-budget required sets, retries without bound, reshuffles rendered prefixes, \
              builds the control plane from content claims, accepts amplified capability \
-             derivations",
+             derivations; (behavioral, M4) effect/recovery anti-patterns — re-mints under a \
+             fresh idempotency key after a crash, blind-re-dispatches on unknown outcome, \
+             re-executes external actions during commit recovery, treats an idempotency \
+             conflict as dedup success, resumes loops without reconciling in-flight effects",
         corrupted_gates: vec![
             "schema-gate",
             "perf-contract-gate",
@@ -1254,6 +1332,13 @@ pub fn self_check(
             "stagnation-behavior",
             "candidate-admission-behavior",
             "trust-plane-behavior",
+            "crash-point-1-behavior",
+            "crash-point-2-behavior",
+            "crash-point-3-behavior",
+            "crash-recovery-behavior",
+            "unknown-outcome-behavior",
+            "idempotency-conflict-behavior",
+            "recovery-reconciliation-behavior",
         ],
         must_flip,
         flipped_to_fail: flipped,
