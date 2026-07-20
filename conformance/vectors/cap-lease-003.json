@@ -10,7 +10,7 @@
     "REQ-CAP-003"
   ],
   "input": {
-    "owner_spec": "CognitiveOS-Architecture.md#capability-protocol",
+    "owner_spec": "specs/core/README.md",
     "requirement_status": "specified"
   },
   "expected": {
