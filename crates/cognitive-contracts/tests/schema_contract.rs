@@ -244,7 +244,9 @@ fn akp_result_envelope_requires_machine_error_and_continuation() {
         panic!("error result with registered machine error must validate, got: {err}");
     }
     assert!(
-        !validator.is_valid(&vector_object("akp-result-error-without-machine-code-003.json")),
+        !validator.is_valid(&vector_object(
+            "akp-result-error-without-machine-code-003.json"
+        )),
         "error status without the machine error envelope must be rejected (REQ-ERR-001)"
     );
     let mut partial = ok.clone();
