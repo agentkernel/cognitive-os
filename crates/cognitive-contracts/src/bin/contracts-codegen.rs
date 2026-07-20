@@ -1,16 +1,22 @@
 //! Schema-to-code generator for the CognitiveOS reference implementation
 //! (ADR-0006 code generation policy; IMP-08 minimal-core-first ordering).
 //!
-//! Reads the minimal core object set (whitepaper appendix A.1, 14 objects)
-//! plus its `$ref` closure from `specs/schemas/` and emits committed,
-//! reviewable language bindings:
+//! Reads the generated object set (whitepaper appendix A.1 minimal core
+//! plus the Shell/AKP client families) with its `$ref` closure from
+//! `specs/schemas/`, plus the error registry `specs/registry/errors.yaml`,
+//! and emits committed, reviewable language bindings:
 //!
 //! - Rust modules under `crates/cognitive-contracts/src/generated/`
 //! - TypeScript modules under `packages/contracts-ts/src/generated/`
 //!
-//! Every emitted file carries a generation header with the source schema
-//! path, its canonical content digest (domain `schema-bundle/0.1`, matching
-//! the schema-bundle manifest per-asset digest), and the generator version.
+//! Every emitted file carries a generation header with the source asset
+//! path, its canonical content digest (schemas: domain `schema-bundle/0.1`,
+//! matching the schema-bundle manifest per-asset digest; registries: domain
+//! `spec-set/0.1` over the canonical JSON projection, matching the spec-set
+//! manifest per-asset digest), and the generator version. The same digest is
+//! re-exported as a runtime constant (`SCHEMA_DIGEST` per schema module plus
+//! the `SCHEMA_DIGESTS` aggregate; `REGISTRY_DIGEST` for the error registry)
+//! so clients can pin envelope `schema_digest` values without re-deriving.
 //! CI regenerates and diffs; a dirty diff fails the build (ADR-0006 item 4).
 //!
 //! Bindings are SHAPE-LEVEL: conditional (`if`/`then`), `allOf` const
@@ -22,7 +28,7 @@
 //! Regeneration procedure (also in ADR-0006):
 //! `cargo run -p cognitive-contracts --bin contracts-codegen && cargo fmt --all`
 
-use cognitive_contracts::canonical;
+use cognitive_contracts::{bundle, canonical};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
@@ -32,13 +38,18 @@ use std::path::{Path, PathBuf};
 
 /// Generator version: bump on any output-affecting change (reviewable per
 /// ADR-0006 "the generator becomes a governed tool").
-const GENERATOR_VERSION: &str = "0.1.0";
+///
+/// 0.2.0 (Lane-TSC contract-gap batch): errors.yaml registry binding,
+/// per-module schema digest runtime constants + aggregates, Shell/AKP
+/// client families in the generated set, `CognitiveOS ` title prefix
+/// stripped from root type names.
+const GENERATOR_VERSION: &str = "0.2.0";
 
-/// Minimal core object set (IMP-08 / whitepaper appendix A.1, 14 objects)
-/// mapped to their registered machine schemas, plus the support contracts
-/// named by ADR-0006 (common-defs, governed-object-header, object-reference).
-/// A.1 objects without a same-named document schema map to their closest
-/// registered machine surface:
+/// Generated object set. Base: the IMP-08 minimal core (whitepaper appendix
+/// A.1, 14 objects) mapped to their registered machine schemas, plus the
+/// support contracts named by ADR-0006 (common-defs, governed-object-header,
+/// object-reference). A.1 objects without a same-named document schema map
+/// to their closest registered machine surface:
 /// - TenantContext        -> governance-domain-context (discriminated union)
 /// - AgentExecution       -> agent-execution-binding (identity binding)
 /// - Task / TaskContract  -> task-contract (Task itself is a lifecycle
@@ -48,7 +59,14 @@ const GENERATOR_VERSION: &str = "0.1.0";
 ///   projection; the full descriptor family follows its consuming milestone)
 /// - Checkpoint           -> loop-checkpoint (registered checkpoint payload)
 /// - ContextRequest / ContextView -> both schemas generated
-const CORE_SET: [&str; 17] = [
+///
+/// Extension (20260720 Lane-CTR gap batch, "remaining object families
+/// follow their consuming milestones"): the Shell client family consumed by
+/// `packages/sdk-ts` (shell-action-proposal, shell-command-preview,
+/// shell-status-view, watch-subscription, user-intent-record) and the AKP
+/// wire shapes registered by D-013/D-014/D-015 (akp-request-envelope,
+/// akp-result-envelope, akp-stream-frame, shell-control-request).
+const CORE_SET: [&str; 26] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -66,6 +84,15 @@ const CORE_SET: [&str; 17] = [
     "task-contract.schema.json",
     "world-state.schema.json",
     "agent-execution-binding.schema.json",
+    "shell-action-proposal.schema.json",
+    "shell-command-preview.schema.json",
+    "shell-status-view.schema.json",
+    "watch-subscription.schema.json",
+    "user-intent-record.schema.json",
+    "akp-request-envelope.schema.json",
+    "akp-result-envelope.schema.json",
+    "akp-stream-frame.schema.json",
+    "shell-control-request.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,
@@ -110,6 +137,9 @@ fn run() -> Result<(), DynError> {
 
     let mut rust_modules: Vec<(String, String)> = Vec::new();
     let mut ts_modules: Vec<(String, String)> = Vec::new();
+    // (schema file name, canonical digest) per generated schema module, in
+    // deterministic sorted order — the source of the digest aggregates.
+    let mut digests: Vec<(String, String)> = Vec::new();
     for (file, doc) in &docs {
         let digest = schema_digest(doc)?;
         let module = generate_module(file, doc, &docs)?;
@@ -118,7 +148,13 @@ fn run() -> Result<(), DynError> {
             module.render_rust(file, &digest),
         ));
         ts_modules.push((module.ts_file_stem.clone(), module.render_ts(file, &digest)));
+        digests.push((file.clone(), digest));
     }
+
+    // Error registry binding (specs/registry/errors.yaml -> both languages).
+    let error_registry = generate_error_registry(&repo_root, &docs)?;
+    rust_modules.push(("error_registry".to_owned(), error_registry.rust));
+    ts_modules.push(("error-registry".to_owned(), error_registry.ts));
 
     let rust_dir = repo_root
         .join("crates")
@@ -137,14 +173,20 @@ fn run() -> Result<(), DynError> {
     for (mod_name, content) in &rust_modules {
         written += write_if_changed(&rust_dir.join(format!("{mod_name}.rs")), content)?;
     }
-    written += write_if_changed(&rust_dir.join("mod.rs"), &render_rust_mod_rs(&rust_modules))?;
+    written += write_if_changed(
+        &rust_dir.join("mod.rs"),
+        &render_rust_mod_rs(&rust_modules, &digests),
+    )?;
     for (stem, content) in &ts_modules {
         written += write_if_changed(&ts_dir.join(format!("{stem}.ts")), content)?;
     }
-    written += write_if_changed(&ts_dir.join("index.ts"), &render_ts_index(&ts_modules))?;
+    written += write_if_changed(
+        &ts_dir.join("index.ts"),
+        &render_ts_index(&ts_modules, &digests),
+    )?;
 
     println!(
-        "contracts-codegen v{GENERATOR_VERSION}: {} schemas -> {} Rust + {} TS modules ({} files rewritten)",
+        "contracts-codegen v{GENERATOR_VERSION}: {} schemas + errors.yaml -> {} Rust + {} TS modules ({} files rewritten)",
         docs.len(),
         rust_modules.len(),
         ts_modules.len(),
@@ -152,6 +194,369 @@ fn run() -> Result<(), DynError> {
     );
     println!("reminder: run `cargo fmt --all` after regeneration (ADR-0006 pipeline step)");
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Error registry binding (specs/registry/errors.yaml)
+// ---------------------------------------------------------------------------
+
+struct ErrorRegistryModules {
+    rust: String,
+    ts: String,
+}
+
+struct RegistryEntry {
+    code: String,
+    category: String,
+    retryable: bool,
+    description: String,
+}
+
+/// Generate the registered-error binding for both languages from
+/// `specs/registry/errors.yaml`. The registry digest is the spec-set
+/// manifest per-asset recipe: canonical JSON projection of the parsed YAML,
+/// domain `spec-set/0.1` (`docs/standards/conformance-evidence.md`
+/// section 6). Every category must be a member of the registered
+/// common-defs error category enumeration; an unknown category fails the
+/// generation instead of guessing.
+fn generate_error_registry(
+    repo_root: &Path,
+    docs: &BTreeMap<String, Value>,
+) -> Result<ErrorRegistryModules, DynError> {
+    let path = repo_root.join("specs").join("registry").join("errors.yaml");
+    let raw = fs::read_to_string(&path).map_err(|e| format!("read errors.yaml: {e}"))?;
+    let value: Value = serde_yaml::from_str(&raw).map_err(|e| format!("parse errors.yaml: {e}"))?;
+    let registry_digest = bundle::asset_content_digest(&value, bundle::SPEC_SET_DOMAIN)
+        .map_err(|e| format!("digest errors.yaml: {e}"))?;
+
+    let categories: BTreeSet<String> = docs
+        .get("common-defs.schema.json")
+        .and_then(|doc| doc.pointer("/$defs/error/properties/category/enum"))
+        .and_then(Value::as_array)
+        .map(|a| {
+            a.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect()
+        })
+        .ok_or("common-defs error category enum not found")?;
+
+    let mut entries: Vec<RegistryEntry> = Vec::new();
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for item in value
+        .get("errors")
+        .and_then(Value::as_array)
+        .ok_or("errors.yaml: `errors` list missing")?
+    {
+        let field = |name: &str| -> Result<&str, DynError> {
+            item.get(name)
+                .and_then(Value::as_str)
+                .ok_or_else(|| format!("errors.yaml entry missing `{name}`").into())
+        };
+        let entry = RegistryEntry {
+            code: field("code")?.to_owned(),
+            category: field("category")?.to_owned(),
+            retryable: item
+                .get("retryable")
+                .and_then(Value::as_bool)
+                .ok_or("errors.yaml entry missing `retryable`")?,
+            description: field("description")?.trim_end().replace('\n', " "),
+        };
+        if !categories.contains(&entry.category) {
+            return Err(format!(
+                "errors.yaml: category `{}` of {} is not in the registered common-defs error category enumeration",
+                entry.category, entry.code
+            )
+            .into());
+        }
+        if !seen.insert(entry.code.clone()) {
+            return Err(format!("errors.yaml: duplicate code {}", entry.code).into());
+        }
+        entries.push(entry);
+    }
+    if entries.is_empty() {
+        return Err("errors.yaml: empty registry".into());
+    }
+
+    Ok(ErrorRegistryModules {
+        rust: render_error_registry_rust(&entries, &registry_digest),
+        ts: render_error_registry_ts(&entries, &registry_digest),
+    })
+}
+
+fn render_error_registry_rust(entries: &[RegistryEntry], registry_digest: &str) -> String {
+    let mut out = String::new();
+    let _ = writeln!(
+        out,
+        "//! @generated by contracts-codegen v{GENERATOR_VERSION}. DO NOT EDIT."
+    );
+    let _ = writeln!(out, "//! source: specs/registry/errors.yaml");
+    let _ = writeln!(
+        out,
+        "//! registry_digest: {registry_digest} (canonical JSON projection, domain spec-set/0.1)"
+    );
+    let _ = writeln!(out, "//! policy: docs/adr/0006-code-generation-policy.md");
+    let _ = writeln!(out, "//!");
+    let _ = writeln!(
+        out,
+        "//! Registered error codes (docs/standards/error-contract.md): a governed"
+    );
+    let _ = writeln!(
+        out,
+        "//! failure surfaces exactly one registered code; an unregistered code is"
+    );
+    let _ = writeln!(
+        out,
+        "//! itself a defect and fails closed at the consumer (REQ-ERR-001/002)."
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(out, "use serde::{{Deserialize, Serialize}};");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "use crate::generated::common_defs::ErrorCategory;");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/// Source registry path (repo-relative).");
+    let _ = writeln!(
+        out,
+        "pub const REGISTRY_PATH: &str = \"specs/registry/errors.yaml\";"
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "/// Canonical content digest of the source registry (canonical JSON"
+    );
+    let _ = writeln!(
+        out,
+        "/// projection of the parsed YAML, domain `spec-set/0.1` — the spec-set"
+    );
+    let _ = writeln!(out, "/// manifest per-asset recipe).");
+    let _ = writeln!(
+        out,
+        "pub const REGISTRY_DIGEST: &str = \"{registry_digest}\";"
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "/// Exhaustive enumeration of the {} registered error codes.",
+        entries.len()
+    );
+    let _ = writeln!(
+        out,
+        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]"
+    );
+    let _ = writeln!(out, "pub enum RegisteredErrorCode {{");
+    for entry in entries {
+        let _ = writeln!(out, "    #[serde(rename = \"{}\")]", entry.code);
+        let _ = writeln!(out, "    {},", variant_name(&entry.code));
+    }
+    let _ = writeln!(out, "}}");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "impl RegisteredErrorCode {{");
+    let _ = writeln!(out, "    /// Wire string of this code.");
+    let _ = writeln!(out, "    pub const fn as_str(self) -> &'static str {{");
+    let _ = writeln!(out, "        match self {{");
+    for entry in entries {
+        let _ = writeln!(
+            out,
+            "            Self::{} => \"{}\",",
+            variant_name(&entry.code),
+            entry.code
+        );
+    }
+    let _ = writeln!(out, "        }}");
+    let _ = writeln!(out, "    }}");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "    /// Registry entry of this code (table in registry order)."
+    );
+    let _ = writeln!(
+        out,
+        "    pub const fn entry(self) -> &'static RegisteredError {{"
+    );
+    let _ = writeln!(out, "        &REGISTERED_ERRORS[self as usize]");
+    let _ = writeln!(out, "    }}");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "    /// Parse a wire code; `None` means unregistered — the consumer"
+    );
+    let _ = writeln!(
+        out,
+        "    /// fails closed instead of inventing a classification."
+    );
+    let _ = writeln!(out, "    pub fn parse(code: &str) -> Option<Self> {{");
+    let _ = writeln!(out, "        match code {{");
+    for entry in entries {
+        let _ = writeln!(
+            out,
+            "            \"{}\" => Some(Self::{}),",
+            entry.code,
+            variant_name(&entry.code)
+        );
+    }
+    let _ = writeln!(out, "            _ => None,");
+    let _ = writeln!(out, "        }}");
+    let _ = writeln!(out, "    }}");
+    let _ = writeln!(out, "}}");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/// One registered error registry entry.");
+    let _ = writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq)]");
+    let _ = writeln!(out, "pub struct RegisteredError {{");
+    let _ = writeln!(out, "    pub code: RegisteredErrorCode,");
+    let _ = writeln!(out, "    pub category: ErrorCategory,");
+    let _ = writeln!(out, "    pub retryable: bool,");
+    let _ = writeln!(out, "    pub description: &'static str,");
+    let _ = writeln!(out, "}}");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "/// Registry entries in registry order (indexable by the enum discriminant)."
+    );
+    let _ = writeln!(
+        out,
+        "pub const REGISTERED_ERRORS: [RegisteredError; {}] = [",
+        entries.len()
+    );
+    for entry in entries {
+        let _ = writeln!(out, "    RegisteredError {{");
+        let _ = writeln!(
+            out,
+            "        code: RegisteredErrorCode::{},",
+            variant_name(&entry.code)
+        );
+        let _ = writeln!(
+            out,
+            "        category: ErrorCategory::{},",
+            variant_name(&entry.category)
+        );
+        let _ = writeln!(out, "        retryable: {},", entry.retryable);
+        let _ = writeln!(out, "        description: {:?},", entry.description);
+        let _ = writeln!(out, "    }},");
+    }
+    let _ = writeln!(out, "];");
+    out
+}
+
+fn render_error_registry_ts(entries: &[RegistryEntry], registry_digest: &str) -> String {
+    let mut out = String::new();
+    let _ = writeln!(
+        out,
+        "// @generated by contracts-codegen v{GENERATOR_VERSION}. DO NOT EDIT."
+    );
+    let _ = writeln!(out, "// source: specs/registry/errors.yaml");
+    let _ = writeln!(
+        out,
+        "// registry_digest: {registry_digest} (canonical JSON projection, domain spec-set/0.1)"
+    );
+    let _ = writeln!(out, "// policy: docs/adr/0006-code-generation-policy.md");
+    let _ = writeln!(out, "//");
+    let _ = writeln!(
+        out,
+        "// Registered error codes (docs/standards/error-contract.md): a governed"
+    );
+    let _ = writeln!(
+        out,
+        "// failure surfaces exactly one registered code; an unregistered code is"
+    );
+    let _ = writeln!(
+        out,
+        "// itself a defect and fails closed at the consumer (REQ-ERR-001/002)."
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "import type {{ ErrorCategory }} from \"./common-defs.js\";"
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/** Source registry path (repo-relative). */");
+    let _ = writeln!(
+        out,
+        "export const REGISTRY_PATH = \"specs/registry/errors.yaml\";"
+    );
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/**");
+    let _ = writeln!(
+        out,
+        " * Canonical content digest of the source registry (canonical JSON"
+    );
+    let _ = writeln!(
+        out,
+        " * projection of the parsed YAML, domain `spec-set/0.1` — the spec-set"
+    );
+    let _ = writeln!(out, " * manifest per-asset recipe).");
+    let _ = writeln!(out, " */");
+    let _ = writeln!(out, "export const REGISTRY_DIGEST = \"{registry_digest}\";");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "/** Exhaustive union of the {} registered error codes. */",
+        entries.len()
+    );
+    let _ = writeln!(out, "export type RegisteredErrorCode =");
+    for (index, entry) in entries.iter().enumerate() {
+        let terminator = if index + 1 == entries.len() { ";" } else { "" };
+        let _ = writeln!(out, "  | \"{}\"{terminator}", entry.code);
+    }
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/** One registered error registry entry. */");
+    let _ = writeln!(out, "export interface RegisteredError {{");
+    let _ = writeln!(out, "  readonly code: RegisteredErrorCode;");
+    let _ = writeln!(out, "  readonly category: ErrorCategory;");
+    let _ = writeln!(out, "  readonly retryable: boolean;");
+    let _ = writeln!(out, "  readonly description: string;");
+    let _ = writeln!(out, "}}");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/** Registry entries in registry order. */");
+    let _ = writeln!(
+        out,
+        "export const REGISTERED_ERRORS: readonly RegisteredError[] = ["
+    );
+    for entry in entries {
+        let _ = writeln!(
+            out,
+            "  {{ code: \"{}\", category: \"{}\", retryable: {}, description: {:?} }},",
+            entry.code, entry.category, entry.retryable, entry.description
+        );
+    }
+    let _ = writeln!(out, "];");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/** Code -> registry entry lookup table. */");
+    let _ = writeln!(
+        out,
+        "export const ERROR_REGISTRY: Readonly<Record<RegisteredErrorCode, RegisteredError>> ="
+    );
+    let _ = writeln!(out, "  Object.freeze(");
+    let _ = writeln!(out, "    REGISTERED_ERRORS.reduce((table, entry) => {{");
+    let _ = writeln!(out, "      table[entry.code] = entry;");
+    let _ = writeln!(out, "      return table;");
+    let _ = writeln!(
+        out,
+        "    }}, {{}} as Record<RegisteredErrorCode, RegisteredError>),"
+    );
+    let _ = writeln!(out, "  );");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/**");
+    let _ = writeln!(
+        out,
+        " * Parse a wire code; `undefined` means unregistered — the consumer"
+    );
+    let _ = writeln!(
+        out,
+        " * fails closed instead of inventing a classification."
+    );
+    let _ = writeln!(out, " */");
+    let _ = writeln!(
+        out,
+        "export function parseErrorCode(code: string): RegisteredErrorCode | undefined {{"
+    );
+    let _ = writeln!(
+        out,
+        "  return Object.prototype.hasOwnProperty.call(ERROR_REGISTRY, code)"
+    );
+    let _ = writeln!(out, "    ? (code as RegisteredErrorCode)");
+    let _ = writeln!(out, "    : undefined;");
+    let _ = writeln!(out, "}}");
+    out
 }
 
 fn write_if_changed(path: &PathBuf, content: &str) -> Result<usize, DynError> {
@@ -336,6 +741,15 @@ fn doc_of(schema: &Value) -> Option<String> {
         .map(|s| s.replace('\n', " "))
 }
 
+/// Root type name from a schema title. A `CognitiveOS ` product prefix is
+/// presentation, not part of the type name (`CognitiveOS ShellActionProposal`
+/// -> `ShellActionProposal`); bare titles pass through unchanged.
+fn root_type_name(doc: &Value) -> Option<String> {
+    doc.get("title")
+        .and_then(Value::as_str)
+        .map(|title| pascal(title.strip_prefix("CognitiveOS ").unwrap_or(title)))
+}
+
 fn generate_module(
     file: &str,
     doc: &Value,
@@ -360,11 +774,8 @@ fn generate_module(
         }
     }
     if doc.get("properties").is_some() || doc.get("oneOf").is_some() {
-        let root_name = doc
-            .get("title")
-            .and_then(Value::as_str)
-            .map(pascal)
-            .ok_or_else(|| format!("{file}: root schema has no title"))?;
+        let root_name =
+            root_type_name(doc).ok_or_else(|| format!("{file}: root schema has no title"))?;
         // Defs-only files (common-defs) have a title but no root object.
         if doc.get("properties").is_some() || root_oneof_is_type_union(doc) {
             builder.named_type_of(&root_name, doc)?;
@@ -667,10 +1078,7 @@ impl ModuleBuilder<'_> {
                 .docs
                 .get(&target_file)
                 .ok_or_else(|| format!("unresolved $ref file {target_file}"))?;
-            let root = target_doc
-                .get("title")
-                .and_then(Value::as_str)
-                .map(pascal)
+            let root = root_type_name(target_doc)
                 .ok_or_else(|| format!("{target_file}: no title for root ref"))?;
             return Ok(Ty::Named {
                 module: target_module,
@@ -756,6 +1164,23 @@ impl Module {
         let _ = writeln!(out, "#![allow(clippy::doc_markdown)]");
         let _ = writeln!(out);
         let _ = writeln!(out, "use serde::{{Deserialize, Serialize}};");
+        let _ = writeln!(out);
+        let _ = writeln!(out, "/// Source schema file name (== its `$id`).");
+        let _ = writeln!(out, "pub const SCHEMA_ID: &str = \"{source_file}\";");
+        let _ = writeln!(out);
+        let _ = writeln!(
+            out,
+            "/// Canonical content digest of the source schema (canonical bytes,"
+        );
+        let _ = writeln!(
+            out,
+            "/// domain `schema-bundle/0.1` — the schema-bundle manifest per-asset"
+        );
+        let _ = writeln!(
+            out,
+            "/// digest); the envelope `schema_digest` pin for this payload."
+        );
+        let _ = writeln!(out, "pub const SCHEMA_DIGEST: &str = \"{digest}\";");
         for ty in &self.types {
             let _ = writeln!(out);
             out.push_str(&self.render_rust_type(ty));
@@ -930,6 +1355,25 @@ impl Module {
             let _ = writeln!(out);
             let _ = writeln!(out, "import type {{ {list} }} from \"./{module_stem}.js\";");
         }
+        let _ = writeln!(out);
+        let _ = writeln!(out, "/** Source schema file name (== its `$id`). */");
+        let _ = writeln!(out, "export const SCHEMA_ID = \"{source_file}\";");
+        let _ = writeln!(out);
+        let _ = writeln!(out, "/**");
+        let _ = writeln!(
+            out,
+            " * Canonical content digest of the source schema (canonical bytes,"
+        );
+        let _ = writeln!(
+            out,
+            " * domain `schema-bundle/0.1` — the schema-bundle manifest per-asset"
+        );
+        let _ = writeln!(
+            out,
+            " * digest); the envelope `schema_digest` pin for this payload."
+        );
+        let _ = writeln!(out, " */");
+        let _ = writeln!(out, "export const SCHEMA_DIGEST = \"{digest}\";");
         for ty in &self.types {
             let _ = writeln!(out);
             out.push_str(&self.render_ts_type(ty));
@@ -1052,7 +1496,9 @@ impl Module {
 }
 
 fn rust_field_ident(json_name: &str) -> String {
-    const KEYWORDS: [&str; 5] = ["type", "ref", "use", "move", "const"];
+    // Keywords and reserved words that appear (or may appear) as contract
+    // member names; raw identifiers keep the wire name intact under serde.
+    const KEYWORDS: [&str; 6] = ["type", "ref", "use", "move", "const", "final"];
     if KEYWORDS.contains(&json_name) {
         format!("r#{json_name}")
     } else {
@@ -1072,7 +1518,7 @@ fn union_variant_label(ty: &Ty) -> String {
     }
 }
 
-fn render_rust_mod_rs(modules: &[(String, String)]) -> String {
+fn render_rust_mod_rs(modules: &[(String, String)], digests: &[(String, String)]) -> String {
     let mut out = String::new();
     let _ = writeln!(
         out,
@@ -1080,20 +1526,47 @@ fn render_rust_mod_rs(modules: &[(String, String)]) -> String {
     );
     let _ = writeln!(
         out,
-        "//! Schema-generated bindings for the IMP-08 minimal core object set"
+        "//! Schema-generated bindings for the IMP-08 minimal core object set,"
     );
     let _ = writeln!(
         out,
-        "//! plus its $ref closure (ADR-0006; source specs/schemas/)."
+        "//! the Shell/AKP client families and their $ref closure, plus the"
     );
+    let _ = writeln!(
+        out,
+        "//! errors.yaml registry binding (ADR-0006; sources specs/schemas/,"
+    );
+    let _ = writeln!(out, "//! specs/registry/errors.yaml).");
     let _ = writeln!(out);
     for (name, _) in modules {
         let _ = writeln!(out, "pub mod {name};");
     }
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "/// Schema file name (== `$id`) -> canonical schema content digest"
+    );
+    let _ = writeln!(
+        out,
+        "/// (canonical bytes, domain `schema-bundle/0.1`) for every generated"
+    );
+    let _ = writeln!(
+        out,
+        "/// schema module; the envelope `schema_digest` pin table."
+    );
+    let _ = writeln!(
+        out,
+        "pub const SCHEMA_DIGESTS: [(&str, &str); {}] = [",
+        digests.len()
+    );
+    for (file, digest) in digests {
+        let _ = writeln!(out, "    (\"{file}\", \"{digest}\"),");
+    }
+    let _ = writeln!(out, "];");
     out
 }
 
-fn render_ts_index(modules: &[(String, String)]) -> String {
+fn render_ts_index(modules: &[(String, String)], digests: &[(String, String)]) -> String {
     let mut out = String::new();
     let _ = writeln!(
         out,
@@ -1101,12 +1574,17 @@ fn render_ts_index(modules: &[(String, String)]) -> String {
     );
     let _ = writeln!(
         out,
-        "// Schema-generated bindings for the IMP-08 minimal core object set"
+        "// Schema-generated bindings for the IMP-08 minimal core object set,"
     );
     let _ = writeln!(
         out,
-        "// plus its $ref closure (ADR-0006; source specs/schemas/)."
+        "// the Shell/AKP client families and their $ref closure, plus the"
     );
+    let _ = writeln!(
+        out,
+        "// errors.yaml registry binding (ADR-0006; sources specs/schemas/,"
+    );
+    let _ = writeln!(out, "// specs/registry/errors.yaml).");
     let _ = writeln!(out, "//");
     let _ = writeln!(
         out,
@@ -1121,6 +1599,26 @@ fn render_ts_index(modules: &[(String, String)]) -> String {
         let namespace = camel(stem);
         let _ = writeln!(out, "export * as {namespace} from \"./{stem}.js\";");
     }
+    let _ = writeln!(out);
+    let _ = writeln!(out, "/**");
+    let _ = writeln!(
+        out,
+        " * Schema file name (== `$id`) -> canonical schema content digest"
+    );
+    let _ = writeln!(
+        out,
+        " * (canonical bytes, domain `schema-bundle/0.1`) for every generated"
+    );
+    let _ = writeln!(
+        out,
+        " * schema module; the envelope `schema_digest` pin table."
+    );
+    let _ = writeln!(out, " */");
+    let _ = writeln!(out, "export const SCHEMA_DIGESTS = {{");
+    for (file, digest) in digests {
+        let _ = writeln!(out, "  \"{file}\": \"{digest}\",");
+    }
+    let _ = writeln!(out, "}} as const;");
     out
 }
 
