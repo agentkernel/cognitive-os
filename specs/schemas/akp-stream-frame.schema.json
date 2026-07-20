@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akp-stream-frame.schema.json",
+  "title": "CognitiveOS AkpStreamFrame",
+  "description": "AKP stream fragment wire shape (specs/akp/README.md section 8; REQ-AKP-STR-001, REQ-AKP-STR-002, REQ-AKP-SHELL-002). Every fragment carries stream identity, a monotonic sequence, a kind, an optional payload content digest, a final flag and optional cumulative cost. The registered kinds pin the reference-implementation watch profile (event-audit-watch section 5): one snapshot, ordered deltas, machine-coded stream errors. Duplicate/gap/truncation detection and backpressure remain behavioral gates.",
+  "type": "object",
+  "required": [
+    "stream_id",
+    "sequence",
+    "kind"
+  ],
+  "properties": {
+    "stream_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "snapshot",
+        "delta",
+        "error"
+      ]
+    },
+    "payload": {},
+    "payload_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "snapshot_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "final": {
+      "type": "boolean"
+    },
+    "cost": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "error": {
+      "$ref": "common-defs.schema.json#/$defs/error"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "snapshot"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "snapshot_version",
+          "payload"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "delta"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "payload"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "error"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "error"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

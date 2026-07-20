@@ -1,0 +1,37 @@
+{
+  "id": "AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003",
+  "title": "AKP error result without a registered machine error envelope is rejected",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-AKP-ENV-001",
+    "REQ-ERR-001"
+  ],
+  "input": {
+    "validate_against": "specs/schemas/akp-result-envelope.schema.json",
+    "object": {
+      "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
+      "correlation_id": "conv://tenant-a/session-1/turn-9",
+      "protocol_version": "cognitiveos.akp/0.2",
+      "status": "error",
+      "result": {
+        "detail": "something went wrong"
+      }
+    }
+  },
+  "expected": {
+    "schema_valid": false,
+    "decision": "deny",
+    "error": {
+      "code": "SCHEMA_MISMATCH",
+      "category": "protocol"
+    },
+    "rejection_reasons": [
+      "status `error` requires the registered machine error envelope (common-defs error: code, category, stage, retryable)",
+      "a free-text failure must not replace a registered code (REQ-ERR-001: errors are never silently reshaped)"
+    ]
+  }
+}

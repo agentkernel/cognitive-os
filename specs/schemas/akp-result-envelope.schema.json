@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akp-result-envelope.schema.json",
+  "title": "CognitiveOS AkpResultEnvelope",
+  "description": "AKP result envelope wire shape (specs/akp/README.md sections 3, 5 and 10.1; REQ-AKP-ENV-001, REQ-AKP-RES-001, REQ-ERR-001). The status set pins the reference-implementation profile: the section 5 base statuses plus the section 10.1 management distinctions. No status maps receipt/accepted/remote-completed to local acceptance; that stays a behavioral gate (REQ-AKP-RES-001). An `error` status requires the registered machine error; `partial` requires a continuation (section 5).",
+  "type": "object",
+  "required": [
+    "in_reply_to",
+    "correlation_id",
+    "protocol_version",
+    "status"
+  ],
+  "properties": {
+    "in_reply_to": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol_version": {
+      "const": "cognitiveos.akp/0.2"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "accepted",
+        "partial",
+        "cancel_pending",
+        "error",
+        "outcome_unknown",
+        "verified",
+        "committed"
+      ]
+    },
+    "result": {},
+    "result_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "result_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "error": {
+      "$ref": "common-defs.schema.json#/$defs/error"
+    },
+    "observed_versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cost": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "continuation": {},
+    "audit_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "extensions": {
+      "type": "array",
+      "items": {
+        "$ref": "akp-request-envelope.schema.json#/$defs/extension"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "error"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "partial"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "continuation"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,42 @@
+{
+  "id": "AKP-ENVELOPE-AMBIGUOUS-PAYLOAD-002",
+  "title": "AKP request envelope carrying both inline payload and payload_ref is rejected",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-AKP-ENV-001"
+  ],
+  "input": {
+    "validate_against": "specs/schemas/akp-request-envelope.schema.json",
+    "object": {
+      "message_id": "01890a5d-ac96-774b-bcce-b302099a8071",
+      "operation": "intent.record",
+      "protocol_version": "cognitiveos.akp/0.2",
+      "schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "sender": "principal://tenant-a/user-alice",
+      "audience": "kernel://task-gateway",
+      "correlation_id": "conv://tenant-a/session-1/turn-10",
+      "deadline": "2026-07-20T00:05:00Z",
+      "idempotency_key": "idem-intent-record-0002",
+      "payload": {
+        "raw_expression": "archive the July invoices"
+      },
+      "payload_ref": "blob://tenant-a/payloads/uir-0002"
+    }
+  },
+  "expected": {
+    "schema_valid": false,
+    "decision": "deny",
+    "error": {
+      "code": "SCHEMA_MISMATCH",
+      "category": "protocol"
+    },
+    "rejection_reasons": [
+      "exactly one of `payload` or `payload_ref` must be present (immutable payload/ref, REQ-AKP-ENV-001)",
+      "an envelope carrying both leaves the digest-pinned content ambiguous"
+    ]
+  }
+}

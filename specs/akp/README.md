@@ -33,6 +33,8 @@ MCP、A2A 与 DDS 是外部/下层适配边界，不是 AKP 的同义词。
 
 结果信封字段：原请求关联、`status`、`result|result_ref`、`error`、`observed_versions`、`cost`、`continuation` 与审计引用。
 
+机器 schema：请求信封为 [akp-request-envelope.schema.json](../schemas/akp-request-envelope.schema.json)，结果信封为 [akp-result-envelope.schema.json](../schemas/akp-result-envelope.schema.json)（原请求关联 = `in_reply_to`，审计引用 = `audit_ref`）。schema 固定成员形状；版本协商、critical extension 拒绝顺序、payload digest 验证与 effecting 幂等键要求仍是行为门。
+
 payload_ref 读取需再次授权；URI 或网络可达性不是权限。
 
 [REQ-AKP-ENV-001] 每个跨边界 AKP 消息 **MUST** 带版本、schema digest、发送者、受众、关联、deadline 和不可变 payload/ref。
@@ -77,6 +79,8 @@ outcome_unknown 必须映射 Core Effect 对账，不得包装成普通超时。
 
 取消是有因果关系的请求，至少包含 target、reason、deadline 与 principal。
 
+机器 schema：`shell.control` 取消 payload 为 [shell-control-request.schema.json](../schemas/shell-control-request.schema.json)（target/reason 在 payload；deadline 与 principal 由请求信封承载）。
+
 `cancel_pending` 表示传播中；`cancelled` 仅表示本地确定取消条件成立。
 
 取消不保证远端计算、计费、数据处理或外部效果已经停止。
@@ -86,6 +90,8 @@ outcome_unknown 必须映射 Core Effect 对账，不得包装成普通超时。
 ## 8. 流式与背压
 
 每个流片段带 stream_id、sequence、kind、digest、final 标志和累计成本。
+
+机器 schema：流片段为 [akp-stream-frame.schema.json](../schemas/akp-stream-frame.schema.json)（digest = `payload_digest`，累计成本 = `cost`；已登记 kind 集固定参考实现 watch profile：snapshot/delta/error）。重复、缺口、乱序、截断检测与背压仍是行为门。
 
 流式 partial 默认为候选数据，不能在 final verification 前作为 committed state。
 
