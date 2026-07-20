@@ -10,6 +10,7 @@
 - 新增 Takeover Host 最小拓扑与职责分离：Control API、Process Supervisor、Terminal Broker、Session Adopter、File Observer、Workspace Manager、Credential Broker、Local Event Ledger、Verifier。
 - 新增进程 identity/ownership generation、single-controller lease、文件 snapshot/lock/digest/parser、symlink/TOCTOU、session import、移动本机确认、接管状态、威胁、PoC、可执行 oracle 和开发车道要求。
 - 在提示词末尾追加“文档先行、计划治理与多代理开发”阶段协议：先独立研究并完善/优化/局部或整体重构现有产品文档，再建立 Agent Hub 独立文档目录、canonical/derived/owner/traceability/source/template 治理体系，生成 Master 与 11 类分开发计划、统一进度表和分车道自包含提示词；只有产品/计划批准且仓库 gate 满足后才能启动多代理实现。
+- 末尾另加单段“最终强制执行提示”，把 `@docs` 产品设计审查/重构、独立文档治理、具体开发计划/进度表和 gate 后按计划调用多代理开发收敛为不可跳过的执行顺序，避免长提示词中关键阶段被忽略。
 - 更新 `docs/README.md` 与 `docs/plan/PROGRESS.md`。核心提交：`7bd6903`。
 - 本批为 prompt/informative 文档，无关联 REQ/F/IMP；未修改 normative 机器资产或实现代码。
 
