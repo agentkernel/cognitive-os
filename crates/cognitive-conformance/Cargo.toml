@@ -8,6 +8,13 @@ publish.workspace = true
 
 [dependencies]
 cognitive-contracts = { workspace = true }
+# M2 behavioral execution: the implementation under test is the real kernel
+# transition engine over the SQLite WAL authority store. The conformance
+# crate is a leaf; this dependency direction is legal (contracts -> domain
+# -> kernel/store -> conformance).
+cognitive-domain = { workspace = true }
+cognitive-kernel = { workspace = true }
+cognitive-store = { workspace = true }
 # Draft 2020-12 validation for wire-schema vector execution (same pinned
 # major as the contracts-side schema re-verification tests).
 jsonschema = { version = "0.47", default-features = false }
@@ -18,6 +25,8 @@ serde_json = { workspace = true }
 # surface is small and stable; swap only if the YAML surface grows.
 serde_yaml = "0.9"
 sha2 = { workspace = true }
+# Throwaway per-vector SQLite databases for behavioral execution.
+tempfile = { workspace = true }
 thiserror = { workspace = true }
 
 [[bin]]

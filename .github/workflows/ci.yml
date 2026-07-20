@@ -78,7 +78,8 @@ jobs:
       - name: Traceability matrix freshness
         run: node tools/src/gen-matrix.mjs --check
 
-      # Conformance runner (M1 static-contract execution + honest not-run) ---
+      # Conformance runner (M1 static-contract + M2 kernel-behavioral
+      # execution; honest not-run for later-milestone behavior) ------------
       - name: Run conformance runner (five-state report + sample manifest)
         run: cargo run --locked -p cognitive-conformance --bin conformance-runner
 
@@ -94,7 +95,7 @@ jobs:
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
             const s = r.summary;
-            const pinned = { total_vectors: 81, pass: 30, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 51 };
+            const pinned = { total_vectors: 81, pass: 31, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 50 };
             for (const [key, want] of Object.entries(pinned)) {
               if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
             }
@@ -117,14 +118,16 @@ jobs:
           "
 
       # Runner self-check (conformance-evidence.md section 3): a deliberately
-      # wrong, schema-valid implementation MUST be failed by the runner.
+      # wrong, schema-valid implementation MUST be failed by the runner —
+      # including the M2 behavioral corruption (a gate-bypassing direct
+      # store writer over the real SQLite authority database).
       - name: Runner self-check (wrong implementation must fail)
         run: |
           cargo run --locked -q -p cognitive-conformance --bin conformance-runner -- --self-check
           node -e "
             const r = require('./artifacts/evidence/conformance/self-check-report.json');
             if (r.corrupted_but_still_passing.length !== 0) throw new Error('wrong implementation not failed: ' + r.corrupted_but_still_passing.join(', '));
-            if (r.must_flip.length < 11) throw new Error('self-check corpus shrank to ' + r.must_flip.length);
+            if (r.must_flip.length < 12) throw new Error('self-check corpus shrank to ' + r.must_flip.length);
             console.log('self-check honest:', r.flipped_to_fail.length, 'corrupted vectors all failed');
           "
 

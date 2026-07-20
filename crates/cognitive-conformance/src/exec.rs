@@ -1,23 +1,25 @@
-//! M1 static-contract vector execution.
+//! Vector execution: M1 static-contract gates plus M2 kernel-behavioral
+//! gates.
 //!
 //! Execution discipline (`docs/standards/conformance-evidence.md` section 2):
 //! a vector is reported `pass` only when its stated `input` was actually
 //! executed against an implementation and the observable result matched
-//! `expected`. The M1 implementation under test is the set of deterministic
-//! reference gates in this module, each grounded in a registered machine
-//! asset (schema files, registries, transition tables) — never in the
-//! vector's own `expected` document. Vectors whose expectations require
-//! kernel/runtime behavior that does not exist yet are honestly reported
-//! `not-run` with a recorded reason.
+//! `expected`. Static gates are grounded in registered machine assets
+//! (schema files, registries, transition tables) — never in the vector's
+//! own `expected` document. The M2 behavioral gates (`behavior` module)
+//! execute against the real `cognitive-kernel` transition engine over the
+//! `cognitive-store` SQLite WAL adapter. Vectors whose expectations require
+//! runtime behavior that does not exist yet are honestly reported `not-run`
+//! with a recorded reason.
 //!
 //! The deliberately wrong implementation (`ImplementationKind::
 //! DeliberatelyWrong`) exists for the runner self-check demanded by
 //! `docs/standards/conformance-evidence.md` section 3 and DEVELOPMENT-PLAN
-//! M1 acceptance 2: its outputs are schema-shaped but behaviorally wrong
-//! (bridges legacy shapes, accepts stale CAS writes, allows illegal effect
-//! transitions, promotes untrusted content to the control plane, accepts
-//! incomplete benefit claims). The runner MUST fail it; "schema-valid alone
-//! is never pass".
+//! M1 acceptance 2: its outputs are schema-shaped but behaviorally wrong —
+//! static side: bridges legacy shapes, accepts incomplete benefit claims,
+//! promotes untrusted content to the control plane; behavioral side (M2): a
+//! gate-bypassing direct store writer. The runner MUST fail it;
+//! "schema-valid alone is never pass".
 
 use crate::LoadedVector;
 use serde::Serialize;
@@ -25,6 +27,9 @@ use serde_json::{Value, json};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+/// M2 behavioral execution against the real kernel/store authority path.
+mod behavior;
 
 /// Implementation selector for vector execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,7 +51,8 @@ impl ImplementationKind {
     }
 }
 
-/// How a vector is executed by the M1 runner.
+/// How a vector is executed by the runner (M1 static-contract gates plus
+/// the M2 kernel-behavioral gates).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ExecutionMode {
@@ -58,17 +64,24 @@ pub enum ExecutionMode {
     TraceabilityGate,
     /// Whole-registry pairwise coverage (`spec-contract-coverage`).
     CoverageGate,
-    /// Deterministic compare-and-swap admission (REQ-STATE-003;
-    /// `STATE_CONFLICT` in `specs/registry/errors.yaml`).
-    CasGate,
-    /// Transition-table admission over `specs/transitions/*.transitions.json`.
-    TransitionGate,
     /// Performance-report contract gate (REQ-PERF-002/004/005;
     /// `performance-report.schema.json`; `PERFORMANCE_REPORT_INCOMPLETE`).
     PerfContractGate,
     /// Context trust-plane static contract (REQ-CTX-008 / REQ-SEC-002;
     /// `context-view.schema.json` trust/role constraints).
     TrustPlaneGate,
+    /// M2 behavioral: stale compare-and-swap write against the real kernel
+    /// gate over a SQLite WAL authority store (REQ-STATE-003; supersedes
+    /// the M1 static CAS comparator).
+    CasBehavior,
+    /// M2 behavioral: illegal Effect `OUTCOME_UNKNOWN` exit against the
+    /// real kernel gate, with still-unknown continuations committed for
+    /// real (REQ-EFF-STATE-001; supersedes the M1 static table lookup).
+    EffectClosureBehavior,
+    /// M2 behavioral: forced remote-completed acceptance against the real
+    /// kernel gate over the registered task table (REQ-GW-002,
+    /// REQ-INTENT-ACCEPT-001).
+    TaskAcceptanceBehavior,
 }
 
 /// Execution plan for one vector, decided by structural classification.
@@ -119,10 +132,12 @@ pub struct VectorOutcome {
     pub execution: Option<ExecutionRecord>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub not_run_reason: Option<String>,
-    /// Partial static contract-side assertions recorded for plan-named
-    /// behavioral vectors (DEVELOPMENT-PLAN M1 acceptance 4). Never a pass.
+    /// Partial contract assertions recorded for plan-named behavioral
+    /// vectors that cannot be fully executed yet (M1: static side,
+    /// DEVELOPMENT-PLAN M1 acceptance 4; M2: the real read-only degradation
+    /// subset). Never a pass.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub static_contract_assertions: Option<Value>,
+    pub partial_contract_assertions: Option<Value>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -182,8 +197,6 @@ struct TransitionEdge {
     to: String,
     #[serde(default)]
     guards: Vec<String>,
-    #[serde(default)]
-    metadata: Option<Value>,
 }
 
 /// Loaded, parsed machine assets shared by all gates.
@@ -326,16 +339,20 @@ impl AssetContext {
 // Classification
 // ---------------------------------------------------------------------------
 
-/// Vector ids of the plan-named statically executable singletons
-/// (DEVELOPMENT-PLAN M1 acceptance 4 and the lane-cfr layer-2 starter).
+/// Vector ids of the singleton execution paths. The M2 behavioral trio is
+/// executed against the real `cognitive-kernel`/`cognitive-store` authority
+/// path (KRN M2 handoff candidate list); pinning by id keeps future vectors
+/// defaulting to `not-run` instead of silently acquiring an unsound
+/// execution path.
 const CAS_VECTOR_ID: &str = "STATE-CAS-002";
 const TRANSITION_VECTOR_ID: &str = "EFFECT-STATE-CLOSURE-008";
+const TASK_ACCEPTANCE_VECTOR_ID: &str = "GW-REMOTE-COMPLETE-001";
 const PERF_VECTOR_ID: &str = "PERF-REPORT-CONTRACT-001";
 const TRUST_VECTOR_ID: &str = "CTX-TRUST-004";
 const COVERAGE_VECTOR_ID: &str = "SPEC-CONTRACT-COVERAGE-001";
-/// Behavioral vector that additionally receives recorded static
-/// contract-side assertions (never a pass) per DEVELOPMENT-PLAN M1
-/// acceptance 4.
+/// Behavioral vector that receives recorded partial contract assertions
+/// (M1 static side + M2 real read-only degradation subset; never a pass —
+/// disk-full and dispatch/stop/revoke expectations are M4/M5 behavior).
 const STORE_DEGRADATION_VECTOR_ID: &str = "STATE-STORE-DEGRADE-001";
 
 /// Reason strings for honestly-not-run layers: behavioral execution arrives
@@ -382,8 +399,9 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
     }
     match vector.id.as_str() {
         COVERAGE_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CoverageGate),
-        CAS_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CasGate),
-        TRANSITION_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TransitionGate),
+        CAS_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::CasBehavior),
+        TRANSITION_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::EffectClosureBehavior),
+        TASK_ACCEPTANCE_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TaskAcceptanceBehavior),
         PERF_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::PerfContractGate),
         TRUST_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TrustPlaneGate),
         _ => ExecutionPlan::NotRun {
@@ -493,6 +511,10 @@ struct GateOutput {
     actual: Value,
     grounding: Vec<String>,
     informative: Vec<&'static str>,
+    /// Overrides the implementation label of the execution record (used by
+    /// the behavioral gates, whose implementation under test is the real
+    /// kernel/store path, not the runner's static reference gates).
+    implementation: Option<&'static str>,
     evidence: Value,
 }
 
@@ -602,6 +624,7 @@ fn schema_gate(
             "specs/registry/errors.yaml#SCHEMA_MISMATCH".to_owned(),
         ],
         informative: vec!["rejection_reasons"],
+        implementation: None,
         evidence: json!({
             "validator": "jsonschema draft 2020-12, relative $refs from containing file",
             "schema_validation_errors": errors,
@@ -697,6 +720,7 @@ fn traceability_gate(
             input_owner.to_owned(),
         ],
         informative: vec![],
+        implementation: None,
         evidence: json!({
             "registry_checks": checks,
             "owner_schema": owner_schema_required,
@@ -748,172 +772,12 @@ fn coverage_gate(
         }),
         grounding: vec!["specs/registry/requirements.yaml".to_owned()],
         informative: vec![],
+        implementation: None,
         evidence: json!({
             "pairs_checked": ids.len(),
             "unregistered": unregistered,
             "owner_spec_mismatches": owner_mismatches,
             "owner_spec_files_missing": missing_files,
-        }),
-    })
-}
-
-fn cas_gate(
-    ctx: &AssetContext,
-    vector: &LoadedVector,
-    kind: ImplementationKind,
-) -> Result<GateOutput, ExecError> {
-    let expected_version = vector.input.get("expected_version").and_then(Value::as_i64);
-    let authoritative_version = vector
-        .input
-        .get("authoritative_version")
-        .and_then(Value::as_i64);
-    let (Some(expected_version), Some(authoritative_version)) =
-        (expected_version, authoritative_version)
-    else {
-        return Err(ExecError::Environment(
-            "CAS vector lacks integer expected_version/authoritative_version".to_owned(),
-        ));
-    };
-
-    // Reference CAS admission (REQ-STATE-003): a write is applied only when
-    // the caller's expected version equals the authoritative version;
-    // otherwise it is rejected with registered STATE_CONFLICT and audited.
-    // The wrong implementation applies the stale write anyway.
-    let versions_match = expected_version == authoritative_version;
-    let accepted = match kind {
-        ImplementationKind::Reference => versions_match,
-        ImplementationKind::DeliberatelyWrong => true,
-    };
-
-    let actual = if accepted {
-        json!({
-            "decision": "accept",
-            "error": Value::Null,
-            "write_applied": true,
-            "audit_required": false,
-        })
-    } else {
-        json!({
-            "decision": "reject",
-            "error": ctx.registered_error("STATE_CONFLICT").ok_or_else(|| {
-                ExecError::Environment("STATE_CONFLICT not registered".to_owned())
-            })?,
-            "write_applied": false,
-            // Every authorization/state denial is auditable (REQ-AUDIT-001).
-            "audit_required": true,
-        })
-    };
-
-    Ok(GateOutput {
-        actual,
-        grounding: vec![
-            "specs/registry/requirements.yaml#REQ-STATE-003".to_owned(),
-            "specs/registry/errors.yaml#STATE_CONFLICT".to_owned(),
-        ],
-        informative: vec![],
-        evidence: json!({
-            "expected_version": expected_version,
-            "authoritative_version": authoritative_version,
-            "versions_match": versions_match,
-        }),
-    })
-}
-
-fn transition_gate(
-    ctx: &AssetContext,
-    vector: &LoadedVector,
-    kind: ImplementationKind,
-) -> Result<GateOutput, ExecError> {
-    let from = vector
-        .input
-        .get("effect_state")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let requested = vector
-        .input
-        .get("requested_transition")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-
-    let table = &ctx.effect_transitions;
-    let mut allowed_exits: BTreeSet<&str> = BTreeSet::new();
-    let mut edge_exists = false;
-    for edge in &table.transitions {
-        if edge.from == from {
-            allowed_exits.insert(edge.to.as_str());
-            if edge.to == requested {
-                edge_exists = true;
-            }
-        }
-    }
-    let post_reconcile_still_unknown: BTreeSet<&str> = table
-        .transitions
-        .iter()
-        .filter(|edge| {
-            edge.from == "RECONCILED"
-                && edge
-                    .metadata
-                    .as_ref()
-                    .and_then(|m| m.get("reconciliation_result"))
-                    .and_then(Value::as_str)
-                    == Some("still_unknown")
-        })
-        .map(|edge| edge.to.as_str())
-        .collect();
-
-    // The wrong implementation lets the requested commit through even though
-    // the registered table has no such edge.
-    let allowed = match kind {
-        ImplementationKind::Reference => edge_exists,
-        ImplementationKind::DeliberatelyWrong => true,
-    };
-    let reported_exits: Vec<&str> = match kind {
-        ImplementationKind::Reference => allowed_exits.iter().copied().collect(),
-        ImplementationKind::DeliberatelyWrong => allowed_exits
-            .iter()
-            .copied()
-            .chain(std::iter::once(requested))
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect(),
-    };
-
-    // Denied exits from OUTCOME_UNKNOWN map to the registered
-    // EFFECT_OUTCOME_UNKNOWN ("execution may have occurred and requires
-    // reconciliation or quarantine"); other from-states have no registered
-    // denial mapping and would stay unclassified (not-run).
-    let error = if allowed {
-        Value::Null
-    } else if from == "OUTCOME_UNKNOWN" {
-        ctx.registered_error("EFFECT_OUTCOME_UNKNOWN")
-            .ok_or_else(|| {
-                ExecError::Environment("EFFECT_OUTCOME_UNKNOWN not registered".to_owned())
-            })?
-    } else {
-        return Err(ExecError::Environment(format!(
-            "no registered denial code mapping for from-state {from}"
-        )));
-    };
-
-    Ok(GateOutput {
-        actual: json!({
-            "decision": if allowed { "allow" } else { "deny" },
-            "error": error,
-            "allowed_exits": reported_exits,
-            "post_reconcile_exits_when_still_unknown": post_reconcile_still_unknown
-                .iter()
-                .copied()
-                .collect::<Vec<_>>(),
-        }),
-        grounding: vec![
-            "specs/transitions/effect.transitions.json".to_owned(),
-            "specs/registry/errors.yaml#EFFECT_OUTCOME_UNKNOWN".to_owned(),
-        ],
-        informative: vec![],
-        evidence: json!({
-            "from": from,
-            "requested": requested,
-            "edge_exists_in_registered_table": edge_exists,
         }),
     })
 }
@@ -1051,6 +915,7 @@ fn perf_contract_gate(
             "specs/registry/errors.yaml#PERFORMANCE_REPORT_INCOMPLETE".to_owned(),
         ],
         informative: vec!["negative_case_result.reason"],
+        implementation: None,
         evidence: json!({
             "report_schema_valid": report_valid,
             "fragment_schema_valid": fragment_valid,
@@ -1186,6 +1051,7 @@ fn trust_plane_gate(
             "specs/registry/requirements.yaml#REQ-SEC-002".to_owned(),
         ],
         informative: vec![],
+        implementation: None,
         evidence: json!({
             "scope": "static contract side only; runtime isolation behavior is M3 evidence",
             "schema_probe": {
@@ -1232,10 +1098,15 @@ fn execute_gate(
         ExecutionMode::SchemaGate => schema_gate(ctx, vector, kind),
         ExecutionMode::TraceabilityGate => traceability_gate(ctx, vector, kind),
         ExecutionMode::CoverageGate => coverage_gate(ctx, vector, kind),
-        ExecutionMode::CasGate => cas_gate(ctx, vector, kind),
-        ExecutionMode::TransitionGate => transition_gate(ctx, vector, kind),
         ExecutionMode::PerfContractGate => perf_contract_gate(ctx, vector, kind),
         ExecutionMode::TrustPlaneGate => trust_plane_gate(ctx, vector, kind),
+        ExecutionMode::CasBehavior => behavior::cas_behavior(ctx, vector, kind),
+        ExecutionMode::EffectClosureBehavior => {
+            behavior::effect_closure_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::TaskAcceptanceBehavior => {
+            behavior::task_acceptance_behavior(ctx, vector, kind)
+        }
     }
 }
 
@@ -1254,7 +1125,7 @@ pub fn execute_vector(
         result,
         execution: None,
         not_run_reason: None,
-        static_contract_assertions: None,
+        partial_contract_assertions: None,
     };
 
     match classify(vector) {
@@ -1262,7 +1133,11 @@ pub fn execute_vector(
             let mut outcome = base("not-run");
             outcome.not_run_reason = Some(reason);
             if vector.id == STORE_DEGRADATION_VECTOR_ID {
-                outcome.static_contract_assertions = Some(store_degradation_assertions(ctx));
+                outcome.partial_contract_assertions = Some(json!({
+                    "static_contract": store_degradation_assertions(ctx),
+                    "m2_behavioral_read_only_subset":
+                        behavior::store_degradation_behavioral_subset(),
+                }));
             }
             outcome
         }
@@ -1295,7 +1170,7 @@ pub fn execute_vector(
                 let mut outcome = base(result);
                 outcome.execution = Some(ExecutionRecord {
                     mode,
-                    implementation: kind.label(),
+                    implementation: gate.implementation.unwrap_or_else(|| kind.label()),
                     grounding: gate.grounding,
                     compared_fields: compared,
                     informative_fields: gate.informative.iter().map(|s| (*s).to_owned()).collect(),
@@ -1345,13 +1220,17 @@ pub struct SelfCheckReport {
     pub verdict: &'static str,
 }
 
-/// Gates the deliberately wrong implementation corrupts observably.
-const CORRUPTED_MODES: [ExecutionMode; 5] = [
+/// Gates the deliberately wrong implementation corrupts observably. The
+/// three behavioral modes are corrupted by a gate-bypassing direct store
+/// writer (no table lookup, no CAS respect, no guards/evidence) instead of
+/// a wrong comparator.
+const CORRUPTED_MODES: [ExecutionMode; 6] = [
     ExecutionMode::SchemaGate,
-    ExecutionMode::CasGate,
-    ExecutionMode::TransitionGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::TrustPlaneGate,
+    ExecutionMode::CasBehavior,
+    ExecutionMode::EffectClosureBehavior,
+    ExecutionMode::TaskAcceptanceBehavior,
 ];
 
 /// Run the self-check: the deliberately wrong implementation must fail every
@@ -1396,14 +1275,18 @@ pub fn self_check(
     Ok(SelfCheckReport {
         report: "cognitiveos-conformance-self-check",
         wrong_implementation: "schema-valid outputs, wrong behavior: bridges legacy governed-object \
-             shapes, accepts stale CAS writes, allows OUTCOME_UNKNOWN->COMMITTED, accepts \
-             incomplete benefit claims, promotes untrusted content to the control plane",
+             shapes, accepts incomplete benefit claims, promotes untrusted content to the \
+             control plane, and (behavioral, M2) writes authority state through a \
+             gate-bypassing direct store writer — blind last-write-wins over stale CAS, \
+             commits OUTCOME_UNKNOWN->COMMITTED, force-completes an ACTIVE task from a \
+             remote report",
         corrupted_gates: vec![
             "schema-gate",
-            "cas-gate",
-            "transition-gate",
             "perf-contract-gate",
             "trust-plane-gate",
+            "cas-behavior",
+            "effect-closure-behavior",
+            "task-acceptance-behavior",
         ],
         must_flip,
         flipped_to_fail: flipped,

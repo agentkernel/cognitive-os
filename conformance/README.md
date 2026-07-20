@@ -69,9 +69,10 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 ## Running
 
-The reference runner is `crates/cognitive-conformance` (M1 capability:
-static-contract execution). `vectors/*.json` stay declarative inputs and
-expected outcomes usable by any runner author.
+The reference runner is `crates/cognitive-conformance` (M2 capability:
+static-contract execution plus kernel-behavioral execution).
+`vectors/*.json` stay declarative inputs and expected outcomes usable by
+any runner author.
 
 ```powershell
 cargo run -p cognitive-conformance --bin conformance-runner
@@ -80,18 +81,23 @@ cargo run -p cognitive-conformance --bin conformance-runner -- --self-check
 
 The default mode enumerates every vector, executes the statically decidable
 subset against deterministic reference gates grounded in the registered
-machine assets (schema validation, registry traceability, CAS admission,
-transition-table admission, performance-report contract, context trust-plane
-static contract), and writes a five-state machine report plus the sample
-profile manifest to `artifacts/evidence/conformance/` (gitignored). Vectors
-whose expectations require kernel/runtime behavior are reported `not-run`
-with a recorded reason until their owning milestone delivers behavioral
-execution (`docs/standards/conformance-evidence.md` section 2). A
-static-contract `pass` is never a behavioral or Profile conformance claim.
+machine assets (schema validation, registry traceability, performance-report
+contract, context trust-plane static contract), executes the M2
+kernel-backed vectors behaviorally against the real
+`cognitive-kernel` transition engine over the `cognitive-store` SQLite WAL
+authority adapter (stale CAS rejection, illegal Effect `OUTCOME_UNKNOWN`
+exits, forced remote-completed acceptance), and writes a five-state machine
+report plus the sample profile manifest to
+`artifacts/evidence/conformance/` (gitignored). Vectors whose expectations
+require runtime behavior of later milestones are reported `not-run` with a
+recorded reason (`docs/standards/conformance-evidence.md` section 2). A
+`pass` is scoped to its recorded execution mode and is never a Profile
+conformance claim.
 
 `--self-check` executes a deliberately wrong implementation (schema-valid
-outputs, wrong behavior) and exits non-zero unless the runner fails every
-corrupted vector (`docs/standards/conformance-evidence.md` section 3).
+outputs, wrong behavior; behaviorally a gate-bypassing direct store writer)
+and exits non-zero unless the runner fails every corrupted vector
+(`docs/standards/conformance-evidence.md` section 3).
 
 Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
 
