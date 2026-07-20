@@ -10,7 +10,8 @@ Layout convention:
 
 ```text
 artifacts/evidence/
-  conformance/     conformance-report.json, sample-profile-manifest.json
+  conformance/     conformance-report.json, sample-profile-manifest.json,
+                   self-check-report.json (wrong-implementation self-check)
   golden/          rust-digests.json, ts-digests.json (CI cross-language diff)
   performance/     performance reports (REQ-PERF-004/005, from M6)
   faults/          fault-injection and crash-recovery evidence (from M4)
@@ -20,7 +21,11 @@ Reproduce the conformance artifacts locally:
 
 ```powershell
 cargo run -p cognitive-conformance --bin conformance-runner
+cargo run -p cognitive-conformance --bin conformance-runner -- --self-check
 ```
+
+The runner prints each emitted report's sha256; committed documents cite
+evidence by path + digest (`docs/standards/conformance-evidence.md` §4).
 
 A file in this directory is NOT a conformance claim. Claims live only in a
 profile manifest whose `test_runs` reference digest-pinned evidence

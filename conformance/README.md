@@ -20,7 +20,22 @@ This directory contains machine-readable conformance vectors. It is a data packa
 14. Semantic mediation and CRB hard-bound enforcement.
 15. User intent, Agent Shell target/preview/channel/control/watch and acceptance semantics.
 
-测试层编号是单一累积分类，不表示存在 runner、实现或通过结果。
+测试层编号是单一累积分类，不表示存在实现或通过结果。
+
+Layers 7 and 8 keep no dedicated vector `layer` slug (documented disposition
+of drift D-004, findings ledger): their scenarios are genuinely
+cross-cutting and are hosted under other slugs. The pinned mapping (kept in
+sync with `cognitive-conformance::CROSS_SLICE_HOSTED`):
+
+- Layer 7 (knowledge compilation and invalidation):
+  `KNOW-INVALIDATION-001` (`context-semantic`), `KNOW-POISON-001`
+  (`security-negative`), `KNOW-MAINTENANCE-001` (`harness-loop`).
+- Layer 8 (performance and reproducibility contracts):
+  `PERF-REPORT-CONTRACT-001` (`wire-schema`).
+
+Runner reports list these vectors under their primary slug's layer and
+additionally show them as `cross_slice_hosted` on layers 7/8, so the zero
+dedicated-slug count is never read as zero coverage.
 ## Manifests and status language
 
 A conformance claim is represented by `specs/schemas/profile-manifest.schema.json`. A manifest pins the specification, requirement and schema bundle digests, encoding/canonicalization profile, suite digest, implementation version, results, degradations, and evidence. Profile values have distinct meanings:
@@ -54,16 +69,31 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 ## Running
 
-There is currently no conformance runner in this repository. `vectors/*.json` are declarative inputs and expected outcomes for runner authors. At minimum, consumers can parse every JSON document, validate schemas against JSON Schema draft 2020-12, resolve every relative `$ref` from the containing schema, parse both YAML registries, and verify that each vector's `requirement_ids` and error codes exist in the registries.
-
-Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
-
-Example validation with suitable Python packages installed:
+The reference runner is `crates/cognitive-conformance` (M1 capability:
+static-contract execution). `vectors/*.json` stay declarative inputs and
+expected outcomes usable by any runner author.
 
 ```powershell
-python -m pip install jsonschema PyYAML
-python scripts-or-your-runner.py  # repository currently provides no runner
+cargo run -p cognitive-conformance --bin conformance-runner
+cargo run -p cognitive-conformance --bin conformance-runner -- --self-check
 ```
+
+The default mode enumerates every vector, executes the statically decidable
+subset against deterministic reference gates grounded in the registered
+machine assets (schema validation, registry traceability, CAS admission,
+transition-table admission, performance-report contract, context trust-plane
+static contract), and writes a five-state machine report plus the sample
+profile manifest to `artifacts/evidence/conformance/` (gitignored). Vectors
+whose expectations require kernel/runtime behavior are reported `not-run`
+with a recorded reason until their owning milestone delivers behavioral
+execution (`docs/standards/conformance-evidence.md` section 2). A
+static-contract `pass` is never a behavioral or Profile conformance claim.
+
+`--self-check` executes a deliberately wrong implementation (schema-valid
+outputs, wrong behavior) and exits non-zero unless the runner fails every
+corrupted vector (`docs/standards/conformance-evidence.md` section 3).
+
+Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
 
 Do not report a vector as passed merely because the JSON parses. A runner must execute the stated input against an implementation, compare the observable result with `expected`, preserve evidence, and report pass, fail, not-applicable, or documented-degradation for each applicable requirement.
 
