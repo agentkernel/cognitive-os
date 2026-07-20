@@ -1,6 +1,6 @@
 [package]
 name = "cognitive-conformance"
-description = "Static conformance asset enumeration and vector runner (M0: enumerate-only, every result not-run)"
+description = "Conformance runner (M1: static-contract execution against registered machine assets; behavioral layers stay not-run)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,11 +8,16 @@ publish.workspace = true
 
 [dependencies]
 cognitive-contracts = { workspace = true }
+# Draft 2020-12 validation for wire-schema vector execution (same pinned
+# major as the contracts-side schema re-verification tests).
+jsonschema = { version = "0.47", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 # Archived-but-stable YAML parser, used read-only for the registries.
-# Revisit the dependency choice with the M1 runner delivery.
+# Revisited at the M1 runner delivery: kept, because the read-only registry
+# surface is small and stable; swap only if the YAML surface grows.
 serde_yaml = "0.9"
+sha2 = { workspace = true }
 thiserror = { workspace = true }
 
 [[bin]]

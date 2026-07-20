@@ -10,7 +10,7 @@
     "REQ-PROFILE-CVM-001"
   ],
   "input": {
-    "owner_spec": "CognitiveOS-Architecture.md#context-virtualization-profile",
+    "owner_spec": "specs/core/README.md",
     "requirement_status": "specified"
   },
   "expected": {
