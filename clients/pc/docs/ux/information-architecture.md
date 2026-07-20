@@ -4,7 +4,7 @@
 >
 > 原则：任务语言优先，机器语义可追溯；角色与 readiness 决定落点，不授予权限
 >
-> Agent Hub 关系：本文的六分组导航不变；Agent Hub 专属 shell 与手机 companion 导航在 [agent-hub/product/product-design.md](./agent-hub/product/product-design.md#6-信息架构pc) 与 [agent-hub/product/journeys-and-screens.md](./agent-hub/product/journeys-and-screens.md)，为扩展视图，不改写此处一级入口。
+> Agent Hub 关系：本文的六分组导航不变；Agent Hub 专属 shell 与手机 companion 导航在 [agent-hub/product/product-design.md](../../../../apps/cognitiveos-console/docs/agent-hub/product/product-design.md#6-信息架构pc) 与 [agent-hub/product/journeys-and-screens.md](../../../../apps/cognitiveos-console/docs/agent-hub/product/journeys-and-screens.md)，为扩展视图，不改写此处一级入口。
 
 ## 1. 导航模型
 
@@ -232,4 +232,4 @@ Windows v1 收件箱按用户需要行动的原因分组：
 
 ## 10. 未来扩展
 
-Windows v1 不冻结 Approval、Audit、企业 Users & Access、独立 Executions 或移动导航的位置。这些扩展进入各自 discovery 后再验证 persona、JTBD 和导航，不得让当前主导航出现空入口。未来范围与不可变边界见 [roadmap.md](./roadmap.md)。
+Windows v1 不冻结 Approval、Audit、企业 Users & Access、独立 Executions 或移动导航的位置。这些扩展进入各自 discovery 后再验证 persona、JTBD 和导航，不得让当前主导航出现空入口。未来范围与不可变边界见 [roadmap.md](../../plan/roadmap.md)。

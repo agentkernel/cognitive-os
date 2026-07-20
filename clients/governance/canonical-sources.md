@@ -7,9 +7,9 @@
 | 域 | canonical 文件 | 现址（查询基准日） | 迁移批次 |
 |---|---|---|---|
 | 客户端项目地图/目录索引 | `clients/README.md` | [clients/README.md](../README.md) | B1（已落位） |
-| Windows 产品（简报/范围/IA/旅程/DS/安全 UX/追踪/决策/roadmap） | `clients/pc/docs/**` + `clients/pc/plan/roadmap.md` 各文件 | [apps/cognitiveos-console/docs/](../../apps/cognitiveos-console/README.md) 九份 | B2 |
-| 桌面平台切片（macOS/Linux/desktop-parity） | `clients/pc/docs/platforms/**` | [docs/platforms/](../../docs/platforms/README.md) 三份 | B2 |
-| 桌面平台决策 | `clients/pc/docs/platforms/platform-decision-log.md` | [platform-decision-log](../../docs/platforms/platform-decision-log.md)（`CONSOLE-MAC/LNX-V1-DEC-*`） | B2 |
+| Windows 产品（简报/范围/IA/旅程/DS/安全 UX/追踪/决策/roadmap） | `clients/pc/docs/**` + `clients/pc/plan/roadmap.md` 各文件 | [clients/pc](../pc/README.md) 九份 | B2（已落位） |
+| 桌面平台切片（macOS/Linux/desktop-parity） | `clients/pc/docs/platforms/**` | [clients/pc/docs/platforms](../pc/README.md) 三份 | B2（已落位） |
+| 桌面平台决策 | `clients/pc/docs/platforms/platform-decision-log.md` | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md)（`CONSOLE-MAC/LNX-V1-DEC-*`） | B2（已落位） |
 | 移动产品决策 | `clients/mobile/shared/docs/mobile-platform-decision-log.md`（iOS+AND 双命名空间单文件） | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | B3 |
 | iPhone / Android 产品设计 | `clients/mobile/{ios,android}/docs/*.md` | [ios](../../docs/platforms/ios-product-design.md) / [android](../../docs/platforms/android-product-design.md) | B3 |
 | 移动 parity | `clients/mobile/shared/docs/mobile-parity-matrix.md` | [mobile-parity-matrix](../../docs/platforms/mobile-parity-matrix.md) | B3 |

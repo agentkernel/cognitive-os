@@ -8,11 +8,11 @@
 
 Agent Hub 让用户在 PC 和手机上统一发现、安全接管、创建、监督、纠偏和收敛他们有权管理的成熟第三方 Agent，同时始终可见当前部署模式、接管层级、事实来源和不保证事项。
 
-Agent Hub 扩展现有 Console `/agents` 入口（[CONSOLE-V2-DEC-007](../../decision-log.md)），不是替换；它显式区分 Direct Takeover 与 CognitiveOS Governed 两种部署模式，保证矩阵见 [deployment-modes-and-guarantees.md](./deployment-modes-and-guarantees.md)。
+Agent Hub 扩展现有 Console `/agents` 入口（[CONSOLE-V2-DEC-007](../../../../../clients/pc/docs/product/decision-log.md)），不是替换；它显式区分 Direct Takeover 与 CognitiveOS Governed 两种部署模式，保证矩阵见 [deployment-modes-and-guarantees.md](./deployment-modes-and-guarantees.md)。
 
 ## 2. 首要用户与 JTBD
 
-首要 persona：Agent 操作者 / 高级终端用户（沿用 [CONSOLE-V2-DEC-001](../../decision-log.md)）。核心 JTBD：
+首要 persona：Agent 操作者 / 高级终端用户（沿用 [CONSOLE-V2-DEC-001](../../../../../clients/pc/docs/product/decision-log.md)）。核心 JTBD：
 
 1. 发现已安装 Agent、可安全接管的运行进程/终端会话/native session；
 2. 启动新的受管 Agent，或通过官方接口接管已有 session；

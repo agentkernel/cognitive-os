@@ -1,4 +1,4 @@
-# clients/ 迁移对照表（MIGRATION-MAP）
+﻿# clients/ 迁移对照表（MIGRATION-MAP）
 
 > 类别：informative migration map ｜ 日期：2026-07-20 ｜ owner：Lane-CON
 >
@@ -36,19 +36,19 @@
 
 | old | new | 批次 | 状态 |
 |---|---|---|---|
-| `apps/cognitiveos-console/docs/product-brief.md` | `clients/pc/docs/product/product-brief.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/decision-log.md` | `clients/pc/docs/product/decision-log.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/requirements-traceability.md` | `clients/pc/docs/product/requirements-traceability.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/information-architecture.md` | `clients/pc/docs/ux/information-architecture.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/journeys-and-screens.md` | `clients/pc/docs/ux/journeys-and-screens.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/design-system.md` | `clients/pc/docs/ux/design-system.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/trust-safety-ux.md` | `clients/pc/docs/security/trust-safety-ux.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/windows-v1-scope.md` | `clients/pc/docs/platforms/windows/windows-v1-scope.md` | B2 | pending-B2 |
-| `apps/cognitiveos-console/docs/roadmap.md` | `clients/pc/plan/roadmap.md` | B2 | pending-B2 |
-| `docs/platforms/macos-product-design.md` | `clients/pc/docs/platforms/macos/macos-product-design.md` | B2 | pending-B2 |
-| `docs/platforms/linux-product-design.md` | `clients/pc/docs/platforms/linux/linux-product-design.md` | B2 | pending-B2 |
-| `docs/platforms/desktop-parity-matrix.md` | `clients/pc/docs/platforms/desktop-parity-matrix.md` | B2 | pending-B2 |
-| `docs/platforms/platform-decision-log.md` | `clients/pc/docs/platforms/platform-decision-log.md` | B2 | pending-B2 |
+| `apps/cognitiveos-console/docs/product-brief.md` | `clients/pc/docs/product/product-brief.md` | B2 | done |
+| `apps/cognitiveos-console/docs/decision-log.md` | `clients/pc/docs/product/decision-log.md` | B2 | done |
+| `apps/cognitiveos-console/docs/requirements-traceability.md` | `clients/pc/docs/product/requirements-traceability.md` | B2 | done |
+| `apps/cognitiveos-console/docs/information-architecture.md` | `clients/pc/docs/ux/information-architecture.md` | B2 | done |
+| `apps/cognitiveos-console/docs/journeys-and-screens.md` | `clients/pc/docs/ux/journeys-and-screens.md` | B2 | done |
+| `apps/cognitiveos-console/docs/design-system.md` | `clients/pc/docs/ux/design-system.md` | B2 | done |
+| `apps/cognitiveos-console/docs/trust-safety-ux.md` | `clients/pc/docs/security/trust-safety-ux.md` | B2 | done |
+| `apps/cognitiveos-console/docs/windows-v1-scope.md` | `clients/pc/docs/platforms/windows/windows-v1-scope.md` | B2 | done |
+| `apps/cognitiveos-console/docs/roadmap.md` | `clients/pc/plan/roadmap.md` | B2 | done |
+| `docs/platforms/macos-product-design.md` | `clients/pc/docs/platforms/macos/macos-product-design.md` | B2 | done |
+| `docs/platforms/linux-product-design.md` | `clients/pc/docs/platforms/linux/linux-product-design.md` | B2 | done |
+| `docs/platforms/desktop-parity-matrix.md` | `clients/pc/docs/platforms/desktop-parity-matrix.md` | B2 | done |
+| `docs/platforms/platform-decision-log.md` | `clients/pc/docs/platforms/platform-decision-log.md` | B2 | done |
 
 ### 2.3 B3 mobile 文档（4 文件）
 

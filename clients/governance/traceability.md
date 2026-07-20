@@ -6,14 +6,14 @@
 
 | 命名空间 | 实测计数 | canonical 定义点（迁移前现址） | 迁移批次 |
 |---|---|---|---|
-| `CONSOLE-V2-PRD-*` | 49 | [requirements-traceability §2](../../apps/cognitiveos-console/docs/requirements-traceability.md) | B2 |
-| `CONSOLE-V2-BLK-*` | 14 | [requirements-traceability §3](../../apps/cognitiveos-console/docs/requirements-traceability.md) | B2 |
-| `CONSOLE-V2-DEC-*` | 17 | [decision-log](../../apps/cognitiveos-console/docs/decision-log.md) | B2 |
-| `CONSOLE-V2-JRN-*` | 10 | [journeys-and-screens §2](../../apps/cognitiveos-console/docs/journeys-and-screens.md) | B2 |
-| `CONSOLE-V2-PAGE-*` | 19 | [journeys-and-screens §3](../../apps/cognitiveos-console/docs/journeys-and-screens.md) | B2 |
-| `CONSOLE-V2-CMP-*` | 12 | [design-system §4](../../apps/cognitiveos-console/docs/design-system.md) | B2 |
-| `CONSOLE-MAC-V1-PRD-*` / `CONSOLE-LNX-V1-PRD-*` | 24 / 24 | [macos](../../docs/platforms/macos-product-design.md) / [linux](../../docs/platforms/linux-product-design.md) 产品设计 | B2 |
-| `CONSOLE-MAC-V1-DEC-*` / `CONSOLE-LNX-V1-DEC-*` | 11 / 11 | [platform-decision-log](../../docs/platforms/platform-decision-log.md) | B2 |
+| `CONSOLE-V2-PRD-*` | 49 | [requirements-traceability §2](../pc/docs/product/requirements-traceability.md) | B2 |
+| `CONSOLE-V2-BLK-*` | 14 | [requirements-traceability §3](../pc/docs/product/requirements-traceability.md) | B2 |
+| `CONSOLE-V2-DEC-*` | 17 | [decision-log](../pc/docs/product/decision-log.md) | B2 |
+| `CONSOLE-V2-JRN-*` | 10 | [journeys-and-screens §2](../pc/docs/ux/journeys-and-screens.md) | B2 |
+| `CONSOLE-V2-PAGE-*` | 19 | [journeys-and-screens §3](../pc/docs/ux/journeys-and-screens.md) | B2 |
+| `CONSOLE-V2-CMP-*` | 12 | [design-system §4](../pc/docs/ux/design-system.md) | B2 |
+| `CONSOLE-MAC-V1-PRD-*` / `CONSOLE-LNX-V1-PRD-*` | 24 / 24 | [macos](../pc/docs/platforms/macos/macos-product-design.md) / [linux](../pc/docs/platforms/linux/linux-product-design.md) 产品设计 | B2（已落位） |
+| `CONSOLE-MAC-V1-DEC-*` / `CONSOLE-LNX-V1-DEC-*` | 11 / 11 | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md) | B2（已落位） |
 | `MAC-POC-*` / `LNX-POC-*` | 12 / 12 | 各自产品设计 §13 | B2 |
 | `CONSOLE-IOS-V1-PRD-*` | 38 | [ios-product-design](../../docs/platforms/ios-product-design.md) | B3 |
 | `CONSOLE-IOS-V1-DEC-*` | 16 | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | B3 |

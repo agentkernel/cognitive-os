@@ -2,7 +2,7 @@
 
 > 状态：Draft / planned
 >
-> 决策依据：[decision-log.md](./decision-log.md)
+> 决策依据：[decision-log.md](../../product/decision-log.md)
 >
 > 产品范围：Windows 桌面、一个本机共享节点、R0/R1
 

@@ -6,7 +6,7 @@
 >
 > 地位：产品行为。机器安全义务必须由 normative contract 和实现证据闭合。
 >
-> Agent Hub 关系：本文覆盖 Governed R0/R1 信任模型。Direct Takeover 的接管威胁模型、本机控制面、凭据与电脑控制在 [agent-hub/security/](./agent-hub/security/)，其 `host-managed`/`*-observed` 事实来源不得升级为 authority。
+> Agent Hub 关系：本文覆盖 Governed R0/R1 信任模型。Direct Takeover 的接管威胁模型、本机控制面、凭据与电脑控制在 [agent-hub/security/](../../../../apps/cognitiveos-console/docs/agent-hub/security/)，其 `host-managed`/`*-observed` 事实来源不得升级为 authority。
 
 ## 1. 威胁模型
 

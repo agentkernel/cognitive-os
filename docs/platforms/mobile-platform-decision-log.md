@@ -10,7 +10,7 @@
 
 本文只索引已经冻结的 iPhone v1 与 Android phone v1 产品方向。它不新增或修改 requirement、error code、schema、transition、conformance vector 或 Profile，也不把 accepted product direction 写成实现、测试、平台证据或符合性事实。
 
-详细设计与平台事实分别以 [iOS 产品设计](ios-product-design.md) 和 [Android 产品设计](android-product-design.md) 为来源；桌面决策背景见 [Console v2 决策记录](../../apps/cognitiveos-console/docs/decision-log.md) 和 [桌面平台产品决策记录](platform-decision-log.md)。本索引是移动平台冻结决策的 canonical 查找入口；平台来源 ledger、旅程、PoC 和 PRD 仍留在各自产品设计中。
+详细设计与平台事实分别以 [iOS 产品设计](ios-product-design.md) 和 [Android 产品设计](android-product-design.md) 为来源；桌面决策背景见 [Console v2 决策记录](../../clients/pc/docs/product/decision-log.md) 和 [桌面平台产品决策记录](../../clients/pc/docs/platforms/platform-decision-log.md)。本索引是移动平台冻结决策的 canonical 查找入口；平台来源 ledger、旅程、PoC 和 PRD 仍留在各自产品设计中。
 
 ## 1. 决策状态解释
 

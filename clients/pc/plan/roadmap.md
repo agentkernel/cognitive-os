@@ -2,11 +2,11 @@
 
 > 状态：Product roadmap hypotheses
 >
-> 基线：Windows v1 见 [windows-v1-scope.md](./windows-v1-scope.md)
+> 基线：Windows v1 见 [windows-v1-scope.md](../docs/platforms/windows/windows-v1-scope.md)
 >
 > 规则：本页保留未来价值、不可变边界和进入门禁，不冻结未经验证的页面布局。
 >
-> Agent Hub 关系：Direct Takeover 与第三方 Agent 接管是一条独立于本路线图的产品线，其里程碑/DAG/gate 在 [agent-hub/planning/README.md](./agent-hub/planning/README.md) 与 [docs/plan/agent-hub-development-plan.md](../../../docs/plan/agent-hub-development-plan.md)，同样受 Console/M5/平台/AGPL gate 阻断。
+> Agent Hub 关系：Direct Takeover 与第三方 Agent 接管是一条独立于本路线图的产品线，其里程碑/DAG/gate 在 [agent-hub/planning/README.md](../../../apps/cognitiveos-console/docs/agent-hub/planning/README.md) 与 [docs/plan/agent-hub-development-plan.md](../../../docs/plan/agent-hub-development-plan.md)，同样受 Console/M5/平台/AGPL gate 阻断。
 
 ## 1. 排序原则
 
@@ -56,9 +56,9 @@
 
 用户价值：把 Windows 已确认的任务与治理语义适配到两个独立、明确受限的平台产品切片。详细规格：
 
-- [macOS v1 产品设计](../../../docs/platforms/macos-product-design.md)
-- [Linux v1 产品设计](../../../docs/platforms/linux-product-design.md)
-- [桌面 parity matrix](../../../docs/platforms/desktop-parity-matrix.md)
+- [macOS v1 产品设计](../docs/platforms/macos/macos-product-design.md)
+- [Linux v1 产品设计](../docs/platforms/linux/linux-product-design.md)
+- [桌面 parity matrix](../docs/platforms/desktop-parity-matrix.md)
 
 产品范围：
 

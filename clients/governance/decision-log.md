@@ -19,8 +19,8 @@
 
 | 决策域 | canonical 文件（迁移前现址） | 命名空间 | 迁移批次 |
 |---|---|---|---|
-| Console v2（Windows） | [decision-log](../../apps/cognitiveos-console/docs/decision-log.md) | `CONSOLE-V2-DEC-*`（17 项实测） | B2 |
-| 桌面平台（macOS/Linux） | [platform-decision-log](../../docs/platforms/platform-decision-log.md) | `CONSOLE-MAC-V1-DEC-*`（11）/`CONSOLE-LNX-V1-DEC-*`（11） | B2 |
+| Console v2（Windows） | [decision-log](../pc/docs/product/decision-log.md) | `CONSOLE-V2-DEC-*`（17 项实测） | B2（已落位） |
+| 桌面平台（macOS/Linux） | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md) | `CONSOLE-MAC-V1-DEC-*`（11）/`CONSOLE-LNX-V1-DEC-*`（11） | B2（已落位） |
 | 移动平台（iPhone/Android） | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | `CONSOLE-IOS-V1-DEC-*`（16）/`CONSOLE-AND-V1-DEC-*`（16） | B3 |
 | Agent Hub | [decisions/decision-log](../../apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md) | `CONSOLE-AGENTHUB-V1-DEC-*`（26） | B5 |
 

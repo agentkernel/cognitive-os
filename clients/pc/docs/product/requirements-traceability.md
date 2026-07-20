@@ -6,7 +6,7 @@
 >
 > 规则：本文件不新增 CognitiveOS normative `REQ-*`，也不把文件存在误写为实现或测试证据。
 >
-> Agent Hub 关系：Agent Hub 产品要求用独立 `CONSOLE-AGENTHUB-V1-PRD-*` 命名空间，追踪见 [agent-hub/traceability/product-requirements.md](./agent-hub/traceability/product-requirements.md)，同样不进入 normative registry，不与本文 `CONSOLE-V2-*` 混编。
+> Agent Hub 关系：Agent Hub 产品要求用独立 `CONSOLE-AGENTHUB-V1-PRD-*` 命名空间，追踪见 [agent-hub/traceability/product-requirements.md](../../../../apps/cognitiveos-console/docs/agent-hub/traceability/product-requirements.md)，同样不进入 normative registry，不与本文 `CONSOLE-V2-*` 混编。
 
 ## 1. 三维状态
 
@@ -36,61 +36,61 @@
 
 Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/implemented/unsupported`。Windows v1 当前 Profile 为 `planned`；Console `not-implemented`；相关既有 vectors 在 M0 runner 中为 `not-run`，产品级端到端证据为 `none`。仓库其他参考实现骨架不改变该结论。
 
-macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../../docs/platforms/README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
+macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../../../docs/platforms/README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
 
 ## 2. v2 产品要求
 
 | ID | 原子要求 | Contract | Implementation | Evidence | 主要规格 |
 |---|---|---|---|---|---|
-| `CONSOLE-V2-PRD-001` | Console 不拥有 authority、commit、root、账号验证或生命周期事实 | partial | not-implemented | none | [brief](./product-brief.md)、[trust](./trust-safety-ux.md) |
-| `CONSOLE-V2-PRD-002` | Task 与 management channel 的 session、store、cache、proposal、approval 和 audit material 隔离 | partial | not-implemented | not-run | [trust §2](./trust-safety-ux.md#2-信任边界) |
-| `CONSOLE-V2-PRD-003` | Session 短期、有界、SID/node/channel-bound、可撤销，重连不静默恢复特权 | partial | not-implemented | not-run | [scope §3](./windows-v1-scope.md#3-首次设置与账号) |
-| `CONSOLE-V2-PRD-004` | 每个写操作使用固定 proposal/preview/gate/Effect/authority result | partial | not-implemented | not-run | [journey 003](./journeys-and-screens.md#console-v2-jrn-003-从-shell-创建任务) |
+| `CONSOLE-V2-PRD-001` | Console 不拥有 authority、commit、root、账号验证或生命周期事实 | partial | not-implemented | none | [brief](./product-brief.md)、[trust](../security/trust-safety-ux.md) |
+| `CONSOLE-V2-PRD-002` | Task 与 management channel 的 session、store、cache、proposal、approval 和 audit material 隔离 | partial | not-implemented | not-run | [trust §2](../security/trust-safety-ux.md#2-信任边界) |
+| `CONSOLE-V2-PRD-003` | Session 短期、有界、SID/node/channel-bound、可撤销，重连不静默恢复特权 | partial | not-implemented | not-run | [scope §3](../platforms/windows/windows-v1-scope.md#3-首次设置与账号) |
+| `CONSOLE-V2-PRD-004` | 每个写操作使用固定 proposal/preview/gate/Effect/authority result | partial | not-implemented | not-run | [journey 003](../ux/journeys-and-screens.md#console-v2-jrn-003-从-shell-创建任务) |
 | `CONSOLE-V2-PRD-005` | 所有生命周期状态只来自 authority projection，客户端/Agent 文本不改变事实 | partial | not-implemented | none | [brief §5](./product-brief.md#5-产品原则) |
-| `CONSOLE-V2-PRD-006` | AgentExecution 与 Runtime/进程载体分别展示和控制 | partial | not-implemented | none | [PAGE-007](./journeys-and-screens.md#console-v2-page-007-任务详情) |
-| `CONSOLE-V2-PRD-007` | Task/Loop/AgentExecution/Effect/Verification 状态分离，用户摘要可展开到机器轨道 | partial | not-implemented | none | [Flow Thread](./design-system.md#console-v2-cmp-005-governed-flow-thread) |
-| `CONSOLE-V2-PRD-008` | `CANDIDATE_COMPLETE` 只有在当前 Verification 和 AcceptanceDecision 均满足时才显示 `COMPLETED` | partial | not-implemented | not-run | [PAGE-007](./journeys-and-screens.md#console-v2-page-007-任务详情) |
-| `CONSOLE-V2-PRD-009` | cancel/pause/stop runtime/terminate/revoke/reconcile/compensate/quarantine 不混同 | partial | not-implemented | not-run | [trust §7](./trust-safety-ux.md#7-监督暂停与紧急遏制) |
-| `CONSOLE-V2-PRD-010` | Watch 使用授权 snapshot + cursor/delta；gap/stale/权限变化先 resnapshot | partial | not-implemented | not-run | [scope §7](./windows-v1-scope.md#7-离线与降级) |
-| `CONSOLE-V2-PRD-011` | 写目标固定稳定 ref/version/digest；歧义、漂移和权限变化 fail closed | partial | not-implemented | not-run | [IA §7](./information-architecture.md#7-搜索与对象定位) |
-| `CONSOLE-V2-PRD-012` | 节点、账号、channel 和权限版本变化时相关 cache/watch/preview 原子失效 | partial | not-implemented | not-run | [trust §2](./trust-safety-ux.md#2-信任边界) |
-| `CONSOLE-V2-PRD-013` | 错误保留已登记 code/retryable；未知 code 不伪装成已知结果 | partial | not-implemented | none | [trust §12](./trust-safety-ux.md#12-错误与完整性) |
-| `CONSOLE-V2-PRD-014` | readiness 只开放节点实际声明且用户有权使用的确定性能力 | prose-only | not-implemented | none | [IA §3](./information-architecture.md#3-启动落点) |
-| `CONSOLE-V2-PRD-015` | Agent 安装/升级/回滚/卸载保留验证、风险、事务、旧版本和未决 Effect | partial | not-implemented | not-run | [journey 007](./journeys-and-screens.md#console-v2-jrn-007-安装升级回滚或卸载-agent) |
-| `CONSOLE-V2-PRD-016` | Windows v1 关键旅程满足 WCAG 2.2 AA、Narrator、键盘、High Contrast、缩放和 reduced motion | product-only | not-implemented | none | [design §7](./design-system.md#7-无障碍) |
-| `CONSOLE-V2-PRD-017` | 离线/不可达时所有写禁用，last-good 标 `as_of`，不可达不推断任务已暂停/停止 | partial | not-implemented | not-run | [scope §7](./windows-v1-scope.md#7-离线与降级) |
-| `CONSOLE-V2-PRD-018` | Windows 通知只包含脱敏 hint，不携带 credential/正文且不能直接执行 R1 | missing | not-implemented | none | [trust §11](./trust-safety-ux.md#11-通知与深链) |
-| `CONSOLE-V2-PRD-019` | 协议/schema/security floor 不兼容时相关能力 fail closed | partial | not-implemented | not-run | [scope §10](./windows-v1-scope.md#10-技术候选与-release-gate) |
-| `CONSOLE-V2-PRD-020` | authority 计算风险下界；Windows v1 只执行 R0/R1，R2/R3 不降级 | partial | not-implemented | none | [scope §5](./windows-v1-scope.md#5-风险与写入范围) |
-| `CONSOLE-V2-PRD-021` | 节点拥有并验证本地账号密码；Console 不保存密码哈希或成为 IdP | missing | not-implemented | none | [scope §3](./windows-v1-scope.md#3-首次设置与账号) |
-| `CONSOLE-V2-PRD-022` | 共享节点运行于独立 Windows Service；renderer 只能使用版本化 allowlist IPC | missing | not-implemented | none | [scope §2](./windows-v1-scope.md#2-部署边界) |
-| `CONSOLE-V2-PRD-023` | state store/audit 不可持久化时普通写 fail closed | partial | not-implemented | not-run | [trust §7.3](./trust-safety-ux.md#73-storeaudit-降级) |
-| `CONSOLE-V2-PRD-024` | `OUTCOME_UNKNOWN` 禁止换 key/盲重试；仅按原绑定查询、对账、验证或隔离 | partial | not-implemented | not-run | [trust §8](./trust-safety-ux.md#8-结果未知与幂等) |
-| `CONSOLE-V2-PRD-025` | supervision lease 到期后在安全检查点暂停；未收到证据前只显示 pause pending | missing | not-implemented | none | [scope §6](./windows-v1-scope.md#6-监督-lease-与退出) |
-| `CONSOLE-V2-PRD-026` | 页面区分 loading/last-good/empty/partial/redacted/offline/denied/submitting/unknown/conflict/privacy-locked/reauth | product-only | not-implemented | none | [state matrix](./journeys-and-screens.md#4-通用页面状态矩阵) |
-| `CONSOLE-V2-PRD-027` | 用户任务语言为主，机器 enum/ref/error 在详情保真且中英文一致 | product-only | not-implemented | none | [IA §6](./information-architecture.md#6-用户术语与机器术语) |
-| `CONSOLE-V2-PRD-028` | 任意来源只进入获取/检查；运行要求证据完整且 authority 风险不高于 R1 | partial | not-implemented | not-run | [trust §9](./trust-safety-ux.md#9-agent-包与供应链) |
-| `CONSOLE-V2-PRD-029` | 关闭窗口进托盘维持监督；“退出并请求暂停”有界等待 accepted，超时不宣称已暂停 | missing | not-implemented | none | [journey 005](./journeys-and-screens.md#console-v2-jrn-005-托盘监督退出和-lease-到期) |
+| `CONSOLE-V2-PRD-006` | AgentExecution 与 Runtime/进程载体分别展示和控制 | partial | not-implemented | none | [PAGE-007](../ux/journeys-and-screens.md#console-v2-page-007-任务详情) |
+| `CONSOLE-V2-PRD-007` | Task/Loop/AgentExecution/Effect/Verification 状态分离，用户摘要可展开到机器轨道 | partial | not-implemented | none | [Flow Thread](../ux/design-system.md#console-v2-cmp-005-governed-flow-thread) |
+| `CONSOLE-V2-PRD-008` | `CANDIDATE_COMPLETE` 只有在当前 Verification 和 AcceptanceDecision 均满足时才显示 `COMPLETED` | partial | not-implemented | not-run | [PAGE-007](../ux/journeys-and-screens.md#console-v2-page-007-任务详情) |
+| `CONSOLE-V2-PRD-009` | cancel/pause/stop runtime/terminate/revoke/reconcile/compensate/quarantine 不混同 | partial | not-implemented | not-run | [trust §7](../security/trust-safety-ux.md#7-监督暂停与紧急遏制) |
+| `CONSOLE-V2-PRD-010` | Watch 使用授权 snapshot + cursor/delta；gap/stale/权限变化先 resnapshot | partial | not-implemented | not-run | [scope §7](../platforms/windows/windows-v1-scope.md#7-离线与降级) |
+| `CONSOLE-V2-PRD-011` | 写目标固定稳定 ref/version/digest；歧义、漂移和权限变化 fail closed | partial | not-implemented | not-run | [IA §7](../ux/information-architecture.md#7-搜索与对象定位) |
+| `CONSOLE-V2-PRD-012` | 节点、账号、channel 和权限版本变化时相关 cache/watch/preview 原子失效 | partial | not-implemented | not-run | [trust §2](../security/trust-safety-ux.md#2-信任边界) |
+| `CONSOLE-V2-PRD-013` | 错误保留已登记 code/retryable；未知 code 不伪装成已知结果 | partial | not-implemented | none | [trust §12](../security/trust-safety-ux.md#12-错误与完整性) |
+| `CONSOLE-V2-PRD-014` | readiness 只开放节点实际声明且用户有权使用的确定性能力 | prose-only | not-implemented | none | [IA §3](../ux/information-architecture.md#3-启动落点) |
+| `CONSOLE-V2-PRD-015` | Agent 安装/升级/回滚/卸载保留验证、风险、事务、旧版本和未决 Effect | partial | not-implemented | not-run | [journey 007](../ux/journeys-and-screens.md#console-v2-jrn-007-安装升级回滚或卸载-agent) |
+| `CONSOLE-V2-PRD-016` | Windows v1 关键旅程满足 WCAG 2.2 AA、Narrator、键盘、High Contrast、缩放和 reduced motion | product-only | not-implemented | none | [design §7](../ux/design-system.md#7-无障碍) |
+| `CONSOLE-V2-PRD-017` | 离线/不可达时所有写禁用，last-good 标 `as_of`，不可达不推断任务已暂停/停止 | partial | not-implemented | not-run | [scope §7](../platforms/windows/windows-v1-scope.md#7-离线与降级) |
+| `CONSOLE-V2-PRD-018` | Windows 通知只包含脱敏 hint，不携带 credential/正文且不能直接执行 R1 | missing | not-implemented | none | [trust §11](../security/trust-safety-ux.md#11-通知与深链) |
+| `CONSOLE-V2-PRD-019` | 协议/schema/security floor 不兼容时相关能力 fail closed | partial | not-implemented | not-run | [scope §10](../platforms/windows/windows-v1-scope.md#10-技术候选与-release-gate) |
+| `CONSOLE-V2-PRD-020` | authority 计算风险下界；Windows v1 只执行 R0/R1，R2/R3 不降级 | partial | not-implemented | none | [scope §5](../platforms/windows/windows-v1-scope.md#5-风险与写入范围) |
+| `CONSOLE-V2-PRD-021` | 节点拥有并验证本地账号密码；Console 不保存密码哈希或成为 IdP | missing | not-implemented | none | [scope §3](../platforms/windows/windows-v1-scope.md#3-首次设置与账号) |
+| `CONSOLE-V2-PRD-022` | 共享节点运行于独立 Windows Service；renderer 只能使用版本化 allowlist IPC | missing | not-implemented | none | [scope §2](../platforms/windows/windows-v1-scope.md#2-部署边界) |
+| `CONSOLE-V2-PRD-023` | state store/audit 不可持久化时普通写 fail closed | partial | not-implemented | not-run | [trust §7.3](../security/trust-safety-ux.md#73-storeaudit-降级) |
+| `CONSOLE-V2-PRD-024` | `OUTCOME_UNKNOWN` 禁止换 key/盲重试；仅按原绑定查询、对账、验证或隔离 | partial | not-implemented | not-run | [trust §8](../security/trust-safety-ux.md#8-结果未知与幂等) |
+| `CONSOLE-V2-PRD-025` | supervision lease 到期后在安全检查点暂停；未收到证据前只显示 pause pending | missing | not-implemented | none | [scope §6](../platforms/windows/windows-v1-scope.md#6-监督-lease-与退出) |
+| `CONSOLE-V2-PRD-026` | 页面区分 loading/last-good/empty/partial/redacted/offline/denied/submitting/unknown/conflict/privacy-locked/reauth | product-only | not-implemented | none | [state matrix](../ux/journeys-and-screens.md#4-通用页面状态矩阵) |
+| `CONSOLE-V2-PRD-027` | 用户任务语言为主，机器 enum/ref/error 在详情保真且中英文一致 | product-only | not-implemented | none | [IA §6](../ux/information-architecture.md#6-用户术语与机器术语) |
+| `CONSOLE-V2-PRD-028` | 任意来源只进入获取/检查；运行要求证据完整且 authority 风险不高于 R1 | partial | not-implemented | not-run | [trust §9](../security/trust-safety-ux.md#9-agent-包与供应链) |
+| `CONSOLE-V2-PRD-029` | 关闭窗口进托盘维持监督；“退出并请求暂停”有界等待 accepted，超时不宣称已暂停 | missing | not-implemented | none | [journey 005](../ux/journeys-and-screens.md#console-v2-jrn-005-托盘监督退出和-lease-到期) |
 | `CONSOLE-V2-PRD-030` | 产品价值以每位活跃操作者成功收敛的受验证任务数衡量，客户端点击不冒充完成 | product-only | not-implemented | none | [brief §7](./product-brief.md#7-成功定义) |
-| `CONSOLE-V2-PRD-031` | 不可信内容与密码/bootstrap/R1/系统控件使用独立 WebView/进程或原生安全边界 | missing | not-implemented | none | [trust §4](./trust-safety-ux.md#4-不可信内容与系统控件) |
-| `CONSOLE-V2-PRD-032` | PrivilegedManagementSession 只是权限上界，不能替代每个写操作的单次 gate/approval | registered | not-implemented | not-run | [trust §6](./trust-safety-ux.md#6-r0r1-安全交互) |
-| `CONSOLE-V2-PRD-033` | 每个 governed write 产生独立、关联稳定 ref 的 authority audit，不复用其他操作记录 | partial | not-implemented | none | [trust §7.3](./trust-safety-ux.md#73-storeaudit-降级) |
-| `CONSOLE-V2-PRD-034` | URL/Git/本地路径 acquisition 自身经低权限 broker、proposal/Effect、路径/网络/预算 gate | missing | not-implemented | none | [trust §9.1](./trust-safety-ux.md#91-来源) |
-| `CONSOLE-V2-PRD-035` | Owner bootstrap bundle 固定 endpoint key/目标 SID；Service 从 IPC peer token 派生 SID | missing | not-implemented | none | [PAGE-018](./journeys-and-screens.md#console-v2-page-018-首个-owner-领取) |
-| `CONSOLE-V2-PRD-036` | Service install/uninstall/stop/restart/update/bootstrap mint/trust reset/recovery 要求 OS 管理员/UAC、签名和 anti-rollback | missing | not-implemented | none | [scope §2](./windows-v1-scope.md#2-部署边界) |
-| `CONSOLE-V2-PRD-037` | lease 续租绑定 task/principal/SID/logon-session/channel/client-epoch 与 session/watch/UI freshness | missing | not-implemented | none | [trust §7.1](./trust-safety-ux.md#71-监督-lease) |
-| `CONSOLE-V2-PRD-038` | Service 经每用户 broker 投递一次性 opaque notification handle；消费后才解析 item ref | missing | not-implemented | none | [trust §11](./trust-safety-ux.md#11-通知与深链) |
-| `CONSOLE-V2-PRD-039` | 锁屏/用户切换 teardown 敏感 renderer、清理 app-managed buffers，解锁后重认证/resnapshot | product-only | not-implemented | none | [scope §7.1](./windows-v1-scope.md#71-断线锁屏和本地残留) |
-| `CONSOLE-V2-PRD-040` | 降级遏制仅使用预授权、限时、target/version/fencing-bound capability 和独立应急日志 | missing | not-implemented | none | [trust §7.3](./trust-safety-ux.md#73-storeaudit-降级) |
-| `CONSOLE-V2-PRD-041` | C0–C3 兼容等级与 R0–R3 风险等级正交显示，不合成总分 | partial | not-implemented | none | [PAGE-013](./journeys-and-screens.md#console-v2-page-013-兼容性报告) |
-| `CONSOLE-V2-PRD-042` | package/sandbox/compatibility 证据只适用于明确 host/channel/adapter 版本，不跨平台外推 | partial | not-implemented | not-run | [trust §9.2](./trust-safety-ux.md#92-证据) |
-| `CONSOLE-V2-PRD-043` | 通知按稳定 event/proposal ref 去重；普通进度可聚合但安全事项不被吞掉 | missing | not-implemented | none | [trust §11](./trust-safety-ux.md#11-通知与深链) |
-| `CONSOLE-V2-PRD-044` | 普通本地首连 TOFU 固定节点 identity；identity 变化阻断并经受控恢复 | missing | not-implemented | none | [PAGE-002](./journeys-and-screens.md#console-v2-page-002-节点信任)、[PAGE-019](./journeys-and-screens.md#console-v2-page-019-节点身份变化阻断) |
-| `CONSOLE-V2-PRD-045` | 本地账号恢复只经 Admin CLI，恢复轮换相关 session/secret 并写 authority audit | missing | not-implemented | none | [scope §3.3](./windows-v1-scope.md#33-后续用户) |
-| `CONSOLE-V2-PRD-046` | 每个 Windows SID 映射独立 CognitiveOS 账号；SID 本身不授予 CognitiveOS 权限 | missing | not-implemented | none | [scope §3.3](./windows-v1-scope.md#33-后续用户) |
-| `CONSOLE-V2-PRD-047` | 应用不主动持久化敏感 snapshot，并通过临时 profile/storage/dump policy 收窄 OS 残留 | product-only | not-implemented | none | [scope §7.1](./windows-v1-scope.md#71-断线锁屏和本地残留) |
-| `CONSOLE-V2-PRD-048` | quiet hours 只抑制通知呈现，不改变底层事项、deadline 或 authority 状态 | product-only | not-implemented | none | [trust §11](./trust-safety-ux.md#11-通知与深链) |
-| `CONSOLE-V2-PRD-049` | 安全事项可升级；acknowledged 只改变提醒，不能替代 handled/decided/reconciled | missing | not-implemented | none | [trust §11](./trust-safety-ux.md#11-通知与深链) |
+| `CONSOLE-V2-PRD-031` | 不可信内容与密码/bootstrap/R1/系统控件使用独立 WebView/进程或原生安全边界 | missing | not-implemented | none | [trust §4](../security/trust-safety-ux.md#4-不可信内容与系统控件) |
+| `CONSOLE-V2-PRD-032` | PrivilegedManagementSession 只是权限上界，不能替代每个写操作的单次 gate/approval | registered | not-implemented | not-run | [trust §6](../security/trust-safety-ux.md#6-r0r1-安全交互) |
+| `CONSOLE-V2-PRD-033` | 每个 governed write 产生独立、关联稳定 ref 的 authority audit，不复用其他操作记录 | partial | not-implemented | none | [trust §7.3](../security/trust-safety-ux.md#73-storeaudit-降级) |
+| `CONSOLE-V2-PRD-034` | URL/Git/本地路径 acquisition 自身经低权限 broker、proposal/Effect、路径/网络/预算 gate | missing | not-implemented | none | [trust §9.1](../security/trust-safety-ux.md#91-来源) |
+| `CONSOLE-V2-PRD-035` | Owner bootstrap bundle 固定 endpoint key/目标 SID；Service 从 IPC peer token 派生 SID | missing | not-implemented | none | [PAGE-018](../ux/journeys-and-screens.md#console-v2-page-018-首个-owner-领取) |
+| `CONSOLE-V2-PRD-036` | Service install/uninstall/stop/restart/update/bootstrap mint/trust reset/recovery 要求 OS 管理员/UAC、签名和 anti-rollback | missing | not-implemented | none | [scope §2](../platforms/windows/windows-v1-scope.md#2-部署边界) |
+| `CONSOLE-V2-PRD-037` | lease 续租绑定 task/principal/SID/logon-session/channel/client-epoch 与 session/watch/UI freshness | missing | not-implemented | none | [trust §7.1](../security/trust-safety-ux.md#71-监督-lease) |
+| `CONSOLE-V2-PRD-038` | Service 经每用户 broker 投递一次性 opaque notification handle；消费后才解析 item ref | missing | not-implemented | none | [trust §11](../security/trust-safety-ux.md#11-通知与深链) |
+| `CONSOLE-V2-PRD-039` | 锁屏/用户切换 teardown 敏感 renderer、清理 app-managed buffers，解锁后重认证/resnapshot | product-only | not-implemented | none | [scope §7.1](../platforms/windows/windows-v1-scope.md#71-断线锁屏和本地残留) |
+| `CONSOLE-V2-PRD-040` | 降级遏制仅使用预授权、限时、target/version/fencing-bound capability 和独立应急日志 | missing | not-implemented | none | [trust §7.3](../security/trust-safety-ux.md#73-storeaudit-降级) |
+| `CONSOLE-V2-PRD-041` | C0–C3 兼容等级与 R0–R3 风险等级正交显示，不合成总分 | partial | not-implemented | none | [PAGE-013](../ux/journeys-and-screens.md#console-v2-page-013-兼容性报告) |
+| `CONSOLE-V2-PRD-042` | package/sandbox/compatibility 证据只适用于明确 host/channel/adapter 版本，不跨平台外推 | partial | not-implemented | not-run | [trust §9.2](../security/trust-safety-ux.md#92-证据) |
+| `CONSOLE-V2-PRD-043` | 通知按稳定 event/proposal ref 去重；普通进度可聚合但安全事项不被吞掉 | missing | not-implemented | none | [trust §11](../security/trust-safety-ux.md#11-通知与深链) |
+| `CONSOLE-V2-PRD-044` | 普通本地首连 TOFU 固定节点 identity；identity 变化阻断并经受控恢复 | missing | not-implemented | none | [PAGE-002](../ux/journeys-and-screens.md#console-v2-page-002-节点信任)、[PAGE-019](../ux/journeys-and-screens.md#console-v2-page-019-节点身份变化阻断) |
+| `CONSOLE-V2-PRD-045` | 本地账号恢复只经 Admin CLI，恢复轮换相关 session/secret 并写 authority audit | missing | not-implemented | none | [scope §3.3](../platforms/windows/windows-v1-scope.md#33-后续用户) |
+| `CONSOLE-V2-PRD-046` | 每个 Windows SID 映射独立 CognitiveOS 账号；SID 本身不授予 CognitiveOS 权限 | missing | not-implemented | none | [scope §3.3](../platforms/windows/windows-v1-scope.md#33-后续用户) |
+| `CONSOLE-V2-PRD-047` | 应用不主动持久化敏感 snapshot，并通过临时 profile/storage/dump policy 收窄 OS 残留 | product-only | not-implemented | none | [scope §7.1](../platforms/windows/windows-v1-scope.md#71-断线锁屏和本地残留) |
+| `CONSOLE-V2-PRD-048` | quiet hours 只抑制通知呈现，不改变底层事项、deadline 或 authority 状态 | product-only | not-implemented | none | [trust §11](../security/trust-safety-ux.md#11-通知与深链) |
+| `CONSOLE-V2-PRD-049` | 安全事项可升级；acknowledged 只改变提醒，不能替代 handled/decided/reconciled | missing | not-implemented | none | [trust §11](../security/trust-safety-ux.md#11-通知与深链) |
 
 `partial` 表示相关资产只覆盖部分行为（例如幂等冲突已登记，但完整客户端收敛流程仍缺失）；不能简化成“已登记”。
 

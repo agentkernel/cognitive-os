@@ -8,7 +8,7 @@
 >
 > 地位：Informative，不代表实现已提供、测试已执行或 Profile 已符合
 >
-> Agent Hub 关系：本简报聚焦 Governed（完整治理）方向。第三方 Agent 的 Direct Takeover 与两部署模式设计在 [agent-hub/product/product-design.md](./agent-hub/product/product-design.md)，扩展而非改写本文的 persona/JTBD/边界。
+> Agent Hub 关系：本简报聚焦 Governed（完整治理）方向。第三方 Agent 的 Direct Takeover 与两部署模式设计在 [agent-hub/product/product-design.md](../../../../apps/cognitiveos-console/docs/agent-hub/product/product-design.md)，扩展而非改写本文的 persona/JTBD/边界。
 
 ## 1. 一句话定义
 

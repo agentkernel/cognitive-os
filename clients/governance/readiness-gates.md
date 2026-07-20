@@ -12,9 +12,9 @@
 
 | 平台 | gate 入口 | 状态 |
 |---|---|---|
-| Windows | [windows-v1-scope §10](../../apps/cognitiveos-console/docs/windows-v1-scope.md#10-技术候选与-release-gate)（release gate；无独立编号 PoC 表） | 未满足 |
-| macOS | [macOS Open PoC 与 GA gates](../../docs/platforms/macos-product-design.md#13-open-poc-and-ga-gates)（`MAC-POC-01..12`） | 全部 `not-run` |
-| Linux | [Linux Open PoC 与 GA gates](../../docs/platforms/linux-product-design.md#13-open-poc-and-ga-gates)（`LNX-POC-01..12`） | 全部 `not-run` |
+| Windows | [windows-v1-scope §10](../pc/docs/platforms/windows/windows-v1-scope.md#10-技术候选与-release-gate)（release gate；无独立编号 PoC 表） | 未满足 |
+| macOS | [macOS Open PoC 与 GA gates](../pc/docs/platforms/macos/macos-product-design.md#13-open-poc-and-ga-gates)（`MAC-POC-01..12`） | 全部 `not-run` |
+| Linux | [Linux Open PoC 与 GA gates](../pc/docs/platforms/linux/linux-product-design.md#13-open-poc-and-ga-gates)（`LNX-POC-01..12`） | 全部 `not-run` |
 | iPhone | [iPhone Open PoC 与 GA gates](../../docs/platforms/ios-product-design.md#18-open-poc-与-ga-gates)（`IOS-POC-01..18`） | 全部 `not-run` |
 | Android | [Android Open PoC 与 GA gates](../../docs/platforms/android-product-design.md#18-open-poc-与-ga-gates)（`POC-001..018`） | 全部 `not-run` |
 
