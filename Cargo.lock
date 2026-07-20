@@ -122,11 +122,15 @@ name = "cognitive-conformance"
 version = "0.0.1"
 dependencies = [
  "cognitive-contracts",
+ "cognitive-domain",
+ "cognitive-kernel",
+ "cognitive-store",
  "jsonschema",
  "serde",
  "serde_json",
  "serde_yaml",
  "sha2",
+ "tempfile",
  "thiserror",
 ]
 

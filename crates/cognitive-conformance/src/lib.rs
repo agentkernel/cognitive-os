@@ -1,15 +1,17 @@
 //! `cognitive-conformance`: conformance runner of the CognitiveOS reference
 //! implementation.
 //!
-//! M1 capability (Lane-CFR, per `docs/plan/DEVELOPMENT-PLAN.md`): enumerate
+//! M2 capability (Lane-CFR, per `docs/plan/DEVELOPMENT-PLAN.md`): enumerate
 //! the fifteen test layers of `conformance/README.md` and every declarative
 //! vector under `conformance/vectors/`, execute the statically decidable
 //! subset against deterministic reference gates grounded in the registered
 //! machine assets (schemas, registries, transition tables — see
-//! `exec::classify`), and report every vector in one of the five states of
+//! `exec::classify`), execute the M2 kernel-backed vectors behaviorally
+//! against `cognitive-kernel` over the `cognitive-store` SQLite WAL
+//! authority store, and report every vector in one of the five states of
 //! `docs/standards/conformance-evidence.md` section 2. Vectors whose
-//! expectations require kernel/runtime behavior stay `not-run` with a
-//! recorded reason.
+//! expectations require runtime behavior of later milestones stay `not-run`
+//! with a recorded reason.
 //!
 //! A schema-valid vector file is never reported as `pass`
 //! (`conformance/README.md` "Running"; REQ-CONF-* in the registry). The
@@ -443,13 +445,15 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
         runner: RunnerInfo {
             name: "cognitive-conformance",
             version: env!("CARGO_PKG_VERSION"),
-            capability: "static-contract-execution",
+            capability: "static-contract + kernel-behavioral execution (M2)",
         },
-        note: "M1 runner: statically decidable vectors are executed against deterministic \
-               reference gates grounded in registered machine assets; behavioral layers stay \
-               not-run with recorded reasons. A pass is a static-contract result, never a \
-               behavioral or Profile claim; schema-valid parsing alone is never a pass \
-               (conformance/README.md; docs/standards/conformance-evidence.md).",
+        note: "M2 runner: statically decidable vectors are executed against deterministic \
+               reference gates grounded in registered machine assets; the M2 kernel-backed \
+               vectors are executed behaviorally against cognitive-kernel over the SQLite WAL \
+               authority store. Remaining behavioral layers stay not-run with recorded \
+               reasons. A pass is scoped to its execution mode and is never a Profile claim; \
+               schema-valid parsing alone is never a pass (conformance/README.md; \
+               docs/standards/conformance-evidence.md).",
         layers,
         cross_cutting,
         vectors: outcomes,
@@ -460,7 +464,9 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
 /// Render the human-readable summary of a report.
 pub fn human_summary(report: &ConformanceReport) -> String {
     let mut out = String::new();
-    out.push_str("CognitiveOS conformance runner (M1, static-contract execution)\n");
+    out.push_str(
+        "CognitiveOS conformance runner (M2: static-contract + kernel-behavioral execution)\n",
+    );
     out.push_str(&format!(
         "Vectors enumerated: {} | pass {} | fail {} | not-applicable {} | documented-degradation {} | not-run {}\n",
         report.summary.total_vectors,
@@ -513,9 +519,10 @@ pub fn human_summary(report: &ConformanceReport) -> String {
         ));
     }
     out.push_str(
-        "A pass is a static-contract execution result grounded in registered machine assets; \
-         it is never a behavioral or Profile conformance claim. Behavioral layers stay not-run \
-         with recorded reasons until their owning milestone.\n",
+        "A pass is scoped to its execution mode (static-contract gates grounded in registered \
+         machine assets, or M2 behavioral execution against the real kernel/store authority \
+         path); it is never a Profile conformance claim. Remaining behavioral layers stay \
+         not-run with recorded reasons until their owning milestone.\n",
     );
     out
 }
@@ -755,7 +762,7 @@ mod tests {
             result,
             execution: None,
             not_run_reason: (result == "not-run").then(|| "test".to_owned()),
-            static_contract_assertions: None,
+            partial_contract_assertions: None,
         }
     }
 

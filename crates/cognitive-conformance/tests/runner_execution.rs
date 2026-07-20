@@ -1,16 +1,23 @@
-//! M1 runner execution acceptance tests (Lane-CFR).
+//! Runner execution acceptance tests (Lane-CFR; M1 static-contract batch +
+//! M2 behavioral batch).
 //!
 //! Pins, against the real committed corpus:
 //! 1. the five-state distribution of the reference run (honest counts:
-//!    every pass is a static-contract execution with evidence, every
-//!    behavioral vector stays not-run with a recorded reason);
+//!    every pass is an executed result with evidence, every behavioral
+//!    vector of later milestones stays not-run with a recorded reason);
 //! 2. the F-003 closure gate: both governed-object legacy negatives are
 //!    actually executed and pass (schema rejects the dual-track shapes);
-//! 3. the runner self-check: the deliberately wrong implementation
-//!    (schema-valid outputs, wrong behavior) is failed on every corrupted
-//!    vector — "schema-valid alone is never pass"
+//! 3. the M2 behavioral executions: STATE-CAS-002 /
+//!    EFFECT-STATE-CLOSURE-008 / GW-REMOTE-COMPLETE-001 run against the
+//!    real `cognitive-kernel` gate over the `cognitive-store` SQLite WAL
+//!    adapter, and STATE-STORE-DEGRADE-001 carries the real read-only
+//!    degradation subset as recorded assertions (still not-run);
+//! 4. the runner self-check: the deliberately wrong implementation
+//!    (schema-valid outputs, wrong behavior; behaviorally a gate-bypassing
+//!    direct store writer) is failed on every corrupted vector —
+//!    "schema-valid alone is never pass"
 //!    (docs/standards/conformance-evidence.md section 3, DEVELOPMENT-PLAN
-//!    M1 acceptance 2).
+//!    M1 acceptance 2 and M2 review).
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -24,12 +31,18 @@ fn repo_root() -> PathBuf {
 /// Reference-run distribution over the committed 81-vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
-/// 2026-07-20 Lane-CTR gap batch: +5 wire-schema negatives for the newly
-/// registered AKP envelope/stream/control schemas (D-013/D-014/D-015), all
-/// schema-gate executed.
+/// 2026-07-20 Lane-CFR M2 batch: GW-REMOTE-COMPLETE-001 leaves not-run
+/// (kernel-behavioral execution), so pass 30 -> 31, not-run 51 -> 50.
 const TOTAL: usize = 81;
-const PASS: usize = 30;
-const NOT_RUN: usize = 51;
+const PASS: usize = 31;
+const NOT_RUN: usize = 50;
+
+/// The M2 kernel-behavioral executions and their report modes.
+const BEHAVIORAL: [(&str, &str); 3] = [
+    ("STATE-CAS-002", "CasBehavior"),
+    ("EFFECT-STATE-CLOSURE-008", "EffectClosureBehavior"),
+    ("GW-REMOTE-COMPLETE-001", "TaskAcceptanceBehavior"),
+];
 
 #[test]
 fn reference_run_distribution_is_honest_and_pinned() {
@@ -127,13 +140,112 @@ fn f003_legacy_negatives_are_executed_and_pass() {
     }
 }
 
+/// M2 behavioral executions run against the real kernel/store authority
+/// path — the execution record must say so, and every one must pass.
+#[test]
+fn m2_behavioral_vectors_execute_against_the_real_kernel_path() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    for (id, mode) in BEHAVIORAL {
+        let outcome = outcomes
+            .iter()
+            .find(|o| o.id == id)
+            .unwrap_or_else(|| panic!("{id} missing from corpus"));
+        assert_eq!(
+            outcome.result,
+            "pass",
+            "{id} must pass behaviorally: {:?}",
+            outcome.execution.as_ref().map(|e| &e.mismatches)
+        );
+        let record = outcome.execution.as_ref().expect("execution record");
+        assert_eq!(format!("{:?}", record.mode), mode);
+        assert!(
+            record.implementation.contains("cognitive-kernel")
+                && record.implementation.contains("SqliteAuthorityStore"),
+            "{id} implementation label must name the real authority path, got {}",
+            record.implementation
+        );
+        assert!(
+            record
+                .grounding
+                .iter()
+                .any(|g| g.contains("cognitive-kernel")),
+            "{id} grounding must include the kernel gate"
+        );
+    }
+}
+
+/// STATE-STORE-DEGRADE-001 stays honestly not-run (disk-full and
+/// dispatch/stop/revoke expectations are M4/M5), but the M2 read-only
+/// degradation subset must have been executed for real and recorded.
+#[test]
+fn store_degradation_carries_the_executed_m2_subset() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    let degradation = outcomes
+        .iter()
+        .find(|o| o.id == "STATE-STORE-DEGRADE-001")
+        .expect("vector present");
+    assert_eq!(degradation.result, "not-run");
+    let assertions = degradation
+        .partial_contract_assertions
+        .as_ref()
+        .expect("partial contract assertions recorded");
+    // M1 static side still present.
+    assert_eq!(
+        assertions
+            .pointer("/static_contract/error_registered/fail_closed_description")
+            .and_then(serde_json::Value::as_bool),
+        Some(true)
+    );
+    // M2 behavioral read-only subset executed for real (probe must not
+    // error and every executed assertion must hold).
+    let subset = assertions
+        .pointer("/m2_behavioral_read_only_subset")
+        .expect("behavioral subset recorded");
+    assert!(
+        subset.get("probe_error").is_none(),
+        "behavioral degradation probe failed: {subset}"
+    );
+    for key in [
+        "governed_write_rejected_fail_closed",
+        "read_only_inspection_available",
+        "nothing_buffered_as_committed",
+        "replay_digest_stable_across_degradation",
+        "same_write_commits_after_recovery",
+    ] {
+        assert_eq!(
+            subset.get(key).and_then(serde_json::Value::as_bool),
+            Some(true),
+            "degradation subset assertion {key} does not hold"
+        );
+    }
+    assert_eq!(
+        subset
+            .pointer("/degraded_write_error/code")
+            .and_then(serde_json::Value::as_str),
+        Some("STATE_STORE_UNAVAILABLE")
+    );
+    assert_eq!(
+        subset
+            .get("committed_history_lost")
+            .and_then(serde_json::Value::as_bool),
+        Some(false)
+    );
+}
+
 #[test]
 fn plan_named_static_contract_vectors_are_executed() {
     let root = repo_root();
     let vectors = enumerate_vectors(&root).expect("corpus enumerates");
     let outcomes =
         execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
-    // DEVELOPMENT-PLAN M1 acceptance 4 names these three vectors.
+    // DEVELOPMENT-PLAN M1 acceptance 4 named these vectors; closure-008 has
+    // since been upgraded to behavioral execution (M2 batch).
     let by_id = |id: &str| {
         outcomes
             .iter()
@@ -142,26 +254,6 @@ fn plan_named_static_contract_vectors_are_executed() {
     };
     assert_eq!(by_id("EFFECT-STATE-CLOSURE-008").result, "pass");
     assert_eq!(by_id("CTX-TRUST-004").result, "pass");
-    // state-store-degradation stays honestly not-run but must carry the
-    // recorded static contract-side assertions.
-    let degradation = by_id("STATE-STORE-DEGRADE-001");
-    assert_eq!(degradation.result, "not-run");
-    let assertions = degradation
-        .static_contract_assertions
-        .as_ref()
-        .expect("static contract assertions recorded");
-    assert_eq!(
-        assertions
-            .pointer("/error_registered/fail_closed_description")
-            .and_then(serde_json::Value::as_bool),
-        Some(true)
-    );
-    assert_eq!(
-        assertions
-            .pointer("/dispatch_requires_durable_intent_guard_in_transition_table")
-            .and_then(serde_json::Value::as_bool),
-        Some(true)
-    );
 }
 
 #[test]
@@ -174,15 +266,18 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "self-check failed: {:?}",
         report.corrupted_but_still_passing
     );
-    // Every observably corrupted gate must be represented and flipped.
-    assert_eq!(report.must_flip.len(), 11, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 11);
+    // Every observably corrupted gate must be represented and flipped
+    // (M2: +GW-REMOTE-COMPLETE-001; the CAS and closure vectors now flip
+    // through the gate-bypassing behavioral wrong implementation).
+    assert_eq!(report.must_flip.len(), 12, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 12);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
         "GOBJ-LEGACY-STRONGREF-001",
         "STATE-CAS-002",
         "EFFECT-STATE-CLOSURE-008",
+        "GW-REMOTE-COMPLETE-001",
         "PERF-REPORT-CONTRACT-001",
         "CTX-TRUST-004",
         "AKP-ENVELOPE-NO-SCHEMA-PIN-001",
@@ -211,7 +306,7 @@ fn sample_manifest_stays_all_planned() {
     assert_eq!(profiles.len(), 13);
     assert!(
         profiles.values().all(|v| v == "planned"),
-        "static-contract passes must not move any profile off planned"
+        "vector passes (static or behavioral) must not move any profile off planned"
     );
     assert_eq!(
         manifest
@@ -219,6 +314,6 @@ fn sample_manifest_stays_all_planned() {
             .and_then(serde_json::Value::as_array)
             .map(Vec::len),
         Some(0),
-        "no conformance claim: test_runs stays empty until behavioral evidence exists"
+        "no conformance claim: test_runs stays empty until a profile-level behavioral evidence pipeline exists"
     );
 }
