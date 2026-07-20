@@ -1,5 +1,7 @@
 # CognitiveOS Console
 
+> 本目录已降为**兼容入口**：产品文档正文迁至 [clients/pc/](../../clients/pc/README.md)（Agent Hub 迁至 [clients/agent-hub/](../../clients/agent-hub/README.md)，`CLIENTS-DEC-001`）。本页与 [PRODUCT-DESIGN.md](./PRODUCT-DESIGN.md) 保留既有 anchor 与导航，不再新增正文。
+
 CognitiveOS Console（工作名）是面向 Agent 操作者的可视化客户端：以对话开始任务，同时让监督边界、Agent 生命周期、authority 状态和安全恢复保持可见。
 
 ## 当前产品切片
@@ -37,7 +39,7 @@ macOS、受限 Linux、iPhone 与列名 Android phone 已形成独立的 `planne
 - [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md)：v2 ID、旧 ID 映射和上游阻断；
 - [路线图](../../clients/pc/plan/roadmap.md)：非 Windows v1 feature briefs；
 - [决策记录](../../clients/pc/docs/product/decision-log.md)：本轮已确认和被替代的产品决策。
-- [跨平台产品设计](../../docs/platforms/README.md)：macOS/Linux/iPhone/Android phone 范围、要求、决策、parity matrix 和真实 PoC gate。
+- [跨平台产品设计](../../clients/README.md)：macOS/Linux/iPhone/Android phone 范围、要求、决策、parity matrix 和真实 PoC gate。
 - [Agent Hub / 直连接管](../../clients/agent-hub/docs/README.md)：Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级、Adapter 研究、威胁模型与受 gate 阻断的开发计划（informative，`not-implemented`）。
 - [PC + 手机客户端目录索引](../../docs/clients/README.md)：客户端、共享 SDK/契约、平台设计与 Agent Hub 目录的 canonical 导航。
 

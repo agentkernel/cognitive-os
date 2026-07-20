@@ -80,7 +80,7 @@
 
 | old | new | 批次 | 状态 |
 |---|---|---|---|
-| `docs/platforms/README.md` 的"Console 实现 gate"正文（含四条 gate 与激活规则） | `clients/governance/readiness-gates.md`（成为 canonical） | B6 | pending-B6；旧文件压成 stub 并保留 anchor |
+| `docs/platforms/README.md` 的"Console 实现 gate"正文（含四条 gate 与激活规则） | `clients/governance/readiness-gates.md`（成为 canonical） | B6 | done；旧文件已压成 stub 并保留 anchor |
 
 ## 3. anchor / ID 保全方案
 

@@ -6,7 +6,7 @@
 
 | 里程碑 | 范围 | 状态 | 解阻 gate |
 |---|---|---|---|
-| CL-M1 PC Windows MVP（只读监督起步） | Task/Execution 五轨 + watch 投影 | `blocked` | [Console 实现 gate](../../docs/platforms/README.md#console-实现-gate)：依赖组 1/2/7 + M5 + Windows 真实 PoC + PC 技术栈 ADR |
+| CL-M1 PC Windows MVP（只读监督起步） | Task/Execution 五轨 + watch 投影 | `blocked` | [Console 实现 gate](../governance/readiness-gates.md#console-实现-gate)：依赖组 1/2/7 + M5 + Windows 真实 PoC + PC 技术栈 ADR |
 | CL-M2 macOS / Linux parity | 桌面 parity 切片 | `blocked` | 同上 + [macOS](../pc/docs/platforms/macos/macos-product-design.md#13-open-poc-and-ga-gates) / [Linux](../pc/docs/platforms/linux/linux-product-design.md#13-open-poc-and-ga-gates) PoC |
 | CL-M3 iPhone remote companion | 受限远程 Console | `blocked` | Console gate + [iPhone PoC](../mobile/ios/docs/ios-product-design.md#18-open-poc-与-ga-gates) + iOS ADR |
 | CL-M4 Android remote companion | 受限远程 Console | `blocked` | Console gate + [Android PoC](../mobile/android/docs/android-product-design.md#18-open-poc-与-ga-gates) + Android ADR |

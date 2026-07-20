@@ -6,4 +6,4 @@
   - [Design System §7 无障碍](../ux/design-system.md#7-无障碍) 与 [§10 Design System 验收](../ux/design-system.md#10-design-system-验收)；
   - [旅程与页面 §6 未来自动化验收](../ux/journeys-and-screens.md#6-未来自动化验收)。
 - **边界**：本目录不复制验收矩阵正文；Narrator/键盘/High Contrast/reduced-motion 等测试均未执行（`none`），文档存在不构成 a11y 证据。
-- **gate**：[Console 实现 gate](../../../../docs/platforms/README.md#console-实现-gate)。
+- **gate**：[Console 实现 gate](../../../governance/readiness-gates.md#console-实现-gate)。

@@ -1,12 +1,24 @@
-# 客户端实现 gate 入口（readiness-gates）
+# 客户端实现 gate（readiness-gates）
 
 > 类别：informative gate registry ｜ owner：Lane-CON ｜ 日期：2026-07-20
 >
-> 状态：**骨架**。Console 实现 gate 的 canonical 正文当前仍在 [docs/platforms/README.md#console-实现-gate](../../docs/platforms/README.md#console-实现-gate)；迁移批 B6 将把 gate 正文（四条 gate 与激活规则）收纳进本文件并把旧位置压成 stub。在那之前本文件只登记指针，不复制正文。
+> 本文件是 **Console 实现 gate 的 canonical 定义点**（自 `docs/platforms/README.md` 迁入，旧位置保留 anchor stub）；同时收纳各平台 PoC/GA gate 入口与 Agent Hub gate 指针。
 
-## 1. Console 实现 gate（canonical 现址指针）
+<a id="console-实现-gate"></a>
+<a id="implementation-gate"></a>
+## 1. Console 实现 gate（canonical）
 
-- [Console 实现 gate](../../docs/platforms/README.md#console-实现-gate)——依赖组 1/2/7、M5 出口评审、目标平台真实 PoC/GA gate、技术栈 ADR、machine contract/implementation/evidence 门槛。
+任何 Console 实现里程碑仍须同时满足：
+
+1. [DEVELOPMENT-PLAN Console 节](../../docs/plan/DEVELOPMENT-PLAN.md) 依赖组 1、2、7 已交付；
+2. M5 出口评审通过；
+3. 目标平台文档的 Open PoC 与 GA gates 使用真实 API/真实 OS 行为完成并留下可复现实测证据（各平台入口见 §2）；
+4. 技术栈 ADR 已批准；
+5. 适用 machine contract、implementation 和 executed evidence 分别达到其声明门槛。
+
+在此之前，所有平台 Profile 均保持 `planned`，所有平台专属测试证据均为 `none`。
+
+**激活规则**：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 Open PoC/GA gate 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。Lane-CON 激活前 informative 文档例外（[PARALLEL-LANES §2.1](../../docs/plan/PARALLEL-LANES.md)）不改变此 gate。
 
 ## 2. 各平台 PoC / GA gate 入口（迁移前现址）
 

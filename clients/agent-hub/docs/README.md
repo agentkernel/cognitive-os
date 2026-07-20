@@ -89,7 +89,7 @@
 ## 4. 上游依赖入口
 
 - Console v2 基线：[apps/cognitiveos-console/PRODUCT-DESIGN.md](../../../apps/cognitiveos-console/PRODUCT-DESIGN.md)（§17/§20.3 anchor 保持不变）。
-- 平台产品设计：[docs/platforms/README.md](../../../docs/platforms/README.md)。
-- Console 实现 gate：[docs/platforms/README.md#console-实现-gate](../../../docs/platforms/README.md#console-实现-gate)。
+- 平台产品设计：[clients/README.md](../../README.md)（PC/mobile 平台文档域）。
+- Console 实现 gate：[docs/platforms/README.md#console-实现-gate](../../governance/readiness-gates.md#console-实现-gate)。
 - 开发计划入口：[docs/plan/agent-hub-development-plan.md](../plan/agent-hub-development-plan.md)。
 - 车道机制：[docs/plan/PARALLEL-LANES.md](../../../docs/plan/PARALLEL-LANES.md)。

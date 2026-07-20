@@ -41,7 +41,7 @@ flowchart LR
 
 2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `docs/platforms/` 与 `apps/cognitiveos-console/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。同一例外覆盖 Agent Hub / 直连接管的 canonical 文档（`apps/cognitiveos-console/docs/agent-hub/`）及其开发计划与提示词（`docs/plan/agent-hub/`、`docs/plan/agent-hub-development-plan.md`、`docs/prompts/agent-hub/`）。
 
-该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../platforms/README.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
+该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](../../clients/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
 ## 3. 所有权表（当前）
 

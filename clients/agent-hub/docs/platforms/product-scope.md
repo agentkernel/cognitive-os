@@ -2,7 +2,7 @@
 
 > 类别：informative product design ｜ 日期：2026-07-20 ｜ canonical owner：Lane-CON
 >
-> 与既有平台设计联动见 [docs/platforms/README.md](../../../../docs/platforms/README.md) 与 [docs/platforms/agent-hub-platform-parity.md](./agent-hub-platform-parity.md)。既有移动/桌面 canonical 决策不被本文改写。
+> 与既有平台设计联动见 [clients/README.md](../../../README.md) 与 [docs/platforms/agent-hub-platform-parity.md](./agent-hub-platform-parity.md)。既有移动/桌面 canonical 决策不被本文改写。
 
 ## 1. 平台优先级
 
@@ -44,4 +44,4 @@
 
 ## 5. 平台 gate
 
-各平台实现 gate 见 [docs/platforms/README.md](../../../../docs/platforms/README.md) 与 [../GOVERNANCE.md](../GOVERNANCE.md#7-实现-gate不可跳过)；当前全部 `not-implemented / evidence none`。
+各平台实现 gate 见 [clients/governance/readiness-gates.md](../../../governance/readiness-gates.md#console-实现-gate) 与 [../GOVERNANCE.md](../GOVERNANCE.md#7-实现-gate不可跳过)；当前全部 `not-implemented / evidence none`。

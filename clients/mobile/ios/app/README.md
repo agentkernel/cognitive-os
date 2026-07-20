@@ -7,5 +7,5 @@
   1. [DEVELOPMENT-PLAN Console 节](../../../../docs/plan/DEVELOPMENT-PLAN.md) 依赖组 1、2、7 交付 + M5 出口评审通过；
   2. [iPhone Open PoC 与 GA gates](../docs/ios-product-design.md#18-open-poc-与-ga-gates)（`IOS-POC-01..18`）用真实 API/真机行为留证；
   3. iOS 技术栈 ADR 已批准（当前不存在）。
-- **gate 权威**：[Console 实现 gate](../../../../docs/platforms/README.md#console-实现-gate)。
+- **gate 权威**：[Console 实现 gate](../../../governance/readiness-gates.md#console-实现-gate)。
 - 本 README 不含任何"技术栈已批准"或"实现已启动"的暗示。

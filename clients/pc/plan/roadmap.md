@@ -77,7 +77,7 @@
 进入门禁：
 
 - 通用 Console 依赖组 1/2/7 + M5 出口；
-- [目标平台 Open PoC/GA gates](../../../docs/platforms/README.md#console-实现-gate) 使用真实 API/真实 OS 行为留证；
+- [目标平台 Open PoC/GA gates](../../governance/readiness-gates.md#console-实现-gate) 使用真实 API/真实 OS 行为留证；
 - 平台安装/签名/更新/恢复、secure storage、AT/键盘/contrast/motion、daemon/helper 权限、两次升级演练均通过。
 
 <a id="phase-d--mobile-remote-companion"></a>

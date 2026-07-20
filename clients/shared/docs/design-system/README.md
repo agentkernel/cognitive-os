@@ -7,4 +7,4 @@
   - PC Design System（品牌/布局/组件/动效/无障碍）：[design-system.md](../../../pc/docs/ux/design-system.md)（B2 已迁入）；
   - 平台差异：[桌面 parity](../../../pc/docs/platforms/desktop-parity-matrix.md) 与 [移动 parity](../../../mobile/shared/docs/mobile-parity-matrix.md)。
 - **边界**：设计 token 尚无独立共享定义文件；平台原生控件差异以各平台产品设计为准；本目录不新造视觉规范。
-- **gate**：[Console 实现 gate](../../../../docs/platforms/README.md#console-实现-gate)。
+- **gate**：[Console 实现 gate](../../../governance/readiness-gates.md#console-实现-gate)。

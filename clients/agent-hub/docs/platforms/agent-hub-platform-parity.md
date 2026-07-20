@@ -35,4 +35,4 @@
 
 ## 3. gate
 
-Agent Hub 各平台实现 gate 与 [Console 实现 gate](../../../../docs/platforms/README.md#implementation-gate) 一致，另加 Paseo/AGPL 复用法务 gate；当前全部平台 `not-implemented / evidence none`。既有移动/桌面 canonical 决策（`CONSOLE-MAC/LNX/IOS/AND-V1-*`）不受本文影响。
+Agent Hub 各平台实现 gate 与 [Console 实现 gate](../../../governance/readiness-gates.md#implementation-gate) 一致，另加 Paseo/AGPL 复用法务 gate；当前全部平台 `not-implemented / evidence none`。既有移动/桌面 canonical 决策（`CONSOLE-MAC/LNX/IOS/AND-V1-*`）不受本文影响。

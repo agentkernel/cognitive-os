@@ -6,4 +6,4 @@
   - [产品要求与追踪 §4 Windows v1 release-gate 矩阵](../product/requirements-traceability.md#4-windows-v1-release-gate-矩阵)；
   - 共用客户端测试策略：[test-strategy.md](../../../shared/docs/test-strategy.md)。
 - **边界**：76 份 conformance 向量全部 `not-run`；平台端到端测试未执行；本目录不复制 gate 矩阵正文。
-- **gate**：[Console 实现 gate](../../../../docs/platforms/README.md#console-实现-gate)。
+- **gate**：[Console 实现 gate](../../../governance/readiness-gates.md#console-实现-gate)。

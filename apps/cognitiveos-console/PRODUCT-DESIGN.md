@@ -2,7 +2,7 @@
 
 <a id="doc-top"></a>
 
-> 本文件是 CognitiveOS Console v2 的兼容入口。完整产品设计已拆分到 [`clients/pc/`](../../clients/pc/README.md)；本文件保留旧路径以及仓库依赖的 §17、§20.3 锚点。
+> 本文件是 CognitiveOS Console v2 的兼容入口（deprecated；successor：[`clients/pc/`](../../clients/pc/README.md)，`CLIENTS-DEC-001`）。完整产品设计正文在 clients/pc 各专题文档；本文件保留旧路径、仓库依赖的 §17、§20.3 锚点与漂移登记表，不再新增正文。
 >
 > 文档性质：Informative。本文不新增/修改任何 CognitiveOS `REQ-*`、错误码、schema、transition table 或 conformance vector。
 >
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 2026-07-20 | F-003 governed-object 单轨迁移已落地，仍待 M1 runner/codegen 复验 | §20.3、产品追踪 BLK-013 | 更正为 `partially-closed`，不宣称行为已验证 |
 | 2026-07-20 | D-005 已使 transition table schema 接受 `0.1/0.2` | §20.3、产品追踪 BLK-001 | 移除过时 blocker，保留已关闭历史 |
-| 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`docs/platforms/`](../../docs/platforms/README.md#console-实现-gate) 的可定位平台 gate |
+| 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`docs/platforms/`](../../clients/governance/readiness-gates.md#console-实现-gate) 的可定位平台 gate |
 
 ## 0. v2 文档地图
 
@@ -29,7 +29,7 @@
 | [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md) | `CONSOLE-V2-*`、旧 ID 映射、三维状态与上游阻断 |
 | [路线图](../../clients/pc/plan/roadmap.md) | 非 Windows v1 feature briefs |
 | [决策记录](../../clients/pc/docs/product/decision-log.md) | 已确认和被替代的产品决策 |
-| [桌面平台产品设计](../../docs/platforms/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
+| [桌面平台产品设计](../../clients/pc/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
 | [Agent Hub / 直连接管](../../clients/agent-hub/docs/README.md) | Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级/Adapter、威胁模型与受 gate 阻断的开发计划（informative） |
 
 ## 1. 当前产品基线
@@ -130,7 +130,7 @@ Windows v1 是当前唯一冻结的 Console 产品切片：
 7. Multi-Agent / Distributed。
 
 每个 phase 的不可变边界和进入门禁见 [roadmap.md](../../clients/pc/plan/roadmap.md)。
-macOS/Linux 已确认的平台产品决策、支持边界和 Open PoC/GA gates 见 [桌面平台产品设计](../../docs/platforms/README.md)；这些文档属于激活前 informative 例外，不改变实现 gate。
+macOS/Linux 已确认的平台产品决策、支持边界和 Open PoC/GA gates 见 [桌面平台产品设计](../../clients/pc/README.md)；这些文档属于激活前 informative 例外，不改变实现 gate。
 
 ### 17.4 Release gate
 
@@ -143,7 +143,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - 真实证据证明无错误完成声明、无跨用户/channel 泄露、无重复 Effect；
 - Tauri 2 + React/TypeScript（或替代方案）ADR 已批准。
 
-跨平台 Console 实现还必须满足 [平台实现 gate](../../docs/platforms/README.md#console-实现-gate)，且目标平台 PoC 使用真实 API/真实 OS 行为留证。
+跨平台 Console 实现还必须满足 [平台实现 gate](../../clients/governance/readiness-gates.md#console-实现-gate)，且目标平台 PoC 使用真实 API/真实 OS 行为留证。
 
 ---
 

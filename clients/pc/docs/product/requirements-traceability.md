@@ -36,7 +36,7 @@
 
 Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/implemented/unsupported`。Windows v1 当前 Profile 为 `planned`；Console `not-implemented`；相关既有 vectors 在 M0 runner 中为 `not-run`，产品级端到端证据为 `none`。仓库其他参考实现骨架不改变该结论。
 
-macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../../../docs/platforms/README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
+macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
 
 ## 2. v2 产品要求
 

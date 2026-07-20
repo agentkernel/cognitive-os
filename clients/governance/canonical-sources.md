@@ -17,7 +17,7 @@
 | Agent Hub 各专题（产品/架构/安全/协作/平台/决策/追踪/adapter/来源/模板） | `clients/agent-hub/docs/**` 各文件 | [agent-hub/docs](../agent-hub/docs/README.md) | B5（已落位） |
 | Agent Hub 计划 / 提示词 | `clients/agent-hub/plan/**`、`clients/agent-hub/prompts/**` | [plan](../agent-hub/plan/README.md)、[prompts](../agent-hub/prompts/README.md) | B5（已落位） |
 | Agent Hub 平台 parity | `clients/agent-hub/docs/platforms/agent-hub-platform-parity.md` | [agent-hub-platform-parity](../agent-hub/docs/platforms/agent-hub-platform-parity.md) | B5（已落位） |
-| 客户端实现 gate | `clients/governance/readiness-gates.md` | [docs/platforms/README.md#console-实现-gate](../../docs/platforms/README.md#console-实现-gate) | B6 |
+| 客户端实现 gate | `clients/governance/readiness-gates.md` | [readiness-gates](readiness-gates.md#console-实现-gate) | B6（已落位） |
 | 客户端结构决策（`CLIENTS-DEC-*`） | `clients/governance/decision-log.md` | [decision-log.md](decision-log.md) | B1（已落位） |
 | readiness 双结论 | `clients/READINESS.md` | [READINESS.md](../READINESS.md) | B1（已落位） |
 | 机器合同（REQ/错误码/schema/transition/vector） | `specs/**`、`conformance/**`（**不在 clients**） | [specs registry](../../specs/registry/requirements.yaml) | 不迁移 |
