@@ -24,20 +24,28 @@ const dictionaries = {
       about: "关于",
     },
     home: {
-      eyebrow: "个人开发者博客 · 示例身份",
-      title: "把 Agent 的不确定行动，收敛成可检查的工程边界。",
+      eyebrow: "系统设计 · 可靠性 · Agent 治理",
+      title: "把 Agent 的不确定行动，收敛为可检查的工程边界。",
       thesis:
         "我写系统设计、可靠性与开发工具，重点不是让模型说得更像完成，而是让状态、授权、Effect 与验收留下可复核的证据。",
       primaryAction: "阅读 CognitiveOS 代表作",
       featuredLabel: "代表作",
-      projectsHeading: "项目证据",
-      articlesHeading: "最近手记",
-      aboutHeading: "作者入口",
+      featuredMeta: "代表作 · CognitiveOS · 研究快照 b626e88",
+      projectsHeading: "案例与工具",
+      projectsDescription: "示例案例按问题、约束、方案、结果与反思组织。",
+      articlesHeading: "近期文章",
+      articlesDescription: "长文提供完整论证；短记只处理一个问题，并明确证据边界。",
+      aboutHeading: "写作者说明",
+      aboutDescription: "当前身份与经历均为占位；方法与内容边界保持公开。",
       aboutLink: "查看方法与示例时间线",
     },
     articles: {
       title: "文章",
       description: "一篇可追溯的 CognitiveOS 长文，以及三篇明确标记的技术写作示例。",
+      featuredHeading: "研究长文",
+      featuredDescription: "完整论证、来源快照与可展开的证据边界。",
+      sampleHeading: "示例短记",
+      sampleDescription: "每篇只处理一个工程问题，用于验证阅读与内容结构。",
       emptyTitle: "这里还没有真实短文",
       emptyBody: "示例条目不会进入 RSS 或 sitemap；真实内容会在来源和身份就绪后发布。",
       read: "阅读文章",
@@ -110,21 +118,34 @@ const dictionaries = {
       about: "About",
     },
     home: {
-      eyebrow: "Personal developer blog · placeholder identity",
+      eyebrow: "System design · reliability · agent governance",
       title: "Turn uncertain agent actions into inspectable engineering boundaries.",
       thesis:
         "I write about system design, reliability, and developer tools. The goal is not to make a model sound finished, but to leave reviewable evidence across state, authorization, Effects, and acceptance.",
       primaryAction: "Read the CognitiveOS flagship",
       featuredLabel: "Flagship",
-      projectsHeading: "Project evidence",
-      articlesHeading: "Recent notes",
-      aboutHeading: "About the author",
+      featuredMeta: "Featured essay · CognitiveOS · research snapshot b626e88",
+      projectsHeading: "Cases and tools",
+      projectsDescription:
+        "Sample cases are structured as problem, constraints, approach, outcome, and reflection.",
+      articlesHeading: "Recent writing",
+      articlesDescription:
+        "Long-form work carries the full argument; each short note handles one question and names its evidence boundary.",
+      aboutHeading: "About this writer",
+      aboutDescription:
+        "Identity and experience remain placeholders; the working method and content boundaries stay explicit.",
       aboutLink: "See the method and sample timeline",
     },
     articles: {
       title: "Articles",
       description:
         "One traceable CognitiveOS long-form article and three clearly marked technical writing samples.",
+      featuredHeading: "Research essay",
+      featuredDescription:
+        "A complete argument with a source snapshot and inspectable evidence boundaries.",
+      sampleHeading: "Sample notes",
+      sampleDescription:
+        "Each note handles one engineering question and exists to exercise the reading system.",
       emptyTitle: "No real short notes yet",
       emptyBody:
         "Sample entries stay out of RSS and the sitemap. Real work will publish once sources and identity are ready.",

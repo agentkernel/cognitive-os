@@ -32,9 +32,9 @@
   per sourcebook
 - static import/boundary checks: 16 MDX imports, 3 intentional Client
   Components
-- Next.js production build: 33 generated static/SSG routes
+- Next.js production build: 34 generated static/SSG routes
 
-`pnpm test:e2e` passed 14 Chromium scenarios:
+`pnpm test:e2e` passed 15 Chromium scenarios:
 
 - permanent root redirect
 - keyboard skip link and primary navigation
@@ -43,6 +43,7 @@
 - local generated images and local font requests
 - mobile-menu focus trap, Escape, and focus return
 - 375, 768, and 1440 viewport screenshots and overflow checks
+- enforced long-form line measure, font size, and line-height checks
 - browser console/page-error checks
 - reduced-motion and forced-colors behavior
 - RSS, sitemap, robots, sample noindex, and invalid-route 404s
@@ -54,6 +55,8 @@ Screenshots were generated under the ignored directory:
 - `artifacts/evidence/screenshots/home-375.png`
 - `artifacts/evidence/screenshots/home-768.png`
 - `artifacts/evidence/screenshots/home-1440.png`
+- `artifacts/evidence/screenshots/article-375.png`
+- `artifacts/evidence/screenshots/article-1440.png`
 
 ## Independent-root proof
 

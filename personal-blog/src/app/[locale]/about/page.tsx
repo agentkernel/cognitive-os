@@ -39,7 +39,7 @@ export default async function AboutPage({
           <h1>{dictionary.about.title}</h1>
           <div>
             <p>{dictionary.about.description}</p>
-            <p className="eyebrow">{dictionary.sample} / Sample content</p>
+            <p className="eyebrow">{dictionary.sample}</p>
           </div>
         </header>
 
@@ -53,7 +53,7 @@ export default async function AboutPage({
               {authorProfile.initials}
             </div>
             <div>
-              <p className="eyebrow">{dictionary.sample} / Sample content</p>
+              <p className="eyebrow">{dictionary.sample}</p>
               <h2>{authorProfile.title[locale]}</h2>
               <p>{authorProfile.bio[locale]}</p>
               <p>{authorProfile.location[locale]}</p>
@@ -81,7 +81,7 @@ export default async function AboutPage({
               <li key={entry.id}>
                 <time>{entry.period}</time>
                 <div>
-                  <p className="eyebrow">{dictionary.sample} / Sample content</p>
+                  <p className="eyebrow">{dictionary.sample}</p>
                   <h3>{entry.title[locale]}</h3>
                   <p>{entry.detail[locale]}</p>
                 </div>

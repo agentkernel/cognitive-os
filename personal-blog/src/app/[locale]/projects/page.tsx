@@ -45,7 +45,7 @@ export default async function ProjectsPage({
           <h1>{dictionary.projects.title}</h1>
           <div>
             <p>{dictionary.projects.description}</p>
-            <p className="eyebrow">{dictionary.sample} / Sample content</p>
+            <p className="eyebrow">{dictionary.sample}</p>
           </div>
         </header>
         <ContentList

@@ -45,7 +45,7 @@ export default async function LocaleLayout({
 }) {
   const locale = requireLocale((await params).locale);
   return (
-    <html lang={htmlLanguageByRoute[locale]}>
+    <html lang={htmlLanguageByRoute[locale]} data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );

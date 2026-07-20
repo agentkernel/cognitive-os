@@ -3,10 +3,18 @@ import { cognitiveOsSnapshot } from "@/data/cognitiveos";
 export function SampleNotice() {
   return (
     <aside className="sample-notice" aria-label="示例内容 / Sample content">
-      <strong>示例内容 / Sample content</strong>
+      <strong>
+        <span className="locale-copy locale-copy--zh">示例内容</span>
+        <span className="locale-copy locale-copy--en">Sample content</span>
+      </strong>
       <p>
-        仅用于展示信息结构，不代表真实经历、客户或结果。 / For information-architecture
-        demonstration only; not a real role, client, or outcome.
+        <span className="locale-copy locale-copy--zh">
+          仅用于展示信息结构，不代表真实经历、客户或结果。
+        </span>
+        <span className="locale-copy locale-copy--en">
+          For information-architecture demonstration only; not a real role,
+          client, or outcome.
+        </span>
       </p>
     </aside>
   );
@@ -43,10 +51,16 @@ export function ArticleSnapshot() {
         </div>
       </dl>
       <p>
-        The Lane-CTR contract batch is delivered, including two new F-003 negative vectors, but
-        there are still zero REQ-level implementation claims and zero behavior-executed vectors.
-        Snapshot counts are not conformance evidence. / Lane-CTR 契约批已交付并新增两份 F-003
-        负例，但 REQ 级实现声明与行为向量执行仍均为 0；快照计数不构成符合性证据。
+        <span className="locale-copy locale-copy--zh">
+          Lane-CTR 契约批已交付并新增两份 F-003 负例，但 REQ
+          级实现声明与行为向量执行仍均为 0；快照计数不构成符合性证据。
+        </span>
+        <span className="locale-copy locale-copy--en">
+          The Lane-CTR contract batch is delivered, including two new F-003
+          negative vectors, but there are still zero REQ-level implementation
+          claims and zero behavior-executed vectors. Snapshot counts are not
+          conformance evidence.
+        </span>
       </p>
     </aside>
   );

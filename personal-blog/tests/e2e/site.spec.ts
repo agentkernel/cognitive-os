@@ -117,6 +117,38 @@ test("responsive screenshots stay within the page viewport", async ({ page }) =>
       fullPage: true,
     });
   }
+  for (const width of [375, 1440]) {
+    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+    await page.goto("/zh/cognitiveos/verifiable-agent-actions");
+    await expectNoPageOverflow(page);
+    await page.screenshot({
+      path: `artifacts/evidence/screenshots/article-${width}.png`,
+      fullPage: true,
+    });
+  }
+});
+
+test("long-form typography keeps a comfortable measure and rhythm", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/en/cognitiveos/verifiable-agent-actions");
+  const readingMetrics = await page.locator(".prose").evaluate((element) => {
+    const paragraph = element.querySelector(":scope > p")!;
+    const style = getComputedStyle(paragraph);
+    const fontSize = Number.parseFloat(style.fontSize);
+    return {
+      width: element.getBoundingClientRect().width,
+      fontSize,
+      lineHeightRatio: Number.parseFloat(style.lineHeight) / fontSize,
+    };
+  });
+  expect(readingMetrics.width).toBeLessThanOrEqual(740);
+  expect(readingMetrics.fontSize).toBeGreaterThanOrEqual(18);
+  expect(readingMetrics.lineHeightRatio).toBeGreaterThanOrEqual(1.65);
+  await expect(
+    page.getByRole("link", { name: "Intent, Effect, and reconciliation" }),
+  ).toBeVisible();
 });
 
 test("public routes have no console or page errors", async ({ page }) => {

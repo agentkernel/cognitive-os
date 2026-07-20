@@ -67,6 +67,7 @@ export default async function HomePage({
           <p className="eyebrow">{dictionary.home.eyebrow}</p>
           <h1 id="home-title">{dictionary.home.title}</h1>
           <p className="home-hero__thesis">{dictionary.home.thesis}</p>
+          <p className="home-hero__meta">{dictionary.home.featuredMeta}</p>
           <Link className="primary-link" href={flagshipPath(locale)}>
             {dictionary.home.primaryAction}
             <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -95,26 +96,11 @@ export default async function HomePage({
         </figure>
       </section>
 
-      <section className="home-section" aria-labelledby="home-projects">
-        <header>
-          <span>{locale === "zh" ? "项目证据" : "PROJECT EVIDENCE"}</span>
-          <h2 id="home-projects">{dictionary.home.projectsHeading}</h2>
-        </header>
-        <ContentList
-          entries={projects}
-          resolveHref={(entry: ArticleEntry | ProjectEntry) =>
-            projectPath(locale, entry.frontmatter.slug)
-          }
-          actionLabel={dictionary.projects.read}
-          sampleLabel={dictionary.sample}
-          headingLevel="h3"
-        />
-      </section>
-
       <section className="home-section" aria-labelledby="home-articles">
         <header>
-          <span>{locale === "zh" ? "技术手记" : "TECHNICAL NOTES"}</span>
+          <span>{locale === "zh" ? "技术写作" : "TECHNICAL WRITING"}</span>
           <h2 id="home-articles">{dictionary.home.articlesHeading}</h2>
+          <p>{dictionary.home.articlesDescription}</p>
         </header>
         <ContentList
           entries={recentArticles}
@@ -127,13 +113,31 @@ export default async function HomePage({
         />
       </section>
 
+      <section className="home-section" aria-labelledby="home-projects">
+        <header>
+          <span>{locale === "zh" ? "项目证据" : "PROJECT EVIDENCE"}</span>
+          <h2 id="home-projects">{dictionary.home.projectsHeading}</h2>
+          <p>{dictionary.home.projectsDescription}</p>
+        </header>
+        <ContentList
+          entries={projects}
+          resolveHref={(entry: ArticleEntry | ProjectEntry) =>
+            projectPath(locale, entry.frontmatter.slug)
+          }
+          actionLabel={dictionary.projects.read}
+          sampleLabel={dictionary.sample}
+          headingLevel="h3"
+        />
+      </section>
+
       <section className="home-section" aria-labelledby="home-about">
         <header>
           <span>{locale === "zh" ? "作者资料" : "AUTHOR CONTEXT"}</span>
           <h2 id="home-about">{dictionary.home.aboutHeading}</h2>
+          <p>{dictionary.home.aboutDescription}</p>
         </header>
         <div className="home-about">
-          <p className="eyebrow">{dictionary.sample} / Sample content</p>
+          <p className="eyebrow">{dictionary.sample}</p>
           <h3>{authorProfile.title[locale]}</h3>
           <p>{authorProfile.bio[locale]}</p>
           <Link className="text-link" href={pagePath(locale, "about")}>
