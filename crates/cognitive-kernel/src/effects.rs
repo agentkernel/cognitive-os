@@ -44,8 +44,8 @@ use crate::executor::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
 use crate::ports::{
-    AuthorityStore, Clock, EventDraft, IdGenerator, IntentChainStore, IntentRow, PortFailure,
-    ProtocolStore, StorePortError, TaskBinding,
+    AuthorityStore, Clock, EventDraft, IdGenerator, IntentRow, PortFailure, ProtocolStore,
+    StorePortError, TaskBinding,
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
@@ -322,7 +322,7 @@ pub fn mint_intent<S, C, G>(
     cmd: &IntentCommand,
 ) -> Result<MintedIntent, EffectError>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -551,7 +551,7 @@ pub struct EffectProtocol<'a, S, C, G> {
 
 impl<'a, S, C, G> EffectProtocol<'a, S, C, G>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore,
     C: Clock,
     G: IdGenerator,
 {

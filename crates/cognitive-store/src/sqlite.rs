@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -942,6 +942,16 @@ impl ProtocolStore for SqliteAuthorityStore {
             })
     }
 
+    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError> {
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref = ?1",
+            (task_ref,),
+            |row| row.get(0),
+        )
+        .map_err(unavailable("read current contract epoch"))
+    }
+
     fn load_event_by_id(
         &self,
         event_id: &EventId,
@@ -1340,16 +1350,6 @@ impl IntentChainStore for SqliteAuthorityStore {
                 rusqlite::Error::QueryReturnedNoRows => Ok(None),
                 other => Err(unavailable("query load_task_contract")(other)),
             })
-    }
-
-    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError> {
-        let conn = self.lock()?;
-        conn.query_row(
-            "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref = ?1",
-            (task_ref,),
-            |row| row.get(0),
-        )
-        .map_err(unavailable("read current contract epoch"))
     }
 
     fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError> {

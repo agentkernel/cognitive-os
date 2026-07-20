@@ -367,6 +367,11 @@ pub trait ProtocolStore {
         &self,
         event_id: &EventId,
     ) -> Result<Option<CommittedEvent>, StorePortError>;
+
+    /// Current (highest) TaskContract epoch of one task; 0 = no contract
+    /// (M5 correction fencing: the epoch-currency read the effect
+    /// protocol consults at mint and dispatch, REQ-INTENT-SUPERSEDE-001).
+    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError>;
 }
 
 /// One persisted loop checkpoint (recovery-stable facts of
@@ -521,9 +526,6 @@ pub trait IntentChainStore {
         task_ref: &str,
         contract_epoch: i64,
     ) -> Result<Option<TaskContractRow>, StorePortError>;
-
-    /// Current (highest) contract epoch of one task; 0 = no contract.
-    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError>;
 
     /// Enumerate persisted intents bound to one task (supersede
     /// classification input), in insertion order.

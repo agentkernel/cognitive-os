@@ -944,13 +944,15 @@ where
 
 /// Deterministic epoch-currency check for one task binding: the fencing
 /// primitive behind `INTENT_VERSION_SUPERSEDED` (REQ-INTENT-SUPERSEDE-001,
-/// REQ-AKP-INTENT-001 kernel side; vector `intent-supersede-002`).
+/// REQ-AKP-INTENT-001 kernel side; vector `intent-supersede-002`). Reads
+/// the epoch through [`ProtocolStore`] (protocol-side fencing state, like
+/// the writer epoch), so the effect protocol needs no extra bound.
 pub fn verify_task_binding_current<S>(
     store: &S,
     binding: &crate::ports::TaskBinding,
 ) -> Result<(), ProtocolDenial>
 where
-    S: IntentChainStore,
+    S: ProtocolStore,
 {
     let current = store
         .current_contract_epoch(&binding.task_ref)

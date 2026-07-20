@@ -30,8 +30,7 @@ use crate::effects::{EffectProtocol, WriterLease};
 use crate::error::{EFFECT_RECOVERY_QUARANTINED, RegisteredError, TransitionRejection};
 use crate::executor::{EffectExecutor, ExecutorQueryResult};
 use crate::ports::{
-    AuthorityStore, CheckpointRow, Clock, IdGenerator, IntentChainStore, ProtocolStore,
-    StorePortError,
+    AuthorityStore, CheckpointRow, Clock, IdGenerator, ProtocolStore, StorePortError,
 };
 use crate::replay::{ReplayError, replay_projection};
 use cognitive_domain::{LifecycleDomain, ObjectId, StateName, Version};
@@ -270,7 +269,7 @@ pub fn run_recovery<S, C, G>(
     protocol: &EffectProtocol<'_, S, C, G>,
 ) -> Result<RecoveryReport, RecoveryError>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -446,7 +445,7 @@ fn reconcile_after_unknown<S, C, G>(
     lease: &WriterLease,
 ) -> Result<EffectDisposition, RecoveryError>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore,
     C: Clock,
     G: IdGenerator,
 {
