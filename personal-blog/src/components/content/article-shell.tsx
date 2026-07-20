@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cognitiveOsSnapshot } from "@/data/cognitiveos";
+import { CognitiveOsManualSidebar } from "@/components/cognitiveos/manual-sidebar";
 import { JsonLd } from "@/components/seo/json-ld";
 import { PageScaffold } from "@/components/layout/page-scaffold";
 import type { Locale } from "@/i18n/config";
@@ -120,14 +121,8 @@ export function ArticleShell({
         }
       : null;
 
-  return (
-    <PageScaffold
-      locale={locale}
-      currentPage={currentPage}
-      alternatePath={alternatePath}
-    >
-      {structuredData ? <JsonLd data={structuredData} /> : null}
-      <article className="article-page">
+  const articleContent = (
+    <article className="article-page">
         <nav className="breadcrumbs" aria-label={locale === "zh" ? "面包屑" : "Breadcrumbs"}>
           <Link href={pagePath(locale, "home")}>{dictionary.nav.home}</Link>
           <span aria-hidden="true">/</span>
@@ -208,7 +203,24 @@ export function ArticleShell({
             </nav>
           </aside>
         </div>
-      </article>
+    </article>
+  );
+
+  return (
+    <PageScaffold
+      locale={locale}
+      currentPage={currentPage}
+      alternatePath={alternatePath}
+    >
+      {structuredData ? <JsonLd data={structuredData} /> : null}
+      {currentPage === "cognitiveos" ? (
+        <div className="manual-layout">
+          <CognitiveOsManualSidebar locale={locale} active="flagship" />
+          <div className="manual-content">{articleContent}</div>
+        </div>
+      ) : (
+        articleContent
+      )}
     </PageScaffold>
   );
 }

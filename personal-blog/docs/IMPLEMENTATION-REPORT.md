@@ -34,12 +34,13 @@
   Components
 - Next.js production build: 34 generated static/SSG routes
 
-`pnpm test:e2e` passed 15 Chromium scenarios:
+`pnpm test:e2e` passed 16 Chromium scenarios:
 
 - permanent root redirect
 - keyboard skip link and primary navigation
 - equivalent-language routing and anchors
 - flagship semantics and all five diagrams
+- responsive CognitiveOS manual sidebar and compact mobile index
 - local generated images and local font requests
 - mobile-menu focus trap, Escape, and focus return
 - 375, 768, and 1440 viewport screenshots and overflow checks
@@ -57,6 +58,8 @@ Screenshots were generated under the ignored directory:
 - `artifacts/evidence/screenshots/home-1440.png`
 - `artifacts/evidence/screenshots/article-375.png`
 - `artifacts/evidence/screenshots/article-1440.png`
+- `artifacts/evidence/screenshots/cognitiveos-overview-375.png`
+- `artifacts/evidence/screenshots/cognitiveos-overview-1440.png`
 
 ## Independent-root proof
 

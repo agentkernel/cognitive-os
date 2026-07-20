@@ -66,6 +66,57 @@ test("flagship renders complete governance semantics and five diagrams", async (
   await expectNoPageOverflow(page);
 });
 
+test("CognitiveOS uses a responsive manual-style sidebar", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/zh/cognitiveos");
+  const manual = page.getByRole("navigation", { name: "CognitiveOS 说明书目录" });
+  await expect(manual).toBeVisible();
+  await expect(manual.getByRole("link", { name: "专题总览" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(
+    manual.getByRole("link", { name: "Intent、Effect 与对账" }),
+  ).toHaveAttribute(
+    "href",
+    "/zh/cognitiveos/verifiable-agent-actions#intent-effect",
+  );
+
+  await page.goto("/zh/cognitiveos/verifiable-agent-actions");
+  await expect(
+    page
+      .getByRole("navigation", { name: "CognitiveOS 说明书目录" })
+      .getByRole("link", { name: "完整设计说明" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page.getByRole("navigation", { name: "文章目录" }),
+  ).toBeVisible();
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/zh/cognitiveos");
+  const compactManual = page.locator("details.manual-sidebar-mobile");
+  await expect(compactManual).toBeVisible();
+  await compactManual.locator("summary").click();
+  await expect(
+    compactManual.getByRole("link", { name: "完整设计说明" }),
+  ).toBeVisible();
+  await expectNoPageOverflow(page);
+
+  await page.goto("/zh/cognitiveos/verifiable-agent-actions");
+  const mobileColumns = await page.locator(".article-grid > *").evaluateAll(
+    (elements) =>
+      elements.map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, width: rect.width };
+      }),
+  );
+  for (const column of mobileColumns) {
+    expect(column.left).toBeGreaterThanOrEqual(0);
+    expect(column.right).toBeLessThanOrEqual(376);
+    expect(column.width).toBeGreaterThan(300);
+  }
+});
+
 test("generated visuals and licensed fonts are served locally", async ({ page }) => {
   await page.goto("/zh");
   await expect(page.locator('img[src*="governed-trace-hero"]').first()).toBeVisible();
@@ -123,6 +174,12 @@ test("responsive screenshots stay within the page viewport", async ({ page }) =>
     await expectNoPageOverflow(page);
     await page.screenshot({
       path: `artifacts/evidence/screenshots/article-${width}.png`,
+      fullPage: true,
+    });
+    await page.goto("/zh/cognitiveos");
+    await expectNoPageOverflow(page);
+    await page.screenshot({
+      path: `artifacts/evidence/screenshots/cognitiveos-overview-${width}.png`,
       fullPage: true,
     });
   }
