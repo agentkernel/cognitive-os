@@ -31,7 +31,7 @@ import {
   parseResultEnvelope,
   serializeEnvelope,
   type ErrorEnvelope,
-  type ExtensionEntry,
+  type Extension,
   type OperationKind,
   type RequestSpec,
   type ResultEnvelope,
@@ -90,7 +90,7 @@ export interface CallSpec<P = unknown> {
   readonly budget?: commonDefs.Budget | undefined;
   readonly correlationId?: string | undefined;
   readonly causationId?: string | undefined;
-  readonly extensions?: ReadonlyArray<ExtensionEntry> | undefined;
+  readonly extensions?: ReadonlyArray<Extension> | undefined;
 }
 
 export interface CallOptions<P = unknown> {

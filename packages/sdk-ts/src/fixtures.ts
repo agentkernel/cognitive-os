@@ -12,6 +12,7 @@ import { payloadDigest } from "./envelope.js";
 import type {
   ShellActionProposal,
   ShellCommandPreview,
+  ShellControlRequest,
   ShellStatusView,
   UserIntentRecord,
   WatchSubscription,
@@ -170,6 +171,18 @@ export function sampleIntentRecord(overrides: Partial<UserIntentRecord> = {}): U
     raw_expression: "restart the nightly export job",
     recorded_at: "2026-07-20T10:59:00Z",
     intent_digest: sampleDigest("intent-content"),
+    ...overrides,
+  };
+}
+
+export function sampleControlRequest(
+  overrides: Partial<ShellControlRequest> = {},
+): ShellControlRequest {
+  return {
+    schema_version: "cognitiveos.shell-control-request/0.1",
+    control: "cancel",
+    target_ref: "task://tenant-a/task-1",
+    reason: "user requested stop",
     ...overrides,
   };
 }

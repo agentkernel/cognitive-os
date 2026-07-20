@@ -56,12 +56,19 @@ const snap = (sequence: number, snapshotVersion: number, payload: unknown = { s:
   frameText({ stream_id: "st-1", sequence, kind: "snapshot", snapshot_version: snapshotVersion, payload });
 const delta = (sequence: number, payload: unknown = { d: sequence }, final = false) =>
   frameText({ stream_id: "st-1", sequence, kind: "delta", payload, final });
+// D-015: the machine error rides on the frame's `error` member (generated
+// commonDefs.Error shape), not on the payload.
 const errorFrame = (code: string, retryable: boolean) =>
   frameText({
     stream_id: "st-1",
     sequence: 0,
     kind: "error",
-    payload: { code, category: "watch", retryable, stage: "resume" },
+    error: {
+      code,
+      category: code === "WATCH_CURSOR_STALE" ? "watch" : "auth",
+      retryable,
+      stage: "resume",
+    },
   });
 
 async function drain(items: AsyncIterable<WatchItem>): Promise<WatchItem[]> {
@@ -219,5 +226,24 @@ test("malformed frames fail closed", async () => {
   await assert.rejects(
     drain(consumeWatch(client, PARAMS)),
     (error: unknown) => error instanceof WatchViolation && error.reason === "malformed-frame",
+  );
+});
+
+test("an error frame without a machine error member fails closed (D-015 shape)", async () => {
+  // The pre-D-015 provisional shape carried the code on the payload; that
+  // is no longer a classifiable stream error and must not be interpreted.
+  const legacyShaped = frameText({
+    stream_id: "st-1",
+    sequence: 0,
+    kind: "error",
+    payload: { code: "WATCH_CURSOR_STALE", category: "watch", retryable: true, stage: "resume" },
+  });
+  const { client } = harness([() => [snap(10, 8), legacyShaped]]);
+  await assert.rejects(
+    drain(consumeWatch(client, PARAMS)),
+    (error: unknown) =>
+      error instanceof WatchViolation &&
+      error.reason === "malformed-frame" &&
+      /machine error member/.test(error.message),
   );
 });

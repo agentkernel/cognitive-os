@@ -1,17 +1,18 @@
 /**
- * Drift gates for the interim hand-modeled shell-family bindings:
+ * Fixture gates for the generated shell-family bindings:
  *
- * 1. every sample fixture (typed by `views.ts`) validates against the real
- *    schema under `specs/schemas/` (ajv draft 2020-12, full $ref closure);
- * 2. `SHELL_SCHEMA_DIGESTS` re-derives from the schema files through the
- *    contracts canonical digest (domain `schema-bundle/0.1`, the generated
- *    module header recipe);
- * 3. the `isShellStatusView` ingestion guard accepts the valid fixture and
- *    rejects non-view payloads.
+ * 1. every sample fixture (typed by the GENERATED interfaces) validates
+ *    against the real schema under `specs/schemas/` (ajv draft 2020-12,
+ *    full $ref closure) — proves the shared test doubles stay schema-valid
+ *    and that schema conditionals still bite through the typed surface;
+ * 2. the `isShellStatusView` ingestion guard accepts the valid fixture and
+ *    rejects non-view payloads;
+ * 3. the runtime `SHELL_STATUS_VALUES` list mirrors the generated union
+ *    (the compile-time witness lives in `views.ts`; here we pin the count).
  *
- * A schema change therefore turns this suite red instead of silently
- * desynchronizing the client (interim measure until Lane-CTR codegen covers
- * the shell family; gap registered in the 20260720 lane-tsc handoff).
+ * The former hand-written interface drift gates (test-time digest
+ * re-derivation, YAML re-reads) are gone: schema↔binding parity including
+ * `SCHEMA_DIGEST` constants is proven inside contracts-ts (codegen 0.2.0).
  */
 
 import assert from "node:assert/strict";
@@ -23,16 +24,15 @@ import { fileURLToPath } from "node:url";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormatsImport from "ajv-formats";
 
-import { digestJson } from "@cognitiveos/contracts-ts";
-
 import {
+  sampleControlRequest,
   sampleIntentRecord,
   samplePreview,
   sampleProposal,
   sampleStatusView,
   sampleWatchSubscription,
 } from "./fixtures.js";
-import { isShellStatusView, SHELL_SCHEMA_DIGESTS } from "./views.js";
+import { isShellStatusView, SHELL_STATUS_VALUES } from "./views.js";
 
 const addFormats = addFormatsImport as unknown as (ajv: Ajv2020) => Ajv2020;
 
@@ -63,6 +63,7 @@ test("sample fixtures validate against the real shell-family schemas", () => {
   assertValid("shell-action-proposal.schema.json", sampleProposal());
   assertValid("shell-command-preview.schema.json", samplePreview());
   assertValid("user-intent-record.schema.json", sampleIntentRecord());
+  assertValid("shell-control-request.schema.json", sampleControlRequest());
 });
 
 test("schema conditionals still bite through the typed fixtures (negative)", () => {
@@ -73,11 +74,9 @@ test("schema conditionals still bite through the typed fixtures (negative)", () 
   assert.equal(validate(sampleProposal({ channel: "management" })), false);
 });
 
-test("SHELL_SCHEMA_DIGESTS matches the canonical digests of the schema files", () => {
-  for (const [file, pinned] of Object.entries(SHELL_SCHEMA_DIGESTS)) {
-    const text = readFileSync(path.join(SCHEMA_DIR, file), "utf-8");
-    assert.equal(digestJson(text, "schema-bundle/0.1"), pinned, `${file} digest drifted`);
-  }
+test("SHELL_STATUS_VALUES mirrors the generated status union", () => {
+  assert.equal(SHELL_STATUS_VALUES.length, 12);
+  assert.equal(new Set(SHELL_STATUS_VALUES).size, 12);
 });
 
 test("isShellStatusView accepts the valid view and rejects non-view payloads", () => {
