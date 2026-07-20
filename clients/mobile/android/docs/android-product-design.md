@@ -168,7 +168,7 @@ device allowlist
 
 ### 4.1 角色与权限上界
 
-- Canonical：[CONSOLE-AND-V1-DEC-001](./mobile-platform-decision-log.md#console-and-v1-dec-001)
+- Canonical：[CONSOLE-AND-V1-DEC-001](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-001)
 - 状态：accepted product direction / delivery blocked。
 - Android App 是更广但受限的远程 Console，首要用户为 Agent operator。
 - 只执行 authority 判定的 R0/R1；R2/R3 只解释并阻断。
@@ -176,21 +176,21 @@ device allowlist
 
 ### 4.2 支持矩阵与形态
 
-- Canonical：[CONSOLE-AND-V1-DEC-002](./mobile-platform-decision-log.md#console-and-v1-dec-002)
+- Canonical：[CONSOLE-AND-V1-DEC-002](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-002)
 - GA 仅 §2 所列 phone、API 33+、target API 36、`arm64-v8a`、GMS/Play Protect certified。
 - tablet/foldable/watch/widget/desktop mode 均 `planned/blocked`。
 - 支持资格由短期 signed metadata、实际 browser/Custom Tabs provider floor、WebView no-use gate 和其他全部 floor 共同决定。
 
 ### 4.3 市场、设备所有权与 profile
 
-- Canonical：[CONSOLE-AND-V1-DEC-003](./mobile-platform-decision-log.md#console-and-v1-dec-003)
+- Canonical：[CONSOLE-AND-V1-DEC-003](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-003)
 - 首发美国、新加坡；`zh-CN/en`。
 - 同时支持 BYOD 与 Android Enterprise managed。
 - personal/work profile 是不同 UID、App install、storage、session、FCM registration 和 device binding；禁止跨 profile 复制或恢复。
 
 ### 4.4 Account-first 身份与设备绑定
 
-- Canonical：[CONSOLE-AND-V1-DEC-004](./mobile-platform-decision-log.md#console-and-v1-dec-004)
+- Canonical：[CONSOLE-AND-V1-DEC-004](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-004)
 - OIDC/OAuth 2.1 Authorization Code + PKCE 通过 Custom Tabs/system browser；Credential Manager/passkey 可作为 upstream login。
 - authority 返回可用 tenant/node；单一活动账号可访问多个 tenant/node。
 - device enrollment key generation 必须使用 authority fresh、single-use、短期 nonce 作为 `attestationChallenge`；服务端验证 challenge value、single-use、expiry 和 key attestation 中实际可用的 package、signing certificate digest 与 version。
@@ -200,7 +200,7 @@ device allowlist
 
 ### 4.5 信息架构
 
-- Canonical：[CONSOLE-AND-V1-DEC-005](./mobile-platform-decision-log.md#console-and-v1-dec-005)
+- Canonical：[CONSOLE-AND-V1-DEC-005](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-005)
 - 五个一级目的地：Work、Tasks、Agents、Inbox、More。
 - compact `NavigationBar`，system/predictive back，edge-to-edge + insets。
 - Task detail 分离 AgentExecution、Task、Loop、Effect、Verification 五个 authority lifecycle 域与独立远端 Runtime projection；Runtime/process stop 不推进 Task/Effect。
@@ -208,7 +208,7 @@ device allowlist
 
 ### 4.6 生命周期与 supervision lease
 
-- Canonical：[CONSOLE-AND-V1-DEC-006](./mobile-platform-decision-log.md#console-and-v1-dec-006)
+- Canonical：[CONSOLE-AND-V1-DEC-006](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-006)
 - 仅 Activity `RESUMED`、设备已解锁、session/watch/UI fresh 时续租。
 - background、lock、process death、Settings Force stop/hibernation、Android 13+ Active apps Task Manager Stop 与 Recents/process kill 都停止客户端续租；这些停止机制的 stopped-state 与后续 resync 能力不同，不得混称。
 - WorkManager、FGS、high-priority FCM 只用于 hint/resync，永不续租。
@@ -216,7 +216,7 @@ device allowlist
 
 ### 4.7 FCM 与系统通知
 
-- Canonical：[CONSOLE-AND-V1-DEC-007](./mobile-platform-decision-log.md#console-and-v1-dec-007)
+- Canonical：[CONSOLE-AND-V1-DEC-007](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-007)
 - FCM payload 只含最小 opaque handle 和通用显示文案。
 - 唯一 action 是打开 App；打开后 reauth、消费/解析 handle、resnapshot。
 - message ID、accepted、received、displayed、clicked 都不是 authority truth/evidence。
@@ -224,7 +224,7 @@ device allowlist
 
 ### 4.8 Digest-bound R1
 
-- Canonical：[CONSOLE-AND-V1-DEC-008](./mobile-platform-decision-log.md#console-and-v1-dec-008)
+- Canonical：[CONSOLE-AND-V1-DEC-008](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-008)
 - authority 签发 versioned `CanonicalDisplayEnvelope`；同一 immutable decoded envelope 同时驱动 Native Compose 渲染与完整 envelope digest 签名。
 - envelope 固定 account/principal、tenant/node、app/channel、session、action、target/version、parameters、risk、budget、egress、deadline、verification/acceptance、supervision/cancel/reconcile/compensation、nonce/expiry/idempotency、display-profile/app-build。
 - BiometricPrompt 仅接受 Class 3 biometric，用于解锁 auth-per-use、non-exportable、hardware-backed Android Keystore signing key；StrongBox optional。
@@ -235,7 +235,7 @@ device allowlist
 
 ### 4.9 Offline、内容与隐私
 
-- Canonical：[CONSOLE-AND-V1-DEC-009](./mobile-platform-decision-log.md#console-and-v1-dec-009)
+- Canonical：[CONSOLE-AND-V1-DEC-009](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-009)
 - 仅在 credential-encrypted storage 持久化非敏感连接 metadata、stable refs、设置和所有用户 draft。
 - 默认不注册 direct-boot-aware FCM 或业务 component；device-encrypted storage 最多保存固定、无账号/用户内容且确有 boot 前用途的 build/support metadata。
 - 敏感 last-good 只在进程内并标 `as_of`；不排队控制动作；Direct Boot 不放 token、binding 或用户内容。
@@ -244,21 +244,21 @@ device allowlist
 
 ### 4.10 Agent lifecycle 与 acquisition
 
-- Canonical：[CONSOLE-AND-V1-DEC-010](./mobile-platform-decision-log.md#console-and-v1-dec-010)
+- Canonical：[CONSOLE-AND-V1-DEC-010](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-010)
 - 用户可远程请求 Agent install、upgrade、rollback、uninstall。
 - 输入只能是 authority catalog/package ref；远端 node 下载、验签、检查、sandbox、安装和 commit。
 - Android App 永不下载、解释、执行、缓存或转发 Agent executable bundle。
 
 ### 4.11 分发 identity
 
-- Canonical：[CONSOLE-AND-V1-DEC-011](./mobile-platform-decision-log.md#console-and-v1-dec-011)
+- Canonical：[CONSOLE-AND-V1-DEC-011](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-011)
 - Public Google Play 与 Managed Google Play private app 使用不同 application ID、FCM project、App Links、device binding 和发布记录。
 - 两渠道使用同一代码与能力上限；managed policy 只能收窄。
 - direct APK 不进入 GA。
 
 ### 4.12 更新、floor 与 kill switch
 
-- Canonical：[CONSOLE-AND-V1-DEC-012](./mobile-platform-decision-log.md#console-and-v1-dec-012)
+- Canonical：[CONSOLE-AND-V1-DEC-012](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-012)
 - Public/managed 均使用 AAB、Play App Signing 和各自 signing identity。
 - recommended minimum 与 security floor 分离；monthly review，signed metadata 短期 expiry；authority 维护 channel/device-binding-bound monotonic `floor_epoch` high-water mark，拒绝低 epoch rollback。
 - floor 验证实际 browser/Custom Tabs provider package/signer/version，并把 WebView 保持为 build/runtime no-use gate；只有未来启用时才加入 WebView provider floor。
@@ -267,7 +267,7 @@ device allowlist
 
 ### 4.13 恢复与完整性
 
-- Canonical：[CONSOLE-AND-V1-DEC-013](./mobile-platform-decision-log.md#console-and-v1-dec-013)
+- Canonical：[CONSOLE-AND-V1-DEC-013](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-013)
 - root、bootloader、Play Integrity、key attestation 只作风险信号。
 - 明确异常可选择性阻断 lease、R1、Agent lifecycle 和 protected writes。
 - 必须保留安全只读、device revoke、sign-out 和 update recovery。
@@ -275,21 +275,21 @@ device allowlist
 
 ### 4.14 Accessibility 与 motion
 
-- Canonical：[CONSOLE-AND-V1-DEC-014](./mobile-platform-decision-log.md#console-and-v1-dec-014)
+- Canonical：[CONSOLE-AND-V1-DEC-014](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-014)
 - TalkBack、Switch Access、Voice Access、Android 14+ 200% font、每台设备最大可用 Display size、high contrast、color correction、外接键盘、横屏和 Remove animations 是 GA gate。
 - 触控目标至少 48dp；状态不只靠颜色/动画。
 - reduced motion 使用静态 Flow Thread、文本和 live announcement，不降低确认强度。
 
 ### 4.15 Telemetry 与 diagnostics
 
-- Canonical：[CONSOLE-AND-V1-DEC-015](./mobile-platform-decision-log.md#console-and-v1-dec-015)
+- Canonical：[CONSOLE-AND-V1-DEC-015](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-015)
 - 只使用最小第一方、content-free telemetry；无广告、tracking 或 third-party analytics。
 - crash/diagnostics 默认不上传敏感正文。
 - diagnostics 在本地生成字段预览，用户显式确认后上传。
 
 ### 4.16 状态与追踪纪律
 
-- Canonical：[CONSOLE-AND-V1-DEC-016](./mobile-platform-decision-log.md#console-and-v1-dec-016)
+- Canonical：[CONSOLE-AND-V1-DEC-016](../../shared/docs/mobile-platform-decision-log.md#console-and-v1-dec-016)
 - 本文始终区分 product decision、registered contract、implementation、evidence、Profile。
 - Android carrier 缺失写 `unregistered`，不得借通用 REQ 冒充已登记。
 - implementation 统一 `not-implemented`；平台/PoC evidence 统一 `none`；相关既有 vectors 统一 `not-run`；Profile `planned/not implemented`。

@@ -15,11 +15,11 @@
 | `CONSOLE-MAC-V1-PRD-*` / `CONSOLE-LNX-V1-PRD-*` | 24 / 24 | [macos](../pc/docs/platforms/macos/macos-product-design.md) / [linux](../pc/docs/platforms/linux/linux-product-design.md) 产品设计 | B2（已落位） |
 | `CONSOLE-MAC-V1-DEC-*` / `CONSOLE-LNX-V1-DEC-*` | 11 / 11 | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md) | B2（已落位） |
 | `MAC-POC-*` / `LNX-POC-*` | 12 / 12 | 各自产品设计 §13 | B2 |
-| `CONSOLE-IOS-V1-PRD-*` | 38 | [ios-product-design](../../docs/platforms/ios-product-design.md) | B3 |
-| `CONSOLE-IOS-V1-DEC-*` | 16 | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | B3 |
+| `CONSOLE-IOS-V1-PRD-*` | 38 | [ios-product-design](../mobile/ios/docs/ios-product-design.md) | B3（已落位） |
+| `CONSOLE-IOS-V1-DEC-*` | 16 | [mobile-platform-decision-log](../mobile/shared/docs/mobile-platform-decision-log.md) | B3（已落位） |
 | `IOS-POC-*` / `IOS-TM-*` | 18 / 16 | ios-product-design §18 / 威胁模型节 | B3 |
-| `CONSOLE-AND-V1-PRD-*` | 40 | [android-product-design](../../docs/platforms/android-product-design.md) | B3 |
-| `CONSOLE-AND-V1-DEC-*` | 16 | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | B3 |
+| `CONSOLE-AND-V1-PRD-*` | 40 | [android-product-design](../mobile/android/docs/android-product-design.md) | B3（已落位） |
+| `CONSOLE-AND-V1-DEC-*` | 16 | [mobile-platform-decision-log](../mobile/shared/docs/mobile-platform-decision-log.md) | B3（已落位） |
 | `POC-001..018`（Android） / `AND-TM-*` | 18 / 22 | android-product-design §18 / 威胁模型节 | B3 |
 | `CONSOLE-AGENTHUB-V1-PRD-*` | 28 | [product-requirements](../../apps/cognitiveos-console/docs/agent-hub/traceability/product-requirements.md) | B5 |
 | `CONSOLE-AGENTHUB-V1-DEC-*` | 26 | [agent-hub decision-log](../../apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md) | B5 |

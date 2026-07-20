@@ -10,9 +10,9 @@
 | Windows 产品（简报/范围/IA/旅程/DS/安全 UX/追踪/决策/roadmap） | `clients/pc/docs/**` + `clients/pc/plan/roadmap.md` 各文件 | [clients/pc](../pc/README.md) 九份 | B2（已落位） |
 | 桌面平台切片（macOS/Linux/desktop-parity） | `clients/pc/docs/platforms/**` | [clients/pc/docs/platforms](../pc/README.md) 三份 | B2（已落位） |
 | 桌面平台决策 | `clients/pc/docs/platforms/platform-decision-log.md` | [platform-decision-log](../pc/docs/platforms/platform-decision-log.md)（`CONSOLE-MAC/LNX-V1-DEC-*`） | B2（已落位） |
-| 移动产品决策 | `clients/mobile/shared/docs/mobile-platform-decision-log.md`（iOS+AND 双命名空间单文件） | [mobile-platform-decision-log](../../docs/platforms/mobile-platform-decision-log.md) | B3 |
-| iPhone / Android 产品设计 | `clients/mobile/{ios,android}/docs/*.md` | [ios](../../docs/platforms/ios-product-design.md) / [android](../../docs/platforms/android-product-design.md) | B3 |
-| 移动 parity | `clients/mobile/shared/docs/mobile-parity-matrix.md` | [mobile-parity-matrix](../../docs/platforms/mobile-parity-matrix.md) | B3 |
+| 移动产品决策 | `clients/mobile/shared/docs/mobile-platform-decision-log.md`（iOS+AND 双命名空间单文件） | [mobile-platform-decision-log](../mobile/shared/docs/mobile-platform-decision-log.md) | B3（已落位） |
+| iPhone / Android 产品设计 | `clients/mobile/{ios,android}/docs/*.md` | [ios](../mobile/ios/docs/ios-product-design.md) / [android](../mobile/android/docs/android-product-design.md) | B3（已落位） |
+| 移动 parity | `clients/mobile/shared/docs/mobile-parity-matrix.md` | [mobile-parity-matrix](../mobile/shared/docs/mobile-parity-matrix.md) | B3（已落位） |
 | 共用测试策略 / 遥测脱敏留存政策 | `clients/shared/docs/test-strategy.md`、`.../telemetry-evidence/telemetry-redaction-retention-policy.md` | 缺口（B4 新建） | B4 |
 | Agent Hub 各专题（产品/架构/安全/协作/平台/决策/追踪/adapter/来源/模板） | `clients/agent-hub/docs/**` 各文件 | [apps/cognitiveos-console/docs/agent-hub/](../../apps/cognitiveos-console/docs/agent-hub/README.md) | B5 |
 | Agent Hub 计划 / 提示词 | `clients/agent-hub/plan/**`、`clients/agent-hub/prompts/**` | [docs/plan/agent-hub/](../../docs/plan/agent-hub/README.md)、[docs/prompts/agent-hub/](../../docs/prompts/agent-hub/README.md) | B5 |

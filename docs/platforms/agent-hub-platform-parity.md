@@ -4,7 +4,7 @@
 >
 > 状态：`planned / implementation not-implemented / test none / Profile not implemented`
 >
-> canonical 设计在 [apps/cognitiveos-console/docs/agent-hub/](../../apps/cognitiveos-console/docs/agent-hub/README.md)。本文只登记 **Direct Takeover 接管能力** 的跨平台差异，作为既有 [桌面 parity](../../clients/pc/docs/platforms/desktop-parity-matrix.md) 与 [移动 parity](./mobile-parity-matrix.md) 的补充；不改写既有平台 canonical 决策、ID 或 anchor。
+> canonical 设计在 [apps/cognitiveos-console/docs/agent-hub/](../../apps/cognitiveos-console/docs/agent-hub/README.md)。本文只登记 **Direct Takeover 接管能力** 的跨平台差异，作为既有 [桌面 parity](../../clients/pc/docs/platforms/desktop-parity-matrix.md) 与 [移动 parity](../../clients/mobile/shared/docs/mobile-parity-matrix.md) 的补充；不改写既有平台 canonical 决策、ID 或 anchor。
 
 ## 1. 桌面接管能力 parity
 

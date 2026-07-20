@@ -195,10 +195,10 @@
 
 2026-07-20 在同一 Lane-CON informative 文档例外内，确认 iPhone v1 与 Android phone v1 的独立产品方向。移动决策使用独立 namespace，不修改或复用本文件既有 `CONSOLE-V2-DEC-*`：
 
-- `CONSOLE-IOS-V1-DEC-001..016` 与 canonical 记录见 [移动平台产品决策索引](../../../../docs/platforms/mobile-platform-decision-log.md#3-iphone-v1-决策)；
-- `CONSOLE-AND-V1-DEC-001..016` 与 canonical 记录见 [移动平台产品决策索引](../../../../docs/platforms/mobile-platform-decision-log.md#4-android-phone-v1-决策)；
-- iPhone 范围、要求、旅程、威胁、PoC 和 Apple 来源见 [iPhone-only v1 产品设计](../../../../docs/platforms/ios-product-design.md)；
-- Android 范围、列名设备、要求、旅程、威胁、PoC 和 Google 来源见 [Android phone v1 产品设计](../../../../docs/platforms/android-product-design.md)；
-- Windows/macOS/Linux 的复用、移动适配、替换、不提供和阻断关系见 [移动 parity matrix](../../../../docs/platforms/mobile-parity-matrix.md)。
+- `CONSOLE-IOS-V1-DEC-001..016` 与 canonical 记录见 [移动平台产品决策索引](../../../mobile/shared/docs/mobile-platform-decision-log.md#3-iphone-v1-决策)；
+- `CONSOLE-AND-V1-DEC-001..016` 与 canonical 记录见 [移动平台产品决策索引](../../../mobile/shared/docs/mobile-platform-decision-log.md#4-android-phone-v1-决策)；
+- iPhone 范围、要求、旅程、威胁、PoC 和 Apple 来源见 [iPhone-only v1 产品设计](../../../mobile/ios/docs/ios-product-design.md)；
+- Android 范围、列名设备、要求、旅程、威胁、PoC 和 Google 来源见 [Android phone v1 产品设计](../../../mobile/android/docs/android-product-design.md)；
+- Windows/macOS/Linux 的复用、移动适配、替换、不提供和阻断关系见 [移动 parity matrix](../../../mobile/shared/docs/mobile-parity-matrix.md)。
 
 移动 v1 是 phone-only 的受限远程 Console，不是本地 node/daemon/authority。它提供 Conversation/Task、监督纠偏、tenant/node 选择和基于 authority catalog ref 的远端 Agent 生命周期；只执行 authority 判定的 R0/R1，R2/R3 一律阻断。所有移动 machine carrier、implementation、platform evidence 和 Profile conformance 当前仍未闭合；76 个既有 conformance vectors 均为 `not-run`。

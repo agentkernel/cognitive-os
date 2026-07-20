@@ -38,7 +38,7 @@
 
 ## 4. 移动范围（摘要）
 
-- iPhone/Android 均为 remote companion；能力矩阵见 [docs/platforms/mobile-parity-matrix.md](../../../../../docs/platforms/mobile-parity-matrix.md) 与本目录 parity。
+- iPhone/Android 均为 remote companion；能力矩阵见 [docs/platforms/mobile-parity-matrix.md](../../../../../clients/mobile/shared/docs/mobile-parity-matrix.md) 与本目录 parity。
 - 手机可查看投影、请求扩权；高后果动作强制 PC-local 确认。
 - 无障碍验收见 [../product/states-content-and-accessibility.md](../product/states-content-and-accessibility.md)。
 

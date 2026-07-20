@@ -85,10 +85,10 @@
 
 产品方向已经按 iPhone 与 Android phone 分别冻结：
 
-- [iPhone-only v1 产品设计](../../../docs/platforms/ios-product-design.md)
-- [Android phone v1 产品设计](../../../docs/platforms/android-product-design.md)
-- [移动 parity matrix](../../../docs/platforms/mobile-parity-matrix.md)
-- [移动平台决策记录](../../../docs/platforms/mobile-platform-decision-log.md)
+- [iPhone-only v1 产品设计](../../mobile/ios/docs/ios-product-design.md)
+- [Android phone v1 产品设计](../../mobile/android/docs/android-product-design.md)
+- [移动 parity matrix](../../mobile/shared/docs/mobile-parity-matrix.md)
+- [移动平台决策记录](../../mobile/shared/docs/mobile-platform-decision-log.md)
 
 首要任务：
 

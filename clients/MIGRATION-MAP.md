@@ -54,10 +54,10 @@
 
 | old | new | 批次 | 状态 |
 |---|---|---|---|
-| `docs/platforms/ios-product-design.md` | `clients/mobile/ios/docs/ios-product-design.md` | B3 | pending-B3 |
-| `docs/platforms/android-product-design.md` | `clients/mobile/android/docs/android-product-design.md` | B3 | pending-B3 |
-| `docs/platforms/mobile-parity-matrix.md` | `clients/mobile/shared/docs/mobile-parity-matrix.md` | B3 | pending-B3 |
-| `docs/platforms/mobile-platform-decision-log.md` | `clients/mobile/shared/docs/mobile-platform-decision-log.md` | B3 | pending-B3 |
+| `docs/platforms/ios-product-design.md` | `clients/mobile/ios/docs/ios-product-design.md` | B3 | done |
+| `docs/platforms/android-product-design.md` | `clients/mobile/android/docs/android-product-design.md` | B3 | done |
+| `docs/platforms/mobile-parity-matrix.md` | `clients/mobile/shared/docs/mobile-parity-matrix.md` | B3 | done |
+| `docs/platforms/mobile-platform-decision-log.md` | `clients/mobile/shared/docs/mobile-platform-decision-log.md` | B3 | done |
 
 ### 2.4 B4 shared 新文档（新建，非迁移）
 
