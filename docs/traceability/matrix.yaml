@@ -82,10 +82,15 @@ requirements:
       - CTX-REQ-007
     vectors:
       - conformance/vectors/context-required-over-budget.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: required-over-budget fail-closed (CONTEXT_BUDGET_EXCEEDED, CTX-REQ-007 numbers) and unclosable required set
+      (CONTEXT_INCOMPLETE) executed."
   - id: REQ-CTX-005
     owner: context
     owner_spec: specs/schemas/context-view.schema.json
@@ -94,10 +99,14 @@ requirements:
       - CTX-VIEW-001
     vectors:
       - conformance/vectors/ctx-view-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: loaded/rejected/pinned-versions/loss-declaration provenance emitted and asserted."
   - id: REQ-CTX-008
     owner: context
     owner_spec: specs/core/README.md
@@ -106,10 +115,15 @@ requirements:
       - CTX-TRUST-004
     vectors:
       - conformance/vectors/prompt-injection-isolation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: authority-declared role/trust preserved through rendering; untrusted content cannot back control mutations
+      (prompt-injection-isolation behavior side executed)."
   - id: REQ-EVT-001
     owner: event
     owner_spec: specs/schemas/event.schema.json
@@ -130,10 +144,17 @@ requirements:
       - CAP-BIND-001
     vectors:
       - conformance/vectors/cap-bind-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-domain/src/capability.rs
+      - crates/cognitive-kernel/src/authz.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/governance_gate.rs
+      - crates/cognitive-domain/src/capability.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: subject/audience/purpose/action/resource/parameter binding enforced at the six-step gate (behavior tests
+      executed); vector execution stays with Lane-CFR."
   - id: REQ-CAP-002
     owner: capability
     owner_spec: specs/core/README.md
@@ -142,10 +163,16 @@ requirements:
       - CAP-ATTEN-004
     vectors:
       - conformance/vectors/capability-attenuation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-domain/src/capability.rs
+    impl_tests:
+      - crates/cognitive-domain/src/capability.rs
+      - crates/cognitive-kernel/tests/governance_gate.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: monotone attenuation violations (vector CAP-ATTEN-004 arithmetic) and intersection-only-narrows property
+      tests executed; vector execution stays with Lane-CFR."
   - id: REQ-CAP-003
     owner: capability
     owner_spec: specs/core/README.md
@@ -154,10 +181,17 @@ requirements:
       - CAP-LEASE-003
     vectors:
       - conformance/vectors/cap-lease-003.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-domain/src/capability.rs
+      - crates/cognitive-kernel/src/authz.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/governance_gate.rs
+      - crates/cognitive-store/tests/m3_revocation_races.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: lease window + revocation epoch behavior executed (AUTH_CAPABILITY_EXPIRED, dispatch/commit revalidation);
+      cross-node write fencing stays M4."
   - id: REQ-EFF-001
     owner: effect
     owner_spec: specs/schemas/intent.schema.json
@@ -267,10 +301,14 @@ requirements:
       - CTX-TRUST-004
     vectors:
       - conformance/vectors/prompt-injection-isolation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: control plane fixed by authority metadata only; untrusted input never promoted."
   - id: REQ-CONF-001
     owner: conformance
     owner_spec: specs/schemas/profile-manifest.schema.json
@@ -374,10 +412,15 @@ requirements:
     vectors:
       - conformance/vectors/context-revocation-cache-reuse.json
       - conformance/vectors/cvm-stale-001.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context_cache.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: caches key on tenant/chain digest/capability version/revocation epoch/purpose/schema digest/encoding profile
+      + conversation; stale keys cannot hit."
   - id: REQ-PROFILE-HARNESS-001
     owner: profile-harness
     owner_spec: specs/schemas/profile-manifest.schema.json
@@ -864,10 +907,14 @@ requirements:
       - DISC-STAGNATION-004
     vectors:
       - conformance/vectors/context-resolution-stagnation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: bounded no-gain re-resolution surfaces CONTEXT_RESOLUTION_STAGNATED."
   - id: REQ-CAT-LIFECYCLE-001
     owner: operation-catalog
     owner_spec: specs/schemas/operation-catalog-snapshot.schema.json
@@ -1363,10 +1410,18 @@ requirements:
     vectors:
       - conformance/vectors/context-revocation-cache-reuse.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/authz.rs
+      - crates/cognitive-kernel/src/context_cache.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/governance_gate.rs
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - crates/cognitive-store/tests/m3_revocation_races.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: epoch/capability-set-version invalidation at decision, cache and dispatch/commit revalidation points (F-007
+      behavior side executed)."
   - id: REQ-CAT-SHELL-001
     owner: cat-shell
     owner_spec: specs/operation-catalog/README.md
@@ -1576,10 +1631,15 @@ requirements:
       - conformance/vectors/context-rank-before-auth.json
       - conformance/vectors/spec-contract-coverage.json
       - conformance/vectors/tenant-lateral-read-denial.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: per-object authorization re-validation before ranker/renderer, recording-ranker evidence
+      (context-rank-before-auth behavior side executed)."
   - id: REQ-CTX-003
     owner: ctx-003
     owner_spec: specs/core/README.md
@@ -1600,10 +1660,14 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: context errors never degrade silently; explicit partial emits complete:false with missing list."
   - id: REQ-CTX-007
     owner: ctx-007
     owner_spec: specs/core/README.md
@@ -1612,10 +1676,14 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: nine-stage pipeline with per-stage reason codes asserted in order."
   - id: REQ-CTX-009
     owner: ctx-009
     owner_spec: specs/core/README.md
@@ -1648,10 +1716,14 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: ranking stage records candidate digests and discarded out-of-set proposals."
   - id: REQ-CTX-012
     owner: context
     owner_spec: specs/core/README.md
@@ -1660,10 +1732,15 @@ requirements:
       - CTX-RENDER-001
     vectors:
       - conformance/vectors/context-render-stability.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: byte-stable deterministic render, per-item segments, prefix stability under unrelated additions
+      (context-render-stability behavior side executed)."
   - id: REQ-DISC-PRIVACY-001
     owner: disc-privacy
     owner_spec: specs/cognitive-discovery/README.md
@@ -3178,10 +3255,17 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/authz.rs
+      - crates/cognitive-kernel/src/context.rs
+    impl_tests:
+      - crates/cognitive-kernel/tests/governance_gate.rs
+      - crates/cognitive-kernel/tests/context_pipeline.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
+    notes: "M3: cross-tenant/unknown-subject fail-closed with audit record and no existence leak (denial isomorphic with
+      not-found)."
   - id: REQ-SEM-SHELL-001
     owner: sem-shell
     owner_spec: specs/semantic-mediation/README.md

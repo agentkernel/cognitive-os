@@ -229,7 +229,24 @@ impl WallTimestamp {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// Normalized instant key for CORRECT instant comparison: the fixed
+    /// 19-character second part plus the fraction right-padded to 9 digits.
+    /// The derived `Ord` on this newtype is plain text order and MUST NOT
+    /// be used for instant math (canonical form trims fraction zeros, so
+    /// `..00.5Z` would text-sort before `..00Z`); lease and expiry checks
+    /// use this key (ADR-0005 `wall_clock` domain).
+    pub fn instant_key(&self) -> TimestampInstant {
+        let seconds = &self.0[..19];
+        let rest = &self.0[19..self.0.len() - 1]; // between seconds and 'Z'
+        let fraction = rest.strip_prefix('.').unwrap_or("");
+        TimestampInstant(format!("{seconds}{fraction:0<9}"))
+    }
 }
+
+/// Comparable normalized wall instant (see [`WallTimestamp::instant_key`]).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TimestampInstant(String);
 
 impl fmt::Display for WallTimestamp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -290,5 +307,15 @@ mod tests {
         assert!(WallTimestamp::parse("2026-07-20T05:00:00.123Z").is_ok());
         assert!(WallTimestamp::parse("2026-07-20T05:00:00+02:00").is_err());
         assert!(WallTimestamp::parse("2026-07-20T05:00:00.120Z").is_err());
+    }
+
+    #[test]
+    fn instant_key_orders_across_fraction_shapes() {
+        let ts = |text: &str| WallTimestamp::parse(text).unwrap().instant_key();
+        // Text order would put "..00.5Z" before "..00Z"; instant order must not.
+        assert!(ts("2026-07-20T05:00:00.5Z") > ts("2026-07-20T05:00:00Z"));
+        assert!(ts("2026-07-20T05:00:00.5Z") > ts("2026-07-20T05:00:00.12Z"));
+        assert!(ts("2026-07-20T05:00:00.999999999Z") < ts("2026-07-20T05:00:01Z"));
+        assert_eq!(ts("2026-07-20T05:00:00Z"), ts("2026-07-20T05:00:00Z"));
     }
 }

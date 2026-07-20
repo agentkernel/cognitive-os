@@ -9,16 +9,24 @@
 //!
 //! Normative sources: `docs/standards/state-and-transition-contract.md`,
 //! `specs/registry/state-domains.yaml`, `specs/transitions/`, ADR-0005.
-//! REQ coverage: REQ-STATE-001/002/003, REQ-GOBJ-ID-001 (format layer).
+//! REQ coverage: REQ-STATE-001/002/003, REQ-GOBJ-ID-001 (format layer),
+//! REQ-CAP-001/002 (capability constraint arithmetic,
+//! `docs/standards/authn-authz-capability.md`).
 
+pub mod capability;
 pub mod error;
 pub mod ids;
 pub mod transitions;
 pub mod version;
 
+pub use capability::{
+    CapabilityConstraints, EffectiveRights, LeaseWindow, ParameterBound, attenuation_violations,
+    intersect_chain, resource_within,
+};
 pub use error::DomainError;
 pub use ids::{
-    BudgetId, EventId, ObjectId, ReasonCode, RecordId, StateName, UriRef, WallTimestamp,
+    BudgetId, EventId, ObjectId, ReasonCode, RecordId, StateName, TimestampInstant, UriRef,
+    WallTimestamp,
 };
 pub use transitions::{
     EdgeLookupError, LifecycleDomain, LoadedTable, TableAssetError, TransitionEdge,

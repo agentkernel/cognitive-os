@@ -17,13 +17,30 @@
 //! REQ coverage: REQ-STATE-001/002/003, REQ-EVT-002/004 (port contract),
 //! REQ-REC-003 (fail-closed mapping). Registered code mapping: [`error`].
 
+pub mod authz;
 pub mod budget;
+pub mod context;
+pub mod context_cache;
 pub mod engine;
 pub mod error;
 pub mod ports;
 pub mod replay;
 
+pub use authz::{
+    AccessDenial, AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, DeniedAccess,
+    DenyRule, MembershipFacts, ObjectGovernance, PrincipalFacts, authorize,
+    capability_and_revocation_current, protected_read, revalidate_grant,
+};
 pub use budget::{BudgetCharge, BudgetError, BudgetExhausted, BudgetState};
+pub use context::{
+    ArrivalOrderRanker, CandidateObject, ContextBudget, ProposalRanker, RankerCandidate,
+    RenderSpec, RequiredItem, ResolutionFailure, ResolutionRequest, ResolutionSession,
+    ResolvedContextView, admit_control_mutation, effective_control_plane, resolve,
+};
+pub use context_cache::{
+    CacheDecision, CachedView, ContextViewCache, DerivedCacheKind, GovernanceBinding,
+    InvalidationReport,
+};
 pub use engine::{
     AdmitCommand, AdmittedObject, BudgetChargeCommand, Causation, CommittedTransition, Reason,
     TablePin, TransitionCommand, TransitionEngine,
