@@ -33,7 +33,7 @@
 
 ### M1 合同收敛与符合性 Runner
 
-- **范围**：①按 findings-ledger 闭合仍开放的机器合同缺口——F-003 治理对象双轨迁移（30+ schema 单轨化到 GovernedObjectHeader/ObjectReference，负例向量先行）、D-001/D-006 `$id` 统一、D-004 层 slug 决策、M1 复验项逐条负例复验（F-004/005/006/007/008/010/012/018）；②runner 执行能力：分层执行全部 74 向量、五态结果输出、机器 JSON + 人读报告、profile manifest 生成；③schema→Rust/TS 代码生成管线（ADR-0006），最小核心对象集（IMP-08 附录 A.1 14 对象）优先；④注册式 bundle digest 程序（替换 M0 临时 digest，`conformance-evidence.md` §6）。
+- **范围**：①按 findings-ledger 闭合仍开放的机器合同缺口——F-003 治理对象双轨迁移（30+ schema 单轨化到 GovernedObjectHeader/ObjectReference，负例向量先行）、D-001/D-006 `$id` 统一、D-004 层 slug 决策、M1 复验项逐条负例复验（F-004/005/006/007/008/010/012/018）；②runner 执行能力：分层执行 M1 当时全部登记向量、五态结果输出、机器 JSON + 人读报告、profile manifest 生成（当前总数与分布只读 PROGRESS）；③schema→Rust/TS 代码生成管线（ADR-0006），最小核心对象集（IMP-08 附录 A.1 14 对象）优先；④注册式 bundle digest 程序（替换 M0 临时 digest，`conformance-evidence.md` §6）。
 - **交付物**：单轨 schema 集 + 迁移说明；codegen 工具 + 生成绑定入库；可执行 runner；复验后的 findings-ledger。
 - **验收判据**（安全负例必含）：
   1. F-003 关闭：不存在 legacy metadata/strongRef 双轨引用，全 schema 过元校验与 `$ref` 解析；
@@ -134,7 +134,9 @@
 
 依据 `apps/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）与 §20.3（后端依赖结论）。**M0 仅建立依赖追踪**；每组依赖 = 对应机器契约 + 后端能力交付 + gate 通过后，才启动相应 Console 里程碑。
 
-2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。平台入口见 [`docs/platforms/README.md`](../platforms/README.md)。
+2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。客户端项目根见 [`clients/`](../../clients/README.md)（ADR-0007），实现 gate 见 [`clients/governance/readiness-gates.md`](../../clients/governance/readiness-gates.md#console-实现-gate)。
+
+Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + Governed 两部署模式），canonical 文档见 [`clients/agent-hub/docs/`](../../clients/agent-hub/docs/README.md)，Master 计划见 [`clients/agent-hub/plan/agent-hub-development-plan.md`](../../clients/agent-hub/plan/agent-hub-development-plan.md)。同受本节 gate 阻断，另加 Paseo/AGPL 复用法务 gate；当前仅 informative 文档与计划/提示词，`implementation not-implemented / evidence none`，未激活实现车道。
 
 | # | §20.3 依赖组 | 提供方里程碑 | 状态 |
 |---|---|---|---|
@@ -146,9 +148,9 @@
 | 6 | Memory private working set、Knowledge Evidence/Claim schemas | M7 | 未交付 |
 | 7 | AuditRecord/export、StateSnapshot/ack、reconciliation/recovery report | M4~M6 | 未交付 |
 | 8 | native-app auth redirect/PKCE、offline lease、deep-link、IdP/push/config/update/health | M6+（部署基建） | 未交付 |
-| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 骨架已有（not-run） |
+| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M4 执行能力；当前 84 vectors 中 46 pass / 38 not-run，真实 Profile manifest 仍待 M6 |
 
-激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](../platforms/README.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
+激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](../../clients/governance/readiness-gates.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
 
 ## 3. IMP-01~18 与 F-001~F-030 → 里程碑映射
 

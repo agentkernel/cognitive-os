@@ -22,7 +22,7 @@
   2. 在批准的窄幅例外内维护 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix 与治理说明。
   3. 后端契约语义型变更影响 Console 设计时，在 PRODUCT-DESIGN 文首"漂移登记"节追加标注行（日期/变更/受影响章节），并按 findings-ledger 事实最小修正。
   4. 复核 §17.1 MVP 排除项和平台 support matrix 是否仍成立（每个里程碑出口评审后）。
-- **激活条件**（全部满足才可规划实现里程碑）：依赖组 1/2/7 交付 + M5 出口评审通过 + [平台实现 gate](../platforms/README.md#console-实现-gate) 中目标平台 PoC 用**真实 API**（禁 mock 冒充）出具可复现实测报告。
+- **激活条件**（全部满足才可规划实现里程碑）：依赖组 1/2/7 交付 + M5 出口评审通过 + [平台实现 gate](../../clients/governance/readiness-gates.md#console-实现-gate) 中目标平台 PoC 用**真实 API**（禁 mock 冒充）出具可复现实测报告。
 - 激活后第一里程碑建议：MVP Desktop 只读监督（Task/Execution 五轨 + watch 投影），继续遵循"客户端非 authority"（`.cursor/rules/11-typescript-clients.mdc`）。
 
 ## 禁止越界
