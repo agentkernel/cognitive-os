@@ -8,7 +8,14 @@ publish.workspace = true
 
 [dependencies]
 cognitive-contracts = { workspace = true }
+cognitive-domain = { workspace = true }
 cognitive-management = { workspace = true }
+cognitive-store = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+cognitive-kernel = { workspace = true }
+tempfile = { workspace = true }
 
 [lints]
 workspace = true
