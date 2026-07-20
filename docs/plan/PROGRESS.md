@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CFR M2 行为执行批：runner 行为模式 + M2 出口评审）
+> 最后更新：2026-07-20（Lane-CFR M2 行为执行批 + M2 出口评审；并行合并 Lane-TSC 换绑批 PR #6，后合并方 CFR 解决本页冲突）
 
 ## 里程碑状态
 
@@ -23,7 +23,7 @@
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **60**；迁移表 5） |
 | 实现已提供（构建通过且有实现代码的 REQ） | **8**（matrix impl/impl_tests 已回填：REQ-CONF-001/002/003（M1 CFR）+ REQ-STATE-002/003、REQ-EVT-004、REQ-REC-003、REQ-GOBJ-ID-001（M2 KRN，附 Rust 行为测试证据）；其余待各车道证据口径回填） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 3 向量**（STATE-CAS-002 / EFFECT-STATE-CLOSURE-008 / GW-REMOTE-COMPLETE-001，被测 = 真实 `cognitive-kernel`+`cognitive-store` 权威路径；另 state-store-degradation M2 只读子集真实执行落档）+ 内核 Rust 行为测试 51 项（KRN）；静态合同层：28/81 向量 pass；**均不构成 Profile 覆盖声明**（conformance-evidence §2）；TS 客户端 75 项包内单元测试为实现测试，不计向量执行 |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 3 向量**（STATE-CAS-002 / EFFECT-STATE-CLOSURE-008 / GW-REMOTE-COMPLETE-001，被测 = 真实 `cognitive-kernel`+`cognitive-store` 权威路径；另 state-store-degradation M2 只读子集真实执行落档）+ 内核 Rust 行为测试 51 项（KRN）；静态合同层：28/81 向量 pass；**均不构成 Profile 覆盖声明**（conformance-evidence §2）；TS 客户端 79 项包内单元测试为实现测试，不计向量执行 |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`） |
 
 ## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-20 Lane-CFR M2 行为批）
@@ -50,10 +50,10 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | 缺口批已合并（PR #5） | `lane/ctr` | TSC 7 项缺口收敛：AKP 信封 ×2/流帧/shell-control 机器 schema + 5 份负例向量（D-013/D-014/D-015 闭合）、codegen 0.2.0（28 模块、错误注册表绑定、digest 常量）、⑦ deferred-to-v0.2（D-016）；sdk-ts 换绑定就绪（归 Lane-TSC） |
+| Lane-CTR 契约与生成 | 缺口批已合并（PR #5） | `lane/ctr` | TSC 7 项缺口收敛：AKP 信封 ×2/流帧/shell-control 机器 schema + 5 份负例向量（D-013/D-014/D-015 闭合）、codegen 0.2.0（28 模块、错误注册表绑定、digest 常量）、⑦ deferred-to-v0.2（D-016）；KRN handoff §4 缺口清单（transition request/record 生成绑定、投影合同域、事件 envelope 升格）待下批处置 |
 | Lane-CFR 符合性与工具 | **M2 行为执行批已交付**（本页所在 PR） | `lane/cfr` | 已完成：runner 行为执行模式（被测 = `cognitive-kernel`+`cognitive-store` 真实权威路径；3 向量脱静态/not-run → 行为 pass；state-store-degradation M2 只读子集真实执行落档）、行为侧错误实现自检（gate-bypassing 直写 store → 3 向量翻 fail，合计 12/12）、钉扎同批调整（ci.yml 81/31/0/0/0/50 + self-check ≥12、runner_execution.rs 7 测试）、M2 出口评审。**触碰通告**：`crates/cognitive-conformance/**`（+behavior 模块，Cargo 依赖 +kernel/store/domain/tempfile）、`.github/workflows/ci.yml`（钉扎计数）、`conformance/README.md`（Running 节行为模式）、`Cargo.lock` |
 | Lane-KRN 内核主线 | M2 内核批已合并（PR #4）；**M3 入口 gate 的 M2 分量已达成** | `lane/krn` | M3 治理链与 Context（`docs/prompts/milestone-m3.md` / `lane-krn.md`；第一动作 = F-007 行为侧测试计划：先写「capability 交集只缩不扩」与「撤销后缓存复用被拒」失败测试） |
-| Lane-TSC TS 客户端 | 客户端骨架已合并（PR #2）：sdk-ts AKP envelope 编解码/双通道隔离客户端/registry 驱动重试/snapshot+cursor watch 消费器（`WATCH_CURSOR_STALE`→重新快照）/注入式传输层 + agent-shell 会话层（preview/submit/attach/detach/cancel，detach≠cancel、展示只读投影）；75 项 TS 单元测试通过（sdk-ts 63 / agent-shell 12）；向量状态无虚报（当时全 not-run，现行 25/51 见上表）；发现 7 项契约缺口待 Lane-CTR（清单见 handoff §4）；只触碰 `packages/sdk-ts`、`apps/agent-shell`、`pnpm-lock.yaml` 与本页/handoff | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
+| Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
 | Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；iOS/Android 提示词待执行；实现 gate 未通过 |
@@ -62,4 +62,4 @@
 
 1. [20260720-lane-cfr-m2-handoff.md](../checkpoints/20260720-lane-cfr-m2-handoff.md)（Lane-CFR M2 行为执行批：runner 行为模式、3 向量行为 pass、降级子集落档、行为自检、M2 出口评审）
 2. [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md)（M2 出口评审：5 判据 + 预算范围项逐条证据，GO → M3）
-3. [20260720-lane-ctr-gaps-handoff.md](../checkpoints/20260720-lane-ctr-gaps-handoff.md)（Lane-CTR 缺口批：TSC 7 项逐项终态、AKP wire schema ×4、codegen 0.2.0、D-013~D-016）
+3. [20260720-lane-tsc-bindings-handoff.md](../checkpoints/20260720-lane-tsc-bindings-handoff.md)（Lane-TSC 换绑批：四模块换生成绑定、删除临时机制清单、D-015 行为适配、剩余 M5 前待办）

@@ -1,21 +1,21 @@
 /**
- * AKP envelope construction and parsing (specs/akp/README.md §3/§5/§9;
- * docs/standards/akp-envelope-and-http-profile.md §2/§3; REQ-AKP-ENV-001,
+ * AKP envelope construction and parsing over the GENERATED wire bindings
+ * (`akp-request-envelope.schema.json` / `akp-result-envelope.schema.json`,
+ * D-013 closure; specs/akp/README.md §3/§5/§9; REQ-AKP-ENV-001,
  * REQ-AKP-ENV-002, REQ-AKP-VER-001, REQ-AKP-CAN-001, REQ-AKP-IDEM-001,
  * REQ-AKP-RES-001).
  *
- * Canonicalization and digests go exclusively through
- * `@cognitiveos/contracts-ts` (REQ-AKP-CAN-001). The receive path fails
- * closed in contract order: strict parse → shape → version → unknown
- * critical extensions → payload digest, so no payload byte is interpreted
- * behind a failed gate.
+ * The former hand-modeled envelope interfaces are deleted: types come from
+ * `@cognitiveos/contracts-ts` (`akpRequestEnvelope` / `akpResultEnvelope`),
+ * and the envelope `schema_digest` pins come from the generated
+ * `SCHEMA_DIGEST` constants. Canonicalization and digests go exclusively
+ * through contracts-ts (REQ-AKP-CAN-001).
  *
- * NOTE (registered contract gap, 20260720 lane-tsc handoff): there is no
- * machine schema for the AKP envelope yet, so the member names below encode
- * specs/akp/README.md §3 prose. They are confined to this module; when
- * Lane-CTR lands an envelope schema + codegen, this module consumes the
- * generated binding instead. `result_digest` mirrors the standard's inline
- * `payload_digest` semantics for result values and is provisional.
+ * The receive path fails closed in contract order: strict parse → shape →
+ * version → unknown critical extensions → payload digest, so no payload
+ * byte is interpreted behind a failed gate. Schema conditionals the
+ * builders/parsers enforce eagerly client-side: payload XOR payload_ref,
+ * `error` status ⇒ machine error member, `partial` status ⇒ continuation.
  *
  * This SDK is a client: it never interprets `accepted`, receipts, or remote
  * `completed` as success, and it exposes no helper that collapses statuses
@@ -25,6 +25,8 @@
 import {
   CanonicalError,
   ProjectionError,
+  akpRequestEnvelope,
+  akpResultEnvelope,
   assertNoUnknownCriticalExtensions,
   canonicalize,
   digest,
@@ -35,8 +37,9 @@ import {
   type commonDefs,
 } from "@cognitiveos/contracts-ts";
 
-/** Protocol version implemented by this SDK (specs/akp/README.md). */
-export const AKP_PROTOCOL_VERSION = "cognitiveos.akp/0.2";
+/** Protocol version implemented by this SDK (generated const type). */
+export const AKP_PROTOCOL_VERSION: akpRequestEnvelope.AkpRequestEnvelopeProtocolVersion =
+  "cognitiveos.akp/0.2";
 
 /**
  * Digest domain for inline payload/result values, pinned by the
@@ -47,11 +50,51 @@ export const AKP_PAYLOAD_DIGEST_DOMAIN = "akp-payload/0.2";
 /** Extension IDs this client understands; unknown critical ones fail closed. */
 export const SUPPORTED_EXTENSION_IDS: ReadonlyArray<string> = [];
 
+/** Generated wire types consumed and re-exported by this SDK. */
+export type RequestEnvelope = akpRequestEnvelope.AkpRequestEnvelope;
+export type Extension = akpRequestEnvelope.Extension;
+export type ResultStatus = akpResultEnvelope.AkpResultEnvelopeStatus;
+
+/** Wire error envelope: the generated registered-error shape. */
+export type ErrorEnvelope = commonDefs.Error;
+
+/**
+ * Result envelope with a typed `result` member. Structurally identical to
+ * the generated `AkpResultEnvelope` (`ResultEnvelope<unknown>` = generated
+ * shape); the parameter only preserves caller typing through `call<R>`.
+ */
+export type ResultEnvelope<R = unknown> = Omit<akpResultEnvelope.AkpResultEnvelope, "result"> & {
+  readonly result?: R;
+};
+
+/**
+ * Runtime companion of the generated status union (types erase; the parser
+ * needs a value list). `satisfies` pins every entry to the union; the
+ * witness below fails to compile if the union gains a member missing here.
+ */
+export const RESULT_STATUSES = [
+  "ok",
+  "accepted",
+  "partial",
+  "cancel_pending",
+  "error",
+  "outcome_unknown",
+  "verified",
+  "committed",
+] as const satisfies readonly ResultStatus[];
+
+type StatusListCoversUnion = [ResultStatus] extends [(typeof RESULT_STATUSES)[number]]
+  ? true
+  : never;
+const _exhaustive: StatusListCoversUnion = true;
+void _exhaustive;
+
 /** Client-side envelope violation reasons (not authority error responses). */
 export type EnvelopeViolationReason =
   | "malformed-json"
   | "invalid-shape"
   | "missing-field"
+  | "ambiguous-payload"
   | "missing-idempotency-key"
   | "invalid-timestamp"
   | "invalid-digest"
@@ -59,6 +102,7 @@ export type EnvelopeViolationReason =
   | "critical-extension-unknown"
   | "digest-mismatch"
   | "missing-error"
+  | "missing-continuation"
   | "unknown-status";
 
 const REASON_TO_CODE: Partial<Record<EnvelopeViolationReason, string>> = {
@@ -85,66 +129,6 @@ export class EnvelopeViolation extends Error {
   }
 }
 
-/** AKP extension entry ({@link assertNoUnknownCriticalExtensions} shape). */
-export interface ExtensionEntry {
-  readonly id: string;
-  readonly critical: boolean;
-}
-
-/** Wire error envelope: the generated registered-error shape. */
-export type ErrorEnvelope = commonDefs.Error;
-
-/** Request envelope (specs/akp/README.md §3). */
-export interface RequestEnvelope<P = unknown> {
-  readonly message_id: string;
-  readonly operation: string;
-  readonly protocol_version: string;
-  readonly schema_digest: string;
-  readonly sender: string;
-  readonly audience: string;
-  readonly correlation_id: string;
-  readonly causation_id?: string;
-  readonly deadline: string;
-  readonly idempotency_key?: string;
-  readonly authorization_ref?: string;
-  readonly budget?: commonDefs.Budget;
-  readonly payload?: P;
-  readonly payload_ref?: string;
-  readonly payload_digest?: string;
-  readonly extensions?: ReadonlyArray<ExtensionEntry>;
-}
-
-/** Result statuses (specs/akp/README.md §5 base set + §10.1 additions). */
-export const RESULT_STATUSES = [
-  "ok",
-  "accepted",
-  "partial",
-  "cancel_pending",
-  "error",
-  "outcome_unknown",
-  "verified",
-  "committed",
-] as const;
-export type ResultStatus = (typeof RESULT_STATUSES)[number];
-
-/** Result envelope (specs/akp/README.md §3/§5). */
-export interface ResultEnvelope<R = unknown> {
-  readonly in_reply_to: string;
-  readonly correlation_id: string;
-  readonly protocol_version: string;
-  readonly status: ResultStatus;
-  readonly result?: R;
-  readonly result_ref?: string;
-  readonly result_digest?: string;
-  readonly error?: ErrorEnvelope;
-  readonly observed_versions?: Readonly<Record<string, number>>;
-  readonly cost?: commonDefs.Budget;
-  /** Opaque continuation token/object; forwarded verbatim, never decoded. */
-  readonly continuation?: unknown;
-  readonly audit_ref?: string;
-  readonly extensions?: ReadonlyArray<ExtensionEntry>;
-}
-
 /** Operation effect declaration: effecting operations require idempotency. */
 export type OperationKind = "effecting" | "read";
 
@@ -162,7 +146,7 @@ export interface RequestSpec<P = unknown> {
   readonly budget?: commonDefs.Budget | undefined;
   readonly payload?: P | undefined;
   readonly payloadRef?: string | undefined;
-  readonly extensions?: ReadonlyArray<ExtensionEntry> | undefined;
+  readonly extensions?: ReadonlyArray<Extension> | undefined;
   readonly messageId: string;
 }
 
@@ -174,9 +158,10 @@ export function payloadDigest(value: unknown): string {
 /**
  * Build a request envelope. Fails closed on: effecting operation without an
  * idempotency key (REQ-AKP-IDEM-001), non-canonical deadline, malformed
- * schema digest, and missing payload and payload_ref alike.
+ * schema digest, and payload/payload_ref not being exactly one (schema
+ * `oneOf`).
  */
-export function buildRequestEnvelope<P>(spec: RequestSpec<P>): RequestEnvelope<P> {
+export function buildRequestEnvelope<P>(spec: RequestSpec<P>): RequestEnvelope {
   try {
     validateDigestString(spec.schemaDigest);
   } catch {
@@ -196,6 +181,9 @@ export function buildRequestEnvelope<P>(spec: RequestSpec<P>): RequestEnvelope<P
   if (spec.payload === undefined && spec.payloadRef === undefined) {
     throw new EnvelopeViolation("missing-field", "payload or payload_ref is required");
   }
+  if (spec.payload !== undefined && spec.payloadRef !== undefined) {
+    throw new EnvelopeViolation("ambiguous-payload", "payload and payload_ref are mutually exclusive");
+  }
   return {
     message_id: spec.messageId,
     operation: spec.operation,
@@ -213,7 +201,7 @@ export function buildRequestEnvelope<P>(spec: RequestSpec<P>): RequestEnvelope<P
       ? { payload: spec.payload, payload_digest: payloadDigest(spec.payload) }
       : {}),
     ...(spec.payloadRef !== undefined ? { payload_ref: spec.payloadRef } : {}),
-    ...(spec.extensions !== undefined ? { extensions: spec.extensions } : {}),
+    ...(spec.extensions !== undefined ? { extensions: [...spec.extensions] } : {}),
   };
 }
 
@@ -239,6 +227,9 @@ export function buildResultEnvelope<R>(spec: ResultSpec<R>): ResultEnvelope<R> {
   if (spec.status === "error" && spec.error === undefined) {
     throw new EnvelopeViolation("missing-error", "error status requires an error envelope");
   }
+  if (spec.status === "partial" && spec.continuation === undefined) {
+    throw new EnvelopeViolation("missing-continuation", "partial status requires a continuation");
+  }
   return {
     in_reply_to: spec.inReplyTo,
     correlation_id: spec.correlationId,
@@ -247,7 +238,9 @@ export function buildResultEnvelope<R>(spec: ResultSpec<R>): ResultEnvelope<R> {
     ...(spec.result !== undefined ? { result: spec.result } : {}),
     ...(spec.resultRef !== undefined ? { result_ref: spec.resultRef } : {}),
     ...(spec.error !== undefined ? { error: spec.error } : {}),
-    ...(spec.observedVersions !== undefined ? { observed_versions: spec.observedVersions } : {}),
+    ...(spec.observedVersions !== undefined
+      ? { observed_versions: { ...spec.observedVersions } }
+      : {}),
     ...(spec.cost !== undefined ? { cost: spec.cost } : {}),
     ...(spec.continuation !== undefined ? { continuation: spec.continuation } : {}),
     ...(spec.auditRef !== undefined ? { audit_ref: spec.auditRef } : {}),
@@ -255,7 +248,7 @@ export function buildResultEnvelope<R>(spec: ResultSpec<R>): ResultEnvelope<R> {
 }
 
 /** Serialize an envelope to wire JSON text (digests are computed separately). */
-export function serializeEnvelope(envelope: RequestEnvelope<unknown> | ResultEnvelope<unknown>): string {
+export function serializeEnvelope(envelope: RequestEnvelope | ResultEnvelope<unknown>): string {
   return JSON.stringify(envelope);
 }
 
@@ -340,14 +333,14 @@ function verifyInlineDigest(value: unknown, declared: unknown, field: string): v
 }
 
 /** Parse and gate a request envelope (receiver side; used by test fakes). */
-export function parseRequestEnvelope<P = unknown>(text: string): RequestEnvelope<P> {
+export function parseRequestEnvelope(text: string): RequestEnvelope {
   const obj = parseEnvelopeObject(text);
   checkVersion(obj);
   checkExtensions(obj);
-  const envelope: RequestEnvelope<P> = {
+  const envelope: RequestEnvelope = {
     message_id: requireString(obj, "message_id"),
     operation: requireString(obj, "operation"),
-    protocol_version: requireString(obj, "protocol_version"),
+    protocol_version: AKP_PROTOCOL_VERSION,
     schema_digest: requireString(obj, "schema_digest"),
     sender: requireString(obj, "sender"),
     audience: requireString(obj, "audience"),
@@ -361,17 +354,18 @@ export function parseRequestEnvelope<P = unknown>(text: string): RequestEnvelope
       ? { authorization_ref: requireString(obj, "authorization_ref") }
       : {}),
     ...(obj["budget"] !== undefined ? { budget: obj["budget"] as commonDefs.Budget } : {}),
-    ...(obj["payload"] !== undefined ? { payload: obj["payload"] as P } : {}),
+    ...(obj["payload"] !== undefined ? { payload: obj["payload"] } : {}),
     ...(obj["payload_ref"] !== undefined ? { payload_ref: requireString(obj, "payload_ref") } : {}),
     ...(obj["payload_digest"] !== undefined
       ? { payload_digest: requireString(obj, "payload_digest") }
       : {}),
-    ...(obj["extensions"] !== undefined
-      ? { extensions: obj["extensions"] as ReadonlyArray<ExtensionEntry> }
-      : {}),
+    ...(obj["extensions"] !== undefined ? { extensions: obj["extensions"] as Extension[] } : {}),
   };
   if (envelope.payload === undefined && envelope.payload_ref === undefined) {
     throw new EnvelopeViolation("missing-field", "payload or payload_ref is required");
+  }
+  if (envelope.payload !== undefined && envelope.payload_ref !== undefined) {
+    throw new EnvelopeViolation("ambiguous-payload", "payload and payload_ref are mutually exclusive");
   }
   verifyInlineDigest(envelope.payload, obj["payload_digest"], "payload_digest");
   return envelope;
@@ -408,7 +402,7 @@ export function parseResultEnvelope<R = unknown>(text: string): ResultEnvelope<R
   const envelope: ResultEnvelope<R> = {
     in_reply_to: requireString(obj, "in_reply_to"),
     correlation_id: requireString(obj, "correlation_id"),
-    protocol_version: requireString(obj, "protocol_version"),
+    protocol_version: AKP_PROTOCOL_VERSION,
     status: status as ResultStatus,
     ...(obj["result"] !== undefined ? { result: obj["result"] as R } : {}),
     ...(obj["result_ref"] !== undefined ? { result_ref: requireString(obj, "result_ref") } : {}),
@@ -417,17 +411,18 @@ export function parseResultEnvelope<R = unknown>(text: string): ResultEnvelope<R
       : {}),
     ...(obj["error"] !== undefined ? { error: parseErrorEnvelope(obj["error"]) } : {}),
     ...(obj["observed_versions"] !== undefined
-      ? { observed_versions: obj["observed_versions"] as Readonly<Record<string, number>> }
+      ? { observed_versions: obj["observed_versions"] as Record<string, number> }
       : {}),
     ...(obj["cost"] !== undefined ? { cost: obj["cost"] as commonDefs.Budget } : {}),
     ...(obj["continuation"] !== undefined ? { continuation: obj["continuation"] } : {}),
     ...(obj["audit_ref"] !== undefined ? { audit_ref: requireString(obj, "audit_ref") } : {}),
-    ...(obj["extensions"] !== undefined
-      ? { extensions: obj["extensions"] as ReadonlyArray<ExtensionEntry> }
-      : {}),
+    ...(obj["extensions"] !== undefined ? { extensions: obj["extensions"] as Extension[] } : {}),
   };
   if (envelope.status === "error" && envelope.error === undefined) {
     throw new EnvelopeViolation("missing-error", "error status requires an error envelope");
+  }
+  if (envelope.status === "partial" && envelope.continuation === undefined) {
+    throw new EnvelopeViolation("missing-continuation", "partial status requires a continuation");
   }
   verifyInlineDigest(envelope.result, obj["result_digest"], "result_digest");
   return envelope;
