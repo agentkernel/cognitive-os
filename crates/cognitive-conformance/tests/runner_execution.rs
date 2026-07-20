@@ -31,17 +31,32 @@ fn repo_root() -> PathBuf {
 /// Reference-run distribution over the committed 81-vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
-/// 2026-07-20 Lane-CFR M2 batch: GW-REMOTE-COMPLETE-001 leaves not-run
-/// (kernel-behavioral execution), so pass 30 -> 31, not-run 51 -> 50.
+/// 2026-07-20 Lane-CFR M3 batch: eight governance/context vectors leave
+/// not-run (behavioral execution against the M3 kernel surface) and
+/// CTX-TRUST-004 upgrades from the static gate to behavioral execution,
+/// so pass 31 -> 39, not-run 50 -> 42.
 const TOTAL: usize = 81;
-const PASS: usize = 31;
-const NOT_RUN: usize = 50;
+const PASS: usize = 39;
+const NOT_RUN: usize = 42;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
     ("STATE-CAS-002", "CasBehavior"),
     ("EFFECT-STATE-CLOSURE-008", "EffectClosureBehavior"),
     ("GW-REMOTE-COMPLETE-001", "TaskAcceptanceBehavior"),
+];
+
+/// The M3 governance/context behavioral executions and their report modes.
+const BEHAVIORAL_M3: [(&str, &str); 9] = [
+    ("GOBJ-TENANT-LATERAL-001", "LateralReadBehavior"),
+    ("CAP-ATTEN-004", "AttenuationBehavior"),
+    ("CTX-REVOKE-CACHE-001", "RevocationCacheBehavior"),
+    ("CTX-RANK-AUTH-001", "RankBeforeAuthBehavior"),
+    ("CTX-REQ-007", "RequiredBudgetBehavior"),
+    ("CTX-RENDER-001", "RenderStabilityBehavior"),
+    ("DISC-STAGNATION-004", "StagnationBehavior"),
+    ("DISC-ADMISSION-002", "CandidateAdmissionBehavior"),
+    ("CTX-TRUST-004", "TrustPlaneBehavior"),
 ];
 
 #[test]
@@ -138,6 +153,52 @@ fn f003_legacy_negatives_are_executed_and_pass() {
         assert_eq!(format!("{:?}", record.mode), "SchemaGate");
         assert!(record.mismatches.is_empty());
     }
+}
+
+/// M3 governance/context behavioral executions run against the real
+/// authz/context/context_cache/capability surface — the execution record
+/// must say so, and every one must pass.
+#[test]
+fn m3_behavioral_vectors_execute_against_the_governance_surface() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    for (id, mode) in BEHAVIORAL_M3 {
+        let outcome = outcomes
+            .iter()
+            .find(|o| o.id == id)
+            .unwrap_or_else(|| panic!("{id} missing from corpus"));
+        assert_eq!(
+            outcome.result,
+            "pass",
+            "{id} must pass behaviorally: {:?}",
+            outcome.execution.as_ref().map(|e| &e.mismatches)
+        );
+        let record = outcome.execution.as_ref().expect("execution record");
+        assert_eq!(format!("{:?}", record.mode), mode);
+        assert!(
+            record
+                .implementation
+                .contains("authz/context/context_cache"),
+            "{id} implementation label must name the M3 surface, got {}",
+            record.implementation
+        );
+    }
+    // Delta consumption is M5: the vector stays honestly not-run with the
+    // recorded reason.
+    let delta = outcomes
+        .iter()
+        .find(|o| o.id == "DISC-DELTA-SCOPE-003")
+        .expect("delta vector present");
+    assert_eq!(delta.result, "not-run");
+    assert!(
+        delta
+            .not_run_reason
+            .as_deref()
+            .is_some_and(|reason| reason.contains("M5")),
+        "delta not-run reason must record the M5 deferral"
+    );
 }
 
 /// M2 behavioral executions run against the real kernel/store authority
@@ -267,10 +328,9 @@ fn wrong_implementation_is_failed_by_the_runner() {
         report.corrupted_but_still_passing
     );
     // Every observably corrupted gate must be represented and flipped
-    // (M2: +GW-REMOTE-COMPLETE-001; the CAS and closure vectors now flip
-    // through the gate-bypassing behavioral wrong implementation).
-    assert_eq!(report.must_flip.len(), 12, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 12);
+    // (M2: gate-bypassing store writer; M3: governance anti-patterns).
+    assert_eq!(report.must_flip.len(), 20, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 20);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -285,6 +345,14 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003",
         "AKP-STREAM-FRAME-UNSEQUENCED-004",
         "SHELL-CONTROL-UNREASONED-CANCEL-001",
+        "GOBJ-TENANT-LATERAL-001",
+        "CAP-ATTEN-004",
+        "CTX-REVOKE-CACHE-001",
+        "CTX-RANK-AUTH-001",
+        "CTX-REQ-007",
+        "CTX-RENDER-001",
+        "DISC-STAGNATION-004",
+        "DISC-ADMISSION-002",
     ] {
         assert!(
             report.flipped_to_fail.iter().any(|f| f == id),

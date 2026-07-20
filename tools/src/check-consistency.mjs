@@ -331,7 +331,10 @@ if (registries) {
     "crates/",
     "packages/",
   ];
-  const reqPattern = /REQ-[A-Z0-9]+(?:-[A-Z0-9]+)*/g;
+  // Negative lookbehind: a vector id like `CTX-REQ-007` must not have its
+  // `REQ-007` tail misread as a requirement reference; a real requirement
+  // id is never preceded by another id segment.
+  const reqPattern = /(?<![A-Z0-9-])REQ-[A-Z0-9]+(?:-[A-Z0-9]+)*/g;
   for (const mdAbs of listMarkdownFiles()) {
     const rel = toRepoRelative(mdAbs);
     if (!LIVING_SCOPES.some((scope) => rel === scope || rel.startsWith(scope))) {

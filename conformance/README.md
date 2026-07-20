@@ -69,7 +69,7 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 ## Running
 
-The reference runner is `crates/cognitive-conformance` (M2 capability:
+The reference runner is `crates/cognitive-conformance` (M3 capability:
 static-contract execution plus kernel-behavioral execution).
 `vectors/*.json` stay declarative inputs and expected outcomes usable by
 any runner author.
@@ -82,12 +82,16 @@ cargo run -p cognitive-conformance --bin conformance-runner -- --self-check
 The default mode enumerates every vector, executes the statically decidable
 subset against deterministic reference gates grounded in the registered
 machine assets (schema validation, registry traceability, performance-report
-contract, context trust-plane static contract), executes the M2
-kernel-backed vectors behaviorally against the real
-`cognitive-kernel` transition engine over the `cognitive-store` SQLite WAL
-authority adapter (stale CAS rejection, illegal Effect `OUTCOME_UNKNOWN`
-exits, forced remote-completed acceptance), and writes a five-state machine
-report plus the sample profile manifest to
+contract), executes the M2 kernel-backed vectors behaviorally against the
+real `cognitive-kernel` transition engine over the `cognitive-store` SQLite
+WAL authority adapter (stale CAS rejection, illegal Effect `OUTCOME_UNKNOWN`
+exits, forced remote-completed acceptance), executes the M3
+governance/context vectors behaviorally against the
+`authz`/`context`/`context_cache`/`capability` surface (lateral-read denial
+isomorphism, attenuation arithmetic, revocation-bound caches,
+filter-before-rank, budget fail-closed, prefix-stable render, bounded
+stagnation, candidate narrowing, prompt-injection isolation), and writes a
+five-state machine report plus the sample profile manifest to
 `artifacts/evidence/conformance/` (gitignored). Vectors whose expectations
 require runtime behavior of later milestones are reported `not-run` with a
 recorded reason (`docs/standards/conformance-evidence.md` section 2). A
@@ -95,7 +99,8 @@ recorded reason (`docs/standards/conformance-evidence.md` section 2). A
 conformance claim.
 
 `--self-check` executes a deliberately wrong implementation (schema-valid
-outputs, wrong behavior; behaviorally a gate-bypassing direct store writer)
+outputs, wrong behavior: a gate-bypassing direct store writer and
+governance anti-patterns such as rank-before-auth and stale cache serving)
 and exits non-zero unless the runner fails every corrupted vector
 (`docs/standards/conformance-evidence.md` section 3).
 
