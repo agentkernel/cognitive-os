@@ -63,8 +63,8 @@
 
 | old | new | 批次 | 状态 |
 |---|---|---|---|
-| —（缺口新建） | `clients/shared/docs/test-strategy.md` | B4 | pending-B4 |
-| —（缺口新建） | `clients/shared/docs/telemetry-evidence/telemetry-redaction-retention-policy.md` | B4 | pending-B4 |
+| —（缺口新建） | `clients/shared/docs/test-strategy.md` | B4 | done |
+| —（缺口新建） | `clients/shared/docs/telemetry-evidence/telemetry-redaction-retention-policy.md` | B4 | done |
 
 ### 2.5 B5 Agent Hub（86 文件）
 
