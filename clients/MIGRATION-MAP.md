@@ -13,14 +13,14 @@
 | P0-1 | Agent Hub canonical 文档 + Master/车道计划 + 提示词落地（迁移前封口） | `03250e1b3e3249d2cc600346f2861886a351a079` |
 | P0-2 | Lane-CON 仓库联动 + D-012 计数修正（迁移前封口） | `8e1de44150c3ded0a7561fd69a7cbf1f7df89ad4` |
 | P0-3 | agent-hub 设计 handoff（哈希回填）+ 目录索引会话提示词 | `dc55eebcec95916b6bc0971857a628aeb21f173e` |
-| B1 | clients/ 根、治理件、readiness、迁移表、薄 README 骨架 | 待本批提交后回填 |
-| B2 | PC 产品/平台文档迁移（13 文件） | — |
-| B3 | mobile shared/iOS/Android 文档迁移（4 文件） | — |
-| B4 | shared 新文档（测试策略、遥测/脱敏/留存政策） | — |
-| B5 | Agent Hub docs/plan/prompts 迁移（86 文件） | — |
-| B6 | 旧路径 stub 定稿、Console 实现 gate canonical 迁移、全仓链接修复 | — |
-| B7 | Cursor rules 与治理入口联动、ADR-0007 | — |
-| B8 | readiness review、PROGRESS、handoff | — |
+| B1 | clients/ 根、治理件、readiness、迁移表、薄 README 骨架 | `dedd082a3a8b3271fd0c106727c4f865d278b0e2` |
+| B2 | PC 产品/平台文档迁移（13 文件） | `41609ce712412ae45a1074743fc94d0359eef09e` |
+| B3 | mobile shared/iOS/Android 文档迁移（4 文件） | `7591fe8ae837530c0c9e6d3f8ec82193946104bd` |
+| B4 | shared 新文档（测试策略、遥测/脱敏/留存政策） | `8afce717816a075e3639b57ac331d72f1fcc5aeb` |
+| B5 | Agent Hub docs/plan/prompts 迁移（86 文件） | `85331bb21391abe4e6b7199f9dd717e2d06c7f92` |
+| B6 | 旧路径 stub 定稿、Console 实现 gate canonical 迁移、全仓链接修复 | `b2c1f63205ed209234fa8f1fa79a39f0612c9210` |
+| B7 | Cursor rules 与治理入口联动、ADR-0007 | `5902a252b5e4b5d80239e353e72f8e50930554e9` |
+| B8 | readiness review、PROGRESS、handoff、pc/docs/architecture 薄 README 补齐 | 本提交（见 handoff） |
 
 ## 2. old → new 逐文件映射
 

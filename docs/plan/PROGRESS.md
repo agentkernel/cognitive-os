@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CON Agent Hub 直连接管 canonical 文档体系 + Master/12 宏车道/6 Adapter 开发计划 + 18 份提示词落地；74→76 向量计数漂移登记修正 D-012；隔离 `personal-blog` CognitiveOS Research 重构）
+> 最后更新：2026-07-20（Lane-CON 建立 `clients/` 客户端项目根并完成文档迁移：PC/mobile/shared/Agent Hub 四域、104 文件 git mv、4 兼容 stub、gate canonical 迁至 `clients/governance/readiness-gates.md`、rules 16/17 与 ADR-0007；structure-ready yes / implementation-ready no(blocked)；CLIENTS-DEC-001）
 
 ## 里程碑状态
 
@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | not-started | — | 入口另需 F-011 R1 合同登记 |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux/iPhone/Android phone 产品切片已记录；Agent Hub 直连接管 canonical 文档（两部署模式、L1–L8 接管层级、6 Tier 1 dossier、能力矩阵、4 来源 ledger、20 威胁项、决策/追踪）+ Master/12 宏车道/6 Adapter 开发计划 + 18 份 blocked 提示词已落地；客户端 implementation 均未启动，平台测试未执行，Open PoC 全 not-run，Profile 未符合 |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成：全部产品/平台/Agent Hub 文档归于 `clients/`（[项目地图](../../clients/README.md)，ADR-0007）；macOS/Linux/iPhone/Android phone 产品切片、Agent Hub canonical 文档（两部署模式、L1–L8、6 dossier、21 威胁项实测）与开发计划/提示词全部迁入；客户端 implementation 均未启动，平台测试未执行，Open PoC 全 not-run，Profile 未符合 |
 
 ## 隔离产品子工程
 
@@ -60,18 +60,19 @@
 | Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | — | iPhone/Android phone 独立产品设计已记录；Agent Hub 直连接管 canonical 文档体系 + 开发计划/提示词已落地（`apps/cognitiveos-console/docs/agent-hub/`、`docs/plan/agent-hub*`、`docs/prompts/agent-hub/`），全部 `blocked`；实现 gate 未通过（另加 Paseo/AGPL 法务 gate） |
+| Lane-CON Console | tracking-only 文档例外 | — | `clients/` 客户端项目根已建立（ADR-0007、CLIENTS-DEC-001）：PC/mobile/shared/Agent Hub 文档全部迁入（Agent Hub 树在 `clients/agent-hub/{docs,plan,prompts}/`），全部实现车道 `blocked`；实现 gate（canonical：`clients/governance/readiness-gates.md`）未通过（Agent Hub 另加 Paseo/AGPL 法务 gate） |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-con-agent-hub-design-handoff.md](../checkpoints/20260720-lane-con-agent-hub-design-handoff.md)（Agent Hub 直连接管 canonical 文档体系、Adapter 研究、威胁模型、开发计划/提示词与 74→76 计数修正）
-2. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
-3. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
+1. [20260720-lane-con-clients-root-migration-handoff.md](../checkpoints/20260720-lane-con-clients-root-migration-handoff.md)（`clients/` 项目根建立与四域文档迁移、4 stub、gate canonical 迁移、rules 16/17、ADR-0007、readiness 双结论）
+2. [20260720-lane-con-agent-hub-design-handoff.md](../checkpoints/20260720-lane-con-agent-hub-design-handoff.md)（Agent Hub 直连接管 canonical 文档体系、Adapter 研究、威胁模型、开发计划/提示词与 74→76 计数修正）
+3. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
 
 ## 客户端目录治理交付
 
 | 交付 | 状态 | 证据与入口 |
 |---|---|---|
-| PC + 手机客户端目录 canonical 索引 | **done（informative 文档）** | [docs/clients/README.md](../clients/README.md)：覆盖 Console、agent-shell、sdk-ts、contracts-ts、平台设计、手机无代码载体事实与 Agent Hub；未启动任何客户端实现 |
-| 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`；专用 consistency 自动校验保持 `planned`，工具变更须经 Lane-CFR，交付前执行索引 §9 手动 gate |
-| 本轮静态验证 | **pass（非实现/PoC 证据）** | `check:consistency`：273 REQ / 55 码 / 56 schema / 76 向量，链接与追踪通过；`git diff --check` 无空白错误；[handoff](../checkpoints/20260720-lane-con-client-directory-index-handoff.md) |
+| 客户端项目根与 canonical 索引 | **done（informative 文档；结构迁移完成）** | canonical 项目地图迁至 [clients/README.md](../../clients/README.md)（ADR-0007、CLIENTS-DEC-001）；PC 13 + mobile 4 + Agent Hub 86 + 索引 1 共 104 文件 `git mv`；4 个旧路径兼容 stub（docs/clients、apps console README/PRODUCT-DESIGN、docs/platforms/README）；Console 实现 gate canonical 迁至 [readiness-gates](../../clients/governance/readiness-gates.md)；未启动任何客户端实现 |
+| readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](../../clients/READINESS.md)：结构九判据逐项有证据；实现侧 blocker（依赖组 1/2/7、M5、五平台 PoC、技术栈 ADR、AGPL 法务、接口核验、F-003、76 向量 not-run、规则禁令）全部未解 |
+| 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`（canonical 改指 clients/README.md）+ 新增 `.cursor/rules/17-client-project-boundaries.mdc`；专用 consistency 自动校验保持 `planned`（Lane-CFR，checker 不扫 `clients/`），交付前执行 [clients/README.md §9](../../clients/README.md#9-持续维护与手动-gate) 手动 gate |
+| 本轮静态验证 | **pass（非实现/PoC 证据）** | 每批 `check:consistency` OK：273 REQ / 55 码 / 56 schema / 76 向量不变，链接与追踪通过；`git diff --check` 无空白错误；clients 专项链接检查 156 文件 0 断链；[handoff](../checkpoints/20260720-lane-con-clients-root-migration-handoff.md) |
