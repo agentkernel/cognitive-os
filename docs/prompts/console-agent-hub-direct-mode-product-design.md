@@ -188,14 +188,15 @@
 
 执行研究时必须验证并保留以下关键区分：
 
+- 本提示词编写时的源码核验基线为 2026-07-20 `main` commit `3d86c738ff70a9815cdd86c5602c9a5c420df619`；实际执行必须重新取得当前 commit/release 并记录差异。
 - Paseo 的主要模式是本地 daemon **启动并监管**用户已安装、已认证的 Agent CLI；不是对任意正在运行的 PID 做内存注入。
 - Native provider 负责具体 Agent 适配；通用 ACP provider 由 daemon spawn 后通过 JSON-RPC/stdio 协商 capabilities、modes、models、session、tool 和 permission。
-- Paseo 的 `attach` 是连接 daemon 已管理的 Agent 输出；不得据此推断可以安全附着任意外部终端。
-- Paseo 支持 provider session import contract，但应核实它是调用 provider 的 list/import/resume，还是读取 native session 文件；会话候选发现与最终 adopt 必须分开。
-- Paseo 不接管供应商认证，Agent 使用执行主机上原 CLI 的现有凭据；这一点值得借鉴，但也意味着 Agent 进程继承用户上下文和可见 secret，不能直接当成最小权限 vault。
+- Paseo 的 `attach` 是读取 daemon 自己的 timeline 并订阅输出；Ctrl+C 只断开观察客户端。`send` 是向 Paseo 管理的 Agent session 提交 prompt，与 terminal `send-keys` 不是同一条路径；不得据此推断可以安全附着任意外部终端。
+- Paseo 支持 provider session import contract，但 import 会创建新的 Paseo Agent 并调用 provider resume/load，不是接管原进程；候选发现与最终 adopt 必须分开。源码未证明会拒绝仍有外部 active writer 的 session，因此本产品必须额外要求旧 runtime inactive 或 provider 提供独占 lease/fencing。
+- Paseo 官方安全文档称凭据由原 CLI 管理，但源码中的 quota fetcher 会读取、刷新并可能重写 Claude/Codex 等本机凭据，自定义 provider 也可能把 API key 明文保存到配置；这些实现不能作为本产品 Vault 或账号接入范本。
 - Paseo 的 worktree、daemon/CLI/mobile/web、Relay 与 E2EE pairing 是重要体验参考。
 - Paseo 官方安全文档明确：默认 loopback daemon 依赖网络可达性，能访问 socket 的客户端可控制 daemon；connected client 被视为 daemon 用户的 trusted operator，文件预览可读 daemon 用户可读的任意普通文件，workspace relative path 不是安全边界。
-- Paseo Relay 虽有应用层 E2EE，但官方文档注明 live session 内尚未实现完整 replay tracking；Relay 仍可见 IP、时序、消息大小和 session ID。
+- Paseo Relay 虽有应用层 E2EE，但官方文档注明 live session 内尚未实现完整 replay tracking；Relay 仍可见 IP、时序、消息大小和稳定标识。配对链接近似可重复使用的 bearer capability，源码中的 daemon key/server ID 持久化也与“普通重启即可轮换”的公开表述存在冲突。
 - Paseo 使用 AGPL-3.0；借鉴产品模式、调用独立程序、复用源码、修改后网络提供服务的许可义务必须分别由法律/许可证评审确认。
 - Paseo README 标明由单一维护者主导且发布频繁；应把它作为架构/体验参考和可选互操作目标，不在尽调前把其代码或协议当作稳定产品依赖。
 
@@ -228,7 +229,7 @@
 
 1. `official-control`：官方 SDK、App Server、Gateway、ACP、REST/SSE、JSON-RPC 或结构化 headless 模式。
 2. `host-launched`：Takeover Host 从任务开始就启动 Agent 子进程，拥有 PTY/stdio、进程组、cwd、环境、预算和退出观察。
-3. `official-session-adopted`：通过供应商公开的 list/import/resume/fork/session-id 接口接管既有会话。
+3. `official-session-adopted`：通过供应商公开的 list/import/resume/fork/session-id 接口接管既有会话；旧 runtime 必须已停止，或 provider 必须提供可验证的独占 lease/fencing，否则拒绝 adopt，防止双 writer。
 4. `managed-terminal-attached`：只附着由本产品、tmux、ConPTY、screen 或等价受控终端创建的会话；可 capture/send/detach/signal，但终端文本仍是不可信输入。
 5. `read-only-file-observed`：只读供应商公开、用户可访问的 session JSONL/SQLite/log/config 元数据，使用快照、文件锁、digest、mtime 和来源标签；不得把解析结果升级成可信提交。
 6. `documented-file-write`：只有供应商明确记录并支持外部写入、格式版本与原子更新时才能写；必须先备份、锁定、CAS、校验、可回滚。
@@ -269,6 +270,7 @@ Takeover Host 内部职责必须继续分离：
 - 同时校验 OS owner、executable canonical path、publisher/signature、version、process start time、parent/child tree，防止 PID reuse。
 - 优先新建受控子进程；不得默认抢占用户正在交互的终端。
 - 每个可写目标只能有一个 active controller lease；takeover、handoff、release、用户抢回和 Host 重启都推进 ownership generation，旧客户端输入必须被拒绝。
+- native session adopt 前必须证明旧 runtime inactive，或取得 provider-supported exclusive lease；无法证明时只允许只读观察。
 - 进程从 Host 启动时立即登记 ownership generation；启动超时、进程提前退出、Host 崩溃和关机均能清理或恢复。
 - 每个 Agent 独立 process group/Job Object/cgroup/launchd scope；停止 Host 管理对象不得误杀用户其他进程。
 - `send`、Ctrl+C、SIGTERM、TerminateProcess、kill tree 分别建模；发送信号不等于 Agent 已停止。
@@ -687,6 +689,7 @@ Takeover Host 内部职责必须继续分离：
 - API key 出现在环境、进程列表、日志、shell history、dump 或 child process；
 - 账号/profile/config home/cache/session 跨用户或跨任务混淆；
 - Relay 读取正文、重放命令、错误路由到其他 Host/账号；
+- 长期配对链接泄露、缺少逐设备身份/scope/expiry/revoke、静态 daemon key 泄露和本地未加密移动状态；
 - 手机丢失、越狱/root、恶意 accessibility/overlay、通知和截图泄露；
 - 远程终端/桌面控制绕过本机权限或用户可见提示；
 - GUI 自动化点击错误窗口、密码管理器或提升提示；
@@ -707,6 +710,7 @@ Takeover Host 内部职责必须继续分离：
 - 每个 Tier 1 Agent 的版本握手、session、stream、permission、cancel、resume；
 - Host 从开始 spawn/own/reap Agent 进程及其完整进程树；
 - 通过官方 session list/import/resume 接管，并证明候选发现不泄露其他用户；
+- 外部 runtime 仍活跃或无法取得独占 lease 时，session adopt 必须拒绝并保持只读；
 - 对本产品/tmux/ConPTY 管理会话执行 attach/send/detach/interrupt；
 - 普通外部 PID 无受支持通道时保持 observe-only，输入和写入被拒绝；
 - session 文件只读快照、锁冲突、半写、损坏、symlink、schema drift 与敏感字段负例；
@@ -720,6 +724,7 @@ Takeover Host 内部职责必须继续分离：
 - Windows/macOS/Linux 锁屏、用户切换、权限提升和进程树；
 - iOS/Android 配对、E2EE、push、revoke、进程死亡和离线；
 - command replay、乱序、重复、过期和错误 Host routing；
+- 短期配对、逐设备 scope/revoke、daemon key rotation、消息序号和 live-session replay 拒绝；
 - worktree/branch/port/resource isolation；
 - 群组 DAG、循环委派、预算上限、取消和 conflict；
 - Agent reported done 不能自动成为 verified/accepted；

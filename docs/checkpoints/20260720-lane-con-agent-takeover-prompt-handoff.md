@@ -5,7 +5,8 @@
 - 按用户决策取消 `cognitive-kernel` 中间模式；Agent Hub 只保留“无 CognitiveOS 安全直连接管”与“完整 CognitiveOS 治理”两种产品部署模式。
 - 重构 `docs/prompts/console-agent-hub-direct-mode-product-design.md`，将“直接介入进程/文件”收口为分级、可审计的接管模型：官方控制面 → Host 启动监管 → 官方 session adopt → 受管终端 attach → 只读文件观察 → 有文档约束的文件写入 → observe-only；进程注入、二进制篡改、token 抽取和未记录内部文件写入明确禁止。
 - 以 `getpaseo/paseo` 官方仓库、Providers/Custom Providers、CLI 与 SECURITY 文档为主要参考：确认 Paseo 以 daemon 启动/监管已安装已认证的 CLI，通过 native Adapter 或 ACP/stdio 控制，并支持 provider session import、worktree、移动端和 E2EE Relay；它不是任意 PID 注入工具。
-- 将 Paseo 的已知边界写入提示词：默认 loopback 依赖可达性、客户端被视为 daemon 用户的 trusted operator、文件预览可触达 daemon 用户可读文件、Relay 暴露元数据且 live session replay tracking 尚未完整、provider 凭据由原 CLI 管理、AGPL-3.0 与单维护者风险。
+- 将 Paseo 的已知边界写入提示词：默认 loopback 依赖可达性、客户端被视为 daemon 用户的 trusted operator、文件预览可触达 daemon 用户可读文件、Relay 暴露元数据且 live session replay tracking 尚未完整，以及 AGPL-3.0 与单维护者风险。
+- Paseo 源码深挖进一步修正：`attach` 是 timeline 订阅而非进程 stdin；import 会新建 Paseo Agent 并调用 provider resume/load，旧 runtime/双 writer 互斥未被证明；quota fetcher 会读取、刷新或重写部分 provider 凭据；配对链接、持久 daemon key、逐设备撤销和文档/源码表述存在额外边界。提示词已要求 inactive/exclusive lease gate、禁止 quota token 抓取并补 per-device identity/anti-replay/rotation。
 - 增补 Agent of Empires、Claude Squad、amux、tmux-agent-tools、Happy、Vibe Kanban、Agent Deck 等 daemon/tmux/worktree/remote-control 项目作为接管模式对照，要求执行提示词时逐项目重新核实官方来源、许可和维护状态。
 - 新增 Takeover Host 最小拓扑与职责分离：Control API、Process Supervisor、Terminal Broker、Session Adopter、File Observer、Workspace Manager、Credential Broker、Local Event Ledger、Verifier。
 - 新增进程 identity/ownership generation、single-controller lease、文件 snapshot/lock/digest/parser、symlink/TOCTOU、session import、移动本机确认、接管状态、威胁、PoC、可执行 oracle 和开发车道要求。
@@ -34,6 +35,7 @@
 - 未发现需要修改 normative 资产的新漂移；接管 Host、进程/文件 carrier、Relay、Vault 与 Adapter 仍为 `unregistered / planned / blocked`。
 - “用户拥有本机文件/进程”不自动等于供应商允许第三方自动化、再分发、订阅凭据复用或内部格式写入；每个 Agent/版本/账号类型必须单独做条款与许可证复核。
 - Paseo 的安全模型不能原样外推：本产品应优先 OS-authenticated IPC、最小客户端能力、文件范围授权和 live-session anti-replay，而不是仅依赖 loopback 或把所有客户端视为等权 operator。
+- session import 若不能证明旧 runtime inactive 或取得 provider-supported exclusive lease，必须拒绝写接管并保持 observe-only，避免两个进程同时写同一 native session。
 - 对无受支持 IPC/PTY/session handle 的既有 PID，只能 observe-only；通过调试器、内存、任意 stdin 或内部数据库强行接管不进入产品方案。
 - session 文件只读解析仍面临半写、锁、损坏、schema drift、敏感字段、symlink/TOCTOU 和跨用户泄露风险。
 - Agent reported done、进程退出、terminal capture、文件变化、通知或 Relay receipt 均不是 CognitiveOS Verification/acceptance。
