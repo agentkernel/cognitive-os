@@ -1,8 +1,8 @@
-# CognitiveOS Console Agent Hub 直连模式产品设计提示词
+# CognitiveOS Console Agent Hub 直连接管模式产品设计与任务编排提示词
 
 > 用法：将下方提示词全文粘贴到新的 Cursor Agent 会话，工作目录设为仓库根 `agent-kernel`。
 >
-> 目标：对 PC 与手机端“Agent Hub / 直连模式”做全方位产品、体验、架构、安全与平台设计，并编排后续开发任务。在没有 CognitiveOS、只有 `cognitive-kernel`、以及完整 CognitiveOS 三种部署条件下，研究如何统一管理 OpenClaw、Hermes Agent、Codex、Claude Code、WorkBuddy 与其他常见 Agent。
+> 目标：对 PC 与手机端“Agent Hub / 直连接管模式”做全方位产品、体验、架构、安全与平台设计，并编排后续开发任务。只区分“无 CognitiveOS 的安全直连接管”与“完整 CognitiveOS 治理”两种部署条件；不存在 `cognitive-kernel` 中间模式。
 >
 > 本提示词只授权 Lane-CON informative 文档和未来开发任务编排，不授权客户端、Host、Adapter、Relay、Vault、UI、脚手架、mock server、机器合同或测试实现。遇到会改变产品范围、安全模型、账号条款、平台支持或任务拆分的疑问，必须通过交互式问题逐轮与用户确认。
 
@@ -12,7 +12,7 @@
 
 ## 目标
 
-为 CognitiveOS Console 设计一个以用户体验为核心的工作模式，使用户即使没有安装 CognitiveOS，或只具备 `cognitive-kernel`，也能通过 PC 客户端与手机 companion：
+为 CognitiveOS Console 设计一个以用户体验为核心的工作模式，使用户即使没有安装 CognitiveOS，也能通过 PC 客户端与手机 companion：
 
 - 发现、连接和管理本机或远端常见 Agent；
 - 创建、派发、查看、纠偏、暂停、取消和恢复任务；
@@ -23,7 +23,25 @@
 - 从 PC 无缝转到手机查看进度、响应问题和执行允许的控制动作；
 - 在未来升级到完整 CognitiveOS 时保留来源与历史，不伪造治理、授权、Effect、Verification 或完成证据。
 
-工作名使用 **Agent Hub 兼容模式**；其中至少区分“直连”“内核增强”“完整治理”三种产品部署模式。它们不是新增 CognitiveOS normative Profile。名称、导航位置和发布顺序必须经用户确认后再冻结。
+工作名使用 **Agent Hub 直连接管模式**；产品只区分“Direct Takeover / 直连接管”与“CognitiveOS Governed / 完整治理”两种部署模式。它们不是新增 CognitiveOS normative Profile。名称、导航位置和发布顺序必须经用户确认后再冻结。
+
+## 首要用户与 JTBD
+
+至少研究并验证：
+
+1. 多 Agent 操作者：希望少切终端、复用现有 CLI 配置、统一看见运行/等待/费用/产物。
+2. 既有会话接管者：Agent 已在运行或已有历史，希望不中断上下文地安全附着、恢复或只读观察。
+3. 协作负责人：希望拆分目标、隔离 worktree、控制预算、处理冲突并独立验证。
+4. 跨设备操作者：在 PC 执行，在手机监督、纠偏、响应 permission 和恢复。
+5. 安全敏感 Owner：负责 Agent 来源、进程/文件范围、账号、密钥、设备、撤销和异常处置。
+
+核心 JTBD：
+
+- 识别“哪些 Agent/会话可以真正接管、哪些只能观察、为什么”；
+- 用最少步骤接管用户有权管理的既有工作，而不窃取凭据或破坏原生状态；
+- 清楚知道当前控制来自官方接口、Host 启动、受管终端还是文件观察；
+- 在接管、释放、Host 崩溃或 Agent 更新后保持可恢复；
+- 从多个 Agent 的候选结果中形成可检查、可验收的最终产物。
 
 ## 先澄清一个关键事实
 
@@ -108,10 +126,11 @@
 - 特别核实 Codex 官方认证/App Server、Claude Code authentication/legal/Agent SDK/Remote Control、WorkBuddy OAuth 与公开集成面。
 - 给出“可连接 / 仅调用官方登录 / 只能沿用本机 CLI 登录 / 禁止导入 / 尚不明确”的逐项结论。
 
-### 子代理 D：竞品与用户痛点
+### 子代理 D：Paseo、同类接管项目与用户痛点
 
 - 研究相关开源项目的真实仓库、维护状态和许可证。
-- 至少覆盖 Happy、Vibe Kanban、Agent Deck、Nimbalyst，并核实 Opcode/Claudia 同源关系、Omnara 旧 wrapper 归档与新版开源状态、OpenHands、Open WebUI 许可等是否适合作为参照。
+- 以 `getpaseo/paseo` 为首要参考，核实其 daemon、native/ACP provider、进程 spawn、session import、worktree、Relay、移动端与凭据边界。
+- 至少覆盖 Happy、Vibe Kanban、Agent Deck、Agent of Empires、Claude Squad、amux、tmux-agent-tools、Nimbalyst，并核实 Opcode/Claudia 同源关系、Omnara 旧 wrapper 归档与新版开源状态、OpenHands、Open WebUI 许可等是否适合作为参照。
 - 提炼安装发现、账号切换、并行会话、worktree 冲突、长任务离线、通知、权限疲劳、费用/配额、恢复、状态不可比、手机操作等痛点。
 - 既要记录可借鉴模式，也要记录项目停更、CLI wrapper 易碎、凭据边界模糊等反例。
 
@@ -144,6 +163,7 @@
 
 以下只作为初始检索入口，执行时必须重新核实，不能把本列表当已验证事实：
 
+- Paseo：`https://github.com/getpaseo/paseo`、`https://paseo.sh/docs/providers`、`https://paseo.sh/docs/custom-providers`、`https://github.com/getpaseo/paseo/blob/main/SECURITY.md`
 - OpenClaw：`https://github.com/openclaw/openclaw`、`https://docs.openclaw.ai/gateway/external-apps`
 - Hermes Agent：`https://github.com/NousResearch/hermes-agent`、`https://hermes-agent.nousresearch.com/docs/developer-guide/programmatic-integration`
 - Codex：`https://github.com/openai/codex`、`https://developers.openai.com/codex/app-server`、`https://developers.openai.com/codex/auth`
@@ -155,46 +175,132 @@
 - Happy：`https://github.com/slopus/happy`
 - Vibe Kanban：`https://github.com/BloopAI/vibe-kanban`
 - Agent Deck：`https://github.com/asheshgoplani/agent-deck`
+- Agent of Empires：`https://github.com/agent-of-empires/agent-of-empires`
+- Claude Squad：`https://github.com/smtg-ai/claude-squad`
+- amux：`https://github.com/mixpeek/amux`
+- tmux-agent-tools：`https://github.com/ohyeh/tmux-agent-tools`
 - Omnara：`https://github.com/omnara-ai/omnara`
 - Opcode：`https://github.com/winfunc/opcode`
 
 名称相同或仓库迁移时必须确认 owner、官方主页和维护状态。不得把第三方博客、聚合站或 README 宣传语直接写成安全结论。
 
-## 三种产品部署模式必须分别设计
+## Paseo 参考基线
 
-### 1. 直连模式（无 CognitiveOS）
+执行研究时必须验证并保留以下关键区分：
 
-- PC 上的 Agent Host/Adapter 是本地控制层，不得称为 CognitiveOS node、authority 或符合性实现。
+- Paseo 的主要模式是本地 daemon **启动并监管**用户已安装、已认证的 Agent CLI；不是对任意正在运行的 PID 做内存注入。
+- Native provider 负责具体 Agent 适配；通用 ACP provider 由 daemon spawn 后通过 JSON-RPC/stdio 协商 capabilities、modes、models、session、tool 和 permission。
+- Paseo 的 `attach` 是连接 daemon 已管理的 Agent 输出；不得据此推断可以安全附着任意外部终端。
+- Paseo 支持 provider session import contract，但应核实它是调用 provider 的 list/import/resume，还是读取 native session 文件；会话候选发现与最终 adopt 必须分开。
+- Paseo 不接管供应商认证，Agent 使用执行主机上原 CLI 的现有凭据；这一点值得借鉴，但也意味着 Agent 进程继承用户上下文和可见 secret，不能直接当成最小权限 vault。
+- Paseo 的 worktree、daemon/CLI/mobile/web、Relay 与 E2EE pairing 是重要体验参考。
+- Paseo 官方安全文档明确：默认 loopback daemon 依赖网络可达性，能访问 socket 的客户端可控制 daemon；connected client 被视为 daemon 用户的 trusted operator，文件预览可读 daemon 用户可读的任意普通文件，workspace relative path 不是安全边界。
+- Paseo Relay 虽有应用层 E2EE，但官方文档注明 live session 内尚未实现完整 replay tracking；Relay 仍可见 IP、时序、消息大小和 session ID。
+- Paseo 使用 AGPL-3.0；借鉴产品模式、调用独立程序、复用源码、修改后网络提供服务的许可义务必须分别由法律/许可证评审确认。
+- Paseo README 标明由单一维护者主导且发布频繁；应把它作为架构/体验参考和可选互操作目标，不在尽调前把其代码或协议当作稳定产品依赖。
+
+不得照抄的风险包括：无额外认证的本地控制面、将所有客户端视作同等 trusted operator、Daemon 用户全文件可读、将 provider inherited credentials 视为统一 vault、在 URL/环境中暴露共享密码、依赖 `--yolo`/自动批准、把 Agent 输出解析为可信完成。
+
+## 两种产品部署模式必须分别设计
+
+### 1. 直连接管模式（无 CognitiveOS）
+
+- PC 上的 Takeover Host/Adapter 是本地确定性控制层，可以对自己启动、包装、附着和记录的本地进程/文件操作负责，但不得称为 CognitiveOS node、CognitiveOS authority 或符合性实现。
 - 统一“工作项”是产品对象，不得冒充已登记 `Task`。
 - 状态来源必须显式标记，例如 `adapter-reported`、`process-observed`、`check-observed`、`user-accepted`、`unknown`。
 - Agent 自述、CLI 文本、退出码、远端 `completed` 或 Relay receipt 不得直接显示为“已验证完成”。
 - 没有 CognitiveOS 时，不得暗示具备其 CAS、fencing、Effect 幂等、授权、审计、Verification 或 acceptance 保证。
-- 可以研究确定性的本地调度、进程控制、预算和日志，但这些都是未登记的产品/实现依赖。
+- 需要设计确定性的 Takeover Host ledger、进程所有权、文件快照、预算、冲突和恢复，但这些仍是未登记的产品/实现依赖。
 
-### 2. 内核增强模式（只有 `cognitive-kernel`）
-
-- 先检查仓库中 `cognitive-kernel` 实际暴露什么；不得从 crate 名称推断完整 Runtime、Management、身份、Relay、Vault、Adapter 或移动能力。
-- 裸 `cognitive-kernel` 不足以形成可用 authority；至少还需验证持久 store、policy/authority、Effect WAL/对账、Adapter executor 和 verifier 是否真实存在。
-- 只把真实存在且可用的内核能力标成可复用；缺 carrier、store、runtime、transport 或 evidence 时保持 `partial / unregistered / planned / blocked`。
-- 说明哪些直连工作项可以映射为内核对象，哪些仍只是 Adapter projection。
-- 模式切换不得静默把历史 CLI 会话升级成已授权 Task/Effect。
-
-### 3. 完整治理模式（完整 CognitiveOS）
+### 2. 完整治理模式（完整 CognitiveOS）
 
 - 复用既有 Console 的 authority projection、五个独立生命周期、Effect、Verification、risk floor、session、watch 和 acceptance 边界。
 - 直连 Adapter 只能作为受治理 Agent/runtime integration，不得绕过完整模式的确定性入口。
 - 不因兼容第三方 Agent 而降低 R0/R1/R2/R3、授权、预算、幂等或完成判定。
 
-必须产出部署模式能力与保证矩阵。每项区分“用户可见能力”“事实来源”“控制主体”“凭据主体”“持久化主体”“完成/验收主体”“当前 contract/implementation/evidence”。
+必须产出两种部署模式的能力与保证矩阵。每项区分“用户可见能力”“事实来源”“控制主体”“凭据主体”“持久化主体”“完成/验收主体”“当前 contract/implementation/evidence”。
+
+## 安全、合法接管模型（本任务核心）
+
+不得把“直接介入进程或文件”理解为任意 PID 注入、内存 patch、二进制篡改、token 抽取或绕过供应商授权。接管只允许在用户明确授权、用户拥有或有权管理的主机/工作区、同一 OS principal 或经批准的服务身份下发生。
+
+按以下优先级设计接管，低层级不能冒充高层级：
+
+1. `official-control`：官方 SDK、App Server、Gateway、ACP、REST/SSE、JSON-RPC 或结构化 headless 模式。
+2. `host-launched`：Takeover Host 从任务开始就启动 Agent 子进程，拥有 PTY/stdio、进程组、cwd、环境、预算和退出观察。
+3. `official-session-adopted`：通过供应商公开的 list/import/resume/fork/session-id 接口接管既有会话。
+4. `managed-terminal-attached`：只附着由本产品、tmux、ConPTY、screen 或等价受控终端创建的会话；可 capture/send/detach/signal，但终端文本仍是不可信输入。
+5. `read-only-file-observed`：只读供应商公开、用户可访问的 session JSONL/SQLite/log/config 元数据，使用快照、文件锁、digest、mtime 和来源标签；不得把解析结果升级成可信提交。
+6. `documented-file-write`：只有供应商明确记录并支持外部写入、格式版本与原子更新时才能写；必须先备份、锁定、CAS、校验、可回滚。
+7. `observe-only`：对任意既有 PID 只能验证 executable、owner、cwd、parent、start time 和健康；没有受支持 IPC/PTY/session handle 时，不得发送输入或宣称接管成功。
+8. `forbidden`：进程内存注入、DLL/动态库注入、调试器劫持、任意 stdin 句柄抢占、修改签名二进制、伪造 provider 状态、抓取 cookie/token/keychain secret、绕过付费/授权/沙箱或反自动化机制。
+
+必须把接管结果分成：
+
+- `managed-from-start`
+- `officially-adopted`
+- `terminal-attached`
+- `read-only-observed`
+- `unmanaged-observed`
+- `unsupported`
+- `blocked-by-policy`
+
+推荐研究的最小拓扑：
+
+`PC/Mobile Client → authenticated local IPC or E2E Relay → Takeover Host → Provider Adapter → Agent process/session/files`
+
+Takeover Host 内部职责必须继续分离：
+
+- Control API：认证客户端、目标绑定、request id、anti-replay、限流；
+- Process Supervisor：spawn、process-group、signal、reap、crash recovery；
+- Terminal Broker：PTY/ConPTY/tmux 归属、输入、输出、ANSI/OSC 清洗；
+- Session Adopter：官方 list/import/resume/fork 和 native handle 映射；
+- File Observer：只读 snapshot、parser、lock、digest、watch gap；
+- Workspace Manager：cwd、repo、worktree、文件范围、端口和 artifact 隔离；
+- Credential Broker：只处理 opaque handle/短期注入，不导出 provider secret；
+- Local Event Ledger：记录 Host 自己接受、观察和执行的事实，不冒充 CognitiveOS audit；
+- Verifier：运行固定检查并保存 evidence；不能仅接受 Agent 自述。
+
+本机控制面不得只依赖 `127.0.0.1` 可达性：Windows 优先使用带 SID/ACL 与 peer identity 的 named pipe，macOS/Linux 优先使用带 owner/mode/peer credential 的 Unix socket；确需 TCP 时使用独立认证、TLS/绑定保护和明确 origin/Host 检查。PC、手机、CLI、Web 与自动化客户端分别授予最小能力，不把所有配对设备视为等权 trusted operator。
+
+### 进程接管最低条件
+
+- 用户显式确认目标 Agent、PID/session、账号、cwd、工作区和接管能力。
+- 同时校验 OS owner、executable canonical path、publisher/signature、version、process start time、parent/child tree，防止 PID reuse。
+- 优先新建受控子进程；不得默认抢占用户正在交互的终端。
+- 每个可写目标只能有一个 active controller lease；takeover、handoff、release、用户抢回和 Host 重启都推进 ownership generation，旧客户端输入必须被拒绝。
+- 进程从 Host 启动时立即登记 ownership generation；启动超时、进程提前退出、Host 崩溃和关机均能清理或恢复。
+- 每个 Agent 独立 process group/Job Object/cgroup/launchd scope；停止 Host 管理对象不得误杀用户其他进程。
+- `send`、Ctrl+C、SIGTERM、TerminateProcess、kill tree 分别建模；发送信号不等于 Agent 已停止。
+- 任何 attach 都不得跳过 Agent 原生 permission prompt、账号限制或 OS 权限。
+
+### 文件接管最低条件
+
+- 区分 provider-owned source of truth、Host mirror、只读索引和用户产物。
+- 只读解析使用版本化 parser；未知字段、半写文件、truncate、rotation、schema drift、锁冲突和损坏进入 `partial/unknown`。
+- 打开文件前校验 real path、owner、权限、symlink/reparse point、大小和类型，阻断路径穿越、设备文件与跨用户读取。
+- 不直接修改供应商 credential、auth、entitlement、policy、approval、history 或内部数据库。
+- 导入会话优先调用官方 API；读取 native session 文件只用于发现候选，最终 resume/adopt 仍由 provider 验证。
+- 需要写入的 Host ledger 与 provider 文件分离；Host 不在 provider 数据库中伪造“受管”标记。
+- 文件变化只能说明“观察到磁盘变化”，不证明 Agent 完成、Effect 已闭合或结果正确。
+
+### 合法性与供应商边界
+
+- 每个 Adapter dossier 必须记录软件许可证、服务条款、账号条款、商标、再分发、自动化、逆向、订阅和数据保留限制。
+- 开源客户端许可证不自动授权使用背后的订阅服务，也不自动允许复用 OAuth。
+- 不打包或再分发无许可的 Agent binary；默认要求用户自行安装并在原产品中认证。
+- 不抓取或转换订阅 token；只使用官方登录、API key、service token 或原 CLI 自己管理的 profile。
+- 不通过文件/进程介入规避供应商计费、并发、地域、组织策略或 safety gate。
+- “安全、合法”只能在指定 Agent 版本、OS、接入层级、账号类型和条款查询日期下声明，不能泛化。
 
 ## 模式切换与迁移
 
 必须设计：
 
-- 首次启动如何判断“未安装 CognitiveOS / 仅内核 / 完整 OS / 状态未知”；
+- 首次启动如何判断“未安装 CognitiveOS / 完整 CognitiveOS / 状态未知”；
 - 用户如何显式选择模式，哪些推荐可自动建议，哪些不能自动切换；
 - 工作区、账号、Agent、历史、附件、任务和密钥如何隔离；
-- 直连会话升级到内核或完整 OS 时如何保留 provenance；
+- 直连接管会话升级到完整 OS 时如何保留 provenance；
 - 降级或失联时哪些能力收窄，哪些状态只能显示 last-known；
 - 完整模式恢复后如何 resnapshot，而不是把直连本地状态写回 authority；
 - 同一客户端同时连接多个部署模式时如何防止模式、账号、主机和权限混淆。
@@ -207,22 +313,27 @@
 
 1. 安装检测、版本、更新与卸载；
 2. 可执行文件与配置根发现；
-3. 账号/认证状态检测；
-4. 模型/provider/account profile 选择；
-5. 创建、列出、加载、恢复、fork、关闭会话；
-6. 提交 prompt、附件和上下文；
-7. assistant/tool/reasoning/diff/artifact 的结构化流；
-8. permission/clarification/secret/sudo 请求；
-9. approve/deny、interrupt、cancel turn、stop session；
-10. 终止进程与进程树；
-11. usage、cost、quota、rate limit；
-12. working directory、repo、branch、worktree、sandbox；
-13. MCP/tool 配置；
-14. subagent 或 agent-to-agent 能力；
-15. 远程 attach、handoff 与重连；
-16. capability/version handshake；
-17. 错误、timeout、disconnect、unknown outcome；
-18. 可执行检查、diff、测试和产物提取。
+3. 进程发现、owner/signature/version/start-time/parent-tree 验证；
+4. Host spawn、PTY/stdio/process-group ownership 与 reaping；
+5. 官方 native session list/import/resume/fork；
+6. managed terminal attach/capture/send/detach/signal；
+7. provider session/config/history 文件的只读发现与 parser 版本；
+8. 账号/认证状态检测；
+9. 模型/provider/account profile 选择；
+10. 创建、列出、加载、恢复、fork、关闭会话；
+11. 提交 prompt、附件和上下文；
+12. assistant/tool/reasoning/diff/artifact 的结构化流；
+13. permission/clarification/secret/sudo 请求；
+14. approve/deny、interrupt、cancel turn、stop session；
+15. 终止进程与进程树；
+16. usage、cost、quota、rate limit；
+17. working directory、repo、branch、worktree、sandbox；
+18. MCP/tool 配置；
+19. subagent 或 agent-to-agent 能力；
+20. 远程 attach、handoff 与重连；
+21. capability/version handshake；
+22. 错误、timeout、disconnect、unknown outcome；
+23. 可执行检查、diff、测试和产物提取。
 
 每个 Agent、每项能力只能使用类似以下的明确等级：
 
@@ -316,11 +427,14 @@
 至少设计以下体验，但不要先冻结视觉稿：
 
 - 首次启动：识别部署模式、扫描已安装 Agent、解释数据边界；
+- Agent 接管向导：分别展示可启动 Agent、可官方导入 session、可附着受管终端、只读观察文件/PID 与不可接管项；
+- 接管预览：目标 PID/session、owner、binary/signature/version、cwd、账号、接管层级、可用动作、将读取的文件、将发送的信号和不保证事项；
 - Agent 连接向导：安装状态、版本、控制等级、账号、工作目录、权限与健康检查；
 - 工作主页：继续最近工作、创建任务、查看等待用户事项；
 - 统一任务板：目标、主机、工作区、Agent、账号、阶段、等待原因、成本、更新时间；
 - 会话详情：普通语言摘要优先，结构化事件、终端、diff、artifact、usage 按需展开；
 - Agent 中心：可用能力、Adapter 版本、账号/模型、更新、兼容性和故障；
+- Takeover Host：进程树、managed terminal、session import、文件观察、ownership generation、attach/release/recover；
 - 群组工作区：角色、任务图、消息、handoff、冲突、评审与验收；
 - 收件箱：permission、clarification、rate limit、冲突、host offline、结果未知、待验收；
 - 连接与密钥：provider、agent account、connector、Host、手机和 Relay 分区管理；
@@ -347,6 +461,8 @@
 - 任务进度、等待原因、群组消息、diff 摘要和 artifact 预览；
 - 打开 App 后重新获取 current state，再允许回复 clarification、approve/deny、pause/cancel 等受支持动作；
 - PC 离线、Relay 延迟、重复/乱序消息、Host 重启和 Agent 进程消失时的恢复；
+- 手机可以请求接管候选，但首次附着普通既有进程、扩大文件范围或提升控制层级默认要求 PC 本机确认；
+- 手机只看到按策略裁剪的进程/session/file 元数据，不暴露其他用户、无关路径、环境变量或 credential；
 - 设备丢失、换机、revoke、账号切换、配对密钥轮换；
 - Push 只携最小 opaque hint；通知 action 不直接提交敏感控制；
 - secret、完整 API key 和供应商 refresh token 默认永不出现在手机；
@@ -370,7 +486,7 @@
 - 手机上终端信息过载、危险动作目标不清和误触；
 - “停止”“取消”“杀进程”“已完成”含义不一致。
 
-候选指标至少包括：首次可用任务时间、Agent 连接成功率、跨端恢复成功率、permission 等待时间、用户找回当前状态的时间、任务/账号误选率、并行冲突率、Adapter 升级回归率、unknown outcome 收敛时间、误报完成数、secret 泄露数、无障碍关键旅程成功率。没有真实 baseline 前不得虚构数值目标；安全失败不能被效率收益抵消。
+候选指标至少包括：首次可用任务时间、可安全接管会话比例、错误 PID/session 接管数、越界文件读取/写入数、Agent 连接成功率、跨端恢复成功率、permission 等待时间、用户找回当前状态的时间、任务/账号误选率、并行冲突率、Adapter 升级回归率、unknown outcome 收敛时间、误报完成数、secret 泄露数、无障碍关键旅程成功率。没有真实 baseline 前不得虚构数值目标；安全失败不能被效率收益抵消。
 
 ## 电脑控制边界
 
@@ -452,7 +568,7 @@
 - 用户已接受；
 - 状态未知。
 
-内核增强与完整治理模式继续遵循仓库真实 Verification/acceptance 语义。任意部署模式都不得把远端 `completed`、退出码、通知或模型自述当作 CognitiveOS 完成证据。
+完整治理模式继续遵循仓库真实 Verification/acceptance 语义。任意部署模式都不得把远端 `completed`、退出码、通知或模型自述当作 CognitiveOS 完成证据。
 
 ## 必须优先确认的产品决策
 
@@ -461,7 +577,7 @@
 1. 首要用户是开发者、通用知识工作者，还是同时支持但分产品切片？
 2. 工作名、模式名称和入口：首次启动模式选择、工作区级切换还是全局切换？
 3. v1 支持 Windows-only PC，还是同步规划 macOS/Linux；手机首发 iPhone、Android 或双端？
-4. 直连、内核增强、完整治理三种部署模式的发布顺序和保证标签。
+4. 直连接管与完整治理两种部署模式的发布顺序和保证标签。
 5. Tier 1 Agent 清单与选择依据；WorkBuddy 无公开接口时是否接受 launch-only。
 6. PC Host 是纯本地、可经 managed relay、自托管 relay，还是只支持用户已有 VPN/SSH。
 7. 手机允许的动作上限：只读、回复/纠偏、permission 决定、暂停/取消、终端输入、桌面控制。
@@ -478,6 +594,10 @@
 18. 企业设备、多人共享 PC、OS 用户切换和 managed device 是否进入 v1。
 19. `zh-CN/en`、无障碍与支持矩阵。
 20. 直连历史升级到完整 CognitiveOS 的迁移与不可迁移项。
+21. 首版允许 `host-launched`、`official-session-adopted`、`managed-terminal-attached`、只读文件观察中的哪些接管层级？
+22. 对已经在普通终端运行且无受支持 IPC/PTY 的进程，是否接受只读观察而不发送输入？
+23. 是否允许读取供应商 session 文件用于发现？哪些文件永不允许修改？
+24. Takeover Host 以当前用户、独立 OS 用户、受限 service 还是容器运行？
 
 违反供应商条款、共同安全基线或真实平台限制的选项要直接指出，并给出满足原目标的安全替代，不要机械接受。
 
@@ -485,29 +605,34 @@
 
 至少设计并按 PC/手机/部署模式/Agent 类型分别说明：
 
-1. 无 CognitiveOS 首次启动，扫描并连接第一个 Agent；
-2. 只有内核时识别真实可用能力和缺口；
-3. 检测已有 CLI 登录但不读取 secret；
-4. 通过官方流程连接新的 API key 或账号；
-5. 建立多个账号 profile，并为新任务选择账号；
-6. 创建单 Agent 工作项；
-7. 从 PC 转到手机继续同一会话；
-8. 手机响应 clarification 或 permission；
-9. 创建多 Agent 群组、拆分任务和确认预算；
-10. coding Agent 在独立 worktree 并行执行；
-11. reviewer 检查 diff/test/artifact 并返回问题；
-12. Agent 或账号 rate limit，选择等待、换模型、handoff 或新会话；
-13. Agent 不支持结构化 cancel，只能中断/终止进程；
-14. 外部动作结果未知，重新观察和对账；
-15. 两个 Agent 修改同一文件或产物冲突；
-16. PC Host 睡眠、锁屏、掉线、重启或进程崩溃；
-17. Relay 延迟、重复、乱序或手机离线；
-18. 从手机安全查看/控制终端、文件、浏览器或桌面；
-19. 撤销丢失手机或旧 PC；
-20. Adapter 升级后协议不兼容；
-21. WorkBuddy 等 launch-only Agent 的诚实降级体验；
-22. 将直连工作归档或显式迁移到完整 CognitiveOS；
-23. 无障碍用户完成创建、响应、暂停、验收和账号切换。
+1. 无 CognitiveOS 首次启动，扫描已安装 Agent、会话文件和候选进程；
+2. 用 Takeover Host 启动并从开始监管新的 Agent；
+3. 通过官方 list/import/resume 接管已有 native session；
+4. 附着由本产品或 tmux/ConPTY 管理的既有终端会话；
+5. 对普通外部 PID 只读观察，并解释为何不能安全发送输入；
+6. 从 provider session 文件发现候选，处理半写、锁、损坏、版本漂移和敏感字段；
+7. 拒绝进程注入、二进制篡改、token 抽取或未记录文件写入；
+8. 检测已有 CLI 登录但不读取 secret；
+9. 通过官方流程连接新的 API key 或账号；
+10. 建立多个账号 profile，并为新任务选择账号；
+11. 创建单 Agent 工作项；
+12. 从 PC 转到手机继续同一会话；
+13. 手机响应 clarification 或 permission；
+14. 创建多 Agent 群组、拆分任务和确认预算；
+15. coding Agent 在独立 worktree 并行执行；
+16. reviewer 检查 diff/test/artifact 并返回问题；
+17. Agent 或账号 rate limit，选择等待、换模型、handoff 或新会话；
+18. Agent 不支持结构化 cancel，只能中断/终止进程；
+19. 外部动作结果未知，重新观察和对账；
+20. 两个 Agent 修改同一文件或产物冲突；
+21. PC Host 睡眠、锁屏、掉线、重启或进程崩溃；
+22. Relay 延迟、重复、乱序或手机离线；
+23. 从手机安全查看/控制终端、文件、浏览器或桌面；
+24. 撤销丢失手机或旧 PC；
+25. Adapter 升级后协议不兼容；
+26. WorkBuddy 等 launch-only Agent 的诚实降级体验；
+27. 将直连接管工作归档或显式迁移到完整 CognitiveOS；
+28. 无障碍用户完成创建、接管、响应、暂停、验收和账号切换。
 
 每个旅程记录：入口、前置条件、产品部署模式、主机、Agent/Adapter 版本、账号、用户步骤、事实来源、控制路径、失败/取消/重复/恢复、敏感数据、可执行 oracle、当前 evidence。
 
@@ -520,6 +645,11 @@
 - initial loading；
 - no host / no agent / no account；
 - agent detected but unsupported；
+- takeover candidate detected；
+- takeover preview / consent required；
+- host-launched / officially-adopted / terminal-attached / observe-only；
+- process identity changed / ownership lost；
+- session file locked / partial / corrupt / version-unknown；
 - adapter incompatible；
 - connecting / authenticating / reauth required；
 - ready；
@@ -547,6 +677,11 @@
 - prompt injection 诱导读取 secret、扩大权限或控制其他 Agent；
 - PTY 输出伪造系统状态、permission prompt、完成或错误；
 - Adapter 解析器崩溃、协议漂移、恶意超长/ANSI/Bidi 内容；
+- PID reuse、伪造 executable/path、同名恶意进程、父子树漂移和接管竞态；
+- 抢占不属于 Host 的 stdin/PTY、调试器或进程内存注入；
+- session JSONL/SQLite/log 的半写、truncate、rotation、恶意字段、schema drift 和 parser exploit；
+- symlink/reparse point/hardlink/TOCTOU 导致跨工作区或跨用户文件读取/覆盖；
+- 篡改 provider history/auth/config 后伪造 resume、permission 或 completion；
 - CLI/app-server 非 loopback 暴露、未认证 WebSocket/API；
 - 读取或复制 Codex/Claude/WorkBuddy/browser 登录 secret；
 - API key 出现在环境、进程列表、日志、shell history、dump 或 child process；
@@ -570,6 +705,12 @@
 本任务不执行 PoC，但必须列出未来真实 PoC，至少覆盖：
 
 - 每个 Tier 1 Agent 的版本握手、session、stream、permission、cancel、resume；
+- Host 从开始 spawn/own/reap Agent 进程及其完整进程树；
+- 通过官方 session list/import/resume 接管，并证明候选发现不泄露其他用户；
+- 对本产品/tmux/ConPTY 管理会话执行 attach/send/detach/interrupt；
+- 普通外部 PID 无受支持通道时保持 observe-only，输入和写入被拒绝；
+- session 文件只读快照、锁冲突、半写、损坏、symlink、schema drift 与敏感字段负例；
+- 任意内存注入、二进制修改、token/cookie 抽取和未记录 provider 文件写入均被拒绝；
 - 升级一个主版本后 Adapter 的兼容与安全降级；
 - PTY/ANSI/Bidi/超长输出负例；
 - CLI/app-server/Gateway 仅 loopback 暴露和本地 peer authentication；
@@ -595,22 +736,24 @@
    - 产品问题、persona/JTBD、部署模式、范围、IA、成功指标和非目标。
 2. `apps/cognitiveos-console/docs/agent-hub-adapter-matrix.md`
    - Agent dossier、逐能力支持等级、版本策略、来源与许可证 ledger。
-3. `apps/cognitiveos-console/docs/agent-hub-security-and-credentials.md`
+3. `apps/cognitiveos-console/docs/agent-hub-takeover-architecture.md`
+   - Paseo 与同类项目事实、接管分级、Takeover Host、进程/PTY/stdio/session/file ownership、attach/adopt/release/recovery、OS 差异和禁止路径。
+4. `apps/cognitiveos-console/docs/agent-hub-security-and-credentials.md`
    - Host/Adapter/Vault/Relay/Mobile 边界、账号、key、远控和威胁模型。
-4. `apps/cognitiveos-console/docs/agent-hub-journeys-and-screens.md`
+5. `apps/cognitiveos-console/docs/agent-hub-journeys-and-screens.md`
    - PC/手机旅程、页面、组件、状态和文字线框。
-5. `apps/cognitiveos-console/docs/agent-hub-collaboration.md`
+6. `apps/cognitiveos-console/docs/agent-hub-collaboration.md`
    - 群组模型、DAG、worktree/artifact 隔离、handoff、评审和冲突。
-6. `apps/cognitiveos-console/docs/agent-hub-decision-log.md`
+7. `apps/cognitiveos-console/docs/agent-hub-decision-log.md`
    - 产品决策、替代方案、依据、状态和 blocked_by。
-7. `docs/platforms/agent-hub-platform-parity.md`
-   - Windows/macOS/Linux/iOS/Android 与三种产品部署模式的能力、限制和证据边界。
-8. `docs/plan/agent-hub-development-plan.md`
+8. `docs/platforms/agent-hub-platform-parity.md`
+   - Windows/macOS/Linux/iOS/Android 与直连接管/完整治理两种部署模式的能力、限制和证据边界。
+9. `docs/plan/agent-hub-development-plan.md`
    - 只编排、不执行的开发任务包：阶段、依赖 DAG、车道/所有权、里程碑 gate、任务卡、验收 oracle、风险、估算假设、并行/串行关系和回滚点。
-9. `docs/prompts/agent-hub/` 下的自包含接续提示词
-   - 按未来批准的车道拆分产品、合同、Host/Adapter、Vault/Relay、桌面、iOS、Android、测试/安全与发布任务；每份提示词写清输入、前置 gate、允许路径、禁止路径、交付物、测试和 handoff。
+10. `docs/prompts/agent-hub/` 下的自包含接续提示词
+   - 按未来批准的车道拆分产品、合同、Takeover Host、原生/ACP Adapter、进程/终端接管、session/file adoption、Vault/Relay、桌面、iOS、Android、测试/安全与发布任务；每份提示词写清输入、前置 gate、允许路径、禁止路径、交付物、测试和 handoff。
    - 这些提示词只是未来开发入口；当前 Console implementation gate 未通过时必须标 `blocked`，不得调用它们开始写代码。
-10. 必要的索引、roadmap、requirements trace、PROGRESS 和 handoff 更新。
+11. 必要的索引、roadmap、requirements trace、PROGRESS 和 handoff 更新。
 
 如果研究表明更少的文件能降低漂移，可以合并，但必须保留单一事实来源和稳定 anchor。不得破坏现有 Windows/macOS/Linux/iOS/Android ID、anchor、parity 或 gate。
 
@@ -628,8 +771,10 @@
 
 每项产品要求至少记录：
 
-- deployment profile；
+- deployment mode；
 - agent/adapter/platform；
+- takeover level；
+- process/session/file access；
 - contract；
 - implementation；
 - evidence；
@@ -657,7 +802,7 @@
 4. 全部关键决策确认后，提出文件级计划、ID 方案、影响面和不修改项。
 5. 只有用户批准计划后才编辑 informative 文档。
 6. 编辑后同时启动至少 4 个只读审查代理：
-   - 外部事实、许可证与维护状态；
+   - Paseo/同类接管机制、外部事实、许可证与维护状态；
    - 凭据、远控、Relay 与多账号安全；
    - PC/手机 UX、无障碍与恢复；
    - 仓库边界、状态用语、链接与追溯。
@@ -670,20 +815,25 @@
 2. OpenClaw、Hermes、Codex、Claude Code、WorkBuddy 的项目身份和接口未混淆。
 3. ACP、MCP、A2A 与供应商专属协议职责未混淆。
 4. “账号导入”没有变成 token/cookie/keychain secret 抽取或订阅凭据代理。
-5. 三种产品部署模式的能力、保证、事实来源和完成语义清楚分离。
-6. 每个 Adapter 逐能力标记，没有笼统“全支持”。
-7. PC 与手机、桌面 OS、Agent 版本和账号证据均未互相外推。
-8. 群聊消息、Agent reported done、退出码、Relay receipt、push 或通知未被写成 authority/Verification/acceptance。
-9. cancel、interrupt、process kill、Effect closure 和 compensation 未混同。
-10. 手机不承载 Agent runtime、完整 secret vault 或无限后台监督。
-11. 电脑控制按能力与 OS 权限拆分，并有明确 blocked 项。
-12. 现有 Console gate、M9 路线图、平台 ID、anchor 和 parity 未被静默改写。
-13. 未修改 registry、error registry、schema、transition、vector 或实现代码。
-14. 运行 Markdown link/anchor 检查、`git diff --check` 和 `pnpm run check:consistency`。
-15. 使用 `code-review` skill 和并行审查代理完成 docs-only 终审。
-16. 未执行的实现、PoC、真机、Agent 集成和安全测试保持 `not-implemented / none / not-run`。
-17. 更新 `docs/plan/PROGRESS.md` 和新的 handoff。
-18. 只暂存本任务文件并提交，禁止混入其他工作区改动。
+5. Paseo 被准确描述为 daemon 启动/监管 CLI 与 provider session import，而不是任意 PID 注入。
+6. 接管层级明确区分 managed-from-start、officially-adopted、terminal-attached、read-only-observed 与 unsupported。
+7. 没有受支持 IPC/PTY/session handle 的普通 PID 保持 observe-only。
+8. 未设计进程内存注入、二进制篡改、任意 stdin 抢占或 provider 文件伪造。
+9. session 文件默认只读，credential/auth/policy/internal DB 不被直接修改。
+10. 两种产品部署模式的能力、保证、事实来源和完成语义清楚分离。
+11. 每个 Adapter 逐能力标记，没有笼统“全支持”。
+12. PC 与手机、桌面 OS、Agent 版本和账号证据均未互相外推。
+13. 群聊消息、Agent reported done、退出码、Relay receipt、push 或通知未被写成 authority/Verification/acceptance。
+14. cancel、interrupt、process kill、Effect closure 和 compensation 未混同。
+15. 手机不承载 Agent runtime、完整 secret vault 或无限后台监督。
+16. 电脑控制按能力与 OS 权限拆分，并有明确 blocked 项。
+17. 现有 Console gate、M9 路线图、平台 ID、anchor 和 parity 未被静默改写。
+18. 未修改 registry、error registry、schema、transition、vector 或实现代码。
+19. 运行 Markdown link/anchor 检查、`git diff --check` 和 `pnpm run check:consistency`。
+20. 使用 `code-review` skill 和并行审查代理完成 docs-only 终审。
+21. 未执行的实现、PoC、真机、Agent 集成和安全测试保持 `not-implemented / none / not-run`。
+22. 更新 `docs/plan/PROGRESS.md` 和新的 handoff。
+23. 只暂存本任务文件并提交，禁止混入其他工作区改动。
 
 ## 最终输出要求
 
@@ -691,6 +841,7 @@
 
 - 新增/修改的文档；
 - 已确认的产品名称、部署模式、Tier 1 Agent 和跨端范围；
+- Paseo/同类项目的可借鉴机制、接管层级、进程/文件边界与禁止路径；
 - 账号连接、API key、手机 Relay、电脑控制和群组协作的关键决策；
 - 参考的官方与开源项目及重要反例；
 - 真实执行的检查及结果；
