@@ -1,7 +1,7 @@
 /**
  * `@cognitiveos/sdk-ts`: client SDK of the CognitiveOS reference
- * implementation (M5 delivery per `docs/plan/DEVELOPMENT-PLAN.md`; M0
- * skeleton only).
+ * implementation (Lane-TSC pre-M5 delivery; integration with a real
+ * kernel-server lands at M5).
  *
  * Hard rules (see `.cursor/rules/11-typescript-clients.mdc`): clients are
  * never an authority; every displayed state is an authority projection; the
@@ -11,9 +11,14 @@
 
 import { ENCODING_PROFILE } from "@cognitiveos/contracts-ts";
 
-/** The two isolated client channels. A client instance binds exactly one. */
-export const CLIENT_CHANNELS = ["task", "management"] as const;
-export type ClientChannel = (typeof CLIENT_CHANNELS)[number];
+export * from "./channel.js";
+export * from "./client.js";
+export * from "./envelope.js";
+export * from "./errors.js";
+export * from "./fixtures.js";
+export * from "./transport.js";
+export * from "./views.js";
+export * from "./watch.js";
 
 /** Encoding profile shared with the contracts layer. */
 export const SDK_ENCODING_PROFILE: string = ENCODING_PROFILE;
