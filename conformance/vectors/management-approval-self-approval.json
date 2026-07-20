@@ -1,0 +1,61 @@
+{
+  "id": "MGMT-APPROVAL-SELF-010",
+  "title": "Proposer and approver identity overlap is rejected as self-authorization",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital",
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-APPROVAL-001",
+    "REQ-MGMT-AUTHZ-001"
+  ],
+  "input": {
+    "request_contract": "management-approval-request.schema.json",
+    "decision_contract": "management-approval-decision.schema.json",
+    "cases": [
+      {
+        "name": "approver_equals_proposer",
+        "risk_class": "R1",
+        "proposer_principal": "principal://tenant-a/agent-worker-7",
+        "approver_principal": "principal://tenant-a/agent-worker-7",
+        "decision": "approve"
+      },
+      {
+        "name": "approver_chain_contains_proposing_workload",
+        "risk_class": "R1",
+        "proposer_principal": "principal://tenant-a/agent-worker-7",
+        "approver_principal": "principal://tenant-a/user-alice",
+        "approver_actor_chain_contains_proposer_execution": true,
+        "decision": "approve",
+        "note": "workload-rendered forged approval card completing its own confirmation"
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "name": "approver_equals_proposer",
+        "decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_SELF_AUTHORIZATION_DENIED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "effects_created": false
+      },
+      {
+        "name": "approver_chain_contains_proposing_workload",
+        "decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_SELF_AUTHORIZATION_DENIED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "effects_created": false
+      }
+    ],
+    "self_approval_accepted": false
+  }
+}

@@ -23,6 +23,8 @@ export * as governanceDomainContext from "./governance-domain-context.js";
 export * as governedObjectHeader from "./governed-object-header.js";
 export * as intent from "./intent.js";
 export * as loopCheckpoint from "./loop-checkpoint.js";
+export * as managementApprovalDecision from "./management-approval-decision.js";
+export * as managementApprovalRequest from "./management-approval-request.js";
 export * as objectReference from "./object-reference.js";
 export * as operationSummary from "./operation-summary.js";
 export * as principal from "./principal.js";
@@ -61,6 +63,8 @@ export const SCHEMA_DIGESTS = {
   "governed-object-header.schema.json": "sha256:a208962ac374f074210ef57e9853fd09edf03b8769720d11247574acb3df9dcc",
   "intent.schema.json": "sha256:c45ed1a33db1f62177e8b0b46e528ba3cb41da39a72eba62af85c1416ee868d0",
   "loop-checkpoint.schema.json": "sha256:f1f19426d50731c03420dccbde5ddda3afe988b9e4b765d9e12b4ea8d71abdda",
+  "management-approval-decision.schema.json": "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
+  "management-approval-request.schema.json": "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
   "object-reference.schema.json": "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
   "operation-summary.schema.json": "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",

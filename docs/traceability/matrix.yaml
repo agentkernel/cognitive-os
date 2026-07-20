@@ -648,7 +648,9 @@ requirements:
     registry_tests:
       - MGMT-CONFIG-001
       - MGMT-GATE-DENY-003
+      - MGMT-APPROVAL-R1-009
     vectors:
+      - conformance/vectors/management-approval-missing-confirmation.json
       - conformance/vectors/management-gate-denials.json
       - conformance/vectors/management-valid-configuration.json
     impl: []
@@ -661,7 +663,13 @@ requirements:
     status: specified
     registry_tests:
       - MGMT-APPROVAL-005
+      - MGMT-APPROVAL-R1-009
+      - MGMT-APPROVAL-SELF-010
+      - MGMT-APPROVAL-FATIGUE-011
     vectors:
+      - conformance/vectors/management-approval-fatigue-guard.json
+      - conformance/vectors/management-approval-missing-confirmation.json
+      - conformance/vectors/management-approval-self-approval.json
       - conformance/vectors/management-independent-approval.json
     impl: []
     impl_tests: []
@@ -673,7 +681,9 @@ requirements:
     status: specified
     registry_tests:
       - MGMT-AUTHZ-004
+      - MGMT-APPROVAL-SELF-010
     vectors:
+      - conformance/vectors/management-approval-self-approval.json
       - conformance/vectors/management-untrusted-self-authorization.json
     impl: []
     impl_tests: []
@@ -1258,7 +1268,11 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - MGMT-APPROVAL-R1-009
+      - MGMT-APPROVAL-FATIGUE-011
     vectors:
+      - conformance/vectors/management-approval-fatigue-guard.json
+      - conformance/vectors/management-approval-missing-confirmation.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []

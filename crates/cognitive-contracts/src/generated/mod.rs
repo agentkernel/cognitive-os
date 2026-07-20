@@ -21,6 +21,8 @@ pub mod governance_domain_context;
 pub mod governed_object_header;
 pub mod intent;
 pub mod loop_checkpoint;
+pub mod management_approval_decision;
+pub mod management_approval_request;
 pub mod object_reference;
 pub mod operation_summary;
 pub mod principal;
@@ -39,7 +41,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 30] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 32] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -103,6 +105,14 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 30] = [
     (
         "loop-checkpoint.schema.json",
         "sha256:f1f19426d50731c03420dccbde5ddda3afe988b9e4b765d9e12b4ea8d71abdda",
+    ),
+    (
+        "management-approval-decision.schema.json",
+        "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
+    ),
+    (
+        "management-approval-request.schema.json",
+        "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
     ),
     (
         "object-reference.schema.json",

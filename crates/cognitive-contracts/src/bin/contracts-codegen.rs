@@ -74,7 +74,15 @@ const GENERATOR_VERSION: &str = "0.2.0";
 /// `engine.rs` and swaps to the bindings under Lane-KRN ownership).
 /// Input-set extension only: rendering semantics unchanged, so the
 /// generator version stays 0.2.0 (existing module bodies do not change).
-const CORE_SET: [&str; 28] = [
+///
+/// Extension (20260720 Lane-CTR F-011 batch, same clause): the approval
+/// pair registered for the R1 structured confirmation
+/// (management-approval-request, management-approval-decision). The
+/// consuming milestone is M5 Lane-RUN, which is gated on exactly this
+/// registration and starts immediately after it — a definite named
+/// consumer, unlike the conditional membership case deferred on
+/// 2026-07-20 (M4-eval handoff item 2).
+const CORE_SET: [&str; 30] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -103,6 +111,8 @@ const CORE_SET: [&str; 28] = [
     "shell-control-request.schema.json",
     "state-transition-request.schema.json",
     "state-transition-record.schema.json",
+    "management-approval-request.schema.json",
+    "management-approval-decision.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,

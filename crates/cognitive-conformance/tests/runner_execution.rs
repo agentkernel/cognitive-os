@@ -34,9 +34,12 @@ fn repo_root() -> PathBuf {
 /// 2026-07-20 Lane-CFR M4 batch: seven effect/recovery vectors leave
 /// not-run (behavioral execution through the fault-injection framework),
 /// so pass 39 -> 46, not-run 42 -> 35.
-const TOTAL: usize = 81;
+/// 2026-07-20 Lane-CTR F-011 batch: +3 behavioral management-approval
+/// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
+/// until the CFR M5 behavioral batch.
+const TOTAL: usize = 84;
 const PASS: usize = 46;
-const NOT_RUN: usize = 35;
+const NOT_RUN: usize = 38;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
