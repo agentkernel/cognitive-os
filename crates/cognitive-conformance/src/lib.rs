@@ -1,14 +1,16 @@
 //! `cognitive-conformance`: conformance runner of the CognitiveOS reference
 //! implementation.
 //!
-//! M2 capability (Lane-CFR, per `docs/plan/DEVELOPMENT-PLAN.md`): enumerate
+//! M3 capability (Lane-CFR, per `docs/plan/DEVELOPMENT-PLAN.md`): enumerate
 //! the fifteen test layers of `conformance/README.md` and every declarative
 //! vector under `conformance/vectors/`, execute the statically decidable
 //! subset against deterministic reference gates grounded in the registered
 //! machine assets (schemas, registries, transition tables — see
 //! `exec::classify`), execute the M2 kernel-backed vectors behaviorally
 //! against `cognitive-kernel` over the `cognitive-store` SQLite WAL
-//! authority store, and report every vector in one of the five states of
+//! authority store, execute the M3 governance/context vectors behaviorally
+//! against the `authz`/`context`/`context_cache`/`capability` surface, and
+//! report every vector in one of the five states of
 //! `docs/standards/conformance-evidence.md` section 2. Vectors whose
 //! expectations require runtime behavior of later milestones stay `not-run`
 //! with a recorded reason.
@@ -445,15 +447,16 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
         runner: RunnerInfo {
             name: "cognitive-conformance",
             version: env!("CARGO_PKG_VERSION"),
-            capability: "static-contract + kernel-behavioral execution (M2)",
+            capability: "static-contract + kernel-behavioral execution (M2/M3)",
         },
-        note: "M2 runner: statically decidable vectors are executed against deterministic \
+        note: "M3 runner: statically decidable vectors are executed against deterministic \
                reference gates grounded in registered machine assets; the M2 kernel-backed \
-               vectors are executed behaviorally against cognitive-kernel over the SQLite WAL \
-               authority store. Remaining behavioral layers stay not-run with recorded \
-               reasons. A pass is scoped to its execution mode and is never a Profile claim; \
-               schema-valid parsing alone is never a pass (conformance/README.md; \
-               docs/standards/conformance-evidence.md).",
+               vectors run behaviorally against cognitive-kernel over the SQLite WAL authority \
+               store, and the M3 governance/context vectors run behaviorally against the \
+               authz/context/context_cache/capability surface. Remaining behavioral layers \
+               stay not-run with recorded reasons. A pass is scoped to its execution mode and \
+               is never a Profile claim; schema-valid parsing alone is never a pass \
+               (conformance/README.md; docs/standards/conformance-evidence.md).",
         layers,
         cross_cutting,
         vectors: outcomes,
@@ -465,7 +468,7 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
 pub fn human_summary(report: &ConformanceReport) -> String {
     let mut out = String::new();
     out.push_str(
-        "CognitiveOS conformance runner (M2: static-contract + kernel-behavioral execution)\n",
+        "CognitiveOS conformance runner (M3: static-contract + kernel-behavioral execution)\n",
     );
     out.push_str(&format!(
         "Vectors enumerated: {} | pass {} | fail {} | not-applicable {} | documented-degradation {} | not-run {}\n",
@@ -520,9 +523,9 @@ pub fn human_summary(report: &ConformanceReport) -> String {
     }
     out.push_str(
         "A pass is scoped to its execution mode (static-contract gates grounded in registered \
-         machine assets, or M2 behavioral execution against the real kernel/store authority \
-         path); it is never a Profile conformance claim. Remaining behavioral layers stay \
-         not-run with recorded reasons until their owning milestone.\n",
+         machine assets, or M2/M3 behavioral execution against the real kernel surfaces); it \
+         is never a Profile conformance claim. Remaining behavioral layers stay not-run with \
+         recorded reasons until their owning milestone.\n",
     );
     out
 }

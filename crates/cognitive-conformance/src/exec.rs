@@ -30,6 +30,8 @@ use std::path::{Path, PathBuf};
 
 /// M2 behavioral execution against the real kernel/store authority path.
 mod behavior;
+/// M3 behavioral execution against the governance/context kernel surface.
+mod behavior_m3;
 
 /// Implementation selector for vector execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,9 +69,6 @@ pub enum ExecutionMode {
     /// Performance-report contract gate (REQ-PERF-002/004/005;
     /// `performance-report.schema.json`; `PERFORMANCE_REPORT_INCOMPLETE`).
     PerfContractGate,
-    /// Context trust-plane static contract (REQ-CTX-008 / REQ-SEC-002;
-    /// `context-view.schema.json` trust/role constraints).
-    TrustPlaneGate,
     /// M2 behavioral: stale compare-and-swap write against the real kernel
     /// gate over a SQLite WAL authority store (REQ-STATE-003; supersedes
     /// the M1 static CAS comparator).
@@ -82,6 +81,35 @@ pub enum ExecutionMode {
     /// kernel gate over the registered task table (REQ-GW-002,
     /// REQ-INTENT-ACCEPT-001).
     TaskAcceptanceBehavior,
+    /// M3 behavioral: same-tenant lateral read against the six-step
+    /// authorization gate with denial/not-found isomorphism
+    /// (REQ-CTX-002; supersedes nothing — left not-run before M3).
+    LateralReadBehavior,
+    /// M3 behavioral: capability amplification against the monotone
+    /// attenuation arithmetic (REQ-CAP-002).
+    AttenuationBehavior,
+    /// M3 behavioral: revocation-stale cache reuse against the
+    /// governance-bound context cache (REQ-CAP-005, REQ-PROFILE-CVM-001).
+    RevocationCacheBehavior,
+    /// M3 behavioral: filter-before-rank against the nine-stage pipeline
+    /// (REQ-CTX-002).
+    RankBeforeAuthBehavior,
+    /// M3 behavioral: required-over-budget fail-closed against the
+    /// pipeline's budget-fitting stage (REQ-CTX-004, REQ-RES-001).
+    RequiredBudgetBehavior,
+    /// M3 behavioral: deterministic prefix-stable render (REQ-CTX-012,
+    /// IMP-02).
+    RenderStabilityBehavior,
+    /// M3 behavioral: bounded no-gain resolution stagnation
+    /// (REQ-DISC-STAGNATION-001).
+    StagnationBehavior,
+    /// M3 behavioral: candidate narrowing before execution
+    /// (REQ-DISC-ADMIT-001).
+    CandidateAdmissionBehavior,
+    /// M3 behavioral upgrade of the M1 static trust-plane gate: prompt
+    /// injection isolated by the real pipeline and control-plane gates
+    /// (REQ-CTX-008, REQ-SEC-002).
+    TrustPlaneBehavior,
 }
 
 /// Execution plan for one vector, decided by structural classification.
@@ -350,6 +378,19 @@ const TASK_ACCEPTANCE_VECTOR_ID: &str = "GW-REMOTE-COMPLETE-001";
 const PERF_VECTOR_ID: &str = "PERF-REPORT-CONTRACT-001";
 const TRUST_VECTOR_ID: &str = "CTX-TRUST-004";
 const COVERAGE_VECTOR_ID: &str = "SPEC-CONTRACT-COVERAGE-001";
+/// M3 governance/context behavioral executions (KRN M3 handoff candidate
+/// list; kernel behavioral twins exist for each).
+const LATERAL_VECTOR_ID: &str = "GOBJ-TENANT-LATERAL-001";
+const ATTENUATION_VECTOR_ID: &str = "CAP-ATTEN-004";
+const REVOCATION_CACHE_VECTOR_ID: &str = "CTX-REVOKE-CACHE-001";
+const RANK_BEFORE_AUTH_VECTOR_ID: &str = "CTX-RANK-AUTH-001";
+const REQUIRED_BUDGET_VECTOR_ID: &str = "CTX-REQ-007";
+const RENDER_STABILITY_VECTOR_ID: &str = "CTX-RENDER-001";
+const STAGNATION_VECTOR_ID: &str = "DISC-STAGNATION-004";
+const CANDIDATE_ADMISSION_VECTOR_ID: &str = "DISC-ADMISSION-002";
+/// Delta consumption is an M5 runtime path: no kernel API exists to
+/// execute `context-delta-scope` against, so it stays not-run honestly.
+const DELTA_SCOPE_VECTOR_ID: &str = "DISC-DELTA-SCOPE-003";
 /// Behavioral vector that receives recorded partial contract assertions
 /// (M1 static side + M2 real read-only degradation subset; never a pass —
 /// disk-full and dispatch/stop/revoke expectations are M4/M5 behavior).
@@ -359,10 +400,13 @@ const STORE_DEGRADATION_VECTOR_ID: &str = "STATE-STORE-DEGRADE-001";
 /// with the owning subsystem milestone (docs/plan/DEVELOPMENT-PLAN.md).
 fn not_run_reason(vector: &LoadedVector) -> String {
     let milestone = match vector.layer_slug.as_str() {
-        "effect-recovery" => "kernel Effect/recovery behavior (M2/M4)",
+        "effect-recovery" => "kernel Effect/recovery behavior (M4)",
         "state-machine" => "kernel state-machine behavior (M2)",
-        "security-negative" => "governance/context runtime behavior (M3/M4)",
-        "context-semantic" => "context resolution runtime behavior (M3+)",
+        // Remaining after the M3 batch: knowledge poisoning isolation.
+        "security-negative" => "knowledge-plane isolation behavior (M11)",
+        // Remaining after the M3 batch: knowledge invalidation (M11) and
+        // embodied observation staleness (M10).
+        "context-semantic" => "knowledge/embodied runtime behavior (M10/M11)",
         "shell-intent-lifecycle" => "Shell/intent runtime behavior (M5)",
         "management-shell" => "management session behavior (M5)",
         "harness-loop" => "harness/loop runtime behavior (M5+)",
@@ -403,7 +447,26 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         TRANSITION_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::EffectClosureBehavior),
         TASK_ACCEPTANCE_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TaskAcceptanceBehavior),
         PERF_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::PerfContractGate),
-        TRUST_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TrustPlaneGate),
+        TRUST_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::TrustPlaneBehavior),
+        LATERAL_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::LateralReadBehavior),
+        ATTENUATION_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AttenuationBehavior),
+        REVOCATION_CACHE_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::RevocationCacheBehavior)
+        }
+        RANK_BEFORE_AUTH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::RankBeforeAuthBehavior),
+        REQUIRED_BUDGET_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::RequiredBudgetBehavior),
+        RENDER_STABILITY_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::RenderStabilityBehavior)
+        }
+        STAGNATION_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::StagnationBehavior),
+        CANDIDATE_ADMISSION_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::CandidateAdmissionBehavior)
+        }
+        DELTA_SCOPE_VECTOR_ID => ExecutionPlan::NotRun {
+            reason: "delta consumption is an M5 runtime path; no kernel API exists to \
+                     execute this scenario against (KRN M3 handoff; honest not-run)"
+                .to_owned(),
+        },
         _ => ExecutionPlan::NotRun {
             reason: not_run_reason(vector),
         },
@@ -928,141 +991,6 @@ fn perf_contract_gate(
     })
 }
 
-fn trust_plane_gate(
-    ctx: &AssetContext,
-    vector: &LoadedVector,
-    kind: ImplementationKind,
-) -> Result<GateOutput, ExecError> {
-    let items: Vec<Value> = vector
-        .input
-        .get("context_items")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    let mutations: Vec<Value> = vector
-        .input
-        .get("proposed_control_mutations")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-
-    let control_items: Vec<&Value> = items
-        .iter()
-        .filter(|item| item.get("role").and_then(Value::as_str) == Some("control"))
-        .collect();
-    let non_control: Vec<&Value> = items
-        .iter()
-        .filter(|item| item.get("role").and_then(Value::as_str) != Some("control"))
-        .collect();
-    let [injected] = non_control.as_slice() else {
-        return Err(ExecError::Environment(
-            "trust-plane gate expects exactly one non-control context item".to_owned(),
-        ));
-    };
-    let injected_role = injected
-        .get("role")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-
-    // Ground the untrusted->control ban in the registered ContextView item
-    // contract: a loaded item with trust_level `untrusted` and role `control`
-    // must be schema-invalid, while the declared untrusted_input role stays
-    // valid (F-018 closure constraint in context-view.schema.json).
-    let item_schema = ctx
-        .schemas
-        .get("context-view.schema.json")
-        .and_then(|s| s.pointer("/properties/loaded/items"))
-        .cloned()
-        .ok_or_else(|| {
-            ExecError::Environment(
-                "context-view.schema.json loaded-item subschema missing".to_owned(),
-            )
-        })?;
-    let item_validator = jsonschema::options()
-        .with_retriever(FileNameRetriever {
-            schemas: ctx.schemas.clone(),
-        })
-        .should_validate_formats(true)
-        .build(&item_schema)
-        .map_err(|err| ExecError::SchemaCompile {
-            name: "context-view.schema.json#/properties/loaded/items".to_owned(),
-            reason: err.to_string(),
-        })?;
-    let probe = |role: &str| -> Value {
-        json!({
-            "item_id": "item://trust-plane-probe",
-            "object_ref": {
-                "kind": "strong",
-                "id": "01890a5d-ac96-774b-bcce-b302099a8064",
-                "object_version": 1,
-                "content_digest": format!("sha256:{}", "6".repeat(64)),
-            },
-            "representation": "text",
-            "trust_level": "untrusted",
-            "role": role,
-            "cost": { "bytes": 0 },
-        })
-    };
-    let untrusted_control_rejected = !item_validator.is_valid(&probe("control"));
-    let untrusted_input_accepted = item_validator.is_valid(&probe("untrusted_input"));
-    if !(untrusted_control_rejected && untrusted_input_accepted) {
-        return Err(ExecError::Environment(
-            "context-view.schema.json no longer pins the untrusted/control ban".to_owned(),
-        ));
-    }
-
-    // Deterministic control-plane rules (REQ-CTX-008, REQ-SEC-002 and the
-    // observe/propose/authorize separation): context content never mutates
-    // control policy and never mints an AuthorizationCapability; untrusted
-    // content keeps its declared untrusted role at render time; the
-    // effective policy is exactly the control items' content.
-    let effective_policy = control_items
-        .iter()
-        .filter_map(|item| item.get("content").and_then(Value::as_str))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    let actual = match kind {
-        ImplementationKind::Reference => json!({
-            "decision": if mutations.is_empty() { "allow" } else { "reject_control_mutation" },
-            "render_role": injected_role,
-            "effective_policy": effective_policy,
-            "capability_created": false,
-            "audit_required": !mutations.is_empty(),
-        }),
-        // The wrong implementation lets injected content steer the control
-        // plane: applies the mutation, renders the injection as control, and
-        // mints the claimed capability.
-        ImplementationKind::DeliberatelyWrong => json!({
-            "decision": "accept",
-            "render_role": "control",
-            "effective_policy": injected.get("content").cloned().unwrap_or(Value::Null),
-            "capability_created": true,
-            "audit_required": false,
-        }),
-    };
-
-    Ok(GateOutput {
-        actual,
-        grounding: vec![
-            "specs/schemas/context-view.schema.json (loaded-item trust/role constraints)"
-                .to_owned(),
-            "specs/registry/requirements.yaml#REQ-CTX-008".to_owned(),
-            "specs/registry/requirements.yaml#REQ-SEC-002".to_owned(),
-        ],
-        informative: vec![],
-        implementation: None,
-        evidence: json!({
-            "scope": "static contract side only; runtime isolation behavior is M3 evidence",
-            "schema_probe": {
-                "untrusted_plus_control_rejected": untrusted_control_rejected,
-                "untrusted_plus_untrusted_input_accepted": untrusted_input_accepted,
-            },
-            "proposed_control_mutations": mutations,
-        }),
-    })
-}
-
 /// Static contract-side assertions for the plan-named behavioral vector
 /// `state-store-degradation` (F-008). Recorded as evidence only; the vector
 /// result stays `not-run` until the M2/M4 behavioral execution.
@@ -1099,7 +1027,6 @@ fn execute_gate(
         ExecutionMode::TraceabilityGate => traceability_gate(ctx, vector, kind),
         ExecutionMode::CoverageGate => coverage_gate(ctx, vector, kind),
         ExecutionMode::PerfContractGate => perf_contract_gate(ctx, vector, kind),
-        ExecutionMode::TrustPlaneGate => trust_plane_gate(ctx, vector, kind),
         ExecutionMode::CasBehavior => behavior::cas_behavior(ctx, vector, kind),
         ExecutionMode::EffectClosureBehavior => {
             behavior::effect_closure_behavior(ctx, vector, kind)
@@ -1107,6 +1034,25 @@ fn execute_gate(
         ExecutionMode::TaskAcceptanceBehavior => {
             behavior::task_acceptance_behavior(ctx, vector, kind)
         }
+        ExecutionMode::LateralReadBehavior => behavior_m3::lateral_read_behavior(ctx, vector, kind),
+        ExecutionMode::AttenuationBehavior => behavior_m3::attenuation_behavior(ctx, vector, kind),
+        ExecutionMode::RevocationCacheBehavior => {
+            behavior_m3::revocation_cache_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::RankBeforeAuthBehavior => {
+            behavior_m3::rank_before_auth_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::RequiredBudgetBehavior => {
+            behavior_m3::required_budget_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::RenderStabilityBehavior => {
+            behavior_m3::render_stability_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::StagnationBehavior => behavior_m3::stagnation_behavior(ctx, vector, kind),
+        ExecutionMode::CandidateAdmissionBehavior => {
+            behavior_m3::candidate_admission_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::TrustPlaneBehavior => behavior_m3::trust_plane_behavior(ctx, vector, kind),
     }
 }
 
@@ -1220,17 +1166,27 @@ pub struct SelfCheckReport {
     pub verdict: &'static str,
 }
 
-/// Gates the deliberately wrong implementation corrupts observably. The
-/// three behavioral modes are corrupted by a gate-bypassing direct store
-/// writer (no table lookup, no CAS respect, no guards/evidence) instead of
-/// a wrong comparator.
-const CORRUPTED_MODES: [ExecutionMode; 6] = [
+/// Gates the deliberately wrong implementation corrupts observably. The M2
+/// behavioral modes are corrupted by a gate-bypassing direct store writer;
+/// the M3 modes by governance anti-patterns (membership-alone reads,
+/// rank-before-auth, stale cache serving, silent truncation, unbounded
+/// retry, reshuffling render, content-claimed control plane, accepted
+/// amplification).
+const CORRUPTED_MODES: [ExecutionMode; 14] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
-    ExecutionMode::TrustPlaneGate,
     ExecutionMode::CasBehavior,
     ExecutionMode::EffectClosureBehavior,
     ExecutionMode::TaskAcceptanceBehavior,
+    ExecutionMode::LateralReadBehavior,
+    ExecutionMode::AttenuationBehavior,
+    ExecutionMode::RevocationCacheBehavior,
+    ExecutionMode::RankBeforeAuthBehavior,
+    ExecutionMode::RequiredBudgetBehavior,
+    ExecutionMode::RenderStabilityBehavior,
+    ExecutionMode::StagnationBehavior,
+    ExecutionMode::CandidateAdmissionBehavior,
+    ExecutionMode::TrustPlaneBehavior,
 ];
 
 /// Run the self-check: the deliberately wrong implementation must fail every
@@ -1275,18 +1231,29 @@ pub fn self_check(
     Ok(SelfCheckReport {
         report: "cognitiveos-conformance-self-check",
         wrong_implementation: "schema-valid outputs, wrong behavior: bridges legacy governed-object \
-             shapes, accepts incomplete benefit claims, promotes untrusted content to the \
-             control plane, and (behavioral, M2) writes authority state through a \
-             gate-bypassing direct store writer — blind last-write-wins over stale CAS, \
-             commits OUTCOME_UNKNOWN->COMMITTED, force-completes an ACTIVE task from a \
-             remote report",
+             shapes, accepts incomplete benefit claims; (behavioral, M2) writes authority state \
+             through a gate-bypassing direct store writer — blind last-write-wins over stale \
+             CAS, commits OUTCOME_UNKNOWN->COMMITTED, force-completes an ACTIVE task; \
+             (behavioral, M3) governance anti-patterns — membership-alone body reads, ranks \
+             unauthorized bodies, serves revocation-stale cache entries, silently truncates \
+             over-budget required sets, retries without bound, reshuffles rendered prefixes, \
+             builds the control plane from content claims, accepts amplified capability \
+             derivations",
         corrupted_gates: vec![
             "schema-gate",
             "perf-contract-gate",
-            "trust-plane-gate",
             "cas-behavior",
             "effect-closure-behavior",
             "task-acceptance-behavior",
+            "lateral-read-behavior",
+            "attenuation-behavior",
+            "revocation-cache-behavior",
+            "rank-before-auth-behavior",
+            "required-budget-behavior",
+            "render-stability-behavior",
+            "stagnation-behavior",
+            "candidate-admission-behavior",
+            "trust-plane-behavior",
         ],
         must_flip,
         flipped_to_fail: flipped,
