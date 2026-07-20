@@ -134,7 +134,7 @@
 
 依据 `apps/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）与 §20.3（后端依赖结论）。**M0 仅建立依赖追踪**；每组依赖 = 对应机器契约 + 后端能力交付 + gate 通过后，才启动相应 Console 里程碑。
 
-2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。平台入口见 [`docs/platforms/README.md`](../platforms/README.md)。
+2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。客户端项目根见 [`clients/`](../../clients/README.md)（ADR-0007），实现 gate 见 [`clients/governance/readiness-gates.md`](../../clients/governance/readiness-gates.md#console-实现-gate)。
 
 Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + Governed 两部署模式），canonical 文档见 [`clients/agent-hub/docs/`](../../clients/agent-hub/docs/README.md)，Master 计划见 [`clients/agent-hub/plan/agent-hub-development-plan.md`](../../clients/agent-hub/plan/agent-hub-development-plan.md)。同受本节 gate 阻断，另加 Paseo/AGPL 复用法务 gate；当前仅 informative 文档与计划/提示词，`implementation not-implemented / evidence none`，未激活实现车道。
 

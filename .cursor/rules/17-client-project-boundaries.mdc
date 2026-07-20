@@ -1,0 +1,29 @@
+---
+description: clients/ 项目根跨平台边界（非 authority、remote companion、gate 前禁实现）
+globs: "clients/**,apps/agent-shell/**,packages/sdk-ts/**,packages/contracts-ts/**"
+alwaysApply: false
+---
+
+# 客户端项目边界
+
+## 必须做
+
+- PC Console、手机 companion、agent-shell、sdk-ts 全部**非 authority**：只发请求、渲染 authority 投影（snapshot + watch），授权/完成/状态迁移判定一律在服务端。
+- 手机是 remote companion：不承载 Agent runtime、CognitiveOS authority、CognitiveOS node 或完整 Vault；只执行 authority 判定的 R0/R1；高后果动作保持 PC-local（canonical 见 `clients/agent-hub/docs/platforms/product-scope.md`）。
+- 四类状态用语（规范已登记/实现已提供/测试已执行/Profile 已符合）严格分开；未启动写 `planned`/`blocked`/`not-implemented`，未执行写 `none`/`not-run`。
+- 实现 gate 权威：`clients/governance/readiness-gates.md`（Console gate；Agent Hub 另加 `clients/agent-hub/docs/GOVERNANCE.md` §7）。gate 未过时 `clients/` 下只允许 Markdown。
+- 机器合同只在 `specs/**`、`conformance/**` 与 `packages/contracts-ts`；`clients/` 只引用不复制；canonical encoding/digest 只消费 `contracts-ts`。
+- UI 实现启动后（gate 过后）按需加载 skills：`frontend-design`、`ui-design-brain`、`responsive-design`、`visual-design-foundations`、`wcag-audit-patterns`、`webapp-testing`。
+
+## 禁止做
+
+- gate 未过禁止：package manifest（package.json/Cargo/Gradle/Xcode/Podfile）、源码、UI 组件、mock server、假 transport、假 authority、`.gitkeep`、CI 假证据。
+- 禁止把目录/README/计划/静态检查通过写成实现已提供、测试已执行或 Profile 已符合。
+- 禁止移动或改写 `apps/agent-shell`、`packages/sdk-ts`（Lane-TSC）与 `packages/contracts-ts`（Lane-CTR）；接口与代码目录变更须经所属车道流程。
+- 禁止制造第二份 canonical（目录索引、gate、产品决策各只有一个 canonical 文件，清单见 `clients/governance/canonical-sources.md`）。
+
+## 完成前检查
+
+1. 代码变更：`pnpm -r build ; pnpm -r test` 全绿（触碰 TS package 时）；文档变更：`pnpm run check:consistency` + `git diff --check`。
+2. `clients/**` 相对链接与 anchor 手动核对（checker 不扫本目录，见 `clients/README.md` §9 手动 gate）。
+3. 触碰平台声明时核对对应平台 gate/PoC 状态未被虚报；产品 ID 不重编号、不重用。

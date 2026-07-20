@@ -13,7 +13,7 @@
 - **决策**：在仓库根建立 `clients/` 作为唯一客户端项目根（PC/mobile/shared/Agent Hub/governance/plan/prompts 七域）；将分散在 `docs/clients/`、`apps/cognitiveos-console/docs/`、`docs/platforms/`、`docs/plan/agent-hub*`、`docs/prompts/agent-hub/` 的客户端 informative 文档按 [canonical-sources.md](canonical-sources.md) 分批 `git mv` 迁入；旧路径保留 4 个兼容 stub（deprecated + successor，不复制正文）；不移动 Lane-TSC/Lane-CTR 代码 package；手机代码载体从"无已分配路径"变为 `app/` 保留入口（无任何实现）。
 - **理由**：客户端文档分散四处，目录索引维护成本高；单一项目根降低跨会话导航与 canonical 漂移风险。
 - **不改变**：任何实现 gate、四类状态、产品 ID、机器合同；checker 不扫 `clients/` 的缺口登记为 Lane-CFR `planned` 任务。
-- **落地记录**：批次哈希见 [MIGRATION-MAP §1](../MIGRATION-MAP.md#1-批次与提交哈希)；ADR-0007 随治理联动批（B7）登记。
+- **落地记录**：批次哈希见 [MIGRATION-MAP §1](../MIGRATION-MAP.md#1-批次与提交哈希)；[ADR-0007](../../docs/adr/0007-clients-project-root-and-doc-migration.md) 已登记（B7）。
 
 ## 2. 四本产品决策日志索引（canonical 各自独立）
 
