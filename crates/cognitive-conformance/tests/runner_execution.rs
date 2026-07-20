@@ -21,11 +21,14 @@ fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
 }
 
-/// Reference-run distribution over the committed 76-vector corpus. These
+/// Reference-run distribution over the committed 81-vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
-const TOTAL: usize = 76;
-const PASS: usize = 25;
+/// 2026-07-20 Lane-CTR gap batch: +5 wire-schema negatives for the newly
+/// registered AKP envelope/stream/control schemas (D-013/D-014/D-015), all
+/// schema-gate executed.
+const TOTAL: usize = 81;
+const PASS: usize = 30;
 const NOT_RUN: usize = 51;
 
 #[test]
@@ -172,8 +175,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
         report.corrupted_but_still_passing
     );
     // Every observably corrupted gate must be represented and flipped.
-    assert_eq!(report.must_flip.len(), 6, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 6);
+    assert_eq!(report.must_flip.len(), 11, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 11);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -182,6 +185,11 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "EFFECT-STATE-CLOSURE-008",
         "PERF-REPORT-CONTRACT-001",
         "CTX-TRUST-004",
+        "AKP-ENVELOPE-NO-SCHEMA-PIN-001",
+        "AKP-ENVELOPE-AMBIGUOUS-PAYLOAD-002",
+        "AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003",
+        "AKP-STREAM-FRAME-UNSEQUENCED-004",
+        "SHELL-CONTROL-UNREASONED-CANCEL-001",
     ] {
         assert!(
             report.flipped_to_fail.iter().any(|f| f == id),

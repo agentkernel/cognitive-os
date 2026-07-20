@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akp-request-envelope.schema.json",
+  "title": "CognitiveOS AkpRequestEnvelope",
+  "description": "AKP request envelope wire shape (specs/akp/README.md sections 3, 6 and 10.1; REQ-AKP-ENV-001, REQ-AKP-ENV-002, REQ-AKP-MGMT-001). Registers the machine schema for the envelope members the companion describes. Behavioral gates stay runtime contracts: version negotiation, unknown-critical-extension rejection before payload processing, payload-digest verification, and the idempotency-key requirement for effecting operations.",
+  "type": "object",
+  "required": [
+    "message_id",
+    "operation",
+    "protocol_version",
+    "schema_digest",
+    "sender",
+    "audience",
+    "correlation_id",
+    "deadline"
+  ],
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.:-]{2,127}$"
+    },
+    "protocol_version": {
+      "const": "cognitiveos.akp/0.2"
+    },
+    "schema_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "sender": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "audience": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "causation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 256
+    },
+    "authorization_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    },
+    "payload": {},
+    "payload_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "payload_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "management_session_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "activity_context_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "proposal_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "approval_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-defs.schema.json#/$defs/uriRef"
+      },
+      "uniqueItems": true
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revocation_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expected_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/extension"
+      }
+    }
+  },
+  "$defs": {
+    "extension": {
+      "title": "Envelope extension entry",
+      "description": "An extension entry is `{id, critical}`; receivers reject unknown critical extensions before any payload processing (REQ-AKP-ENV-002) and treat malformed entries as critical.",
+      "type": "object",
+      "required": [
+        "id",
+        "critical"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "critical": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "payload"
+      ]
+    },
+    {
+      "required": [
+        "payload_ref"
+      ]
+    }
+  ],
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "management_session_ref"
+        ]
+      },
+      "then": {
+        "required": [
+          "actor_chain_digest",
+          "activity_context_ref"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

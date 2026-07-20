@@ -1,0 +1,34 @@
+{
+  "id": "AKP-STREAM-FRAME-UNSEQUENCED-004",
+  "title": "AKP stream fragment without stream identity and sequence is rejected",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-AKP-STR-001"
+  ],
+  "input": {
+    "validate_against": "specs/schemas/akp-stream-frame.schema.json",
+    "object": {
+      "kind": "delta",
+      "payload": {
+        "view_hint": "status changed"
+      },
+      "final": false
+    }
+  },
+  "expected": {
+    "schema_valid": false,
+    "decision": "deny",
+    "error": {
+      "code": "SCHEMA_MISMATCH",
+      "category": "protocol"
+    },
+    "rejection_reasons": [
+      "required properties `stream_id` and `sequence` are missing",
+      "duplicate, gap, reorder and truncation detection (REQ-AKP-STR-001) is impossible without stream identity and a monotonic sequence"
+    ]
+  }
+}

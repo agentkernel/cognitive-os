@@ -103,9 +103,10 @@ fn effect_state_enum_is_exhaustive_against_transition_table() {
 
 #[test]
 fn generated_headers_pin_current_schema_digests() {
-    // Every generated file's schema_digest header line must match the digest
-    // of the current source schema (ADR-0006 item 4, verified without
-    // regenerating).
+    // Every schema-sourced generated file's schema_digest header line must
+    // match the digest of the current source schema (ADR-0006 item 4,
+    // verified without regenerating). The errors.yaml-sourced module is
+    // covered by `error_registry_matches_errors_yaml` below.
     let generated_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("src")
         .join("generated");
@@ -123,11 +124,13 @@ fn generated_headers_pin_current_schema_digests() {
             .lines()
             .find(|l| l.starts_with("//! source: "))
             .unwrap_or_else(|| panic!("{} missing source header", path.display()));
+        let Some(schema_rel) = source_line.strip_prefix("//! source: specs/schemas/") else {
+            continue; // registry-sourced module (error_registry.rs)
+        };
         let digest_line = text
             .lines()
             .find(|l| l.starts_with("//! schema_digest: "))
             .unwrap_or_else(|| panic!("{} missing digest header", path.display()));
-        let schema_rel = source_line.trim_start_matches("//! source: specs/schemas/");
         let raw = fs::read_to_string(schema_dir.join(schema_rel)).unwrap();
         let doc = canonical::parse_strict(&raw).unwrap();
         let expected = canonical::digest(
@@ -142,5 +145,120 @@ fn generated_headers_pin_current_schema_digests() {
         );
         checked += 1;
     }
-    assert!(checked >= 19, "generated module coverage shrank: {checked}");
+    assert!(checked >= 28, "generated module coverage shrank: {checked}");
+}
+
+#[test]
+fn schema_digest_constants_match_live_schemas() {
+    // Gap 5 of the 20260720 lane-tsc handoff: the digest is a RUNTIME
+    // constant, not just a header comment. The aggregate table and the
+    // per-module constants must equal the re-derived digest of the live
+    // schema file (same recipe as the schema-bundle manifest per-asset
+    // digest, so clients can pin envelope `schema_digest` without
+    // re-deriving).
+    let schema_dir = repo_root().join("specs").join("schemas");
+    for (file, pinned) in cognitive_contracts::generated::SCHEMA_DIGESTS {
+        let raw = fs::read_to_string(schema_dir.join(file)).unwrap();
+        let doc = canonical::parse_strict(&raw).unwrap();
+        let live = canonical::digest(
+            &canonical::canonical_bytes(&doc).unwrap(),
+            "schema-bundle/0.1",
+        )
+        .unwrap();
+        assert_eq!(pinned, live, "{file}: SCHEMA_DIGESTS entry is stale");
+    }
+    assert_eq!(
+        cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
+        28,
+        "generated schema module count drifted"
+    );
+    // Per-module constants are the same values (spot checks across families).
+    use cognitive_contracts::generated as g;
+    let by_file: std::collections::BTreeMap<&str, &str> =
+        g::SCHEMA_DIGESTS.iter().copied().collect();
+    assert_eq!(
+        g::effect::SCHEMA_DIGEST,
+        by_file["effect.schema.json"],
+        "per-module constant diverged from the aggregate"
+    );
+    assert_eq!(g::effect::SCHEMA_ID, "effect.schema.json");
+    assert_eq!(
+        g::akp_request_envelope::SCHEMA_DIGEST,
+        by_file["akp-request-envelope.schema.json"]
+    );
+    assert_eq!(
+        g::shell_action_proposal::SCHEMA_DIGEST,
+        by_file["shell-action-proposal.schema.json"]
+    );
+}
+
+#[test]
+fn error_registry_matches_errors_yaml() {
+    // Gap 2 of the 20260720 lane-tsc handoff: the generated registry table
+    // must match specs/registry/errors.yaml entry by entry, and the pinned
+    // REGISTRY_DIGEST must equal the spec-set manifest per-asset recipe
+    // (canonical JSON projection of the parsed YAML, domain spec-set/0.1).
+    use cognitive_contracts::bundle;
+    use cognitive_contracts::generated::error_registry::{
+        REGISTERED_ERRORS, REGISTRY_DIGEST, RegisteredErrorCode,
+    };
+
+    let raw = fs::read_to_string(
+        repo_root()
+            .join("specs")
+            .join("registry")
+            .join("errors.yaml"),
+    )
+    .unwrap();
+    let value: Value = serde_yaml::from_str(&raw).unwrap();
+    let live_digest = bundle::asset_content_digest(&value, bundle::SPEC_SET_DOMAIN).unwrap();
+    assert_eq!(
+        REGISTRY_DIGEST, live_digest,
+        "REGISTRY_DIGEST is stale (run contracts-codegen + cargo fmt)"
+    );
+
+    let entries = value["errors"].as_array().unwrap();
+    assert_eq!(
+        REGISTERED_ERRORS.len(),
+        entries.len(),
+        "registry table count drifted from errors.yaml"
+    );
+    for (generated, registered) in REGISTERED_ERRORS.iter().zip(entries) {
+        let code = registered["code"].as_str().unwrap();
+        assert_eq!(generated.code.as_str(), code, "code order drifted");
+        assert_eq!(
+            serde_json::to_value(generated.category).unwrap(),
+            registered["category"],
+            "{code}: category drifted"
+        );
+        assert_eq!(
+            generated.retryable,
+            registered["retryable"].as_bool().unwrap(),
+            "{code}: retryable drifted"
+        );
+        assert_eq!(
+            generated.description,
+            registered["description"]
+                .as_str()
+                .unwrap()
+                .trim_end()
+                .replace('\n', " "),
+            "{code}: description drifted"
+        );
+        // Round trips: enum <-> wire string <-> table entry.
+        assert_eq!(RegisteredErrorCode::parse(code), Some(generated.code));
+        assert_eq!(generated.code.entry(), generated);
+    }
+    assert_eq!(RegisteredErrorCode::parse("NOT_A_REGISTERED_CODE"), None);
+    // Contract-driven retry classification stays registry truth
+    // (docs/standards/error-contract.md section 3).
+    let retryable = |code: &str| {
+        RegisteredErrorCode::parse(code)
+            .map(|c| c.entry().retryable)
+            .unwrap()
+    };
+    assert!(retryable("STATE_CONFLICT"));
+    assert!(retryable("EFFECT_OUTCOME_UNKNOWN"));
+    assert!(!retryable("EFFECT_IDEMPOTENCY_CONFLICT"));
+    assert!(!retryable("CONTEXT_AUTH_DENIED"));
 }

@@ -512,6 +512,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - SHELL-CONTROL-UNREASONED-CANCEL-001
 - id: REQ-AKP-CONF-001
   owner: akp-conf
   owner_spec: specs/akp/README.md
@@ -548,12 +549,16 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - AKP-ENVELOPE-NO-SCHEMA-PIN-001
+  - AKP-ENVELOPE-AMBIGUOUS-PAYLOAD-002
+  - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
 - id: REQ-AKP-ENV-002
   owner: akp-env
   owner_spec: specs/akp/README.md
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - AKP-ENVELOPE-NO-SCHEMA-PIN-001
 - id: REQ-AKP-IDEM-001
   owner: akp-idem
   owner_spec: specs/akp/README.md
@@ -614,12 +619,14 @@ requirements:
   status: specified
   tests:
   - SHELL-CANCEL-SEMANTICS-005
+  - SHELL-CONTROL-UNREASONED-CANCEL-001
 - id: REQ-AKP-STR-001
   owner: akp-str
   owner_spec: specs/akp/README.md
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - AKP-STREAM-FRAME-UNSEQUENCED-004
 - id: REQ-AKP-STR-002
   owner: akp-str
   owner_spec: specs/akp/README.md
@@ -984,6 +991,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
 - id: REQ-ERR-002
   owner: err-002
   owner_spec: specs/core/README.md
@@ -1599,6 +1607,7 @@ requirements:
   tests:
   - SHELL-CANCEL-SEMANTICS-005
   - SHELL-EXECUTION-MIGRATION-009
+  - SHELL-CONTROL-UNREASONED-CANCEL-001
 - id: REQ-SHELL-CORRECTION-001
   owner: shell-correction
   owner_spec: RFC-0001-cognitiveos-governance-context-access.md

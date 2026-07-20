@@ -1042,7 +1042,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
+      - conformance/vectors/shell-control-unreasoned-cancel-001.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -1114,7 +1116,13 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - AKP-ENVELOPE-NO-SCHEMA-PIN-001
+      - AKP-ENVELOPE-AMBIGUOUS-PAYLOAD-002
+      - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
     vectors:
+      - conformance/vectors/akp-envelope-ambiguous-payload-002.json
+      - conformance/vectors/akp-envelope-no-schema-pin-001.json
+      - conformance/vectors/akp-result-error-without-machine-code-003.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -1126,7 +1134,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - AKP-ENVELOPE-NO-SCHEMA-PIN-001
     vectors:
+      - conformance/vectors/akp-envelope-no-schema-pin-001.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -1248,8 +1258,10 @@ requirements:
     status: specified
     registry_tests:
       - SHELL-CANCEL-SEMANTICS-005
+      - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
       - conformance/vectors/shell-cancel-semantics-005.json
+      - conformance/vectors/shell-control-unreasoned-cancel-001.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -1261,7 +1273,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - AKP-STREAM-FRAME-UNSEQUENCED-004
     vectors:
+      - conformance/vectors/akp-stream-frame-unsequenced-004.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -1995,7 +2009,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
     vectors:
+      - conformance/vectors/akp-result-error-without-machine-code-003.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
@@ -3224,8 +3240,10 @@ requirements:
     registry_tests:
       - SHELL-CANCEL-SEMANTICS-005
       - SHELL-EXECUTION-MIGRATION-009
+      - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
       - conformance/vectors/shell-cancel-semantics-005.json
+      - conformance/vectors/shell-control-unreasoned-cancel-001.json
       - conformance/vectors/shell-execution-migration-009.json
       - conformance/vectors/spec-contract-coverage.json
     impl: []

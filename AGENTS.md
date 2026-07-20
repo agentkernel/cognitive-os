@@ -20,8 +20,8 @@
 ## 目录地图
 
 ```text
-specs/            规范资产（registry 273 REQ / 55 错误码；5 迁移表；56 schema）——机器合同真相
-conformance/      74 份声明式向量 + 15 测试层（数据包，非 runner）
+specs/            规范资产（registry 273 REQ / 55 错误码；5 迁移表；60 schema）——机器合同真相
+conformance/      81 份声明式向量 + 15 测试层（数据包，非 runner）
 crates/           Rust：contracts → domain → kernel/store → runtime/management/akp → conformance
 apps/             kernel-server、admin-cli（Rust）；agent-shell（TS 客户端）；cognitiveos-console（planned 产品设计）
 packages/         contracts-ts、sdk-ts

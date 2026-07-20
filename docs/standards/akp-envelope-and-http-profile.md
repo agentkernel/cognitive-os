@@ -6,7 +6,10 @@
 - Status: Draft Normative Standard
 - Date: 2026-07-20
 - Machine assets: AKP envelope rules in `specs/akp/README.md`;
-  `specs/registry/errors.yaml` protocol codes
+  `specs/registry/errors.yaml` protocol codes; envelope/stream/control wire
+  schemas `specs/schemas/akp-request-envelope.schema.json`,
+  `akp-result-envelope.schema.json`, `akp-stream-frame.schema.json`,
+  `shell-control-request.schema.json` (D-013/D-014/D-015 closure)
 - Normative sources: AKP companion (`specs/akp/README.md`); ADR-0003
   (reference implementation transport decision, not a specification
   requirement)
@@ -27,8 +30,12 @@ registers no new requirement.
 Every AKP message carries the versioned envelope: protocol version, message
 type, correlation/causation IDs, actor context reference, payload schema
 pin (digest), and idempotency key where the operation is effecting
-([REQ-AKP-ENV-001..002], [REQ-AKP-IDEM-001]). Payload bytes are validated
-against the pinned schema digest before processing
+([REQ-AKP-ENV-001..002], [REQ-AKP-IDEM-001]). The registered wire shapes
+are `akp-request-envelope.schema.json` and `akp-result-envelope.schema.json`
+(negative vectors `akp-envelope-no-schema-pin-001.json`,
+`akp-envelope-ambiguous-payload-002.json`,
+`akp-result-error-without-machine-code-003.json`). Payload bytes are
+validated against the pinned schema digest before processing
 (`PROTOCOL_SCHEMA_DIGEST_MISMATCH` on mismatch); canonicalization follows
 `canonical-encoding-and-digest.md` ([REQ-AKP-CAN-001]).
 

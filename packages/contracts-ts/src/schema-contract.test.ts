@@ -129,6 +129,167 @@ test("migrated positive Effect instance is accepted", () => {
   );
 });
 
+/**
+ * Positive AKP request envelope (D-013 wire schema): the members the
+ * companion describes (specs/akp/README.md section 3) must be accepted, so
+ * the negative vectors are not passing vacuously.
+ */
+function positiveRequestEnvelope(): Record<string, unknown> {
+  return {
+    message_id: "01890a5d-ac96-774b-bcce-b302099a8070",
+    operation: "shell.submit",
+    protocol_version: "cognitiveos.akp/0.2",
+    schema_digest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    sender: "principal://tenant-a/user-alice",
+    audience: "kernel://task-gateway",
+    correlation_id: "conv://tenant-a/session-1/turn-9",
+    causation_id: "01890a5d-ac96-774b-bcce-b302099a806f",
+    deadline: "2026-07-20T00:05:00Z",
+    idempotency_key: "idem-shell-submit-0001",
+    authorization_ref: "cap://tenant-a/lease-77",
+    budget: { wall_time_ms: 60000 },
+    payload: { proposal_ref: "proposal://tenant-a/sap-0001" },
+    payload_digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    extensions: [{ id: "x-trace", critical: false }],
+  };
+}
+
+test("AKP request envelope accepts described members and rejects vector negatives", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("akp-request-envelope.schema.json");
+  assert.ok(validate);
+  assert.equal(
+    validate(positiveRequestEnvelope()),
+    true,
+    `described request envelope must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  // Management members ride the same envelope (AKP section 10.1) but the
+  // session ref never travels alone.
+  const management = positiveRequestEnvelope();
+  management["management_session_ref"] = "session://tenant-a/pms-1";
+  assert.equal(validate(management), false, "lone management_session_ref must be rejected");
+  management["actor_chain_digest"] = `sha256:${"d".repeat(64)}`;
+  management["activity_context_ref"] = "activity://tenant-a/act-1";
+  assert.equal(
+    validate(management),
+    true,
+    `management-bound envelope must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  for (const vector of [
+    "akp-envelope-no-schema-pin-001.json",
+    "akp-envelope-ambiguous-payload-002.json",
+  ]) {
+    assert.equal(
+      validate(vectorObject(vector)),
+      false,
+      `${vector} object must be rejected (REQ-AKP-ENV-001/002)`,
+    );
+  }
+});
+
+test("AKP result envelope requires the machine error and partial continuation", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("akp-result-envelope.schema.json");
+  assert.ok(validate);
+  const ok: Record<string, unknown> = {
+    in_reply_to: "01890a5d-ac96-774b-bcce-b302099a8070",
+    correlation_id: "conv://tenant-a/session-1/turn-9",
+    protocol_version: "cognitiveos.akp/0.2",
+    status: "ok",
+    result: { accepted_ref: "task://tenant-a/tsk-0007" },
+    observed_versions: { task: 4 },
+    cost: { wall_time_ms: 12 },
+    audit_ref: "audit://tenant-a/rec-1",
+  };
+  assert.equal(validate(ok), true, `ok result must validate: ${JSON.stringify(validate.errors)}`);
+  const errorResult = {
+    in_reply_to: "01890a5d-ac96-774b-bcce-b302099a8070",
+    correlation_id: "conv://tenant-a/session-1/turn-9",
+    protocol_version: "cognitiveos.akp/0.2",
+    status: "error",
+    error: { code: "STATE_CONFLICT", category: "state", stage: "authorization", retryable: true },
+  };
+  assert.equal(
+    validate(errorResult),
+    true,
+    `error result with machine error must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  assert.equal(
+    validate(vectorObject("akp-result-error-without-machine-code-003.json")),
+    false,
+    "error status without the machine error envelope must be rejected (REQ-ERR-001)",
+  );
+  const partial = { ...ok, status: "partial" };
+  assert.equal(validate(partial), false, "partial without continuation must be rejected");
+  assert.equal(
+    validate({ ...partial, continuation: { high_watermark: 7 } }),
+    true,
+    `partial with continuation must validate: ${JSON.stringify(validate.errors)}`,
+  );
+});
+
+test("AKP stream frame kinds carry their required members", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("akp-stream-frame.schema.json");
+  assert.ok(validate);
+  const snapshot: Record<string, unknown> = {
+    stream_id: "watch://tenant-a/wsub-1",
+    sequence: 0,
+    kind: "snapshot",
+    snapshot_version: 4,
+    payload: { view: "initial" },
+    final: false,
+    cost: { context_bytes: 2048 },
+  };
+  assert.equal(
+    validate(snapshot),
+    true,
+    `snapshot frame must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  const errorFrame = {
+    stream_id: "watch://tenant-a/wsub-1",
+    sequence: 9,
+    kind: "error",
+    error: { code: "WATCH_CURSOR_STALE", category: "watch", stage: "resume", retryable: true },
+    final: true,
+  };
+  assert.equal(
+    validate(errorFrame),
+    true,
+    `machine-coded error frame must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  const unversioned = { ...snapshot };
+  delete unversioned["snapshot_version"];
+  assert.equal(validate(unversioned), false, "snapshot without snapshot_version must be rejected");
+  assert.equal(
+    validate(vectorObject("akp-stream-frame-unsequenced-004.json")),
+    false,
+    "frame without stream identity/sequence must be rejected (REQ-AKP-STR-001)",
+  );
+});
+
+test("shell control request is a cancel with target and reason", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("shell-control-request.schema.json");
+  assert.ok(validate);
+  const cancel = {
+    schema_version: "cognitiveos.shell-control-request/0.1",
+    control: "cancel",
+    target_ref: "task://tenant-a/tsk-0007",
+    reason: "user requested stop from the shell",
+  };
+  assert.equal(
+    validate(cancel),
+    true,
+    `cancel control request must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  assert.equal(
+    validate(vectorObject("shell-control-unreasoned-cancel-001.json")),
+    false,
+    "cancel without reason must be rejected (REQ-AKP-CAN-001)",
+  );
+});
+
 test("legacy $defs stay deprecated and unreferenced (F-003 retention decision)", () => {
   const schemas = loadSchemas();
   const common = schemas.find((s) => s.name === "common-defs.schema.json");

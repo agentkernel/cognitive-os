@@ -6,7 +6,8 @@
 - Status: Draft Normative Standard
 - Date: 2026-07-20
 - Machine assets: `specs/schemas/event.schema.json`,
-  `watch-subscription.schema.json`, `shell-status-view.schema.json`
+  `watch-subscription.schema.json`, `shell-status-view.schema.json`,
+  `akp-stream-frame.schema.json` (watch stream fragment wire shape)
 - Normative sources: RFC-0001 section 14; Core companion; AKP companion
 
 ## 1. Scope and normative language
@@ -48,7 +49,10 @@ state are linkable (vector `eff-crash-001.json` asserts
 ## 5. Watch: snapshot + cursor
 
 A watch subscription delivers one consistent snapshot, then ordered deltas
-with a resumable cursor ([REQ-SHELL-WATCH-001], [REQ-AKP-SHELL-002]).
+with a resumable cursor ([REQ-SHELL-WATCH-001], [REQ-AKP-SHELL-002]). The
+wire shape of each stream fragment is `akp-stream-frame.schema.json`
+(AKP section 8; kinds `snapshot`/`delta`/`error`, machine-coded stream
+errors in the registered common-defs error shape).
 Delivery is at-least-once; consumers deduplicate by event ID/sequence
 (profile manifest guarantee `event_delivery: at_least_once`). A stale or
 compacted cursor MUST fail with `WATCH_CURSOR_STALE`, forcing a fresh

@@ -1,0 +1,46 @@
+{
+  "id": "AKP-ENVELOPE-NO-SCHEMA-PIN-001",
+  "title": "AKP request envelope without a payload schema digest pin is rejected",
+  "version": "0.1",
+  "layer": "wire-schema",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-AKP-ENV-001",
+    "REQ-AKP-ENV-002"
+  ],
+  "input": {
+    "validate_against": "specs/schemas/akp-request-envelope.schema.json",
+    "object": {
+      "message_id": "01890a5d-ac96-774b-bcce-b302099a8070",
+      "operation": "shell.submit",
+      "protocol_version": "cognitiveos.akp/0.2",
+      "sender": "principal://tenant-a/user-alice",
+      "audience": "kernel://task-gateway",
+      "correlation_id": "conv://tenant-a/session-1/turn-9",
+      "deadline": "2026-07-20T00:05:00Z",
+      "idempotency_key": "idem-shell-submit-0001",
+      "authorization_ref": "cap://tenant-a/lease-77",
+      "budget": {
+        "wall_time_ms": 60000
+      },
+      "payload": {
+        "proposal_ref": "proposal://tenant-a/sap-0001"
+      },
+      "payload_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  "expected": {
+    "schema_valid": false,
+    "decision": "deny",
+    "error": {
+      "code": "SCHEMA_MISMATCH",
+      "category": "protocol"
+    },
+    "rejection_reasons": [
+      "required property `schema_digest` is missing",
+      "a payload must not be interpreted without its digest-pinned schema (REQ-AKP-ENV-002 gate order)"
+    ]
+  }
+}

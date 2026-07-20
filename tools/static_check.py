@@ -35,12 +35,12 @@ def check(name, ok, detail=''):
 schemas = {}
 for path in sorted(glob.glob('specs/schemas/*.json')):
     schemas[os.path.basename(path)] = json.load(open(path, encoding='utf-8'))
-check('parse schemas (%d)' % len(schemas), len(schemas) == 56, 'expected 56')
+check('parse schemas (%d)' % len(schemas), len(schemas) == 60, 'expected 60')
 
 vectors = {}
 for path in sorted(glob.glob('conformance/vectors/*.json')):
     vectors[os.path.basename(path)] = json.load(open(path, encoding='utf-8'))
-check('parse vectors (%d)' % len(vectors), len(vectors) == 76, 'expected 76')
+check('parse vectors (%d)' % len(vectors), len(vectors) == 81, 'expected 81')
 
 transitions = {}
 for path in sorted(glob.glob('specs/transitions/*.json')):

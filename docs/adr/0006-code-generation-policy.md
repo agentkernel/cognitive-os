@@ -104,3 +104,32 @@ committed output with digest headers). Facts of the delivered pipeline:
    (`generated_headers_pin_current_schema_digests`).
 6. Remaining object families follow their consuming milestones (unchanged
    from the Consequences section).
+
+## Delivery record (Lane-CTR contract-gap batch, generator 0.2.0)
+
+Extension driven by the Lane-TSC client families
+(`docs/checkpoints/20260720-lane-tsc-handoff.md` section 4, gaps 2/3/5):
+
+1. Input set: + the five Shell client schemas consumed by
+   `packages/sdk-ts` (shell-action-proposal, shell-command-preview,
+   shell-status-view, watch-subscription, user-intent-record) and the four
+   AKP wire schemas registered by D-013/D-014/D-015 (akp-request-envelope,
+   akp-result-envelope, akp-stream-frame, shell-control-request) — 28
+   schema modules per language.
+2. New input kind: `specs/registry/errors.yaml` generates the registered
+   error binding (`error_registry.rs` / `error-registry.ts`): exhaustive
+   code enum/union, table with category/retryable/description consuming the
+   generated common-defs `ErrorCategory`, fail-closed parse. Its header and
+   `REGISTRY_DIGEST` constant pin the spec-set manifest per-asset recipe
+   (canonical JSON projection of the parsed YAML, domain `spec-set/0.1`).
+3. Digest runtime constants (gap 5): every schema module exports
+   `SCHEMA_ID` + `SCHEMA_DIGEST`; the module roots export the
+   `SCHEMA_DIGESTS` aggregate — the envelope `schema_digest` pin table, so
+   clients stop re-deriving digests at load time.
+4. Root type names strip the `CognitiveOS ` title prefix (presentation, not
+   type identity); no pre-0.2.0 module had a prefixed root title, so no
+   existing type renamed.
+5. Parity is test-pinned both without regeneration
+   (`error_registry_matches_errors_yaml`,
+   `schema_digest_constants_match_live_schemas`, TS twins) and by the CI
+   regenerate-and-diff gate, which now also covers the registry binding.

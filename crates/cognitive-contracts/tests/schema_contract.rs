@@ -154,6 +154,177 @@ fn migrated_positive_effect_is_accepted() {
     }
 }
 
+/// Positive AKP request envelope: the D-013 wire schema must accept the
+/// members the companion describes (specs/akp/README.md section 3), so the
+/// negative vectors are not passing vacuously.
+fn positive_request_envelope() -> Value {
+    serde_json::json!({
+        "message_id": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "operation": "shell.submit",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "schema_digest":
+            "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "sender": "principal://tenant-a/user-alice",
+        "audience": "kernel://task-gateway",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "causation_id": "01890a5d-ac96-774b-bcce-b302099a806f",
+        "deadline": "2026-07-20T00:05:00Z",
+        "idempotency_key": "idem-shell-submit-0001",
+        "authorization_ref": "cap://tenant-a/lease-77",
+        "budget": { "wall_time_ms": 60000 },
+        "payload": { "proposal_ref": "proposal://tenant-a/sap-0001" },
+        "payload_digest":
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "extensions": [ { "id": "x-trace", "critical": false } ]
+    })
+}
+
+#[test]
+fn akp_request_envelope_accepts_described_members_and_rejects_vector_negatives() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-request-envelope.schema.json");
+    if let Some(err) = validator.validate(&positive_request_envelope()).err() {
+        panic!("described request envelope must validate, got: {err}");
+    }
+    // Management members ride the same envelope (AKP section 10.1) but the
+    // session ref never travels alone.
+    let mut management = positive_request_envelope();
+    management["management_session_ref"] = serde_json::json!("session://tenant-a/pms-1");
+    assert!(
+        !validator.is_valid(&management),
+        "management_session_ref without actor_chain_digest/activity_context_ref must be rejected"
+    );
+    management["actor_chain_digest"] = serde_json::json!(format!("sha256:{}", "d".repeat(64)));
+    management["activity_context_ref"] = serde_json::json!("activity://tenant-a/act-1");
+    if let Some(err) = validator.validate(&management).err() {
+        panic!("management-bound request envelope must validate, got: {err}");
+    }
+    // The exact instances pinned by the negative vectors are rejected.
+    for vector in [
+        "akp-envelope-no-schema-pin-001.json",
+        "akp-envelope-ambiguous-payload-002.json",
+    ] {
+        assert!(
+            !validator.is_valid(&vector_object(vector)),
+            "{vector} object must be rejected (REQ-AKP-ENV-001/002)"
+        );
+    }
+}
+
+#[test]
+fn akp_result_envelope_requires_machine_error_and_continuation() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-result-envelope.schema.json");
+    let ok = serde_json::json!({
+        "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "status": "ok",
+        "result": { "accepted_ref": "task://tenant-a/tsk-0007" },
+        "observed_versions": { "task": 4 },
+        "cost": { "wall_time_ms": 12 },
+        "audit_ref": "audit://tenant-a/rec-1"
+    });
+    if let Some(err) = validator.validate(&ok).err() {
+        panic!("ok result envelope must validate, got: {err}");
+    }
+    let error_result = serde_json::json!({
+        "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "status": "error",
+        "error": {
+            "code": "STATE_CONFLICT",
+            "category": "state",
+            "stage": "authorization",
+            "retryable": true
+        }
+    });
+    if let Some(err) = validator.validate(&error_result).err() {
+        panic!("error result with registered machine error must validate, got: {err}");
+    }
+    assert!(
+        !validator.is_valid(&vector_object(
+            "akp-result-error-without-machine-code-003.json"
+        )),
+        "error status without the machine error envelope must be rejected (REQ-ERR-001)"
+    );
+    let mut partial = ok.clone();
+    partial["status"] = serde_json::json!("partial");
+    assert!(
+        !validator.is_valid(&partial),
+        "partial without continuation must be rejected (AKP section 5)"
+    );
+    partial["continuation"] = serde_json::json!({ "high_watermark": 7 });
+    if let Some(err) = validator.validate(&partial).err() {
+        panic!("partial with continuation must validate, got: {err}");
+    }
+}
+
+#[test]
+fn akp_stream_frame_kinds_carry_their_required_members() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-stream-frame.schema.json");
+    let snapshot = serde_json::json!({
+        "stream_id": "watch://tenant-a/wsub-1",
+        "sequence": 0,
+        "kind": "snapshot",
+        "snapshot_version": 4,
+        "payload": { "view": "initial" },
+        "final": false,
+        "cost": { "context_bytes": 2048 }
+    });
+    if let Some(err) = validator.validate(&snapshot).err() {
+        panic!("snapshot frame must validate, got: {err}");
+    }
+    let error_frame = serde_json::json!({
+        "stream_id": "watch://tenant-a/wsub-1",
+        "sequence": 9,
+        "kind": "error",
+        "error": {
+            "code": "WATCH_CURSOR_STALE",
+            "category": "watch",
+            "stage": "resume",
+            "retryable": true
+        },
+        "final": true
+    });
+    if let Some(err) = validator.validate(&error_frame).err() {
+        panic!("machine-coded error frame must validate, got: {err}");
+    }
+    let mut unversioned_snapshot = snapshot.clone();
+    unversioned_snapshot
+        .as_object_mut()
+        .map(|o| o.remove("snapshot_version"));
+    assert!(
+        !validator.is_valid(&unversioned_snapshot),
+        "snapshot frame without snapshot_version must be rejected"
+    );
+    assert!(
+        !validator.is_valid(&vector_object("akp-stream-frame-unsequenced-004.json")),
+        "frame without stream identity/sequence must be rejected (REQ-AKP-STR-001)"
+    );
+}
+
+#[test]
+fn shell_control_request_is_cancel_with_target_and_reason() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "shell-control-request.schema.json");
+    let cancel = serde_json::json!({
+        "schema_version": "cognitiveos.shell-control-request/0.1",
+        "control": "cancel",
+        "target_ref": "task://tenant-a/tsk-0007",
+        "reason": "user requested stop from the shell"
+    });
+    if let Some(err) = validator.validate(&cancel).err() {
+        panic!("cancel control request must validate, got: {err}");
+    }
+    assert!(
+        !validator.is_valid(&vector_object("shell-control-unreasoned-cancel-001.json")),
+        "cancel without reason must be rejected (REQ-AKP-CAN-001)"
+    );
+}
+
 #[test]
 fn legacy_defs_stay_deprecated_and_unreferenced() {
     // Decision record for F-003 remaining condition (legacy `$defs`): the
