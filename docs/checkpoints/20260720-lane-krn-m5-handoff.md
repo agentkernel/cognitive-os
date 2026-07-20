@@ -48,6 +48,7 @@
 3. **`GovernanceSeed` 是过渡输入面**：header 治理引用（owner/authority/resource_scope strong ref、tenant、retention）由调用方以确定性数据供给；M5 RUN 落地持久化治理对象后应从治理链解析（D-018 ②同源）。若 RUN 需要 kernel 提供治理对象解析端口，走 §4.1 同通道提请求。
 4. **进展事实与 F-014 sink 口径**：`loop_progress_facts` 写入沿用 checkpoint 的事务内 fencing 校验（store-transaction sink 类），`COMMIT_SINKS` 审查常量保持 4 项不扩（progress fact 归 CheckpointWrite 同类：loop 事实持久化）；`sink_inventory_is_complete_and_stable` 钉扎不变。
 5. 本机工具链：M4 handoff §4.5 基础上**新增** `RUSTFLAGS="-C link-self-contained=yes"`（llvm-mingw 无 libgcc/libgcc_eh，链接用 rustc 自带 self-contained mingw 库；CC/AR 仍为 llvm-mingw 绝对路径不进 PATH）。
+6. **已接收 Lane-RUN 批 1 handoff §4.2 的两项 KRN 请求**（批 2 前协商，不阻塞）：① governance currency（revocation epoch / capability set version）收编为 store 表 + ProtocolStore 端口——认领为 KRN 下一批候选（与 `GovernanceSeed` 过渡面同源，见 §4.3）；② execution↔effect 关联暴露——本批的 `IntentRow.task_binding` + `IntentChainStore::list_intents_for_task` 已给出 **task↔effect** 关联（每 intent 行携 `effect_object_id`），stop 的 pending-effects 检查可先收窄到 per-task；per-execution 粒度需 AgentExecutionBinding 持久化，同列 KRN 下一批候选。
 
 ## 5. 下一步入口
 
@@ -80,7 +81,7 @@
 | `verify_task_binding_current` | `(store, &TaskBinding) -> Result<(), ProtocolDenial>` | epoch 现势判定（effects 已内嵌调用；RUN 可单独预检） | 旧 epoch → `INTENT_VERSION_SUPERSEDED`；超前 epoch → `STATE_CONFLICT` |
 | `derive_candidate_status` | `(&InterpretationCandidate) -> &'static str` | 纯函数：schema 条件的确定性派生 | — |
 
-**Effects 面变化**：`IntentCommand.task_binding: Option<TaskBinding>`（Some 时 mint 校验 epoch 现势并落库）；`dispatch_effect` 对耐久 IntentRow 的绑定二次 fencing（在 transition commit 与外呼之前）。`EffectProtocol`/`mint_intent`/`run_recovery` 的 `S` bound 增加 `IntentChainStore`。
+**Effects 面变化**：`IntentCommand.task_binding: Option<TaskBinding>`（Some 时 mint 校验 epoch 现势并落库）；`dispatch_effect` 对耐久 IntentRow 的绑定二次 fencing（在 transition commit 与外呼之前）。`current_contract_epoch` 归入 **`ProtocolStore`**（与 writer fencing epoch 同类的协议侧 fencing 状态读取），因此 `EffectProtocol`/`mint_intent`/`run_recovery` 的 `S` bound 保持 M4 冻结面 `AuthorityStore + ProtocolStore` **不变**（RUN 批 1 的 management plane 无需改动即过编译，已实测）。
 
 ### 7.2 有界 Loop（`cognitive_kernel::harness::LoopDriver`）
 
