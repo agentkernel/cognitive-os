@@ -9,12 +9,13 @@
 - 增补 Agent of Empires、Claude Squad、amux、tmux-agent-tools、Happy、Vibe Kanban、Agent Deck 等 daemon/tmux/worktree/remote-control 项目作为接管模式对照，要求执行提示词时逐项目重新核实官方来源、许可和维护状态。
 - 新增 Takeover Host 最小拓扑与职责分离：Control API、Process Supervisor、Terminal Broker、Session Adopter、File Observer、Workspace Manager、Credential Broker、Local Event Ledger、Verifier。
 - 新增进程 identity/ownership generation、single-controller lease、文件 snapshot/lock/digest/parser、symlink/TOCTOU、session import、移动本机确认、接管状态、威胁、PoC、可执行 oracle 和开发车道要求。
+- 在提示词末尾追加“文档先行、计划治理与多代理开发”阶段协议：先独立研究并完善/优化/局部或整体重构现有产品文档，再建立 Agent Hub 独立文档目录、canonical/derived/owner/traceability/source/template 治理体系，生成 Master 与 11 类分开发计划、统一进度表和分车道自包含提示词；只有产品/计划批准且仓库 gate 满足后才能启动多代理实现。
 - 更新 `docs/README.md` 与 `docs/plan/PROGRESS.md`。核心提交：`7bd6903`。
 - 本批为 prompt/informative 文档，无关联 REQ/F/IMP；未修改 normative 机器资产或实现代码。
 
 ## 2. 未完成 / 进行中
 
-- Agent Hub 产品正文、Paseo/同类项目完整源码尽调、Adapter dossier、两模式 parity、接管 UX、开发任务 DAG 和分车道提示词尚未执行。
+- Agent Hub 产品正文、Paseo/同类项目完整源码尽调、独立文档治理目录、Adapter dossier、两模式 parity、接管 UX、分开发计划、进度表、开发任务 DAG 和分车道提示词尚未执行。
 - 首发接管层级、Tier 1 Agent、Takeover Host OS 身份、session 文件允许范围、Relay 形态、手机控制上限和供应商条款仍须在执行提示词时逐轮确认。
 - Console implementation gate 未满足；不得据此启动 Takeover Host、Adapter、Relay、Vault、桌面或移动实现。
 
@@ -39,12 +40,12 @@
 ## 5. 下一步入口
 
 - 建议提示词：`docs/prompts/console-agent-hub-direct-mode-product-design.md`
-- 工作范围：Lane-CON informative 文档例外；实现仍无可用车道。
+- 工作范围：先执行 Lane-CON informative 产品/文档/计划阶段；实现仍无可用车道，只有后续全部 gate 满足后才按批准计划启动多代理开发。
 - 第一个动作：在新 Cursor 会话粘贴完整提示词，并发完成 Paseo/同类源码、Agent 接口、供应商条款、Host 安全与跨端 UX 只读研究；随后通过交互式问题确认首发 takeover 层级。
 
 ## 6. 快照
 
 - PROGRESS 已更新：是。
-- Agent Hub 状态：两模式提示词已提供；产品设计/开发编排未执行；implementation `not-implemented`；product evidence `none`；Profile 未符合。
+- Agent Hub 状态：两模式及阶段化多代理开发提示词已提供；产品设计/文档治理/开发编排未执行；implementation `not-implemented`；product evidence `none`；Profile 未符合。
 - 本次核心提交：`7bd6903`。
 - 本 handoff 与 PROGRESS 最新入口提交哈希见会话最终报告。

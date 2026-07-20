@@ -4,7 +4,7 @@
 >
 > 目标：对 PC 与手机端“Agent Hub / 直连接管模式”做全方位产品、体验、架构、安全与平台设计，并编排后续开发任务。只区分“无 CognitiveOS 的安全直连接管”与“完整 CognitiveOS 治理”两种部署条件；不存在 `cognitive-kernel` 中间模式。
 >
-> 本提示词只授权 Lane-CON informative 文档和未来开发任务编排，不授权客户端、Host、Adapter、Relay、Vault、UI、脚手架、mock server、机器合同或测试实现。遇到会改变产品范围、安全模型、账号条款、平台支持或任务拆分的疑问，必须通过交互式问题逐轮与用户确认。
+> 研究、产品设计和开发计划阶段只授权 Lane-CON informative 文档与任务编排，不得立即实现。只有完成末尾“文档先行、计划治理与多代理开发”阶段的全部批准和 gate 后，才进入对应开发车道。遇到会改变产品范围、安全模型、账号条款、平台支持或任务拆分的疑问，必须通过交互式问题逐轮与用户确认。
 
 ---
 
@@ -807,7 +807,7 @@ Takeover Host 内部职责必须继续分离：
    - PC/手机 UX、无障碍与恢复；
    - 仓库边界、状态用语、链接与追溯。
 7. 主代理逐项验证高置信问题并最小修正，不机械接受相互冲突的建议。
-8. 产品与架构设计稳定后，再生成开发任务 DAG 与各车道自包含提示词；只做编排，不实现任何任务。
+8. 产品与架构设计稳定后，再生成开发任务 DAG 与各车道自包含提示词；计划批准且全部前置 gate 满足后，才可按末尾阶段化协议启动多代理开发。
 
 ## 完成前检查
 
@@ -850,3 +850,210 @@ Takeover Host 内部职责必须继续分离：
 - 提交哈希。
 
 不得把产品设计完成描述为 Agent Hub、PC/手机客户端、Adapter、Relay、Vault、多 Agent、账号切换或电脑控制已经实现、测试或符合 Profile。
+
+## 文档先行、计划治理与多代理开发
+
+本节是后续执行阶段的唯一入口。严格按顺序推进，不得跳过文档和计划直接写代码：
+
+### 阶段 1：独立调研与产品设计
+
+1. 先由多个只读代理独立研究仓库、用户痛点、Paseo/同类项目、目标 Agent、平台限制、安全、许可和供应商条款。
+2. 主代理综合事实、冲突、风险与建议，并通过交互式问题确认关键决策。
+3. 决策确认后，先检查 `@docs` 与 `apps/cognitiveos-console/docs/` 中现有产品设计，逐文件判断采用：
+   - 原样保留并建立引用；
+   - 补充完善；
+   - 局部优化；
+   - 局部重构；
+   - 整体重构；
+   - 新建独立文档。
+4. 不为追求“重构”而搬动稳定 ID、anchor 或 canonical owner；只有证据证明现有结构导致重复、冲突、不可维护或无法覆盖新产品时才重构。
+5. 先完成产品简报、Persona/JTBD、范围/非目标、两种部署模式、接管模型、IA、关键旅程、页面状态、Adapter matrix、凭据、威胁、平台 parity、PoC、成功指标与决策记录。
+6. 产品设计文档完成后先提交评审，得到用户批准再进入开发计划阶段。
+
+### 阶段 2：建立独立、成熟的文档治理体系
+
+1. 为 Agent Hub 建立独立文档目录，建议由调研后在以下方案中选择：
+   - `docs/agent-hub/`
+   - `docs/products/agent-hub/`
+   - 或与仓库现有分类更一致的等价路径。
+2. 独立目录必须至少包含：
+   - `README.md`：文档地图、状态、owner、阅读顺序和 canonical source；
+   - `product/`：产品简报、Persona/JTBD、范围、IA、旅程和页面；
+   - `architecture/`：Takeover Host、Adapter、进程、终端、session/file、Relay、Vault 和数据流；
+   - `security/`：威胁模型、凭据、隐私、供应商条款和安全 gate；
+   - `platforms/`：Windows、macOS、Linux、iOS、Android parity 与平台限制；
+   - `adapters/`：逐 Agent dossier、版本矩阵、能力和接管层级；
+   - `decisions/`：产品 decision log 与需要时的 ADR；
+   - `traceability/`：产品要求、实现、测试、证据、owner、oracle 和 blocked_by；
+   - `plans/`：开发主计划、分阶段计划、车道计划和里程碑；
+   - `progress/`：开发进度表、风险、阻断和证据索引；
+   - `sources/`：官方来源 ledger、查询日期、版本、许可证和条款；
+   - `templates/`：PRD、ADR、Adapter dossier、PoC、测试证据、handoff 模板。
+3. 明确单一事实来源，禁止多个文件复制同一事实后独立演化。
+4. 每份文档声明：
+   - 类别；
+   - 状态；
+   - owner；
+   - canonical/derived；
+   - 最后核验日期；
+   - 适用版本；
+   - 更新触发条件；
+   - 上游/下游链接。
+5. 建立 ID、anchor、术语、状态和链接规则；建立 deprecated/superseded/迁移规则。
+6. 建立产品要求 → 架构 → 开发任务 → 测试 → evidence 的追踪链。
+7. 建立文档评审、变更分类、同步义务、影响面扫描、断链检查和漂移处置。
+8. 独立目录不得成为绕过现有 `docs-sync-contract`、PROGRESS、findings-ledger、lane ownership 或 handoff 的平行治理系统；必须与仓库全局治理双向同步。
+9. 需要重构现有 `@docs` 时，先生成迁移清单、旧→新路径映射、anchor 兼容策略和回滚方案，再逐批迁移。
+
+### 阶段 3：生成若干开发计划与进度表
+
+在独立文档目录下生成至少以下计划：
+
+1. `MASTER-DEVELOPMENT-PLAN.md`
+   - 总目标、范围、非目标、架构、里程碑、依赖 DAG、总体 gate、交付顺序。
+2. `CONTRACT-AND-CAPABILITY-PLAN.md`
+   - product contract、capability negotiation、Adapter contract、缺失 machine contract 和 Lane-CTR 入口。
+3. `TAKEOVER-HOST-PLAN.md`
+   - Control API、Process Supervisor、Terminal Broker、Session Adopter、File Observer、Workspace Manager。
+4. `ADAPTER-PLAN.md`
+   - Tier 1/2/experimental Agent 波次、逐 Agent 接口、版本、接管层级和测试。
+5. `CREDENTIAL-AND-ACCOUNT-PLAN.md`
+   - Vault、官方登录、opaque handle、多账号、revoke、rotation 和条款。
+6. `RELAY-AND-DEVICE-PLAN.md`
+   - pairing、E2EE、anti-replay、设备能力、移动远控和 revoke。
+7. `DESKTOP-CLIENT-PLAN.md`
+   - Windows/macOS/Linux UI、native host、IPC、接管体验和无障碍。
+8. `MOBILE-CLIENT-PLAN.md`
+   - iOS/Android IA、通知、生命周期、真机、安全和无障碍。
+9. `MULTI-AGENT-ORCHESTRATION-PLAN.md`
+   - DAG、worktree、预算、handoff、reviewer/verifier、冲突和 parent acceptance。
+10. `SECURITY-AND-TEST-PLAN.md`
+   - threat-driven tests、fault injection、negative vectors、PoC、平台矩阵和 evidence。
+11. `RELEASE-AND-SUPPLY-CHAIN-PLAN.md`
+   - 签名、更新、回滚、Adapter floor、许可证、SBOM、商店和发布 gate。
+12. `MIGRATION-PLAN.md`
+   - 直连接管历史升级到完整 CognitiveOS、旧文档迁移、数据与兼容策略。
+
+同时生成统一开发进度表，例如：
+
+- `progress/PROGRESS.md`
+- `progress/MILESTONES.md`
+- `progress/DEPENDENCY-DAG.md`
+- `progress/RISKS-AND-BLOCKERS.md`
+- `progress/EVIDENCE-INDEX.md`
+
+进度表中每个任务至少记录：
+
+- Task ID；
+- 产品要求/REQ/决策关联；
+- 所属车道；
+- owner；
+- 状态；
+- priority；
+- dependencies；
+- blocked_by；
+- 允许修改路径；
+- 禁止修改路径；
+- 交付物；
+- 测试；
+- evidence；
+- 开始/完成条件；
+- commit/PR；
+- 风险；
+- 下一步。
+
+开发状态至少使用：
+
+- `planned`
+- `ready`
+- `blocked`
+- `in-progress`
+- `in-review`
+- `implemented`
+- `test-executed`
+- `done`
+
+但不得用开发任务的 `implemented/done` 冒充 CognitiveOS Profile 已符合。
+
+### 阶段 4：把计划拆成可执行多代理任务
+
+1. 根据具体开发计划和依赖 DAG，将任务拆为互不冲突的车道。
+2. 每条车道使用独立分支/worktree、独立 Cursor 多代理会话和明确目录所有权。
+3. 建议车道至少包括：
+   - Product/Docs；
+   - Contract/Capability；
+   - Takeover Host；
+   - Native Adapter；
+   - ACP Adapter；
+   - Process/Terminal；
+   - Session/File Adoption；
+   - Credential/Vault；
+   - Relay/Device；
+   - Desktop；
+   - iOS；
+   - Android；
+   - Multi-Agent Scheduler；
+   - Verification/Test；
+   - Security；
+   - Release/Supply Chain。
+4. 为每个具体任务生成自包含提示词，写明：
+   - 背景；
+   - 目标；
+   - 前置 gate；
+   - 输入文档；
+   - 允许路径；
+   - 禁止路径；
+   - 真实 REQ/产品 ID；
+   - 交付物；
+   - 测试先行要求；
+   - 安全负例；
+   - oracle；
+   - evidence；
+   - 文档同步；
+   - PROGRESS/handoff；
+   - commit/PR 要求。
+5. 契约、接口和共享类型必须先由所属车道冻结，其他代理不得各自发明不兼容接口。
+6. 可并行任务在同一轮启动多个代理；存在依赖的任务严格按 DAG 串行。
+7. 主代理只负责综合、冲突处理、gate 审核和最终验收，不把全部实现重新集中到一个会话。
+
+### 阶段 5：满足 gate 后启动开发
+
+只有同时满足以下条件才允许调用多代理开始实现：
+
+1. 产品设计已经评审批准；
+2. 独立文档目录和治理规则已经建立；
+3. Master Plan、分计划、进度表和依赖 DAG 已批准；
+4. 对应任务的 contract/接口已经冻结；
+5. `docs/plan/PARALLEL-LANES.md` 允许该车道启动；
+6. Console implementation gate 和目标平台 gate 已满足；
+7. 开放 P0 不阻断该子系统；
+8. 真实测试策略、负例和 evidence 路径已定义；
+9. 工作区不存在会被覆盖或混入的他人改动。
+
+如果任一 gate 未满足：
+
+- 不得写实现代码；
+- 在进度表中标记 `blocked`；
+- 写明缺失条件、owner、oracle 和下一步；
+- 继续完成允许范围内的产品、文档、PoC 计划或合同准备；
+- 不得用 mock、原型或提示词存在冒充 gate 已通过。
+
+满足 gate 后：
+
+1. 按具体开发计划同时启动可并行的多代理；
+2. 每个代理先写失败测试或可执行 oracle，再实现；
+3. 每批实现同步更新对应产品、架构、计划、追踪和进度文档；
+4. 每个车道提交独立、可审查、可回滚；
+5. 每批完成后运行对应测试、静态检查、安全负例和一致性检查；
+6. 主代理核验 evidence 后才推进里程碑；
+7. 子 Agent、远端 completed、代码存在或构建通过都不能自动完成父任务；
+8. 只有计划中的验收 authority 和 oracle 能关闭任务。
+
+### 持续治理要求
+
+- 每次开发状态变化都更新独立进度表和仓库全局 `docs/plan/PROGRESS.md`。
+- 每次接口、行为或目录结构变化都执行文档影响面扫描。
+- 计划和实现发生偏差时先记录 deviation，再决定更新计划或修正实现。
+- 每个里程碑输出 review、evidence index、开放风险和下一里程碑 GO/NO-GO。
+- 每次会话结束更新 handoff；交接文档必须能让没有聊天历史的代理继续。
+- 禁止让开发计划、进度表、对话历史和实际代码形成四套互相不一致的事实来源。
