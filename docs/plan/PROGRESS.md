@@ -67,3 +67,11 @@
 1. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
 2. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
 3. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 初版产品设计、第三方 Agent 适配与开发任务编排提示词）
+
+## 客户端目录治理交付
+
+| 交付 | 状态 | 证据与入口 |
+|---|---|---|
+| PC + 手机客户端目录 canonical 索引 | **done（informative 文档）** | [docs/clients/README.md](../clients/README.md)：覆盖 Console、agent-shell、sdk-ts、contracts-ts、平台设计、手机无代码载体事实与 Agent Hub；未启动任何客户端实现 |
+| 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`；专用 consistency 自动校验保持 `planned`，工具变更须经 Lane-CFR，交付前执行索引 §9 手动 gate |
+| 本轮静态验证 | **pass（非实现/PoC 证据）** | `check:consistency`：273 REQ / 55 码 / 56 schema / 76 向量，链接与追踪通过；`git diff --check` 无空白错误；[handoff](../checkpoints/20260720-lane-con-client-directory-index-handoff.md) |

@@ -38,6 +38,7 @@ macOS、受限 Linux、iPhone 与列名 Android phone 已形成独立的 `planne
 - [路线图](./docs/roadmap.md)：非 Windows v1 feature briefs；
 - [决策记录](./docs/decision-log.md)：本轮已确认和被替代的产品决策。
 - [跨平台产品设计](../../docs/platforms/README.md)：macOS/Linux/iPhone/Android phone 范围、要求、决策、parity matrix 和真实 PoC gate。
+- [PC + 手机客户端目录索引](../../docs/clients/README.md)：客户端、共享 SDK/契约、平台设计与 Agent Hub 目录的 canonical 导航。
 
 ## 技术状态
 
