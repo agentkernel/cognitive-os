@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CFR M2 行为执行批 + M2 出口评审；并行合并 Lane-TSC 换绑批 PR #6，后合并方 CFR 解决本页冲突）
+> 最后更新：2026-07-20（Lane-CTR KRN 缺口批：transition request/record 入 codegen（30 模块）、投影合同 D-017 deferred、事件 envelope 升格路径 D-018 决策落档；schema/向量计数 60/81 不变）
 
 ## 里程碑状态
 
@@ -44,13 +44,13 @@
 |---|---|---|
 | P0 | 0（+1 证据性质） | **F-003 已闭合**（2026-07-20 Lane-CFR：runner 真实执行两份双轨拒绝负例 → pass）；F-001（证据缺口，随 M1~M6 消解，不阻断） |
 | P1 | 4 | F-011（M5）、F-014（M4）、F-023（M4）、F-017（M6）；另 F-015 持续收敛 |
-| 漂移 | 0 开放（+1 deferred） | D-013/D-014/D-015（AKP 信封/控制 payload/流帧机器 schema 缺口，Lane-CTR 缺口批登记并闭合）；**D-016 deferred-to-v0.2**（management 操作名登记需新增规范面，M5 实现反馈驱动）；D-004、D-012（M1 Lane-CFR）、D-001/D-006/D-011（M1 Lane-CTR）与 D-002/D-003/D-005/D-007~D-010 均已闭合 |
+| 漂移 | 0 开放（+2 deferred，+1 决策落档） | **D-017 deferred-to-v0.2**（内核重放投影合同/digest 域：REQ-STATE-002 属性级、投影 derived 非登记面，注册 = 新增对象形合同；触发条件 = 投影 digest 跨信任边界成为机器合同）；**D-018 决策落档**（事件 envelope 升格路径：M3 治理链后 CTR 修正型评估，实施随 M3/M5 gate）；**D-016 deferred-to-v0.2**（management 操作名，M5 实现反馈驱动）；D-013/D-014/D-015（Lane-CTR 缺口批闭合）、D-004、D-012（M1 Lane-CFR）、D-001/D-006/D-011（M1 Lane-CTR）与 D-002/D-003/D-005/D-007~D-010 均已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | 缺口批已合并（PR #5） | `lane/ctr` | TSC 7 项缺口收敛：AKP 信封 ×2/流帧/shell-control 机器 schema + 5 份负例向量（D-013/D-014/D-015 闭合）、codegen 0.2.0（28 模块、错误注册表绑定、digest 常量）、⑦ deferred-to-v0.2（D-016）；KRN handoff §4 缺口清单（transition request/record 生成绑定、投影合同域、事件 envelope 升格）待下批处置 |
+| Lane-CTR 契约与生成 | **KRN 缺口批已交付**（本页所在 PR） | `lane/ctr` | KRN M2 handoff §4 四项收敛：① state-transition-request/record 入 codegen 生成集（30 schema 模块 ×2 语言，`engine.rs` 替换点归 Lane-KRN）；② 投影合同/digest 域 **D-017 deferred-to-v0.2**（判定依据入台账；内核 `cognitiveos.impl.` 域维持）；③ 事件 envelope 升格路径 **D-018 决策落档**（M3 后 CTR 评估，M5 边界组装为预期路线）；④ 错误码映射口径核对无误、无动作。schema/向量/runner 钉扎零变化（60/81、81/31/50、self-check 12）。**触碰通告**：仅 `crates/cognitive-contracts`、`packages/contracts-ts` 生成物与计数测试（28→30 模块钉扎） |
 | Lane-CFR 符合性与工具 | **M2 行为执行批已交付**（本页所在 PR） | `lane/cfr` | 已完成：runner 行为执行模式（被测 = `cognitive-kernel`+`cognitive-store` 真实权威路径；3 向量脱静态/not-run → 行为 pass；state-store-degradation M2 只读子集真实执行落档）、行为侧错误实现自检（gate-bypassing 直写 store → 3 向量翻 fail，合计 12/12）、钉扎同批调整（ci.yml 81/31/0/0/0/50 + self-check ≥12、runner_execution.rs 7 测试）、M2 出口评审。**触碰通告**：`crates/cognitive-conformance/**`（+behavior 模块，Cargo 依赖 +kernel/store/domain/tempfile）、`.github/workflows/ci.yml`（钉扎计数）、`conformance/README.md`（Running 节行为模式）、`Cargo.lock` |
 | Lane-KRN 内核主线 | M2 内核批已合并（PR #4）；**M3 入口 gate 的 M2 分量已达成** | `lane/krn` | M3 治理链与 Context（`docs/prompts/milestone-m3.md` / `lane-krn.md`；第一动作 = F-007 行为侧测试计划：先写「capability 交集只缩不扩」与「撤销后缓存复用被拒」失败测试） |
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
@@ -60,6 +60,6 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-cfr-m2-handoff.md](../checkpoints/20260720-lane-cfr-m2-handoff.md)（Lane-CFR M2 行为执行批：runner 行为模式、3 向量行为 pass、降级子集落档、行为自检、M2 出口评审）
-2. [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md)（M2 出口评审：5 判据 + 预算范围项逐条证据，GO → M3）
-3. [20260720-lane-tsc-bindings-handoff.md](../checkpoints/20260720-lane-tsc-bindings-handoff.md)（Lane-TSC 换绑批：四模块换生成绑定、删除临时机制清单、D-015 行为适配、剩余 M5 前待办）
+1. [20260720-lane-ctr-krn-gaps-handoff.md](../checkpoints/20260720-lane-ctr-krn-gaps-handoff.md)（Lane-CTR KRN 缺口批：transition 对入 codegen、D-017 deferred、D-018 决策落档、错误码口径核对）
+2. [20260720-lane-cfr-m2-handoff.md](../checkpoints/20260720-lane-cfr-m2-handoff.md)（Lane-CFR M2 行为执行批：runner 行为模式、3 向量行为 pass、降级子集落档、行为自检、M2 出口评审）
+3. [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md)（M2 出口评审：5 判据 + 预算范围项逐条证据，GO → M3）

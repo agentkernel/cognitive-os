@@ -145,7 +145,7 @@ fn generated_headers_pin_current_schema_digests() {
         );
         checked += 1;
     }
-    assert!(checked >= 28, "generated module coverage shrank: {checked}");
+    assert!(checked >= 30, "generated module coverage shrank: {checked}");
 }
 
 #[test]
@@ -169,7 +169,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        28,
+        30,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).

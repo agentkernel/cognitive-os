@@ -133,3 +133,8 @@ Extension driven by the Lane-TSC client families
    (`error_registry_matches_errors_yaml`,
    `schema_digest_constants_match_live_schemas`, TS twins) and by the CI
    regenerate-and-diff gate, which now also covers the registry binding.
+6. Input-set extension (20260720 Lane-KRN M2 gap batch, same
+   "consuming milestones" clause): + state-transition-request /
+   state-transition-record, the transition wire pair consumed by the
+   kernel's centralized transition gate (30 schema modules per language).
+   Rendering semantics unchanged; generator version stays 0.2.0.

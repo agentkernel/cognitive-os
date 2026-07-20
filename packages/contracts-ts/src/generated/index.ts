@@ -31,6 +31,8 @@ export * as shellActionProposal from "./shell-action-proposal.js";
 export * as shellCommandPreview from "./shell-command-preview.js";
 export * as shellControlRequest from "./shell-control-request.js";
 export * as shellStatusView from "./shell-status-view.js";
+export * as stateTransitionRecord from "./state-transition-record.js";
+export * as stateTransitionRequest from "./state-transition-request.js";
 export * as taskContract from "./task-contract.js";
 export * as userIntentRecord from "./user-intent-record.js";
 export * as watchSubscription from "./watch-subscription.js";
@@ -67,6 +69,8 @@ export const SCHEMA_DIGESTS = {
   "shell-command-preview.schema.json": "sha256:7e538f23d999783931d057939bf2bb0a52f6f7a42d8ae60597b7a7506a5fee43",
   "shell-control-request.schema.json": "sha256:49fb7764e2242cafd0102de7158b12b85f9778e72273f8d4532e179dc7e332ae",
   "shell-status-view.schema.json": "sha256:d4cf8856c906db93052aaebc1f3cfa59a49fa7a242b31bbea3a3d7205fcb12ab",
+  "state-transition-record.schema.json": "sha256:520f8b1bddb55b64c9bdc489ef971cbe22cad3bb281527e1d83e240c18c7429c",
+  "state-transition-request.schema.json": "sha256:d63cb89d20e15ad9cd0ee43d0e8b6df21dec463dede71613759f20e5fdf95f59",
   "task-contract.schema.json": "sha256:a5f8b7ecd3bc78aeede571e24f9c4103cc5cbb2d73accf44d791b58ed532a072",
   "user-intent-record.schema.json": "sha256:b3064740e47c0e67bd5646f20a87db33662858e913e90ff631fe182ef51383b5",
   "watch-subscription.schema.json": "sha256:1e2b2d6439b306cf558fdb22ad6c45bfcaee41b146940d97d377cd71fa321e3a",
