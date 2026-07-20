@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-DOC/Lane-CON Agent Hub 安全直连接管提示词）
+> 最后更新：2026-07-20（Lane-DOC/Lane-CON Agent Hub 安全直连接管提示词；隔离 `personal-blog` CognitiveOS Research 重构）
 
 ## 里程碑状态
 
@@ -16,6 +16,12 @@
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | macOS/Linux/iPhone/Android phone 产品切片已记录；Agent Hub 两模式提示词已加入 Paseo 类接管、独立文档治理、分计划/进度表和 gate 后多代理开发协议；客户端 implementation 均未启动，平台测试未执行，Profile 未符合 |
+
+## 隔离产品子工程
+
+| 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
+|---|---|---|---|
+| `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行** | Next.js 38 静态/SSG 页面；Vitest 14/14；Playwright Chromium 22/22；全模板 axe WCAG 2.0/2.1/2.2 A/AA 通过 | 仅研究发布与展示层；不改变 REQ 实现、向量执行或 Profile 符合状态 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -58,6 +64,6 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
-2. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 初版产品设计、第三方 Agent 适配与开发任务编排提示词）
-3. [20260720-lane-con-mobile-product-design-handoff.md](../checkpoints/20260720-lane-con-mobile-product-design-handoff.md)（iPhone/Android phone 产品设计、决策、parity、验证与剩余 gates）
+1. [20260720-personal-blog-research-refactor-handoff.md](../checkpoints/20260720-personal-blog-research-refactor-handoff.md)（CognitiveOS Research 品牌、信息架构、发布合同、来源账本、视觉/a11y/SEO 与验证）
+2. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
+3. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 初版产品设计、第三方 Agent 适配与开发任务编排提示词）
