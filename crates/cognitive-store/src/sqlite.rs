@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -25,8 +25,10 @@ use cognitive_domain::{
 };
 use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, IntentRow, ObjectAdmission,
-    OutboxEntry, ProtocolStore, StorePortError, StoredBudget, StoredObject, TransitionCommit,
+    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, HarnessStore, IntentChainStore,
+    IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry, ProgressFactRow, ProtocolStore,
+    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow,
 };
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
 use std::path::Path;
@@ -106,7 +108,10 @@ CREATE TABLE IF NOT EXISTS intents (
   expected_state_version INTEGER NOT NULL,
   grant_epoch            INTEGER NOT NULL,
   capability_set_version INTEGER NOT NULL,
-  canonical_json         TEXT NOT NULL
+  task_ref               TEXT,
+  contract_epoch         INTEGER,
+  canonical_json         TEXT NOT NULL,
+  CHECK ((task_ref IS NULL) = (contract_epoch IS NULL))
 ) STRICT;
 
 CREATE TRIGGER IF NOT EXISTS intents_append_only_update
@@ -140,6 +145,86 @@ BEGIN SELECT RAISE(ABORT, 'append-only: checkpoints are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS checkpoints_append_only_delete
 BEFORE DELETE ON checkpoints
 BEGIN SELECT RAISE(ABORT, 'append-only: checkpoints are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS user_intent_records (
+  record_seq                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  record_id                  TEXT NOT NULL UNIQUE,
+  conversation_or_scope_ref  TEXT NOT NULL,
+  actor_chain_digest         TEXT NOT NULL,
+  raw_expression             TEXT NOT NULL,
+  recorded_at                TEXT NOT NULL,
+  intent_authority_ref       TEXT NOT NULL,
+  intent_digest              TEXT NOT NULL,
+  canonical_json             TEXT NOT NULL
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS user_intents_append_only_update
+BEFORE UPDATE ON user_intent_records
+BEGIN SELECT RAISE(ABORT, 'append-only: user intent records are immutable'); END;
+
+CREATE TRIGGER IF NOT EXISTS user_intents_append_only_delete
+BEFORE DELETE ON user_intent_records
+BEGIN SELECT RAISE(ABORT, 'append-only: user intent records are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS intent_interpretations (
+  interpretation_seq          INTEGER PRIMARY KEY AUTOINCREMENT,
+  interpretation_id           TEXT NOT NULL UNIQUE,
+  user_intent_record_id       TEXT NOT NULL,
+  recorded_status             TEXT NOT NULL CHECK (recorded_status IN ('candidate','clarification_required')),
+  material_ambiguity_count    INTEGER NOT NULL CHECK (material_ambiguity_count >= 0),
+  supersedes_interpretation   TEXT,
+  interpretation_digest       TEXT NOT NULL,
+  canonical_json              TEXT NOT NULL
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS interpretations_append_only_update
+BEFORE UPDATE ON intent_interpretations
+BEGIN SELECT RAISE(ABORT, 'append-only: interpretation candidates are immutable'); END;
+
+CREATE TRIGGER IF NOT EXISTS interpretations_append_only_delete
+BEFORE DELETE ON intent_interpretations
+BEGIN SELECT RAISE(ABORT, 'append-only: interpretation candidates are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS task_contracts (
+  contract_seq           INTEGER PRIMARY KEY AUTOINCREMENT,
+  contract_id            TEXT NOT NULL UNIQUE,
+  task_ref               TEXT NOT NULL,
+  contract_epoch         INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  user_intent_record_id  TEXT NOT NULL,
+  interpretation_id      TEXT NOT NULL,
+  accepted_by            TEXT NOT NULL,
+  contract_digest        TEXT NOT NULL,
+  canonical_json         TEXT NOT NULL,
+  UNIQUE (task_ref, contract_epoch)
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS task_contracts_append_only_update
+BEFORE UPDATE ON task_contracts
+BEGIN SELECT RAISE(ABORT, 'append-only: task contracts are immutable'); END;
+
+CREATE TRIGGER IF NOT EXISTS task_contracts_append_only_delete
+BEFORE DELETE ON task_contracts
+BEGIN SELECT RAISE(ABORT, 'append-only: task contracts are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS loop_progress_facts (
+  progress_seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  loop_object_id      TEXT NOT NULL,
+  iteration           INTEGER NOT NULL CHECK (iteration >= 1),
+  status              TEXT NOT NULL CHECK (status IN ('advanced','none','uncertain','blocked')),
+  action_fingerprint  TEXT NOT NULL,
+  evidence_refs_json  TEXT NOT NULL,
+  recorded_at         TEXT NOT NULL,
+  fencing_epoch       INTEGER NOT NULL,
+  UNIQUE (loop_object_id, iteration)
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS progress_facts_append_only_update
+BEFORE UPDATE ON loop_progress_facts
+BEGIN SELECT RAISE(ABORT, 'append-only: progress facts are immutable'); END;
+
+CREATE TRIGGER IF NOT EXISTS progress_facts_append_only_delete
+BEFORE DELETE ON loop_progress_facts
+BEGIN SELECT RAISE(ABORT, 'append-only: progress facts are immutable'); END;
 ";
 
 /// SQLite-backed [`AuthorityStore`].
@@ -584,6 +669,15 @@ impl AuthorityStore for SqliteAuthorityStore {
 }
 
 fn row_to_intent(row: &rusqlite::Row<'_>) -> Result<IntentRow, rusqlite::Error> {
+    let task_ref: Option<String> = row.get(9)?;
+    let contract_epoch: Option<i64> = row.get(10)?;
+    let task_binding = match (task_ref, contract_epoch) {
+        (Some(task_ref), Some(contract_epoch)) => Some(TaskBinding {
+            task_ref,
+            contract_epoch,
+        }),
+        _ => None,
+    };
     Ok(IntentRow {
         intent_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|_| {
             rusqlite::Error::InvalidColumnType(0, "intent_id".into(), rusqlite::types::Type::Text)
@@ -608,13 +702,14 @@ fn row_to_intent(row: &rusqlite::Row<'_>) -> Result<IntentRow, rusqlite::Error> 
         })?,
         grant_epoch: row.get(7)?,
         capability_set_version: row.get(8)?,
-        canonical_json: row.get(9)?,
+        task_binding,
+        canonical_json: row.get(11)?,
     })
 }
 
 const INTENT_COLUMNS: &str = "intent_id, idempotency_key, parameters_digest, action, target, \
      effect_object_id, expected_state_version, grant_epoch, capability_set_version, \
-     canonical_json";
+     task_ref, contract_epoch, canonical_json";
 
 impl ProtocolStore for SqliteAuthorityStore {
     fn insert_intent(
@@ -628,7 +723,8 @@ impl ProtocolStore for SqliteAuthorityStore {
             .map_err(unavailable("begin intent"))?;
         let inserted = tx.execute(
             &format!(
-                "INSERT INTO intents ({INTENT_COLUMNS}) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)"
+                "INSERT INTO intents ({INTENT_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)"
             ),
             (
                 intent.intent_id.as_str(),
@@ -640,6 +736,14 @@ impl ProtocolStore for SqliteAuthorityStore {
                 intent.expected_state_version.get(),
                 intent.grant_epoch,
                 intent.capability_set_version,
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.task_ref.as_str()),
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.contract_epoch),
                 intent.canonical_json.as_str(),
             ),
         );
@@ -836,6 +940,512 @@ impl ProtocolStore for SqliteAuthorityStore {
                 rusqlite::Error::QueryReturnedNoRows => Ok(None),
                 other => Err(unavailable("query latest_checkpoint")(other)),
             })
+    }
+
+    fn load_event_by_id(
+        &self,
+        event_id: &EventId,
+    ) -> Result<Option<CommittedEvent>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT sequence, event_id, object_id, domain, object_version, event_type,
+                        canonical_json
+                 FROM events WHERE event_id = ?1",
+            )
+            .map_err(unavailable("prepare load_event_by_id"))?;
+        let row = statement
+            .query_row((event_id.as_str(),), |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                ))
+            })
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_event_by_id")(other)),
+            })?;
+        match row {
+            None => Ok(None),
+            Some((sequence, event_id, object_id, domain, object_version, event_type, json)) => {
+                Ok(Some(CommittedEvent {
+                    sequence,
+                    event_id: EventId::parse(&event_id).map_err(|err| corrupt("event_id", err))?,
+                    object_id: ObjectId::parse(&object_id)
+                        .map_err(|err| corrupt("object_id", err))?,
+                    domain: LifecycleDomain::parse(&domain)
+                        .map_err(|err| corrupt("domain", err))?,
+                    object_version: Version::new(object_version)
+                        .map_err(|err| corrupt("object_version", err))?,
+                    event_type,
+                    canonical_json: json,
+                }))
+            }
+        }
+    }
+}
+
+fn row_to_user_intent(row: &rusqlite::Row<'_>) -> Result<UserIntentRecordRow, rusqlite::Error> {
+    Ok(UserIntentRecordRow {
+        record_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(0, "record_id".into(), rusqlite::types::Type::Text)
+        })?,
+        conversation_or_scope_ref: row.get(1)?,
+        actor_chain_digest: row.get(2)?,
+        raw_expression: row.get(3)?,
+        recorded_at: WallTimestamp::parse(&row.get::<_, String>(4)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(4, "recorded_at".into(), rusqlite::types::Type::Text)
+        })?,
+        intent_authority_ref: row.get(5)?,
+        intent_digest: row.get(6)?,
+        canonical_json: row.get(7)?,
+    })
+}
+
+const USER_INTENT_COLUMNS: &str = "record_id, conversation_or_scope_ref, actor_chain_digest, \
+     raw_expression, recorded_at, intent_authority_ref, intent_digest, canonical_json";
+
+fn row_to_interpretation(row: &rusqlite::Row<'_>) -> Result<InterpretationRow, rusqlite::Error> {
+    let supersedes: Option<String> = row.get(4)?;
+    Ok(InterpretationRow {
+        interpretation_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(
+                0,
+                "interpretation_id".into(),
+                rusqlite::types::Type::Text,
+            )
+        })?,
+        user_intent_record_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(
+                1,
+                "user_intent_record_id".into(),
+                rusqlite::types::Type::Text,
+            )
+        })?,
+        recorded_status: row.get(2)?,
+        material_ambiguity_count: row.get(3)?,
+        supersedes_interpretation: supersedes
+            .map(|raw| {
+                ObjectId::parse(&raw).map_err(|_| {
+                    rusqlite::Error::InvalidColumnType(
+                        4,
+                        "supersedes_interpretation".into(),
+                        rusqlite::types::Type::Text,
+                    )
+                })
+            })
+            .transpose()?,
+        interpretation_digest: row.get(5)?,
+        canonical_json: row.get(6)?,
+    })
+}
+
+const INTERPRETATION_COLUMNS: &str = "interpretation_id, user_intent_record_id, recorded_status, \
+     material_ambiguity_count, supersedes_interpretation, interpretation_digest, canonical_json";
+
+fn row_to_task_contract(row: &rusqlite::Row<'_>) -> Result<TaskContractRow, rusqlite::Error> {
+    Ok(TaskContractRow {
+        contract_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(0, "contract_id".into(), rusqlite::types::Type::Text)
+        })?,
+        task_ref: row.get(1)?,
+        contract_epoch: row.get(2)?,
+        user_intent_record_id: ObjectId::parse(&row.get::<_, String>(3)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(
+                3,
+                "user_intent_record_id".into(),
+                rusqlite::types::Type::Text,
+            )
+        })?,
+        interpretation_id: ObjectId::parse(&row.get::<_, String>(4)?).map_err(|_| {
+            rusqlite::Error::InvalidColumnType(
+                4,
+                "interpretation_id".into(),
+                rusqlite::types::Type::Text,
+            )
+        })?,
+        accepted_by: row.get(5)?,
+        contract_digest: row.get(6)?,
+        canonical_json: row.get(7)?,
+    })
+}
+
+const TASK_CONTRACT_COLUMNS: &str = "contract_id, task_ref, contract_epoch, \
+     user_intent_record_id, interpretation_id, accepted_by, contract_digest, canonical_json";
+
+fn append_event_in_tx(
+    tx: &Transaction<'_>,
+    event: &cognitive_kernel::ports::EventDraft,
+) -> Result<i64, StorePortError> {
+    tx.execute(
+        "INSERT INTO events
+           (event_id, object_id, domain, object_version, event_type, canonical_json)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        (
+            event.event_id.as_str(),
+            event.object_id.as_str(),
+            event.domain.as_str(),
+            event.object_version.get(),
+            event.event_type.as_str(),
+            event.canonical_json.as_str(),
+        ),
+    )
+    .map_err(unavailable("append chain event"))?;
+    Ok(tx.last_insert_rowid())
+}
+
+impl IntentChainStore for SqliteAuthorityStore {
+    fn insert_user_intent(
+        &self,
+        record: &UserIntentRecordRow,
+        event: &cognitive_kernel::ports::EventDraft,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin user intent"))?;
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO user_intent_records ({USER_INTENT_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)"
+            ),
+            (
+                record.record_id.as_str(),
+                record.conversation_or_scope_ref.as_str(),
+                record.actor_chain_digest.as_str(),
+                record.raw_expression.as_str(),
+                record.recorded_at.as_str(),
+                record.intent_authority_ref.as_str(),
+                record.intent_digest.as_str(),
+                record.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!("user intent record {} already fixed", record.record_id),
+                });
+            }
+            Err(err) => return Err(unavailable("insert user intent")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit user intent"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_user_intent(
+        &self,
+        record_id: &ObjectId,
+    ) -> Result<Option<UserIntentRecordRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {USER_INTENT_COLUMNS} FROM user_intent_records WHERE record_id = ?1"
+            ))
+            .map_err(unavailable("prepare load_user_intent"))?;
+        statement
+            .query_row((record_id.as_str(),), row_to_user_intent)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_user_intent")(other)),
+            })
+    }
+
+    fn list_user_intents_for_scope(
+        &self,
+        conversation_or_scope_ref: &str,
+    ) -> Result<Vec<UserIntentRecordRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {USER_INTENT_COLUMNS} FROM user_intent_records
+                 WHERE conversation_or_scope_ref = ?1 ORDER BY record_seq ASC"
+            ))
+            .map_err(unavailable("prepare list_user_intents_for_scope"))?;
+        let mut rows = statement
+            .query((conversation_or_scope_ref,))
+            .map_err(unavailable("query list_user_intents_for_scope"))?;
+        let mut records = Vec::new();
+        while let Some(row) = rows.next().map_err(unavailable("read user intent row"))? {
+            records.push(row_to_user_intent(row).map_err(|err| corrupt("user intent row", err))?);
+        }
+        Ok(records)
+    }
+
+    fn insert_interpretation(
+        &self,
+        interpretation: &InterpretationRow,
+        event: &cognitive_kernel::ports::EventDraft,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin interpretation"))?;
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO intent_interpretations ({INTERPRETATION_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7)"
+            ),
+            (
+                interpretation.interpretation_id.as_str(),
+                interpretation.user_intent_record_id.as_str(),
+                interpretation.recorded_status.as_str(),
+                interpretation.material_ambiguity_count,
+                interpretation
+                    .supersedes_interpretation
+                    .as_ref()
+                    .map(|id| id.as_str()),
+                interpretation.interpretation_digest.as_str(),
+                interpretation.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "interpretation {} already persisted",
+                        interpretation.interpretation_id
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert interpretation")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit interpretation"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_interpretation(
+        &self,
+        interpretation_id: &ObjectId,
+    ) -> Result<Option<InterpretationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {INTERPRETATION_COLUMNS} FROM intent_interpretations
+                 WHERE interpretation_id = ?1"
+            ))
+            .map_err(unavailable("prepare load_interpretation"))?;
+        statement
+            .query_row((interpretation_id.as_str(),), row_to_interpretation)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_interpretation")(other)),
+            })
+    }
+
+    fn insert_task_contract(
+        &self,
+        contract: &TaskContractRow,
+        event: &cognitive_kernel::ports::EventDraft,
+        expected_current_epoch: i64,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin task contract"))?;
+        // Contract-epoch CAS inside the transaction: the current epoch
+        // must equal the caller's expectation and the new row must be its
+        // immediate successor. Any race rolls the whole unit back.
+        let current: i64 = tx
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref = ?1",
+                (contract.task_ref.as_str(),),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("read contract epoch"))?;
+        if current != expected_current_epoch {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "contract epoch raced for {}: expected {expected_current_epoch}, \
+                     current {current}",
+                    contract.task_ref
+                ),
+            });
+        }
+        if contract.contract_epoch != expected_current_epoch + 1 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "contract epoch must advance by exactly one: current \
+                     {expected_current_epoch}, proposed {}",
+                    contract.contract_epoch
+                ),
+            });
+        }
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO task_contracts ({TASK_CONTRACT_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)"
+            ),
+            (
+                contract.contract_id.as_str(),
+                contract.task_ref.as_str(),
+                contract.contract_epoch,
+                contract.user_intent_record_id.as_str(),
+                contract.interpretation_id.as_str(),
+                contract.accepted_by.as_str(),
+                contract.contract_digest.as_str(),
+                contract.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "contract {} or epoch {} of {} already persisted",
+                        contract.contract_id, contract.contract_epoch, contract.task_ref
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert task contract")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit task contract"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_task_contract(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<TaskContractRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {TASK_CONTRACT_COLUMNS} FROM task_contracts
+                 WHERE task_ref = ?1 AND contract_epoch = ?2"
+            ))
+            .map_err(unavailable("prepare load_task_contract"))?;
+        statement
+            .query_row((task_ref, contract_epoch), row_to_task_contract)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_task_contract")(other)),
+            })
+    }
+
+    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError> {
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref = ?1",
+            (task_ref,),
+            |row| row.get(0),
+        )
+        .map_err(unavailable("read current contract epoch"))
+    }
+
+    fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {INTENT_COLUMNS} FROM intents WHERE task_ref = ?1 ORDER BY intent_id"
+            ))
+            .map_err(unavailable("prepare list_intents_for_task"))?;
+        let mut rows = statement
+            .query((task_ref,))
+            .map_err(unavailable("query list_intents_for_task"))?;
+        let mut intents = Vec::new();
+        while let Some(row) = rows.next().map_err(unavailable("read intent row"))? {
+            intents.push(row_to_intent(row).map_err(|err| corrupt("intent row", err))?);
+        }
+        Ok(intents)
+    }
+}
+
+impl HarnessStore for SqliteAuthorityStore {
+    fn append_progress_fact(&self, fact: &ProgressFactRow) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin progress fact"))?;
+        // Same sink discipline as checkpoints (F-014 store-transaction
+        // class): a stale writer cannot poison the stagnation counters.
+        verify_fencing_in_tx(&tx, Some(fact.fencing_epoch))?;
+        let inserted = tx.execute(
+            "INSERT INTO loop_progress_facts
+               (loop_object_id, iteration, status, action_fingerprint, evidence_refs_json,
+                recorded_at, fencing_epoch)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            (
+                fact.loop_object_id.as_str(),
+                fact.iteration,
+                fact.status.as_str(),
+                fact.action_fingerprint.as_str(),
+                fact.evidence_refs_json.as_str(),
+                fact.recorded_at.as_str(),
+                fact.fencing_epoch,
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "progress fact for loop {} iteration {} already recorded",
+                        fact.loop_object_id, fact.iteration
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert progress fact")(err)),
+        }
+        tx.commit().map_err(unavailable("commit progress fact"))?;
+        Ok(())
+    }
+
+    fn list_progress_facts(
+        &self,
+        loop_object_id: &ObjectId,
+    ) -> Result<Vec<ProgressFactRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT loop_object_id, iteration, status, action_fingerprint,
+                        evidence_refs_json, recorded_at, fencing_epoch
+                 FROM loop_progress_facts WHERE loop_object_id = ?1 ORDER BY iteration ASC",
+            )
+            .map_err(unavailable("prepare list_progress_facts"))?;
+        let mut rows = statement
+            .query((loop_object_id.as_str(),))
+            .map_err(unavailable("query list_progress_facts"))?;
+        let mut facts = Vec::new();
+        while let Some(row) = rows.next().map_err(unavailable("read progress fact"))? {
+            let loop_id: String = row.get(0).map_err(unavailable("column loop_object_id"))?;
+            let recorded_at: String = row.get(5).map_err(unavailable("column recorded_at"))?;
+            facts.push(ProgressFactRow {
+                loop_object_id: ObjectId::parse(&loop_id)
+                    .map_err(|err| corrupt("loop_object_id", err))?,
+                iteration: row.get(1).map_err(unavailable("column iteration"))?,
+                status: row.get(2).map_err(unavailable("column status"))?,
+                action_fingerprint: row
+                    .get(3)
+                    .map_err(unavailable("column action_fingerprint"))?,
+                evidence_refs_json: row
+                    .get(4)
+                    .map_err(unavailable("column evidence_refs_json"))?,
+                recorded_at: WallTimestamp::parse(&recorded_at)
+                    .map_err(|err| corrupt("recorded_at", err))?,
+                fencing_epoch: row.get(6).map_err(unavailable("column fencing_epoch"))?,
+            });
+        }
+        Ok(facts)
     }
 }
 

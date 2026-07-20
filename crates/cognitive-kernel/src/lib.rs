@@ -25,6 +25,7 @@ pub mod effects;
 pub mod engine;
 pub mod error;
 pub mod executor;
+pub mod intent_chain;
 pub mod ports;
 pub mod recovery;
 pub mod replay;
@@ -58,9 +59,17 @@ pub use error::{RegisteredError, RejectionKind, TransitionRejection};
 pub use executor::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
+pub use intent_chain::{
+    AcceptanceCommand, AdmittedInterpretation, AmbiguityFact, GovernanceSeed,
+    InterpretationCandidate, PendingWork, PendingWorkDisposition, SupersedeCommand,
+    SupersedeReport, TaskContractCommand, UserIntentCommand, admit_interpretation,
+    derive_candidate_status, mint_task_contract, record_interpretation_candidate,
+    record_user_intent, supersede_task_contract, verify_task_binding_current,
+};
 pub use ports::{
-    AuthorityStore, CheckpointRow, Clock, IdGenerator, IntentRow, PortFailure, ProtocolStore,
-    StorePortError,
+    AuthorityStore, CheckpointRow, Clock, HarnessStore, IdGenerator, IntentChainStore, IntentRow,
+    InterpretationRow, PortFailure, ProgressFactRow, ProtocolStore, StorePortError, TaskBinding,
+    TaskContractRow, UserIntentRecordRow,
 };
 pub use recovery::{
     EffectDisposition, RECOVERY_ORDER, RecoveryError, RecoveryReport, RecoverySequencer,

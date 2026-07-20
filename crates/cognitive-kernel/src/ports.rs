@@ -266,6 +266,19 @@ pub trait AuthorityStore {
     ) -> Result<(), StorePortError>;
 }
 
+/// Binding of an Intent to one task's contract epoch (M5 intent chain,
+/// REQ-INTENT-SUPERSEDE-001). A dispatch bound to an epoch older than the
+/// task's current contract epoch is fenced with the registered
+/// `INTENT_VERSION_SUPERSEDED` code — the correction-fencing analogue of
+/// the F-014 writer lease.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskBinding {
+    /// Task URI the intent works for.
+    pub task_ref: String,
+    /// Contract epoch the proposal was made under.
+    pub contract_epoch: i64,
+}
+
 /// One persisted Intent row (immutable once inserted; the storage layer
 /// forbids UPDATE/DELETE exactly like the event log). The idempotency key
 /// is unique across the store: key stability and same-key conflict
@@ -291,6 +304,8 @@ pub struct IntentRow {
     pub grant_epoch: i64,
     /// Capability set version of the authorization binding.
     pub capability_set_version: i64,
+    /// Task/contract-epoch binding (M5). `None` = pre-M5 unbound intent.
+    pub task_binding: Option<TaskBinding>,
     /// Canonical JSON of the full intent value (evidence).
     pub canonical_json: String,
 }
@@ -344,6 +359,14 @@ pub trait ProtocolStore {
         &self,
         loop_object_id: &ObjectId,
     ) -> Result<Option<CheckpointRow>, StorePortError>;
+
+    /// Load one committed event by identity (D-018: the M5 runtime
+    /// envelope assembler resolves outbox rows to their committed event
+    /// values without scanning the log).
+    fn load_event_by_id(
+        &self,
+        event_id: &EventId,
+    ) -> Result<Option<CommittedEvent>, StorePortError>;
 }
 
 /// One persisted loop checkpoint (recovery-stable facts of
@@ -361,6 +384,190 @@ pub struct CheckpointRow {
     pub fencing_epoch: i64,
     /// Canonical JSON of the checkpoint value (pins and pending effects).
     pub canonical_json: String,
+}
+
+/// One persisted UserIntentRecord row (immutable once inserted, exactly
+/// like the event log: REQ-INTENT-RECORD-001 — summaries, model output and
+/// later corrections never overwrite the original record). The
+/// `canonical_json` carries the `user-intent-record.schema.json` shape
+/// composed from the generated binding; the flat columns are derived
+/// copies for deterministic queries.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserIntentRecordRow {
+    /// Record identity.
+    pub record_id: ObjectId,
+    /// Conversation or ResourceScope the expression arrived in.
+    pub conversation_or_scope_ref: String,
+    /// Canonical actor-chain digest of the expressing principal.
+    pub actor_chain_digest: String,
+    /// Raw user expression (never rewritten).
+    pub raw_expression: String,
+    /// Wall time the record was fixed.
+    pub recorded_at: WallTimestamp,
+    /// Intent authority whose acceptance decisions bind this record
+    /// (deterministic admission comparison basis).
+    pub intent_authority_ref: String,
+    /// Canonical digest over the fixed expression facts.
+    pub intent_digest: String,
+    /// Canonical JSON of the schema-shaped record (evidence).
+    pub canonical_json: String,
+}
+
+/// One persisted IntentInterpretation candidate row (immutable). The row
+/// records the candidate AS PROPOSED: `recorded_status` is derived
+/// deterministically from the material-ambiguity facts (schema
+/// conditional), never chosen by the model. Acceptance and supersession
+/// are separate facts (TaskContract rows and `supersedes_interpretation`),
+/// not in-place status rewrites.
+#[derive(Debug, Clone, PartialEq)]
+pub struct InterpretationRow {
+    /// Interpretation identity.
+    pub interpretation_id: ObjectId,
+    /// UserIntentRecord this interpretation was derived from.
+    pub user_intent_record_id: ObjectId,
+    /// `candidate` or `clarification_required` (deterministic derivation).
+    pub recorded_status: String,
+    /// Number of MATERIAL ambiguities the candidate declared.
+    pub material_ambiguity_count: i64,
+    /// Interpretation this candidate supersedes (user correction chains).
+    pub supersedes_interpretation: Option<ObjectId>,
+    /// Canonical digest of the candidate content (acceptance binding
+    /// basis: the authority accepts exactly the digest it reviewed).
+    pub interpretation_digest: String,
+    /// Canonical JSON of the schema-shaped candidate (evidence).
+    pub canonical_json: String,
+}
+
+/// One persisted TaskContract row (immutable; `task-contract.schema.json`
+/// shape in `canonical_json` via the generated binding). Contract epochs
+/// per task are monotonic: the adapter admits epoch N+1 only against the
+/// caller's expected current epoch N (CAS inside the transaction).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskContractRow {
+    /// Contract identity.
+    pub contract_id: ObjectId,
+    /// Task URI this contract governs.
+    pub task_ref: String,
+    /// Monotonic contract epoch (starts at 1).
+    pub contract_epoch: i64,
+    /// UserIntentRecord bound by this contract.
+    pub user_intent_record_id: ObjectId,
+    /// Accepted interpretation bound by this contract.
+    pub interpretation_id: ObjectId,
+    /// Authority that accepted the interpretation.
+    pub accepted_by: String,
+    /// Canonical digest of the contract content.
+    pub contract_digest: String,
+    /// Canonical JSON of the schema-shaped contract (evidence).
+    pub canonical_json: String,
+}
+
+/// M5 intent-chain persistence port (UserIntentRecord →
+/// IntentInterpretation candidate → TaskContract; REQ-INTENT-RECORD-001,
+/// REQ-INTENT-ADMISSION-001, REQ-INTENT-SUPERSEDE-001). Implemented
+/// alongside [`AuthorityStore`]/[`ProtocolStore`] by the store adapter.
+/// All three families are append-only rows committed atomically with
+/// their events.
+pub trait IntentChainStore {
+    /// Insert a UserIntentRecord row and append its event in ONE
+    /// transaction. A duplicate `record_id` is a conflict.
+    fn insert_user_intent(
+        &self,
+        record: &UserIntentRecordRow,
+        event: &EventDraft,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// Load one UserIntentRecord by identity.
+    fn load_user_intent(
+        &self,
+        record_id: &ObjectId,
+    ) -> Result<Option<UserIntentRecordRow>, StorePortError>;
+
+    /// List records fixed in one conversation/scope, in insertion order.
+    fn list_user_intents_for_scope(
+        &self,
+        conversation_or_scope_ref: &str,
+    ) -> Result<Vec<UserIntentRecordRow>, StorePortError>;
+
+    /// Insert an interpretation candidate row and append its event in ONE
+    /// transaction. A duplicate `interpretation_id` is a conflict.
+    fn insert_interpretation(
+        &self,
+        interpretation: &InterpretationRow,
+        event: &EventDraft,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// Load one interpretation candidate by identity.
+    fn load_interpretation(
+        &self,
+        interpretation_id: &ObjectId,
+    ) -> Result<Option<InterpretationRow>, StorePortError>;
+
+    /// Insert a TaskContract row and append its event in ONE transaction.
+    /// The adapter MUST verify INSIDE the transaction that the task's
+    /// current epoch equals `expected_current_epoch` (0 = no contract yet)
+    /// and that `contract.contract_epoch == expected_current_epoch + 1`;
+    /// any mismatch is a conflict and nothing persists.
+    fn insert_task_contract(
+        &self,
+        contract: &TaskContractRow,
+        event: &EventDraft,
+        expected_current_epoch: i64,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// Load one contract by task and epoch.
+    fn load_task_contract(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<TaskContractRow>, StorePortError>;
+
+    /// Current (highest) contract epoch of one task; 0 = no contract.
+    fn current_contract_epoch(&self, task_ref: &str) -> Result<i64, StorePortError>;
+
+    /// Enumerate persisted intents bound to one task (supersede
+    /// classification input), in insertion order.
+    fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError>;
+}
+
+/// One persisted loop progress fact (REQ-RUN-007: progress is a verifiable
+/// state difference, reduced uncertainty or satisfied precondition —
+/// recorded as a typed durable fact, never a transcript-length heuristic).
+/// Append-only; the stagnation and retry counters fold over these rows.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProgressFactRow {
+    /// Loop the fact belongs to.
+    pub loop_object_id: ObjectId,
+    /// Iteration the fact was recorded for (monotonic from 1).
+    pub iteration: i64,
+    /// `advanced`, `none`, `uncertain` or `blocked` (schema progress set).
+    pub status: String,
+    /// Deterministic fingerprint of the action taken this iteration
+    /// (REQ-RUN-008 retry accounting key).
+    pub action_fingerprint: String,
+    /// Canonical JSON array of evidence references.
+    pub evidence_refs_json: String,
+    /// Wall time the fact was recorded.
+    pub recorded_at: WallTimestamp,
+    /// Fencing epoch of the recording writer (verified in-transaction,
+    /// same store-side sink discipline as checkpoints).
+    pub fencing_epoch: i64,
+}
+
+/// M5 harness-loop fact persistence port (progress facts for stagnation
+/// and retry accounting; REQ-RUN-005/007/008). Implemented by the store
+/// adapter next to [`ProtocolStore`].
+pub trait HarnessStore {
+    /// Append one progress fact (append-only). The adapter MUST verify
+    /// `fencing_epoch` inside the transaction and reject stale writers,
+    /// and MUST reject a duplicate `(loop_object_id, iteration)` pair.
+    fn append_progress_fact(&self, fact: &ProgressFactRow) -> Result<(), StorePortError>;
+
+    /// List progress facts of one loop in iteration order.
+    fn list_progress_facts(
+        &self,
+        loop_object_id: &ObjectId,
+    ) -> Result<Vec<ProgressFactRow>, StorePortError>;
 }
 
 /// Failure of an infrastructure port (clock, ID generation). The kernel

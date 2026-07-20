@@ -296,6 +296,7 @@ pub fn intent_command(
         actor_ref: uri("actor://tenant-a/agent-1"),
         authority_ref: uri("authority://tenant-a/effect-authority"),
         correlation_id: uri("corr://tenant-a/m4-chain"),
+        task_binding: None,
     }
 }
 

@@ -264,6 +264,9 @@ fn intent_command(
         actor_ref: uri("actor://tenant-a/agent-1")?,
         authority_ref: uri("authority://tenant-a/effect-authority")?,
         correlation_id: uri("corr://tenant-a/conformance-m4")?,
+        // Mechanical M5 cross-lane patch (Lane-KRN): new optional field,
+        // None = the pre-M5 unbound path; behavior unchanged.
+        task_binding: None,
     })
 }
 
