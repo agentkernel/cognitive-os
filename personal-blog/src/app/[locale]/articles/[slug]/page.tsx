@@ -6,8 +6,6 @@ import { articlePath } from "@/i18n/routes";
 import { articleSlugs, getArticle } from "@/lib/content/registry";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return locales.flatMap((locale) =>
     articleSlugs.map((slug) => ({

@@ -39,6 +39,9 @@
 - static generation capped at two workers to avoid Windows worker resource
   crashes; Playwright starts the already completed build rather than rebuilding
   it a second time
+- development-route smoke check: `/zh/cognitiveos` and `/zh/articles` return
+  200; an unknown locale and unknown article return 404 without relying on
+  `dynamicParams=false`
 
 `pnpm test:e2e` passed 17 Chromium scenarios:
 
@@ -134,9 +137,5 @@ Until a valid HTTPS origin is configured, metadata remains `noindex` and
 - Confirm publication rights under the image-generation service terms.
 - Complete the documented NVDA/real-browser, 200–400% zoom, pronunciation, and
   final human translation review after identity replacement.
-- Next.js currently logs its internal `NoFallbackError` on deliberately rejected
-  `dynamicParams=false` requests even though it correctly returns 404. Browser
-  console checks are clean; this upstream server-log issue is tracked by
-  vercel/next.js#90537.
 - `globalNotFound` is a documented Next.js experimental convention and should
   be rechecked during future Next upgrades.

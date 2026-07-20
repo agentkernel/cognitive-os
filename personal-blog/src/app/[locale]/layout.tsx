@@ -6,8 +6,6 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { pagePath } from "@/i18n/routes";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }

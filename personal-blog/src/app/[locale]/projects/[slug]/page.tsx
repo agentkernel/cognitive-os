@@ -6,8 +6,6 @@ import { projectPath } from "@/i18n/routes";
 import { getProject, projectSlugs } from "@/lib/content/registry";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return locales.flatMap((locale) =>
     projectSlugs.map((slug) => ({
