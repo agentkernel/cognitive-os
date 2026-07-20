@@ -46,4 +46,5 @@
 
 - PROGRESS 已更新：是。
 - 移动产品决策：已记录；machine contract：partial/unregistered；implementation：not-implemented；platform evidence：none；Profile：not implemented。
-- 本次提交：提交前保持 pending；最终提交哈希见会话最终报告。
+- 本次核心文档提交：`0fc3807`（`docs(console): define iOS and Android mobile products`）。
+- 本 handoff 的哈希记录补丁见会话最终报告。
