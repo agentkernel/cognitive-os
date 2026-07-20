@@ -78,21 +78,54 @@ jobs:
       - name: Traceability matrix freshness
         run: node tools/src/gen-matrix.mjs --check
 
-      # Conformance runner skeleton (enumerate-only, all not-run) ------------
-      - name: Run conformance runner (not-run report + sample manifest)
+      # Conformance runner (M1 static-contract execution + honest not-run) ---
+      - name: Run conformance runner (five-state report + sample manifest)
         run: cargo run --locked -p cognitive-conformance --bin conformance-runner
 
       - name: Validate sample profile manifest against schema
         run: node tools/src/validate-manifest.mjs
 
-      - name: Assert every vector is reported not-run (no fake claims)
+      # Report honesty gate: pass only with execution evidence, not-run only
+      # with a recorded reason, and the five-state distribution pinned to the
+      # measured counts (IMP-17). The pinned numbers may only change together
+      # with a reviewed vector or runner-capability change.
+      - name: Assert report honesty (evidence-backed pass, reasoned not-run, pinned counts)
         run: |
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
-            if (r.summary.total_vectors < 1) throw new Error('no vectors enumerated');
-            if (r.summary['not-run'] !== r.summary.total_vectors) throw new Error('M0 runner must report every vector not-run');
-            if (r.summary.pass !== 0) throw new Error('M0 runner cannot report pass');
-            console.log('runner report honest:', r.summary.total_vectors, 'vectors all not-run');
+            const s = r.summary;
+            const pinned = { total_vectors: 76, pass: 25, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 51 };
+            for (const [key, want] of Object.entries(pinned)) {
+              if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
+            }
+            if (s.pass + s.fail + s['not-applicable'] + s['documented-degradation'] + s['not-run'] !== s.total_vectors) {
+              throw new Error('five-state counts do not sum to total');
+            }
+            for (const v of r.vectors) {
+              if (v.result === 'pass' || v.result === 'fail') {
+                if (!v.execution || !(v.execution.grounding || []).length || !(v.execution.compared_fields >= 1)) {
+                  throw new Error(v.id + ' reported ' + v.result + ' without execution evidence');
+                }
+              } else if (v.result === 'not-run') {
+                if (!v.not_run_reason) throw new Error(v.id + ' not-run without recorded reason');
+                if (v.execution) throw new Error(v.id + ' not-run but carries an execution record');
+              } else {
+                throw new Error(v.id + ' unexpected result state ' + v.result);
+              }
+            }
+            console.log('runner report honest:', s.pass, 'evidence-backed pass /', s['not-run'], 'reasoned not-run of', s.total_vectors);
+          "
+
+      # Runner self-check (conformance-evidence.md section 3): a deliberately
+      # wrong, schema-valid implementation MUST be failed by the runner.
+      - name: Runner self-check (wrong implementation must fail)
+        run: |
+          cargo run --locked -q -p cognitive-conformance --bin conformance-runner -- --self-check
+          node -e "
+            const r = require('./artifacts/evidence/conformance/self-check-report.json');
+            if (r.corrupted_but_still_passing.length !== 0) throw new Error('wrong implementation not failed: ' + r.corrupted_but_still_passing.join(', '));
+            if (r.must_flip.length < 6) throw new Error('self-check corpus shrank to ' + r.must_flip.length);
+            console.log('self-check honest:', r.flipped_to_fail.length, 'corrupted vectors all failed');
           "
 
       # Cross-language golden digest gate (ADR-0004 compliance check) --------

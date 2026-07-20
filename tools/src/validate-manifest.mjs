@@ -17,9 +17,10 @@ const manifestPath =
 
 const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });
 addFormats(ajv);
+// $id policy (D-001/D-006): $id == file name, so schemas register under
+// their own $id and relative $refs resolve without any stripping layer.
 for (const schema of loadSchemas()) {
-  const { $id: _ignored, ...withoutId } = schema.doc;
-  ajv.addSchema(withoutId, schema.name);
+  ajv.addSchema(schema.doc);
 }
 
 const validate = ajv.getSchema("profile-manifest.schema.json");
