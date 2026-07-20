@@ -1,10 +1,14 @@
 /**
- * AKP envelope build/parse tests (specs/akp/README.md §3/§5/§6;
- * docs/standards/akp-envelope-and-http-profile.md §2; REQ-AKP-ENV-001,
- * REQ-AKP-ENV-002, REQ-AKP-VER-001, REQ-AKP-CAN-001, REQ-AKP-IDEM-001).
+ * AKP envelope build/parse tests over the generated wire bindings
+ * (akp-request-envelope / akp-result-envelope, D-013; specs/akp/README.md
+ * §3/§5/§6; docs/standards/akp-envelope-and-http-profile.md §2;
+ * REQ-AKP-ENV-001, REQ-AKP-ENV-002, REQ-AKP-VER-001, REQ-AKP-CAN-001,
+ * REQ-AKP-IDEM-001).
  *
  * Gate order under test (fail closed before payload processing): strict
- * parse → shape → version → critical extensions → payload digest.
+ * parse → shape → version → critical extensions → payload digest. Schema
+ * conditionals enforced eagerly client-side: payload XOR payload_ref,
+ * error status ⇒ machine error, partial status ⇒ continuation.
  */
 
 import assert from "node:assert/strict";
@@ -72,6 +76,44 @@ test("a read request needs no idempotency key", () => {
     idempotencyKey: undefined,
   });
   assert.equal(envelope.idempotency_key, undefined);
+});
+
+test("payload and payload_ref together are rejected (schema oneOf, both sides)", () => {
+  assert.throws(
+    () =>
+      buildRequestEnvelope({ ...BASE_REQUEST, payloadRef: "artifact://tenant-a/blob-1" }),
+    (error: unknown) => error instanceof EnvelopeViolation && error.reason === "ambiguous-payload",
+  );
+  const envelope = buildRequestEnvelope(BASE_REQUEST);
+  const tampered = JSON.parse(serializeEnvelope(envelope)) as Record<string, unknown>;
+  tampered["payload_ref"] = "artifact://tenant-a/blob-1";
+  assert.throws(
+    () => parseRequestEnvelope(JSON.stringify(tampered)),
+    (error: unknown) => error instanceof EnvelopeViolation && error.reason === "ambiguous-payload",
+  );
+});
+
+test("a partial result without a continuation is rejected (schema conditional)", () => {
+  assert.throws(
+    () =>
+      buildResultEnvelope({
+        inReplyTo: "msg-0001",
+        correlationId: "corr-0001",
+        status: "partial",
+        result: { part: 1 },
+      }),
+    (error: unknown) =>
+      error instanceof EnvelopeViolation && error.reason === "missing-continuation",
+  );
+  assert.throws(
+    () => parseResultEnvelope(okResultText({ status: "partial" })),
+    (error: unknown) =>
+      error instanceof EnvelopeViolation && error.reason === "missing-continuation",
+  );
+  const parsed = parseResultEnvelope(
+    okResultText({ status: "partial", continuation: { token: "c1", high_watermark: 3 } }),
+  );
+  assert.equal(parsed.status, "partial");
 });
 
 test("non-canonical deadline (offset form) is rejected at build time", () => {

@@ -1,7 +1,8 @@
 /**
- * Snapshot + cursor watch consumer (docs/standards/event-audit-watch.md §5;
- * REQ-SHELL-WATCH-001, REQ-AKP-SHELL-002, REQ-AKP-CONT-001,
- * REQ-AKP-STR-001..002).
+ * Snapshot + cursor watch consumer over the GENERATED stream-frame binding
+ * (`akp-stream-frame.schema.json`, D-015 closure;
+ * docs/standards/event-audit-watch.md §5; REQ-SHELL-WATCH-001,
+ * REQ-AKP-SHELL-002, REQ-AKP-CONT-001, REQ-AKP-STR-001..002).
  *
  * Contract behavior:
  * - one consistent snapshot, then ordered deltas with a resumable cursor;
@@ -15,30 +16,23 @@
  *   re-base — a gap is never silently skipped;
  * - recovery is bounded; exhaustion fails closed.
  *
- * Frames are stream fragments (AKP §8), parsed strictly; the payloads are
- * authority projections consumed verbatim.
+ * D-015 adaptation: a stream error is the machine-coded `error` member of
+ * the frame (generated `commonDefs.Error` shape), not an ad-hoc payload;
+ * error frames without a machine error fail closed.
  */
 
-import { CanonicalError, parseStrict } from "@cognitiveos/contracts-ts";
+import { CanonicalError, akpStreamFrame, parseStrict, watchSubscription } from "@cognitiveos/contracts-ts";
 
 import type { CallSpec } from "./client.js";
-import { SHELL_SCHEMA_DIGESTS, type WatchSubscription } from "./views.js";
+import type { WatchSubscription } from "./views.js";
 
 /** Minimal stream source: any channel client exposing `openStream`. */
 export interface WatchStreamSource {
   openStream<P>(spec: CallSpec<P>): AsyncIterable<string>;
 }
 
-/** One stream fragment (AKP §8 shape, watch profile). */
-export interface WatchStreamFrame {
-  readonly stream_id: string;
-  readonly sequence: number;
-  readonly kind: "snapshot" | "delta" | "error";
-  readonly payload?: unknown;
-  /** Present on snapshot frames: the authority snapshot version. */
-  readonly snapshot_version?: number;
-  readonly final?: boolean;
-}
+/** Generated stream fragment wire type (AKP §8, watch profile). */
+export type WatchStreamFrame = akpStreamFrame.AkpStreamFrame;
 
 /** Serialize a frame (test fakes and the M5 harness produce frames). */
 export function frameText(frame: WatchStreamFrame): string {
@@ -78,7 +72,7 @@ export interface WatchItem<T = unknown> {
 export interface WatchParams {
   readonly subscription: WatchSubscription;
   readonly deadline: string;
-  /** Envelope schema pin; defaults to the watch-subscription schema digest. */
+  /** Envelope schema pin; defaults to the generated watch-subscription digest. */
   readonly schemaDigest?: string;
   /** Bound on consecutive recoveries without progress. Default 3. */
   readonly maxRecoveryAttempts?: number;
@@ -137,12 +131,11 @@ function toPlain(value: ReturnType<typeof parseStrict>): unknown {
   return out;
 }
 
-function errorCodeOf(payload: unknown): string | undefined {
-  if (payload !== null && typeof payload === "object" && !Array.isArray(payload)) {
-    const code = (payload as Record<string, unknown>)["code"];
-    if (typeof code === "string") {
-      return code;
-    }
+/** Machine error code of an error frame (D-015: the `error` member). */
+function streamErrorCode(frame: WatchStreamFrame): string | undefined {
+  const error = frame.error;
+  if (error !== undefined && typeof error === "object" && typeof error.code === "string") {
+    return error.code;
   }
   return undefined;
 }
@@ -156,8 +149,7 @@ export async function* consumeWatch(
   params: WatchParams,
 ): AsyncGenerator<WatchItem, void, undefined> {
   const maxRecovery = params.maxRecoveryAttempts ?? 3;
-  const schemaDigest =
-    params.schemaDigest ?? SHELL_SCHEMA_DIGESTS["watch-subscription.schema.json"];
+  const schemaDigest = params.schemaDigest ?? watchSubscription.SCHEMA_DIGEST;
 
   let snapshotVersion = params.resumeFrom?.snapshotVersion;
   let lastAck = params.resumeFrom?.lastAckCursor;
@@ -194,7 +186,12 @@ export async function* consumeWatch(
       const frame = parseFrame(text);
 
       if (frame.kind === "error") {
-        const code = errorCodeOf(frame.payload);
+        // D-015: the machine error rides on the frame's `error` member; an
+        // error frame without one cannot be classified and fails closed.
+        const code = streamErrorCode(frame);
+        if (code === undefined) {
+          throw new WatchViolation("malformed-frame", "error frame without a machine error member");
+        }
         if (code === "WATCH_CURSOR_STALE") {
           // Continuity is gone; only a fresh authorized snapshot may
           // continue the watch (vector SHELL-WATCH-RESUME-006).
@@ -205,7 +202,7 @@ export async function* consumeWatch(
           hasSnapshot = false;
           continue outer;
         }
-        throw new WatchViolation("stream-error", `stream failed with ${code ?? "unknown code"}`, code);
+        throw new WatchViolation("stream-error", `stream failed with ${code}`, code);
       }
 
       if (frame.kind === "snapshot") {

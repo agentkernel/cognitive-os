@@ -23,12 +23,12 @@
 import {
   consumeWatch,
   isShellStatusView,
-  SHELL_CONTROL_PROVISIONAL_PIN,
-  SHELL_SCHEMA_DIGESTS,
-  type CancelControl,
+  shellActionProposal,
+  shellControlRequest,
   type ResultEnvelope,
   type ShellActionProposal,
   type ShellCommandPreview,
+  type ShellControlRequest,
   type ShellStatusView,
   type TaskChannelClient,
   type WatchItem,
@@ -114,7 +114,7 @@ export class ShellSession {
     const result = await this.#deps.client.call<ShellActionProposal, ShellCommandPreview>({
       operation: "shell.preview",
       kind: "read",
-      schemaDigest: SHELL_SCHEMA_DIGESTS["shell-action-proposal.schema.json"],
+      schemaDigest: shellActionProposal.SCHEMA_DIGEST,
       deadline: this.#deps.deadline(),
       payload: proposal,
     });
@@ -154,7 +154,7 @@ export class ShellSession {
     const result = await this.#deps.client.call({
       operation: "shell.submit",
       kind: "effecting",
-      schemaDigest: SHELL_SCHEMA_DIGESTS["shell-action-proposal.schema.json"],
+      schemaDigest: shellActionProposal.SCHEMA_DIGEST,
       deadline: this.#deps.deadline(),
       payload: proposal,
       idempotencyKey: proposal.idempotency_key,
@@ -215,7 +215,8 @@ export class ShellSession {
    * retry: closure progress is observed via watch, not by resending.
    */
   async cancel(taskRef: string, request: CancelRequest): Promise<CancelDisposition> {
-    const payload: CancelControl = {
+    const payload: ShellControlRequest = {
+      schema_version: "cognitiveos.shell-control-request/0.1",
       control: "cancel",
       target_ref: taskRef,
       reason: request.reason,
@@ -223,8 +224,7 @@ export class ShellSession {
     const result = await this.#deps.client.call({
       operation: "shell.control",
       kind: "effecting",
-      // Provisional pin: the control payload schema is not registered yet.
-      schemaDigest: SHELL_CONTROL_PROVISIONAL_PIN,
+      schemaDigest: shellControlRequest.SCHEMA_DIGEST,
       deadline: this.#deps.deadline(),
       payload,
       idempotencyKey: request.idempotencyKey,

@@ -1,92 +1,39 @@
 /**
- * Registered-error-code table and retry classification tests.
+ * Retry-classification tests over the generated error registry
+ * (docs/standards/error-contract.md §3; REQ-ERR-001/002).
  *
- * Drift gate: `REGISTERED_ERRORS` must match `specs/registry/errors.yaml`
- * exactly (code set, category, retryable). The table is a pinned copy only
- * because contracts codegen does not yet emit an errors.yaml binding
- * (registered as a Lane-CTR contract gap in the 20260720 lane-tsc handoff);
- * this test turns any registry drift into a red build.
- *
- * Classification semantics under test: docs/standards/error-contract.md §3
- * — retryability is contract, not heuristic; EFFECT_OUTCOME_UNKNOWN retries
- * only through reconciliation; STATE_CONFLICT retries only after re-reading
- * authoritative state.
+ * The former test-time YAML re-read is gone: registry↔errors.yaml parity is
+ * proven inside contracts-ts (codegen 0.2.0 parity tests). Here we pin the
+ * §3 semantics layered on top of the generated table.
  */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 
-import { classifyError, REGISTERED_ERRORS } from "./errors.js";
+import { classifyError, ERROR_REGISTRY, ERROR_REGISTRY_DIGEST } from "./errors.js";
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const ERRORS_YAML = path.join(REPO_ROOT, "specs", "registry", "errors.yaml");
+test("classification consumes the generated registry (55 codes, digest constant)", () => {
+  assert.equal(Object.keys(ERROR_REGISTRY).length, 55);
+  assert.match(ERROR_REGISTRY_DIGEST, /^sha256:[0-9a-f]{64}$/);
+});
 
-interface RegistryEntry {
-  code: string;
-  category: string;
-  retryable: boolean;
-}
-
-interface PartialEntry {
-  code: string;
-  category?: string | undefined;
-  retryable?: boolean | undefined;
-}
-
-/**
- * Minimal line-based reader for the fixed errors.yaml layout (list items
- * `- code:` with 2-space-indented `category:` / `retryable:` scalars).
- * Test-only: the runtime table must not depend on repo files.
- */
-function readErrorRegistry(): RegistryEntry[] {
-  const entries: RegistryEntry[] = [];
-  let current: PartialEntry | undefined;
-  for (const line of readFileSync(ERRORS_YAML, "utf-8").split(/\r?\n/)) {
-    const codeMatch = /^-\s+code:\s*(\S+)\s*$/.exec(line);
-    const code = codeMatch?.[1];
-    if (code !== undefined) {
-      if (current) {
-        entries.push(assertComplete(current));
-      }
-      current = { code };
-      continue;
+test("every registered code classifies consistently with its generated retryable flag", () => {
+  for (const entry of Object.values(ERROR_REGISTRY)) {
+    const classification = classifyError(entry.code);
+    if (!entry.retryable) {
+      assert.deepEqual(
+        classification,
+        { kind: "non-retryable", registered: true },
+        `${entry.code} must be non-retryable`,
+      );
+    } else {
+      assert.notEqual(
+        classification.kind,
+        "non-retryable",
+        `${entry.code} is contract-retryable and must not classify as non-retryable`,
+      );
+      assert.ok(classification.registered, `${entry.code} must classify as registered`);
     }
-    const fieldMatch = /^\s+(category|retryable):\s*(\S+)\s*$/.exec(line);
-    const fieldValue = fieldMatch?.[2];
-    if (fieldMatch && fieldValue !== undefined && current) {
-      if (fieldMatch[1] === "category") {
-        current.category = fieldValue;
-      } else {
-        assert.ok(fieldValue === "true" || fieldValue === "false", `bad retryable: ${line}`);
-        current.retryable = fieldValue === "true";
-      }
-    }
-  }
-  if (current) {
-    entries.push(assertComplete(current));
-  }
-  return entries;
-}
-
-function assertComplete(entry: PartialEntry): RegistryEntry {
-  const { code, category, retryable } = entry;
-  assert.ok(category, `registry entry ${code} without category`);
-  assert.ok(typeof retryable === "boolean", `registry entry ${code} without retryable`);
-  return { code, category, retryable };
-}
-
-test("REGISTERED_ERRORS matches specs/registry/errors.yaml exactly (55 codes)", () => {
-  const registry = readErrorRegistry();
-  assert.equal(registry.length, 55, "registered code count changed; regenerate the pinned table");
-  assert.equal(Object.keys(REGISTERED_ERRORS).length, registry.length);
-  for (const entry of registry) {
-    const pinned = REGISTERED_ERRORS[entry.code];
-    assert.ok(pinned, `missing pinned entry for ${entry.code}`);
-    assert.equal(pinned.category, entry.category, `${entry.code} category drifted`);
-    assert.equal(pinned.retryable, entry.retryable, `${entry.code} retryable drifted`);
   }
 });
 
