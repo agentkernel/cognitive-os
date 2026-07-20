@@ -66,6 +66,10 @@ History/          冻结归档：禁止读取、引用、参与构建
 - 结束：更新 PROGRESS → 写 handoff（已完成/未完成 REQ、提交哈希、测试与证据状态、未决风险与漂移、下一步入口与建议提示词路径）→ 分批提交。
 - 上下文接近极限：提前执行结束协议，剩余工作写入接续提示词。
 
+## 自动提交与自动 push（所有者已授权）
+
+完成且测试通过的原子任务由代理自动提交并 push，无需逐次请示（ADR-0008，细则 `.cursor/rules/18-auto-commit-and-doc-sync.mdc`）。硬条件：禁止提交失败状态；逐路径 `git add`；push 前必查 `git log --name-only origin/main..HEAD`；禁止 force-push；禁止推送 `personal-blog/**`；docs-only 低风险批可直推 main，代码批走 lane 分支 + PR + CI 全绿合并，分支保护拒绝直推时自动改走 PR。
+
 ## 红线
 
 - 禁止读取/引用 `History/`；禁止虚构规范资产；禁止改写向量迎合实现。
