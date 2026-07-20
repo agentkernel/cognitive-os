@@ -11,6 +11,11 @@
 
 use crate::engine::{EVENT_TYPE_OBJECT_ADMITTED, EVENT_TYPE_TRANSITION_COMMITTED};
 use crate::ports::{AuthorityStore, StorePortError};
+
+/// Event type appended when an Intent is durably persisted (M4;
+/// audit/provenance event — it advances no object state and replay folds
+/// it as provenance only).
+pub const EVENT_TYPE_INTENT_PERSISTED: &str = "cognitiveos.intent.persisted";
 use cognitive_contracts::canonical;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -115,13 +120,25 @@ pub fn replay_projection<S: AuthorityStore>(store: &S) -> Result<ReplayedProject
             let event_type = str_field(&event, "event_type", sequence)?;
             let object_id = str_field(&event, "object_id", sequence)?;
             let domain = str_field(&event, "domain", sequence)?;
-            let after_state = str_field(&event, "after_state", sequence)?;
-            let after_version = int_field(&event, "after_version", sequence)?;
             if object_id != committed.object_id.as_str()
                 || domain != committed.domain.as_str()
-                || after_version != committed.object_version.get()
                 || event_type != committed.event_type
             {
+                return Err(ReplayError::Barrier(format!(
+                    "event at sequence {sequence}: log columns diverge from event value"
+                )));
+            }
+
+            // Provenance-only events fold no state (the intent event is
+            // keyed by the intent's own identity).
+            if event_type == EVENT_TYPE_INTENT_PERSISTED {
+                str_field(&event, "idempotency_key", sequence)?;
+                continue;
+            }
+
+            let after_state = str_field(&event, "after_state", sequence)?;
+            let after_version = int_field(&event, "after_version", sequence)?;
+            if after_version != committed.object_version.get() {
                 return Err(ReplayError::Barrier(format!(
                     "event at sequence {sequence}: log columns diverge from event value"
                 )));

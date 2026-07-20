@@ -24,6 +24,8 @@ use crate::ports::{
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::object_reference::StrongReference;
+use cognitive_contracts::generated::state_transition_record as generated_record;
+use cognitive_contracts::generated::state_transition_request as generated_request;
 use cognitive_domain::transitions::EdgeLookupError;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, LoadedTable, ObjectId, ReasonCode, RecordId, StateName,
@@ -127,6 +129,10 @@ pub struct TransitionCommand {
     pub budget: Option<BudgetChargeCommand>,
     /// Outbox destinations for the committed event.
     pub outbox_destinations: Vec<String>,
+    /// Writer fencing epoch (F-014): when set, the store verifies it
+    /// against the current epoch inside the commit transaction and fences
+    /// stale writers out. `None` = unfenced path (M2 compatibility).
+    pub fencing_epoch: Option<i64>,
 }
 
 /// Admission of a new governed object at the table's initial state.
@@ -148,6 +154,8 @@ pub struct AdmitCommand {
     pub correlation_id: UriRef,
     /// Outbox destinations for the admission event.
     pub outbox_destinations: Vec<String>,
+    /// Writer fencing epoch (F-014); `None` = unfenced path.
+    pub fencing_epoch: Option<i64>,
 }
 
 /// Receipt of one accepted, durably committed transition.
@@ -352,6 +360,7 @@ where
                     destination: destination.clone(),
                 })
                 .collect(),
+            fencing_epoch: cmd.fencing_epoch,
         };
         let receipt: CommitReceipt = self.store.admit_object(&admission).map_err(store_error)?;
         Ok(AdmittedObject {
@@ -582,49 +591,50 @@ where
             (a.id.0.as_str(), a.object_version).cmp(&(b.id.0.as_str(), b.object_version))
         });
         evidence_refs.dedup_by(|a, b| a == b);
-        let evidence_values: Vec<Value> = evidence_refs
-            .iter()
-            .map(|reference| {
-                serde_json::to_value(reference).map_err(|err| {
-                    reject(
-                        RejectionKind::InvalidCommand,
-                        format!("evidence serialization: {err}"),
-                    )
-                })
-            })
-            .collect::<Result<_, _>>()?;
 
-        let reason_value = match &cmd.reason.detail {
-            Some(detail) => json!({"code": cmd.reason.code.as_str(), "detail": detail}),
-            None => json!({"code": cmd.reason.code.as_str()}),
+        // Committed record via the schema-generated binding
+        // (`state-transition-record.schema.json`, contracts-codegen v0.2;
+        // the canonical member set is identical to the pre-binding
+        // hand-rolled composition — replay/record bytes unchanged).
+        let reason_value = generated_request::Reason {
+            code: cmd.reason.code.as_str().to_owned(),
+            detail: cmd.reason.detail.clone(),
         };
-        let mut record_value = json!({
-            "record_id": record_id.as_str(),
-            "request_ref": cmd.request_id.as_str(),
-            "domain": cmd.domain.as_str(),
-            "subject_ref": cmd.subject_ref.as_str(),
-            "before_state": cmd.from.as_str(),
-            "after_state": cmd.to.as_str(),
-            "expected_version": cmd.expected_version.get(),
-            "before_version": cmd.expected_version.get(),
-            "after_version": next_version.get(),
-            "reason": reason_value,
-            "causation": {
-                "causation_id": cmd.causation.causation_id.as_str(),
-                "correlation_id": cmd.causation.correlation_id.as_str(),
-                "request_ref": cmd.request_id.as_str(),
+        let record = generated_record::CommittedStateTransitionRecord {
+            actor_ref: cmd.actor_ref.as_str().to_owned(),
+            after_state: cmd.to.as_str().to_owned(),
+            after_version: next_version.get(),
+            authority_ref: cmd.authority_ref.as_str().to_owned(),
+            before_state: cmd.from.as_str().to_owned(),
+            before_version: cmd.expected_version.get(),
+            causation: generated_request::Causation {
+                causation_id: cmd.causation.causation_id.as_str().to_owned(),
+                correlation_id: cmd.causation.correlation_id.as_str().to_owned(),
+                request_ref: Some(cmd.request_id.as_str().to_owned()),
             },
-            "actor_ref": cmd.actor_ref.as_str(),
-            "authority_ref": cmd.authority_ref.as_str(),
-            "requested_at": cmd.requested_at.as_str(),
-            "committed_at": committed_at.as_str(),
-            "table_version": loaded.table.version,
-            "table_digest": loaded.digest,
-            "evidence_refs": evidence_values,
-        });
-        if let Some(metadata) = &edge.metadata {
-            record_value["metadata"] = metadata.clone();
-        }
+            committed_at: committed_at.as_str().to_owned(),
+            domain: cmd.domain.as_str().to_owned(),
+            event_ref: None,
+            evidence_refs: evidence_refs.into_iter().cloned().collect(),
+            expected_version: cmd.expected_version.get(),
+            metadata: edge
+                .metadata
+                .as_ref()
+                .and_then(|metadata| metadata.as_object().cloned()),
+            reason: reason_value.clone(),
+            record_id: record_id.as_str().to_owned(),
+            request_ref: cmd.request_id.as_str().to_owned(),
+            requested_at: cmd.requested_at.as_str().to_owned(),
+            subject_ref: cmd.subject_ref.as_str().to_owned(),
+            table_digest: loaded.digest.clone(),
+            table_version: loaded.table.version.clone(),
+        };
+        let record_value = serde_json::to_value(&record).map_err(|err| {
+            reject(
+                RejectionKind::InvalidCommand,
+                format!("record serialization: {err}"),
+            )
+        })?;
         let record_json = canonical_text(&record_value)?;
 
         let event_value = json!({
@@ -685,6 +695,7 @@ where
                     destination: destination.clone(),
                 })
                 .collect(),
+            fencing_epoch: cmd.fencing_epoch,
         };
         let receipt = self
             .store

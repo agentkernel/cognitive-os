@@ -21,9 +21,12 @@ pub mod authz;
 pub mod budget;
 pub mod context;
 pub mod context_cache;
+pub mod effects;
 pub mod engine;
 pub mod error;
+pub mod executor;
 pub mod ports;
+pub mod recovery;
 pub mod replay;
 
 pub use authz::{
@@ -41,12 +44,28 @@ pub use context_cache::{
     CacheDecision, CachedView, ContextViewCache, DerivedCacheKind, GovernanceBinding,
     InvalidationReport,
 };
+pub use effects::{
+    CommitSink, EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
+    MintedIntent, OperationDescriptor, ProtocolDenial, RecoveryClosure, VerificationRecord,
+    VerificationStatus, WriterLease, acquire_lease, admit_operation, parameters_digest,
+    verification_still_current,
+};
 pub use engine::{
     AdmitCommand, AdmittedObject, BudgetChargeCommand, Causation, CommittedTransition, Reason,
     TablePin, TransitionCommand, TransitionEngine,
 };
 pub use error::{RegisteredError, RejectionKind, TransitionRejection};
-pub use ports::{AuthorityStore, Clock, IdGenerator, PortFailure, StorePortError};
+pub use executor::{
+    DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
+};
+pub use ports::{
+    AuthorityStore, CheckpointRow, Clock, IdGenerator, IntentRow, PortFailure, ProtocolStore,
+    StorePortError,
+};
+pub use recovery::{
+    EffectDisposition, RECOVERY_ORDER, RecoveryError, RecoveryReport, RecoverySequencer,
+    RecoveryStep, run_recovery, validate_checkpoint,
+};
 pub use replay::{ReplayError, ReplayedProjection, replay_projection};
 
 /// Port capability surface defined by this crate and implemented by
