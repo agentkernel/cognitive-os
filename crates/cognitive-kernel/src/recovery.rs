@@ -366,15 +366,15 @@ where
         };
         // Every continuation that is not terminally closed must present
         // fresh authorization before it can proceed (step 6 input).
-        if !matches!(disposition, EffectDisposition::ReconciledNotExecuted) {
-            if let Some(intent) = store.load_intent_for_effect(&effect.object_id)? {
-                reauthorization_obligations.push(ReauthorizationObligation {
-                    effect_object_id: effect.object_id.clone(),
-                    idempotency_key: intent.idempotency_key,
-                    grant_epoch: intent.grant_epoch,
-                    capability_set_version: intent.capability_set_version,
-                });
-            }
+        if !matches!(disposition, EffectDisposition::ReconciledNotExecuted)
+            && let Some(intent) = store.load_intent_for_effect(&effect.object_id)?
+        {
+            reauthorization_obligations.push(ReauthorizationObligation {
+                effect_object_id: effect.object_id.clone(),
+                idempotency_key: intent.idempotency_key,
+                grant_epoch: intent.grant_epoch,
+                capability_set_version: intent.capability_set_version,
+            });
         }
         reconciled.push((effect.object_id.clone(), disposition));
     }

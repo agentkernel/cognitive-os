@@ -414,6 +414,8 @@ pub fn derive_candidate_status(candidate: &InterpretationCandidate) -> &'static 
 /// Persist one interpretation candidate, atomically with its provenance
 /// event. Fails closed if the UserIntentRecord is not durably fixed first
 /// (REQ-INTENT-RECORD-001 ordering is structural, not conventional).
+// Explicit deterministic inputs are the point of the gate surface.
+#[allow(clippy::too_many_arguments)]
 pub fn record_interpretation_candidate<S, C, G>(
     store: &S,
     clock: &C,
@@ -447,18 +449,17 @@ where
         }
         .into());
     }
-    if let Some(superseded) = &candidate.supersedes {
-        if store
+    if let Some(superseded) = &candidate.supersedes
+        && store
             .load_interpretation(superseded)
             .map_err(store_rejection)?
             .is_none()
-        {
-            return Err(ProtocolDenial {
-                registered: STATE_CONFLICT,
-                detail: format!("superseded interpretation {superseded} is not persisted"),
-            }
-            .into());
+    {
+        return Err(ProtocolDenial {
+            registered: STATE_CONFLICT,
+            detail: format!("superseded interpretation {superseded} is not persisted"),
         }
+        .into());
     }
     let recorded_at = clock
         .now()
@@ -528,13 +529,13 @@ where
         "information_gaps": gaps_value,
         "interpretation_digest": interpretation_digest,
     });
-    if let Some(superseded) = &candidate.supersedes {
-        if let Some(object) = interpretation_value.as_object_mut() {
-            object.insert(
-                "supersedes_ref".to_owned(),
-                json!(format!("state://task/interpretation/{superseded}")),
-            );
-        }
+    if let Some(superseded) = &candidate.supersedes
+        && let Some(object) = interpretation_value.as_object_mut()
+    {
+        object.insert(
+            "supersedes_ref".to_owned(),
+            json!(format!("state://task/interpretation/{superseded}")),
+        );
     }
     let (sealed, _) = seal_content_digest(interpretation_value).map_err(EffectError::Denied)?;
     let canonical_json = canonical_text(&sealed).map_err(EffectError::Denied)?;
