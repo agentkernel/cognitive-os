@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-20（Lane-CTR M1 契约批会话）
+> 最后更新：2026-07-20（Lane-TSC 客户端骨架会话）
 
 ## 里程碑状态
 
@@ -22,7 +22,7 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema 56；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | 0（合同层已有 canonical/bundle/projection/生成绑定实现，未作 REQ 级实现声明——待 runner 证据与 matrix impl 字段回填） |
+| 实现已提供（构建通过且有实现代码的 REQ） | 0（合同层已有 canonical/bundle/projection/生成绑定实现；客户端层 sdk-ts/agent-shell 已有实现与包内单元测试。均未作 REQ 级实现声明——待 runner 证据与 matrix impl 字段回填） |
 | 测试已执行（runner 真实执行并留证据） | 0 |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`） |
 
@@ -51,13 +51,13 @@
 | Lane-CTR 契约与生成 | **M1 契约批已交付**（本页所在 PR） | `lane/ctr` | 已完成 F-003 收尾 / D-001·D-006 `$id` 统一 / ADR-0006 codegen / §13 bundle digest / golden §14；**触碰通告（CFR 合并前须 rebase）**：`tools/src/check-consistency.mjs`（移除剥离 `$id` 兼容层 + 新增 `$id`==文件名红灯）、`tools/static_check.py`（向量计数 76、删除绝对 URL 别名注册）、`.github/workflows/ci.yml`（新增 codegen regenerate-and-diff 步骤）、`crates/cognitive-conformance/src/lib.rs`（provisional_digests → registered_digests，非 runner 执行逻辑） |
 | Lane-CFR 符合性与工具 | 待启动（可与 CTR 并行） | `lane/cfr` | M1：runner 执行能力（`docs/prompts/lane-cfr.md`）；开工前先 rebase 上述 CTR 触碰点 |
 | Lane-KRN 内核主线 | 阻塞于 M1 | `lane/krn` | — |
-| Lane-TSC TS 客户端 | 阻塞于 CTR golden 对齐 | `lane/tsc` | — |
+| Lane-TSC TS 客户端 | **客户端骨架已交付**（本页所在 PR）：sdk-ts AKP envelope 编解码/双通道隔离客户端/registry 驱动重试/snapshot+cursor watch 消费器（`WATCH_CURSOR_STALE`→重新快照）/注入式传输层 + agent-shell 会话层（preview/submit/attach/detach/cancel，detach≠cancel、展示只读投影）；75 项 TS 单元测试通过（sdk-ts 63 / agent-shell 12）；**向量状态无变化（全 not-run，无虚报）**；发现 7 项契约缺口待 Lane-CTR（清单见 handoff §4）；只触碰 `packages/sdk-ts`、`apps/agent-shell`、`pnpm-lock.yaml` 与本页/handoff | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
 | Lane-RUN 运行时与管理面 | 阻塞于 M4 | `lane/run` | — |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
 | Lane-CON Console | tracking-only 文档例外 | — | 维护依赖表与 informative 平台产品设计；iOS/Android 提示词待执行；实现 gate 未通过 |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-ctr-handoff.md](../checkpoints/20260720-lane-ctr-handoff.md)（Lane-CTR M1 契约批：F-003 收尾、$id 统一、codegen、bundle digest、golden §14、触碰点清单）
-2. [20260720-lane-con-mobile-design-prompt-handoff.md](../checkpoints/20260720-lane-con-mobile-design-prompt-handoff.md)（iOS/Android 产品设计提示词、验证与下一步入口）
-3. [20260720-lane-con-platform-design-handoff.md](../checkpoints/20260720-lane-con-platform-design-handoff.md)（macOS/Linux 产品设计、治理例外、验证与剩余 gates）
+1. [20260720-lane-tsc-handoff.md](../checkpoints/20260720-lane-tsc-handoff.md)（Lane-TSC 客户端骨架：sdk-ts envelope/双通道/watch/retry + agent-shell 会话层、契约缺口清单、M5 剩余工作）
+2. [20260720-lane-ctr-handoff.md](../checkpoints/20260720-lane-ctr-handoff.md)（Lane-CTR M1 契约批：F-003 收尾、$id 统一、codegen、bundle digest、golden §14、触碰点清单）
+3. [20260720-lane-con-mobile-design-prompt-handoff.md](../checkpoints/20260720-lane-con-mobile-design-prompt-handoff.md)（iOS/Android 产品设计提示词、验证与下一步入口）
