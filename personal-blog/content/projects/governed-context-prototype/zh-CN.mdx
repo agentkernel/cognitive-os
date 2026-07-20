@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: zh-CN
+translationKey: governed-context-prototype
+slug: governed-context-prototype
+title: "受治理 Context 解析原型（示例）"
+description: "一个示例案例，用静态原型说明 required、授权、预算、损失声明与 ContextView 投影之间的关系。"
+publishedAt: "2026-07-10"
+status: sample
+placeholder: true
+pairingSnapshot: sample-governed-context-prototype-v1
+role: "交互与合同设计（示例）"
+constraints:
+  - "ContextView 不得成为 authority"
+  - "授权必须早于正文排序"
+stack:
+  - React
+  - TypeScript
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象上下文过滤路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">问题</h2>
+
+“检索最相关内容”无法说明哪些信息被允许读取、哪些证据必须存在，以及压缩造成了什么损失。
+
+<h2 id="constraints">约束</h2>
+
+原型必须区分硬治理门禁与可替换排序策略，并避免把 ContextView 画成可信数据库。
+
+<h2 id="approach">方案</h2>
+
+用顺序化信息结构展示准入、预过滤、候选、逐对象授权、预算与损失声明，并在输出端明确“非 authority 投影”。
+
+<h2 id="outcome">结果</h2>
+
+示例帮助评审者定位失败关闭与可降级路径，但没有运行时、真实数据或符合性证据。
+
+<h2 id="reflection">反思</h2>
+
+把相关性放在治理之后，能让界面少一个诱人的总分，多几个真正可追问的边界。

@@ -1,0 +1,61 @@
+---
+schemaVersion: 1
+kind: project
+locale: en
+translationKey: accessible-docs-migration
+slug: accessible-docs-migration
+title: "Accessible bilingual documentation migration (sample)"
+description: "A sample case study designing bilingual navigation, anchors, and keyboard paths without introducing a large client-side framework."
+publishedAt: "2026-07-06"
+status: sample
+placeholder: true
+pairingSnapshot: sample-accessible-docs-migration-v1
+role: "Frontend and content architecture (sample)"
+constraints:
+  - "Prefer server components"
+  - "Keyboard and reduced-motion paths must be complete"
+stack:
+  - Next.js
+  - MDX
+  - Playwright
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract documentation navigation path"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">Problem</h2>
+
+A bilingual documentation migration can leave broken language switches, automatically generated but unstable heading anchors, and mobile navigation that only works with a pointer.
+
+<h2 id="constraints">Constraints</h2>
+
+Page bodies remain server-rendered; only mobile navigation holds necessary client state; both languages share explicit anchors.
+
+<h2 id="approach">Approach</h2>
+
+Create an explicit content registry, pairing tests, and visible focus styles, then cover skip links, Escape-to-close, and 44-pixel touch targets in browser tests.
+
+<h2 id="outcome">Outcome</h2>
+
+The sample demonstrates an acceptance method, but includes no real migration scope, team, or performance figures.
+
+<h2 id="reflection">Reflection</h2>
+
+Accessibility is not a scan before release. It belongs in the design of routes, content identity, and interaction state.

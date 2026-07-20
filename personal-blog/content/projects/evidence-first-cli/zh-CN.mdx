@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: zh-CN
+translationKey: evidence-first-cli
+slug: evidence-first-cli
+title: "证据优先的任务 CLI（示例）"
+description: "一个示例案例，演示命令行客户端如何只消费 authority 投影，而不自行宣布任务完成。"
+publishedAt: "2026-07-12"
+status: sample
+placeholder: true
+pairingSnapshot: sample-evidence-first-cli-v1
+role: "产品与系统设计（示例）"
+constraints:
+  - "客户端不得成为 authority"
+  - "取消请求与 Effect 闭合分开表达"
+stack:
+  - TypeScript
+  - Node.js
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象命令与证据路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">问题</h2>
+
+示例命令行工具需要展示长任务状态，但远端回执和模型文本都不能直接等同于本地验收。
+
+<h2 id="constraints">约束</h2>
+
+Shell 只是投影消费者；退出不能隐式取消任务；未知 Effect 必须保持可见。
+
+<h2 id="approach">方案</h2>
+
+把 `watch`、`cancel request` 与 `acceptance` 分成不同命令语义，并让每个状态附带来源、版本和下一道门禁。
+
+<h2 id="outcome">结果</h2>
+
+示例信息架构能清楚演示“已收到”“候选完成”和“已验收”的区别。这里没有真实实现或用户结果。
+
+<h2 id="reflection">反思</h2>
+
+客户端文案本身也是治理边界；一个过早出现的“完成”比缺少动画更危险。

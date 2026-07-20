@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: zh-CN
+translationKey: incident-replay-notebook
+slug: incident-replay-notebook
+title: "Effect 事故回放笔记（示例）"
+description: "一个示例案例，展示如何围绕持久 Intent、幂等标识、未知结果与对账证据组织事故复盘。"
+publishedAt: "2026-07-08"
+status: sample
+placeholder: true
+pairingSnapshot: sample-incident-replay-notebook-v1
+role: "可靠性分析（示例）"
+constraints:
+  - "不得把超时解释为未执行"
+  - "补偿必须是独立授权的 Effect"
+stack:
+  - Markdown
+  - JSON
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象事件回放路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">问题</h2>
+
+普通时间线很容易把“请求已发出”“回执缺失”和“操作未发生”写成同一件事。
+
+<h2 id="constraints">约束</h2>
+
+回放必须保留原始 Intent 与幂等绑定；任何补偿都要拥有新 Intent 和独立授权。
+
+<h2 id="approach">方案</h2>
+
+按固定前态、dispatch、观察缺口、对账、验证与处置重排记录，并让无法闭合的分支进入隔离。
+
+<h2 id="outcome">结果</h2>
+
+示例模板能迫使作者标注未知事实和证据来源；它没有复盘任何真实事故。
+
+<h2 id="reflection">反思</h2>
+
+事故文档最重要的不是故事完整，而是没有用叙事填掉证据空白。

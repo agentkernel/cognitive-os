@@ -1,0 +1,155 @@
+---
+schemaVersion: 1
+kind: cognitiveos
+locale: en
+translationKey: verifiable-agent-actions
+slug: verifiable-agent-actions
+title: "Making Agent Actions Verifiable: The Deterministic Kernel Design of CognitiveOS"
+description: "Starting from completion claims, ContextView, and capability boundaries, this article explains how the CognitiveOS draft constrains agent action with independent state machines, Intent/Effect reconciliation, and Verification/Acceptance."
+publishedAt: "2026-07-20"
+updatedAt: "2026-07-20"
+status: published
+placeholder: false
+featured: true
+pairingSnapshot: cognitiveos-verifiable-agent-actions-b626e88-v2
+primaryTopic: agent-systems
+tags:
+  - agent-systems
+  - system-design
+  - governance
+hero:
+  src: /images/ai/governed-trace-hero.avif
+  alt: "A blue evidence trace crosses cold white paper, detours at a copper interruption, and passes two graphite gates"
+  license: "AI-generated output; publication subject to the repository owner's image-service terms"
+  provenance: "Generated for this blog on 2026-07-20; local AVIF/WebP derivatives; no reference image"
+anchors:
+  - completion-is-a-claim
+  - architecture-view
+  - authority-boundary
+  - context-view
+  - descriptor-capability
+  - lifecycle-domains
+  - intent-effect
+  - verification-acceptance
+  - evidence-status
+  - reading-limits
+factSnapshot: b626e88-2026-07-20
+sourcebookRef: content/research/cognitiveos-sourcebook.en.md
+claimLevel: normative-synthesis
+---
+
+<ArticleSnapshot />
+
+An agent can easily produce a grammatical sentence that says “done.” The hard questions come next: which state version supports that claim? Who allowed the agent to change the outside world? After a timeout, did the action happen? Which verifier checked a fixed post-state? Who has final acceptance authority?
+
+This article reorganizes the machine contracts, transition tables, and normative companions in the current CognitiveOS repository into one readable argument. It is an original synthesis and redraw, not copied whitepaper prose, and it does not present a draft as a running product. Every “requires” or “defines” below refers to registered assets at commit `b626e88`; none means that the reference implementation already guarantees the behaviour.
+
+<h2 id="completion-is-a-claim">1. Completion begins as a claim to verify</h2>
+
+In ordinary automation, a zero process exit, successful HTTP response, or remote task marked `completed` often triggers the next step. An open-ended agent combines partial observation, probabilistic reasoning, external tools, and recovery over time. Those signals say what one component reported. They do not automatically say that the TaskContract has been satisfied.
+
+The CognitiveOS task transition table deliberately preserves `CANDIDATE_COMPLETE`. An agent can submit a completion claim, but moving from there to `COMPLETED` requires three things at once: the acceptance authority matches, Verification bound to a fixed post-state is still passed and current, and that post-state has not changed. Failed or expired verification can return the task to `ACTIVE` or `BLOCKED`; a dispute can escalate. This intermediate state is not ceremony. It makes “said done” and “accepted” two auditable facts.
+
+The `remote-completed-not-acceptance.json` vector states the same boundary as a negative scenario: even a signed remote artifact and remote `completed` value remain observation evidence. That vector is currently a **not-run test intention**, not executed proof.
+
+<GovernedFlowThread locale="en" />
+
+<h2 id="architecture-view">2. The overall architecture is an explanatory view, not a fourth contract</h2>
+
+The whitepaper explains the system through four orthogonal views. A dual-kernel model separates open-ended slow cognition from hard real-time safety arbitration. Three planes separate experience, control, execution, and data responsibilities. Seven layers decompose responsibility from the host and physical world up to agents and applications. Context Engineering cuts across the structure, but does not become a fourth authority plane.
+
+This decomposition answers “where should responsibility live?” It cannot replace machine schemas or state transition tables. In particular, the real-time safety kernel belongs to an informative architecture and relevant Profile boundaries. The snapshot cannot support a claim that physical safety has been implemented or certified.
+
+<OverallArchitectureDiagram locale="en" />
+
+The important feature is not the number of boxes, but two boundaries that may not be crossed. First, probabilistic components may discover, rank, compress, or propose candidates; they may not approve reads, loosen hard budgets, perform CAS, advance authority state, or commit Effects. Second, no upper-layer action may override final actuator arbitration by the real-time safety kernel. This article concentrates on the first, deterministic-kernel boundary. The second needs deployment and domain evidence and cannot be inferred from an architecture name.
+
+<h2 id="authority-boundary">3. Probabilistic proposals stop at the deterministic authority boundary</h2>
+
+LLMs, retrievers, rankers, and matchers are useful because they search open spaces. They can produce a proposal, candidate, summary, or match report. Deterministic code checks schemas, authorization, state versions, hard budgets, idempotency bindings, fencing, and transition legality. This is not a hierarchy of “intelligent” versus “mechanical.” It separates errors by consequence: a bad candidate can be discarded; a bad authority decision changes shared facts.
+
+A model saying “authorized” therefore cannot create an authorization decision. A high rank score cannot return an object rejected by a governance pre-filter to Context. An endpoint claiming support for an operation cannot enlarge the caller’s capability.
+
+<AuthorityBoundaryDiagram locale="en" />
+
+The boundary also informs naming. A probabilistic path should produce candidate or proposal semantics, not decision or commit semantics. Naming is not a security control, but it helps review catch authority drifting upward.
+
+<h2 id="context-view">4. ContextView is a working projection, not a shortcut to fact or permission</h2>
+
+Context Engineering asks what one Activity should see: which objects are required or forbidden, whether the subject and purpose may read them, whether the budget fits, how compression loss is declared, and whether rendering is stable. It does not answer whether visible content becomes true.
+
+The current sources contain two nine-stage vocabularies. The Core companion uses `discover → filter → authorize → rank → budget → transform → verify → render → audit`. The implementation standard uses ContextRequest admission, governance pre-filter, candidate retrieval, per-object authorization re-validation, semantic ranking and selection, budget fitting, loss declaration, deterministic rendering, and ContextView emission with provenance. They describe related boundaries but are not word-for-word aliases, so this article does not silently merge them.
+
+The standard emphasizes two orderings. Tenant and scope pre-filtering occurs before retrieval or ranking touches content. Per-object body authorization is revalidated before the ranker or renderer sees the body. The resulting ContextView reports pinned versions, rejected items, cost, lineage, and loss. When the system later authorizes, performs CAS, transitions state, or commits, the deterministic path must return to authority state and re-check; it cannot trust the projection itself.
+
+<ContextPipelineDiagram locale="en" />
+
+This is also why prompt injection cannot be solved only with a prompt. Untrusted text can be data, but cannot promote itself to control through a ContextView. Caches must bind tenant, actor chain, capability-set version, revocation epoch, purpose, schema digest, and encoding profile, or a “hit” may cross a governance boundary that has already changed.
+
+<h2 id="descriptor-capability">5. Describing what can be done is not permission to do it</h2>
+
+An `OperationDescriptor` describes endpoint semantics: input and output, effect class, idempotency and cancellation support, query or reconciliation capability, version, and limits. An `AuthorizationCapability` is issued by local authority and answers who may perform which action, for what purpose, within which resources and parameter bounds, and until when.
+
+Discovering a descriptor grants no call permission. Possessing a capability does not prove that an endpoint provides what it advertises. Combining the two into one type quietly turns discoverability into permission.
+
+The current snapshot does not contain a complete `OperationDescriptor` schema. It contains related operation-summary, catalog-snapshot, and match-report schemas. The F-023 admission matrix for non-queryable or non-idempotent executors also remains open. The public claim available today is the semantic separation defined by Core, not a closed machine contract or proven behaviour path.
+
+<h2 id="lifecycle-domains">6. Five lifecycles remain orthogonal state domains</h2>
+
+AgentExecution, Task, Loop, Effect, and Verification each have their own state set, transition guards, and authority. They cite one another’s evidence, but cannot collapse into a single “overall progress” value. AgentExecution may be `RUNNABLE`, a Task `BLOCKED`, one Effect `OUTCOME_UNKNOWN`, and Verification `NOT_REQUESTED` at the same time. That combination is not contradictory.
+
+<LifecycleDomainsDiagram locale="en" />
+
+Separate models have three immediate benefits:
+
+1. **Cancellation stops being ambiguous.** A cancel request, Task `CANCELLED`, execution termination, and Effect closure are decided separately.
+2. **Verification can expire.** `PASSED` can move to `EXPIRED` after the fixed post-state changes, evidence is invalidated, or a verifier version is revoked; old proof cannot support new state.
+3. **Quarantine is precise.** AgentExecution `QUARANTINED`, Loop `QUARANTINE`, and Effect `QUARANTINED` each have their own recovery conditions instead of one global boolean.
+
+The state names in the diagram are copied from the current transition JSON into child-local data. The blog build and runtime never read the parent repository. Any later source change requires new research and a deliberate update.
+
+<h2 id="intent-effect">7. Intent and Effect turn external change into a recoverable record</h2>
+
+For an external side effect, the core order is “persist Intent before dispatch.” Intent fixes the action, parameter digest, target and expected state version, capability binding, deadline, idempotency key, postconditions, and compensation policy. If durable persistence fails, the path must close before dispatch; it cannot perform the external action and hope to record it later.
+
+The most dangerous observation after dispatch is not a clear failure. It is a connection loss, timeout, or missing receipt when the action **may already have happened**. The Effect table represents that as `OUTCOME_UNKNOWN`. It cannot move directly to `VERIFIED` or `COMMITTED`, and a retry should not mint a new idempotency key. The system first Reconciles against the original binding:
+
+- confirmed executed: fix the reconciliation result, then verify postconditions;
+- confirmed not executed: move to `NOT_EXECUTED`;
+- still unknown: use separately authorized compensation or enter quarantine.
+
+Compensation is not an “undo” button inherited from the original action. It is a new governed Effect with its own Intent, risk, idempotency identity, and independent authorization. Compensation can itself fail or have an unknown outcome.
+
+<GovernedFlowDiagram locale="en" />
+
+The copper branch intentionally does not rejoin the ordinary success line. Uncertainty may be reconciled, quarantined, or escalated. Interface copy cannot erase it.
+
+<h2 id="verification-acceptance">8. Verification proves criteria; Acceptance advances completion</h2>
+
+Verification has its own lifecycle: `NOT_REQUESTED` becomes `PENDING`; a closed evidence set becomes `EVIDENCE_READY`; evaluation produces `PASSED`, `FAILED`, or `INCONCLUSIVE`; and an invalid binding becomes `EXPIRED`. A report binds its subject, criteria, verifier version, and fixed post-state.
+
+Acceptance is another authority decision. The Task transition from `CANDIDATE_COMPLETE` to `COMPLETED` requires both a verification report and an acceptance decision. The current schema directory has no complete `AcceptanceDecision` schema, so this article cannot present that behavioural rule as a closed machine shape. It remains an explicit requirement in task transitions and normative behaviour.
+
+The separation prevents a verifier from both setting the exam and declaring the Task complete. It also blocks shortcuts through remote `completed`, a receipt, or agent self-report. Human review has a clear place: a person may be the designated acceptance authority or contribute evidence, but “a human looked at it” should not become an unstructured log entry.
+
+<h2 id="evidence-status">9. Current evidence status: specified is not implemented</h2>
+
+At the research snapshot:
+
+- **Specified:** 273 requirements, 55 error codes, 56 schemas, and five execution-lifecycle transition tables;
+- **Implementation provided:** still 0 under the current REQ-level vocabulary. Lane-CTR delivered contract code, bilingual schema-contract tests, code generation, bundle, and projection implementations, but the matrix does not yet make REQ-level implementation claims;
+- **Behaviour executed:** 0;
+- **Conformant profiles:** 0;
+- **Vector status:** all 76 are `not-run`. Two are F-003 legacy metadata/strongRef rejection negatives. Bilingual contract tests prove those instances are schema-rejected, but that is not vector behaviour execution. The repository has an enumerate-only runner skeleton; behaviour execution still awaits Lane-CFR.
+
+These categories do not imply one another. Schema-valid means only that a shape passed. A vector’s presence means a test intention is registered. Enumeration is not execution. A “formal” whitepaper version does not make a reference implementation production-ready.
+
+The sources retain unresolved discrepancies. The whitepaper file says v1.0.2 while the root README says v1.0.1 and still lists 74 vectors with M0 status. The conformance README literally says there is no runner, while code and PROGRESS describe an enumerate-only skeleton. F-003’s contract-layer obligations are complete; its only remaining gate is Lane-CFR’s real execution of the two negative vectors. F-001 remains an evidence gap; F-011, F-014, F-023, and F-017 remain open; F-015 continues to narrow; D-004 remains open. D-001, D-006, and D-011 are closed by M1. All 56 schema `$id` values now exactly equal their file names, with zero absolute URL IDs.
+
+<h2 id="reading-limits">10. How to cite this design safely</h2>
+
+A safe public statement is: “The current draft requires probabilistic components to produce candidates only; its transition table defines `OUTCOME_UNKNOWN` as requiring reconciliation; Task completion needs current Verification and an acceptance-authority decision.” That wording identifies a specification boundary and source version.
+
+Unsafe statements include claims that CognitiveOS has passed 76 tests, conforms to a Profile, guarantees fencing across every sink, has proven production safety, or has improved agent performance. The snapshot contains no such evidence.
+
+A verifiable agent system does not make uncertainty disappear in a demo. It gives uncertainty a state that cannot acquire authority, gives each change a recoverable causal chain, and gives completion an acceptance path independent of self-report. The CognitiveOS draft provides reviewable contracts for that direction. Implementation, executed tests, and published evidence still come next.

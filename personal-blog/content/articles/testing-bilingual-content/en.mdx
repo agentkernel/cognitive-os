@@ -1,0 +1,65 @@
+---
+schemaVersion: 1
+kind: article
+locale: en
+translationKey: testing-bilingual-content
+slug: testing-bilingual-content
+title: "Make bilingual pairing a build constraint (sample)"
+description: "A sample article on using explicit translation keys, stable anchors, and build tests to prevent silent drift in a bilingual site."
+publishedAt: "2026-07-16"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-testing-bilingual-content-v1
+primaryTopic: testing
+tags:
+  - testing
+  - nextjs
+  - accessibility
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract paired paths"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - identity
+  - anchors
+  - build-gate
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="identity">A translation key is identity, not a title</h2>
+
+Titles change, and slugs sometimes do too. Each bilingual entry needs a `translationKey` independent of display text, plus an explicit locale, content kind, publication date, and placeholder state. The language switch can then use a registry instead of guessing with URL replacement.
+
+<h2 id="anchors">Long-form headings need shared anchors</h2>
+
+Chinese and English headings cannot generate the same automatic slug. Stable ASCII anchors for each paired section let external references and language links land on the equivalent argument, not text that merely looks similar.
+
+An anchor is part of the content contract. Deleting or renaming it should fail a test like changing a public API.
+
+<h2 id="build-gate">Keep drift in the build phase</h2>
+
+A build check can require exactly two locales for every published translation key, then compare kind, date, placeholder state, pairing snapshot, and anchor set. Sample material should also be forced to `noindex` and excluded from RSS and the sitemap.
+
+| Gate | Drift rejected |
+| --- | --- |
+| `translationKey` pair | Publishing only one locale |
+| Shared anchors | Switching to the wrong section |
+| `placeholder` parity | Accidentally indexing sample content |
+
+```ts
+const localeSet = new Set(pair.map((entry) => entry.locale));
+if (localeSet.size !== 2) {
+  throw new Error("Published content requires zh-CN and en.");
+}
+```
+
+Those checks cannot judge translation quality, but they remove a class of avoidable structural errors.
+Structural validity also does not prove that a native speaker reviewed the
+translation; that remains a separate human acceptance step.[^review]
+
+[^review]: This sample describes a content contract. It does not claim that
+automated checks can prove translation quality.

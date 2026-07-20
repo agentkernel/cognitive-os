@@ -1,0 +1,61 @@
+{
+  "name": "personal-developer-blog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  },
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "next build",
+    "start": "next start --port 3100",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:content": "tsx scripts/check-content.ts && tsx scripts/check-links.ts",
+    "test:e2e": "playwright test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:content && pnpm build"
+  },
+  "dependencies": {
+    "@fontsource-variable/recursive": "5.3.0",
+    "@fontsource-variable/source-serif-4": "5.3.0",
+    "@fontsource/noto-serif-sc": "5.3.0",
+    "@mdx-js/loader": "3.1.1",
+    "@mdx-js/react": "3.1.1",
+    "@next/mdx": "16.2.10",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-mdx-frontmatter": "5.2.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/mdx": "2.0.13",
+    "@types/node": "22.19.7",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.2.10",
+    "sharp": "0.35.3",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "yaml": "2.9.0"
+  }
+}

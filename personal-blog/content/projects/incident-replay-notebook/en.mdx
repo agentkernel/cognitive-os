@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: en
+translationKey: incident-replay-notebook
+slug: incident-replay-notebook
+title: "Effect incident replay notebook (sample)"
+description: "A sample case study organizing incident review around persisted Intent, idempotency identity, unknown outcomes, and reconciliation evidence."
+publishedAt: "2026-07-08"
+status: sample
+placeholder: true
+pairingSnapshot: sample-incident-replay-notebook-v1
+role: "Reliability analysis (sample)"
+constraints:
+  - "A timeout cannot be interpreted as non-execution"
+  - "Compensation must be a separately authorized Effect"
+stack:
+  - Markdown
+  - JSON
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract event replay path"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">Problem</h2>
+
+An ordinary timeline can easily collapse “request dispatched,” “receipt missing,” and “operation did not happen” into one event.
+
+<h2 id="constraints">Constraints</h2>
+
+Replay must preserve the original Intent and idempotency binding. Any compensation needs a new Intent and independent authorization.
+
+<h2 id="approach">Approach</h2>
+
+Reorder the record around fixed prior state, dispatch, observation gap, reconciliation, verification, and disposition, sending any unclosed branch to quarantine.
+
+<h2 id="outcome">Outcome</h2>
+
+The sample template forces an author to label unknown facts and evidence sources. It does not describe a real incident.
+
+<h2 id="reflection">Reflection</h2>
+
+The most important quality of an incident document is not a complete story. It is refusing to fill an evidence gap with narrative.

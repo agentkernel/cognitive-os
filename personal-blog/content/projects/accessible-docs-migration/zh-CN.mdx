@@ -1,0 +1,61 @@
+---
+schemaVersion: 1
+kind: project
+locale: zh-CN
+translationKey: accessible-docs-migration
+slug: accessible-docs-migration
+title: "可访问的双语文档迁移（示例）"
+description: "一个示例案例，说明如何在不引入大型客户端框架的前提下设计双语导航、锚点与键盘路径。"
+publishedAt: "2026-07-06"
+status: sample
+placeholder: true
+pairingSnapshot: sample-accessible-docs-migration-v1
+role: "前端与内容架构（示例）"
+constraints:
+  - "服务端组件优先"
+  - "键盘路径与减少动态效果必须完整"
+stack:
+  - Next.js
+  - MDX
+  - Playwright
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象文档导航路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">问题</h2>
+
+双语文档迁移容易留下断裂的语言切换、自动生成但不稳定的标题锚点，以及只能用鼠标打开的移动导航。
+
+<h2 id="constraints">约束</h2>
+
+页面主体保持服务端渲染；只有移动导航承担必要客户端状态；两种语言共享明确锚点。
+
+<h2 id="approach">方案</h2>
+
+建立显式内容 registry、配对测试与可见焦点样式，并用浏览器测试覆盖跳转链接、Escape 关闭和 44 像素触控目标。
+
+<h2 id="outcome">结果</h2>
+
+示例说明了一套验收方法，但没有真实迁移范围、团队或性能数字。
+
+<h2 id="reflection">反思</h2>
+
+无障碍不是发布前的扫描步骤；它需要进入路由、内容身份和交互状态的设计。

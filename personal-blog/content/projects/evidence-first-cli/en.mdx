@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: en
+translationKey: evidence-first-cli
+slug: evidence-first-cli
+title: "Evidence-first task CLI (sample)"
+description: "A sample case study showing how a command-line client can consume authority projections without declaring task completion itself."
+publishedAt: "2026-07-12"
+status: sample
+placeholder: true
+pairingSnapshot: sample-evidence-first-cli-v1
+role: "Product and systems design (sample)"
+constraints:
+  - "The client must not become an authority"
+  - "Cancellation requests remain separate from Effect closure"
+stack:
+  - TypeScript
+  - Node.js
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract command and evidence path"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">Problem</h2>
+
+The sample command-line tool needs to show long-running task state, while remote receipts and model text cannot become local acceptance.
+
+<h2 id="constraints">Constraints</h2>
+
+The Shell only consumes projections; exiting cannot imply cancellation; an unknown Effect must stay visible.
+
+<h2 id="approach">Approach</h2>
+
+Separate `watch`, `cancel request`, and `acceptance` as command semantics, then attach a source, version, and next gate to every displayed state.
+
+<h2 id="outcome">Outcome</h2>
+
+The sample information architecture clearly demonstrates the difference between received, candidate complete, and accepted. There is no real implementation or user result here.
+
+<h2 id="reflection">Reflection</h2>
+
+Client copy is part of the governance boundary. A premature “complete” label is more dangerous than missing animation.

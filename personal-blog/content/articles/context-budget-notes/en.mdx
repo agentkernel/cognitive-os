@@ -1,0 +1,48 @@
+---
+schemaVersion: 1
+kind: article
+locale: en
+translationKey: context-budget-notes
+slug: context-budget-notes
+title: "A context budget is not a relevance leaderboard (sample)"
+description: "A sample note that separates hard boundaries from semantic ranking through required items, forbidden items, authorization, and loss declarations."
+publishedAt: "2026-07-14"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-context-budget-notes-v1
+primaryTopic: agent-systems
+tags:
+  - agent-systems
+  - governance
+  - system-design
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract budget boundary"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - hard-soft
+  - loss
+  - questions
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="hard-soft">Separate hard boundaries from soft signals</h2>
+
+A relevance score can order candidates. It cannot buy permission, cross a sensitivity boundary, or displace required evidence. Context-budget design starts by separating `required`, `forbidden`, authorization, freshness, and hard resource limits from replaceable retrieval strategies.
+
+<h2 id="loss">Make omission and loss visible</h2>
+
+When optional material does not fit, the system can degrade. The result should still say what was omitted, which transform version was used, and where the conclusion applies. When a required item cannot be authorized or exceeds the hard budget, the default should fail closed rather than present an incomplete view as complete input.
+
+<h2 id="questions">Questions to ask before implementation</h2>
+
+- Does the ranker see body content before authorization?
+- Do cache keys bind the actor, purpose, and revocation version?
+- Can a summary still be traced to its source and declared loss?
+- Do identical inputs and renderer versions produce stable output?
+
+These questions turn “what went into the prompt” into a contract that can be reviewed at a system boundary.

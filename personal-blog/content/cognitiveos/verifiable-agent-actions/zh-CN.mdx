@@ -1,0 +1,155 @@
+---
+schemaVersion: 1
+kind: cognitiveos
+locale: zh-CN
+translationKey: verifiable-agent-actions
+slug: verifiable-agent-actions
+title: "让 Agent 的行动可验证：CognitiveOS 的确定性内核设计"
+description: "从完成声明、ContextView 与 capability 边界出发，解释 CognitiveOS 草案如何用独立状态机、Intent/Effect 对账和 Verification/Acceptance 约束 Agent 行动。"
+publishedAt: "2026-07-20"
+updatedAt: "2026-07-20"
+status: published
+placeholder: false
+featured: true
+pairingSnapshot: cognitiveos-verifiable-agent-actions-b626e88-v2
+primaryTopic: agent-systems
+tags:
+  - agent-systems
+  - system-design
+  - governance
+hero:
+  src: /images/ai/governed-trace-hero.avif
+  alt: "蓝色证据路径穿过冷白纸面，在铜色断点前转向并通过两道石墨门槛"
+  license: "AI-generated output; publication subject to the repository owner's image-service terms"
+  provenance: "Generated for this blog on 2026-07-20; local AVIF/WebP derivatives; no reference image"
+anchors:
+  - completion-is-a-claim
+  - architecture-view
+  - authority-boundary
+  - context-view
+  - descriptor-capability
+  - lifecycle-domains
+  - intent-effect
+  - verification-acceptance
+  - evidence-status
+  - reading-limits
+factSnapshot: b626e88-2026-07-20
+sourcebookRef: content/research/cognitiveos-sourcebook.zh-CN.md
+claimLevel: normative-synthesis
+---
+
+<ArticleSnapshot />
+
+Agent 很容易生成一句语法完整的“已经完成”。真正困难的是回答另一组问题：它依据哪个状态版本？谁允许它改变外部世界？请求超时后动作到底有没有发生？哪个 verifier 检查了固定后态？又是谁拥有最终验收权？
+
+这篇文章把 CognitiveOS 当前仓库里的机器合同、状态迁移表与 normative companion 重新组织成一条可阅读的论证。它是原创综合与重绘，不复制白皮书正文，也不把草案写成已经运行的产品。文中“要求”“定义”都指向 commit `b626e88` 的登记资产；没有一句等同于“参考实现已经保证”。
+
+<h2 id="completion-is-a-claim">一、完成首先是一项待验证声明</h2>
+
+在普通自动化中，进程以零退出、HTTP 返回成功或远端任务显示 `completed`，经常足以驱动下一步。但开放式 Agent 同时处理不完整观察、概率推理、外部工具和跨时段恢复，这些信号最多说明“某个组件报告了什么”，并不自动说明任务合同已经满足。
+
+CognitiveOS 的任务迁移表专门保留 `CANDIDATE_COMPLETE`。Agent 可以提交完成声明，但从该状态进入 `COMPLETED` 还需要三件事同时成立：验收 authority 匹配、绑定固定后态的 Verification 仍然通过且未过期、固定后态没有改变。验证失败或过期，任务可以回到 `ACTIVE` 或 `BLOCKED`；争议也可以升级。这个中间态不是拖延，而是把“说完成”和“被接受”拆成两个可审计事实。
+
+向量 `remote-completed-not-acceptance.json` 给出同一边界的负例：即使远端 artifact 签名有效，远端 `completed` 仍只被当作 observation evidence。该向量目前是 **not-run 测试意图**，不是已执行证明。
+
+<GovernedFlowThread locale="zh" />
+
+<h2 id="architecture-view">二、总体图是解释视图，不是第四套合同</h2>
+
+白皮书用四个正交视图解释系统。双内核区分开放式慢认知与硬实时安全仲裁；三平面分离体验、控制、执行与数据责任；七层从宿主和物理世界向上拆到 Agent 与应用；Context Engineering 横切这些结构，但不成为第四个 authority 平面。
+
+这组分解适合回答“责任放在哪里”，却不能替代机器 schema 或状态迁移表。尤其是实时安全内核属于说明性总体架构与相应 Profile 边界；当前快照不能据此宣称物理安全已经实现或认证。
+
+<OverallArchitectureDiagram locale="zh" />
+
+图中的关键不是盒子数量，而是两条禁止穿越的边界。第一，概率组件可以发现、排序、压缩或提出候选，却不能自己批准读取、放宽硬预算、执行 CAS、推进 authority 状态或提交 Effect。第二，任何上层动作都不能覆盖实时安全内核对最终执行器的仲裁。前者是本文讨论的确定性内核重点；后者需要部署和行业证据，不能从架构名称推导。
+
+<h2 id="authority-boundary">三、概率提议止于确定性 authority 边界</h2>
+
+LLM、检索器、ranker 和 matcher 的价值在于开放式搜索。它们可以给出 proposal、candidate、summary 或 match report。确定性代码则负责检查 schema、授权、状态版本、硬预算、幂等绑定、fencing 与迁移合法性。两边并非“智能”和“机械”的高低关系，而是错误后果不同：候选错了可以丢弃；authority 错了会改变共享事实。
+
+因此，模型输出“已授权”不会生成授权决定；排序得分再高，也不能让被治理预过滤拒绝的对象重新进入 Context；工具宣称支持某操作，也不能扩大本次主体的 capability。
+
+<AuthorityBoundaryDiagram locale="zh" />
+
+这条边界还影响命名。概率路径应产出 `candidate` 或 `proposal` 语义，而不是 `decision` 或 `commit`。命名不是安全机制，但它能让代码评审更快发现权力悄悄上移。
+
+<h2 id="context-view">四、ContextView 是工作投影，不是事实与权限的捷径</h2>
+
+Context Engineering 解决的是“这次 Activity 应看到什么”：哪些对象是 required，哪些 forbidden，主体和 purpose 是否允许读取，预算能否容纳，压缩损失如何声明，最终渲染是否稳定。它不解决“看到的内容是否因此成为真相”。
+
+当前来源存在两套九阶段命名。Core companion 写作 `discover → filter → authorize → rank → budget → transform → verify → render → audit`；实现标准写作“请求准入 → 治理预过滤 → 候选检索 → 逐对象授权重验 → 语义排序/选择 → 预算适配 → 损失声明 → 确定性渲染 → 携带来源的 ContextView 输出”。两者描述相关边界，但不是逐词同义，本文不把它们静默拼成一套。
+
+标准中特别强调两个顺序：tenant/scope 预过滤先于检索或排序接触内容；逐对象正文授权重验先于 ranker 和 renderer 看到正文。输出的 ContextView 必须携带固定版本、拒绝项、成本、谱系和损失声明。此后在真正授权、CAS、迁移或提交时，确定性路径仍要回到 authority 状态重验，不能信任投影本身。
+
+<ContextPipelineDiagram locale="zh" />
+
+这也是 prompt injection 不能只靠提示词对抗的原因。不可信文本可以是 data，却不能通过 ContextView 把自己提升为 control；缓存也必须绑定 tenant、主体链、capability 集版本、撤销 epoch、purpose、schema digest 和编码配置，否则一次“命中”可能越过已经变化的治理边界。
+
+<h2 id="descriptor-capability">五、描述能做什么，不等于被允许做什么</h2>
+
+`OperationDescriptor` 描述 endpoint 的语义能力：输入输出、effect class、幂等与取消支持、是否可查询或对账、版本与限制。`AuthorizationCapability` 则由本地 authority 签发，回答谁、为了什么 purpose、在什么资源和参数边界内、何时以前可以执行什么。
+
+发现 descriptor 不会授予调用权；拿到 capability 也不能证明 endpoint 真的具备它宣称的功能。把二者合成一个类型，会让“可发现性”悄悄变成“权限”。
+
+当前快照没有完整的 `OperationDescriptor` schema。只有 operation summary、catalog snapshot 和 match report 等相关 schema；F-023 所要求的不可查询/不可幂等执行器准入矩阵也仍开放。这里能公开说明的是 Core 文本规定的语义分离，不能声称机器合同和行为路径已经闭合。
+
+<h2 id="lifecycle-domains">六、五个生命周期是正交状态域</h2>
+
+AgentExecution、Task、Loop、Effect 与 Verification 各自拥有状态集合、迁移条件和 authority。它们互相引用证据，但不能合并成一个“总进度”。例如 AgentExecution 可以 `RUNNABLE`，Task 可以 `BLOCKED`，某个 Effect 可以 `OUTCOME_UNKNOWN`，Verification 仍处于 `NOT_REQUESTED`；这些组合并不矛盾。
+
+<LifecycleDomainsDiagram locale="zh" />
+
+分开建模带来三个直接好处：
+
+1. **取消不再含糊。** cancel request、Task `CANCELLED`、执行终止与 Effect 闭合分别判定。
+2. **验证可以过期。** `PASSED` 在固定后态变化、证据失效或 verifier 版本撤销后进入 `EXPIRED`，不让旧证明继续支撑新状态。
+3. **隔离可以精确。** AgentExecution 的 `QUARANTINED`、Loop 的 `QUARANTINE` 与 Effect 的 `QUARANTINED` 各有自己的恢复条件，不能靠一个全局布尔值清除。
+
+五个域的状态名直接复制自当前 transition JSON，存放在博客子工程本地。站点构建和运行不会读取父仓库；来源发生变化时，需要重新取证和人工更新。
+
+<h2 id="intent-effect">七、Intent/Effect 把外部改变变成可恢复记录</h2>
+
+对外部副作用，核心顺序是“先持久 Intent，再 dispatch”。Intent 固定 action、参数 digest、目标与预期状态版本、capability 绑定、deadline、幂等键、后置条件与补偿策略。持久化失败必须在 dispatch 前关闭，不能先做外部动作再尝试补记。
+
+dispatch 之后最危险的观察不是明确失败，而是连接断开、超时或回执缺失：动作**可能已经发生**。Effect 迁移表把它表示为 `OUTCOME_UNKNOWN`。这时不允许直接进入 `VERIFIED` 或 `COMMITTED`，也不应通过生成新幂等键盲目重试。系统先用原绑定执行 Reconcile：
+
+- 确认已执行：固定对账结果，再验证后置条件；
+- 确认未执行：进入 `NOT_EXECUTED`；
+- 仍然未知：只能走 separately authorized compensation，或进入 quarantine。
+
+补偿不是原动作的“撤销按钮”。它是新的受治理 Effect，拥有自己的 Intent、风险、幂等和独立授权；补偿本身也可能失败或结果未知。
+
+<GovernedFlowDiagram locale="zh" />
+
+图中铜色分支刻意不回到普通成功线。它提醒读者：不确定性可以被对账、隔离或升级，但不能被 UI 文案抹掉。
+
+<h2 id="verification-acceptance">八、Verification 证明条件，Acceptance 推进完成</h2>
+
+Verification 有独立状态机：从 `NOT_REQUESTED` 到 `PENDING`，证据集合关闭后进入 `EVIDENCE_READY`，再得到 `PASSED`、`FAILED` 或 `INCONCLUSIVE`；绑定失效时进入 `EXPIRED`。验证报告需要绑定 subject、criteria、verifier 版本和固定后态。
+
+Acceptance 是另一项 authority 决定。Task 从 `CANDIDATE_COMPLETE` 到 `COMPLETED` 的 required evidence 同时包含 verification report 与 acceptance decision。当前 schema 目录没有完整的 `AcceptanceDecision` schema，因此文章不能把这条行为规则写成已经闭合的机器形状；它仍是 task transition 与 normative behavior 的明确要求。
+
+这种分离避免 verifier 既出题又宣布任务完成，也避免远端 `completed`、receipt 或模型自述成为捷径。它还给人审留下清晰位置：人可以作为被指定的 acceptance authority 或提供证据，但“人看过”也不应被无结构地塞进日志。
+
+<h2 id="evidence-status">九、当前证据状态：指定不等于实现</h2>
+
+截至研究快照：
+
+- **规范已登记（specified）**：273 条 requirement、55 个错误码、56 份 schema、5 份执行生命周期迁移表；
+- **实现已提供**：按当前 REQ 级口径仍为 0；Lane-CTR 已交付 contract code、双语言 schema contract tests、codegen、bundle 与 projection 实现，但 matrix 尚未形成 REQ 级实现声明；
+- **测试已执行**：行为执行为 0；
+- **Profile 已符合**：0；
+- **向量状态**：76 份全部 `not-run`。其中两份是 F-003 legacy metadata/strongRef 拒绝负例；双语言合同测试已证明对应实例被 schema 拒绝，但这不计为向量行为执行。仓库有 enumerate-only runner 骨架，行为执行能力仍待 Lane-CFR。
+
+这四种状态不能互相推导。schema-valid 只说明形状通过；向量存在只说明测试意图已登记；runner 能枚举也不等于执行过；白皮书版本“正式”更不等于参考实现生产就绪。
+
+当前来源还保留若干未闭合差异：白皮书文件为 v1.0.2，而根 README 仍写 v1.0.1，并仍列 74 份向量与 M0 状态；conformance README 字面写“没有 runner”，代码与 PROGRESS 则描述仅枚举骨架。F-003 的合同层义务已经完成，唯一剩余 gate 是 Lane-CFR 真实执行两份负例；F-001 仍是证据缺口；F-011、F-014、F-023、F-017 开放，F-015 持续收敛；D-004 仍开放。D-001、D-006 与 D-011 已由 M1 闭合，当前 56 份 schema 的 `$id` 全都严格等于文件名，绝对 URL `$id` 为 0。
+
+<h2 id="reading-limits">十、怎样安全引用这套设计</h2>
+
+安全的公开表述是：“当前草案要求概率组件只产出候选；transition table 定义 `OUTCOME_UNKNOWN` 必须先对账；Task 完成需要当前 Verification 与 acceptance authority 的决定。”这说明的是规范边界和来源版本。
+
+不安全的表述是：“CognitiveOS 已经通过 76 项测试”“已经符合某个 Profile”“保证所有 sink 都有 fencing”“已证明生产安全”或“提升了 Agent 性能”。当前快照没有这些证据。
+
+真正可验证的 Agent 系统，不是把不确定性消灭在演示里，而是给不确定性一个不能越权的状态、给每次改变一个能恢复的因果链、给完成一个独立于自述的验收入口。CognitiveOS 的草案为这条路提供了可审查的合同；下一步仍是实现、执行测试并公开证据。

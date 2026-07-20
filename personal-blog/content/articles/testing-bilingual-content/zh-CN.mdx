@@ -1,0 +1,63 @@
+---
+schemaVersion: 1
+kind: article
+locale: zh-CN
+translationKey: testing-bilingual-content
+slug: testing-bilingual-content
+title: "把双语内容配对变成构建约束（示例）"
+description: "一篇示例文章，说明如何用显式翻译键、稳定锚点和构建测试防止双语站点静默漂移。"
+publishedAt: "2026-07-16"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-testing-bilingual-content-v1
+primaryTopic: testing
+tags:
+  - testing
+  - nextjs
+  - accessibility
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象配对路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - identity
+  - anchors
+  - build-gate
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="identity">翻译键是身份，不是标题</h2>
+
+标题会改，slug 偶尔也会改。双语条目应拥有独立于显示文本的 `translationKey`，并明确声明语言、内容类型、发布日期和占位状态。语言切换据此查表，而不是对 URL 做猜测式替换。
+
+<h2 id="anchors">长文锚点需要共享</h2>
+
+中英文标题不可能生成同样的自动 slug。为每个成对章节维护稳定 ASCII 锚点，才能让外部引用和语言切换落到等价论点，而不是碰巧相似的文字。
+
+锚点也是内容合同。删除或改名应当像修改公开 API 一样被测试捕获。
+
+<h2 id="build-gate">把漂移留在构建阶段</h2>
+
+构建检查可以要求每个已发布翻译键恰好拥有两种语言，并比较 kind、日期、占位状态、配对快照和锚点集合。示例内容还应被强制 `noindex`，并从 RSS 与 sitemap 中排除。
+
+| 检查 | 拒绝的漂移 |
+| --- | --- |
+| `translationKey` 配对 | 只发布一种语言 |
+| 共享锚点 | 语言切换落到错误章节 |
+| `placeholder` 一致性 | 示例内容被误索引 |
+
+```ts
+const localeSet = new Set(pair.map((entry) => entry.locale));
+if (localeSet.size !== 2) {
+  throw new Error("Published content requires zh-CN and en.");
+}
+```
+
+这些检查不能判断翻译质量，却能消除一类本可避免的结构错误。
+结构通过也不代表翻译已经由母语审校；那是另一项人工验收。[^review]
+
+[^review]: 该示例只说明内容合同，不声称自动测试能证明翻译质量。

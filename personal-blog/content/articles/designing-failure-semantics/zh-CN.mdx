@@ -1,0 +1,50 @@
+---
+schemaVersion: 1
+kind: article
+locale: zh-CN
+translationKey: designing-failure-semantics
+slug: designing-failure-semantics
+title: "先写失败语义，再写成功路径（示例）"
+description: "一篇示例技术手记，演示如何在实现前固定未知结果、重试与人工介入的边界。"
+publishedAt: "2026-07-18"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-designing-failure-semantics-v1
+primaryTopic: reliability
+tags:
+  - reliability
+  - system-design
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象约束边界与路径"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - premise
+  - unknown
+  - review
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="premise">先固定系统不敢说什么</h2>
+
+可靠性设计常从成功路径开始：请求进入、工作完成、结果返回。更稳妥的顺序，是先列出系统**不能据此作结论**的观察。超时不等于失败，收到回执不等于验收，重试也不自动安全。
+
+示例练习把每个模糊词换成可检查的状态、入口条件和退出证据。这样做不会让实现更聪明，却能让错误结论更难穿过边界。
+
+<h2 id="unknown">把未知保留为未知</h2>
+
+当外部操作可能已经发生，系统需要一个能够容纳不确定性的状态。盲目重试会把信息缺口放大成重复副作用；直接报告成功则会把猜测包装成事实。
+
+这类设计通常要求同一逻辑尝试保持稳定幂等标识，先查询或对账，再决定继续、隔离或请求人工处理。具体协议必须由真实项目的合同与证据决定；本文只是结构示例。
+
+<h2 id="review">评审时问三件事</h2>
+
+1. 哪个观察只能算证据，不能算最终决定？
+2. 哪个状态允许恢复，哪个状态只能隔离？
+3. 重试、补偿与验收分别由谁授权？
+
+如果这三问没有可定位答案，成功路径写得再顺也很难成为可靠承诺。

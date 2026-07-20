@@ -1,0 +1,60 @@
+---
+schemaVersion: 1
+kind: project
+locale: en
+translationKey: governed-context-prototype
+slug: governed-context-prototype
+title: "Governed Context resolution prototype (sample)"
+description: "A sample case study using a static prototype to connect required items, authorization, budgets, loss declarations, and ContextView projections."
+publishedAt: "2026-07-10"
+status: sample
+placeholder: true
+pairingSnapshot: sample-governed-context-prototype-v1
+role: "Interaction and contract design (sample)"
+constraints:
+  - "A ContextView must not become authority"
+  - "Authorization must precede body ranking"
+stack:
+  - React
+  - TypeScript
+evidenceStatus: sample-only
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract context filtering path"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+structure:
+  - problem
+  - constraints
+  - approach
+  - outcome
+  - reflection
+---
+
+<SampleNotice />
+
+<h2 id="problem">Problem</h2>
+
+“Retrieve the most relevant content” does not say what may be read, which evidence is required, or what a compression step loses.
+
+<h2 id="constraints">Constraints</h2>
+
+The prototype must separate hard governance gates from replaceable ranking policy and avoid presenting a ContextView as a trusted database.
+
+<h2 id="approach">Approach</h2>
+
+Show admission, pre-filtering, candidates, per-object authorization, budgeting, and loss declarations in order, then label the output as a non-authority projection.
+
+<h2 id="outcome">Outcome</h2>
+
+The sample helps a reviewer locate fail-closed and degradable paths, but includes no runtime, real data, or conformance evidence.
+
+<h2 id="reflection">Reflection</h2>
+
+Putting relevance after governance removes one seductive score from the interface and creates several boundaries worth questioning.

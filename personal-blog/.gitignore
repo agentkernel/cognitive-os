@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.env*.local
+artifacts/
+playwright-report/
+test-results/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*

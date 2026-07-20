@@ -1,0 +1,50 @@
+---
+schemaVersion: 1
+kind: article
+locale: en
+translationKey: designing-failure-semantics
+slug: designing-failure-semantics
+title: "Write failure semantics before the happy path (sample)"
+description: "A sample technical note showing how to fix boundaries for unknown outcomes, retries, and human intervention before implementation."
+publishedAt: "2026-07-18"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-designing-failure-semantics-v1
+primaryTopic: reliability
+tags:
+  - reliability
+  - system-design
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "Abstract constraint boundaries and paths"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - premise
+  - unknown
+  - review
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="premise">First define what the system cannot claim</h2>
+
+Reliability design often starts with a happy path: a request enters, work finishes, and a result returns. A safer order begins with observations that **cannot justify a conclusion**. A timeout is not proof of failure, a receipt is not acceptance, and a retry is not automatically safe.
+
+This sample exercise replaces each vague phrase with an inspectable state, entry condition, and exit evidence. It does not make an implementation smarter. It makes an incorrect conclusion harder to move across the boundary.
+
+<h2 id="unknown">Keep unknown outcomes unknown</h2>
+
+When an external operation may already have happened, the system needs a state that preserves uncertainty. Blind retry can turn an information gap into a duplicate side effect; declaring success turns a guess into a fact.
+
+A design like this normally keeps a stable idempotency identity across one logical attempt, queries or reconciles first, and only then continues, quarantines, or asks for human resolution. A real project must ground that protocol in its own contract and evidence. This page demonstrates structure only.
+
+<h2 id="review">Ask three questions in review</h2>
+
+1. Which observation is evidence but not a final decision?
+2. Which state can recover, and which can only quarantine?
+3. Who authorizes retry, compensation, and acceptance?
+
+If those questions do not have locatable answers, a polished happy path still cannot support a reliable promise.

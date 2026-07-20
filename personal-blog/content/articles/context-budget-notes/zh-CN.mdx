@@ -1,0 +1,48 @@
+---
+schemaVersion: 1
+kind: article
+locale: zh-CN
+translationKey: context-budget-notes
+slug: context-budget-notes
+title: "上下文预算不是相关性排行榜（示例）"
+description: "一篇示例手记，用 required、forbidden、授权和损失声明区分硬边界与语义排序。"
+publishedAt: "2026-07-14"
+status: sample
+placeholder: true
+featured: false
+pairingSnapshot: sample-context-budget-notes-v1
+primaryTopic: agent-systems
+tags:
+  - agent-systems
+  - governance
+  - system-design
+hero:
+  src: /images/projects/constraint-map.svg
+  alt: "抽象预算边界"
+  license: "Project-authored SVG, UNLICENSED"
+  provenance: "Local abstract fallback; no external source"
+anchors:
+  - hard-soft
+  - loss
+  - questions
+claimLevel: sample
+---
+
+<SampleNotice />
+
+<h2 id="hard-soft">先分硬边界与软信号</h2>
+
+相关性分数可以帮助候选排序，却不能购买权限、突破敏感度边界或挤掉必需证据。上下文预算设计的第一步，是把 `required`、`forbidden`、授权、时效和硬资源上限与可替换的检索策略分开。
+
+<h2 id="loss">缺失与损失需要可见</h2>
+
+当可选材料装不下时，系统可以降级；但降级结果应说明省略了什么、使用了哪个转换版本，以及结论适用于何种范围。必需项无法授权或超出硬预算时，默认应关闭，而不是把残缺视图包装成完整输入。
+
+<h2 id="questions">实现前的检查问题</h2>
+
+- 排序器是否在授权之前看到正文？
+- 缓存键是否包含主体、目的与撤销版本？
+- 摘要后是否还能追溯来源与损失？
+- 相同输入与渲染器版本是否产生稳定输出？
+
+这些问题把“提示词塞了什么”转化为可以在系统边界上审查的合同。
