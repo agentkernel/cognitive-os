@@ -165,6 +165,7 @@ impl KernelHarness {
                     canonical_json,
                 },
                 outbox: vec![],
+                fencing_epoch: None,
             })
             .map_err(|err| env_err(format!("seed admission: {err}")))?;
         Ok(())
@@ -288,6 +289,7 @@ fn command(
         evidence,
         budget: None,
         outbox_destinations: vec![],
+        fencing_epoch: None,
     })
 }
 
@@ -387,6 +389,7 @@ fn bypass_gate_commit(
             },
             budget: None,
             outbox: vec![],
+            fencing_epoch: None,
         })
         .map_err(|err| env_err(format!("bypass commit failed unexpectedly: {err}")))?;
     Ok(())
