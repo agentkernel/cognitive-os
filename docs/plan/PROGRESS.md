@@ -58,6 +58,6 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 三模式产品设计、第三方 Agent 适配与开发任务编排提示词）
-2. [20260720-lane-con-mobile-product-design-handoff.md](../checkpoints/20260720-lane-con-mobile-product-design-handoff.md)（iPhone/Android phone 产品设计、决策、parity、验证与剩余 gates）
-3. [20260720-lane-ctr-handoff.md](../checkpoints/20260720-lane-ctr-handoff.md)（Lane-CTR M1 契约批：F-003 收尾、`$id` 统一、codegen、bundle digest、golden §14、触碰点清单）
+1. [20260720-lane-con-agent-takeover-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-takeover-prompt-handoff.md)（Agent Hub 两模式、Paseo 参考与安全进程/session/文件接管提示词）
+2. [20260720-lane-con-agent-hub-prompt-handoff.md](../checkpoints/20260720-lane-con-agent-hub-prompt-handoff.md)（Agent Hub 初版产品设计、第三方 Agent 适配与开发任务编排提示词）
+3. [20260720-lane-con-mobile-product-design-handoff.md](../checkpoints/20260720-lane-con-mobile-product-design-handoff.md)（iPhone/Android phone 产品设计、决策、parity、验证与剩余 gates）
