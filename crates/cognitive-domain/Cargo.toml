@@ -10,6 +10,8 @@ publish.workspace = true
 # on cognitive-contracts only. No HTTP, no SQLite, no model SDKs, no tokio.
 [dependencies]
 cognitive-contracts = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]

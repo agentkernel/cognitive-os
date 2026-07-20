@@ -40,10 +40,17 @@ requirements:
       - STATE-CAS-002
     vectors:
       - conformance/vectors/state-conflict.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/engine.rs
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m2_acceptance.rs
+      - crates/cognitive-kernel/tests/engine_gate.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
+    notes: M2 Rust behavior tests executed (concurrent CAS single winner, stale-version STATE_CONFLICT); vector execution
+      stays with Lane-CFR.
   - id: REQ-STATE-004
     owner: state
     owner_spec: specs/core/README.md
@@ -2038,10 +2045,14 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-store/src/sqlite.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m2_acceptance.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
+    notes: Storage-level append-only triggers; UPDATE/DELETE negatives executed in M2 acceptance tests.
   - id: REQ-EVT-005
     owner: evt-005
     owner_spec: specs/core/README.md
@@ -2061,10 +2072,17 @@ requirements:
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors: []
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-domain/src/ids.rs
+      - crates/cognitive-store/src/ids.rs
+    impl_tests:
+      - crates/cognitive-domain/src/ids.rs
+      - crates/cognitive-store/src/ids.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
+    notes: Lowercase canonical UUIDv7 newtypes and RFC 9562 generator (format layer); deeper clock-rollback and same-tick
+      compliance tests are M4 scope.
   - id: REQ-GOBJ-DOMAIN-001
     owner: governed-object-contract
     owner_spec: docs/standards/governed-object-contract.md#2-identity-and-governance-domains
@@ -3003,10 +3021,17 @@ requirements:
       - STATE-STORE-DEGRADE-001
     vectors:
       - conformance/vectors/state-store-degradation.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-kernel/src/error.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m2_acceptance.rs
+      - crates/cognitive-kernel/tests/engine_gate.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
+    notes: M2 behavior side executed (read-only degradation and mid-transaction fault fail closed as
+      STATE_STORE_UNAVAILABLE); full degradation vector execution stays with Lane-CFR (M4 adds disk-full faults).
   - id: REQ-RES-002
     owner: res-002
     owner_spec: specs/core/README.md
@@ -3319,10 +3344,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-kernel/src/replay.rs
+    impl_tests:
+      - crates/cognitive-store/tests/m2_acceptance.rs
+      - crates/cognitive-kernel/tests/engine_gate.rs
+    evidence:
+      - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
+    notes: M2 Rust behavior tests executed (replay digest stability); vector execution stays with Lane-CFR.
   - id: REQ-STATE-005
     owner: state-005
     owner_spec: specs/core/README.md

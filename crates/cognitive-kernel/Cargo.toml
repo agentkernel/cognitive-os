@@ -13,6 +13,8 @@ publish.workspace = true
 [dependencies]
 cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]
