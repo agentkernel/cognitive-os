@@ -39,6 +39,14 @@
       "format": "uri-reference",
       "minLength": 1
     },
+    "request_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "single_use": {
+      "type": "boolean"
+    },
     "proposal_digest": {
       "$ref": "common-defs.schema.json#/$defs/digest"
     },
@@ -139,6 +147,33 @@
         ],
         "properties": {
           "independent_from_proposer": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "const": "R1"
+          },
+          "decision": {
+            "const": "approve"
+          }
+        },
+        "required": [
+          "risk_class",
+          "decision"
+        ]
+      },
+      "then": {
+        "required": [
+          "request_ref",
+          "single_use"
+        ],
+        "properties": {
+          "single_use": {
             "const": true
           }
         }

@@ -8,7 +8,9 @@
 - Machine assets: `specs/schemas/authorization-capability.schema.json`,
   `authorization-delegation.schema.json`, `principal.schema.json`,
   `membership.schema.json`, `actor-chain.schema.json`,
-  `privileged-management-session.schema.json`
+  `privileged-management-session.schema.json`,
+  `management-approval-request.schema.json` (F-011 R1 registration),
+  `management-approval-decision.schema.json`
 - Normative sources: RFC-0001 sections 5-6, 19; Core companion
 
 ## 1. Scope and normative language
@@ -68,11 +70,27 @@ PrivilegedManagementSession: expired or revoked sessions fail with
 `MANAGEMENT_SESSION_EXPIRED` / `MANAGEMENT_SESSION_REVOKED`; step-up
 requirements return `MANAGEMENT_STEP_UP_REQUIRED` as a challenge, not a
 grant. Self-authorization is denied (`MANAGEMENT_SELF_AUTHORIZATION_DENIED`,
-vector `management-untrusted-self-authorization.json`); independent approval
+vectors `management-untrusted-self-authorization.json`,
+`management-approval-self-approval.json`); independent approval
 is enforced where required (`MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED`,
 vector `management-independent-approval.json`). Task and management channels
 keep disjoint credentials and caches ([REQ-SHELL-CHANNEL-001], vector
 `shell-channel-isolation-003.json`).
+
+The R1 in-conversation structured confirmation (F-011/IMP-05 registration)
+is machine-fixed by `management-approval-request.schema.json` (the OS-issued
+challenge card: proposal digest, tiered confirmation surface, independent
+channel identity, one-time challenge, method, expiry, single-use) and the
+R1-approve conditional of `management-approval-decision.schema.json`
+(`request_ref` + `single_use: true`). Natural language only triggers the
+structured challenge (RFC-0001 section 7.6, [REQ-AKP-MGMT-002]); a decision
+that is missing, expired, replayed, challenge-mismatched or
+proposer-entangled never dispatches (vectors
+`management-approval-missing-confirmation.json`,
+`management-approval-fatigue-guard.json`,
+`management-approval-self-approval.json`). An R1 decision's `session_ref`
+names the one-shot approval context: in-chat approval establishes no
+persistent PrivilegedManagementSession (whitepaper section 12.12).
 
 ## 6. Compliance checks
 

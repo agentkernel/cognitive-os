@@ -325,6 +325,137 @@ fn shell_control_request_is_cancel_with_target_and_reason() {
     );
 }
 
+/// Positive R1 approval request (F-011 registration): the described
+/// challenge members validate, so the tier negatives below are not passing
+/// vacuously.
+fn positive_r1_approval_request() -> Value {
+    serde_json::json!({
+        "schema_version": "cognitiveos.management-approval-request/0.1",
+        "request_id": "mar_r1-net-cfg-0001",
+        "proposal_ref": "proposal://tenant-a/map_cfg-network-42",
+        "proposal_digest": format!("sha256:{}", "a".repeat(64)),
+        "risk_class": "R1",
+        "confirmation_surface": "chat_structured",
+        "human_principal": "principal://tenant-a/user-alice",
+        "proposer_principal": "principal://tenant-a/agent-worker-7",
+        "proposer_actor_chain_digest": format!("sha256:{}", "b".repeat(64)),
+        "channel_identity": "channel://os/approval-bot-1",
+        "challenge_digest": format!("sha256:{}", "c".repeat(64)),
+        "method": "digest_shortcode_match",
+        "single_use": true,
+        "aggregation_key": "system.configure/network",
+        "requested_at": "2026-07-20T00:00:00Z",
+        "expires_at": "2026-07-20T00:05:00Z"
+    })
+}
+
+#[test]
+fn approval_request_tiers_fail_closed_by_risk_class() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "management-approval-request.schema.json");
+    if let Some(err) = validator.validate(&positive_r1_approval_request()).err() {
+        panic!("R1 chat-structured approval request must validate, got: {err}");
+    }
+    // Chat is never a completion surface above R1 (whitepaper 12.12 matrix).
+    let mut r2_chat = positive_r1_approval_request();
+    r2_chat["risk_class"] = serde_json::json!("R2");
+    r2_chat["session_ref"] = serde_json::json!("session://tenant-a/pms-1");
+    assert!(
+        !validator.is_valid(&r2_chat),
+        "R2 with chat_structured completion surface must be rejected"
+    );
+    r2_chat["confirmation_surface"] = serde_json::json!("trusted_surface");
+    if let Some(err) = validator.validate(&r2_chat).err() {
+        panic!("R2 trusted-surface request must validate, got: {err}");
+    }
+    // R2/R3 bind a persistent management session.
+    let mut r2_sessionless = r2_chat.clone();
+    r2_sessionless
+        .as_object_mut()
+        .map(|o| o.remove("session_ref"));
+    assert!(
+        !validator.is_valid(&r2_sessionless),
+        "R2 without session_ref must be rejected"
+    );
+    // R3 requires the dual-independent surface.
+    let mut r3 = r2_chat.clone();
+    r3["risk_class"] = serde_json::json!("R3");
+    assert!(
+        !validator.is_valid(&r3),
+        "R3 on a non-dual surface must be rejected"
+    );
+    r3["confirmation_surface"] = serde_json::json!("dual_independent");
+    if let Some(err) = validator.validate(&r3).err() {
+        panic!("R3 dual-independent request must validate, got: {err}");
+    }
+    // Auto-approval is an R0-only surface; R1+ must confirm.
+    let mut r1_auto = positive_r1_approval_request();
+    r1_auto["confirmation_surface"] = serde_json::json!("policy_auto");
+    assert!(
+        !validator.is_valid(&r1_auto),
+        "R1 with policy_auto must be rejected"
+    );
+    // The challenge is single-use by contract (REQ-AKP-MGMT-002).
+    let mut reusable = positive_r1_approval_request();
+    reusable["single_use"] = serde_json::json!(false);
+    assert!(
+        !validator.is_valid(&reusable),
+        "a reusable approval request must be rejected"
+    );
+}
+
+#[test]
+fn approval_decision_r1_conditional_binds_request_and_single_use() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "management-approval-decision.schema.json");
+    let base = serde_json::json!({
+        "schema_version": "cognitiveos.management-approval-decision/0.1",
+        "decision_id": "mad_r1-net-cfg-0001",
+        "object_version": 1,
+        "proposal_ref": "proposal://tenant-a/map_cfg-network-42",
+        "proposal_digest": format!("sha256:{}", "a".repeat(64)),
+        "session_ref": "approval://tenant-a/one-shot/mar_r1-net-cfg-0001",
+        "decision": "approve",
+        "deciding_authority": "authority://platform/management-session",
+        "approver_principal": "principal://tenant-a/user-alice",
+        "approver_actor_chain_digest": format!("sha256:{}", "d".repeat(64)),
+        "policy_version": 3,
+        "risk_class": "R1",
+        "challenge_digest": format!("sha256:{}", "c".repeat(64)),
+        "decided_at": "2026-07-20T00:01:00Z",
+        "expires_at": "2026-07-20T00:05:00Z",
+        "decision_digest": format!("sha256:{}", "e".repeat(64)),
+        "authority_signature": "sig-0123456789abcdef"
+    });
+    // R1 approve without the request binding / single-use pledge is rejected
+    // (hardened conditional, F-011).
+    assert!(
+        !validator.is_valid(&base),
+        "R1 approve without request_ref/single_use must be rejected"
+    );
+    let mut bound = base.clone();
+    bound["request_ref"] = serde_json::json!("approval-request://tenant-a/mar_r1-net-cfg-0001");
+    bound["single_use"] = serde_json::json!(true);
+    if let Some(err) = validator.validate(&bound).err() {
+        panic!("bound single-use R1 approval must validate, got: {err}");
+    }
+    let mut reusable = bound.clone();
+    reusable["single_use"] = serde_json::json!(false);
+    assert!(
+        !validator.is_valid(&reusable),
+        "reusable R1 approval must be rejected"
+    );
+    // Pre-existing shapes stay valid: an R2 independent approval without the
+    // new members is untouched by the hardening (non-breaking proof).
+    let mut r2 = base.clone();
+    r2["risk_class"] = serde_json::json!("R2");
+    r2["independent_from_proposer"] = serde_json::json!(true);
+    r2["step_up_method"] = serde_json::json!("fido2_sign");
+    if let Some(err) = validator.validate(&r2).err() {
+        panic!("existing R2 approval shape must stay valid, got: {err}");
+    }
+}
+
 #[test]
 fn legacy_defs_stay_deprecated_and_unreferenced() {
     // Decision record for F-003 remaining condition (legacy `$defs`): the

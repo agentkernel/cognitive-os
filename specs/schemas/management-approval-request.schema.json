@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "management-approval-request.schema.json",
+  "title": "CognitiveOS ManagementApprovalRequest",
+  "description": "OS-issued approval request/challenge card (F-011 R1 registration). Registers the structured exchange described by RFC-0001 section 7.6 (natural language only triggers a structured challenge; it is never itself an approval), REQ-AKP-MGMT-002 (a challenge binds proposal digest, session, human principal, method, expiry and a single/limited-use policy) and the whitepaper section 12.12 tiered-confirmation baseline (IMP-05). The confirmation surface is tiered by risk class and fails closed: a chat channel is a notification and low-risk confirmation surface only; R2/R3 completion surfaces leave the conversation channel. Channel-identity independence from the workload under review, one-time challenge freshness, per-source rate limiting and aggregation remain behavioral gates.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_id",
+    "proposal_ref",
+    "proposal_digest",
+    "risk_class",
+    "confirmation_surface",
+    "human_principal",
+    "proposer_principal",
+    "proposer_actor_chain_digest",
+    "channel_identity",
+    "challenge_digest",
+    "method",
+    "single_use",
+    "requested_at",
+    "expires_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.management-approval-request/0.1"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^mar_[A-Za-z0-9._-]{8,128}$"
+    },
+    "proposal_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "proposal_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "session_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "risk_class": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "confirmation_surface": {
+      "description": "Tiered completion surface (whitepaper section 12.12 matrix): policy_auto (R0), chat_structured (R1 in-conversation structured confirmation), trusted_surface (R2 credential-signed trusted surface), dual_independent (R3 dual-principal with step-up).",
+      "enum": [
+        "policy_auto",
+        "chat_structured",
+        "trusted_surface",
+        "dual_independent"
+      ]
+    },
+    "human_principal": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "proposer_principal": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "proposer_actor_chain_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "channel_identity": {
+      "description": "OS-held channel identity independent of the workload under review (section 12.12 mechanism constraint; independence itself is verified behaviorally).",
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "challenge_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "method": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+    },
+    "single_use": {
+      "const": true
+    },
+    "aggregation_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "const": "R0"
+          }
+        },
+        "required": [
+          "risk_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confirmation_surface": {
+            "const": "policy_auto"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "const": "R1"
+          }
+        },
+        "required": [
+          "risk_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confirmation_surface": {
+            "enum": [
+              "chat_structured",
+              "trusted_surface",
+              "dual_independent"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "const": "R2"
+          }
+        },
+        "required": [
+          "risk_class"
+        ]
+      },
+      "then": {
+        "required": [
+          "session_ref"
+        ],
+        "properties": {
+          "confirmation_surface": {
+            "enum": [
+              "trusted_surface",
+              "dual_independent"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk_class": {
+            "const": "R3"
+          }
+        },
+        "required": [
+          "risk_class"
+        ]
+      },
+      "then": {
+        "required": [
+          "session_ref"
+        ],
+        "properties": {
+          "confirmation_surface": {
+            "const": "dual_independent"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

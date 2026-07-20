@@ -281,18 +281,23 @@ requirements:
   tests:
   - MGMT-CONFIG-001
   - MGMT-GATE-DENY-003
+  - MGMT-APPROVAL-R1-009
 - id: REQ-MGMT-APPROVAL-001
   owner: management-approval
   owner_spec: specs/schemas/management-approval-decision.schema.json
   status: specified
   tests:
   - MGMT-APPROVAL-005
+  - MGMT-APPROVAL-R1-009
+  - MGMT-APPROVAL-SELF-010
+  - MGMT-APPROVAL-FATIGUE-011
 - id: REQ-MGMT-AUTHZ-001
   owner: management-authorization
   owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
   status: specified
   tests:
   - MGMT-AUTHZ-004
+  - MGMT-APPROVAL-SELF-010
 - id: REQ-MGMT-TRUST-001
   owner: management-trust
   owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
@@ -583,6 +588,8 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - MGMT-APPROVAL-R1-009
+  - MGMT-APPROVAL-FATIGUE-011
 - id: REQ-AKP-MGMT-003
   owner: akp-mgmt
   owner_spec: specs/akp/README.md

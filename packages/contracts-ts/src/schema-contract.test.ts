@@ -290,6 +290,124 @@ test("shell control request is a cancel with target and reason", () => {
   );
 });
 
+/** Positive R1 approval request (F-011 registration), TS twin. */
+function positiveR1ApprovalRequest(): Record<string, unknown> {
+  return {
+    schema_version: "cognitiveos.management-approval-request/0.1",
+    request_id: "mar_r1-net-cfg-0001",
+    proposal_ref: "proposal://tenant-a/map_cfg-network-42",
+    proposal_digest: `sha256:${"a".repeat(64)}`,
+    risk_class: "R1",
+    confirmation_surface: "chat_structured",
+    human_principal: "principal://tenant-a/user-alice",
+    proposer_principal: "principal://tenant-a/agent-worker-7",
+    proposer_actor_chain_digest: `sha256:${"b".repeat(64)}`,
+    channel_identity: "channel://os/approval-bot-1",
+    challenge_digest: `sha256:${"c".repeat(64)}`,
+    method: "digest_shortcode_match",
+    single_use: true,
+    aggregation_key: "system.configure/network",
+    requested_at: "2026-07-20T00:00:00Z",
+    expires_at: "2026-07-20T00:05:00Z",
+  };
+}
+
+test("approval request tiers fail closed by risk class (F-011 R1)", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("management-approval-request.schema.json");
+  assert.ok(validate);
+  assert.equal(
+    validate(positiveR1ApprovalRequest()),
+    true,
+    `R1 chat-structured request must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  const r2Chat = {
+    ...positiveR1ApprovalRequest(),
+    risk_class: "R2",
+    session_ref: "session://tenant-a/pms-1",
+  };
+  assert.equal(validate(r2Chat), false, "R2 with chat_structured must be rejected");
+  const r2Trusted = { ...r2Chat, confirmation_surface: "trusted_surface" };
+  assert.equal(
+    validate(r2Trusted),
+    true,
+    `R2 trusted-surface request must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  const r2Sessionless = { ...r2Trusted } as Record<string, unknown>;
+  delete r2Sessionless["session_ref"];
+  assert.equal(validate(r2Sessionless), false, "R2 without session_ref must be rejected");
+  const r3Wrong = { ...r2Trusted, risk_class: "R3" };
+  assert.equal(validate(r3Wrong), false, "R3 on a non-dual surface must be rejected");
+  assert.equal(
+    validate({ ...r3Wrong, confirmation_surface: "dual_independent" }),
+    true,
+    `R3 dual-independent request must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  assert.equal(
+    validate({ ...positiveR1ApprovalRequest(), confirmation_surface: "policy_auto" }),
+    false,
+    "R1 with policy_auto must be rejected",
+  );
+  assert.equal(
+    validate({ ...positiveR1ApprovalRequest(), single_use: false }),
+    false,
+    "a reusable approval request must be rejected",
+  );
+});
+
+test("approval decision R1 conditional binds request_ref and single_use", () => {
+  const ajv = buildAjv(loadSchemas());
+  const validate = ajv.getSchema("management-approval-decision.schema.json");
+  assert.ok(validate);
+  const base: Record<string, unknown> = {
+    schema_version: "cognitiveos.management-approval-decision/0.1",
+    decision_id: "mad_r1-net-cfg-0001",
+    object_version: 1,
+    proposal_ref: "proposal://tenant-a/map_cfg-network-42",
+    proposal_digest: `sha256:${"a".repeat(64)}`,
+    session_ref: "approval://tenant-a/one-shot/mar_r1-net-cfg-0001",
+    decision: "approve",
+    deciding_authority: "authority://platform/management-session",
+    approver_principal: "principal://tenant-a/user-alice",
+    approver_actor_chain_digest: `sha256:${"d".repeat(64)}`,
+    policy_version: 3,
+    risk_class: "R1",
+    challenge_digest: `sha256:${"c".repeat(64)}`,
+    decided_at: "2026-07-20T00:01:00Z",
+    expires_at: "2026-07-20T00:05:00Z",
+    decision_digest: `sha256:${"e".repeat(64)}`,
+    authority_signature: "sig-0123456789abcdef",
+  };
+  assert.equal(validate(base), false, "R1 approve without request_ref/single_use must be rejected");
+  const bound = {
+    ...base,
+    request_ref: "approval-request://tenant-a/mar_r1-net-cfg-0001",
+    single_use: true,
+  };
+  assert.equal(
+    validate(bound),
+    true,
+    `bound single-use R1 approval must validate: ${JSON.stringify(validate.errors)}`,
+  );
+  assert.equal(
+    validate({ ...bound, single_use: false }),
+    false,
+    "reusable R1 approval must be rejected",
+  );
+  // Non-breaking proof: the pre-existing R2 independent shape stays valid.
+  const r2 = {
+    ...base,
+    risk_class: "R2",
+    independent_from_proposer: true,
+    step_up_method: "fido2_sign",
+  };
+  assert.equal(
+    validate(r2),
+    true,
+    `existing R2 approval shape must stay valid: ${JSON.stringify(validate.errors)}`,
+  );
+});
+
 test("legacy $defs stay deprecated and unreferenced (F-003 retention decision)", () => {
   const schemas = loadSchemas();
   const common = schemas.find((s) => s.name === "common-defs.schema.json");

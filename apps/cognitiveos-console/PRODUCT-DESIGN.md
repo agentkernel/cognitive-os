@@ -16,6 +16,7 @@
 | 2026-07-20 | D-005 已使 transition table schema 接受 `0.1/0.2` | §20.3、产品追踪 BLK-001 | 移除过时 blocker，保留已关闭历史 |
 | 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`docs/platforms/`](../../docs/platforms/README.md#console-实现-gate) 的可定位平台 gate |
 | 2026-07-20 | Lane-CTR 缺口批（D-013~D-015）登记 AKP 信封/流帧/shell.control 机器 schema（56→60），错误注册表与 Shell/AKP 族入 codegen；Console 未来消费的 watch/控制 wire 形状自此有登记合同 | 引用 AKP/watch wire 形状的产品章节 | 仅登记标注；正文由 Console 车道对齐 |
+| 2026-07-20 | Lane-CTR F-011 批登记 R1 审批合同（60→61：management-approval-request 新增 + approval-decision R1 条件硬化 + 3 份防疲劳/自批/缺确认负例向量）；Console 审批卡片/确认面的机器合同基线自此存在（分级确认面 schema 条件：R2/R3 禁聊天完成面） | 引用审批/确认交互的产品章节 | 仅登记标注；正文由 Console 车道对齐 |
 
 ## 0. v2 文档地图
 

@@ -1,0 +1,62 @@
+{
+  "id": "MGMT-APPROVAL-R1-009",
+  "title": "R1 action without a structured confirmation decision must not dispatch",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital",
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-APPROVAL-001",
+    "REQ-MGMT-GATE-001",
+    "REQ-AKP-MGMT-002"
+  ],
+  "input": {
+    "request_contract": "management-approval-request.schema.json",
+    "decision_contract": "management-approval-decision.schema.json",
+    "cases": [
+      {
+        "name": "no_decision_present",
+        "risk_class": "R1",
+        "confirmation_required": true,
+        "approval_request_issued": true,
+        "approval_decision_present": false
+      },
+      {
+        "name": "natural_language_only",
+        "risk_class": "R1",
+        "confirmation_required": true,
+        "approval_request_issued": true,
+        "approval_decision_present": false,
+        "conversation_text": "yes go ahead, approved"
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "name": "no_decision_present",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "effects_created": false
+      },
+      {
+        "name": "natural_language_only",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "effects_created": false,
+        "text_constitutes_approval": false
+      }
+    ],
+    "structured_decision_required_before_dispatch": true
+  }
+}

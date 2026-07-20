@@ -1,0 +1,90 @@
+{
+  "id": "MGMT-APPROVAL-FATIGUE-011",
+  "title": "Expired, reused, mismatched or bulk-resent approvals never authorize",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital",
+    "intelligent_management_shell"
+  ],
+  "requirement_ids": [
+    "REQ-MGMT-APPROVAL-001",
+    "REQ-AKP-MGMT-002"
+  ],
+  "input": {
+    "request_contract": "management-approval-request.schema.json",
+    "decision_contract": "management-approval-decision.schema.json",
+    "cases": [
+      {
+        "name": "decision_presented_after_expiry",
+        "risk_class": "R1",
+        "decision": "approve",
+        "expires_at": "2026-07-20T00:05:00Z",
+        "presented_at": "2026-07-20T00:07:30Z"
+      },
+      {
+        "name": "single_use_decision_replayed",
+        "risk_class": "R1",
+        "decision": "approve",
+        "single_use": true,
+        "prior_uses": 1
+      },
+      {
+        "name": "challenge_digest_mismatch",
+        "risk_class": "R1",
+        "decision": "approve",
+        "decision_challenge_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "request_challenge_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      {
+        "name": "duplicate_resend_burst",
+        "risk_class": "R1",
+        "identical_requests_in_window": 25,
+        "window_seconds": 60,
+        "user_action": "none"
+      }
+    ]
+  },
+  "expected": {
+    "case_results": [
+      {
+        "name": "decision_presented_after_expiry",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "fresh_challenge_required": true
+      },
+      {
+        "name": "single_use_decision_replayed",
+        "decision": "challenge",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "fresh_challenge_required": true
+      },
+      {
+        "name": "challenge_digest_mismatch",
+        "decision": "deny",
+        "error": {
+          "code": "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED",
+          "category": "auth"
+        },
+        "dispatches": 0,
+        "effects_created": false
+      },
+      {
+        "name": "duplicate_resend_burst",
+        "requests_aggregated": true,
+        "resend_rate_limited": true,
+        "auto_approval_granted": false,
+        "dispatches": 0
+      }
+    ],
+    "expired_or_reused_approval_executes": false
+  }
+}
