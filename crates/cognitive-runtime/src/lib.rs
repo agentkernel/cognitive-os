@@ -20,6 +20,7 @@ pub mod readiness;
 pub mod recovery_flow;
 pub mod sandbox;
 pub mod shell;
+pub mod target_resolution;
 
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
@@ -49,6 +50,10 @@ pub use sandbox::{
     refuse_cross_platform_merge,
 };
 pub use shell::{ShellError, ShellPhase, ShellService};
+pub use target_resolution::{
+    TargetSelectorDecision, TargetSelectorRequest, admit_target_selector, is_strong_reference,
+    request_from_target_vector_input,
+};
 
 /// Runtime role marker (M6: harness/shell + install/sandbox/adapter/readiness/PERF).
 pub const RUNTIME_ROLE: &str =
@@ -230,5 +235,56 @@ mod tests {
         assert_eq!(decision.decision, "deny");
         assert_eq!(decision.error_code, Some("SHELL_CHANNEL_BINDING_MISMATCH"));
         assert!(!decision.management_context_leaked);
+    }
+
+    /// REQ-SHELL-TARGET-001 / REQ-SHELL-AMBIGUITY-001 /
+    /// vector SHELL-TARGET-AMBIGUITY-001: selector "stop it" + two visible
+    /// executions → clarification_required + SHELL_TARGET_AMBIGUOUS +
+    /// dispatch=false (never guess top-1).
+    #[test]
+    fn shell_target_ambiguity_rejects_stop_it_with_two_executions() {
+        let request =
+            crate::request_from_target_vector_input("stop it", ["execution://a", "execution://b"]);
+        let decision = crate::admit_target_selector(&request);
+        assert_eq!(decision.decision, "clarification_required");
+        assert_eq!(decision.error_code, Some("SHELL_TARGET_AMBIGUOUS"));
+        assert_eq!(decision.error_category, Some("shell"));
+        assert!(!decision.dispatch);
+        assert!(decision.resolved_target.is_none());
+    }
+
+    #[test]
+    fn shell_target_ambiguity_never_dispatches_on_multi_candidate() {
+        let request = crate::TargetSelectorRequest {
+            selector: "the agent".to_owned(),
+            visible_candidates: vec![
+                "execution://x".to_owned(),
+                "execution://y".to_owned(),
+                "execution://z".to_owned(),
+            ],
+        };
+        let decision = crate::admit_target_selector(&request);
+        assert!(!decision.dispatch);
+        assert_eq!(decision.error_code, Some("SHELL_TARGET_AMBIGUOUS"));
+    }
+
+    #[test]
+    fn shell_target_allows_exact_unique_strong_ref() {
+        let request = crate::request_from_target_vector_input("execution://a", ["execution://a"]);
+        let decision = crate::admit_target_selector(&request);
+        assert_eq!(decision.decision, "allow");
+        assert!(decision.error_code.is_none());
+        assert!(decision.dispatch);
+        assert_eq!(decision.resolved_target.as_deref(), Some("execution://a"));
+    }
+
+    #[test]
+    fn shell_target_not_found_on_empty_candidates() {
+        let request =
+            crate::request_from_target_vector_input("execution://a", Vec::<String>::new());
+        let decision = crate::admit_target_selector(&request);
+        assert_eq!(decision.decision, "deny");
+        assert_eq!(decision.error_code, Some("SHELL_TARGET_NOT_FOUND"));
+        assert!(!decision.dispatch);
     }
 }
