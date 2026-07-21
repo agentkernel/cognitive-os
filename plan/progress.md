@@ -1,6 +1,6 @@
 # 客户端文档/结构局部进度
 
-> 类别：plan（局部）｜ owner：Lane-CON ｜ 最后更新：2026-07-21（M5 细监控：PR #20 已合；批 2a 仅在 `lane/run`/PR #21；gate 仍 blocked）
+> 类别：plan（局部）｜ owner：Lane-CON ｜ 最后更新：2026-07-21（PR #21 合入后解阻复核；gate 仍 blocked；进入等待上游）
 >
 > **职责边界**：本文件只记录 `clients/` 文档与结构的局部准备状态。全局工程状态、里程碑、REQ/向量计数、证据声明的唯一真相是 [docs/plan/PROGRESS.md](../../docs/plan/PROGRESS.md)；两者冲突时以全局 PROGRESS 为准。
 
@@ -22,8 +22,9 @@
 | **Phase 0：技术栈候选比较草案** | **done（非正式 ADR；未批准栈）** |
 | **Phase 0：设计系统 planned 缺口登记** | **done（最小登记；无 token 大文件）** |
 | **Phase 0：文档准备收口（本地所能）** | **done（2026-07-21）** — 真实 PoC 执行 / 正式 ADR / M5 出口仍 blocked；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-status-handoff.md` |
-| **上游 M5 细监控（只读）** | **done（2026-07-21）** — main=`bd890bb`（PR #20）；`lane/run`=`952bd8c` 批 2a **未合 main**（开放 PR #21）；main 上 akp/runtime/kernel-server 仍骨架；management 批 1 已非骨架；无 m5-milestone-review；依赖组 1/2/7 仍未完整交付；handoff：`docs/checkpoints/20260721-lane-con-m5-monitor-handoff.md` |
+| **上游 M5 细监控（只读）** | **done（2026-07-21）** — 见 PR #22 / `20260721-lane-con-m5-monitor-handoff.md`（批 2a 合入前快照） |
+| **上游 M5 解阻复核（只读）** | **done（2026-07-21）** — main=`bb5b356`（含 PR #21/#22）；akp 已脱离骨架；runtime/kernel-server 部分脱离；无 m5-milestone-review；依赖组 1/2/7 仍未完整；五项 gate 仍不满足；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
 | structure-ready | **yes**（见 [READINESS](../READINESS.md)） |
 | implementation-ready | **no / blocked**（见 [READINESS](../READINESS.md)；未改 yes） |
 
-客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；Agent Hub Open PoC = 28 not-run + 5 planned；全局向量 84（46 `pass` / 38 `not-run`）但客户端平台证据仍为 `none`；Profile `not implemented`。Phase 0 文档准备已尽本地所能（PR #18/#19/#20）；**本地 Phase 0 文档已尽，进入等待**——等 M5 出口（含批 2b + milestone-review）与外部设备/账号；批 2a（PR #21）合入后仅值得再做只读快照，不构成实现授权。
+客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；Agent Hub Open PoC = 28 not-run + 5 planned；全局向量 84（46 `pass` / 38 `not-run`）但客户端平台证据仍为 `none`；Profile `not implemented`。Phase 0 文档准备已尽本地所能；**进入等待上游**——等批 2b + m5-milestone-review + 依赖组 1/2/7 完整 + 外部 PoC/ADR/法务。批 2a 合入不构成实现授权。
