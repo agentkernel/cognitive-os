@@ -12,6 +12,7 @@
 | TS 安装 | `pnpm install` | `pnpm install --frozen-lockfile` |
 | TS 构建/测试 | `pnpm -r build ; pnpm -r test` | `pnpm -r build && pnpm -r test` |
 | 静态一致性检查 | `pnpm run check:consistency` | 同左 |
+| 本地一键 Boot→Verify→Perf（non-claim） | `pnpm run verify:local` | 同左（见 `docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`） |
 | 符合性 runner（枚举） | `cargo run -p cognitive-conformance --bin conformance-runner` | 同左 |
 | 跨语言 golden 对比 | 见 `.github/workflows/ci.yml` golden job | CI 自动 |
 
