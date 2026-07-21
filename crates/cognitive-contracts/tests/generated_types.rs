@@ -5,11 +5,15 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use cognitive_contracts::canonical;
+use cognitive_contracts::generated::agent_installation::AgentInstallation;
+use cognitive_contracts::generated::agent_package_manifest::AgentPackageManifest;
 use cognitive_contracts::generated::effect::{Effect, EffectState};
 use cognitive_contracts::generated::intent_interpretation::IntentInterpretation;
 use cognitive_contracts::generated::management_action_proposal::ManagementActionProposal;
 use cognitive_contracts::generated::object_reference::{ObjectReference, StrongReference};
+use cognitive_contracts::generated::performance_report::PerformanceReport;
 use cognitive_contracts::generated::privileged_management_session::PrivilegedManagementSession;
+use cognitive_contracts::generated::profile_manifest::ProfileManifest;
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -148,7 +152,7 @@ fn generated_headers_pin_current_schema_digests() {
         );
         checked += 1;
     }
-    assert!(checked >= 35, "generated module coverage shrank: {checked}");
+    assert!(checked >= 40, "generated module coverage shrank: {checked}");
 }
 
 #[test]
@@ -172,7 +176,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        35,
+        40,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).
@@ -218,6 +222,39 @@ fn m5_consumer_bindings_are_exported_with_required_members() {
     assert_eq!(
         g::management_action_proposal::SCHEMA_DIGEST,
         by_file[g::management_action_proposal::SCHEMA_ID]
+    );
+}
+
+#[test]
+fn m6_consumer_bindings_are_exported_with_required_members() {
+    let missing_required = serde_json::json!({});
+    assert!(serde_json::from_value::<AgentPackageManifest>(missing_required.clone()).is_err());
+    assert!(serde_json::from_value::<AgentInstallation>(missing_required.clone()).is_err());
+    assert!(serde_json::from_value::<PerformanceReport>(missing_required.clone()).is_err());
+    assert!(serde_json::from_value::<ProfileManifest>(missing_required).is_err());
+
+    use cognitive_contracts::generated as g;
+    let by_file: std::collections::BTreeMap<&str, &str> =
+        g::SCHEMA_DIGESTS.iter().copied().collect();
+    for id in [
+        g::agent_package_manifest::SCHEMA_ID,
+        g::agent_installation::SCHEMA_ID,
+        g::agent_compatibility_report::SCHEMA_ID,
+        g::performance_report::SCHEMA_ID,
+        g::profile_manifest::SCHEMA_ID,
+    ] {
+        assert!(
+            by_file.contains_key(id),
+            "M6 schema {id} missing from SCHEMA_DIGESTS"
+        );
+    }
+    assert_eq!(
+        g::agent_package_manifest::SCHEMA_DIGEST,
+        by_file[g::agent_package_manifest::SCHEMA_ID]
+    );
+    assert_eq!(
+        g::performance_report::SCHEMA_DIGEST,
+        by_file[g::performance_report::SCHEMA_ID]
     );
 }
 
