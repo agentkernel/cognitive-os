@@ -248,6 +248,16 @@ impl PrivilegedManagementSession {
     /// schema constraints. Any violation fails closed with the registered
     /// auth denial — an invalid document is not a session.
     pub fn from_json_value(value: &Value) -> Result<Self, ManagementDenial> {
+        // Mechanical contract pin: generated binding must accept the wire
+        // document (`privileged-management-session.schema.json`).
+        let _: cognitive_contracts::generated::privileged_management_session::PrivilegedManagementSession =
+            serde_json::from_value(value.clone()).map_err(|err| {
+                denial(format!(
+                    "generated privileged-management-session binding rejected document: {err}"
+                ))
+            })?;
+        let _schema_pin =
+            cognitive_contracts::generated::privileged_management_session::SCHEMA_DIGEST;
         let schema_version = string_field(value, "schema_version")?;
         if schema_version != SCHEMA_VERSION {
             return Err(denial(format!(
@@ -455,17 +465,58 @@ impl PrivilegedManagementSession {
 
 impl PrivilegedManagementSession {
     pub fn canonical_json(&self) -> Result<Vec<u8>, ManagementDenial> {
-        let value = serde_json::json!({
-            "schema_version":SCHEMA_VERSION,"session_id":self.session_id,"object_version":self.object_version,
-            "management_domain":self.management_domain,"session_authority":self.session_authority,"human_principal":self.human_principal,
-            "actor_chain_digest":self.actor_chain_digest,"authentication_context_ref":self.authentication_context_ref,"activity_context_ref":self.activity_context_ref,
-            "scope":{"domains":self.scope.domains,"actions":self.scope.actions,"resources":self.scope.resources},
-            "risk_ceiling":match self.risk_ceiling{RiskClass::R0=>"R0",RiskClass::R1=>"R1",RiskClass::R2=>"R2",RiskClass::R3=>"R3"},
-            "policy_version":self.policy_version,"revocation_epoch":self.revocation_epoch,"issued_at":self.issued_at.as_str(),"last_activity_at":self.last_activity_at.as_str(),
-            "idle_timeout_seconds":self.idle_timeout_seconds,"absolute_expires_at":self.absolute_expires_at.as_str(),
-            "state":match self.state{SessionState::Pending=>"pending",SessionState::Active=>"active",SessionState::Expired=>"expired",SessionState::Revoked=>"revoked",SessionState::Closed=>"closed"},
-            "step_up_methods":self.step_up_methods,"session_digest":self.session_digest,"authority_signature":self.authority_signature
-        });
+        use cognitive_contracts::generated::common_defs::Digest;
+        use cognitive_contracts::generated::privileged_management_session::{
+            PrivilegedManagementSession as GeneratedSession,
+            PrivilegedManagementSessionRiskCeiling, PrivilegedManagementSessionSchemaVersion,
+            PrivilegedManagementSessionScope, PrivilegedManagementSessionState,
+        };
+        let typed = GeneratedSession {
+            absolute_expires_at: self.absolute_expires_at.as_str().to_owned(),
+            activity_context_ref: self.activity_context_ref.clone(),
+            actor_chain_digest: Digest(self.actor_chain_digest.clone()),
+            authentication_context_ref: self.authentication_context_ref.clone(),
+            authority_signature: self.authority_signature.clone(),
+            conversation_isolation_key: None,
+            human_principal: self.human_principal.clone(),
+            idle_timeout_seconds: self.idle_timeout_seconds,
+            issued_at: self.issued_at.as_str().to_owned(),
+            last_activity_at: self.last_activity_at.as_str().to_owned(),
+            management_domain: self.management_domain.clone(),
+            object_version: self.object_version,
+            policy_version: self.policy_version,
+            revocation_epoch: self.revocation_epoch,
+            risk_ceiling: match self.risk_ceiling {
+                RiskClass::R0 => PrivilegedManagementSessionRiskCeiling::R0,
+                RiskClass::R1 => PrivilegedManagementSessionRiskCeiling::R1,
+                RiskClass::R2 => PrivilegedManagementSessionRiskCeiling::R2,
+                RiskClass::R3 => PrivilegedManagementSessionRiskCeiling::R3,
+            },
+            schema_version:
+                PrivilegedManagementSessionSchemaVersion::CognitiveosPrivilegedManagementSession01,
+            scope: PrivilegedManagementSessionScope {
+                actions: self.scope.actions.clone(),
+                domains: self.scope.domains.clone(),
+                resources: self.scope.resources.clone(),
+            },
+            session_authority: self.session_authority.clone(),
+            session_digest: Digest(self.session_digest.clone()),
+            session_id: self.session_id.clone(),
+            state: match self.state {
+                SessionState::Pending => PrivilegedManagementSessionState::Pending,
+                SessionState::Active => PrivilegedManagementSessionState::Active,
+                SessionState::Expired => PrivilegedManagementSessionState::Expired,
+                SessionState::Revoked => PrivilegedManagementSessionState::Revoked,
+                SessionState::Closed => PrivilegedManagementSessionState::Closed,
+            },
+            step_up_methods: if self.step_up_methods.is_empty() {
+                None
+            } else {
+                Some(self.step_up_methods.clone())
+            },
+        };
+        let value = serde_json::to_value(&typed)
+            .map_err(|e| denial(format!("generated session serialization failed: {e}")))?;
         cognitive_contracts::canonical::canonical_bytes_of_value(&value)
             .map_err(|e| denial(format!("canonical session encoding failed: {e}")))
     }
