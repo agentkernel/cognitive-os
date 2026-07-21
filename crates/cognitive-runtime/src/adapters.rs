@@ -53,12 +53,13 @@ impl IdentityAdapter {
         claimed_user: Option<&str>,
         authority_principal: &str,
     ) -> Result<String, AdapterError> {
-        if let Some(claimed) = claimed_user
-            && claimed != authority_principal
-        {
-            return Err(AdapterError::bypass(format!(
-                "agent self-reported identity {claimed} rejected; authority={authority_principal}"
-            )));
+        match claimed_user {
+            Some(claimed) if claimed != authority_principal => {
+                return Err(AdapterError::bypass(format!(
+                    "agent self-reported identity {claimed} rejected; authority={authority_principal}"
+                )));
+            }
+            _ => {}
         }
         Ok(authority_principal.to_owned())
     }
@@ -76,9 +77,7 @@ impl MemoryAdapter {
             "add" | "update" => "propose",
             "delete" => "invalidate",
             other => {
-                return Err(AdapterError::bypass(format!(
-                    "unknown memory op {other}"
-                )));
+                return Err(AdapterError::bypass(format!("unknown memory op {other}")));
             }
         })
     }

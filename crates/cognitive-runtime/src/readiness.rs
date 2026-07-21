@@ -21,11 +21,8 @@ impl ReadinessGrade {
         }
     }
 
-    pub const ORDER: [ReadinessGrade; 3] = [
-        Self::ManagementReady,
-        Self::UserReady,
-        Self::Operational,
-    ];
+    pub const ORDER: [ReadinessGrade; 3] =
+        [Self::ManagementReady, Self::UserReady, Self::Operational];
 }
 
 #[derive(Debug, Clone, Default)]

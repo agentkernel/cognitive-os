@@ -86,9 +86,7 @@ pub(super) fn agent_install_001_behavior(
                 "authority_unchanged": false,
                 "capability_expanded": true
             }),
-            grounding: vec![
-                "deliberately-wrong: accept invalid signature / provenance".to_owned(),
-            ],
+            grounding: vec!["deliberately-wrong: accept invalid signature / provenance".to_owned()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({
@@ -156,7 +154,9 @@ pub(super) fn agent_bypass_002_behavior(
                 "authority_unchanged": false,
                 "capability_expanded": true
             }),
-            grounding: vec!["deliberately-wrong: allow unmediated network + self-completion".to_owned()],
+            grounding: vec![
+                "deliberately-wrong: allow unmediated network + self-completion".to_owned(),
+            ],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"bypass_accepted": true}),

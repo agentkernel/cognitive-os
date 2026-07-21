@@ -42,7 +42,9 @@ impl OobReconciler {
     }
 
     pub fn authority_bytes(&self, path: &str) -> Option<&[u8]> {
-        self.projections.get(path).map(|p| p.authority_bytes.as_slice())
+        self.projections
+            .get(path)
+            .map(|p| p.authority_bytes.as_slice())
     }
 
     pub fn silent_overwrite_count(&self) -> u64 {
@@ -52,7 +54,11 @@ impl OobReconciler {
     fn digest_of(bytes: &[u8]) -> String {
         // Stable non-crypto fingerprint for unit tests; production pins use
         // cognitive_contracts::canonical digests at the install boundary.
-        format!("sha256:len{}-b0-{:02x}", bytes.len(), bytes.first().copied().unwrap_or(0))
+        format!(
+            "sha256:len{}-b0-{:02x}",
+            bytes.len(),
+            bytes.first().copied().unwrap_or(0)
+        )
     }
 
     /// First read after an out-of-band edit: detect drift, ingest candidate.
@@ -108,7 +114,9 @@ mod tests {
             authority_bytes: authority,
         });
         let edited = b"user-edited-v2".to_vec();
-        let report = r.first_read_after_edit("workspace/notes.md", &edited).unwrap();
+        let report = r
+            .first_read_after_edit("workspace/notes.md", &edited)
+            .unwrap();
         assert_eq!(report["digest_drift_detected"], true);
         assert_eq!(report["edit_ingested_as_candidate"], true);
         assert_eq!(report["silent_overwrite_either_side"], false);
@@ -129,7 +137,10 @@ mod tests {
         let edited = b"edit".to_vec();
         let _ = r.first_read_after_edit("workspace/a", &edited).unwrap();
         let _ = r.first_read_after_edit("workspace/a", &edited).unwrap();
-        assert_eq!(r.authority_bytes("workspace/a").unwrap(), authority.as_slice());
+        assert_eq!(
+            r.authority_bytes("workspace/a").unwrap(),
+            authority.as_slice()
+        );
         assert_eq!(r.silent_overwrite_count(), 0);
     }
 }
