@@ -1,6 +1,6 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-21）；主战役 `RUN-SHELL-CHANNEL-AUTHORITY-THEN-CFR` **阶段 A 已合入**（PR #42 @ `8e57e6d`）+ **阶段 B（CFR）进行中**（`SHELL-CHANNEL-ISOLATION-003` → pins **58/26**）；Intent Authority / PR #40 **已交付**；类别 plan（informative）
+- 状态：active（2026-07-21）；主战役 `RUN-SHELL-CHANNEL-AUTHORITY-THEN-CFR` **已合入**（RUN PR #42 @ `8e57e6d` + CFR PR #43 @ `889178f`；pins **58/26**）；Intent Authority / PR #40 **已交付**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)
