@@ -6,7 +6,10 @@
 
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::effect::{Effect, EffectState};
+use cognitive_contracts::generated::intent_interpretation::IntentInterpretation;
+use cognitive_contracts::generated::management_action_proposal::ManagementActionProposal;
 use cognitive_contracts::generated::object_reference::{ObjectReference, StrongReference};
+use cognitive_contracts::generated::privileged_management_session::PrivilegedManagementSession;
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -145,7 +148,7 @@ fn generated_headers_pin_current_schema_digests() {
         );
         checked += 1;
     }
-    assert!(checked >= 32, "generated module coverage shrank: {checked}");
+    assert!(checked >= 35, "generated module coverage shrank: {checked}");
 }
 
 #[test]
@@ -169,7 +172,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        32,
+        35,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).
@@ -189,6 +192,32 @@ fn schema_digest_constants_match_live_schemas() {
     assert_eq!(
         g::shell_action_proposal::SCHEMA_DIGEST,
         by_file["shell-action-proposal.schema.json"]
+    );
+}
+
+#[test]
+fn m5_consumer_bindings_are_exported_with_required_members() {
+    let missing_required = serde_json::json!({});
+    assert!(serde_json::from_value::<IntentInterpretation>(missing_required.clone()).is_err());
+    assert!(
+        serde_json::from_value::<PrivilegedManagementSession>(missing_required.clone()).is_err()
+    );
+    assert!(serde_json::from_value::<ManagementActionProposal>(missing_required).is_err());
+
+    use cognitive_contracts::generated as g;
+    let by_file: std::collections::BTreeMap<&str, &str> =
+        g::SCHEMA_DIGESTS.iter().copied().collect();
+    assert_eq!(
+        g::intent_interpretation::SCHEMA_DIGEST,
+        by_file[g::intent_interpretation::SCHEMA_ID]
+    );
+    assert_eq!(
+        g::privileged_management_session::SCHEMA_DIGEST,
+        by_file[g::privileged_management_session::SCHEMA_ID]
+    );
+    assert_eq!(
+        g::management_action_proposal::SCHEMA_DIGEST,
+        by_file[g::management_action_proposal::SCHEMA_ID]
     );
 }
 

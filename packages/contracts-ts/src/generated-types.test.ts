@@ -21,6 +21,9 @@ import {
   type RegisteredErrorCode,
 } from "./generated/error-registry.js";
 import { SCHEMA_DIGESTS } from "./generated/index.js";
+import type { IntentInterpretation } from "./generated/intent-interpretation.js";
+import type { ManagementActionProposal } from "./generated/management-action-proposal.js";
+import type { PrivilegedManagementSession } from "./generated/privileged-management-session.js";
 import type { StrongReference } from "./generated/object-reference.js";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -69,18 +72,32 @@ test("generated literal unions reject wrong states at compile time", () => {
   assert.ok(effect.verification.status);
 });
 
-test("SCHEMA_DIGESTS constants match the live schema files (32 generated modules)", () => {
+test("SCHEMA_DIGESTS constants match the live schema files (35 generated modules)", () => {
   // Gap 5 of the 20260720 lane-tsc handoff: the digest is a RUNTIME
   // constant clients pin envelope `schema_digest` with; it must equal the
   // re-derived canonical digest of the live schema (the schema-bundle
   // manifest per-asset recipe).
   const entries = Object.entries(SCHEMA_DIGESTS);
-  assert.equal(entries.length, 32, "generated schema module count drifted");
+  assert.equal(entries.length, 35, "generated schema module count drifted");
   for (const [file, pinned] of entries) {
     const raw = readFileSync(path.join(REPO_ROOT, "specs", "schemas", file), "utf-8");
     const live = digest(canonicalize(raw), "schema-bundle/0.1");
     assert.equal(pinned, live, `${file}: SCHEMA_DIGESTS entry is stale`);
   }
+});
+test("M5 consumer bindings export required members and digest pins", () => {
+  // @ts-expect-error - registered required members cannot be omitted.
+  const interpretation: IntentInterpretation = {};
+  // @ts-expect-error - registered required members cannot be omitted.
+  const session: PrivilegedManagementSession = {};
+  // @ts-expect-error - registered required members cannot be omitted.
+  const proposal: ManagementActionProposal = {};
+  void interpretation;
+  void session;
+  void proposal;
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "intent-interpretation.schema.json"), true);
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "privileged-management-session.schema.json"), true);
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "management-action-proposal.schema.json"), true);
 });
 
 test("generated error registry is table-complete and fail-closed on unknown codes", () => {

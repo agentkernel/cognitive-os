@@ -82,7 +82,7 @@ const GENERATOR_VERSION: &str = "0.2.0";
 /// registration and starts immediately after it — a definite named
 /// consumer, unlike the conditional membership case deferred on
 /// 2026-07-20 (M4-eval handoff item 2).
-const CORE_SET: [&str; 30] = [
+const CORE_SET: [&str; 33] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -113,6 +113,9 @@ const CORE_SET: [&str; 30] = [
     "state-transition-record.schema.json",
     "management-approval-request.schema.json",
     "management-approval-decision.schema.json",
+    "intent-interpretation.schema.json",
+    "privileged-management-session.schema.json",
+    "management-action-proposal.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,
