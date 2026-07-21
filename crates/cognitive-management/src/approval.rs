@@ -2,6 +2,7 @@
 use crate::{ManagementDenial, RiskClass};
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
+use cognitive_contracts::generated::management_action_proposal::SCHEMA_DIGEST as PROPOSAL_SCHEMA_DIGEST;
 use cognitive_contracts::generated::management_approval_decision::{
     ManagementApprovalDecision, ManagementApprovalDecisionDecision,
     ManagementApprovalDecisionRiskClass, ManagementApprovalDecisionSchemaVersion,
@@ -14,6 +15,14 @@ use cognitive_domain::WallTimestamp;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 const DOMAIN: &str = "management-approval/0.1";
+
+/// Registered schema pin for the full wire proposal document
+/// (`management-action-proposal.schema.json`). The runtime
+/// [`ManagementActionProposal`] below is the approval-gate working set;
+/// wire ingress that carries the full schema document must validate against
+/// the generated binding (SCHEMA_DIGEST).
+#[allow(dead_code)]
+const _PROPOSAL_SCHEMA_PIN: &str = PROPOSAL_SCHEMA_DIGEST;
 
 #[derive(Debug, Clone)]
 pub struct ManagementActionProposal {
