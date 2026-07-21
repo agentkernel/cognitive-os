@@ -47,4 +47,4 @@
 - PROGRESS 已更新：是
 - 工作分支：`lane/cfr-m5-intent-authority-slice`
 - 关联 REQ：`REQ-INTENT-SUPERSEDE-001`、`REQ-INTENT-ACCEPT-001`（及向量附属 REQ）
-- 提交哈希：`59a1bc41f2abfc2e1403dbcd7fead1ac074acdea`
+- 提交哈希：`59a1bc41`（实现）+ `c6d11f83`（handoff hash 回填）；push/PR 因本机 `git push` → origin **403** 未完成，需人工 `git push -u origin lane/cfr-m5-intent-authority-slice` 后开 PR。
