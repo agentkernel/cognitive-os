@@ -486,3 +486,50 @@ fn legacy_defs_stay_deprecated_and_unreferenced() {
         }
     }
 }
+
+#[test]
+fn m5_codegen_consumer_schemas_enforce_key_constraints() {
+    let schemas = load_schemas();
+    let interpretation_validator = validator_for(&schemas, "intent-interpretation.schema.json");
+    let mut interpretation = serde_json::json!({
+        "header": vector_object("governed-object-legacy-strongref-001.json")["header"].clone(),
+        "intent_ref": {"kind":"strong","id":"01890a5d-ac96-774b-bcce-b302099a805d","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))},
+        "status":"candidate","objectives":["resolve target"],"constraints":[],"forbidden":[],"assumptions":[],
+        "ambiguities":[{"id":"amb-1","material":true,"question":"which target?"}],"information_gaps":[],
+        "interpretation_digest":format!("sha256:{}", "b".repeat(64))
+    });
+    assert!(!interpretation_validator.is_valid(&interpretation));
+    interpretation["status"] = serde_json::json!("clarification_required");
+    assert!(interpretation_validator.is_valid(&interpretation));
+
+    let session_validator = validator_for(&schemas, "privileged-management-session.schema.json");
+    let session = serde_json::json!({
+        "schema_version":"cognitiveos.privileged-management-session/0.1","session_id":"pms_session-0001","object_version":1,
+        "management_domain":"cognitiveos.management.runtime","session_authority":"authority://platform/management","human_principal":"principal://tenant-a/alice",
+        "actor_chain_digest":format!("sha256:{}", "c".repeat(64)),"authentication_context_ref":"authn://tenant-a/context-1","activity_context_ref":"activity://tenant-a/activity-1",
+        "scope":{"domains":["cognitiveos.management.runtime"],"actions":["task.stop"],"resources":["task://tenant-a/task-1"]},
+        "risk_ceiling":"R2","policy_version":1,"revocation_epoch":0,"issued_at":"2026-07-21T00:00:00Z","last_activity_at":"2026-07-21T00:00:00Z",
+        "idle_timeout_seconds":300,"absolute_expires_at":"2026-07-21T01:00:00Z","state":"active","session_digest":format!("sha256:{}", "d".repeat(64)),
+        "authority_signature":"sig-0123456789abcdef"
+    });
+    assert!(session_validator.is_valid(&session));
+    let mut bad_session = session;
+    bad_session["risk_ceiling"] = serde_json::json!("R4");
+    assert!(!session_validator.is_valid(&bad_session));
+
+    let proposal_validator = validator_for(&schemas, "management-action-proposal.schema.json");
+    let proposal = serde_json::json!({
+        "schema_version":"cognitiveos.management-action-proposal/0.1","proposal_id":"map_proposal-0001","object_version":1,"session_ref":"session://tenant-a/pms-1",
+        "management_domain":"cognitiveos.management.runtime","action":"task.stop","target_refs":["task://tenant-a/task-1"],"parameters_digest":format!("sha256:{}", "e".repeat(64)),
+        "expected_versions":{"task://tenant-a/task-1":7},"idempotency_key":"management-action-0001","risk_class":"R1","actor_chain_digest":format!("sha256:{}", "f".repeat(64)),
+        "activity_context_ref":"activity://tenant-a/activity-1","policy_version":1,"created_at":"2026-07-21T00:00:00Z","expires_at":"2026-07-21T00:05:00Z",
+        "proposal_digest":format!("sha256:{}", "1".repeat(64)),"revocation_epoch":0,"step_up_required":true,"independent_approval_required":false
+    });
+    assert!(proposal_validator.is_valid(&proposal));
+    let mut missing = proposal.clone();
+    missing.as_object_mut().unwrap().remove("idempotency_key");
+    assert!(!proposal_validator.is_valid(&missing));
+    let mut unknown = proposal;
+    unknown["model_decision"] = serde_json::json!(true);
+    assert!(!proposal_validator.is_valid(&unknown));
+}

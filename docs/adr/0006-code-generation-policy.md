@@ -145,3 +145,11 @@ Extension driven by the Lane-TSC client families
    immediately after it — a definite named consumer, in contrast with the
    membership case deferred on the same day for having only a conditional
    consumer (32 schema modules per language; rendering unchanged, 0.2.0).
+8. Input-set extension (20260721 Lane-CTR M5 corrective binding batch,
+   same clause): + intent-interpretation, privileged-management-session,
+   and management-action-proposal. Named consumers are respectively
+   `cognitive-kernel::intent_chain::record_interpretation_candidate` and the
+   Lane-RUN management plane (`cognitive-management::session` plus the M5
+   proposal/approval path). This is a generated-input correction only: 35
+   schema modules per language, unchanged registered schemas, unchanged
+   rendering semantics, generator 0.2.0.
