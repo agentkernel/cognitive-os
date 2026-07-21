@@ -43,6 +43,10 @@ use cognitive_contracts::generated::common_defs::{
 use cognitive_contracts::generated::governed_object_header::{
     GovernedObjectHeader, GovernedObjectHeaderScopeDomain, GovernedObjectHeaderSensitivity,
 };
+use cognitive_contracts::generated::intent_interpretation::{
+    IntentInterpretation, IntentInterpretationAmbiguitieItem, IntentInterpretationStatus,
+    SCHEMA_DIGEST as INTENT_INTERPRETATION_SCHEMA_DIGEST,
+};
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
 use cognitive_contracts::generated::task_contract::{
     ContractCondition, ContractConditionKind, TaskContract, TaskScope,
@@ -504,39 +508,41 @@ where
         &recorded_at,
     )
     .map_err(EffectError::Denied)?;
-    let header_value = serde_json::to_value(&header)
-        .map_err(|err| denial(format!("header serialization: {err}")))
-        .map_err(EffectError::Denied)?;
 
-    // Schema-shaped candidate value (`intent-interpretation.schema.json`;
-    // no generated binding exists for this schema yet — composed by hand
-    // exactly like the pre-M4 record path, swap registered as a Lane-CTR
-    // codegen request in the M5 handoff).
-    let mut interpretation_value = json!({
-        "header": header_value,
-        "intent_ref": {
-            "kind": "strong",
-            "id": record.record_id.as_str(),
-            "object_version": 1,
-            "content_digest": record.intent_digest,
-        },
-        "status": status,
-        "objectives": candidate.objectives,
-        "constraints": candidate.constraints,
-        "forbidden": candidate.forbidden,
-        "assumptions": candidate.assumptions,
-        "ambiguities": ambiguities_value,
-        "information_gaps": gaps_value,
-        "interpretation_digest": interpretation_digest,
-    });
-    if let Some(superseded) = &candidate.supersedes
-        && let Some(object) = interpretation_value.as_object_mut()
-    {
-        object.insert(
-            "supersedes_ref".to_owned(),
-            json!(format!("state://task/interpretation/{superseded}")),
-        );
-    }
+    // Schema-shaped candidate via generated binding
+    // (`intent-interpretation.schema.json`, SCHEMA_DIGEST pin below).
+    let _schema_pin = INTENT_INTERPRETATION_SCHEMA_DIGEST;
+    let status_enum = match status {
+        "clarification_required" => IntentInterpretationStatus::ClarificationRequired,
+        _ => IntentInterpretationStatus::Candidate,
+    };
+    let typed = IntentInterpretation {
+        ambiguities: candidate
+            .ambiguities
+            .iter()
+            .map(|a| IntentInterpretationAmbiguitieItem {
+                id: a.id.clone(),
+                material: a.material,
+                question: a.question.clone(),
+            })
+            .collect(),
+        assumptions: candidate.assumptions.clone(),
+        constraints: candidate.constraints.clone(),
+        forbidden: candidate.forbidden.clone(),
+        header,
+        information_gaps: gaps_value.clone(),
+        intent_ref: strong_ref_to(&record.record_id, &record.intent_digest),
+        interpretation_digest: Digest(interpretation_digest.clone()),
+        objectives: candidate.objectives.clone(),
+        status: status_enum,
+        supersedes_ref: candidate
+            .supersedes
+            .as_ref()
+            .map(|s| format!("state://task/interpretation/{s}")),
+    };
+    let interpretation_value = serde_json::to_value(&typed)
+        .map_err(|err| denial(format!("intent-interpretation serialization: {err}")))
+        .map_err(EffectError::Denied)?;
     let (sealed, _) = seal_content_digest(interpretation_value).map_err(EffectError::Denied)?;
     let canonical_json = canonical_text(&sealed).map_err(EffectError::Denied)?;
 
