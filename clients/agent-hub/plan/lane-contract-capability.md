@@ -21,10 +21,11 @@
 - oracle：矩阵与 dossier 一致｜evidence：none
 
 ### AH-CTR-02 六 Adapter 接口一手核验清单
-- owner/lane：Lane-CON / CTR｜depends_on：AH-CTR-01｜blocked_by：接口 gate
+- owner/lane：Lane-CON / CTR｜depends_on：AH-CTR-01｜blocked_by：接口 gate（runtime PoC）
 - 交付物：每 Agent 官方接口 URL/version/commit、稳定性、session 语义、凭据位置补齐 provider-interfaces-ledger
-- 安全负例：不得把竞品间接观察当官方合同
-- oracle：六 Adapter dossier 无 `待核验` 关键项｜evidence：not-run
+- 安全负例：不得把竞品间接观察当官方合同；不得把文档级核验写成实现/Profile
+- **2026-07-21 进展（文档级）**：六 provider 官方一手已回填 ledger + 六 dossier；Hermes 指认 decided=`NousResearch/hermes-agent`；MCP current=2025-11-25；ACP 稳定版本 1。OpenClaw Gateway WS 字段级仍 partial。
+- oracle：六 Adapter dossier 无 `待核验` 关键项（文档级接近满足）｜evidence：**not-run**（runtime/PoC 未执行；Adapter 实现仍 blocked）
 
 ### AH-CTR-03 Governed `REQ-AGENT-*` 对接
 - owner/lane：Lane-CON + Lane-CTR / CTR｜depends_on：AH-CTR-01｜blocked_by：契约 gate（外部 M6）
