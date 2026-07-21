@@ -18,9 +18,10 @@ use cognitive_runtime::ShellService;
 use serde_json::{Value, json};
 
 const REFERENCE_IMPLEMENTATION: &str = "cognitive-management ApprovalGate + cognitive-runtime \
-     ShellService + cognitive-akp WatchLog (real M5 RUN surfaces)";
-const WRONG_IMPLEMENTATION: &str = "management/shell/watch anti-pattern implementation \
-     (deliberately wrong: unstructured approve, cancel-as-done, privilege restore, silent stale resume)";
+     ShellService + channel_binding + cognitive-akp WatchLog (real M5 RUN surfaces)";
+const WRONG_IMPLEMENTATION: &str = "management/shell/watch/channel anti-pattern implementation \
+     (deliberately wrong: unstructured approve, cancel-as-done, privilege restore, silent stale \
+     resume, cross-channel allow)";
 
 fn env_err(what: impl Into<String>) -> ExecError {
     ExecError::Environment(what.into())
@@ -629,6 +630,75 @@ pub(super) fn shell_watch_006_behavior(
             "last_ack_cursor": last_ack,
             "server_min_cursor": server_min,
             "error_detail": err.to_string()
+        }),
+    })
+}
+
+/// SHELL-CHANNEL-ISOLATION-003 — task credential cannot invoke privileged
+/// management actions; authority deny via `admit_channel_binding`.
+pub(super) fn shell_channel_isolation_003_behavior(
+    ctx: &AssetContext,
+    vector: &LoadedVector,
+    kind: ImplementationKind,
+) -> Result<GateOutput, ExecError> {
+    let _ = registered(ctx, "SHELL_CHANNEL_BINDING_MISMATCH")?;
+    if matches!(kind, ImplementationKind::DeliberatelyWrong) {
+        return Ok(GateOutput {
+            actual: json!({
+                "decision": "allow",
+                "error": {"code": "OK", "category": "auth"},
+                "management_context_leaked": true
+            }),
+            grounding: vec!["specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into()],
+            informative: vec![],
+            implementation: implementation_label(kind),
+            evidence: json!({"anti_pattern":"task credential allowed on system.configure"}),
+        });
+    }
+
+    let task_cred = vector
+        .input
+        .get("task_conversation_credential")
+        .and_then(Value::as_bool)
+        .ok_or_else(|| env_err("input.task_conversation_credential bool required"))?;
+    let action = vector
+        .input
+        .get("requested_action")
+        .and_then(Value::as_str)
+        .ok_or_else(|| env_err("input.requested_action string required"))?;
+    let privileged = vector
+        .input
+        .get("privileged_session")
+        .and_then(Value::as_bool)
+        .ok_or_else(|| env_err("input.privileged_session bool required"))?;
+
+    let request = cognitive_runtime::request_from_vector_input(task_cred, action, privileged);
+    let decision = cognitive_runtime::admit_channel_binding(&request);
+
+    let error = match (decision.error_code, decision.error_category) {
+        (Some(code), Some(category)) => json!({"code": code, "category": category}),
+        _ => json!(null),
+    };
+
+    Ok(GateOutput {
+        actual: json!({
+            "decision": decision.decision,
+            "error": error,
+            "management_context_leaked": decision.management_context_leaked
+        }),
+        grounding: vec![
+            "crates/cognitive-runtime/src/channel_binding.rs".into(),
+            "specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into(),
+            "conformance/vectors/shell-channel-isolation-003.json".into(),
+        ],
+        informative: vec![],
+        implementation: implementation_label(kind),
+        evidence: json!({
+            "credential_channel": if task_cred { "task" } else { "management" },
+            "requested_action": action,
+            "privileged_session": privileged,
+            "decision": decision.decision,
+            "error_code": decision.error_code,
         }),
     })
 }
