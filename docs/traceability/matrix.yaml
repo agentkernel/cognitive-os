@@ -266,15 +266,20 @@ requirements:
     impl:
       - crates/cognitive-kernel/src/intent_chain.rs
       - crates/cognitive-kernel/src/harness.rs
+      - crates/cognitive-runtime/src/harness_loop.rs
+      - crates/cognitive-runtime/src/intent_flow.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_intent_chain.rs
       - crates/cognitive-store/tests/m5_harness.rs
+      - crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 kernel side: TaskContract minting refuses contracts without a decidable acceptance condition; loop start
-      refuses uncontracted loops and pins the durable contract (generated-binding parse); versioned epochs per task.
-      Cross-boundary runtime orchestration = M5 Lane-RUN."
+      refuses uncontracted loops and pins the durable contract (generated-binding parse); versioned epochs per task. M5
+      RUN batch 2b: BoundedHarness + intent_flow::admit_and_mint_contract consume frozen LoopDriver/intent ports
+      (stagnation Stop/Escalate; never unbounded spin)."
   - id: REQ-RUN-005
     owner: runtime
     owner_spec: specs/schemas/loop-checkpoint.schema.json
@@ -285,14 +290,18 @@ requirements:
       - conformance/vectors/loop-gate-001.json
     impl:
       - crates/cognitive-kernel/src/harness.rs
+      - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_harness.rs
+      - crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 kernel side: begin_iteration is the per-iteration hard-precondition gate (monotonic accounting,
       checkpoint-bound continuation, budget reload + same-transaction debit, max_iterations ceiling as registered
-      RESOURCE_BUDGET_EXHAUSTED denial), fail closed. Wait/escalate/terminate policy on rejection = M5 Lane-RUN."
+      RESOURCE_BUDGET_EXHAUSTED denial), fail closed. M5 RUN batch 2b: decide_stagnation Stop/Escalate policy on
+      consecutive_without_progress ceiling (unit-tested; EffectError hard ceilings propagate)."
   - id: REQ-RUN-006
     owner: runtime
     owner_spec: specs/schemas/loop-checkpoint.schema.json
@@ -3268,17 +3277,22 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-kernel/src/recovery.rs
+      - crates/cognitive-runtime/src/recovery_flow.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_recovery.rs
       - crates/cognitive-store/tests/m5_recovery_governance.rs
+      - crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M4: recovery fences the old writer (epoch advance, every sink checks) and reconciles possibly-executed Effects
       before anything resumes; order-pinned sequencer; behavior tests executed. M5: steps 6/7 upgraded to orchestrable
       facts - the report carries reauthorization obligations (durable pre-crash bindings) and the context rebinding; a
-      pre-crash grant fails the dispatch guard closed, a pre-crash cache binding is refused and purged by key."
+      pre-crash grant fails the dispatch guard closed, a pre-crash cache binding is refused and purged by key. M5 RUN
+      batch 2b: plan_recovery_continuations consumes obligations via reauthorization_satisfied + context_rebinding
+      (stale grant / pre-crash binding fail closed; unit-tested)."
   - id: REQ-REC-002
     owner: rec-002
     owner_spec: specs/core/README.md
@@ -3386,14 +3400,18 @@ requirements:
     impl:
       - crates/cognitive-kernel/src/harness.rs
       - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_harness.rs
+      - crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 kernel side: progress is a typed durable fact (advanced/none/uncertain/blocked) - advanced REQUIRES evidence
       references (a bare claim is unrecordable); stagnation arithmetic is a pure fold over the append-only rows; stale
-      writers fenced in-transaction; Rust behavior tests executed."
+      writers fenced in-transaction; Rust behavior tests executed. M5 RUN batch 2b: BoundedHarness.drive_iteration
+      records progress then folds decide_stagnation (Stop/Escalate; never spin)."
   - id: REQ-RUN-008
     owner: run-008
     owner_spec: specs/core/README.md
@@ -3404,14 +3422,18 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-kernel/src/harness.rs
+      - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_harness.rs
+      - crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 kernel side: retry accounting is action-fingerprint-scoped over non-advancing facts; admit_retry denies at
       the contract's max_retries with the registered hard-limit code (count bound; time/cost bounds ride the same
-      hard-budget ledger). Attribution-boundary orchestration = M5 Lane-RUN."
+      hard-budget ledger). M5 RUN batch 2b: harness orchestration feeds fingerprints through LoopDriver; hard ceilings
+      propagate as EffectError (caller must not retry unboundedly)."
   - id: REQ-RUN-STATE-001
     owner: run-state
     owner_spec: specs/core/README.md
@@ -3503,10 +3525,16 @@ requirements:
     vectors:
       - conformance/vectors/shell-detach-attach-004.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-runtime/src/shell.rs
+      - apps/kernel-server/src/main.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
+    notes: "M5 RUN batch 2b: ShellService.attach is projection-only (non-authority); HTTP POST /shell/attach ready."
   - id: REQ-SHELL-CHANNEL-001
     owner: shell-channel
     owner_spec: specs/core/README.md
@@ -3533,10 +3561,17 @@ requirements:
       - conformance/vectors/shell-control-unreasoned-cancel-001.json
       - conformance/vectors/shell-execution-migration-009.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-runtime/src/shell.rs
+      - apps/kernel-server/src/main.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
+    notes: "M5 RUN batch 2b: cancel returns CANCEL_PENDING (Effect reconcile is caller's job); terminal effect →
+      CANCEL_TOO_LATE; detach never cancels. Full Effect reconcile path + migration vectors remain CFR."
   - id: REQ-SHELL-CORRECTION-001
     owner: shell-correction
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md
@@ -3546,10 +3581,14 @@ requirements:
     vectors:
       - conformance/vectors/intent-supersede-002.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
+    impl:
+      - crates/cognitive-runtime/src/intent_flow.rs
     impl_tests: []
-    evidence: []
+    evidence:
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
+    notes: "M5 RUN batch 2b: correct_and_supersede wraps kernel supersede_task_contract (epoch fencing). End-to-end shell
+      command surface + CFR vector still pending."
   - id: REQ-SHELL-DETACH-001
     owner: shell-detach
     owner_spec: specs/core/README.md
@@ -3559,10 +3598,16 @@ requirements:
     vectors:
       - conformance/vectors/shell-detach-attach-004.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-runtime/src/shell.rs
+      - apps/kernel-server/src/main.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
+    notes: "M5 RUN batch 2b: detach never cancels (cancelled=false even if cancel was pending); unit + HTTP e2e."
   - id: REQ-SHELL-PREVIEW-001
     owner: shell-preview
     owner_spec: specs/core/README.md
@@ -3571,10 +3616,15 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-runtime/src/shell.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
+    notes: "M5 RUN batch 2b: proposal → preview digest → submit receipt (authority=false); submit requires matching preview
+      digest (stale digest → STATE_CONFLICT)."
   - id: REQ-SHELL-STATUS-001
     owner: shell-status
     owner_spec: specs/core/README.md
