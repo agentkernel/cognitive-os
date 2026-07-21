@@ -124,7 +124,7 @@
 
 | 里程碑 | 范围 | 关键闭环 | 工作量（假设 A/B） |
 |---|---|---|---|
-| **M7** 受治理记忆与认知发现 | MemoryCandidate/准入/生命周期、IMP-03 异步准入 + read-your-write、发现 delta/停滞 | F-019 行为侧；`memory-*`、`context-candidate-admission`、`discovery-read-separation`、跨 scope 晋升负例；REQ-PERF-005 四臂对照首次实测（IMP-18） | 4–6 周 / 2–3 周 |
+| **M7** 受治理记忆与认知发现 | MemoryCandidate/准入/生命周期、IMP-03 异步准入 + read-your-write、发现 delta/停滞 | F-019 行为侧；`memory-*`、`context-candidate-admission`、`discovery-read-separation`、跨 scope 晋升负例；REQ-PERF-005 默认 non-claim（升格见计划）；**canonical 计划** [M7-PLAN.md](M7-PLAN.md)（existing-only） | 4–6 周 / 2–3 周 |
 | **M8** Operation Catalog 与 SMS/CRB | catalog 生命周期/match/bind、语义中介降级边界、CRB 核算 | `catalog-*`、`semantic-fallback-bounds`、`MODEL_EGRESS_DENIED` 负例 | 4–6 周 / 2–3 周 |
 | **M9** 分布式与多 Agent | placement、mailbox、分区、委派单调衰减、handoff/verifier | 独立审查 No-Go 解除条件：单节点正确性 + 全 sink fencing + 分区模型；多 Agent 需单 Agent 强基线 | 8–12 周 / 4–6 周 |
 | **M10** 具身与异构 | 实时安全内核隔离、CIM 校准、staleness | **无独立安全证据前只标 experimental**（F-030）；`stale-embodied-observation`、`cim-calibration-mismatch` | 8–12 周 / 4–6 周 |

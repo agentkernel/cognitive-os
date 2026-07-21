@@ -65,4 +65,5 @@ flowchart LR
 | M3 | KRN | CFR、TSC（投影消费）、DOC | [milestone-m3.md](../prompts/milestone-m3.md) |
 | M4 | KRN | CFR（故障注入）、DOC | [milestone-m4.md](../prompts/milestone-m4.md) |
 | M5 | RUN + TSC | CFR、DOC | [milestone-m5.md](../prompts/milestone-m5.md) |
-| M6 | RUN | CFR（平台矩阵）、DOC、CON（依赖复核） | [milestone-m6.md](../prompts/milestone-m6.md) · [M6-PLAN.md](M6-PLAN.md) |
+| M6 | RUN | CFR（平台矩阵）、DOC、CON（依赖复核） | [milestone-m6.md](../prompts/milestone-m6.md) · [M6-PLAN.md](M6-PLAN.md) · [M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) |
+| M7 | KRN + RUN | CFR（行为向量）、CTR（仅既有合同核对）、DOC、CON（tracking-only） | [milestone-m7.md](../prompts/milestone-m7.md) · [M7-PLAN.md](M7-PLAN.md) |
