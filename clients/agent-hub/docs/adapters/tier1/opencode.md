@@ -1,51 +1,58 @@
 # Adapter Dossier — OpenCode
 
-> 类别：informative research ｜ 日期：2026-07-20 ｜ owner：Lane-CON ｜ 状态：product-only / not-implemented / evidence none
+> 类别：informative research ｜ 日期：2026-07-20（2026-07-21 AH-CTR-02 文档级回填）｜ owner：Lane-CON
 >
-> 接口事实部分来自竞品实现观察（[../../sources/paseo-and-comparables-ledger.md](../../sources/paseo-and-comparables-ledger.md)）；官方一手接口须在 [../../sources/provider-interfaces-ledger.md](../../sources/provider-interfaces-ledger.md) 补齐，未补齐标 `待核验`。
+> 状态用语：**接口已核验（文档级）** / product-only / not-implemented / **evidence not-run**。
 
 ## 身份
 
-- 目标：OpenCode（开源 coding agent，含 server/session 能力）。
-- 适用基线：官方 version/commit 待核验。
-- 许可：开源许可待核验（在 terms-and-licenses ledger 登记具体 SPDX）。
+- 目标：OpenCode（开源 coding agent；含 server/session/ACP）。
+- 官方仓库：https://github.com/anomalyco/opencode （原 `sst/opencode`，301 重定向有效；MIT；查询日 2026-07-20）。
+- 适用基线：release **v1.18.3**（2026-07-16）；默认分支 `dev`；近乎每日发版。
+- 维护状态：活跃。
+- 许可：**MIT**（开源构建）；托管 Zen 服务另受 ToS。
 
-## 官方控制接口（部分来自竞品观察，待官方核验）
+## 官方控制接口（一手）
 
-- **OpenCode server**：可 spawn server 或连接用户已运行的 OpenCode server（Open WebUI Computer 观察到）。
-- session list/管理 API（Paseo/Vibe 生态观察到）。
-- 部分工具经通用 **ACP** 与 OpenCode 交互（待核验具体版本）。
+- **`opencode serve`**：headless HTTP（默认 `127.0.0.1:4096`）；OpenAPI 3.1 于 `/doc`；Basic auth 经环境变量（**默认无认证**）；`--mdns` / `--cors`。
+- **REST**：`/session` CRUD + fork/abort/share/revert/message/`prompt_async`；**`/session/:id/permissions/:permissionID`**；SSE `/event`；**`/tui/*`** 远程驱动 TUI；`/auth/:id` 写凭据。
+- **CLI**：`opencode run`（`--format json`、`--attach`、`--auto`）；`opencode acp`（stdio ACP server）；`opencode db` / `db path`；session export/import（`--sanitize`）。
+- 来源：https://opencode.ai/docs/server/ 、/cli/ 、/providers/ 、/troubleshooting/ 。
+- 稳定性：高频发版 + 2026 存储迁移 → 漂移风险高。
 
 ## 接管层级适用性
 
 | Level | 适用 | 条件/限制 |
 |---|---|---|
-| L1 官方控制 | 目标 | server/API / ACP |
-| L2 Host-launched | 目标 | Host spawn server |
-| L3 session 采用 | 条件 | 连接已运行 server 属条件采用；写需单 writer/lease 证明 |
+| L1 官方控制 | 目标 | server OpenAPI / ACP（文档级） |
+| L2 Host-launched | 目标 | Host spawn `opencode serve` |
+| L3 session 采用 | 条件 | `--attach` 连接已运行 server；写需单 writer/lease 证明 |
 | L4 受管终端 | 条件 | 仅 Host-owned |
-| L5 只读文件 | 只读 | native 存储疑为 SQLite（待核验格式/位置） |
+| L5 只读文件 | 只读 | **SQLite `opencode.db`（已核）**；迁移期可能残留 JSON 双布局 |
 | L7 observe-only | 是 | |
 | L6 / L8 | 阻断 / 禁止 | |
 
 ## session / 文件事实
 
-- native 存储：疑为 SQLite（待核验）；若 SQLite 则只读一致 read transaction、禁 checkpoint/主库单文件复制。
-- 连接已运行 server：属 L3 条件采用，须确认单 writer 或官方并发语义。
+- **当前存储（≥v1.2.x）**：**SQLite** `~/.local/share/opencode/opencode.db`（Windows：`%USERPROFILE%\.local\share\opencode\`）。证据：官方 `opencode db path` + 仓库 issue #13636/#13654。
+- 遗留 JSON 布局可能残留（`storage/session|message|part/...`）——L5 parser 须容忍双布局；不得以已过时 troubleshooting 页为合同（上游文档漂移）。
+- `auth.json`：同数据根目录。
+- 只读约束：一致 read transaction；禁 checkpoint/主库单文件复制（POC-FILE-002）。
 
 ## 账号与凭据
 
-- 登录/凭据：待核验；仅 opaque handle；不写 provider 配置（Vibe MCP 直写配置为反例）。
+- 工具无账号墙；模型 BYO API key / OAuth 或 OpenCode Zen。
+- server 默认无认证 + `/tui` + `/auth` → 按不可信本地面设计；仅 opaque handle；不写 provider 配置。
 
 ## 平台
 
-- Windows/macOS/Linux 待核验；终端后端待核验。
+- 官方 README 提供 Windows（scoop/choco）、macOS、Linux 安装；性能问题 troubleshooting 建议 WSL——行为以 PoC 为准。
 
 ## 未决与 Open PoC
 
-- 官方 server/session API 与版本；native 存储格式/位置；连接已运行 server 的并发/writer 语义。
-- Open PoC：POC-SESS-001、POC-FILE-002——状态 not-run。
+- 当前 `opencode.db` schema dump；WAL 只读快照；孤儿 JSON；默认无认证暴露面；SSE 事件词表。
+- Open PoC：POC-SESS-001、POC-SESS-002、POC-FILE-002——状态 **not-run**。
 
 ## 产品映射
 
-- server/API 为 L1 主路径；连接已运行 server 需 L3 条件与单 writer 证明；SQLite 仅 L5 只读。
+- server/API 为 L1 主路径；连接已运行 server 需 L3 条件；SQLite 仅 L5 只读；证据全 not-run。

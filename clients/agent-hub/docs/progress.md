@@ -14,7 +14,10 @@
 | 安全（threat-model / credentials / computer-control / licensing） | done（v1 草案） | 威胁逐项、密钥分层、AGPL gate |
 | 协作 / 平台 / 决策 / 追踪 | done（v1 草案） | Lead+Workers、平台范围、DEC/PRD |
 | Adapter（README / matrix / 6×tier1 / 其它 tier） | done（v1 草案） | 逐能力分级 |
-| 来源 ledger（interfaces/terms/platform/paseo-comparables） | done（v1 草案） | 均含查询日与 URL |
+| 来源 ledger（interfaces/terms/platform/paseo-comparables） | done（v1 草案） | **2026-07-21**：interfaces/terms 六 provider 文档级回填 |
+| 六× Tier 1 dossier | done（文档级核验回填） | 接口已核验（文档级）；evidence not-run；Hermes decided |
+| 威胁 oracle 摘要 | done（informative） | [security/threat-test-oracles.md](./security/threat-test-oracles.md)；零执行 |
+| 法务材料（POC-LIC） | 材料整理 done | 评估仍 not-run；见 licensing-and-terms + risk-register 外部阻断 |
 | 模板（dossier/source/threat/poc/task） | done（v1 草案） | 供后续填充 |
 | 开发计划与提示词 | done（v1 草案） | 见 [planning/README.md](./planning/README.md) |
 
