@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**Post-v0.1 下一阶段计划已落盘**：canonical [POST-V01-NEXT-PHASE-PLAN.md](POST-V01-NEXT-PHASE-PLAN.md)；推荐主战役 `CFR-M5-INTENT-AUTHORITY-SLICE`（尚未执行）；执行提示词 [cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)；V01 L3 non-claim 仍有效；pins **84/55/29**；**Profile implemented = 0**）
+> 最后更新：2026-07-21（**CFR-M5-INTENT-AUTHORITY-SLICE 已交付**：`INTENT-SUPERSEDE-002` / `INTENT-ACCEPTANCE-007` 行为执行 pass；pins **84/57/27**；self-check **38/38**；**Profile implemented = 0**；V01 L3 non-claim 仍有效）
 
 ## 里程碑状态
 
@@ -29,7 +29,7 @@
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
 | 实现已提供（构建通过且有实现代码的 REQ） | **64**（matrix 实测非空 impl；相对批 2a 的 59：+RUN 批 2b 回填 REQ-SHELL-ATTACH/CONTROL/CORRECTION/DETACH/PREVIEW；RUN-004/005/007/008 与 REC-001 增补 runtime 路径） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 28 向量**（M2 3 + M3 9 + M4 7 + M5 6 + **M6 3**）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 30 向量**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2** + **M6 3**）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
 
 ## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-21 Lane-RUN/CFR M6 行为批）
@@ -37,10 +37,10 @@
 | 状态 | 计数 |
 |---|---|
 | 向量总数 | **84** |
-| **pass** | **55** = 静态 27 + **行为 28**（M2 3 + M3 9 + M4 7 + M5 6 + **M6 3**：AGENT-INSTALL-001 / AGENT-BYPASS-002 / AGENT-OOB-001） |
+| **pass** | **57** = 静态 27 + **行为 30**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2**：INTENT-SUPERSEDE-002 / INTENT-ACCEPTANCE-007 + **M6 3**） |
 | fail / not-applicable / documented-degradation | 0 / 0 / 0 |
-| **not-run** | **29**（含 MGMT-FALLBACK 全动词、intent-supersede/acceptance、shell channel/target/migration、delta-scope、store-degradation disk-full 等） |
-| 错误实现自检 | **36/36 corrupted 向量全部翻 fail**（+3 M6 anti-pattern）；CI 地板 ≥36 |
+| **not-run** | **27**（含 MGMT-FALLBACK 全动词、shell channel/target/migration、delta-scope、store-degradation disk-full 等） |
+| 错误实现自检 | **38/38 corrupted 向量全部翻 fail**（+2 Intent Authority）；CI 地板 ≥36 |
 
 分层明细见 `artifacts/evidence/conformance/conformance-report.json`（本地再生成：`cargo run -p cognitive-conformance --bin conformance-runner`；报告 sha256 由 runner 打印）。层 7/8 无专属 slug = D-004 已按文档化跨切片映射闭合（conformance/README + runner `CROSS_SLICE_HOSTED`）。
 
@@ -57,7 +57,7 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **下一主战役已规划、未执行** | 建议 `lane/cfr-m5-intent-authority-slice` | 计划：[POST-V01-NEXT-PHASE-PLAN.md](POST-V01-NEXT-PHASE-PLAN.md)；目标向量 `INTENT-SUPERSEDE-002` / `INTENT-ACCEPTANCE-007`；提示词 [cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)；pins 仍 55/29 |
+| Lane-CFR 符合性与工具 | **CFR-M5-INTENT-AUTHORITY-SLICE 已交付** | `lane/cfr-m5-intent-authority-slice` | `INTENT-SUPERSEDE-002` / `INTENT-ACCEPTANCE-007` behavior pass；pins **57/27**；self-check 38；handoff：`20260721-lane-cfr-m5-intent-authority-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；shell-channel isolation 协作标 P1 |
 | Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021；PERF campaign 默认 defer |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md)（Post-v0.1 下一阶段计划落盘；主战役未执行）
-2. [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（V01 Auto-Run P0：L3 non-claim 证据 + PR #37）
-3. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
+1. [20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)（CFR-M5 Intent Authority：两向量脱 not-run；pins 57/27）
+2. [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md)（Post-v0.1 下一阶段计划落盘；主战役未执行）
+3. [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（V01 Auto-Run P0：L3 non-claim 证据 + PR #37）
 
 ## 客户端目录治理交付
 
