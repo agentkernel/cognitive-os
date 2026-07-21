@@ -1,10 +1,11 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-21）；主战役 `CFR-M5-INTENT-AUTHORITY-SLICE` **已交付**（pins 57/27）；类别 plan（informative）
+- 状态：active（2026-07-21）；主战役 `CFR-M5-INTENT-AUTHORITY-SLICE` **已交付（分支）**（pins 57/27）；**合入战役** `OPS-PR40-CI-UNBLOCK-MERGE` **阻塞于 Actions billing 人闸**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
-- 主战役 handoff：[20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)
-- 下一窗口：P1 候选见 §B（shell channel / target 等）；执行提示词仍可参考 [cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)（已完成战役留档）
+- Intent Authority handoff：[20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)
+- 合入阻塞 handoff：[20260721-ops-pr40-ci-unblock-handoff.md](../checkpoints/20260721-ops-pr40-ci-unblock-handoff.md)（PR #40；billing；本地 57/27；**未 merge**）
+- 下一窗口：① 恢复 https://github.com/settings/billing 后重跑 CI 并 merge #40；② 其后 P1 = shell channel readiness（RUN authority → CFR）；勿批量清 not-run
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
