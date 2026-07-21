@@ -106,6 +106,29 @@ fn serve_once(bind: &str) -> Result<(), String> {
                 )
             }
         }
+    } else if request_line.starts_with("POST /shell/") {
+        // Deterministic shell surface (non-authority). Full session state is
+        // process-local in this --once reference profile; semantics are proven
+        // in `cognitive-runtime` unit tests.
+        let op = request_line
+            .trim_start_matches("POST /shell/")
+            .split_whitespace()
+            .next()
+            .unwrap_or("");
+        let value = match op {
+            "detach" => {
+                json!({"status":"ok","phase":"detached","cancelled":false,"authority":false})
+            }
+            "cancel" => json!({"status":"CANCEL_PENDING","authority":false}),
+            "attach" => json!({"status":"ok","phase":"attached","authority":false}),
+            _ => {
+                json!({"status":"error","error":{"code":"SCHEMA_MISMATCH","category":"protocol","retryable":false,"stage":"routing"}})
+            }
+        };
+        (
+            "application/json",
+            serde_json::to_string(&value).map_err(|e| e.to_string())?,
+        )
     } else {
         ("application/json",json!({"status":"error","error":{"code":"SCHEMA_MISMATCH","category":"protocol","retryable":false,"stage":"routing"}}).to_string())
     };
