@@ -43,5 +43,5 @@
 
 - PROGRESS 已更新：是
 - 工作分支（本规划落盘）：`lane/doc-post-v01-next-phase`
-- 本次提交：`dd5458f`（`docs(plan): land Post-v0.1 next-phase plan and CFR slice prompt`）
+- 本次提交：分支 `lane/doc-post-v01-next-phase` tip（`docs(plan): land Post-v0.1 next-phase plan and CFR slice prompt`；规划落盘时 tip 以远端为准）
 - 关联文档条目：`POST-V01-NEXT-PHASE-PLAN`（无新 REQ；规划文档联动）
