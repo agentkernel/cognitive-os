@@ -1,6 +1,6 @@
 # 客户端文档/结构局部进度
 
-> 类别：plan（局部）｜ owner：Lane-CON ｜ 最后更新：2026-07-20（B8 终审）
+> 类别：plan（局部）｜ owner：Lane-CON ｜ 最后更新：2026-07-21（Phase 0 审计回填）
 >
 > **职责边界**：本文件只记录 `clients/` 文档与结构的局部准备状态。全局工程状态、里程碑、REQ/向量计数、证据声明的唯一真相是 [docs/plan/PROGRESS.md](../../docs/plan/PROGRESS.md)；两者冲突时以全局 PROGRESS 为准。
 
@@ -13,9 +13,12 @@
 | Agent Hub 迁移（B5，86 文件） | done（`85331bb`） |
 | stub 定稿与 gate canonical（B6） | done（`b2c1f63`） |
 | rules 与治理入口联动（B7，ADR-0007） | done（`5902a25`） |
-| readiness review + PROGRESS + handoff（B8） | done（本提交） |
-| 远端 M5 gate 基线集成与 D-019 漂移闭合（I1） | done（本集成 PR） |
-| structure-ready | **yes**（逐项证据见 [READINESS](../READINESS.md)） |
-| implementation-ready | **no / blocked**（九项 blocker，见 [READINESS](../READINESS.md)） |
+| readiness review + PROGRESS + handoff（B8） | done |
+| 远端 M5 gate 基线集成与 D-019 漂移闭合（I1） | done |
+| **Phase 0：AH-CTR-02 接口文档级回填** | **done（文档级；evidence not-run）** |
+| **Phase 0：POC-LIC 材料整理** | **材料 done；评估 not-run** |
+| **Phase 0：威胁 oracle / planned PoC 登记** | **done（设计/登记；零执行）** |
+| structure-ready | **yes**（见 [READINESS](../READINESS.md)） |
+| implementation-ready | **no / blocked**（见 [READINESS](../READINESS.md)；未改 yes） |
 
-客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；全局向量 84（46 `pass` / 38 `not-run`）但客户端平台证据仍为 `none`；Profile `not implemented`。结构就绪不构成实现授权。
+客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；Agent Hub Open PoC = 28 not-run + 5 planned；全局向量 84（46 `pass` / 38 `not-run`）但客户端平台证据仍为 `none`；Profile `not implemented`。结构就绪与文档级接口核验均不构成实现授权。

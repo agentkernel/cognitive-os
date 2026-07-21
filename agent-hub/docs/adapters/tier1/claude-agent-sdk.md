@@ -1,54 +1,61 @@
 # Adapter Dossier — Anthropic Claude Agent SDK
 
-> 类别：informative research ｜ 日期：2026-07-20 ｜ owner：Lane-CON ｜ 状态：product-only / not-implemented / evidence none
+> 类别：informative research ｜ 日期：2026-07-20（2026-07-21 AH-CTR-02 文档级回填）｜ owner：Lane-CON
 >
-> 本 dossier 的接口事实部分来自竞品实现观察（[../../sources/paseo-and-comparables-ledger.md](../../sources/paseo-and-comparables-ledger.md)），Claude 官方 SDK/CLI 的一手接口合同须在 [../../sources/provider-interfaces-ledger.md](../../sources/provider-interfaces-ledger.md) 用查询日/version 补齐，未补齐项标 `待核验`。
+> 状态用语：**接口已核验（文档级）** / product-only / not-implemented / **evidence not-run**。
 
 ## 身份
 
 - 目标：Anthropic Claude Agent SDK（及配套 Claude Code CLI 生态）。
-- 适用基线：官方 SDK/CLI version 待核验（provider ledger 填充）。
-- 许可 / 条款：Anthropic 官方条款，须核验第三方 Host 启动/接管/读取 session 的允许性。
+- 官方文档：https://code.claude.com/docs/en/agent-sdk 、/agent-sdk/sessions （查询日 2026-07-20）。
+- 适用基线：TS **`@anthropic-ai/claude-agent-sdk` 0.3.215**（`claudeCodeVersion` 2.1.215）；Python **`claude-agent-sdk` 0.2.123**（2026-07-19）。
+- 维护状态：活跃（近乎每日发版；npm 捆绑平台原生二进制）。
+- 许可：**TS SDK 受 Anthropic Commercial ToS**（README License；非 OSS）；**Python wrapper MIT**（CLI/服务仍受 Commercial ToS）。
 
-## 官方控制接口（部分来自竞品观察，待官方核验）
+## 官方控制接口（一手）
 
-- 多个成熟工具经 **Claude Agent SDK** 主路径驱动 Claude（Happy、Nimbalyst、Open WebUI Computer 观察到）。
-- Claude Code CLI 提供 `--resume <session-id>` 恢复（Opcode、AoE、tmux-agent-tools 观察到）。
-- native session 存储为 **JSONL**（`~/.claude/projects` 等；多工具只读扫描）。
-- fork/rewind 会写新的 native JSONL（Happy 观察到）——属修改 provider session 存储，需谨慎。
+- **`query()`**（TS/Python）：options 含 `allowedTools`、`mcpServers`、`hooks`、`resume`、`forkSession`、`persistSession: false`（仅 TS 内存态）。
+- **官方 session API**（L5/L3 首选合同面，优于裸扫文件）：`listSessions`、`getSessionMessages`、`getSessionInfo`、`renameSession`、`tagSession`、`forkSession`。
+- **`SessionStore` adapter**：跨主机镜像 transcript（官方推荐）。
+- **Hooks**：PreToolUse / PostToolUse / SessionStart / SessionEnd / UserPromptSubmit 等。
+- **漂移样本**：experimental V2 `createSession` API 已于 TS **0.3.142 移除**。
+- CLI 备选：`claude -p --output-format json`。
 
 ## 接管层级适用性
 
 | Level | 适用 | 条件/限制 |
 |---|---|---|
-| L1 官方控制 | 目标 | Agent SDK |
+| L1 官方控制 | 目标 | Agent SDK（文档级） |
 | L2 Host-launched | 目标 | Host 启动 SDK 会话 |
-| L3 session 采用 | 条件 | 仅旧 writer inactive 或有 exclusive lease；双 writer（外部 `claude --resume` 同写同 session）为高风险反例 |
+| L3 session 采用 | 条件 | 仅旧 writer inactive 或 exclusive lease；外部 `claude --resume` 同写为高风险 |
 | L4 受管终端 | 条件 | 仅 Host-owned |
-| L5 只读文件 | 只读 | JSONL opt-in、documented root、敏感裁剪 |
+| L5 只读文件 | 只读 | JSONL opt-in；优先官方 session API；敏感裁剪 |
 | L7 observe-only | 是 | |
 | L6 / L8 | 阻断 / 禁止 | 写 native JSONL 属 L6，v1 阻断 |
 
 ## session / 文件事实
 
-- 格式：JSONL（待核验具体 schema/版本）。
-- resume：官方 session ID 恢复（新进程）。
-- 双 writer 风险：外部并行 `claude --resume` 与 SDK 同时写同一 session（Happy 反例）——采用前必须证明单 writer。
+- 路径（官方）：`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`，或 `$CLAUDE_CONFIG_DIR/projects/...`；`<encoded-cwd>` = 绝对路径中非字母数字字符替换为 `-`。
+- resume 需 `cwd` 匹配。
+- fork：`forkSession: true` → **新 session ID 新文件，原 session 不变**（官方）。
+- JSONL 行级 schema：**无官方文档**（POC-FILE-001）。
+- 双 writer fencing：官方未给承诺——维持单 writer 前置（POC-SESS-002）。
 
 ## 账号与凭据
 
-- 登录：Claude 原生登录（OAuth/token），凭据由原 CLI 管理。
-- 规则：不复制 `.credentials.json`/Keychain secret（Paseo quota fetcher、Agent Deck 反例）；仅 opaque handle。
+- 登录：Claude 订阅 OAuth 或 Anthropic API key。
+- 规则：不复制 credentials/Keychain secret；仅 opaque handle。
+- **外部阻断**：订阅路径下第三方 Host 自动化是否属「另行明确许可」——需 Anthropic 确认（POC-LIC-002）。
 
 ## 平台
 
-- Windows/macOS/Linux 待核验；Windows 终端后端须固定为 ConPTY（多工具未给公开 ConPTY 合同）。
+- SDK 捆绑多平台二进制；Windows/macOS/Linux 行为与 ConPTY 须 PoC。
 
 ## 未决与 Open PoC
 
-- 官方 SDK/CLI 版本与接口合同；fork/rewind 对 native JSONL 的确切写行为；双 writer fencing。
-- Open PoC：POC-SESS-001、POC-SESS-002、POC-FILE-001——状态 not-run。
+- JSONL schema；双 writer；rewind 行为；Commercial ToS 再分发/订阅自动化；V2 API 移除后的漂移监测。
+- Open PoC：POC-SESS-001、POC-SESS-002、POC-FILE-001、POC-SEC-003——状态 **not-run**。
 
 ## 产品映射
 
-- 以 Agent SDK 为 L1 主路径；JSONL 仅 L5 只读；native 写归 L6 阻断。
+- 以 Agent SDK + 官方 session API 为 L1/L5 主路径；JSONL 裸扫为后备；native 写归 L6；证据全 not-run。

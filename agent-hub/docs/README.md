@@ -55,10 +55,11 @@
 
 | 文档 | canonical 负责内容 |
 |---|---|
-| [security/threat-model.md](./security/threat-model.md) | 威胁清单（asset/attacker/entry/boundary/prevention/detection/failure/recovery/owner/oracle/evidence） |
+| [security/threat-model.md](./security/threat-model.md) | 威胁清单（21 项已规范登记；oracle/evidence 全 not-run——非「实测」） |
+| [security/threat-test-oracles.md](./security/threat-test-oracles.md) | ~30 条测试 oracle 设计摘要（informative；零条已执行） |
 | [security/security-and-credentials.md](./security/security-and-credentials.md) | 本机控制面、账号/密钥分层、secret 存储与不同步、多账号切换 |
 | [security/computer-control.md](./security/computer-control.md) | selected-window 桌面控制、隔离浏览器、PC-local 确认矩阵 |
-| [security/licensing-and-terms.md](./security/licensing-and-terms.md) | 供应商条款/许可、AGPL 与 Paseo 复用 gate |
+| [security/licensing-and-terms.md](./security/licensing-and-terms.md) | 供应商条款/许可、AGPL 与 Paseo 复用 gate（POC-LIC 仍 not-run） |
 
 ### 2.5 协作、平台、决策、追踪、Adapter、来源、模板
 

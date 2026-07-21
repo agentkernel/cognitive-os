@@ -8,7 +8,7 @@
 
 | 类别 | 要求 | 当前状态 |
 |---|---|---|
-| Open PoC | 见产品证据索引 27+ 项 `CONSOLE-AGENTHUB-V1-POC-*` | not-run |
+| Open PoC | 见产品证据索引 33 项（28 not-run + 5 planned）`POC-*` | not-run / planned |
 | 单元/集成失败测试 | 各任务失败测试先行 | none |
 | 安全负例 | squatting/PID reuse/breakaway/stdin 抢占/双 writer/symlink/MITM/replay 等 | none |
 | 无障碍验收 | WCAG 2.2 + 各平台原生 AT 关键旅程 | none |
