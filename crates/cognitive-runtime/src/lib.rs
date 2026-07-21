@@ -243,10 +243,8 @@ mod tests {
     /// dispatch=false (never guess top-1).
     #[test]
     fn shell_target_ambiguity_rejects_stop_it_with_two_executions() {
-        let request = crate::request_from_target_vector_input(
-            "stop it",
-            ["execution://a", "execution://b"],
-        );
+        let request =
+            crate::request_from_target_vector_input("stop it", ["execution://a", "execution://b"]);
         let decision = crate::admit_target_selector(&request);
         assert_eq!(decision.decision, "clarification_required");
         assert_eq!(decision.error_code, Some("SHELL_TARGET_AMBIGUOUS"));
@@ -272,10 +270,7 @@ mod tests {
 
     #[test]
     fn shell_target_allows_exact_unique_strong_ref() {
-        let request = crate::request_from_target_vector_input(
-            "execution://a",
-            ["execution://a"],
-        );
+        let request = crate::request_from_target_vector_input("execution://a", ["execution://a"]);
         let decision = crate::admit_target_selector(&request);
         assert_eq!(decision.decision, "allow");
         assert!(decision.error_code.is_none());
@@ -285,7 +280,8 @@ mod tests {
 
     #[test]
     fn shell_target_not_found_on_empty_candidates() {
-        let request = crate::request_from_target_vector_input("execution://a", Vec::<String>::new());
+        let request =
+            crate::request_from_target_vector_input("execution://a", Vec::<String>::new());
         let decision = crate::admit_target_selector(&request);
         assert_eq!(decision.decision, "deny");
         assert_eq!(decision.error_code, Some("SHELL_TARGET_NOT_FOUND"));
