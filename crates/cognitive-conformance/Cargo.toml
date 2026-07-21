@@ -15,6 +15,10 @@ cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }
 cognitive-kernel = { workspace = true }
 cognitive-store = { workspace = true }
+# M5 behavioral execution: management / runtime / AKP public surfaces (leaf deps).
+cognitive-management = { workspace = true }
+cognitive-runtime = { workspace = true }
+cognitive-akp = { workspace = true }
 # Draft 2020-12 validation for wire-schema vector execution (same pinned
 # major as the contracts-side schema re-verification tests).
 jsonschema = { version = "0.47", default-features = false }

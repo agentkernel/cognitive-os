@@ -447,7 +447,7 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
         runner: RunnerInfo {
             name: "cognitive-conformance",
             version: env!("CARGO_PKG_VERSION"),
-            capability: "static-contract + kernel-behavioral execution (M2/M3/M4)",
+            capability: "static-contract + kernel-behavioral execution (M2/M3/M4/M5)",
         },
         note: "M4 runner: statically decidable vectors are executed against deterministic \
                reference gates grounded in registered machine assets; the M2 kernel-backed \
@@ -470,7 +470,7 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
 pub fn human_summary(report: &ConformanceReport) -> String {
     let mut out = String::new();
     out.push_str(
-        "CognitiveOS conformance runner (M4: static-contract + kernel-behavioral execution)\n",
+        "CognitiveOS conformance runner (M5: static-contract + kernel-behavioral execution)\n",
     );
     out.push_str(&format!(
         "Vectors enumerated: {} | pass {} | fail {} | not-applicable {} | documented-degradation {} | not-run {}\n",
