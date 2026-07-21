@@ -35,6 +35,9 @@ mod behavior_m3;
 /// M4 behavioral execution: effect protocol and crash recovery through the
 /// public fault-injection framework.
 mod behavior_m4;
+/// M5 behavioral execution: management approval (F-011), shell cancel/detach,
+/// watch cursor stale — against RUN public surfaces.
+mod behavior_m5;
 
 /// Implementation selector for vector execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -134,6 +137,18 @@ pub enum ExecutionMode {
     /// M4 behavioral: pending effects are reconciled before any loop
     /// resume (REQ-AGENT-RECOVERY-001).
     RecoveryReconciliationBehavior,
+    /// M5 behavioral: R1 approval without structured confirmation (F-011).
+    ApprovalR1MissingBehavior,
+    /// M5 behavioral: self-authorization / chain entanglement denied (F-011).
+    ApprovalSelfBehavior,
+    /// M5 behavioral: expired/replayed/mismatched/burst approvals (F-011).
+    ApprovalFatigueBehavior,
+    /// M5 behavioral: cancel yields CANCEL_PENDING, not authority cancel.
+    ShellCancelBehavior,
+    /// M5 behavioral: detach does not cancel; reattach restores no privilege.
+    ShellDetachBehavior,
+    /// M5 behavioral: stale watch cursor forces authorized new snapshot.
+    ShellWatchResumeBehavior,
 }
 
 /// Execution plan for one vector, decided by structural classification.
@@ -424,6 +439,13 @@ const CRASH_RECOVERY_VECTOR_ID: &str = "RECOVERY-CRASH-006";
 const UNKNOWN_OUTCOME_VECTOR_ID: &str = "EFF-UNK-003";
 const IDEMPOTENCY_CONFLICT_VECTOR_ID: &str = "EFF-IDEM-CONFLICT-001";
 const RECOVERY_RECONCILIATION_VECTOR_ID: &str = "AGENT-RECOVERY-003";
+/// M5 management/shell/watch behavioral executions (RUN M5 public APIs).
+const APPROVAL_R1_VECTOR_ID: &str = "MGMT-APPROVAL-R1-009";
+const APPROVAL_SELF_VECTOR_ID: &str = "MGMT-APPROVAL-SELF-010";
+const APPROVAL_FATIGUE_VECTOR_ID: &str = "MGMT-APPROVAL-FATIGUE-011";
+const SHELL_CANCEL_VECTOR_ID: &str = "SHELL-CANCEL-SEMANTICS-005";
+const SHELL_DETACH_VECTOR_ID: &str = "SHELL-DETACH-ATTACH-004";
+const SHELL_WATCH_VECTOR_ID: &str = "SHELL-WATCH-RESUME-006";
 /// Behavioral vector that receives recorded partial contract assertions
 /// (M1 static side + M2 real read-only degradation subset; never a pass —
 /// disk-full and dispatch/stop/revoke expectations are M4/M5 behavior).
@@ -511,6 +533,14 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         RECOVERY_RECONCILIATION_VECTOR_ID => {
             ExecutionPlan::Execute(ExecutionMode::RecoveryReconciliationBehavior)
         }
+        APPROVAL_R1_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ApprovalR1MissingBehavior),
+        APPROVAL_SELF_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ApprovalSelfBehavior),
+        APPROVAL_FATIGUE_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::ApprovalFatigueBehavior)
+        }
+        SHELL_CANCEL_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellCancelBehavior),
+        SHELL_DETACH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellDetachBehavior),
+        SHELL_WATCH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellWatchResumeBehavior),
         STORE_DEGRADATION_VECTOR_ID => ExecutionPlan::NotRun {
             reason: "disk-full fault mode and management stop/revoke expectations are \
                      M4-deferred (no portable disk-full injection) and M5 management plane; \
@@ -1119,6 +1149,24 @@ fn execute_gate(
         ExecutionMode::RecoveryReconciliationBehavior => {
             behavior_m4::recovery_reconciliation_behavior(ctx, vector, kind)
         }
+        ExecutionMode::ApprovalR1MissingBehavior => {
+            behavior_m5::approval_r1_009_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::ApprovalSelfBehavior => {
+            behavior_m5::approval_self_010_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::ApprovalFatigueBehavior => {
+            behavior_m5::approval_fatigue_011_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::ShellCancelBehavior => {
+            behavior_m5::shell_cancel_005_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::ShellDetachBehavior => {
+            behavior_m5::shell_detach_004_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::ShellWatchResumeBehavior => {
+            behavior_m5::shell_watch_006_behavior(ctx, vector, kind)
+        }
     }
 }
 
@@ -1240,7 +1288,7 @@ pub struct SelfCheckReport {
 /// rank-before-auth, stale cache serving, silent truncation, unbounded
 /// retry, reshuffling render, content-claimed control plane, accepted
 /// amplification).
-const CORRUPTED_MODES: [ExecutionMode; 21] = [
+const CORRUPTED_MODES: [ExecutionMode; 27] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::CasBehavior,
@@ -1262,6 +1310,12 @@ const CORRUPTED_MODES: [ExecutionMode; 21] = [
     ExecutionMode::UnknownOutcomeBehavior,
     ExecutionMode::IdempotencyConflictBehavior,
     ExecutionMode::RecoveryReconciliationBehavior,
+    ExecutionMode::ApprovalR1MissingBehavior,
+    ExecutionMode::ApprovalSelfBehavior,
+    ExecutionMode::ApprovalFatigueBehavior,
+    ExecutionMode::ShellCancelBehavior,
+    ExecutionMode::ShellDetachBehavior,
+    ExecutionMode::ShellWatchResumeBehavior,
 ];
 
 /// Run the self-check: the deliberately wrong implementation must fail every

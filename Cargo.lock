@@ -127,9 +127,12 @@ dependencies = [
 name = "cognitive-conformance"
 version = "0.0.1"
 dependencies = [
+ "cognitive-akp",
  "cognitive-contracts",
  "cognitive-domain",
  "cognitive-kernel",
+ "cognitive-management",
+ "cognitive-runtime",
  "cognitive-store",
  "jsonschema",
  "serde",

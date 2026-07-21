@@ -38,8 +38,8 @@ fn repo_root() -> PathBuf {
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
 const TOTAL: usize = 84;
-const PASS: usize = 46;
-const NOT_RUN: usize = 38;
+const PASS: usize = 52;
+const NOT_RUN: usize = 32;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
@@ -70,6 +70,16 @@ const BEHAVIORAL_M4: [(&str, &str); 7] = [
     ("EFF-UNK-003", "UnknownOutcomeBehavior"),
     ("EFF-IDEM-CONFLICT-001", "IdempotencyConflictBehavior"),
     ("AGENT-RECOVERY-003", "RecoveryReconciliationBehavior"),
+];
+
+/// The M5 management/shell/watch behavioral executions and their report modes.
+const BEHAVIORAL_M5: [(&str, &str); 6] = [
+    ("MGMT-APPROVAL-R1-009", "ApprovalR1MissingBehavior"),
+    ("MGMT-APPROVAL-SELF-010", "ApprovalSelfBehavior"),
+    ("MGMT-APPROVAL-FATIGUE-011", "ApprovalFatigueBehavior"),
+    ("SHELL-CANCEL-SEMANTICS-005", "ShellCancelBehavior"),
+    ("SHELL-DETACH-ATTACH-004", "ShellDetachBehavior"),
+    ("SHELL-WATCH-RESUME-006", "ShellWatchResumeBehavior"),
 ];
 
 #[test]
@@ -270,6 +280,36 @@ fn m4_behavioral_vectors_execute_through_the_fault_framework() {
     }
 }
 
+/// M5 management/shell/watch behavioral executions against RUN public APIs.
+#[test]
+fn m5_behavioral_vectors_execute_against_run_surfaces() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    for (id, mode) in BEHAVIORAL_M5 {
+        let outcome = outcomes
+            .iter()
+            .find(|o| o.id == id)
+            .unwrap_or_else(|| panic!("{id} missing from corpus"));
+        assert_eq!(
+            outcome.result,
+            "pass",
+            "{id} must pass behaviorally: {:?}",
+            outcome.execution.as_ref().map(|e| &e.mismatches)
+        );
+        let record = outcome.execution.as_ref().expect("execution record");
+        assert_eq!(format!("{:?}", record.mode), mode);
+        assert!(
+            record.implementation.contains("ApprovalGate")
+                || record.implementation.contains("ShellService")
+                || record.implementation.contains("WatchLog"),
+            "{id} implementation label must name the M5 RUN surface, got {}",
+            record.implementation
+        );
+    }
+}
+
 /// M2 behavioral executions run against the real kernel/store authority
 /// path — the execution record must say so, and every one must pass.
 #[test]
@@ -399,8 +439,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
     // Every observably corrupted gate must be represented and flipped
     // (M2: gate-bypassing store writer; M3: governance anti-patterns;
     // M4: effect/recovery anti-patterns).
-    assert_eq!(report.must_flip.len(), 27, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 27);
+    assert_eq!(report.must_flip.len(), 33, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 33);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
