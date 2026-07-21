@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**RUN shell-channel authority 门禁进行中**：分支 `lane/run-shell-channel-authority`；`admit_channel_binding` 负例单测绿；pins **仍 84/57/27**（CFR 未接）；Intent Authority PR [#40](https://github.com/agentkernel/cognitive-os/pull/40) 已合入 @ `6d21af7`；tip 文档基线 `63617a0`；Profile **implemented = 0**；V01 L3 non-claim 仍有效）
+> 最后更新：2026-07-21（**CFR shell-channel isolation 行为批**：`SHELL-CHANNEL-ISOLATION-003` 脱 not-run；pins **84/58/26**；self-check **39**；上游 RUN PR [#42](https://github.com/agentkernel/cognitive-os/pull/42) @ `8e57e6d`；Intent PR [#40](https://github.com/agentkernel/cognitive-os/pull/40) 已合入；Profile **implemented = 0**；V01 L3 non-claim 仍有效）
 
 ## 里程碑状态
 
@@ -28,19 +28,19 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | **66**（matrix 实测非空 impl；相对 tip：+`REQ-SHELL-CHANNEL-001` / `REQ-SHELL-UX-001` channel_binding；**向量仍 not-run 直至 CFR 阶段 B**） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 30 向量**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2** + **M6 3**）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
+| 实现已提供（构建通过且有实现代码的 REQ） | **66**（matrix 实测非空 impl；含 `REQ-SHELL-CHANNEL-001` / `REQ-SHELL-UX-001` channel_binding） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 31 向量**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2** + **M5-shell-channel 1** + **M6 3**）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
 
-## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-21 Lane-RUN/CFR M6 行为批）
+## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-21 Lane-CFR shell-channel 行为批）
 
 | 状态 | 计数 |
 |---|---|
 | 向量总数 | **84** |
-| **pass** | **57** = 静态 27 + **行为 30**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2**：INTENT-SUPERSEDE-002 / INTENT-ACCEPTANCE-007 + **M6 3**） |
+| **pass** | **58** = 静态 27 + **行为 31**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + **SHELL-CHANNEL-ISOLATION-003** + M6 3） |
 | fail / not-applicable / documented-degradation | 0 / 0 / 0 |
-| **not-run** | **27**（含 MGMT-FALLBACK 全动词、shell channel/target/migration、delta-scope、store-degradation disk-full 等） |
-| 错误实现自检 | **38/38 corrupted 向量全部翻 fail**（+2 Intent Authority）；CI 地板 ≥36 |
+| **not-run** | **26**（含 MGMT-FALLBACK 全动词、shell target/migration、delta-scope、store-degradation disk-full 等） |
+| 错误实现自检 | **39/39 corrupted 向量全部翻 fail**（+1 shell-channel）；CI 地板 ≥38 |
 
 分层明细见 `artifacts/evidence/conformance/conformance-report.json`（本地再生成：`cargo run -p cognitive-conformance --bin conformance-runner`；报告 sha256 由 runner 打印）。层 7/8 无专属 slug = D-004 已按文档化跨切片映射闭合（conformance/README + runner `CROSS_SLICE_HOSTED`）。
 
@@ -57,18 +57,18 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **Intent Authority 已合入 main（PR #40）** | `main` @ `6d21af7` | pins **57/27**；self-check 38；等待 RUN channel-binding 合入后接 `SHELL-CHANNEL-ISOLATION-003`；handoff：`20260721-ops-pr40-merge-handoff.md` |
+| Lane-CFR 符合性与工具 | **shell-channel isolation 行为批进行中** | `lane/cfr-shell-channel-isolation` | pins **58/26**；self-check 39；`SHELL-CHANNEL-ISOLATION-003` pass；handoff：`20260721-lane-cfr-shell-channel-isolation-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
-| Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；shell-channel isolation 协作标 P1 |
-| Lane-RUN 运行时与管理面 | **shell-channel authority 门禁进行中** | `lane/run-shell-channel-authority` | `channel_binding::admit_channel_binding`（REQ-SHELL-CHANNEL-001）；handoff：`20260721-lane-run-shell-channel-authority-handoff.md`；pins 未变 |
+| Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
+| Lane-RUN 运行时与管理面 | **shell-channel authority 已合入**（PR #42） | `main` @ `8e57e6d` | `channel_binding::admit_channel_binding`；handoff：`20260721-lane-run-shell-channel-authority-handoff.md` |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)（RUN channel-binding authority；pins 仍 57/27）
-2. [20260721-ops-pr40-merge-handoff.md](../checkpoints/20260721-ops-pr40-merge-handoff.md)（OPS-PR40：PR #40 MERGED @ `6d21af7`；pins 57/27）
-3. [20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)（CFR-M5 Intent Authority：两向量脱 not-run）
+1. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass；pins 58/26）
+2. [20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)（RUN channel-binding authority；PR #42）
+3. [20260721-ops-pr40-merge-handoff.md](../checkpoints/20260721-ops-pr40-merge-handoff.md)（OPS-PR40：PR #40 MERGED @ `6d21af7`）
 
 ## 客户端目录治理交付
 

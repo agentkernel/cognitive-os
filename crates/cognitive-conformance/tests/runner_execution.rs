@@ -38,8 +38,8 @@ fn repo_root() -> PathBuf {
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
 const TOTAL: usize = 84;
-const PASS: usize = 57;
-const NOT_RUN: usize = 27;
+const PASS: usize = 58;
+const NOT_RUN: usize = 26;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
@@ -73,13 +73,17 @@ const BEHAVIORAL_M4: [(&str, &str); 7] = [
 ];
 
 /// The M5 management/shell/watch behavioral executions and their report modes.
-const BEHAVIORAL_M5: [(&str, &str); 6] = [
+const BEHAVIORAL_M5: [(&str, &str); 7] = [
     ("MGMT-APPROVAL-R1-009", "ApprovalR1MissingBehavior"),
     ("MGMT-APPROVAL-SELF-010", "ApprovalSelfBehavior"),
     ("MGMT-APPROVAL-FATIGUE-011", "ApprovalFatigueBehavior"),
     ("SHELL-CANCEL-SEMANTICS-005", "ShellCancelBehavior"),
     ("SHELL-DETACH-ATTACH-004", "ShellDetachBehavior"),
     ("SHELL-WATCH-RESUME-006", "ShellWatchResumeBehavior"),
+    (
+        "SHELL-CHANNEL-ISOLATION-003",
+        "ShellChannelIsolationBehavior",
+    ),
 ];
 
 /// The M5 Intent Authority behavioral executions (KRN/store).
@@ -316,6 +320,7 @@ fn m5_behavioral_vectors_execute_against_run_surfaces() {
         assert!(
             record.implementation.contains("ApprovalGate")
                 || record.implementation.contains("ShellService")
+                || record.implementation.contains("channel_binding")
                 || record.implementation.contains("WatchLog"),
             "{id} implementation label must name the M5 RUN surface, got {}",
             record.implementation
@@ -513,8 +518,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
     // Every observably corrupted gate must be represented and flipped
     // (M2: gate-bypassing store writer; M3: governance anti-patterns;
     // M4: effect/recovery anti-patterns).
-    assert_eq!(report.must_flip.len(), 38, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 38);
+    assert_eq!(report.must_flip.len(), 39, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 39);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -546,6 +551,7 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "AGENT-RECOVERY-003",
         "INTENT-SUPERSEDE-002",
         "INTENT-ACCEPTANCE-007",
+        "SHELL-CHANNEL-ISOLATION-003",
         "AGENT-INSTALL-001",
         "AGENT-BYPASS-002",
         "AGENT-OOB-001",

@@ -3560,9 +3560,12 @@ requirements:
       - crates/cognitive-runtime/src/channel_binding.rs
     impl_tests:
       - crates/cognitive-runtime/src/lib.rs
-    evidence: []
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - artifacts/evidence/conformance/conformance-report.json
     docs:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
   - id: REQ-SHELL-CONTROL-001
     owner: shell-control
     owner_spec: specs/core/README.md
@@ -3687,9 +3690,12 @@ requirements:
       - crates/cognitive-runtime/src/channel_binding.rs
     impl_tests:
       - crates/cognitive-runtime/src/lib.rs
-    evidence: []
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - artifacts/evidence/conformance/conformance-report.json
     docs:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
   - id: REQ-SHELL-WATCH-001
     owner: shell-watch
     owner_spec: specs/core/README.md

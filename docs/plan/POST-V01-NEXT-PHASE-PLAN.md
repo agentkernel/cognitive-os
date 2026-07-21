@@ -1,29 +1,29 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-21）；主战役 `CFR-M5-INTENT-AUTHORITY-SLICE` **已合入 main**（PR #40 @ `6d21af7`；pins 57/27）；`OPS-PR40-CI-UNBLOCK-MERGE` **闭合**；类别 plan（informative）
+- 状态：active（2026-07-21）；主战役 `RUN-SHELL-CHANNEL-AUTHORITY-THEN-CFR` **阶段 A 已合入**（PR #42 @ `8e57e6d`）+ **阶段 B（CFR）进行中**（`SHELL-CHANNEL-ISOLATION-003` → pins **58/26**）；Intent Authority / PR #40 **已交付**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
-- Intent Authority handoff：[20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)
-- 合入 handoff：[20260721-ops-pr40-merge-handoff.md](../checkpoints/20260721-ops-pr40-merge-handoff.md)（PR #40 MERGED；双 OS CI 绿）
-- 下一窗口：P1 = shell channel readiness（RUN authority deny → CFR `SHELL-CHANNEL-ISOLATION-003`）；勿批量清 not-run；勿开 PERF
+- RUN handoff：[20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)
+- CFR handoff：[20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)
+- 下一窗口：P1 = `SHELL-TARGET-AMBIGUITY-001` discovery（或 defer 族）；勿批量清 not-run；勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
 
 ### 阶段目标
 
-在 `origin/main` tip `aa4f142`、v0.1 **GO-with-explicit-non-claim**、V01 Auto-Run 已达到 L3 Perf-report-ready（non-claim）之后，下一阶段只推进一条可审计的 M5 Intent/acceptance 行为证据切片：把已有确定性 KRN/RUN 行为承载接入 CFR，形成真实 runner 证据，同时保持发布声明和 Profile 口径不升格。
+在 `origin/main` tip（Intent Authority + PR #40 + RUN channel-binding PR #42）与 pins **58/26** 之后，下一窄面优先核对 shell target ambiguity 或 defer 族；本文件历史 P0 Intent 切片与 shell-channel authority **已交付**，不得再规划为 P0。
 
 本阶段的成功定义是「实现已提供 + 测试已执行 + 相关向量 pass 的窄面证据」，不是 Profile implemented、跨平台安全符合、完整 M5/M6 或 v0.2 发布。
 
 ### 当前事实地板
 
-- tip：`aa4f142`（`main` 与 `origin/main` 对齐）；PR #37/#38 已合并。
-- conformance：84 vectors，55 pass，29 not-run，fail/not-applicable/documented-degradation 为 0。
-- self-check：至少 36 个 corrupted vectors 必须翻 fail；不得降低地板。
+- tip：以 `origin/main` 实测为准（规划会话起点曾为 `63617a0`；RUN merge `8e57e6d`；CFR 合入后继续前进）。
+- conformance：84 vectors，**58 pass**，**26 not-run**，fail/not-applicable/documented-degradation 为 0。
+- self-check：至少 **38** 个 corrupted vectors 必须翻 fail（实测 **39**）；不得降低地板。
 - Profile implemented：0；自动绿灯不改变该状态。
 - V01 canonical run：`20260721-192142-492`，`level=L3`，`release=non_claim_preserved`，`platform_label=windows_wsl2_linux_guest`。
-- 工作树旁路 dirty（规划基线快照）：`.cursor/rules/use-skills.mdc`、`.cursor/skills/**`、职校选型 `.md/.xlsx`、`_gen_*.py`、`artifacts/_local/**`、规划入口提示词等——执行窗口必须保护、忽略、不暂存、不回退。
+- 工作树旁路 dirty（skills / 职校选型 / `artifacts/_local/**` 等）——执行窗口必须保护、忽略、不暂存、不回退。
 
 ### In-scope
 
