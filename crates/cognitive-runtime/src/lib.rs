@@ -8,6 +8,8 @@
 //! kernel's Effect protocol; this crate never commits authority state
 //! directly.
 
+pub mod event_envelope;
+pub use event_envelope::{EventEnvelopeError, assemble_event};
 /// Placeholder marker for the executor pipeline (implemented from M4).
 pub const RUNTIME_ROLE: &str = "operation-executor+harness-loop (planned, M4)";
 

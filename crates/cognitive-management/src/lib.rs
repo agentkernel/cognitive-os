@@ -22,11 +22,13 @@
 //! `management-approval-decision.schema.json`; vectors `management-*.json`
 //! (registered not-run; behavioral execution is Lane-CFR's M5 batch).
 
+pub mod approval;
 pub mod error;
 pub mod governance;
 pub mod model;
 pub mod plane;
 pub mod session;
+pub use approval::{ApprovalGate, ApprovalPresentation, ManagementActionProposal};
 
 pub use error::{ManagementDenial, ManagementError, RegisteredParts, category_str};
 pub use governance::GovernanceLedger;
@@ -47,7 +49,8 @@ pub use plane::{
     ReconciledEffect, RevokeReport, StopReport, StopRequest,
 };
 pub use session::{
-    ManagementAction, PrivilegedManagementSession, RiskClass, SessionScope, SessionState,
+    ManagementAction, ManagementSessionArchive, PrivilegedManagementSession, RiskClass,
+    SessionScope, SessionState,
 };
 
 /// Deterministic management verbs that must work without any model.

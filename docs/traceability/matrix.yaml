@@ -132,8 +132,10 @@ requirements:
       - EVT-SCHEMA-001
     vectors:
       - conformance/vectors/evt-schema-001.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-runtime/src/event_envelope.rs
+    impl_tests:
+      - crates/cognitive-runtime/tests/m5_event_envelope.rs
     evidence: []
     docs: []
   - id: REQ-CAP-001
@@ -709,8 +711,10 @@ requirements:
       - conformance/vectors/management-approval-missing-confirmation.json
       - conformance/vectors/management-approval-self-approval.json
       - conformance/vectors/management-independent-approval.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-management/src/approval.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_session_approval.rs
     evidence: []
     docs: []
   - id: REQ-MGMT-AUTHZ-001
@@ -1182,8 +1186,11 @@ requirements:
     vectors:
       - conformance/vectors/shell-control-unreasoned-cancel-001.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-CONF-001
@@ -1206,8 +1213,11 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-ECO-001
@@ -1260,8 +1270,11 @@ requirements:
       - conformance/vectors/akp-envelope-no-schema-pin-001.json
       - conformance/vectors/akp-result-error-without-machine-code-003.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-ENV-002
@@ -1274,8 +1287,11 @@ requirements:
     vectors:
       - conformance/vectors/akp-envelope-no-schema-pin-001.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-IDEM-001
@@ -1311,8 +1327,11 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-MGMT-002
@@ -1327,8 +1346,10 @@ requirements:
       - conformance/vectors/management-approval-fatigue-guard.json
       - conformance/vectors/management-approval-missing-confirmation.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-management/src/approval.rs
+    impl_tests:
+      - crates/cognitive-management/tests/m5_session_approval.rs
     evidence: []
     docs: []
   - id: REQ-AKP-MGMT-003
@@ -1388,8 +1409,11 @@ requirements:
     vectors:
       - conformance/vectors/shell-watch-resume-006.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-SHELL-003
@@ -1417,8 +1441,11 @@ requirements:
     vectors:
       - conformance/vectors/akp-stream-frame-unsequenced-004.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-STR-002
@@ -1429,8 +1456,11 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-VER-001
@@ -1441,8 +1471,11 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AUDIT-001
@@ -3592,8 +3625,11 @@ requirements:
       - conformance/vectors/shell-execution-migration-009.json
       - conformance/vectors/shell-watch-resume-006.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-akp/src/lib.rs
+    impl_tests:
+      - crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-STATE-001
