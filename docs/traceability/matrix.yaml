@@ -3695,8 +3695,8 @@ requirements:
     docs:
       - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
       - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
-    notes: "CFR SHELL-TARGET-AMBIGUITY-001 (2026-07-22): admit_target_selector returns
-      clarification_required + SHELL_TARGET_AMBIGUOUS + dispatch=false; never top-1 guess."
+    notes: "CFR SHELL-TARGET-AMBIGUITY-001 (2026-07-22): admit_target_selector returns clarification_required +
+      SHELL_TARGET_AMBIGUOUS + dispatch=false; never top-1 guess."
   - id: REQ-SHELL-UX-001
     owner: shell-ux
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md
