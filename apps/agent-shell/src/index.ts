@@ -13,6 +13,7 @@
 
 import { CLIENT_CHANNELS } from "@cognitiveos/sdk-ts";
 
+export * from "./live.js";
 export * from "./session.js";
 
 /** Shell verbs (the CLI front end binds them at M5). */

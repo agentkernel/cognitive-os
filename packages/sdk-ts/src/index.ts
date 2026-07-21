@@ -1,7 +1,7 @@
 /**
  * `@cognitiveos/sdk-ts`: client SDK of the CognitiveOS reference
- * implementation (Lane-TSC pre-M5 delivery; integration with a real
- * kernel-server lands at M5).
+ * implementation (Lane-TSC M5: HttpSseTransport binds kernel-server
+ * `/management/*`, `/shell/*`, `GET /task/watch`).
  *
  * Hard rules (see `.cursor/rules/11-typescript-clients.mdc`): clients are
  * never an authority; every displayed state is an authority projection; the
