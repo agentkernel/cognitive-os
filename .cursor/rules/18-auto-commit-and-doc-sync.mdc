@@ -20,7 +20,8 @@ alwaysApply: true
 - 禁止提交失败状态（构建红、测试红、lint 红、check:consistency 红）。
 - 禁止 `git add -A` / `git add .`；禁止混入无关改动或他人工作区状态。
 - 禁止 force-push 任何已推送分支。
-- 禁止推送 `personal-blog/**`（独立子工程，不入本仓远端）。
+- 禁止推送 `personal-blog/**`（独立子工程，不入本仓远端）；路径/远程/禁毁见 `.cursor/rules/19-personal-blog-boundary.mdc`。
+- 禁止在自动清理 Cos 工作区时删除或覆盖 `personal-blog/` 嵌套仓。
 - `clients/**` 仅允许核心 gate 变化引起的最小 Markdown 状态同步，禁止夹带其他客户端内容。
 
 ## 完成前检查
