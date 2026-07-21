@@ -3558,11 +3558,13 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-runtime/src/channel_binding.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
       - crates/cognitive-runtime/src/lib.rs
       - crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
-      - artifacts/evidence/conformance/conformance-report.json
+      - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
     docs:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
@@ -3688,11 +3690,13 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-runtime/src/channel_binding.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
       - crates/cognitive-runtime/src/lib.rs
       - crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
-      - artifacts/evidence/conformance/conformance-report.json
+      - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
     docs:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
