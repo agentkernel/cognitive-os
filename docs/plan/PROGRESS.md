@@ -15,7 +15,7 @@
 | M5 意图链/Harness/Shell/管理面 | **in-progress（RUN 批 1 + KRN kernel 侧批已交付）** | — | 入口 gate 达成（M4 出口 + F-011 R1 登记）。**RUN 批 1（2026-07-21，PR #16）：确定性管理 fallback——PrivilegedManagementSession 门（过期/撤销/scope/step-up 全 fail-closed）+ 无模型四动词 inspect/stop/revoke/reconcile（经中央 transition 门 / M3 revocation 算术 / M4 recovery 路径），验收判据 5 的车道侧证据。KRN kernel 侧批（2026-07-21，PR 见车道表）：意图链持久化 + 确定性 admission（判据 1 的 intent 分量：`INTENT_CLARIFICATION_REQUIRED`）+ 修正 epoch fencing（判据 2 语义：`INTENT_VERSION_SUPERSEDED` 双点 fence、零执行、pending 分类）+ 有界 Loop 驱动 kernel 端口 + 恢复 6/7 编排事实；端口面冻结（KRN M5 handoff §7）。判据 1–4/6–8 的 Shell/AKP/Harness 运行时面待 RUN 批 2+**；建议提示词 docs/prompts/milestone-m5.md / lane-run.md |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
-| Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；**2026-07-21 Phase 0**：AH-CTR-02 六 provider 接口文档级回填、POC-LIC 材料整理（评估仍 not-run）、21 项威胁已规范登记（oracle/evidence 全 not-run，非「实测」）+ 5 planned PoC；implementation-ready 仍 blocked（后端/M5/平台 PoC/ADR/法务/runtime） |
+| Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；**2026-07-21 Phase 0 文档准备收口**（PR #18/#19）：AH-CTR-02、POC-LIC 材料、威胁 oracle、五平台 runbook、tech-stack 草案、设计缺口——本地 informative 已尽；真实 PoC/正式 ADR/法务评估仍 blocked；上游 M5 in-progress 但 AKP/runtime/kernel-server 仍骨架、无 m5-milestone-review；implementation-ready 仍 **no** |
 
 ## 隔离产品子工程
 
@@ -62,13 +62,13 @@
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
 | Lane-RUN 运行时与管理面 | **M5 批 1 已交付**（确定性管理 fallback：session 门 + 无模型四动词，实现已提供 + 车道测试已执行；management 向量保持 not-run 归 CFR） | `lane/run` | RUN 批 2：Management API HTTP 面 + AKP envelope + Harness Loop + Operation 执行器（等 KRN M5 端口）；governance ledger 收编 store 表待与 KRN 协商 |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | `work/clients-phase0-poc-prep` | Phase 0 informative：PoC runbook/模板、技术栈比较草案、设计缺口登记；implementation-ready 仍 no；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md` |
+| Lane-CON Console | tracking-only 文档例外 | `work/clients-phase0-status` | Phase 0 文档准备收口（等 M5 出口 + 外部设备/账号）；implementation-ready 仍 no；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-status-handoff.md` |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-con-clients-phase0-poc-prep-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md)（Lane-CON Phase 0：PoC 执行手册/模板、tech-stack 比较草案、设计缺口；implementation-ready 仍 blocked）
-2. [20260721-lane-con-clients-phase0-audits-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md)（Lane-CON Phase 0：AH-CTR-02 文档级、POC-LIC 材料、威胁 oracle/planned PoC；implementation-ready 仍 blocked）
-3. [20260720-lane-krn-m5-handoff.md](../checkpoints/20260720-lane-krn-m5-handoff.md)（Lane-KRN M5 kernel 侧批：意图链/修正 fencing/Loop 端口/恢复 6-7/D-018，端口面冻结 §7、16 项行为测试、matrix +7 REQ 回填）
+1. [20260721-lane-con-clients-phase0-status-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-status-handoff.md)（Lane-CON Phase 0 收口：文档准备尽本地所能；M5 in-progress 但客户端仍 blocked；等外部设备/账号）
+2. [20260721-lane-con-clients-phase0-poc-prep-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md)（Lane-CON Phase 0：PoC 执行手册/模板、tech-stack 比较草案、设计缺口；implementation-ready 仍 blocked）
+3. [20260721-lane-con-clients-phase0-audits-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md)（Lane-CON Phase 0：AH-CTR-02 文档级、POC-LIC 材料、威胁 oracle/planned PoC；implementation-ready 仍 blocked）
 
 ## 客户端目录治理交付
 
