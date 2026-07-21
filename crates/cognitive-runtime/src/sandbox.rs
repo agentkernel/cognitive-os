@@ -150,12 +150,10 @@ impl SandboxGate {
                     )));
                 }
             }
-            SandboxChannel::Secrets => {
-                if target.starts_with("host://") {
-                    return Err(SandboxError::bypass(format!(
-                        "host secret path {target} blocked"
-                    )));
-                }
+            SandboxChannel::Secrets if target.starts_with("host://") => {
+                return Err(SandboxError::bypass(format!(
+                    "host secret path {target} blocked"
+                )));
             }
             _ => {}
         }

@@ -53,12 +53,12 @@ impl IdentityAdapter {
         claimed_user: Option<&str>,
         authority_principal: &str,
     ) -> Result<String, AdapterError> {
-        if let Some(claimed) = claimed_user {
-            if claimed != authority_principal {
-                return Err(AdapterError::bypass(format!(
-                    "agent self-reported identity {claimed} rejected; authority={authority_principal}"
-                )));
-            }
+        if let Some(claimed) = claimed_user
+            && claimed != authority_principal
+        {
+            return Err(AdapterError::bypass(format!(
+                "agent self-reported identity {claimed} rejected; authority={authority_principal}"
+            )));
         }
         Ok(authority_principal.to_owned())
     }
