@@ -47,4 +47,4 @@
 - PROGRESS 已更新：是
 - 工作分支：`lane/cfr-m5-intent-authority-slice`
 - 关联 REQ：`REQ-INTENT-SUPERSEDE-001`、`REQ-INTENT-ACCEPT-001`（及向量附属 REQ）
-- 提交哈希：见本 PR / `git log`（写 handoff 时尚未 commit）
+- 提交哈希：`59a1bc41f2abfc2e1403dbcd7fead1ac074acdea`
