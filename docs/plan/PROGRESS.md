@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**CFR shell-channel isolation 已合入 main**：PR [#43](https://github.com/agentkernel/cognitive-os/pull/43) @ `889178f`；上游 RUN PR [#42](https://github.com/agentkernel/cognitive-os/pull/42) @ `8e57e6d`；pins **84/58/26**；self-check **39**；Profile **implemented = 0**；V01 L3 non-claim 仍有效）
+> 最后更新：2026-07-22（**Lane-RUN shell target ambiguity authority**：分支 `lane/run-shell-target-ambiguity-authority`；`admit_target_selector` 已提供；向量 `SHELL-TARGET-AMBIGUITY-001` **仍 not-run**；pins **84/58/26**；self-check **39**；Profile **implemented = 0**；上游 tip `80ffcc0`）
 
 ## 里程碑状态
 
@@ -57,18 +57,18 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **shell-channel isolation 已合入 main（PR #43）** | `main` @ `889178f` | pins **58/26**；self-check 39；下一候选 `SHELL-TARGET-AMBIGUITY-001`；handoff：`20260721-lane-cfr-shell-channel-isolation-handoff.md` |
+| Lane-CFR 符合性与工具 | **shell-channel isolation 已合入 main（PR #43）** | `main` @ `80ffcc0` | pins **58/26**；self-check 39；下一候选 `SHELL-TARGET-AMBIGUITY-001`（等 RUN target authority 合入）；handoff：`20260721-lane-cfr-shell-channel-isolation-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **shell-channel authority 已合入**（PR #42） | `main` @ `8e57e6d` | `channel_binding::admit_channel_binding`；handoff：`20260721-lane-run-shell-channel-authority-handoff.md` |
+| Lane-RUN 运行时与管理面 | **shell target ambiguity authority 进行中** | `lane/run-shell-target-ambiguity-authority` | `target_resolution::admit_target_selector`；单元绿；向量仍 not-run；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass；pins 58/26）
-2. [20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)（RUN channel-binding authority；PR #42）
-3. [20260721-ops-pr40-merge-handoff.md](../checkpoints/20260721-ops-pr40-merge-handoff.md)（OPS-PR40：PR #40 MERGED @ `6d21af7`）
+1. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；pins 仍 58/26；向量 not-run）
+2. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass；pins 58/26）
+3. [20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)（RUN channel-binding authority；PR #42）
 
 ## 客户端目录治理交付
 
