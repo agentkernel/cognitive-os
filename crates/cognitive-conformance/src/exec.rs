@@ -38,6 +38,8 @@ mod behavior_m4;
 /// M5 behavioral execution: management approval (F-011), shell cancel/detach,
 /// watch cursor stale — against RUN public surfaces.
 mod behavior_m5;
+/// M5 Intent Authority: supersede fencing + acceptance gate (KRN/store).
+mod behavior_m5_intent;
 /// M6 behavioral execution: install verification, adapter/sandbox bypass,
 /// OOB reconciliation — against RUN public surfaces.
 mod behavior_m6;
@@ -152,6 +154,12 @@ pub enum ExecutionMode {
     ShellDetachBehavior,
     /// M5 behavioral: stale watch cursor forces authorized new snapshot.
     ShellWatchResumeBehavior,
+    /// M5 Intent Authority: user correction supersedes epoch and fences
+    /// old-epoch dispatch (REQ-INTENT-SUPERSEDE-001).
+    IntentSupersedeBehavior,
+    /// M5 Intent Authority: agent-completed without verification/acceptance
+    /// does not complete the task (REQ-INTENT-ACCEPT-001).
+    IntentAcceptanceBehavior,
     /// M6 behavioral: invalid package signature prevents install commit.
     AgentInstallBehavior,
     /// M6 behavioral: adapter/sandbox/self-completion bypass denied.
@@ -455,6 +463,9 @@ const APPROVAL_FATIGUE_VECTOR_ID: &str = "MGMT-APPROVAL-FATIGUE-011";
 const SHELL_CANCEL_VECTOR_ID: &str = "SHELL-CANCEL-SEMANTICS-005";
 const SHELL_DETACH_VECTOR_ID: &str = "SHELL-DETACH-ATTACH-004";
 const SHELL_WATCH_VECTOR_ID: &str = "SHELL-WATCH-RESUME-006";
+/// M5 Intent Authority behavioral executions (KRN intent_chain / acceptance).
+const INTENT_SUPERSEDE_VECTOR_ID: &str = "INTENT-SUPERSEDE-002";
+const INTENT_ACCEPTANCE_VECTOR_ID: &str = "INTENT-ACCEPTANCE-007";
 /// M6 install/adapter/OOB behavioral executions (RUN M6 public APIs).
 const AGENT_INSTALL_VECTOR_ID: &str = "AGENT-INSTALL-001";
 const AGENT_BYPASS_VECTOR_ID: &str = "AGENT-BYPASS-002";
@@ -554,6 +565,12 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         SHELL_CANCEL_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellCancelBehavior),
         SHELL_DETACH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellDetachBehavior),
         SHELL_WATCH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellWatchResumeBehavior),
+        INTENT_SUPERSEDE_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::IntentSupersedeBehavior)
+        }
+        INTENT_ACCEPTANCE_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::IntentAcceptanceBehavior)
+        }
         AGENT_INSTALL_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentInstallBehavior),
         AGENT_BYPASS_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentBypassBehavior),
         AGENT_OOB_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentOobBehavior),
@@ -1183,6 +1200,12 @@ fn execute_gate(
         ExecutionMode::ShellWatchResumeBehavior => {
             behavior_m5::shell_watch_006_behavior(ctx, vector, kind)
         }
+        ExecutionMode::IntentSupersedeBehavior => {
+            behavior_m5_intent::intent_supersede_002_behavior(ctx, vector, kind)
+        }
+        ExecutionMode::IntentAcceptanceBehavior => {
+            behavior_m5_intent::intent_acceptance_007_behavior(ctx, vector, kind)
+        }
         ExecutionMode::AgentInstallBehavior => {
             behavior_m6::agent_install_001_behavior(ctx, vector, kind)
         }
@@ -1311,7 +1334,7 @@ pub struct SelfCheckReport {
 /// rank-before-auth, stale cache serving, silent truncation, unbounded
 /// retry, reshuffling render, content-claimed control plane, accepted
 /// amplification).
-const CORRUPTED_MODES: [ExecutionMode; 30] = [
+const CORRUPTED_MODES: [ExecutionMode; 32] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::CasBehavior,
@@ -1339,6 +1362,8 @@ const CORRUPTED_MODES: [ExecutionMode; 30] = [
     ExecutionMode::ShellCancelBehavior,
     ExecutionMode::ShellDetachBehavior,
     ExecutionMode::ShellWatchResumeBehavior,
+    ExecutionMode::IntentSupersedeBehavior,
+    ExecutionMode::IntentAcceptanceBehavior,
     ExecutionMode::AgentInstallBehavior,
     ExecutionMode::AgentBypassBehavior,
     ExecutionMode::AgentOobBehavior,

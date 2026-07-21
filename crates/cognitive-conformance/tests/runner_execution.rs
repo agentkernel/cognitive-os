@@ -38,8 +38,8 @@ fn repo_root() -> PathBuf {
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
 const TOTAL: usize = 84;
-const PASS: usize = 55;
-const NOT_RUN: usize = 29;
+const PASS: usize = 57;
+const NOT_RUN: usize = 27;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
@@ -80,6 +80,12 @@ const BEHAVIORAL_M5: [(&str, &str); 6] = [
     ("SHELL-CANCEL-SEMANTICS-005", "ShellCancelBehavior"),
     ("SHELL-DETACH-ATTACH-004", "ShellDetachBehavior"),
     ("SHELL-WATCH-RESUME-006", "ShellWatchResumeBehavior"),
+];
+
+/// The M5 Intent Authority behavioral executions (KRN/store).
+const BEHAVIORAL_M5_INTENT: [(&str, &str); 2] = [
+    ("INTENT-SUPERSEDE-002", "IntentSupersedeBehavior"),
+    ("INTENT-ACCEPTANCE-007", "IntentAcceptanceBehavior"),
 ];
 
 /// The M6 install/adapter/OOB behavioral executions and their report modes.
@@ -317,6 +323,36 @@ fn m5_behavioral_vectors_execute_against_run_surfaces() {
     }
 }
 
+/// M5 Intent Authority: supersede fencing + acceptance gate against KRN/store.
+#[test]
+fn m5_intent_authority_vectors_execute_against_kernel_store() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    for (id, mode) in BEHAVIORAL_M5_INTENT {
+        let outcome = outcomes
+            .iter()
+            .find(|o| o.id == id)
+            .unwrap_or_else(|| panic!("{id} missing from corpus"));
+        assert_eq!(
+            outcome.result,
+            "pass",
+            "{id} must pass behaviorally: {:?}",
+            outcome.execution.as_ref().map(|e| &e.mismatches)
+        );
+        let record = outcome.execution.as_ref().expect("execution record");
+        assert_eq!(format!("{:?}", record.mode), mode);
+        assert!(
+            record.implementation.contains("intent_chain")
+                || record.implementation.contains("TransitionEngine")
+                || record.implementation.contains("intent-authority"),
+            "{id} implementation label must name the intent-authority surface, got {}",
+            record.implementation
+        );
+    }
+}
+
 /// M6 install/adapter/OOB behavioral executions against RUN public APIs.
 #[test]
 fn m6_behavioral_vectors_execute_against_run_surfaces() {
@@ -477,8 +513,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
     // Every observably corrupted gate must be represented and flipped
     // (M2: gate-bypassing store writer; M3: governance anti-patterns;
     // M4: effect/recovery anti-patterns).
-    assert_eq!(report.must_flip.len(), 36, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 36);
+    assert_eq!(report.must_flip.len(), 38, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 38);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -508,6 +544,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "EFF-UNK-003",
         "EFF-IDEM-CONFLICT-001",
         "AGENT-RECOVERY-003",
+        "INTENT-SUPERSEDE-002",
+        "INTENT-ACCEPTANCE-007",
         "AGENT-INSTALL-001",
         "AGENT-BYPASS-002",
         "AGENT-OOB-001",

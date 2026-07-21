@@ -1324,10 +1324,14 @@ requirements:
     vectors:
       - conformance/vectors/intent-supersede-002.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
+    notes: Covered by INTENT-SUPERSEDE-002 behavior execution (Lane-CFR 2026-07-21); AKP wire surface unchanged.
   - id: REQ-AKP-MGMT-001
     owner: akp-mgmt
     owner_spec: specs/akp/README.md
@@ -2849,15 +2853,20 @@ requirements:
     impl:
       - crates/cognitive-kernel/src/effects.rs
       - crates/cognitive-kernel/src/engine.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_effects.rs
       - crates/cognitive-store/tests/m4_tracer_bullet.rs
+      - crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
     notes: "M4: completion only via verification + acceptance authority guards (receipt/remote-completed/model narrative
       underivable). M5: the chain objects now persist kernel-side (TaskContract binds record/interpretation/acceptance
-      strong refs); surfacing the chain binding at Task COMPLETED display = M5 Lane-RUN shell."
+      strong refs); INTENT-ACCEPTANCE-007 behavior-executed by Lane-CFR (2026-07-21) against TransitionEngine —
+      agent-completed + inconclusive verification keeps CANDIDATE_COMPLETE / display_completed=false /
+      next_gate=verification_or_acceptance. Distinct from GW-REMOTE-COMPLETE-001."
   - id: REQ-INTENT-ADMISSION-001
     owner: intent-admission
     owner_spec: specs/core/README.md
@@ -2910,15 +2919,18 @@ requirements:
       - crates/cognitive-kernel/src/intent_chain.rs
       - crates/cognitive-kernel/src/effects.rs
       - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_intent_chain.rs
+      - crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
     notes: "M5: user correction mints a superseding record/interpretation/contract (epoch CAS N->N+1, prior rows never
       rewritten); mint AND dispatch fence old-epoch bindings with INTENT_VERSION_SUPERSEDED (zero execution); pending
-      old-epoch work classified per RFC-0001 categories (must-reconcile before continue); intent-supersede-002 expected
-      semantics covered by Rust behavior tests; vector execution stays with Lane-CFR."
+      old-epoch work classified per RFC-0001 categories (must-reconcile before continue). INTENT-SUPERSEDE-002
+      behavior-executed by Lane-CFR (2026-07-21) via conformance runner (oracle twin m5_intent_chain)."
   - id: REQ-KNOW-007
     owner: knowledge-compilation
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
@@ -3583,12 +3595,15 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-runtime/src/intent_flow.rs
-    impl_tests: []
+      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
+      - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
-    notes: "M5 RUN batch 2b: correct_and_supersede wraps kernel supersede_task_contract (epoch fencing). End-to-end shell
-      command surface + CFR vector still pending."
+    notes: "M5 RUN batch 2b: correct_and_supersede wraps kernel supersede_task_contract (epoch fencing). CFR
+      INTENT-SUPERSEDE-002 behavior-executed 2026-07-21 (Lane-CFR Intent Authority slice)."
   - id: REQ-SHELL-DETACH-001
     owner: shell-detach
     owner_spec: specs/core/README.md
@@ -3634,10 +3649,15 @@ requirements:
     vectors:
       - conformance/vectors/intent-acceptance-007.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
+    impl:
+      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+    impl_tests:
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
+    notes: "CFR INTENT-ACCEPTANCE-007 (2026-07-21): display_completed projection stays false until
+      verification_or_acceptance; authority task_state remains CANDIDATE_COMPLETE."
   - id: REQ-SHELL-TARGET-001
     owner: shell-target
     owner_spec: specs/core/README.md

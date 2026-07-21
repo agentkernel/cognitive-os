@@ -98,7 +98,7 @@ jobs:
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
             const s = r.summary;
-            const pinned = { total_vectors: 84, pass: 55, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 29 };
+            const pinned = { total_vectors: 84, pass: 57, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 27 };
             for (const [key, want] of Object.entries(pinned)) {
               if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
             }
