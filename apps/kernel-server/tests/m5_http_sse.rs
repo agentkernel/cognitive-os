@@ -78,3 +78,28 @@ fn watch_endpoint_streams_snapshot_then_ordered_delta_frames() {
     );
     child.wait().unwrap();
 }
+
+#[test]
+fn shell_detach_and_cancel_routes_are_non_authority() {
+    let p = port();
+    let mut child = spawn(p);
+    let detach = request(
+        p,
+        "POST /shell/detach HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+    );
+    assert!(detach.contains("HTTP/1.1 200"));
+    assert!(detach.contains("\"cancelled\":false"));
+    assert!(detach.contains("\"authority\":false"));
+    child.wait().unwrap();
+
+    let p = port();
+    let mut child = spawn(p);
+    let cancel = request(
+        p,
+        "POST /shell/cancel HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+    );
+    assert!(cancel.contains("HTTP/1.1 200"));
+    assert!(cancel.contains("CANCEL_PENDING"));
+    assert!(cancel.contains("\"authority\":false"));
+    child.wait().unwrap();
+}
