@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（Lane-KRN M5 kernel 侧批：意图链 UserIntentRecord→candidate→确定性准入→TaskContract、修正 epoch fencing `INTENT_VERSION_SUPERSEDED`、有界 Loop 驱动端口、恢复 6/7 编排事实、D-018 KRN 协作项交付——实现已提供 + 车道 Rust 行为测试已执行，端口面冻结于 [KRN M5 handoff](../checkpoints/20260720-lane-krn-m5-handoff.md) §7；向量保持 not-run 归 Lane-CFR。同日：Lane-RUN M5 批 1 无模型确定性 admin CLI 四动词已交付；ADR-0008 自动提交/推送治理政策生效）
+> 最后更新：2026-07-21（Lane-RUN M5 批 2a：R1 结构化审批、session 生命周期、AKP HTTP/SSE watch 与 D-018 可证明组装分量已交付；向量保持 not-run。Lane-KRN M5 kernel 侧批：意图链 UserIntentRecord→candidate→确定性准入→TaskContract、修正 epoch fencing `INTENT_VERSION_SUPERSEDED`、有界 Loop 驱动端口、恢复 6/7 编排事实、D-018 KRN 协作项交付——实现已提供 + 车道 Rust 行为测试已执行，端口面冻结于 [KRN M5 handoff](../checkpoints/20260720-lane-krn-m5-handoff.md) §7；向量保持 not-run 归 Lane-CFR。同日：Lane-RUN M5 批 1 无模型确定性 admin CLI 四动词已交付；ADR-0008 自动提交/推送治理政策生效）
 
 ## 里程碑状态
 
@@ -12,7 +12,7 @@
 | M2 对象/状态/事件内核 | **done** | [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md) | KRN 内核批（三 crate 实现 + 六判据行为测试，PR #4）+ CFR 行为执行批（runner 行为模式：3 向量对真实 kernel/store 行为执行 pass、只读降级子集落档、gate-bypass 错误实现自检 12/12 fail）。**M3 入口 gate 的 M2 出口分量达成** |
 | M3 治理链与 Context | **done** | [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md) | KRN M3 批（六步授权门、capability 算术、九阶段管线、治理缓存键、确定性渲染、F-007 双竞态，PR #9）+ CFR 行为执行扩展批（8 向量脱 not-run + CTX-TRUST-004 静态→行为升级、治理类自检 20/20 fail）。**M4 入口 gate（tracer bullet；F-002~F-010 类全收敛）逐条核验通过 → 开启**（评审 §7） |
 | M4 Intent/Effect 与恢复 + tracer bullet | **done** | [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) | KRN M4 批（Intent/幂等/准入矩阵/Effect 协议/sink fencing/恢复八步/faults 框架/tracer bullet，PR #12）+ CFR 行为执行批（7 向量脱 not-run 全经故障注入驱动、fencing 子集落档、反模式自检 27/27 fail、tracer bullet 复现确认）。**F-014/F-023 闭合；F-023 拒绝码 NO_AUTHORIZED_OPERATION_CANDIDATE 确认**。M5 入口 = M4 分量达成 + **F-011 R1 合同登记（剩余项，归 Lane-CTR）** |
-| M5 意图链/Harness/Shell/管理面 | **in-progress（RUN 批 1 + KRN kernel 侧批已交付）** | — | 入口 gate 达成（M4 出口 + F-011 R1 登记）。**RUN 批 1（2026-07-21，PR #16）：确定性管理 fallback——PrivilegedManagementSession 门（过期/撤销/scope/step-up 全 fail-closed）+ 无模型四动词 inspect/stop/revoke/reconcile（经中央 transition 门 / M3 revocation 算术 / M4 recovery 路径），验收判据 5 的车道侧证据。KRN kernel 侧批（2026-07-21，PR 见车道表）：意图链持久化 + 确定性 admission（判据 1 的 intent 分量：`INTENT_CLARIFICATION_REQUIRED`）+ 修正 epoch fencing（判据 2 语义：`INTENT_VERSION_SUPERSEDED` 双点 fence、零执行、pending 分类）+ 有界 Loop 驱动 kernel 端口 + 恢复 6/7 编排事实；端口面冻结（KRN M5 handoff §7）。判据 1–4/6–8 的 Shell/AKP/Harness 运行时面待 RUN 批 2+**；建议提示词 docs/prompts/milestone-m5.md / lane-run.md |
+| M5 意图链/Harness/Shell/管理面 | **in-progress（RUN 批 2a + KRN kernel 侧批已交付）** | — | 入口 gate 达成（M4 出口 + F-011 R1 登记）。**RUN 批 1（PR #16）**：无模型四动词 + session 门（判据 5）。**RUN 批 2a**：session 签发/续期/撤销生命周期 + R1 结构化审批门（F-011 三负例语义、dispatches=0）+ AKP envelope/HTTP JSON + SSE snapshot/cursor（`WATCH_CURSOR_STALE`）+ D-018 event envelope 组装器（可证明分量）。**KRN M5**：意图链/修正 fencing/Loop 端口/恢复 6/7（判据 1–2 的 kernel 分量；端口冻结 handoff §7）。**待批 2b**：Harness Loop 运行时 + Shell proposal/preview/submit/attach/detach/cancel（判据 1–4/6）；向量执行归 CFR |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；**2026-07-21 Phase 0 文档准备收口**（PR #18/#19）：AH-CTR-02、POC-LIC 材料、威胁 oracle、五平台 runbook、tech-stack 草案、设计缺口——本地 informative 已尽；真实 PoC/正式 ADR/法务评估仍 blocked；上游 M5 in-progress 但 AKP/runtime/kernel-server 仍骨架、无 m5-milestone-review；implementation-ready 仍 **no** |
@@ -28,8 +28,8 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | **46**（matrix impl/impl_tests 已回填：REQ-CONF-001/002/003（M1 CFR）+ REQ-STATE-002/003、REQ-EVT-004、REQ-REC-003、REQ-GOBJ-ID-001（M2 KRN）+ REQ-CAP-001/002/003/005、REQ-CTX-002/004/005/006/007/008/011/012、REQ-SEC-001/002、REQ-DISC-STAGNATION-001、REQ-PROFILE-CVM-001（M3 KRN）+ REQ-EFF-001/002/004/005/006、REQ-EFF-STATE-001、REQ-REC-001/002、REQ-RUN-006、REQ-INTENT-ACCEPT-001（M4 KRN，附 Rust 行为测试证据）+ **REQ-MGMT-FALLBACK-001、REQ-MGMT-SESSION-002/003、REQ-MGMT-GATE-001、REQ-MGMT-SESSION-LIFECYCLE-001（M5 RUN 批 1，附 Rust 行为/e2e 测试证据；proposal/approval/lifecycle 剩余分量后续批）** + **REQ-INTENT-RECORD-001、REQ-INTENT-ADMISSION-001、REQ-INTENT-SUPERSEDE-001、REQ-RUN-004/005/007/008（M5 KRN kernel 侧批，附 Rust 行为测试证据；Shell/AKP/Harness 运行时面归 RUN 后续批）**；其余待各车道证据口径回填） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 19 向量**（M2 3 + M3 9 + **M4 7**：三 crash point、三场景聚合、unknown 隔离、幂等冲突、对账先于 loop 恢复——全经 `cognitive_store::faults` 故障注入驱动；另 state-store-degradation 三层子集落档：M1 静态 + M2 只读 + M4 fencing）+ 内核 Rust 行为测试 **109** 项（KRN M2 51 + M3 26 + M4 16 + **M5 16**：intent 链 5 + Loop 端口 5 + 恢复 6/7 与 D-018 3 + kernel 单元 3）+ **管理面 Rust 行为/e2e 测试 16 项（RUN M5 批 1：管理库 7 + admin-cli 9，含 8 项真二进制 spawn e2e 对真实 SQLite store reload 断言 + 零模型调用探针）** + tracer bullet 端到端证据链（复现确认）；静态合同层：27/81 向量 pass；**均不构成 Profile 覆盖声明**（conformance-evidence §2）；TS 客户端 79 项包内单元测试为实现测试，不计向量执行 |
+| 实现已提供（构建通过且有实现代码的 REQ） | **59**（matrix 实测非空 impl；相对 KRN M5 基线 46：+RUN 批 2a 回填含 REQ-MGMT-APPROVAL-001、REQ-AKP-CAN/CONT/ENV/MGMT/SHELL/STR/VER 族、REQ-EVT-001 等；批 1 五 MGMT + KRN 七 INTENT/RUN 仍在列） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 19 向量**（不变）+ workspace Rust **189** 项全绿（含 KRN 109 + RUN 批 1 16 + 批 2a 7 等）+ tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS 79 项包内单元测试不计向量执行 |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`） |
 
 ## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-20 Lane-CFR M4 行为批）
@@ -50,7 +50,7 @@
 |---|---|---|
 | P0 | 0（+1 证据性质） | F-001（证据缺口，随 M1~M6 消解，不阻断；行为执行 19 向量 + 内核行为测试 93 项 + tracer bullet 证据链在案） |
 | P1 | **2** | F-011（R1 合同已登记、M5 入口已开；行为证据随 M5 收口）、F-017（M6）；另 F-015 持续收敛。**F-014/F-023 已于 M4 出口评审闭合** |
-| 漂移 | 0 开放（+2 deferred，+1 decided） | **D-017 deferred-to-v0.2**；**D-018 decided**（M5 Lane-RUN+KRN 实施）；**D-016 deferred-to-v0.2**；D-019 客户端长期分支编号/计数漂移已在本集成批闭合；其余 D-001~D-015 均已闭合 |
+| 漂移 | 0 开放（+2 deferred，+1 decided/partial） | **D-017 deferred-to-v0.2**；**D-018 partially-implemented**（RUN 批 2a 组装器已交付；闭合仍待 CFR watch/shell 向量证据 + 治理对象端口）；**D-016 deferred-to-v0.2**；D-019 已闭合；其余 D-001~D-015 均已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
@@ -60,15 +60,15 @@
 | Lane-CFR 符合性与工具 | **M4 故障注入向量执行批已交付** | `lane/cfr` | M5 行为向量持续；优先领取 `clients/` 扫描根、链接/anchor、必填字段与唯一 canonical 自动防漂移任务并附注入演练 |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付**（意图链 + 修正 fencing + Loop 端口 + 恢复 6/7 事实 + D-018 协作项；端口面冻结于 [KRN M5 handoff §7](../checkpoints/20260720-lane-krn-m5-handoff.md)；给 CTR 的 intent-interpretation codegen 请求见其 §4.1） | `lane/krn` | 下一批候选：governance currency 收编 store 表 + execution↔effect 关联（RUN 批 1 handoff §4.2 请求，已认领评估）；intent-interpretation 生成绑定换装（等 CTR） |
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
-| Lane-RUN 运行时与管理面 | **M5 批 1 已交付**（确定性管理 fallback：session 门 + 无模型四动词，实现已提供 + 车道测试已执行；management 向量保持 not-run 归 CFR） | `lane/run` | RUN 批 2：Management API HTTP 面 + AKP envelope + Harness Loop + Operation 执行器（等 KRN M5 端口）；governance ledger 收编 store 表待与 KRN 协商 |
+| Lane-RUN 运行时与管理面 | **M5 批 2a 已交付实现**（session 生命周期 + R1 审批负例 + AKP HTTP/SSE watch + D-018 组装器；车道测试已执行，向量仍 not-run） | `lane/run` | 批 2b：Harness Loop + Shell proposal/preview/submit/attach/detach/cancel；D-018 治理对象持久化/解析端口待 KRN |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
 | Lane-CON Console | tracking-only 文档例外 | `work/clients-phase0-status` | Phase 0 文档准备收口（等 M5 出口 + 外部设备/账号）；implementation-ready 仍 no；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-status-handoff.md` |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-con-clients-phase0-status-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-status-handoff.md)（Lane-CON Phase 0 收口：文档准备尽本地所能；M5 in-progress 但客户端仍 blocked；等外部设备/账号）
-2. [20260721-lane-con-clients-phase0-poc-prep-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md)（Lane-CON Phase 0：PoC 执行手册/模板、tech-stack 比较草案、设计缺口；implementation-ready 仍 blocked）
-3. [20260721-lane-con-clients-phase0-audits-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md)（Lane-CON Phase 0：AH-CTR-02 文档级、POC-LIC 材料、威胁 oracle/planned PoC；implementation-ready 仍 blocked）
+1. [20260721-lane-run-m5-batch2a-handoff.md](../checkpoints/20260721-lane-run-m5-batch2a-handoff.md)（Lane-RUN M5 批 2a：session 生命周期 / R1 审批 / AKP HTTP+SSE / watch / D-018 组装器）
+2. [20260721-lane-con-clients-phase0-status-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-status-handoff.md)（Lane-CON Phase 0 收口：文档准备尽本地所能；客户端仍 blocked）
+3. [20260720-lane-krn-m5-handoff.md](../checkpoints/20260720-lane-krn-m5-handoff.md)（Lane-KRN M5 kernel 侧批：意图链/修正 fencing/Loop 端口/恢复 6-7/D-018，端口面冻结 §7）
 
 ## 客户端目录治理交付
 

@@ -119,6 +119,7 @@ name = "cognitive-akp"
 version = "0.0.1"
 dependencies = [
  "cognitive-contracts",
+ "serde_json",
  "thiserror",
 ]
 
@@ -194,6 +195,7 @@ dependencies = [
  "cognitive-contracts",
  "cognitive-domain",
  "cognitive-kernel",
+ "serde_json",
  "thiserror",
 ]
 
@@ -609,6 +611,7 @@ dependencies = [
  "cognitive-management",
  "cognitive-runtime",
  "cognitive-store",
+ "serde_json",
 ]
 
 [[package]]

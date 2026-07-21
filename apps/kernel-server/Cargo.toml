@@ -16,6 +16,7 @@ cognitive-kernel = { workspace = true }
 cognitive-runtime = { workspace = true }
 cognitive-management = { workspace = true }
 cognitive-akp = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

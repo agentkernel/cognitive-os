@@ -11,6 +11,7 @@ cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }
 cognitive-kernel = { workspace = true }
 thiserror = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true
