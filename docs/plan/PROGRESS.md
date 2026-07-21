@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（Lane-RUN M5 批 2b：Harness Loop + Shell + intent/recovery 接线已交付；向量保持 not-run 归 CFR；Lane-CON 仍 blocked 等待 M5 出口）
+> 最后更新：2026-07-21（Lane-TSC M5：HttpSseTransport 真对接 kernel-server；Lane-RUN 批 2b 已合入；向量执行归 CFR；Lane-CON 仍 blocked 等待 M5 出口）
 
 ## 里程碑状态
 
@@ -12,7 +12,7 @@
 | M2 对象/状态/事件内核 | **done** | [20260720-m2-milestone-review.md](../checkpoints/20260720-m2-milestone-review.md) | KRN 内核批（三 crate 实现 + 六判据行为测试，PR #4）+ CFR 行为执行批（runner 行为模式：3 向量对真实 kernel/store 行为执行 pass、只读降级子集落档、gate-bypass 错误实现自检 12/12 fail）。**M3 入口 gate 的 M2 出口分量达成** |
 | M3 治理链与 Context | **done** | [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md) | KRN M3 批（六步授权门、capability 算术、九阶段管线、治理缓存键、确定性渲染、F-007 双竞态，PR #9）+ CFR 行为执行扩展批（8 向量脱 not-run + CTX-TRUST-004 静态→行为升级、治理类自检 20/20 fail）。**M4 入口 gate（tracer bullet；F-002~F-010 类全收敛）逐条核验通过 → 开启**（评审 §7） |
 | M4 Intent/Effect 与恢复 + tracer bullet | **done** | [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) | KRN M4 批（Intent/幂等/准入矩阵/Effect 协议/sink fencing/恢复八步/faults 框架/tracer bullet，PR #12）+ CFR 行为执行批（7 向量脱 not-run 全经故障注入驱动、fencing 子集落档、反模式自检 27/27 fail、tracer bullet 复现确认）。**F-014/F-023 闭合；F-023 拒绝码 NO_AUTHORIZED_OPERATION_CANDIDATE 确认**。M5 入口 = M4 分量达成 + **F-011 R1 合同登记（剩余项，归 Lane-CTR）** |
-| M5 意图链/Harness/Shell/管理面 | **in-progress（RUN 批 2b + KRN/CTR 已交付；待 TSC/CFR 出口）** | — | 入口 gate 达成（M4 出口 + F-011 R1 登记）。**RUN 批 1–2a**（PR #16/#21）：管理面/审批/AKP/SSE/D-018 组装器。**RUN 批 2b**：`BoundedHarness`（停滞 Stop/Escalate）+ `ShellService`（proposal/preview/submit/attach/detach/cancel；detach 不取消；`CANCEL_PENDING`/`CANCEL_TOO_LATE`）+ intent 链编排 + recovery 6/7 消费 + `POST /shell/*`。**KRN/CTR** 已合入。**待**：TSC 真 HTTP/SSE 集成 + CFR M5 向量执行 + milestone review；F-011/D-018 闭合挂 CFR |
+| M5 意图链/Harness/Shell/管理面 | **in-progress（RUN+TSC 已交付；待 CFR 向量 + 出口评审）** | — | **RUN 批 1–2b**（PR #16/#21/#27）+ **KRN/CTR** 已合入。**TSC M5**：`HttpSseTransport` 对接 `/management/*`、`/shell/*`、`GET /task/watch`（sdk-ts 72 / agent-shell 13；含可选 live）。**待**：CFR M5 行为向量（F-011 三负例、shell cancel/detach/watch、intent-supersede 等）+ milestone review；F-011/D-018 闭合挂 CFR |
 | M6 安装与适配、v0.1 发布 | not-started | — | F-017 平台矩阵为出口阻断 |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；Phase 0 文档收口；解阻复核后仍 blocked：RUN 批 2b 已交付但缺 M5 出口评审 / PoC / ADR；依赖组 1/2/7 仍未完整；implementation-ready 仍 **no**；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
@@ -29,7 +29,7 @@
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
 | 实现已提供（构建通过且有实现代码的 REQ） | **64**（matrix 实测非空 impl；相对批 2a 的 59：+RUN 批 2b 回填 REQ-SHELL-ATTACH/CONTROL/CORRECTION/DETACH/PREVIEW；RUN-004/005/007/008 与 REC-001 增补 runtime 路径） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 19 向量**（不变）+ workspace Rust **196** 项全绿（批 2b +7 相对 189：runtime 单元/集成与 shell e2e）+ tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS 79 项包内单元测试不计向量执行 |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 19 向量**（不变；CFR M5 批前）+ workspace Rust **196** 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项包内单元测试（sdk-ts 72 / agent-shell 13；含 3 live HTTP/SSE）不计向量执行 |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`） |
 
 ## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-20 Lane-CFR M4 行为批）
@@ -59,16 +59,17 @@
 | Lane-CTR 契约与生成 | **M5 修正型绑定批已交付** | `lane/ctr` | `intent-interpretation` / `privileged-management-session` / `management-action-proposal` 纳入 codegen CORE_SET；Rust/TS 各 35 schema 模块，KRN/RUN 精确换装点见 CTR M5 handoff；无规范资产或行为语义变化 |
 | Lane-CFR 符合性与工具 | **M4 故障注入向量执行批已交付** | `lane/cfr` | M5 行为向量持续；优先领取 `clients/` 扫描根、链接/anchor、必填字段与唯一 canonical 自动防漂移任务并附注入演练 |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付**（意图链 + 修正 fencing + Loop 端口 + 恢复 6/7 事实 + D-018 协作项；端口面冻结于 [KRN M5 handoff §7](../checkpoints/20260720-lane-krn-m5-handoff.md)；intent-interpretation 生成绑定已由 CTR 交付并完成机械换装） | `lane/krn` | 下一批候选：governance currency 收编 store 表 + execution↔effect 关联（RUN 批 1 handoff §4.2 请求，已认领评估） |
-| Lane-TSC TS 客户端 | 换绑批已合并（PR #6）；**79** 项 TS 客户端单元测试；语义负例保持通过 | `lane/tsc` | **M5 集成已可启动**：真 kernel-server HTTP+SSE（management / watch / shell attach·detach·cancel）；客户端永不做 authority |
-| Lane-RUN 运行时与管理面 | **M5 批 2b 已交付实现**（Harness Loop + Shell + intent 编排 + recovery 6/7 消费 + `/shell/*`；车道测试已执行，向量仍 not-run） | `lane/run` | M5 RUN 面完成；D-018 闭合与 F-011 行为证据挂 CFR；治理对象端口待 KRN |
+| Lane-TSC TS 客户端 | **M5 HTTP/SSE 集成已交付**（`HttpSseTransport` 换绑 kernel-server；live 3 + 单元；agent-shell `createLiveShellSession`）；客户端永不做 authority | `lane/tsc` | M5 TSC 面完成；后续增量 = proposal/preview/submit 完整 HTTP 面（随 RUN 扩展） |
+| Lane-RUN 运行时与管理面 | **M5 批 2b 已交付**（PR #27） | `lane/run` | D-018/F-011 闭合挂 CFR；治理对象端口待 KRN |
+| Lane-CFR 符合性与工具 | **M4 已交付；M5 向量执行待启动** | `lane/cfr` | 优先：F-011 三负例、MGMT-FALLBACK、shell-cancel/detach/watch-resume、intent-supersede |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
 | Lane-CON Console | tracking-only 文档例外 | `work/clients-m5-unblock-review` | Phase 0 本地已尽；PR #21 合入后解阻复核完成——仍 blocked（缺批 2b/M5 出口/PoC/ADR；依赖组 1/2/7 未完整）；**进入等待上游**；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-run-m5-batch2b-handoff.md](../checkpoints/20260721-lane-run-m5-batch2b-handoff.md)（Lane-RUN M5 批 2b：Harness Loop / Shell / intent / recovery 6–7）
-2. [20260721-lane-con-m5-unblock-review-handoff.md](../checkpoints/20260721-lane-con-m5-unblock-review-handoff.md)（Lane-CON：PR #21 合入后解阻复核；仍缺 M5 出口/PoC/ADR；gate 仍 blocked）
-3. [20260721-lane-ctr-m5-bindings-handoff.md](../checkpoints/20260721-lane-ctr-m5-bindings-handoff.md)（Lane-CTR M5：三 schema 生成绑定 CORE_SET 扩展，35 模块）
+1. [20260721-lane-tsc-m5-http-sse-handoff.md](../checkpoints/20260721-lane-tsc-m5-http-sse-handoff.md)（Lane-TSC M5：HttpSseTransport ↔ kernel-server）
+2. [20260721-lane-run-m5-batch2b-handoff.md](../checkpoints/20260721-lane-run-m5-batch2b-handoff.md)（Lane-RUN M5 批 2b：Harness Loop / Shell / intent / recovery 6–7）
+3. [20260721-lane-con-m5-unblock-review-handoff.md](../checkpoints/20260721-lane-con-m5-unblock-review-handoff.md)（Lane-CON：仍缺 M5 出口/PoC/ADR；gate 仍 blocked）
 
 ## 客户端目录治理交付
 
