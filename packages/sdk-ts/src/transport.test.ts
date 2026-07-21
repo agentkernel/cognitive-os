@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { buildRequestEnvelope, buildResultEnvelope, serializeEnvelope } from "./envelope.js";
-import { HttpSseTransport, InMemoryTransport } from "./transport.js";
+import { HttpSseTransport, InMemoryTransport, kernelServerPath } from "./transport.js";
 
 const REQUEST = buildRequestEnvelope({
   operation: "shell.attach",
@@ -24,6 +24,18 @@ const REQUEST = buildRequestEnvelope({
   schemaDigest: `sha256:${"ab".repeat(32)}`,
   payload: { task_ref: "task://tenant-a/task-1" },
   messageId: "msg-1",
+});
+
+const MGMT_REQUEST = buildRequestEnvelope({
+  operation: "management.inspect",
+  kind: "read",
+  sender: "principal://tenant-a/alice",
+  audience: "service://kernel/management",
+  correlationId: "corr-m",
+  deadline: "2026-07-21T01:00:00Z",
+  schemaDigest: `sha256:${"cd".repeat(32)}`,
+  payload: { target: "agent-execution://1" },
+  messageId: "msg-m",
 });
 
 test("in-memory transport records request envelopes and replies from the script", async () => {
@@ -53,7 +65,15 @@ test("in-memory transport streams scripted frames in order", async () => {
   assert.deepEqual(frames, ['{"sequence":1}', '{"sequence":2}']);
 });
 
-test("http transport posts to channel-disjoint endpoint roots with bearer material", async () => {
+test("kernel-server path map keeps management and task roots disjoint", () => {
+  assert.equal(kernelServerPath("management", "management.inspect"), "/management/inspect");
+  assert.equal(kernelServerPath("task", "shell.detach"), "/shell/detach");
+  assert.equal(kernelServerPath("task", "shell.control"), "/shell/cancel");
+  assert.throws(() => kernelServerPath("management", "shell.detach"), /refusing/);
+  assert.throws(() => kernelServerPath("task", "management.inspect"), /unsupported/);
+});
+
+test("http transport posts to channel-disjoint kernel-server roots with bearer material", async () => {
   const seen: Array<{ url: string; init: RequestInit }> = [];
   const fetchStub: typeof fetch = (input, init) => {
     seen.push({ url: String(input), init: init ?? {} });
@@ -65,23 +85,26 @@ test("http transport posts to channel-disjoint endpoint roots with bearer materi
     bearer: "mgmt-secret",
     fetchImpl: fetchStub,
   });
-  const reply = await transport.request('{"x":1}');
+  const reply = await transport.request(serializeEnvelope(MGMT_REQUEST));
   // Transport status is surfaced verbatim; outcome interpretation is the
   // envelope layer's job, and a non-2xx body is still returned for parsing.
   assert.equal(reply.transportStatus, 503);
   assert.equal(reply.body, '{"status":"error"}');
   assert.equal(seen.length, 1);
-  assert.ok(seen[0]?.url.startsWith("https://kernel.local/akp/management/"));
+  assert.equal(seen[0]?.url, "https://kernel.local/management/inspect");
   const headers = seen[0]?.init.headers as Record<string, string>;
   assert.equal(headers["authorization"], "Bearer mgmt-secret");
 });
 
-test("http transport parses SSE data lines into frame texts", async () => {
+test("http transport parses SSE data lines into frame texts from GET /task/watch", async () => {
   const sse = 'data: {"sequence":1}\n\ndata: {"sequence":2}\n\n: comment\n\ndata: {"sequence":3}\n\n';
-  const fetchStub: typeof fetch = () =>
-    Promise.resolve(
+  const seen: string[] = [];
+  const fetchStub: typeof fetch = (input, init) => {
+    seen.push(`${init?.method ?? "GET"} ${String(input)}`);
+    return Promise.resolve(
       new Response(sse, { status: 200, headers: { "content-type": "text/event-stream" } }),
     );
+  };
   const transport = new HttpSseTransport({
     baseUrl: "https://kernel.local",
     channel: "task",
@@ -89,8 +112,26 @@ test("http transport parses SSE data lines into frame texts", async () => {
     fetchImpl: fetchStub,
   });
   const frames: string[] = [];
-  for await (const frame of transport.openStream('{"x":1}')) {
+  for await (const frame of transport.openStream(serializeEnvelope(REQUEST))) {
     frames.push(frame);
   }
   assert.deepEqual(frames, ['{"sequence":1}', '{"sequence":2}', '{"sequence":3}']);
+  assert.equal(seen[0], "GET https://kernel.local/task/watch");
+});
+
+test("management channel refuses to open a watch stream", async () => {
+  const transport = new HttpSseTransport({
+    baseUrl: "https://kernel.local",
+    channel: "management",
+    bearer: "mgmt-secret",
+    fetchImpl: () => Promise.reject(new Error("network should not be touched")),
+  });
+  await assert.rejects(
+    async () => {
+      for await (const _ of transport.openStream(serializeEnvelope(MGMT_REQUEST))) {
+        // never
+      }
+    },
+    /task channel only/,
+  );
 });

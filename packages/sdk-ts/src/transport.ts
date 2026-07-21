@@ -8,9 +8,11 @@
  * a 2xx transport response). Channels bind to disjoint endpoint roots and
  * disjoint session material.
  *
- * `InMemoryTransport` is the scriptable fake used by unit tests and by the
- * pre-M5 Shell; `HttpSseTransport` is a thin default HTTP binding whose
- * exact routes are provisional until kernel-server lands at M5.
+ * `InMemoryTransport` is the scriptable fake used by unit tests.
+ * `HttpSseTransport` binds the M5 kernel-server surface:
+ *   - management → `POST /management/<op>`
+ *   - task shell → `POST /shell/<verb>`
+ *   - task watch → `GET /task/watch` (SSE)
  */
 
 import type { ClientChannel } from "./channel.js";
@@ -93,11 +95,39 @@ export interface HttpSseTransportInit {
 }
 
 /**
- * Default HTTP JSON + SSE binding (ADR-0003). Request/response operations
- * POST to `<base>/akp/<channel>/request`; streams POST to
- * `<base>/akp/<channel>/stream` and consume `data:` SSE lines. Routes are
- * provisional until M5 pins the kernel-server surface; integration against
- * a real server is executed at M5, not here.
+ * Map an AKP operation onto the M5 kernel-server HTTP surface while keeping
+ * channel roots disjoint (REQ-SHELL-CHANNEL-001 / ADR-0003).
+ */
+export function kernelServerPath(channel: ClientChannel, operation: string): string {
+  if (channel === "management") {
+    if (!operation.startsWith("management.")) {
+      throw new Error(
+        `HttpSseTransport(management): refusing non-management operation ${operation}`,
+      );
+    }
+    const rest = operation.slice("management.".length).replace(/\./g, "/");
+    return `/management/${rest}`;
+  }
+  if (operation.startsWith("shell.")) {
+    let verb = operation.slice("shell.".length);
+    // AKP shell.control carries cancel; kernel-server exposes /shell/cancel.
+    if (verb === "control") {
+      verb = "cancel";
+    }
+    return `/shell/${verb}`;
+  }
+  if (operation.startsWith("watch.")) {
+    throw new Error(
+      `HttpSseTransport(task): watch operations use openStream → GET /task/watch, not request()`,
+    );
+  }
+  throw new Error(`HttpSseTransport(${channel}): unsupported operation ${operation}`);
+}
+
+/**
+ * Default HTTP JSON + SSE binding against Lane-RUN kernel-server (M5).
+ * Management and task channels use disjoint URL roots; bearer material is
+ * never shared across instances.
  */
 export class HttpSseTransport implements AkpTransport {
   readonly channel: ClientChannel;
@@ -120,7 +150,9 @@ export class HttpSseTransport implements AkpTransport {
   }
 
   async request(envelopeText: string): Promise<TransportReply> {
-    const response = await this.fetchImpl(`${this.baseUrl}/akp/${this.channel}/request`, {
+    const envelope = parseRequestEnvelope(envelopeText);
+    const path = kernelServerPath(this.channel, envelope.operation);
+    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: this.headers(),
       body: envelopeText,
@@ -129,10 +161,15 @@ export class HttpSseTransport implements AkpTransport {
   }
 
   async *openStream(envelopeText: string): AsyncIterable<string> {
-    const response = await this.fetchImpl(`${this.baseUrl}/akp/${this.channel}/stream`, {
-      method: "POST",
+    if (this.channel !== "task") {
+      throw new Error("HttpSseTransport: watch streams bind the task channel only");
+    }
+    // Parse (and discard) the open envelope so malformed opens fail closed
+    // before any network I/O; M5 --once watch is GET /task/watch.
+    parseRequestEnvelope(envelopeText);
+    const response = await this.fetchImpl(`${this.baseUrl}/task/watch`, {
+      method: "GET",
       headers: { ...this.headers(), accept: "text/event-stream" },
-      body: envelopeText,
     });
     if (response.body === null) {
       return;
