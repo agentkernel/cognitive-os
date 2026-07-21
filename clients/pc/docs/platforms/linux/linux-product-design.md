@@ -335,6 +335,8 @@ v1 只接受 trusted registry ID 与 portal/system picker 本地签名 bundle。
 
 ## 13. Open PoC and GA gates
 
+执行清单骨架（全部 `not-run`）：[linux-poc-runbook.md](linux-poc-runbook.md)。
+
 | Gate | 必须证明 | 当前 |
 |---|---|---|
 | `LNX-POC-01` | Ubuntu 24.04 x86_64 stock GNOME/Wayland `.deb` 安装/卸载 | not-run |

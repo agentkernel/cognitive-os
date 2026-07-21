@@ -216,7 +216,7 @@ flowchart LR
 
 ## 10. 技术候选与 release gate
 
-Tauri 2 + React/TypeScript 仍是候选，不是已批准结论。进入实现前至少需要：
+Tauri 2 + React/TypeScript 仍是候选，不是已批准结论。候选维度对照见 [tech-stack-comparison](../../architecture/tech-stack-comparison.md)（**非正式 ADR**）。执行清单骨架见 [windows-poc-runbook](windows-poc-runbook.md)（`WIN-RG-01..10`，全部 `not-run`）。进入实现前至少需要：
 
 1. Windows Service + 原生 Host + renderer 的权限隔离 PoC；
 2. bootstrap bundle/endpoint key/SID、TOFU、账号/session/recovery 的威胁模型和合同；
