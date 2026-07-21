@@ -69,6 +69,8 @@
 ## 6. 快照
 
 - PROGRESS 已更新：是
-- PR：https://github.com/agentkernel/cognitive-os/pull/37
-- 本次提交列表：见 push 后本分支 `git log origin/main..HEAD`
-- 合并记录：_(push/CI 后回填 merge commit 或「待人合并」)_
+- PR：https://github.com/agentkernel/cognitive-os/pull/37 — **MERGED**
+- 分支 tip（合并前）：`101d71c`（`docs(v01-auto-run): close P0 with L3 non-claim evidence`）
+- **merge commit**：`5b5401a26fec3a2f7108cdfb4f542d917c32cc0b`（2026-07-21T11:34:01Z）
+- CI（合并前）：push `29826034378` + PR `29826038420` — ubuntu/windows verify SUCCESS
+- 本次提交列表：`0fb0c59` → `693c069` → `101d71c` → merge `5b5401a`
