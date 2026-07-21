@@ -20,12 +20,15 @@ pub mod event;
 pub mod governance_domain_context;
 pub mod governed_object_header;
 pub mod intent;
+pub mod intent_interpretation;
 pub mod loop_checkpoint;
+pub mod management_action_proposal;
 pub mod management_approval_decision;
 pub mod management_approval_request;
 pub mod object_reference;
 pub mod operation_summary;
 pub mod principal;
+pub mod privileged_management_session;
 pub mod resource_scope;
 pub mod shell_action_proposal;
 pub mod shell_command_preview;
@@ -41,7 +44,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 32] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 35] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -99,12 +102,20 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 32] = [
         "sha256:a208962ac374f074210ef57e9853fd09edf03b8769720d11247574acb3df9dcc",
     ),
     (
+        "intent-interpretation.schema.json",
+        "sha256:3bf59d3c1f4ccde382b81bf69b66ff1d556acea656aca3f0eccb64c7c358ca37",
+    ),
+    (
         "intent.schema.json",
         "sha256:c45ed1a33db1f62177e8b0b46e528ba3cb41da39a72eba62af85c1416ee868d0",
     ),
     (
         "loop-checkpoint.schema.json",
         "sha256:f1f19426d50731c03420dccbde5ddda3afe988b9e4b765d9e12b4ea8d71abdda",
+    ),
+    (
+        "management-action-proposal.schema.json",
+        "sha256:ecfb5345a73dc3a32bf1e3704d7b3cb02b32e5c057ca3c63111eec1b284b0757",
     ),
     (
         "management-approval-decision.schema.json",
@@ -125,6 +136,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 32] = [
     (
         "principal.schema.json",
         "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",
+    ),
+    (
+        "privileged-management-session.schema.json",
+        "sha256:46b81f99681e9ed273302fb079fcbb2ec0a410e0dcd79aa92355486cd9144341",
     ),
     (
         "resource-scope.schema.json",

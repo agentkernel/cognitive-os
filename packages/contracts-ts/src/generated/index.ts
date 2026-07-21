@@ -21,13 +21,16 @@ export * as effect from "./effect.js";
 export * as event from "./event.js";
 export * as governanceDomainContext from "./governance-domain-context.js";
 export * as governedObjectHeader from "./governed-object-header.js";
+export * as intentInterpretation from "./intent-interpretation.js";
 export * as intent from "./intent.js";
 export * as loopCheckpoint from "./loop-checkpoint.js";
+export * as managementActionProposal from "./management-action-proposal.js";
 export * as managementApprovalDecision from "./management-approval-decision.js";
 export * as managementApprovalRequest from "./management-approval-request.js";
 export * as objectReference from "./object-reference.js";
 export * as operationSummary from "./operation-summary.js";
 export * as principal from "./principal.js";
+export * as privilegedManagementSession from "./privileged-management-session.js";
 export * as resourceScope from "./resource-scope.js";
 export * as shellActionProposal from "./shell-action-proposal.js";
 export * as shellCommandPreview from "./shell-command-preview.js";
@@ -61,13 +64,16 @@ export const SCHEMA_DIGESTS = {
   "event.schema.json": "sha256:e9e0b36dd588c730b5081bf35030f892461197a39410dff1718fcf81bbc0be84",
   "governance-domain-context.schema.json": "sha256:1a86be4fc92a1378d5d169b9ba6cc0465b8018454c404c75aaf3460be801405c",
   "governed-object-header.schema.json": "sha256:a208962ac374f074210ef57e9853fd09edf03b8769720d11247574acb3df9dcc",
+  "intent-interpretation.schema.json": "sha256:3bf59d3c1f4ccde382b81bf69b66ff1d556acea656aca3f0eccb64c7c358ca37",
   "intent.schema.json": "sha256:c45ed1a33db1f62177e8b0b46e528ba3cb41da39a72eba62af85c1416ee868d0",
   "loop-checkpoint.schema.json": "sha256:f1f19426d50731c03420dccbde5ddda3afe988b9e4b765d9e12b4ea8d71abdda",
+  "management-action-proposal.schema.json": "sha256:ecfb5345a73dc3a32bf1e3704d7b3cb02b32e5c057ca3c63111eec1b284b0757",
   "management-approval-decision.schema.json": "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
   "management-approval-request.schema.json": "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
   "object-reference.schema.json": "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
   "operation-summary.schema.json": "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",
+  "privileged-management-session.schema.json": "sha256:46b81f99681e9ed273302fb079fcbb2ec0a410e0dcd79aa92355486cd9144341",
   "resource-scope.schema.json": "sha256:0de94af7c162c19a5444cc854d4b86e9bf59140210e572fe3305b53fa9b99817",
   "shell-action-proposal.schema.json": "sha256:f0057d1ad298fff34c452487567517f6ca352bacfb474dcefb111497cdbefaed",
   "shell-command-preview.schema.json": "sha256:7e538f23d999783931d057939bf2bb0a52f6f7a42d8ae60597b7a7506a5fee43",

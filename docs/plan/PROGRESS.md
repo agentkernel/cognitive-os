@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（Lane-RUN M5 批 2a：R1 结构化审批、session 生命周期、AKP HTTP/SSE watch 与 D-018 可证明组装分量已交付；向量保持 not-run。Lane-KRN M5 kernel 侧批：意图链 UserIntentRecord→candidate→确定性准入→TaskContract、修正 epoch fencing `INTENT_VERSION_SUPERSEDED`、有界 Loop 驱动端口、恢复 6/7 编排事实、D-018 KRN 协作项交付——实现已提供 + 车道 Rust 行为测试已执行，端口面冻结于 [KRN M5 handoff](../checkpoints/20260720-lane-krn-m5-handoff.md) §7；向量保持 not-run 归 Lane-CFR。同日：Lane-RUN M5 批 1 无模型确定性 admin CLI 四动词已交付；ADR-0008 自动提交/推送治理政策生效）
+> 最后更新：2026-07-21（Lane-CTR M5 修正型生成绑定批：intent-interpretation / privileged-management-session / management-action-proposal 纳入 CORE_SET，生成模块 32→35；Lane-RUN M5 批 2a：R1 审批/session/AKP HTTP+SSE/D-018 组装器已交付；Lane-KRN M5 kernel 侧批端口面冻结；向量保持 not-run 归 CFR）
 
 ## 里程碑状态
 
@@ -56,19 +56,19 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **F-011 批已交付** | `lane/ctr` | R1 审批合同登记完成，M5 入口 gate 达成；遗留 D-016、membership 绑定与 D-018 实施随 M5 反馈收口 |
+| Lane-CTR 契约与生成 | **M5 修正型绑定批已交付** | `lane/ctr` | `intent-interpretation` / `privileged-management-session` / `management-action-proposal` 纳入 codegen CORE_SET；Rust/TS 各 35 schema 模块，KRN/RUN 精确换装点见 CTR M5 handoff；无规范资产或行为语义变化 |
 | Lane-CFR 符合性与工具 | **M4 故障注入向量执行批已交付** | `lane/cfr` | M5 行为向量持续；优先领取 `clients/` 扫描根、链接/anchor、必填字段与唯一 canonical 自动防漂移任务并附注入演练 |
-| Lane-KRN 内核主线 | **M5 kernel 侧批已交付**（意图链 + 修正 fencing + Loop 端口 + 恢复 6/7 事实 + D-018 协作项；端口面冻结于 [KRN M5 handoff §7](../checkpoints/20260720-lane-krn-m5-handoff.md)；给 CTR 的 intent-interpretation codegen 请求见其 §4.1） | `lane/krn` | 下一批候选：governance currency 收编 store 表 + execution↔effect 关联（RUN 批 1 handoff §4.2 请求，已认领评估）；intent-interpretation 生成绑定换装（等 CTR） |
+| Lane-KRN 内核主线 | **M5 kernel 侧批已交付**（意图链 + 修正 fencing + Loop 端口 + 恢复 6/7 事实 + D-018 协作项；端口面冻结于 [KRN M5 handoff §7](../checkpoints/20260720-lane-krn-m5-handoff.md)；给 CTR 的 intent-interpretation codegen 请求见其 §4.1） | `lane/krn` | 下一批候选：governance currency 收编 store 表 + execution↔effect 关联（RUN 批 1 handoff §4.2 请求，已认领评估）；intent-interpretation 生成绑定已由 CTR 交付，待 KRN 机械换装 |
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
-| Lane-RUN 运行时与管理面 | **M5 批 2a 已交付实现**（session 生命周期 + R1 审批负例 + AKP HTTP/SSE watch + D-018 组装器；车道测试已执行，向量仍 not-run） | `lane/run` | 批 2b：Harness Loop + Shell proposal/preview/submit/attach/detach/cancel；D-018 治理对象持久化/解析端口待 KRN |
+| Lane-RUN 运行时与管理面 | **M5 批 2a 已交付实现**（session 生命周期 + R1 审批负例 + AKP HTTP/SSE watch + D-018 组装器；车道测试已执行，向量仍 not-run；session/proposal 生成绑定已由 CTR 交付待换装） | `lane/run` | 批 2b：Harness Loop + Shell proposal/preview/submit/attach/detach/cancel；D-018 治理对象持久化/解析端口待 KRN |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
 | Lane-CON Console | tracking-only 文档例外 | `work/clients-phase0-status` | Phase 0 文档准备收口（等 M5 出口 + 外部设备/账号）；implementation-ready 仍 no；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-status-handoff.md` |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-run-m5-batch2a-handoff.md](../checkpoints/20260721-lane-run-m5-batch2a-handoff.md)（Lane-RUN M5 批 2a：session 生命周期 / R1 审批 / AKP HTTP+SSE / watch / D-018 组装器）
-2. [20260721-lane-con-clients-phase0-status-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-status-handoff.md)（Lane-CON Phase 0 收口：文档准备尽本地所能；客户端仍 blocked）
-3. [20260720-lane-krn-m5-handoff.md](../checkpoints/20260720-lane-krn-m5-handoff.md)（Lane-KRN M5 kernel 侧批：意图链/修正 fencing/Loop 端口/恢复 6-7/D-018，端口面冻结 §7）
+1. [20260721-lane-ctr-m5-bindings-handoff.md](../checkpoints/20260721-lane-ctr-m5-bindings-handoff.md)（Lane-CTR M5：三 schema 生成绑定 CORE_SET 扩展，35 模块）
+2. [20260721-lane-run-m5-batch2a-handoff.md](../checkpoints/20260721-lane-run-m5-batch2a-handoff.md)（Lane-RUN M5 批 2a：session/R1/AKP/SSE/D-018）
+3. [20260721-lane-con-clients-phase0-status-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-status-handoff.md)（Lane-CON Phase 0 收口；客户端仍 blocked）
 
 ## 客户端目录治理交付
 

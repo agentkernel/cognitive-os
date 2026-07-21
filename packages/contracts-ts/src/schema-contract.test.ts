@@ -432,3 +432,45 @@ test("legacy $defs stay deprecated and unreferenced (F-003 retention decision)",
     }
   }
 });
+
+test("M5 codegen consumer schemas enforce key constraints", () => {
+  const ajv = buildAjv(loadSchemas());
+  const interpretation = {
+    header: (vectorObject("governed-object-legacy-strongref-001.json") as Record<string, unknown>)["header"],
+    intent_ref: { kind: "strong", id: "01890a5d-ac96-774b-bcce-b302099a805d", object_version: 1, content_digest: `sha256:${"a".repeat(64)}` },
+    status: "candidate", objectives: ["resolve target"], constraints: [], forbidden: [], assumptions: [],
+    ambiguities: [{ id: "amb-1", material: true, question: "which target?" }], information_gaps: [], interpretation_digest: `sha256:${"b".repeat(64)}`,
+  };
+  const validateInterpretation = ajv.getSchema("intent-interpretation.schema.json");
+  assert.ok(validateInterpretation);
+  assert.equal(validateInterpretation(interpretation), false, "material ambiguity must force clarification_required");
+  assert.equal(validateInterpretation({ ...interpretation, status: "clarification_required" }), true);
+
+  const session = {
+    schema_version: "cognitiveos.privileged-management-session/0.1", session_id: "pms_session-0001", object_version: 1,
+    management_domain: "cognitiveos.management.runtime", session_authority: "authority://platform/management", human_principal: "principal://tenant-a/alice",
+    actor_chain_digest: `sha256:${"c".repeat(64)}`, authentication_context_ref: "authn://tenant-a/context-1", activity_context_ref: "activity://tenant-a/activity-1",
+    scope: { domains: ["cognitiveos.management.runtime"], actions: ["task.stop"], resources: ["task://tenant-a/task-1"] },
+    risk_ceiling: "R2", policy_version: 1, revocation_epoch: 0, issued_at: "2026-07-21T00:00:00Z", last_activity_at: "2026-07-21T00:00:00Z",
+    idle_timeout_seconds: 300, absolute_expires_at: "2026-07-21T01:00:00Z", state: "active", session_digest: `sha256:${"d".repeat(64)}`,
+    authority_signature: "sig-0123456789abcdef",
+  };
+  const validateSession = ajv.getSchema("privileged-management-session.schema.json");
+  assert.ok(validateSession);
+  assert.equal(validateSession(session), true);
+  assert.equal(validateSession({ ...session, risk_ceiling: "R4" }), false, "risk enum must be exhaustive");
+
+  const proposal = {
+    schema_version: "cognitiveos.management-action-proposal/0.1", proposal_id: "map_proposal-0001", object_version: 1, session_ref: "session://tenant-a/pms-1",
+    management_domain: "cognitiveos.management.runtime", action: "task.stop", target_refs: ["task://tenant-a/task-1"], parameters_digest: `sha256:${"e".repeat(64)}`,
+    expected_versions: { "task://tenant-a/task-1": 7 }, idempotency_key: "management-action-0001", risk_class: "R1", actor_chain_digest: `sha256:${"f".repeat(64)}`,
+    activity_context_ref: "activity://tenant-a/activity-1", policy_version: 1, created_at: "2026-07-21T00:00:00Z", expires_at: "2026-07-21T00:05:00Z",
+    proposal_digest: `sha256:${"1".repeat(64)}`, revocation_epoch: 0, step_up_required: true, independent_approval_required: false,
+  };
+  const validateProposal = ajv.getSchema("management-action-proposal.schema.json");
+  assert.ok(validateProposal);
+  assert.equal(validateProposal(proposal), true);
+  const { idempotency_key: _omitted, ...missingRequired } = proposal;
+  assert.equal(validateProposal(missingRequired), false, "required proposal member must be enforced");
+  assert.equal(validateProposal({ ...proposal, model_decision: true }), false, "closed shape must reject unknown members");
+});
