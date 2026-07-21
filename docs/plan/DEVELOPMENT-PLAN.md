@@ -93,7 +93,7 @@
 
 - **范围**：UserIntentRecord→IntentInterpretation（准入）→TaskContract、有界 Loop 与进展/停滞判定、Management API + 确定性 admin CLI、任务 Shell proposal/preview/attach/cancel、snapshot+cursor watch、R1 聊天内结构化确认（IMP-05 最低集，闭合 F-011 的 R1 部分）、AKP envelope + HTTP/SSE（ADR-0003）。标准：`task-loop-verification.md`、`akp-envelope-and-http-profile.md`、`event-audit-watch.md`。
 - **验收判据**：
-  1. 实质歧义必须澄清（`shell-target-ambiguity-001`，`INTENT_CLARIFICATION_REQUIRED`）；
+  1. 实质歧义必须澄清（`shell-target-ambiguity-001`，**`SHELL_TARGET_AMBIGUOUS`** / category=shell；**不是** `INTENT_CLARIFICATION_REQUIRED`）；
   2. 用户修正推进 epoch 并 fence 旧 dispatch（`intent-supersede-002`）；
   3. Shell 退出不取消（`shell-detach-attach-004`）；cancel 经 Effect 闭合（`shell-cancel-semantics-005`）；
   4. 无模型仍可 inspect/stop/revoke/reconcile（`management-deterministic-fallback`）；

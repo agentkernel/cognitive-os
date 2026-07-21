@@ -1,11 +1,11 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-21）；主战役 `RUN-SHELL-CHANNEL-AUTHORITY-THEN-CFR` **已合入**（RUN PR #42 @ `8e57e6d` + CFR PR #43 @ `889178f`；pins **58/26**）；Intent Authority / PR #40 **已交付**；类别 plan（informative）
+- 状态：active（2026-07-22）；主战役 `RUN-SHELL-TARGET-AMBIGUITY-AUTHORITY-THEN-CFR` **已交付**（RUN PR #45 @ `eef258d` + CFR 本批；pins **59/25**；self-check **40**）；shell-channel / Intent Authority **已交付**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
-- RUN handoff：[20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)
-- CFR handoff：[20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)
-- 下一窗口：P1 = `SHELL-TARGET-AMBIGUITY-001` discovery（或 defer 族）；勿批量清 not-run；勿开 PERF；**隔离 PR #36（M7 plan）**
+- RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
+- CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
+- 下一窗口：P1 discovery-only / defer 族（`MGMT-FALLBACK-008`、`STATE-STORE-DEGRADE-001` disk-full、migration/delta）；勿批量清 not-run；勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界

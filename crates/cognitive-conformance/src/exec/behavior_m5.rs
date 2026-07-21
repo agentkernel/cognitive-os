@@ -18,10 +18,10 @@ use cognitive_runtime::ShellService;
 use serde_json::{Value, json};
 
 const REFERENCE_IMPLEMENTATION: &str = "cognitive-management ApprovalGate + cognitive-runtime \
-     ShellService + channel_binding + cognitive-akp WatchLog (real M5 RUN surfaces)";
-const WRONG_IMPLEMENTATION: &str = "management/shell/watch/channel anti-pattern implementation \
+     ShellService + channel_binding + target_resolution + cognitive-akp WatchLog (real M5 RUN surfaces)";
+const WRONG_IMPLEMENTATION: &str = "management/shell/watch/channel/target anti-pattern implementation \
      (deliberately wrong: unstructured approve, cancel-as-done, privilege restore, silent stale \
-     resume, cross-channel allow)";
+     resume, cross-channel allow, top-1 target guess)";
 
 fn env_err(what: impl Into<String>) -> ExecError {
     ExecError::Environment(what.into())
@@ -699,6 +699,82 @@ pub(super) fn shell_channel_isolation_003_behavior(
             "privileged_session": privileged,
             "decision": decision.decision,
             "error_code": decision.error_code,
+        }),
+    })
+}
+
+/// SHELL-TARGET-AMBIGUITY-001 — natural-language TargetSelector with multiple
+/// visible candidates must clarify; authority deny via `admit_target_selector`.
+pub(super) fn shell_target_ambiguity_001_behavior(
+    ctx: &AssetContext,
+    vector: &LoadedVector,
+    kind: ImplementationKind,
+) -> Result<GateOutput, ExecError> {
+    let _ = registered(ctx, "SHELL_TARGET_AMBIGUOUS")?;
+    if matches!(kind, ImplementationKind::DeliberatelyWrong) {
+        // Anti-pattern: guess top-1 candidate and dispatch, or swap in an
+        // intent-class clarification code. Either must fail expected compare.
+        return Ok(GateOutput {
+            actual: json!({
+                "decision": "allow",
+                "error": {"code": "INTENT_CLARIFICATION_REQUIRED", "category": "intent"},
+                "dispatch": true
+            }),
+            grounding: vec!["specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into()],
+            informative: vec![],
+            implementation: implementation_label(kind),
+            evidence: json!({
+                "anti_pattern": "top-1 guess + INTENT_CLARIFICATION_REQUIRED masquerade"
+            }),
+        });
+    }
+
+    let selector = vector
+        .input
+        .get("selector")
+        .and_then(Value::as_str)
+        .ok_or_else(|| env_err("input.selector string required"))?;
+    let candidates = vector
+        .input
+        .get("visible_candidates")
+        .and_then(Value::as_array)
+        .ok_or_else(|| env_err("input.visible_candidates array required"))?;
+    let visible: Vec<String> = candidates
+        .iter()
+        .map(|v| {
+            v.as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| env_err("visible_candidates entries must be strings"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let request = cognitive_runtime::request_from_target_vector_input(selector, visible.clone());
+    let decision = cognitive_runtime::admit_target_selector(&request);
+
+    let error = match (decision.error_code, decision.error_category) {
+        (Some(code), Some(category)) => json!({"code": code, "category": category}),
+        _ => json!(null),
+    };
+
+    Ok(GateOutput {
+        actual: json!({
+            "decision": decision.decision,
+            "error": error,
+            "dispatch": decision.dispatch
+        }),
+        grounding: vec![
+            "crates/cognitive-runtime/src/target_resolution.rs".into(),
+            "specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into(),
+            "conformance/vectors/shell-target-ambiguity-001.json".into(),
+        ],
+        informative: vec![],
+        implementation: implementation_label(kind),
+        evidence: json!({
+            "selector": selector,
+            "visible_candidates": visible,
+            "decision": decision.decision,
+            "error_code": decision.error_code,
+            "dispatch": decision.dispatch,
         }),
     })
 }

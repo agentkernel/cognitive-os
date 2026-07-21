@@ -92,13 +92,13 @@ jobs:
       # with a reviewed vector or runner-capability change.
       # 2026-07-20 M4 batch: seven effect/recovery vectors execute
       # behaviorally through the public fault-injection framework
-      # (pass 57 -> 58, not-run 27 -> 26 after SHELL-CHANNEL-ISOLATION-003 behavioral batch).
+      # (pass 58 -> 59, not-run 26 -> 25 after SHELL-TARGET-AMBIGUITY-001 behavioral batch).
       - name: Assert report honesty (evidence-backed pass, reasoned not-run, pinned counts)
         run: |
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
             const s = r.summary;
-            const pinned = { total_vectors: 84, pass: 58, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 26 };
+            const pinned = { total_vectors: 84, pass: 59, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 25 };
             for (const [key, want] of Object.entries(pinned)) {
               if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
             }
@@ -130,7 +130,7 @@ jobs:
           node -e "
             const r = require('./artifacts/evidence/conformance/self-check-report.json');
             if (r.corrupted_but_still_passing.length !== 0) throw new Error('wrong implementation not failed: ' + r.corrupted_but_still_passing.join(', '));
-            if (r.must_flip.length < 38) throw new Error('self-check corpus shrank to ' + r.must_flip.length);
+            if (r.must_flip.length < 40) throw new Error('self-check corpus shrank to ' + r.must_flip.length);
             console.log('self-check honest:', r.flipped_to_fail.length, 'corrupted vectors all failed');
           "
 

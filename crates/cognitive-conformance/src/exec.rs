@@ -156,6 +156,9 @@ pub enum ExecutionMode {
     ShellWatchResumeBehavior,
     /// M5 behavioral: task/management channel binding mismatch deny.
     ShellChannelIsolationBehavior,
+    /// M5 behavioral: TargetSelector multi-candidate ambiguity deny
+    /// (`SHELL_TARGET_AMBIGUOUS`, dispatch=false).
+    ShellTargetAmbiguityBehavior,
     /// M5 Intent Authority: user correction supersedes epoch and fences
     /// old-epoch dispatch (REQ-INTENT-SUPERSEDE-001).
     IntentSupersedeBehavior,
@@ -466,6 +469,7 @@ const SHELL_CANCEL_VECTOR_ID: &str = "SHELL-CANCEL-SEMANTICS-005";
 const SHELL_DETACH_VECTOR_ID: &str = "SHELL-DETACH-ATTACH-004";
 const SHELL_WATCH_VECTOR_ID: &str = "SHELL-WATCH-RESUME-006";
 const SHELL_CHANNEL_VECTOR_ID: &str = "SHELL-CHANNEL-ISOLATION-003";
+const SHELL_TARGET_AMBIGUITY_VECTOR_ID: &str = "SHELL-TARGET-AMBIGUITY-001";
 /// M5 Intent Authority behavioral executions (KRN intent_chain / acceptance).
 const INTENT_SUPERSEDE_VECTOR_ID: &str = "INTENT-SUPERSEDE-002";
 const INTENT_ACCEPTANCE_VECTOR_ID: &str = "INTENT-ACCEPTANCE-007";
@@ -570,6 +574,9 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         SHELL_WATCH_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::ShellWatchResumeBehavior),
         SHELL_CHANNEL_VECTOR_ID => {
             ExecutionPlan::Execute(ExecutionMode::ShellChannelIsolationBehavior)
+        }
+        SHELL_TARGET_AMBIGUITY_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::ShellTargetAmbiguityBehavior)
         }
         INTENT_SUPERSEDE_VECTOR_ID => {
             ExecutionPlan::Execute(ExecutionMode::IntentSupersedeBehavior)
@@ -1209,6 +1216,9 @@ fn execute_gate(
         ExecutionMode::ShellChannelIsolationBehavior => {
             behavior_m5::shell_channel_isolation_003_behavior(ctx, vector, kind)
         }
+        ExecutionMode::ShellTargetAmbiguityBehavior => {
+            behavior_m5::shell_target_ambiguity_001_behavior(ctx, vector, kind)
+        }
         ExecutionMode::IntentSupersedeBehavior => {
             behavior_m5_intent::intent_supersede_002_behavior(ctx, vector, kind)
         }
@@ -1343,7 +1353,7 @@ pub struct SelfCheckReport {
 /// rank-before-auth, stale cache serving, silent truncation, unbounded
 /// retry, reshuffling render, content-claimed control plane, accepted
 /// amplification).
-const CORRUPTED_MODES: [ExecutionMode; 33] = [
+const CORRUPTED_MODES: [ExecutionMode; 34] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::CasBehavior,
@@ -1372,6 +1382,7 @@ const CORRUPTED_MODES: [ExecutionMode; 33] = [
     ExecutionMode::ShellDetachBehavior,
     ExecutionMode::ShellWatchResumeBehavior,
     ExecutionMode::ShellChannelIsolationBehavior,
+    ExecutionMode::ShellTargetAmbiguityBehavior,
     ExecutionMode::IntentSupersedeBehavior,
     ExecutionMode::IntentAcceptanceBehavior,
     ExecutionMode::AgentInstallBehavior,

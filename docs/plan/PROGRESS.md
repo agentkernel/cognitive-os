@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-22（**Lane-RUN shell target ambiguity authority**：分支 `lane/run-shell-target-ambiguity-authority`；`admit_target_selector` 已提供；向量 `SHELL-TARGET-AMBIGUITY-001` **仍 not-run**；pins **84/58/26**；self-check **39**；Profile **implemented = 0**；上游 tip `80ffcc0`）
+> 最后更新：2026-07-22（**CFR shell-target-ambiguity 行为批**：分支 `lane/cfr-shell-target-ambiguity`；上游 RUN PR [#45](https://github.com/agentkernel/cognitive-os/pull/45) @ `eef258d`；`SHELL-TARGET-AMBIGUITY-001` behavior **pass**；pins **84/59/25**；self-check **40**；Profile **implemented = 0**）
 
 ## 里程碑状态
 
@@ -28,19 +28,19 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | **66**（matrix 实测非空 impl；含 `REQ-SHELL-CHANNEL-001` / `REQ-SHELL-UX-001` channel_binding） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 31 向量**（M2 3 + M3 9 + M4 7 + M5 6 + **M5-intent 2** + **M5-shell-channel 1** + **M6 3**）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
+| 实现已提供（构建通过且有实现代码的 REQ） | **68**（matrix 实测非空 impl；含 channel_binding + **target_resolution**） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 32 向量**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + M5-shell-channel 1 + **SHELL-TARGET-AMBIGUITY-001** + M6 3）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
 
-## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-21 Lane-CFR shell-channel 行为批）
+## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-22 Lane-CFR shell-target-ambiguity 行为批）
 
 | 状态 | 计数 |
 |---|---|
 | 向量总数 | **84** |
-| **pass** | **58** = 静态 27 + **行为 31**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + **SHELL-CHANNEL-ISOLATION-003** + M6 3） |
+| **pass** | **59** = 静态 27 + **行为 32**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + SHELL-CHANNEL-ISOLATION-003 + **SHELL-TARGET-AMBIGUITY-001** + M6 3） |
 | fail / not-applicable / documented-degradation | 0 / 0 / 0 |
-| **not-run** | **26**（含 MGMT-FALLBACK 全动词、shell target/migration、delta-scope、store-degradation disk-full 等） |
-| 错误实现自检 | **39/39 corrupted 向量全部翻 fail**（+1 shell-channel）；CI 地板 ≥38 |
+| **not-run** | **25**（含 MGMT-FALLBACK 全动词、shell migration、delta-scope、store-degradation disk-full 等） |
+| 错误实现自检 | **40/40 corrupted 向量全部翻 fail**（+1 shell-target）；CI 地板 ≥40 |
 
 分层明细见 `artifacts/evidence/conformance/conformance-report.json`（本地再生成：`cargo run -p cognitive-conformance --bin conformance-runner`；报告 sha256 由 runner 打印）。层 7/8 无专属 slug = D-004 已按文档化跨切片映射闭合（conformance/README + runner `CROSS_SLICE_HOSTED`）。
 
@@ -57,18 +57,18 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **shell-channel isolation 已合入 main（PR #43）** | `main` @ `80ffcc0` | pins **58/26**；self-check 39；下一候选 `SHELL-TARGET-AMBIGUITY-001`（等 RUN target authority 合入）；handoff：`20260721-lane-cfr-shell-channel-isolation-handoff.md` |
+| Lane-CFR 符合性与工具 | **shell-target-ambiguity 行为批进行中** | `lane/cfr-shell-target-ambiguity` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **shell target ambiguity authority 进行中** | `lane/run-shell-target-ambiguity-authority` | `target_resolution::admit_target_selector`；单元绿；向量仍 not-run；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
+| Lane-RUN 运行时与管理面 | **shell target ambiguity authority 已合入**（PR #45） | `main` @ `eef258d` | `target_resolution::admit_target_selector`；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；pins 仍 58/26；向量 not-run）
-2. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass；pins 58/26）
-3. [20260721-lane-run-shell-channel-authority-handoff.md](../checkpoints/20260721-lane-run-shell-channel-authority-handoff.md)（RUN channel-binding authority；PR #42）
+1. [20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)（CFR：`SHELL-TARGET-AMBIGUITY-001` pass；pins 59/25）
+2. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；PR #45）
+3. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass）
 
 ## 客户端目录治理交付
 
