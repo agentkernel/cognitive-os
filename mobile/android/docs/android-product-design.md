@@ -995,6 +995,8 @@ Android App 只消费 projection 和提交受治理 proposal，不接触 executa
 
 ### 18.1 Open PoC
 
+执行清单骨架（全部 `not-run` / evidence `none`）：[android-poc-runbook.md](android-poc-runbook.md)。
+
 | ID | 必须证明 | 当前 evidence |
 |---|---|---|
 | `CONSOLE-AND-V1-POC-001` | API 33–36、arm64、GMS/Play Protect support detection 与 fail-closed | none |

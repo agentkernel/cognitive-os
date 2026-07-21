@@ -332,6 +332,8 @@ GA 必测旅程：安装/claim、登录、创建 Task、R1、pause pending、unk
 
 ## 13. Open PoC and GA gates
 
+执行清单骨架（全部 `not-run`）：[macos-poc-runbook.md](macos-poc-runbook.md)。
+
 | Gate | 必须证明 | 当前 |
 |---|---|---|
 | `MAC-POC-01` | Universal 2 Console/daemon/broker/helper 在候选 OS/CPU 安装、签名、公证和启动 | not-run |

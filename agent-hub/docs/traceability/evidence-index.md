@@ -5,6 +5,8 @@
 > 本文汇总所有 Open PoC（`CONSOLE-AGENTHUB-V1-POC-*` 短写 `POC-*`）与证据状态。**当前全部 `not-run` 或 `planned`，evidence `none`。** 任何设计文档中的 prevention/detection/oracle 描述都不得被引用为已实现或已验证。
 >
 > **威胁状态口径**：21 项威胁已规范登记；oracle/evidence 全 not-run——**不是**「21 威胁项实测」。设计摘要见 [../security/threat-test-oracles.md](../security/threat-test-oracles.md)。
+>
+> **执行准备（非证据）**：[poc-prep-checklist.md](poc-prep-checklist.md)；条目模板 [../templates/open-poc.md](../templates/open-poc.md)；共享记录模板 [../../../shared/docs/poc-execution-record.md](../../../shared/docs/poc-execution-record.md)。
 
 ## 1. 证据状态总声明
 

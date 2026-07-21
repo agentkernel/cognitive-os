@@ -11,7 +11,7 @@
 | 包级单元测试 | contracts-ts、sdk-ts、agent-shell 的合同/客户端实现测试 | Lane-CTR / Lane-TSC；[contracts-ts](../../../packages/contracts-ts/src/index.ts) | TS 客户端包内测试已执行；不计平台 PoC 或 conformance 向量执行 |
 | 跨语言 golden | Rust/TS canonical 编码与 digest 夹具对比 | Lane-CTR；[tests/golden/README.md](../../../tests/golden/README.md) | 夹具已提供；CI golden job 对比（非客户端功能证据） |
 | conformance 向量 | 84 份声明式向量、15 测试层 | Lane-CFR runner；[conformance/README.md](../../../conformance/README.md) | 全局 46 `pass` / 38 `not-run`；已执行项不构成客户端平台证据 |
-| 平台 PoC | 各平台真实 API/真实 OS 行为验证 | Lane-CON 编排、gate 权威见 [readiness-gates](../../governance/readiness-gates.md) | `MAC/LNX-POC-*`、`IOS-POC-*`、Android `POC-*` 全部 `not-run` |
+| 平台 PoC | 各平台真实 API/真实 OS 行为验证 | Lane-CON 编排、gate 权威见 [readiness-gates](../../governance/readiness-gates.md)；执行骨架见各 `*-poc-runbook.md` + [poc-execution-record](poc-execution-record.md) | `WIN-RG-*` / `MAC/LNX-POC-*` / `IOS-POC-*` / `CONSOLE-AND-V1-POC-*` 全部 `not-run`；evidence `none` |
 | 端到端（E2E） | 客户端↔kernel-server 全链路 | [tests/e2e](../../../tests/e2e/README.md)（占位，M4/M5 充实） | `planned`；未执行 |
 
 ## 2. 证据口径
