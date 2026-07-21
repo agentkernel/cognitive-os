@@ -62,19 +62,19 @@
 | Lane-TSC TS 客户端 | 换绑批已合并（PR #6）：sdk-ts/agent-shell 全量换用 codegen 0.2.0 生成绑定——errors.ts 消费 `errorRegistry`（删手写 55 码表 + 测试时 YAML 对读）、envelope.ts 消费 `akpRequestEnvelope`/`akpResultEnvelope`（删手工信封接口；新增 payload⊕payload_ref 与 partial⇒continuation 门）、views.ts 消费 shell 族 6 生成模块 + `SCHEMA_DIGESTS`（删 5 手工接口/`SHELL_SCHEMA_DIGESTS`/`CancelControl`/`SHELL_CONTROL_PROVISIONAL_PIN` 及 digest 重derive 漂移门）、watch.ts 消费 `akpStreamFrame` 且流错误码收口 `error.code`（D-015 行为适配 + 旧形状负例）；语义负例全部保持通过；**79 项 TS 客户端单元测试**（sdk-ts 67 / agent-shell 12），仍为实现测试、不计向量执行；剩余临时机制清单见 handoff §2/§4 | `lane/tsc` | M5 集成（真 kernel-server HTTP+SSE 对接）待 Lane-RUN gate |
 | Lane-RUN 运行时与管理面 | **M5 批 1 已交付**（确定性管理 fallback：session 门 + 无模型四动词，实现已提供 + 车道测试已执行；management 向量保持 not-run 归 CFR） | `lane/run` | RUN 批 2：Management API HTTP 面 + AKP envelope + Harness Loop + Operation 执行器（等 KRN M5 端口）；governance ledger 收编 store 表待与 KRN 协商 |
 | Lane-DOC 文档维护 | 持续 | 随各车道 PR | — |
-| Lane-CON Console | tracking-only 文档例外 | `work/clients-full-development` | Phase 0 informative：AH-CTR-02 文档级完成、法务材料/威胁 oracle/planned PoC 登记；implementation-ready 仍 no；gate canonical：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md` |
+| Lane-CON Console | tracking-only 文档例外 | `work/clients-phase0-poc-prep` | Phase 0 informative：PoC runbook/模板、技术栈比较草案、设计缺口登记；implementation-ready 仍 no；gate：`clients/governance/readiness-gates.md`；handoff：`docs/checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md` |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-lane-con-clients-phase0-audits-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md)（Lane-CON Phase 0：AH-CTR-02 文档级、POC-LIC 材料、威胁 oracle/planned PoC；implementation-ready 仍 blocked）
-2. [20260720-lane-krn-m5-handoff.md](../checkpoints/20260720-lane-krn-m5-handoff.md)（Lane-KRN M5 kernel 侧批：意图链/修正 fencing/Loop 端口/恢复 6-7/D-018，端口面冻结 §7、16 项行为测试、matrix +7 REQ 回填）
-3. [20260720-lane-run-m5-batch1-handoff.md](../checkpoints/20260720-lane-run-m5-batch1-handoff.md)（Lane-RUN M5 批 1：session 门 + 无模型四动词 inspect/stop/revoke/reconcile、16 项行为/e2e 测试、matrix +5 REQ 回填）
+1. [20260721-lane-con-clients-phase0-poc-prep-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md)（Lane-CON Phase 0：PoC 执行手册/模板、tech-stack 比较草案、设计缺口；implementation-ready 仍 blocked）
+2. [20260721-lane-con-clients-phase0-audits-handoff.md](../checkpoints/20260721-lane-con-clients-phase0-audits-handoff.md)（Lane-CON Phase 0：AH-CTR-02 文档级、POC-LIC 材料、威胁 oracle/planned PoC；implementation-ready 仍 blocked）
+3. [20260720-lane-krn-m5-handoff.md](../checkpoints/20260720-lane-krn-m5-handoff.md)（Lane-KRN M5 kernel 侧批：意图链/修正 fencing/Loop 端口/恢复 6-7/D-018，端口面冻结 §7、16 项行为测试、matrix +7 REQ 回填）
 
 ## 客户端目录治理交付
 
 | 交付 | 状态 | 证据与入口 |
 |---|---|---|
 | 客户端项目根与 canonical 索引 | **done（informative 文档；结构迁移完成）** | canonical 项目地图迁至 [clients/README.md](../../clients/README.md)（ADR-0007、CLIENTS-DEC-001）；PC 13 + mobile 4 + Agent Hub 86 + 索引 1 共 104 文件 `git mv`；4 个旧路径兼容 stub（docs/clients、apps console README/PRODUCT-DESIGN、docs/platforms/README）；Console 实现 gate canonical 迁至 [readiness-gates](../../clients/governance/readiness-gates.md)；未启动任何客户端实现 |
-| readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](../../clients/READINESS.md)：AH-CTR-02 文档级已进展；仍 blocked 于 M5 出口、依赖组 1/2/7、五平台 PoC、技术栈 ADR、AGPL 法务评估（POC-LIC not-run）、Tier 1 runtime PoC |
+| readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](../../clients/READINESS.md)：PoC runbook/模板与技术栈比较草案已提供（非执行/非 ADR）；仍 blocked 于 M5 出口、依赖组 1/2/7、五平台 PoC 执行、技术栈 ADR、AGPL 法务评估（POC-LIC not-run）、Tier 1 runtime PoC |
 | 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`（canonical 改指 clients/README.md）+ 新增 `.cursor/rules/17-client-project-boundaries.mdc`；专用 consistency 自动校验保持 `planned`（Lane-CFR，checker 不扫 `clients/`），交付前执行 [clients/README.md §9](../../clients/README.md#9-持续维护与手动-gate) 手动 gate |
 | 本轮静态验证 | **pass（非实现/PoC 证据）** | 迁移集成后 `check:consistency` 以 273 REQ / 55 码 / 61 schema / 84 向量为准；clients 专项链接检查仍为手动 gate；[handoff](../checkpoints/20260720-lane-con-clients-root-migration-handoff.md) |
