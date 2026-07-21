@@ -20,16 +20,16 @@ use cognitive_contracts::generated::common_defs::Budget;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
 use cognitive_domain::{
-    EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version, WallTimestamp,
-    table,
+    table, EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version,
+    WallTimestamp,
 };
 use cognitive_kernel::authz::{
-    AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
-    ObjectGovernance, PrincipalFacts, authorize,
+    authorize, AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
+    ObjectGovernance, PrincipalFacts,
 };
 use cognitive_kernel::effects::{
-    EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
-    OperationDescriptor, WriterLease, mint_intent,
+    mint_intent, EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
+    OperationDescriptor, WriterLease,
 };
 use cognitive_kernel::executor::ExecutorCapabilities;
 use cognitive_kernel::intent_chain::ConditionSpec;
@@ -38,15 +38,14 @@ use cognitive_kernel::ports::{
     TaskBinding,
 };
 use cognitive_kernel::{
-    AcceptanceCommand, AdmitCommand, AmbiguityFact, Causation, GovernanceSeed,
-    InterpretationCandidate, PendingWorkDisposition, Reason, SupersedeCommand, TablePin,
-    TaskContractCommand, TransitionCommand, TransitionEngine, UserIntentCommand,
     admit_interpretation, mint_task_contract, record_interpretation_candidate, record_user_intent,
-    supersede_task_contract,
+    supersede_task_contract, AcceptanceCommand, AdmitCommand, AmbiguityFact, Causation,
+    GovernanceSeed, InterpretationCandidate, PendingWorkDisposition, Reason, SupersedeCommand,
+    TablePin, TaskContractCommand, TransitionCommand, TransitionEngine, UserIntentCommand,
 };
-use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
-use serde_json::{Value, json};
+use cognitive_store::SqliteAuthorityStore;
+use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -597,7 +596,10 @@ pub(super) fn intent_supersede_002_behavior(
     )
     .map_err(|err| env_err(format!("supersede_task_contract: {err}")))?;
 
-    assert_env(report.new_contract.contract_epoch == 2, "epoch must advance")?;
+    assert_env(
+        report.new_contract.contract_epoch == 2,
+        "epoch must advance",
+    )?;
     let pending_disp = report
         .pending
         .iter()
@@ -714,12 +716,7 @@ impl AcceptHarness {
 
     /// Seed a task already at `at` through the store port (committed history
     /// model), matching the M2 behavioral harness pattern.
-    fn seed(
-        &self,
-        object_id: &ObjectId,
-        at: &str,
-        subject_ref: &str,
-    ) -> Result<(), ExecError> {
+    fn seed(&self, object_id: &ObjectId, at: &str, subject_ref: &str) -> Result<(), ExecError> {
         let admitted_at = WallTimestamp::parse("2026-07-21T11:00:00Z")
             .map_err(|err| env_err(format!("seed timestamp: {err}")))?;
         let raw_event_id = self
@@ -783,7 +780,8 @@ fn acceptance_command(
     expected_version: Version,
     include_all_guards: bool,
 ) -> Result<TransitionCommand, ExecError> {
-    let loaded = table(LifecycleDomain::Task).map_err(|err| env_err(format!("task table: {err}")))?;
+    let loaded =
+        table(LifecycleDomain::Task).map_err(|err| env_err(format!("task table: {err}")))?;
     let from_state = state_name(from)?;
     let to_state = state_name(to)?;
     let edge = loaded
@@ -883,8 +881,14 @@ pub(super) fn intent_acceptance_007_behavior(
         input_state == "CANDIDATE_COMPLETE",
         "vector requires CANDIDATE_COMPLETE",
     )?;
-    assert_env(verification == "inconclusive", "vector requires inconclusive")?;
-    assert_env(!acceptance_decision, "vector requires acceptance_decision=false")?;
+    assert_env(
+        verification == "inconclusive",
+        "vector requires inconclusive",
+    )?;
+    assert_env(
+        !acceptance_decision,
+        "vector requires acceptance_decision=false",
+    )?;
 
     if matches!(kind, ImplementationKind::DeliberatelyWrong) {
         return Ok(GateOutput {
