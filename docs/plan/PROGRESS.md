@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-22（**CFR shell-target-ambiguity 行为批**：分支 `lane/cfr-shell-target-ambiguity`；上游 RUN PR [#45](https://github.com/agentkernel/cognitive-os/pull/45) @ `eef258d`；`SHELL-TARGET-AMBIGUITY-001` behavior **pass**；pins **84/59/25**；self-check **40**；Profile **implemented = 0**）
+> 最后更新：2026-07-22（**CFR shell-target-ambiguity 已合入 main**：PR [#46](https://github.com/agentkernel/cognitive-os/pull/46) @ `0ab3ab4`；上游 RUN PR [#45](https://github.com/agentkernel/cognitive-os/pull/45) @ `eef258d`；`SHELL-TARGET-AMBIGUITY-001` behavior **pass**；pins **84/59/25**；self-check **40**；Profile **implemented = 0**）
 
 ## 里程碑状态
 
@@ -57,7 +57,7 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **shell-target-ambiguity 行为批进行中** | `lane/cfr-shell-target-ambiguity` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
+| Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
 | Lane-RUN 运行时与管理面 | **shell target ambiguity authority 已合入**（PR #45） | `main` @ `eef258d` | `target_resolution::admit_target_selector`；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
