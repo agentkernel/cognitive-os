@@ -746,13 +746,12 @@ pub fn release_candidate_profile_manifest(
     for key in PROFILE_KEYS {
         // agent_compatibility / core_digital get experimental only when the
         // M6 agent vectors are among the measured passes; never implemented.
-        let status = if matches!(key, "core_digital" | "agent_compatibility")
-            && report.summary.pass >= 55
-        {
-            "experimental"
-        } else {
-            "planned"
-        };
+        let status =
+            if matches!(key, "core_digital" | "agent_compatibility") && report.summary.pass >= 55 {
+                "experimental"
+            } else {
+                "planned"
+            };
         profiles.insert(key.to_owned(), serde_json::Value::String(status.to_owned()));
     }
     let status = if report.summary.fail > 0 {

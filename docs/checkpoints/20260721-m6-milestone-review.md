@@ -4,6 +4,7 @@
 - Baseline tip consumed: Lane-CTR `013b4d7` (bindings + D-020/D-021) atop plan `b7bb68e`
 - Reviewer lane: Lane-DOC (consuming RUN+CFR delivery evidence)
 - Verdict: **NO-GO for v0.1 release** (hard blockers remain)
+- **Superseded for exit conclusion** by [20260721-v01-rereview.md](20260721-v01-rereview.md) (**GO-with-explicit-non-claim** after F-017 claim-set closure). This document remains the historical first-pass NO-GO.
 
 ## 1. Entry check (`M6-ENTRY`)
 

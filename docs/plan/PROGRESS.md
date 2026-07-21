@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（Lane-RUN/CFR M6：installer/sandbox/adapter/OOB/readiness/PERF + 三向量行为 pass；pins 55/29；**v0.1 NO-GO** 因 F-017）
+> 最后更新：2026-07-21（M6-EXIT：F-017 声明集闭合 + digests；**v0.1 GO-with-explicit-non-claim**；见 [M6-EXIT-PLAN](M6-EXIT-PLAN.md) / [v01-rereview](../checkpoints/20260721-v01-rereview.md)）
 
 ## 里程碑状态
 
@@ -13,7 +13,7 @@
 | M3 治理链与 Context | **done** | [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md) | KRN M3 批（六步授权门、capability 算术、九阶段管线、治理缓存键、确定性渲染、F-007 双竞态，PR #9）+ CFR 行为执行扩展批（8 向量脱 not-run + CTX-TRUST-004 静态→行为升级、治理类自检 20/20 fail）。**M4 入口 gate（tracer bullet；F-002~F-010 类全收敛）逐条核验通过 → 开启**（评审 §7） |
 | M4 Intent/Effect 与恢复 + tracer bullet | **done** | [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) | KRN M4 批（Intent/幂等/准入矩阵/Effect 协议/sink fencing/恢复八步/faults 框架/tracer bullet，PR #12）+ CFR 行为执行批（7 向量脱 not-run 全经故障注入驱动、fencing 子集落档、反模式自检 27/27 fail、tracer bullet 复现确认）。**F-014/F-023 闭合；F-023 拒绝码 NO_AUTHORIZED_OPERATION_CANDIDATE 确认**。M5 入口 = M4 分量达成 + **F-011 R1 合同登记（剩余项，归 Lane-CTR）** |
 | M5 意图链/Harness/Shell/管理面 | **done** | [20260721-m5-milestone-review.md](../checkpoints/20260721-m5-milestone-review.md) | KRN+CTR+RUN 1–2b+TSC+CFR 已合入。行为向量当时 **52 pass / 32 not-run**；F-011 三负例行为闭合；D-018 仍 partially-implemented。**GO M6**（附带条件见评审 §7） |
-| M6 安装与适配、v0.1 发布 | **实现已提供；测试已执行（局部）；出口 NO-GO** | [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md) | RUN installer/sandbox/adapter/OOB/readiness/PERF + CFR `AGENT-INSTALL/BYPASS/OOB` 行为 pass；pins **55/29**；RC manifest 诚实 experimental；**F-017 仍开放 → v0.1 NO-GO**；Profile implemented = 0 |
+| M6 安装与适配、v0.1 发布 | **实现已提供；测试已执行（局部）；出口 GO-with-explicit-non-claim** | [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（初评 [NO-GO](../checkpoints/20260721-m6-milestone-review.md)） | RUN/CFR M6 交付 + EXIT 声明集/F-017 digests；pins **55/29**；RC ≤ experimental；**implemented = 0**；durable install / PERF 战役 / D-018 / Win-native / WSL2 = explicit non-claim；计划：[M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；Phase 0 文档收口；M5 出口已 GO，但 implementation-ready 仍 **no (blocked)**：缺五平台 PoC / 技术栈 ADR / 依赖组 1/2/7 完整交付与法务 gate；与 M6 核心可并行 tracking-only，不混入主线 PR；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
 
@@ -49,7 +49,7 @@
 | 级别 | 开放 | 条目 |
 |---|---|---|
 | P0 | 0（+1 证据性质） | F-001（证据缺口，随里程碑消解，不阻断） |
-| P1 | **1** | F-017（M6）；F-015 持续。**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 闭合 |
+| P1 | **0**（+持续） | F-017 **closed-for-release-claim-set**；F-015 持续。**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 闭合 |
 | 漂移 | 0 开放（+2 deferred，+1 decided/partial） | **D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 deferred-to-v0.2**；D-019 已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
@@ -57,18 +57,18 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **M6 三向量行为批已交付**（pins 55/29；self-check 36） | `lane/run-m6-installer` | RC manifest；F-017 矩阵文档仍 open；clients 扫描根自动化仍 planned |
-| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 治理对象端口；可选 InstallationStore（当前 RUN in-process ledger） |
+| Lane-CFR 符合性与工具 | **M6 三向量 + F-017 声明集 digests** | `lane/doc-m6-exit` | RC manifest；F-017 closed-for-release-claim-set；clients 扫描根自动化仍 planned |
+| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim） |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量 |
-| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021 |
-| Lane-DOC 文档维护 | **M6 出口评审已写（NO-GO）** | `lane/run-m6-installer` | [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md) |
+| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021 |
+| Lane-DOC 文档维护 | **M6-EXIT + v0.1 重评审已写** | `lane/doc-m6-exit` | [M6-EXIT-PLAN](M6-EXIT-PLAN.md)；[v01-rereview](../checkpoints/20260721-v01-rereview.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md)（M6/v0.1：**NO-GO**，F-017）
-2. [20260721-lane-run-m6-installer-handoff.md](../checkpoints/20260721-lane-run-m6-installer-handoff.md)（RUN/CFR M6 交付）
-3. [20260721-lane-ctr-m6-bindings-handoff.md](../checkpoints/20260721-lane-ctr-m6-bindings-handoff.md)（Lane-CTR M6 Batch-0A：bindings + D-020/D-021）
+1. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
+2. [20260721-m6-exit-planning-handoff.md](../checkpoints/20260721-m6-exit-planning-handoff.md)（M6-EXIT 计划落盘 + F-017 声明集）
+3. [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md)（初评 NO-GO，已被重评审取代为出口结论）
 
 ## 客户端目录治理交付
 

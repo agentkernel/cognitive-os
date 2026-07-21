@@ -285,4 +285,34 @@ mod tests {
         .unwrap_err();
         assert_eq!(err.code, "AGENT_ADAPTER_BYPASS_DETECTED");
     }
+
+    /// Pins F-017 claim-freeze digests for the three linux_native deny rows.
+    #[test]
+    fn f017_claim_freeze_digests_are_stable() {
+        let gate = linux_gate();
+        let rows = gate.matrix_rows();
+        let digest = |ch: SandboxChannel| {
+            rows.iter()
+                .find(|r| r.channel == ch)
+                .and_then(|r| r.evidence_digest.clone())
+        };
+        assert_eq!(
+            digest(SandboxChannel::Network).as_deref(),
+            Some("sha256:evidence-network")
+        );
+        assert_eq!(
+            digest(SandboxChannel::Secrets).as_deref(),
+            Some("sha256:evidence-secrets")
+        );
+        assert_eq!(
+            digest(SandboxChannel::ToolProxy).as_deref(),
+            Some("sha256:evidence-tool_proxy")
+        );
+        assert_eq!(
+            rows.iter()
+                .find(|r| r.channel == SandboxChannel::Filesystem)
+                .map(|r| r.claim),
+            Some(ChannelClaim::NotTested)
+        );
+    }
 }

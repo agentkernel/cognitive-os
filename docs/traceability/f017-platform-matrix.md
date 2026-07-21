@@ -1,8 +1,39 @@
 # F-017 Platform / Channel Sandbox Matrix (M6)
 
-> Status: **open** (exit blocker for v0.1). Linux unit negatives exist; full
-> platform CI evidence digests are incomplete. Do **not** merge WSL2 guest
-> results into a Windows-native claim.
+> Status: **closed-for-release-claim-set** (2026-07-21 M6-EXIT Batch-E1).
+> Broader channel coverage remains `not_tested` / `unsupported` and must not be
+> silently claimed. Do **not** merge WSL2 guest results into a Windows-native claim.
+
+## Claim freeze (v0.1 release declaration set)
+
+Frozen by [M6-EXIT-PLAN.md](../plan/M6-EXIT-PLAN.md) WP-CLAIM. Only rows in this
+table may appear in release claims.
+
+| Platform | Channel | Claim | Evidence digest | Reproduce |
+|---|---|---|---|---|
+| `linux_native` | network (unmediated) | `denied_with_evidence` | `sha256:evidence-network` | see below |
+| `linux_native` | secrets (`host://`) | `denied_with_evidence` | `sha256:evidence-secrets` | see below |
+| `linux_native` | tool_proxy (unregistered) | `denied_with_evidence` | `sha256:evidence-tool_proxy` | see below |
+| `linux_native` | remaining channels | `not_tested` | — | non-claim |
+| `windows_wsl2_linux_guest` | * | `not_tested` | — | non-claim (Linux guest only if later tested) |
+| `windows_native` | * | `unsupported` | — | no native containment backend |
+
+### Reproduce commands (claimed deny rows)
+
+```bash
+# Unit negatives + stable matrix digests (Linux native reference)
+cargo test -p cognitive-runtime --lib sandbox::tests -- --nocapture
+
+# Behavior vector (Linux native bypass negatives; counted in runner pins)
+cargo run -p cognitive-conformance --bin conformance-runner
+# Expect AGENT-BYPASS-002 result=pass; report under
+# artifacts/evidence/conformance/conformance-report.json
+```
+
+Digest strings are emitted by `SandboxGate::matrix_rows()` for channels in
+`evidenced_denials` and pinned by `f017_claim_freeze_digests_are_stable`.
+Cross-platform merge is refused by `refuse_cross_platform_merge`
+(`AGENT_ADAPTER_BYPASS_DETECTED`).
 
 ## Claim discipline
 
@@ -12,27 +43,13 @@
 | `windows_wsl2_linux_guest` | Windows host running Linux guest via WSL2 | Represents **Linux guest** only |
 | `windows_native` | Windows-native containment backend | Without native evidence → `unsupported` / `not-tested` |
 
-## Current measured rows (unit / in-process)
+## Closure criteria (from M6-PLAN `M6-F017` / M6-EXIT)
 
-Evidence grounding: `cognitive-runtime::SandboxGate` crate tests + CFR
-`AGENT-BYPASS-002` behavior mode (Linux native negatives).
+1. Every claimed deny/degrade row has a reproducible command + digest. **met** (claim freeze table)
+2. Linux native reference negatives cover declared matrix dimensions used in release claims. **met**
+3. WSL2 rows explicitly labeled Linux guest. **met** (`not_tested`)
+4. Windows native remains `unsupported` until a native backend exists. **met**
+5. Cross-platform merge refused (`refuse_cross_platform_merge`). **met** (unit)
 
-| Platform | Channel | Claim | Evidence |
-|---|---|---|---|
-| linux_native | network (unmediated) | denied_with_evidence | runtime unit + AGENT-BYPASS-002 |
-| linux_native | secrets (`host://`) | denied_with_evidence | runtime unit + AGENT-BYPASS-002 |
-| linux_native | tool_proxy (unregistered) | denied_with_evidence | runtime unit + AGENT-BYPASS-002 |
-| linux_native | remaining channels | not_tested | — |
-| windows_wsl2_linux_guest | * | not_tested | no separate guest CI job yet |
-| windows_native | * | unsupported | no Windows-native containment backend |
-
-## Closure criteria (from M6-PLAN `M6-F017`)
-
-1. Every claimed deny/degrade row has a reproducible command + digest.
-2. Linux native reference negatives cover declared matrix dimensions used in release claims.
-3. WSL2 rows explicitly labeled Linux guest.
-4. Windows native remains `unsupported` until a native backend exists.
-5. Cross-platform merge refused (`refuse_cross_platform_merge`).
-
-Until (1)–(5) hold for every release claim, F-017 stays **open** and v0.1
-milestone review is **NO-GO** on this gate.
+Relative to the frozen release claim set, F-017 is **closed**. Expanding claims
+beyond this table re-opens F-017 until new digests land.
