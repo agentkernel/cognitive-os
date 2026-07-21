@@ -198,6 +198,7 @@ dependencies = [
  "cognitive-contracts",
  "cognitive-domain",
  "cognitive-kernel",
+ "serde",
  "serde_json",
  "thiserror",
 ]

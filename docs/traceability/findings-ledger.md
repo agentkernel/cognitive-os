@@ -26,7 +26,7 @@
 | F-014 | P1 | fencing 未证明覆盖所有提交端（sink 矩阵缺失） | **closed-by-M4**（出口评审确认） | 全 sink 清单落码为审查常量 `cognitive_kernel::effects::COMMIT_SINKS`（4 端）；逐端强制点：executor 端 sink 自身拒陈旧 epoch + store 三类写入事务内 `verify_fencing_in_tx`；逐端负例 + 正例：`m4_effects.rs::f014_every_commit_sink_fences_stale_epoch_writers`；恢复步骤 2/3 推进 epoch 即全端生效。**M4 向量侧证据（2026-07-20 Lane-CFR）**：state-store-degradation 的 `m4_behavioral_fencing_subset` 真实执行（陈旧 epoch 写在 authority-store sink 事务内被拒、当前 epoch 可提交）+ 全部 M4 行为向量在 fencing 贯通的门上执行。闭合于 [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) 判据 6 | 已闭合 |
 | F-015 | P1 | 向量数量≠行为覆盖（大量 REQ 仅挂 generic 追溯向量) | partially-closed | 1.0.1 补部分负例向量；`spec-contract-coverage.json` 仍托管 170+ REQ 的 generic 追溯。M1：runner 分层执行 + 逐向量执行模式/not-run 理由 = 机器可见覆盖缺口清单；traceability pass 显式限定非行为声明。M2/M3（2026-07-20）：**12 份向量已行为执行**（报告 execution.mode 区分 static/behavioral，被测真实内核面标注在 execution.implementation），行为覆盖随里程碑推进机器可见 | 覆盖提升贯穿 M1~M6 |
 | F-016 | P1 | implemented 声明可被 degradation 稀释 | closed-by-1.0.1 | `conformance/README.md` 状态语言收紧（degradation 强制缩范围或降 experimental；安全负例不可豁免） | — |
-| F-017 | P1 | sandbox 不可绕过证据过粗（缺平台/通道矩阵） | **open** | 需按宿主平台分别声明与测试（Linux 参考平台；Windows 经 WSL2/CI） | **阻断 M6 出口** |
+| F-017 | P1 | sandbox 不可绕过证据过粗（缺平台/通道矩阵） | **closed-for-release-claim-set**（2026-07-21 M6-EXIT：linux_native network/secrets/tool_proxy deny digests + reproduce；WSL2 `not_tested`；windows_native `unsupported`；跨平台合并拒） | 矩阵台账：[f017-platform-matrix.md](f017-platform-matrix.md)；扩大声明集则重新 open | 相对冻结声明集不阻断 GO-with-explicit-non-claim；见 [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md) |
 | F-018 | P1 | ContextView 允许 `untrusted+control` 信任矛盾 | **verified-by-vector（M3 行为执行）** | `context-view.schema.json` 约束收紧（M1 静态复验 pass 在案）。**M3 内核行为侧（2026-07-20 Lane-KRN）**：`context_pipeline.rs::untrusted_input_cannot_reach_the_control_plane`。**M3 向量行为执行（2026-07-20 Lane-CFR 扩展批）**：CTX-TRUST-004 执行模式由 M1 静态门升级为 **trust-plane-behavior**——真实管线加载注入项（角色保持 untrusted_input）、`effective_control_plane` 只认 authority 声明的 control 项（effective_policy 实测）、`admit_control_mutation` 拒绝以 untrusted 项为源的控制变更且零 capability 铸造；错误实现（内容声称即控制面）被自检判 fail | 已复核（运行时 admission 全链随 M5 复核） |
 | F-019 | P1 | read-your-write 隔离无法机器表达 | closed-by-1.0.1 | REQ-MEM-ADMIT-002 + 向量 `memory-read-your-write.json`；行为实现挂 M7 | 行为验收挂 M7 |
 | F-020 | P1 | 性能报告 schema 不支撑 A/B、消融、非劣效 | closed-by-1.0.1 | `performance-report.schema.json` 扩展 + `agent-benefit-benchmark.md`（REQ-PERF-005 四臂+预注册） | — |
@@ -42,7 +42,7 @@
 | F-030 | P2 | 高级 Profile 应继续延后 | closed-by-plan | DEVELOPMENT-PLAN：distributed/多 Agent/具身/学习列 M9~M11，不阻塞 v0.1；具身无独立安全证据前仅 experimental | — |
 
 **开放 P0 汇总**：无合同缺口类开放 P0（F-003 已于 2026-07-20 Lane-CFR runner 真实执行负例后闭合）。F-001 为证据缺口性质（随 M1~M6 消解，不单独阻断）。
-**开放 P1 汇总**：F-017（M6）、F-015（持续）；**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 出口评审闭合。
+**开放 P1 汇总**：F-015（持续）；F-017 **closed-for-release-claim-set**（扩大声明则 reopen）；**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 出口评审闭合。
 **tracer bullet 入口 gate**（审查 §1.2"F-002~F-010 类合同缺口收敛"）：F-002/004/005/006/007/008/009/010 已由 1.0.1 关闭且 M1 复验逐条落档（可静态判定者已执行，需行为者如实记录并挂 M2/M3/M4）；F-003 已闭合 → **M1 出口 = tracer bullet 入口 gate 开启**（M4 入口另需 M2/M3 行为验收，见 DEVELOPMENT-PLAN M4 入口）。
 
 ## 二、评审结论 IMP-01~18

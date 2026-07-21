@@ -1,8 +1,9 @@
 # CognitiveOS M6 开发与验收计划
 
 - 状态：approved（2026-07-21）；类别 plan（informative）
+- **出口闭合与 v0.1 重评审**：见 canonical [M6-EXIT-PLAN.md](M6-EXIT-PLAN.md)（本文件保留 M6 进入/交付计划；出口 WP 以 EXIT 为准）
 - 入口证据：`origin/main` tip `3c7115c`（PR #30 pins：pass 52 / not-run 32 / self-check ≥33）；[M5 milestone review](../checkpoints/20260721-m5-milestone-review.md) **GO M6**
-- 出口：v0.1 发布评审；F-017 平台矩阵为出口硬阻断
+- 出口：v0.1 发布评审；F-017 平台矩阵为出口硬阻断（声明集闭合见 EXIT / [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)）
 - 更新责任：M6 批次合入与出口评审时同步本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## 1 页执行摘要
