@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**CFR-M5-INTENT-AUTHORITY-SLICE 已交付（分支）**；PR [#40](https://github.com/agentkernel/cognitive-os/pull/40) **OPEN**，CI 因 **Actions billing/spending-limit** 0 步秒失败——**非代码回归**；`OPS-PR40-CI-UNBLOCK-MERGE` 停在人闸；本地 pins **84/57/27**；self-check **38**；**main 尚未合入**（`origin/main`=`4856234`）；Profile **implemented = 0**）
+> 最后更新：2026-07-21（**CFR-M5-INTENT-AUTHORITY-SLICE 已合入 main**：PR [#40](https://github.com/agentkernel/cognitive-os/pull/40) **MERGED** @ `6d21af7`；`OPS-PR40-CI-UNBLOCK-MERGE` 闭合；pins **84/57/27**；self-check **38**；CI 双 OS 绿；Profile **implemented = 0**；V01 L3 non-claim 仍有效）
 
 ## 里程碑状态
 
@@ -57,7 +57,7 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **Intent Authority 已交付；PR #40 合入阻塞于 Actions billing** | `lane/cfr-m5-intent-authority-slice` | 本地 57/27 + self-check 38；CI annotation=payments failed / spending limit；人闸 https://github.com/settings/billing ；handoff：`20260721-ops-pr40-ci-unblock-handoff.md` |
+| Lane-CFR 符合性与工具 | **Intent Authority 已合入 main（PR #40）** | `main` @ `6d21af7` | pins **57/27**；self-check 38；下一候选 shell-channel readiness；handoff：`20260721-ops-pr40-merge-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；shell-channel isolation 协作标 P1 |
 | Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021；PERF campaign 默认 defer |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-ops-pr40-ci-unblock-handoff.md](../checkpoints/20260721-ops-pr40-ci-unblock-handoff.md)（OPS-PR40：CI billing 人闸；本地 57/27；未 merge）
-2. [20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)（CFR-M5 Intent Authority：两向量脱 not-run；pins 57/27）
-3. [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md)（Post-v0.1 下一阶段计划落盘）
+1. [20260721-ops-pr40-merge-handoff.md](../checkpoints/20260721-ops-pr40-merge-handoff.md)（OPS-PR40：PR #40 MERGED @ `6d21af7`；pins 57/27）
+2. [20260721-lane-cfr-m5-intent-authority-handoff.md](../checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md)（CFR-M5 Intent Authority：两向量脱 not-run）
+3. [20260721-ops-pr40-ci-unblock-handoff.md](../checkpoints/20260721-ops-pr40-ci-unblock-handoff.md)（合入前 billing 阻塞记录）
 
 ## 客户端目录治理交付
 
