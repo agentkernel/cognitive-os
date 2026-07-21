@@ -148,7 +148,7 @@ Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + G
 | 6 | Memory private working set、Knowledge Evidence/Claim schemas | M7 | 未交付 |
 | 7 | AuditRecord/export、StateSnapshot/ack、reconciliation/recovery report | M4~M6 | 未交付 |
 | 8 | native-app auth redirect/PKCE、offline lease、deep-link、IdP/push/config/update/health | M6+（部署基建） | 未交付 |
-| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M4 执行能力；当前 84 vectors 中 46 pass / 38 not-run，真实 Profile manifest 仍待 M6 |
+| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M5 执行能力；当前 84 vectors 中 **52 pass / 32 not-run**（以 PROGRESS / CI pins 实测为准），真实 Profile manifest 仍待 M6 |
 
 激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](../../clients/governance/readiness-gates.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
 
