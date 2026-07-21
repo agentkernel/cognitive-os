@@ -8,23 +8,46 @@
 //! kernel's Effect protocol; this crate never commits authority state
 //! directly.
 
+pub mod adapters;
 pub mod event_envelope;
 pub mod harness_loop;
+pub mod installer;
 pub mod intent_flow;
+pub mod oob;
+pub mod perf;
+pub mod readiness;
 pub mod recovery_flow;
+pub mod sandbox;
 pub mod shell;
 
+pub use adapters::{
+    CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
+    MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
+};
 pub use event_envelope::{EventEnvelopeError, assemble_event};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
+pub use installer::{
+    AcceptingSignaturePort, InstallCrashPoint, InstallPhase, InstallationLedger, InstallerError,
+    PackageInstallRequest, RejectingSignaturePort, SignatureProvenancePort, install_package,
+    reject_package, verify_package,
+};
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
+pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
+pub use perf::{GovernanceOverheadSample, StageLatencyMs};
+pub use readiness::{R0ThinPath, ReadinessEvaluator, ReadinessFacts, ReadinessGrade};
 pub use recovery_flow::{
     ObligationDecision, RecoveryContinuationPlan, plan_recovery_continuations,
     pre_crash_binding_is_stale,
 };
+pub use sandbox::{
+    ChannelClaim, PlatformChannelRow, SandboxChannel, SandboxGate, SandboxPlatform, SandboxPolicy,
+    refuse_cross_platform_merge,
+};
 pub use shell::{ShellError, ShellPhase, ShellService};
 
-/// Runtime role marker (M5 RUN batch 2b: harness + shell orchestration).
-pub const RUNTIME_ROLE: &str = "operation-executor+harness-loop+shell";
+/// Runtime role marker (M6: harness/shell + install/sandbox/adapter/readiness/PERF).
+pub const RUNTIME_ROLE: &str =
+    "operation-executor+harness-loop+shell+install+sandbox+adapter+readiness+perf";
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used)]

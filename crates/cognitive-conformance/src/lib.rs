@@ -726,6 +726,104 @@ pub fn sample_profile_manifest(
     }))
 }
 
+/// Release-candidate profile manifest bound to a real conformance report digest.
+///
+/// Honesty rules (M6-A7 / REQ-CONF-001/003):
+/// - `test_runs` carries the measured suite digest (never empty sample).
+/// - Every profile stays `planned` or at most `experimental` unless a full
+///   applicable-MUST coverage audit promotes it — this helper never auto-
+///   promotes to `implemented`.
+/// - Does not claim F-017 platform matrix closure.
+pub fn release_candidate_profile_manifest(
+    repo_root: &Path,
+    encoding_digest: &str,
+    report: &ConformanceReport,
+    report_digest: &str,
+    performance_report_digest: Option<&str>,
+) -> Result<serde_json::Value, RunnerError> {
+    let (requirement_set_digest, schema_bundle_digest) = registered_digests(repo_root)?;
+    let mut profiles = serde_json::Map::new();
+    for key in PROFILE_KEYS {
+        // agent_compatibility / core_digital get experimental only when the
+        // M6 agent vectors are among the measured passes; never implemented.
+        let status = if matches!(key, "core_digital" | "agent_compatibility")
+            && report.summary.pass >= 55
+        {
+            "experimental"
+        } else {
+            "planned"
+        };
+        profiles.insert(key.to_owned(), serde_json::Value::String(status.to_owned()));
+    }
+    let status = if report.summary.fail > 0 {
+        "fail"
+    } else if report.summary.not_run > 0 {
+        "partial"
+    } else {
+        "pass"
+    };
+    let mut performance_reports = Vec::new();
+    if let Some(digest) = performance_report_digest {
+        performance_reports.push(serde_json::json!({
+            "report_ref": "./performance-report-m6-overhead.json",
+            "schema_version": "cognitiveos.performance-report/0.1",
+            "report_digest": digest
+        }));
+    }
+    Ok(serde_json::json!({
+        "cognitiveos_conformance": {
+            "spec": {
+                "id": "cognitiveos",
+                "version": "0.1",
+                "requirement_set_digest": requirement_set_digest,
+                "schema_bundle_digest": schema_bundle_digest
+            },
+            "implementation": "cognitiveos-reference/0.0.1 (M6 release-candidate; no Profile implemented claim)",
+            "profiles": profiles,
+            "encodings": {
+                "cognitiveos.canonical-json/0.1": {
+                    "canonicalization": "cognitiveos.canonical-json/0.1",
+                    "digest": encoding_digest
+                }
+            },
+            "guarantees": {
+                "event_delivery": "at_least_once",
+                "state_conflict": "compare_and_swap",
+                "effect_recovery": "reconcile_or_quarantine"
+            },
+            "test_runs": [{
+                "suite": "conformance/vectors",
+                "suite_digest": report_digest,
+                "result_ref": "./conformance-report.json",
+                "status": status
+            }],
+            "known_degradations": [
+                {
+                    "requirement": "REQ-AGENT-SANDBOX-001",
+                    "reason": "F-017 platform/channel matrix incomplete; Windows native unsupported without evidence; WSL2 is Linux guest only",
+                    "evidence_ref": "./docs/traceability/f017-platform-matrix.md"
+                },
+                {
+                    "requirement": "REQ-AGENT-INSTALL-001",
+                    "reason": "D-020: no installation transition table; companion prose sequence only (not machine-table consumption)",
+                    "evidence_ref": "./docs/traceability/findings-ledger.md"
+                }
+            ],
+            "evidence_refs": ["./conformance-report.json"],
+            "performance_reports": performance_reports,
+            "agent_compatibility": {
+                "max_profile": "C1",
+                "max_verified_risk": "R1",
+                "feature_matrix": {}
+            },
+            "semantic_service": {
+                "level": "unsupported",
+                "manifest_ref": null
+            }
+        }
+    }))
+}
+
 /// Digest of the committed golden fixture file, used as the operational
 /// identifier of the encoding profile in the sample manifest.
 pub fn golden_fixture_digest(repo_root: &Path) -> Result<String, RunnerError> {

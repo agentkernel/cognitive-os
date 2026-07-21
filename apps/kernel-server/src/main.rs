@@ -1,17 +1,26 @@
 //! `kernel-server`: single-node composition root of the CognitiveOS
-//! reference implementation (M5 delivery; M0 skeleton only).
+//! reference implementation (M5/M6 delivery; M0 skeleton HTTP surface).
 //!
 //! Readiness is graded, never binary (whitepaper section 16 and the
 //! readiness case of M6): `MANAGEMENT_READY` (deterministic management and
 //! recovery verbs available) before `USER_READY` (task channel accepts
-//! intents) before `OPERATIONAL` (full governed execution).
+//! intents) before `OPERATIONAL` (full governed execution). Machine carrier
+//! for readiness remains absent (D-021); grades below mirror
+//! `cognitive_runtime::ReadinessGrade`.
 
 use cognitive_contracts::generated::akp_request_envelope::SCHEMA_DIGEST;
+use cognitive_runtime::ReadinessGrade;
 use serde_json::json;
 use std::io::{Read, Write};
 use std::net::TcpListener;
-/// Ordered readiness grades of the single-node deployment.
-pub const READINESS_GRADES: [&str; 3] = ["MANAGEMENT_READY", "USER_READY", "OPERATIONAL"];
+
+fn readiness_grades() -> [&'static str; 3] {
+    [
+        ReadinessGrade::ManagementReady.as_str(),
+        ReadinessGrade::UserReady.as_str(),
+        ReadinessGrade::Operational.as_str(),
+    ]
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -29,7 +38,7 @@ fn main() {
     }
     println!(
         "kernel-server M0 skeleton: no server is started. Readiness grades: {}.",
-        READINESS_GRADES.join(" -> ")
+        readiness_grades().join(" -> ")
     );
     println!(
         "Layers wired: contracts={}, domains={}, ports={}, store={}, runtime={}, mgmt-fallback={:?}, akp={}",
@@ -153,7 +162,9 @@ mod tests {
 
     #[test]
     fn readiness_grades_are_ordered_management_first() {
-        assert_eq!(READINESS_GRADES[0], "MANAGEMENT_READY");
-        assert_eq!(READINESS_GRADES.len(), 3);
+        let grades = readiness_grades();
+        assert_eq!(grades[0], "MANAGEMENT_READY");
+        assert_eq!(grades.len(), 3);
+        assert_eq!(grades[2], "OPERATIONAL");
     }
 }
