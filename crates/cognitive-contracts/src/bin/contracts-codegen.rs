@@ -43,7 +43,10 @@ use std::path::{Path, PathBuf};
 /// per-module schema digest runtime constants + aggregates, Shell/AKP
 /// client families in the generated set, `CognitiveOS ` title prefix
 /// stripped from root type names.
-const GENERATOR_VERSION: &str = "0.2.0";
+///
+/// 0.2.1 (M6 Batch-0A): JSON Schema `number` → Rust `f64` / TS `number`,
+/// plus `type: ["number","integer"]` widen-to-f64 (performance-report).
+const GENERATOR_VERSION: &str = "0.2.1";
 
 /// Generated object set. Base: the IMP-08 minimal core (whitepaper appendix
 /// A.1, 14 objects) mapped to their registered machine schemas, plus the
@@ -82,7 +85,13 @@ const GENERATOR_VERSION: &str = "0.2.0";
 /// registration and starts immediately after it — a definite named
 /// consumer, unlike the conditional membership case deferred on
 /// 2026-07-20 (M4-eval handoff item 2).
-const CORE_SET: [&str; 33] = [
+///
+/// M6 Batch-0A (2026-07-21): append five already-registered agent /
+/// conformance schemas for Lane-RUN installer + CFR manifest/PERF
+/// consumers. GENERATOR_VERSION bumped to 0.2.1 for `number` support.
+/// No installation transition table or readiness carrier is registered
+/// in this batch (see D-020/D-021).
+const CORE_SET: [&str; 38] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -116,6 +125,11 @@ const CORE_SET: [&str; 33] = [
     "intent-interpretation.schema.json",
     "privileged-management-session.schema.json",
     "management-action-proposal.schema.json",
+    "agent-package-manifest.schema.json",
+    "agent-installation.schema.json",
+    "agent-compatibility-report.schema.json",
+    "performance-report.schema.json",
+    "profile-manifest.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,
@@ -636,6 +650,8 @@ fn collect_file_refs(node: &Value, out: &mut BTreeSet<String>) {
 enum Ty {
     String,
     I64,
+    /// JSON Schema `number` (IEEE-754 float; used by performance-report percentiles).
+    F64,
     Bool,
     /// Arbitrary JSON value (empty schema / unconstrained payload).
     Any,
@@ -1015,6 +1031,7 @@ impl ModuleBuilder<'_> {
                     Ok((self.named_type_of(&name, &synthetic)?, false))
                 }
                 Value::Bool(_) => Ok((Ty::Bool, false)),
+                Value::Number(_) => Ok((Ty::F64, false)),
                 other => Err(format!(
                     "{}: unsupported const {other} at {parent}.{prop}",
                     self.file
@@ -1023,64 +1040,101 @@ impl ModuleBuilder<'_> {
             };
         }
         // Typed primitives and containers.
-        match schema.get("type").and_then(Value::as_str) {
-            Some("string") => Ok((Ty::String, false)),
-            Some("integer") => Ok((Ty::I64, false)),
-            Some("boolean") => Ok((Ty::Bool, false)),
-            Some("array") => {
-                let items = schema.get("items").ok_or_else(|| {
-                    format!("{}: array without items at {parent}.{prop}", self.file)
-                })?;
-                let (item_ty, nullable) = self.type_of(parent, &singular(prop), items)?;
-                if nullable {
-                    return Err(
-                        format!("{}: nullable array item at {parent}.{prop}", self.file).into(),
-                    );
-                }
-                Ok((Ty::Vec(Box::new(item_ty)), false))
+        // JSON Schema allows `type` as a string or as an array of strings
+        // (e.g. performance-report numerator/denominator: ["number","integer"]).
+        let type_tags: Vec<&str> = match schema.get("type") {
+            Some(Value::String(s)) => vec![s.as_str()],
+            Some(Value::Array(items)) => items.iter().filter_map(Value::as_str).collect(),
+            _ => Vec::new(),
+        };
+        if type_tags.is_empty() && schema.get("type").is_some() {
+            return Err(format!(
+                "{}: unsupported type tag at {parent}.{prop}: {}",
+                self.file,
+                schema
+                    .get("type")
+                    .and_then(|v| serde_json::to_string(v).ok())
+                    .unwrap_or_else(|| "<missing>".to_string())
+            )
+            .into());
+        }
+        if !type_tags.is_empty() {
+            let only_numeric = type_tags.iter().all(|t| *t == "number" || *t == "integer");
+            if only_numeric && type_tags.len() > 1 {
+                // Widen integer∪number to f64 / TS number (JSON numbers).
+                return Ok((Ty::F64, false));
             }
-            Some("object") => {
-                let has_declared_props = schema
-                    .get("properties")
-                    .and_then(Value::as_object)
-                    .is_some_and(|p| !p.is_empty());
-                if has_declared_props {
-                    let name = schema
-                        .get("title")
-                        .and_then(Value::as_str)
-                        .map(pascal)
-                        .unwrap_or_else(|| format!("{parent}{}", pascal(prop)));
-                    return Ok((self.named_type_of(&name, schema)?, false));
-                }
-                match schema.get("additionalProperties") {
-                    None | Some(Value::Bool(true)) => Ok((Ty::AnyMap, false)),
-                    Some(Value::Bool(false)) => Err(format!(
-                        "{}: closed object without properties at {parent}.{prop}",
-                        self.file
-                    )
-                    .into()),
-                    Some(ap_schema) => {
-                        let (value_ty, _) = self.type_of(parent, prop, ap_schema)?;
-                        Ok((Ty::Map(Box::new(value_ty)), false))
+            if type_tags.len() == 1 {
+                match type_tags[0] {
+                    "string" => return Ok((Ty::String, false)),
+                    "integer" => return Ok((Ty::I64, false)),
+                    "number" => return Ok((Ty::F64, false)),
+                    "boolean" => return Ok((Ty::Bool, false)),
+                    "array" => {
+                        let items = schema.get("items").ok_or_else(|| {
+                            format!("{}: array without items at {parent}.{prop}", self.file)
+                        })?;
+                        let (item_ty, nullable) = self.type_of(parent, &singular(prop), items)?;
+                        if nullable {
+                            return Err(format!(
+                                "{}: nullable array item at {parent}.{prop}",
+                                self.file
+                            )
+                            .into());
+                        }
+                        return Ok((Ty::Vec(Box::new(item_ty)), false));
+                    }
+                    "object" => {
+                        let has_declared_props = schema
+                            .get("properties")
+                            .and_then(Value::as_object)
+                            .is_some_and(|p| !p.is_empty());
+                        if has_declared_props {
+                            let name = schema
+                                .get("title")
+                                .and_then(Value::as_str)
+                                .map(pascal)
+                                .unwrap_or_else(|| format!("{parent}{}", pascal(prop)));
+                            return Ok((self.named_type_of(&name, schema)?, false));
+                        }
+                        return match schema.get("additionalProperties") {
+                            None | Some(Value::Bool(true)) => Ok((Ty::AnyMap, false)),
+                            Some(Value::Bool(false)) => Err(format!(
+                                "{}: closed object without properties at {parent}.{prop}",
+                                self.file
+                            )
+                            .into()),
+                            Some(ap_schema) => {
+                                let (value_ty, _) = self.type_of(parent, prop, ap_schema)?;
+                                Ok((Ty::Map(Box::new(value_ty)), false))
+                            }
+                        };
+                    }
+                    other => {
+                        return Err(format!(
+                            "{}: unsupported type {other} at {parent}.{prop}",
+                            self.file
+                        )
+                        .into());
                     }
                 }
             }
-            Some(other) => {
-                Err(format!("{}: unsupported type {other} at {parent}.{prop}", self.file).into())
-            }
-            None => {
-                // Empty schema (unconstrained payload).
-                if schema.as_object().is_some_and(|o| o.is_empty()) {
-                    Ok((Ty::Any, false))
-                } else {
-                    Err(format!(
-                        "{}: unsupported schema at {parent}.{prop}: {}",
-                        self.file,
-                        serde_json::to_string(schema).unwrap_or_default()
-                    )
-                    .into())
-                }
-            }
+            return Err(format!(
+                "{}: unsupported multi-type {:?} at {parent}.{prop}",
+                self.file, type_tags
+            )
+            .into());
+        }
+        // Empty schema (unconstrained payload) or unsupported shape.
+        if schema.as_object().is_some_and(|o| o.is_empty()) {
+            Ok((Ty::Any, false))
+        } else {
+            Err(format!(
+                "{}: unsupported schema at {parent}.{prop}: {}",
+                self.file,
+                serde_json::to_string(schema).unwrap_or_default()
+            )
+            .into())
         }
     }
 
@@ -1215,6 +1269,7 @@ impl Module {
         let base = match ty {
             Ty::String => "String".to_string(),
             Ty::I64 => "i64".to_string(),
+            Ty::F64 => "f64".to_string(),
             Ty::Bool => "bool".to_string(),
             Ty::Any => "serde_json::Value".to_string(),
             Ty::AnyMap => "serde_json::Map<String, serde_json::Value>".to_string(),
@@ -1438,6 +1493,7 @@ impl Module {
         let base = match ty {
             Ty::String => "string".to_string(),
             Ty::I64 => "number".to_string(),
+            Ty::F64 => "number".to_string(),
             Ty::Bool => "boolean".to_string(),
             Ty::Any => "unknown".to_string(),
             Ty::AnyMap => "Record<string, unknown>".to_string(),
@@ -1533,6 +1589,7 @@ fn union_variant_label(ty: &Ty) -> String {
     match ty {
         Ty::String => "String".to_string(),
         Ty::I64 => "Integer".to_string(),
+        Ty::F64 => "Number".to_string(),
         Ty::Bool => "Boolean".to_string(),
         Ty::Named { name, .. } => name.clone(),
         Ty::Vec(item) => format!("{}List", union_variant_label(item)),
