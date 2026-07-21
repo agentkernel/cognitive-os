@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**V01 Auto-Run P0 闭合**：WSL2 guest `pnpm run verify:local` → **L3 Perf-report-ready（non-claim）**；run `20260721-192142-492`；见 [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)；v0.1 仍为 GO-with-explicit-non-claim；**Profile implemented = 0**）
+> 最后更新：2026-07-21（**Post-v0.1 下一阶段计划已落盘**：canonical [POST-V01-NEXT-PHASE-PLAN.md](POST-V01-NEXT-PHASE-PLAN.md)；推荐主战役 `CFR-M5-INTENT-AUTHORITY-SLICE`（尚未执行）；执行提示词 [cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)；V01 L3 non-claim 仍有效；pins **84/55/29**；**Profile implemented = 0**）
 
 ## 里程碑状态
 
@@ -57,17 +57,17 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **M6 三向量 + F-017 声明集 digests** | `lane/doc-m6-exit` | RC manifest；F-017 closed-for-release-claim-set；clients 扫描根自动化仍 planned |
-| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim） |
-| Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量 |
-| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021 |
-| Lane-DOC 文档维护 | **V01 Auto-Run P0 闭合（L3 non-claim）** | `lane/doc-v01-auto-run` | PR [#37](https://github.com/agentkernel/cognitive-os/pull/37)；证据 run `20260721-192142-492`（`windows_wsl2_linux_guest`）；战役升格默认 non-claim；handoff：`20260721-v01-auto-run-l3-handoff.md` |
-| Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked |
+| Lane-CFR 符合性与工具 | **下一主战役已规划、未执行** | 建议 `lane/cfr-m5-intent-authority-slice` | 计划：[POST-V01-NEXT-PHASE-PLAN.md](POST-V01-NEXT-PHASE-PLAN.md)；目标向量 `INTENT-SUPERSEDE-002` / `INTENT-ACCEPTANCE-007`；提示词 [cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)；pins 仍 55/29 |
+| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
+| Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；shell-channel isolation 协作标 P1 |
+| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021；PERF campaign 默认 defer |
+| Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
+| Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（V01 Auto-Run P0：L3 non-claim 证据 + PR #37）
-2. [20260721-v01-auto-run-handoff.md](../checkpoints/20260721-v01-auto-run-handoff.md)（V01 无人值守编排：计划+脚本+prompts）
+1. [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md)（Post-v0.1 下一阶段计划落盘；主战役未执行）
+2. [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（V01 Auto-Run P0：L3 non-claim 证据 + PR #37）
 3. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
 
 ## 客户端目录治理交付
