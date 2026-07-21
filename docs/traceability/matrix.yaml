@@ -3556,10 +3556,13 @@ requirements:
     vectors:
       - conformance/vectors/shell-channel-isolation-003.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-runtime/src/channel_binding.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
     evidence: []
-    docs: []
+    docs:
+      - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
   - id: REQ-SHELL-CONTROL-001
     owner: shell-control
     owner_spec: specs/core/README.md
@@ -3680,10 +3683,13 @@ requirements:
     vectors:
       - conformance/vectors/shell-channel-isolation-003.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
+    impl:
+      - crates/cognitive-runtime/src/channel_binding.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
     evidence: []
-    docs: []
+    docs:
+      - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
   - id: REQ-SHELL-WATCH-001
     owner: shell-watch
     owner_spec: specs/core/README.md

@@ -9,6 +9,7 @@
 //! directly.
 
 pub mod adapters;
+pub mod channel_binding;
 pub mod event_envelope;
 pub mod harness_loop;
 pub mod installer;
@@ -23,6 +24,10 @@ pub mod shell;
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
+};
+pub use channel_binding::{
+    AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
+    is_privileged_management_action, request_from_vector_input,
 };
 pub use event_envelope::{EventEnvelopeError, assemble_event};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
@@ -186,5 +191,44 @@ mod tests {
             &report.context_rebinding,
             41
         ));
+    }
+
+    /// REQ-SHELL-CHANNEL-001 / vector SHELL-CHANNEL-ISOLATION-003:
+    /// task credential + system.configure → deny SHELL_CHANNEL_BINDING_MISMATCH,
+    /// management_context_leaked=false.
+    #[test]
+    fn shell_channel_isolation_denies_task_credential_on_system_configure() {
+        let request = crate::request_from_vector_input(true, "system.configure", false);
+        let decision = crate::admit_channel_binding(&request);
+        assert_eq!(decision.decision, "deny");
+        assert_eq!(decision.error_code, Some("SHELL_CHANNEL_BINDING_MISMATCH"));
+        assert_eq!(decision.error_category, Some("auth"));
+        assert!(!decision.management_context_leaked);
+    }
+
+    #[test]
+    fn shell_channel_isolation_allows_management_with_privileged_session() {
+        let request = crate::ChannelBindingRequest {
+            credential_channel: crate::AuthorityChannel::Management,
+            requested_action: "system.configure".to_owned(),
+            privileged_session: true,
+        };
+        let decision = crate::admit_channel_binding(&request);
+        assert_eq!(decision.decision, "allow");
+        assert!(decision.error_code.is_none());
+        assert!(!decision.management_context_leaked);
+    }
+
+    #[test]
+    fn shell_channel_isolation_rejects_management_cred_on_task_action() {
+        let request = crate::ChannelBindingRequest {
+            credential_channel: crate::AuthorityChannel::Management,
+            requested_action: "task.preview".to_owned(),
+            privileged_session: false,
+        };
+        let decision = crate::admit_channel_binding(&request);
+        assert_eq!(decision.decision, "deny");
+        assert_eq!(decision.error_code, Some("SHELL_CHANNEL_BINDING_MISMATCH"));
+        assert!(!decision.management_context_leaked);
     }
 }
