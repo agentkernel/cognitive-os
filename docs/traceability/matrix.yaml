@@ -3524,10 +3524,18 @@ requirements:
     vectors:
       - conformance/vectors/shell-target-ambiguity-001.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
-    docs: []
+    impl:
+      - crates/cognitive-runtime/src/target_resolution.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
+      - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
+    docs:
+      - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
+      - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
   - id: REQ-SHELL-ATTACH-001
     owner: shell-attach
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md
@@ -3675,10 +3683,20 @@ requirements:
     vectors:
       - conformance/vectors/shell-target-ambiguity-001.json
       - conformance/vectors/spec-contract-coverage.json
-    impl: []
-    impl_tests: []
-    evidence: []
-    docs: []
+    impl:
+      - crates/cognitive-runtime/src/target_resolution.rs
+      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+    impl_tests:
+      - crates/cognitive-runtime/src/lib.rs
+      - crates/cognitive-conformance/tests/runner_execution.rs
+    evidence:
+      - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
+      - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
+    docs:
+      - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
+      - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
+    notes: "CFR SHELL-TARGET-AMBIGUITY-001 (2026-07-22): admit_target_selector returns
+      clarification_required + SHELL_TARGET_AMBIGUOUS + dispatch=false; never top-1 guess."
   - id: REQ-SHELL-UX-001
     owner: shell-ux
     owner_spec: RFC-0001-cognitiveos-governance-context-access.md
