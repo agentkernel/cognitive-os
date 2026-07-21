@@ -49,7 +49,7 @@ flowchart LR
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
 | `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr`（已建，worktree） | F-011 R1 登记批已交付；M5 合同入口已开 |
-| `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `lane/cfr-shell-channel-isolation` | `SHELL-CHANNEL-ISOLATION-003` 行为 pass；pins 58/26；self-check 39；见 `20260721-lane-cfr-shell-channel-isolation-handoff.md` |
+| `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `main`（PR #43 已合入） | `SHELL-CHANNEL-ISOLATION-003` 行为 pass；pins 58/26；self-check 39；见 `20260721-lane-cfr-shell-channel-isolation-handoff.md` |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |
 | `crates/cognitive-runtime`、`cognitive-management`、`cognitive-akp`、`apps/kernel-server`、`apps/admin-cli` | Lane-RUN | `main`（PR #42 已合入） | shell-channel authority deny 已合入；见 `20260721-lane-run-shell-channel-authority-handoff.md` |
