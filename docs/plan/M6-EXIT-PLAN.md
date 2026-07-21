@@ -8,9 +8,9 @@
 
 **目标**：在不扩大 v0.1 规范表面的前提下，闭合 **F-017**（及评审认定的发布级残留），固化可复现平台矩阵 digests 与声明边界，然后以诚实 manifest 重做 **v0.1 发布评审**；结论只能是 GO / GO-with-explicit-non-claim / NO-GO。
 
-**入口（开工时重测；落盘时快照）**：
-- 依赖栈：#31 DOC plan（merged）→ #32 CTR bindings（merged）→ #34 RUN+CFR（supersedes #33；合入后 tip 须重测）
-- pins 目标（#34 合入后）：**pass 55 / not-run 29 / self-check ≥36**（以 CI 实测为准）
+**入口（实测 2026-07-21 合入后）**：
+- `origin/main` = `24842bb83a0395264e4d5467883e5ac841ceff84`（#31 → #32 → #34；#33 superseded）
+- CI run `29801433518` success；pins **pass 55 / not-run 29 / self-check ≥36**
 - 工程会话必须在干净 worktree；禁止从含 `personal-blog/**` 的 dirty `main` 推送
 
 **出口**：F-017 对**发布声明集**闭合；M6-A1…A7 / F011-REG 不回归；manifest 诚实（`implemented=0` 可接受）；无冻结违约。**不是**「所有 profile implemented」。

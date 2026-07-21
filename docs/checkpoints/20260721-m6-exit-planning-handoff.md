@@ -12,14 +12,13 @@
 
 ## 2. 未完成 / 进行中
 
-- #34 须 CI 绿后合入 `main`（本 handoff 写作时以 PR 状态为准）
-- 合入后重测 `gh run list --commit $(git rev-parse origin/main)` 与 pins
 - 可选后续：InstallationStore / PERF 战役 / D-018 闭合（见 batch2；默认不触发）
+- 发布笔记须引用 v01-rereview explicit non-claim 列表
 
 ## 3. 测试与证据状态
 
-- CI：#34 待绿；本地 Windows mingw linker 不可靠，以 CI 为准
-- 向量：pins 目标 55/29；self-check ≥36（M6 交付已钉；合入后复核）
+- CI：main tip `24842bb` run `29801433518` **success**（ubuntu + windows）
+- 向量：pins **55/29**；self-check ≥36（CI honesty gate）
 - F-017：closed-for-release-claim-set；digests `sha256:evidence-{network,secrets,tool_proxy}`
 
 ## 4. 未决风险与漂移
