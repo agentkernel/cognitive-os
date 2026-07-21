@@ -207,3 +207,9 @@ pwsh -File scripts/v01-auto-run.ps1 -SkipBuild
 pnpm run verify:local
 bash scripts/v01-auto-run.sh --skip-build
 ```
+
+### 编排器实现注记（2026-07-21）
+
+- 无人值守默认导出 `CI=true`，避免无 TTY 时 pnpm `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`
+- CONNECT-SHELL 中 `kernel-server` `m5_http_sse` 使用 `--test-threads=1`（降低并行 `--once` 偶发 ConnectionReset；不改变 tip 行为合同）
+- Windows host 若 gnu 缺 libgcc：诚实 L0；WSL2 guest 标签为 `windows_wsl2_linux_guest`，禁止写成 Windows-native sandbox pass

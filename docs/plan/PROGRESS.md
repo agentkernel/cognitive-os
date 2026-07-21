@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（**V01 auto-run 编排落地**：`pnpm run verify:local`；见 [V01-AUTO-RUN-VERIFY-PERF-PLAN](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)；v0.1 仍为 GO-with-explicit-non-claim）
+> 最后更新：2026-07-21（**V01 Auto-Run P0 闭合**：WSL2 guest `pnpm run verify:local` → **L3 Perf-report-ready（non-claim）**；run `20260721-192142-492`；见 [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)；v0.1 仍为 GO-with-explicit-non-claim；**Profile implemented = 0**）
 
 ## 里程碑状态
 
@@ -61,14 +61,14 @@
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim） |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量 |
 | Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021 |
-| Lane-DOC 文档维护 | **V01 auto-run 计划+编排落地** | `lane/doc-v01-auto-run` | [V01-AUTO-RUN-VERIFY-PERF-PLAN](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)；`pnpm run verify:local`；战役升格默认 non-claim |
+| Lane-DOC 文档维护 | **V01 Auto-Run P0 闭合（L3 non-claim）** | `lane/doc-v01-auto-run` | PR [#37](https://github.com/agentkernel/cognitive-os/pull/37)；证据 run `20260721-192142-492`（`windows_wsl2_linux_guest`）；战役升格默认 non-claim；handoff：`20260721-v01-auto-run-l3-handoff.md` |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-v01-auto-run-handoff.md](../checkpoints/20260721-v01-auto-run-handoff.md)（V01 无人值守编排：计划+脚本+prompts）
-2. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
-3. [20260721-m6-exit-planning-handoff.md](../checkpoints/20260721-m6-exit-planning-handoff.md)（M6-EXIT 计划落盘 + F-017 声明集）
+1. [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（V01 Auto-Run P0：L3 non-claim 证据 + PR #37）
+2. [20260721-v01-auto-run-handoff.md](../checkpoints/20260721-v01-auto-run-handoff.md)（V01 无人值守编排：计划+脚本+prompts）
+3. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
 
 ## 客户端目录治理交付
 

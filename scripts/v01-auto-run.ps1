@@ -27,6 +27,12 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $RepoRoot
 
+# Unattended: pnpm may need to purge node_modules when switching host/guest
+# toolchains; without CI=true it aborts with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY.
+if (-not $env:CI -or [string]::IsNullOrWhiteSpace($env:CI)) {
+  $env:CI = "true"
+}
+
 $Pinned = @{
   total_vectors              = 84
   pass                       = 55
@@ -373,8 +379,10 @@ if (-not $stopped) {
     }
   }
 
+  # Serial threads: parallel watch/management --once children occasionally
+  # ConnectionReset under load right after sdk-ts live suite; tip behavior unchanged.
   $r = Invoke-Logged "m5-http-sse" (Join-Path $LogDir "connect-shell-m5-http-sse.log") {
-    cargo test -p kernel-server --test m5_http_sse --locked
+    cargo test -p kernel-server --test m5_http_sse --locked -- --test-threads=1
   }
   $shell.steps += $r
   if ($r.exit_code -ne 0) {

@@ -7,6 +7,10 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Unattended: pnpm may need to purge node_modules when switching host/guest
+# toolchains; without CI=true it aborts with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY.
+export CI="${CI:-true}"
+
 SKIP_BUILD=0
 STRICT_ENTRY=0
 for arg in "$@"; do
@@ -129,7 +133,9 @@ if [[ "$STOPPED" = 0 ]]; then
   else
     ec="$(run_logged connect-shell-sdk pnpm --filter @cognitiveos/sdk-ts test)"
     [[ "$ec" = 0 ]] || SHELL_S=auto_fail
-    ec="$(run_logged connect-shell-sse cargo test -p kernel-server --test m5_http_sse --locked)"
+    # Serial threads: parallel watch/management --once children occasionally
+    # ConnectionReset under load right after sdk-ts live suite; tip behavior unchanged.
+    ec="$(run_logged connect-shell-sse cargo test -p kernel-server --test m5_http_sse --locked -- --test-threads=1)"
     [[ "$ec" = 0 ]] || SHELL_S=auto_fail
   fi
   cat >"$RUN_DIR/connect-shell.json" <<EOF
