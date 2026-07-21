@@ -105,7 +105,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
         gate.authorize(
             &proposal,
             &request,
-            ApprovalPresentation::Structured(self_decision),
+            ApprovalPresentation::Structured(Box::new(self_decision)),
             &ts("2026-07-21T00:00:10Z")
         )
         .unwrap_err()
@@ -121,7 +121,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
         gate.authorize(
             &proposal,
             &request,
-            ApprovalPresentation::Structured(forged),
+            ApprovalPresentation::Structured(Box::new(forged)),
             &ts("2026-07-21T00:00:10Z")
         )
         .unwrap_err()
@@ -138,7 +138,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
     gate.authorize(
         &proposal,
         &request,
-        ApprovalPresentation::Structured(good.clone()),
+        ApprovalPresentation::Structured(Box::new(good.clone())),
         &ts("2026-07-21T00:00:30Z"),
     )
     .unwrap();
@@ -146,7 +146,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
         gate.authorize(
             &proposal,
             &request,
-            ApprovalPresentation::Structured(good),
+            ApprovalPresentation::Structured(Box::new(good)),
             &ts("2026-07-21T00:00:31Z")
         )
         .unwrap_err()
@@ -171,7 +171,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
         gate.authorize(
             &proposal,
             &expired,
-            ApprovalPresentation::Structured(expired_decision),
+            ApprovalPresentation::Structured(Box::new(expired_decision)),
             &ts("2026-07-21T00:00:04Z")
         )
         .unwrap_err()
@@ -197,7 +197,7 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
         gate.authorize(
             &proposal,
             &mismatch_request,
-            ApprovalPresentation::Structured(mismatch),
+            ApprovalPresentation::Structured(Box::new(mismatch)),
             &ts("2026-07-21T00:00:10Z")
         )
         .unwrap_err()

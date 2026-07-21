@@ -64,7 +64,7 @@ impl ManagementActionProposal {
 pub enum ApprovalPresentation {
     Missing,
     NaturalLanguage(String),
-    Structured(ManagementApprovalDecision),
+    Structured(Box<ManagementApprovalDecision>),
 }
 #[derive(Debug)]
 pub struct ApprovalGate {
