@@ -7,5 +7,6 @@
   - 文档树：[Agent Hub README](docs/README.md) → [GOVERNANCE](docs/GOVERNANCE.md) → [decision log](docs/decisions/decision-log.md)；
   - 计划树：[Master plan](plan/agent-hub-development-plan.md) 与 [plan README](plan/README.md)；
   - 提示词树：[prompt README](prompts/README.md)（全部 `blocked`）。
+- **Open PoC**：条目模板 [open-poc](docs/templates/open-poc.md)；证据索引 [evidence-index](docs/traceability/evidence-index.md)；**准备清单（非证据）** [poc-prep-checklist](docs/traceability/poc-prep-checklist.md)；共享执行模板 [poc-execution-record](../shared/docs/poc-execution-record.md)。全部 PoC 仍 `not-run`/`planned`，evidence `none`。
 - **边界**：两部署模式与 L1–L8 层级只由 [部署模式与保证](docs/product/deployment-modes-and-guarantees.md) 定义；本入口不复制能力矩阵、不新造保证。
 - **gate**：[Agent Hub 实现 gate](docs/GOVERNANCE.md#7-实现-gate不可跳过)（依赖组 1/2/7 + M5 + 平台 PoC + 技术栈 ADR + 合同门槛 + Paseo/AGPL 法务）；另需 Tier 1 provider 一手接口核验（`AH-CTR-02`）。
