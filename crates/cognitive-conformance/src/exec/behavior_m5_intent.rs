@@ -20,16 +20,16 @@ use cognitive_contracts::generated::common_defs::Budget;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
 use cognitive_domain::{
-    table, EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version,
-    WallTimestamp,
+    EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version, WallTimestamp,
+    table,
 };
 use cognitive_kernel::authz::{
-    authorize, AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
-    ObjectGovernance, PrincipalFacts,
+    AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
+    ObjectGovernance, PrincipalFacts, authorize,
 };
 use cognitive_kernel::effects::{
-    mint_intent, EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
-    OperationDescriptor, WriterLease,
+    EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
+    OperationDescriptor, WriterLease, mint_intent,
 };
 use cognitive_kernel::executor::ExecutorCapabilities;
 use cognitive_kernel::intent_chain::ConditionSpec;
@@ -38,14 +38,15 @@ use cognitive_kernel::ports::{
     TaskBinding,
 };
 use cognitive_kernel::{
+    AcceptanceCommand, AdmitCommand, AmbiguityFact, Causation, GovernanceSeed,
+    InterpretationCandidate, PendingWorkDisposition, Reason, SupersedeCommand, TablePin,
+    TaskContractCommand, TransitionCommand, TransitionEngine, UserIntentCommand,
     admit_interpretation, mint_task_contract, record_interpretation_candidate, record_user_intent,
-    supersede_task_contract, AcceptanceCommand, AdmitCommand, AmbiguityFact, Causation,
-    GovernanceSeed, InterpretationCandidate, PendingWorkDisposition, Reason, SupersedeCommand,
-    TablePin, TaskContractCommand, TransitionCommand, TransitionEngine, UserIntentCommand,
+    supersede_task_contract,
 };
-use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
 use cognitive_store::SqliteAuthorityStore;
-use serde_json::{json, Value};
+use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
+use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 
