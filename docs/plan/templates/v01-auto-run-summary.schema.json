@@ -1,0 +1,41 @@
+{
+  "schema_version": "cognitiveos.v01-auto-run-summary/0.1",
+  "run_id": "<yyyyMMdd-HHmmss-xxxxxxxx>",
+  "level": "L0|L1|L2|L3",
+  "stopped": false,
+  "stop_reason": null,
+  "release": "non_claim_preserved|blocked",
+  "profile_implemented": 0,
+  "auto_green_means_profile_implemented": false,
+  "platform_label": "linux_native|windows_wsl2_linux_guest|windows_native",
+  "results": {
+    "ENTRY": "auto_pass|auto_fail",
+    "PLATFORM-LABEL": "auto_pass|needs_human|auto_fail",
+    "BOOT-BUILD": "auto_pass|auto_fail",
+    "BOOT-UP": "auto_pass|auto_fail",
+    "CONNECT-MGMT": "auto_pass|auto_fail",
+    "CONNECT-SHELL": "auto_pass|auto_fail",
+    "CONNECT-WATCH": "skipped_nonclaim",
+    "VERIFY-CONSISTENCY": "auto_pass|auto_fail",
+    "VERIFY-PINS": "auto_pass|auto_fail",
+    "VERIFY-SELFCHECK": "auto_pass|auto_fail",
+    "REGRESS-V01": "auto_pass|auto_fail",
+    "F017-CLAIM-FREEZE": "auto_pass|auto_fail",
+    "PERF004-AUTO-REPORT": "auto_pass|auto_fail|skipped_nonclaim",
+    "PERF004-NO-SILENT-CAMPAIGN": "auto_pass|auto_fail",
+    "PERF005-DEFAULT-NONCLAIM": "skipped_nonclaim",
+    "PERF005-NO-SILENT-BENEFIT": "auto_pass|auto_fail",
+    "ORCHESTRATOR-ONE-SHOT": "auto_pass",
+    "SUMMARY-MACHINE-READABLE": "auto_pass",
+    "MANIFEST-HONESTY": "auto_pass|auto_fail",
+    "REVIEW": "skipped_nonclaim"
+  },
+  "partitions": {
+    "auto_pass": [],
+    "auto_fail": [],
+    "skipped_nonclaim": [],
+    "needs_human": []
+  },
+  "v01_non_claims": [],
+  "human_gates": []
+}

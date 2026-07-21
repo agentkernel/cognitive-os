@@ -14,3 +14,11 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local personal notes (not Cos deliverables)
+docs/_local/
+
+
+# Nested CognitiveOS Research blog (independent git; never push to Cos origin/main)
+/personal-blog/
+

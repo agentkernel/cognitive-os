@@ -12,6 +12,7 @@
 | TS 安装 | `pnpm install` | `pnpm install --frozen-lockfile` |
 | TS 构建/测试 | `pnpm -r build ; pnpm -r test` | `pnpm -r build && pnpm -r test` |
 | 静态一致性检查 | `pnpm run check:consistency` | 同左 |
+| 本地一键 Boot→Verify→Perf（non-claim） | `pnpm run verify:local` | 同左（见 `docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`） |
 | 符合性 runner（枚举） | `cargo run -p cognitive-conformance --bin conformance-runner` | 同左 |
 | 跨语言 golden 对比 | 见 `.github/workflows/ci.yml` golden job | CI 自动 |
 
@@ -31,6 +32,8 @@ tools/            静态一致性检查（Node）
 docs/             standards / adr / plan / traceability / checkpoints / prompts / evaluation
 artifacts/        运行证据（gitignore）
 History/          冻结归档：禁止读取、引用、参与构建
+personal-blog/    嵌套独立仓 CognitiveOS Research（根 .gitignore；远程 github.com/agentkernel/blog；不入 Cos origin/main）
+docs/_local/      本机草稿（gitignore；非 Cos 交付物）
 ```
 
 ## 硬纪律摘要（全文见 `.cursor/rules/`）
@@ -75,3 +78,4 @@ History/          冻结归档：禁止读取、引用、参与构建
 - 禁止读取/引用 `History/`；禁止虚构规范资产；禁止改写向量迎合实现。
 - 既有未提交改动（他人工作区状态)不覆盖、不回退、不混入自己的提交（逐路径 `git add`，禁 `git add -A`）。
 - Console 车道未过后端 gate 前只维护依赖台账（`docs/plan/DEVELOPMENT-PLAN.md` Console 节），不启动实现。
+- **`personal-blog/`**：唯一副本在本工作树该目录；远程固定 `https://github.com/agentkernel/blog.git`；禁止推入 Cos；禁止为对齐 Cos 基线而删除/清空嵌套仓；禁止在 `D:\blog-*` 等路径散落平行克隆（细则 `.cursor/rules/19-personal-blog-boundary.mdc`）。

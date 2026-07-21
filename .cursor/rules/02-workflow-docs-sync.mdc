@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## 必须做
 
-- **会话开始**：读 `AGENTS.md` → `docs/plan/PROGRESS.md` → 最近一份 `docs/checkpoints/*-handoff.md` → 确认当前车道与任务边界（`docs/plan/PARALLEL-LANES.md`）后再动手。
+- **会话开始**：读 `AGENTS.md` → `docs/plan/PROGRESS.md` → 最近一份 `docs/checkpoints/*-handoff.md` → 确认当前车道与任务边界（`docs/plan/PARALLEL-LANES.md`）后再动手。若将做 `reset`/`clean`/重建工作树，先按 `.cursor/rules/19-personal-blog-boundary.mdc` 确认 `personal-blog/` 嵌套仓仍在。
 - **会话结束**（或上下文接近极限时提前执行）：更新 PROGRESS → 写 handoff（已完成/未完成 REQ、提交哈希、测试与证据状态、未决风险与漂移、下一步入口与建议提示词路径，模板 `docs/checkpoints/TEMPLATE.md`）→ 提交。交接文档是跨会话唯一记忆载体，禁止依赖对话历史承载工程状态。
 - 语义型/结构型变更执行 `docs/standards/docs-sync-contract.md` 的同批联动义务（registry/schema/vector/实现/测试/matrix/台账/受影响产品文档）。
 - 每次合并更新 `docs/plan/PROGRESS.md`；触碰 F/IMP 条目时同步 `docs/traceability/findings-ledger.md`。
