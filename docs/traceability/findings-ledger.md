@@ -28,14 +28,14 @@
 | F-016 | P1 | implemented 声明可被 degradation 稀释 | closed-by-1.0.1 | `conformance/README.md` 状态语言收紧（degradation 强制缩范围或降 experimental；安全负例不可豁免） | — |
 | F-017 | P1 | sandbox 不可绕过证据过粗（缺平台/通道矩阵） | **closed-for-release-claim-set**（2026-07-21 M6-EXIT：linux_native network/secrets/tool_proxy deny digests + reproduce；WSL2 `not_tested`；windows_native `unsupported`；跨平台合并拒） | 矩阵台账：[f017-platform-matrix.md](f017-platform-matrix.md)；扩大声明集则重新 open | 相对冻结声明集不阻断 GO-with-explicit-non-claim；见 [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md) |
 | F-018 | P1 | ContextView 允许 `untrusted+control` 信任矛盾 | **verified-by-vector（M3 行为执行）** | `context-view.schema.json` 约束收紧（M1 静态复验 pass 在案）。**M3 内核行为侧（2026-07-20 Lane-KRN）**：`context_pipeline.rs::untrusted_input_cannot_reach_the_control_plane`。**M3 向量行为执行（2026-07-20 Lane-CFR 扩展批）**：CTX-TRUST-004 执行模式由 M1 静态门升级为 **trust-plane-behavior**——真实管线加载注入项（角色保持 untrusted_input）、`effective_control_plane` 只认 authority 声明的 control 项（effective_policy 实测）、`admit_control_mutation` 拒绝以 untrusted 项为源的控制变更且零 capability 铸造；错误实现（内容声称即控制面）被自检判 fail | 已复核（运行时 admission 全链随 M5 复核） |
-| F-019 | P1 | read-your-write 隔离无法机器表达 | closed-by-1.0.1 | REQ-MEM-ADMIT-002 + 向量 `memory-read-your-write.json`；行为实现挂 M7 | 行为验收挂 M7 |
+| F-019 | P1 | read-your-write 隔离无法机器表达 | closed-by-1.0.1（合同）；**行为仍挂 M7** | REQ-MEM-ADMIT-002 + 向量 `memory-read-your-write.json`；计划入口 [M7-PLAN.md](../plan/M7-PLAN.md) WP-M7-MEM（existing-only；实现 not-started） | 行为验收挂 M7 |
 | F-020 | P1 | 性能报告 schema 不支撑 A/B、消融、非劣效 | closed-by-1.0.1 | `performance-report.schema.json` 扩展 + `agent-benefit-benchmark.md`（REQ-PERF-005 四臂+预注册） | — |
 | F-021 | P1 | 相对顺序不变 ≠ 字节前缀稳定 | **verified-by-vector（M3 行为执行）** | REQ-CTX-012 + `context-render-stability.json`。**M3 内核行为侧（2026-07-20 Lane-KRN，IMP-02）**：`context_pipeline.rs::criterion_8_render_is_byte_stable_and_prefix_stable`。**M3 向量行为执行（2026-07-20 Lane-CFR 扩展批）**：CTX-RENDER-001 → **pass**（render-stability-behavior：同输入两次解析 render digest/bytes 相同；新增无关对象后既有段字节不变、旧流为新流严格前缀、新内容 append-only suffix、相对顺序保留——全部从真实 RenderedView 段读回比对；重排渲染器错误实现被自检判 fail）。行为验收原挂 M3 → 完成 | 已复核 |
 | F-022 | P1 | SLO 只有容器无阈值 | closed-by-1.0.1 | performance-report `slo_profile` 结构化；阈值预注册机制见 benchmark 文档 | M6 实测 |
 | F-023 | P1 | 不可查询/不可幂等执行器缺准入拒绝矩阵 | **closed-by-M4**（出口评审确认，含拒绝码选型确认） | `OperationDescriptor` 与 AuthorizationCapability 分型分检；准入矩阵 `admit_operation` 2×2（双否 governed_external/emergency → 拒绝，零持久化）。测试：kernel `admission_matrix_*` 全组合 + `m4_effects.rs::f023_*`。**拒绝码选型确认（2026-07-20 M4 出口评审）**：`NO_AUTHORIZED_OPERATION_CANDIDATE`（catalog 域）为正确口径——注册描述"无既可见又被授权的候选"覆盖"无安全 unknown-outcome 闭合路径 ⇒ 非可准入候选"；备选 `CATALOG_MATCH_INCONCLUSIVE` 语义为匹配歧义，不取；不新增码（注册面冻结遵守）。闭合于 [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) 判据 8 | 已闭合 |
 | F-024 | P1 | §4.7 四视图映射遗漏 owner | closed-by-1.0.1 | 责任矩阵补全（含 Approval Service 归属） | — |
 | F-025 | P1 | OS 身份缺不可绕过参考监视器实现证据 | framework | 随 M6 sandbox 拦截证据 + M4 门禁行为证据积累；宣称口径持续用"Agent control plane + durable governed runtime" | 定性宣称约束，全程有效 |
-| F-026 | P1 | Agent 收益 E0 假设、无实测 | framework | REQ-PERF-005 合同已立；实测四臂对照挂 M7+（优化落地后）；此前禁止任何收益宣称 | 宣称约束，全程有效 |
+| F-026 | P1 | Agent 收益 E0 假设、无实测 | framework | REQ-PERF-005 合同已立；[M7-PLAN.md](../plan/M7-PLAN.md) WP-PERF-005 **默认继续 non-claim**；实测四臂对照仅在人类升格后；此前禁止任何收益宣称 | 宣称约束，全程有效 |
 | F-027 | P2 | 规范表面积远大于最小 Core | framework | 对冲=冻结条款（IMP-01）+ M1 最小核心对象集优先（IMP-08 A.1 14 对象） | — |
 | F-028 | P2 | 外部证据分级混类、版本过期 | partially-closed | 1.0.1 修订附录 C 部分条目；剩余为文档级修订，随 Lane-DOC 顺带 | 不阻断 |
 | F-029 | P2 | 无受版本控制的里程碑/ADR 入口 | closed-by-M0 | 本次交付 `docs/plan/`、`docs/adr/0001~0006`、`docs/checkpoints/`、本台账 | — |
@@ -51,7 +51,7 @@
 |---|---|---|---|
 | IMP-01 | 实现优先、冻结规范表面扩张 | 已应用（§21/§1.2；`.cursor/rules/01` 第 4 条） | 全程纪律 |
 | IMP-02 | 渲染前缀稳定性显式要求 | 已登记（REQ-CTX-012、`context-render-stability.json`） | M3 验收 |
-| IMP-03 | 记忆准入异步化 + read-your-write | 已登记（REQ-MEM-ADMIT-002、`memory-read-your-write.json`） | M7 实现 |
+| IMP-03 | 记忆准入异步化 + read-your-write | 已登记（REQ-MEM-ADMIT-002、`memory-read-your-write.json`）；计划 [M7-PLAN.md](../plan/M7-PLAN.md) WP-M7-MEM | M7 实现（not-started） |
 | IMP-04 | 治理开销性能契约 | 已登记（REQ-PERF-004 + schema 扩展） | M6 基线报告；M1 runner 证据格式 |
 | IMP-05 | 审批子系统（分级确认/防疲劳） | 文本已应用（§12.12）；**R1 最低集机器合同已登记（=F-011）**；RUN ApprovalGate 已实现；**CFR M5 三负例向量行为 pass（2026-07-21）** | R2/R3 后置 |
 | IMP-06 | R0 薄路径合法降级形态 | 已应用（§20.5 降级映射+不可降级边界） | M6 readiness case |
@@ -66,7 +66,7 @@
 | IMP-15 | C2 生态差距承认与激励 | 已应用（§5.2/§21） | — |
 | IMP-16 | 主文档瘦身 | 长期编辑纪律 | Lane-DOC 持续 |
 | IMP-17 | 计数必须每轮实测 | v2.0 revised 采纳 | PROGRESS 一律实测数（本轮：273 REQ/55 码/61 schema/84 向量） |
-| IMP-18 | 收益声明合同（REQ-PERF-005） | 已登记（四臂+预注册） | M7+ 实测；此前只可声明 hypothesis/non_inferiority |
+| IMP-18 | 收益声明合同（REQ-PERF-005） | 已登记（四臂+预注册）；M7 默认 non-claim 见 [M7-PLAN.md](../plan/M7-PLAN.md) WP-PERF-005 | M7+ 实测（升格后）；此前只可声明 hypothesis/non_inferiority |
 
 ## 三、漂移登记（M0 盘点新发现）
 

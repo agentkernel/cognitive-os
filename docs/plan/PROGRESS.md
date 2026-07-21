@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-21（M6-EXIT：F-017 声明集闭合 + digests；**v0.1 GO-with-explicit-non-claim**；见 [M6-EXIT-PLAN](M6-EXIT-PLAN.md) / [v01-rereview](../checkpoints/20260721-v01-rereview.md)）
+> 最后更新：2026-07-21（**M7-PLAN 已登记**；主线 = 受治理记忆与认知发现；existing-only；实现未启动；v0.1 仍 GO-with-explicit-non-claim；见 [M7-PLAN](M7-PLAN.md) / [m7-planning-handoff](../checkpoints/20260721-m7-planning-handoff.md)）
 
 ## 里程碑状态
 
@@ -14,7 +14,8 @@
 | M4 Intent/Effect 与恢复 + tracer bullet | **done** | [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) | KRN M4 批（Intent/幂等/准入矩阵/Effect 协议/sink fencing/恢复八步/faults 框架/tracer bullet，PR #12）+ CFR 行为执行批（7 向量脱 not-run 全经故障注入驱动、fencing 子集落档、反模式自检 27/27 fail、tracer bullet 复现确认）。**F-014/F-023 闭合；F-023 拒绝码 NO_AUTHORIZED_OPERATION_CANDIDATE 确认**。M5 入口 = M4 分量达成 + **F-011 R1 合同登记（剩余项，归 Lane-CTR）** |
 | M5 意图链/Harness/Shell/管理面 | **done** | [20260721-m5-milestone-review.md](../checkpoints/20260721-m5-milestone-review.md) | KRN+CTR+RUN 1–2b+TSC+CFR 已合入。行为向量当时 **52 pass / 32 not-run**；F-011 三负例行为闭合；D-018 仍 partially-implemented。**GO M6**（附带条件见评审 §7） |
 | M6 安装与适配、v0.1 发布 | **实现已提供；测试已执行（局部）；出口 GO-with-explicit-non-claim** | [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（初评 [NO-GO](../checkpoints/20260721-m6-milestone-review.md)） | RUN/CFR M6 交付 + EXIT 声明集/F-017 digests；pins **55/29**；RC ≤ experimental；**implemented = 0**；durable install / PERF 战役 / D-018 / Win-native / WSL2 = explicit non-claim；计划：[M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) |
-| M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
+| M7 受治理记忆与认知发现 | **计划已登记；实现 not-started** | — | Canonical：[M7-PLAN.md](M7-PLAN.md)；existing-only（禁新增 Profile/REQ 域/对象族）；F-019/IMP-03 行为侧；PERF-005 默认 non-claim；Residual-V01 隔离；提示词 [milestone-m7.md](../prompts/milestone-m7.md) |
+| M8~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 / 不阻塞 M7 入口 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；Phase 0 文档收口；M5 出口已 GO，但 implementation-ready 仍 **no (blocked)**：缺五平台 PoC / 技术栈 ADR / 依赖组 1/2/7 完整交付与法务 gate；与 M6 核心可并行 tracking-only，不混入主线 PR；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
 
 ## 隔离产品子工程
@@ -57,18 +58,18 @@
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
-| Lane-CFR 符合性与工具 | **M6 三向量 + F-017 声明集 digests** | `lane/doc-m6-exit` | RC manifest；F-017 closed-for-release-claim-set；clients 扫描根自动化仍 planned |
-| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim） |
+| Lane-CFR 符合性与工具 | **M6 三向量 + F-017 声明集 digests**；**M7 向量批可启动** | `lane/cfr` | 按 [M7-PLAN](M7-PLAN.md) / [m7-cfr-vectors-and-self-check.md](../prompts/m7-cfr-vectors-and-self-check.md)；clients 扫描根自动化仍 planned |
+| Lane-KRN 内核主线 | **M5 kernel 侧批已交付**；**M7 memory authority 可启动** | `lane/krn` | 按 [M7-PLAN](M7-PLAN.md) WP-M7-MEM；D-018 / InstallationStore 仍为 v0.1 non-claim（隔离） |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量 |
-| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付** | `lane/run-m6-installer-ci` | handoff：`20260721-lane-run-m6-installer-handoff.md`；消费 D-020/D-021 |
-| Lane-DOC 文档维护 | **M6-EXIT + v0.1 重评审已写** | `lane/doc-m6-exit` | [M6-EXIT-PLAN](M6-EXIT-PLAN.md)；[v01-rereview](../checkpoints/20260721-v01-rereview.md) |
-| Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked |
+| Lane-RUN 运行时与管理面 | **M6 安装/sandbox/adapter/OOB/readiness/PERF 已交付**；**M7 discovery delta 可启动** | `lane/run-m6-installer-ci` | M6 handoff：`20260721-lane-run-m6-installer-handoff.md`；M7 见 [m7-discovery-delta-and-stagnation.md](../prompts/m7-discovery-delta-and-stagnation.md) |
+| Lane-DOC 文档维护 | **M7-PLAN 已落盘** | `lane/doc-m7-plan` | [M7-PLAN](M7-PLAN.md)；入口 handoff：[20260721-m7-planning-handoff.md](../checkpoints/20260721-m7-planning-handoff.md)；v0.1 仍 [v01-rereview](../checkpoints/20260721-v01-rereview.md) |
+| Lane-CON Console | tracking-only | — | M7 不改变 implementation-ready **blocked**；依赖组 6（Memory）仍未交付；仅 informative gate 复评 |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
-2. [20260721-m6-exit-planning-handoff.md](../checkpoints/20260721-m6-exit-planning-handoff.md)（M6-EXIT 计划落盘 + F-017 声明集）
-3. [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md)（初评 NO-GO，已被重评审取代为出口结论）
+1. [20260721-m7-planning-handoff.md](../checkpoints/20260721-m7-planning-handoff.md)（M7-PLAN 落盘；existing-only；实现未启动）
+2. [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（v0.1：**GO-with-explicit-non-claim**）
+3. [20260721-m6-exit-planning-handoff.md](../checkpoints/20260721-m6-exit-planning-handoff.md)（M6-EXIT 计划落盘 + F-017 声明集）
 
 ## 客户端目录治理交付
 
