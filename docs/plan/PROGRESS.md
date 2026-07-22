@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **OPS registration eligibility audited / machine registration NO-GO** | `lane/ctr-v02-ca-ops-registration` | PR #54 merge/main CI gate 已闭合；AUDIT owner-authorized security/audit/compliance review completed（非外部/GitHub review）；`V02-CA-OPS-REG-READINESS-01` 证明八个 candidates 全部 blocked，foundation choices 亦未唯一闭合；本分支只交付 docs-only NO-GO audit，不登记任何 member/asset；SIG independent review、四类 registration、CA-0 GO 仍 pending |
+| Lane-CTR 契约与生成 | **OPS registration eligibility audited / machine registration NO-GO；PR #55 review pending** | `lane/ctr-v02-ca-ops-registration` | PR #54 merge/main CI gate 已闭合；AUDIT owner-authorized security/audit/compliance review completed（非外部/GitHub review）；`V02-CA-OPS-REG-READINESS-01` 证明八个 candidates 全部 blocked，foundation choices 亦未唯一闭合；PR #55 只交付 docs-only NO-GO audit，不登记任何 member/asset；SIG independent review、四类 registration、CA-0 GO 仍 pending |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |

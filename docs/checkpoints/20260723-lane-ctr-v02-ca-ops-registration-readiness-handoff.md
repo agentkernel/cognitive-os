@@ -122,8 +122,8 @@ descriptor/error-map responsibilities. No new error was invented.
   build/test jobs, and ordinary CI enumeration are repository-integrity evidence
   only and do not change behavior evidence or Profile state.
 
-Commit, PR, and final-head CI facts are pending and must be backfilled after
-they exist.
+The primary commit and PR facts are recorded below. Final-head CI remains
+pending and is intentionally not converted into behavior evidence.
 
 ## 7. Status ledger
 
@@ -141,12 +141,20 @@ they exist.
 
 ## 8. Commit, PR, review, and CI
 
-- Primary commit: pending.
-- PR: pending.
+- Primary commit:
+  `e8a92750b9a973f0a591deb9af42b3468303f6e2`
+  (`docs(ctr): audit OPS registration eligibility`).
+- PR: [#55](https://github.com/agentkernel/cognitive-os/pull/55), open and
+  ready for review, base `main`, initial head
+  `e8a92750b9a973f0a591deb9af42b3468303f6e2`.
+- PR scope at creation: exactly 14 docs-only paths; no machine asset,
+  generated binding, vector, implementation, runtime, store, kernel, SDK, or
+  client path.
 - GitHub reviewer requests: none; a request may be created only when the user
   names the reviewer.
 - Required review: owner/security/protocol review of the exact docs-only NO-GO
   audit head.
+- Final-head Ubuntu/Windows CI: pending after this factual handoff backfill.
 - The PR must not be auto-merged.
 
 ## 9. Next unique entry
