@@ -20,6 +20,7 @@
 | 项 | 结果 |
 |---|---|
 | 基线 main CI | `29897267489` @ `d1a4d6a` = success |
+| PR CI（decision commit） | push run `29898744293` + PR run `29898776613`：Ubuntu/Windows 全部 success；runner pins 84/59/25、self-check 40 |
 | docs consistency | **pass**：273 requirements / 55 errors / 61 schemas / 84 vectors；links/traceability verified |
 | matrix check | **pass**：`gen-matrix --check: matrix is up to date`；非空 impl 维持 70 |
 | TypeScript workspace build/test | **pass**：`pnpm -r build`；tests contracts 38、tools 2、sdk 69 pass/3 skip、agent-shell 13 |
@@ -43,5 +44,8 @@
 ## 6. 提交快照
 
 - 分支：`lane/ctr-config-authority-spec-correction`
-- commit / PR / merge / main CI：待完成验证、提交、push、PR 与 CI 后回填。
+- decision commit：`7a9e2dd5bfe4148295ac3be516e90c9d4949250d`。
+- PR：[#49](https://github.com/agentkernel/cognitive-os/pull/49)；decision commit 的 push/PR CI 全绿。
+- handoff 收尾 commit：本文件回填提交/PR/CI 后的当前 branch tip（见 PR #49 commits）。
+- merge / main CI：PR 合并后由执行会话继续观察并在最终回复报告；不伪写未发生状态。
 - PROGRESS / PARALLEL-LANES / findings-ledger：已同步本裁决状态。
