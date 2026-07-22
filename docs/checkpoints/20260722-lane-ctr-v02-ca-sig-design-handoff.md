@@ -218,11 +218,22 @@ insufficient.
 
 ## 11. Commit, PR, CI, and review snapshot
 
-- SIG primary design commit: pending.
-- SIG PR: pending; base must be `main`, docs-only, and independent from TARGET.
-- SIG head checks: pending.
-- Owner/security reviewer status: pending. No reviewer request is created without
-  an explicit user instruction naming the reviewer.
+- SIG primary design commit:
+  `32f862867f8a6e8028eacb624aa9b812fe0d5434` (`docs(ctr): design v0.2
+  signature profiles`).
+- SIG PR: [#53](https://github.com/agentkernel/cognitive-os/pull/53), base
+  `main`, docs-only, 11 expected docs paths, independent from TARGET.
+- Initial SIG push run
+  [29924662541](https://github.com/agentkernel/cognitive-os/actions/runs/29924662541)
+  and PR run
+  [29924750869](https://github.com/agentkernel/cognitive-os/actions/runs/29924750869)
+  both completed Ubuntu/Windows `success` at the primary commit.
+- Initial PR state after CI: OPEN, MERGEABLE/CLEAN; reviews, review decision,
+  and requested reviewers empty.
+- This handoff fact backfill is a separate docs-only commit. Its final PR-head
+  checks must also remain successful; the authoritative final status is PR #53.
+- Owner/security reviewer status: pending. No reviewer request was created
+  because no explicit user instruction named a reviewer.
 - SIG PR must not be auto-merged.
 
 ## 12. Status and pins
