@@ -30,6 +30,9 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
 - `diagnostics.configure`, `gateway.configure`, and `system.configure` become negotiable only after critical-extension and TARGET closure.
 - A blocked candidate is absent from the machine manifest even if its spelling is recognized.
 - Caller/plugin/private DTO membership injection is rejected.
+- A configure candidate also requires an independently reviewed, digest-pinned
+  target profile and exact authority/consumer/readback/receipt bindings. TARGET
+  design intent is not a machine target identity.
 
 ## 4. Mapping and quarantine
 
@@ -38,6 +41,14 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
 - Reject lossy mapping of required authority, session scope, capability, target, readback, approval, audit, error, or critical-extension semantics with `PROTOCOL_MAPPING_INCOMPLETE` where exact.
 - Missing authority, scope, target, or readback enters reject or quarantine; it never defaults to platform/current tenant/public authority.
 - Preserve in-flight Effects under their original idempotency, fencing, unknown-outcome, reconciliation, and audit obligations.
+- URI targets, open proposal parameters, vector inputs, private rows/DTOs,
+  telemetry configuration, and catalog projections are migration inputs only.
+  They cannot be upgraded in place into target authority.
+- Migration to a future target profile creates a new governed target identity
+  and version, records the deciding authority and mapping digest, and pins the
+  real consumer and readback/verifier. Ambiguous system targets, gateway
+  instance/group choices, and diagnostics policy/sink/profile choices fail
+  closed or enter quarantine.
 
 ## 5. Vector and evidence migration
 

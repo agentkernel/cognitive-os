@@ -25,6 +25,9 @@ A receiver selects a set only when all of the following hold:
 - no core or extension collision exists;
 - mapping is lossless for required governance semantics;
 - authorization is revalidated in the new epoch.
+- every selected configure descriptor pins an independently reviewed target
+  profile, authority mapping, request/result schemas, consumer,
+  readback/verifier, receipt, risk/approval policy, and audit slot.
 
 Failure uses `VERSION_UNSUPPORTED`, `CRITICAL_EXTENSION_UNKNOWN`, or `PROTOCOL_MAPPING_INCOMPLETE` only where the registered meaning exactly applies. Unknown-operation, unnegotiated-operation, and epoch-specific error closure remains unresolved.
 
@@ -34,4 +37,14 @@ Adding/removing/renaming a core member, changing descriptor semantics or binding
 
 ## 4. Current non-claim
 
-No compatibility adapter, negotiation profile, operation set, extension, or digest is implemented or registered by this proposal. All eight candidates remain blocked.
+No compatibility adapter, negotiation profile, operation set, extension,
+target profile, configuration state domain, consumer, readback/verifier,
+receipt, or digest is implemented or registered by this proposal. The TARGET
+audit keeps all three configure candidates blocked, and all eight OPS
+candidates remain blocked.
+
+An old or private target representation is not inside the window merely because
+its URI, operation spelling, or JSON can be parsed. A future target adapter must
+list exact source/target asset identities and remain finite; loss of target
+authority, CAS, epoch, consumer, verification, receipt, approval, audit, or
+critical-extension semantics fails closed.
