@@ -1,7 +1,7 @@
 # V02-CA-OPS-01 Draft Release Notes
 
 - Proposed release: `0.2.0-draft.1`
-- Status: OPS and TARGET merged; SIG owner technical selections confirmed / independent security review pending; not published or specified
+- Status: OPS, TARGET, and SIG merged; AUDIT owner technical selections confirmed / independent review pending; not published or specified
 - Operation-set digest: `unresolved/not computed`
 - Classification: docs-only; no machine registration or implementation
 
@@ -24,6 +24,13 @@
   platform-root-signed registry manifest, depth-one tenant delegation, distinct
   session/approval leaf usages, 24-hour rotation overlap, immediate revocation,
   exact receipt/AUDIT split, tier/session/replay rules, and 19 future SIG errors.
+- AUDIT source audit and owner-confirmed Event-plus-closed-record carrier,
+  platform/tenant-domain stream partition, fenced contiguous sequence,
+  previous-record digest chain, signed periodic checkpoints, minimized records,
+  policy-derived retention floor, independent legal-hold release, deterministic
+  redaction, and signed canonical export manifest.
+- Proposed dedicated checkpoint/export signing usages and exact future AUDIT
+  error responsibilities; all remain unregistered and independently reviewable.
 
 ## Breaking
 
@@ -39,6 +46,12 @@
 - a v0.1 session or approval signature string cannot be interpreted as a v0.2
   detached signature or upgraded in place; new profiles require a new epoch,
   reauthentication/reissuance or rechallenge/redecision, and exact digest pins.
+- an Event, transition record, receipt, `audit_ref`, SQLite row, outbox, boolean,
+  log, trace, telemetry item, wall clock, UUID order, or autoincrement value
+  cannot be promoted into an authoritative audit record or continuity proof;
+- an old epoch cannot enable the audit critical extension, and export cannot
+  proceed without exact authorization, redaction, checkpoint, high-watermark,
+  manifest, and signing-profile pins.
 
 These are proposed v0.2 design consequences, not active runtime behavior.
 
@@ -68,3 +81,9 @@ The owner selected the SIG algorithm/key/trust/domain/projection/error model at
 the docs-only design level. No envelope, key descriptor/registry manifest,
 profile, receipt, replay ledger, error, schema, extension, or digest is machine
 registered; independent security review remains pending.
+
+The owner selected the AUDIT carrier/stream/integrity/checkpoint/retention/
+legal-hold/redaction/export model at the docs-only design level. No audit record,
+stream, checkpoint, policy, export manifest, signature profile/key usage,
+persistence port, error/category, schema, extension, or digest is registered;
+independent owner/security/audit/compliance review remains pending.

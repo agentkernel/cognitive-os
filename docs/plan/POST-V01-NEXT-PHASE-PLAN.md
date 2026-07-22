@@ -1,18 +1,18 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-22）；`V02-CA-GOV-00`、PR #51 OPS 与 PR #52 TARGET 已合入，`V02-CA-SIG-01` 已 [记录 owner-confirmed technical selections](V02-CA-SIG-DESIGN-DECISION.md)（[ADR-0012](../adr/0012-v02-detached-signature-profile-governance.md)）：pure Ed25519、governed authority-key registry、platform root/有界 tenant delegation、对象专属 profiles、24 小时 rotation、receipt 与 19 个未来 errors；独立 security/GitHub review、AUDIT 与 machine registration 仍待完成，两个 SIG profiles 未登记/不可用，八项 operation candidates 全部 blocked，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
+- 状态：active（2026-07-22）；`V02-CA-GOV-00` 与 OPS/TARGET/SIG docs-only 设计已合入；PR #53 GitHub reviews 为空，SIG independent security review 仍不得声称完成；[V02-CA-AUDIT-01](V02-CA-AUDIT-DESIGN-DECISION.md) / [ADR-0013](../adr/0013-v02-authoritative-audit-governance.md) 已记录 owner-confirmed carrier/stream/sequence/hash-chain/checkpoint/retention/legal-hold/redaction/export 选择，等待独立 owner/security/audit/compliance review；OPS/TARGET/SIG/AUDIT machine contracts 全部未登记，八项 operation candidates blocked，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
 - CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
-- 下一唯一门禁：独立 security/GitHub review 与普通 merge docs-only SIG PR；SIG 合入后按顺序进入 AUDIT 与四类 machine registration；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
+- 下一唯一门禁：独立 owner/security/audit/compliance review 与普通 merge docs-only AUDIT PR；不得自动合并；其后按顺序进入四类独立 machine registration；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
 
 ### 阶段目标
 
-在 `origin/main@42d609b`（PR #52 merge）与 pins **59/25** 之后，OPS/TARGET 已合入，SIG 设计包已记录 owner-confirmed algorithm/key/trust/domain/projection/error/receipt 选择并等待独立 security/GitHub review；session/approval profiles 仍缺 signed machine schema/profile digests、AUDIT carrier 与 machine registration，因而未登记/不可用，三个 configure candidates 也继续 blocked。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
+在 `origin/main@0a30ac7`（PR #53 merge）与 pins **59/25** 之后，OPS/TARGET/SIG docs-only 设计已合入；SIG independent security review 仍未完成。AUDIT 设计已记录 owner-confirmed Event+closed record carrier、platform/tenant-domain streams、fenced contiguous sequence、previous-record digest chain、signed checkpoints、policy retention/legal hold、deterministic redaction 与 signed canonical export；精确 machine schemas/digests/policy values/keys/errors/port 均未登记，三个 configure candidates 继续 blocked。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
 
 本阶段的成功定义是「实现已提供 + 测试已执行 + 相关向量 pass 的窄面证据」，不是 Profile implemented、跨平台安全符合、完整 M5/M6 或 v0.2 发布。
 
@@ -115,10 +115,10 @@
 - [V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
 - PERF-004 触发需 HUMAN-PERF004-CAMPAIGN、L2 green、硬件拓扑/并发预注册和 campaign digest；PERF-005 还需 M7+ 四臂 harness、BenchmarkManifest、独立 verifier。当前不得把 sample/builder 写成 campaign 或 benefit。
 
-**defer-2：MGMT-FALLBACK-008 全族（OPS/TARGET merged；SIG design materialized；machine registration / implementation blocked）**
+**defer-2：MGMT-FALLBACK-008 全族（OPS/TARGET/SIG merged；AUDIT design materialized；machine registration / implementation blocked）**
 
 - vector `MGMT-FALLBACK-008` 对应 `REQ-MGMT-FALLBACK-001`，要求 session.create_restricted、status.inspect、capability.revoke、execution.stop、effect.reconcile、gateway.configure、diagnostics.configure 七个 operations 全可达。
-- `V02-CA-OPS-01` 与 `V02-CA-TARGET-01` 已合入；TARGET 证明 governed-object 治理骨架可复用，但 system/gateway/diagnostics 均无唯一 target profile、真实 consumer、readback/verifier 或 receipt。`V02-CA-SIG-01` 已记录 owner-confirmed pure Ed25519、governed key registry/platform root、独立 session/approval profiles、rotation/revocation、receipt 与 future-error 选择，但所有相关 machine assets/digests 仍未登记。八项全部 blocked，没有 machine-registered member/profile；下一门禁是 SIG 独立 security/GitHub review 与普通 merge。四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
+- OPS/TARGET/SIG docs-only 设计已合入；TARGET 证明 governed-object 治理骨架可复用，但 system/gateway/diagnostics 均无唯一 target profile、真实 consumer、readback/verifier 或 receipt。SIG owner selections 已记录但 independent security review 仍不得声称完成。AUDIT owner selections 已记录，但 record/stream/checkpoint/retention/redaction/export/port/errors 均未登记。八项全部 blocked，没有 machine-registered member/profile；下一门禁是 AUDIT 独立 review 与普通 merge。四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
 
 **defer-3：store-degradation disk-full**
 
@@ -213,7 +213,7 @@
 
 - 任何失败不得改变已通过的 59 个向量、其余 not-run 族的诚实原因、self-check 40 和 Profile implemented=0。
 - 主战役最多改变两个目标 vector 的状态；不批量改变 not-run。
-- 当前 GOV/OPS/TARGET/SIG 规范治理入口不得改变 pins；保持 84/59/25。未来只有 runner 对真实实现执行并留证据的独立 CFR 批，才可按实测同批更新 CI honesty pin 与 runner tests。
+- 当前 GOV/OPS/TARGET/SIG/AUDIT 规范治理入口不得改变 pins；保持 84/59/25。未来只有 runner 对真实实现执行并留证据的独立 CFR 批，才可按实测同批更新 CI honesty pin 与 runner tests。
 - 不产生 `fail`、`not-applicable` 或 documented-degradation 伪绿。
 - 旧 epoch 新 dispatch 必须零 sink call；acceptance 必须由 verification/acceptance authority 证明。
 - 测试并发导致 `m5_http_sse` flake 时，只允许受控、可记录的单线程重跑；重复失败即 NO-GO，不能无限重试。

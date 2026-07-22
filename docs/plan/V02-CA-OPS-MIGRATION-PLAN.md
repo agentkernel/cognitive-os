@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Migration Plan
 
-- Status: design with owner-confirmed SIG selections; independent security review pending
+- Status: design with owner-confirmed SIG and AUDIT selections; independent reviews pending
 - Source: existing v0.1 assets and epochs
 - Target proposal: `0.2.0-draft.1`; digest `unresolved/not computed`
 - Classification: docs-only; migration not implemented
@@ -9,7 +9,9 @@
 
 - Preserve all v0.1 bytes, digests, evidence, and negotiation epochs.
 - Create new v0.2 specification-set, operation-set, descriptor, signature-profile,
-  signed-schema, schema-bundle, and suite identities; never rewrite v0.1 assets.
+  signed-schema, audit-record/stream/checkpoint/retention/redaction/export/
+  commit-receipt profile, schema-bundle, and suite identities; never rewrite
+  v0.1 assets.
 - Treat existing operation spellings only as migration inputs, not as target membership or authorization.
 - Reject the same asset ID/SemVer with different bytes or digest.
 
@@ -18,9 +20,11 @@
 1. terminate or explicitly supersede the old epoch;
 2. authenticate peers again;
 3. select and verify the new specification set and nested manifests;
-4. select the operation set, three critical SIG extensions, session/approval
+4. select the operation set, three critical SIG extensions, the critical AUDIT
+   extension, session/approval
    signature profiles, pure Ed25519 set, governed registry manifest, and
-   platform-root/delegation/status profiles;
+   platform-root/delegation/status profiles, plus exact audit record/stream/
+   checkpoint/retention/redaction/export profiles and policy/key pins;
 5. verify and reissue the session or rechallenge/redecide approval under the new
    profile, then revalidate authorization, session scope, capabilities, risk,
    approval, target authority, and continuation;
@@ -42,6 +46,13 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
   creates a newly authenticated/reissued session version and a newly challenged
   approval decision under distinct v0.2 signature profiles; no algorithm, key,
   trust root, domain, or projection is inferred from old bytes.
+- Existing Event/transition/outbox/SQLite rows, `DenialAudit`, `audit_ref`,
+  booleans, logs, traces, telemetry and vector audit facts are migration inputs
+  only. They are never relabeled as authoritative audit records or used to
+  fabricate historical chain continuity.
+- The new audit epoch establishes or verifies a genesis checkpoint, exact stream
+  partition, writer epoch/fencing and high-watermark before admitting work.
+  Unverifiable continuity fails closed or enters quarantine.
 
 ## 4. Mapping and quarantine
 
@@ -66,14 +77,21 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
   activation and only within 24 hours; revocation has no grace period. Session
   expansion or absolute-expiry extension creates a newly authenticated session,
   while approvals are rechallenged and atomically consumed under the new epoch.
+- Imported legacy audit facts, if a future mapping accepts them, receive new
+  record IDs/sequences with explicit source provenance and loss declarations.
+  They do not backdate, fill gaps, or assert a checkpoint before verification.
+- Retention migration selects exact policy values; expiry never silently
+  deletes records. Legal holds survive migration. Redaction/export mappings pin
+  exact source ranges, policies, checkpoints, high-watermarks and signatures.
 
 ## 5. Vector and evidence migration
 
 - Preserve existing vector `expected` values.
 - Add explicit v0.2 negotiation, identity-drift, extension, signature profile,
   algorithm downgrade, key/trust/rotation/revocation, cross-object replay,
-  authorization-non-expansion, and pre-dispatch negative vectors in later
-  registration/CFR batches.
+  audit carrier/stream/sequence/chain/checkpoint/atomicity/retention/legal-hold/
+  redaction/export, authorization-non-expansion, and pre-dispatch negative
+  vectors in later registration/CFR batches.
 - Keep planned vectors `not-run` until a runner executes them against real deterministic implementation and retains evidence.
 - Do not migrate v0.1 evidence into a v0.2 Profile claim.
 
@@ -85,6 +103,7 @@ The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` targ
 
 If any target identity, critical extension, descriptor, signature profile,
 signed schema/projection, algorithm, key/trust/status, mapping, authorization,
-target/readback, or audit obligation cannot be verified, migration fails closed
-before dispatch. v0.1 bytes remain intact; no partial v0.2 membership, session,
-approval, or success receipt is created.
+target/readback, audit record/stream/checkpoint/policy/export, or atomic
+obligation cannot be verified, migration fails closed before dispatch. v0.1
+bytes remain intact; no partial v0.2 membership, session, approval, audit chain,
+or success receipt is created.
