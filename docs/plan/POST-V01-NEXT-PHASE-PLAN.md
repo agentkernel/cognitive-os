@@ -1,26 +1,26 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-22）；主战役 `RUN-SHELL-TARGET-AMBIGUITY-AUTHORITY-THEN-CFR` **已交付**（RUN PR #45 @ `eef258d` + CFR 本批；pins **59/25**；self-check **40**）；shell-channel / Intent Authority **已交付**；类别 plan（informative）
+- 状态：active（2026-07-22）；`V02-CA-GOV-00` 已将 Configuration Authority normative surface expansion 落为 **owner-approved / design pending**（[授权决议](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) / [ADR-0009](../adr/0009-v02-configuration-authority-surface-expansion-governance.md)）；四类 machine contracts 未登记，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
 - CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
-- 下一窗口：P1 discovery-only / defer 族（`MGMT-FALLBACK-008`、`STATE-STORE-DEGRADE-001` disk-full、migration/delta）；勿批量清 not-run；勿开 PERF；**隔离 PR #36（M7 plan）**
+- 下一唯一窗口：独立 Lane-CTR `V02-CA-OPS-01`，仅设计/评审 v0.2 Management operation set；SIG/AUDIT 可在 GOV 合入后另开并行设计，TARGET 必须承接 OPS 对 configure operation 的裁决；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
 
 ### 阶段目标
 
-在 `origin/main` tip（Intent Authority + PR #40 + RUN channel-binding PR #42）与 pins **58/26** 之后，下一窄面优先核对 shell target ambiguity 或 defer 族；本文件历史 P0 Intent 切片与 shell-channel authority **已交付**，不得再规划为 P0。
+在 `origin/main@251c69c`（PR #49）与 pins **59/25** 之后，下一治理入口是 `V02-CA-OPS-01`。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 只获 v0.2 surface 设计授权，尚未登记机器合同或解除实现门禁。
 
 本阶段的成功定义是「实现已提供 + 测试已执行 + 相关向量 pass 的窄面证据」，不是 Profile implemented、跨平台安全符合、完整 M5/M6 或 v0.2 发布。
 
 ### 当前事实地板
 
 - tip：以 `origin/main` 实测为准（规划会话起点曾为 `63617a0`；RUN merge `8e57e6d`；CFR 合入后继续前进）。
-- conformance：84 vectors，**58 pass**，**26 not-run**，fail/not-applicable/documented-degradation 为 0。
-- self-check：至少 **38** 个 corrupted vectors 必须翻 fail（实测 **39**）；不得降低地板。
+- conformance：84 vectors，**59 pass**，**25 not-run**，fail/not-applicable/documented-degradation 为 0。
+- self-check：**40** 个 corrupted vectors 必须翻 fail；不得降低地板。
 - Profile implemented：0；自动绿灯不改变该状态。
 - V01 canonical run：`20260721-192142-492`，`level=L3`，`release=non_claim_preserved`，`platform_label=windows_wsl2_linux_guest`。
 - 工作树旁路 dirty（skills / 职校选型 / `artifacts/_local/**` 等）——执行窗口必须保护、忽略、不暂存、不回退。
@@ -38,7 +38,7 @@
 - durable InstallationStore；当前 installation ledger 仍为 in-process，不得称 durable install authority。
 - D-018 governance object ports；当前仅 partially-implemented，事件发布组装器已有但治理对象持久化/解析端口仍缺。
 - PERF-004 full HW campaign、PERF-005 benefit；默认不触发 `HUMAN-PERF004-CAMPAIGN` / `HUMAN-PERF005-CLAIM`。
-- 不批量清空 29 not-run，不改 vector expected、不删除安全负例、不降低 84/55/29 或 self-check ≥36。
+- 不批量清空 25 not-run，不改 vector expected、不删除安全负例、不降低 84/59/25 或 self-check 40。
 - 不发明 `kernel-server` 的 `--data-dir`、`/health`、`/ready`；tip 仍只允许 `--once --bind` 参考面。
 - Console、clients、Agent Hub、M7+；Lane-CON 继续 tracking-only，不启动实现脚手架。
 - 不修改 `personal-blog/`，不把它纳入 Cos 交付。
@@ -115,10 +115,10 @@
 - [V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
 - PERF-004 触发需 HUMAN-PERF004-CAMPAIGN、L2 green、硬件拓扑/并发预注册和 campaign digest；PERF-005 还需 M7+ 四臂 harness、BenchmarkManifest、独立 verifier。当前不得把 sample/builder 写成 campaign 或 benefit。
 
-**defer-2：MGMT-FALLBACK-008 全族**
+**defer-2：MGMT-FALLBACK-008 全族（v0.2 design authorized；implementation blocked）**
 
 - vector `MGMT-FALLBACK-008` 对应 `REQ-MGMT-FALLBACK-001`，要求 session.create_restricted、status.inspect、capability.revoke、execution.stop、effect.reconcile、gateway.configure、diagnostics.configure 七个 operations 全可达。
-- 当前 handoff 明确仍缺后两个 configure 面；已有 deterministic fallback 不能证明完整 vector。判定 defer（或 P1 discovery only），先补真实 management API 设计/实现后再执行，不能在 CFR 中硬编码「全可达」。
+- `V02-CA-GOV-00` 已授权 v0.2 breaking Draft 的 OPS/TARGET/SIG/AUDIT 设计，但没有登记 operation/payload/target/signature/audit machine contracts。下一步先执行 `V02-CA-OPS-01`，再由 TARGET 承接 configure operation 裁决；四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
 
 **defer-3：store-degradation disk-full**
 
@@ -163,7 +163,7 @@
 
 **IA-0**
 
-1. 先失败测试/检查：执行窗口首先确认当前 branch/status；确认目标 vector 在 registry、matrix 和 `conformance/vectors/` 中存在且仍 not-run；确认当前 report 地板为 84/55/29、self-check ≥36。
+1. 先失败测试/检查：执行窗口首先确认当前 branch/status；确认目标 vector 在 registry、matrix 和 `conformance/vectors/` 中存在且仍 not-run；当前仓库地板已前进为 84/59/25、self-check 40（本 IA 历史工作包已交付，不得重跑为新任务）。
 2. 实现：无业务实现。
 3. 证据：执行日志与最终 handoff 的基线记录。
 4. DoD：旁路 dirty 未被暂存；未读取/引用 `History/`；主战役分支只归 Lane-CFR。
@@ -211,9 +211,9 @@
 
 期待的不变量（pins 地板保护）：
 
-- 任何失败不得改变已通过的 55 个向量、其余 not-run 族的诚实原因、self-check ≥36 和 Profile implemented=0。
+- 任何失败不得改变已通过的 59 个向量、其余 not-run 族的诚实原因、self-check 40 和 Profile implemented=0。
 - 主战役最多改变两个目标 vector 的状态；不批量改变 not-run。
-- 成功后预期 pins 以实测为准（例：pass 55→57、not-run 29→27），须同批更新 CI honesty pin 与 runner tests；未成功则保持 84/55/29。
+- 当前 GOV/OPS 规范治理入口不得改变 pins；保持 84/59/25。未来只有 runner 对真实实现执行并留证据的独立 CFR 批，才可按实测同批更新 CI honesty pin 与 runner tests。
 - 不产生 `fail`、`not-applicable` 或 documented-degradation 伪绿。
 - 旧 epoch 新 dispatch 必须零 sink call；acceptance 必须由 verification/acceptance authority 证明。
 - 测试并发导致 `m5_http_sse` flake 时，只允许受控、可记录的单线程重跑；重复失败即 NO-GO，不能无限重试。
