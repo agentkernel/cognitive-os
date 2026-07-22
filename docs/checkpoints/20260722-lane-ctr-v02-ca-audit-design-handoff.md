@@ -86,10 +86,14 @@ generated bindings, vectors, and implementation remain pending.
 
 ## 6. Commit, PR, CI, and review snapshot
 
-- AUDIT primary design commit: `pending`.
-- AUDIT PR: `pending`.
-- Final PR head checks: `pending`.
-- GitHub reviews, review decision, and requested reviewers: `pending`.
+- AUDIT primary design commit:
+  `216b10b229707e84d4dd64270813e3a5d72e8cad` (`docs(ctr): design v0.2
+  authoritative audit`).
+- AUDIT PR: [#54](https://github.com/agentkernel/cognitive-os/pull/54), base
+  `main`, docs-only, 11 expected docs paths, independent from SIG.
+- Final PR head checks: pending after this handoff fact backfill.
+- GitHub reviews, review decision, and requested reviewers were empty when the
+  PR was created.
 - No reviewer request may be created without an explicit user instruction naming
   the reviewer.
 - AUDIT PR must not be auto-merged.
