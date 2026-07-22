@@ -58,3 +58,12 @@ Rejected. It violates the descriptor/capability separation and expands authority
 ## Rollback and failure strategy
 
 If owner review rejects or materially changes this model, do not register machine assets. Keep D-016 open, D-022 blocking, all eight candidates blocked, and all management vectors at their current evidence status. Any later correction to a published Draft creates a new SemVer/digest; no pinned identity is rewritten.
+
+## Registration-readiness record
+
+On 2026-07-23 the owner authorized the recommended docs-only NO-GO path after a
+new eligibility audit at `origin/main@54929f1ed8fef1e09ffbb5593633f5d94d5e281e`.
+[V02-CA-OPS-REG-READINESS-01](../plan/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
+confirms that all eight candidates and the generic foundation remain ineligible.
+This is a delivery/readiness record, not a change to the decision, a machine
+registration, or an exception to independent review and CA-0 gates.

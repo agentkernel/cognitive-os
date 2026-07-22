@@ -1,7 +1,7 @@
 # V02-CA-OPS-01 Draft Release Notes
 
 - Proposed release: `0.2.0-draft.1`
-- Status: OPS, TARGET, and SIG merged; AUDIT owner technical selections confirmed / independent review pending; not published or specified
+- Status: all four docs-only designs merged; AUDIT owner-authorized security/audit/compliance review completed with limited provenance; OPS registration eligibility NO-GO; not published or specified
 - Operation-set digest: `unresolved/not computed`
 - Classification: docs-only; no machine registration or implementation
 
@@ -86,4 +86,18 @@ The owner selected the AUDIT carrier/stream/integrity/checkpoint/retention/
 legal-hold/redaction/export model at the docs-only design level. No audit record,
 stream, checkpoint, policy, export manifest, signature profile/key usage,
 persistence port, error/category, schema, extension, or digest is registered;
-independent owner/security/audit/compliance review remains pending.
+the owner-authorized security/audit/compliance review component is completed,
+with the provenance limitations below.
+
+The 2026-07-23
+[registration-readiness audit](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
+revalidated every mandatory descriptor binding and found no eligible member.
+It also found no independently useful foundation asset whose identity,
+publication, digest, empty-set semantics, activation order, errors, and
+cross-family bindings are uniquely fixed. No release asset is added by that
+audit.
+
+The owner-authorized AUDIT security/audit/compliance review found no blocking
+design defect after PR #54 merged. It is not an external human, third-party, or
+GitHub review and does not register an AUDIT profile. SIG independent
+security/cryptography review remains pending.

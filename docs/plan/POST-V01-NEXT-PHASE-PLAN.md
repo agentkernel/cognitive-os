@@ -1,18 +1,18 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-22）；`V02-CA-GOV-00` 与 OPS/TARGET/SIG docs-only 设计已合入；PR #53 GitHub reviews 为空，SIG independent security review 仍不得声称完成；[V02-CA-AUDIT-01](V02-CA-AUDIT-DESIGN-DECISION.md) / [ADR-0013](../adr/0013-v02-authoritative-audit-governance.md) 已记录 owner-confirmed carrier/stream/sequence/hash-chain/checkpoint/retention/legal-hold/redaction/export 选择，等待独立 owner/security/audit/compliance review；OPS/TARGET/SIG/AUDIT machine contracts 全部未登记，八项 operation candidates blocked，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
+- 状态：active（2026-07-23）；`V02-CA-GOV-00` 与 OPS/TARGET/SIG/AUDIT docs-only 设计已合入；AUDIT exact merged design 的 owner-authorized security/audit/compliance review 已完成且未发现阻断性设计缺陷，但不是外部人类、第三方或 GitHub review；SIG independent security/cryptography review 仍未完成；[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md) 判定八项 operation candidates 全部 blocked，foundation choices 亦未唯一闭合；OPS/TARGET/SIG/AUDIT machine contracts 全部未登记，D-016 open，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
 - CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
-- 下一唯一门禁：独立 owner/security/audit/compliance review 与普通 merge docs-only AUDIT PR；不得自动合并；其后按顺序进入四类独立 machine registration；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
+- 下一唯一门禁：review 并普通合入 docs-only OPS registration eligibility NO-GO packet，随后取得有界 owner governance decision 以闭合至少一个 OPS member 或具独立用途的 foundation；不得登记 placeholder、不得自动合并；其后仍须完成 OPS/TARGET/SIG/AUDIT 四类 machine-registration lines；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
 
 ### 阶段目标
 
-在 `origin/main@0a30ac7`（PR #53 merge）与 pins **59/25** 之后，OPS/TARGET/SIG docs-only 设计已合入；SIG independent security review 仍未完成。AUDIT 设计已记录 owner-confirmed Event+closed record carrier、platform/tenant-domain streams、fenced contiguous sequence、previous-record digest chain、signed checkpoints、policy retention/legal hold、deterministic redaction 与 signed canonical export；精确 machine schemas/digests/policy values/keys/errors/port 均未登记，三个 configure candidates 继续 blocked。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
+在 `origin/main@54929f1`（PR #54 merge）与 pins **59/25** 之后，OPS/TARGET/SIG/AUDIT docs-only 设计已合入；AUDIT owner-authorized security/audit/compliance review 已完成但不是外部/GitHub review，SIG independent security/cryptography review 仍未完成。`V02-CA-OPS-REG-READINESS-01` 已逐项审计八个 candidates：均缺 mandatory exact bindings，且 descriptor/set foundation 的 identity、SemVer/publication、digest domain、zero-member semantics、freeze order、cross-family cycle-break 与 error taxonomy 未唯一闭合，因此没有 machine-registered member/profile。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
 
 本阶段的成功定义是「实现已提供 + 测试已执行 + 相关向量 pass 的窄面证据」，不是 Profile implemented、跨平台安全符合、完整 M5/M6 或 v0.2 发布。
 
@@ -115,10 +115,10 @@
 - [V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
 - PERF-004 触发需 HUMAN-PERF004-CAMPAIGN、L2 green、硬件拓扑/并发预注册和 campaign digest；PERF-005 还需 M7+ 四臂 harness、BenchmarkManifest、独立 verifier。当前不得把 sample/builder 写成 campaign 或 benefit。
 
-**defer-2：MGMT-FALLBACK-008 全族（OPS/TARGET/SIG merged；AUDIT design materialized；machine registration / implementation blocked）**
+**defer-2：MGMT-FALLBACK-008 全族（OPS/TARGET/SIG/AUDIT designs merged；machine registration / implementation blocked）**
 
 - vector `MGMT-FALLBACK-008` 对应 `REQ-MGMT-FALLBACK-001`，要求 session.create_restricted、status.inspect、capability.revoke、execution.stop、effect.reconcile、gateway.configure、diagnostics.configure 七个 operations 全可达。
-- OPS/TARGET/SIG docs-only 设计已合入；TARGET 证明 governed-object 治理骨架可复用，但 system/gateway/diagnostics 均无唯一 target profile、真实 consumer、readback/verifier 或 receipt。SIG owner selections 已记录但 independent security review 仍不得声称完成。AUDIT owner selections 已记录，但 record/stream/checkpoint/retention/redaction/export/port/errors 均未登记。八项全部 blocked，没有 machine-registered member/profile；下一门禁是 AUDIT 独立 review 与普通 merge。四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
+- OPS/TARGET/SIG/AUDIT docs-only 设计已合入；TARGET 证明 governed-object 治理骨架可复用，但 system/gateway/diagnostics 均无唯一 target profile、真实 consumer、readback/verifier 或 receipt。SIG owner selections 已记录但 independent security/cryptography review 仍不得声称完成。AUDIT owner-authorized security/audit/compliance review 已完成但不是外部/GitHub review；record/stream/checkpoint/retention/redaction/export/port/errors 均未登记。`V02-CA-OPS-REG-READINESS-01` 判定八项全部 blocked，没有 machine-registered member/profile；下一门禁是 docs-only eligibility NO-GO packet 的 owner/security/protocol review 与普通 merge，再取得有界 owner governance decision。四类合同全部闭合且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
 
 **defer-3：store-degradation disk-full**
 
