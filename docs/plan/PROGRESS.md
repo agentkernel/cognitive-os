@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-22（PR #53 SIG 已 merge，merge-triggered main CI `29930557168` 双平台成功；GitHub reviews 为空，**SIG independent security review 仍不得声称完成**；[V02-CA-AUDIT-01](V02-CA-AUDIT-DESIGN-DECISION.md) / [ADR-0013](../adr/0013-v02-authoritative-audit-governance.md) 已记录 owner-confirmed docs-only AUDIT selections：Event + closed record carrier、platform/tenant-domain streams、fenced contiguous sequence、previous-record digest chain、signed checkpoints、policy-derived retention、independent legal-hold release、deterministic redaction 与 signed canonical export；精确 schemas/digests/policy values/keys/errors/port 均未登记，AUDIT 等待独立 owner/security/audit/compliance review；OPS/TARGET/SIG/AUDIT machine contracts 未登记，D-016 不 closed，D-022 继续阻断 CA-1～CA-8；pins **84/59/25**、self-check **40/40**；Profile **implemented = 0**）
+> 最后更新：2026-07-23（AUDIT PR #54 已 merge：`54929f1ed8fef1e09ffbb5593633f5d94d5e281e`，merge-triggered main CI `29937238562` 双平台成功；GitHub reviews/reviewDecision/requested reviewers 为空；owner-authorized security/audit/compliance 复审未发现阻断性设计缺陷，但不是外部人类、第三方或 GitHub review；**SIG independent security/cryptography review 仍未完成**。[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md) 逐项复核八个 candidate 后裁决全部 `blocked`，且 foundation 的 exact ID/SemVer/digest domain/empty-set/freeze-order/error/digest-cycle 选择未闭合，因此本批为 docs-only registration NO-GO，不登记 machine asset/member；OPS/TARGET/SIG/AUDIT machine contracts 仍未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**）
 
 ## 里程碑状态
 
@@ -50,13 +50,13 @@
 |---|---|---|
 | P0 | 0（+1 证据性质） | F-001（证据缺口，随里程碑消解，不阻断） |
 | P1 | **0**（+持续） | F-017 **closed-for-release-claim-set**；F-015 持续。**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 闭合 |
-| 漂移 | **0 open**（+3 deferred/design-materialized，+1 decided/partial） | **D-022 v0.2 design progression blocker**（OPS/TARGET/SIG merged；AUDIT owner selections recorded；SIG independent security review、AUDIT independent review 与四类 registration pending；所有新 profiles 未登记/不可用；继续阻断 CA-1～CA-8）；**D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 OPS/TARGET/SIG merged / AUDIT owner selections recorded / registration pending**（未 closed、机器合同未登记）；D-019 已闭合 |
+| 漂移 | **0 open**（+3 deferred/design-materialized，+1 decided/partial） | **D-022 v0.2 design/registration blocker**（AUDIT owner-authorized security/audit/compliance review 分量完成但 provenance 受限；SIG independent review、四类 machine registration、OPS member closure 与 CA-0 GO pending；继续阻断 CA-1～CA-8）；**D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 registration eligibility NO-GO**（八项 blocked；machine contracts 未登记）；D-019 已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **AUDIT owner selections recorded / independent review pending** | `lane/ctr-v02-ca-audit-design` | PR #53 SIG 已合入且 main CI `29930557168` 双平台成功，但 GitHub reviews 为空，独立 SIG security review 不得声称完成；`V02-CA-AUDIT-01` 已记录 carrier/stream/sequence/hash-chain/checkpoint/retention/legal-hold/redaction/export owner selections；全部 AUDIT schemas/digests/policies/keys/errors/port 未登记；下一门禁 = 独立 owner/security/audit/compliance review 与普通 merge，不自动合并 |
+| Lane-CTR 契约与生成 | **OPS registration eligibility audited / machine registration NO-GO；PR #55 review pending** | `lane/ctr-v02-ca-ops-registration` | PR #54 merge/main CI gate 已闭合；AUDIT owner-authorized security/audit/compliance review completed（非外部/GitHub review）；`V02-CA-OPS-REG-READINESS-01` 证明八个 candidates 全部 blocked，foundation choices 亦未唯一闭合；PR #55 只交付 docs-only NO-GO audit，不登记任何 member/asset；SIG independent review、四类 registration、CA-0 GO 仍 pending |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260722-lane-ctr-v02-ca-audit-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-audit-design-handoff.md)（CTR：PR #53 merge/main CI gate closed；AUDIT owner selections recorded；machine contracts unregistered）
-2. [20260722-lane-ctr-v02-ca-sig-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-sig-design-handoff.md)（CTR：SIG design merged；independent security review still unclaimed；profiles 未登记/不可用）
-3. [20260722-lane-ctr-v02-ca-target-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-target-design-handoff.md)（CTR：TARGET design materialized；三个 configure candidates blocked）
+1. [20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md](../checkpoints/20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md)（CTR：八项 eligibility audit；machine registration NO-GO；无 asset/member 登记）
+2. [20260722-lane-ctr-v02-ca-audit-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-audit-design-handoff.md)（CTR：AUDIT design merged；owner-authorized review provenance 由后续 handoff 更新）
+3. [20260722-lane-ctr-v02-ca-sig-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-sig-design-handoff.md)（CTR：SIG design merged；independent security review still unclaimed；profiles 未登记/不可用）
 
 ## 客户端目录治理交付
 

@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Migration Plan
 
-- Status: design with owner-confirmed SIG and AUDIT selections; independent reviews pending
+- Status: docs-only design; AUDIT owner-authorized review component completed; OPS registration eligibility NO-GO; SIG independent review and machine registration pending
 - Source: existing v0.1 assets and epochs
 - Target proposal: `0.2.0-draft.1`; digest `unresolved/not computed`
 - Classification: docs-only; migration not implemented
@@ -107,3 +107,11 @@ target/readback, audit record/stream/checkpoint/policy/export, or atomic
 obligation cannot be verified, migration fails closed before dispatch. v0.1
 bytes remain intact; no partial v0.2 membership, session, approval, audit chain,
 or success receipt is created.
+
+## 8. Registration-readiness clarification
+
+The 2026-07-23 eligibility audit creates no migration target. All eight operation
+spellings remain inputs only; no member, descriptor, set, extension, target,
+signature, audit profile, or new epoch exists. Foundation and member closure
+therefore remain future OPS work and cannot be omitted from the four-family
+registration sequence.

@@ -48,7 +48,7 @@ flowchart LR
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
-| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ca-audit-design` | PR #53 SIG 已 merge 且 main CI `29930557168` 双平台成功；GitHub reviews 为空，SIG independent security review 仍不得声称完成；`V02-CA-AUDIT-01` 已记录 owner-confirmed carrier/stream/sequence/hash-chain/checkpoint/retention/legal-hold/redaction/export 选择，等待独立 owner/security/audit/compliance review；四类 machine contracts 均未登记；D-022 继续阻断 CA-1～CA-8 |
+| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ca-ops-registration` | PR #54 merge `54929f1` 与 main CI `29937238562` 双平台成功；AUDIT owner-authorized security/audit/compliance review completed（非外部人类/第三方/GitHub review）；PR #55 的 OPS eligibility audit 裁决八项全部 blocked 且 foundation choices 未闭合，因此只形成 docs-only registration NO-GO；SIG independent review 与四类 machine registration 均 pending；D-022 继续阻断 CA-1～CA-8 |
 | `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `main`（PR #46 已合入） | `SHELL-TARGET-AMBIGUITY-001` behavior pass；pins 59/25；self-check 40；见 `20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |

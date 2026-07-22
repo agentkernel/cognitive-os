@@ -2,7 +2,7 @@
 
 - Decision ID: `V02-CA-AUDIT-01`
 - Date: 2026-07-22
-- Status: **materialized with owner-confirmed technical selections; independent owner/security/audit/compliance review and machine registration pending**
+- Status: **merged; owner-authorized security/audit/compliance review completed with limited provenance; machine registration pending**
 - Baseline: `origin/main@0a30ac70769f0501f7928d96f55f17636eaa9888`
   (PR #53 merge; main CI run `29930557168` Ubuntu/Windows success)
 - Inputs: [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
@@ -804,9 +804,15 @@ session. This is not a GitHub review of the resulting PR head. No review or
 merge exception from PR #50 through #53 applies to this AUDIT PR, machine
 registration, CA-0, implementation, or CFR.
 
+After PR #54 merged, the repository owner expressly authorized the preceding
+agent to review the exact merged design from security, audit, and compliance
+perspectives. That review found no blocking design defect. It may be recorded as
+an owner-authorized AUDIT review completed, but it is not an external human,
+third-party, independent cryptography, or GitHub review and does not expand any
+machine-registration or implementation authority.
+
 ### Blocking facts
 
-- independent owner/security/audit/compliance review of this exact PR head;
 - exact future schema/profile/policy bytes and all digests;
 - positive finite checkpoint thresholds and actual retention-policy values;
 - governed checkpoint/export key descriptors and registered usages;
@@ -825,19 +831,21 @@ a Profile claim.
 
 ## 19. GO/NO-GO and downstream order
 
-- `GO`: AUDIT design is materialized for owner/security/audit/compliance review.
+- `GO`: AUDIT docs-only design is merged and its owner-authorized
+  security/audit/compliance review is completed with the provenance limitation
+  above.
 - `NO-GO`: AUDIT machine registration, OPS/TARGET/SIG registration,
   Configuration Authority implementation, behavior execution, and Profile
   claim.
 
 Downstream order remains:
 
-1. independent review and ordinary merge of this AUDIT docs-only packet;
-2. OPS/TARGET/SIG/AUDIT four independent machine-registration batches;
-3. independent CA-0 re-review;
-4. explicit CA-0 GO;
-5. only then, implementation;
-6. Management CFR after real implementation exists.
+1. OPS/TARGET/SIG/AUDIT four independent machine-registration lines, with SIG
+   independent security/cryptography review before SIG registration;
+2. independent CA-0 re-review;
+3. explicit CA-0 GO;
+4. only then, implementation;
+5. Management CFR after real implementation exists.
 
 AUDIT merge does not make Event, transition records, receipts, `audit_ref`,
 SQLite rows, booleans, logs, sequence values, hash proposals, retention rules,

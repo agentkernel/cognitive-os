@@ -324,7 +324,25 @@ A candidate remains blocked until all mandatory descriptor bindings close, exact
 
 OPS merge alone does not unblock TARGET implementation, CA-1 through CA-8, or any behavior vector.
 
-## 12. Preserved state
+## 12. 2026-07-23 registration-readiness audit
+
+After PR #54 merged and main CI `29937238562` succeeded on Ubuntu and Windows,
+the owner authorized a security-first registration eligibility audit. The result
+is recorded in
+[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md):
+
+- all eight candidates remain `blocked` after every mandatory binding was
+  rechecked;
+- no operation member is eligible for machine registration;
+- no descriptor/set foundation is eligible without unresolved owner choices;
+- no machine asset, implementation, behavior result, or Profile claim changed.
+
+The owner-authorized AUDIT security/audit/compliance review component is
+completed, but it is not an external human, third-party, or GitHub review. SIG
+independent security/cryptography review remains pending. Neither fact supplies
+an unregistered TARGET, SIG, or AUDIT triple to an OPS descriptor.
+
+## 13. Preserved state
 
 - v0.1 assets and identities unchanged;
 - 273 requirements, 55 errors, 61 schemas, 84 vectors;

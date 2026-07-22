@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Compatibility Window Proposal
 
-- Status: finite design with owner-confirmed SIG and AUDIT selections; independent reviews pending
+- Status: finite docs-only design; AUDIT owner-authorized review component completed; OPS registration eligibility NO-GO; SIG independent review and machine registration pending
 - Proposed native set: exact `0.2.0-draft.1`
 - Operation-set digest: `unresolved/not computed`
 - Machine status: unregistered
@@ -81,3 +81,11 @@ its URI, operation spelling, or JSON can be parsed. A future target adapter must
 list exact source/target asset identities and remain finite; loss of target
 authority, CAS, epoch, consumer, verification, receipt, approval, audit, or
 critical-extension semantics fails closed.
+
+## 5. Registration-readiness clarification
+
+The proposed window does not make `0.2.0-draft.1` a published identity and does
+not authorize an empty operation set. The 2026-07-23 eligibility audit found no
+eligible member and no owner-closed foundation identity. Consequently there is
+currently no selectable native set, adapter input, descriptor, extension, or
+epoch to which this window can apply.

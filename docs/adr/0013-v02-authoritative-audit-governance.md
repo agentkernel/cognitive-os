@@ -1,6 +1,6 @@
 # ADR-0013: v0.2 Authoritative Audit Governance
 
-- Status: Proposed; owner technical selections confirmed; independent owner/security/audit/compliance review pending
+- Status: Accepted as docs-only design; owner-authorized security/audit/compliance review completed with limited provenance; machine registration pending
 - Date: 2026-07-22
 - Decision owners: repository owner, security reviewer, audit/store/recovery
   owner, compliance/privacy owner, SIG owner, and Configuration Authority
@@ -96,6 +96,13 @@ retention/legal-hold, redaction, and export choices on 2026-07-22. This closes
 those alternatives at the docs-only design level. It does not register machine
 assets, set policy numbers, compute digests, or substitute for independent
 review of the resulting PR head.
+
+After PR #54 merged, the repository owner expressly authorized the preceding
+agent to review the exact merged design from security, audit, and compliance
+perspectives. The review found no blocking design defect. Its provenance is
+owner-authorized agent review, not external human, third-party, independent
+cryptography, or GitHub review. It does not register an AUDIT asset, close SIG
+review, authorize CA-0, or provide implementation or behavior evidence.
 
 ## Consequences
 
