@@ -1,7 +1,7 @@
 # V02-CA-OPS-01 Draft Release Notes
 
 - Proposed release: `0.2.0-draft.1`
-- Status: OPS and TARGET merged; SIG docs-only design materialized for owner/security review; not published or specified
+- Status: OPS and TARGET merged; SIG owner technical selections confirmed / independent security review pending; not published or specified
 - Operation-set digest: `unresolved/not computed`
 - Classification: docs-only; no machine registration or implementation
 
@@ -20,8 +20,10 @@
 - SIG source audit and proposed detached-signature envelope family with distinct
   session and approval profiles, domains, projections, key usages, replay rules,
   verification order, receipt responsibilities, and 40 planned negatives.
-- Bounded Ed25519/P-256 and governed-registry/external-resolver/trust-delegation
-  alternatives; no algorithm, key infrastructure, or trust root is selected.
+- Owner-confirmed pure strict Ed25519-only, governed strong-ref key registry,
+  platform-root-signed registry manifest, depth-one tenant delegation, distinct
+  session/approval leaf usages, 24-hour rotation overlap, immediate revocation,
+  exact receipt/AUDIT split, tier/session/replay rules, and 19 future SIG errors.
 
 ## Breaking
 
@@ -62,6 +64,7 @@ The TARGET audit did not select or register a system, gateway, or diagnostics
 target profile. There is no published core, extension, descriptor, target
 profile, state domain, set digest, or machine membership in this release note.
 
-The SIG audit did not select an algorithm set, key resolver, trust root, or
-registered profile. The proposed envelope and object-specific session/approval
-profiles remain blocked and have unresolved digests.
+The owner selected the SIG algorithm/key/trust/domain/projection/error model at
+the docs-only design level. No envelope, key descriptor/registry manifest,
+profile, receipt, replay ledger, error, schema, extension, or digest is machine
+registered; independent security review remains pending.

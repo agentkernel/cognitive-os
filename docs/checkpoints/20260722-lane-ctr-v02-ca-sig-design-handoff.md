@@ -46,14 +46,14 @@
 - Structural decision: a reusable detached-signature envelope/profile family
   is viable, but session and approval require independent object-specific
   profiles. A generic or cross-object signature domain is forbidden.
-- Proposed session profile/domain:
+- Owner-confirmed session profile/domain:
   `cognitiveos.signature.management-session-authority/0.2` /
   `management-session-authority/0.2`.
-- Proposed approval profile/domain:
+- Owner-confirmed approval profile/domain:
   `cognitiveos.signature.management-approval-authority/0.2` /
   `management-approval-authority/0.2`.
-- All profile/family versions are proposed `0.2.0-draft.1`; every digest is
-  `unresolved/not computed`. Nothing is registered.
+- All profile/family versions are owner-confirmed `0.2.0-draft.1`; every digest
+  is `unresolved/not computed`. Nothing is registered.
 
 ## 4. Machine and implementation audit result
 
@@ -77,7 +77,7 @@
 
 ## 5. Shared family and object-specific bindings
 
-The proposed shared envelope carries only profile triple, algorithm, key ID,
+The owner-confirmed shared envelope carries only profile triple, algorithm, key ID,
 signed domain, signed schema digest, signed content digest, negotiation epoch
 digest, and encoded signature bytes. Algorithm, key, resolver, trust root,
 projection, and exclusions cannot be caller supplied.
@@ -95,28 +95,41 @@ Digest integrity, signature validity, signer/key authorization, trust-root
 validity, rotation/revocation status, and current business authorization are
 separate checks. No one check implies another.
 
-## 6. Algorithm, key, and trust alternatives
+## 6. Owner-confirmed algorithm, key, and trust decisions
 
-No unique selection was possible from current digest-pinned facts. The design
-records these bounded alternatives for owner/security review:
+The repository owner confirmed the following docs-only design selections on
+2026-07-22:
 
-- algorithms: Ed25519 with fixed raw unpadded-base64url signature; fixed-width
-  low-S P-256 ECDSA; or a strictly pinned two-algorithm set only if a proven
-  compatibility need justifies the downgrade surface;
-- key resolution: governed CognitiveOS authority-key registry or immutable
-  external KMS/PKI resolver profile;
-- trust: platform-rooted authority, with bounded tenant delegation only if a
-  tenant-scoped authority requirement is proven.
+- pure strict RFC 8032 `Ed25519` only, with no ctx/ph variant or application
+  prehash; public keys are 32 raw bytes and signatures 64 raw bytes, both using
+  unpadded base64url where encoded; strict verification rejects wrong length,
+  non-canonical point/scalar encodings, `S >= L`, and small-order public keys or
+  signature points; aliases, PEM/DER/hex, fallback, and downgrade are forbidden;
+- `key_id` is a strong ref resolved only through a governed authority-key
+  registry. Session and approval use distinct single-usage leaf keys named
+  `management-session-signing` and `management-approval-signing`; proposer or
+  workload ownership is forbidden. External KMS/HSM may hold private keys but
+  cannot define identity, trust, status, or policy;
+- one platform governance root, used only for
+  `authority-key-certification`, signs immutable registry manifests under
+  `authority-key-registry/0.2`. Negotiation pins the manifest. Tenant
+  delegation is platform-signed, monotone, cross-tenant isolated, and depth 1;
+- statuses are `scheduled`, `active`, `retiring`, `revoked`, and `expired`, with
+  exactly one active key per authority/usage. A retiring predecessor is accepted
+  only for pre-successor objects and at most 24 hours; revocation is immediate.
+  Authorization and commit use current authoritative state without stale-cache
+  fallback; resolution ambiguity or unavailability fails closed.
 
-Both profiles remain blocked until the owner/security and identity/KMS reviewers
-select the allowed set, identifiers/encoding, key ID and resolver, trust roots,
-usage, rotation, revocation, freshness/cache/outage rules, and exact errors.
+These choices close the prior algorithm/key/trust alternative at the design
+level. They do not register profiles, keys, roots, manifests, schemas, errors,
+or extensions. Independent security review and machine registration remain
+mandatory.
 
 ## 7. Signed projections
 
 ### Session
 
-- content-digest domain proposal: `management-session-content/0.2`;
+- content-digest domain: `management-session-content/0.2`;
 - `session_digest` projection excludes exactly `/session_digest` and
   `/authority_signature`;
 - subject projection excludes exactly `/authority_signature` and includes the
@@ -127,10 +140,14 @@ usage, rotation, revocation, freshness/cache/outage rules, and exact errors.
   `management-session-signed-projection/0.2`;
 - any renewal, activity/expiry, scope/risk, policy/revocation, state, or other
   signed-field change requires a new object version, digest, and signature.
+- Every accepted activity update is a CAS version/signature update. Ordinary
+  renewal cannot extend absolute expiry or expand scope/risk; expansion,
+  absolute-expiry extension, or authority/domain change requires reauthentication
+  and a new session ID. Reconnect never restores old bearer/session authority.
 
 ### Approval
 
-- content-digest domain proposal:
+- content-digest domain:
   `management-approval-decision-content/0.2`;
 - `decision_digest` projection excludes exactly `/decision_digest` and
   `/authority_signature`;
@@ -144,6 +161,11 @@ usage, rotation, revocation, freshness/cache/outage rules, and exact errors.
 - proposal, request/challenge, session, decision, authority, approver/
   ActorChain, independence, policy, risk, step-up, decision/expiry, and
   single-use bindings remain in the signed projection where applicable.
+- R1 accepts an OS-held structured/trusted/dual surface; R2 requires trusted or
+  dual plus step-up and one independent decision; R3 requires two decisions
+  with pairwise-distinct principals, ActorChains, and approval leaf keys,
+  bound to one tuple and consumed atomically. R0 policy-auto is not human
+  approval. Every approval is finite and single-use.
 
 Current v0.1 schemas cannot be the final signed schemas because they contain
 only string signatures and do not register these projections. Future v0.2
@@ -163,21 +185,34 @@ All G1-G4 signature checks finish before business authorization. Signature
 success is followed by current business authorization. Receipt or audit failure
 cannot report success.
 
-Exact existing-code reuse is limited to the registered condition: critical
+Exact existing-code reuse is limited to its registered condition: critical
 extension, lossy mapping, supported version window, pinned protocol schema,
-schema shape after registration, declared digest mismatch, self-authorization,
-missing independent approval, session expiry/revocation/scope/step-up, and
-authoritative persistence failure.
+future registered schema shape, declared digest mismatch, current-version CAS,
+self-authorization, missing independent approval, session expiry/revocation/
+scope/step-up, and authoritative persistence failure.
 
-Unknown profile/algorithm/key, downgrade, malformed signature, wrong domain or
-projection, revoked/rotated key, unauthorized usage, trust mismatch, invalid
-signature, replay, and general object/policy/revocation/negotiation mismatch do
-not have complete exact registered error closure. No nearby code was repurposed.
+The owner confirmed 19 future SIG errors: profile unknown; algorithm
+unsupported/downgrade denied; encoding invalid; domain/signed-schema/projection
+mismatch; verification failed; key unknown/resolution failed/revoked/expired/
+rotated out/usage denied; trust-root mismatch; replay detected; and negotiation,
+revocation, or policy version mismatch. Only key-resolution failure is
+retryable. These names remain unregistered; no nearby code was reinterpreted.
 
-SIG owns verification facts and a logical receipt slot. AUDIT still owns the
-authoritative carrier/profile/persistence port and atomic audit slot. Event open
-payload, transition record, outbox, SQLite row, and AKP `audit_ref` remain
-insufficient.
+The owner confirmed that future SIG registration owns one shared
+`SignatureVerificationReceipt` schema for both object-specific profiles.
+Success and failure both persist safe verification facts before business
+authorization. The receipt is not independently signed and grants no authority;
+its integrity depends on registered digest plus authoritative persistence and
+AUDIT. AUDIT still owns carrier, sequence/high-watermark, tamper resistance,
+retention/sensitivity/export, and the atomic audit slot. Event open payload,
+transition record, outbox, SQLite row, and AKP `audit_ref` remain insufficient.
+
+Critical extensions are owner-confirmed as
+`cognitiveos.ext.signature.management-session-authority`,
+`cognitiveos.ext.signature.management-approval-authority`, and
+`cognitiveos.ext.authority-key-registry`, all critical and unregistered. Session
+current-version authority is reusable within scope; approval authority is
+consumed by authoritative CAS, with an R3 pair consumed as one atomic set.
 
 ## 9. Planned tests and evidence boundary
 
@@ -209,7 +244,7 @@ insufficient.
 - `pnpm -r build`: pass.
 - `pnpm -r test`: pass (contracts-ts 38; tools 2; sdk-ts 69 pass / 3 skip;
   agent-shell 13).
-- Additional local `cargo test --workspace` did not enter test execution: the
+- Initial and owner-selection follow-up local `cargo test --workspace` did not enter test execution: the
   known Windows GNU environment still lacks linker libraries `libgcc_eh` and
   `libgcc`. This is an environment limitation, not a SIG document failure;
   SIG PR Ubuntu/Windows CI is the required Rust build/test gate.
@@ -232,16 +267,20 @@ insufficient.
   and requested reviewers empty.
 - This handoff fact backfill is a separate docs-only commit. Its final PR-head
   checks must also remain successful; the authoritative final status is PR #53.
-- Owner/security reviewer status: pending. No reviewer request was created
-  because no explicit user instruction named a reviewer.
+- Repository-owner technical selections were confirmed in the active governance
+  session and are materialized by a follow-up docs-only commit. This is not an
+  independent security/cryptography review or a GitHub PR review. GitHub reviews,
+  review decision, and requested reviewers remain pending/empty; no reviewer
+  request was created because no explicit user instruction named a reviewer.
 - SIG PR must not be auto-merged.
 
 ## 12. Status and pins
 
-- D-016: OPS/TARGET merged; SIG design materialized; registration pending; not
-  closed.
-- D-022: OPS/TARGET merged; SIG design materialized; AUDIT and four machine
-  registrations pending; remains a blocker for CA-1 through CA-8.
+- D-016: OPS/TARGET merged; SIG owner selections recorded; registration pending;
+  not closed.
+- D-022: OPS/TARGET merged; SIG owner selections recorded; independent security
+  review, AUDIT, and four machine registrations pending; remains a blocker for
+  CA-1 through CA-8.
 - IMP-01: v0.1 freeze unchanged; this is a docs-only v0.2 structural design and
   registers no proposed structure.
 - Pins remain 273 REQ / 55 errors / 61 schemas / 84 vectors / 59 pass / 25
@@ -251,7 +290,7 @@ insufficient.
 
 ## 13. Next unique entry
 
-1. wait for SIG owner/security review and ordinary merge;
+1. wait for independent SIG security/GitHub review and ordinary merge;
 2. wait for merge-triggered main CI Ubuntu/Windows success;
 3. AUDIT design;
 4. OPS/TARGET/SIG/AUDIT four independent machine-registration batches;
@@ -262,5 +301,5 @@ insufficient.
 
 Suggested continuation prompt: `docs/prompts/lane-ctr.md`.
 
-Final status: SIG design materialized for owner review; machine contracts
-remain unregistered.
+Final status: SIG design materialized with owner-confirmed technical selections
+for independent review; machine contracts remain unregistered.

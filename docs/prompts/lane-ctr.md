@@ -47,29 +47,39 @@
 
 ## SIG 当前裁决
 
-- 可提议一个共享 detached-signature envelope/profile family，但不能使用
-  generic/object/payload 或跨对象共享的 signature domain。
-- session 与 approval 必须拥有独立 profile ID/version/digest、domain、
-  signed schema/projection/exclusions、key usage、replay与业务验证规则。
-- session signed projection 提议只排除 `/authority_signature`，包含重算的
-  `session_digest`；其内容 digest projection 另排除 `/session_digest`。
-- approval signed projection同样只排除 `/authority_signature`，包含重算的
-  `decision_digest`；其内容 digest projection另排除 `/decision_digest`。
-- 算法候选为 Ed25519、fixed-width low-S P-256 或严格钉扎的双算法集合；
-  key/trust候选为 governed registry、外部 KMS/PKI resolver profile 或有界
-  tenant delegation。没有选定任何一项。
-- 两个 profiles 均 `blocked`：算法集合、key ID/resolution、trust roots、
-  rotation/revocation、signed schema digests、proposal/request digest closure、
-  一般 crypto errors、verification receipt/AUDIT slot 均未闭合。
+- 共享 family 固定为 `cognitiveos.detached-signature-envelope/0.2`；session 与
+  approval 使用独立 profile、domain、signed schema/projection/exclusions、
+  key usage、replay 与业务验证规则，禁止 generic/object/payload domain。
+- 算法集合仅含 pure strict RFC 8032 `Ed25519`：32-byte raw public key、
+  64-byte raw signature、unpadded base64url；禁止 ctx/ph、应用 prehash、alias、
+  fallback、downgrade、非规范编码与 small-order points。
+- key ID 使用 strong ref，通过 governed authority-key registry 唯一解析；
+  session/approval 使用不同且单一 usage 的 leaf key。platform governance root
+  只认证 immutable registry manifest；tenant delegation 深度不超过 1 且只能
+  单调收窄。外部 KMS/HSM 只能保管私钥，不能定义身份、trust 或 status。
+- key 状态为 scheduled/active/retiring/revoked/expired；每 authority+usage 仅
+  一个 active；retiring predecessor 只验证 successor activation 前签署对象，
+  最长 24 小时；revoked 无 grace；authorization/commit 均读当前权威状态。
+- session 内容 projection 精确排除 `/session_digest` 与
+  `/authority_signature`，subject projection 仅排除 `/authority_signature`；
+  approval 对应排除 `/decision_digest` 与 `/authority_signature`。所有 domain、
+  critical extensions、receipt/replay、R1-R3 与 session lifecycle 规则以
+  `V02-CA-SIG-DESIGN-DECISION.md` 为准。
+- owner 已确认 19 个未来 SIG errors；仅
+  `SIGNATURE_KEY_RESOLUTION_FAILED` 可重试。本批未修改 error registry。
+- 以上是 owner-confirmed docs-only design，不是 GitHub security review 或机器
+  合同。两个 profiles 仍未登记/不可选择；signed machine schemas/digests、
+  AUDIT carrier、machine registration、implementation 与 evidence 均待后续。
 - digest integrity、cryptographic validity、key/signer authorization、trust、
   rotation/revocation 与 session/approval business authorization 必须分别验证。
 
 ## 当前任务
 
-1. 核验 SIG PR head、文件范围、checks、review 与 owner/security authorization。
-2. 未获 owner/security 明确批准前保持 WRITE-WAIT；不得自动 merge。
+1. 核验 SIG PR head、文件范围、checks、review 与独立 security/GitHub review。
+2. owner technical selections 已记录；在独立 review 与普通 merge 前保持
+   WRITE-WAIT，不得自动 merge。
 3. 不得沿用 PR #50、#51 或 #52 的任何 review 例外。
-4. 只有 owner/security review 和普通 merge 完成，且 merge-triggered main CI
+4. 只有独立 security/GitHub review 和普通 merge 完成，且 merge-triggered main CI
    Ubuntu/Windows 成功，才转入 AUDIT design。
 5. 不得顺手登记 SIG/TARGET/OPS machine contracts。
 
@@ -95,5 +105,5 @@
 6. Management CFR。
 
 第一个动作：只读重核验 SIG PR、remote main、tracked worktree/index、旁路
-路径、review/checks 与 owner/security authorization；在 SIG review/merge
+路径、review/checks 与独立 security/GitHub review；在 SIG review/merge
 gate 完成前不改文件。

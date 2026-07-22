@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Migration Plan
 
-- Status: design proposal for owner review
+- Status: design with owner-confirmed SIG selections; independent security review pending
 - Source: existing v0.1 assets and epochs
 - Target proposal: `0.2.0-draft.1`; digest `unresolved/not computed`
 - Classification: docs-only; migration not implemented
@@ -18,8 +18,9 @@
 1. terminate or explicitly supersede the old epoch;
 2. authenticate peers again;
 3. select and verify the new specification set and nested manifests;
-4. select the operation set, critical extensions, session/approval signature
-   profiles, algorithm set, key resolver, and trust-root/status profiles;
+4. select the operation set, three critical SIG extensions, session/approval
+   signature profiles, pure Ed25519 set, governed registry manifest, and
+   platform-root/delegation/status profiles;
 5. verify and reissue the session or rechallenge/redecide approval under the new
    profile, then revalidate authorization, session scope, capabilities, risk,
    approval, target authority, and continuation;
@@ -61,6 +62,10 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
   signature booleans, schema-valid fixtures, or cached key rows are migration
   inputs only and never verification authority. Unknown or stale key/trust
   facts fail closed.
+- A retiring predecessor verifies only objects signed before successor
+  activation and only within 24 hours; revocation has no grace period. Session
+  expansion or absolute-expiry extension creates a newly authenticated session,
+  while approvals are rechallenged and atomically consumed under the new epoch.
 
 ## 5. Vector and evidence migration
 
@@ -74,7 +79,7 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
 
 ## 6. Adapter removal
 
-The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` target sets and is removed at `0.2.0-draft.3`. Concrete versions may change during owner review, but removal remains finite and published in advance.
+The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` target sets and is removed at `0.2.0-draft.3`. Independent review may require successor Draft identities, but no pinned Draft is rewritten and removal remains finite and published in advance.
 
 ## 7. Rollback
 

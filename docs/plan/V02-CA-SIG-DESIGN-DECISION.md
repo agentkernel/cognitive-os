@@ -2,7 +2,7 @@
 
 - Decision ID: `V02-CA-SIG-01`
 - Date: 2026-07-22
-- Status: **materialized for owner/security review; both profiles blocked**
+- Status: **materialized with owner-confirmed technical selections; security review and machine registration pending**
 - Baseline: `origin/main@42d609b2f49e2db641f46aa99b6cc9a538a7f4fd`
   (PR #52 merge; main CI run `29922529556` Ubuntu/Windows success)
 - Inputs: [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
@@ -11,7 +11,7 @@
 - Structural governance:
   [ADR-0012](../adr/0012-v02-detached-signature-profile-governance.md)
 - Classification: docs-only structural design; no machine registration
-- Proposed profile family/version: `cognitiveos.detached-signature-envelope/0.2`,
+- Owner-confirmed profile family/version: `cognitiveos.detached-signature-envelope/0.2`,
   `0.2.0-draft.1`; digest `unresolved/not computed`
 - Session profile version/digest: `0.2.0-draft.1`;
   `unresolved/not computed`
@@ -30,17 +30,20 @@ A reusable detached-signature envelope/profile family is structurally sound,
 but a single generic signing profile is not. Session issuance and approval
 decisions have different authorities, replay boundaries, signed schemas,
 domains, projections, key usages, lifetimes, and business authorization gates.
-The proposed family therefore has two object-specific profiles:
+The owner-confirmed family therefore has two object-specific profiles:
 
 - `cognitiveos.signature.management-session-authority/0.2`, domain
   `management-session-authority/0.2`;
 - `cognitiveos.signature.management-approval-authority/0.2`, domain
   `management-approval-authority/0.2`.
 
-Both profiles remain `blocked`. Current machine facts do not uniquely select an
-allowed algorithm set, key infrastructure, trust roots, or complete
-stage-to-error mapping. The profile IDs, versions, domains, envelope fields,
-and projections below are design proposals for review, not registered assets.
+The repository owner has now selected the algorithm, key infrastructure, trust
+model, rotation/revocation rules, domains/projections, receipt boundary, tiered
+approval semantics, session renewal rules, exact future errors, and
+critical-extension/replay model below. The prior technical-choice blocker is
+closed at the design level. Both profiles remain unregistered and unselectable
+until independent security review and later machine registration assign exact
+schema/profile bytes and digests.
 
 This decision registers no requirement, error, schema, state domain,
 transition, vector, generated binding, operation, extension, specification
@@ -156,12 +159,12 @@ are not cryptographic proof.
 
 ## 4. Shared envelope family and object-specific profile decision
 
-### 4.1 Proposed reusable envelope
+### 4.1 Owner-confirmed reusable envelope
 
 A future machine-registration PR may propose a closed detached envelope with
 these logical fields:
 
-| Field | Proposed obligation |
+| Field | Owner-confirmed obligation |
 |---|---|
 | `signature_profile` | immutable `(asset_id, complete SemVer, sha256 digest)` |
 | `algorithm` | exact case-sensitive ASCII identifier in the selected profile's closed allowed set |
@@ -193,89 +196,121 @@ The same signature bytes, key authorization decision, or profile selection
 cannot be replayed between the two object types. Shared envelope shape is not a
 shared authorization domain.
 
-## 5. Algorithm, key, and trust alternatives
+## 5. Owner-confirmed algorithm, key, and trust decision
 
-No current digest-pinned asset uniquely selects among these bounded options.
-Owner and security review must choose one closed option or reject the family.
+These choices are design-authoritative owner decisions for this v0.2 packet.
+They are not machine contracts until separately registered and digest-pinned.
 
-### 5.1 Algorithm alternatives
+### 5.1 Pure Ed25519 only
 
-| Alternative | Proposed exact shape | Security/operational difference | Status |
-|---|---|---|---|
-| A: Ed25519 only | identifier `Ed25519`; 64 raw signature bytes; unpadded base64url | simple fixed-width encoding and one algorithm; requires compatible authority/KMS support and controlled public-key registration | unresolved |
-| B: P-256 ECDSA only | identifier `ECDSA-P256-SHA256`; fixed 64-byte `r || s`, low-S enforced; unpadded base64url | broader enterprise/HSM availability; requires deterministic encoding and anti-malleability rules | unresolved |
-| C: explicit two-algorithm set | both exact identifiers, with no aliases and per-key algorithm pin | migration flexibility but larger downgrade, interop, and testing surface; selection must be profile/epoch-pinned | unresolved; not preferred without a demonstrated compatibility need |
+- The closed allowed set contains exactly case-sensitive identifier `Ed25519`.
+- It means pure RFC 8032 Ed25519, not `Ed25519ctx` or `Ed25519ph`.
+- The algorithm signs the canonical section 12 signature input directly. No
+  application SHA-256 or other prehash is added; the algorithm's internal
+  hashing remains part of Ed25519.
+- Public keys are exactly 32 raw bytes and signatures exactly 64 raw bytes,
+  encoded as unpadded base64url.
+- Verification is strict: reject wrong lengths, non-canonical point/scalar
+  encodings, `S >= L`, small-order public keys or signature points, and any
+  verification result not accepted by a strict Ed25519 verifier.
+- PEM, DER, hex, standard base64, algorithm aliases, `none`, caller-selected
+  algorithms, fallback, and downgrade are forbidden.
+- Any future algorithm addition or removal creates a new SemVer/digest and
+  migration; P-256 is not in the v0.2 initial allowed set.
 
-DER/raw guessing, algorithm aliases, `none`, caller-selected algorithms, and
-unknown-algorithm fallback are forbidden. Algorithm selection or removal is a
-profile-breaking change with new SemVer/digest and migration.
+### 5.2 Governed authority-key registry
 
-### 5.2 Key-resolution and trust alternatives
+- `key_id` is the existing strong-reference structure `(id, object_version,
+  content_digest)`, not a caller string or resolver URL.
+- It resolves through a governed CognitiveOS authority-key registry to exactly
+  one digest-pinned descriptor containing the Ed25519 public key, owner and
+  deciding authority, one key usage, validity interval, status, rotation
+  generation, predecessor/successor refs, revocation epoch, tenant/domain
+  bounds, and descriptor digest.
+- Session and approval use distinct leaf keys. A leaf descriptor has exactly
+  one usage: `management-session-signing` or
+  `management-approval-signing`. A proposer or workload cannot own either
+  usage.
+- Private-key custody may be external KMS/HSM, but custody cannot define or
+  override key identity, resolver behavior, trust roots, status, or usage.
+- Caller-provided keys, resolver URLs, trust anchors, cache rows, or private
+  database rows are forbidden authority inputs.
 
-| Alternative | Deterministic resolution | Trust/rotation model | Status |
-|---|---|---|---|
-| K1: governed CognitiveOS authority-key registry | `key_id` resolves to one strong, digest-pinned key descriptor under the session/approval authority | platform root authorizes key owner, usage, validity interval, status, successor, revocation epoch, and resolver version | unresolved |
-| K2: external KMS/PKI resolver profile | `key_id` plus selected resolver profile maps to exactly one external key/version; response is authenticated and pinned | trust-anchor set, certificate/key policy, status source, freshness, outage behavior, and rotation overlap are fixed by the profile/epoch | unresolved |
-| K3: platform root with tenant-delegated signing authority | platform root signs a bounded delegation to a tenant authority; chain is digest-pinned and monotone | supports tenant authority but adds delegation, chain, cross-tenant isolation, and revocation complexity | unresolved; only if tenant-scoped session authority is required |
+### 5.3 Platform-rooted registry manifest and tenant delegation
 
-Caller-provided resolver URLs, trust anchors, public keys, cache entries, or
-private database rows are forbidden authority inputs. Resolver unavailability,
-ambiguous results, stale status, unknown keys, or indeterminate trust fail
-closed. Rotation overlap must be finite and explicit. Revocation applies to
-future decisions immediately; verification records the status source/version
-and time used.
+- The platform governance root is the single trust anchor. Its key usage is
+  only `authority-key-certification`; it cannot sign sessions or approvals.
+- The root is offline or HSM-protected and signs an immutable
+  `AuthorityKeyRegistryManifest` with domain `authority-key-registry/0.2`.
+- Each new negotiation epoch pins the registry manifest asset ID, complete
+  SemVer, digest, and certification profile. The manifest lists every usable
+  key descriptor/delegation and its status/usage/bounds.
+- Tenant authorities are never self-anchored roots. A tenant authority is valid
+  only through a platform-root-signed, digest-pinned, maximum-depth-one
+  delegation that monotonically narrows tenant, management domain, scope, risk,
+  key usage, validity, and revocation epoch.
+- Missing, cross-tenant, expired, revoked, expanded, or indeterminate
+  delegation fails closed.
 
-### 5.3 Owner/security decisions required
+### 5.4 Rotation, revocation, and current status
 
-Review must uniquely decide:
+- Key status is one of `scheduled`, `active`, `retiring`, `revoked`, or
+  `expired`.
+- For each `(authority, key_usage)`, exactly one key is `active`. New signatures
+  use only that key.
+- When a successor becomes active, the predecessor enters `retiring` and may
+  verify only objects signed before successor activation, for at most 24 hours
+  and never beyond the object's or key's own expiry.
+- `revoked` is immediate and has no grace period. Existing signed sessions and
+  approvals cannot authorize new work after revocation.
+- Authorization and commit both resolve the current authoritative descriptor,
+  manifest, delegation, and revocation epoch. Resolver unavailability,
+  ambiguity, or stale status fails closed; no stale-cache authorization is
+  allowed.
+- Historical audit may record that a signature was valid at signing time, but
+  historical validity cannot restore current authorization.
 
-1. the closed algorithm set and exact identifiers/encodings;
-2. key descriptor and `key_id` shape;
-3. the deterministic resolver and freshness/cache policy;
-4. platform and tenant trust-root boundaries;
-5. session-signing and approval-signing key usages;
-6. rotation overlap and the meaning of rotated versus expired;
-7. revocation source, epoch, propagation, and historical-verification policy;
-8. exact new error codes for unresolved failure classes.
-
-Until all eight close, neither profile may be registered or selected.
+These selections close the algorithm/key/trust choice at the docs-only design
+level. Independent security review, exact machine schemas/digests, registration,
+generated bindings, implementation, and behavior evidence remain pending.
 
 ## 6. Complete signature binding matrix
 
-Every row is mandatory. “Proposed” means docs-only design, not machine status.
+Every row is mandatory. “Owner-confirmed” means docs-only design, not machine
+registration or runtime authority.
 
 | # | Binding | Session profile | Approval profile | Status |
 |---|---|---|---|---|
-| 1 | profile identity | `cognitiveos.signature.management-session-authority/0.2` | `cognitiveos.signature.management-approval-authority/0.2` | proposed, unregistered |
-| 2 | profile SemVer/digest | `0.2.0-draft.1`; unresolved digest | same version; independent unresolved digest | blocked |
-| 3 | allowed algorithm set | alternatives A/B/C | alternatives A/B/C; may be narrower | owner/security decision |
-| 4 | algorithm identifier | exact selected ASCII identifier | exact selected ASCII identifier | unresolved |
-| 5 | signature encoding | fixed by selected alternative | fixed by selected alternative | unresolved |
-| 6 | key ID shape | authority-key descriptor or resolver-bound ID | approval-key descriptor or resolver-bound ID | unresolved |
-| 7 | deterministic key resolution | selected K1/K2/K3 resolver | selected K1/K2/K3 resolver | unresolved |
-| 8 | trust-root binding | session authority root/delegation | deciding authority root/delegation | unresolved |
-| 9 | key owner/authority | must be authorized by current `session_authority` | must be authorized by current `deciding_authority` | proposed rule; registry absent |
-| 10 | key usage/purpose | exact `management-session-signing` usage | exact `management-approval-signing` usage | proposed; distinct usages |
-| 11 | rotation | finite overlap, explicit successor/version | finite overlap, explicit successor/version | unresolved infrastructure |
-| 12 | revocation | current status/epoch before use | current status/epoch before use | unresolved infrastructure |
-| 13 | verification-time status | record source/version/freshness/time | same, independently | proposed receipt obligation |
-| 14 | signature domain | `management-session-authority/0.2` | `management-approval-authority/0.2` | proposed, independent |
+| 1 | profile identity | `cognitiveos.signature.management-session-authority/0.2` | `cognitiveos.signature.management-approval-authority/0.2` | owner-confirmed, unregistered |
+| 2 | profile SemVer/digest | owner-confirmed `0.2.0-draft.1`; digest computed at registration | same version; independent digest computed at registration | design-closed; unregistered |
+| 3 | allowed algorithm set | exactly pure Ed25519 | exactly pure Ed25519 | owner-confirmed |
+| 4 | algorithm identifier | exact `Ed25519` | exact `Ed25519` | owner-confirmed |
+| 5 | signature encoding | 64 raw bytes, unpadded base64url; strict verification | same | owner-confirmed |
+| 6 | key ID shape | strong ref to session-signing descriptor | strong ref to approval-signing descriptor | owner-confirmed; schema unregistered |
+| 7 | deterministic key resolution | governed authority-key registry only | same, distinct leaf | owner-confirmed; registry unregistered |
+| 8 | trust-root binding | platform registry manifest or max-depth-one tenant delegation | same | owner-confirmed; manifest unregistered |
+| 9 | key owner/authority | current descriptor/delegation binds `session_authority` | current descriptor/delegation binds `deciding_authority` | owner-confirmed |
+| 10 | key usage/purpose | exact `management-session-signing`; exclusive leaf | exact `management-approval-signing`; exclusive leaf | owner-confirmed |
+| 11 | rotation | active successor; predecessor retiring <= 24 hours and only for pre-activation objects | same | owner-confirmed |
+| 12 | revocation | immediate, no grace; future authorization denied | same | owner-confirmed |
+| 13 | verification-time status | authoritative manifest/descriptor/delegation read at authorization and commit; no stale cache | same, independently | owner-confirmed receipt obligation |
+| 14 | signature domain | `management-session-authority/0.2` | `management-approval-authority/0.2` | owner-confirmed, independent |
 | 15 | signed schema identity | future v0.2 session projection schema/digest | future v0.2 approval projection schema/digest | unregistered |
-| 16 | signed projection | closed session binding record containing profile/algorithm/key/schema/epoch metadata plus complete subject except `/authority_signature` | closed approval binding record additionally containing session/request/revocation bindings plus complete subject except `/authority_signature` | proposed; section 7 |
-| 17 | excluded paths | subject source excludes only `/authority_signature`; binding record has no signature-bytes member | subject source excludes only `/authority_signature`; binding record has no signature-bytes member | proposed; digest exclusions are separate |
-| 18 | content-digest cross-check | recompute `session_digest` plus signed-projection digest domain `management-session-signed-projection/0.2` | recompute `decision_digest` plus `management-approval-signed-projection/0.2` | domains/schemas unregistered |
+| 16 | signed projection | closed session binding record containing profile/algorithm/key/schema/epoch metadata plus complete subject except `/authority_signature` | closed approval binding record additionally containing session/request/revocation bindings plus complete subject except `/authority_signature` | owner-confirmed; section 7; schema unregistered |
+| 17 | excluded paths | subject source excludes only `/authority_signature`; binding record has no signature-bytes member | subject source excludes only `/authority_signature`; binding record has no signature-bytes member | owner-confirmed; digest exclusions are separate |
+| 18 | content-digest cross-check | recompute `session_digest` plus signed-projection digest domain `management-session-signed-projection/0.2` | recompute `decision_digest` plus `management-approval-signed-projection/0.2` | owner-confirmed domains; schemas unregistered |
 | 19 | canonical encoding | RFC 8785 under `cognitiveos.canonical-json/0.1` | same | existing standard reusable |
-| 20 | replay resistance | session ID/version/profile/domain/epochs/times | decision ID/version/proposal/request/challenge/session/profile/domain/times/single-use | proposed |
-| 21 | object version | exact signed `object_version`; renewal/change creates new version and re-sign | exact signed `object_version`; change creates new decision version and re-sign | proposed |
-| 22 | policy/revocation/negotiation epoch | policy and revocation are signed; negotiation epoch externally pinned and rechecked | policy signed; revocation and negotiation bindings require future profile/envelope/request closure | partial; blocked |
+| 20 | replay resistance | current session ID/version/profile/domain/epochs/times; old/cross-profile binding rejected | atomic decision/proposal/request/session/profile/epoch consumption ledger; R3 pair consumed together | owner-confirmed; ledger unregistered |
+| 21 | object version | exact signed `object_version`; every accepted activity/renewal/change creates CAS version and re-sign | exact signed `object_version`; change creates new decision version and re-sign | owner-confirmed |
+| 22 | policy/revocation/negotiation epoch | policy and revocation signed; specification/registry/negotiation pins in binding record and rechecked | policy, revocation, specification, registry, and negotiation pins in binding record and rechecked | owner-confirmed; carriers unregistered |
 | 23 | ActorChain/principal | human principal and ActorChain digest signed | approver principal and ActorChain digest signed | resolution/current authorization separate |
-| 24 | proposal/session/challenge | not part of session issuance object; later proposals bind the verified session version/digest | proposal digest, session ref, request ref, challenge digest, and single-use semantics | proposal/request digest closure blocked |
-| 25 | verification order | G0-G5 before any management authorization | G0-G5 before approval is counted | proposed; section 10 |
-| 26 | verification receipt | session-specific receipt slot | approval-specific receipt slot | logical design only; carrier unregistered |
-| 27 | audit responsibility | SIG supplies verification facts; AUDIT owns authoritative carrier/atomic slot | same | AUDIT blocker |
-| 28 | stage-to-error mapping | exact existing session business errors plus unresolved crypto errors | exact approval/self-authorization errors plus unresolved crypto errors | incomplete |
-| 29 | critical extension/negotiation | session profile triple and algorithm set are critical pins | approval profile triple and algorithm set are critical pins | extension assets unregistered |
-| 30 | finite compatibility/migration | v0.1 string never upgrades in place; reissue v0.2 session | v0.1 string never upgrades in place; create a new v0.2 decision | proposed |
+| 24 | proposal/session/challenge | later proposals bind the exact current verified session ID/version/digest | exact proposal/request/challenge plus session ID/version/digest; R3 decisions bind the same tuple | owner-confirmed rule; proposal/TARGET assets unregistered |
+| 25 | verification order | G0-G5 before any management authorization | G0-G5 before approval is counted | owner-confirmed; section 10 |
+| 26 | verification receipt | shared `SignatureVerificationReceipt` with session subject/profile facts | same schema with approval subject/profile facts | owner-confirmed SIG responsibility; schema unregistered |
+| 27 | audit responsibility | SIG owns receipt facts/schema; AUDIT owns authoritative carrier/sequence/atomic slot | same | owner-confirmed split; AUDIT pending |
+| 28 | stage-to-error mapping | exact existing codes plus owner-confirmed SIG codes in section 12 | same | design-closed; registry unmodified |
+| 29 | critical extension/negotiation | `cognitiveos.ext.signature.management-session-authority` plus `cognitiveos.ext.authority-key-registry`, both critical | `cognitiveos.ext.signature.management-approval-authority` plus registry extension, both critical | owner-confirmed; extension assets unregistered |
+| 30 | finite compatibility/migration | v0.1 string never upgrades in place; reauthenticate and reissue v0.2 session | v0.1 string never upgrades in place; rechallenge and create v0.2 decision | owner-confirmed |
 | 31 | authorization non-expansion | valid signature proves bytes/key only | valid signature proves bytes/key only | mandatory invariant |
 
 ## 7. Canonical domains, projections, and exclusions
@@ -300,26 +335,25 @@ For each object, processing is:
 
 No implementation may sign a display digest, pretty JSON, source/transport
 bytes, an open payload, or implicitly reparsed content. No application SHA-256
-is added before the selected algorithm unless the registered algorithm profile
-explicitly requires it.
+or other prehash is added before pure Ed25519.
 
 ### 7.2 Session projections
 
-Proposed session content-digest domain:
+Owner-confirmed session content-digest domain:
 `management-session-content/0.2`.
 
-Proposed `session_digest` projection includes every schema-known session field
+The owner-confirmed `session_digest` projection includes every schema-known session field
 except exactly:
 
 - `/session_digest`;
 - `/authority_signature`.
 
-Proposed session subject projection includes every schema-known field,
+The owner-confirmed session subject projection includes every schema-known field,
 including `/session_digest` and all present optional fields, except exactly:
 
 - `/authority_signature`.
 
-The proposed session signed projection is a closed binding record with:
+The owner-confirmed session signed projection is a closed binding record with:
 
 - profile asset ID, SemVer, and digest;
 - algorithm, key ID, signed domain, signed schema digest, and canonical profile;
@@ -342,22 +376,22 @@ version, recomputed digest, and new signature.
 
 ### 7.3 Approval projections
 
-Proposed approval content-digest domain:
+Owner-confirmed approval content-digest domain:
 `management-approval-decision-content/0.2`.
 
-Proposed `decision_digest` projection includes every schema-known approval
+The owner-confirmed `decision_digest` projection includes every schema-known approval
 decision field except exactly:
 
 - `/decision_digest`;
 - `/authority_signature`.
 
-Proposed approval subject projection includes every schema-known field,
+The owner-confirmed approval subject projection includes every schema-known field,
 including `/decision_digest` and all present conditional/optional fields,
 except exactly:
 
 - `/authority_signature`.
 
-The proposed approval signed projection is a closed binding record with:
+The owner-confirmed approval signed projection is a closed binding record with:
 
 - profile asset ID, SemVer, and digest;
 - algorithm, key ID, signed domain, signed schema digest, and canonical profile;
@@ -376,11 +410,11 @@ risk, revocation and negotiation epochs, challenge, safe reason codes,
 decision/expiry times, the recomputed decision digest, and the exact
 profile/algorithm/key/schema context.
 
-For an `approve` decision, future profile registration must close the exact
-request/challenge rule for R1, R2, and R3. The current R1 conditional is not a
-complete cross-tier signature profile. Proposal digest closure must prove that
-the exact target/profile/parameters digest is covered; otherwise the approval
-profile remains blocked.
+For an `approve` decision, the owner-confirmed rules in section 9 close the
+design-level request/challenge semantics for R1, R2, and R3. The current v0.1
+R1 conditional remains insufficient as a machine carrier. Future registration
+must materialize the confirmed cross-tier shapes, and proposal digest closure
+must prove that the exact target/profile/parameters digest is covered.
 
 ### 7.4 Signed schema identity
 
@@ -388,8 +422,8 @@ The current v0.1 schemas cannot be used as the final v0.2 signed schema because
 their `authority_signature` member is only a string and they do not register
 the detached envelope, external epoch/request/session bindings, or closed
 binding-record projections. Future registration must create new immutable
-schema/profile identities and digests and must decide where those binding facts
-are carried. This design does not assign those digests or mutate the current
+schema/profile identities and digests that materialize the owner-confirmed
+binding records. This design does not assign those digests or mutate the current
 schemas.
 
 ## 8. Session-specific business verification
@@ -411,12 +445,25 @@ After cryptographic verification, the authority must still verify:
 - negotiation epoch and profile triple are current and critical semantics were
   preserved.
 
-Renewal creates a new object version and signature. Revocation, closure, scope
-change, risk change, policy/revocation advance, activity/expiry update, or key
-rotation outside the finite overlap invalidates future use of the old version.
-Reconnect establishes a new authenticated negotiation/session binding; it
-does not restore an old bearer or session authority. Old object, policy,
-revocation, key-status, or negotiation versions fail closed.
+Initial issuance uses `object_version = 1`. Every authority-accepted activity
+update changes signed `last_activity_at`, performs CAS, increments object
+version, recomputes digests, and re-signs. Authorization and commit must observe
+the same exact current session version; an intervening change fails closed.
+
+Ordinary renewal may update activity/idle state only within the original
+absolute expiry and cannot expand scope or risk. Scope/risk attenuation may keep
+the session ID but requires a new CAS version and signature. Scope/risk
+expansion, absolute-expiry extension, or authority/domain change requires fresh
+authentication and a new session ID. Revocation or closure immediately commits
+a new signed version and invalidates every older version. Pending Effects retain
+their original idempotency, fencing, and reconciliation duties and are not
+auto-committed.
+
+Reconnect establishes a new authenticated negotiation/session binding and a
+new session; it does not restore an old bearer or session authority. A session
+signed by a retiring key is usable only until the earlier of the object's own
+expiry and the 24-hour rotation overlap. Key revocation is immediate. Old
+object, policy, revocation, key-status, or negotiation versions fail closed.
 
 Session signature verification must complete before management authorization,
 proposal authorization, Effect creation, dispatch, state mutation, or commit.
@@ -446,11 +493,28 @@ After cryptographic verification, the authority must still verify:
 - the approval has not been used for another proposal, session, profile,
   target, parameters digest, object version, or negotiation epoch.
 
-R1 structured chat confirmation remains one-shot and machine-bound. R2 requires
-a policy-approved trusted surface. R3 requires the registered dual-independent
-surface and principals. Natural language, a chat message, reusable approval
-token, expired challenge, old proposal digest, proposer-controlled key, or a
-schema-valid decision is never approval.
+Every `approve` binds the OS-issued request, proposal digest, challenge digest,
+and exact session ID/version/digest and is single-use. Principal, ActorChain,
+key owner, and authority delegation are all checked; a boolean independence
+claim is not proof.
+
+- R1 permits `chat_structured`, `trusted_surface`, or `dual_independent`, uses an
+  OS-held channel identity, and requires an approver independent from the
+  proposer/workload.
+- R2 permits only `trusted_surface` or `dual_independent`, requires policy-
+  approved step-up, and requires one independent signed decision.
+- R3 permits only `dual_independent` and requires two signed decisions whose
+  principals, ActorChains, and approval leaf keys are pairwise distinct. Both
+  decisions bind the same proposal/request/session/profile tuple and are
+  consumed atomically.
+- R0 `policy_auto` is not human approval. If an R0 decision object is emitted,
+  it is an authority-signed policy decision and never counts as R1-R3 approval.
+
+For every tier, `decided_at < expires_at <= request.expires_at`; the finite
+request lifetime comes from the digest-pinned approval policy. Any expired
+request/decision, invalid signature, inconsistent R3 pair, natural-language
+message, reusable token, old proposal digest, proposer-controlled key, or merely
+schema-valid decision is rejected.
 
 ## 10. Verification order and fail-closed behavior
 
@@ -481,9 +545,43 @@ Rules:
    neither authorization nor completion proof;
 6. receipt/audit persistence or authority commit failure cannot report success.
 
+### 10.1 Critical signature extensions
+
+The owner-confirmed critical extension IDs are:
+
+- `cognitiveos.ext.signature.management-session-authority`;
+- `cognitiveos.ext.signature.management-approval-authority`;
+- `cognitiveos.ext.authority-key-registry`.
+
+All are `critical: true` and receive complete SemVer/digest identities during
+machine registration. A new negotiation epoch pins the applicable signature
+profile, signed schema, registry manifest, algorithm set, and extensions. An
+old epoch cannot enable them. Unknown, missing, mismatched, or stripped
+critical semantics fail before payload/business authorization.
+
+### 10.2 Replay and atomic consumption
+
+A current session is not a single-use token and may authorize multiple in-scope
+operations. Use of an old/revoked session version or cross-profile/epoch
+signature is replay/stale binding and is rejected.
+
+Approval consumption uses an authoritative CAS ledger keyed by at least
+decision ID/version, proposal digest, request digest, session ID/version/digest,
+approval-profile digest, and negotiation epoch. An R3 pair is consumed as one
+atomic approval set. Repeated delivery of the same idempotency request may
+return the already committed equivalent result, but cannot redispatch, create a
+second Effect, or consume approval twice. Ordinary repeat cryptographic
+verification is not itself replay; reuse of consumable authority is.
+
+Ledger, receipt, audit, or authority-commit unavailability fails with the exact
+registered persistence semantics and cannot report success.
+
 ## 11. Verification receipt and audit responsibility
 
-A future SIG verification receipt must include or strongly bind:
+The owner confirms that future SIG machine registration owns one shared
+`SignatureVerificationReceipt` schema. It supports both subject types while
+retaining their exact object/profile/domain identities and must include or
+strongly bind:
 
 - receipt ID/version and verification time;
 - object kind, ID, object version, and object digest;
@@ -497,52 +595,76 @@ A future SIG verification receipt must include or strongly bind:
 - result, earliest failed stage, and exact registered error when available;
 - correlation/causation references and receipt digest.
 
-It must not contain private key material, secret content, or make a failed
-verification replayable. A receipt is evidence of a verification attempt, not
-proof of session validity, approval sufficiency, authorization, dispatch,
-commit, or completion.
+Successful and failed verification attempts both create a safe receipt. It must
+not contain private key material, secret content, signature material usable for
+replay, or protected subject content. The receipt is not independently signed;
+its integrity comes from its registered digest plus authoritative persistence
+and the later AUDIT contract. Receipt persistence completes before business
+authorization; persistence failure denies the request.
+
+A receipt is evidence of a verification attempt, not proof of session validity,
+approval sufficiency, authorization, dispatch, commit, or completion.
 
 SIG owns the verification-fact profile and its handoff slot. AUDIT owns the
 authoritative audit carrier/profile/persistence port, sequence/high-watermark,
 retention, sensitivity, export, tamper resistance, and atomic commit. That slot
-is unresolved until AUDIT design and later machine registration. An Event open
+remains pending until AUDIT design and later machine registration. An Event open
 payload, AKP `audit_ref`, transition record, outbox row, or private database row
 cannot fill it.
 
 ## 12. Stage-to-registered-error responsibility
 
 Existing codes are reused only when their registered descriptions exactly
-match. A later registration batch must add or decide exact codes for every
-unresolved row; this docs-only batch does not edit the registry.
+match. The owner confirms the future SIG-specific codes below. They remain
+unregistered proposals until the later machine-registration batch edits the
+error registry and generated bindings.
 
-| Failure | Stage | Current exact mapping | Responsibility |
+### 12.1 Exact existing-code reuse
+
+| Failure | Stage | Existing registered code | Exact boundary |
 |---|---|---|---|
-| unknown signature critical extension | G1 | `CRITICAL_EXTENSION_UNKNOWN` | exact when the extension is unknown and critical |
-| stripped/lossy signature extension | G1 | `PROTOCOL_MAPPING_INCOMPLETE` | exact for lossy gateway mapping |
-| profile/specification version outside finite window | G1/G2 | `VERSION_UNSUPPORTED` | exact only for unsupported protocol/spec-set major/window |
-| payload/signed schema differs from protocol pin | G1/G2 | `PROTOCOL_SCHEMA_DIGEST_MISMATCH` | exact only when it is the pinned payload schema |
-| schema-invalid future envelope/projection | G2/G3 | `SCHEMA_MISMATCH` | usable only after that schema is registered |
-| recomputed declared content digest mismatch | G3 | `DIGEST_MISMATCH` | exact for the registered digest |
-| self-signing or proposer-entangled approval | G4/G5 | `MANAGEMENT_SELF_AUTHORIZATION_DENIED` | exact self-authorization semantics only |
-| missing independent approval | G5 | `MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED` | exact where current approval is absent/invalid for independence policy |
-| expired/revoked session | G5 | `MANAGEMENT_SESSION_EXPIRED` / `MANAGEMENT_SESSION_REVOKED` | exact business state failures |
-| session domain/action/resource outside scope | G5 | `MANAGEMENT_SCOPE_MISMATCH` | exact scope failure |
+| unknown signature critical extension | G1 | `CRITICAL_EXTENSION_UNKNOWN` | extension unknown and critical |
+| stripped/lossy signature extension | G1 | `PROTOCOL_MAPPING_INCOMPLETE` | gateway cannot preserve critical semantics |
+| profile/specification version outside finite window | G1/G2 | `VERSION_UNSUPPORTED` | unsupported protocol/specification window, not arbitrary algorithm failure |
+| pinned protocol payload schema digest mismatch | G1/G2 | `PROTOCOL_SCHEMA_DIGEST_MISMATCH` | payload schema only; signed projection schema uses a new SIG code |
+| schema-invalid future envelope/projection | G2/G3 | `SCHEMA_MISMATCH` | only after the future schema is registered |
+| recomputed declared content digest mismatch | G3 | `DIGEST_MISMATCH` | declared registered digest only |
+| current session/approval object version differs | G5 | `STATE_CONFLICT` | authoritative expected-version/CAS mismatch |
+| self-signing or proposer-entangled approval | G4/G5 | `MANAGEMENT_SELF_AUTHORIZATION_DENIED` | self-authorization only |
+| missing independent approval | G5 | `MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED` | required independent decision absent/invalid |
+| expired/revoked session | G5 | `MANAGEMENT_SESSION_EXPIRED` / `MANAGEMENT_SESSION_REVOKED` | session business state |
+| session domain/action/resource outside scope | G5 | `MANAGEMENT_SCOPE_MISMATCH` | exact scope mismatch |
 | required step-up absent | G5 | `MANAGEMENT_STEP_UP_REQUIRED` | exact challenge condition |
-| receipt/audit/authority commit unavailable | G6 | `STATE_STORE_UNAVAILABLE` | exact for authoritative persistence failure; AUDIT-specific closure pending |
-| unknown signature profile | G2 | none proven exact | SIG registration owner |
-| unsupported algorithm inside an otherwise supported set | G2 | none proven exact | do not reinterpret `VERSION_UNSUPPORTED` |
-| algorithm downgrade or profile/algorithm mismatch | G2 | none proven exact | SIG/negotiation owner |
-| malformed signature byte encoding | G3 | none proven exact | schema code may cover shape only, not general cryptographic failure |
-| wrong signature domain | G2/G3 | none proven exact | `DIGEST_MISMATCH` is not a generic domain error |
-| wrong signed schema/projection/exclusion set | G2/G3 | none proven exact | profile/schema registration owner |
-| unknown key or resolver unavailable/ambiguous | G4 | none proven exact | key infrastructure owner |
-| revoked, expired, or rotated-out key | G4 | none proven exact | key status owner |
-| unauthorized key usage/owner | G4 | none proven exact | signer authority owner |
-| trust-root mismatch | G4 | none proven exact | trust policy owner |
-| invalid cryptographic signature | G3/G4 | none proven exact | do not reinterpret `DIGEST_MISMATCH` or self-authorization |
-| signature replay | G3/G5 | none proven exact | object-specific profile owner |
-| session/approval object-version mismatch | G5 | no complete exact mapping | `STATE_CONFLICT` is exact only for registered authority CAS semantics |
-| policy/revocation/negotiation epoch mismatch | G1/G5 | no complete exact mapping | session business codes do not cover every epoch mismatch |
+| ledger/receipt/audit/authority commit unavailable | G6 | `STATE_STORE_UNAVAILABLE` | authoritative persistence unavailable |
+
+### 12.2 Owner-confirmed future SIG errors
+
+Only `SIGNATURE_KEY_RESOLUTION_FAILED` is `retryable: true`. Every other code
+below is `retryable: false`; recovery requires corrected input, reissuance, key
+or policy repair, or a new negotiation rather than automatic replay of the same
+request.
+
+| Future error code | Stage | Exact meaning | Retryable |
+|---|---|---|---|
+| `SIGNATURE_PROFILE_UNKNOWN` | G2 | profile asset ID is unknown in the selected specification set | false |
+| `SIGNATURE_ALGORITHM_UNSUPPORTED` | G2 | algorithm is not exact `Ed25519` in the selected profile | false |
+| `SIGNATURE_ALGORITHM_DOWNGRADE_DENIED` | G1/G2 | peer/message attempted fallback, aliasing, or weaker algorithm selection | false |
+| `SIGNATURE_ENCODING_INVALID` | G3 | public key/signature encoding or raw length violates the profile | false |
+| `SIGNATURE_DOMAIN_MISMATCH` | G2/G3 | signed domain differs from the object-specific profile domain | false |
+| `SIGNATURE_SIGNED_SCHEMA_MISMATCH` | G2 | signed projection schema identity/digest differs from the profile pin | false |
+| `SIGNATURE_PROJECTION_MISMATCH` | G3 | signed projection or declared exclusion set differs from the registered profile | false |
+| `SIGNATURE_VERIFICATION_FAILED` | G3/G4 | strict pure-Ed25519 verification fails | false |
+| `SIGNATURE_KEY_UNKNOWN` | G4 | strong key ref is absent from the selected registry manifest | false |
+| `SIGNATURE_KEY_RESOLUTION_FAILED` | G4 | authoritative registry/descriptor resolution is temporarily unavailable | true |
+| `SIGNATURE_KEY_REVOKED` | G4 | current descriptor/delegation status is revoked | false |
+| `SIGNATURE_KEY_EXPIRED` | G4 | key validity interval has ended | false |
+| `SIGNATURE_KEY_ROTATED_OUT` | G4 | predecessor is outside the 24-hour overlap or signed after successor activation | false |
+| `SIGNATURE_KEY_USAGE_DENIED` | G4 | key owner/usage/authority bounds do not authorize this subject profile | false |
+| `SIGNATURE_TRUST_ROOT_MISMATCH` | G4 | registry manifest/delegation does not chain to the pinned platform root | false |
+| `SIGNATURE_REPLAY_DETECTED` | G3/G5 | consumed approval, old session version, or cross-profile/epoch signature was reused | false |
+| `SIGNATURE_NEGOTIATION_EPOCH_MISMATCH` | G1/G5 | object/extension/profile/registry binding differs from the current epoch | false |
+| `SIGNATURE_REVOCATION_EPOCH_MISMATCH` | G4/G5 | signed or resolved revocation epoch differs from current authority state | false |
+| `SIGNATURE_POLICY_VERSION_MISMATCH` | G5 | signed approval/session policy version is not current | false |
 
 ## 13. Planned negative matrix
 
@@ -612,8 +734,8 @@ delegation, and receipt redaction. They remain future registration/CFR work.
 SIG inherits the finite OPS window and adds these requirements:
 
 - a native v0.2 epoch selects exact specification, operation, signature
-  profile, signed schema, algorithm-set, resolver, trust-root, and critical
-  extension digests;
+  profile, signed schema, Ed25519-only algorithm set, authority-key registry
+  manifest, platform root/delegation, and critical-extension digests;
 - the proposed native point is exact `0.2.0-draft.1`; any temporary adapter may
   cover only exact `0.2.0-draft.1` and `0.2.0-draft.2` and is removed at
   `0.2.0-draft.3`; no adapter exists now;
@@ -626,6 +748,9 @@ SIG inherits the finite OPS window and adds these requirements:
 - reconnect does not restore old session or approval authority;
 - missing key/trust/projection facts cause rejection or quarantine, never
   defaults to a platform, tenant, process, caller, or cached key;
+- rotation accepts a predecessor only for objects signed before successor
+  activation and only within the owner-confirmed 24-hour overlap; revocation
+  has no migration grace period;
 - in-flight Effects retain their original session, approval, idempotency,
   fencing, reconciliation, and audit obligations;
 - algorithm, key usage, trust-root, projection, exclusion, domain, status, or
@@ -681,19 +806,23 @@ The proof obligations are:
 - OPS/TARGET reviewers: proposal/target/profile/parameters digest closure;
 - AUDIT reviewer: verification receipt carrier and atomic persistence slot.
 
-No SIG owner approval or GitHub review is claimed by this authoring batch. No
-review exception from PR #50, #51, or #52 applies to this PR.
+The repository owner confirmed the technical selections in sections 5-12 on
+2026-07-22 through the active governance session. This records owner decisions;
+it is not a GitHub review of the resulting new PR head and does not claim an
+independent security/cryptography review. No review exception from PR #50, #51,
+or #52 applies to this PR.
 
 ### Blocking facts
 
-- selected closed algorithm set and exact encoding;
-- key ID/descriptor, deterministic resolver, and trust roots;
-- key ownership, usage, rotation, revocation, and verification-time status;
-- future v0.2 session/approval/envelope/projection schema identities/digests;
+- independent security/cryptography review of the owner-confirmed selections;
+- future v0.2 envelope, session, approval, binding-record, key descriptor,
+  registry manifest/delegation, receipt, and replay-ledger schema identities and
+  exact digests;
 - proposal and approval-request digest/domain/projection closure;
-- negotiation extension/profile identities and epoch carrier;
-- complete exact error registry mapping;
-- verification receipt schema and authoritative AUDIT slot;
+- machine registration of the three critical extensions, profiles, key usages,
+  registry manifest certification, and negotiation-epoch carrier;
+- registration of the 19 owner-confirmed SIG errors and generated bindings;
+- authoritative AUDIT carrier/sequence/atomic persistence slot;
 - TARGET profile and exact proposal-to-target/parameters closure.
 
 ### Evidence limitation
@@ -706,16 +835,16 @@ Profile claim.
 
 ## 17. GO/NO-GO and downstream order
 
-- `GO`: this docs-only SIG packet is materialized for owner/security review.
+- `GO`: this docs-only SIG packet contains owner-confirmed technical selections
+  and is materialized for independent security review.
 - `NO-GO`: SIG machine registration, TARGET/OPS/AUDIT registration,
   Configuration Authority implementation, behavior execution, and Profile
   claim.
 
-Both profiles remain blocked until all 31 matrix rows close, owner/security and
-key/trust reviewers select exact alternatives, every unresolved error receives
-an exact registered responsibility, machine assets are independently reviewed
-and registered, and future negative vectors are added without modifying old
-`expected` values.
+The algorithm/key/trust/domain/projection/error choices are closed at the
+docs-only design level. Both profiles remain unregistered and unusable until
+independent security review, exact machine registration, generated bindings,
+and future negative vectors land without modifying old `expected` values.
 
 Downstream order remains:
 
@@ -727,9 +856,9 @@ Downstream order remains:
 6. only then, implementation;
 7. Management CFR after real implementation exists.
 
-SIG merge does not register a signature profile, approve an algorithm or trust
-root, unblock a configure operation, approve target authority, or authorize
-implementation.
+SIG merge does not register Ed25519, a key/trust profile, signature profile,
+extension, receipt, or error; unblock a configure operation; approve target
+authority; or authorize implementation.
 
 Preserved state:
 
