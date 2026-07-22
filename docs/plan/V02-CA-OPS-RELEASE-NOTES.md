@@ -1,7 +1,7 @@
 # V02-CA-OPS-01 Draft Release Notes
 
 - Proposed release: `0.2.0-draft.1`
-- Status: OPS merged; TARGET docs-only design materialized for owner review; not published or specified
+- Status: OPS and TARGET merged; SIG docs-only design materialized for owner/security review; not published or specified
 - Operation-set digest: `unresolved/not computed`
 - Classification: docs-only; no machine registration or implementation
 
@@ -17,6 +17,11 @@
   candidates; the governed-object outer model is reusable, while target bodies,
   consumers, readback/verifiers, receipts, risk/approval, errors, and audit
   bindings remain unresolved.
+- SIG source audit and proposed detached-signature envelope family with distinct
+  session and approval profiles, domains, projections, key usages, replay rules,
+  verification order, receipt responsibilities, and 40 planned negatives.
+- Bounded Ed25519/P-256 and governed-registry/external-resolver/trust-delegation
+  alternatives; no algorithm, key infrastructure, or trust root is selected.
 
 ## Breaking
 
@@ -29,6 +34,9 @@
 - no URI, open JSON, private row/DTO, Event payload, vector fixture, route,
   caller value, or catalog projection can become a configuration authority
   target during migration or negotiation.
+- a v0.1 session or approval signature string cannot be interpreted as a v0.2
+  detached signature or upgraded in place; new profiles require a new epoch,
+  reauthentication/reissuance or rechallenge/redecision, and exact digest pins.
 
 These are proposed v0.2 design consequences, not active runtime behavior.
 
@@ -53,3 +61,7 @@ All five intended-core and three intended-extension candidates are `blocked`.
 The TARGET audit did not select or register a system, gateway, or diagnostics
 target profile. There is no published core, extension, descriptor, target
 profile, state domain, set digest, or machine membership in this release note.
+
+The SIG audit did not select an algorithm set, key resolver, trust root, or
+registered profile. The proposed envelope and object-specific session/approval
+profiles remain blocked and have unresolved digests.

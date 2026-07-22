@@ -8,7 +8,8 @@
 ## 1. Preservation and identity
 
 - Preserve all v0.1 bytes, digests, evidence, and negotiation epochs.
-- Create new v0.2 specification-set, operation-set, descriptor, schema, and suite identities; never rewrite v0.1 assets.
+- Create new v0.2 specification-set, operation-set, descriptor, signature-profile,
+  signed-schema, schema-bundle, and suite identities; never rewrite v0.1 assets.
 - Treat existing operation spellings only as migration inputs, not as target membership or authorization.
 - Reject the same asset ID/SemVer with different bytes or digest.
 
@@ -17,8 +18,11 @@
 1. terminate or explicitly supersede the old epoch;
 2. authenticate peers again;
 3. select and verify the new specification set and nested manifests;
-4. select the operation set and critical extensions;
-5. revalidate authorization, session scope, capabilities, risk, approval, target authority, and continuation;
+4. select the operation set, critical extensions, session/approval signature
+   profiles, algorithm set, key resolver, and trust-root/status profiles;
+5. verify and reissue the session or rechallenge/redecide approval under the new
+   profile, then revalidate authorization, session scope, capabilities, risk,
+   approval, target authority, and continuation;
 6. issue a new epoch ID with explicit creation and expiry/termination rules;
 7. only then admit a payload.
 
@@ -33,6 +37,10 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
 - A configure candidate also requires an independently reviewed, digest-pinned
   target profile and exact authority/consumer/readback/receipt bindings. TARGET
   design intent is not a machine target identity.
+- A v0.1 `authority_signature` string is not a detached envelope. Migration
+  creates a newly authenticated/reissued session version and a newly challenged
+  approval decision under distinct v0.2 signature profiles; no algorithm, key,
+  trust root, domain, or projection is inferred from old bytes.
 
 ## 4. Mapping and quarantine
 
@@ -49,11 +57,18 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
   real consumer and readback/verifier. Ambiguous system targets, gateway
   instance/group choices, and diagnostics policy/sink/profile choices fail
   closed or enter quarantine.
+- Caller-provided algorithms, keys, resolvers, trust roots, projection rules,
+  signature booleans, schema-valid fixtures, or cached key rows are migration
+  inputs only and never verification authority. Unknown or stale key/trust
+  facts fail closed.
 
 ## 5. Vector and evidence migration
 
 - Preserve existing vector `expected` values.
-- Add explicit v0.2 negotiation, identity-drift, extension, authorization-non-expansion, and pre-dispatch negative vectors in later registration/CFR batches.
+- Add explicit v0.2 negotiation, identity-drift, extension, signature profile,
+  algorithm downgrade, key/trust/rotation/revocation, cross-object replay,
+  authorization-non-expansion, and pre-dispatch negative vectors in later
+  registration/CFR batches.
 - Keep planned vectors `not-run` until a runner executes them against real deterministic implementation and retains evidence.
 - Do not migrate v0.1 evidence into a v0.2 Profile claim.
 
@@ -63,4 +78,8 @@ The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` targ
 
 ## 7. Rollback
 
-If any target identity, critical extension, descriptor, schema, mapping, authorization, target/readback, or audit obligation cannot be verified, migration fails closed before dispatch. v0.1 bytes remain intact; no partial v0.2 membership or success receipt is created.
+If any target identity, critical extension, descriptor, signature profile,
+signed schema/projection, algorithm, key/trust/status, mapping, authorization,
+target/readback, or audit obligation cannot be verified, migration fails closed
+before dispatch. v0.1 bytes remain intact; no partial v0.2 membership, session,
+approval, or success receipt is created.

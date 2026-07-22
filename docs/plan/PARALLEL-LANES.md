@@ -48,7 +48,7 @@ flowchart LR
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
-| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ca-target-design` | PR #51 OPS 已由 owner 单次例外普通 merge，main CI 成功；`V02-CA-TARGET-01` design materialized for owner review，三个 configure candidates 因 target/consumer/readback/receipt 等未闭合继续 blocked；四类 machine contracts 未登记；下一门禁 = TARGET owner review/merge；D-022 继续阻断 CA-1～CA-8 |
+| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ca-sig-design` | PR #52 TARGET 已 merge 且 main CI `29922529556` 双平台成功；`V02-CA-SIG-01` design materialized for owner/security review，共享 detached envelope family 与独立 session/approval profile 仅为提案，算法/key/trust/errors/receipt 未闭合，两个 profiles blocked；四类 machine contracts 未登记；下一门禁 = SIG owner/security review/merge；D-022 继续阻断 CA-1～CA-8 |
 | `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `main`（PR #46 已合入） | `SHELL-TARGET-AMBIGUITY-001` behavior pass；pins 59/25；self-check 40；见 `20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |

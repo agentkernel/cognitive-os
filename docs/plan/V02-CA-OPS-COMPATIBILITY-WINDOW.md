@@ -28,12 +28,17 @@ A receiver selects a set only when all of the following hold:
 - every selected configure descriptor pins an independently reviewed target
   profile, authority mapping, request/result schemas, consumer,
   readback/verifier, receipt, risk/approval policy, and audit slot.
+- every selected session/approval signature profile pins an exact profile,
+  signed schema, domain, projection/exclusions, algorithm set, key resolver,
+  trust-root/status policy, receipt slot, and critical extension digest;
+- authorization is revalidated after signature-profile/epoch selection, and a
+  v0.1 signature string is never treated as a v0.2 detached envelope.
 
 Failure uses `VERSION_UNSUPPORTED`, `CRITICAL_EXTENSION_UNKNOWN`, or `PROTOCOL_MAPPING_INCOMPLETE` only where the registered meaning exactly applies. Unknown-operation, unnegotiated-operation, and epoch-specific error closure remains unresolved.
 
 ## 3. Breaking changes within the window
 
-Adding/removing/renaming a core member, changing descriptor semantics or binding, changing risk/approval/authority/error mapping, changing criticality, or removing support is breaking. A pinned Draft cannot be modified in place; it receives a new complete SemVer and digest plus migration note.
+Adding/removing/renaming a core member, changing descriptor semantics or binding, changing risk/approval/authority/error mapping, changing signature algorithm/key usage/trust root/domain/projection/exclusions, changing criticality, or removing support is breaking. A pinned Draft cannot be modified in place; it receives a new complete SemVer and digest plus migration note.
 
 ## 4. Current non-claim
 
@@ -42,6 +47,11 @@ target profile, configuration state domain, consumer, readback/verifier,
 receipt, or digest is implemented or registered by this proposal. The TARGET
 audit keeps all three configure candidates blocked, and all eight OPS
 candidates remain blocked.
+
+No detached-signature envelope, session/approval signature profile, allowed
+algorithm set, key registry/resolver, trust root, rotation/revocation service,
+or verification receipt is implemented or registered. Both SIG profiles remain
+blocked; the existing string fields have only their v0.1 schema meaning.
 
 An old or private target representation is not inside the window merely because
 its URI, operation spelling, or JSON can be parsed. A future target adapter must
