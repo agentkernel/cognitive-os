@@ -108,10 +108,19 @@ complete registered error closure. No nearby error code was repurposed.
 
 ## 7. Commit, PR, CI, and review snapshot
 
-- TARGET primary design commit: pending validation/commit.
-- TARGET PR: pending creation.
-- TARGET CI: pending.
-- TARGET owner/reviewer status: pending; PR #51 exception is not reusable.
+- TARGET primary design commit:
+  `cd73747f4c3d14bdcd8ea63637490f17d3a62f4c` (`docs(ctr): design v0.2
+  configuration targets`).
+- TARGET PR: [#52](https://github.com/agentkernel/cognitive-os/pull/52), base
+  `main`, docs-only, 11 expected docs paths.
+- Initial TARGET head CI: push run `29918786973` and PR run `29918879012` at
+  `cd73747f4c3d14bdcd8ea63637490f17d3a62f4c`; Ubuntu and Windows all success.
+- Initial PR state after CI: OPEN, MERGEABLE/CLEAN; reviews, review decision,
+  and requested reviewers empty.
+- This handoff fact backfill is a separate docs-only commit. Its final PR-head
+  checks must also remain successful; the authoritative final status is PR #52.
+- TARGET owner/reviewer status: pending; PR #51 exception is not reusable and
+  no TARGET review request was created without an explicit reviewer decision.
 - TARGET PR must not be auto-merged.
 
 ## 8. Protection record
@@ -128,9 +137,8 @@ complete registered error closure. No nearby error code was repurposed.
 
 ## 9. Next unique entry
 
-- Complete local validation, create the docs-only TARGET commit/PR, and wait for
-  Ubuntu/Windows CI.
-- Then request owner review; do not auto-merge TARGET.
+- Wait for the handoff-backfill head Ubuntu/Windows CI, then request owner
+  review; do not auto-merge TARGET.
 - After TARGET owner review/merge and merge-triggered main CI success, proceed
   in order: SIG → AUDIT → four machine-registration batches → CA-0 re-review →
   explicit CA-0 GO → implementation → Management CFR.
