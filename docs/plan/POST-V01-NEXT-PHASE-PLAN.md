@@ -1,18 +1,18 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-22）；`V02-CA-GOV-00` 已合入，`V02-CA-OPS-01` 已 [materialize 为 owner-review 设计包](V02-CA-OPS-DESIGN-DECISION.md)（[ADR-0010](../adr/0010-v02-management-operation-set-governance.md)）；八项 operation candidates 全部 blocked，set digest unresolved/not computed，四类 machine contracts 未登记，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
+- 状态：active（2026-07-22）；`V02-CA-GOV-00` 与 PR #51 `V02-CA-OPS-01` 已合入，`V02-CA-TARGET-01` 已 [materialize 为 owner-review 设计包](V02-CA-TARGET-DESIGN-DECISION.md)（[ADR-0011](../adr/0011-v02-configuration-target-authority-governance.md)）；八项 operation candidates 全部 blocked，三个 configure target profile/consumer/readback/receipt 未登记，set digest unresolved/not computed，四类 machine contracts 未登记，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
 - 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
 - CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
-- 下一唯一门禁：owner review/merge 独立 docs-only OPS PR；合入后进入 TARGET design，承接三个 configure candidates 的 target authority/consumer/readback/receipt closure；SIG/AUDIT 仍须独立设计；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
+- 下一唯一门禁：owner review/merge 独立 docs-only TARGET PR；TARGET 合入后按顺序进入 SIG、AUDIT 与四类 machine registration；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
 
 ### 阶段目标
 
-在 `origin/main@41fce4d`（PR #50 merge）与 pins **59/25** 之后，OPS 设计包已落盘等待 owner review；下一设计入口仅在 OPS 合入后转为 TARGET。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
+在 `origin/main@88d5374`（PR #51 merge）与 pins **59/25** 之后，OPS 已合入，TARGET 设计包已落盘等待 owner review；三个 configure candidates 仍因 target profile/consumer/readback/verifier/receipt 等未闭合而 blocked。本文件历史 P0 Intent、shell-channel 与 shell-target 批均已交付，不得再规划为 P0；Configuration Authority 尚未登记机器合同或解除实现门禁。
 
 本阶段的成功定义是「实现已提供 + 测试已执行 + 相关向量 pass 的窄面证据」，不是 Profile implemented、跨平台安全符合、完整 M5/M6 或 v0.2 发布。
 
@@ -115,10 +115,10 @@
 - [V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
 - PERF-004 触发需 HUMAN-PERF004-CAMPAIGN、L2 green、硬件拓扑/并发预注册和 campaign digest；PERF-005 还需 M7+ 四臂 harness、BenchmarkManifest、独立 verifier。当前不得把 sample/builder 写成 campaign 或 benefit。
 
-**defer-2：MGMT-FALLBACK-008 全族（OPS design materialized；machine registration / implementation blocked）**
+**defer-2：MGMT-FALLBACK-008 全族（OPS merged；TARGET design materialized；machine registration / implementation blocked）**
 
 - vector `MGMT-FALLBACK-008` 对应 `REQ-MGMT-FALLBACK-001`，要求 session.create_restricted、status.inspect、capability.revoke、execution.stop、effect.reconcile、gateway.configure、diagnostics.configure 七个 operations 全可达。
-- `V02-CA-OPS-01` 已把五个 intended-core 与三个 intended critical-extension candidates 的设计落盘，但八项全部 blocked，没有 design-approved 或 machine-registered member；下一门禁是 owner review/merge，之后由 TARGET 承接三个 configure candidates。四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
+- `V02-CA-OPS-01` 已合入；`V02-CA-TARGET-01` 证明 governed-object 治理骨架可复用，但 system/gateway/diagnostics 均无唯一 target profile、真实 consumer、readback/verifier 或 receipt。八项全部 blocked，没有 design-approved 或 machine-registered member；下一门禁是 TARGET owner review/merge。四类合同合入且 CA-0 re-review GO 前不得实现或执行该 vector，不能在 CFR 中硬编码「全可达」。
 
 **defer-3：store-degradation disk-full**
 
@@ -213,7 +213,7 @@
 
 - 任何失败不得改变已通过的 59 个向量、其余 not-run 族的诚实原因、self-check 40 和 Profile implemented=0。
 - 主战役最多改变两个目标 vector 的状态；不批量改变 not-run。
-- 当前 GOV/OPS 规范治理入口不得改变 pins；保持 84/59/25。未来只有 runner 对真实实现执行并留证据的独立 CFR 批，才可按实测同批更新 CI honesty pin 与 runner tests。
+- 当前 GOV/OPS/TARGET 规范治理入口不得改变 pins；保持 84/59/25。未来只有 runner 对真实实现执行并留证据的独立 CFR 批，才可按实测同批更新 CI honesty pin 与 runner tests。
 - 不产生 `fail`、`not-applicable` 或 documented-degradation 伪绿。
 - 旧 epoch 新 dispatch 必须零 sink call；acceptance 必须由 verification/acceptance authority 证明。
 - 测试并发导致 `m5_http_sse` flake 时，只允许受控、可记录的单线程重跑；重复失败即 NO-GO，不能无限重试。

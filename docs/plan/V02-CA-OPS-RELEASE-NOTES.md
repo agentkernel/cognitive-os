@@ -1,7 +1,7 @@
 # V02-CA-OPS-01 Draft Release Notes
 
 - Proposed release: `0.2.0-draft.1`
-- Status: design proposal for owner review; not published or specified
+- Status: OPS merged; TARGET docs-only design materialized for owner review; not published or specified
 - Operation-set digest: `unresolved/not computed`
 - Classification: docs-only; no machine registration or implementation
 
@@ -13,6 +13,10 @@
 - nested identity verification from specification set through request/result schemas;
 - per-operation request/result, channel, authority, target/readback, risk, error, audit, and migration obligations;
 - fail-closed negative-test plan with G0–G6 rejection stages.
+- TARGET source audit and proposed structural governance for the three configure
+  candidates; the governed-object outer model is reusable, while target bodies,
+  consumers, readback/verifiers, receipts, risk/approval, errors, and audit
+  bindings remain unresolved.
 
 ## Breaking
 
@@ -22,6 +26,9 @@
 - reconnect requires a new negotiation and authorization revalidation;
 - operation-set, descriptor, or schema drift terminates or suspends the epoch;
 - `diagnostics.configure`, `gateway.configure`, and `system.configure` require critical extension negotiation and TARGET closure.
+- no URI, open JSON, private row/DTO, Event payload, vector fixture, route,
+  caller value, or catalog projection can become a configuration authority
+  target during migration or negotiation.
 
 These are proposed v0.2 design consequences, not active runtime behavior.
 
@@ -42,4 +49,7 @@ These are proposed v0.2 design consequences, not active runtime behavior.
 
 ## Candidate status
 
-All five intended-core and three intended-extension candidates are `blocked`. There is no published core, extension, descriptor, set digest, or machine membership in this release note.
+All five intended-core and three intended-extension candidates are `blocked`.
+The TARGET audit did not select or register a system, gateway, or diagnostics
+target profile. There is no published core, extension, descriptor, target
+profile, state domain, set digest, or machine membership in this release note.
