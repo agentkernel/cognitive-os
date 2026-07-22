@@ -20,7 +20,7 @@
 
 - PR #50 merge 后 main CI：run `29913153660`，Ubuntu/Windows success。
 - OPS 本地静态验证：`pnpm run check:consistency` **pass**（273 requirements / 55 errors / 61 schemas / 84 vectors；Markdown links / traceability verified）；`node tools/src/gen-matrix.mjs --check` **pass**；`git diff --check` **pass**；`pnpm -r build` **pass**；`pnpm -r test` **pass**（contracts-ts 38、tools 2、sdk-ts 69 pass / 3 skip、agent-shell 13）。这些静态/构建测试不构成新 behavior execution。
-- OPS PR CI：创建并完成后回填本节。
+- OPS 主设计提交 CI：push run `29914503678` + PR run `29914841751` @ `a6799459d37faecc3fab09553a3567d5ac44c13b`，Ubuntu/Windows 全部 success。handoff 回填提交后的最终 head checks 以 PR #51 为准。
 - 行为向量：未执行新的行为向量；负例计划全部标记 `planned/not executed`。
 - 证据：未生成或修改 conformance evidence。
 - pins 保持：273 REQ / 55 errors / 61 schemas / 84 vectors / 59 pass / 25 not-run / self-check 40 / matrix impl 70 / Profile implemented 0。
@@ -53,7 +53,7 @@
 ## 7. 快照
 
 - PROGRESS 已更新：是。
-- OPS design commit：提交后回填。
-- OPS PR：创建后回填。
-- OPS PR CI：完成后回填。
+- OPS design commit：`a6799459d37faecc3fab09553a3567d5ac44c13b`（`docs(ctr): design v0.2 management operation set`）。
+- OPS PR：[#51](https://github.com/agentkernel/cognitive-os/pull/51)，OPEN，owner review pending，不自动 merge。
+- OPS design commit CI：push run `29914503678` + PR run `29914841751`，Ubuntu/Windows success；handoff 回填后的最终 CI 见 PR #51 checks。
 - 最终状态：OPS design materialized for owner review；machine contracts remain unregistered。
