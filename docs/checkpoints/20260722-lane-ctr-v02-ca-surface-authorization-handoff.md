@@ -12,13 +12,14 @@
 
 - OPS、TARGET、SIG、AUDIT 四条规范设计均未开始；四类 machine contracts 和生成绑定均未登记。
 - CA-0 re-review 未执行；Configuration Authority 实现未提供；Management CFR 未执行。
-- PR/CI 回填：首个提交、PR 与 CI 建立后在本 handoff 的 §6 补齐；如产生纯 handoff 回填提交，重新观察 CI。
+- PR #50 已创建；首个提交的 push run 与 PR run 均已在 Ubuntu/Windows success。纯 handoff 回填提交完成后须重新观察最终 CI。
 
 ## 3. 测试与证据状态
 
 | 项 | 结果 |
 |---|---|
 | main 基线 | PR #49 merged；CI run `29899655551` @ `251c69c`，Ubuntu/Windows success |
+| 首个提交 CI | push run `29903173172` + PR run `29903235245`：Ubuntu/Windows 全部 success |
 | `pnpm run check:consistency` | **pass**：273 requirements / 55 errors / 61 schemas / 84 vectors；markdown links / traceability verified |
 | `node tools/src/gen-matrix.mjs --check` | **pass**：matrix is up to date；非空 impl 重算为 70 |
 | `git diff --check` | **pass** |
@@ -46,7 +47,8 @@
 
 - PROGRESS 已更新：是。
 - 分支：`lane/ctr-v02-ca-surface-authorization`。
-- 首个提交：待验证后回填。
-- PR：待创建后回填。
-- PR CI：待观察后回填。
+- 首个提交：`0156e8eb37e90e6f3ce181a299020a553beaea8a`。
+- PR：[#50](https://github.com/agentkernel/cognitive-os/pull/50)。
+- 首个提交 CI：push run [`29903173172`](https://github.com/agentkernel/cognitive-os/actions/runs/29903173172) 与 PR run [`29903235245`](https://github.com/agentkernel/cognitive-os/actions/runs/29903235245)，Ubuntu/Windows 全部 success。
+- handoff 回填提交：本文件回填上述 commit/PR/CI 后的当前 branch tip；最终 SHA 与 CI 见 PR #50 commits/checks。
 - 合并：按分支保护和 owner review 执行，本会话不擅自声明合并。
