@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Migration Plan
 
-- Status: design proposal for owner review
+- Status: design with owner-confirmed SIG selections; independent security review pending
 - Source: existing v0.1 assets and epochs
 - Target proposal: `0.2.0-draft.1`; digest `unresolved/not computed`
 - Classification: docs-only; migration not implemented
@@ -8,7 +8,8 @@
 ## 1. Preservation and identity
 
 - Preserve all v0.1 bytes, digests, evidence, and negotiation epochs.
-- Create new v0.2 specification-set, operation-set, descriptor, schema, and suite identities; never rewrite v0.1 assets.
+- Create new v0.2 specification-set, operation-set, descriptor, signature-profile,
+  signed-schema, schema-bundle, and suite identities; never rewrite v0.1 assets.
 - Treat existing operation spellings only as migration inputs, not as target membership or authorization.
 - Reject the same asset ID/SemVer with different bytes or digest.
 
@@ -17,8 +18,12 @@
 1. terminate or explicitly supersede the old epoch;
 2. authenticate peers again;
 3. select and verify the new specification set and nested manifests;
-4. select the operation set and critical extensions;
-5. revalidate authorization, session scope, capabilities, risk, approval, target authority, and continuation;
+4. select the operation set, three critical SIG extensions, session/approval
+   signature profiles, pure Ed25519 set, governed registry manifest, and
+   platform-root/delegation/status profiles;
+5. verify and reissue the session or rechallenge/redecide approval under the new
+   profile, then revalidate authorization, session scope, capabilities, risk,
+   approval, target authority, and continuation;
 6. issue a new epoch ID with explicit creation and expiry/termination rules;
 7. only then admit a payload.
 
@@ -33,6 +38,10 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
 - A configure candidate also requires an independently reviewed, digest-pinned
   target profile and exact authority/consumer/readback/receipt bindings. TARGET
   design intent is not a machine target identity.
+- A v0.1 `authority_signature` string is not a detached envelope. Migration
+  creates a newly authenticated/reissued session version and a newly challenged
+  approval decision under distinct v0.2 signature profiles; no algorithm, key,
+  trust root, domain, or projection is inferred from old bytes.
 
 ## 4. Mapping and quarantine
 
@@ -49,18 +58,33 @@ Reconnect and continuation do not silently restore an old epoch. An old epoch ca
   real consumer and readback/verifier. Ambiguous system targets, gateway
   instance/group choices, and diagnostics policy/sink/profile choices fail
   closed or enter quarantine.
+- Caller-provided algorithms, keys, resolvers, trust roots, projection rules,
+  signature booleans, schema-valid fixtures, or cached key rows are migration
+  inputs only and never verification authority. Unknown or stale key/trust
+  facts fail closed.
+- A retiring predecessor verifies only objects signed before successor
+  activation and only within 24 hours; revocation has no grace period. Session
+  expansion or absolute-expiry extension creates a newly authenticated session,
+  while approvals are rechallenged and atomically consumed under the new epoch.
 
 ## 5. Vector and evidence migration
 
 - Preserve existing vector `expected` values.
-- Add explicit v0.2 negotiation, identity-drift, extension, authorization-non-expansion, and pre-dispatch negative vectors in later registration/CFR batches.
+- Add explicit v0.2 negotiation, identity-drift, extension, signature profile,
+  algorithm downgrade, key/trust/rotation/revocation, cross-object replay,
+  authorization-non-expansion, and pre-dispatch negative vectors in later
+  registration/CFR batches.
 - Keep planned vectors `not-run` until a runner executes them against real deterministic implementation and retains evidence.
 - Do not migrate v0.1 evidence into a v0.2 Profile claim.
 
 ## 6. Adapter removal
 
-The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` target sets and is removed at `0.2.0-draft.3`. Concrete versions may change during owner review, but removal remains finite and published in advance.
+The proposed adapter accepts only exact `0.2.0-draft.1` and `0.2.0-draft.2` target sets and is removed at `0.2.0-draft.3`. Independent review may require successor Draft identities, but no pinned Draft is rewritten and removal remains finite and published in advance.
 
 ## 7. Rollback
 
-If any target identity, critical extension, descriptor, schema, mapping, authorization, target/readback, or audit obligation cannot be verified, migration fails closed before dispatch. v0.1 bytes remain intact; no partial v0.2 membership or success receipt is created.
+If any target identity, critical extension, descriptor, signature profile,
+signed schema/projection, algorithm, key/trust/status, mapping, authorization,
+target/readback, or audit obligation cannot be verified, migration fails closed
+before dispatch. v0.1 bytes remain intact; no partial v0.2 membership, session,
+approval, or success receipt is created.

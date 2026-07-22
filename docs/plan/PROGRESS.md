@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-22（PR #51 / `V02-CA-OPS-01` 已由 owner 单次例外普通 merge，main CI `29915808901` 双平台成功；**V02-CA-TARGET-01 design materialized for owner review**，见 [TARGET decision](V02-CA-TARGET-DESIGN-DECISION.md) / [ADR-0011](../adr/0011-v02-configuration-target-authority-governance.md)；三个 configure candidates 仍 `blocked`，只复用 governed-object 治理骨架，target profile/consumer/readback/verifier/receipt 均未登记；D-016 不 closed，D-022 继续阻断 CA-1～CA-8；pins **84/59/25**、self-check **40/40**；Profile **implemented = 0**）
+> 最后更新：2026-07-22（PR #52 TARGET 已 merge，main CI `29922529556` 双平台成功；**V02-CA-SIG-01 已记录 owner-confirmed technical selections，等待独立 security/GitHub review**，见 [SIG decision](V02-CA-SIG-DESIGN-DECISION.md) / [ADR-0012](../adr/0012-v02-detached-signature-profile-governance.md)；已选择 pure `Ed25519`、governed authority-key registry、platform-rooted manifest、深度不超过 1 的 tenant delegation、24 小时 retiring window、对象专属 profile/domain/projection、verification receipt 边界与 19 个未来 SIG errors；这些仍是 docs-only 设计，两个 profiles 均未登记且不可选择；machine contracts 未登记，D-016 不 closed，D-022 继续阻断 CA-1～CA-8；pins **84/59/25**、self-check **40/40**；Profile **implemented = 0**）
 
 ## 里程碑状态
 
@@ -50,13 +50,13 @@
 |---|---|---|
 | P0 | 0（+1 证据性质） | F-001（证据缺口，随里程碑消解，不阻断） |
 | P1 | **0**（+持续） | F-017 **closed-for-release-claim-set**；F-015 持续。**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 闭合 |
-| 漂移 | **0 open**（+3 deferred/design-materialized，+1 decided/partial） | **D-022 v0.2 design progression blocker**（OPS merged；TARGET design materialized；SIG/AUDIT/registration pending；继续阻断 CA-1～CA-8）；**D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 OPS merged / TARGET design materialized / registration pending**（未 closed、机器合同未登记）；D-019 已闭合 |
+| 漂移 | **0 open**（+3 deferred/design-materialized，+1 decided/partial） | **D-022 v0.2 design progression blocker**（OPS/TARGET merged；SIG owner selections recorded；独立 security review、AUDIT 与 registration pending；两个 SIG profiles 未登记/不可用；继续阻断 CA-1～CA-8）；**D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 OPS/TARGET merged / SIG owner selections recorded / registration pending**（未 closed、机器合同未登记）；D-019 已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **TARGET design materialized / owner review pending** | `lane/ctr-v02-ca-target-design` | PR #51 OPS 已合入且 main CI 成功；`V02-CA-TARGET-01` docs-only design 证明 governed-object 骨架可复用但三个 configure target 无唯一 profile/consumer/readback/receipt，全部继续 blocked；machine contracts 未登记，下一门禁 = TARGET owner review/merge |
+| Lane-CTR 契约与生成 | **SIG owner selections recorded / independent review pending** | `lane/ctr-v02-ca-sig-design` | PR #52 TARGET 已合入且 main CI 成功；`V02-CA-SIG-01` 已记录 pure Ed25519、governed key registry/platform root、对象专属 session/approval profiles、24 小时 rotation window、receipt 与 19 个未来 errors；signed schema/profile digests、AUDIT carrier 与 machine registration 仍未闭合，两个 profiles 未登记/不可用；下一门禁 = 独立 security/GitHub review 与普通 merge |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260722-lane-ctr-v02-ca-target-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-target-design-handoff.md)（CTR：PR #51 owner gate/main CI closed；TARGET design materialized for owner review；三个 configure candidates blocked）
-2. [20260722-lane-ctr-v02-ca-ops-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-ops-design-handoff.md)（CTR：OPS design materialized；八项 blocked；machine contracts unregistered）
-3. [20260722-lane-ctr-v02-ca-surface-authorization-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-surface-authorization-handoff.md)（CTR：v0.2 CA surface owner-approved / design pending；D-022 继续阻断）
+1. [20260722-lane-ctr-v02-ca-sig-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-sig-design-handoff.md)（CTR：PR #52 merge/main CI gate closed；SIG owner selections recorded；两个 profiles 未登记/不可用）
+2. [20260722-lane-ctr-v02-ca-target-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-target-design-handoff.md)（CTR：TARGET design materialized；三个 configure candidates blocked）
+3. [20260722-lane-ctr-v02-ca-ops-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-ops-design-handoff.md)（CTR：OPS design materialized；八项 blocked；machine contracts unregistered）
 
 ## 客户端目录治理交付
 
