@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-22（**CFR shell-target-ambiguity 已合入 main**：PR [#46](https://github.com/agentkernel/cognitive-os/pull/46) @ `0ab3ab4`；上游 RUN PR [#45](https://github.com/agentkernel/cognitive-os/pull/45) @ `eef258d`；`SHELL-TARGET-AMBIGUITY-001` behavior **pass**；pins **84/59/25**；self-check **40**；Profile **implemented = 0**）
+> 最后更新：2026-07-22（**Configuration Authority CA-0 = NO-GO**：D-016 operation set + D-022 signature/audit/config carrier 未闭合，CA-1～CA-8 不启动；WSL 复验 pins **84/59/25**、self-check **40/40**；Profile **implemented = 0**）
 
 ## 里程碑状态
 
@@ -28,7 +28,7 @@
 | 口径 | 计数 |
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
-| 实现已提供（构建通过且有实现代码的 REQ） | **68**（matrix 实测非空 impl；含 channel_binding + **target_resolution**） |
+| 实现已提供（构建通过且有实现代码的 REQ） | **70**（matrix 实测非空 impl；shell channel + target resolution 两批各回填 2 条后的当前值） |
 | 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 32 向量**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + M5-shell-channel 1 + **SHELL-TARGET-AMBIGUITY-001** + M6 3）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
 
@@ -50,13 +50,13 @@
 |---|---|---|
 | P0 | 0（+1 证据性质） | F-001（证据缺口，随里程碑消解，不阻断） |
 | P1 | **0**（+持续） | F-017 **closed-for-release-claim-set**；F-015 持续。**F-011 已于 CFR M5 行为批闭合**；F-014/F-023 已于 M4 闭合 |
-| 漂移 | 0 开放（+2 deferred，+1 decided/partial） | **D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 deferred-to-v0.2**；D-019 已闭合 |
+| 漂移 | **1 open**（+2 deferred，+1 decided/partial） | **D-022 open**（阻断 CA-1～CA-8）；**D-017 deferred-to-v0.2**；**D-018 partially-implemented**（组装器 + watch/shell 行为证据已有；治理对象端口仍缺）；**D-016 deferred-to-v0.2**；D-019 已闭合 |
 
 ## 车道当前分工（权威：[PARALLEL-LANES](PARALLEL-LANES.md)）
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **M6 Batch-0A 已交付** | `lane/ctr-m6-bindings` | CORE_SET +5 schema；codegen 0.2.1（number）；SCHEMA_DIGESTS 40；D-020/D-021 裁决；handoff：`20260721-lane-ctr-m6-bindings-handoff.md` |
+| Lane-CTR 契约与生成 | **Configuration Authority CA-0 NO-GO** | `lane/ctr-config-authority-contract` | D-016 + D-022 阻断 operation/payload/readback、signature profile 与 authoritative audit carrier；CA-1～CA-8 停止；未改机器资产 |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)（CFR：`SHELL-TARGET-AMBIGUITY-001` pass；pins 59/25）
-2. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；PR #45）
-3. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass）
+1. [20260722-lane-ctr-config-authority-contract-handoff.md](../checkpoints/20260722-lane-ctr-config-authority-contract-handoff.md)（CTR：CA-0 NO-GO；D-022 open；pins 59/25）
+2. [20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)（CFR：`SHELL-TARGET-AMBIGUITY-001` pass；pins 59/25）
+3. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；PR #45）
 
 ## 客户端目录治理交付
 
