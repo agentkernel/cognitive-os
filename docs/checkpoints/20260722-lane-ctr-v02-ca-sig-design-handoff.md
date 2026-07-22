@@ -265,8 +265,16 @@ consumed by authoritative CAS, with an R3 pair consumed as one atomic set.
   both completed Ubuntu/Windows `success` at the primary commit.
 - Initial PR state after CI: OPEN, MERGEABLE/CLEAN; reviews, review decision,
   and requested reviewers empty.
-- This handoff fact backfill is a separate docs-only commit. Its final PR-head
-  checks must also remain successful; the authoritative final status is PR #53.
+- Owner-selection materialization commit:
+  `5a191bb2ca89c68efeccaf3bd06adbf192a32f92` (`docs(ctr): record
+  owner-confirmed SIG selections`). Its push run
+  [29928621359](https://github.com/agentkernel/cognitive-os/actions/runs/29928621359)
+  and PR run
+  [29928625097](https://github.com/agentkernel/cognitive-os/actions/runs/29928625097)
+  both completed Ubuntu/Windows `success`.
+- This final handoff fact backfill is a separate docs-only commit. Its final
+  PR-head checks must also remain successful; the authoritative final status is
+  PR #53.
 - Repository-owner technical selections were confirmed in the active governance
   session and are materialized by a follow-up docs-only commit. This is not an
   independent security/cryptography review or a GitHub PR review. GitHub reviews,
