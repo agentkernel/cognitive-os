@@ -91,7 +91,19 @@ generated bindings, vectors, and implementation remain pending.
   authoritative audit`).
 - AUDIT PR: [#54](https://github.com/agentkernel/cognitive-os/pull/54), base
   `main`, docs-only, 11 expected docs paths, independent from SIG.
-- Final PR head checks: pending after this handoff fact backfill.
+- Handoff/PR fact-backfill commit before the CI-status update:
+  `73f81baca1bc4d9a711f05d8e135c4cd305fe0bf` (`docs(ctr): record AUDIT PR
+  handoff`).
+- At that head, push run
+  [29935718020](https://github.com/agentkernel/cognitive-os/actions/runs/29935718020)
+  and pull-request run
+  [29935721065](https://github.com/agentkernel/cognitive-os/actions/runs/29935721065)
+  both completed `success`, with `verify (ubuntu-latest)` and
+  `verify (windows-latest)` successful in each run.
+- This CI-status backfill necessarily creates a newer docs-only PR head. The
+  final-head check result and exact run identifiers are external facts on PR
+  #54 and must be reverified there; they are not recursively committed into the
+  branch.
 - GitHub reviews, review decision, and requested reviewers were empty when the
   PR was created.
 - No reviewer request may be created without an explicit user instruction naming
