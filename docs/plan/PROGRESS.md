@@ -60,15 +60,15 @@
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **shell target ambiguity authority 已合入**（PR #45） | `main` @ `eef258d` | `target_resolution::admit_target_selector`；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
+| Lane-RUN 运行时与管理面 | **MGMT-FALLBACK-008 配置 discovery NO-GO**（未改变实现或 pins） | `lane/run-mgmt-fallback-008-discovery` | `gateway.configure` / `diagnostics.configure` 缺真实配置后端、持久化 authority 与权威 audit；保持 vector not-run；handoff：`20260722-lane-run-mgmt-fallback-008-discovery-handoff.md` |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
 1. [20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)（CFR：`SHELL-TARGET-AMBIGUITY-001` pass；pins 59/25）
-2. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；PR #45）
-3. [20260721-lane-cfr-shell-channel-isolation-handoff.md](../checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md)（CFR：`SHELL-CHANNEL-ISOLATION-003` pass）
+2. [20260722-lane-run-mgmt-fallback-008-discovery-handoff.md](../checkpoints/20260722-lane-run-mgmt-fallback-008-discovery-handoff.md)（RUN：配置 authority NO-GO；vector 保持 not-run）
+3. [20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)（RUN：`admit_target_selector`；PR #45）
 
 ## 客户端目录治理交付
 
