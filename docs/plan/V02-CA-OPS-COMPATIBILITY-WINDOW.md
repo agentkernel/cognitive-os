@@ -1,6 +1,6 @@
 # V02-CA-OPS-01 Compatibility Window Proposal
 
-- Status: finite design with owner-confirmed SIG selections; independent security review pending
+- Status: finite design with owner-confirmed SIG and AUDIT selections; independent reviews pending
 - Proposed native set: exact `0.2.0-draft.1`
 - Operation-set digest: `unresolved/not computed`
 - Machine status: unregistered
@@ -34,12 +34,27 @@ A receiver selects a set only when all of the following hold:
   and critical-extension digest;
 - authorization is revalidated after signature-profile/epoch selection, and a
   v0.1 signature string is never treated as a v0.2 detached envelope.
+- the selected audit critical extension pins exact record, stream, checkpoint,
+  retention, redaction, export and commit-receipt profiles, all schemas/digests,
+  finite checkpoint thresholds, retention-policy values, governed checkpoint/
+  export signing keys, and future error mappings;
+- stream identity, tenant/compartment scope, expected high-watermark, writer
+  epoch/fencing, previous-record digest, and checkpoint signature verify before
+  authority commit or recovery progress;
+- export pins the authorized filter, source checkpoint/high-watermark,
+  deterministic redaction profile, ordered digest list, manifest and signature.
 
 Failure uses `VERSION_UNSUPPORTED`, `CRITICAL_EXTENSION_UNKNOWN`, or `PROTOCOL_MAPPING_INCOMPLETE` only where the registered meaning exactly applies. Unknown-operation, unnegotiated-operation, and epoch-specific error closure remains unresolved.
 
 ## 3. Breaking changes within the window
 
-Adding/removing/renaming a core member, changing descriptor semantics or binding, changing risk/approval/authority/error mapping, changing signature algorithm/key usage/trust root/domain/projection/exclusions, changing criticality, or removing support is breaking. A pinned Draft cannot be modified in place; it receives a new complete SemVer and digest plus migration note.
+Adding/removing/renaming a core member, changing descriptor semantics or binding,
+changing risk/approval/authority/error mapping, changing signature algorithm/key
+usage/trust root/domain/projection/exclusions, changing audit carrier/topology/
+sequence/chain/checkpoint/signature/retention/legal-hold/redaction/export,
+changing criticality, or removing support is breaking. A pinned Draft cannot be
+modified in place; it receives a new complete SemVer and digest plus migration
+note.
 
 ## 4. Current non-claim
 
@@ -54,6 +69,12 @@ profile, key descriptor/registry manifest, trust-root/delegation asset,
 rotation/revocation service, replay ledger, error set, or verification receipt
 is implemented or registered. Owner-confirmed design does not change the
 existing string fields' v0.1 schema meaning.
+
+No authoritative audit record, stream, checkpoint, retention/redaction policy,
+legal-hold authority binding, export manifest/signature, audit persistence port,
+error/category, critical extension, or digest is implemented or registered.
+Owner-confirmed AUDIT design does not change Event, transition, receipt,
+`audit_ref`, SQLite, vector, evidence, or Profile meaning.
 
 An old or private target representation is not inside the window merely because
 its URI, operation spelling, or JSON can be parsed. A future target adapter must
