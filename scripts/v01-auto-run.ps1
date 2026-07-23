@@ -34,13 +34,13 @@ if (-not $env:CI -or [string]::IsNullOrWhiteSpace($env:CI)) {
 }
 
 $Pinned = @{
-  total_vectors              = 84
-  pass                       = 55
+  total_vectors              = 85
+  pass                       = 60
   fail                       = 0
   "not-applicable"           = 0
   "documented-degradation"   = 0
-  "not-run"                  = 29
-  self_check_min             = 36
+  "not-run"                  = 25
+  self_check_min             = 41
 }
 
 $RegressIds = @(
@@ -110,11 +110,17 @@ function Invoke-Logged {
 }
 
 function Resolve-KernelServerBin {
+  $targetRoot = $env:CARGO_TARGET_DIR
+  if ([string]::IsNullOrWhiteSpace($targetRoot)) {
+    $targetRoot = Join-Path $RepoRoot "target"
+  } elseif (-not [System.IO.Path]::IsPathRooted($targetRoot)) {
+    $targetRoot = Join-Path $RepoRoot $targetRoot
+  }
   $candidates = @(
-    (Join-Path $RepoRoot "target/debug/kernel-server.exe"),
-    (Join-Path $RepoRoot "target/debug/kernel-server"),
-    (Join-Path $RepoRoot "target/release/kernel-server.exe"),
-    (Join-Path $RepoRoot "target/release/kernel-server")
+    (Join-Path $targetRoot "debug/kernel-server.exe"),
+    (Join-Path $targetRoot "debug/kernel-server"),
+    (Join-Path $targetRoot "release/kernel-server.exe"),
+    (Join-Path $targetRoot "release/kernel-server")
   )
   foreach ($c in $candidates) {
     if (Test-Path $c) { return (Resolve-Path $c).Path }

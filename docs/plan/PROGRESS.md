@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（经批准的 Lane-CFR + Lane-CTR 原子例外已为 Ordinary Core `status.inspect` 登记 `ORDINARY-CORE-AUDIT-INSPECT-001`，同时映射 `REQ-AUDIT-001` / `REQ-AUDIT-002` 并刷新 matrix。runner 最小行为实现已提供，向量测试已执行：公开 `inspect_with_audit` + durable file audit + 正式 decision/receipt + release gate，真实结果 **85 vectors / 60 pass / 25 not-run / 0 fail**，self-check **41/41**；candidate/schema/generated/golden 与 Lane-RUN 生产路径未改。此向量证据不构成 machine-registration 总体完成、CA-0 GO、High-Assurance、Profile 已符合或 D-022 解除；D-022 仍 blocking，Profile **implemented = 0**。）
+> 最后更新：2026-07-24（完整 Windows-native 验证以 `origin/main@a5e179c` 执行：workspace Rust/TS、clippy、format、consistency、matrix、runner 和 self-check 均通过；runner 实测 **85 vectors / 60 pass / 25 not-run / 0 fail**，self-check **41/41**。本地 Boot→Connect→Verify→Perf-report-ready 自动链在修复隔离 `CARGO_TARGET_DIR` 发现与过期 pins 后达到 L3，仍是 Ordinary Core **non-claim**：Profile **implemented = 0**，PERF-004 campaign 与 PERF-005 benefit 均未执行/不得声称。完整分析见 [20260724-full-validation-analysis.md](20260724-full-validation-analysis.md)。）
 
 ## 里程碑状态
 
@@ -13,7 +13,7 @@
 | M3 治理链与 Context | **done** | [20260720-m3-milestone-review.md](../checkpoints/20260720-m3-milestone-review.md) | KRN M3 批（六步授权门、capability 算术、九阶段管线、治理缓存键、确定性渲染、F-007 双竞态，PR #9）+ CFR 行为执行扩展批（8 向量脱 not-run + CTX-TRUST-004 静态→行为升级、治理类自检 20/20 fail）。**M4 入口 gate（tracer bullet；F-002~F-010 类全收敛）逐条核验通过 → 开启**（评审 §7） |
 | M4 Intent/Effect 与恢复 + tracer bullet | **done** | [20260720-m4-milestone-review.md](../checkpoints/20260720-m4-milestone-review.md) | KRN M4 批（Intent/幂等/准入矩阵/Effect 协议/sink fencing/恢复八步/faults 框架/tracer bullet，PR #12）+ CFR 行为执行批（7 向量脱 not-run 全经故障注入驱动、fencing 子集落档、反模式自检 27/27 fail、tracer bullet 复现确认）。**F-014/F-023 闭合；F-023 拒绝码 NO_AUTHORIZED_OPERATION_CANDIDATE 确认**。M5 入口 = M4 分量达成 + **F-011 R1 合同登记（剩余项，归 Lane-CTR）** |
 | M5 意图链/Harness/Shell/管理面 | **done** | [20260721-m5-milestone-review.md](../checkpoints/20260721-m5-milestone-review.md) | KRN+CTR+RUN 1–2b+TSC+CFR 已合入。行为向量当时 **52 pass / 32 not-run**；F-011 三负例行为闭合；D-018 仍 partially-implemented。**GO M6**（附带条件见评审 §7） |
-| M6 安装与适配、v0.1 发布 | **实现已提供；测试已执行（局部）；出口 GO-with-explicit-non-claim** | [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（初评 [NO-GO](../checkpoints/20260721-m6-milestone-review.md)） | RUN/CFR M6 交付 + EXIT 声明集/F-017 digests；pins **55/29**；RC ≤ experimental；**implemented = 0**；durable install / PERF 战役 / D-018 / Win-native / WSL2 = explicit non-claim；计划：[M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) |
+| M6 安装与适配、v0.1 发布 | **实现已提供；测试已执行（局部）；出口 GO-with-explicit-non-claim** | [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（初评 [NO-GO](../checkpoints/20260721-m6-milestone-review.md)） | RUN/CFR M6 交付 + EXIT 声明集/F-017 digests；当前 runner pins **60/25**（85 vectors；self-check 41/41）；RC ≤ experimental；**implemented = 0**；durable install / PERF 战役 / D-018 / Win-native / WSL2 = explicit non-claim；计划：[M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) |
 | M7~M11 扩展 Profile | not-started | — | 不阻塞 v0.1 |
 | Console 产品车道 | **tracking-only（informative 文档例外）** | — | 客户端项目根迁移完成（ADR-0007）；Phase 0 文档收口；M5 出口已 GO，但 implementation-ready 仍 **no (blocked)**：缺五平台 PoC / 技术栈 ADR / 依赖组 1/2/7 完整交付与法务 gate；与 M6 核心可并行 tracking-only，不混入主线 PR；handoff：`docs/checkpoints/20260721-lane-con-m5-unblock-review-handoff.md` |
 
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-doc-product-complexity-boundary-handoff.md](../checkpoints/20260723-lane-doc-product-complexity-boundary-handoff.md)（DOC：ADR-0015 将严格 High-Assurance 审计后置，Ordinary Core 保持默认产品范围）
-2. [20260723-lane-krn-d018-governance-ports-handoff.md](../checkpoints/20260723-lane-krn-d018-governance-ports-handoff.md)（KRN：D-018 durable governance-header resolution port 已提供；focused test 已执行；仍非 D-018 闭合）
-3. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
+1. [20260724-lane-cfr-auto-run-validation-handoff.md](../checkpoints/20260724-lane-cfr-auto-run-validation-handoff.md)（CFR tooling：auto-run pins 与隔离 target resolver 修复；完整本地自动链 L3 non-claim）
+2. [20260724-full-validation-analysis.md](20260724-full-validation-analysis.md)（完整 Windows-native 验证与产品/性能边界分析）
+3. [20260723-lane-doc-product-complexity-boundary-handoff.md](../checkpoints/20260723-lane-doc-product-complexity-boundary-handoff.md)（DOC：ADR-0015 将严格 High-Assurance 审计后置，Ordinary Core 保持默认产品范围）
 
 ## 客户端目录治理交付
 
