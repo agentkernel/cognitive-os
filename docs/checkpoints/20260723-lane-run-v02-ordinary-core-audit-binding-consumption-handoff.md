@@ -134,8 +134,13 @@ untracked content was removed.
   `origin/lane/run-v02-ordinary-core-audit-binding-consumption`.
 - Pull request: `https://github.com/agentkernel/cognitive-os/pull/69`.
 - The first GitHub GraphQL create attempt returned a transient `EOF`; a read-only
-  head query confirmed no PR existed, and one retry created PR #69. Final CI and
-  merge status are pending this delivery-metadata update.
+  head query confirmed no PR existed, and one retry created PR #69.
+- Final head: `61ccee8a943c94253df1437614abfa31aeaac66e` (implementation +
+  delivery-metadata commits).
+- Final-head CI: Ubuntu pass in 1m22s; Windows pass in 6m45s. The earlier
+  implementation-only revision also passed both jobs (1m02s / 6m42s).
+- Merge: PR #69 merged at `2026-07-23T11:07:10Z`; merge commit
+  `ddb782cba5970095f3d7ff4551aed2f7d20ecbcc`.
 - Next lane: Lane-CFR behavior work for the already registered Ordinary Core
   decision/receipt and the now-formal Lane-RUN production consumer. It must not
   broaden the AUDIT family or convert these local runtime tests into a Profile or

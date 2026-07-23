@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（Lane-CTR Ordinary Core `status.inspect` AUDIT minimal machine registration 已由 PR #68 合入 `main`：两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。Lane-RUN 已让 audited runtime production path 直接消费正式 `OrdinaryCorePrivilegedReadDecision` / `OrdinaryCoreAuditCommitReceipt`，移除重复 wire DTO，并以正式闭合 enum、跨字段校验、durable readback/digest 与 receipt release gate 保持 audit-before-result；实现已提供、测试已执行，本地 Rust/TS/consistency/matrix 门禁通过。Lane-CFR conformance behavior 仍 pending；D-022 整体仍 blocking；CA-0 GO = no；High-Assurance deferred；Profile **implemented = 0**。）
+> 最后更新：2026-07-23（Lane-CTR Ordinary Core `status.inspect` AUDIT minimal machine registration 已由 PR #68 合入 `main`：两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。Lane-RUN 已让 audited runtime production path 直接消费正式 `OrdinaryCorePrivilegedReadDecision` / `OrdinaryCoreAuditCommitReceipt`，移除重复 wire DTO，并以正式闭合 enum、跨字段校验、durable readback/digest 与 receipt release gate 保持 audit-before-result；实现已提供、测试已执行，PR #69 双平台 CI 全绿并已合入 `main`。Lane-CFR conformance behavior 仍 pending；D-022 整体仍 blocking；CA-0 GO = no；High-Assurance deferred；Profile **implemented = 0**。）
 
 ## 里程碑状态
 
@@ -60,7 +60,7 @@
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption provided/tested** | `lane/run-v02-ordinary-core-audit-binding-consumption` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；非 conformance/Profile claim |
+| Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption merged (PR #69)** | `main` @ `ddb782c` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；Lane-CFR behavior pending，非 Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
