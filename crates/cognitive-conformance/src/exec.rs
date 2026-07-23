@@ -30,6 +30,9 @@ use std::path::{Path, PathBuf};
 
 /// M2 behavioral execution against the real kernel/store authority path.
 mod behavior;
+/// Ordinary Core AUDIT behavioral execution through the audited public
+/// `status.inspect` consumer and durable file adapter.
+mod behavior_audit;
 /// M3 behavioral execution against the governance/context kernel surface.
 mod behavior_m3;
 /// M4 behavioral execution: effect protocol and crash recovery through the
@@ -171,6 +174,9 @@ pub enum ExecutionMode {
     AgentBypassBehavior,
     /// M6 behavioral: OOB digest drift ingests candidate (no silent adopt).
     AgentOobBehavior,
+    /// Ordinary Core behavioral AUDIT: audited `status.inspect`, durable
+    /// decision readback, formal receipt binding, and release withholding.
+    OrdinaryCoreAuditInspectBehavior,
 }
 
 /// Execution plan for one vector, decided by structural classification.
@@ -477,6 +483,8 @@ const INTENT_ACCEPTANCE_VECTOR_ID: &str = "INTENT-ACCEPTANCE-007";
 const AGENT_INSTALL_VECTOR_ID: &str = "AGENT-INSTALL-001";
 const AGENT_BYPASS_VECTOR_ID: &str = "AGENT-BYPASS-002";
 const AGENT_OOB_VECTOR_ID: &str = "AGENT-OOB-001";
+/// Ordinary Core audited public-read execution.
+const ORDINARY_CORE_AUDIT_INSPECT_VECTOR_ID: &str = "ORDINARY-CORE-AUDIT-INSPECT-001";
 /// Behavioral vector that receives recorded partial contract assertions
 /// (M1 static side + M2 real read-only degradation subset; never a pass —
 /// disk-full and dispatch/stop/revoke expectations are M4/M5 behavior).
@@ -587,6 +595,9 @@ pub fn classify(vector: &LoadedVector) -> ExecutionPlan {
         AGENT_INSTALL_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentInstallBehavior),
         AGENT_BYPASS_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentBypassBehavior),
         AGENT_OOB_VECTOR_ID => ExecutionPlan::Execute(ExecutionMode::AgentOobBehavior),
+        ORDINARY_CORE_AUDIT_INSPECT_VECTOR_ID => {
+            ExecutionPlan::Execute(ExecutionMode::OrdinaryCoreAuditInspectBehavior)
+        }
         STORE_DEGRADATION_VECTOR_ID => ExecutionPlan::NotRun {
             reason: "disk-full fault mode and management stop/revoke expectations are \
                      M4-deferred (no portable disk-full injection) and M5 management plane; \
@@ -1232,6 +1243,9 @@ fn execute_gate(
             behavior_m6::agent_bypass_002_behavior(ctx, vector, kind)
         }
         ExecutionMode::AgentOobBehavior => behavior_m6::agent_oob_001_behavior(ctx, vector, kind),
+        ExecutionMode::OrdinaryCoreAuditInspectBehavior => {
+            behavior_audit::ordinary_core_audit_inspect_001_behavior(ctx, vector, kind)
+        }
     }
 }
 
@@ -1353,7 +1367,7 @@ pub struct SelfCheckReport {
 /// rank-before-auth, stale cache serving, silent truncation, unbounded
 /// retry, reshuffling render, content-claimed control plane, accepted
 /// amplification).
-const CORRUPTED_MODES: [ExecutionMode; 34] = [
+const CORRUPTED_MODES: [ExecutionMode; 35] = [
     ExecutionMode::SchemaGate,
     ExecutionMode::PerfContractGate,
     ExecutionMode::CasBehavior,
@@ -1388,6 +1402,7 @@ const CORRUPTED_MODES: [ExecutionMode; 34] = [
     ExecutionMode::AgentInstallBehavior,
     ExecutionMode::AgentBypassBehavior,
     ExecutionMode::AgentOobBehavior,
+    ExecutionMode::OrdinaryCoreAuditInspectBehavior,
 ];
 
 /// Run the self-check: the deliberately wrong implementation must fail every
@@ -1465,6 +1480,7 @@ pub fn self_check(
             "unknown-outcome-behavior",
             "idempotency-conflict-behavior",
             "recovery-reconciliation-behavior",
+            "ordinary-core-audit-inspect-behavior",
         ],
         must_flip,
         flipped_to_fail: flipped,

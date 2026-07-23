@@ -652,12 +652,14 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - ORDINARY-CORE-AUDIT-INSPECT-001
 - id: REQ-AUDIT-002
   owner: audit-002
   owner_spec: specs/core/README.md
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - ORDINARY-CORE-AUDIT-INSPECT-001
 - id: REQ-AUTH-001
   owner: auth-001
   owner_spec: specs/core/README.md

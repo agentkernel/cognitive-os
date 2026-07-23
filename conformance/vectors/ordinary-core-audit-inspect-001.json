@@ -1,0 +1,36 @@
+{
+  "id": "ORDINARY-CORE-AUDIT-INSPECT-001",
+  "title": "Commit an Ordinary Core status.inspect audit decision before releasing success",
+  "version": "0.1",
+  "layer": "management-shell",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-AUDIT-001",
+    "REQ-AUDIT-002"
+  ],
+  "input": {
+    "public_consumer": "ManagementPlane::inspect_with_audit",
+    "operation": "status.inspect",
+    "domain": "agent-execution",
+    "audit_adapter": "FileManagementAuditLog"
+  },
+  "expected": {
+    "public_consumer_executed": true,
+    "status_inspect_result_released": true,
+    "audit_commit_completed_before_success_return": true,
+    "formal_decision_shape_valid": true,
+    "formal_receipt_shape_valid": true,
+    "request_digest_matches_projection": true,
+    "result_digest_matches_report": true,
+    "record_digest_matches_readback": true,
+    "record_id_bound": true,
+    "request_digest_bound": true,
+    "sequence_positive": true,
+    "writer_epoch_positive": true,
+    "commit_not_before_observation": true,
+    "durable_readback_present": true,
+    "mismatched_receipt_withholds_result": true
+  }
+}
