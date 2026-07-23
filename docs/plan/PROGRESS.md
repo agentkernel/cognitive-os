@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序 **PR #56 先合并、#57 后重核验**；该决定不自动合并/注册。WP-1 AUDIT real-consumer docket、WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [WP-0 record](V02-CA-PR56-PR57-UNIFIED-BASELINE-RECORD.md)、[AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)、[SIG intake](V02-CA-SIG-INDEPENDENT-REVIEW-INTAKE.md) 与 [TARGET docket](V02-CA-TARGET-CONSUMER-INVESTIGATION-DOCKET.md)）
+> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序 **PR #56 先合并、#57 后重核验**，并确认旁路集合唯一比较算法为 ordinal path sort → UTF-8 no-BOM → LF + trailing LF → SHA-256；两项均不自动合并/注册，且不读取旁路内容。WP-1 AUDIT real-consumer docket、WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [WP-0 record](V02-CA-PR56-PR57-UNIFIED-BASELINE-RECORD.md)、[AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)、[SIG intake](V02-CA-SIG-INDEPENDENT-REVIEW-INTAKE.md) 与 [TARGET docket](V02-CA-TARGET-CONSUMER-INVESTIGATION-DOCKET.md)）
 
 ## 里程碑状态
 
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md)（CTR：owner 确认 #56 先、#57 后重核验；不自动合并/登记）
-2. [20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md)（CTR：PR #56/#57 unified baseline + TARGET consumer dockets；无选择/无 asset）
-3. [20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md)（CTR：AUDIT consumer docket + SIG review intake；不选择 consumer/reviewer，不登记任何 asset）
+1. [20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md)（CTR：owner 确认旁路集合唯一 hash 算法；不读取内容）
+2. [20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md)（CTR：owner 确认 #56 先、#57 后重核验；不自动合并/登记）
+3. [20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md)（CTR：PR #56/#57 unified baseline + TARGET consumer dockets；无选择/无 asset）
 
 ## 客户端目录治理交付
 

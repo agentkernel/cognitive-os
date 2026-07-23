@@ -57,7 +57,7 @@ ordering and the later packet is revalidated against the then-current `main`.
 | Decision | Current state | Required evidence before recording |
 |---|---|---|
 | PR #56/#57 merge order | **owner-confirmed 2026-07-23: #56 first, then #57** | #56 must merge before #57 is acted on; after that merge, revalidate #57 against the resulting current `main`, including its GitHub mergeability and governance facts |
-| Path-set normalization algorithm | provisionally documented above; **owner confirmation required** | Confirmation that ordinal UTF-8/LF/trailing-LF is the governance comparison procedure |
+| Path-set normalization algorithm | **owner-confirmed 2026-07-23** | Ordinal path-name sort → UTF-8 without BOM → LF join plus one trailing LF → SHA-256 is the sole governance comparison procedure; only count/hash may be recorded |
 | Compatibility of the two NO-GO packets | recorded as compatible at this snapshot | Independent governance reviewer checks this record and both exact heads |
 
 ## 5. Stop condition
