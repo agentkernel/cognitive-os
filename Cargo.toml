@@ -15,6 +15,7 @@ members = [
     "crates/cognitive-conformance",
     "apps/kernel-server",
     "apps/admin-cli",
+    "apps/pi-agent-adapter",
 ]
 
 [workspace.package]
