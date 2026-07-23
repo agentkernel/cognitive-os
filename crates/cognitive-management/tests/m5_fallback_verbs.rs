@@ -515,13 +515,15 @@ fn all_four_verbs_run_with_zero_model_calls() {
     let session = active_session();
 
     // inspect
+    let inspect_audit = RecordingAuditPort::new(AuditMode::Commit);
     let inspected = plane
-        .inspect(
+        .inspect_with_audit(
             &session,
             &InspectRequest {
                 domain: LifecycleDomain::AgentExecution,
                 object_id: execution_id.clone(),
             },
+            &inspect_audit,
         )
         .unwrap();
     assert_eq!(inspected.state, "RUNNABLE");
@@ -626,15 +628,18 @@ fn expired_and_revoked_sessions_deny_without_losing_pending_effects() {
         ),
     ];
     for (session, expected) in &cases {
+        let inspect_audit = RecordingAuditPort::new(AuditMode::Commit);
         let inspect = plane
-            .inspect(
+            .inspect_with_audit(
                 session,
                 &InspectRequest {
                     domain: LifecycleDomain::AgentExecution,
                     object_id: execution_id.clone(),
                 },
+                &inspect_audit,
             )
             .unwrap_err();
+        let inspect = expect_management_error(inspect);
         assert_eq!(denial_code(&inspect), *expected);
         let stop = plane
             .stop(
@@ -931,13 +936,15 @@ fn inspect_reports_authority_state_and_writes_nothing() {
 
     let plane = ManagementPlane::deterministic(&store, &clock, &ids);
     let session = active_session();
+    let audit = RecordingAuditPort::new(AuditMode::Commit);
     let report = plane
-        .inspect(
+        .inspect_with_audit(
             &session,
             &InspectRequest {
                 domain: LifecycleDomain::AgentExecution,
                 object_id: execution_id.clone(),
             },
+            &audit,
         )
         .unwrap();
     assert_eq!(report.domain, "agent-execution");
@@ -956,15 +963,24 @@ fn inspect_reports_authority_state_and_writes_nothing() {
     // missing object surfaces the same registered denial as an
     // unauthorized one.
     let missing = plane
-        .inspect(
+        .inspect_with_audit(
             &session,
             &InspectRequest {
                 domain: LifecycleDomain::AgentExecution,
                 object_id: oid(0xdead),
             },
+            &audit,
         )
         .unwrap_err();
+    let missing = expect_management_error(missing);
     assert_eq!(denial_code(&missing), "CONTEXT_AUTH_DENIED");
+}
+
+fn expect_management_error(error: AuditedInspectError) -> ManagementError {
+    match error {
+        AuditedInspectError::Management(error) => error,
+        AuditedInspectError::Audit(error) => panic!("unexpected audit failure: {error}"),
+    }
 }
 
 #[derive(Clone, Copy)]

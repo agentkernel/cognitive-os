@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（Ordinary Core `status.inspect`：内部 tracer + lightweight durable `FileManagementAuditLog` implementation 已提供；`admin-cli inspect` 已强制 audit-before-result。日志具单写锁、重启 epoch、连续 sequence、canonical readback 与 durable sync；audit 打不开/锁冲突/损坏/提交失败时零 inspect stdout。测试先行；cognitive-management **17/17**、admin-cli **11/11**、strict clippy/fmt 通过。machine registration、conformance behavior 与 Profile claim 仍未提供；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [handoff](../checkpoints/20260723-lane-run-v02-durable-audit-wiring-handoff.md)）
+> 最后更新：2026-07-23（Ordinary Core `status.inspect`：内部 tracer + lightweight durable `FileManagementAuditLog` implementation 已提供；`admin-cli inspect` 已强制 audit-before-result，未审计 `inspect` 已改为 crate-private，外部产品代码无法编译旁路。日志具单写锁、重启 epoch、连续 sequence、canonical readback 与 durable sync；audit 打不开/锁冲突/损坏/提交失败时零 inspect stdout。测试先行；cognitive-management **17/17**、admin-cli **11/11**、strict clippy/fmt 通过。machine registration、conformance behavior 与 Profile claim 仍未提供；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [handoff](../checkpoints/20260723-lane-run-v02-inspect-api-hardening-handoff.md)）
 
 ## 里程碑状态
 
@@ -60,15 +60,15 @@
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **Ordinary Core durable audit-before-result implemented/tested (internal candidate)** | `lane/run-v02-durable-audit-wiring` | file adapter + `admin-cli inspect` 强制接线；未来新增 HTTP/API inspect 入口仍须复用 release gate；非 machine registration/conformance/Profile claim |
+| Lane-RUN 运行时与管理面 | **Ordinary Core audited inspect API hardened/tested (internal candidate)** | `lane/run-v02-inspect-api-hardening` | durable adapter + CLI 接线已合入；未审计 primitive 改为 crate-private，外部调用面只保留 audited inspect；非 machine registration/conformance/Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-run-v02-durable-audit-wiring-handoff.md](../checkpoints/20260723-lane-run-v02-durable-audit-wiring-handoff.md)（RUN：durable file AUDIT + `admin-cli inspect` 防旁路接线已实现并测试）
-2. [20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md)（RUN：`status.inspect` audit-before-result 内部 tracer 已实现并测试）
-3. [20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md)（CTR：Ordinary Core/High-Assurance split；Core tracer development gate open）
+1. [20260723-lane-run-v02-inspect-api-hardening-handoff.md](../checkpoints/20260723-lane-run-v02-inspect-api-hardening-handoff.md)（RUN：未审计 inspect 收紧为 crate-private；外部旁路编译面关闭）
+2. [20260723-lane-run-v02-durable-audit-wiring-handoff.md](../checkpoints/20260723-lane-run-v02-durable-audit-wiring-handoff.md)（RUN：durable file AUDIT + `admin-cli inspect` 防旁路接线已实现并测试）
+3. [20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md)（RUN：`status.inspect` audit-before-result 内部 tracer 已实现并测试）
 
 ## 客户端目录治理交付
 
