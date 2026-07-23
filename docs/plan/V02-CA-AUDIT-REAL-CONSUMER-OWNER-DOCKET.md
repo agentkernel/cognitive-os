@@ -54,13 +54,13 @@ Complete one record for each candidate considered. A blanket approval is invalid
 | Field | Required decision/evidence |
 |---|---|
 | Candidate | A, B, or C above; one record per candidate |
-| Consumer owner | Named accountable owner and organization; not the AUDIT packet author |
-| Boundary | Exact producer/consumer boundary and deployment/organizational separation |
+| Consumer owner | **Owner-confirmed role model, 2026-07-23:** Management Operations API Owner owns the result-release gate; Authoritative Audit Service Owner owns durable audit persistence; actual person/team appointment still required and neither role may be the AUDIT packet author alone |
+| Boundary | **Owner-confirmed role model, 2026-07-23:** independently deployed Management API and Authoritative Audit Service communicate through an authenticated, version-pinned internal service API; actual endpoint/deployment evidence still required |
 | Input triple | Exact future `(asset_id, SemVer, digest)` accepted by the consumer; may remain `owner decision required` until final bytes exist, but then selection cannot pass |
 | Deterministic result | Accepted/rejected outcomes and the responsible failure path |
 | Required facts | Each record/stream/receipt field whose removal causes rejection |
 | Failure oracle | Safe outcome on missing, stale, mismatched, reordered, or persistence-failed input |
-| Independence review | Named audit/privacy reviewer, conflict disclosure, scope, date, and conclusion |
+| Independence review | **Owner-confirmed role model, 2026-07-23:** Security & Privacy Reviewer, independent of both implementation owners; actual reviewer appointment, conflict disclosure, scope, date, and conclusion still required |
 | Owner decision | `selected` — candidate A, 2026-07-23; accountable owners and boundary still required |
 
 ## 5. Seventeen itemized AUDIT owner decisions

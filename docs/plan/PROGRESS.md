@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序 **PR #56 先合并、#57 后重核验**、旁路集合唯一比较算法，并选定 WP-1 candidate A（`status.inspect` result-release audit gate）为首个 AUDIT consumer 设计方向；A 的 owners、独立边界和六项 consumer proof 尚未提供，故仍非 registration GO。WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)）
+> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序、旁路 hash 算法，并为 WP-1 candidate A 设定三方 role model：Management Operations API Owner、Authoritative Audit Service Owner、独立 Security & Privacy Reviewer，边界为独立部署服务的 authenticated/version-pinned internal API。实际人员/团队、endpoint/deployment evidence 和 consumer proof 尚未提供，故仍非 registration GO。WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)）
 
 ## 里程碑状态
 
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md)（CTR：owner 选定 A 为 AUDIT consumer 方向；owners/boundary/proof 仍缺）
-2. [20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md)（CTR：owner 确认旁路集合唯一 hash 算法；不读取内容）
-3. [20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pr-order-owner-decision-handoff.md)（CTR：owner 确认 #56 先、#57 后重核验；不自动合并/登记）
+1. [20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md)（CTR：owner 确认三方 role model + 独立服务 API；实际 appointment/proof 仍缺）
+2. [20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md)（CTR：owner 选定 A 为 AUDIT consumer 方向；owners/boundary/proof 仍缺）
+3. [20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp0-pathset-algorithm-owner-decision-handoff.md)（CTR：owner 确认旁路集合唯一 hash 算法；不读取内容）
 
 ## 客户端目录治理交付
 
