@@ -166,6 +166,18 @@ not prove independent deployment, a third-party consumer, non-repudiation, or
 the full AUDIT family. HAL9003 independent exact-byte review remains pending;
 there is no registration, behavior-pass, CA-0 GO, or Profile claim.
 
+### 2026-07-23 Ordinary Core AUDIT safe-reason corrective-freeze note
+
+The technical review returned **NO-GO** for the prior candidate because its
+`safe_reason` pattern admitted unregistered values. Lane-CTR produced a
+replacement review-only candidate: the schema uses an exact enum and its
+candidate-only test mechanically compares that enum with `errors.yaml`, while
+also rejecting `UNREGISTERED_AUDIT_REASON`. The replacement preserves the
+success/denied/error terminal constraints and exact manifest digest check.
+This processes the NO-GO as input only; it is not a final-byte approval, machine
+registration, conformance behavior evidence, CA-0 GO, or Profile claim. A new
+independent final-byte review remains required.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。
