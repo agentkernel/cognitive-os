@@ -4,7 +4,7 @@
 - Date: 2026-07-23
 - Classification: governance preparation only; no machine asset or registration
 - Baseline: `lane/ctr-v02-audit-privileged-read-registration@3792d915a73a28187e9740648f6e0d753f286957`
-- Status: **owner decision required — no consumer selected**
+- Status: **owner-confirmed design direction: candidate A; consumer proof incomplete**
 
 ## 1. Boundary
 
@@ -39,12 +39,13 @@ the future AUDIT carrier.
 
 | Candidate | Possible boundary and exact consumption role | Preconditions before owner may select | Principal risks | Current result |
 |---|---|---|---|---|
-| A. `status.inspect` result-release audit gate | Management result-release component consumes the committed privileged-read decision, stream position, and receipt before releasing a success, denial, challenge, or error result. | A separately owned authoritative audit store; exact result-release failure oracle; AUDIT lower assets must not reverse-pin OPS; existence hiding must be shown for every terminal shape. | Subject/tenant/authority existence leakage; OPS↔AUDIT digest cycle; suppressing a safe denial on audit failure. | **Not selected; no current independent consumer proof.** |
+| A. `status.inspect` result-release audit gate | Management result-release component consumes the committed privileged-read decision, stream position, and receipt before releasing a success, denial, challenge, or error result. | A separately owned authoritative audit store; exact result-release failure oracle; AUDIT lower assets must not reverse-pin OPS; existence hiding must be shown for every terminal shape. | Subject/tenant/authority existence leakage; OPS↔AUDIT digest cycle; suppressing a safe denial on audit failure. | **Owner-selected 2026-07-23 as the first design direction; no current independent consumer proof.** |
 | B. Independent compliance/export verifier | A separately operated verifier consumes canonical exported records, checkpoints, and manifests and deterministically accepts or rejects an export. | A real controlled export boundary; independent verifier owner; complete omission/duplicate/reorder/high-watermark handling; exact use of `privileged_read_decision`. | Redaction leakage; export omission/reordering; checkpoint/key rotation gaps. | **Candidate only; no current controlled export consumer proof.** |
 | C. Recovery/high-watermark verifier | A recovery authority separate from the writer/store consumes exact records, stream positions, receipts, and checkpoints before authorizing resume. | Separate recovery authority; explicit proof it consumes privileged-read facts rather than only a generic chain; durable ordering/fork/gap failure authority. | Treating generic chain validation as a privileged-read consumer; unsafe recovery after store failure. | **Candidate only; no current independent consumer proof.** |
 
-No candidate is automatically preferred. Selecting one requires the owner decision
-record below and a named independent audit/privacy reviewer.
+Candidate A is now the owner-selected design direction. It still requires the
+owner decision record below, named independent ownership, and an audit/privacy
+reviewer before it can pass the consumer gate. B and C remain unselected.
 
 ## 4. Owner decision record — real consumer
 
@@ -60,7 +61,7 @@ Complete one record for each candidate considered. A blanket approval is invalid
 | Required facts | Each record/stream/receipt field whose removal causes rejection |
 | Failure oracle | Safe outcome on missing, stale, mismatched, reordered, or persistence-failed input |
 | Independence review | Named audit/privacy reviewer, conflict disclosure, scope, date, and conclusion |
-| Owner decision | `selected`, `rejected`, or `deferred`, with rationale and date |
+| Owner decision | `selected` — candidate A, 2026-07-23; accountable owners and boundary still required |
 
 ## 5. Seventeen itemized AUDIT owner decisions
 
