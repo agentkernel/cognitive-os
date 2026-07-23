@@ -12,6 +12,7 @@ pub mod agent_package_manifest;
 pub mod akp_request_envelope;
 pub mod akp_result_envelope;
 pub mod akp_stream_frame;
+pub mod audit_commit_receipt;
 pub mod authorization_capability;
 pub mod common_defs;
 pub mod context_request;
@@ -33,6 +34,7 @@ pub mod operation_summary;
 pub mod performance_report;
 pub mod principal;
 pub mod privileged_management_session;
+pub mod privileged_read_decision;
 pub mod profile_manifest;
 pub mod resource_scope;
 pub mod shell_action_proposal;
@@ -49,7 +51,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 40] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 42] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -81,6 +83,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 40] = [
     (
         "akp-stream-frame.schema.json",
         "sha256:0e9c12eba75936d591202578a89c401f6f67fb2188ae85f972f327fadf04135c",
+    ),
+    (
+        "audit-commit-receipt.schema.json",
+        "sha256:7ac5e9ff0b29dd5db35568919dc493d238099cdcfb7986f0790d32cfc171a456",
     ),
     (
         "authorization-capability.schema.json",
@@ -161,6 +167,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 40] = [
     (
         "privileged-management-session.schema.json",
         "sha256:46b81f99681e9ed273302fb079fcbb2ec0a410e0dcd79aa92355486cd9144341",
+    ),
+    (
+        "privileged-read-decision.schema.json",
+        "sha256:26ad227a6c6f929dadd1090eeed01962a0a3801e284ad2c2850c86d32acefe1a",
     ),
     (
         "profile-manifest.schema.json",

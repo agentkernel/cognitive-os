@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audit-commit-receipt.schema.json",
+  "title": "CognitiveOS Ordinary Core AuditCommitReceipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_id", "record_digest", "request_digest", "sequence", "writer_epoch", "committed_at"],
+  "properties": {
+    "record_id": { "type": "string", "format": "uuid" },
+    "record_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "writer_epoch": { "type": "integer", "minimum": 1 },
+    "committed_at": { "type": "string", "format": "date-time" }
+  }
+}

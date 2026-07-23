@@ -13,6 +13,9 @@ use cognitive_contracts::generated::management_action_proposal::ManagementAction
 use cognitive_contracts::generated::object_reference::{ObjectReference, StrongReference};
 use cognitive_contracts::generated::performance_report::PerformanceReport;
 use cognitive_contracts::generated::privileged_management_session::PrivilegedManagementSession;
+use cognitive_contracts::generated::privileged_read_decision::{
+    OrdinaryCorePrivilegedReadDecision, OrdinaryCorePrivilegedReadDecisionSafeReason,
+};
 use cognitive_contracts::generated::profile_manifest::ProfileManifest;
 use serde_json::Value;
 use std::fs;
@@ -176,7 +179,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        40,
+        42,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).
@@ -196,6 +199,31 @@ fn schema_digest_constants_match_live_schemas() {
     assert_eq!(
         g::shell_action_proposal::SCHEMA_DIGEST,
         by_file["shell-action-proposal.schema.json"]
+    );
+}
+
+#[test]
+fn ordinary_core_audit_bindings_reject_unknown_fields_and_unregistered_reasons() {
+    let record = serde_json::json!({
+        "record_kind": "privileged_read_decision",
+        "record_id": "01890a5d-ac96-774b-bcce-b302099a805d",
+        "request_digest": format!("sha256:{}", "a".repeat(64)),
+        "outcome": "denied",
+        "safe_reason": "CONTEXT_AUTH_DENIED",
+        "observed_at": "2026-07-23T00:00:00Z"
+    });
+    assert!(serde_json::from_value::<OrdinaryCorePrivilegedReadDecision>(record.clone()).is_ok());
+    let mut unknown = record.clone();
+    unknown["object_id"] = Value::String("must-reject".to_owned());
+    assert!(serde_json::from_value::<OrdinaryCorePrivilegedReadDecision>(unknown).is_err());
+    let mut unregistered = record;
+    unregistered["safe_reason"] = Value::String("UNREGISTERED_AUDIT_REASON".to_owned());
+    assert!(serde_json::from_value::<OrdinaryCorePrivilegedReadDecision>(unregistered).is_err());
+    assert!(
+        serde_json::from_value::<OrdinaryCorePrivilegedReadDecisionSafeReason>(Value::String(
+            "UNREGISTERED_AUDIT_REASON".to_owned()
+        ))
+        .is_err()
     );
 }
 

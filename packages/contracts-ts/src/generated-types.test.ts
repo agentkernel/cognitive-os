@@ -28,6 +28,10 @@ import type { ManagementActionProposal } from "./generated/management-action-pro
 import type { PerformanceReport } from "./generated/performance-report.js";
 import type { PrivilegedManagementSession } from "./generated/privileged-management-session.js";
 import type { ProfileManifest } from "./generated/profile-manifest.js";
+import type {
+  OrdinaryCorePrivilegedReadDecision,
+  OrdinaryCorePrivilegedReadDecisionSafeReason,
+} from "./generated/privileged-read-decision.js";
 import type { StrongReference } from "./generated/object-reference.js";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -76,18 +80,35 @@ test("generated literal unions reject wrong states at compile time", () => {
   assert.ok(effect.verification.status);
 });
 
-test("SCHEMA_DIGESTS constants match the live schema files (40 generated modules)", () => {
+test("SCHEMA_DIGESTS constants match the live schema files (42 generated modules)", () => {
   // Gap 5 of the 20260720 lane-tsc handoff: the digest is a RUNTIME
   // constant clients pin envelope `schema_digest` with; it must equal the
   // re-derived canonical digest of the live schema (the schema-bundle
   // manifest per-asset recipe).
   const entries = Object.entries(SCHEMA_DIGESTS);
-  assert.equal(entries.length, 40, "generated schema module count drifted");
+  assert.equal(entries.length, 42, "generated schema module count drifted");
   for (const [file, pinned] of entries) {
     const raw = readFileSync(path.join(REPO_ROOT, "specs", "schemas", file), "utf-8");
     const live = digest(canonicalize(raw), "schema-bundle/0.1");
     assert.equal(pinned, live, `${file}: SCHEMA_DIGESTS entry is stale`);
   }
+});
+test("Ordinary Core AUDIT generated types reject unknown fields and unregistered reasons", () => {
+  const decision: OrdinaryCorePrivilegedReadDecision = {
+    record_kind: "privileged_read_decision",
+    record_id: "01890a5d-ac96-774b-bcce-b302099a805d",
+    request_digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    outcome: "denied",
+    safe_reason: "CONTEXT_AUTH_DENIED",
+    observed_at: "2026-07-23T00:00:00Z",
+  };
+  // @ts-expect-error - public contract has no raw object identity.
+  decision.object_id = "must-reject";
+  // @ts-expect-error - generated union is closed over errors.yaml.
+  const unregistered: OrdinaryCorePrivilegedReadDecisionSafeReason = "UNREGISTERED_AUDIT_REASON";
+  void unregistered;
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "privileged-read-decision.schema.json"), true);
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "audit-commit-receipt.schema.json"), true);
 });
 test("M5 consumer bindings export required members and digest pins", () => {
   // @ts-expect-error - registered required members cannot be omitted.
