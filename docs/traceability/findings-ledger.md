@@ -146,7 +146,9 @@ Lane-RUN provides an internal candidate `ManagementAuditPort`, safe digested
 lightweight durable file adapter with a single-writer lock, restart writer epoch,
 contiguous sequence, canonical readback validation and sync-before-receipt, then
 forces the existing external `admin-cli inspect` path through that gate. Audit
-open/lock/corruption/commit failure withholds stdout. The affected management
+open/lock/corruption/commit failure withholds stdout. A follow-up API-hardening
+batch makes the unaudited `inspect` primitive crate-private, so external Rust
+product code cannot compile a bypass. The affected management
 and CLI suites pass. This remains partial implementation feedback—not full
 REQ-AUDIT-001/002 coverage, machine registration, conformance behavior evidence,
 CA-0 GO, or Profile implementation.

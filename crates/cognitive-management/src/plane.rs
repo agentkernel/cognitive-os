@@ -335,11 +335,11 @@ where
         Ok(())
     }
 
-    /// Verb 1 — inspect: read the authority facts of one governed object
+    /// Internal inspect primitive: read the authority facts of one governed object
     /// (current state, version, committed events, fencing epoch). Pure
     /// read; a missing object surfaces the same registered denial as an
     /// unauthorized one (M3 protected-read isomorphism).
-    pub fn inspect(
+    fn inspect(
         &self,
         session: &PrivilegedManagementSession,
         request: &InspectRequest,
