@@ -23,12 +23,17 @@
 //! (registered not-run; behavioral execution is Lane-CFR's M5 batch).
 
 pub mod approval;
+pub mod audit;
 pub mod error;
 pub mod governance;
 pub mod model;
 pub mod plane;
 pub mod session;
 pub use approval::{ApprovalGate, ApprovalPresentation, ManagementActionProposal};
+pub use audit::{
+    AuditCommitReceipt, AuditPortFailure, AuditedInspectError, ManagementAuditPort,
+    PrivilegedReadDecision, PrivilegedReadOutcome, ResultReleaseGate,
+};
 
 pub use error::{ManagementDenial, ManagementError, RegisteredParts, category_str};
 pub use governance::GovernanceLedger;

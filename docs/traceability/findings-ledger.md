@@ -138,6 +138,16 @@ Detached object signatures, independent deployments/verifiers, R2/R3,
 checkpoint/export/legal/key-delegation remain High-Assurance gates. No machine
 asset, behavior result, CA-0 GO, or Profile claim is created by this correction.
 
+### 2026-07-23 Ordinary Core status.inspect tracer note
+
+Lane-RUN provides an internal candidate `ManagementAuditPort`, safe digested
+`privileged_read_decision`, commit receipt validation, and
+`inspect_with_audit` result-release gate. Three new tests pass for success,
+audit failure/receipt mismatch, and protected not-found denial; the complete
+`cognitive-management` suite passes. This is partial implementation feedback,
+not full REQ-AUDIT-001/002 coverage, durable AUDIT storage, machine registration,
+conformance behavior evidence, CA-0 GO, or Profile implementation.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。

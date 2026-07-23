@@ -58,6 +58,10 @@ envelope、key registry、R2/R3 与对象级不可抵赖签名保留为 High-Ass
 
 ## 6. 第一条 tracer
 
+状态（2026-07-23）：**内部 tracer implementation 已提供；management tests 已执行；
+durable adapter、machine registration、conformance behavior 与 Profile claim
+尚未提供。**
+
 第一批只实现 `status.inspect` 的 audit-before-result path：
 
 ```text
@@ -71,3 +75,8 @@ session/capability gate
 
 测试必须覆盖 audit commit failure、receipt subject mismatch、not-found/denial
 isomorphism，以及零可见成功结果。该 tracer 不创建公开 schema 或 Profile claim。
+
+已提供的内部 candidate surface：`ManagementAuditPort`、
+`PrivilegedReadDecision`、`AuditCommitReceipt`、`ResultReleaseGate` 与
+`ManagementPlane::inspect_with_audit`。现有未审计 `inspect` 仍是兼容内部读路径；
+产品/API 集成必须选择 audited tracer 才能获得 Core 的 release guarantee。
