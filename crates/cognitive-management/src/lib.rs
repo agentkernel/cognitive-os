@@ -31,8 +31,8 @@ pub mod plane;
 pub mod session;
 pub use approval::{ApprovalGate, ApprovalPresentation, ManagementActionProposal};
 pub use audit::{
-    AuditCommitReceipt, AuditPortFailure, AuditedInspectError, ManagementAuditPort,
-    PrivilegedReadDecision, PrivilegedReadOutcome, ResultReleaseGate,
+    AuditCommitReceipt, AuditPortFailure, AuditedInspectError, FileManagementAuditLog,
+    ManagementAuditPort, PrivilegedReadDecision, PrivilegedReadOutcome, ResultReleaseGate,
 };
 
 pub use error::{ManagementDenial, ManagementError, RegisteredParts, category_str};

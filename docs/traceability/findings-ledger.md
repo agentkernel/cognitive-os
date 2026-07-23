@@ -142,11 +142,14 @@ asset, behavior result, CA-0 GO, or Profile claim is created by this correction.
 
 Lane-RUN provides an internal candidate `ManagementAuditPort`, safe digested
 `privileged_read_decision`, commit receipt validation, and
-`inspect_with_audit` result-release gate. Three new tests pass for success,
-audit failure/receipt mismatch, and protected not-found denial; the complete
-`cognitive-management` suite passes. This is partial implementation feedback,
-not full REQ-AUDIT-001/002 coverage, durable AUDIT storage, machine registration,
-conformance behavior evidence, CA-0 GO, or Profile implementation.
+`inspect_with_audit` result-release gate. The follow-up Lane-RUN batch adds a
+lightweight durable file adapter with a single-writer lock, restart writer epoch,
+contiguous sequence, canonical readback validation and sync-before-receipt, then
+forces the existing external `admin-cli inspect` path through that gate. Audit
+open/lock/corruption/commit failure withholds stdout. The affected management
+and CLI suites pass. This remains partial implementation feedback—not full
+REQ-AUDIT-001/002 coverage, machine registration, conformance behavior evidence,
+CA-0 GO, or Profile implementation.
 
 ## 四、复验方法备注
 

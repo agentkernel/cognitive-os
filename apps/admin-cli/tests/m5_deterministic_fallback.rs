@@ -568,6 +568,15 @@ fn inspect_reads_authority_state_without_writing() {
     assert_eq!(report["event_count"], 3, "admit + 2 transitions");
     assert_eq!(report["fencing_epoch"], 1);
 
+    let audit_path = format!("{}.management-audit.jsonl", db.display());
+    let audit = std::fs::read_to_string(audit_path).unwrap();
+    assert!(audit.contains("\"kind\":\"writer_epoch\""));
+    assert!(audit.contains("\"kind\":\"privileged_read_decision\""));
+    assert!(
+        !audit.contains(execution_id.as_str()),
+        "the durable audit carrier must not expose the raw protected object identity"
+    );
+
     // Read-only proof from the durable store, not from CLI echo.
     let store = SqliteAuthorityStore::open(&db).unwrap();
     assert_eq!(event_count(&store), 3, "inspect appended nothing");
@@ -1078,4 +1087,39 @@ fn malformed_session_documents_fail_closed() {
 
     let store = SqliteAuthorityStore::open(&db).unwrap();
     assert_eq!(store.current_fencing_epoch().unwrap(), 1, "no fencing done");
+}
+
+#[test]
+fn inspect_withholds_stdout_when_the_durable_audit_log_cannot_open() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("authority.db");
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let execution_id = {
+        let store = SqliteAuthorityStore::open(&db).unwrap();
+        seed_runnable_execution(&store, &clock, &ids, 0x2009).0
+    };
+    let session = write_session(
+        dir.path(),
+        "session.json",
+        &session_value("active", "2030-01-01T00:00:00Z", &ALL_ACTIONS),
+    );
+
+    let denied = run_cli(&[
+        "inspect",
+        "--store",
+        db.to_str().unwrap(),
+        "--session",
+        session.to_str().unwrap(),
+        "--domain",
+        "agent-execution",
+        "--object",
+        execution_id.as_str(),
+        "--audit",
+        dir.path().to_str().unwrap(),
+    ]);
+
+    assert_eq!(denied.code, 1);
+    assert!(denied.stdout.is_empty(), "inspect result must be withheld");
+    assert_eq!(stderr_error_code(&denied), "STATE_STORE_UNAVAILABLE");
 }
