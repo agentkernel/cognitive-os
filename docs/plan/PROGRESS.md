@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（Lane-CTR 已冻结 Ordinary Core `status.inspect` AUDIT **replacement review-only candidate** 的精确 JSON payload bytes、repository-computed digests 与实现字段映射；`safe_reason` 已闭合至当前登记公开错误码，替代被否决的 `dc488bd` review input。owner 已接受隔离 final-byte technical review 的 `CONDITIONAL-GO`，并将其作为本 Ordinary Core candidate 的 registration-preparation gate；不要求外部 provenance，且不影响 High-Assurance 独立审查。候选仍非 registered/published/selected；machine registration、conformance behavior、CA-0 GO 与 Profile claim 仍未提供。RUN tracer + lightweight durable `FileManagementAuditLog` 已提供，`admin-cli inspect` 已强制 audit-before-result，未审计 `inspect` crate-private；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。）
+> 最后更新：2026-07-23（Lane-CTR 已将隔离 final-byte technical-reviewed 的 Ordinary Core `status.inspect` AUDIT candidate 最小范围登记为两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。登记仅覆盖 decision/receipt、三条 digest domain 与 `ManagementAuditPort.commit_privileged_read_decision` 最小责任；不登记完整 AUDIT family 或 High-Assurance surface。此前本机 GNU linker 缺少 `libgcc_eh`/`libgcc` 的阻塞，已由仅会话级 MSYS2 GCC 16.1.0 linker（无仓库或永久 PATH 配置）解除；workspace Rust build/test/clippy、专项候选/生成绑定测试、TS build/test、consistency 与 matrix 门禁均已通过。Lane-RUN 绑定消费、Lane-CFR conformance behavior、CA-0 GO 与 Profile claim 仍 pending；Profile **implemented = 0**。）
 
 ## 里程碑状态
 
@@ -27,7 +27,7 @@
 
 | 口径 | 计数 |
 |---|---|
-| 规范已登记（specified） | **273**（40 域；errors 55 码；schema **61**；迁移表 5） |
+| 规范已登记（specified） | **273**（40 域；errors 55 码；schema **63**；迁移表 5） |
 | 实现已提供（构建通过且有实现代码的 REQ） | **70**（matrix 实测非空 impl；shell channel + target resolution 两批各回填 2 条后的当前值） |
 | 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 32 向量**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + M5-shell-channel 1 + **SHELL-TARGET-AMBIGUITY-001** + M6 3）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **Ordinary Core AUDIT replacement bytes technical-reviewed; registration preparation may start** | `lane/ctr-v02-ordinary-core-audit-review-gate-simplification` | owner accepts isolated final-byte technical review for this Core candidate; no registry/vector/binding change yet, High-Assurance independent review remains separate |
+| Lane-CTR 契约与生成 | **Ordinary Core AUDIT minimal machine registration provided** | `lane/ctr-v02-ordinary-core-audit-machine-registration` | formal decision/receipt schemas + minimal responsibility companion + Rust/TS bindings; implementation consumption and conformance behavior pending; no CA-0/Profile claim |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |

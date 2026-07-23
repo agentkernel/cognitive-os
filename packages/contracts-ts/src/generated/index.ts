@@ -15,6 +15,7 @@ export * as agentPackageManifest from "./agent-package-manifest.js";
 export * as akpRequestEnvelope from "./akp-request-envelope.js";
 export * as akpResultEnvelope from "./akp-result-envelope.js";
 export * as akpStreamFrame from "./akp-stream-frame.js";
+export * as auditCommitReceipt from "./audit-commit-receipt.js";
 export * as authorizationCapability from "./authorization-capability.js";
 export * as commonDefs from "./common-defs.js";
 export * as contextRequest from "./context-request.js";
@@ -35,6 +36,7 @@ export * as operationSummary from "./operation-summary.js";
 export * as performanceReport from "./performance-report.js";
 export * as principal from "./principal.js";
 export * as privilegedManagementSession from "./privileged-management-session.js";
+export * as privilegedReadDecision from "./privileged-read-decision.js";
 export * as profileManifest from "./profile-manifest.js";
 export * as resourceScope from "./resource-scope.js";
 export * as shellActionProposal from "./shell-action-proposal.js";
@@ -63,6 +65,7 @@ export const SCHEMA_DIGESTS = {
   "akp-request-envelope.schema.json": "sha256:feeaeb0942ce2796d0155b4b9c316a87cca94eccbf7b0fd7b031a2135dd7ee7b",
   "akp-result-envelope.schema.json": "sha256:5334b879b18736d500bd9266d1bf4164b657aed31faaa63029095340901b1782",
   "akp-stream-frame.schema.json": "sha256:0e9c12eba75936d591202578a89c401f6f67fb2188ae85f972f327fadf04135c",
+  "audit-commit-receipt.schema.json": "sha256:7ac5e9ff0b29dd5db35568919dc493d238099cdcfb7986f0790d32cfc171a456",
   "authorization-capability.schema.json": "sha256:74b6b1ab6c560453a8b06c0793a04c662f183c02b22d5459cfecf57c24392828",
   "common-defs.schema.json": "sha256:af6763f4367741b8de9576f71be68cb189768aed776e2d991684bb5360984219",
   "context-request.schema.json": "sha256:41a36516aad2f58a85f569564c7036d03c8a383f460be7179a4d03b601eddf7a",
@@ -83,6 +86,7 @@ export const SCHEMA_DIGESTS = {
   "performance-report.schema.json": "sha256:558e100166417da952cb320713cd90ace47e1e3b7378eb0f9ef795d087101268",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",
   "privileged-management-session.schema.json": "sha256:46b81f99681e9ed273302fb079fcbb2ec0a410e0dcd79aa92355486cd9144341",
+  "privileged-read-decision.schema.json": "sha256:26ad227a6c6f929dadd1090eeed01962a0a3801e284ad2c2850c86d32acefe1a",
   "profile-manifest.schema.json": "sha256:d6ab026484e5bfbf9df9b6ac58514591165023c947c7b95d394c9cdec32cdef1",
   "resource-scope.schema.json": "sha256:0de94af7c162c19a5444cc854d4b86e9bf59140210e572fe3305b53fa9b99817",
   "shell-action-proposal.schema.json": "sha256:f0057d1ad298fff34c452487567517f6ca352bacfb474dcefb111497cdbefaed",
