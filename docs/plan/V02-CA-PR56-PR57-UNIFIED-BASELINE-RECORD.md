@@ -56,13 +56,13 @@ ordering and the later packet is revalidated against the then-current `main`.
 
 | Decision | Current state | Required evidence before recording |
 |---|---|---|
-| PR #56/#57 merge order | **owner decision required** | Explicit order/rationale; post-first-merge revalidation of the later packet against current `main` |
+| PR #56/#57 merge order | **owner-confirmed 2026-07-23: #56 first, then #57** | #56 must merge before #57 is acted on; after that merge, revalidate #57 against the resulting current `main`, including its GitHub mergeability and governance facts |
 | Path-set normalization algorithm | provisionally documented above; **owner confirmation required** | Confirmation that ordinal UTF-8/LF/trailing-LF is the governance comparison procedure |
 | Compatibility of the two NO-GO packets | recorded as compatible at this snapshot | Independent governance reviewer checks this record and both exact heads |
 
 ## 5. Stop condition
 
-Until the owner records the first decision and an independent governance reviewer
-checks the exact later baseline, neither PR may be described as merged,
-registration-ready, independently reviewed, or a CA-0 GO. This record permits
-only further docs/review preparation.
+The owner has selected the order only. Until #56 actually merges and an
+independent governance reviewer checks the exact later baseline, neither PR may
+be described as merged, registration-ready, independently reviewed, or a CA-0
+GO. This record permits only further docs/review preparation.
