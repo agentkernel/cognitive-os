@@ -1,13 +1,19 @@
 //! True TCP process-level M5 HTTP JSON + SSE evidence (ADR-0003).
-#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use cognitive_contracts::generated::akp_request_envelope::SCHEMA_DIGEST;
 use serde_json::json;
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     process::Command,
+    sync::{LazyLock, Mutex},
     time::Duration,
 };
+
+// Each case starts a real child process that owns a TCP listener. Keep this
+// integration fixture serial: parallel process startup caused connection-reset
+// flakes on Linux CI, which is not a product retry policy.
+static HTTP_PROCESS_TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 fn port() -> u16 {
     TcpListener::bind("127.0.0.1:0")
         .unwrap()
@@ -34,8 +40,45 @@ fn spawn(port: u16) -> std::process::Child {
         .spawn()
         .unwrap()
 }
+
+fn spawn_serve(port: u16) -> std::process::Child {
+    Command::new(env!("CARGO_BIN_EXE_kernel-server"))
+        .args(["--serve", "--bind", &format!("127.0.0.1:{port}")])
+        .spawn()
+        .unwrap()
+}
+
+fn request_with_timeout(port: u16, wire: &str) -> String {
+    for _ in 0..50 {
+        if let Ok(mut stream) = TcpStream::connect(("127.0.0.1", port)) {
+            stream.write_all(wire.as_bytes()).unwrap();
+            stream.shutdown(std::net::Shutdown::Write).unwrap();
+            let mut out = String::new();
+            stream.read_to_string(&mut out).unwrap();
+            return out;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    panic!("server did not accept a connection");
+}
+
+#[test]
+fn serve_mode_accepts_multiple_loopback_requests_without_claiming_operational() {
+    let _guard = HTTP_PROCESS_TEST_LOCK.lock().unwrap();
+    let p = port();
+    let mut child = spawn_serve(p);
+    let request = "GET /unknown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    let first = request_with_timeout(p, request);
+    let second = request_with_timeout(p, request);
+    assert!(first.contains("SCHEMA_MISMATCH"));
+    assert!(second.contains("SCHEMA_MISMATCH"));
+    assert!(child.try_wait().unwrap().is_none());
+    child.kill().unwrap();
+    child.wait().unwrap();
+}
 #[test]
 fn management_post_returns_authoritative_akp_result_and_error_envelopes() {
+    let _guard = HTTP_PROCESS_TEST_LOCK.lock().unwrap();
     let p = port();
     let mut child = spawn(p);
     let body=json!({"message_id":"m1","operation":"management.inspect","protocol_version":"cognitiveos.akp/0.2","schema_digest":SCHEMA_DIGEST,"sender":"principal://a","audience":"service://kernel/management","correlation_id":"c1","deadline":"2026-07-21T01:00:00Z","payload":{"target":"agent-execution://1"}}).to_string();
@@ -63,6 +106,7 @@ fn management_post_returns_authoritative_akp_result_and_error_envelopes() {
 }
 #[test]
 fn watch_endpoint_streams_snapshot_then_ordered_delta_frames() {
+    let _guard = HTTP_PROCESS_TEST_LOCK.lock().unwrap();
     let p = port();
     let mut child = spawn(p);
     let response = request(
@@ -81,6 +125,7 @@ fn watch_endpoint_streams_snapshot_then_ordered_delta_frames() {
 
 #[test]
 fn shell_detach_and_cancel_routes_are_non_authority() {
+    let _guard = HTTP_PROCESS_TEST_LOCK.lock().unwrap();
     let p = port();
     let mut child = spawn(p);
     let detach = request(
