@@ -86,7 +86,7 @@ final canonical bytes and repository-computed digests remain later gates.
 | 14 | freeze and activation order | **owner-confirmed 2026-07-23:** requirements → schema bundle → lower record/stream/receipt → AUDIT profile/extension → specification set → suite/claim profile → runtime selection profile → new epoch; bindings follow candidate bytes/digests, vectors follow binding validation, implementation follows explicit CA-0 GO | No stage may be skipped |
 | 15 | real independent consumer | **owner-confirmed NO-GO, 2026-07-23:** direction/roles/boundary model are insufficient without deployed/API triple consumption and deterministic accept/reject evidence | Requires a completed §4 record passing all six qualification statements |
 | 16 | AUDIT error responsibility | **owner-confirmed 2026-07-23:** existing codes never expand into AUDIT port/integrity/receipt/retention/export responsibilities; future AUDIT errors may register only after complete carrier, real consumer, and final bytes | No AUDIT error is currently registered |
-| 17 | final bytes and tool-computed digests | **NO-GO** | Schema-valid immutable bytes and repository-tool digest evidence after prior gates |
+| 17 | final bytes and tool-computed digests | **owner-confirmed NO-GO, 2026-07-23:** no AUDIT asset has final schema-valid canonical bytes or repository-tool digest; no registration before those evidence and the consumer/review gates exist | Requires immutable bytes and tool digest evidence after prior gates |
 
 ## 6. Completion rule and stop condition
 
