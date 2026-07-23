@@ -1,4 +1,4 @@
-# HAL9003 independent final review packet
+# Ordinary Core final-byte technical review packet
 
 Review the replacement exact commit and the five payload JSON files in
 `candidate-manifest.json`. This supersedes the review input at rejected commit
@@ -16,6 +16,7 @@ For each file, recompute raw SHA-256 and canonical digest with
 
 Executed evidence is ordinary implementation/unit testing, not conformance behavior.
 Recommended conclusion: **approve or reject only these exact review-only bytes for
-the next registration window**. It is not an approval of registration, CA-0 GO,
-or Profile implementation. This replacement requires a complete genuinely
-independent final-byte review; it is not a HAL9003 independent final review.
+the next registration window**. The completed isolated technical review is
+accepted as this Ordinary Core candidate's final-byte gate. It is not an approval
+of registration execution, CA-0 GO, or Profile implementation, and it does not
+alter High-Assurance independent-review requirements.
