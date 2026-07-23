@@ -78,4 +78,5 @@ restored to `HEAD` and are not part of this docs-only batch. No new AUDIT/OPS
 behavior vector was invoked; existing workspace tests are not new AUDIT/OPS
 behavior evidence.
 
-Commit, PR URL/head, and CI conclusions are to be appended after they occur.
+Decision/NO-GO commit: `48551e3`. A final handoff-sync commit, PR URL/head,
+and CI conclusions are to be appended after they occur.
