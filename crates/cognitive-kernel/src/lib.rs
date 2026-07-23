@@ -69,9 +69,9 @@ pub use intent_chain::{
     record_user_intent, supersede_task_contract, verify_task_binding_current,
 };
 pub use ports::{
-    AuthorityStore, CheckpointRow, Clock, HarnessStore, IdGenerator, IntentChainStore, IntentRow,
-    InterpretationRow, PortFailure, ProgressFactRow, ProtocolStore, StorePortError, TaskBinding,
-    TaskContractRow, UserIntentRecordRow,
+    AuthorityStore, CheckpointRow, Clock, GovernanceObjectStore, HarnessStore, IdGenerator,
+    IntentChainStore, IntentRow, InterpretationRow, PortFailure, ProgressFactRow, ProtocolStore,
+    StorePortError, TaskBinding, TaskContractRow, UserIntentRecordRow,
 };
 pub use recovery::{
     ContextRebinding, EffectDisposition, RECOVERY_ORDER, ReauthorizationObligation, RecoveryError,

@@ -25,7 +25,9 @@ use cognitive_kernel::intent_chain::{
     admit_interpretation, mint_task_contract, record_interpretation_candidate, record_user_intent,
     supersede_task_contract,
 };
-use cognitive_kernel::ports::{AuthorityStore, IntentChainStore, ProtocolStore, TaskBinding};
+use cognitive_kernel::ports::{
+    AuthorityStore, GovernanceObjectStore, IntentChainStore, ProtocolStore, TaskBinding,
+};
 use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
 use m4_common::*;
@@ -257,6 +259,47 @@ fn user_intent_record_is_fixed_first_and_never_overwritten() {
         .unwrap();
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].record_id, row.record_id);
+}
+
+/// D-018: publication code must obtain governance references from the
+/// durable canonical object, rather than accepting a caller-injected header.
+/// An unknown identity deliberately resolves to no header; it must never
+/// synthesize a tenant, owner, authority, or resource scope.
+#[test]
+fn persisted_user_intent_resolves_its_durable_governance_header() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = fresh_store(&dir);
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+
+    let row = record_user_intent(
+        &store,
+        &clock,
+        &ids,
+        &lease(1),
+        &user_intent_cmd(101, "publish only after governed review"),
+    )
+    .unwrap();
+
+    let header = store
+        .load_governed_object_header(&row.record_id)
+        .unwrap()
+        .expect("the append-only canonical record carries its governance header");
+    assert_eq!(header.id.0, row.record_id.as_str());
+    assert_eq!(header.owner_ref, seed().owner);
+    assert_eq!(header.authority_ref, seed().authority);
+    assert_eq!(header.resource_scope_ref, seed().resource_scope);
+    assert_eq!(
+        header.tenant_id.as_ref().map(|tenant| tenant.0.as_str()),
+        seed().tenant_id.as_deref()
+    );
+
+    assert!(
+        store
+            .load_governed_object_header(&oid(999))
+            .unwrap()
+            .is_none()
+    );
 }
 
 /// REQ-INTENT-ADMISSION-001 negative: a candidate carrying a MATERIAL
