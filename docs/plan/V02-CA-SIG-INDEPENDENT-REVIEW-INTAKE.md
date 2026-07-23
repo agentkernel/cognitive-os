@@ -3,7 +3,7 @@
 - Intake ID: `V02-CA-SIG-INDEPENDENT-REVIEW-01`
 - Date: 2026-07-23
 - Classification: review preparation only; no machine registration
-- Status: **reviewer engagement required; registration-grade review unavailable until final bytes exist**
+- Status: **HAL9003 owner-appointed as independent reviewer; engagement evidence and final-byte review still required**
 
 ## 1. Purpose and non-claim
 
@@ -30,6 +30,10 @@ Before review begins, the owner must record:
 
 GitHub approval may transport a review but cannot by itself establish reviewer
 identity or independence.
+
+The owner appointed HAL9003 on 2026-07-23. HAL9003 must not implement SIG or
+AUDIT assets, must disclose conflicts, and must record the exact scope, inputs,
+methods, findings, and final-byte re-review when bytes exist.
 
 ## 3. Required review inputs
 
