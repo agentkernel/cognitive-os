@@ -1,0 +1,23 @@
+{
+  "status": "review-only-candidate",
+  "canonicalization": "cognitiveos.canonical-json/0.1",
+  "alg": "sha256",
+  "domains": {
+    "request": "management-privileged-read-request/0.2",
+    "result": "management-privileged-read-result/0.2",
+    "record": "management-privileged-read-record/0.2"
+  },
+  "projections": {
+    "request": ["domain", "object_id"],
+    "result": "canonical InspectReport value",
+    "record": "all and only fields admitted by privileged-read-decision.candidate.schema.json"
+  },
+  "exclusions": {
+    "record": [],
+    "receipt": ["receipt is not record-digested; it binds the already-calculated record digest"]
+  },
+  "minimization": {
+    "forbidden_in_record": ["raw domain selector", "raw object selector", "object existence", "infrastructure secret", "protected result content"],
+    "permitted_selector_representation": "request_digest only"
+  }
+}

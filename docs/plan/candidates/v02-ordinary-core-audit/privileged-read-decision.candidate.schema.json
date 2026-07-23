@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "review-only privileged_read_decision candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_kind", "record_id", "request_digest", "outcome", "observed_at"],
+  "properties": {
+    "record_kind": { "const": "privileged_read_decision" },
+    "record_id": { "type": "string", "format": "uuid" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "outcome": { "enum": ["success", "denied", "error"] },
+    "safe_reason": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "result_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "observed_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    { "if": { "properties": { "outcome": { "const": "success" } } }, "then": { "required": ["result_digest"], "not": { "required": ["safe_reason"] } } },
+    { "if": { "properties": { "outcome": { "const": "denied" } } }, "then": { "required": ["safe_reason"], "not": { "required": ["result_digest"] } } },
+    { "if": { "properties": { "outcome": { "const": "error" } } }, "then": { "required": ["safe_reason"], "not": { "required": ["result_digest"] } } }
+  ]
+}

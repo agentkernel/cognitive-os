@@ -1,0 +1,12 @@
+{
+  "status": "review-only-candidate",
+  "machine_registration": "no",
+  "manifest_self_exclusion": "This manifest cannot hash itself. It lists every review payload JSON candidate; README and review documents are covered by Git commit identity, not this payload manifest.",
+  "files": [
+    { "path": "privileged-read-decision.candidate.schema.json", "byte_length": 1236, "raw_sha256": "sha256:f8fbb36a8002d32488a29fafd48082a9eb043a96a9777e8ce44d2376cbf1c534", "canonical_digest": "sha256:ad1e9821694ed22ca71306d0b10956cc6f9a6b9dbb2d1efd551aef4f55c84b77", "digest_domain": "ordinary-core-audit-candidate-file/0.2" },
+    { "path": "audit-commit-receipt.candidate.schema.json", "byte_length": 695, "raw_sha256": "sha256:5444a796d3330db0173d5087384d8bef368ed2b0a7126d8a12e17202b4980f5c", "canonical_digest": "sha256:a50dc0f4886513c663d86f8e5d245509157c9252d23ef3af18d25dc415780b86", "digest_domain": "ordinary-core-audit-candidate-file/0.2" },
+    { "path": "commit-privileged-read-decision.candidate.operation.json", "byte_length": 1080, "raw_sha256": "sha256:d34a6368923c5a333979362f5c4e79af2a58ed3e09e3e8868dbcd81e55f2685f", "canonical_digest": "sha256:4cb320ee6de03462dfea5aa71f3de336c93701362cc244aed4fca7fb32ddda34", "digest_domain": "ordinary-core-audit-candidate-file/0.2" },
+    { "path": "digest-rules.candidate.json", "byte_length": 881, "raw_sha256": "sha256:ad0547a89094dd8135fae39d4b768b21b3f541ed1a54ef5774feb1a2b523bf94", "canonical_digest": "sha256:1bda7e96bf7da7e8ae2f22d51cd21db70d995620b205839b049f2f8b46260e30", "digest_domain": "ordinary-core-audit-candidate-file/0.2" },
+    { "path": "fixtures.json", "byte_length": 2267, "raw_sha256": "sha256:c44ffbf4a5024d48cbb6d38ab10e4f7240257925f0820927d3d80b9d4fa288a6", "canonical_digest": "sha256:05bdef4f8fd3229682a37aed8db948869a5223fee4f507dc862bd97e4298ee6c", "digest_domain": "ordinary-core-audit-candidate-file/0.2" }
+  ]
+}

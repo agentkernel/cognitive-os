@@ -1,0 +1,28 @@
+{
+  "status": "review-only-candidate",
+  "operation": "commit_privileged_read_decision",
+  "responsibility": "ManagementAuditPort",
+  "input": {
+    "record_schema": "privileged-read-decision.candidate.schema.json",
+    "record_digest_domain": "management-privileged-read-record/0.2",
+    "caller_supplies_record_digest": true
+  },
+  "success_output": {
+    "receipt_schema": "audit-commit-receipt.candidate.schema.json",
+    "durable_before_return": true,
+    "binds": ["record_id", "record_digest", "request_digest", "sequence", "writer_epoch", "committed_at"]
+  },
+  "release_gate": {
+    "requires_matching_receipt": true,
+    "requires_positive_sequence_and_writer_epoch": true,
+    "requires_committed_at_not_before_observed_at": true,
+    "audit_failure_or_receipt_mismatch": "withhold_success_result"
+  },
+  "external_error_mapping": {
+    "internal": "AuditPortFailure",
+    "candidate_registered_code_reuse": "STATE_STORE_UNAVAILABLE",
+    "retryable": true,
+    "stage": "audit_commit_or_receipt_validation",
+    "zero_result_oracle": "no_success_result_visible"
+  }
+}
