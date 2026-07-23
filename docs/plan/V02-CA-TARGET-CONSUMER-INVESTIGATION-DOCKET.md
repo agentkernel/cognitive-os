@@ -38,7 +38,7 @@ extension set.
 
 | Candidate | Owner must determine | Current result |
 |---|---|---|
-| `system.configure` | Exact system/subsystem/policy target kind; authority source; real apply consumer; independent readback/verifier; risk/approval mapping; authority receipt and recovery model. | **No real consumer identified; owner decision required.** |
+| `system.configure` | Exact system/subsystem/policy target kind; authority source; real apply consumer; independent readback/verifier; risk/approval mapping; authority receipt and recovery model. | **Owner-confirmed 2026-07-23:** HAL9001 initiates management requests; an independent System Configuration Authority Owner must own apply/readback/verifier. Actual owner appointment and consumer evidence remain required. |
 | `gateway.configure` | Exact instance/group granularity; routing/trust/egress authority; real consumer; fan-out/partial-apply policy; independent readback/verifier; receipt and reconciliation model. | **No real consumer identified; owner decision required.** |
 | `diagnostics.configure` | Exact policy/sink/profile target; sensitivity/retention/export authority; real consumer; independent readback/verifier; receipt and partial-sink recovery model. | **No real consumer identified; owner decision required.** |
 
