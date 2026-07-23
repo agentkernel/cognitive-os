@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（external evidence intake：owner 确认 HAL9003 为真实、可识别、可问责的独立 reviewer；仓库已准备 reviewer-signed provenance/findings/conclusion attestation，以及 HAL9001/HAL9002 AUDIT 和 HAL9004～HAL9007 三条 TARGET 的 deployment/consumer/readback/verifier evidence manifests。表单本身不是证据，agent 未代签或虚构部署；HAL9003 submission、真实 artifacts、final bytes/digests、registrations 与 CA-0 GO 仍缺，故 D-016 open、D-022 blocking、CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [HAL9003 attestation](V02-CA-HAL9003-INDEPENDENT-REVIEW-ATTESTATION.md) 与 [consumer evidence attestation](V02-CA-REAL-CONSUMER-DEPLOYMENT-EVIDENCE-ATTESTATION.md)）
+> 最后更新：2026-07-23（ADR-0014 / `V02-ORDINARY-CORE-01`：面向普通个人与普通企业，将 v0.2 分为 Ordinary Core 与 High-Assurance extension。Core operation 缩为 session.create_restricted/status.inspect/capability.revoke/execution.stop/effect.reconcile；三类 configure、detached object signatures、R2/R3、独立部署 AUDIT/TARGET verifier、checkpoint/export/legal/key delegation 不再阻塞 Core。非循环 gate 允许 test-first internal tracer implementation；首批为 status.inspect + in-process deterministic AUDIT lower + receipt-before-result。machine registration、行为向量与 Profile claim 仍未发生；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [Ordinary Core decision](V02-ORDINARY-CORE-REFACTOR-DECISION.md)）
 
 ## 里程碑状态
 
@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **external attestations prepared; evidence/registration NO-GO** | `lane/ctr-v02-external-evidence-attestations` | HAL9003 review 与 AUDIT/TARGET deployment/consumer evidence 表单已准备；actual signed report/artifacts、final bytes/digests、registrations 与 CA-0 GO 仍 pending；不代签、不虚构 evidence/implementation/behavior/Profile claim |
+| Lane-CTR 契约与生成 | **Ordinary Core refactor; tracer development gate open** | `lane/ctr-v02-ordinary-core-refactor` | ADR-0014：五项 Core + AUDIT lower；High-Assurance extensions 不阻塞；本批只改 governance/docs，合并后由 Lane-RUN test-first 实现 status.inspect audit-before-result tracer |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-external-evidence-attestations-handoff.md](../checkpoints/20260723-lane-ctr-v02-external-evidence-attestations-handoff.md)（CTR：HAL9003 与 AUDIT/TARGET evidence forms 已准备；actual submissions 仍缺）
-2. [20260723-lane-ctr-v02-cross-family-agent-review-handoff.md](../checkpoints/20260723-lane-ctr-v02-cross-family-agent-review-handoff.md)（CTR：4 项 design/status finding 已修正；independent/external gates 仍 NO-GO）
-3. [20260723-lane-ctr-v02-owner-choice-closure-handoff.md](../checkpoints/20260723-lane-ctr-v02-owner-choice-closure-handoff.md)（CTR：全部 owner choices 已闭合；evidence/registration 仍 NO-GO）
+1. [20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md)（CTR：Ordinary Core/High-Assurance split；Core tracer development gate open）
+2. [20260723-lane-ctr-v02-external-evidence-attestations-handoff.md](../checkpoints/20260723-lane-ctr-v02-external-evidence-attestations-handoff.md)（CTR：HAL9003 与 AUDIT/TARGET evidence forms 已准备；High-Assurance submissions 仍缺）
+3. [20260723-lane-ctr-v02-cross-family-agent-review-handoff.md](../checkpoints/20260723-lane-ctr-v02-cross-family-agent-review-handoff.md)（CTR：4 项 design/status finding 已修正）
 
 ## 客户端目录治理交付
 

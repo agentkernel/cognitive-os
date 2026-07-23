@@ -4,7 +4,7 @@
 - Date: 2026-07-23
 - Classification: governance preparation only; no machine asset or registration
 - Original baseline: `lane/ctr-v02-audit-privileged-read-registration@3792d915a73a28187e9740648f6e0d753f286957`; later owner decisions merged through `main@1605d3f785678c4fbe56b0851b81c5016813421d`
-- Status: **owner-confirmed design direction: candidate A; consumer proof incomplete**
+- Status: **High-Assurance independent-deployment direction; Ordinary Core uses an in-process deterministic port and behavior gate**
 
 ## 1. Boundary
 

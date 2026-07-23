@@ -3,7 +3,7 @@
 - Docket ID: `V02-CA-TARGET-CONSUMER-DOCKET-01`
 - Date: 2026-07-23
 - Classification: WP-6 candidate investigation only; no target registration
-- Status: **three consumer lines unproven; all machine-registration gates remain NO-GO**
+- Status: **High-Assurance extension preparation; does not block Ordinary Core**
 
 ## 1. Boundary
 
