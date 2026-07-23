@@ -72,7 +72,7 @@ final canonical bytes and repository-computed digests remain later gates.
 |---:|---|---|---|
 | 1 | `privileged_read_decision` identity, SemVer, publication status | **owner-confirmed 2026-07-23:** `cognitiveos.audit.configuration-authority-record/0.2`, `0.2.0-draft.1`, `unregistered` | No digest before final bytes; publication remains forbidden pending every later gate |
 | 2 | `commit_privileged_read_decision` machine-port responsibility | **owner-confirmed 2026-07-23:** `AuthoritativeAuditPort.commit_privileged_read_decision` is an AUDIT responsibility owned by HAL9002; HAL9001 may release only after its accepted receipt | No trait/schema/binding exists yet; failed or mismatched receipt blocks release |
-| 3 | record/stream/receipt/checkpoint/retention/redaction/export graph | owner decision required | Required versus deferred assets and one-way dependency graph |
+| 3 | record/stream/receipt/checkpoint/retention/redaction/export graph | **owner-confirmed 2026-07-23:** lower = record/stream/commit receipt; upper = checkpoint/retention/redaction/export; lower must close before upper begins | All remain `0.2.0-draft.1` candidates/unregistered; lower→upper only; no placeholder digest |
 | 4 | terminal-outcome field applicability and minimization | owner decision required | Success/denial/challenge/error field matrix |
 | 5 | existence-hiding policy | owner decision required | Forbidden facts and deterministic minimization proof |
 | 6 | tenant/platform partition tuple | owner decision required | Scope, tenant nullability, and management-domain constraints |
