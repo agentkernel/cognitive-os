@@ -119,6 +119,14 @@ no contrary decision that permits registration or implementation. It is an
 owner-authorized agent review, not HAL9003 independent provenance. D-016 remains
 open, D-022 remains blocking, and CA-1 through CA-8 remain blocked.
 
+### 2026-07-23 external evidence intake note
+
+HAL9003 is owner-confirmed as a real accountable independent reviewer, but no
+reviewer-authored provenance, findings, conclusion, or signature has been
+submitted. Exact attestation and AUDIT/TARGET consumer evidence forms are now
+prepared. Templates are not evidence: D-016/D-022 and CA-1–CA-8 remain blocked
+until reviewer and deployed-service owners provide verifiable artifacts.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。

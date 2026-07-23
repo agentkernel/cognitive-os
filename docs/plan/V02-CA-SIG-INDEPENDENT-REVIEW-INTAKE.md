@@ -35,6 +35,11 @@ The owner appointed HAL9003 on 2026-07-23. HAL9003 must not implement SIG or
 AUDIT assets, must disclose conflicts, and must record the exact scope, inputs,
 methods, findings, and final-byte re-review when bytes exist.
 
+The owner further confirmed that HAL9003 represents a real, identifiable, and
+accountable independent reviewer. Completion still requires HAL9003—not the
+owner or agent—to supply and sign every mandatory field in
+`V02-CA-HAL9003-INDEPENDENT-REVIEW-ATTESTATION.md`.
+
 The owner-authorized agent design review identified and corrected two
 registration-blocking ambiguities before HAL9003 review: early-rejection receipt
 facts are now a safe tagged variant rather than untrusted semantic identities,
