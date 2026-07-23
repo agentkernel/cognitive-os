@@ -166,6 +166,17 @@ not prove independent deployment, a third-party consumer, non-repudiation, or
 the full AUDIT family. HAL9003 independent exact-byte review remains pending;
 there is no registration, behavior-pass, CA-0 GO, or Profile claim.
 
+### 2026-07-23 Ordinary Core AUDIT review-gate simplification
+
+The owner accepts the isolated final-byte technical review of replacement
+candidate `dd0f51eb715260b05f05f73dd184e9ac81702cf1` as sufficient for this
+Ordinary Core `status.inspect` AUDIT candidate's registration-preparation gate.
+The accepted review confirms exact payload digests and closure of the prior
+`safe_reason` P1 finding. This narrowly removes the external-provenance demand
+from the Ordinary Core candidate gate only; it does not close D-016/D-022,
+perform machine registration, establish conformance behavior, grant CA-0 GO, or
+change SIG/High-Assurance independent-review requirements.
+
 ### 2026-07-23 Ordinary Core AUDIT safe-reason corrective-freeze note
 
 The technical review returned **NO-GO** for the prior candidate because its

@@ -52,7 +52,7 @@ envelope、key registry、R2/R3 与对象级不可抵赖签名保留为 High-Ass
 |---|---|---|
 | tracer | 内部 candidate types、失败测试、deterministic port/实现 | machine registered、behavior vector pass、Profile implemented |
 | candidate freeze | 根据 tracer 反馈形成 schema-valid bytes/digests | published/selected |
-| final review | 独立 reviewer 审查 exact final bytes | implementation 自动证明 registration |
+| final review | 隔离 technical review 审查 exact final bytes | implementation 自动证明 registration |
 | registration | registry/schema/bindings/new vectors | behavior pass、Profile implemented |
 | CA-0 Core review | 对已登记 Core 合同与 tracer evidence 独立复核 | High-Assurance GO |
 

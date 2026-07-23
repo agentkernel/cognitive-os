@@ -30,10 +30,11 @@ consumer 又不能冻结 contract，而 CA-0 GO 前又禁止实现。
 7. Core consumer gate 由真实代码路径和行为测试证明：ResultReleaseGate 必须消费
    audit commit receipt；fixture、布尔值或日志文本不能代替。
 8. 开发顺序改为：候选合同/内部类型 → 先失败测试 → tracer implementation →
-   implementation feedback → final candidate bytes/digests → 独立 final review →
-   registration → generated bindings/vectors → CA-0 Core review → broader rollout。
-9. 独立审查是 final candidate registration 前的最后 gate，不阻塞早期 tracer
-   implementation，但未经审查不得 registration 或 Profile claim。
+   implementation feedback → final candidate bytes/digests → final-byte technical
+   review → registration → generated bindings/vectors → CA-0 Core review → broader rollout。
+9. 对 Ordinary Core 最小 AUDIT lower，隔离的 final-byte technical review 是
+   registration 前的最后字节/语义 gate；不要求外部身份 provenance。High-Assurance
+   extension 的独立审查要求保持不变。未经适用 review 不得 registration 或 Profile claim。
 
 ## 安全不变量
 
