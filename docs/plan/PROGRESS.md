@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序/旁路 hash 算法，并在 WP-1 appointment HAL9001 为 Management Operations API Owner、HAL9002 为 Authoritative Audit Service Owner、HAL9003 为独立 Security & Privacy Reviewer；边界仍拟为独立部署服务的 authenticated/version-pinned internal API。endpoint/deployment evidence、conflict disclosure、consumer proof、final bytes/digests 与剩余 16 项 owner decisions 尚未提供；future AUDIT record candidate 已确认 `cognitiveos.audit.configuration-authority-record/0.2` / `0.2.0-draft.1` / `unregistered`，故仍非 registration GO。WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)）
+> 最后更新：2026-07-23（v0.2 owner-choice closure：PR #56/#57 已按顺序合并；AUDIT 17 项治理决策逐项完成，其中 real consumer 与 final bytes 两门保持 NO-GO；HAL9001～HAL9012 的 Management/AUDIT/SIG/TARGET/operation authority 分责已登记；D-016 最小集合确定为全部八项。当前不再有未决 owner 选择，但真实部署/consumer/readback/verifier、HAL9003 独立审查报告、final canonical bytes/digests、四类 machine registration 与 CA-0 GO 仍缺，因此 D-016 open、D-022 blocking、CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [remaining owner decisions closure](V02-CA-REMAINING-OWNER-DECISIONS-CLOSURE.md)）
 
 ## 里程碑状态
 
@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **WP-0/WP-1/WP-2/WP-6 governance preparation; machine-registration NO-GO** | `lane/ctr-v02-audit-privileged-read-registration` | PR #56/#57 unified baseline、AUDIT real-consumer、SIG review 与三条 TARGET consumer dockets 只准备可审计决策输入，不选择 consumer/reviewer/PR 顺序，不创建资产；17 项 bindings、final canonical bytes/digests、SIG independent review、TARGET consumers 和四类 registration 仍 pending；record/stream/receipt/checkpoint/policy/key/error/extension 均未登记，D-022 与 CA-1～CA-8 blocking |
+| Lane-CTR 契约与生成 | **owner choices closed; evidence/registration NO-GO** | `lane/ctr-v02-d016-min-member-set` | HAL9001～HAL9012 分责、AUDIT 17 项、TARGET 三线与 D-016 八项最小集合均已决定；真实 consumers/deployments/readback/verifiers、HAL9003 review outputs、final bytes/digests、四类 registrations 与 CA-0 GO 仍 pending；不创建 machine asset/implementation/behavior/Profile claim |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md)（CTR：HAL9001/HAL9002/HAL9003 appointments；deployment/review proof 仍缺）
-2. [20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md)（CTR：owner 确认三方 role model + 独立服务 API）
-3. [20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md)（CTR：owner 选定 A 为 AUDIT consumer 方向）
+1. [20260723-lane-ctr-v02-owner-choice-closure-handoff.md](../checkpoints/20260723-lane-ctr-v02-owner-choice-closure-handoff.md)（CTR：全部 owner choices 已闭合；evidence/registration 仍 NO-GO）
+2. [20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md)（CTR：HAL9001/HAL9002/HAL9003 appointments；deployment/review proof 仍缺）
+3. [20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md)（CTR：owner 确认三方 role model + 独立服务 API）
 
 ## 客户端目录治理交付
 
