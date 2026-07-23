@@ -20,6 +20,10 @@
 - `cargo test -p kernel-server --test m5_http_sse`: 4/4 pass.
 - `cargo clippy -p kernel-server --all-targets -- -D warnings`: pass.
 - `cargo fmt --check` and `git diff --check`: pass.
+- Linux CI initially exposed a real concurrent-child-process fixture flake
+  (`ConnectionReset`); the integration tests now serialize listener-owning
+  cases with a process-local mutex and pass under the default parallel test
+  runner.
 
 ## Next entry
 
