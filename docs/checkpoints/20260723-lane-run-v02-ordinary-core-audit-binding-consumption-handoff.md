@@ -127,9 +127,15 @@ untracked content was removed.
 
 ## 6. Delivery and next entry
 
-- Implementation commit / push / PR / CI / merge: pending final staged review at
-  handoff creation; delivery metadata will be appended after the authorized
-  ADR-0008 workflow completes.
+- Implementation commit:
+  `1586ea826dd4ed55d6e140c7cf3dbce655d8d6d3` (`feat(run): consume
+  formal Ordinary Core AUDIT bindings (ADR-0014, D-022)`).
+- Remote branch:
+  `origin/lane/run-v02-ordinary-core-audit-binding-consumption`.
+- Pull request: `https://github.com/agentkernel/cognitive-os/pull/69`.
+- The first GitHub GraphQL create attempt returned a transient `EOF`; a read-only
+  head query confirmed no PR existed, and one retry created PR #69. Final CI and
+  merge status are pending this delivery-metadata update.
 - Next lane: Lane-CFR behavior work for the already registered Ordinary Core
   decision/receipt and the now-formal Lane-RUN production consumer. It must not
   broaden the AUDIT family or convert these local runtime tests into a Profile or
