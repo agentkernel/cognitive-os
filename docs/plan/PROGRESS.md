@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（执行 v0.2 治理解阻计划的首个 docs-only 准备批：AUDIT real-consumer owner docket 与 SIG 独立安全/密码学审查 intake 已建立；二者均不选择 consumer/reviewer、不登记 machine asset，且所有 final bytes/digests、17 项 owner decisions、独立审查与 PR #56/#57 基线顺序仍为 `owner decision required`。既有 AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md) 与 [SIG review intake](V02-CA-SIG-INDEPENDENT-REVIEW-INTAKE.md)）
+> 最后更新：2026-07-23（执行 v0.2 治理解阻计划的 docs-only 准备批：WP-0 已将 PR #56/#57 的兼容 NO-GO 放入统一 baseline record；WP-1 AUDIT real-consumer owner docket、WP-2 SIG 独立安全/密码学审查 intake 与 WP-6 TARGET consumer docket 已建立。它们均不选择 consumer/reviewer/PR 顺序、不登记 machine asset；所有 final bytes/digests、17 项 owner decisions、独立审查、三条 TARGET consumer 和 PR 顺序仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [WP-0 record](V02-CA-PR56-PR57-UNIFIED-BASELINE-RECORD.md)、[AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)、[SIG intake](V02-CA-SIG-INDEPENDENT-REVIEW-INTAKE.md) 与 [TARGET docket](V02-CA-TARGET-CONSUMER-INVESTIGATION-DOCKET.md)）
 
 ## 里程碑状态
 
@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **AUDIT consumer/SIG review preparation; machine-registration NO-GO** | `lane/ctr-v02-audit-privileged-read-registration` | real-consumer owner docket 与 SIG independent review intake 只准备决策/审查输入，不选择 consumer/reviewer，不创建资产；17 项 bindings、final canonical bytes/digests、SIG independent review、PR #56/#57 baseline order 和四类 registration 仍 pending；record/stream/receipt/checkpoint/policy/key/error/extension 均未登记，D-022 与 CA-1～CA-8 blocking |
+| Lane-CTR 契约与生成 | **WP-0/WP-1/WP-2/WP-6 governance preparation; machine-registration NO-GO** | `lane/ctr-v02-audit-privileged-read-registration` | PR #56/#57 unified baseline、AUDIT real-consumer、SIG review 与三条 TARGET consumer dockets 只准备可审计决策输入，不选择 consumer/reviewer/PR 顺序，不创建资产；17 项 bindings、final canonical bytes/digests、SIG independent review、TARGET consumers 和四类 registration 仍 pending；record/stream/receipt/checkpoint/policy/key/error/extension 均未登记，D-022 与 CA-1～CA-8 blocking |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md)（CTR：AUDIT consumer docket + SIG review intake；不选择 consumer/reviewer，不登记任何 asset）
-2. `20260723-lane-ctr-v02-audit-privileged-read-registration-handoff.md`（CTR：独立 AUDIT closure；17 项 bindings + consumer gate 未闭合；machine registration NO-GO；无 asset/member 登记）
-3. [20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md](../checkpoints/20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md)（CTR：八项 eligibility audit；machine registration NO-GO；无 asset/member 登记）
+1. [20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp0-wp6-preparation-handoff.md)（CTR：PR #56/#57 unified baseline + TARGET consumer dockets；无选择/无 asset）
+2. [20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md](../checkpoints/20260723-lane-ctr-v02-governance-unblock-wp1-wp2-preparation-handoff.md)（CTR：AUDIT consumer docket + SIG review intake；不选择 consumer/reviewer，不登记任何 asset）
+3. `20260723-lane-ctr-v02-audit-privileged-read-registration-handoff.md`（CTR：独立 AUDIT closure；17 项 bindings + consumer gate 未闭合；machine registration NO-GO；无 asset/member 登记）
 
 ## 客户端目录治理交付
 
