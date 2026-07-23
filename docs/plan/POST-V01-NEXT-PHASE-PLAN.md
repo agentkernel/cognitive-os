@@ -87,9 +87,9 @@
 
 ### P2：有条件推进
 
-**P2-1：D-018 governance object ports（Lane-KRN）**
+**P2-1：D-018 governance object ports + publication consumption（Lane-KRN → Lane-RUN）**
 
-- 当前状态是 partially-implemented，不是开放 P0；已交付 `cognitive-runtime::event_envelope::assemble_event`，仍缺治理对象持久化/解析端口以提供 owner/authority/resource_scope/policy_refs 等 strong refs。
+- 当前状态是 partially-implemented，不是开放 P0；KRN 已交付 durable governance-header resolution port，RUN 发布边界已消费该端口并拒绝缺失 header。仍缺真实 watch/shell 跨边界行为证据，不能宣称 D-018 闭合。
 - 与 v0.1 non-claim 的关系：闭合可减少 D-018 exchange-surface non-claim，但不会自动把 Profile 变为 implemented，也不解除 F-017/Windows/durable/PERF non-claims。
 - 判定：P2。需先给出 KRN 端口契约和失败测试，且不得在 CFR 主战役跨车道实现；若实现反馈要求新 wire/schema/REQ，应按语义/结构型 docs-sync 重新评审。
 

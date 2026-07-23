@@ -30,7 +30,7 @@ pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
     is_privileged_management_action, request_from_vector_input,
 };
-pub use event_envelope::{EventEnvelopeError, assemble_event};
+pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
 pub use installer::{
     AcceptingSignaturePort, InstallCrashPoint, InstallPhase, InstallationLedger, InstallerError,

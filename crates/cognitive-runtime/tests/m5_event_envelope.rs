@@ -8,8 +8,19 @@ use cognitive_contracts::generated::{
     object_reference::{StrongReference, StrongReferenceKind, UuidV7},
 };
 use cognitive_domain::{EventId, LifecycleDomain, ObjectId, Version};
-use cognitive_kernel::ports::CommittedEvent;
-use cognitive_runtime::assemble_event;
+use cognitive_kernel::ports::{CommittedEvent, GovernanceObjectStore, StorePortError};
+use cognitive_runtime::assemble_persisted_event;
+
+struct HeaderStore(Option<GovernedObjectHeader>);
+
+impl GovernanceObjectStore for HeaderStore {
+    fn load_governed_object_header(
+        &self,
+        _object_id: &ObjectId,
+    ) -> Result<Option<GovernedObjectHeader>, StorePortError> {
+        Ok(self.0.clone())
+    }
+}
 fn strong(n: &str) -> StrongReference {
     StrongReference {
         content_digest: Digest(format!("sha256:{}", n.repeat(64)[..64].to_owned())),
@@ -55,8 +66,27 @@ fn committed_internal_fact_becomes_registered_governed_event() {
             until: None,
         },
     };
-    let out = assemble_event(&event, &header, "2026-07-21T00:00:01Z").unwrap();
+    let out = assemble_persisted_event(&HeaderStore(Some(header)), &event, "2026-07-21T00:00:01Z")
+        .unwrap();
     assert_eq!(out["header"]["type"], "Event");
     assert_eq!(out["payload"]["state"], "ACTIVE");
     assert_eq!(out["immutable"], true);
+}
+
+#[test]
+fn publication_fails_closed_without_a_durable_governance_header() {
+    let event = CommittedEvent {
+        sequence: 7,
+        event_id: EventId::parse("00000000-0000-7000-8000-000000000007").unwrap(),
+        object_id: ObjectId::parse("00000000-0000-7000-9000-000000000042").unwrap(),
+        domain: LifecycleDomain::Task,
+        object_version: Version::INITIAL,
+        event_type: "task.updated".to_owned(),
+        canonical_json:
+            r#"{"causation":{"correlation_id":"corr://m5"},"event_time":"2026-07-21T00:00:00Z"}"#
+                .to_owned(),
+    };
+    let err =
+        assemble_persisted_event(&HeaderStore(None), &event, "2026-07-21T00:00:01Z").unwrap_err();
+    assert!(err.to_string().contains("governance header"));
 }
