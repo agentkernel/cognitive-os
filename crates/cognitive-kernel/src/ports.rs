@@ -14,6 +14,7 @@
 //! MUST keep the event log append-only (REQ-EVT-004).
 
 use crate::budget::BudgetState;
+use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
 };
@@ -530,6 +531,19 @@ pub trait IntentChainStore {
     /// Enumerate persisted intents bound to one task (supersede
     /// classification input), in insertion order.
     fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError>;
+}
+
+/// Durable resolution port for the governance header carried by M5 governed
+/// objects. Publication adapters consume this port instead of accepting an
+/// unverified caller-supplied header (D-018).
+pub trait GovernanceObjectStore {
+    /// Return the immutable, schema-shaped header for exactly one persisted
+    /// governed object. Missing identities return `None`; malformed or
+    /// ambiguous durable data fails closed.
+    fn load_governed_object_header(
+        &self,
+        object_id: &ObjectId,
+    ) -> Result<Option<GovernedObjectHeader>, StorePortError>;
 }
 
 /// One persisted loop progress fact (REQ-RUN-007: progress is a verifiable

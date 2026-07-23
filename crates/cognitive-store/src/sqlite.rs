@@ -20,15 +20,16 @@
 //! `BEFORE UPDATE` / `BEFORE DELETE` triggers on `events` and
 //! `transition_records` abort any rewrite attempt, from any connection.
 
+use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
 use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, HarnessStore, IntentChainStore,
-    IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry, ProgressFactRow, ProtocolStore,
-    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow,
+    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, GovernanceObjectStore,
+    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry,
+    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow,
 };
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
 use std::path::Path;
@@ -1108,6 +1109,51 @@ fn append_event_in_tx(
     )
     .map_err(unavailable("append chain event"))?;
     Ok(tx.last_insert_rowid())
+}
+
+impl GovernanceObjectStore for SqliteAuthorityStore {
+    fn load_governed_object_header(
+        &self,
+        object_id: &ObjectId,
+    ) -> Result<Option<GovernedObjectHeader>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT canonical_json FROM user_intent_records WHERE record_id = ?1 \
+                 UNION ALL SELECT canonical_json FROM intent_interpretations WHERE interpretation_id = ?1 \
+                 UNION ALL SELECT canonical_json FROM task_contracts WHERE contract_id = ?1",
+            )
+            .map_err(unavailable("prepare governed-header lookup"))?;
+        let rows = statement
+            .query_map([object_id.as_str()], |row| row.get::<_, String>(0))
+            .map_err(unavailable("query governed-header lookup"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read governed-header lookup"))?;
+        let [canonical_json] = rows.as_slice() else {
+            return if rows.is_empty() {
+                Ok(None)
+            } else {
+                Err(StorePortError::Unavailable {
+                    detail: "ambiguous governed object identity".to_owned(),
+                })
+            };
+        };
+        let value: serde_json::Value = serde_json::from_str(canonical_json)
+            .map_err(|err| corrupt("governed canonical json", err))?;
+        let header: GovernedObjectHeader =
+            serde_json::from_value(value.get("header").cloned().ok_or_else(|| {
+                StorePortError::Unavailable {
+                    detail: "governed object has no header".to_owned(),
+                }
+            })?)
+            .map_err(|err| corrupt("governed header", err))?;
+        if header.id.0 != object_id.as_str() {
+            return Err(StorePortError::Unavailable {
+                detail: "governed header identity mismatch".to_owned(),
+            });
+        }
+        Ok(Some(header))
+    }
 }
 
 impl IntentChainStore for SqliteAuthorityStore {

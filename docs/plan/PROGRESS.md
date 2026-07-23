@@ -58,7 +58,7 @@
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **Ordinary Core AUDIT vector mapping registered in joint batch** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `REQ-AUDIT-001` / `002` both map to `ORDINARY-CORE-AUDIT-INSPECT-001`; matrix is fresh; no schema/candidate semantics changed |
 | Lane-CFR 符合性与工具 | **Ordinary Core AUDIT vector test executed** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `ORDINARY-CORE-AUDIT-INSPECT-001` pass via audited public consumer; pins **60/25**; self-check **41/41**; non-Profile claim |
-| Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
+| Lane-KRN 内核主线 | **D-018 durable governance-header resolution port implemented; focused test executed** | `lane/krn-d018-governance-ports` | Append-only M5 governed records now resolve their canonical `GovernedObjectHeader` by identity, fail closed on malformed/ambiguous values, and never synthesize missing governance facts. D-018 remains partially-implemented pending Lane-RUN consumption and CFR watch/shell behavior evidence; InstallationStore remains a durable non-claim. |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
 | Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption merged (PR #69)** | `main` @ `ddb782c` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；Lane-CFR vector test executed，non-Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
@@ -66,7 +66,8 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
+1. [20260723-lane-krn-d018-governance-ports-handoff.md](../checkpoints/20260723-lane-krn-d018-governance-ports-handoff.md)（KRN：D-018 durable governance-header resolution port 已提供；focused test 已执行；仍非 D-018 闭合）
+2. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
 2. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
 3. [20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md)（CTR：minimal machine registration 已由 PR #68 合入 `main`）
 
