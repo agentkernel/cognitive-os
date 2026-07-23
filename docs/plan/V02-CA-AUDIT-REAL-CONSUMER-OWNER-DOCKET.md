@@ -56,7 +56,7 @@ Complete one record for each candidate considered. A blanket approval is invalid
 | Candidate | A, B, or C above; one record per candidate |
 | Consumer owner | **Owner-appointed 2026-07-23:** HAL9001 is Management Operations API Owner for the result-release gate; HAL9002 is Authoritative Audit Service Owner for durable audit persistence. They are distinct accountable owners and neither role may be the AUDIT packet author alone. |
 | Boundary | **Owner-confirmed role model, 2026-07-23:** independently deployed Management API and Authoritative Audit Service communicate through an authenticated, version-pinned internal service API; actual endpoint/deployment evidence still required |
-| Input triple | Exact future `(asset_id, SemVer, digest)` accepted by the consumer; may remain `owner decision required` until final bytes exist, but then selection cannot pass |
+| Input triple | Exact future `(asset_id, SemVer, digest)` accepted by the consumer; unavailable until final bytes exist, so the consumer gate remains NO-GO |
 | Deterministic result | Accepted/rejected outcomes and the responsible failure path |
 | Required facts | Each record/stream/receipt field whose removal causes rejection |
 | Failure oracle | Safe outcome on missing, stale, mismatched, reordered, or persistence-failed input |
@@ -92,6 +92,5 @@ final canonical bytes and repository-computed digests remain later gates.
 
 WP-1 preparation is complete only when a candidate fact packet and all seventeen
 itemized decision records are ready for owner review. It is **not** a
-machine-registration GO. If an owner decision, consumer proof, or independent
-review is absent, retain `owner decision required` and exact registered assets =
-none.
+machine-registration GO. If consumer proof or independent review is absent,
+retain NO-GO and exact registered assets = none.

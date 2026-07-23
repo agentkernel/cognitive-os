@@ -38,9 +38,9 @@ extension set.
 
 | Candidate | Owner must determine | Current result |
 |---|---|---|
-| `system.configure` | Exact system/subsystem/policy target kind; authority source; real apply consumer; independent readback/verifier; risk/approval mapping; authority receipt and recovery model. | **No real consumer identified; owner decision required.** |
-| `gateway.configure` | Exact instance/group granularity; routing/trust/egress authority; real consumer; fan-out/partial-apply policy; independent readback/verifier; receipt and reconciliation model. | **No real consumer identified; owner decision required.** |
-| `diagnostics.configure` | Exact policy/sink/profile target; sensitivity/retention/export authority; real consumer; independent readback/verifier; receipt and partial-sink recovery model. | **No real consumer identified; owner decision required.** |
+| `system.configure` | Exact system/subsystem/policy target kind; authority source; real apply consumer; independent readback/verifier; risk/approval mapping; authority receipt and recovery model. | **Owner-confirmed 2026-07-23:** HAL9001 initiates; HAL9004 owns exact system/subsystem/policy apply/readback/receipt; HAL9007 independently verifies. Deployment/consumer evidence remains required. |
+| `gateway.configure` | Exact instance/group granularity; routing/trust/egress authority; real consumer; fan-out/partial-apply policy; independent readback/verifier; receipt and reconciliation model. | **Owner-confirmed 2026-07-23:** HAL9005 owns per-instance authority; group rollout decomposes to versioned instance operations; HAL9007 independently verifies. Deployment/consumer evidence remains required. |
+| `diagnostics.configure` | Exact policy/sink/profile target; sensitivity/retention/export authority; real consumer; independent readback/verifier; receipt and partial-sink recovery model. | **Owner-confirmed 2026-07-23:** HAL9006 owns a diagnostics-policy target; sink/profile/credential/retention/export are strong refs; HAL9007 independently verifies. Deployment/consumer evidence remains required. |
 
 For every candidate the owner record must attach target identity, authority,
 payload/result shape, expected version/CAS, writer epoch, consumer owner,

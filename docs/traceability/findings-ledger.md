@@ -96,6 +96,18 @@
 | D-022 | Configuration Authority CA-0 发现三项合同未闭合：① D-016 未登记 Management wire operation set，configure action 无 payload/target/readback profile；② `PrivilegedManagementSession.authority_signature` 无 canonical standard §12 要求的 algorithm/key ID/domain/signed projection/exclusions 与一般无效签名错误映射；③ REQ-AUDIT-001/002 只有性质/prose，无可机器验证顺序、完整性、保留、敏感度、导出及 authority-commit 原子性的 audit carrier/port | **AUDIT review component complete / independent privileged-read registration NO-GO / four registrations pending blocker（2026-07-23）**：PR #54 merge/main CI 后，owner-authorized security/audit/compliance review 未发现阻断性 AUDIT design defect；该 provenance 不是外部人类、第三方或 GitHub review。SIG independent security/cryptography review 仍 pending。OPS audit 证明八项全部 blocked、foundation 未闭合；TARGET/SIG/AUDIT exact machine refs 仍不能填入 OPS descriptor。四类精确 schemas/digests/policies/keys/errors/ports/sets/profiles 均未登记；Event、transition、receipt、`audit_ref`、SQLite row、boolean、log 或 vector fact 仍不是 authoritative audit。只有四类 machine contracts 全部闭合后才可独立 CA-0 re-review | blocker：AUDIT owner-authorized review component completed；SIG independent review + OPS member closure + four machine registrations + CA-0 GO pending（not closed；CA-1～CA-8 blocked；8 个 Management 向量保持 not-run） |
 | D-023 | `PROGRESS.md` 声明 matrix 非空 `impl` 为 68，但 shell-channel 与 shell-target 两批回填后，当前 `matrix.yaml` 中带至少一个实现路径的条目实数为 70 | **CA-0 执行窗口闭合（2026-07-22）**：使用仓库既有 `yaml` 解析器按 `requirements[*].impl.length > 0` 重算为 70；`gen-matrix --check` 证明生成矩阵最新，`check:consistency` 证明 273 条 REQ、路径与 traceability 有效。PROGRESS 修正为 70；不改变“实现已提供”与“测试已执行/Profile 已符合”的边界 | closed-by-CA0-count-remeasurement |
 
+### 2026-07-23 v0.2 owner-choice closure note
+
+`V02-CA-OWNER-CLOSURE-01` closes the remaining owner-choice ambiguity without
+closing D-016 or D-022. All eight D-016 candidates are mandatory; HAL9001 through
+HAL9012 have separated Management, AUDIT, SIG, TARGET, operation-authority, and
+verification roles. The three configure target models and the seventeen AUDIT
+governance decisions are selected. D-016 remains machine-registration NO-GO and
+D-022 remains blocking because real consumers/deployments/readback/verifiers,
+HAL9003's independent review outputs, final immutable triples, generated
+bindings, and OPS/TARGET/SIG/AUDIT registration do not exist. CA-1 through CA-8
+remain blocked and Profile `implemented = 0`.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。

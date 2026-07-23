@@ -3,7 +3,7 @@
 - Record ID: `V02-CA-WP0-BASELINE-01`
 - Date: 2026-07-23
 - Classification: WP-0 governance baseline; docs-only
-- Result: **compatible NO-GO conclusions recorded; merge order remains owner decision required**
+- Result: **compatible NO-GO conclusions recorded; PR #56 then #57 merged in the owner-confirmed order**
 
 ## 1. Exact revalidation snapshot
 
