@@ -2,7 +2,7 @@
 
 - Decision ID: `V02-CA-SIG-01`
 - Date: 2026-07-22
-- Status: **materialized with owner-confirmed technical selections; security review and machine registration pending**
+- Status: **High-Assurance extension design; does not block Ordinary Core tracer development; final review and registration pending**
 - Baseline: `origin/main@42d609b2f49e2db641f46aa99b6cc9a538a7f4fd`
   (PR #52 merge; main CI run `29922529556` Ubuntu/Windows success)
 - Inputs: [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),

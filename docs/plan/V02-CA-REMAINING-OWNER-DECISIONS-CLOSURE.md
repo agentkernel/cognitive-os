@@ -4,7 +4,8 @@
 - Date: 2026-07-23
 - Branch: `lane/ctr-v02-d016-min-member-set`
 - Classification: owner-governance closure; docs-only
-- Result: **remaining owner choices closed; evidence-dependent registration and implementation gates remain NO-GO**
+- Superseded in scope by: ADR-0014 / `V02-ORDINARY-CORE-01`
+- Result: **owner choices retained, but High-Assurance choices no longer block Ordinary Core development**
 
 ## 1. Authority and boundary
 
@@ -52,10 +53,10 @@ schema, receipt, or behavior proof exists yet.
 
 ## 4. D-016 operation-member choices
 
-All eight candidates are mandatory: `status.inspect`,
-`session.create_restricted`, `capability.revoke`, `execution.stop`,
-`effect.reconcile`, `system.configure`, `gateway.configure`, and
-`diagnostics.configure`.
+Ordinary Core requires five candidates: `status.inspect`,
+`session.create_restricted`, `capability.revoke`, `execution.stop`, and
+`effect.reconcile`. The three configure candidates remain High-Assurance
+extension members and do not block Core.
 
 Each candidate remains `0.2.0-draft.1` and unregistered until its exact
 descriptor/request/result triples, authority, Effect/idempotency, error map,
@@ -77,11 +78,10 @@ reachability is not membership. No empty or partial operation set may publish.
 
 ## 6. D-022 and CA status
 
-No owner-choice ambiguity now blocks preparation. D-016 and D-022 nevertheless
-remain open/blocking because OPS/TARGET/SIG/AUDIT machine registrations, real
-consumer/deployment evidence, HAL9003's independent review outputs, generated
-bindings, and final immutable triples do not exist. CA-0 cannot be re-reviewed
-to GO, and CA-1 through CA-8 cannot start.
+No owner-choice ambiguity blocks Core tracer development. D-016-Core remains a
+registration task and D-022-Core remains blocked on Core AUDIT lower and five
+Core operation contracts, but test-first internal implementation is permitted.
+High-Assurance D-016/D-022 components are deferred and do not block Core.
 
 ## 7. Next executable evidence packets
 
