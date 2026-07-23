@@ -153,6 +153,19 @@ and CLI suites pass. This remains partial implementation feedback—not full
 REQ-AUDIT-001/002 coverage, machine registration, conformance behavior evidence,
 CA-0 GO, or Profile implementation.
 
+### 2026-07-23 Ordinary Core AUDIT candidate-freeze note
+
+Lane-CTR froze review-only candidate schemas for `privileged_read_decision` and
+`audit_commit_receipt`, the minimal commit-port responsibility, digest rules,
+fixtures, and a repository-verified exact-byte manifest under
+`docs/plan/candidates/v02-ordinary-core-audit/`. The candidate incorporates the
+real public audited API, `admin-cli` consumer, durable adapter, and success /
+denial / failure / receipt mismatch / corruption / writer-lock test feedback.
+It narrows the former “no real consumer” finding only for Ordinary Core; it does
+not prove independent deployment, a third-party consumer, non-repudiation, or
+the full AUDIT family. HAL9003 independent exact-byte review remains pending;
+there is no registration, behavior-pass, CA-0 GO, or Profile claim.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。

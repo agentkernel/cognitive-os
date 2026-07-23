@@ -1,0 +1,56 @@
+{
+  "success": {
+    "record": {
+      "record_kind": "privileged_read_decision",
+      "record_id": "01983bb4-7480-7000-8000-000000000001",
+      "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "outcome": "success",
+      "result_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_at": "2026-07-23T12:00:00Z"
+    },
+    "receipt": {
+      "record_id": "01983bb4-7480-7000-8000-000000000001",
+      "record_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "sequence": 1,
+      "writer_epoch": 1,
+      "committed_at": "2026-07-23T12:00:00Z"
+    }
+  },
+  "denied": {
+    "record": {
+      "record_kind": "privileged_read_decision",
+      "record_id": "01983bb4-7480-7000-8000-000000000002",
+      "request_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "outcome": "denied",
+      "safe_reason": "CONTEXT_AUTH_DENIED",
+      "observed_at": "2026-07-23T12:00:00Z"
+    },
+    "receipt": {
+      "record_id": "01983bb4-7480-7000-8000-000000000002",
+      "record_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "request_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "sequence": 2,
+      "writer_epoch": 1,
+      "committed_at": "2026-07-23T12:00:00.001Z"
+    }
+  },
+  "error": {
+    "record": {
+      "record_kind": "privileged_read_decision",
+      "record_id": "01983bb4-7480-7000-8000-000000000003",
+      "request_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "outcome": "error",
+      "safe_reason": "STATE_STORE_UNAVAILABLE",
+      "observed_at": "2026-07-23T12:00:00Z"
+    },
+    "receipt": {
+      "record_id": "01983bb4-7480-7000-8000-000000000003",
+      "record_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "request_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "sequence": 3,
+      "writer_epoch": 2,
+      "committed_at": "2026-07-23T12:00:01Z"
+    }
+  }
+}

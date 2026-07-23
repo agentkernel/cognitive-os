@@ -48,7 +48,7 @@ flowchart LR
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
-| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ordinary-core-refactor` | ADR-0014 Ordinary Core/High-Assurance split：五项 Core 与 in-process AUDIT lower tracer gate open；本批 docs-only，不登记 machine assets；合并后 Lane-RUN 实现内部 tracer types/tests |
+| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ordinary-core-audit-candidate-freeze` | ADR-0014 Ordinary Core/High-Assurance split：review-only `status.inspect` AUDIT candidate bytes/digests frozen from RUN feedback; HAL9003 exact-byte review pending; no machine assets registered |
 | `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `main`（PR #46 已合入） | `SHELL-TARGET-AMBIGUITY-001` behavior pass；pins 59/25；self-check 40；见 `20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |
