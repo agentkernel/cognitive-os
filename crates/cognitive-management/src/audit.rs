@@ -1,13 +1,17 @@
-//! Ordinary Core management AUDIT tracer types.
+//! Ordinary Core management AUDIT runtime boundary.
 //!
-//! These are internal candidate contracts from ADR-0014. They deliberately do
-//! not claim machine registration. The deterministic release gate is real code:
-//! no `status.inspect` result crosses it without a matching audit commit receipt.
+//! The port consumes the registered generated decision and receipt bindings.
+//! JSON Schema conditionals are enforced again here because the generated Rust
+//! shapes intentionally do not encode cross-field constraints.
 
 use cognitive_contracts::canonical::{canonical_bytes_of_value, digest};
+pub use cognitive_contracts::generated::audit_commit_receipt::OrdinaryCoreAuditCommitReceipt;
+pub use cognitive_contracts::generated::privileged_read_decision::{
+    OrdinaryCorePrivilegedReadDecision, OrdinaryCorePrivilegedReadDecisionOutcome,
+    OrdinaryCorePrivilegedReadDecisionRecordKind, OrdinaryCorePrivilegedReadDecisionSafeReason,
+};
 use cognitive_domain::WallTimestamp;
 use cognitive_kernel::ports::Clock;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeSet;
 use std::fs::{File, OpenOptions};
@@ -15,74 +19,22 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::Mutex;
 
-/// Candidate digest domain for an inspect selector.
+/// Registered digest domain for an inspect selector.
 pub const PRIVILEGED_READ_REQUEST_DOMAIN: &str = "management-privileged-read-request/0.2";
-/// Candidate digest domain for an inspect result.
+/// Registered digest domain for an inspect result.
 pub const PRIVILEGED_READ_RESULT_DOMAIN: &str = "management-privileged-read-result/0.2";
-/// Candidate digest domain for the audit decision record.
+/// Registered digest domain for the audit decision record.
 pub const PRIVILEGED_READ_RECORD_DOMAIN: &str = "management-privileged-read-record/0.2";
 
-/// Terminal outcome recorded before a privileged-read result may be released.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum PrivilegedReadOutcome {
-    /// An authoritative result was produced.
-    Success,
-    /// The protected read was denied or the object was not visible.
-    Denied,
-    /// Infrastructure prevented the read from completing.
-    Error,
-}
-
-/// Closed internal candidate record for one privileged-read decision.
-///
-/// It intentionally contains no raw selector/object identity. The selector is
-/// represented only by a domain-separated digest, preserving protected
-/// not-found/denial isomorphism in the audit carrier.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PrivilegedReadDecision {
-    /// Candidate record kind.
-    pub record_kind: String,
-    /// UUIDv7 identity allocated by the authority process.
-    pub record_id: String,
-    /// Digest of the exact requested domain/object selector.
-    pub request_digest: String,
-    /// Terminal outcome.
-    pub outcome: PrivilegedReadOutcome,
-    /// Safe registered reason code for denial/error outcomes.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub safe_reason: Option<String>,
-    /// Digest of the authoritative report on success.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result_digest: Option<String>,
-    /// Trusted observation time.
-    pub observed_at: WallTimestamp,
-}
-
-impl PrivilegedReadDecision {
-    /// Canonical candidate digest of this record.
-    pub fn canonical_digest(&self) -> Result<String, AuditPortFailure> {
-        let value = serde_json::to_value(self)
-            .map_err(|err| AuditPortFailure::new(format!("serialize audit record: {err}")))?;
-        digest_value(&value, PRIVILEGED_READ_RECORD_DOMAIN)
-    }
-}
-
-/// Durable receipt returned by the AUDIT port.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AuditCommitReceipt {
-    /// Exact committed record identity.
-    pub record_id: String,
-    /// Exact committed record digest.
-    pub record_digest: String,
-    /// Exact request digest bound by the record.
-    pub request_digest: String,
-    /// Positive contiguous sequence in the audit stream.
-    pub sequence: i64,
-    /// Positive audit-writer epoch.
-    pub writer_epoch: i64,
-    /// Trusted commit time.
-    pub committed_at: WallTimestamp,
+/// Validate the registered decision shape and compute its registered-domain
+/// canonical digest. All and only admitted record fields participate.
+pub fn privileged_read_decision_digest(
+    record: &OrdinaryCorePrivilegedReadDecision,
+) -> Result<String, AuditPortFailure> {
+    validate_privileged_read_decision(record)?;
+    let value = serde_json::to_value(record)
+        .map_err(|err| AuditPortFailure::new(format!("serialize audit record: {err}")))?;
+    digest_value(&value, PRIVILEGED_READ_RECORD_DOMAIN)
 }
 
 /// Fail-closed AUDIT-port or receipt-validation failure.
@@ -107,9 +59,9 @@ pub trait ManagementAuditPort {
     /// Durably commit the decision and return the exact receipt.
     fn commit_privileged_read_decision(
         &self,
-        record: &PrivilegedReadDecision,
+        record: &OrdinaryCorePrivilegedReadDecision,
         record_digest: &str,
-    ) -> Result<AuditCommitReceipt, AuditPortFailure>;
+    ) -> Result<OrdinaryCoreAuditCommitReceipt, AuditPortFailure>;
 }
 
 /// Lightweight durable Ordinary Core AUDIT adapter.
@@ -117,8 +69,9 @@ pub trait ManagementAuditPort {
 /// One process holds an exclusive OS file lock for the adapter lifetime. Each
 /// open durably advances `writer_epoch`; each decision receives one global,
 /// contiguous sequence and is synced before its receipt is returned. The
-/// journal contains only the safe [`PrivilegedReadDecision`] carrier—never the
-/// raw selector or protected object identity.
+/// journal contains only the registered safe
+/// [`OrdinaryCorePrivilegedReadDecision`] carrier—never the raw selector or
+/// protected object identity.
 pub struct FileManagementAuditLog<C> {
     clock: C,
     state: Mutex<FileAuditState>,
@@ -191,10 +144,10 @@ where
 {
     fn commit_privileged_read_decision(
         &self,
-        record: &PrivilegedReadDecision,
+        record: &OrdinaryCorePrivilegedReadDecision,
         record_digest: &str,
-    ) -> Result<AuditCommitReceipt, AuditPortFailure> {
-        let calculated = record.canonical_digest()?;
+    ) -> Result<OrdinaryCoreAuditCommitReceipt, AuditPortFailure> {
+        let calculated = privileged_read_decision_digest(record)?;
         if calculated != record_digest {
             return Err(AuditPortFailure::new(
                 "audit record digest does not match the decision",
@@ -230,13 +183,13 @@ where
         state.last_sequence = sequence;
         state.record_ids.insert(record.record_id.clone());
 
-        Ok(AuditCommitReceipt {
+        Ok(OrdinaryCoreAuditCommitReceipt {
+            committed_at: committed_at.as_str().to_owned(),
             record_id: record.record_id.clone(),
             record_digest: record_digest.to_owned(),
             request_digest: record.request_digest.clone(),
             sequence,
             writer_epoch,
-            committed_at,
         })
     }
 }
@@ -283,7 +236,7 @@ fn scan_journal(text: &str) -> Result<(i64, i64, BTreeSet<String>), AuditPortFai
                         "audit sequence discontinuity at line {line_number}"
                     )));
                 }
-                let record: PrivilegedReadDecision =
+                let record: OrdinaryCorePrivilegedReadDecision =
                     serde_json::from_value(value.get("record").cloned().ok_or_else(|| {
                         AuditPortFailure::new(format!(
                             "audit journal line {line_number} missing record"
@@ -295,7 +248,7 @@ fn scan_journal(text: &str) -> Result<(i64, i64, BTreeSet<String>), AuditPortFai
                         ))
                     })?;
                 let stored_digest = required_str(&value, "record_digest", line_number)?;
-                if record.canonical_digest()? != stored_digest {
+                if privileged_read_decision_digest(&record)? != stored_digest {
                     return Err(AuditPortFailure::new(format!(
                         "audit record digest mismatch at line {line_number}"
                     )));
@@ -364,28 +317,123 @@ pub struct ResultReleaseGate;
 impl ResultReleaseGate {
     /// Validate that the receipt authorizes release of exactly this decision.
     pub fn validate(
-        record: &PrivilegedReadDecision,
+        record: &OrdinaryCorePrivilegedReadDecision,
         record_digest: &str,
-        receipt: &AuditCommitReceipt,
+        receipt: &OrdinaryCoreAuditCommitReceipt,
     ) -> Result<(), AuditPortFailure> {
+        validate_privileged_read_decision(record)?;
+        validate_digest(record_digest, "record digest")?;
+        validate_audit_commit_receipt(receipt)?;
         if receipt.record_id != record.record_id
             || receipt.record_digest != record_digest
             || receipt.request_digest != record.request_digest
         {
             return Err(AuditPortFailure::new("audit receipt subject mismatch"));
         }
-        if receipt.sequence < 1 || receipt.writer_epoch < 1 {
-            return Err(AuditPortFailure::new(
-                "audit receipt sequence/writer epoch is not positive",
-            ));
-        }
-        if timestamp_order_key(&receipt.committed_at) < timestamp_order_key(&record.observed_at) {
+        let committed_at = parse_timestamp(&receipt.committed_at, "receipt committed_at")?;
+        let observed_at = parse_timestamp(&record.observed_at, "decision observed_at")?;
+        if timestamp_order_key(&committed_at) < timestamp_order_key(&observed_at) {
             return Err(AuditPortFailure::new(
                 "audit receipt predates the observed decision",
             ));
         }
         Ok(())
     }
+}
+
+pub(crate) fn registered_safe_reason(
+    code: &str,
+) -> Result<OrdinaryCorePrivilegedReadDecisionSafeReason, AuditPortFailure> {
+    serde_json::from_value(Value::String(code.to_owned())).map_err(|_| {
+        AuditPortFailure::new(format!(
+            "registered management code `{code}` is not admitted by the privileged-read decision schema"
+        ))
+    })
+}
+
+fn validate_privileged_read_decision(
+    record: &OrdinaryCorePrivilegedReadDecision,
+) -> Result<(), AuditPortFailure> {
+    validate_uuid(&record.record_id, "decision record_id")?;
+    validate_digest(&record.request_digest, "decision request_digest")?;
+    parse_timestamp(&record.observed_at, "decision observed_at")?;
+
+    match record.outcome {
+        OrdinaryCorePrivilegedReadDecisionOutcome::Success => {
+            if record.safe_reason.is_some() || record.result_digest.is_none() {
+                return Err(AuditPortFailure::new(
+                    "successful audit decision must have result_digest and no safe_reason",
+                ));
+            }
+        }
+        OrdinaryCorePrivilegedReadDecisionOutcome::Denied
+        | OrdinaryCorePrivilegedReadDecisionOutcome::Error => {
+            if record.safe_reason.is_none() || record.result_digest.is_some() {
+                return Err(AuditPortFailure::new(
+                    "denied/error audit decision must have safe_reason and no result_digest",
+                ));
+            }
+        }
+    }
+    if let Some(result_digest) = &record.result_digest {
+        validate_digest(result_digest, "decision result_digest")?;
+    }
+    Ok(())
+}
+
+fn validate_audit_commit_receipt(
+    receipt: &OrdinaryCoreAuditCommitReceipt,
+) -> Result<(), AuditPortFailure> {
+    validate_uuid(&receipt.record_id, "receipt record_id")?;
+    validate_digest(&receipt.record_digest, "receipt record_digest")?;
+    validate_digest(&receipt.request_digest, "receipt request_digest")?;
+    parse_timestamp(&receipt.committed_at, "receipt committed_at")?;
+    if receipt.sequence < 1 || receipt.writer_epoch < 1 {
+        return Err(AuditPortFailure::new(
+            "audit receipt sequence/writer epoch is not positive",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_uuid(value: &str, field: &str) -> Result<(), AuditPortFailure> {
+    let bytes = value.as_bytes();
+    let valid = bytes.len() == 36
+        && bytes.iter().enumerate().all(|(index, byte)| {
+            if matches!(index, 8 | 13 | 18 | 23) {
+                *byte == b'-'
+            } else {
+                byte.is_ascii_hexdigit()
+            }
+        });
+    if valid {
+        Ok(())
+    } else {
+        Err(AuditPortFailure::new(format!("{field} is not a UUID")))
+    }
+}
+
+fn validate_digest(value: &str, field: &str) -> Result<(), AuditPortFailure> {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return Err(AuditPortFailure::new(format!(
+            "{field} is not a sha256 digest"
+        )));
+    };
+    if hex.len() != 64
+        || !hex
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
+        return Err(AuditPortFailure::new(format!(
+            "{field} is not a lowercase sha256 digest"
+        )));
+    }
+    Ok(())
+}
+
+fn parse_timestamp(value: &str, field: &str) -> Result<WallTimestamp, AuditPortFailure> {
+    WallTimestamp::parse(value)
+        .map_err(|err| AuditPortFailure::new(format!("{field} is invalid: {err}")))
 }
 
 fn timestamp_order_key(timestamp: &WallTimestamp) -> String {

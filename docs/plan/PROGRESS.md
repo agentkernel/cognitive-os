@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（Lane-CTR 已将隔离 final-byte technical-reviewed 的 Ordinary Core `status.inspect` AUDIT candidate 最小范围登记为两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。登记仅覆盖 decision/receipt、三条 digest domain 与 `ManagementAuditPort.commit_privileged_read_decision` 最小责任；不登记完整 AUDIT family 或 High-Assurance surface。此前本机 GNU linker 缺少 `libgcc_eh`/`libgcc` 的阻塞，已由仅会话级 MSYS2 GCC 16.1.0 linker（无仓库或永久 PATH 配置）解除；workspace Rust build/test/clippy、专项候选/生成绑定测试、TS build/test、consistency 与 matrix 门禁均已通过。Lane-RUN 绑定消费、Lane-CFR conformance behavior、CA-0 GO 与 Profile claim 仍 pending；Profile **implemented = 0**。）
+> 最后更新：2026-07-23（Lane-CTR Ordinary Core `status.inspect` AUDIT minimal machine registration 已由 PR #68 合入 `main`：两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。Lane-RUN 已让 audited runtime production path 直接消费正式 `OrdinaryCorePrivilegedReadDecision` / `OrdinaryCoreAuditCommitReceipt`，移除重复 wire DTO，并以正式闭合 enum、跨字段校验、durable readback/digest 与 receipt release gate 保持 audit-before-result；实现已提供、测试已执行，本地 Rust/TS/consistency/matrix 门禁通过。Lane-CFR conformance behavior 仍 pending；D-022 整体仍 blocking；CA-0 GO = no；High-Assurance deferred；Profile **implemented = 0**。）
 
 ## 里程碑状态
 
@@ -56,21 +56,19 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **Ordinary Core AUDIT minimal machine registration provided** | `lane/ctr-v02-ordinary-core-audit-machine-registration` | formal decision/receipt schemas + minimal responsibility companion + Rust/TS bindings; implementation consumption and conformance behavior pending; no CA-0/Profile claim |
+| Lane-CTR 契约与生成 | **Ordinary Core AUDIT minimal machine registration merged (PR #68)** | `main` @ `2baef99` | formal decision/receipt schemas + minimal responsibility companion + Rust/TS bindings registered; Lane-RUN consumption provided; Lane-CFR behavior pending; no CA-0/Profile claim |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **Ordinary Core audited inspect API hardened/tested (internal candidate)** | `lane/run-v02-inspect-api-hardening` | durable adapter + CLI 接线已合入；未审计 primitive 改为 crate-private，外部调用面只保留 audited inspect；非 machine registration/conformance/Profile claim |
+| Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption provided/tested** | `lane/run-v02-ordinary-core-audit-binding-consumption` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；非 conformance/Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-ordinary-core-audit-review-gate-simplification-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-review-gate-simplification-handoff.md)（CTR：Ordinary Core isolated final-byte technical review accepted；可启动登记准备，非登记完成）
-2. [20260723-lane-ctr-v02-ordinary-core-audit-candidate-freeze-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-candidate-freeze-handoff.md)（CTR：prior review-only candidate bytes/digests frozen；technical review NO-GO superseded）
-2. [20260723-lane-run-v02-inspect-api-hardening-handoff.md](../checkpoints/20260723-lane-run-v02-inspect-api-hardening-handoff.md)（RUN：未审计 inspect 收紧为 crate-private；外部旁路编译面关闭）
-2. [20260723-lane-run-v02-durable-audit-wiring-handoff.md](../checkpoints/20260723-lane-run-v02-durable-audit-wiring-handoff.md)（RUN：durable file AUDIT + `admin-cli inspect` 防旁路接线已实现并测试）
-3. [20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md)（RUN：`status.inspect` audit-before-result 内部 tracer 已实现并测试）
+1. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
+2. [20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md)（CTR：minimal machine registration 已由 PR #68 合入 `main`）
+3. [20260723-lane-run-v02-inspect-api-hardening-handoff.md](../checkpoints/20260723-lane-run-v02-inspect-api-hardening-handoff.md)（RUN：未审计 inspect 收紧为 crate-private；外部旁路编译面关闭）
 
 ## 客户端目录治理交付
 

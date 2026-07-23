@@ -13,8 +13,8 @@
 
 use crate::audit::{
     AuditedInspectError, ManagementAuditPort, PRIVILEGED_READ_REQUEST_DOMAIN,
-    PRIVILEGED_READ_RESULT_DOMAIN, PrivilegedReadDecision, PrivilegedReadOutcome,
-    ResultReleaseGate, digest_value,
+    PRIVILEGED_READ_RESULT_DOMAIN, ResultReleaseGate, digest_value,
+    privileged_read_decision_digest, registered_safe_reason,
 };
 use crate::error::{ManagementDenial, ManagementError};
 use crate::governance::GovernanceLedger;
@@ -22,6 +22,10 @@ use crate::model::ModelProvider;
 use crate::session::{ManagementAction, PrivilegedManagementSession, RiskClass};
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
+use cognitive_contracts::generated::privileged_read_decision::{
+    OrdinaryCorePrivilegedReadDecision, OrdinaryCorePrivilegedReadDecisionOutcome,
+    OrdinaryCorePrivilegedReadDecisionRecordKind, OrdinaryCorePrivilegedReadDecisionSafeReason,
+};
 use cognitive_domain::{LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, WallTimestamp};
 use cognitive_kernel::effects::{EffectProtocol, WriterLease};
 use cognitive_kernel::executor::EffectExecutor;
@@ -380,9 +384,8 @@ where
     /// Ordinary Core tracer — inspect authority state and release the report
     /// only after a matching privileged-read audit commit receipt.
     ///
-    /// The candidate audit carrier is intentionally internal until final-byte
-    /// review/registration. Its deterministic behavior is implemented now so
-    /// contract freeze can consume real implementation feedback (ADR-0014).
+    /// The audit port boundary uses the registered generated Ordinary Core
+    /// decision and receipt carriers (ADR-0014).
     pub fn inspect_with_audit<A: ManagementAuditPort>(
         &self,
         session: &PrivilegedManagementSession,
@@ -402,7 +405,7 @@ where
         let result = self.inspect(session, request);
         let (outcome, safe_reason, result_digest) = match &result {
             Ok(report) => (
-                PrivilegedReadOutcome::Success,
+                OrdinaryCorePrivilegedReadDecisionOutcome::Success,
                 None,
                 Some(digest_value(
                     &serde_json::to_value(report).map_err(|err| {
@@ -412,26 +415,21 @@ where
                 )?),
             ),
             Err(error) => {
-                let parts = error.registered_parts();
-                let outcome = if matches!(error, ManagementError::Denied(_)) {
-                    PrivilegedReadOutcome::Denied
-                } else {
-                    PrivilegedReadOutcome::Error
-                };
-                (outcome, Some(parts.code), None)
+                let (outcome, safe_reason) = audit_failure_fields(error)?;
+                (outcome, Some(safe_reason), None)
             }
         };
 
-        let record = PrivilegedReadDecision {
-            record_kind: "privileged_read_decision".to_owned(),
+        let record = OrdinaryCorePrivilegedReadDecision {
+            record_kind: OrdinaryCorePrivilegedReadDecisionRecordKind::PrivilegedReadDecision,
             record_id,
             request_digest,
             outcome,
             safe_reason,
             result_digest,
-            observed_at,
+            observed_at: observed_at.as_str().to_owned(),
         };
-        let record_digest = record.canonical_digest()?;
+        let record_digest = privileged_read_decision_digest(&record)?;
         let receipt = audit.commit_privileged_read_decision(&record, &record_digest)?;
         ResultReleaseGate::validate(&record, &record_digest, &receipt)?;
 
@@ -742,4 +740,54 @@ fn parse_state(name: &str) -> Result<StateName, ManagementError> {
 
 fn parse_reason(name: &str) -> Result<ReasonCode, ManagementError> {
     ReasonCode::parse(name).map_err(|err| internal(format!("reason `{name}`: {err}")))
+}
+
+fn audit_failure_fields(
+    error: &ManagementError,
+) -> Result<
+    (
+        OrdinaryCorePrivilegedReadDecisionOutcome,
+        OrdinaryCorePrivilegedReadDecisionSafeReason,
+    ),
+    crate::AuditPortFailure,
+> {
+    let outcome = if matches!(error, ManagementError::Denied(_)) {
+        OrdinaryCorePrivilegedReadDecisionOutcome::Denied
+    } else {
+        OrdinaryCorePrivilegedReadDecisionOutcome::Error
+    };
+    let parts = error.registered_parts();
+    Ok((outcome, registered_safe_reason(&parts.code)?))
+}
+
+#[cfg(test)]
+mod audit_binding_tests {
+    use super::*;
+    use cognitive_kernel::ports::StorePortError;
+
+    #[test]
+    fn denied_and_error_paths_map_only_to_registered_safe_reason_enums() {
+        let denied = ManagementError::Denied(ManagementDenial::new(
+            RegisteredErrorCode::ContextAuthDenied,
+            "denied",
+        ));
+        assert_eq!(
+            audit_failure_fields(&denied),
+            Ok((
+                OrdinaryCorePrivilegedReadDecisionOutcome::Denied,
+                OrdinaryCorePrivilegedReadDecisionSafeReason::ContextAuthDenied,
+            ))
+        );
+
+        let error = ManagementError::Store(StorePortError::Unavailable {
+            detail: "offline".to_owned(),
+        });
+        assert_eq!(
+            audit_failure_fields(&error),
+            Ok((
+                OrdinaryCorePrivilegedReadDecisionOutcome::Error,
+                OrdinaryCorePrivilegedReadDecisionSafeReason::StateStoreUnavailable,
+            ))
+        );
+    }
 }
