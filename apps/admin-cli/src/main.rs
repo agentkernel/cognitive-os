@@ -18,8 +18,8 @@ use cognitive_management::executor_port::{
     PortFailure,
 };
 use cognitive_management::{
-    GovernanceLedger, InspectRequest, ManagementError, ManagementPlane,
-    PrivilegedManagementSession, StopRequest,
+    AuditPortFailure, AuditedInspectError, FileManagementAuditLog, GovernanceLedger,
+    InspectRequest, ManagementError, ManagementPlane, PrivilegedManagementSession, StopRequest,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
@@ -28,7 +28,7 @@ use std::collections::BTreeMap;
 const USAGE: &str = "admin-cli — deterministic management fallback (no model dependency)
 
 USAGE:
-  admin-cli inspect   --store <db> --session <session.json> --domain <lifecycle-domain> --object <object-id>
+  admin-cli inspect   --store <db> --session <session.json> --domain <lifecycle-domain> --object <object-id> [--audit <journal>]
   admin-cli stop      --store <db> --session <session.json> --execution <object-id>
   admin-cli revoke    --store <db> --session <session.json> --ledger <governance.json>
   admin-cli reconcile --store <db> --session <session.json>
@@ -188,6 +188,30 @@ fn gate_failure(failure: GateFailure) -> i32 {
     }
 }
 
+fn fail_audit(error: AuditPortFailure) -> i32 {
+    fail(&ManagementError::Ledger(format!(
+        "management audit: {}",
+        error.detail
+    )))
+}
+
+fn fail_audited_inspect(error: AuditedInspectError) -> i32 {
+    match error {
+        AuditedInspectError::Management(error) => fail(&error),
+        AuditedInspectError::Audit(error) => fail_audit(error),
+    }
+}
+
+fn inspect_audit_path(flags: &BTreeMap<String, String>) -> Result<std::path::PathBuf, String> {
+    if let Some(path) = flags.get("audit") {
+        return Ok(std::path::PathBuf::from(path));
+    }
+    let store = required(flags, "store")?;
+    Ok(std::path::PathBuf::from(format!(
+        "{store}.management-audit.jsonl"
+    )))
+}
+
 fn dispatch_inspect(flags: &BTreeMap<String, String>) -> i32 {
     let domain = match required(flags, "domain") {
         Ok(text) => match LifecycleDomain::parse(text) {
@@ -207,10 +231,18 @@ fn dispatch_inspect(flags: &BTreeMap<String, String>) -> i32 {
         Ok(gate) => gate,
         Err(failure) => return gate_failure(failure),
     };
+    let audit_path = match inspect_audit_path(flags) {
+        Ok(path) => path,
+        Err(message) => return usage_error(&message),
+    };
     let clock = SystemClock;
     let ids = UuidV7Generator;
+    let audit = match FileManagementAuditLog::open(&audit_path, clock) {
+        Ok(audit) => audit,
+        Err(error) => return fail_audit(error),
+    };
     let plane = ManagementPlane::deterministic(&store, &clock, &ids);
-    match plane.inspect(&session, &InspectRequest { domain, object_id }) {
+    match plane.inspect_with_audit(&session, &InspectRequest { domain, object_id }, &audit) {
         Ok(report) => match serde_json::to_value(&report) {
             Ok(value) => emit(&value),
             Err(err) => {
@@ -218,7 +250,7 @@ fn dispatch_inspect(flags: &BTreeMap<String, String>) -> i32 {
                 1
             }
         },
-        Err(error) => fail(&error),
+        Err(error) => fail_audited_inspect(error),
     }
 }
 
