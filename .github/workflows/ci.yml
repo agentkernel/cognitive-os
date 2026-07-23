@@ -93,12 +93,14 @@ jobs:
       # 2026-07-20 M4 batch: seven effect/recovery vectors execute
       # behaviorally through the public fault-injection framework
       # (pass 58 -> 59, not-run 26 -> 25 after SHELL-TARGET-AMBIGUITY-001 behavioral batch).
+      # 2026-07-23 Ordinary Core AUDIT inspect behavior vector adds one
+      # evidence-backed pass (total 84 -> 85, pass 59 -> 60).
       - name: Assert report honesty (evidence-backed pass, reasoned not-run, pinned counts)
         run: |
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
             const s = r.summary;
-            const pinned = { total_vectors: 84, pass: 59, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 25 };
+            const pinned = { total_vectors: 85, pass: 60, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 25 };
             for (const [key, want] of Object.entries(pinned)) {
               if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
             }
