@@ -5,7 +5,7 @@
 - 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
 - RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
 - CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
-- 下一唯一门禁：review 并普通合入 docs-only OPS registration eligibility NO-GO packet，随后取得有界 owner governance decision 以闭合至少一个 OPS member 或具独立用途的 foundation；不得登记 placeholder、不得自动合并；其后仍须完成 OPS/TARGET/SIG/AUDIT 四类 machine-registration lines；勿启动 CA 实现、勿批量清 not-run、勿开 PERF；**隔离 PR #36（M7 plan）**
+- 产品优先级（ADR-0015）：普通用户与一般企业以 Ordinary Core 为默认范围；SIG/AUDIT/TARGET 的独立审查、外部 verifier、签名、留存/导出与复杂配置 authority 维持 High-Assurance deferred/tracking，不作为近期普通产品交付的日常门禁。D-016/D-022 的事实、registration/Profile claim 门禁不变；不得登记 placeholder、虚构外部证据或批量清 not-run。
 - 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](PROGRESS.md)
 
 ## A. 阶段目标与边界
