@@ -199,12 +199,15 @@ behavior evidence.
 
 ## 8. Commits, PR, and CI
 
-- decision/NO-GO commit: pending;
-- handoff/final sync commit: pending;
-- PR: pending;
-- final branch head: pending;
-- final-head Ubuntu CI: pending;
-- final-head Windows CI: pending;
+- decision/NO-GO commit:
+  `290fbfea80fdd40335118f8e5545c21f1c69c848`;
+- handoff/final sync commit: this follow-up commit at the final branch head;
+- PR: [#56](https://github.com/agentkernel/cognitive-os/pull/56);
+- final branch head: the handoff/final sync commit; its exact SHA and final CI
+  run conclusions are recorded in the durable PR #56 final-head status comment
+  after both platform jobs finish, without changing this branch head;
+- final-head Ubuntu CI: pending at this document commit;
+- final-head Windows CI: pending at this document commit;
 - merge: forbidden without a later explicit owner action; this lane does not
   auto-merge.
 
