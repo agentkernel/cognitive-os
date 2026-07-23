@@ -1505,12 +1505,14 @@ requirements:
     impl_tests:
       - crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
       - crates/cognitive-management/tests/v02_file_audit.rs
+      - crates/cognitive-management/tests/v02_registered_audit_bindings.rs
     evidence:
       - docs/plan/candidates/v02-ordinary-core-audit/registration-readiness.md
     docs:
       - specs/core/ordinary-core-audit.md
     notes: Formal decision/receipt schemas and generated bindings are registered/provided for Ordinary Core status.inspect.
-      Static schema/binding tests execute; Lane-RUN binding adoption and Lane-CFR conformance behavior remain pending.
+      Lane-RUN production binding adoption is provided and its runtime tests execute; Lane-CFR conformance behavior
+      remains pending.
   - id: REQ-AUDIT-002
     owner: audit-002
     owner_spec: specs/core/README.md
@@ -1525,12 +1527,13 @@ requirements:
     impl_tests:
       - crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
       - crates/cognitive-management/tests/v02_file_audit.rs
+      - crates/cognitive-management/tests/v02_registered_audit_bindings.rs
     evidence:
       - docs/plan/candidates/v02-ordinary-core-audit/registration-readiness.md
     docs:
       - specs/core/ordinary-core-audit.md
     notes: Minimal port responsibility is registered in the normative companion. Cross-object receipt binding and time
-      ordering remain runtime obligations; no behavior-vector pass, CA-0 GO, or Profile claim is made.
+      ordering are exercised by Lane-RUN runtime tests; no behavior-vector pass, CA-0 GO, or Profile claim is made.
   - id: REQ-AUTH-001
     owner: auth-001
     owner_spec: specs/core/README.md

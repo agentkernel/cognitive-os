@@ -17,6 +17,11 @@
     clippy::too_many_arguments
 )]
 
+use cognitive_contracts::generated::audit_commit_receipt::OrdinaryCoreAuditCommitReceipt;
+use cognitive_contracts::generated::privileged_read_decision::{
+    OrdinaryCorePrivilegedReadDecision, OrdinaryCorePrivilegedReadDecisionOutcome,
+    OrdinaryCorePrivilegedReadDecisionRecordKind, OrdinaryCorePrivilegedReadDecisionSafeReason,
+};
 use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
 use cognitive_domain::{
     LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version, WallTimestamp, table,
@@ -36,9 +41,8 @@ use cognitive_kernel::{
     AdmitCommand, Causation, Reason, TablePin, TransitionCommand, TransitionEngine,
 };
 use cognitive_management::{
-    AuditCommitReceipt, AuditPortFailure, AuditedInspectError, GovernanceLedger, InspectRequest,
-    ManagementAuditPort, ManagementError, ManagementPlane, ModelProvider,
-    PrivilegedManagementSession, PrivilegedReadDecision, PrivilegedReadOutcome, StopRequest,
+    AuditPortFailure, AuditedInspectError, GovernanceLedger, InspectRequest, ManagementAuditPort,
+    ManagementError, ManagementPlane, ModelProvider, PrivilegedManagementSession, StopRequest,
 };
 use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
@@ -992,7 +996,7 @@ enum AuditMode {
 
 struct RecordingAuditPort {
     mode: AuditMode,
-    committed: RefCell<Vec<PrivilegedReadDecision>>,
+    committed: RefCell<Vec<OrdinaryCorePrivilegedReadDecision>>,
 }
 
 impl RecordingAuditPort {
@@ -1007,14 +1011,15 @@ impl RecordingAuditPort {
 impl ManagementAuditPort for RecordingAuditPort {
     fn commit_privileged_read_decision(
         &self,
-        record: &PrivilegedReadDecision,
+        record: &OrdinaryCorePrivilegedReadDecision,
         record_digest: &str,
-    ) -> Result<AuditCommitReceipt, AuditPortFailure> {
+    ) -> Result<OrdinaryCoreAuditCommitReceipt, AuditPortFailure> {
         if matches!(self.mode, AuditMode::Fail) {
             return Err(AuditPortFailure::new("injected audit persistence failure"));
         }
         self.committed.borrow_mut().push(record.clone());
-        Ok(AuditCommitReceipt {
+        Ok(OrdinaryCoreAuditCommitReceipt {
+            committed_at: "2026-07-20T12:00:00Z".to_owned(),
             record_id: record.record_id.clone(),
             record_digest: if matches!(self.mode, AuditMode::Mismatch) {
                 "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_owned()
@@ -1024,7 +1029,6 @@ impl ManagementAuditPort for RecordingAuditPort {
             request_digest: record.request_digest.clone(),
             sequence: 1,
             writer_epoch: 1,
-            committed_at: ts("2026-07-20T12:00:00Z"),
         })
     }
 }
@@ -1053,8 +1057,22 @@ fn ordinary_core_inspect_releases_only_after_matching_audit_receipt() {
     assert_eq!(report.state, "RUNNABLE");
     let committed = audit.committed.borrow();
     assert_eq!(committed.len(), 1);
-    assert_eq!(committed[0].outcome, PrivilegedReadOutcome::Success);
+    assert_eq!(
+        committed[0].record_kind,
+        OrdinaryCorePrivilegedReadDecisionRecordKind::PrivilegedReadDecision
+    );
+    assert_eq!(
+        committed[0].outcome,
+        OrdinaryCorePrivilegedReadDecisionOutcome::Success
+    );
     assert!(committed[0].result_digest.is_some());
+    assert!(committed[0].safe_reason.is_none());
+    let serialized = serde_json::to_value(&committed[0]).unwrap();
+    let decoded: OrdinaryCorePrivilegedReadDecision =
+        serde_json::from_value(serialized.clone()).unwrap();
+    assert_eq!(decoded, committed[0]);
+    assert_eq!(serialized["record_kind"], "privileged_read_decision");
+    assert_eq!(serialized["outcome"], "success");
 }
 
 #[test]
@@ -1107,10 +1125,13 @@ fn ordinary_core_missing_object_is_audited_without_existence_facts() {
     }
     let committed = audit.committed.borrow();
     assert_eq!(committed.len(), 1);
-    assert_eq!(committed[0].outcome, PrivilegedReadOutcome::Denied);
     assert_eq!(
-        committed[0].safe_reason.as_deref(),
-        Some("CONTEXT_AUTH_DENIED")
+        committed[0].outcome,
+        OrdinaryCorePrivilegedReadDecisionOutcome::Denied
+    );
+    assert_eq!(
+        committed[0].safe_reason,
+        Some(OrdinaryCorePrivilegedReadDecisionSafeReason::ContextAuthDenied)
     );
     assert!(committed[0].result_digest.is_none());
 }
