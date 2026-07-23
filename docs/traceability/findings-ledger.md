@@ -108,6 +108,17 @@ HAL9003's independent review outputs, final immutable triples, generated
 bindings, and OPS/TARGET/SIG/AUDIT registration do not exist. CA-1 through CA-8
 remain blocked and Profile `implemented = 0`.
 
+### 2026-07-23 owner-authorized cross-family agent review note
+
+`V02-CA-CROSS-FAMILY-AGENT-REVIEW-01` corrected four docs-only design/status
+issues: SIG no longer broadens `STATE_STORE_UNAVAILABLE` into AUDIT persistence;
+early G1/G2 verification failures use a safe tagged receipt variant; the AUDIT
+docket reflects selected candidate A and its roles; and all three TARGET lines
+require distinct verifier profiles/evidence even under HAL9007. The review found
+no contrary decision that permits registration or implementation. It is an
+owner-authorized agent review, not HAL9003 independent provenance. D-016 remains
+open, D-022 remains blocking, and CA-1 through CA-8 remain blocked.
+
 ## 四、复验方法备注
 
 M0 核验方式 = 静态证据抽查（schema 字段、registry 条目、向量存在性与 expected 结构），未执行任何向量（无 runner 执行能力，符合四类状态用语）。标注"M1 复验项"的条目：M1 runner 分层执行负例向量后，将本台账状态从 closed-by-1.0.1 升级为 verified-by-vector 或降级重开。

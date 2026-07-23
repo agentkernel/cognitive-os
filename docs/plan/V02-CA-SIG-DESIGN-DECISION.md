@@ -595,6 +595,17 @@ strongly bind:
 - result, earliest failed stage, and exact registered error when available;
 - correlation/causation references and receipt digest.
 
+The receipt is a closed tagged union with `receipt_scope` equal to either
+`subject_verified` or `input_rejected`. `subject_verified` carries every
+applicable subject/profile/key fact above. `input_rejected` is mandatory for a
+failure before the object, profile, signed schema, or key has become trusted; it
+must not copy unvalidated semantic identity fields. It instead binds the
+authenticated channel/peer context, negotiation epoch when established, exact
+earliest failed stage, registered safe error when available, and a domain-
+separated digest of the received envelope bytes or validated framing value. Any
+fact not established before the failed stage is absent, never guessed, defaulted,
+or copied from untrusted input as authority.
+
 Successful and failed verification attempts both create a safe receipt. It must
 not contain private key material, secret content, signature material usable for
 replay, or protected subject content. The receipt is not independently signed;
@@ -635,7 +646,8 @@ error registry and generated bindings.
 | expired/revoked session | G5 | `MANAGEMENT_SESSION_EXPIRED` / `MANAGEMENT_SESSION_REVOKED` | session business state |
 | session domain/action/resource outside scope | G5 | `MANAGEMENT_SCOPE_MISMATCH` | exact scope mismatch |
 | required step-up absent | G5 | `MANAGEMENT_STEP_UP_REQUIRED` | exact challenge condition |
-| ledger/receipt/audit/authority commit unavailable | G6 | `STATE_STORE_UNAVAILABLE` | authoritative persistence unavailable |
+| state/Event/authority commit unavailable | G6 | `STATE_STORE_UNAVAILABLE` | registered authoritative state/Event persistence only |
+| authoritative AUDIT port persistence unavailable | G6 | future `AUDIT_STORE_UNAVAILABLE` | AUDIT-owned persistence before audit commit/receipt; unregistered until the AUDIT error batch |
 
 ### 12.2 Owner-confirmed future SIG errors
 
@@ -723,6 +735,8 @@ success_receipts = 0
 | 38 | rejection followed by state mutation | G5 | planned/not executed |
 | 39 | rejection followed by commit | G6 | planned/not executed |
 | 40 | rejection followed by success receipt | G6 | planned/not executed |
+| 41 | G1/G2 rejection receipt copies untrusted object/profile/key identity as authoritative fact | G1/G2 | planned/not executed |
+| 42 | AUDIT-port persistence failure is reported as `STATE_STORE_UNAVAILABLE` or followed by visible success | G6 | planned/not executed |
 
 Additional positives and negatives must cover exact canonical bytes, both
 object-specific domains, both projection schemas, algorithm identifiers,

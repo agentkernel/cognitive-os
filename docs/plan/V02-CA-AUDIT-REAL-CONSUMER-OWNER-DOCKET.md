@@ -3,15 +3,15 @@
 - Docket ID: `V02-CA-AUDIT-CONSUMER-DOCKET-01`
 - Date: 2026-07-23
 - Classification: governance preparation only; no machine asset or registration
-- Baseline: `lane/ctr-v02-audit-privileged-read-registration@3792d915a73a28187e9740648f6e0d753f286957`
+- Original baseline: `lane/ctr-v02-audit-privileged-read-registration@3792d915a73a28187e9740648f6e0d753f286957`; later owner decisions merged through `main@1605d3f785678c4fbe56b0851b81c5016813421d`
 - Status: **owner-confirmed design direction: candidate A; consumer proof incomplete**
 
 ## 1. Boundary
 
 This docket executes only WP-1 preparation in the v0.2 governance-unblock plan.
-It does not select a consumer, assign a schema ID, approve a policy value, or
-create an AUDIT record, stream, receipt, schema, error, profile, extension,
-binding, vector, implementation, or claim. All such assets remain
+It selects candidate A and records owner decisions, but does not prove a real
+consumer or create an AUDIT record, stream, receipt, schema, error, profile,
+extension, binding, vector, implementation, or claim. All such assets remain
 unregistered.
 
 The consumer gate applies to the exact future
@@ -61,7 +61,7 @@ Complete one record for each candidate considered. A blanket approval is invalid
 | Required facts | Each record/stream/receipt field whose removal causes rejection |
 | Failure oracle | Safe outcome on missing, stale, mismatched, reordered, or persistence-failed input |
 | Independence review | **Owner-appointed 2026-07-23:** HAL9003 is Security & Privacy Reviewer, independent of HAL9001 and HAL9002. Conflict disclosure, review scope, date, methods, and conclusion remain required before a review claim. |
-| Owner decision | `selected` — candidate A, 2026-07-23; accountable owners and boundary still required |
+| Owner decision | `selected` — candidate A, 2026-07-23; HAL9001/HAL9002 roles and the service-boundary model are recorded, while actual endpoint/deployment/triple evidence remains required |
 
 ## 5. Seventeen itemized AUDIT owner decisions
 

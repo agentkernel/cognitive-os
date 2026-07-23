@@ -8,12 +8,15 @@
 ## 1. Boundary
 
 This docket is the permitted preparation for TARGET’s three independently
-governed configure operations. It does not define a generic target, select a
-target kind, register an operation, create a request/result schema, or reuse a
-URI, route, row, vector, or private DTO as authority evidence.
+governed configure operations. It selects the target models recorded below but
+does not define a generic target, register an operation, create a request/result
+schema, or reuse a URI, route, row, vector, or private DTO as authority evidence.
 
 Each row must have its own real apply consumer, authority, independent readback,
 verifier, receipt, and owner. Evidence for one operation cannot close another.
+HAL9007 may be the accountable verifier owner for all three lines, but each line
+must have a distinct verifier identity/version, criteria, pinned postcondition,
+and evidence packet.
 
 ## 2. Shared consumer qualification test
 
@@ -71,6 +74,6 @@ this docket.
 
 Do not create a generic configuration target, target profile, descriptor,
 extension, error, generated binding, vector, or implementation until one
-candidate independently passes §2 and its full owner record is reviewed. Three
-configure operations remain required until the owner explicitly decides whether
-all are necessary for D-022 closure.
+candidate independently passes §2 and its full owner record is reviewed. All
+three configure operations are owner-confirmed as mandatory for D-016/D-022;
+none may borrow another line's consumer or verifier evidence.

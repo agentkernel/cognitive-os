@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（v0.2 owner-choice closure：PR #56/#57 已按顺序合并；AUDIT 17 项治理决策逐项完成，其中 real consumer 与 final bytes 两门保持 NO-GO；HAL9001～HAL9012 的 Management/AUDIT/SIG/TARGET/operation authority 分责已登记；D-016 最小集合确定为全部八项。当前不再有未决 owner 选择，但真实部署/consumer/readback/verifier、HAL9003 独立审查报告、final canonical bytes/digests、四类 machine registration 与 CA-0 GO 仍缺，因此 D-016 open、D-022 blocking、CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [remaining owner decisions closure](V02-CA-REMAINING-OWNER-DECISIONS-CLOSURE.md)）
+> 最后更新：2026-07-23（owner-authorized cross-family agent review：SIG/AUDIT/TARGET/OPS 静态审查发现并修正 4 项设计/状态不一致——AUDIT persistence 错误责任、G1/G2 early-rejection receipt 可信字段、AUDIT consumer docket 漂移、TARGET verifier/三项必需口径；该审查不是 HAL9003 独立人类/第三方/密码学/法律或 final-byte review。当前仅剩外部证据与机器交付 gate：HAL9003 provenance/report、真实 deployments/consumers/readback/verifiers、法律复核、final bytes/digests、四类 registration 与 CA-0 GO；D-016 open、D-022 blocking、CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [cross-family review](V02-CA-CROSS-FAMILY-OWNER-AUTHORIZED-AGENT-REVIEW.md)）
 
 ## 里程碑状态
 
@@ -56,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **owner choices closed; evidence/registration NO-GO** | `lane/ctr-v02-d016-min-member-set` | HAL9001～HAL9012 分责、AUDIT 17 项、TARGET 三线与 D-016 八项最小集合均已决定；真实 consumers/deployments/readback/verifiers、HAL9003 review outputs、final bytes/digests、四类 registrations 与 CA-0 GO 仍 pending；不创建 machine asset/implementation/behavior/Profile claim |
+| Lane-CTR 契约与生成 | **agent design review corrected; external evidence/registration NO-GO** | `lane/ctr-v02-sig-agent-design-review` | 4 项 cross-family design/status finding 已修正；HAL9003 independent report、真实 consumer/deployment/readback/verifier、legal review、final bytes/digests、registrations 与 CA-0 GO 仍 pending；不创建 machine asset/implementation/behavior/Profile claim |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -66,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-owner-choice-closure-handoff.md](../checkpoints/20260723-lane-ctr-v02-owner-choice-closure-handoff.md)（CTR：全部 owner choices 已闭合；evidence/registration 仍 NO-GO）
-2. [20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md)（CTR：HAL9001/HAL9002/HAL9003 appointments；deployment/review proof 仍缺）
-3. [20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md)（CTR：owner 确认三方 role model + 独立服务 API）
+1. [20260723-lane-ctr-v02-cross-family-agent-review-handoff.md](../checkpoints/20260723-lane-ctr-v02-cross-family-agent-review-handoff.md)（CTR：4 项 design/status finding 已修正；independent/external gates 仍 NO-GO）
+2. [20260723-lane-ctr-v02-owner-choice-closure-handoff.md](../checkpoints/20260723-lane-ctr-v02-owner-choice-closure-handoff.md)（CTR：全部 owner choices 已闭合；evidence/registration 仍 NO-GO）
+3. [20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md)（CTR：HAL9001/HAL9002/HAL9003 appointments；deployment/review proof 仍缺）
 
 ## 客户端目录治理交付
 
