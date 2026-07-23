@@ -1,8 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 2026-07-23 Lane-CTR 已从 `origin/main@117df63dfd435f57cac8b700e11a200517f56d0d` 创建 `lane/ctr-v02-ca-ops-foundation-closure`；OPS foundation schemas 无 consumer、均 NO-GO；owner 已确认 `status.inspect` identity/selector/result/read authority/security/verifier、G0～G6 complete error map，以及 future AUDIT `privileged_read_decision` / `commit_privileged_read_decision` responsibility。因 AUDIT record/stream/commit-receipt machine triples 未登记且本批禁止合并 AUDIT registration，触发 TRUE-NO-GO：不登记 errors/schemas/descriptor/member，envelope/epoch binding 不擅自补全并留作 AUDIT blocker 解除后的唯一入口（见 [V02-CA-OPS-STATUS-INSPECT-01](V02-CA-OPS-STATUS-INSPECT-DECISION-MATRIX.md)）；exact registered assets = none。
-> 最后更新：2026-07-23（AUDIT PR #54 已 merge：`54929f1ed8fef1e09ffbb5593633f5d94d5e281e`，merge-triggered main CI `29937238562` 双平台成功；GitHub reviews/reviewDecision/requested reviewers 为空；owner-authorized security/audit/compliance 复审未发现阻断性设计缺陷，但不是外部人类、第三方或 GitHub review；**SIG independent security/cryptography review 仍未完成**。[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md) 逐项复核八个 candidate 后裁决全部 `blocked`，且 foundation 的 exact ID/SemVer/digest domain/empty-set/freeze-order/error/digest-cycle 选择未闭合，因此本批为 docs-only registration NO-GO，不登记 machine asset/member；OPS/TARGET/SIG/AUDIT machine contracts 仍未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**）
+> 最后更新：2026-07-23（v0.2 治理解阻计划：owner 已确认 WP-0 顺序/旁路 hash 算法，并在 WP-1 appointment HAL9001 为 Management Operations API Owner、HAL9002 为 Authoritative Audit Service Owner、HAL9003 为独立 Security & Privacy Reviewer；边界仍拟为独立部署服务的 authenticated/version-pinned internal API。endpoint/deployment evidence、conflict disclosure、consumer proof、final bytes/digests 与剩余 16 项 owner decisions 尚未提供；future AUDIT record candidate 已确认 `cognitiveos.audit.configuration-authority-record/0.2` / `0.2.0-draft.1` / `unregistered`，故仍非 registration GO。WP-2 SIG review intake 与 WP-6 TARGET consumer docket 已建立。所有 final bytes/digests、17 项 owner decisions、独立审查与三条 TARGET consumer 仍为 `owner decision required` 或 unproven。AUDIT privileged-read closure 保持 machine-registration NO-GO：record/stream/receipt/checkpoint/policy/key/error/extension 均未登记；OPS/TARGET/SIG/AUDIT contracts 未登记，D-016 open，D-022 blocking，CA-1～CA-8 blocked；pins **84/59/25**、self-check **40/40**、matrix impl **70**；Profile **implemented = 0**。见 [AUDIT docket](V02-CA-AUDIT-REAL-CONSUMER-OWNER-DOCKET.md)）
 
 ## 里程碑状态
 
@@ -57,7 +56,7 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **OPS foundation/member closure docs-only NO-GO** | `lane/ctr-v02-ca-ops-foundation-closure` | foundation 八项 decisions 已闭合但无真实 schema consumer；`status.inspect` through audit responsibility 已确认，但 unregistered AUDIT privileged-read responsibility/triples 触发 TRUE-NO-GO，envelope/epoch 未擅自补全；7 个新 errors、schemas、descriptor/member 均未登记；exact registered assets = none；八个 candidates 仍 blocked；SIG independent review、四类 registration、D-022 与 CA-1～CA-8 仍 pending/blocking |
+| Lane-CTR 契约与生成 | **WP-0/WP-1/WP-2/WP-6 governance preparation; machine-registration NO-GO** | `lane/ctr-v02-audit-privileged-read-registration` | PR #56/#57 unified baseline、AUDIT real-consumer、SIG review 与三条 TARGET consumer dockets 只准备可审计决策输入，不选择 consumer/reviewer/PR 顺序，不创建资产；17 项 bindings、final canonical bytes/digests、SIG independent review、TARGET consumers 和四类 registration 仍 pending；record/stream/receipt/checkpoint/policy/key/error/extension 均未登记，D-022 与 CA-1～CA-8 blocking |
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
@@ -67,9 +66,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md](../checkpoints/20260723-lane-ctr-v02-ca-ops-registration-readiness-handoff.md)（CTR：八项 eligibility audit；machine registration NO-GO；无 asset/member 登记）
-2. [20260722-lane-ctr-v02-ca-audit-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-audit-design-handoff.md)（CTR：AUDIT design merged；owner-authorized review provenance 由后续 handoff 更新）
-3. [20260722-lane-ctr-v02-ca-sig-design-handoff.md](../checkpoints/20260722-lane-ctr-v02-ca-sig-design-handoff.md)（CTR：SIG design merged；independent security review still unclaimed；profiles 未登记/不可用）
+1. [20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-appointments-handoff.md)（CTR：HAL9001/HAL9002/HAL9003 appointments；deployment/review proof 仍缺）
+2. [20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-owner-model-owner-decision-handoff.md)（CTR：owner 确认三方 role model + 独立服务 API）
+3. [20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md](../checkpoints/20260723-lane-ctr-v02-wp1-audit-consumer-direction-owner-decision-handoff.md)（CTR：owner 选定 A 为 AUDIT consumer 方向）
 
 ## 客户端目录治理交付
 

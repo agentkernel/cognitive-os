@@ -48,7 +48,7 @@ flowchart LR
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|
-| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-ca-ops-foundation-closure` | PR #55 merge `117df63` 与 main CI `29965295595` 双平台成功；foundation schemas 无 consumer、全部 NO-GO；`status.inspect` through audit responsibility 已确认，但 AUDIT privileged-read record/port/receipt 未登记触发 TRUE-NO-GO，envelope/epoch 未推进，7 个新 errors 仍仅为 owner decision（见 `V02-CA-OPS-FOUNDATION-01` / `V02-CA-OPS-STATUS-INSPECT-01`）；exact registered assets = none；八项 candidates 仍 blocked；SIG independent review、四类 machine registration、D-022 与 CA-1～CA-8 仍 pending/blocking |
+| `crates/cognitive-contracts`、`packages/contracts-ts`、`tests/golden/`、`specs/schemas/`（迁移期） | Lane-CTR | `lane/ctr-v02-audit-privileged-read-registration` | 独立 AUDIT privileged-read closure：现有 design 没有相反决定，但 17 项 mandatory bindings 缺最终 canonical bytes/digests，且没有真实独立 consumer；docs-only registration NO-GO，record/stream/receipt/checkpoint/policy/key/error/extension 均未登记，exact registered assets = none。PR #56 OPS 结论未改变；SIG independent review、四类 registration、D-022 与 CA-1～CA-8 仍 pending/blocking |
 | `crates/cognitive-conformance`、`tools/`、`.github/workflows/` | Lane-CFR | `main`（PR #46 已合入） | `SHELL-TARGET-AMBIGUITY-001` behavior pass；pins 59/25；self-check 40；见 `20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | `crates/cognitive-domain`、`cognitive-store`、`cognitive-kernel` | Lane-KRN | `lane/krn`（已建，worktree） | M4 已交付；M5 kernel 面可启动 |
 | `packages/sdk-ts`、`apps/agent-shell` | Lane-TSC | `lane/tsc`（已建分支） | 客户端骨架/生成绑定已交付；M5 真 transport 集成待 RUN |
