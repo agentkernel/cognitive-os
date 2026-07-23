@@ -54,13 +54,13 @@ Complete one record for each candidate considered. A blanket approval is invalid
 | Field | Required decision/evidence |
 |---|---|
 | Candidate | A, B, or C above; one record per candidate |
-| Consumer owner | **Owner-confirmed role model, 2026-07-23:** Management Operations API Owner owns the result-release gate; Authoritative Audit Service Owner owns durable audit persistence; actual person/team appointment still required and neither role may be the AUDIT packet author alone |
+| Consumer owner | **Owner-appointed 2026-07-23:** HAL9001 is Management Operations API Owner for the result-release gate; HAL9002 is Authoritative Audit Service Owner for durable audit persistence. They are distinct accountable owners and neither role may be the AUDIT packet author alone. |
 | Boundary | **Owner-confirmed role model, 2026-07-23:** independently deployed Management API and Authoritative Audit Service communicate through an authenticated, version-pinned internal service API; actual endpoint/deployment evidence still required |
 | Input triple | Exact future `(asset_id, SemVer, digest)` accepted by the consumer; may remain `owner decision required` until final bytes exist, but then selection cannot pass |
 | Deterministic result | Accepted/rejected outcomes and the responsible failure path |
 | Required facts | Each record/stream/receipt field whose removal causes rejection |
 | Failure oracle | Safe outcome on missing, stale, mismatched, reordered, or persistence-failed input |
-| Independence review | **Owner-confirmed role model, 2026-07-23:** Security & Privacy Reviewer, independent of both implementation owners; actual reviewer appointment, conflict disclosure, scope, date, and conclusion still required |
+| Independence review | **Owner-appointed 2026-07-23:** HAL9003 is Security & Privacy Reviewer, independent of HAL9001 and HAL9002. Conflict disclosure, review scope, date, methods, and conclusion remain required before a review claim. |
 | Owner decision | `selected` — candidate A, 2026-07-23; accountable owners and boundary still required |
 
 ## 5. Seventeen itemized AUDIT owner decisions
