@@ -8,12 +8,24 @@
 
 use cognitive_contracts::canonical;
 use jsonschema::Validator;
+use serde::Deserialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 const CANDIDATE_DOMAIN: &str = "ordinary-core-audit-candidate-file/0.2";
+
+#[derive(Debug, Deserialize)]
+struct ErrorRegistry {
+    errors: Vec<RegisteredError>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RegisteredError {
+    code: String,
+}
 
 fn candidate_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -39,10 +51,52 @@ fn validator(path: &Path) -> Validator {
         .unwrap_or_else(|e| panic!("compile {}: {e}", path.display()))
 }
 
+fn registered_public_error_codes() -> BTreeSet<String> {
+    let registry_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("specs")
+        .join("registry")
+        .join("errors.yaml");
+    let registry: ErrorRegistry = serde_yaml::from_slice(
+        &fs::read(&registry_path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", registry_path.display())),
+    )
+    .unwrap_or_else(|e| panic!("parse {}: {e}", registry_path.display()));
+    registry
+        .errors
+        .into_iter()
+        .map(|entry| entry.code)
+        .collect()
+}
+
+fn candidate_safe_reason_codes(schema: &Value) -> BTreeSet<String> {
+    schema["properties"]["safe_reason"]["enum"]
+        .as_array()
+        .expect("safe_reason must use a closed enum")
+        .iter()
+        .map(|value| {
+            value
+                .as_str()
+                .expect("safe_reason enum entries must be strings")
+                .to_owned()
+        })
+        .collect()
+}
+
 #[test]
 fn ordinary_core_audit_candidate_schemas_close_real_fields_and_terminal_outcomes() {
     let root = candidate_root();
-    let decision = validator(&root.join("privileged-read-decision.candidate.schema.json"));
+    let decision_schema = json(&root.join("privileged-read-decision.candidate.schema.json"));
+    assert_eq!(
+        candidate_safe_reason_codes(&decision_schema),
+        registered_public_error_codes(),
+        "candidate safe_reason enum must exactly close over registered public error codes"
+    );
+    let decision = jsonschema::options()
+        .should_validate_formats(true)
+        .build(&decision_schema)
+        .expect("compile decision candidate schema");
     let receipt = validator(&root.join("audit-commit-receipt.candidate.schema.json"));
     let fixtures = json(&root.join("fixtures.json"));
 
@@ -62,6 +116,33 @@ fn ordinary_core_audit_candidate_schemas_close_real_fields_and_terminal_outcomes
     assert!(
         !decision.is_valid(&success),
         "success must not expose a denial/error reason"
+    );
+
+    let mut denied_without_reason = fixtures["denied"]["record"].clone();
+    denied_without_reason
+        .as_object_mut()
+        .expect("denied object")
+        .remove("safe_reason");
+    assert!(
+        !decision.is_valid(&denied_without_reason),
+        "denied must carry an allowed safe reason"
+    );
+
+    let mut error_without_reason = fixtures["error"]["record"].clone();
+    error_without_reason
+        .as_object_mut()
+        .expect("error object")
+        .remove("safe_reason");
+    assert!(
+        !decision.is_valid(&error_without_reason),
+        "error must carry an allowed safe reason"
+    );
+
+    let mut unregistered_reason = fixtures["error"]["record"].clone();
+    unregistered_reason["safe_reason"] = Value::String("UNREGISTERED_AUDIT_REASON".to_owned());
+    assert!(
+        !decision.is_valid(&unregistered_reason),
+        "unregistered safe reasons must be rejected"
     );
 
     let mut denied = fixtures["denied"]["record"].clone();
