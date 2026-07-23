@@ -18,11 +18,13 @@
 pub mod clock;
 pub mod faults;
 pub mod ids;
+pub mod installation;
 pub mod sqlite;
 
 pub use clock::SystemClock;
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use ids::UuidV7Generator;
+pub use installation::{InstallationCommit, InstallationStoreError, SqliteInstallationStore};
 pub use sqlite::SqliteAuthorityStore;
 
 /// Authority store backend implemented by this crate (ADR-0002).
