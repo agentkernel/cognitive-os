@@ -105,3 +105,13 @@ remain excluded and untouched; `personal-blog/**` was not touched. This evidence
 only validates Lane-CTR machine assets and local gates: Lane-RUN consumption and
 Lane-CFR behavior remain pending, CA-0 GO remains no, and Profile implemented
 remains 0.
+
+## Delivery status
+
+- Registration commit: `b1b6d90983ebc280937ae1b0faf2dc9e286a8d7e`
+  (`feat(ctr): register Ordinary Core AUDIT assets (ADR-0014, D-022)`).
+- Remote branch: `origin/lane/ctr-v02-ordinary-core-audit-machine-registration`.
+- Pull request: `https://github.com/agentkernel/cognitive-os/pull/68`.
+- The initial PR revision passed both `verify (ubuntu-latest)` and
+  `verify (windows-latest)`. This delivery metadata commit must receive the
+  same PR checks before merge; no merge or Profile claim is made here.
