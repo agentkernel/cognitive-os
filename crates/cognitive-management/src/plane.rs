@@ -11,6 +11,11 @@
 //! structurally absent: the only model seam is the experimental shell
 //! slot, which no verb reads (tests pin zero calls on a probe).
 
+use crate::audit::{
+    AuditedInspectError, ManagementAuditPort, PRIVILEGED_READ_REQUEST_DOMAIN,
+    PRIVILEGED_READ_RESULT_DOMAIN, PrivilegedReadDecision, PrivilegedReadOutcome,
+    ResultReleaseGate, digest_value,
+};
 use crate::error::{ManagementDenial, ManagementError};
 use crate::governance::GovernanceLedger;
 use crate::model::ModelProvider;
@@ -370,6 +375,67 @@ where
             last_event_sequence: last_event.map(|(_, sequence)| sequence),
             fencing_epoch: self.store.current_fencing_epoch()?,
         })
+    }
+
+    /// Ordinary Core tracer — inspect authority state and release the report
+    /// only after a matching privileged-read audit commit receipt.
+    ///
+    /// The candidate audit carrier is intentionally internal until final-byte
+    /// review/registration. Its deterministic behavior is implemented now so
+    /// contract freeze can consume real implementation feedback (ADR-0014).
+    pub fn inspect_with_audit<A: ManagementAuditPort>(
+        &self,
+        session: &PrivilegedManagementSession,
+        request: &InspectRequest,
+        audit: &A,
+    ) -> Result<InspectReport, AuditedInspectError> {
+        let observed_at = self.now()?;
+        let record_id = self.ids.next_uuid_v7().map_err(ManagementError::from)?;
+        let request_digest = digest_value(
+            &json!({
+                "domain": request.domain.as_str(),
+                "object_id": request.object_id.as_str(),
+            }),
+            PRIVILEGED_READ_REQUEST_DOMAIN,
+        )?;
+
+        let result = self.inspect(session, request);
+        let (outcome, safe_reason, result_digest) = match &result {
+            Ok(report) => (
+                PrivilegedReadOutcome::Success,
+                None,
+                Some(digest_value(
+                    &serde_json::to_value(report).map_err(|err| {
+                        crate::AuditPortFailure::new(format!("serialize inspect report: {err}"))
+                    })?,
+                    PRIVILEGED_READ_RESULT_DOMAIN,
+                )?),
+            ),
+            Err(error) => {
+                let parts = error.registered_parts();
+                let outcome = if matches!(error, ManagementError::Denied(_)) {
+                    PrivilegedReadOutcome::Denied
+                } else {
+                    PrivilegedReadOutcome::Error
+                };
+                (outcome, Some(parts.code), None)
+            }
+        };
+
+        let record = PrivilegedReadDecision {
+            record_kind: "privileged_read_decision".to_owned(),
+            record_id,
+            request_digest,
+            outcome,
+            safe_reason,
+            result_digest,
+            observed_at,
+        };
+        let record_digest = record.canonical_digest()?;
+        let receipt = audit.commit_privileged_read_decision(&record, &record_digest)?;
+        ResultReleaseGate::validate(&record, &record_digest, &receipt)?;
+
+        result.map_err(AuditedInspectError::Management)
     }
 
     /// Verb 2 — stop: deterministically terminate an agent-execution

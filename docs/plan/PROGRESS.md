@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（ADR-0014 / `V02-ORDINARY-CORE-01`：面向普通个人与普通企业，将 v0.2 分为 Ordinary Core 与 High-Assurance extension。Core operation 缩为 session.create_restricted/status.inspect/capability.revoke/execution.stop/effect.reconcile；三类 configure、detached object signatures、R2/R3、独立部署 AUDIT/TARGET verifier、checkpoint/export/legal/key delegation 不再阻塞 Core。非循环 gate 允许 test-first internal tracer implementation；首批为 status.inspect + in-process deterministic AUDIT lower + receipt-before-result。machine registration、行为向量与 Profile claim 仍未发生；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [Ordinary Core decision](V02-ORDINARY-CORE-REFACTOR-DECISION.md)）
+> 最后更新：2026-07-23（Ordinary Core status.inspect AUDIT tracer：内部 `ManagementAuditPort`、safe digested `PrivilegedReadDecision`、`AuditCommitReceipt`、`ResultReleaseGate` 与 `inspect_with_audit` implementation 已提供；audit failure/receipt mismatch 时不释放结果，protected not-found 只进入 safe digest/reason。测试先行；targeted 3/3、完整 cognitive-management 13/13、strict clippy/fmt 通过。durable adapter、产品路径强制 wiring、machine registration、conformance behavior 与 Profile claim 仍未提供；pins **84/59/25**、self-check **40/40**、matrix impl **70**、Profile **implemented = 0**。见 [handoff](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md)）
 
 ## 里程碑状态
 
@@ -60,15 +60,15 @@
 | Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **shell target ambiguity authority 已合入**（PR #45） | `main` @ `eef258d` | `target_resolution::admit_target_selector`；handoff：`20260722-lane-run-shell-target-ambiguity-handoff.md` |
+| Lane-RUN 运行时与管理面 | **Ordinary Core audit-before-result tracer implemented/tested (internal candidate)** | `lane/run-v02-ordinary-core-audit-tracer` | port/record/receipt/release gate + 3 tests；durable adapter 与 external product wiring 下一批；非 machine registration/conformance/Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md)（CTR：Ordinary Core/High-Assurance split；Core tracer development gate open）
-2. [20260723-lane-ctr-v02-external-evidence-attestations-handoff.md](../checkpoints/20260723-lane-ctr-v02-external-evidence-attestations-handoff.md)（CTR：HAL9003 与 AUDIT/TARGET evidence forms 已准备；High-Assurance submissions 仍缺）
-3. [20260723-lane-ctr-v02-cross-family-agent-review-handoff.md](../checkpoints/20260723-lane-ctr-v02-cross-family-agent-review-handoff.md)（CTR：4 项 design/status finding 已修正）
+1. [20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-tracer-handoff.md)（RUN：`status.inspect` audit-before-result 内部 tracer 已实现并测试；durable adapter/product wiring 待续）
+2. [20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-refactor-handoff.md)（CTR：Ordinary Core/High-Assurance split；Core tracer development gate open）
+3. [20260723-lane-ctr-v02-external-evidence-attestations-handoff.md](../checkpoints/20260723-lane-ctr-v02-external-evidence-attestations-handoff.md)（CTR：HAL9003 与 AUDIT/TARGET evidence forms 已准备；High-Assurance submissions 仍缺）
 
 ## 客户端目录治理交付
 

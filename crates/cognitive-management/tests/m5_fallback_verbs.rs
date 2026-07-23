@@ -36,12 +36,14 @@ use cognitive_kernel::{
     AdmitCommand, Causation, Reason, TablePin, TransitionCommand, TransitionEngine,
 };
 use cognitive_management::{
-    GovernanceLedger, InspectRequest, ManagementError, ManagementPlane, ModelProvider,
-    PrivilegedManagementSession, StopRequest,
+    AuditCommitReceipt, AuditPortFailure, AuditedInspectError, GovernanceLedger, InspectRequest,
+    ManagementAuditPort, ManagementError, ManagementPlane, ModelProvider,
+    PrivilegedManagementSession, PrivilegedReadDecision, PrivilegedReadOutcome, StopRequest,
 };
 use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
 use serde_json::{Value, json};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -963,4 +965,136 @@ fn inspect_reports_authority_state_and_writes_nothing() {
         )
         .unwrap_err();
     assert_eq!(denial_code(&missing), "CONTEXT_AUTH_DENIED");
+}
+
+#[derive(Clone, Copy)]
+enum AuditMode {
+    Commit,
+    Fail,
+    Mismatch,
+}
+
+struct RecordingAuditPort {
+    mode: AuditMode,
+    committed: RefCell<Vec<PrivilegedReadDecision>>,
+}
+
+impl RecordingAuditPort {
+    fn new(mode: AuditMode) -> Self {
+        Self {
+            mode,
+            committed: RefCell::new(Vec::new()),
+        }
+    }
+}
+
+impl ManagementAuditPort for RecordingAuditPort {
+    fn commit_privileged_read_decision(
+        &self,
+        record: &PrivilegedReadDecision,
+        record_digest: &str,
+    ) -> Result<AuditCommitReceipt, AuditPortFailure> {
+        if matches!(self.mode, AuditMode::Fail) {
+            return Err(AuditPortFailure::new("injected audit persistence failure"));
+        }
+        self.committed.borrow_mut().push(record.clone());
+        Ok(AuditCommitReceipt {
+            record_id: record.record_id.clone(),
+            record_digest: if matches!(self.mode, AuditMode::Mismatch) {
+                "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_owned()
+            } else {
+                record_digest.to_owned()
+            },
+            request_digest: record.request_digest.clone(),
+            sequence: 1,
+            writer_epoch: 1,
+            committed_at: ts("2026-07-20T12:00:00Z"),
+        })
+    }
+}
+
+#[test]
+fn ordinary_core_inspect_releases_only_after_matching_audit_receipt() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&dir.path().join("authority.db")).unwrap();
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let (execution_id, _) = seed_runnable_execution(&store, &clock, &ids, 0x3301);
+    let plane = ManagementPlane::deterministic(&store, &clock, &ids);
+    let audit = RecordingAuditPort::new(AuditMode::Commit);
+
+    let report = plane
+        .inspect_with_audit(
+            &active_session(),
+            &InspectRequest {
+                domain: LifecycleDomain::AgentExecution,
+                object_id: execution_id,
+            },
+            &audit,
+        )
+        .unwrap();
+
+    assert_eq!(report.state, "RUNNABLE");
+    let committed = audit.committed.borrow();
+    assert_eq!(committed.len(), 1);
+    assert_eq!(committed[0].outcome, PrivilegedReadOutcome::Success);
+    assert!(committed[0].result_digest.is_some());
+}
+
+#[test]
+fn ordinary_core_inspect_withholds_result_on_audit_failure_or_receipt_mismatch() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&dir.path().join("authority.db")).unwrap();
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let (execution_id, _) = seed_runnable_execution(&store, &clock, &ids, 0x3302);
+    let plane = ManagementPlane::deterministic(&store, &clock, &ids);
+    let request = InspectRequest {
+        domain: LifecycleDomain::AgentExecution,
+        object_id: execution_id,
+    };
+
+    for mode in [AuditMode::Fail, AuditMode::Mismatch] {
+        let audit = RecordingAuditPort::new(mode);
+        let err = plane
+            .inspect_with_audit(&active_session(), &request, &audit)
+            .unwrap_err();
+        assert!(matches!(err, AuditedInspectError::Audit(_)));
+    }
+}
+
+#[test]
+fn ordinary_core_missing_object_is_audited_without_existence_facts() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&dir.path().join("authority.db")).unwrap();
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let plane = ManagementPlane::deterministic(&store, &clock, &ids);
+    let audit = RecordingAuditPort::new(AuditMode::Commit);
+
+    let err = plane
+        .inspect_with_audit(
+            &active_session(),
+            &InspectRequest {
+                domain: LifecycleDomain::AgentExecution,
+                object_id: oid(0xdead),
+            },
+            &audit,
+        )
+        .unwrap_err();
+
+    match err {
+        AuditedInspectError::Management(denial) => {
+            assert_eq!(denial_code(&denial), "CONTEXT_AUTH_DENIED")
+        }
+        other => panic!("expected protected-read denial, got {other:?}"),
+    }
+    let committed = audit.committed.borrow();
+    assert_eq!(committed.len(), 1);
+    assert_eq!(committed[0].outcome, PrivilegedReadOutcome::Denied);
+    assert_eq!(
+        committed[0].safe_reason.as_deref(),
+        Some("CONTEXT_AUTH_DENIED")
+    );
+    assert!(committed[0].result_digest.is_none());
 }
