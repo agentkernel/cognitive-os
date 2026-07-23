@@ -78,5 +78,11 @@ restored to `HEAD` and are not part of this docs-only batch. No new AUDIT/OPS
 behavior vector was invoked; existing workspace tests are not new AUDIT/OPS
 behavior evidence.
 
-Decision/NO-GO commit: `48551e3`. A final handoff-sync commit, PR URL/head,
-and CI conclusions are to be appended after they occur.
+Decision/NO-GO commit: `48551e3`; first handoff-sync commit: `c6a2ed7`.
+PR: [#57](https://github.com/agentkernel/cognitive-os/pull/57), opened without
+review requests and titled `docs(ca): AUDIT privileged-read registration NO-GO`.
+At head `c6a2ed773770ceea8d367d1d996ab5ba723b24a8`, CI run `29972541641`
+succeeded on Ubuntu job `89097436597` and Windows job `89097436540`. The
+ordinary CI run is repository verification only, not new AUDIT/OPS behavior
+evidence. This final handoff synchronization requires a new head and its own
+CI recheck; the PR remains open and is not auto-merged.
