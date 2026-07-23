@@ -36,6 +36,24 @@ fn main() {
         }
         return;
     }
+    if args.iter().any(|arg| arg == "--serve") {
+        let bind = args
+            .iter()
+            .position(|arg| arg == "--bind")
+            .and_then(|i| args.get(i + 1))
+            .map_or("127.0.0.1:8080", String::as_str);
+        if !bind.starts_with("127.") && !bind.starts_with("[::1]") {
+            eprintln!(
+                "kernel-server: --serve is loopback-only until authenticated deployment middleware exists"
+            );
+            std::process::exit(2);
+        }
+        if let Err(error) = serve(bind) {
+            eprintln!("kernel-server: {error}");
+            std::process::exit(1);
+        }
+        return;
+    }
     println!(
         "kernel-server M0 skeleton: no server is started. Readiness grades: {}.",
         readiness_grades().join(" -> ")
@@ -55,6 +73,21 @@ fn main() {
 fn serve_once(bind: &str) -> Result<(), String> {
     let listener = TcpListener::bind(bind).map_err(|e| e.to_string())?;
     let (mut stream, _) = listener.accept().map_err(|e| e.to_string())?;
+    serve_connection(&mut stream)
+}
+
+fn serve(bind: &str) -> Result<(), String> {
+    let listener = TcpListener::bind(bind).map_err(|e| e.to_string())?;
+    for incoming in listener.incoming() {
+        let mut stream = incoming.map_err(|e| e.to_string())?;
+        if let Err(error) = serve_connection(&mut stream) {
+            eprintln!("kernel-server connection: {error}");
+        }
+    }
+    Ok(())
+}
+
+fn serve_connection(stream: &mut std::net::TcpStream) -> Result<(), String> {
     let mut bytes = Vec::new();
     let mut chunk = [0_u8; 4096];
     loop {
