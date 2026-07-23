@@ -32,7 +32,7 @@ Local evidence (gitignored, no credential or raw transcript) is recorded at
 | --- | --- | --- | --- |
 | P1 | Candidate-only Pi launcher and real DeepSeek smoke/evaluation | no-tools policy tests; actual model and latency output; zero authority/Effect | delivered in this batch |
 | P2 | Pi supply-chain verifier | immutable package source, digest/SRI plus a trusted signature/provenance policy accepted by `SignatureProvenancePort` | blocked: npm SRI alone is not the required trusted signature/provenance evidence |
-| P3 | Durable InstallationStore | SQLite process-recovery, atomic visibility and management-authority commit for `AgentInstallation` | pending Lane-KRN/RUN split; in-process ledger is insufficient |
+| P3 | Durable InstallationStore | SQLite process-recovery, atomic visibility and management-authority commit for `AgentInstallation` | KRN slice ready for review: WAL staging→commit, explicit interrupted-staging recovery, immutable committed rows and cross-handle tests; RUN authority consumption remains pending, so this is not an `AgentInstallation` commit |
 | P4 | OS sandbox adapter | Linux-native negative evidence for filesystem/network/secrets/subprocess/tool-proxy and no cross-platform claim merge | pending; Windows-native remains unsupported |
 | P5 | Pi lifecycle/I/O adapter | mediated tool/memory/completion/checkpoint/recovery mapping; bypass, revoke and OOB tests | pending after P3/P4 |
 | P6 | Governed installation and evaluation | committed installation with no automatic high-risk capability; prerequisite behavior vectors; preregistered workload report | blocked by P2-P5 |
