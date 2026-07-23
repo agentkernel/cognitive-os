@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（Lane-CTR Ordinary Core `status.inspect` AUDIT minimal machine registration 已由 PR #68 合入 `main`：两份正式 schema、normative companion 与 Rust/TS generated bindings；candidate bytes 保持不变。Lane-RUN 已让 audited runtime production path 直接消费正式 `OrdinaryCorePrivilegedReadDecision` / `OrdinaryCoreAuditCommitReceipt`，移除重复 wire DTO，并以正式闭合 enum、跨字段校验、durable readback/digest 与 receipt release gate 保持 audit-before-result；实现已提供、测试已执行，PR #69 双平台 CI 全绿并已合入 `main`。Lane-CFR conformance behavior 仍 pending；D-022 整体仍 blocking；CA-0 GO = no；High-Assurance deferred；Profile **implemented = 0**。）
+> 最后更新：2026-07-23（经批准的 Lane-CFR + Lane-CTR 原子例外已为 Ordinary Core `status.inspect` 登记 `ORDINARY-CORE-AUDIT-INSPECT-001`，同时映射 `REQ-AUDIT-001` / `REQ-AUDIT-002` 并刷新 matrix。runner 最小行为实现已提供，向量测试已执行：公开 `inspect_with_audit` + durable file audit + 正式 decision/receipt + release gate，真实结果 **85 vectors / 60 pass / 25 not-run / 0 fail**，self-check **41/41**；candidate/schema/generated/golden 与 Lane-RUN 生产路径未改。此向量证据不构成 machine-registration 总体完成、CA-0 GO、High-Assurance、Profile 已符合或 D-022 解除；D-022 仍 blocking，Profile **implemented = 0**。）
 
 ## 里程碑状态
 
@@ -29,18 +29,18 @@
 |---|---|
 | 规范已登记（specified） | **273**（40 域；errors 55 码；schema **63**；迁移表 5） |
 | 实现已提供（构建通过且有实现代码的 REQ） | **70**（matrix 实测非空 impl；shell channel + target resolution 两批各回填 2 条后的当前值） |
-| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 32 向量**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + M5-shell-channel 1 + **SHELL-TARGET-AMBIGUITY-001** + M6 3）+ workspace Rust 项 + tracer bullet；静态 27/81；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
+| 测试已执行（行为层，runner 真实执行并留证据） | **行为执行 33 向量**（既有 32 + **ORDINARY-CORE-AUDIT-INSPECT-001**）+ workspace Rust 项 + tracer bullet；静态执行 27 向量；**均不构成 Profile 覆盖声明**；TS **85** 项（sdk-ts 72 / agent-shell 13） |
 | Profile 已符合（implemented） | 0（样例 manifest 全 `planned`；RC manifest ≤ `experimental`） |
 
-## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-22 Lane-CFR shell-target-ambiguity 行为批）
+## 向量分层计数（15 层 + 跨切片；实测：conformance runner，2026-07-23 Ordinary Core AUDIT 行为批）
 
 | 状态 | 计数 |
 |---|---|
-| 向量总数 | **84** |
-| **pass** | **59** = 静态 27 + **行为 32**（M2 3 + M3 9 + M4 7 + M5 6 + M5-intent 2 + SHELL-CHANNEL-ISOLATION-003 + **SHELL-TARGET-AMBIGUITY-001** + M6 3） |
+| 向量总数 | **85** |
+| **pass** | **60** = 静态 27 + **行为 33**（既有 32 + **ORDINARY-CORE-AUDIT-INSPECT-001**） |
 | fail / not-applicable / documented-degradation | 0 / 0 / 0 |
-| **not-run** | **25**（含 MGMT-FALLBACK 全动词、shell migration、delta-scope、store-degradation disk-full 等） |
-| 错误实现自检 | **40/40 corrupted 向量全部翻 fail**（+1 shell-target）；CI 地板 ≥40 |
+| **not-run** | **25**（含 MGMT-FALLBACK 其余未执行范围、shell migration、delta-scope、store-degradation disk-full 等） |
+| 错误实现自检 | **41/41 corrupted 向量全部翻 fail**（新增 audit-before-release / receipt mismatch anti-pattern）；CI 地板 ≥41 |
 
 分层明细见 `artifacts/evidence/conformance/conformance-report.json`（本地再生成：`cargo run -p cognitive-conformance --bin conformance-runner`；报告 sha256 由 runner 打印）。层 7/8 无专属 slug = D-004 已按文档化跨切片映射闭合（conformance/README + runner `CROSS_SLICE_HOSTED`）。
 
@@ -56,19 +56,19 @@
 
 | 车道 | 状态 | 分支 | 当前任务 |
 |---|---|---|---|
-| Lane-CTR 契约与生成 | **Ordinary Core AUDIT minimal machine registration merged (PR #68)** | `main` @ `2baef99` | formal decision/receipt schemas + minimal responsibility companion + Rust/TS bindings registered; Lane-RUN consumption provided; Lane-CFR behavior pending; no CA-0/Profile claim |
-| Lane-CFR 符合性与工具 | **shell-target-ambiguity 已合入 main（PR #46）** | `main` @ `0ab3ab4` | pins **59/25**；self-check 40；`SHELL-TARGET-AMBIGUITY-001` pass；handoff：`20260722-lane-cfr-shell-target-ambiguity-handoff.md` |
+| Lane-CTR 契约与生成 | **Ordinary Core AUDIT vector mapping registered in joint batch** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `REQ-AUDIT-001` / `002` both map to `ORDINARY-CORE-AUDIT-INSPECT-001`; matrix is fresh; no schema/candidate semantics changed |
+| Lane-CFR 符合性与工具 | **Ordinary Core AUDIT vector test executed** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `ORDINARY-CORE-AUDIT-INSPECT-001` pass via audited public consumer; pins **60/25**; self-check **41/41**; non-Profile claim |
 | Lane-KRN 内核主线 | **M5 kernel 侧批已交付** | `lane/krn` | D-018 端口残留（v0.1 non-claim）；InstallationStore 未做（durable non-claim）；Post-v0.1 计划标 P2 |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption merged (PR #69)** | `main` @ `ddb782c` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；Lane-CFR behavior pending，非 Profile claim |
+| Lane-RUN 运行时与管理面 | **Ordinary Core formal AUDIT binding consumption merged (PR #69)** | `main` @ `ddb782c` | production port/inspect/file journal/release gate 直接消费正式 bindings；durability、audit-before-result、无 stdout fail-closed 与 crate-private unaudited primitive 保持；Lane-CFR vector test executed，non-Profile claim |
 | Lane-DOC 文档维护 | **Post-v0.1 下一阶段计划落盘** | `lane/doc-post-v01-next-phase` | 计划+执行提示词+handoff；V01 L3 non-claim 继承；见 [20260721-post-v01-next-phase-planning-handoff.md](../checkpoints/20260721-post-v01-next-phase-planning-handoff.md) |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
-2. [20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md)（CTR：minimal machine registration 已由 PR #68 合入 `main`）
-3. [20260723-lane-run-v02-inspect-api-hardening-handoff.md](../checkpoints/20260723-lane-run-v02-inspect-api-hardening-handoff.md)（RUN：未审计 inspect 收紧为 crate-private；外部旁路编译面关闭）
+1. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
+2. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
+3. [20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md)（CTR：minimal machine registration 已由 PR #68 合入 `main`）
 
 ## 客户端目录治理交付
 

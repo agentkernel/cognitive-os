@@ -69,9 +69,9 @@ The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_c
 
 ## Running
 
-The reference runner is `crates/cognitive-conformance` (M4 capability:
-static-contract execution plus kernel-behavioral execution, including
-fault-injected crash recovery).
+The reference runner is `crates/cognitive-conformance` (static-contract plus
+behavioral execution through the M2-M6 public surfaces and the Ordinary Core
+audited `status.inspect` consumer).
 `vectors/*.json` stay declarative inputs and expected outcomes usable by
 any runner author.
 
@@ -95,8 +95,13 @@ stagnation, candidate narrowing, prompt-injection isolation), executes the
 M4 effect/recovery vectors through the public fault-injection framework
 (`cognitive_store::faults`: CrashHarness drop-and-reopen crashes and a
 scripted external executor — three crash points, unknown-outcome
-quarantine, idempotency-conflict refusal, reconcile-before-resume), and
-writes a five-state machine report plus the sample profile manifest to
+quarantine, idempotency-conflict refusal, reconcile-before-resume), executes
+the M5/M6 public-surface cases plus
+`ORDINARY-CORE-AUDIT-INSPECT-001` through
+`ManagementPlane::inspect_with_audit`, `FileManagementAuditLog`, and
+`ResultReleaseGate` (durable decision readback, formal receipt binding, and
+mismatch withholding), then writes a five-state machine report plus the
+sample profile manifest to
 `artifacts/evidence/conformance/` (gitignored). Vectors whose expectations
 require runtime behavior of later milestones are reported `not-run` with a
 recorded reason (`docs/standards/conformance-evidence.md` section 2). A

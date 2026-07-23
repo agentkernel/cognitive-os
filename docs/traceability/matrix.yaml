@@ -1497,7 +1497,9 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - ORDINARY-CORE-AUDIT-INSPECT-001
     vectors:
+      - conformance/vectors/ordinary-core-audit-inspect-001.json
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-management/src/audit.rs
@@ -1511,15 +1513,17 @@ requirements:
     docs:
       - specs/core/ordinary-core-audit.md
     notes: Formal decision/receipt schemas and generated bindings are registered/provided for Ordinary Core status.inspect.
-      Lane-RUN production binding adoption is provided and its runtime tests execute; Lane-CFR conformance behavior
-      remains pending.
+      Lane-RUN production binding adoption is provided, and ORDINARY-CORE-AUDIT-INSPECT-001 has executed against the
+      audited public consumer; this is vector-scoped evidence, not a Profile claim.
   - id: REQ-AUDIT-002
     owner: audit-002
     owner_spec: specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - ORDINARY-CORE-AUDIT-INSPECT-001
     vectors:
+      - conformance/vectors/ordinary-core-audit-inspect-001.json
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-management/src/audit.rs
@@ -1532,8 +1536,9 @@ requirements:
       - docs/plan/candidates/v02-ordinary-core-audit/registration-readiness.md
     docs:
       - specs/core/ordinary-core-audit.md
-    notes: Minimal port responsibility is registered in the normative companion. Cross-object receipt binding and time
-      ordering are exercised by Lane-RUN runtime tests; no behavior-vector pass, CA-0 GO, or Profile claim is made.
+    notes: Minimal port responsibility is registered in the normative companion. ORDINARY-CORE-AUDIT-INSPECT-001 has
+      executed durable readback, receipt binding, positive sequence/epoch, time ordering, and mismatch withholding; no
+      CA-0 GO, High-Assurance, D-022 closure, or Profile claim is made.
   - id: REQ-AUTH-001
     owner: auth-001
     owner_spec: specs/core/README.md

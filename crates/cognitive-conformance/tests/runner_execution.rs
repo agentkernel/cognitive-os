@@ -28,7 +28,7 @@ fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
 }
 
-/// Reference-run distribution over the committed 81-vector corpus. These
+/// Reference-run distribution over the committed 85-vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
 /// 2026-07-20 Lane-CFR M4 batch: seven effect/recovery vectors leave
@@ -37,8 +37,8 @@ fn repo_root() -> PathBuf {
 /// 2026-07-20 Lane-CTR F-011 batch: +3 behavioral management-approval
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
-const TOTAL: usize = 84;
-const PASS: usize = 59;
+const TOTAL: usize = 85;
+const PASS: usize = 60;
 const NOT_RUN: usize = 25;
 
 /// The M2 kernel-behavioral executions and their report modes.
@@ -99,6 +99,11 @@ const BEHAVIORAL_M6: [(&str, &str); 3] = [
     ("AGENT-BYPASS-002", "AgentBypassBehavior"),
     ("AGENT-OOB-001", "AgentOobBehavior"),
 ];
+
+const ORDINARY_CORE_AUDIT: (&str, &str) = (
+    "ORDINARY-CORE-AUDIT-INSPECT-001",
+    "OrdinaryCoreAuditInspectBehavior",
+);
 
 #[test]
 fn reference_run_distribution_is_honest_and_pinned() {
@@ -330,6 +335,42 @@ fn m5_behavioral_vectors_execute_against_run_surfaces() {
     }
 }
 
+/// Ordinary Core `status.inspect` must exercise the audited public consumer,
+/// durable decision readback, formal decision/receipt bindings, and the
+/// receipt-validation release gate.
+#[test]
+fn ordinary_core_audit_inspect_executes_before_result_release() {
+    let root = repo_root();
+    let vectors = enumerate_vectors(&root).expect("corpus enumerates");
+    let outcomes =
+        execute_all(&root, &vectors, ImplementationKind::Reference).expect("reference execution");
+    let (id, mode) = ORDINARY_CORE_AUDIT;
+    let outcome = outcomes
+        .iter()
+        .find(|outcome| outcome.id == id)
+        .unwrap_or_else(|| panic!("{id} missing from corpus"));
+    assert_eq!(
+        outcome.result,
+        "pass",
+        "{id} must pass behaviorally: {:?}",
+        outcome.execution.as_ref().map(|record| &record.mismatches)
+    );
+    let record = outcome.execution.as_ref().expect("execution record");
+    assert_eq!(format!("{:?}", record.mode), mode);
+    assert!(
+        record.implementation.contains("inspect_with_audit")
+            && record.implementation.contains("FileManagementAuditLog"),
+        "implementation label must name the audited public consumer and durable adapter, got {}",
+        record.implementation
+    );
+    assert!(
+        record
+            .grounding
+            .iter()
+            .any(|path| path == "specs/core/ordinary-core-audit.md")
+    );
+}
+
 /// M5 Intent Authority: supersede fencing + acceptance gate against KRN/store.
 #[test]
 fn m5_intent_authority_vectors_execute_against_kernel_store() {
@@ -520,8 +561,8 @@ fn wrong_implementation_is_failed_by_the_runner() {
     // Every observably corrupted gate must be represented and flipped
     // (M2: gate-bypassing store writer; M3: governance anti-patterns;
     // M4: effect/recovery anti-patterns).
-    assert_eq!(report.must_flip.len(), 40, "corrupted vector set drifted");
-    assert_eq!(report.flipped_to_fail.len(), 40);
+    assert_eq!(report.must_flip.len(), 41, "corrupted vector set drifted");
+    assert_eq!(report.flipped_to_fail.len(), 41);
     assert!(report.corrupted_but_still_passing.is_empty());
     for id in [
         "GOBJ-LEGACY-METADATA-001",
@@ -558,6 +599,7 @@ fn wrong_implementation_is_failed_by_the_runner() {
         "AGENT-INSTALL-001",
         "AGENT-BYPASS-002",
         "AGENT-OOB-001",
+        "ORDINARY-CORE-AUDIT-INSPECT-001",
     ] {
         assert!(
             report.flipped_to_fail.iter().any(|f| f == id),
