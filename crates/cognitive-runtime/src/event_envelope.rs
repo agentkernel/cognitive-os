@@ -1,6 +1,7 @@
-//! D-018 publication-boundary assembler: committed fact plus governed header.
+//! D-018 publication-boundary assembler: committed fact plus its durable
+//! governance header.
 use cognitive_contracts::generated::{event, governed_object_header::GovernedObjectHeader};
-use cognitive_kernel::ports::CommittedEvent;
+use cognitive_kernel::ports::{CommittedEvent, GovernanceObjectStore};
 use serde_json::{Value, json};
 
 #[derive(Debug, thiserror::Error)]
@@ -8,7 +9,25 @@ pub enum EventEnvelopeError {
     #[error("invalid committed event: {0}")]
     Invalid(String),
 }
-pub fn assemble_event(
+/// Assemble a publication envelope from the authority store's immutable
+/// governance record. A runtime caller cannot substitute a header from an
+/// untrusted request or projection.
+pub fn assemble_persisted_event<S>(
+    store: &S,
+    committed: &CommittedEvent,
+    ingest_time: &str,
+) -> Result<Value, EventEnvelopeError>
+where
+    S: GovernanceObjectStore,
+{
+    let header = store
+        .load_governed_object_header(&committed.object_id)
+        .map_err(|err| EventEnvelopeError::Invalid(format!("governance header lookup: {err}")))?
+        .ok_or_else(|| EventEnvelopeError::Invalid("governance header missing".to_owned()))?;
+    assemble_with_header(committed, &header, ingest_time)
+}
+
+fn assemble_with_header(
     committed: &CommittedEvent,
     header: &GovernedObjectHeader,
     ingest_time: &str,
