@@ -37,7 +37,7 @@ pub use installer::{
     CustomUserProvidedProjectVerifier, DurableInstallationAuthority, DurableInstallationManager,
     InstallCrashPoint, InstallPhase, InstallationLedger, InstallationTrustMode, InstallerError,
     PackageInstallRequest, RejectingSignaturePort, SignatureProvenancePort, install_package,
-    install_package_durable, reject_package, verify_package,
+    install_package_durable, package_artifact_digest, reject_package, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};

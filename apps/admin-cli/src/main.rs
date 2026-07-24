@@ -13,17 +13,26 @@
 //! stderr), `2` usage error.
 
 use cognitive_domain::{LifecycleDomain, ObjectId};
+use cognitive_kernel::Clock;
 use cognitive_management::executor_port::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
     PortFailure,
 };
 use cognitive_management::{
     AuditPortFailure, AuditedInspectError, FileManagementAuditLog, GovernanceLedger,
-    InspectRequest, ManagementError, ManagementPlane, PrivilegedManagementSession, StopRequest,
+    InspectRequest, ManagementAction, ManagementError, ManagementPlane,
+    PrivilegedManagementSession, RiskClass, StopRequest,
+};
+use cognitive_runtime::{
+    CUSTOM_USER_PROVIDED_RISK_NOTICE, CustomInstallationAcknowledgement,
+    CustomUserProvidedProjectVerifier, DurableInstallationAuthority, InstallerError,
+    PackageInstallRequest, install_package_durable, package_artifact_digest,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
+use std::path::Path;
+use std::process::Command;
 
 const USAGE: &str = "admin-cli — deterministic management fallback (no model dependency)
 
@@ -32,6 +41,7 @@ USAGE:
   admin-cli stop      --store <db> --session <session.json> --execution <object-id>
   admin-cli revoke    --store <db> --session <session.json> --ledger <governance.json>
   admin-cli reconcile --store <db> --session <session.json>
+  admin-cli install   --mode custom|official --session <session.json> --installation-store <db> --project <dir> --package-id <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256> [--confirm-custom-source yes]
 
 Verbs run against the SQLite WAL authority store; every mutation goes
 through the central deterministic transition gate. Errors are registered
@@ -81,6 +91,7 @@ fn run(args: &[String]) -> i32 {
         "stop" => dispatch_stop(&flags),
         "revoke" => dispatch_revoke(&flags),
         "reconcile" => dispatch_reconcile(&flags),
+        "install" => dispatch_install(&flags),
         other => usage_error(&format!("unknown verb `{other}`")),
     }
 }
@@ -202,6 +213,34 @@ fn fail_audited_inspect(error: AuditedInspectError) -> i32 {
     }
 }
 
+fn fail_installer(error: InstallerError) -> i32 {
+    let value = json!({
+        "error": {
+            "category": "installation",
+            "code": error.code,
+            "detail": error.detail,
+            "retryable": false,
+        }
+    });
+    match canonical_line(&value) {
+        Ok(line) => eprintln!("{line}"),
+        Err(message) => eprintln!("error: installer failure serialization: {message}"),
+    }
+    1
+}
+
+fn confirmation_required() -> i32 {
+    let value = json!({
+        "notice": CUSTOM_USER_PROVIDED_RISK_NOTICE,
+        "confirmation_required": "pass --confirm-custom-source yes after reviewing this notice",
+    });
+    match canonical_line(&value) {
+        Ok(line) => eprintln!("{line}"),
+        Err(message) => eprintln!("error: custom-source notice serialization: {message}"),
+    }
+    1
+}
+
 fn inspect_audit_path(flags: &BTreeMap<String, String>) -> Result<std::path::PathBuf, String> {
     if let Some(path) = flags.get("audit") {
         return Ok(std::path::PathBuf::from(path));
@@ -321,6 +360,326 @@ fn dispatch_reconcile(flags: &BTreeMap<String, String>) -> i32 {
         Ok(report) => emit(&report.to_json_value()),
         Err(error) => fail(&error),
     }
+}
+
+fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
+    let mode = match required(flags, "mode") {
+        Ok(mode) => mode,
+        Err(message) => return usage_error(&message),
+    };
+    if mode != "custom" && mode != "official" {
+        return usage_error("--mode must be custom or official");
+    }
+    if mode == "custom" && flags.get("confirm-custom-source").map(String::as_str) != Some("yes") {
+        return confirmation_required();
+    }
+    if mode == "official" {
+        return fail_installer(InstallerError {
+            code: "AGENT_PACKAGE_VERIFICATION_FAILED",
+            detail: "official installation is blocked: no trusted publisher attestation verifier is configured"
+                .to_owned(),
+        });
+    }
+
+    let session_path = match required(flags, "session") {
+        Ok(path) => path,
+        Err(message) => return usage_error(&message),
+    };
+    let session_text = match std::fs::read_to_string(session_path) {
+        Ok(text) => text,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "read session {session_path}: {err}"
+            )));
+        }
+    };
+    let session_value: Value = match serde_json::from_str(&session_text) {
+        Ok(value) => value,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "parse session {session_path}: {err}"
+            )));
+        }
+    };
+    let session = match PrivilegedManagementSession::from_json_value(&session_value) {
+        Ok(session) => session,
+        Err(denial) => return fail(&ManagementError::Denied(denial)),
+    };
+    let package_id = match required(flags, "package-id") {
+        Ok(value) if value.starts_with("pkg://") => value,
+        Ok(_) => return usage_error("--package-id must be a pkg:// immutable package reference"),
+        Err(message) => return usage_error(&message),
+    };
+    let clock = SystemClock;
+    let now = match clock.now() {
+        Ok(now) => now,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "read management clock: {err}"
+            )));
+        }
+    };
+    let action = ManagementAction {
+        action: "agent.install".to_owned(),
+        domain: "cognitiveos.management".to_owned(),
+        resource: format!("agent-installation://{package_id}"),
+        risk: RiskClass::R1,
+        step_up_required: false,
+        step_up_satisfied: false,
+    };
+    if let Err(denial) = session.authorize(&action, &now) {
+        return fail(&ManagementError::Denied(denial));
+    }
+
+    let project = match required(flags, "project") {
+        Ok(path) => Path::new(path),
+        Err(message) => return usage_error(&message),
+    };
+    let prepared = match prepare_locked_project(project) {
+        Ok(prepared) => prepared,
+        Err(error) => return fail_installer(error),
+    };
+    let adapter_digest = match required_digest(flags, "adapter-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let sandbox_digest = match required_digest(flags, "sandbox-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let compatibility_digest = match required_digest(flags, "compatibility-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let acknowledgement = match CustomInstallationAcknowledgement::after_risk_review(
+        prepared.bundle_digest.clone(),
+        session.human_principal.clone(),
+        prepared.project_ref.clone(),
+    ) {
+        Ok(acknowledgement) => acknowledgement,
+        Err(error) => return fail_installer(error),
+    };
+    let request = PackageInstallRequest {
+        package_id: package_id.to_owned(),
+        publisher: "custom-user-provided".to_owned(),
+        package_version: "bundle".to_owned(),
+        artifact: prepared.bundle,
+        declared_artifact_digest: prepared.bundle_digest.clone(),
+        signature_ref: format!(
+            "custom-user-provided://operator/{}",
+            session.human_principal
+        ),
+        provenance_ref: format!("custom-user-provided://project/{}", prepared.project_ref),
+        adapter_digest: adapter_digest.to_owned(),
+        sandbox_digest: sandbox_digest.to_owned(),
+        compatibility_digest: compatibility_digest.to_owned(),
+        expected_adapter_digest: adapter_digest.to_owned(),
+        expected_sandbox_digest: sandbox_digest.to_owned(),
+        expected_compatibility_digest: compatibility_digest.to_owned(),
+    };
+    let store_path = match required(flags, "installation-store") {
+        Ok(path) => Path::new(path),
+        Err(message) => return usage_error(&message),
+    };
+    let authority = match DurableInstallationAuthority::open(store_path) {
+        Ok(authority) => authority,
+        Err(error) => return fail_installer(error),
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    let verifier = CustomUserProvidedProjectVerifier::new(acknowledgement);
+    if let Err(error) = install_package_durable(&manager, &request, &verifier) {
+        return fail_installer(error);
+    }
+    emit(&json!({
+        "source_mode": "custom_user_provided",
+        "operator_ref": session.human_principal,
+        "project_ref": prepared.project_ref,
+        "bundle_digest": prepared.bundle_digest,
+        "lockfile_digest": prepared.lockfile_digest,
+        "adapter_digest": adapter_digest,
+        "sandbox_digest": sandbox_digest,
+        "compatibility_digest": compatibility_digest,
+        "verification": "custom_acknowledgement_bound",
+        "capability_grants": authority.capability_grants(),
+        "effects_created": 0,
+        "tasks_completed": 0,
+    }))
+}
+
+struct PreparedProject {
+    project_ref: String,
+    bundle: Vec<u8>,
+    bundle_digest: String,
+    lockfile_digest: String,
+}
+
+fn required_digest<'f>(flags: &'f BTreeMap<String, String>, name: &str) -> Result<&'f str, String> {
+    let value = required(flags, name)?;
+    let valid = value.len() == 71
+        && value.starts_with("sha256:")
+        && value[7..].bytes().all(|byte| byte.is_ascii_hexdigit());
+    if valid {
+        Ok(value)
+    } else {
+        Err(format!("--{name} must be a sha256 digest"))
+    }
+}
+
+fn installer_failure(detail: impl Into<String>) -> InstallerError {
+    InstallerError {
+        code: "AGENT_PACKAGE_VERIFICATION_FAILED",
+        detail: detail.into(),
+    }
+}
+
+fn prepare_locked_project(project: &Path) -> Result<PreparedProject, InstallerError> {
+    let canonical = std::fs::canonicalize(project)
+        .map_err(|err| installer_failure(format!("canonicalize project: {err}")))?;
+    if !canonical.is_dir() {
+        return Err(installer_failure("project must be a directory"));
+    }
+    let package_json = canonical.join("package.json");
+    let lockfile = canonical.join("package-lock.json");
+    let package: Value = serde_json::from_slice(
+        &std::fs::read(&package_json)
+            .map_err(|err| installer_failure(format!("read package.json: {err}")))?,
+    )
+    .map_err(|err| installer_failure(format!("parse package.json: {err}")))?;
+    reject_floating_dependencies(&package)?;
+    let lockfile_bytes = std::fs::read(&lockfile).map_err(|_| {
+        installer_failure("package-lock.json is required; unlocked projects are refused")
+    })?;
+    let _: Value = serde_json::from_slice(&lockfile_bytes)
+        .map_err(|err| installer_failure(format!("parse package-lock.json: {err}")))?;
+    let before = deterministic_bundle(&canonical)?;
+    prepare_dependencies(&canonical)?;
+    let bundle = deterministic_bundle(&canonical)?;
+    if bundle != before {
+        return Err(installer_failure(
+            "project changed during dependency preparation",
+        ));
+    }
+    Ok(PreparedProject {
+        project_ref: format!("file://{}", canonical.to_string_lossy().replace('\\', "/")),
+        bundle_digest: package_artifact_digest(&bundle)?,
+        lockfile_digest: package_artifact_digest(&lockfile_bytes)?,
+        bundle,
+    })
+}
+
+fn reject_floating_dependencies(package: &Value) -> Result<(), InstallerError> {
+    for field in [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+    ] {
+        let Some(entries) = package.get(field).and_then(Value::as_object) else {
+            continue;
+        };
+        for (name, version) in entries {
+            let Some(version) = version.as_str() else {
+                return Err(installer_failure(format!(
+                    "{field}.{name} must be a fixed string"
+                )));
+            };
+            if version.is_empty()
+                || version.starts_with(['^', '~', '>', '<', '=', '*'])
+                || version.contains('*')
+                || version.eq_ignore_ascii_case("latest")
+            {
+                return Err(installer_failure(format!(
+                    "floating dependency {field}.{name}={version} is refused"
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn prepare_dependencies(project: &Path) -> Result<(), InstallerError> {
+    #[cfg(windows)]
+    let npm = "npm.cmd";
+    #[cfg(not(windows))]
+    let npm = "npm";
+    let status = Command::new(npm)
+        .current_dir(project)
+        .args([
+            "ci",
+            "--ignore-scripts",
+            "--offline",
+            "--no-audit",
+            "--no-fund",
+        ])
+        .env_remove("NPM_TOKEN")
+        .env_remove("NODE_AUTH_TOKEN")
+        .env_remove("DEEPSEEK_API_KEY")
+        .env_remove("OPENAI_API_KEY")
+        .env_remove("ANTHROPIC_API_KEY")
+        .status()
+        .map_err(|err| installer_failure(format!("start npm ci --ignore-scripts: {err}")))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(installer_failure("npm ci --ignore-scripts failed"))
+    }
+}
+
+fn deterministic_bundle(project: &Path) -> Result<Vec<u8>, InstallerError> {
+    let mut files = Vec::new();
+    collect_project_files(project, project, &mut files)?;
+    files.sort_by(|left, right| left.0.cmp(&right.0));
+    let mut bundle = Vec::new();
+    for (relative, content) in files {
+        bundle.extend_from_slice(&(relative.len() as u64).to_be_bytes());
+        bundle.extend_from_slice(relative.as_bytes());
+        bundle.extend_from_slice(&(content.len() as u64).to_be_bytes());
+        bundle.extend_from_slice(&content);
+    }
+    Ok(bundle)
+}
+
+fn collect_project_files(
+    root: &Path,
+    current: &Path,
+    files: &mut Vec<(String, Vec<u8>)>,
+) -> Result<(), InstallerError> {
+    for entry in std::fs::read_dir(current)
+        .map_err(|err| installer_failure(format!("read project directory: {err}")))?
+    {
+        let entry = entry.map_err(|err| installer_failure(format!("read project entry: {err}")))?;
+        let file_type = entry
+            .file_type()
+            .map_err(|err| installer_failure(format!("read project entry type: {err}")))?;
+        let name = entry.file_name();
+        if name == ".git" || name == "node_modules" {
+            continue;
+        }
+        if file_type.is_symlink() {
+            return Err(installer_failure("project symlinks are refused"));
+        }
+        let path = entry.path();
+        if file_type.is_dir() {
+            collect_project_files(root, &path, files)?;
+        } else if file_type.is_file() {
+            let relative = path
+                .strip_prefix(root)
+                .map_err(|_| installer_failure("project path escaped root"))?
+                .to_string_lossy()
+                .replace('\\', "/");
+            files.push((
+                relative,
+                std::fs::read(&path)
+                    .map_err(|err| installer_failure(format!("read project file: {err}")))?,
+            ));
+        } else {
+            return Err(installer_failure("project contains a non-regular file"));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
