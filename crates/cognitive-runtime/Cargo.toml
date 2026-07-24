@@ -10,9 +10,13 @@ publish.workspace = true
 cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }
 cognitive-kernel = { workspace = true }
+cognitive-store = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [lints]
 workspace = true
