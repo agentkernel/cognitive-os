@@ -33,8 +33,9 @@ pub use channel_binding::{
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
 pub use installer::{
-    AcceptingSignaturePort, InstallCrashPoint, InstallPhase, InstallationLedger, InstallerError,
-    PackageInstallRequest, RejectingSignaturePort, SignatureProvenancePort, install_package,
+    AcceptingSignaturePort, DurableInstallationAuthority, DurableInstallationManager,
+    InstallCrashPoint, InstallPhase, InstallationLedger, InstallerError, PackageInstallRequest,
+    RejectingSignaturePort, SignatureProvenancePort, install_package, install_package_durable,
     reject_package, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};

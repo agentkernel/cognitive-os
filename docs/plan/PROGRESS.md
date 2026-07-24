@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-24（完整 Windows-native 基线验证保持通过。Pi 外部 Agent 的候选执行边界已交付：Pi 0.81.1 + DeepSeek 实际 5/5 无工具 smoke，观测模型 `deepseek-v4-flash`，p50/p95/p99 = 6081/6451/6451 ms；固定 **authority=0 / Effect=0 / uncontained_candidate_only**。Lane-KRN 的 durable InstallationStore 原子批正在 `lane/krn-installation-store` 待审：SQLite WAL 暂存/提交、显式崩溃恢复和跨句柄原子可见性测试已提供；它尚未被 Lane-RUN 管理 authority 消费，不是 AgentInstallation commit、C0/C1、Profile、PERF-004 campaign 或 PERF-005 benefit。真正安装仍需供应链 verifier、Linux-native OS sandbox 和 lifecycle/I/O adapter。见 [PI-AGENT-INTEGRATION-PLAN.md](PI-AGENT-INTEGRATION-PLAN.md)。）
+> 最后更新：2026-07-24（完整 Windows-native 基线验证保持通过。Pi 外部 Agent 的候选执行边界已交付：Pi 0.81.1 + DeepSeek 实际 5/5 无工具 smoke，观测模型 `deepseek-v4-flash`，p50/p95/p99 = 6081/6451/6451 ms；固定 **authority=0 / Effect=0 / uncontained_candidate_only**。Lane-KRN durable InstallationStore 已合入 `main`：SQLite WAL 暂存/提交、显式崩溃恢复和跨句柄原子可见性测试已提供。Lane-RUN 现通过 in-process `DurableInstallationManager` 消费该 store；验证先于 stage/commit，recovery 仅限 manager，会话不授予 capability。局部 runtime 测试、clippy 与 consistency 已执行通过；跨进程 lifecycle lease 仍需独立 KRN API 决策。这不是 AgentInstallation completion、C0/C1、Profile、PERF-004 campaign 或 PERF-005 benefit。真正安装仍需供应链 verifier、Linux-native OS sandbox 和 lifecycle/I/O adapter。见 [PI-AGENT-INTEGRATION-PLAN.md](PI-AGENT-INTEGRATION-PLAN.md)。）
 
 ## 里程碑状态
 
@@ -58,16 +58,16 @@
 |---|---|---|---|
 | Lane-CTR 契约与生成 | **Ordinary Core AUDIT vector mapping registered in joint batch** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `REQ-AUDIT-001` / `002` both map to `ORDINARY-CORE-AUDIT-INSPECT-001`; matrix is fresh; no schema/candidate semantics changed |
 | Lane-CFR 符合性与工具 | **Ordinary Core AUDIT vector test executed** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `ORDINARY-CORE-AUDIT-INSPECT-001` pass via audited public consumer; pins **60/25**; self-check **41/41**; non-Profile claim |
-| Lane-KRN 内核主线 | **durable InstallationStore 原子批待审** | `lane/krn-installation-store` | SQLite WAL staging→commit、显式 interrupted-staging recovery、跨句柄可见性及不可覆盖负例已本地通过；不新增 installation transition table（D-020），尚未接入 RUN management authority |
+| Lane-KRN 内核主线 | **durable InstallationStore 原子批已合入**（PR #78） | `main` @ `7324227` | SQLite WAL staging→commit、显式 interrupted-staging recovery、跨句柄可见性及不可覆盖负例已提供；不新增 installation transition table（D-020）。Lane-RUN local authority consumption has passed targeted verification; cross-process lifecycle lease remains undecided. |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
-| Lane-RUN 运行时与管理面 | **Pi candidate-only adapter implemented/tested** | `lane/run-pi-agent-integration` | Pi 0.81.1 real DeepSeek no-tools smoke/evaluation runs as `uncontained_candidate_only`; outputs are never authority/Effect. Governed installation remains blocked on verifier, durable store and OS sandbox evidence; see [PI plan](PI-AGENT-INTEGRATION-PLAN.md). |
+| Lane-RUN 运行时与管理面 | **durable installation authority implementation provided; local verification passed** | `lane/run-installation-authority` | `DurableInstallationManager` is the exclusive in-process session for verified durable stage/commit and interrupted-staging recovery; it grants no capabilities and does not create Task completion or Effects. `cargo test -p cognitive-runtime` (38 unit + 2 integration), clippy and consistency passed locally. Governed installation remains blocked on the verifier, OS sandbox and lifecycle/I/O adapter; cross-process lease is not implemented. |
 | Lane-DOC 文档维护 | **ADR-0015 complexity boundary accepted** | `lane/doc-product-complexity-boundary` | Ordinary Core remains the default product range; strict independent AUDIT/SIG/TARGET work is High-Assurance deferred/tracking. This changes priority only, never factual D-016/D-022 or Profile gates. |
 | Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260724-lane-krn-installation-store-handoff.md](../checkpoints/20260724-lane-krn-installation-store-handoff.md)（KRN：durable store 原子批；RUN authority consumption 未完成）
-2. [20260724-lane-run-pi-agent-candidate-handoff.md](../checkpoints/20260724-lane-run-pi-agent-candidate-handoff.md)（RUN：Pi + DeepSeek 候选执行/评测已真实执行；受治理安装仍待 prerequisite）
+1. [20260724-lane-run-installation-authority-handoff.md](../checkpoints/20260724-lane-run-installation-authority-handoff.md)（RUN：durable authority 消费已本地验证；仍无 Profile/AgentInstallation completion claim）
+2. [20260724-lane-krn-installation-store-handoff.md](../checkpoints/20260724-lane-krn-installation-store-handoff.md)（KRN：durable store 原子批已合入；跨进程 lease 仍未决）
 3. [PI-AGENT-INTEGRATION-PLAN.md](PI-AGENT-INTEGRATION-PLAN.md)（Pi 真实安装、sandbox 与性能战役的分阶段计划）
 
 ## 客户端目录治理交付
