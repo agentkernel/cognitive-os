@@ -27,11 +27,23 @@ fn run_cli(args: &[&str], npm_dir: Option<&Path>) -> CliResult {
 }
 
 fn write_fake_npm(dir: &Path) {
+    #[cfg(windows)]
     std::fs::write(
         dir.join("npm.cmd"),
         "@echo off\r\nif not \"%1\"==\"ci\" exit /b 11\r\nif not \"%2\"==\"--ignore-scripts\" exit /b 12\r\nexit /b 0\r\n",
     )
     .unwrap();
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let path = dir.join("npm");
+        std::fs::write(
+            &path,
+            "#!/bin/sh\n[ \"$1\" = \"ci\" ] || exit 11\n[ \"$2\" = \"--ignore-scripts\" ] || exit 12\nexit 0\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
 }
 
 fn write_session(dir: &Path) -> PathBuf {
