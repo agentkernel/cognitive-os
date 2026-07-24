@@ -80,7 +80,7 @@ informative / implementation-private / historical），并为仓库工作文档�
 ## docs/clients/（兼容入口）
 
 - [docs/clients/README.md](clients/README.md)：**deprecated 兼容 stub**。唯一 canonical 客户端项目地图/目录索引已迁至仓库根 [clients/README.md](../clients/README.md)（`CLIENTS-DEC-001`、[ADR-0007](adr/0007-clients-project-root-and-doc-migration.md)）。
-- 持续维护由 [`.cursor/rules/16-client-directory-index.mdc`](../.cursor/rules/16-client-directory-index.mdc) 执行，并入 [docs-sync-contract](standards/docs-sync-contract.md)。
+- 持续维护由 [clients/README.md §9](../clients/README.md#9-持续维护与手动-gate) 执行，并入 [docs-sync-contract](standards/docs-sync-contract.md)。
 
 ## docs/platforms/（informative 产品设计）
 

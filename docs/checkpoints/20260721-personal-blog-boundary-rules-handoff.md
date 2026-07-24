@@ -9,7 +9,7 @@ status: complete
 
 ## 已完成
 
-- 新增 alwaysApply 规则 [`.cursor/rules/19-personal-blog-boundary.mdc`](../../.cursor/rules/19-personal-blog-boundary.mdc)：唯一路径、固定远程 `agentkernel/blog`、嵌套 git + 根 ignore、破坏性操作前保全、禁 `D:\blog-*` 散落、禁混入 Cos 推送。
+- 新增 alwaysApply 规则（当时路径：`.cursor/rules/19-personal-blog-boundary.mdc`）：唯一路径、固定远程 `agentkernel/blog`、嵌套 git + 根 ignore、破坏性操作前保全、禁 `D:\blog-*` 散落、禁混入 Cos 推送。
 - 联动：`AGENTS.md` 目录地图/红线；`02-workflow-docs-sync` 开工检查；`18-auto-commit` 禁毁；`PARALLEL-LANES` §2.7；`PROGRESS` 隔离子工程行；`docs/_local/README.md`；blog 仓 `README.md` 本机路径说明。
 
 ## 根因（本次要防的）
