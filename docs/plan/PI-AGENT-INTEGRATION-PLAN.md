@@ -33,7 +33,7 @@ Local evidence (gitignored, no credential or raw transcript) is recorded at
 | P1 | Candidate-only Pi launcher and real DeepSeek smoke/evaluation | no-tools policy tests; actual model and latency output; zero authority/Effect | delivered in this batch |
 | P2 | Pi supply-chain verifier | immutable package source, digest/SRI plus a trusted signature/provenance policy accepted by `SignatureProvenancePort` | official-publisher path remains blocked: npm SRI alone is not trusted signature/provenance evidence. Custom User-Provided mode now requires the user to review a fixed risk notice and confirm a digest-pinned `file://` project bundle bound to a `principal://` operator. After acknowledgement it uses the same normal installation, authorization and runtime path; it is still not an official-publisher, C0/C1, Profile or sandbox claim. |
 | P3 | Durable InstallationStore | SQLite process-recovery, atomic visibility and management-authority commit for `AgentInstallation` | KRN SQLite WAL staging/commit/recovery slice is merged. Lane-RUN now consumes it through an exclusive in-process `DurableInstallationManager` session: verification precedes stage/commit, recovery is manager-only, and durable persistence grants zero capabilities. Targeted runtime tests and lint passed locally; cross-process lifecycle leasing remains a separate KRN API decision. This is still not a governed `AgentInstallation` completion or C0/C1 claim. |
-| P4 | OS sandbox adapter | Linux-native negative evidence for filesystem/network/secrets/subprocess/tool-proxy and no cross-platform claim merge | pending; Windows-native remains unsupported |
+| P4 | OS sandbox adapter | Linux-native negative evidence for filesystem/network/secrets/subprocess/tool-proxy and no cross-platform claim merge | pre-launch admission is provided on `lane/run-pi-batch1`: Windows-native is refused, WSL2 is separately refused, and a Linux request requires exact policy/adapter/compatibility digests, a healthy registered adapter and an HTTPS model egress proxy to the exact DeepSeek endpoint. No concrete sandbox adapter or Pi subprocess launch exists; Linux-native evidence remains pending. |
 | P5 | Pi lifecycle/I/O adapter | mediated tool/memory/completion/checkpoint/recovery mapping; bypass, revoke and OOB tests | pending after P3/P4 |
 | P6 | Governed installation and evaluation | committed installation with no automatic high-risk capability; prerequisite behavior vectors; preregistered workload report | blocked by P2-P5 |
 | P7 | Performance campaign | REQ-PERF-004 L2-green reference platform, fixed hardware/topology/baseline and measured p50/p95/p99 | not started |
@@ -66,3 +66,18 @@ agent benefit or deployment readiness.
   authorization path.
 - Never claim Windows-native sandbox coverage from WSL2/Linux evidence.
 - Do not promote the candidate launcher to C0/C1 without P2-P5 evidence.
+
+## P4 pre-launch admission evidence (2026-07-24)
+
+`cognitive_runtime::admit_pi_launch` has no success path on Windows-native or
+WSL2. On a non-Linux host it also refuses a caller-supplied `linux_native`
+label. The only Linux-host admission shape is an opaque permit; it carries no
+authority and no concrete adapter in this repository can turn it into a
+subprocess. Missing/faulted/unregistered adapters, any binding digest mismatch,
+missing proxy, a non-HTTPS proxy, malformed/empty digest binding, and a non-registered model endpoint all fail
+closed with the existing `AGENT_ADAPTER_BYPASS_DETECTED` code.
+
+The verification run for this code was a WSL2 Linux guest diagnostic only:
+`cargo test -p cognitive-runtime --offline` = 52 passed / 0 failed and
+`cargo clippy -p cognitive-runtime --all-targets -- -D warnings` = pass.
+It is not Linux-native evidence and does not update F-017 or Profile status.

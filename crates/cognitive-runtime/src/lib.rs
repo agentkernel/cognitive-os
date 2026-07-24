@@ -16,6 +16,7 @@ pub mod installer;
 pub mod intent_flow;
 pub mod oob;
 pub mod perf;
+pub mod pi_launcher;
 pub mod readiness;
 pub mod recovery_flow;
 pub mod sandbox;
@@ -42,6 +43,10 @@ pub use installer::{
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
+pub use pi_launcher::{
+    PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,
+    admit_pi_launch,
+};
 pub use readiness::{R0ThinPath, ReadinessEvaluator, ReadinessFacts, ReadinessGrade};
 pub use recovery_flow::{
     ObligationDecision, RecoveryContinuationPlan, plan_recovery_continuations,
