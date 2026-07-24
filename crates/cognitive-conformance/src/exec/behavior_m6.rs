@@ -51,6 +51,7 @@ fn valid_request(artifact: &[u8], digest: &str) -> PackageInstallRequest {
         adapter_digest: "sha256:adapter".into(),
         sandbox_digest: "sha256:sandbox".into(),
         compatibility_digest: "sha256:compat".into(),
+        lockfile_digest: "sha256:lockfile".into(),
         expected_adapter_digest: "sha256:adapter".into(),
         expected_sandbox_digest: "sha256:sandbox".into(),
         expected_compatibility_digest: "sha256:compat".into(),

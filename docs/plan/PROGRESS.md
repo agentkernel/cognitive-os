@@ -2,6 +2,7 @@
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
 > 最后更新：2026-07-24（完整 Windows-native 基线验证保持通过。Pi 外部 Agent 的候选执行边界已交付：Pi 0.81.1 + DeepSeek 实际 5/5 无工具 smoke，观测模型 `deepseek-v4-flash`，p50/p95/p99 = 6081/6451/6451 ms；固定 **authority=0 / Effect=0 / uncontained_candidate_only**。Lane-KRN durable InstallationStore 已合入 `main`：SQLite WAL 暂存/提交、显式崩溃恢复和跨句柄原子可见性测试已提供。Lane-RUN 现通过 in-process `DurableInstallationManager` 消费该 store；验证先于 stage/commit，recovery 仅限 manager，会话不授予 capability。`admin-cli install` 现以已认证 management session 的 `principal://` 为唯一 Custom 确认操作者，显示固定风险提示、构建确定性 `file://` bundle、拒绝无 lockfile/浮动依赖、并仅执行 `npm ci --ignore-scripts --offline`；它记录并输出 bundle/lockfile/adapter/sandbox/compatibility digests 后再 durable commit。来源/确认的**耐久查询记录**尚无 KRN store carrier，因此本批不将该 CLI 输出冒充 release evidence。该确认不是上游签名、C0/C1、Profile 或 sandbox 声明；官方供应链 verifier、Linux-native OS sandbox、lifecycle/I/O adapter 与跨进程 lifecycle lease 仍待完成。见 [PI-AGENT-INTEGRATION-PLAN.md](PI-AGENT-INTEGRATION-PLAN.md)。）
+> 2026-07-24 carrier 批：KRN 已为 existing installation staging/commit record 加入 Custom source acknowledgement evidence，并以同一 SQLite 事务持久化；RUN 的 manager-only query 与 CLI 输出均读取 committed evidence。该批仍须两平台 CI，且不改变官方 provenance、Linux sandbox、Pi adapter、恢复战役、PERF 或 Profile non-claim。
 
 ## 里程碑状态
 
