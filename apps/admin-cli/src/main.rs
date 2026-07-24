@@ -473,6 +473,7 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
         adapter_digest: adapter_digest.to_owned(),
         sandbox_digest: sandbox_digest.to_owned(),
         compatibility_digest: compatibility_digest.to_owned(),
+        lockfile_digest: prepared.lockfile_digest.clone(),
         expected_adapter_digest: adapter_digest.to_owned(),
         expected_sandbox_digest: sandbox_digest.to_owned(),
         expected_compatibility_digest: compatibility_digest.to_owned(),
@@ -493,16 +494,36 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
     if let Err(error) = install_package_durable(&manager, &request, &verifier) {
         return fail_installer(error);
     }
+    let committed = match manager.committed_installation(package_id) {
+        Ok(Some(committed)) => committed,
+        Ok(None) => {
+            return fail_installer(InstallerError {
+                code: "STATE_STORE_UNAVAILABLE",
+                detail: "installation commit is not queryable through the manager".to_owned(),
+            });
+        }
+        Err(error) => return fail_installer(error),
+    };
+    let evidence = match committed.evidence() {
+        Some(evidence) => evidence,
+        None => {
+            return fail_installer(InstallerError {
+                code: "STATE_STORE_UNAVAILABLE",
+                detail: "Custom installation acknowledgement evidence was not durably committed"
+                    .to_owned(),
+            });
+        }
+    };
     emit(&json!({
-        "source_mode": "custom_user_provided",
-        "operator_ref": session.human_principal,
-        "project_ref": prepared.project_ref,
+        "source_mode": evidence.source_mode(),
+        "operator_ref": evidence.operator_ref(),
+        "project_ref": evidence.project_ref(),
         "bundle_digest": prepared.bundle_digest,
-        "lockfile_digest": prepared.lockfile_digest,
+        "lockfile_digest": evidence.lockfile_digest(),
         "adapter_digest": adapter_digest,
         "sandbox_digest": sandbox_digest,
         "compatibility_digest": compatibility_digest,
-        "verification": "custom_acknowledgement_bound",
+        "verification": evidence.verification_result(),
         "capability_grants": authority.capability_grants(),
         "effects_created": 0,
         "tasks_completed": 0,

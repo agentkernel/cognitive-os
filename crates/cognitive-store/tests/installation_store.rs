@@ -4,7 +4,9 @@
 //! in-memory ledger or a transaction that exposes staging rows cannot satisfy
 //! the authority boundary required before a managed AgentInstallation commit.
 
-use cognitive_store::{InstallationCommit, InstallationStoreError, SqliteInstallationStore};
+use cognitive_store::{
+    InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
+};
 
 fn pi_installation() -> Result<InstallationCommit, Box<dyn std::error::Error>> {
     Ok(InstallationCommit::new(
@@ -14,6 +16,53 @@ fn pi_installation() -> Result<InstallationCommit, Box<dyn std::error::Error>> {
         "sha256:sandbox-policy",
         "sha256:compatibility-report",
     )?)
+}
+
+fn custom_pi_installation() -> Result<InstallationCommit, Box<dyn std::error::Error>> {
+    Ok(InstallationCommit::new_with_evidence(
+        "pkg://pi/0.81.1-custom",
+        "sha256:package-bytes",
+        "sha256:adapter-policy",
+        "sha256:sandbox-policy",
+        "sha256:compatibility-report",
+        InstallationEvidence::custom_user_provided(
+            "principal://tenant-a/verified-operator",
+            "file://tenant-a/pi-0.81.1.bundle",
+            "sha256:lockfile",
+            "custom_acknowledgement_bound",
+        )?,
+    )?)
+}
+
+#[test]
+fn custom_acknowledgement_evidence_is_atomically_committed_and_survives_reopen()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("installation-authority.db");
+    let writer = SqliteInstallationStore::open(&path)?;
+    let reader = SqliteInstallationStore::open(&path)?;
+    let commit = custom_pi_installation()?;
+
+    writer.stage(&commit)?;
+    assert!(reader.committed(commit.package_ref())?.is_none());
+
+    writer.commit(commit.package_ref())?;
+    drop(writer);
+    drop(reader);
+
+    let reopened = SqliteInstallationStore::open(&path)?;
+    let recovered = reopened
+        .committed(commit.package_ref())?
+        .ok_or("committed Custom installation missing after reopen")?;
+    assert_eq!(recovered, commit);
+    assert_eq!(
+        recovered
+            .evidence()
+            .ok_or("missing Custom confirmation evidence")?
+            .source_mode(),
+        "custom_user_provided"
+    );
+    Ok(())
 }
 
 #[test]

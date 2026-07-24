@@ -17,7 +17,12 @@ CREATE TABLE IF NOT EXISTS installation_staging (
   package_digest       TEXT NOT NULL,
   adapter_digest       TEXT NOT NULL,
   sandbox_digest       TEXT NOT NULL,
-  compatibility_digest TEXT NOT NULL
+  compatibility_digest TEXT NOT NULL,
+  source_mode          TEXT,
+  operator_ref         TEXT,
+  project_ref          TEXT,
+  lockfile_digest      TEXT,
+  verification_result  TEXT
 ) STRICT;
 
 CREATE TABLE IF NOT EXISTS installations (
@@ -25,7 +30,12 @@ CREATE TABLE IF NOT EXISTS installations (
   package_digest       TEXT NOT NULL,
   adapter_digest       TEXT NOT NULL,
   sandbox_digest       TEXT NOT NULL,
-  compatibility_digest TEXT NOT NULL
+  compatibility_digest TEXT NOT NULL,
+  source_mode          TEXT,
+  operator_ref         TEXT,
+  project_ref          TEXT,
+  lockfile_digest      TEXT,
+  verification_result  TEXT
 ) STRICT;
 
 CREATE TRIGGER IF NOT EXISTS installations_append_only_update
@@ -54,6 +64,68 @@ pub enum InstallationStoreError {
     Unavailable { detail: String },
 }
 
+/// Immutable source-admission evidence bound to a durable installation.
+///
+/// This is a KRN persistence carrier, not publisher provenance and not an
+/// authorization capability. It keeps the Custom acknowledgement in the same
+/// stage-to-commit transaction as the package and policy digests.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstallationEvidence {
+    source_mode: String,
+    operator_ref: String,
+    project_ref: String,
+    lockfile_digest: String,
+    verification_result: String,
+}
+
+impl InstallationEvidence {
+    /// Evidence for one explicitly acknowledged local project bundle.
+    pub fn custom_user_provided(
+        operator_ref: impl Into<String>,
+        project_ref: impl Into<String>,
+        lockfile_digest: impl Into<String>,
+        verification_result: impl Into<String>,
+    ) -> Result<Self, InstallationStoreError> {
+        let evidence = Self {
+            source_mode: "custom_user_provided".to_owned(),
+            operator_ref: operator_ref.into(),
+            project_ref: project_ref.into(),
+            lockfile_digest: lockfile_digest.into(),
+            verification_result: verification_result.into(),
+        };
+        if !evidence.operator_ref.starts_with("principal://")
+            || !evidence.project_ref.starts_with("file://")
+            || evidence.lockfile_digest.trim().is_empty()
+            || evidence.verification_result.trim().is_empty()
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "Custom evidence requires principal:// operator, file:// bundle, lockfile digest, and verification result".to_owned(),
+            });
+        }
+        Ok(evidence)
+    }
+
+    pub fn source_mode(&self) -> &str {
+        &self.source_mode
+    }
+
+    pub fn operator_ref(&self) -> &str {
+        &self.operator_ref
+    }
+
+    pub fn project_ref(&self) -> &str {
+        &self.project_ref
+    }
+
+    pub fn lockfile_digest(&self) -> &str {
+        &self.lockfile_digest
+    }
+
+    pub fn verification_result(&self) -> &str {
+        &self.verification_result
+    }
+}
+
 /// Immutable evidence inputs for an eventual managed installation commit.
 ///
 /// The record is intentionally authority-neutral. It proves only that the
@@ -67,6 +139,7 @@ pub struct InstallationCommit {
     adapter_digest: String,
     sandbox_digest: String,
     compatibility_digest: String,
+    evidence: Option<InstallationEvidence>,
 }
 
 impl InstallationCommit {
@@ -78,12 +151,51 @@ impl InstallationCommit {
         sandbox_digest: impl Into<String>,
         compatibility_digest: impl Into<String>,
     ) -> Result<Self, InstallationStoreError> {
+        Self::new_optional_evidence(
+            package_ref,
+            package_digest,
+            adapter_digest,
+            sandbox_digest,
+            compatibility_digest,
+            None,
+        )
+    }
+
+    /// Construct a durable record with source-admission evidence that must
+    /// become visible atomically with the package commit.
+    pub fn new_with_evidence(
+        package_ref: impl Into<String>,
+        package_digest: impl Into<String>,
+        adapter_digest: impl Into<String>,
+        sandbox_digest: impl Into<String>,
+        compatibility_digest: impl Into<String>,
+        evidence: InstallationEvidence,
+    ) -> Result<Self, InstallationStoreError> {
+        Self::new_optional_evidence(
+            package_ref,
+            package_digest,
+            adapter_digest,
+            sandbox_digest,
+            compatibility_digest,
+            Some(evidence),
+        )
+    }
+
+    fn new_optional_evidence(
+        package_ref: impl Into<String>,
+        package_digest: impl Into<String>,
+        adapter_digest: impl Into<String>,
+        sandbox_digest: impl Into<String>,
+        compatibility_digest: impl Into<String>,
+        evidence: Option<InstallationEvidence>,
+    ) -> Result<Self, InstallationStoreError> {
         let commit = Self {
             package_ref: package_ref.into(),
             package_digest: package_digest.into(),
             adapter_digest: adapter_digest.into(),
             sandbox_digest: sandbox_digest.into(),
             compatibility_digest: compatibility_digest.into(),
+            evidence,
         };
         for (name, value) in [
             ("package_ref", &commit.package_ref),
@@ -104,6 +216,11 @@ impl InstallationCommit {
     /// Stable package identity used for staging and eventual lookup.
     pub fn package_ref(&self) -> &str {
         &self.package_ref
+    }
+
+    /// Custom source evidence, if this record was committed through that mode.
+    pub fn evidence(&self) -> Option<&InstallationEvidence> {
+        self.evidence.as_ref()
     }
 }
 
@@ -135,6 +252,7 @@ impl SqliteInstallationStore {
         .map_err(|err| unavailable("set pragmas", err))?;
         conn.execute_batch(SCHEMA)
             .map_err(|err| unavailable("install schema", err))?;
+        ensure_evidence_columns(&conn)?;
 
         Ok(Self {
             conn: Mutex::new(conn),
@@ -168,14 +286,23 @@ impl SqliteInstallationStore {
             .map_err(|err| unavailable("begin staging", err))?;
         let inserted = tx.execute(
             "INSERT INTO installation_staging
-               (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
+               (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
+                source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             (
                 &commit.package_ref,
                 &commit.package_digest,
                 &commit.adapter_digest,
                 &commit.sandbox_digest,
                 &commit.compatibility_digest,
+                commit.evidence.as_ref().map(|e| e.source_mode.as_str()),
+                commit.evidence.as_ref().map(|e| e.operator_ref.as_str()),
+                commit.evidence.as_ref().map(|e| e.project_ref.as_str()),
+                commit.evidence.as_ref().map(|e| e.lockfile_digest.as_str()),
+                commit
+                    .evidence
+                    .as_ref()
+                    .map(|e| e.verification_result.as_str()),
             ),
         );
         match inserted {
@@ -197,8 +324,10 @@ impl SqliteInstallationStore {
             .map_err(|err| unavailable("begin installation commit", err))?;
         let promoted = tx.execute(
                 "INSERT INTO installations
-                   (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest)
-                 SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest
+                   (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
+                 SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
+                        source_mode, operator_ref, project_ref, lockfile_digest, verification_result
                    FROM installation_staging WHERE package_ref = ?1",
                 [package_ref],
             );
@@ -232,16 +361,40 @@ impl SqliteInstallationStore {
     ) -> Result<Option<InstallationCommit>, InstallationStoreError> {
         let conn = self.lock()?;
         conn.query_row(
-            "SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest
+            "SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result
                FROM installations WHERE package_ref = ?1",
             [package_ref],
             |row| {
+                let source_mode: Option<String> = row.get(5)?;
+                let operator_ref: Option<String> = row.get(6)?;
+                let project_ref: Option<String> = row.get(7)?;
+                let lockfile_digest: Option<String> = row.get(8)?;
+                let verification_result: Option<String> = row.get(9)?;
+                let evidence = match (
+                    source_mode,
+                    operator_ref,
+                    project_ref,
+                    lockfile_digest,
+                    verification_result,
+                ) {
+                    (None, None, None, None, None) => None,
+                    (Some(source_mode), Some(operator_ref), Some(project_ref), Some(lockfile_digest), Some(verification_result)) => Some(InstallationEvidence {
+                        source_mode,
+                        operator_ref,
+                        project_ref,
+                        lockfile_digest,
+                        verification_result,
+                    }),
+                    _ => return Err(rusqlite::Error::InvalidQuery),
+                };
                 Ok(InstallationCommit {
                     package_ref: row.get(0)?,
                     package_digest: row.get(1)?,
                     adapter_digest: row.get(2)?,
                     sandbox_digest: row.get(3)?,
                     compatibility_digest: row.get(4)?,
+                    evidence,
                 })
             },
         )
@@ -269,6 +422,26 @@ impl SqliteInstallationStore {
                 detail: "installation connection poisoned".to_owned(),
             })
     }
+}
+
+fn ensure_evidence_columns(conn: &Connection) -> Result<(), InstallationStoreError> {
+    for table in ["installation_staging", "installations"] {
+        for column in [
+            "source_mode TEXT",
+            "operator_ref TEXT",
+            "project_ref TEXT",
+            "lockfile_digest TEXT",
+            "verification_result TEXT",
+        ] {
+            let statement = format!("ALTER TABLE {table} ADD COLUMN {column}");
+            match conn.execute(&statement, []) {
+                Ok(_) => {}
+                Err(err) if err.to_string().contains("duplicate column name") => {}
+                Err(err) => return Err(unavailable("migrate installation evidence", err)),
+            }
+        }
+    }
+    Ok(())
 }
 
 fn unavailable(what: &str, err: impl std::fmt::Display) -> InstallationStoreError {

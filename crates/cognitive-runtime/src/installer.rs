@@ -11,7 +11,9 @@
 
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
-use cognitive_store::{InstallationCommit, InstallationStoreError, SqliteInstallationStore};
+use cognitive_store::{
+    InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
+};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
@@ -63,6 +65,16 @@ pub trait SignatureProvenancePort: Send + Sync {
         provenance_ref: &str,
         artifact: &[u8],
     ) -> Result<(), InstallerError>;
+
+    /// Source-admission evidence that must be committed atomically with an
+    /// installation. Normal verified-publisher implementations may return
+    /// `None`; Custom mode must bind its acknowledgement here.
+    fn durable_evidence(
+        &self,
+        _lockfile_digest: &str,
+    ) -> Result<Option<InstallationEvidence>, InstallerError> {
+        Ok(None)
+    }
 }
 
 /// Always-accepting port for positive-path unit tests.
@@ -195,6 +207,20 @@ impl SignatureProvenancePort for CustomUserProvidedProjectVerifier {
         }
         Ok(())
     }
+
+    fn durable_evidence(
+        &self,
+        lockfile_digest: &str,
+    ) -> Result<Option<InstallationEvidence>, InstallerError> {
+        InstallationEvidence::custom_user_provided(
+            self.acknowledgement.operator_ref.clone(),
+            self.acknowledgement.project_ref.clone(),
+            lockfile_digest,
+            "custom_acknowledgement_bound",
+        )
+        .map(Some)
+        .map_err(map_store_error)
+    }
 }
 
 /// Inputs for a single install attempt.
@@ -210,6 +236,7 @@ pub struct PackageInstallRequest {
     pub adapter_digest: String,
     pub sandbox_digest: String,
     pub compatibility_digest: String,
+    pub lockfile_digest: String,
     pub expected_adapter_digest: String,
     pub expected_sandbox_digest: String,
     pub expected_compatibility_digest: String,
@@ -434,6 +461,18 @@ impl DurableInstallationManager<'_> {
     pub fn recover_interrupted_installation(&self) -> Result<(), InstallerError> {
         self.authority.recover_interrupted_staging()
     }
+
+    /// Manager-only durable record query. The authority never exposes source
+    /// acknowledgement evidence through a general reader API.
+    pub fn committed_installation(
+        &self,
+        package_id: &str,
+    ) -> Result<Option<InstallationCommit>, InstallerError> {
+        self.authority
+            .store
+            .committed(package_id)
+            .map_err(map_store_error)
+    }
 }
 
 fn map_store_error(error: InstallationStoreError) -> InstallerError {
@@ -572,13 +611,24 @@ pub fn install_package_durable(
     signatures: &dyn SignatureProvenancePort,
 ) -> Result<CommittedInstallation, InstallerError> {
     let live = verify_package(req, signatures)?;
-    let commit = InstallationCommit::new(
-        &req.package_id,
-        live.clone(),
-        &req.adapter_digest,
-        &req.sandbox_digest,
-        &req.compatibility_digest,
-    )
+    let evidence = signatures.durable_evidence(&req.lockfile_digest)?;
+    let commit = match evidence {
+        Some(evidence) => InstallationCommit::new_with_evidence(
+            &req.package_id,
+            live.clone(),
+            &req.adapter_digest,
+            &req.sandbox_digest,
+            &req.compatibility_digest,
+            evidence,
+        ),
+        None => InstallationCommit::new(
+            &req.package_id,
+            live.clone(),
+            &req.adapter_digest,
+            &req.sandbox_digest,
+            &req.compatibility_digest,
+        ),
+    }
     .map_err(map_store_error)?;
     manager
         .authority
@@ -629,6 +679,7 @@ mod tests {
             adapter_digest: "sha256:adapter".into(),
             sandbox_digest: "sha256:sandbox".into(),
             compatibility_digest: "sha256:compat".into(),
+            lockfile_digest: "sha256:lockfile".into(),
             expected_adapter_digest: "sha256:adapter".into(),
             expected_sandbox_digest: "sha256:sandbox".into(),
             expected_compatibility_digest: "sha256:compat".into(),
@@ -802,6 +853,15 @@ mod tests {
         );
         assert_eq!(committed.phase, InstallPhase::Committed);
         assert!(authority.is_committed(&req.package_id).unwrap());
+        let persisted = manager
+            .committed_installation(&req.package_id)
+            .unwrap()
+            .unwrap();
+        let evidence = persisted.evidence().unwrap();
+        assert_eq!(evidence.source_mode(), "custom_user_provided");
+        assert_eq!(evidence.operator_ref(), "principal://local-owner");
+        assert_eq!(evidence.project_ref(), "file://local/pi-project.tar");
+        assert_eq!(evidence.lockfile_digest(), "sha256:lockfile");
         assert_eq!(authority.capability_grants(), 0);
     }
 
