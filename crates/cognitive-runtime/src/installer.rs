@@ -447,7 +447,11 @@ fn map_store_error(error: InstallationStoreError) -> InstallerError {
     InstallerError::new(code, error.to_string())
 }
 
-fn artifact_digest(bytes: &[u8]) -> Result<String, InstallerError> {
+/// Digest immutable package bytes under the registered installation domain.
+///
+/// Callers must supply a deterministic bundle; this function never reads a
+/// mutable directory and never executes package-manager lifecycle scripts.
+pub fn package_artifact_digest(bytes: &[u8]) -> Result<String, InstallerError> {
     // Domain-separated digest over raw artifact bytes projected as a JSON string
     // of hex is overkill; use digest of the bytes via JSON string of base16.
     let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
@@ -471,7 +475,7 @@ pub fn verify_package(
     req: &PackageInstallRequest,
     signatures: &dyn SignatureProvenancePort,
 ) -> Result<String, InstallerError> {
-    let live = artifact_digest(&req.artifact)?;
+    let live = package_artifact_digest(&req.artifact)?;
     if live != req.declared_artifact_digest {
         return Err(InstallerError::new(
             RegisteredErrorCode::AgentPackageVerificationFailed,
@@ -613,7 +617,7 @@ mod tests {
 
     fn sample_req(digest_override: Option<&str>) -> PackageInstallRequest {
         let artifact = b"agent-bytes-v1".to_vec();
-        let live = artifact_digest(&artifact).unwrap();
+        let live = package_artifact_digest(&artifact).unwrap();
         PackageInstallRequest {
             package_id: "pkg://demo".into(),
             publisher: "example".into(),

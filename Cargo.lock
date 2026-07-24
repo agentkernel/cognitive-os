@@ -10,6 +10,7 @@ dependencies = [
  "cognitive-domain",
  "cognitive-kernel",
  "cognitive-management",
+ "cognitive-runtime",
  "cognitive-store",
  "serde_json",
  "tempfile",
