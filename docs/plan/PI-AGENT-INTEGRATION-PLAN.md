@@ -31,7 +31,7 @@ Local evidence (gitignored, no credential or raw transcript) is recorded at
 | Phase | Deliverable | Exit evidence | Current state |
 | --- | --- | --- | --- |
 | P1 | Candidate-only Pi launcher and real DeepSeek smoke/evaluation | no-tools policy tests; actual model and latency output; zero authority/Effect | delivered in this batch |
-| P2 | Pi supply-chain verifier | immutable package source, digest/SRI plus a trusted signature/provenance policy accepted by `SignatureProvenancePort` | blocked: npm SRI alone is not the required trusted signature/provenance evidence |
+| P2 | Pi supply-chain verifier | immutable package source, digest/SRI plus a trusted signature/provenance policy accepted by `SignatureProvenancePort` | official-publisher path remains blocked: npm SRI alone is not trusted signature/provenance evidence. Custom User-Provided mode now requires the user to review a fixed risk notice and confirm a digest-pinned `file://` project bundle bound to a `principal://` operator. After acknowledgement it uses the same normal installation, authorization and runtime path; it is still not an official-publisher, C0/C1, Profile or sandbox claim. |
 | P3 | Durable InstallationStore | SQLite process-recovery, atomic visibility and management-authority commit for `AgentInstallation` | KRN SQLite WAL staging/commit/recovery slice is merged. Lane-RUN now consumes it through an exclusive in-process `DurableInstallationManager` session: verification precedes stage/commit, recovery is manager-only, and durable persistence grants zero capabilities. Targeted runtime tests and lint passed locally; cross-process lifecycle leasing remains a separate KRN API decision. This is still not a governed `AgentInstallation` completion or C0/C1 claim. |
 | P4 | OS sandbox adapter | Linux-native negative evidence for filesystem/network/secrets/subprocess/tool-proxy and no cross-platform claim merge | pending; Windows-native remains unsupported |
 | P5 | Pi lifecycle/I/O adapter | mediated tool/memory/completion/checkpoint/recovery mapping; bypass, revoke and OOB tests | pending after P3/P4 |
@@ -60,5 +60,9 @@ agent benefit or deployment readiness.
   command arguments or `auth.json`.
 - Never let candidate output produce an authorization decision, capability,
   Effect or Task completion.
+- Custom User-Provided installation requires explicit risk acknowledgement for a
+  digest-pinned local bundle. It never upgrades a user declaration into publisher
+  provenance; later runtime permission remains governed by the same normal
+  authorization path.
 - Never claim Windows-native sandbox coverage from WSL2/Linux evidence.
 - Do not promote the candidate launcher to C0/C1 without P2-P5 evidence.

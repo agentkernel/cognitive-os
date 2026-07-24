@@ -33,10 +33,11 @@ pub use channel_binding::{
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
 pub use installer::{
-    AcceptingSignaturePort, DurableInstallationAuthority, DurableInstallationManager,
-    InstallCrashPoint, InstallPhase, InstallationLedger, InstallerError, PackageInstallRequest,
-    RejectingSignaturePort, SignatureProvenancePort, install_package, install_package_durable,
-    reject_package, verify_package,
+    AcceptingSignaturePort, CUSTOM_USER_PROVIDED_RISK_NOTICE, CustomInstallationAcknowledgement,
+    CustomUserProvidedProjectVerifier, DurableInstallationAuthority, DurableInstallationManager,
+    InstallCrashPoint, InstallPhase, InstallationLedger, InstallationTrustMode, InstallerError,
+    PackageInstallRequest, RejectingSignaturePort, SignatureProvenancePort, install_package,
+    install_package_durable, reject_package, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
