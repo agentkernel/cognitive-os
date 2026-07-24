@@ -37,6 +37,11 @@
   `cargo test -p cognitive-runtime -j 1` (45 tests),
   `cargo clippy -p admin-cli --all-targets -- -D warnings`,
   `cargo fmt --check`, and `git diff --check`.
+- The first PR CI run exposed a test-fixture portability defect: the fixture
+  created `npm.cmd`, while Linux resolves `npm`. `efc55d7` supplies an executable
+  POSIX `npm` fixture on non-Windows and preserves the Windows `.cmd` fixture;
+  the focused Windows test/lint checks pass again. Re-run both CI platforms after
+  that commit; the earlier Ubuntu failure is not an implementation pass.
 - Conformance runner and vectors were not changed or rerun. Existing reported
   pins remain 60 pass / 25 not-run / 0 fail; this local CLI test is not a
   behavior-vector pass or Profile claim.
@@ -69,4 +74,6 @@
 - PROGRESS updated: yes.
 - Code commit: `0d67cab9c2468604671fb59e3643a897df963abf`
   (`feat(run): add confirmed custom install CLI`, `REQ-AGENT-INSTALL-001`).
+- CI-fixture repair: `efc55d734ce6acab17f0862730e4b172c29bff12`
+  (`test(run): make custom install fixture portable`).
 - Documentation commit: this handoff commit (`docs(run): record custom install CLI limits`).
