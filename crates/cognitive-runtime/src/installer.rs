@@ -32,8 +32,30 @@ impl InstallerError {
     }
 }
 
+/// Verification policy selected for an installation attempt.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InstallationTrustMode {
+    /// A verifier established a trusted publisher signature/provenance chain.
+    TrustedPublisher,
+    /// A local operator explicitly accepted the source risk for a digest-pinned
+    /// project bundle.
+    ///
+    /// It is not publisher provenance and cannot support a C0/C1 or Profile
+    /// claim by itself, but it follows the same later authorization and
+    /// lifecycle rules as a trusted-publisher installation.
+    CustomUserProvided,
+}
+
+/// Exact risk notice a caller must display before entering Custom mode.
+pub const CUSTOM_USER_PROVIDED_RISK_NOTICE: &str = "This project does not have trusted publisher provenance. You accept the source risk for this exact bundle; after installation it follows the same authorization and execution policy as a normal installation.";
+
 /// Injected signature / provenance check (crypto stays outside this crate).
 pub trait SignatureProvenancePort: Send + Sync {
+    /// The policy through which the verifier accepted the artifact.
+    fn trust_mode(&self) -> InstallationTrustMode {
+        InstallationTrustMode::TrustedPublisher
+    }
+
     fn verify_artifact(
         &self,
         artifact_digest: &str,
@@ -75,6 +97,103 @@ impl SignatureProvenancePort for RejectingSignaturePort {
             RegisteredErrorCode::AgentPackageVerificationFailed,
             "signature or provenance verification failed",
         ))
+    }
+}
+
+/// User acknowledgement after the caller displayed
+/// [`CUSTOM_USER_PROVIDED_RISK_NOTICE`] for one exact local bundle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomInstallationAcknowledgement {
+    expected_artifact_digest: String,
+    operator_ref: String,
+    project_ref: String,
+}
+
+impl CustomInstallationAcknowledgement {
+    /// Records an affirmative Custom-mode choice for the exact bundle binding.
+    ///
+    /// The caller is responsible for displaying the fixed risk notice and
+    /// obtaining the user's affirmative choice before calling this method.
+    pub fn after_risk_review(
+        expected_artifact_digest: impl Into<String>,
+        operator_ref: impl Into<String>,
+        project_ref: impl Into<String>,
+    ) -> Result<Self, InstallerError> {
+        let expected_artifact_digest = expected_artifact_digest.into();
+        let operator_ref = operator_ref.into();
+        let project_ref = project_ref.into();
+        if expected_artifact_digest.is_empty()
+            || !operator_ref.starts_with("principal://")
+            || !project_ref.starts_with("file://")
+        {
+            return Err(InstallerError::new(
+                RegisteredErrorCode::AgentPackageVerificationFailed,
+                "custom acknowledgement requires a digest, principal:// operator, and file:// bundle",
+            ));
+        }
+        Ok(Self {
+            expected_artifact_digest,
+            operator_ref,
+            project_ref,
+        })
+    }
+}
+
+/// Explicit local-user policy for a digest-pinned project bundle.
+///
+/// Custom projects are permitted only after an acknowledgement binds the exact
+/// artifact digest to a local operator and `file://` bundle reference. Once
+/// installed, they follow the normal authorization and lifecycle path; this
+/// verifier only changes source admission and makes no publisher-signature,
+/// sandbox, C0/C1, or Profile claim.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomUserProvidedProjectVerifier {
+    acknowledgement: CustomInstallationAcknowledgement,
+}
+
+impl CustomUserProvidedProjectVerifier {
+    pub fn new(acknowledgement: CustomInstallationAcknowledgement) -> Self {
+        Self { acknowledgement }
+    }
+
+    fn expected_signature_ref(&self) -> String {
+        format!(
+            "custom-user-provided://operator/{}",
+            self.acknowledgement.operator_ref
+        )
+    }
+
+    fn expected_provenance_ref(&self) -> String {
+        format!(
+            "custom-user-provided://project/{}",
+            self.acknowledgement.project_ref
+        )
+    }
+}
+
+impl SignatureProvenancePort for CustomUserProvidedProjectVerifier {
+    fn trust_mode(&self) -> InstallationTrustMode {
+        InstallationTrustMode::CustomUserProvided
+    }
+
+    fn verify_artifact(
+        &self,
+        artifact_digest: &str,
+        signature_ref: &str,
+        provenance_ref: &str,
+        artifact: &[u8],
+    ) -> Result<(), InstallerError> {
+        if artifact.is_empty()
+            || artifact_digest != self.acknowledgement.expected_artifact_digest
+            || signature_ref != self.expected_signature_ref()
+            || provenance_ref != self.expected_provenance_ref()
+        {
+            return Err(InstallerError::new(
+                RegisteredErrorCode::AgentPackageVerificationFailed,
+                "custom project bundle does not match its explicit operator, source, and digest policy",
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -612,6 +731,123 @@ mod tests {
         let manager = authority.acquire_installation_manager().unwrap();
 
         let error = install_package_durable(&manager, &req, &RejectingSignaturePort).unwrap_err();
+
+        assert_eq!(error.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+        assert!(!authority.is_committed(&req.package_id).unwrap());
+        assert_eq!(authority.capability_grants(), 0);
+    }
+
+    #[test]
+    fn custom_user_provided_project_requires_explicit_custom_mode() {
+        let directory = tempfile::tempdir().unwrap();
+        let authority =
+            DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+        let mut req = sample_req(None);
+        req.signature_ref = "custom-user-provided://operator/principal://local-owner".into();
+        req.provenance_ref = "custom-user-provided://project/file://local/pi-project.tar".into();
+        let manager = authority.acquire_installation_manager().unwrap();
+
+        let error = install_package_durable(&manager, &req, &RejectingSignaturePort).unwrap_err();
+
+        assert_eq!(error.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+        assert!(!authority.is_committed(&req.package_id).unwrap());
+        assert_eq!(authority.capability_grants(), 0);
+    }
+
+    #[test]
+    fn custom_user_provided_project_requires_risk_acknowledgement_for_the_exact_bundle() {
+        let req = sample_req(None);
+        let acknowledgement = CustomInstallationAcknowledgement::after_risk_review(
+            req.declared_artifact_digest.clone(),
+            "principal://local-owner",
+            "file://local/pi-project.tar",
+        )
+        .unwrap();
+
+        let verifier = CustomUserProvidedProjectVerifier::new(acknowledgement);
+
+        assert_eq!(
+            verifier.trust_mode(),
+            InstallationTrustMode::CustomUserProvided
+        );
+        assert!(CUSTOM_USER_PROVIDED_RISK_NOTICE.contains("same authorization"));
+    }
+
+    #[test]
+    fn custom_user_provided_project_commits_digest_pinned_bundle_without_capability_grant() {
+        let directory = tempfile::tempdir().unwrap();
+        let authority =
+            DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+        let mut req = sample_req(None);
+        req.signature_ref = "custom-user-provided://operator/principal://local-owner".into();
+        req.provenance_ref = "custom-user-provided://project/file://local/pi-project.tar".into();
+        let acknowledgement = CustomInstallationAcknowledgement::after_risk_review(
+            req.declared_artifact_digest.clone(),
+            "principal://local-owner",
+            "file://local/pi-project.tar",
+        )
+        .unwrap();
+        let verifier = CustomUserProvidedProjectVerifier::new(acknowledgement);
+        let manager = authority.acquire_installation_manager().unwrap();
+
+        let committed = install_package_durable(&manager, &req, &verifier).unwrap();
+
+        assert_eq!(
+            verifier.trust_mode(),
+            InstallationTrustMode::CustomUserProvided
+        );
+        assert_eq!(committed.phase, InstallPhase::Committed);
+        assert!(authority.is_committed(&req.package_id).unwrap());
+        assert_eq!(authority.capability_grants(), 0);
+    }
+
+    #[test]
+    fn acknowledged_custom_project_uses_the_same_durable_commit_boundary_as_normal_install() {
+        let directory = tempfile::tempdir().unwrap();
+        let authority =
+            DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+        let normal = sample_req(None);
+        let mut custom = sample_req(None);
+        custom.package_id = "pkg://custom-demo".into();
+        custom.signature_ref = "custom-user-provided://operator/principal://local-owner".into();
+        custom.provenance_ref = "custom-user-provided://project/file://local/pi-project.tar".into();
+        let acknowledgement = CustomInstallationAcknowledgement::after_risk_review(
+            custom.declared_artifact_digest.clone(),
+            "principal://local-owner",
+            "file://local/pi-project.tar",
+        )
+        .unwrap();
+        let custom_verifier = CustomUserProvidedProjectVerifier::new(acknowledgement);
+        let manager = authority.acquire_installation_manager().unwrap();
+
+        let normal_commit =
+            install_package_durable(&manager, &normal, &AcceptingSignaturePort).unwrap();
+        let custom_commit = install_package_durable(&manager, &custom, &custom_verifier).unwrap();
+
+        assert_eq!(normal_commit.phase, custom_commit.phase);
+        assert!(authority.is_committed(&normal.package_id).unwrap());
+        assert!(authority.is_committed(&custom.package_id).unwrap());
+        assert_eq!(authority.capability_grants(), 0);
+    }
+
+    #[test]
+    fn custom_user_provided_project_rejects_mismatched_policy_binding_without_commit() {
+        let directory = tempfile::tempdir().unwrap();
+        let authority =
+            DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+        let mut req = sample_req(None);
+        req.signature_ref = "custom-user-provided://operator/principal://local-owner".into();
+        req.provenance_ref = "custom-user-provided://project/file://local/other-project.tar".into();
+        let acknowledgement = CustomInstallationAcknowledgement::after_risk_review(
+            "sha256:not-the-request-digest",
+            "principal://local-owner",
+            "file://local/pi-project.tar",
+        )
+        .unwrap();
+        let verifier = CustomUserProvidedProjectVerifier::new(acknowledgement);
+        let manager = authority.acquire_installation_manager().unwrap();
+
+        let error = install_package_durable(&manager, &req, &verifier).unwrap_err();
 
         assert_eq!(error.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
         assert!(!authority.is_committed(&req.package_id).unwrap());
