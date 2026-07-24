@@ -3,6 +3,7 @@
 - Date: 2026-07-24
 - Base: `3c22a4243254d12a36916a8b4624c07b1ffa6ab5` (`origin/main`, CI success)
 - Branch: `lane/run-pi-batch1`
+- Merged: PR #83, `937e7271af9edda73dad3da1a6841678fc18b1a2`
 - Scope: P4 fail-closed pre-launch admission only
 
 ## Completed
