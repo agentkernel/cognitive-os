@@ -39,9 +39,13 @@
   `cargo fmt --check`, and `git diff --check`.
 - The first PR CI run exposed a test-fixture portability defect: the fixture
   created `npm.cmd`, while Linux resolves `npm`. `efc55d7` supplies an executable
-  POSIX `npm` fixture on non-Windows and preserves the Windows `.cmd` fixture;
-  the focused Windows test/lint checks pass again. Re-run both CI platforms after
-  that commit; the earlier Ubuntu failure is not an implementation pass.
+  POSIX `npm` fixture on non-Windows and preserves the Windows `.cmd` fixture.
+  Its first rerun still failed because the fixture incorrectly passed the entire
+  inherited POSIX `PATH` as one `join_paths` segment. The pending follow-up uses
+  the platform path separator to prepend the fixture directory. The focused
+  Windows test/lint checks pass again, but no Linux CI pass is claimed until the
+  follow-up run completes; both earlier Ubuntu failures remain evidence of the
+  fixture defect, not implementation passes.
 - Conformance runner and vectors were not changed or rerun. Existing reported
   pins remain 60 pass / 25 not-run / 0 fail; this local CLI test is not a
   behavior-vector pass or Profile claim.

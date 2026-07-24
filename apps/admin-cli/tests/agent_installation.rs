@@ -15,7 +15,9 @@ fn run_cli(args: &[&str], npm_dir: Option<&Path>) -> CliResult {
     command.args(args);
     if let Some(npm_dir) = npm_dir {
         let inherited = std::env::var_os("PATH").unwrap_or_default();
-        let paths = std::env::join_paths([npm_dir.as_os_str(), inherited.as_os_str()]).unwrap();
+        let mut paths = npm_dir.as_os_str().to_owned();
+        paths.push(if cfg!(windows) { ";" } else { ":" });
+        paths.push(inherited);
         command.env("PATH", paths);
     }
     let output = command.output().expect("admin-cli runs");
