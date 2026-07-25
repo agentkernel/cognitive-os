@@ -5,6 +5,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+license.workspace = true
 
 # Adapter layer: implements port traits defined by cognitive-kernel.
 # SQLite (rusqlite, WAL mode) is confined to this crate per ADR-0002 and

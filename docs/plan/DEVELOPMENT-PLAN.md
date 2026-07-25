@@ -190,7 +190,7 @@ Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + G
 
 | # | 事项 | 现状 |
 |---|---|---|
-| P-1 | 开源许可证选择 | 未定（Cargo/package.json 均未声明 license）；候选 Apache-2.0 / MIT+Apache 双许可；需权利人决定 |
-| P-2 | 发布渠道（crates.io/npm 是否发布、命名空间） | 未定；当前全部 `private`/`publish=false` |
-| P-3 | CI 远端（GitHub 仓库/Actions 配额） | ci.yml 已备；仓库当前无 remote，推送后生效 |
+| P-1 | 开源许可证选择 | **已决（P0-T03 / ADR-0025）：Apache-2.0**；根 `LICENSE`/`NOTICE`；Cargo/package.json 已声明 `Apache-2.0` |
+| P-2 | 发布渠道（crates.io/npm 是否发布、命名空间） | **部分已决（P0-T03）**：GitHub Release 可检查 Linux bundle 为首个公开产物路径；**crates.io/npm 仍不发布**（`private`/`publish=false`）；Pi/Node 不 vendor |
+| P-3 | CI 远端（GitHub 仓库/Actions 配额） | ci.yml 已备；远端 `agentkernel/cognitive-os` 已用 |
 | P-4 | pnpm 大版本升级（10→11 提示） | 暂钉 10.33.2（packageManager 字段）；升级属修正型变更 |
