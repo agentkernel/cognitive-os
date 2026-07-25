@@ -45,35 +45,22 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
     let runtime_root = resolve_runtime_root_for_spawn(&options.layout_roots, &layout)?;
     write_endpoint(&layout, &options.bind_address)?;
 
-    let mut child = Command::new(&kernel_server)
-        .args([
-            "--personal",
-            "--bind",
-            &options.bind_address,
-            "--runtime-root",
-            runtime_root
-                .to_str()
-                .ok_or_else(|| "runtime root path is not valid UTF-8".to_owned())?,
-        ])
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|error| {
-            format!(
-                "failed to spawn kernel-server from {}: {error}",
-                kernel_server.display()
-            )
-        })?;
+    let mut child =
+        spawn_detached_kernel_server(&kernel_server, &options.bind_address, &runtime_root)?;
 
-    for _ in 0..100 {
+    // Windows MSVC debug and cold disks can take longer than a tight local loop.
+    for _ in 0..250 {
         if layout.daemon_lock_path().exists() && layout.local_bootstrap_secret_path().exists() {
+            // Intentionally leak the Child handle so Drop does not close OS process
+            // handles while the daemon continues as an independent process.
+            let daemon_pid = child.id();
+            std::mem::forget(child);
             return Ok(json!({
                 "status": "ok",
                 "surface": "cognitive-daemon",
                 "action": "started",
                 "endpoint": options.bind_address,
-                "pid": child.id(),
+                "pid": daemon_pid,
                 "kernel_server": kernel_server.display().to_string(),
                 "lock_path": layout.daemon_lock_path().display().to_string(),
                 "profile_claim": "not-claimed",
@@ -220,6 +207,74 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn spawn_detached_kernel_server(
+    kernel_server: &Path,
+    bind_address: &str,
+    runtime_root: &Path,
+) -> Result<std::process::Child, String> {
+    let runtime_root_text = runtime_root
+        .to_str()
+        .ok_or_else(|| "runtime root path is not valid UTF-8".to_owned())?;
+    let mut command = Command::new(kernel_server);
+    command
+        .args([
+            "--personal",
+            "--bind",
+            bind_address,
+            "--runtime-root",
+            runtime_root_text,
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
+    // Detach so the daemon outlives the short-lived `cognitive daemon start`
+    // process under shells and CI job objects (Windows).
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
+        const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
+        command.creation_flags(
+            CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS | CREATE_BREAKAWAY_FROM_JOB,
+        );
+    }
+
+    match command.spawn() {
+        Ok(child) => Ok(child),
+        Err(first_error) => {
+            // Some hosts refuse BREAKAWAY; retry with milder detach flags.
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
+                const DETACHED_PROCESS: u32 = 0x0000_0008;
+                let mut fallback = Command::new(kernel_server);
+                fallback
+                    .args([
+                        "--personal",
+                        "--bind",
+                        bind_address,
+                        "--runtime-root",
+                        runtime_root_text,
+                    ])
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .creation_flags(CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+                if let Ok(child) = fallback.spawn() {
+                    return Ok(child);
+                }
+            }
+            Err(format!(
+                "failed to spawn kernel-server from {}: {first_error}",
+                kernel_server.display()
+            ))
+        }
+    }
+}
+
 fn resolve_kernel_server_path(explicit: Option<&Path>) -> Result<PathBuf, String> {
     if let Some(path) = explicit {
         if path.is_file() {
@@ -296,8 +351,11 @@ fn process_from_lock_alive(layout: &PersonalDataLayout) -> Result<bool, String> 
 fn process_is_alive(pid: u32) -> bool {
     #[cfg(windows)]
     {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         Command::new("tasklist")
             .args(["/FI", &format!("PID eq {pid}"), "/NH"])
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .map(|output| {
                 let text = String::from_utf8_lossy(&output.stdout);
@@ -318,8 +376,11 @@ fn process_is_alive(pid: u32) -> bool {
 fn terminate_pid(pid: u32) -> Result<(), String> {
     #[cfg(windows)]
     {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         let status = Command::new("taskkill")
             .args(["/PID", &pid.to_string(), "/F"])
+            .creation_flags(CREATE_NO_WINDOW)
             .status()
             .map_err(|error| format!("taskkill failed: {error}"))?;
         if status.success() {

@@ -130,9 +130,16 @@ fn issue_management_token(
 }
 
 fn http_exchange(endpoint: &str, wire: &str) -> Result<String, PersonalDaemonClientError> {
+    let address = endpoint
+        .trim()
+        .trim_start_matches("http://")
+        .trim_start_matches("https://");
+    let socket_address = resolve_socket_address(address)?;
     let mut stream =
-        TcpStream::connect(endpoint).map_err(|error| PersonalDaemonClientError::Connect {
-            detail: error.to_string(),
+        TcpStream::connect_timeout(&socket_address, Duration::from_secs(3)).map_err(|error| {
+            PersonalDaemonClientError::Connect {
+                detail: error.to_string(),
+            }
         })?;
     let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(5)));
@@ -187,4 +194,19 @@ fn host_header_value(endpoint: &str) -> String {
         .trim_start_matches("http://")
         .trim_start_matches("https://")
         .to_owned()
+}
+
+fn resolve_socket_address(
+    endpoint: &str,
+) -> Result<std::net::SocketAddr, PersonalDaemonClientError> {
+    use std::net::ToSocketAddrs;
+    endpoint
+        .to_socket_addrs()
+        .map_err(|error| PersonalDaemonClientError::Connect {
+            detail: format!("unable to resolve endpoint `{endpoint}`: {error}"),
+        })?
+        .next()
+        .ok_or_else(|| PersonalDaemonClientError::Connect {
+            detail: format!("endpoint `{endpoint}` resolved to zero addresses"),
+        })
 }
