@@ -8,8 +8,9 @@
 - Base commit: `d1fb6f3` (`main` after P1-T02)
 - Lane: Personal / isolated crate `cognitive-secret` (does not take Lane-RUN
   `cognitive-runtime` / `cognitive-management` ownership)
-- Status: **done pending CI linked-test evidence** (local typecheck/clippy green;
-  Windows GNU host cannot link tests — P0-T01 non-supported baseline)
+- Status: **done** (merged PR #94 as `118d20a`; CI Ubuntu + Windows/MSVC SUCCESS)
+- Merge: https://github.com/agentkernel/cognitive-os/pull/94
+- CI runs: [30157577277](https://github.com/agentkernel/cognitive-os/actions/runs/30157577277) (PR), [30157576277](https://github.com/agentkernel/cognitive-os/actions/runs/30157576277) (push)
 
 ## 2. Completed in this atomic batch
 
@@ -48,7 +49,7 @@
 | `cargo clippy -p cognitive-secret --all-targets --locked` | pass (local) | Clean after parse_models fix |
 | `cargo test -p cognitive-secret --locked --test p1_t03_provider_discovery` | not-supported host | Windows GNU linker failure (P0-T01 non-supported baseline) |
 | `pnpm run check:consistency` | pass (local) | 273 REQ / 55 codes / 63 schemas / 85 vectors |
-| CI `cargo test --workspace --locked` | pending | Must confirm `p1_t03_provider_discovery` on Ubuntu + Windows/MSVC |
+| CI `cargo test --workspace --locked` | pass | runs 30157577277 + 30157576277 Ubuntu/Windows-MSVC SUCCESS (includes `p1_t03_provider_discovery`) |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 No secret material was written to repository evidence. Test markers are synthetic non-production bytes only.
@@ -64,13 +65,11 @@ No secret material was written to repository evidence. Test markers are syntheti
 
 ## 6. Next entry
 
-1. Open/merge PR for this branch; wait for CI Ubuntu/Windows-MSVC green including
-   `p1_t03_provider_discovery`.
-2. Dependency-satisfied next Personal tasks:
+1. P1-T03 is merged with CI green. Dependency-satisfied next Personal tasks:
    - **P1-T04** bounded daemon (depends P0-T07 + P1-T01; independent of P1-T03)
    - **P0-T03** still needs owner license/platform/distribution GO/NO-GO
    - **P1-T05** after both P1-T03 and P1-T04
-3. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
+2. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
    20260725-personal-p1-t03-provider-discovery-handoff.md, PARALLEL-LANES,
    PERSONAL-DEVELOPMENT-PLAN. Prefer next dependency-satisfied task (P1-T04)
    without claiming G0/Profile. If selecting P0-T03, stop and ask owner for
@@ -78,8 +77,8 @@ No secret material was written to repository evidence. Test markers are syntheti
 
 ## 7. Snapshot
 
-- PROGRESS updated: yes (P1-T03 recorded; no Profile claim)
-- Formal Personal ledger updated: yes (`done`, CI test evidence pending)
-- Commits: pending this session
-- PR: pending
-- CI: pending
+- PROGRESS updated: yes (P1-T03 recorded with CI evidence; no Profile claim)
+- Formal Personal ledger updated: yes (`done`, CI green)
+- Merge commit: `118d20a` (PR #94 squash)
+- PR: https://github.com/agentkernel/cognitive-os/pull/94 (MERGED)
+- CI: Ubuntu + Windows/MSVC SUCCESS (runs 30157577277 / 30157576277)
