@@ -118,11 +118,20 @@ mod tests {
         let _ = fs::remove_dir_all(&temp);
         fs::create_dir_all(&temp).unwrap();
         let lock_path = temp.join("daemon.lock");
-        let first = DaemonSingleInstanceLock::acquire(&lock_path).unwrap();
-        let second = DaemonSingleInstanceLock::acquire(&lock_path).unwrap_err();
+        let first = match DaemonSingleInstanceLock::acquire(&lock_path) {
+            Ok(lock) => lock,
+            Err(error) => panic!("first acquire failed: {error}"),
+        };
+        let second = match DaemonSingleInstanceLock::acquire(&lock_path) {
+            Ok(_) => panic!("second acquire should fail"),
+            Err(error) => error,
+        };
         assert!(matches!(second, DaemonLifecycleError::AlreadyRunning { .. }));
         drop(first);
-        let third = DaemonSingleInstanceLock::acquire(&lock_path).unwrap();
+        let third = match DaemonSingleInstanceLock::acquire(&lock_path) {
+            Ok(lock) => lock,
+            Err(error) => panic!("third acquire failed: {error}"),
+        };
         drop(third);
         let _ = fs::remove_dir_all(&temp);
     }
