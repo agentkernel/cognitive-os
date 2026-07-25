@@ -216,10 +216,10 @@ impl LinuxSecretServiceProbe {
     }
 
     fn linux_session_bus_present() -> bool {
-        if let Ok(address) = std::env::var("DBUS_SESSION_BUS_ADDRESS") {
-            if !address.trim().is_empty() {
-                return true;
-            }
+        if let Ok(address) = std::env::var("DBUS_SESSION_BUS_ADDRESS")
+            && !address.trim().is_empty()
+        {
+            return true;
         }
         if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
             let bus_path = std::path::Path::new(&runtime_dir).join("bus");
