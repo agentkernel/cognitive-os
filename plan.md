@@ -599,6 +599,7 @@ Pi 不可以：
 
 ### P1-T06 — `cognitive init/doctor/status/daemon`
 
+- **状态（2026-07-25）：** in-progress on `lane/personal-p1-t06-cognitive-cli`；ADR-0024；CI evidence pending；非 G0/Profile。
 - **目标：** 将 `admin-cli` 演进为 `cognitive` 产品入口。
 - **文件：** 修改 `apps/admin-cli/Cargo.toml`、`src/main.rs`、tests；计划添加 `cognitive` bin，保留 `admin-cli` 兼容。
 - **API：** 只调用 daemon/application service，不直接编排 SQLite。

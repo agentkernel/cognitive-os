@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07、P1-T01、P1-T02、P1-T03、P1-T04、P1-T05 已完成；其余任务尚未开始）**
+> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07、P1-T01、P1-T02、P1-T03、P1-T04、P1-T05 已完成；P1-T06 in-progress；其余任务尚未开始）**
 > **最后更新：2026-07-25**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -20,14 +20,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 5 | 0 | 0 | 2 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 5 | 0 | 0 | 4 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 5 | 1 | 0 | 3 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **10** | **0** | **0** | **41** | — |
+| **合计** | **51** | **10** | **1** | **0** | **40** | — |
 
 ## 2. 产品边界与不变量
 
@@ -76,7 +76,7 @@
 | P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | done | 2026-07-25；分支 `lane/personal-p1-t03-provider-discovery-probe`，PR [#94](https://github.com/agentkernel/cognitive-os/pull/94) 合入 `main@118d20a`。`cognitive-secret`：`ProviderTransport`、`ProviderDiscoveryService`、capability snapshot + `fnv1a64` identity digest、`persist_selected_snapshot_digest`；ADR-0021。CI runs [30157577277](https://github.com/agentkernel/cognitive-os/actions/runs/30157577277) / [30157576277](https://github.com/agentkernel/cognitive-os/actions/runs/30157576277) Ubuntu/Windows-MSVC `cargo test --workspace --locked` SUCCESS（含 `p1_t03_provider_discovery`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile；无真实 Provider Key；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t03-provider-discovery-handoff.md](../checkpoints/20260725-personal-p1-t03-provider-discovery-handoff.md)。 |
 | P1-T04 | 有界 Personal daemon 与本地认证 | P0-T07, P1-T01 | auth/size/timeout/concurrency/restart 测试 | done | 2026-07-25；PR #95（auth/size/host/cookie/restart）+ PR [#96](https://github.com/agentkernel/cognitive-os/pull/96)（timeout/concurrency）。`kernel-server --personal`：loopback、daemon lock、bootstrap secret、channel bearer、header/body 读超时 408、connection/in-flight 429、Host/Cookie fail-closed；ADR-0022。CI runs [30162481713](https://github.com/agentkernel/cognitive-os/actions/runs/30162481713) / [30162477963](https://github.com/agentkernel/cognitive-os/actions/runs/30162477963) Ubuntu/Windows-MSVC SUCCESS（含 timeout/concurrency 单元测试与既有 `p1_t04_personal_daemon`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile；无 Task/Memory/MCP；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t04-timeout-concurrency-handoff.md](../checkpoints/20260725-personal-p1-t04-timeout-concurrency-handoff.md)。 |
 | P1-T05 | Readiness、status 与 doctor 应用服务 | P1-T03, P1-T04 | blocked/degraded/ready 事实区分 | done | 2026-07-25；分支 `lane/personal-p1-t05-readiness-doctor`，PR [#97](https://github.com/agentkernel/cognitive-os/pull/97)。`kernel-server` Personal composition root：`evaluate_personal_readiness` + management-auth `GET /personal/status|readiness|doctor`；ADR-0023；blocked/degraded/ready 分离；`static_check_is_not_runtime_ready`；secret_ref/bootstrap 不入投影。CI runs [30164114878](https://github.com/agentkernel/cognitive-os/actions/runs/30164114878) / [30164113787](https://github.com/agentkernel/cognitive-os/actions/runs/30164113787) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)。 |
-| P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | not-started | — |
+| P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | in-progress | 2026-07-25 开始；分支 `lane/personal-p1-t06-cognitive-cli`。实现：`cognitive` bin + `personal_cli`（init/status/doctor/daemon）、ADR-0024、`tests/p1_t06_cognitive_cli.rs`。本地 Windows GNU linker exit 121 非支持基线；证据待 CI Ubuntu/Windows-MSVC。非 G0/B01-B12/Profile。 |
 | P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | not-started | — |
 | P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | not-started | — |
 | P1-T09 | B01 安装到首次对话 Gate | P1-T08 | 20 次 clean-run；redacted evidence 完整 | not-started | — |
@@ -167,4 +167,3 @@
 - [ ] 如有开放风险或漂移，更新 `docs/traceability/findings-ledger.md`。
 - [ ] 写入 `docs/checkpoints/` handoff，记录完成项、未完成项、测试、证据、风险与下一步。
 - [ ] 在 PR/提交中关联 `PERS-*` 计划 ID，并在适用时关联真实 REQ-ID。
-| P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | done | 2026-07-25；分支 `lane/personal-p1-t03-provider-discovery-probe`，PR [#94](https://github.com/agentkernel/cognitive-os/pull/94) 合入 `main@118d20a`。`cognitive-secret`：`ProviderTransport`、`ProviderDiscoveryService`、capability snapshot + `fnv1a64` identity digest、`persist_selected_snapshot_digest`；ADR-0021。CI runs [30157577277](https://github.com/agentkernel/cognitive-os/actions/runs/30157577277) / [30157576277](https://github.com/agentkernel/cognitive-os/actions/runs/30157576277) Ubuntu/Windows-MSVC `cargo test --workspace --locked` SUCCESS（含 `p1_t03_provider_discovery`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile；无真实 Provider Key；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t03-provider-discovery-handoff.md](../checkpoints/20260725-personal-p1-t03-provider-discovery-handoff.md)。 |
