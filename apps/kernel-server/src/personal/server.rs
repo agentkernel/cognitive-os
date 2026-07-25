@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use cognitive_store::PersonalDataLayout;
 use serde_json::json;
@@ -112,13 +112,13 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         }
         match incoming {
             Ok(stream) => {
-                handle_connection(
-                    stream,
-                    &config.bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                let bounds = config.bounds;
+                let authority = Arc::clone(&authority);
+                let active_connections = Arc::clone(&active_connections);
+                let in_flight = Arc::clone(&in_flight);
+                let _connection_thread = std::thread::spawn(move || {
+                    handle_connection(stream, &bounds, &authority, &active_connections, &in_flight);
+                });
             }
             Err(error) => {
                 eprintln!("kernel-server personal accept: {error}");
@@ -139,6 +139,7 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), PersonalDaemonError> {
     }
     Ok(())
 }
+
 fn handle_connection(
     mut stream: TcpStream,
     bounds: &PersonalResourceBounds,
@@ -146,6 +147,18 @@ fn handle_connection(
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
+    if stream
+        .set_read_timeout(Some(Duration::from_secs(bounds.read_header_timeout_secs)))
+        .is_err()
+    {
+        let _ = write_error_response(
+            &mut stream,
+            500,
+            "PERSONAL_SOCKET_TIMEOUT_CONFIGURATION_FAILED",
+            "unable to configure request read timeout",
+        );
+        return;
+    }
     let current_connections = active_connections.fetch_add(1, Ordering::SeqCst) + 1;
     if current_connections > bounds.max_concurrent_connections {
         active_connections.fetch_sub(1, Ordering::SeqCst);
@@ -172,7 +185,12 @@ fn handle_connection(
 
     let result = process_http_request(&mut stream, bounds, authority);
     if let Err(error) = result {
-        let _ = write_error_response(&mut stream, 400, "PERSONAL_HTTP_PARSE_ERROR", &error);
+        let (status, code) = if error == "PERSONAL_REQUEST_READ_TIMEOUT" {
+            (408, error.as_str())
+        } else {
+            (400, "PERSONAL_HTTP_PARSE_ERROR")
+        };
+        let _ = write_error_response(&mut stream, status, code, &error);
     }
 
     in_flight.fetch_sub(1, Ordering::SeqCst);
@@ -322,6 +340,7 @@ fn handle_channel_route(
         }
     }
 }
+
 fn read_bounded_http_request(
     stream: &mut TcpStream,
     bounds: &PersonalResourceBounds,
@@ -333,7 +352,7 @@ fn read_bounded_http_request(
         .saturating_add(bounds.max_header_block_bytes)
         .saturating_add(1024);
     loop {
-        let read = stream.read(&mut chunk).map_err(|error| error.to_string())?;
+        let read = stream.read(&mut chunk).map_err(map_request_read_error)?;
         if read == 0 {
             break;
         }
@@ -369,9 +388,14 @@ fn read_bounded_http_request(
                 .unwrap_or(0);
             validate_body_length(content_length, bounds)
                 .map_err(|error| error.code().to_owned())?;
+            stream
+                .set_read_timeout(Some(Duration::from_secs(
+                    bounds.request_body_read_timeout_secs,
+                )))
+                .map_err(|error| error.to_string())?;
             let body_start = split + 4;
             while bytes.len() < body_start + content_length {
-                let read = stream.read(&mut chunk).map_err(|error| error.to_string())?;
+                let read = stream.read(&mut chunk).map_err(map_request_read_error)?;
                 if read == 0 {
                     break;
                 }
@@ -388,6 +412,15 @@ fn read_bounded_http_request(
         }
     }
     Err("malformed HTTP request".to_owned())
+}
+
+fn map_request_read_error(error: std::io::Error) -> String {
+    match error.kind() {
+        std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => {
+            "PERSONAL_REQUEST_READ_TIMEOUT".to_owned()
+        }
+        _ => error.to_string(),
+    }
 }
 
 fn parse_request_line(request_line: &str) -> Result<String, String> {
@@ -478,6 +511,7 @@ fn write_json_response(stream: &mut TcpStream, status: u16, body: &str) -> Resul
         401 => "Unauthorized",
         403 => "Forbidden",
         404 => "Not Found",
+        408 => "Request Timeout",
         429 => "Too Many Requests",
         _ => "Error",
     };
@@ -517,12 +551,339 @@ fn find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
 mod tests {
-    use super::ensure_loopback_bind;
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+
+    use cognitive_store::PersonalDataLayout;
+
+    use super::{
+        LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
+    };
+
+    fn test_authority(test_name: &str) -> Arc<Mutex<LocalSessionAuthority>> {
+        let temporary_root = std::env::temp_dir().join(format!(
+            "cos-personal-server-test-{test_name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|duration| duration.as_nanos())
+                .unwrap_or(0),
+        ));
+        let layout = PersonalDataLayout::from_xdg_roots(
+            &temporary_root,
+            &temporary_root,
+            &temporary_root,
+            &temporary_root,
+            &temporary_root,
+        );
+        layout.ensure_directories().expect("test directories");
+        let authority = LocalSessionAuthority::initialize(
+            layout.local_bootstrap_secret_path(),
+            PersonalResourceBounds::personal_v1_baseline(),
+        )
+        .expect("test authority");
+        Arc::new(Mutex::new(authority))
+    }
+
+    fn accept_connection(listener: &TcpListener) -> TcpStream {
+        listener.accept().expect("accepted test connection").0
+    }
+
+    fn wait_for_count(counter: &AtomicUsize, expected: usize) {
+        for _ in 0..200 {
+            if counter.load(Ordering::SeqCst) == expected {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        panic!("counter did not reach {expected}");
+    }
 
     #[test]
     fn non_loopback_bind_is_rejected() {
         assert!(ensure_loopback_bind("0.0.0.0:8080").is_err());
         assert!(ensure_loopback_bind("127.0.0.1:0").is_ok());
+    }
+
+    #[test]
+    fn slow_header_read_times_out_with_stable_protocol_code() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let mut bounds = PersonalResourceBounds::personal_v1_baseline();
+        bounds.read_header_timeout_secs = 1;
+        let authority = test_authority("timeout");
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            move || {
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+
+        let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client connection");
+        client
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("client timeout");
+        client
+            .write_all(b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1")
+            .expect("partial header");
+        let mut response = String::new();
+        client
+            .read_to_string(&mut response)
+            .expect("timeout response");
+        server.join().expect("server thread");
+
+        assert!(
+            response.contains("PERSONAL_REQUEST_READ_TIMEOUT"),
+            "{response}"
+        );
+        assert_eq!(
+            active_connections.load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+        assert_eq!(in_flight.load(std::sync::atomic::Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn slow_body_read_times_out_with_stable_protocol_code() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let mut bounds = PersonalResourceBounds::personal_v1_baseline();
+        bounds.read_header_timeout_secs = 1;
+        bounds.request_body_read_timeout_secs = 1;
+        let authority = test_authority("body-timeout");
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            move || {
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+
+        let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client connection");
+        client
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("client timeout");
+        client
+            .write_all(
+                b"POST /local/session HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: 4\r\n\r\n",
+            )
+            .expect("headers without body");
+        let mut response = String::new();
+        client
+            .read_to_string(&mut response)
+            .expect("timeout response");
+        server.join().expect("server thread");
+
+        assert!(
+            response.contains("PERSONAL_REQUEST_READ_TIMEOUT"),
+            "{response}"
+        );
+        assert_eq!(active_connections.load(Ordering::SeqCst), 0);
+        assert_eq!(in_flight.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn concurrent_connection_limit_rejects_excess_connection() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let mut bounds = PersonalResourceBounds::personal_v1_baseline();
+        bounds.max_concurrent_connections = 2;
+        // Keep in-flight high so the third connection is rejected by the
+        // connection ceiling, not the in-flight ceiling.
+        bounds.max_in_flight_requests = 8;
+        bounds.read_header_timeout_secs = 1;
+        let authority = test_authority("concurrency");
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let mut first = TcpStream::connect(("127.0.0.1", port)).expect("first connection");
+        let first_listener = listener.try_clone().expect("first listener clone");
+        let first_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&first_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        first
+            .write_all(b"GET /personal/health HTTP/1.1\r\n")
+            .expect("first partial header");
+        wait_for_count(&active_connections, 1);
+
+        let mut second = TcpStream::connect(("127.0.0.1", port)).expect("second connection");
+        let second_listener = listener.try_clone().expect("second listener clone");
+        let second_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&second_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        second
+            .write_all(b"GET /personal/health HTTP/1.1\r\n")
+            .expect("second partial header");
+        wait_for_count(&active_connections, 2);
+
+        let mut third = TcpStream::connect(("127.0.0.1", port)).expect("third connection");
+        let third_listener = listener.try_clone().expect("third listener clone");
+        let third_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&third_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        third
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("third timeout");
+
+        let mut response = String::new();
+        third.read_to_string(&mut response).expect("limit response");
+        assert!(response.contains("CONNECTION_LIMIT_EXCEEDED"), "{response}");
+
+        drop(first);
+        drop(second);
+        first_server.join().expect("first server thread");
+        second_server.join().expect("second server thread");
+        third_server.join().expect("third server thread");
+        assert_eq!(active_connections.load(Ordering::SeqCst), 0);
+        assert_eq!(in_flight.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn in_flight_request_limit_rejects_excess_request() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let mut bounds = PersonalResourceBounds::personal_v1_baseline();
+        bounds.max_concurrent_connections = 3;
+        bounds.max_in_flight_requests = 2;
+        bounds.read_header_timeout_secs = 1;
+        let authority = test_authority("in-flight");
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+
+        let mut first = TcpStream::connect(("127.0.0.1", port)).expect("first connection");
+        let first_listener = listener.try_clone().expect("first listener clone");
+        let first_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&first_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        first
+            .write_all(b"GET /personal/health HTTP/1.1\r\n")
+            .expect("first partial header");
+        wait_for_count(&in_flight, 1);
+
+        let mut second = TcpStream::connect(("127.0.0.1", port)).expect("second connection");
+        let second_listener = listener.try_clone().expect("second listener clone");
+        let second_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&second_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        second
+            .write_all(b"GET /personal/health HTTP/1.1\r\n")
+            .expect("second partial header");
+        wait_for_count(&in_flight, 2);
+
+        let mut third = TcpStream::connect(("127.0.0.1", port)).expect("third connection");
+        let third_listener = listener.try_clone().expect("third listener clone");
+        let third_server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            let bounds = bounds;
+            move || {
+                handle_connection(
+                    accept_connection(&third_listener),
+                    &bounds,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        third
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("third timeout");
+
+        let mut response = String::new();
+        third.read_to_string(&mut response).expect("limit response");
+        assert!(response.contains("IN_FLIGHT_LIMIT_EXCEEDED"), "{response}");
+
+        drop(first);
+        drop(second);
+        first_server.join().expect("first server thread");
+        second_server.join().expect("second server thread");
+        third_server.join().expect("third server thread");
+        assert_eq!(active_connections.load(Ordering::SeqCst), 0);
+        assert_eq!(in_flight.load(Ordering::SeqCst), 0);
     }
 }

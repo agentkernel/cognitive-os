@@ -34,7 +34,12 @@ for Personal operation with a fail-closed loopback front door.
 6. **Channel routes:** `/management/*` and `/task/*` require matching bearer;
    cross-channel use returns `SHELL_CHANNEL_BINDING_MISMATCH`.
 7. **Bounds:** ADR-0019 table enforced for body size, header block size/count,
-   concurrent connections, and in-flight requests.
+   concurrent connections, in-flight requests, header read timeout, and body
+   read timeout. Slow partial headers/bodies fail closed with
+   `PERSONAL_REQUEST_READ_TIMEOUT` (HTTP 408). Excess concurrency fails closed
+   with `CONNECTION_LIMIT_EXCEEDED` or `IN_FLIGHT_LIMIT_EXCEEDED` (HTTP 429)
+   and creates no authority side effects. Non-`once` accepts run on worker
+   threads so concurrent limit probes can exercise shared counters.
 8. **Host / CSRF controls:** reject non-loopback `Host`; reject `Cookie` auth.
 9. **Non-claims:** no Task scheduler, Memory, MCP, full readiness projection
    (P1-T05), Provider proxy, G0, B01-B12, or Profile `implemented`.
