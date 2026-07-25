@@ -11,7 +11,9 @@ dependencies = [
  "cognitive-kernel",
  "cognitive-management",
  "cognitive-runtime",
+ "cognitive-secret",
  "cognitive-store",
+ "kernel-server",
  "serde_json",
  "tempfile",
 ]
