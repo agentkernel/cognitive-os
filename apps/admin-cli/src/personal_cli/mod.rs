@@ -126,20 +126,24 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             }
             Err(error) => print_operational_error(&error),
         },
-        CognitiveCommand::Status(options) => match fetch_projection(&options, ProjectionKind::Status) {
-            Ok(body) => {
-                println!("{body}");
-                EXIT_SUCCESS
+        CognitiveCommand::Status(options) => {
+            match fetch_projection(&options, ProjectionKind::Status) {
+                Ok(body) => {
+                    println!("{body}");
+                    EXIT_SUCCESS
+                }
+                Err(error) => print_operational_error(&error),
             }
-            Err(error) => print_operational_error(&error),
-        },
-        CognitiveCommand::Doctor(options) => match fetch_projection(&options, ProjectionKind::Doctor) {
-            Ok(body) => {
-                println!("{body}");
-                EXIT_SUCCESS
+        }
+        CognitiveCommand::Doctor(options) => {
+            match fetch_projection(&options, ProjectionKind::Doctor) {
+                Ok(body) => {
+                    println!("{body}");
+                    EXIT_SUCCESS
+                }
+                Err(error) => print_operational_error(&error),
             }
-            Err(error) => print_operational_error(&error),
-        },
+        }
         CognitiveCommand::Daemon(DaemonCommand::Start(options)) => match daemon::start(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -147,13 +151,15 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             }
             Err(error) => print_operational_error(&error),
         },
-        CognitiveCommand::Daemon(DaemonCommand::Status(options)) => match daemon::status(&options) {
-            Ok(report) => {
-                println!("{}", pretty_json(&report));
-                EXIT_SUCCESS
+        CognitiveCommand::Daemon(DaemonCommand::Status(options)) => {
+            match daemon::status(&options) {
+                Ok(report) => {
+                    println!("{}", pretty_json(&report));
+                    EXIT_SUCCESS
+                }
+                Err(error) => print_operational_error(&error),
             }
-            Err(error) => print_operational_error(&error),
-        },
+        }
         CognitiveCommand::Daemon(DaemonCommand::Stop(options)) => match daemon::stop(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -202,10 +208,15 @@ fn parse_status_options(flags: &BTreeMap<String, String>) -> Result<StatusOption
     })
 }
 
-fn parse_daemon_start_options(flags: &BTreeMap<String, String>) -> Result<DaemonStartOptions, String> {
+fn parse_daemon_start_options(
+    flags: &BTreeMap<String, String>,
+) -> Result<DaemonStartOptions, String> {
     Ok(DaemonStartOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
-        bind_address: flags.get("bind").cloned().unwrap_or_else(|| "127.0.0.1:7420".to_owned()),
+        bind_address: flags
+            .get("bind")
+            .cloned()
+            .unwrap_or_else(|| "127.0.0.1:7420".to_owned()),
         kernel_server_path: flags.get("kernel-server").map(PathBuf::from),
     })
 }
@@ -215,13 +226,22 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {
         if flag == "--allow-ephemeral-secret-backend" {
-            if flags.insert("allow-ephemeral-secret-backend".to_owned(), "true".to_owned()).is_some() {
+            if flags
+                .insert(
+                    "allow-ephemeral-secret-backend".to_owned(),
+                    "true".to_owned(),
+                )
+                .is_some()
+            {
                 return Err("flag --allow-ephemeral-secret-backend given twice".to_owned());
             }
             continue;
         }
         if flag == "--rotate-key" {
-            if flags.insert("rotate-key".to_owned(), "true".to_owned()).is_some() {
+            if flags
+                .insert("rotate-key".to_owned(), "true".to_owned())
+                .is_some()
+            {
                 return Err("flag --rotate-key given twice".to_owned());
             }
             continue;

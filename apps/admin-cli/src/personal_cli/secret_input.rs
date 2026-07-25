@@ -19,10 +19,7 @@ pub fn read_api_key_material(api_key_file: Option<&Path>) -> Result<SecretMateri
         }
         Some(path) => {
             let mut file = File::open(path).map_err(|error| {
-                format!(
-                    "unable to open --api-key-file {}: {error}",
-                    path.display()
-                )
+                format!("unable to open --api-key-file {}: {error}", path.display())
             })?;
             read_secret_material_from_reader(&mut file).map_err(map_secret_error)
         }

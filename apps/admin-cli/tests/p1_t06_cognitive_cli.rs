@@ -238,12 +238,7 @@ fn daemon_start_status_doctor_and_stop_roundtrip() {
 
     thread::sleep(Duration::from_millis(50));
 
-    let status = run_cognitive(&[
-        "daemon",
-        "status",
-        "--runtime-root",
-        root.to_str().unwrap(),
-    ]);
+    let status = run_cognitive(&["daemon", "status", "--runtime-root", root.to_str().unwrap()]);
     assert!(
         status.status.success(),
         "stdout={} stderr={}",
@@ -299,12 +294,7 @@ fn daemon_start_status_doctor_and_stop_roundtrip() {
         stdout_str(&personal_status)
     );
 
-    let stop = run_cognitive(&[
-        "daemon",
-        "stop",
-        "--runtime-root",
-        root.to_str().unwrap(),
-    ]);
+    let stop = run_cognitive(&["daemon", "stop", "--runtime-root", root.to_str().unwrap()]);
     assert!(
         stop.status.success(),
         "stdout={} stderr={}",

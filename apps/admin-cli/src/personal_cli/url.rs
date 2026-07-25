@@ -21,9 +21,7 @@ pub fn normalize_provider_base_url(raw: &str) -> Result<String, String> {
         );
     }
     if trimmed.chars().any(char::is_whitespace) {
-        return Err(
-            "base_url must not contain whitespace; remove spaces and retry".to_owned(),
-        );
+        return Err("base_url must not contain whitespace; remove spaces and retry".to_owned());
     }
     let lowercase = trimmed.to_ascii_lowercase();
     if lowercase.starts_with("http://") {
@@ -61,8 +59,7 @@ mod tests {
 
     #[test]
     fn strips_trailing_slash_and_rejects_http() {
-        let normalized =
-            normalize_provider_base_url("  https://api.deepseek.com/v1/  ").unwrap();
+        let normalized = normalize_provider_base_url("  https://api.deepseek.com/v1/  ").unwrap();
         assert_eq!(normalized, "https://api.deepseek.com/v1");
         let http_error = normalize_provider_base_url("http://api.deepseek.com/v1").unwrap_err();
         assert!(http_error.contains("https://"), "{http_error}");

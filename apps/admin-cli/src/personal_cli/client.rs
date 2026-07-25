@@ -88,9 +88,7 @@ impl PersonalDaemonClient {
     }
 }
 
-fn read_bootstrap_secret(
-    layout: &PersonalDataLayout,
-) -> Result<String, PersonalDaemonClientError> {
+fn read_bootstrap_secret(layout: &PersonalDataLayout) -> Result<String, PersonalDaemonClientError> {
     let path = layout.local_bootstrap_secret_path();
     std::fs::read_to_string(&path)
         .map(|contents| contents.trim().to_owned())
@@ -132,11 +130,10 @@ fn issue_management_token(
 }
 
 fn http_exchange(endpoint: &str, wire: &str) -> Result<String, PersonalDaemonClientError> {
-    let mut stream = TcpStream::connect(endpoint).map_err(|error| {
-        PersonalDaemonClientError::Connect {
+    let mut stream =
+        TcpStream::connect(endpoint).map_err(|error| PersonalDaemonClientError::Connect {
             detail: error.to_string(),
-        }
-    })?;
+        })?;
     let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(5)));
     stream
@@ -155,11 +152,12 @@ fn http_exchange(endpoint: &str, wire: &str) -> Result<String, PersonalDaemonCli
 }
 
 fn split_http_response(response: &str) -> Result<(u16, String), PersonalDaemonClientError> {
-    let (header_block, body) = response.split_once("\r\n\r\n").ok_or_else(|| {
-        PersonalDaemonClientError::Protocol {
-            detail: "response missing header/body separator".to_owned(),
-        }
-    })?;
+    let (header_block, body) =
+        response
+            .split_once("\r\n\r\n")
+            .ok_or_else(|| PersonalDaemonClientError::Protocol {
+                detail: "response missing header/body separator".to_owned(),
+            })?;
     let status_line = header_block.lines().next().unwrap_or_default();
     let status = status_line
         .split_whitespace()
