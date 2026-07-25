@@ -38,7 +38,7 @@ fn map_secret_error(error: SecretError) -> String {
 fn read_interactive_hidden_material() -> Result<SecretMaterial, String> {
     #[cfg(unix)]
     {
-        return read_unix_hidden_material();
+        read_unix_hidden_material()
     }
     #[cfg(not(unix))]
     {

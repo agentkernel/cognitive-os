@@ -113,31 +113,33 @@ fn configure_provider_if_requested(
     })?;
     let base_url = normalize_provider_base_url(&base_url_raw)?;
 
-    if already_configured && !options.rotate_key && options.api_key_file.is_none() {
-        if let Ok(existing) = config_repository.load() {
-            let selected = options
-                .model_id
-                .as_ref()
-                .map(|model_id| format!("manual-model:{model_id}"));
-            let updated = ProviderConfig::new(
-                provider_id.clone(),
-                base_url.clone(),
-                existing.secret_ref().clone(),
-                selected.or_else(|| existing.selected_snapshot_digest().map(str::to_owned)),
-            )
-            .map_err(|error| format!("invalid provider config refresh: {error}"))?;
-            config_repository
-                .store(&updated)
-                .map_err(|error| format!("unable to refresh provider config: {error}"))?;
-            return Ok(json!({
-                "action": "refreshed_non_secret",
-                "configured": true,
-                "provider_id": provider_id,
-                "base_url": base_url,
-                "model_selection": updated.selected_snapshot_digest(),
-                "secret_material_written": false
-            }));
-        }
+    if already_configured
+        && !options.rotate_key
+        && options.api_key_file.is_none()
+        && let Ok(existing) = config_repository.load()
+    {
+        let selected = options
+            .model_id
+            .as_ref()
+            .map(|model_id| format!("manual-model:{model_id}"));
+        let updated = ProviderConfig::new(
+            provider_id.clone(),
+            base_url.clone(),
+            existing.secret_ref().clone(),
+            selected.or_else(|| existing.selected_snapshot_digest().map(str::to_owned)),
+        )
+        .map_err(|error| format!("invalid provider config refresh: {error}"))?;
+        config_repository
+            .store(&updated)
+            .map_err(|error| format!("unable to refresh provider config: {error}"))?;
+        return Ok(json!({
+            "action": "refreshed_non_secret",
+            "configured": true,
+            "provider_id": provider_id,
+            "base_url": base_url,
+            "model_selection": updated.selected_snapshot_digest(),
+            "secret_material_written": false
+        }));
     }
 
     let material = read_api_key_material(options.api_key_file.as_deref())?;
@@ -145,31 +147,28 @@ fn configure_provider_if_requested(
         .model_id
         .as_ref()
         .map(|model_id| format!("manual-model:{model_id}"));
+    let put_request = PutProviderKeyRequest {
+        config_repository,
+        provider_id: &provider_id,
+        base_url: &base_url,
+        material,
+        selected_snapshot_digest,
+        backend_class: if options.allow_ephemeral_secret_backend {
+            "ephemeral-test-double"
+        } else {
+            "linux-secret-tool"
+        },
+        rotate: options.rotate_key && already_configured,
+    };
 
     if options.allow_ephemeral_secret_backend {
-        return put_with_store(
-            EphemeralSecretStore::default(),
-            config_repository,
-            &provider_id,
-            &base_url,
-            material,
-            selected_snapshot_digest,
-            "ephemeral-test-double",
-            options.rotate_key && already_configured,
-        );
+        return put_with_store(EphemeralSecretStore::default(), put_request);
     }
 
     match select_production_secret_store() {
-        cognitive_secret::ProductionSecretBackend::LinuxSecretTool(store) => put_with_store(
-            store,
-            config_repository,
-            &provider_id,
-            &base_url,
-            material,
-            selected_snapshot_digest,
-            "linux-secret-tool",
-            options.rotate_key && already_configured,
-        ),
+        cognitive_secret::ProductionSecretBackend::LinuxSecretTool(store) => {
+            put_with_store(store, put_request)
+        }
         cognitive_secret::ProductionSecretBackend::Unavailable(_) => Err(
             "no production SecretStore is available on this host. On Linux install \
              FreeDesktop Secret Service and secret-tool, then retry. For hermetic tests only, \
@@ -179,56 +178,62 @@ fn configure_provider_if_requested(
     }
 }
 
-fn put_with_store<S: SecretStore>(
-    store: S,
-    config_repository: &ProviderConfigRepository,
-    provider_id: &str,
-    base_url: &str,
+struct PutProviderKeyRequest<'a> {
+    config_repository: &'a ProviderConfigRepository,
+    provider_id: &'a str,
+    base_url: &'a str,
     material: SecretMaterial,
     selected_snapshot_digest: Option<String>,
-    backend_class: &str,
+    backend_class: &'a str,
     rotate: bool,
+}
+
+fn put_with_store<S: SecretStore>(
+    store: S,
+    request: PutProviderKeyRequest<'_>,
 ) -> Result<Value, String> {
-    let service = ProviderKeyService::new(store, config_repository.clone());
-    let config = if rotate {
+    let service = ProviderKeyService::new(store, request.config_repository.clone());
+    let config = if request.rotate {
         service
-            .rotate_provider_key(material)
+            .rotate_provider_key(request.material)
             .map_err(|error| format!("provider key rotate failed: {error}"))?;
         let existing = service
             .load_config()
             .map_err(|error| format!("provider config reload failed: {error}"))?
             .ok_or_else(|| "provider config missing after rotate".to_owned())?;
         let refreshed = ProviderConfig::new(
-            provider_id,
-            base_url,
+            request.provider_id,
+            request.base_url,
             existing.secret_ref().clone(),
-            selected_snapshot_digest
+            request
+                .selected_snapshot_digest
                 .clone()
                 .or_else(|| existing.selected_snapshot_digest().map(str::to_owned)),
         )
         .map_err(|error| format!("invalid provider config after rotate: {error}"))?;
-        config_repository
+        request
+            .config_repository
             .store(&refreshed)
             .map_err(|error| format!("unable to store provider config after rotate: {error}"))?;
         refreshed
     } else {
         service
             .configure_provider(
-                provider_id,
-                base_url,
-                material,
-                selected_snapshot_digest.clone(),
+                request.provider_id,
+                request.base_url,
+                request.material,
+                request.selected_snapshot_digest.clone(),
             )
             .map_err(|error| format!("provider key configure failed: {error}"))?
     };
 
     Ok(json!({
-        "action": if rotate { "rotated" } else { "configured" },
+        "action": if request.rotate { "rotated" } else { "configured" },
         "configured": true,
         "provider_id": config.provider_id(),
         "base_url": config.base_url(),
         "model_selection": config.selected_snapshot_digest(),
-        "secret_backend": backend_class,
+        "secret_backend": request.backend_class,
         "secret_material_written": true,
         "secret_ref_redacted": true
     }))
