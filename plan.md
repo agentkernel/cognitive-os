@@ -577,7 +577,7 @@ Pi 不可以：
 ### P1-T04 — 有界 Personal daemon 与本地认证
 
 - **目标：** 替换 synthetic composition 的 Personal 入口，建立 loopback 有界 front door 与本地认证。
-- **状态：** done（本地 typecheck 受 Windows GNU linker 限制；行为测试由 CI Ubuntu/Windows-MSVC 执行 `p1_t04_personal_daemon`）。
+- **状态：** in-progress（本地 typecheck 受 Windows GNU linker 限制；等待 CI Ubuntu/Windows-MSVC 执行 `p1_t04_personal_daemon` 的行为测试证据）。
 - **文件：** `apps/kernel-server/src/personal/{mod,auth,bounds,lifecycle,server}.rs`、`main.rs --personal`、`tests/p1_t04_personal_daemon.rs`；layout daemon 路径；ADR-0022。
 - **配置：** loopback-only bind、ADR-0019 body/header/concurrency bounds、single-instance `daemon.lock`、runtime bootstrap secret。
 - **API：** `POST /local/session`；channel-scoped bearer on `/management/*` and `/task/*`；`GET /personal/health`（non-claim）。

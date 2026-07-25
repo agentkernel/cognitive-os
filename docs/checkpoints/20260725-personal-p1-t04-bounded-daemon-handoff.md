@@ -8,8 +8,8 @@
 - Base commit: `7ee7648` (`main` after P1-T03 evidence)
 - Lane: Personal / composition root `apps/kernel-server` (does not take Lane-RUN
   ownership of `cognitive-runtime` / `cognitive-management` readiness projection)
-- Status: **done pending CI linked-test evidence** (local Windows GNU linker
-  non-supported per P0-T01)
+- Status: **in-progress pending CI linked-test evidence** (local Windows GNU
+  linker non-supported per P0-T01)
 
 ## 2. Completed in this atomic batch
 
@@ -61,6 +61,6 @@
 ## 7. Snapshot
 
 - PROGRESS updated: yes (no Profile claim)
-- Formal Personal ledger updated: yes (`done`, CI pending)
+- Formal Personal ledger updated: yes (`in-progress`, CI pending)
 - PR: pending
 - CI: pending
