@@ -487,9 +487,9 @@ Pi 不可以：
 - **目标：** 为现有 inline SQLite Schema 建立迁移策略。
 - **证据：** `crates/cognitive-store/src/sqlite.rs`、`installation.rs` 无 schema version。
 - **依赖：** P0-T02；不改变当前 DB。
-- **文件：** 修改 ADR-003；计划新增 `crates/cognitive-store/migrations/`、fixture 目录。
-- **数据/API：** 设计 `schema_migrations(version, digest, applied_at)`、preflight、backup、downgrade policy。
-- **验收：** 用复制数据库完成 dry-run、重复执行、checksum mismatch、失败恢复设计评审。
+- **文件：** 新增 ADR-0017（ADR-0003 已是 HTTP/SSE 传输决策，不得复用）；新增 `crates/cognitive-store` 本地迁移适配器和 focused tests；不创建运行时 XDG 目录或用户数据。
+- **数据/API：** 设计 `schema_migrations(version, digest, applied_at)`、preflight、backup、rollback policy。调用方显式提供 scratch/backup 路径；不暴露客户端 authority 写入口。
+- **验收：** 用复制数据库完成 dry-run、重复执行、checksum mismatch、失败恢复设计评审；实际 Rust 测试须在支持工具链执行后才能将本任务标记 done。
 - **风险：** authority 与 installation DB 顺序；必须定义跨 DB failure semantics。
 - **解锁：** P1-T01。
 

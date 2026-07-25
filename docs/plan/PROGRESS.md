@@ -24,7 +24,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **planning；P0-T01、P0-T02 done；无产品实现声明** | `01ceb93` 的 CI run 30140381194 在 Ubuntu 与 Windows/MSVC 均通过；P0-T02 专用映射核对、`pnpm run check:consistency`、`git diff --check` 均通过；Personal 功能/Gate 证据均 `not-run` | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix，不新增 REQ/schema/vector；记录：[tests/baseline/README.md](../../tests/baseline/README.md)。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **planning；P0-T01、P0-T02、P0-T04 done；无产品实现声明** | P0-T04 的 ADR-0017 和 SQLite migration dry-run/apply/replay/digest-drift/failure-recovery focused tests 已由 CI run [30150183941](https://github.com/agentkernel/cognitive-os/actions/runs/30150183941) 的 Ubuntu/Windows-MSVC `cargo test --workspace --locked` 真实执行并通过；`cargo fmt --all -- --check`、`pnpm run check:consistency`、`git diff --check`、`cargo metadata --locked --no-deps` 亦通过。本机 Windows GNU linker exit 121 是既知非支持基线，不阻断支持 runner 证据。P0-T02 专用映射核对已通过；Personal 功能/Gate 证据仍 `not-run`。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix，不新增 REQ/schema/vector；记录：[tests/baseline/README.md](../../tests/baseline/README.md)。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -69,9 +69,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260725-personal-p0-t02-handoff.md](../checkpoints/20260725-personal-p0-t02-handoff.md)（Personal：PERS-PR/任务/Gate 可机读 trace；planning-only，所有 Personal evidence 仍 `not-run`）
-2. [20260724-lane-run-admin-cli-custom-install-handoff.md](../checkpoints/20260724-lane-run-admin-cli-custom-install-handoff.md)（RUN：Custom 安装 CLI；durable source/ack query persistence 仍缺）
-3. [20260724-lane-run-custom-user-provided-install-handoff.md](../checkpoints/20260724-lane-run-custom-user-provided-install-handoff.md)（RUN：Custom User-Provided digest-pinned local bundle 可零权限登记；官方供应链与执行门槛不变）
+1. [20260725-lane-krn-personal-p0-t04-handoff.md](../checkpoints/20260725-lane-krn-personal-p0-t04-handoff.md)（Personal：P0-T04 迁移设计和 focused tests 已由 CI Ubuntu/Windows-MSVC 真实执行通过；任务完成，GNU 本机失败为非支持基线）
+2. [20260725-personal-p0-t02-handoff.md](../checkpoints/20260725-personal-p0-t02-handoff.md)（Personal：PERS-PR/任务/Gate 可机读 trace；planning-only，所有 Personal evidence 仍 `not-run`）
+3. [20260724-lane-run-admin-cli-custom-install-handoff.md](../checkpoints/20260724-lane-run-admin-cli-custom-install-handoff.md)（RUN：Custom 安装 CLI；durable source/ack query persistence 仍缺）
 
 ## 客户端目录治理交付
 
