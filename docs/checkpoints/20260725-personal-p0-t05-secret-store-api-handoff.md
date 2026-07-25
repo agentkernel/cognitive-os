@@ -7,7 +7,7 @@
 - Branch: `lane/personal-p0-t05-secret-store-api`
 - Base commit: `cdd177806e0e0e7908459ab4f3f1303527310bf4` (`main` @ PR #89)
 - Lane: Personal / isolated crate (does not take Lane-RUN `cognitive-runtime` ownership)
-- Status: **in-progress** until CI executes `cargo test -p cognitive-secret` (or workspace) on supported baselines
+- Status: **done** (CI executed workspace tests on Ubuntu + Windows/MSVC)
 
 ## 2. Completed in this atomic batch
 
@@ -43,7 +43,7 @@
 |---|---|---|
 | `cargo check -p cognitive-secret` | pass (local Windows) | Typecheck succeeded. |
 | `cargo test -p cognitive-secret` | not-supported locally | Windows GNU linker exit 121; MSVC toolchain present but `link.exe` missing. P0-T01 defines CI Linux + Windows/MSVC as supported. |
-| CI `cargo test --workspace --locked` (includes `p0_t05_secret_store`) | pending | Required before marking P0-T05 `done`. |
+| CI `cargo test --workspace --locked` (includes `p0_t05_secret_store`) | pass | CI run [30153311857](https://github.com/agentkernel/cognitive-os/actions/runs/30153311857) Ubuntu + Windows/MSVC success. |
 | `pnpm run check:consistency` | to-run before commit | Docs/static only; no registry change. |
 | `git diff --check` | to-run before commit | — |
 | Personal Gates / B01-B12 / Profile | not-run | No claim. |
@@ -61,12 +61,14 @@ No secret material was written to repository evidence. Test markers are syntheti
 ## 6. Next entry
 
 1. Open/merge PR for this branch; wait for Ubuntu + Windows/MSVC CI green on workspace tests.
-2. On CI green, mark P0-T05 `done` in the formal ledger with CI run URL (second commit if needed).
+2. P0-T05 is marked `done` after CI green; remaining Phase 0 items are P0-T03 (owner decision), P0-T06 (depends P0-T03), P0-T07.
 3. Next legal Personal tasks: P0-T03 (owner license/platform/distribution decision), P0-T07 (transport/threat model, docs/ADR), P1-T01 (XDG + migrations operationalization). Do not start P1-T02 until P0-T05 is `done` and P1-T01 is ready.
 4. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS.md, 20260725-personal-p0-t05-secret-store-api-handoff.md, PARALLEL-LANES.md, PERSONAL-DEVELOPMENT-PLAN.md. If P0-T05 CI is green, mark done; otherwise pick next dependency-satisfied P0 task without inventing owner decisions.`
 
 ## 7. Snapshot
 
 - PROGRESS updated: yes (P0-T05 in-progress; no Profile claim).
-- Formal Personal ledger updated: yes (`in-progress`).
-- Commit/PR/CI: pending at handoff write time.
+- Formal Personal ledger updated: yes (`done`).
+- Commits: `eb45e42`, `8ef7579`, plus done-status docs commit.
+- PR: [#90](https://github.com/agentkernel/cognitive-os/pull/90).
+- CI: [30153311857](https://github.com/agentkernel/cognitive-os/actions/runs/30153311857) success.

@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01、P0-T02、P0-T04 done；P0-T05 in-progress；其余尚未开始）**
+> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05 已完成；其余任务尚未开始）**
 > **最后更新：2026-07-25**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -19,7 +19,7 @@
 
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
-| Phase 0 - 基线与决策 | 7 | 3 | 1 | 0 | 3 | G0 |
+| Phase 0 - 基线与决策 | 7 | 4 | 0 | 0 | 3 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 0 | 0 | 0 | 9 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
@@ -27,7 +27,7 @@
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **3** | **1** | **0** | **47** | — |
+| **合计** | **51** | **4** | **0** | **0** | **47** | — |
 
 ## 2. 产品边界与不变量
 
@@ -63,7 +63,7 @@
 | P0-T02 | 冻结 Personal 需求、追踪与架构边界 | P0-T01 | PERS-PR、任务、benchmark 无孤儿映射 | done | 2026-07-25；Lane-DOC `lane/personal-p0-t02-trace`。新增 [personal-trace.yaml](personal-trace.yaml)：20 个 PERS-PR、51 个正式任务和 21 个 Gate/benchmark 均可交叉核对；仅引用真实登记 REQ，product-only 项明确为空映射，所有证据状态为 `not-run`。验证：专用 Node 映射核对、`pnpm run check:consistency`、`git diff --check` 均通过。 |
 | P0-T03 | License、首发平台与分发决策 | P0-T02 | owner GO/NO-GO 与 notices 完整 | not-started | — |
 | P0-T04 | 数据布局、迁移、备份与回滚设计验证 | P0-T02 | migration dry-run、重放与失败恢复评审 | done | 2026-07-25；Lane-KRN `lane/krn-personal-p0-t04-migrations`，PR #89。ADR-0017 + adapter-local `schema_migrations` dry-run/apply/replay/digest-drift/failure-recovery tests；CI run [30150183941](https://github.com/agentkernel/cognitive-os/actions/runs/30150183941) 在 Ubuntu 与 Windows/MSVC 均通过 `cargo test --workspace --locked`。本机 Windows GNU linker exit 121 是已知非支持环境，不再阻断。未修改 registry/schema/vector 或 authority transition 语义。 |
-| P0-T05 | Linux Secret Service PoC | P0-T01 | set/get/rotate/delete 与泄漏负例通过 | in-progress | 2026-07-25 开始；分支 `lane/personal-p0-t05-secret-store-api`。已交付隔离 crate `cognitive-secret`：冻结 `SecretStore::{probe,put,get,delete}` + opaque `SecretRef`；模拟 backend 覆盖 put/get/rotate/delete、service-absent/locked/prompt-unavailable fail-closed、Debug/Display/env 泄漏负例；`LinuxSecretServiceProbe` 为 native probe-only（mutating D-Bus 归 P1-T02）；ADR-0018。本机 Windows GNU `cargo test -p cognitive-secret` linker exit 121（非支持基线）；`cargo check -p cognitive-secret` 通过。**行为测试待 CI Ubuntu/Windows-MSVC 真实执行后才可标 done**。无明文 fallback；无真实 Provider Key；无 registry/schema/vector 变更。见 handoff。 |
+| P0-T05 | Linux Secret Service PoC | P0-T01 | set/get/rotate/delete 与泄漏负例通过 | done | 2026-07-25；分支 `lane/personal-p0-t05-secret-store-api`，PR [#90](https://github.com/agentkernel/cognitive-os/pull/90)。隔离 crate `cognitive-secret` + ADR-0018：冻结 `SecretStore::{probe,put,get,delete}` 与 opaque `SecretRef`；模拟 put/get/rotate/delete、absent/locked/prompt fail-closed、Debug/Display/env 泄漏负例；Linux native probe-only（mutating D-Bus 归 P1-T02）；无明文 fallback。CI run [30153311857](https://github.com/agentkernel/cognitive-os/actions/runs/30153311857) Ubuntu/Windows-MSVC `cargo test --workspace --locked` 通过（含 `p0_t05_secret_store`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile 声明。handoff：[20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)。 |
 | P0-T06 | Pi 版本、Extension 与 RPC 兼容性 PoC | P0-T03 | 固定版本、integrity、Extension/RPC fixture 通过 | not-started | — |
 | P0-T07 | daemon transport、认证和威胁模型 | P0-T02 | transport 限制与威胁模型评审完成 | not-started | — |
 
