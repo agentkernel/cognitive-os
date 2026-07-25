@@ -38,9 +38,8 @@ does not freeze a Rust port or provide automated leak negatives in CI.
    via `UnavailableSecretStore` or equivalent probe rejection. Locked and
    prompt-unavailable modes also fail closed for daemon use.
 6. `LinuxSecretServiceProbe` classifies native readiness from session-bus
-   signals on Linux and reports unavailable on non-Linux hosts. Live D-Bus
-   mutating put/get/delete against `org.freedesktop.secrets` is deferred to
-   P1-T02; P0-T05 freezes the port and fail-closed semantics only.
+   signals on Linux and reports unavailable on non-Linux hosts. Mutating FreeDesktop Secret Service I/O is delivered by P1-T02
+   (`LinuxSecretToolStore` / ADR-0020); P0-T05 freezes the port and fail-closed semantics only.
 7. Secrets must not be written to SQLite, config files, env, argv, logs, test
    snapshots, or evidence digests. Config may store only opaque `SecretRef`
    identifiers after P1-T02.

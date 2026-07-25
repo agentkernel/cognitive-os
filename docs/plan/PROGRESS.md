@@ -70,9 +70,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)（Personal：P1-T01 XDG layout + dual-DB prepare done；CI 30155053950；非 Gate/Profile）
-2. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
-3. [20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)（Personal：P0-T05 SecretStore API/PoC done；CI Ubuntu/Windows-MSVC 通过；非 Gate/Profile 声明）
+1. [20260725-personal-p1-t02-secret-provider-config-handoff.md](../checkpoints/20260725-personal-p1-t02-secret-provider-config-handoff.md)（Personal：P1-T02 Provider config + SecretStore binding in-progress；待 CI）
+2. [20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)（Personal：P1-T01 XDG layout + dual-DB prepare done；CI 30155053950；非 Gate/Profile）
+3. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
 
 ## 客户端目录治理交付
 
