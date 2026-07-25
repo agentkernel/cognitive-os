@@ -622,6 +622,7 @@ dependencies = [
  "cognitive-kernel",
  "cognitive-management",
  "cognitive-runtime",
+ "cognitive-secret",
  "cognitive-store",
  "serde_json",
 ]

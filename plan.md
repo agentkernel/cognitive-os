@@ -589,10 +589,12 @@ Pi 不可以：
 ### P1-T05 — Readiness、status 和 doctor 应用服务
 
 - **目标：** CLI、Pi、未来 UI 共用同一事实源。
-- **文件：** 修改 `cognitive-management`；新增 readiness projection 和 tests；移除 synthetic `management_ready` 依赖。
-- **API：** system/provider/secret/database/Pi/daemon component checks，均返回事实、时间、来源和 non-claim。
-- **验收：** degraded/blocked/ready 分离；静态检查通过不写成 runtime ready。
-- **观测：** 每项 check duration/error class。
+- **状态：** done（CI Ubuntu/Windows-MSVC SUCCESS：30164114878 / 30164113787）。
+- **文件：** `apps/kernel-server/src/personal/readiness.rs`、`server.rs` 路由、`tests/p1_t05_personal_readiness.rs`、ADR-0023。**未**修改 `cognitive-management`（Lane-RUN 所有权；Personal 组合根承载 projection）。
+- **API：** management-channel `GET /personal/status`、`GET /personal/readiness`、`GET /personal/doctor`；组件 system/database/secret/provider/daemon/pi；返回事实、duration、source、error_class 与 non-claim。
+- **验收：** degraded/blocked/ready 分离；静态检查通过不写成 runtime ready（`static_check_is_not_runtime_ready`）；secret_ref/bootstrap 不入投影。
+- **观测：** 每项 check duration/error class；doctor guidance 可操作。
+- **不包含：** CLI 产品入口（P1-T06）、Pi package（P1-T07）、G0/B01-B12/Profile、registry/schema/vector。
 - **解锁：** P1-T06/T07/T09。
 
 ### P1-T06 — `cognitive init/doctor/status/daemon`
