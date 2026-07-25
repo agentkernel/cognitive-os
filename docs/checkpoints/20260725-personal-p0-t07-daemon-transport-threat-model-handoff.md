@@ -44,8 +44,9 @@
 |---|---|---|
 | Design acceptance (ADR threat rows present) | pass (document review) | CSRF, DNS rebinding, token theft, channel confusion, replay covered in ADR-0019 §4 |
 | Business route / daemon auth implementation | not-run / not-in-scope | Explicitly deferred to P1-T04 |
-| `pnpm run check:consistency` | to-run before commit | Docs-only; no registry change expected |
-| `git diff --check` | to-run before commit | — |
+| pnpm run check:consistency | pass (local + CI) | Docs-only; no registry change. |
+| git diff --check | pass (local) | — |
+| CI workspace verify | pass | run 30154100260 Ubuntu/Windows success. |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 ## 5. Design and safety boundaries
@@ -59,7 +60,7 @@
 
 ## 6. Next entry
 
-1. Open/merge PR for this docs branch (docs-only low risk; CI consistency).
+1. PR #91 merged to main at ff341ef; CI run 30154100260 green.
 2. Remaining Phase 0:
    - **P0-T03** requires owner license / platform / distribution decision —
      do not invent GO/NO-GO.
@@ -77,6 +78,6 @@
 
 - PROGRESS updated: yes (P0-T07 done; no Profile claim).
 - Formal Personal ledger updated: yes (`done`).
-- Commits: pending this PR.
-- PR: pending.
-- CI: docs-only consistency check pending on PR.
+- Commits: d443a0e (branch); merged squash ff341ef on main via PR #91.
+- PR: [#91](https://github.com/agentkernel/cognitive-os/pull/91) merged.
+- CI: [30154100260](https://github.com/agentkernel/cognitive-os/actions/runs/30154100260) Ubuntu + Windows success.
