@@ -24,7 +24,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 + P1-T01/T02 done；无 Profile 声明** | P1-T02：Provider config + SecretStore binding；CI run [30156079691](https://github.com/agentkernel/cognitive-os/actions/runs/30156079691) Ubuntu/Windows-MSVC 全绿（`p1_t02_provider_secret`）。P1-T01 CI 30155053950 仍有效。Personal Gate/B01-B12 仍 `not-run`；G0 仍待 P0-T03/T06。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 + P1-T01/T02/T03 done；无 Profile 声明** | P1-T03：Provider discovery + capability snapshot（`cognitive-secret` + ADR-0021）；本地 check/clippy 通过，行为测试待 CI Ubuntu/Windows-MSVC（`p1_t03_provider_discovery`）。P1-T02 CI 30156079691 仍有效。Personal Gate/B01-B12 仍 `not-run`；G0 仍待 P0-T03/T06。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -71,9 +71,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260725-personal-p1-t02-secret-provider-config-handoff.md](../checkpoints/20260725-personal-p1-t02-secret-provider-config-handoff.md)（Personal：P1-T02 Provider config + SecretStore binding done；CI 30156079691；非 Gate/Profile）
-2. [20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)（Personal：P1-T01 XDG layout + dual-DB prepare done；CI 30155053950；非 Gate/Profile）
-3. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
+1. [20260725-personal-p1-t03-provider-discovery-handoff.md](../checkpoints/20260725-personal-p1-t03-provider-discovery-handoff.md)（Personal：P1-T03 Provider discovery/capability snapshot；local check/clippy；CI pending；非 Gate/Profile）
+2. [20260725-personal-p1-t02-secret-provider-config-handoff.md](../checkpoints/20260725-personal-p1-t02-secret-provider-config-handoff.md)（Personal：P1-T02 Provider config + SecretStore binding done；CI 30156079691；非 Gate/Profile）
+3. [20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)（Personal：P1-T01 XDG layout + dual-DB prepare done；CI 30155053950；非 Gate/Profile）
 
 ## 客户端目录治理交付
 
@@ -83,3 +83,6 @@
 | readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](../../clients/READINESS.md)：PoC runbook/模板与技术栈比较草案已提供（非执行/非 ADR）；M5 出口已 GO，仍 blocked 于依赖组 1/2/7 完整交付、五平台 PoC 执行、技术栈 ADR、AGPL 法务评估（POC-LIC not-run）、Tier 1 runtime PoC |
 | 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`（canonical 改指 clients/README.md）+ 新增 `.cursor/rules/17-client-project-boundaries.mdc`；专用 consistency 自动校验保持 `planned`（Lane-CFR，checker 不扫 `clients/`），交付前执行 [clients/README.md §9](../../clients/README.md#9-持续维护与手动-gate) 手动 gate |
 | 本轮静态验证 | **pass（非实现/PoC 证据）** | 迁移集成后 `check:consistency` 以 273 REQ / 55 码 / 61 schema / 84 向量为准；clients 专项链接检查仍为手动 gate；[handoff](../checkpoints/20260720-lane-con-clients-root-migration-handoff.md) |
+| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 + P1-T01/T02/T03 done；无 Profile 声明** | P1-T03：Provider discovery + capability snapshot（`cognitive-secret` + ADR-0021）；本地 check/clippy 通过，行为测试待 CI Ubuntu/Windows-MSVC（`p1_t03_provider_discovery`）。P1-T02 CI 30156079691 仍有效。Personal Gate/B01-B12 仍 `not-run`；G0 仍待 P0-T03/T06。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal P1-T02 | **Provider config + SecretStore binding done（PR #93 CI green）** | `lane/personal-p1-t02-secret-provider-config` | CI run 30156079691 Ubuntu/Windows-MSVC success；ADR-0020；非 G0/Profile claim |
+| Personal P1-T03 | **Provider discovery + capability snapshot in progress / local check green** | `lane/personal-p1-t03-provider-discovery-probe` | Mock-transport probes + snapshot digest in `cognitive-secret`；ADR-0021；CI pending for linked tests；非 G0/Profile claim |

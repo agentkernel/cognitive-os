@@ -1,6 +1,6 @@
 [package]
 name = "cognitive-secret"
-description = "Personal SecretStore, Provider config binding, and fail-closed backends (P0-T05/P1-T02; not a registry REQ or Profile claim)"
+description = "Personal SecretStore, Provider config/discovery/probe, and fail-closed backends (P0-T05/P1-T02/P1-T03; not a registry REQ or Profile claim)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

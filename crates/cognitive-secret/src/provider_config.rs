@@ -120,6 +120,25 @@ impl ProviderConfig {
         }
     }
 
+    /// Replace only the selected capability-snapshot digest (P1-T03).
+    ///
+    /// Pass `None` to clear a previously selected digest. Digest text is
+    /// validated with the same rules as [`Self::new`].
+    pub fn with_selected_snapshot_digest(
+        &self,
+        selected_snapshot_digest: Option<String>,
+    ) -> Result<Self, ProviderConfigError> {
+        if let Some(digest) = &selected_snapshot_digest {
+            validate_snapshot_digest(digest)?;
+        }
+        Ok(Self {
+            provider_id: self.provider_id.clone(),
+            base_url: self.base_url.clone(),
+            secret_ref: self.secret_ref.clone(),
+            selected_snapshot_digest,
+        })
+    }
+
     /// Serialize the fixed JSON schema. Secret bytes are never included.
     pub fn to_json_document(&self) -> String {
         let digest_json = match &self.selected_snapshot_digest {

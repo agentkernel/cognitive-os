@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07、P1-T01、P1-T02 已完成；其余任务尚未开始）**
+> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07、P1-T01、P1-T02、P1-T03 已完成；其余任务尚未开始）**
 > **最后更新：2026-07-25**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -20,14 +20,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 5 | 0 | 0 | 2 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 2 | 0 | 0 | 7 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 3 | 0 | 0 | 6 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **7** | **0** | **0** | **44** | — |
+| **合计** | **51** | **8** | **0** | **0** | **43** | — |
 
 ## 2. 产品边界与不变量
 
@@ -73,7 +73,7 @@
 |---|---|---|---|---|---|
 | P1-T01 | 版本化数据库迁移与 XDG 布局 | P0-T04 | upgrade/reapply/corruption/disk-failure 测试 | done | 2026-07-25；Lane-KRN `lane/krn-personal-p1-t01-xdg-migrations`，PR [#92](https://github.com/agentkernel/cognitive-os/pull/92)。`PersonalDataLayout` + `prepare_personal_databases`：XDG 五根、Unix 0700/0600、`migration.lock`、双库 v1 plan（与 open 共享 schema 常量）、state/backups 非覆盖备份。CI run [30155053950](https://github.com/agentkernel/cognitive-os/actions/runs/30155053950) Ubuntu/Windows-MSVC 全绿（含 `p1_t01_layout_migrations` 7 pass、clippy、fmt）。本机 Windows GNU linker exit 121 为非支持基线。未改 registry/schema/vector/transition；非 G0/B01-B12/Profile。handoff：[20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)。 |
 | P1-T02 | SecretStore 正式后端与 Provider 配置 | P0-T05, P1-T01 | rotation/restart/redaction negatives 通过 | done | 2026-07-25；分支 `lane/personal-p1-t02-secret-provider-config`，PR [#93](https://github.com/agentkernel/cognitive-os/pull/93)。`cognitive-secret`：ProviderConfig/ProviderKeyService、LinuxSecretToolStore、production selection、hidden-input helper；ADR-0020。CI run [30156079691](https://github.com/agentkernel/cognitive-os/actions/runs/30156079691) Ubuntu/Windows-MSVC 全绿（含 `p1_t02_provider_secret`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t02-secret-provider-config-handoff.md](../checkpoints/20260725-personal-p1-t02-secret-provider-config-handoff.md)。 |
-| P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | not-started | — |
+| P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | done | 2026-07-25；分支 `lane/personal-p1-t03-provider-discovery-probe`。`cognitive-secret`：`ProviderTransport`、`ProviderDiscoveryService`、capability snapshot + `fnv1a64` identity digest、`persist_selected_snapshot_digest`；ADR-0021。本地 `cargo check -p cognitive-secret --tests --locked` 与 `cargo clippy -p cognitive-secret --all-targets --locked` 通过；`cargo test -p cognitive-secret --test p1_t03_provider_discovery` 在本机 Windows GNU linker exit 121 下不可执行（P0-T01 非支持基线），执行证据以 CI Ubuntu/Windows-MSVC 为准。非 G0/B01-B12/Profile；无真实 Provider Key；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t03-provider-discovery-handoff.md](../checkpoints/20260725-personal-p1-t03-provider-discovery-handoff.md)。 |
 | P1-T04 | 有界 Personal daemon 与本地认证 | P0-T07, P1-T01 | auth/size/timeout/concurrency/restart 测试 | not-started | — |
 | P1-T05 | Readiness、status 与 doctor 应用服务 | P1-T03, P1-T04 | blocked/degraded/ready 事实区分 | not-started | — |
 | P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | not-started | — |
@@ -167,3 +167,4 @@
 - [ ] 如有开放风险或漂移，更新 `docs/traceability/findings-ledger.md`。
 - [ ] 写入 `docs/checkpoints/` handoff，记录完成项、未完成项、测试、证据、风险与下一步。
 - [ ] 在 PR/提交中关联 `PERS-*` 计划 ID，并在适用时关联真实 REQ-ID。
+| P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | done | 2026-07-25；分支 `lane/personal-p1-t03-provider-discovery-probe`。`cognitive-secret`：`ProviderTransport`、`ProviderDiscoveryService`、capability snapshot + `fnv1a64` identity digest、`persist_selected_snapshot_digest`；ADR-0021。本地 `cargo check -p cognitive-secret --tests --locked` 与 `cargo clippy -p cognitive-secret --all-targets --locked` 通过；`cargo test -p cognitive-secret --test p1_t03_provider_discovery` 在本机 Windows GNU linker exit 121 下不可执行（P0-T01 非支持基线），执行证据以 CI Ubuntu/Windows-MSVC 为准。非 G0/B01-B12/Profile；无真实 Provider Key；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t03-provider-discovery-handoff.md](../checkpoints/20260725-personal-p1-t03-provider-discovery-handoff.md)。 |
