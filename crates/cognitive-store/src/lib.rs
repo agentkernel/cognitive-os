@@ -19,6 +19,7 @@ pub mod clock;
 pub mod faults;
 pub mod ids;
 pub mod installation;
+pub mod migration;
 pub mod sqlite;
 
 pub use clock::SystemClock;
@@ -26,6 +27,10 @@ pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, S
 pub use ids::UuidV7Generator;
 pub use installation::{
     InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
+};
+pub use migration::{
+    MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
+    execute_sqlite_migration_plan,
 };
 pub use sqlite::SqliteAuthorityStore;
 
