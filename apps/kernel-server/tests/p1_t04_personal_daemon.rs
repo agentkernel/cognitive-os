@@ -195,7 +195,11 @@ fn second_instance_lock_and_restart() {
     assert!(!status.success(), "second instance should fail closed");
     first.kill().unwrap();
     first.wait().unwrap();
-    // Restart after clean shutdown should succeed.
+    // SIGKILL skips Drop, so the create-new lock file can remain. Operators
+    // remove a confirmed-stale lock; tests do the same after forced kill.
+    let stale_lock = root.join("cognitiveos").join("daemon.lock");
+    let _ = std::fs::remove_file(&stale_lock);
+    // Restart after forced stop + stale-lock cleanup should succeed.
     let mut third = spawn_personal(port_a, &root, false);
     let secret = bootstrap_secret(&root);
     let token = issue_token(port_a, &secret, "task");
