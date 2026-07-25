@@ -34,7 +34,7 @@ CognitiveOS 是一个"Agent control plane + durable governed runtime"的架构�
 | [crates/cognitive-conformance](crates/cognitive-conformance/) | runner（M1–M4 已具静态合同、内核行为与错误实现自检能力） |
 | [tests/](tests/) | golden（跨语言 canonical/digest 夹具）/ e2e / faults / security |
 | [tools/](tools/) | 静态一致性检查（registry↔schema↔vector 无孤儿、断链检查），接入 CI |
-| [artifacts/evidence/](artifacts/evidence/) | 运行证据（gitignore，凭 digest 引用） |
+| `artifacts/evidence/` | 运行证据目录（gitignore，凭 digest 引用；由本地 runner 按需创建） |
 
 ### 4. 文档体系（docs system）
 
