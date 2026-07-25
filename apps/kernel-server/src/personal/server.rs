@@ -58,13 +58,24 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         .map_err(|error| PersonalDaemonError::Io {
             detail: error.to_string(),
         })?;
-    let _lock = DaemonSingleInstanceLock::acquire(config.layout.daemon_lock_path())
+    let lock = DaemonSingleInstanceLock::acquire(config.layout.daemon_lock_path())
         .map_err(PersonalDaemonError::Lifecycle)?;
-    let authority = LocalSessionAuthority::initialize(
-        config.layout.local_bootstrap_secret_path(),
-        config.bounds,
-    )
+    eprintln!(
+        "kernel-server personal: acquired single-instance lock at {}",
+        lock.path().display()
+    );
+    let bootstrap_path = config.layout.local_bootstrap_secret_path();
+    let authority = if bootstrap_path.exists() {
+        LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
+    } else {
+        LocalSessionAuthority::initialize(&bootstrap_path, config.bounds)
+    }
     .map_err(PersonalDaemonError::Auth)?;
+    eprintln!(
+        "kernel-server personal: bootstrap secret path {}",
+        authority.bootstrap_secret_path().display()
+    );
+    let _lock = lock;
     let authority = Arc::new(Mutex::new(authority));
     let active_connections = Arc::new(AtomicUsize::new(0));
     let in_flight = Arc::new(AtomicUsize::new(0));
@@ -94,6 +105,9 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             &active_connections,
             &in_flight,
         );
+        if let Ok(mut guard) = authority.lock() {
+            guard.revoke_all();
+        }
         shutting_down.store(true, Ordering::SeqCst);
         return Ok(());
     }
@@ -208,10 +222,15 @@ fn process_http_request(
         return handle_channel_route(stream, &headers, ChannelClass::Task, authority, "task");
     }
     if method_path.starts_with("GET /personal/health ") {
+        let session_count = authority
+            .lock()
+            .map(|guard| guard.session_count())
+            .unwrap_or(0);
         let body = json!({
             "status": "ok",
             "surface": "personal-daemon",
             "auth_required": true,
+            "session_count": session_count,
             "readiness_claim": "not-claimed",
             "profile_claim": "not-claimed"
         })

@@ -204,6 +204,7 @@ impl LocalSessionAuthority {
     }
 
     /// Test/helper read of bootstrap material for hermetic fixtures only.
+    #[cfg(test)]
     pub fn bootstrap_secret_for_tests(&self) -> &str {
         &self.bootstrap_secret
     }
