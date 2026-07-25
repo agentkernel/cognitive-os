@@ -38,9 +38,10 @@
   cargo test -p cognitive-store --test p0_t04_migrations --locked
   ```
 
-- Review the final implementation with the KRN owner before committing. The
-  change intentionally remains an adapter-local P0 validation framework, not
-  the P1-T01 XDG migration runtime or multi-database coordinator.
+- Review the final implementation with the KRN owner before marking the task
+  done. The change intentionally remains an adapter-local P0 validation
+  framework, not the P1-T01 XDG migration runtime or multi-database
+  coordinator.
 
 ## 3. Test and Evidence Status
 
@@ -78,10 +79,11 @@ execution evidence until they pass on a supported runner.
   then run the normal targeted KRN checks required by CI.
 - If the focused test passes, update the P0-T04 formal ledger with the actual
   command/runner evidence, change status to `done`, update `PROGRESS.md`, and
-  only then commit/push/create the lane PR according to repository policy.
+  update draft PR #89 according to repository policy.
 
 ## 6. Snapshot
 
 - PROGRESS updated: yes.
 - Formal Personal ledger updated: yes, P0-T04 remains `in-progress`.
-- Commits made by this session: none.
+- Commits made by this session: `9ad5b11` (`feat(store): add fail-closed
+  SQLite migration validation`); draft PR [#89](https://github.com/agentkernel/cognitive-os/pull/89).
