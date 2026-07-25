@@ -19,7 +19,7 @@ impl PersonalResourceBounds {
     /// ADR-0019 baseline table.
     pub const fn personal_v1_baseline() -> Self {
         Self {
-            max_request_body_bytes: 1 * 1024 * 1024,
+            max_request_body_bytes: 1024 * 1024,
             hard_body_ceiling_bytes: 8 * 1024 * 1024,
             max_header_block_bytes: 16 * 1024,
             max_header_count: 64,
