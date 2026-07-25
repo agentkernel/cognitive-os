@@ -114,13 +114,14 @@ pub struct SecretProbeObservation {
 /// Evaluate Personal readiness from filesystem and probe facts.
 pub fn evaluate_personal_readiness(context: &ReadinessEvaluationContext) -> ReadinessReport {
     let evaluated_at_unix_ms = unix_now_ms();
-    let mut components = Vec::with_capacity(6);
-    components.push(check_system(&context.layout, evaluated_at_unix_ms));
-    components.push(check_database(&context.layout, evaluated_at_unix_ms));
-    components.push(check_secret(context, evaluated_at_unix_ms));
-    components.push(check_provider(context, evaluated_at_unix_ms));
-    components.push(check_daemon(context, evaluated_at_unix_ms));
-    components.push(check_pi(evaluated_at_unix_ms));
+    let components = vec![
+        check_system(&context.layout, evaluated_at_unix_ms),
+        check_database(&context.layout, evaluated_at_unix_ms),
+        check_secret(context, evaluated_at_unix_ms),
+        check_provider(context, evaluated_at_unix_ms),
+        check_daemon(context, evaluated_at_unix_ms),
+        check_pi(evaluated_at_unix_ms),
+    ];
 
     let overall = aggregate_overall(&components);
     let first_conversation_ready = overall == OverallReadiness::Ready
