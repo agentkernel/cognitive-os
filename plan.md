@@ -496,12 +496,12 @@ Pi 不可以：
 ### P0-T05 — Linux Secret Service PoC
 
 - **目标：** 证明 user daemon 能安全 set/get/replace/delete secret。
-- **证据：** SecretStore L0；Secret Service 0.2 Draft。
+- **证据：** SecretStore L0；Secret Service 0.2 Draft；ADR-0018。
 - **依赖：** P0-T01；不持久化真实生产 Key。
-- **文件：** 计划新增 isolated PoC/test；候选修改 `crates/cognitive-runtime/Cargo.toml` 只能在依赖评审后。
-- **API：** 冻结 `SecretStore::{probe,put,get,delete}` 和 opaque `secret_ref`。
-- **步骤：** 测 service absent、locked、prompt unavailable、logout/restart、redaction。
-- **验收：** 测试 secret 不出现在 env/args/config/SQLite/log/artifacts；不可用时 init fail-closed。
+- **文件：** 新增 `crates/cognitive-secret`（isolated PoC）；`Cargo.toml` workspace member；`docs/adr/0018-personal-secret-store-boundary.md`。不修改 `cognitive-runtime` 依赖除非后续评审。
+- **API：** 冻结 `SecretStore::{probe,put,get,delete}` 和 opaque `SecretRef`；attribute-keyed `put` 即 rotate。
+- **步骤：** 模拟 backend 覆盖 put/get/rotate/delete、service absent、locked、prompt unavailable、Debug/Display/env redaction；Linux native probe-only（mutating D-Bus 归 P1-T02）。
+- **验收：** 测试 secret 不出现在 env/args/config/SQLite/log/artifacts；不可用时 fail-closed；无明文 fallback。
 - **回滚：** 删除 PoC secret/item；不提供明文 fallback。
 - **不确定：** headless Linux；未解决则首发限定 desktop user session。
 - **解锁：** P1-T02。

@@ -207,6 +207,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "cognitive-secret"
+version = "0.0.1"
+
+[[package]]
 name = "cognitive-store"
 version = "0.0.1"
 dependencies = [
