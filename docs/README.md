@@ -75,6 +75,7 @@ informative / implementation-private / historical），并为仓库工作文档�
 - [plan/POST-V01-NEXT-PHASE-PLAN.md](plan/POST-V01-NEXT-PHASE-PLAN.md)：Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划（推荐主战役 `CFR-M5-INTENT-AUTHORITY-SLICE`）。
 - [plan/PROGRESS.md](plan/PROGRESS.md)：单页进度仪表（合并必更）。
 - [plan/PARALLEL-LANES.md](plan/PARALLEL-LANES.md)：并行车道所有权与合入序。
+- [plan/PERSONAL-DEVELOPMENT-PLAN.md](plan/PERSONAL-DEVELOPMENT-PLAN.md)：CognitiveOS Personal 的正式开发任务、状态和阶段 Gate；其可机读 [PERS-PR trace](plan/personal-trace.yaml) 不属于 registry matrix，也不构成 REQ 或执行证据。
 - [Agent Hub Master Development Plan](../clients/agent-hub/plan/agent-hub-development-plan.md)：受 gate 阻断，未激活实现车道；已迁至 `clients/agent-hub/plan/`（子计划与提示词同树）。
 
 ## docs/clients/（兼容入口）
