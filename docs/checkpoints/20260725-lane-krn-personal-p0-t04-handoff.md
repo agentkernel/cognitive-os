@@ -24,24 +24,22 @@
   document the authority/installation two-DB non-atomicity boundary, backup
   restore procedure, and deferred XDG realization.
 - Updated `plan.md` task-card detail and `PROGRESS.md`; the formal Personal
-  ledger remains `P0-T04 in-progress`.
+  ledger records `P0-T04 done` with CI execution evidence.
 
-## 2. In Progress / Blocking Condition
+## 2. Completion and Local Environment Boundary
 
-- `P0-T04` is **not done**. Focused Rust behavior tests have not run because
-  this Windows host's GNU linker exits 121 while linking dependencies. A
-  gnullvm attempt also failed when build scripts could not start.
-- Before changing the formal task state, run the focused test on a supported
-  runner (CI Linux or Windows/MSVC):
-
-  ```powershell
-  cargo test -p cognitive-store --test p0_t04_migrations --locked
-  ```
-
-- Review the final implementation with the KRN owner before marking the task
-  done. The change intentionally remains an adapter-local P0 validation
-  framework, not the P1-T01 XDG migration runtime or multi-database
-  coordinator.
+- `P0-T04` is **done**. CI run
+  [30150183941](https://github.com/agentkernel/cognitive-os/actions/runs/30150183941)
+  passed on both Ubuntu and Windows runners. Its `cargo test --workspace
+  --locked` step executes the new `p0_t04_migrations` integration test.
+- The local Windows GNU linker still exits 121, but P0-T01 identifies it as a
+  non-supported host combination. MSVC Build Tools installation was attempted
+  to reproduce the supported Windows baseline locally, but Visual Studio's
+  installer correctly refused because C: has only 4.07 GiB free and requires
+  at least 6.8 GB. This local capacity limitation does not block the verified
+  CI evidence.
+- P1-T01 owns operational XDG paths, daemon lifecycle exclusion, retention,
+  disk-full behavior, and coordinated two-database upgrade semantics.
 
 ## 3. Test and Evidence Status
 
@@ -51,11 +49,13 @@
 | `git diff --check` | pass | No whitespace errors. |
 | `cargo metadata --locked --no-deps --format-version 1` | pass | Lockfile and manifests resolve. |
 | `pnpm run check:consistency` | pass | `273 requirements, 55 error codes, 63 schemas, 85 vectors`. |
-| `cargo test -p cognitive-store --test p0_t04_migrations --locked` | blocked | Windows GNU `x86_64-w64-mingw32-gcc` linker exits 121 before repository test execution. |
+| CI `cargo test --workspace --locked` | pass | CI run [30150183941](https://github.com/agentkernel/cognitive-os/actions/runs/30150183941), Ubuntu and Windows/MSVC jobs both succeeded; workspace test command includes `p0_t04_migrations`. |
+| Local `cargo test -p cognitive-store --test p0_t04_migrations --locked` | not-supported | Windows GNU `x86_64-w64-mingw32-gcc` linker exits 121 before repository test execution; P0-T01 defines CI Linux and Windows/MSVC as supported baselines. |
 | Personal Gates / B01-B12 / Profile | not-run | No claim created. |
 
-No `artifacts/evidence/` output was generated. The source tests are not test
-execution evidence until they pass on a supported runner.
+No new local `artifacts/evidence/` output was generated. CI is the execution
+evidence for this task; it does not create a Personal Gate, B01-B12, or
+Profile claim.
 
 ## 4. Risks and Boundaries
 
@@ -75,15 +75,16 @@ execution evidence until they pass on a supported runner.
 
 - Branch: `lane/krn-personal-p0-t04-migrations`
 - Base snapshot before this working change: `87dc8ddb8099cd84fc392851232a20652356e889`
-- First action on a supported runner: run the focused test command above,
-  then run the normal targeted KRN checks required by CI.
-- If the focused test passes, update the P0-T04 formal ledger with the actual
-  command/runner evidence, change status to `done`, update `PROGRESS.md`, and
-  update draft PR #89 according to repository policy.
+- P0-T04 has no remaining task action. The earliest blocked Phase 0 item is
+  P0-T03, which requires an owner License/first-platform/distribution
+  decision; do not start it without that decision.
+- For a future local Windows/MSVC reproduction, free at least 2.8 GB on C:
+  before installing Visual Studio C++ Build Tools, then run the focused test
+  command with `cargo +1.97.1-x86_64-pc-windows-msvc`.
 
 ## 6. Snapshot
 
 - PROGRESS updated: yes.
-- Formal Personal ledger updated: yes, P0-T04 remains `in-progress`.
+- Formal Personal ledger updated: yes, P0-T04 is `done`.
 - Commits made by this session: `9ad5b11` (`feat(store): add fail-closed
-  SQLite migration validation`); draft PR [#89](https://github.com/agentkernel/cognitive-os/pull/89).
+  SQLite migration validation`); PR [#89](https://github.com/agentkernel/cognitive-os/pull/89).
