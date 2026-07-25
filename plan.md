@@ -476,7 +476,7 @@ Pi 不可以：
 - **目标：** 关闭根仓 License、Linux x86_64 support matrix、Node/Pi redistribution 义务。
 - **证据：** 根 License 未定；Pi MIT；无 release workflow。
 - **依赖：** P0-T02；不开发 installer。
-- **文件：** 修改 root licensing docs、计划 ADR-019；新增 dependency/license inventory。
+- **文件：** 修改 root licensing docs、计划 ADR-0020；新增 dependency/license inventory。
 - **API/配置：** 定义 release manifest 字段，不实现。
 - **验收：** 法务/owner 明确 GO/NO-GO；第三方 notices 完整。
 - **回滚：** 未决则 Phase 1 可做 dev bundle，但禁止 public release。
@@ -523,9 +523,9 @@ Pi 不可以：
 - **目标：** 选择 bounded loopback HTTP/Unix socket、task/management channel bootstrap。
 - **证据：** 当前 server 手写无界 HTTP，routes synthetic。
 - **依赖：** P0-T02；不实现业务路由。
-- **文件：** ADR-002/017；计划修改 `apps/kernel-server` 和 `cognitive-management` ports。
+- **文件：** 新增 `docs/adr/0019-personal-daemon-transport-auth-threat-model.md`（ADR-0003 已是 HTTP/SSE 基线，不得复用编号；ADR-0002/0017 是 store/migration）；P1-T04 再改 `apps/kernel-server` / Personal daemon entry 与 management ports。
 - **API：** 请求大小、header、timeout、concurrency、session issuance/expiry、channel binding。
-- **验收：** threat model 覆盖 CSRF、DNS rebinding、token theft、channel confusion、replay。
+- **验收：** ADR-0019 冻结 UDS 默认 + loopback TCP 可选、channel-scoped bearer bootstrap、资源上限；threat model 覆盖 CSRF、DNS rebinding、token theft、channel confusion、replay；不实现业务路由、不声明 G0/B01-B12/Profile。
 - **回滚：** 保持 loopback disabled-by-default。
 - **解锁：** P1-T04。
 

@@ -24,7 +24,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05 done；无 Profile 声明** | P0-T05：`cognitive-secret` + ADR-0018；CI run [30153311857](https://github.com/agentkernel/cognitive-os/actions/runs/30153311857) Ubuntu/Windows-MSVC 通过 workspace tests（含 `p0_t05_secret_store`）。本机 Windows GNU linker 仍为非支持基线。P0-T04 CI run 30150183941 仍有效。Personal Gate/B01-B12 仍 `not-run`。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 done；无 Profile 声明** | P0-T07：ADR-0019 冻结 Personal daemon UDS/loopback transport、channel-scoped bearer bootstrap、资源上限与 CSRF/DNS-rebinding/token-theft/channel-confusion/replay threat model；设计冻结 only，无业务路由实现。P0-T05 CI run 30153311857 与 P0-T04 CI run 30150183941 仍有效。Personal Gate/B01-B12 仍 `not-run`。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -69,9 +69,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)（Personal：P0-T05 SecretStore API/PoC done；CI Ubuntu/Windows-MSVC 通过；非 Gate/Profile 声明）
-2. [20260725-lane-krn-personal-p0-t04-handoff.md](../checkpoints/20260725-lane-krn-personal-p0-t04-handoff.md)（Personal：P0-T04 迁移设计和 focused tests 已由 CI Ubuntu/Windows-MSVC 真实执行通过；任务完成，GNU 本机失败为非支持基线）
-3. [20260725-personal-p0-t02-handoff.md](../checkpoints/20260725-personal-p0-t02-handoff.md)（Personal：PERS-PR/任务/Gate 可机读 trace；planning-only，所有 Personal evidence 仍 `not-run`）
+1. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
+2. [20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)（Personal：P0-T05 SecretStore API/PoC done；CI Ubuntu/Windows-MSVC 通过；非 Gate/Profile 声明）
+3. [20260725-lane-krn-personal-p0-t04-handoff.md](../checkpoints/20260725-lane-krn-personal-p0-t04-handoff.md)（Personal：P0-T04 迁移设计和 focused tests 已由 CI Ubuntu/Windows-MSVC 真实执行通过；任务完成，GNU 本机失败为非支持基线）
 
 ## 客户端目录治理交付
 

@@ -64,6 +64,9 @@ informative / implementation-private / historical），并为仓库工作文档�
 | [0005-id-and-clock.md](adr/0005-id-and-clock.md) | UUIDv7 与三时钟域（规范基线） |
 | [0006-code-generation-policy.md](adr/0006-code-generation-policy.md) | schema → Rust/TS 代码生成策略（生成物入库、禁手改） |
 | [0007-clients-project-root-and-doc-migration.md](adr/0007-clients-project-root-and-doc-migration.md) | `clients/` 客户端项目根与文档迁移（canonical 地图、4 stub、不移代码 package） |
+| [0017-personal-sqlite-migration-and-recovery.md](adr/0017-personal-sqlite-migration-and-recovery.md) | Personal SQLite 迁移/备份/恢复边界（P0-T04；非 Profile） |
+| [0018-personal-secret-store-boundary.md](adr/0018-personal-secret-store-boundary.md) | Personal SecretStore 端口与 fail-closed 后端（P0-T05；非 Profile） |
+| [0019-personal-daemon-transport-auth-threat-model.md](adr/0019-personal-daemon-transport-auth-threat-model.md) | Personal daemon UDS/loopback transport、本地认证与威胁模型（P0-T07；非 Profile） |
 
 ## docs/plan/（plan 类；每次合并更新 PROGRESS）
 
