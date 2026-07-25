@@ -551,11 +551,11 @@ Pi 不可以：
 
 - **目标：** daemon 以 opaque ref 管理 DeepSeek Key。
 - **依赖：** P0-T05、P1-T01。
-- **状态：** in-progress（实现已落盘；行为测试待 CI Ubuntu/Windows-MSVC）。
+- **状态：** done（CI run 30156079691 Ubuntu/Windows-MSVC 全绿）。
 - **文件：** 扩展 `crates/cognitive-secret`（ProviderConfig、ProviderKeyService、LinuxSecretToolStore、backend_select、secret_input、tests/p1_t02_provider_secret.rs）；ADR-0020；未改 management/runtime（避免 Lane-RUN 所有权冲突）。
 - **数据：** Provider config 只存 provider、base URL、secret_ref、selected snapshot digest。
 - **API：** put/rotate/delete/probe via ProviderKeyService；hidden-input helper `read_secret_material_from_reader`（CLI echo-off 归 P1-T06）。
-- **验收：** rotation、locked store、deleted secret、daemon restart、redaction negatives（本地 check/clippy 通过；test 待 CI）。
+- **验收：** rotation、locked store、deleted secret、daemon restart、redaction negatives（CI p1_t02_provider_secret 通过）。
 - **不包含：** cloud secret manager、明文 fallback、Pi auth.json、真实 Provider Key、G0/Profile。
 - **回滚：** 删除 ref；不自动删除用户未确认的数据。
 - **解锁：** P1-T03/P1-T06。

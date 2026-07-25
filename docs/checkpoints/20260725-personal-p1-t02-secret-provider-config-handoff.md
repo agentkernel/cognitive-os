@@ -8,7 +8,7 @@
 - Base commit: `ee840c4` (`main` after P1-T01)
 - Lane: Personal / isolated crate `cognitive-secret` (does not take Lane-RUN
   `cognitive-runtime` / `cognitive-management` ownership)
-- Status: **in-progress** (implementation complete; behavior tests pending CI)
+- Status: **done** (CI Ubuntu + Windows/MSVC green)
 
 ## 2. Completed in this atomic batch
 
@@ -52,7 +52,7 @@
 | `cargo clippy -p cognitive-secret --all-targets --locked` | pass (local) | Clean after is_multiple_of / is_none fixes |
 | `cargo test -p cognitive-secret --locked` | not-supported host | Windows GNU linker exit 121 (P0-T01 non-supported baseline) |
 | `pnpm run check:consistency` | pass (local) | 273 REQ / 55 codes / 63 schemas / 85 vectors |
-| CI `cargo test --workspace --locked` | pending | PR CI on Ubuntu + Windows/MSVC |
+| CI `cargo test --workspace --locked` | pass | run [30156079691](https://github.com/agentkernel/cognitive-os/actions/runs/30156079691) Ubuntu + Windows/MSVC; includes `p1_t02_provider_secret` |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 No secret material was written to repository evidence. Test markers are synthetic non-production bytes only.
@@ -64,24 +64,24 @@ No secret material was written to repository evidence. Test markers are syntheti
 - Clients/Pi/CLI remain non-authority; this crate is not an authority writer.
 - No change to registry, schema, transitions, vectors, or generated bindings.
 
+
 ## 6. Next entry
 
-1. Open/merge PR for this branch; wait for Ubuntu + Windows/MSVC CI green on
-   workspace tests including `p1_t02_provider_secret`.
-2. After CI green, mark P1-T02 `done` with run URL in formal ledger + PROGRESS.
-3. Dependency-satisfied next Personal tasks after P1-T02 done:
+1. PR #93 CI green (run 30156079691); merge when ready.
+2. Dependency-satisfied next Personal tasks:
    - **P1-T03** Provider/model discovery (depends P1-T02)
-   - **P1-T04** bounded daemon (depends P0-T07 + P1-T01; can parallel P1-T02)
+   - **P1-T04** bounded daemon (depends P0-T07 + P1-T01; independent of P1-T03)
    - **P0-T03** still needs owner license/platform/distribution GO/NO-GO
-4. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
+3. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
    20260725-personal-p1-t02-secret-provider-config-handoff.md, PARALLEL-LANES,
-   PERSONAL-DEVELOPMENT-PLAN. If P1-T02 CI is green, mark done; else prefer
-   P1-T04 or ask owner for P0-T03. Do not claim G0/Profile.`
+   PERSONAL-DEVELOPMENT-PLAN. Prefer next dependency-satisfied task (P1-T03 or
+   P1-T04) without claiming G0/Profile. If selecting P0-T03, stop and ask owner
+   for license/platform/distribution.`
 
 ## 7. Snapshot
 
-- PROGRESS updated: yes (P1-T02 in-progress; no Profile claim)
-- Formal Personal ledger updated: yes (`in-progress`)
-- Commits: pending at handoff write time
-- PR: pending
-- CI: pending
+- PROGRESS updated: yes (P1-T02 done; no Profile claim)
+- Formal Personal ledger updated: yes (`done`)
+- Commits: `9bc308f` (feat) + docs evidence commit
+- PR: [#93](https://github.com/agentkernel/cognitive-os/pull/93)
+- CI: [30156079691](https://github.com/agentkernel/cognitive-os/actions/runs/30156079691) success
