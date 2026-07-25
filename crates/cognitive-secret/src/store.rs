@@ -56,3 +56,57 @@ pub trait SecretStore {
     /// Delete secret material for an opaque ref. Missing refs fail closed.
     fn delete(&self, secret_ref: &SecretRef) -> Result<(), SecretError>;
 }
+
+impl<T: SecretStore + ?Sized> SecretStore for &T {
+    fn class(&self) -> SecretStoreClass {
+        (**self).class()
+    }
+
+    fn probe(&self) -> Result<SecretStoreAvailability, SecretError> {
+        (**self).probe()
+    }
+
+    fn put(
+        &self,
+        label: &SecretLabel,
+        attributes: &SecretAttributes,
+        material: SecretMaterial,
+    ) -> Result<SecretRef, SecretError> {
+        (**self).put(label, attributes, material)
+    }
+
+    fn get(&self, secret_ref: &SecretRef) -> Result<SecretMaterial, SecretError> {
+        (**self).get(secret_ref)
+    }
+
+    fn delete(&self, secret_ref: &SecretRef) -> Result<(), SecretError> {
+        (**self).delete(secret_ref)
+    }
+}
+
+impl<T: SecretStore + ?Sized> SecretStore for std::sync::Arc<T> {
+    fn class(&self) -> SecretStoreClass {
+        (**self).class()
+    }
+
+    fn probe(&self) -> Result<SecretStoreAvailability, SecretError> {
+        (**self).probe()
+    }
+
+    fn put(
+        &self,
+        label: &SecretLabel,
+        attributes: &SecretAttributes,
+        material: SecretMaterial,
+    ) -> Result<SecretRef, SecretError> {
+        (**self).put(label, attributes, material)
+    }
+
+    fn get(&self, secret_ref: &SecretRef) -> Result<SecretMaterial, SecretError> {
+        (**self).get(secret_ref)
+    }
+
+    fn delete(&self, secret_ref: &SecretRef) -> Result<(), SecretError> {
+        (**self).delete(secret_ref)
+    }
+}

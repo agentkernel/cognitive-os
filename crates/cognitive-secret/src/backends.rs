@@ -205,7 +205,8 @@ pub type EphemeralSecretStore = SimulatedSecretServiceStore;
 ///
 /// This backend never implements a plaintext fallback. On non-Linux hosts it is
 /// permanently unavailable. On Linux it only inspects session-bus environment
-/// signals; live D-Bus put/get remains P1-T02 with a real native adapter.
+/// signals. Mutating FreeDesktop Secret Service I/O is implemented by
+/// [`crate::LinuxSecretToolStore`] (P1-T02).
 #[derive(Debug, Default)]
 pub struct LinuxSecretServiceProbe;
 
@@ -243,7 +244,7 @@ impl SecretStore for LinuxSecretServiceProbe {
         if Self::linux_session_bus_present() {
             // Presence of a session bus is necessary but not sufficient for a
             // unlocked Secret Service collection. P0-T05 freezes fail-closed
-            // probe semantics; mutating native I/O is owned by P1-T02.
+            // probe semantics; use LinuxSecretToolStore for mutating I/O.
             Ok(SecretStoreAvailability::Available)
         } else {
             Ok(SecretStoreAvailability::Unavailable)
@@ -257,19 +258,19 @@ impl SecretStore for LinuxSecretServiceProbe {
         _material: SecretMaterial,
     ) -> Result<SecretRef, SecretError> {
         Err(SecretError::Unavailable {
-            reason: "native Secret Service mutating adapter is deferred to P1-T02",
+            reason: "use LinuxSecretToolStore for native Secret Service mutations",
         })
     }
 
     fn get(&self, _secret_ref: &SecretRef) -> Result<SecretMaterial, SecretError> {
         Err(SecretError::Unavailable {
-            reason: "native Secret Service mutating adapter is deferred to P1-T02",
+            reason: "use LinuxSecretToolStore for native Secret Service mutations",
         })
     }
 
     fn delete(&self, _secret_ref: &SecretRef) -> Result<(), SecretError> {
         Err(SecretError::Unavailable {
-            reason: "native Secret Service mutating adapter is deferred to P1-T02",
+            reason: "use LinuxSecretToolStore for native Secret Service mutations",
         })
     }
 }
