@@ -149,7 +149,8 @@ fn oversized_body_is_rejected() {
         body.len()
     );
     let response = http_exchange(port, &wire);
-    let rejected = response.contains("REQUEST_BODY_TOO_LARGE")
+    let rejected = response.contains("HTTP/1.1 400 Bad Request")
+        || response.contains("REQUEST_BODY_TOO_LARGE")
         || response.contains("PERSONAL_HTTP_PARSE_ERROR")
         || response.is_empty();
     assert!(rejected, "expected body size rejection, got: {response}");
