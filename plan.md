@@ -447,7 +447,7 @@ Pi 不可以：
 ### P0-T01 — 固定可复现基线与支持工具链
 
 - **优先级/目标/价值：** P0；让后续会话可复现 Rust、TS、CI 基线。
-- **证据/研究：** 本机 LLVM-MinGW 缺 `libgcc`；远端双 OS CI green。
+- **证据/研究：** 本机 LLVM-MinGW 缺 `libgcc`；远端双 OS CI green。2026-07-25 的正式台账记录确认：`01ceb93` 的 CI run 30140381194 在 Ubuntu 与 Windows/MSVC 均通过；本机 Windows GNU 在默认和已记录的 LLVM-MinGW/shim 处置下均于 linker exit 121 失败，故 GNU host 是非支持开发环境。详见 `tests/baseline/README.md`。
 - **依赖/不包含：** 无；不改生产逻辑。
 - **文件：** 修改 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`、本研究报告及 CI/toolchain docs；计划新增 `tests/baseline/README.md`；不删文件。
 - **数据/API/配置/迁移：** 无数据/API；明确 Linux runner、Windows GNU/MSVC 支持组合。
