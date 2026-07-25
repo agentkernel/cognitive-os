@@ -1,0 +1,15 @@
+[package]
+name = "cognitive-secret"
+description = "Personal SecretStore port and fail-closed backends (P0-T05 PoC; not a registry REQ or Profile claim)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Isolated Personal PoC crate with zero external dependencies so the API and
+# leak-negative tests can run on hosts that cannot link proc-macro build
+# scripts. Does not depend on kernel/store/runtime and is not an authority writer.
+[dependencies]
+
+[lints]
+workspace = true
