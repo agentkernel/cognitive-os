@@ -7,8 +7,7 @@
 - Branch: `lane/krn-personal-p1-t01-xdg-migrations`
 - Base commit: `43a1d85` (`main` after P0-T07 evidence)
 - Lane: Lane-KRN (`cognitive-store` only; no registry/schema/vector/transition)
-- Status: **in-progress** (implementation provided; supported-toolchain test
-  execution pending CI Ubuntu/Windows-MSVC)
+- Status: **done** (implementation + CI Ubuntu/Windows-MSVC evidence)
 
 ## 2. Completed in this atomic batch
 
@@ -54,9 +53,10 @@
 |---|---|---|
 | Implementation unit tests (`p1_t01_layout_migrations`) | not-run locally | Windows GNU linker exit 121 (P0-T01 non-supported baseline) |
 | `cargo test -p cognitive-store --test p1_t01_layout_migrations --locked` | not-supported host | linker exit 121 before compile complete |
-| `pnpm run check:consistency` | pending with commit | docs-only registry surface unchanged |
-| `git diff --check` | pending with commit | — |
-| CI `cargo test --workspace --locked` | pending | Required before marking P1-T01 `done` |
+| `pnpm run check:consistency` | pass (local) | 273 REQ / 55 codes / 63 schemas / 85 vectors |
+| `git diff --check` | pass (local) | — |
+| CI `cargo test --workspace --locked` | pass | run [30155053950](https://github.com/agentkernel/cognitive-os/actions/runs/30155053950) Ubuntu + Windows/MSVC; includes `p1_t01_layout_migrations` (7 pass) |
+| CI clippy / rustfmt | pass | same run |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 ## 5. Design and safety boundaries
@@ -68,22 +68,21 @@
 
 ## 6. Next entry
 
-1. Push branch and open PR; wait for CI Ubuntu + Windows/MSVC green
-2. On green: mark P1-T01 `done` with CI run URL; merge
-3. Dependency-satisfied next Personal tasks:
+1. PR #92 CI green (run 30155053950); merge when ready.
+2. Dependency-satisfied next Personal tasks:
    - **P1-T02** after P1-T01 done (SecretStore formal backend)
    - **P1-T04** after P1-T01 done + P0-T07 (bounded daemon)
    - **P0-T03** still needs owner license/platform/distribution GO/NO-GO
-4. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
+3. Suggested prompt: `Continue Personal plan. Read AGENTS.md, PROGRESS,
    20260725-lane-krn-personal-p1-t01-handoff.md, PARALLEL-LANES,
-   PERSONAL-DEVELOPMENT-PLAN. If P1-T01 CI is green, mark done. Prefer
-   next dependency-satisfied task without claiming G0/Profile. If selecting
-   P0-T03, stop and ask owner for license/platform/distribution.`
+   PERSONAL-DEVELOPMENT-PLAN. Prefer next dependency-satisfied task (P1-T02
+   or P1-T04) without claiming G0/Profile. If selecting P0-T03, stop and ask
+   owner for license/platform/distribution.`
 
 ## 7. Snapshot
 
-- PROGRESS updated: yes (P1-T01 in-progress; CI pending)
-- Formal Personal ledger updated: yes (`in-progress`)
-- Commits: pending this session
-- PR: pending
-- CI: pending
+- PROGRESS updated: yes (P1-T01 done; CI 30155053950)
+- Formal Personal ledger updated: yes (`done`)
+- Commits: `6e92d24` (feat), `c17c6b7` (fmt); docs evidence commit follows
+- PR: [#92](https://github.com/agentkernel/cognitive-os/pull/92)
+- CI: [30155053950](https://github.com/agentkernel/cognitive-os/actions/runs/30155053950) success
