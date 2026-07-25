@@ -1,7 +1,7 @@
 # PROGRESS — 单页进度仪表
 
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
-> 最后更新：2026-07-23（经批准的 Lane-CFR + Lane-CTR 原子例外已为 Ordinary Core `status.inspect` 登记 `ORDINARY-CORE-AUDIT-INSPECT-001`，同时映射 `REQ-AUDIT-001` / `REQ-AUDIT-002` 并刷新 matrix。runner 最小行为实现已提供，向量测试已执行：公开 `inspect_with_audit` + durable file audit + 正式 decision/receipt + release gate，真实结果 **85 vectors / 60 pass / 25 not-run / 0 fail**，self-check **41/41**；candidate/schema/generated/golden 与 Lane-RUN 生产路径未改。此向量证据不构成 machine-registration 总体完成、CA-0 GO、High-Assurance、Profile 已符合或 D-022 解除；D-022 仍 blocking，Profile **implemented = 0**。）
+> 最后更新：2026-07-25（Personal `P0-T01` 已收集本地与 CI 基线证据，但因 Windows 支持工具链尚待 owner 决策而 **blocked**；此计划状态不改变 REQ、向量、机器合同或 Profile 声明。既有 Ordinary Core `status.inspect` 状态维持：85 vectors / 60 pass / 25 not-run / 0 fail，self-check 41/41，Profile **implemented = 0**。）
 
 ## 里程碑状态
 
@@ -21,6 +21,7 @@
 
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
+| CognitiveOS Personal 产品化计划 | **planning；P0-T01 blocked** | Pinned CI run `30135181631`: Ubuntu + Windows jobs passed; local Windows GNU Rust build failed at linker (`-lgcc_eh`, exit 101); TypeScript, formatting, consistency, and matrix local checks passed | Personal tasks are management-plan work, not REQ or Profile evidence. Owner must select the supported Windows toolchain before G0/P0-T01 can close; details: [`tests/baseline/README.md`](../../tests/baseline/README.md) |
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
@@ -66,9 +67,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
-2. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
-3. [20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md](../checkpoints/20260723-lane-ctr-v02-ordinary-core-audit-machine-registration-handoff.md)（CTR：minimal machine registration 已由 PR #68 合入 `main`）
+1. [20260725-personal-p0-t01-handoff.md](../checkpoints/20260725-personal-p0-t01-handoff.md)（Personal：P0-T01 基线证据已收集；Windows 支持工具链待 owner 决策，任务 blocked）
+2. [20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md](../checkpoints/20260723-lane-cfr-ctr-ordinary-core-audit-inspect-handoff.md)（CFR+CTR：双 REQ mapping + Ordinary Core AUDIT 行为向量测试已执行）
+3. [20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md](../checkpoints/20260723-lane-run-v02-ordinary-core-audit-binding-consumption-handoff.md)（RUN：正式 decision/receipt bindings 已进入 audited production path；实现已提供、测试已执行）
 
 ## 客户端目录治理交付
 
