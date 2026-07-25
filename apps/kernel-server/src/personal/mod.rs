@@ -9,11 +9,5 @@ mod bounds;
 mod lifecycle;
 mod server;
 
-pub use auth::{
-    ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest, SessionTokenView,
-};
-pub use bounds::{
-    PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
-};
-pub use lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
-pub use server::{PersonalDaemonConfig, PersonalDaemonError, serve_personal_loopback};
+pub use bounds::PersonalResourceBounds;
+pub use server::{PersonalDaemonConfig, serve_personal_loopback};
