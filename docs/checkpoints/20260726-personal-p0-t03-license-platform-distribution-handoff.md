@@ -7,7 +7,8 @@
 - Branch: `lane/personal-p0-t03-license-platform-distribution`
 - Base: `main@cc29335`
 - Lane: Personal product legal/distribution decision (docs + package metadata; no authority runtime change)
-- Status: **done** for decision package acceptance. Not G0, B01-B12, Profile, or release claim.
+- Status: **done** — PR [#99](https://github.com/agentkernel/cognitive-os/pull/99) merged to `main@fd6ff6b`. Not G0, B01-B12, Profile, or release claim.
+- CI: [30180002937](https://github.com/agentkernel/cognitive-os/actions/runs/30180002937) (PR) + [30179991223](https://github.com/agentkernel/cognitive-os/actions/runs/30179991223) (push) Ubuntu + Windows-MSVC SUCCESS.
 
 ## 2. Owner decisions recorded
 
@@ -44,6 +45,7 @@
 |---|---|---|
 | `pnpm run check:consistency` | executed | OK (273 requirements, 55 error codes, 63 schemas, 85 vectors) |
 | `git diff --check` | executed | clean (CRLF→LF normalize warnings only on metadata files) |
+| CI PR #99 Ubuntu/Windows-MSVC | executed | SUCCESS runs 30180002937 + 30179991223 |
 | Rust/TS behavioral product tests | not applicable | no runtime behavior change |
 | Personal Gates / B01-B12 / Profile | not-run | no claim |
 | Local Windows GNU cargo | non-supported host | not required for this docs/metadata batch |
@@ -65,4 +67,5 @@
 
 - PROGRESS updated: yes (P0-T03 done; G0 still waits on P0-T06; no Profile claim)
 - Formal Personal ledger updated: yes (`done`, 12/51)
-- PR / CI: pending push
+- PR: [#99](https://github.com/agentkernel/cognitive-os/pull/99) **MERGED**
+- Merge commit: `fd6ff6b`
