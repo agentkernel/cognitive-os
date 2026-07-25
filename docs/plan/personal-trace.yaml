@@ -1,0 +1,193 @@
+version: "0.1"
+status: planning
+classification: documentation-only
+
+# This is a Personal product-plan trace. It is intentionally separate from the
+# registry-derived matrix: PERS-PR IDs are planning IDs, not REQ IDs.
+sources:
+  formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+  research_plan: plan.md
+  registry: specs/registry/requirements.yaml
+  registry_matrix: docs/traceability/matrix.yaml
+
+rules:
+  direct_registry_requirements: exact registered REQ IDs only
+  product_only: no direct registry requirement is claimed
+  evidence_status: not-run does not inherit conformance or Profile status
+
+gate_catalog:
+  G0: { phase: P0, benchmarks: [] }
+  G1: { phase: P1, benchmarks: [B01] }
+  G2: { phase: P2, benchmarks: [B02, B04, B05, B12] }
+  G3: { phase: P3, benchmarks: [B03, B06, B07] }
+  G4: { phase: P4, benchmarks: [B08] }
+  G5: { phase: P5, benchmarks: [B09, B10] }
+  G6: { phase: P6, benchmarks: [B11] }
+  G7: { phase: P7, benchmarks: [RC] }
+
+# P0-T01 is an enabling baseline rather than a product requirement delivery.
+enabling_tasks: [P0-T01]
+
+personal_requirements:
+  - id: PERS-PR-001
+    classification: product-only
+    statement: Linux users can verify installation and roll back.
+    direct_registry_requirements: []
+    tasks: [P0-T03, P1-T08, P1-T09, P7-T01, P7-T02, P7-T06]
+    gates: [G1, B01, G7, RC]
+    evidence_status: not-run
+
+  - id: PERS-PR-002
+    classification: product-only
+    statement: cognitive init initializes directories, Secret Store, Provider, daemon, and Pi.
+    direct_registry_requirements: []
+    tasks: [P0-T05, P0-T06, P0-T07, P1-T01, P1-T02, P1-T03, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09]
+    gates: [G1, B01]
+    evidence_status: not-run
+
+  - id: PERS-PR-003
+    classification: product-only
+    statement: Provider models pass an active capability probe.
+    direct_registry_requirements: []
+    tasks: [P1-T03, P1-T09]
+    gates: [G1, B01]
+    evidence_status: not-run
+
+  - id: PERS-PR-004
+    classification: mixed
+    statement: The Personal daemon is the sole authority writer.
+    direct_registry_requirements: [REQ-AUTH-001, REQ-STATE-001, REQ-STATE-003, REQ-EVT-001]
+    product_only_aspects: [daemon-process-identity, single-writer-deployment-topology]
+    tasks: [P1-T04, P2-T01, P2-T02, P2-T03, P2-T08]
+    gates: [G2, B02, B05]
+    evidence_status: not-run
+
+  - id: PERS-PR-005
+    classification: mixed
+    statement: Pi is a Shell and not Task, Process, or Memory authority.
+    direct_registry_requirements: [REQ-AGENT-ADAPTER-001, REQ-AGENT-COMPLETE-001, REQ-AGENT-SHELL-001, REQ-STATE-004, REQ-AKP-RES-001]
+    product_only_aspects: [Pi-product-integration]
+    tasks: [P0-T06, P1-T07, P2-T02, P2-T08]
+    gates: [G2, B02, B05]
+    evidence_status: not-run
+
+  - id: PERS-PR-006
+    classification: direct
+    statement: Natural-language goals form a UserIntent before deterministic admission.
+    direct_registry_requirements: [REQ-INTENT-RECORD-001, REQ-INTENT-ADMISSION-001, REQ-INTENT-ACCEPT-001, REQ-CORE-CANDIDATE-001]
+    tasks: [P2-T01, P2-T08]
+    gates: [G2, B04]
+    evidence_status: not-run
+
+  - id: PERS-PR-007
+    classification: direct
+    statement: Every Task has scope, criteria, budgets, and retry or iteration bounds.
+    direct_registry_requirements: [REQ-RUN-003, REQ-RUN-004, REQ-RUN-005, REQ-RUN-008, REQ-RES-001]
+    tasks: [P2-T01, P2-T03, P2-T04, P2-T07, P2-T08]
+    gates: [G2, B04, B07]
+    evidence_status: not-run
+
+  - id: PERS-PR-008
+    classification: direct
+    statement: All external mutating tools use Intent and Effect.
+    direct_registry_requirements: [REQ-EFF-001, REQ-EFF-002, REQ-EFF-003, REQ-EFF-STATE-001, REQ-OP-001]
+    tasks: [P2-T05, P2-T06, P2-T07, P2-T08, P5-T03, P5-T04]
+    gates: [G2, B04, B12]
+    evidence_status: not-run
+
+  - id: PERS-PR-009
+    classification: direct
+    statement: Unknown outcomes are not blindly retried.
+    direct_registry_requirements: [REQ-EFF-004, REQ-EFF-STATE-001, REQ-AKP-IDEM-001, REQ-MGMT-IDEM-001]
+    tasks: [P2-T06, P2-T07, P2-T08]
+    gates: [G2, B12]
+    evidence_status: not-run
+
+  - id: PERS-PR-010
+    classification: direct
+    statement: An independent verifier or acceptance authority decides completion.
+    direct_registry_requirements: [REQ-RUN-009, REQ-EFF-003, REQ-INTENT-ACCEPT-001, REQ-AKP-RES-001, REQ-AGENT-COMPLETE-001]
+    tasks: [P2-T07, P2-T08]
+    gates: [G2, B04]
+    evidence_status: not-run
+
+  - id: PERS-PR-011
+    classification: direct
+    statement: Context is minimally sufficient, authorized before ranking, and loss is explicit.
+    direct_registry_requirements: [REQ-CTX-002, REQ-CTX-003, REQ-CTX-004, REQ-CTX-005, REQ-CTX-006, REQ-CTX-007]
+    tasks: [P3-T01, P3-T02, P3-T03, P3-T04, P3-T05, P3-T06]
+    gates: [G3, B03, B06, B07]
+    evidence_status: not-run
+
+  - id: PERS-PR-012
+    classification: direct
+    statement: Memory has provenance, scope, freshness, and forgetting.
+    direct_registry_requirements: [REQ-MEM-OBJECT-001, REQ-MEM-ADMIT-001, REQ-MEM-ADMIT-002, REQ-MEM-PROMOTE-001, REQ-MEM-DELETE-001, REQ-MEM-MUTATE-001]
+    tasks: [P4-T01, P4-T02, P4-T03, P4-T04, P4-T05, P4-T06]
+    gates: [G4, B08]
+    evidence_status: not-run
+
+  - id: PERS-PR-013
+    classification: direct
+    statement: Agent or Tool installation does not automatically grant runtime permission.
+    direct_registry_requirements: [REQ-AGENT-INSTALL-001, REQ-AGENT-INSTALL-002, REQ-AGENT-COMPAT-001]
+    tasks: [P5-T01, P5-T02, P5-T05]
+    gates: [G5, B09, B10]
+    evidence_status: not-run
+
+  - id: PERS-PR-014
+    classification: product-only
+    statement: CLI and Pi natural-language management call the same application service.
+    direct_registry_requirements: []
+    tasks: [P1-T05, P1-T06, P1-T07, P2-T02]
+    gates: [G2, B02]
+    evidence_status: not-run
+
+  - id: PERS-PR-015
+    classification: direct
+    statement: Restart performs fencing, replay, reconciliation, reauthorization, and Context re-resolution.
+    direct_registry_requirements: [REQ-REC-001, REQ-REC-002, REQ-REC-003, REQ-EFF-006, REQ-MGMT-RECOVERY-001, REQ-AGENT-RECOVERY-001]
+    tasks: [P2-T03, P2-T06, P2-T07, P2-T08]
+    gates: [G2, B05, B12]
+    evidence_status: not-run
+
+  - id: PERS-PR-016
+    classification: mixed
+    statement: Multi-Agent is disabled by default until benefit is demonstrated against a single-Agent baseline.
+    direct_registry_requirements: [REQ-PERF-005, REQ-DIST-DEL-001, REQ-DIST-BUD-001, REQ-DIST-REC-001]
+    product_only_aspects: [default-disabled-release-policy]
+    tasks: [P6-T01, P6-T02, P6-T03, P6-T04]
+    gates: [G6, B11]
+    evidence_status: not-run
+
+  - id: PERS-PR-017
+    classification: direct
+    statement: Token, Tool, Loop, Memory, and Cost are observable.
+    direct_registry_requirements: [REQ-RUN-002, REQ-RES-001, REQ-AUDIT-001, REQ-AUDIT-002, REQ-PERF-001, REQ-PERF-002, REQ-PERF-003, REQ-PERF-004]
+    tasks: [P3-T04, P3-T05, P3-T06, P4-T05, P4-T06, P5-T04, P5-T05, P6-T04, P7-T04, P7-T06]
+    gates: [G3, B03, B06, B07, G4, B08, G5, B09, B10, G6, B11, G7, RC]
+    evidence_status: not-run
+
+  - id: PERS-PR-018
+    classification: product-only
+    statement: API keys do not appear in configuration, SQLite, Pi, environment, logs, or evidence.
+    direct_registry_requirements: []
+    tasks: [P0-T05, P1-T02, P1-T07, P1-T09, P2-T06, P7-T03]
+    gates: [G1, B01, G7, RC]
+    evidence_status: not-run
+
+  - id: PERS-PR-019
+    classification: product-only
+    statement: A failed update restores prior binary, configuration, and database compatibility.
+    direct_registry_requirements: []
+    tasks: [P0-T04, P1-T01, P1-T08, P7-T01, P7-T02, P7-T06]
+    gates: [G1, B01, G7, RC]
+    evidence_status: not-run
+
+  - id: PERS-PR-020
+    classification: product-only
+    statement: Enterprise governance stays outside the Personal default critical path.
+    direct_registry_requirements: []
+    tasks: [P0-T02, P0-T07, P7-T05, P7-T06]
+    gates: [G0, G7, RC]
+    evidence_status: not-run

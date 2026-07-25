@@ -263,6 +263,8 @@ Linux x86_64 可验证安装包
 
 以下是**规划追踪 ID，不是 registry REQ-ID**。
 
+`docs/plan/personal-trace.yaml` 是 PERS-PR、正式任务与 Gate/benchmark 的可机读交叉引用；它刻意不并入 registry-derived `docs/traceability/matrix.yaml`，且所有 `evidence_status` 初始为 `not-run`。
+
 | ID | 需求 | 现有规范域 | 验证 |
 |---|---|---|---|
 | PERS-PR-001 | Linux 用户可验证安装并回滚 | install/audit | B01 |
@@ -909,6 +911,8 @@ Pi 不可以：
 ---
 
 # 12. 机器可读依赖图
+
+本节只定义阶段和任务依赖。PERS-PR 到任务、Gate/benchmark 和既有 REQ 的映射由 [docs/plan/personal-trace.yaml](docs/plan/personal-trace.yaml) 单独承载，以免把产品规划 ID 混入 registry matrix。
 
 ```yaml
 phases:
