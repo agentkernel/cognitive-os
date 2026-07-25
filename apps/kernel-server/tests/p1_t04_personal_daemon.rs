@@ -139,7 +139,7 @@ fn oversized_body_is_rejected() {
     let root = runtime_root("body");
     let mut child = spawn_personal(port, &root, false);
     let _ = bootstrap_secret(&root);
-    let body = "x".repeat((1 * 1024 * 1024) + 1);
+    let body = "x".repeat((1024 * 1024) + 1);
     let wire = format!(
         "POST /local/session HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
         body.len()
