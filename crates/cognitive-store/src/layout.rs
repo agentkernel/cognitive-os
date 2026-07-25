@@ -158,6 +158,23 @@ impl PersonalDataLayout {
         self.runtime_dir.join("migration.lock")
     }
 
+    /// Exclusive Personal daemon single-instance lock (P1-T04).
+    pub fn daemon_lock_path(&self) -> PathBuf {
+        self.runtime_dir.join("daemon.lock")
+    }
+
+    /// Default Unix domain socket path for the Personal daemon (P1-T04 / ADR-0019).
+    pub fn daemon_socket_path(&self) -> PathBuf {
+        self.runtime_dir.join("daemon.sock")
+    }
+
+    /// Private bootstrap secret file for local session issuance (P1-T04 / ADR-0019).
+    ///
+    /// Mode `0600` on Unix. Never stored in SQLite authority tables or Secret Service.
+    pub fn local_bootstrap_secret_path(&self) -> PathBuf {
+        self.runtime_dir.join("local-bootstrap.secret")
+    }
+
     /// Create layout directories with restrictive permissions (0700 on Unix).
     ///
     /// Does not create database files and does not migrate schemas.
