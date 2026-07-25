@@ -384,9 +384,10 @@ fn terminate_pid(pid: u32) -> Result<(), String> {
             .status()
             .map_err(|error| format!("taskkill failed: {error}"))?;
         if status.success() {
-            return Ok(());
+            Ok(())
+        } else {
+            Err(format!("taskkill exited with {status:?}"))
         }
-        return Err(format!("taskkill exited with {status:?}"));
     }
     #[cfg(unix)]
     {
