@@ -795,7 +795,8 @@ mod tests {
         touch_personal_database_files(&layout).unwrap();
         write_provider_config(&layout, true);
         fs::write(layout.daemon_lock_path(), b"lock").unwrap();
-        fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
+        let bootstrap_material = "bootstrap-secret-material-p1t05-redaction";
+        fs::write(layout.local_bootstrap_secret_path(), bootstrap_material.as_bytes()).unwrap();
         let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
             layout,
             daemon_listening: true,
@@ -815,8 +816,8 @@ mod tests {
         assert_eq!(secret.status, ComponentStatus::Blocked);
         assert_eq!(secret.error_class, Some("secret_store_locked"));
         let doctor_text = doctor_projection_json(&report).to_string();
+        assert!(!doctor_text.contains(bootstrap_material));
         assert!(!doctor_text.contains("test-material-not-a-real-key"));
-        assert!(!doctor_text.contains("bootstrap"));
     }
 
     #[test]
