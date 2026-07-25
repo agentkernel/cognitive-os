@@ -67,6 +67,7 @@ informative / implementation-private / historical），并为仓库工作文档�
 | [0017-personal-sqlite-migration-and-recovery.md](adr/0017-personal-sqlite-migration-and-recovery.md) | Personal SQLite 迁移/备份/恢复边界（P0-T04；非 Profile） |
 | [0018-personal-secret-store-boundary.md](adr/0018-personal-secret-store-boundary.md) | Personal SecretStore 端口与 fail-closed 后端（P0-T05；非 Profile） |
 | [0019-personal-daemon-transport-auth-threat-model.md](adr/0019-personal-daemon-transport-auth-threat-model.md) | Personal daemon UDS/loopback transport、本地认证与威胁模型（P0-T07；非 Profile） |
+| [0022-personal-bounded-daemon-local-auth.md](adr/0022-personal-bounded-daemon-local-auth.md) | Personal bounded daemon + local auth（P1-T04；非 Profile） |
 
 ## docs/plan/（plan 类；每次合并更新 PROGRESS）
 

@@ -576,13 +576,14 @@ Pi 不可以：
 
 ### P1-T04 — 有界 Personal daemon 与本地认证
 
-- **目标：** 替换 synthetic composition，建立唯一 writer 和真实 readiness routes。
-- **文件：** 修改 `apps/kernel-server/src/main.rs`、tests；新增 server/router/auth/lifecycle modules。
-- **内部 API：** `PersonalApplicationServices` 聚合 store、provider、readiness；kernel 不依赖 HTTP。
-- **配置：** loopback/socket、limits、graceful shutdown、single-instance lock。
-- **验收：** oversized request、slow client、bad auth、wrong channel、concurrency、shutdown/restart。
-- **不包含：** Task scheduler、Memory、MCP。
-- **回滚：** daemon 不 ready 时拒绝 mutation。
+- **目标：** 替换 synthetic composition 的 Personal 入口，建立 loopback 有界 front door 与本地认证。
+- **状态：** done（本地 typecheck 受 Windows GNU linker 限制；行为测试由 CI Ubuntu/Windows-MSVC 执行 `p1_t04_personal_daemon`）。
+- **文件：** `apps/kernel-server/src/personal/{mod,auth,bounds,lifecycle,server}.rs`、`main.rs --personal`、`tests/p1_t04_personal_daemon.rs`；layout daemon 路径；ADR-0022。
+- **配置：** loopback-only bind、ADR-0019 body/header/concurrency bounds、single-instance `daemon.lock`、runtime bootstrap secret。
+- **API：** `POST /local/session`；channel-scoped bearer on `/management/*` and `/task/*`；`GET /personal/health`（non-claim）。
+- **验收：** oversized body、bad auth、wrong channel、cookie/host reject、second-instance lock、restart。
+- **不包含：** Task scheduler、Memory、MCP、full readiness projection（P1-T05）、UDS product default path（design remains ADR-0019）。
+- **回滚：** 未认证/超限请求 fail-closed；无 authority mutation from this front door.
 - **解锁：** P1-T05/T06/T07。
 
 ### P1-T05 — Readiness、status 和 doctor 应用服务

@@ -12,6 +12,10 @@ use cognitive_contracts::generated::akp_request_envelope::SCHEMA_DIGEST;
 use cognitive_runtime::ReadinessGrade;
 use serde_json::json;
 use std::io::{Read, Write};
+mod personal;
+
+use cognitive_store::PersonalDataLayout;
+use personal::{PersonalDaemonConfig, PersonalResourceBounds, serve_personal_loopback};
 use std::net::TcpListener;
 
 fn readiness_grades() -> [&'static str; 3] {
@@ -24,6 +28,43 @@ fn readiness_grades() -> [&'static str; 3] {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+
+    if args.iter().any(|arg| arg == "--personal") {
+        let bind = args
+            .iter()
+            .position(|arg| arg == "--bind")
+            .and_then(|i| args.get(i + 1))
+            .map_or("127.0.0.1:0", String::as_str)
+            .to_owned();
+        let once = args.iter().any(|arg| arg == "--once");
+        let runtime_root = args
+            .iter()
+            .position(|arg| arg == "--runtime-root")
+            .and_then(|i| args.get(i + 1))
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                std::env::temp_dir().join(format!("cognitiveos-personal-{}", std::process::id()))
+            });
+        let layout = PersonalDataLayout::from_xdg_roots(
+            runtime_root.join("config"),
+            runtime_root.join("data"),
+            runtime_root.join("state"),
+            runtime_root.join("cache"),
+            runtime_root.clone(),
+        );
+        let config = PersonalDaemonConfig {
+            bind_address: bind,
+            layout,
+            bounds: PersonalResourceBounds::personal_v1_baseline(),
+            once,
+        };
+        if let Err(error) = serve_personal_loopback(config) {
+            eprintln!("kernel-server personal: {error}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     if args.iter().any(|arg| arg == "--once") {
         let bind = args
             .iter()
