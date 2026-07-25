@@ -120,6 +120,25 @@ impl ProviderConfig {
         }
     }
 
+    /// Replace only the selected capability-snapshot digest (P1-T03).
+    ///
+    /// Pass `None` to clear a previously selected digest. Digest text is
+    /// validated with the same rules as [`Self::new`].
+    pub fn with_selected_snapshot_digest(
+        &self,
+        selected_snapshot_digest: Option<String>,
+    ) -> Result<Self, ProviderConfigError> {
+        if let Some(digest) = &selected_snapshot_digest {
+            validate_snapshot_digest(digest)?;
+        }
+        Ok(Self {
+            provider_id: self.provider_id.clone(),
+            base_url: self.base_url.clone(),
+            secret_ref: self.secret_ref.clone(),
+            selected_snapshot_digest,
+        })
+    }
+
     /// Serialize the fixed JSON schema. Secret bytes are never included.
     pub fn to_json_document(&self) -> String {
         let digest_json = match &self.selected_snapshot_digest {
@@ -306,9 +325,12 @@ fn validate_snapshot_digest(digest: &str) -> Result<(), ProviderConfigError> {
             detail: "selected_snapshot_digest length out of range",
         });
     }
+    // Product-local identity digests may use a short algorithm prefix
+    // (for example `fnv1a64:`) plus hex. Allow alphanumerics and common
+    // separators; never treat this field as secret material.
     if !digest
         .bytes()
-        .all(|byte| byte.is_ascii_hexdigit() || matches!(byte, b':' | b'-' | b'_'))
+        .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b':' | b'-' | b'_' | b'.'))
     {
         return Err(ProviderConfigError::Invalid {
             detail: "selected_snapshot_digest has unsupported characters",

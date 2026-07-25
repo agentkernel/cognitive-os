@@ -560,15 +560,18 @@ Pi 不可以：
 - **回滚：** 删除 ref；不自动删除用户未确认的数据。
 - **解锁：** P1-T03/P1-T06。
 ### P1-T03 — OpenAI-compatible Provider、模型发现与能力快照
+### P1-T03 — OpenAI-compatible Provider、模型发现与能力快照
 
 - **目标：** DeepSeek 默认初始化，但模型 ID 动态发现和主动验证。
-- **文件：** 修改 `crates/cognitive-runtime/src/lib.rs`；新增 `provider/` client、models、probe tests；通过 contract流程添加必要 DTO。
-- **API：** `list_models`、`probe_chat`、`probe_stream`、`probe_tool_call`、`probe_cancel`、`readiness_snapshot`。
-- **数据：** requested/observed model、endpoint、probe version、capabilities、TTL、token/latency、error class。
-- **步骤：** HTTPS policy→GET `/models`→用户选择→最小对话→最小 tool candidate→persist snapshot。
-- **验收：** 401/403/404/429/5xx、alias drift、HTTP 200但tool失败、timeout、manual model fallback。
-- **安全：** response/body redaction；Key 仅在最终 egress header。
-- **性能：** init probe 建议总预算 60 s，可取消。
+- **状态：** done（本地 typecheck/clippy 通过；行为测试由 CI Ubuntu/Windows-MSVC 执行 `p1_t03_provider_discovery`）。
+- **文件：** 扩展 `crates/cognitive-secret`（`provider_transport` / `provider_snapshot` / `provider_probe`、`tests/p1_t03_provider_discovery.rs`）；ADR-0021。**未**修改 `cognitive-runtime`（避免 Lane-RUN 所有权冲突；HTTPS client 由 daemon 注入 transport）。
+- **API：** `ProviderDiscoveryService::{list_models, discover_probe_and_persist}`；`ModelSelection`；`ProviderCapabilitySnapshot` / readiness snapshot digest。
+- **数据：** observed models、selected model、probe version、capability flags、product-local `fnv1a64` digest 写入 `provider.json` 的 `selected_snapshot_digest`。
+- **步骤：** HTTPS policy→GET `/models`→选择→chat/stream/tool/cancel 主动 probe→persist digest。
+- **验收：** 401/403/404/429/5xx、alias drift、HTTP 200 但 tool 失败、timeout、manual model fallback、Authorization/body redaction（mock transport）。
+- **安全：** response/body redaction；Key 仅在最终 egress Authorization header；tool_call 成功仅为 candidate 形状，非 Effect。
+- **性能：** init probe 建议总预算 60 s；不测 live latency 本批。
+- **不包含：** 真实 DeepSeek 网络、G0/B01-B12/Profile、registry DTO、runtime 接线。
 - **解锁：** P1-T05/T07/T09。
 
 ### P1-T04 — 有界 Personal daemon 与本地认证

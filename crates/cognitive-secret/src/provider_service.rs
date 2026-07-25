@@ -187,4 +187,20 @@ impl<S: SecretStore> ProviderKeyService<S> {
             .ok_or(ProviderKeyServiceError::NotConfigured)?;
         Ok(config.secret_ref().clone())
     }
+
+    /// Persist a capability-snapshot digest without re-writing secret material.
+    ///
+    /// Used by P1-T03 after a successful model probe. The digest is non-secret
+    /// product identity metadata; it is never derived from secret bytes.
+    pub fn persist_selected_snapshot_digest(
+        &self,
+        selected_snapshot_digest: Option<String>,
+    ) -> Result<ProviderConfig, ProviderKeyServiceError> {
+        let existing = self
+            .load_config()?
+            .ok_or(ProviderKeyServiceError::NotConfigured)?;
+        let updated = existing.with_selected_snapshot_digest(selected_snapshot_digest)?;
+        self.config_repository.store(&updated)?;
+        Ok(updated)
+    }
 }
