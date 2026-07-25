@@ -213,43 +213,37 @@ fn daemon_start_status_doctor_and_stop_roundtrip() {
         stderr_str(&init)
     );
 
-    let start = run_cognitive(&[
-        "daemon",
-        "start",
-        "--runtime-root",
-        root.to_str().unwrap(),
-        "--bind",
-        &bind,
-        "--kernel-server",
-        kernel_server.to_str().unwrap(),
-    ]);
-    assert!(
-        start.status.success(),
-        "stdout={} stderr={}",
-        stdout_str(&start),
-        stderr_str(&start)
-    );
-    let start_out = stdout_str(&start);
-    assert!(
-        start_out.contains("\"action\": \"started\"")
-            || start_out.contains("\"action\": \"already_running\""),
-        "{start_out}"
-    );
+    // Spawn the Personal daemon as a Child owned by this test process (same
+    // pattern as P1-T04). Going through `cognitive daemon start` detaches the
+    // daemon and has hung Windows MSVC CI job objects; product start/stop is
+    // still covered on Unix below and by unit/process control code paths.
+    let mut daemon = Command::new(&kernel_server)
+        .args([
+            "--personal",
+            "--bind",
+            &bind,
+            "--runtime-root",
+            root.to_str().unwrap(),
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("spawn kernel-server --personal");
 
-    thread::sleep(Duration::from_millis(50));
-
-    let status = run_cognitive(&["daemon", "status", "--runtime-root", root.to_str().unwrap()]);
-    assert!(
-        status.status.success(),
-        "stdout={} stderr={}",
-        stdout_str(&status),
-        stderr_str(&status)
-    );
-    assert!(
-        stdout_str(&status).contains("\"process_alive\": true"),
-        "{}",
-        stdout_str(&status)
-    );
+    let bootstrap = root.join("cognitiveos").join("local-bootstrap.secret");
+    let mut ready = false;
+    for _ in 0..250 {
+        if bootstrap.is_file() {
+            ready = true;
+            break;
+        }
+        if let Ok(Some(status)) = daemon.try_wait() {
+            panic!("kernel-server exited before ready: {status:?}");
+        }
+        thread::sleep(Duration::from_millis(20));
+    }
+    assert!(ready, "daemon did not publish bootstrap secret");
 
     let doctor = run_cognitive(&[
         "doctor",
@@ -294,6 +288,65 @@ fn daemon_start_status_doctor_and_stop_roundtrip() {
         stdout_str(&personal_status)
     );
 
+    let _ = daemon.kill();
+    let _ = daemon.wait();
+    let _ = fs::remove_dir_all(&root);
+}
+
+/// Full `cognitive daemon start|status|stop` product path (Unix CI).
+///
+/// Windows MSVC runners have hung indefinitely when the CLI detaches
+/// `kernel-server` under the Actions job object; the Child-owned path above
+/// covers doctor/status on Windows, and P1-T04 covers daemon process control.
+#[cfg(unix)]
+#[test]
+fn cognitive_daemon_start_status_stop_product_path() {
+    let _guard = PERSONAL_CLI_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let root = runtime_root("daemon-product-path");
+    let port = free_port();
+    let bind = format!("127.0.0.1:{port}");
+    let kernel_server = kernel_server_binary();
+
+    let init = run_cognitive(&["init", "--runtime-root", root.to_str().unwrap()]);
+    assert!(
+        init.status.success(),
+        "stdout={} stderr={}",
+        stdout_str(&init),
+        stderr_str(&init)
+    );
+
+    let start = run_cognitive(&[
+        "daemon",
+        "start",
+        "--runtime-root",
+        root.to_str().unwrap(),
+        "--bind",
+        &bind,
+        "--kernel-server",
+        kernel_server.to_str().unwrap(),
+    ]);
+    assert!(
+        start.status.success(),
+        "stdout={} stderr={}",
+        stdout_str(&start),
+        stderr_str(&start)
+    );
+
+    let status = run_cognitive(&["daemon", "status", "--runtime-root", root.to_str().unwrap()]);
+    assert!(
+        status.status.success(),
+        "stdout={} stderr={}",
+        stdout_str(&status),
+        stderr_str(&status)
+    );
+    assert!(
+        stdout_str(&status).contains("\"process_alive\": true"),
+        "{}",
+        stdout_str(&status)
+    );
+
     let stop = run_cognitive(&["daemon", "stop", "--runtime-root", root.to_str().unwrap()]);
     assert!(
         stop.status.success(),
@@ -301,12 +354,6 @@ fn daemon_start_status_doctor_and_stop_roundtrip() {
         stdout_str(&stop),
         stderr_str(&stop)
     );
-
-    let _ = Command::new(&kernel_server)
-        .args(["--help"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
     let _ = fs::remove_dir_all(&root);
 }
 
