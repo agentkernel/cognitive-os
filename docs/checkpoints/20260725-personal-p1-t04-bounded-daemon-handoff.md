@@ -8,8 +8,9 @@
 - Base commit: `7ee7648` (`main` after P1-T03 evidence)
 - Lane: Personal / composition root `apps/kernel-server` (does not take Lane-RUN
   ownership of `cognitive-runtime` / `cognitive-management` readiness projection)
-- Status: **in-progress pending CI linked-test evidence** (local Windows GNU
-  linker non-supported per P0-T01)
+- Status: **in-progress**. PR #95 merged at `main@6fe21b3`; CI run 30159744673
+  passed on Ubuntu and Windows/MSVC for the current auth/size/host/cookie/restart
+  coverage. Timeout and concurrency behavior tests remain outstanding.
 
 ## 2. Completed in this atomic batch
 
@@ -38,7 +39,7 @@
 | Check | Status | Result |
 |---|---|---|
 | Local Windows GNU `cargo check/test` | not-supported host | linker exit 121 (P0-T01) |
-| CI `cargo test --workspace --locked` | pending | Must run `p1_t04_personal_daemon` on Ubuntu + Windows/MSVC |
+| CI `cargo test --workspace --locked` | executed (partial) | Run 30159744673 passed on Ubuntu + Windows/MSVC for existing `p1_t04_personal_daemon` coverage; timeout/concurrency behavior coverage is still missing |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 ## 5. Design and safety boundaries
@@ -50,17 +51,15 @@
 
 ## 6. Next entry
 
-1. Open/merge PR; wait for CI Ubuntu/Windows-MSVC green including
-   `p1_t04_personal_daemon`.
-2. Next dependency-satisfied Personal tasks:
-   - **P1-T05** readiness/status/doctor (depends P1-T03 + P1-T04)
-   - **P0-T03** still needs owner license/platform/distribution GO/NO-GO
-3. Suggested prompt: continue Personal plan preferring P1-T05 without claiming
-   G0/Profile. If selecting P0-T03, stop and ask owner.
+1. Add and execute timeout/concurrency behavior tests for P1-T04; do not begin
+   P1-T05 until those acceptance criteria have CI evidence.
+2. **P0-T03** still needs owner license/platform/distribution GO/NO-GO.
+3. Suggested prompt: continue P1-T04 timeout/concurrency coverage without
+   claiming G0/Profile.
 
 ## 7. Snapshot
 
 - PROGRESS updated: yes (no Profile claim)
-- Formal Personal ledger updated: yes (`in-progress`, CI pending)
-- PR: pending
-- CI: pending
+- Formal Personal ledger updated: yes (`in-progress`, partial CI evidence)
+- PR: #95 merged at `6fe21b3`
+- CI: run 30159744673 passed on Ubuntu + Windows/MSVC for the current scope
