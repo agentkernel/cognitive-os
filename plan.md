@@ -538,11 +538,11 @@ Pi 不可以：
 - **目标：** 初始化 config/data/state/cache/runtime，安全迁移两套 SQLite。
 - **证据：** inline schema、无 migration framework。
 - **依赖：** P0-T04。
-- **文件：** 修改 `crates/cognitive-store/src/sqlite.rs`、`installation.rs`、`lib.rs`；新增 migrations、fixtures、migration tests。
+- **文件：** 修改 `crates/cognitive-store/src/{sqlite,installation,lib}.rs`；新增 `layout.rs`、`personal_db.rs`、`tests/p1_t01_layout_migrations.rs`；ADR-0017 补记 XDG 实现。
 - **数据变化：** 新增 migration metadata；不改变 authority transition semantics。
 - **配置：** XDG paths，目录 0700，DB 0600。
 - **迁移：** 先备份、checksum、transaction、integrity check；失败保留旧 DB。
-- **验收：** empty→latest、previous fixture→latest、reapply、corrupt/checksum mismatch、disk failure tests。
+- **验收：** empty→latest、previous fixture→latest、reapply、corrupt/checksum mismatch、disk failure tests（`p1_t01_layout_migrations`；CI 执行）。
 - **性能：** 小型 DB migrate 建议目标 <5 s；未测前不宣称。
 - **回滚：** 恢复备份并启动旧 binary。
 - **解锁：** P1-T02/T04/T08。

@@ -54,8 +54,8 @@ of truth for the P0-T04 design portion.
 
 ## Data Layout
 
-P0-T04 deliberately does not create user paths. P1-T01 will map these logical
-roles to Linux XDG directories with restrictive permissions:
+P0-T04 defined the logical roles. P1-T01 maps them to Linux XDG directories with
+restrictive permissions (`PersonalDataLayout` / `prepare_personal_databases`):
 
 | Role | Future logical location | Ownership / semantics |
 |---|---|---|
@@ -64,9 +64,11 @@ roles to Linux XDG directories with restrictive permissions:
 | Pre-migration backup | `$XDG_STATE_HOME/cognitiveos/backups/` | Created before apply; never overwritten by the migration adapter. |
 | Dry-run scratch database | `$XDG_RUNTIME_DIR/cognitiveos/migration/` | Ephemeral, daemon-private; dry run must not mutate durable data. |
 
-The mapping is a design boundary, not an implemented XDG layout or release
-support claim. P1-T01 owns actual directory creation, permissions, retention,
-and interruption handling.
+Directory creation, Unix 0700/0600 modes, exclusive `migration.lock`, and
+dual-database prepare are implemented in-store. Long-term backup retention
+policy, full daemon single-instance lifecycle, and coordinated two-database
+atomic upgrade remain later Personal work. This is not a release or Profile
+claim.
 
 ## Consequences
 
@@ -105,3 +107,10 @@ P0-T04 adds focused tests for scratch dry run, apply/replay, digest mismatch
 with zero subsequent SQL side effect, and transactional failure recovery.
 They remain subject to execution on a supported Rust toolchain. This ADR is a
 design and local-adapter decision only; it does not complete P1-T01 or G0.
+
+P1-T01 realizes the XDG path roles above in `cognitive-store` (`layout` +
+`personal_db`): directory creation with Unix 0700, database files 0600,
+exclusive `migration.lock`, and dual-database prepare that applies the
+versioned plans independently with non-overwriting backups under
+`$XDG_STATE_HOME/cognitiveos/backups/`. Cross-database atomic upgrade remains
+out of scope. P1-T01 does not claim G0, B01-B12, or Profile conformance.

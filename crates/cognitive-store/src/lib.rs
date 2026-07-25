@@ -19,7 +19,9 @@ pub mod clock;
 pub mod faults;
 pub mod ids;
 pub mod installation;
+pub mod layout;
 pub mod migration;
+pub mod personal_db;
 pub mod sqlite;
 
 pub use clock::SystemClock;
@@ -28,9 +30,17 @@ pub use ids::UuidV7Generator;
 pub use installation::{
     InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
 };
+pub use layout::{
+    AUTHORITY_DATABASE_FILE_NAME, INSTALLATION_DATABASE_FILE_NAME, PERSONAL_PRODUCT_DIR_NAME,
+    PersonalDataLayout, PersonalLayoutError,
+};
 pub use migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
+};
+pub use personal_db::{
+    PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
+    installation_migration_plan, prepare_personal_databases,
 };
 pub use sqlite::SqliteAuthorityStore;
 
