@@ -1,0 +1,18 @@
+CognitiveOS
+Copyright 2026 The CognitiveOS Authors
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file at the repository root.
+
+This product includes third-party software. A curated inventory of direct
+runtime and tooling dependencies, redistribution policy, and external
+components that are deliberately NOT redistributed (for example Pi and
+Node runtimes) is maintained in:
+
+  docs/legal/THIRD-PARTY-NOTICES.md
+
+Full machine-generated SBOM and release attestation are out of scope for
+P0-T03 and are delivered by P7-T01. This NOTICE and the third-party
+inventory satisfy the Personal plan owner GO/NO-GO notices obligation for
+the decision package only; they do not constitute a release claim,
+Profile claim, or G0/B01-B12 evidence.

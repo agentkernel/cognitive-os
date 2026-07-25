@@ -24,7 +24,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 + P1-T01..T06 done；无 Profile 声明** | P1-T06 done：PR #98 / `main@adbb0e5`；CI [30167503487](https://github.com/agentkernel/cognitive-os/actions/runs/30167503487) Ubuntu/Windows-MSVC SUCCESS；`cognitive` CLI + ADR-0024。Personal Gate/B01-B12 仍 `not-run`；G0 仍待 P0-T03/T06。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **planning；P0-T01..T05/T07 + P1-T01..T06 done；无 Profile 声明** | P0-T03 done：Apache-2.0 + Linux/Windows x86_64 首发 + GitHub Release（不 vendor Pi/Node）；ADR-0025 / `LICENSE`/`NOTICE` / [THIRD-PARTY-NOTICES](../legal/THIRD-PARTY-NOTICES.md) / [PERSONAL-SUPPORT-MATRIX](PERSONAL-SUPPORT-MATRIX.md)。P1-T06 done：PR #98 / `main@adbb0e5`。Personal Gate/B01-B12 仍 `not-run`；**G0 仍待 P0-T06**。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -68,6 +68,7 @@
 | Personal P1-T04 | **bounded daemon + timeout/concurrency done（PR #96 CI green）** | `lane/personal-p1-t04-timeout-concurrency` | PR #96 CI runs 30162481713 + 30162477963 Ubuntu/Windows-MSVC success；ADR-0022；auth/size/timeout/concurrency/restart covered；非 G0/Profile claim |
 | Personal P1-T05 | **readiness/status/doctor done（PR #97 CI green）** | `lane/personal-p1-t05-readiness-doctor` | CI runs 30164114878 + 30164113787 Ubuntu/Windows-MSVC success；ADR-0023；blocked/degraded/ready + auth；非 G0/Profile claim |
 | Personal P1-T06 | **cognitive CLI done（PR #98 CI green）** | `main` @ `adbb0e5` | CI run 30167503487 Ubuntu/Windows-MSVC success；ADR-0024；非 G0/Profile claim |
+| Personal P0-T03 | **License/platform/distribution decision done** | `lane/personal-p0-t03-license-platform-distribution` | Owner GO 2026-07-26：Apache-2.0；Linux+Windows x86_64；GitHub Release；no Pi/Node vendor；no crates.io/npm publish；ADR-0025；非 G0/Profile claim |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
 | Lane-RUN 运行时与管理面 | **Pi P4 fail-closed pre-launch admission merged (PR #83)** | `main` @ `937e727` | Custom CLI/durable evidence baseline remains; Pi P4 additionally refuses Windows-native/WSL2 and requires Linux host + valid exact policy/adapter/compatibility digests + healthy registered adapter + HTTPS DeepSeek proxy. No Pi process/authority/Effect/Task completion path exists. WSL2 guest tests 52/52 + clippy pass; Windows local linker blocked; Linux-native evidence, official provenance, lifecycle/I/O adapter and cross-process lease remain pending. |
 | Lane-DOC 文档维护 | **ADR-0015 complexity boundary accepted** | `lane/doc-product-complexity-boundary` | Ordinary Core remains the default product range; strict independent AUDIT/SIG/TARGET work is High-Assurance deferred/tracking. This changes priority only, never factual D-016/D-022 or Profile gates. |
@@ -75,6 +76,7 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
+1. [20260726-personal-p0-t03-license-platform-distribution-handoff.md](../checkpoints/20260726-personal-p0-t03-license-platform-distribution-handoff.md)（Personal：P0-T03 License/平台/分发 owner GO；非 Gate/Profile）
 1. [20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)（Personal：P1-T06 cognitive CLI done；CI 30167503487 green；非 Gate/Profile）
 2. [20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)（Personal：P1-T05 readiness/status/doctor done；CI 30164114878 green；非 Gate/Profile）
 2. [20260725-personal-p1-t04-timeout-concurrency-handoff.md](../checkpoints/20260725-personal-p1-t04-timeout-concurrency-handoff.md)（Personal：P1-T04 timeout/concurrency done；CI 30162481713 green；非 Gate/Profile）

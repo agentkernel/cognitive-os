@@ -137,7 +137,7 @@ Linux x86_64 可验证安装包
 | Pi 候选适配器 | `apps/pi-agent-adapter/src/main.rs` |
 | TS Shell | library，无 `bin` |
 | CI | `.github/workflows/ci.yml`，Windows/Linux |
-| License | 根仓库发行 License 尚未决定；Rust `publish=false`；TS private |
+| License | **Apache-2.0**（P0-T03 / ADR-0025）；Rust `publish=false`；TS `private: true`；Pi/Node 不 vendor |
 | 部署 | 无 Dockerfile/Compose、安装器、Homebrew、OS service、release workflow |
 | 迁移 | 无版本化 SQL migrations 框架 |
 
@@ -473,14 +473,15 @@ Pi 不可以：
 
 ### P0-T03 — License、首发平台与分发决策
 
-- **目标：** 关闭根仓 License、Linux x86_64 support matrix、Node/Pi redistribution 义务。
-- **证据：** 根 License 未定；Pi MIT；无 release workflow。
+- **状态：** **done**（2026-07-26 owner GO；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。
+- **目标：** 关闭根仓 License、首发平台 support matrix、Node/Pi redistribution 义务。
+- **Owner 决议：** Apache-2.0；首发产品平台 Linux x86_64 + Windows x86_64；GitHub Release 可检查 bundle；不 vendor Pi/Node；crates.io/npm 仍不发布。
 - **依赖：** P0-T02；不开发 installer。
-- **文件：** 修改 root licensing docs、计划 ADR-0020；新增 dependency/license inventory。
-- **API/配置：** 定义 release manifest 字段，不实现。
-- **验收：** 法务/owner 明确 GO/NO-GO；第三方 notices 完整。
-- **回滚：** 未决则 Phase 1 可做 dev bundle，但禁止 public release。
-- **解锁：** P1-T08、P7-T01。
+- **文件：** 根 `LICENSE`/`NOTICE`；`docs/adr/0025-personal-license-platform-distribution.md`；`docs/legal/THIRD-PARTY-NOTICES.md`；`docs/plan/PERSONAL-SUPPORT-MATRIX.md`；workspace license 元数据。
+- **API/配置：** 定义 release manifest 字段，不实现（P7-T01）。
+- **验收：** owner GO/NO-GO 与 notices 完整；非 G0/B01/Profile。
+- **回滚：** 变更许可证须新的 owner 决议与 ADR 修订。
+- **解锁：** P0-T06、P1-T08、P7-T01。
 
 ### P0-T04 — 数据布局、迁移、备份与回滚设计验证
 

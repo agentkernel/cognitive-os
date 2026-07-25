@@ -10,5 +10,6 @@
     "test": "pnpm -r test",
     "check:consistency": "pnpm --filter @cognitiveos/repo-tools run check",
     "verify:local": "node scripts/v01-auto-run-entry.mjs"
-  }
+  },
+  "license": "Apache-2.0"
 }

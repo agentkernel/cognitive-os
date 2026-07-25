@@ -67,6 +67,8 @@ informative / implementation-private / historical），并为仓库工作文档�
 | [0017-personal-sqlite-migration-and-recovery.md](adr/0017-personal-sqlite-migration-and-recovery.md) | Personal SQLite 迁移/备份/恢复边界（P0-T04；非 Profile） |
 | [0018-personal-secret-store-boundary.md](adr/0018-personal-secret-store-boundary.md) | Personal SecretStore 端口与 fail-closed 后端（P0-T05；非 Profile） |
 | [0019-personal-daemon-transport-auth-threat-model.md](adr/0019-personal-daemon-transport-auth-threat-model.md) | Personal daemon UDS/loopback transport、本地认证与威胁模型（P0-T07；非 Profile） |
+| [0024-personal-cognitive-cli-product-entry.md](adr/0024-personal-cognitive-cli-product-entry.md) | Personal `cognitive` CLI 产品入口（P1-T06；非 Profile） |
+| [0025-personal-license-platform-distribution.md](adr/0025-personal-license-platform-distribution.md) | Personal License / 首发平台 / 分发决策（P0-T03；非 Profile） |
 | [0022-personal-bounded-daemon-local-auth.md](adr/0022-personal-bounded-daemon-local-auth.md) | Personal bounded daemon + local auth（P1-T04；非 Profile） |
 
 ## docs/plan/（plan 类；每次合并更新 PROGRESS）
@@ -81,6 +83,8 @@ informative / implementation-private / historical），并为仓库工作文档�
 - [plan/PARALLEL-LANES.md](plan/PARALLEL-LANES.md)：并行车道所有权与合入序。
 - [plan/PERSONAL-DEVELOPMENT-PLAN.md](plan/PERSONAL-DEVELOPMENT-PLAN.md)：CognitiveOS Personal 的正式开发任务、状态和阶段 Gate；其可机读 [PERS-PR trace](plan/personal-trace.yaml) 不属于 registry matrix，也不构成 REQ 或执行证据。
 - [Agent Hub Master Development Plan](../clients/agent-hub/plan/agent-hub-development-plan.md)：受 gate 阻断，未激活实现车道；已迁至 `clients/agent-hub/plan/`（子计划与提示词同树）。
+- [plan/PERSONAL-SUPPORT-MATRIX.md](plan/PERSONAL-SUPPORT-MATRIX.md)：Personal 首发支持矩阵（P0-T03 / ADR-0025；非 G0/B01 证据）。
+- [legal/THIRD-PARTY-NOTICES.md](legal/THIRD-PARTY-NOTICES.md)：第三方 notices 与再分发清单（P0-T03；SBOM 归 P7-T01）。
 
 ## docs/clients/（兼容入口）
 

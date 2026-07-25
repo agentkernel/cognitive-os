@@ -24,8 +24,8 @@ version = "0.0.1"
 edition = "2024"
 rust-version = "1.97"
 publish = false
-# License: intentionally not declared yet; recorded as an open decision in
-# docs/plan/DEVELOPMENT-PLAN.md (pending-decisions).
+license = "Apache-2.0"
+# License decided P0-T03 / ADR-0025. publish remains false until a later P7 owner decision.
 
 [workspace.dependencies]
 cognitive-contracts = { path = "crates/cognitive-contracts" }
