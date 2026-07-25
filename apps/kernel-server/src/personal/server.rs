@@ -1,4 +1,4 @@
-﻿//! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
+//! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -123,7 +123,14 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
-                    handle_connection(stream, &bounds, &layout, &authority, &active_connections, &in_flight);
+                    handle_connection(
+                        stream,
+                        &bounds,
+                        &layout,
+                        &authority,
+                        &active_connections,
+                        &in_flight,
+                    );
                 });
             }
             Err(error) => {
@@ -687,7 +694,14 @@ mod tests {
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
-                handle_connection(accept_connection(&listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
 
@@ -730,7 +744,14 @@ mod tests {
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
-                handle_connection(accept_connection(&listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
 
@@ -779,7 +800,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&first_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&first_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         first
@@ -796,7 +824,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&second_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&second_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         second
@@ -813,7 +848,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&third_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&third_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         third
@@ -854,7 +896,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&first_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&first_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         first
@@ -871,7 +920,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&second_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&second_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         second
@@ -888,7 +944,14 @@ mod tests {
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(accept_connection(&third_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
+                handle_connection(
+                    accept_connection(&third_listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &active_connections,
+                    &in_flight,
+                );
             }
         });
         third

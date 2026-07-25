@@ -218,7 +218,8 @@ fn doctor_guidance(report: &ReadinessReport) -> Vec<&'static str> {
                 guidance.push("create Personal XDG layout directories before continuing");
             }
             ("database", ComponentStatus::Blocked) => {
-                guidance.push("run personal database prepare / migration before first conversation");
+                guidance
+                    .push("run personal database prepare / migration before first conversation");
             }
             ("secret", ComponentStatus::Blocked) => {
                 guidance.push("configure a native SecretStore backend and store the Provider key");
@@ -227,13 +228,16 @@ fn doctor_guidance(report: &ReadinessReport) -> Vec<&'static str> {
                 guidance.push("write provider.json via cognitive init with an opaque secret_ref");
             }
             ("provider", ComponentStatus::Degraded) => {
-                guidance.push("run provider discovery probe to persist a capability snapshot digest");
+                guidance
+                    .push("run provider discovery probe to persist a capability snapshot digest");
             }
             ("daemon", ComponentStatus::Blocked) => {
                 guidance.push("start kernel-server --personal and confirm loopback listen");
             }
             ("pi", ComponentStatus::NotConfigured | ComponentStatus::Blocked) => {
-                guidance.push("Pi package/extension is deferred to P1-T07; first conversation stays blocked");
+                guidance.push(
+                    "Pi package/extension is deferred to P1-T07; first conversation stays blocked",
+                );
             }
             _ => {}
         }
@@ -505,10 +509,7 @@ fn check_provider(
     }
 }
 
-fn check_daemon(
-    context: &ReadinessEvaluationContext,
-    observed_at_unix_ms: u64,
-) -> ComponentCheck {
+fn check_daemon(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) -> ComponentCheck {
     let started = Instant::now();
     let lock_present = context.layout.daemon_lock_path().is_file();
     let bootstrap_present = context.layout.local_bootstrap_secret_path().is_file();
@@ -534,14 +535,13 @@ fn check_daemon(
             value: context.session_count.to_string(),
         },
     ];
-    let (status, error_class) =
-        if context.daemon_listening && lock_present && bootstrap_present {
-            (ComponentStatus::Ready, None)
-        } else if context.daemon_listening {
-            (ComponentStatus::Degraded, Some("daemon_runtime_partial"))
-        } else {
-            (ComponentStatus::Blocked, Some("daemon_not_listening"))
-        };
+    let (status, error_class) = if context.daemon_listening && lock_present && bootstrap_present {
+        (ComponentStatus::Ready, None)
+    } else if context.daemon_listening {
+        (ComponentStatus::Degraded, Some("daemon_runtime_partial"))
+    } else {
+        (ComponentStatus::Blocked, Some("daemon_not_listening"))
+    };
     ComponentCheck {
         component: "daemon",
         status,
@@ -633,10 +633,8 @@ fn unix_now_ms() -> u64 {
 #[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
+    use cognitive_secret::{ProviderConfig, SecretRef};
     use std::fs;
-    use cognitive_secret::{
-        ProviderConfig, SecretRef,
-    };
 
     fn touch_personal_database_files(layout: &PersonalDataLayout) -> std::io::Result<()> {
         touch_file(&layout.authority_database_path())?;
@@ -778,16 +776,11 @@ mod tests {
         assert_eq!(doctor["overall"], "ready");
         assert_eq!(doctor["first_conversation_ready"], false);
         assert_eq!(doctor["gate_claim"], "not-claimed");
-        let guidance = doctor["guidance"]
-            .as_array()
-            .expect("guidance array");
-        assert!(
-            guidance
-                .iter()
-                .any(|entry| entry.as_str() == Some(
-                    "Pi package/extension is deferred to P1-T07; first conversation stays blocked"
-                ))
-        );
+        let guidance = doctor["guidance"].as_array().expect("guidance array");
+        assert!(guidance.iter().any(|entry| entry.as_str()
+            == Some(
+                "Pi package/extension is deferred to P1-T07; first conversation stays blocked"
+            )));
     }
 
     #[test]
@@ -797,7 +790,11 @@ mod tests {
         write_provider_config(&layout, true);
         fs::write(layout.daemon_lock_path(), b"lock").unwrap();
         let bootstrap_material = "bootstrap-secret-material-p1t05-redaction";
-        fs::write(layout.local_bootstrap_secret_path(), bootstrap_material.as_bytes()).unwrap();
+        fs::write(
+            layout.local_bootstrap_secret_path(),
+            bootstrap_material.as_bytes(),
+        )
+        .unwrap();
         let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
             layout,
             daemon_listening: true,

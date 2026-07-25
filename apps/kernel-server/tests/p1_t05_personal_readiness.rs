@@ -109,19 +109,13 @@ fn status_and_doctor_require_management_channel_and_report_blocked() {
         port,
         "GET /personal/status HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
     );
-    assert!(
-        unauth.contains("LOCAL_SESSION_UNAUTHORIZED"),
-        "{unauth}"
-    );
+    assert!(unauth.contains("LOCAL_SESSION_UNAUTHORIZED"), "{unauth}");
 
     let wrong_channel = format!(
         "GET /personal/doctor HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {task_token}\r\nConnection: close\r\n\r\n"
     );
     let wrong = http_exchange(port, &wrong_channel);
-    assert!(
-        wrong.contains("SHELL_CHANNEL_BINDING_MISMATCH"),
-        "{wrong}"
-    );
+    assert!(wrong.contains("SHELL_CHANNEL_BINDING_MISMATCH"), "{wrong}");
 
     let status_wire = format!(
         "GET /personal/status HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nConnection: close\r\n\r\n"
@@ -129,7 +123,10 @@ fn status_and_doctor_require_management_channel_and_report_blocked() {
     let status = http_exchange(port, &status_wire);
     assert!(status.contains("HTTP/1.1 200"), "{status}");
     assert!(status.contains("\"overall\":\"blocked\""), "{status}");
-    assert!(status.contains("\"profile_claim\":\"not-claimed\""), "{status}");
+    assert!(
+        status.contains("\"profile_claim\":\"not-claimed\""),
+        "{status}"
+    );
     assert!(
         status.contains("\"static_check_is_not_runtime_ready\":true"),
         "{status}"
@@ -144,10 +141,21 @@ fn status_and_doctor_require_management_channel_and_report_blocked() {
     );
     let doctor = http_exchange(port, &doctor_wire);
     assert!(doctor.contains("HTTP/1.1 200"), "{doctor}");
-    assert!(doctor.contains("\"surface\":\"personal-doctor\""), "{doctor}");
+    assert!(
+        doctor.contains("\"surface\":\"personal-doctor\""),
+        "{doctor}"
+    );
     assert!(doctor.contains("\"component\":\"database\""), "{doctor}");
-    assert!(doctor.contains("database_not_prepared") || doctor.contains("secret_store_unavailable") || doctor.contains("provider_config_missing"), "{doctor}");
-    assert!(doctor.contains("\"gate_claim\":\"not-claimed\""), "{doctor}");
+    assert!(
+        doctor.contains("database_not_prepared")
+            || doctor.contains("secret_store_unavailable")
+            || doctor.contains("provider_config_missing"),
+        "{doctor}"
+    );
+    assert!(
+        doctor.contains("\"gate_claim\":\"not-claimed\""),
+        "{doctor}"
+    );
     // Bootstrap secret material must never appear in projections.
     assert!(!doctor.contains(&secret), "{doctor}");
 
