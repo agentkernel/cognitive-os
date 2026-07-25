@@ -378,9 +378,11 @@ mod tests {
                 now,
             )
             .unwrap();
-        assert!(authority
-            .authorize(&view.token, ChannelClass::Management, now)
-            .is_ok());
+        assert!(
+            authority
+                .authorize(&view.token, ChannelClass::Management, now)
+                .is_ok()
+        );
         assert!(matches!(
             authority.authorize(&view.token, ChannelClass::Task, now),
             Err(LocalAuthError::ChannelBindingMismatch)

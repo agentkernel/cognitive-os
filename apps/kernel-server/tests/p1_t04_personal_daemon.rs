@@ -99,7 +99,9 @@ fn issue_token(port: u16, secret: &str, channel: &str) -> String {
 
 #[test]
 fn bad_auth_and_wrong_channel_fail_closed() {
-    let _guard = PERSONAL_PROCESS_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let port = free_port();
     let root = runtime_root("auth");
     let mut child = spawn_personal(port, &root, false);
@@ -134,7 +136,9 @@ fn bad_auth_and_wrong_channel_fail_closed() {
 
 #[test]
 fn oversized_body_is_rejected() {
-    let _guard = PERSONAL_PROCESS_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let port = free_port();
     let root = runtime_root("body");
     let mut child = spawn_personal(port, &root, false);
@@ -156,7 +160,9 @@ fn oversized_body_is_rejected() {
 
 #[test]
 fn cookie_auth_and_bad_host_are_rejected() {
-    let _guard = PERSONAL_PROCESS_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let port = free_port();
     let root = runtime_root("csrf");
     let mut child = spawn_personal(port, &root, false);
@@ -183,7 +189,9 @@ fn cookie_auth_and_bad_host_are_rejected() {
 
 #[test]
 fn second_instance_lock_and_restart() {
-    let _guard = PERSONAL_PROCESS_TEST_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let port_a = free_port();
     let port_b = free_port();
     let root = runtime_root("lock");

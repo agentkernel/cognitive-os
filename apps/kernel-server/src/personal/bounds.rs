@@ -33,7 +33,8 @@ impl PersonalResourceBounds {
 
     /// Effective body limit: min(default, hard ceiling).
     pub fn effective_max_body_bytes(&self) -> usize {
-        self.max_request_body_bytes.min(self.hard_body_ceiling_bytes)
+        self.max_request_body_bytes
+            .min(self.hard_body_ceiling_bytes)
     }
 }
 
@@ -108,7 +109,7 @@ mod tests {
     #[test]
     fn baseline_body_limit_is_one_mebibyte() {
         let bounds = PersonalResourceBounds::personal_v1_baseline();
-        assert_eq!(bounds.effective_max_body_bytes(), 1 * 1024 * 1024);
+        assert_eq!(bounds.effective_max_body_bytes(), 1024 * 1024);
         assert!(validate_body_length(1024, &bounds).is_ok());
         assert!(matches!(
             validate_body_length(bounds.effective_max_body_bytes() + 1, &bounds),

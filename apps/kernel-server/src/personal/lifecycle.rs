@@ -108,7 +108,7 @@ fn restrict_private_file(path: &Path) -> Result<(), DaemonLifecycleError> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[allow(clippy::panic, clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -126,7 +126,10 @@ mod tests {
             Ok(_) => panic!("second acquire should fail"),
             Err(error) => error,
         };
-        assert!(matches!(second, DaemonLifecycleError::AlreadyRunning { .. }));
+        assert!(matches!(
+            second,
+            DaemonLifecycleError::AlreadyRunning { .. }
+        ));
         drop(first);
         let third = match DaemonSingleInstanceLock::acquire(&lock_path) {
             Ok(lock) => lock,

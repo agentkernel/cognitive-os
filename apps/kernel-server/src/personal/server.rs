@@ -9,9 +9,7 @@ use std::time::Instant;
 use cognitive_store::PersonalDataLayout;
 use serde_json::json;
 
-use super::auth::{
-    ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest,
-};
+use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
 use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
 };
@@ -87,17 +85,13 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         }
     })?;
     if let Ok(local_address) = listener.local_addr() {
-        eprintln!(
-            "kernel-server personal: listening on {local_address} (loopback auth enabled)"
-        );
+        eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
     }
 
     if config.once {
-        let (stream, _) = listener
-            .accept()
-            .map_err(|error| PersonalDaemonError::Io {
-                detail: error.to_string(),
-            })?;
+        let (stream, _) = listener.accept().map_err(|error| PersonalDaemonError::Io {
+            detail: error.to_string(),
+        })?;
         handle_connection(
             stream,
             &config.bounds,
@@ -259,9 +253,8 @@ fn handle_session_issue(
         .ok_or_else(|| "principal_id field required".to_owned())?;
     let bootstrap_secret = extract_json_string(document, "bootstrap_secret")
         .ok_or_else(|| "bootstrap_secret field required".to_owned())?;
-    let channel = ChannelClass::parse(&channel_raw).ok_or_else(|| {
-        "channel must be task or management".to_owned()
-    })?;
+    let channel = ChannelClass::parse(&channel_raw)
+        .ok_or_else(|| "channel must be task or management".to_owned())?;
 
     let mut guard = authority
         .lock()
@@ -335,7 +328,8 @@ fn read_bounded_http_request(
 ) -> Result<(String, String, Vec<u8>), String> {
     let mut bytes = Vec::new();
     let mut chunk = [0_u8; 4096];
-    let hard_read_ceiling = bounds.hard_body_ceiling_bytes
+    let hard_read_ceiling = bounds
+        .hard_body_ceiling_bytes
         .saturating_add(bounds.max_header_block_bytes)
         .saturating_add(1024);
     loop {
@@ -373,7 +367,8 @@ fn read_bounded_http_request(
                         .and_then(|value| value.parse::<usize>().ok())
                 })
                 .unwrap_or(0);
-            validate_body_length(content_length, bounds).map_err(|error| error.code().to_owned())?;
+            validate_body_length(content_length, bounds)
+                .map_err(|error| error.code().to_owned())?;
             let body_start = split + 4;
             while bytes.len() < body_start + content_length {
                 let read = stream.read(&mut chunk).map_err(|error| error.to_string())?;
