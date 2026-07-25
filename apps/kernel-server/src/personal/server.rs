@@ -1,4 +1,4 @@
-//! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
+﻿//! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -14,6 +14,10 @@ use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
 };
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
+use super::readiness::{
+    ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
+    status_projection_json,
+};
 
 /// Configuration for the Personal loopback daemon surface.
 #[derive(Debug, Clone)]
@@ -95,6 +99,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         handle_connection(
             stream,
             &config.bounds,
+            &config.layout,
             &authority,
             &active_connections,
             &in_flight,
@@ -113,11 +118,12 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         match incoming {
             Ok(stream) => {
                 let bounds = config.bounds;
+                let layout = config.layout.clone();
                 let authority = Arc::clone(&authority);
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
-                    handle_connection(stream, &bounds, &authority, &active_connections, &in_flight);
+                    handle_connection(stream, &bounds, &layout, &authority, &active_connections, &in_flight);
                 });
             }
             Err(error) => {
@@ -143,6 +149,7 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), PersonalDaemonError> {
 fn handle_connection(
     mut stream: TcpStream,
     bounds: &PersonalResourceBounds,
+    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
@@ -183,7 +190,7 @@ fn handle_connection(
         return;
     }
 
-    let result = process_http_request(&mut stream, bounds, authority);
+    let result = process_http_request(&mut stream, bounds, layout, authority);
     if let Err(error) = result {
         let (status, code) = if error == "PERSONAL_REQUEST_READ_TIMEOUT" {
             (408, error.as_str())
@@ -200,6 +207,7 @@ fn handle_connection(
 fn process_http_request(
     stream: &mut TcpStream,
     bounds: &PersonalResourceBounds,
+    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
 ) -> Result<(), String> {
     let (request_line, headers, body) = read_bounded_http_request(stream, bounds)?;
@@ -232,6 +240,14 @@ fn process_http_request(
     }
     if method_path.starts_with("POST /task/") || method_path.starts_with("GET /task/") {
         return handle_channel_route(stream, &headers, ChannelClass::Task, authority, "task");
+    }
+    if method_path.starts_with("GET /personal/status ")
+        || method_path.starts_with("GET /personal/readiness ")
+    {
+        return handle_readiness_route(stream, &headers, layout, authority, "status");
+    }
+    if method_path.starts_with("GET /personal/doctor ") {
+        return handle_readiness_route(stream, &headers, layout, authority, "doctor");
     }
     if method_path.starts_with("GET /personal/health ") {
         let session_count = authority
@@ -329,6 +345,53 @@ fn handle_channel_route(
             })
             .to_string();
             write_json_response(stream, 200, &response)
+        }
+        Err(error) => {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            write_error_response(stream, status, error.code(), &error.to_string())
+        }
+    }
+}
+
+fn handle_readiness_route(
+    stream: &mut TcpStream,
+    headers: &str,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    surface: &str,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    match guard.authorize(&token, ChannelClass::Management, Instant::now()) {
+        Ok(()) => {
+            let session_count = guard.session_count();
+            drop(guard);
+            let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+                layout: layout.clone(),
+                daemon_listening: true,
+                session_count,
+                secret_probe_override: None,
+                provider_config_path_override: None,
+            });
+            let body = if surface == "doctor" {
+                doctor_projection_json(&report).to_string()
+            } else {
+                status_projection_json(&report).to_string()
+            };
+            write_json_response(stream, 200, &body)
         }
         Err(error) => {
             let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
@@ -565,7 +628,7 @@ mod tests {
         LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
     };
 
-    fn test_authority(test_name: &str) -> Arc<Mutex<LocalSessionAuthority>> {
+    fn test_fixture(test_name: &str) -> (PersonalDataLayout, Arc<Mutex<LocalSessionAuthority>>) {
         let temporary_root = std::env::temp_dir().join(format!(
             "cos-personal-server-test-{test_name}-{}-{}",
             std::process::id(),
@@ -587,7 +650,7 @@ mod tests {
             PersonalResourceBounds::personal_v1_baseline(),
         )
         .expect("test authority");
-        Arc::new(Mutex::new(authority))
+        (layout, Arc::new(Mutex::new(authority)))
     }
 
     fn accept_connection(listener: &TcpListener) -> TcpStream {
@@ -616,7 +679,7 @@ mod tests {
         let port = listener.local_addr().expect("listener address").port();
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
-        let authority = test_authority("timeout");
+        let (layout, authority) = test_fixture("timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
@@ -624,13 +687,7 @@ mod tests {
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
-                handle_connection(
-                    accept_connection(&listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
 
@@ -665,7 +722,7 @@ mod tests {
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
         bounds.request_body_read_timeout_secs = 1;
-        let authority = test_authority("body-timeout");
+        let (layout, authority) = test_fixture("body-timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
@@ -673,13 +730,7 @@ mod tests {
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
-                handle_connection(
-                    accept_connection(&listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
 
@@ -716,24 +767,19 @@ mod tests {
         // connection ceiling, not the in-flight ceiling.
         bounds.max_in_flight_requests = 8;
         bounds.read_header_timeout_secs = 1;
-        let authority = test_authority("concurrency");
+        let (layout, authority) = test_fixture("concurrency");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let mut first = TcpStream::connect(("127.0.0.1", port)).expect("first connection");
         let first_listener = listener.try_clone().expect("first listener clone");
         let first_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&first_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&first_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         first
@@ -745,17 +791,12 @@ mod tests {
         let second_listener = listener.try_clone().expect("second listener clone");
         let second_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&second_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&second_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         second
@@ -767,17 +808,12 @@ mod tests {
         let third_listener = listener.try_clone().expect("third listener clone");
         let third_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&third_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&third_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         third
@@ -805,7 +841,7 @@ mod tests {
         bounds.max_concurrent_connections = 3;
         bounds.max_in_flight_requests = 2;
         bounds.read_header_timeout_secs = 1;
-        let authority = test_authority("in-flight");
+        let (layout, authority) = test_fixture("in-flight");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
 
@@ -813,17 +849,12 @@ mod tests {
         let first_listener = listener.try_clone().expect("first listener clone");
         let first_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&first_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&first_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         first
@@ -835,17 +866,12 @@ mod tests {
         let second_listener = listener.try_clone().expect("second listener clone");
         let second_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&second_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&second_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         second
@@ -857,17 +883,12 @@ mod tests {
         let third_listener = listener.try_clone().expect("third listener clone");
         let third_server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             let bounds = bounds;
             move || {
-                handle_connection(
-                    accept_connection(&third_listener),
-                    &bounds,
-                    &authority,
-                    &active_connections,
-                    &in_flight,
-                );
+                handle_connection(accept_connection(&third_listener), &bounds, &layout, &authority, &active_connections, &in_flight);
             }
         });
         third
