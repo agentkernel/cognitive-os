@@ -135,21 +135,38 @@ pub fn stop(options: &StatusOptions) -> Result<Value, String> {
             layout.daemon_lock_path().display()
         )
     })?;
-    terminate_pid(pid)?;
-    for _ in 0..100 {
-        if !layout.daemon_lock_path().exists() {
+    // SIGTERM/taskkill terminate the OS process without running Rust Drop, so the
+    // create-new lock file often remains. Product stop semantics: signal, wait
+    // until the recorded pid is dead, then remove the confirmed-stale lock.
+    if process_is_alive(pid) {
+        terminate_pid(pid)?;
+    }
+    for _ in 0..150 {
+        if !process_is_alive(pid) {
+            let lock_was_present = layout.daemon_lock_path().exists();
+            if lock_was_present {
+                fs::remove_file(layout.daemon_lock_path()).map_err(|error| {
+                    format!(
+                        "pid {pid} is stopped but unable to remove stale daemon.lock at {}: {error}",
+                        layout.daemon_lock_path().display()
+                    )
+                })?;
+            }
             let _ = fs::remove_file(endpoint_path(&layout));
             return Ok(json!({
                 "status": "ok",
                 "surface": "cognitive-daemon",
                 "action": "stopped",
-                "pid": pid
+                "pid": pid,
+                "stale_lock_removed": lock_was_present,
+                "profile_claim": "not-claimed",
+                "gate_claim": "not-claimed"
             }));
         }
         thread::sleep(Duration::from_millis(20));
     }
     Err(format!(
-        "signaled pid {pid} but daemon.lock still present; investigate and remove stale lock if needed"
+        "signaled pid {pid} but the process is still alive after timeout; refuse to remove daemon.lock"
     ))
 }
 
