@@ -1,7 +1,7 @@
 //! Capture Provider API key material without logging or echoing bytes.
 
 use std::fs::File;
-use std::io::{self, Read};
+use std::io;
 use std::path::Path;
 
 use cognitive_secret::{SecretError, SecretMaterial, read_secret_material_from_reader};
