@@ -325,10 +325,12 @@ fn validate_snapshot_digest(digest: &str) -> Result<(), ProviderConfigError> {
             detail: "selected_snapshot_digest length out of range",
         });
     }
-    if !digest
-        .bytes()
-        .all(|byte| byte.is_ascii_hexdigit() || matches!(byte, b':' | b'-' | b'_'))
-    {
+    // Product-local identity digests may use a short algorithm prefix
+    // (for example `fnv1a64:`) plus hex. Allow alphanumerics and common
+    // separators; never treat this field as secret material.
+    if !digest.bytes().all(|byte| {
+        byte.is_ascii_alphanumeric() || matches!(byte, b':' | b'-' | b'_' | b'.')
+    }) {
         return Err(ProviderConfigError::Invalid {
             detail: "selected_snapshot_digest has unsupported characters",
         });
