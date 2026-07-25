@@ -589,7 +589,7 @@ Pi 不可以：
 ### P1-T05 — Readiness、status 和 doctor 应用服务
 
 - **目标：** CLI、Pi、未来 UI 共用同一事实源。
-- **状态：** in-progress（实现已提供，CI 证据待执行）。
+- **状态：** done（CI Ubuntu/Windows-MSVC SUCCESS：30164114878 / 30164113787）。
 - **文件：** `apps/kernel-server/src/personal/readiness.rs`、`server.rs` 路由、`tests/p1_t05_personal_readiness.rs`、ADR-0023。**未**修改 `cognitive-management`（Lane-RUN 所有权；Personal 组合根承载 projection）。
 - **API：** management-channel `GET /personal/status`、`GET /personal/readiness`、`GET /personal/doctor`；组件 system/database/secret/provider/daemon/pi；返回事实、duration、source、error_class 与 non-claim。
 - **验收：** degraded/blocked/ready 分离；静态检查通过不写成 runtime ready（`static_check_is_not_runtime_ready`）；secret_ref/bootstrap 不入投影。

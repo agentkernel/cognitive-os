@@ -8,8 +8,9 @@
 - Base commit: `7cfa9ac` (`origin/main` after P1-T04 merge)
 - Lane: Personal composition root `apps/kernel-server` (does **not** take
   Lane-RUN ownership of `cognitive-management` / `cognitive-runtime`)
-- Status: **in-progress** (implementation landed; Rust behavior evidence
-  awaits CI Ubuntu/Windows-MSVC). Not a G0/B01-B12/Profile claim.
+- Status: **done** after CI Ubuntu/Windows-MSVC SUCCESS on PR #97
+  (runs 30164114878 and 30164113787). Not a G0/B01-B12/Profile claim.
+- Tip commit: `21265ab` (implementation + CI fixes + rustfmt)
 
 ## 2. Completed in this atomic batch
 
@@ -29,7 +30,6 @@
 
 ## 3. Not completed / out of scope
 
-- CI Ubuntu/Windows-MSVC execution evidence (pending push)
 - CLI product entry `cognitive status/doctor` (P1-T06)
 - Pi package checks (P1-T07)
 - Live Secret Service / live Provider network
@@ -44,7 +44,8 @@
 | Local MSVC `cargo check` | not-supported host | `link.exe` not found |
 | `pnpm run check:consistency` | executed | OK (273 REQ / 55 codes / 63 schemas / 85 vectors) |
 | `git diff --check` | executed | clean (CRLF→LF warning only on server.rs) |
-| CI PR run | pending | — |
+| CI PR run | executed | [30164114878](https://github.com/agentkernel/cognitive-os/actions/runs/30164114878) SUCCESS (Ubuntu + Windows-MSVC) |
+| CI push run | executed | [30164113787](https://github.com/agentkernel/cognitive-os/actions/runs/30164113787) SUCCESS (Ubuntu + Windows-MSVC) |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 ## 5. Design and safety boundaries
@@ -57,19 +58,18 @@
 
 ## 6. Next entry
 
-1. Push branch + open PR; wait for CI Ubuntu/Windows-MSVC.
-2. On CI green, mark P1-T05 `done` with run IDs and merge.
-3. Next dependency-satisfied Personal task: **P1-T06** CLI product entry
+1. Merge PR #97 when ready.
+2. Next dependency-satisfied Personal task: **P1-T06** CLI product entry
    (depends P1-T02 + P1-T05). **P0-T03** still needs owner license/platform
    decisions (blocks P0-T06 / installer / G0).
-4. Suggested prompt: after P1-T05 CI green, implement P1-T06
+3. Suggested prompt: implement P1-T06
    `cognitive init/doctor/status/daemon` calling the shared readiness
    projections without direct SQLite authority writes.
 
 ## 7. Snapshot
 
-- PROGRESS updated: yes (P1-T05 in-progress; no Profile claim)
-- Formal Personal ledger updated: yes (`in-progress`)
-- PR: pending
-- CI: pending
-- Commit: pending
+- PROGRESS updated: yes (P1-T05 done; no Profile claim)
+- Formal Personal ledger updated: yes (`done`)
+- PR: [#97](https://github.com/agentkernel/cognitive-os/pull/97)
+- CI: 30164114878 + 30164113787 SUCCESS
+- Commits: `3beeaae` + CI fixes + `21265ab` rustfmt
