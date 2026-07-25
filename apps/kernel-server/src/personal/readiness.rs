@@ -8,8 +8,7 @@
 //! Ownership: lives in the Personal composition root (`kernel-server`) so
 //! Personal does not take Lane-RUN ownership of `cognitive-management`.
 
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_secret::{
@@ -380,7 +379,6 @@ fn check_secret(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) 
         (_, SecretStoreAvailability::Unavailable) | (SecretStoreClass::Unavailable, _) => {
             (ComponentStatus::Blocked, Some("secret_store_unavailable"))
         }
-        _ => (ComponentStatus::Blocked, Some("secret_store_unavailable")),
     };
     ComponentCheck {
         component: "secret",
@@ -630,32 +628,32 @@ fn unix_now_ms() -> u64 {
         .unwrap_or(0)
 }
 
-/// Write empty placeholder DB files for hermetic readiness fixtures.
-pub fn touch_personal_database_files(layout: &PersonalDataLayout) -> std::io::Result<()> {
-    touch_file(&layout.authority_database_path())?;
-    touch_file(&layout.installation_database_path())?;
-    Ok(())
-}
-
-fn touch_file(path: &Path) -> std::io::Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-    fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(false)
-        .open(path)
-        .map(|_| ())
-}
-
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
+    use std::fs;
     use cognitive_secret::{
         ProviderConfig, SecretRef,
     };
+
+    fn touch_personal_database_files(layout: &PersonalDataLayout) -> std::io::Result<()> {
+        touch_file(&layout.authority_database_path())?;
+        touch_file(&layout.installation_database_path())?;
+        Ok(())
+    }
+
+    fn touch_file(path: &std::path::Path) -> std::io::Result<()> {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(false)
+            .open(path)
+            .map(|_| ())
+    }
 
     fn temp_layout(label: &str) -> PersonalDataLayout {
         let root = std::env::temp_dir().join(format!(
