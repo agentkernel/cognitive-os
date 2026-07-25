@@ -1,7 +1,7 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：planning（尚未启动实现）**
-> **最后更新：2026-07-24**
+> **状态：in-progress（P0-T01 已完成；其余任务尚未开始）**
+> **最后更新：2026-07-25**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 
@@ -18,7 +18,7 @@
 
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
-| Phase 0 - 基线与决策 | 7 | 0 | 0 | 0 | 7 | G0 |
+| Phase 0 - 基线与决策 | 7 | 1 | 0 | 0 | 6 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 0 | 0 | 0 | 9 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
@@ -26,7 +26,7 @@
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **0** | **0** | **0** | **51** | — |
+| **合计** | **51** | **1** | **0** | **0** | **50** | — |
 
 ## 2. 产品边界与不变量
 
@@ -58,7 +58,7 @@
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P0-T01 | 固定可复现基线与支持工具链 | — | Linux runner 与支持的 Windows 工具链结论可复现 | not-started | — |
+| P0-T01 | 固定可复现基线与支持工具链 | — | Linux runner 与支持的 Windows 工具链结论可复现 | done | 2026-07-25；Lane-DOC `lane/personal-p0-t01-baseline-2`。基线 `01ceb93`：CI run [30140381194](https://github.com/agentkernel/cognitive-os/actions/runs/30140381194) 的 Ubuntu/Windows jobs 均成功；本机 `pnpm install --frozen-lockfile`、3 次 `pnpm -r build` + `pnpm -r test`（p50 29.669s）和 `cargo fmt --all -- --check` 通过。本机 Windows GNU `cargo build --workspace --locked` 在 linker exit 121 下失败，LLVM-MinGW/shim 重试同样失败；因此支持组合明确为 CI Linux 与 Windows/MSVC，GNU host 非支持基线。详见 [tests/baseline/README.md](../../tests/baseline/README.md)。 |
 | P0-T02 | 冻结 Personal 需求、追踪与架构边界 | P0-T01 | PERS-PR、任务、benchmark 无孤儿映射 | not-started | — |
 | P0-T03 | License、首发平台与分发决策 | P0-T02 | owner GO/NO-GO 与 notices 完整 | not-started | — |
 | P0-T04 | 数据布局、迁移、备份与回滚设计验证 | P0-T02 | migration dry-run、重放与失败恢复评审 | not-started | — |
