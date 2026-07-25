@@ -60,7 +60,12 @@ fn empty_layout_migrates_both_databases_to_latest() {
     assert_eq!(report.installation().applied_versions(), &[1]);
     assert!(layout.authority_database_path().exists());
     assert!(layout.installation_database_path().exists());
-    assert!(report.authority_backup_path().expect("authority backup").exists());
+    assert!(
+        report
+            .authority_backup_path()
+            .expect("authority backup")
+            .exists()
+    );
     assert!(
         report
             .installation_backup_path()
@@ -87,8 +92,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
 
     // Production open paths remain compatible after versioned prepare.
     SqliteAuthorityStore::open(&layout.authority_database_path()).expect("open authority");
-    SqliteInstallationStore::open(&layout.installation_database_path())
-        .expect("open installation");
+    SqliteInstallationStore::open(&layout.installation_database_path()).expect("open installation");
 
     #[cfg(unix)]
     {
@@ -149,17 +153,15 @@ fn previous_fixture_upgrades_to_latest_with_additive_version() {
     ];
 
     let first_backup = layout.backups_dir().join("fixture.before-v1.sqlite");
-    let first_report =
-        apply_database_migration_plan(&database_path, &first_backup, &previous_plan)
-            .expect("apply previous fixture");
+    let first_report = apply_database_migration_plan(&database_path, &first_backup, &previous_plan)
+        .expect("apply previous fixture");
     assert_eq!(first_report.applied_versions(), &[1]);
     assert!(table_exists(&database_path, "fixture_core"));
     assert!(!table_exists(&database_path, "fixture_extension"));
 
     let second_backup = layout.backups_dir().join("fixture.before-v2.sqlite");
-    let second_report =
-        apply_database_migration_plan(&database_path, &second_backup, &latest_plan)
-            .expect("upgrade to latest");
+    let second_report = apply_database_migration_plan(&database_path, &second_backup, &latest_plan)
+        .expect("upgrade to latest");
     assert_eq!(second_report.applied_versions(), &[2]);
     assert_eq!(recorded_migration_versions(&database_path), vec![1, 2]);
     assert!(table_exists(&database_path, "fixture_extension"));

@@ -67,8 +67,10 @@ impl PersonalDataLayout {
         let config_root = env_path_or_fallback("XDG_CONFIG_HOME", home_directory.join(".config"))?;
         let data_root =
             env_path_or_fallback("XDG_DATA_HOME", home_directory.join(".local").join("share"))?;
-        let state_root =
-            env_path_or_fallback("XDG_STATE_HOME", home_directory.join(".local").join("state"))?;
+        let state_root = env_path_or_fallback(
+            "XDG_STATE_HOME",
+            home_directory.join(".local").join("state"),
+        )?;
         let cache_root = env_path_or_fallback("XDG_CACHE_HOME", home_directory.join(".cache"))?;
         let runtime_root = match env::var_os("XDG_RUNTIME_DIR") {
             Some(value) if !value.is_empty() => PathBuf::from(value),
