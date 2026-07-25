@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07 已完成；其余任务尚未开始）**
+> **状态：in-progress（P0-T01、P0-T02、P0-T04、P0-T05、P0-T07 已完成；P1-T01 in-progress 待 CI 证据；其余任务尚未开始）**
 > **最后更新：2026-07-25**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -20,14 +20,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 5 | 0 | 0 | 2 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 0 | 0 | 0 | 9 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 0 | 1 | 0 | 8 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **5** | **0** | **0** | **46** | — |
+| **合计** | **51** | **5** | **1** | **0** | **45** | — |
 
 ## 2. 产品边界与不变量
 
@@ -71,7 +71,7 @@
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P1-T01 | 版本化数据库迁移与 XDG 布局 | P0-T04 | upgrade/reapply/corruption/disk-failure 测试 | not-started | — |
+| P1-T01 | 版本化数据库迁移与 XDG 布局 | P0-T04 | upgrade/reapply/corruption/disk-failure 测试 | in-progress | 2026-07-25 开始；Lane-KRN `lane/krn-personal-p1-t01-xdg-migrations`。实现已提供：`PersonalDataLayout` + `prepare_personal_databases`（XDG 五根、Unix 0700/0600、`migration.lock`、双库 v1 plan 与 open 共享 schema 常量、state/backups 非覆盖备份）。测试套件 `p1_t01_layout_migrations` 覆盖 empty→latest、previous→latest、reapply、digest mismatch、disk/copy failure、exclusive lock。本机 Windows GNU linker exit 121（非支持基线）未能执行；**done 需 CI Ubuntu/Windows-MSVC `cargo test --workspace --locked` 通过**。未改 registry/schema/vector/transition；非 G0/B01-B12/Profile。handoff：[20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)。 |
 | P1-T02 | SecretStore 正式后端与 Provider 配置 | P0-T05, P1-T01 | rotation/restart/redaction negatives 通过 | not-started | — |
 | P1-T03 | Provider、模型发现与能力快照 | P1-T02 | probe 正负例与 model snapshot 通过 | not-started | — |
 | P1-T04 | 有界 Personal daemon 与本地认证 | P0-T07, P1-T01 | auth/size/timeout/concurrency/restart 测试 | not-started | — |

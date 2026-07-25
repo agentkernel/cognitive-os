@@ -11,7 +11,11 @@ use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 use thiserror::Error;
 
-const SCHEMA: &str = "
+/// Immutable installation schema body for Personal migration plan version 1.
+///
+/// Shared with `personal_db` so open-path bootstrap and the versioned plan
+/// stay identical. Not a machine-contract surface (D-020).
+pub(crate) const INSTALLATION_SCHEMA_V1: &str = "
 CREATE TABLE IF NOT EXISTS installation_staging (
   package_ref          TEXT PRIMARY KEY,
   package_digest       TEXT NOT NULL,
@@ -250,7 +254,7 @@ impl SqliteInstallationStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(|err| unavailable("set pragmas", err))?;
-        conn.execute_batch(SCHEMA)
+        conn.execute_batch(INSTALLATION_SCHEMA_V1)
             .map_err(|err| unavailable("install schema", err))?;
         ensure_evidence_columns(&conn)?;
 

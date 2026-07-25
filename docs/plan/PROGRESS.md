@@ -24,7 +24,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 done；无 Profile 声明** | P0-T07：ADR-0019 冻结 Personal daemon UDS/loopback transport、channel-scoped bearer bootstrap、资源上限与 CSRF/DNS-rebinding/token-theft/channel-confusion/replay threat model；设计冻结 only，无业务路由实现。P0-T05 CI run 30153311857 与 P0-T04 CI run 30150183941 仍有效。Personal Gate/B01-B12 仍 `not-run`。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **planning；P0-T01/T02/T04/T05/T07 done；P1-T01 in-progress；无 Profile 声明** | P1-T01 实现已提供（XDG layout + dual-DB prepare + `p1_t01_layout_migrations`）；本机 GNU linker exit 121 未执行 Rust 测试；**CI 证据 pending**。P0-T07 ADR-0019 与 P0-T05/T04 CI 证据仍有效。Personal Gate/B01-B12 仍 `not-run`；G0 仍待 P0-T03/T06。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -62,6 +62,7 @@
 | Lane-CTR 契约与生成 | **Ordinary Core AUDIT vector mapping registered in joint batch** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `REQ-AUDIT-001` / `002` both map to `ORDINARY-CORE-AUDIT-INSPECT-001`; matrix is fresh; no schema/candidate semantics changed |
 | Lane-CFR 符合性与工具 | **Ordinary Core AUDIT vector test executed** | `lane/cfr-ctr-ordinary-core-audit-inspect` | `ORDINARY-CORE-AUDIT-INSPECT-001` pass via audited public consumer; pins **60/25**; self-check **41/41**; non-Profile claim |
 | Lane-KRN 内核主线 | **durable InstallationStore 原子批已合入**（PR #78） | `main` @ `7324227` | SQLite WAL staging→commit、显式 interrupted-staging recovery、跨句柄可见性及不可覆盖负例已提供；不新增 installation transition table（D-020）。Lane-RUN local authority consumption has passed targeted verification; cross-process lifecycle lease remains undecided. |
+| Lane-KRN Personal P1-T01 | **XDG layout + dual-DB prepare 实现已提供；测试待 CI 执行** | `lane/krn-personal-p1-t01-xdg-migrations` | `layout`/`personal_db` + `p1_t01_layout_migrations`；不改 registry/schema/vector；非 G0/Profile claim |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
 | Lane-RUN 运行时与管理面 | **Pi P4 fail-closed pre-launch admission merged (PR #83)** | `main` @ `937e727` | Custom CLI/durable evidence baseline remains; Pi P4 additionally refuses Windows-native/WSL2 and requires Linux host + valid exact policy/adapter/compatibility digests + healthy registered adapter + HTTPS DeepSeek proxy. No Pi process/authority/Effect/Task completion path exists. WSL2 guest tests 52/52 + clippy pass; Windows local linker blocked; Linux-native evidence, official provenance, lifecycle/I/O adapter and cross-process lease remain pending. |
 | Lane-DOC 文档维护 | **ADR-0015 complexity boundary accepted** | `lane/doc-product-complexity-boundary` | Ordinary Core remains the default product range; strict independent AUDIT/SIG/TARGET work is High-Assurance deferred/tracking. This changes priority only, never factual D-016/D-022 or Profile gates. |
@@ -69,9 +70,9 @@
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
-2. [20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)（Personal：P0-T05 SecretStore API/PoC done；CI Ubuntu/Windows-MSVC 通过；非 Gate/Profile 声明）
-3. [20260725-lane-krn-personal-p0-t04-handoff.md](../checkpoints/20260725-lane-krn-personal-p0-t04-handoff.md)（Personal：P0-T04 迁移设计和 focused tests 已由 CI Ubuntu/Windows-MSVC 真实执行通过；任务完成，GNU 本机失败为非支持基线）
+1. [20260725-lane-krn-personal-p1-t01-handoff.md](../checkpoints/20260725-lane-krn-personal-p1-t01-handoff.md)（Personal：P1-T01 XDG layout + dual-DB prepare 实现已提供；CI 证据 pending；非 Gate/Profile）
+2. [20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)（Personal：P0-T07 transport/auth/threat model design freeze；ADR-0019；非 Gate/Profile 声明）
+3. [20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)（Personal：P0-T05 SecretStore API/PoC done；CI Ubuntu/Windows-MSVC 通过；非 Gate/Profile 声明）
 
 ## 客户端目录治理交付
 

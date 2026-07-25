@@ -38,7 +38,11 @@ use std::sync::{Mutex, MutexGuard};
 /// Schema of the authority database. Two structural guarantees matter to
 /// the contract: the event log and transition records are append-only
 /// (triggers), and versions are positive integers (CHECK).
-const SCHEMA: &str = "
+/// Immutable authority schema body for Personal migration plan version 1.
+///
+/// Shared with `personal_db` so the production open path and the versioned
+/// migration plan cannot drift. This is not a machine-contract surface.
+pub(crate) const AUTHORITY_SCHEMA_V1: &str = "
 CREATE TABLE IF NOT EXISTS governed_objects (
   object_id  TEXT PRIMARY KEY,
   domain     TEXT NOT NULL,
@@ -270,7 +274,7 @@ impl SqliteAuthorityStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(unavailable("set pragmas"))?;
-        conn.execute_batch(SCHEMA)
+        conn.execute_batch(AUTHORITY_SCHEMA_V1)
             .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
