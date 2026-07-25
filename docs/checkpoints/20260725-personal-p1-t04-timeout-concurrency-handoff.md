@@ -8,10 +8,11 @@
 - Base commit: `de66370` (`main` docs note that acceptance gaps remain)
 - Lane: Personal composition root `apps/kernel-server` (no Lane-RUN ownership of
   `cognitive-runtime` / `cognitive-management`)
-- Status: **in-progress**. Implementation and unit tests for timeout +
-  concurrency are in this branch. Local Windows GNU cannot link (exit 121).
-  P1-T04 remains not-done until CI Ubuntu/Windows-MSVC executes the new tests
-  successfully. Do not unlock P1-T05 yet.
+- Status: **done** for P1-T04 acceptance (auth/size/timeout/concurrency/restart).
+  Implementation + unit tests landed; CI Ubuntu/Windows-MSVC SUCCESS on PR #96
+  (runs 30162481713 and 30162477963). Local Windows GNU remains non-supported
+  (linker exit 121). Not a G0/B01-B12/Profile claim. P1-T05 is now unblocked by
+  dependency only (still requires implementation).
 
 ## 2. Completed in this atomic batch
 
@@ -34,8 +35,6 @@
 
 ## 3. Not completed / out of scope
 
-- CI execution of the new unit tests (pending this PR)
-- Marking P1-T04 `done` / unlocking P1-T05
 - Per-channel concurrent connection accounting (`max_concurrent_connections_per_channel`)
 - Idle connection timeout (ADR-0019 60s) as a separate timer
 - UDS product default listener
@@ -49,7 +48,8 @@
 | Local Windows GNU `cargo test -p kernel-server` | not-supported host | linker exit 121 (P0-T01) |
 | `pnpm run check:consistency` | executed | OK (273 REQ / 55 codes / 63 schemas / 85 vectors) |
 | `git diff --check` | executed | clean |
-| CI `cargo test --workspace --locked` | pending | required before P1-T04 done |
+| CI PR run | executed | [30162481713](https://github.com/agentkernel/cognitive-os/actions/runs/30162481713) SUCCESS (Ubuntu + Windows-MSVC) |
+| CI push run | executed | [30162477963](https://github.com/agentkernel/cognitive-os/actions/runs/30162477963) SUCCESS (Ubuntu + Windows-MSVC) |
 | Personal Gates / B01-B12 / Profile | not-run | No claim |
 
 ## 5. Design and safety boundaries
@@ -62,17 +62,18 @@
 
 ## 6. Next entry
 
-1. Open/merge PR for this branch; watch Ubuntu + Windows/MSVC CI.
-2. On CI SUCCESS for the new timeout/concurrency tests, mark P1-T04 `done` in
-   `PERSONAL-DEVELOPMENT-PLAN.md` + PROGRESS, then start P1-T05.
-3. **P0-T03** still needs owner license/platform/distribution GO/NO-GO.
-4. Suggested prompt: after CI green, close P1-T04 done evidence and begin
-   P1-T05 readiness/status/doctor without claiming G0/Profile.
+1. Merge PR #96 when ready; rebase next work on `main`.
+2. Start **P1-T05** readiness/status/doctor application service (depends on
+   P1-T03 + P1-T04).
+3. **P0-T03** still needs owner license/platform/distribution GO/NO-GO
+   (blocks P0-T06 / G0 / installer path).
+4. Suggested prompt: implement P1-T05 blocked/degraded/ready fact separation
+   behind the authenticated Personal front door without claiming G0/Profile.
 
 ## 7. Snapshot
 
-- PROGRESS updated: yes (still in-progress; no Profile claim)
-- Formal Personal ledger updated: yes (`in-progress`, CI pending)
-- PR: pending
-- CI: pending
-- Commit: pending (this handoff lands with the code batch)
+- PROGRESS updated: yes (P1-T04 done; no Profile claim)
+- Formal Personal ledger updated: yes (`done`)
+- PR: [#96](https://github.com/agentkernel/cognitive-os/pull/96)
+- CI: 30162481713 + 30162477963 SUCCESS
+- Commits: `4d84745` (implementation) + docs-done follow-up on same branch
