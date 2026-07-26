@@ -510,6 +510,7 @@ Pi 不可以：
 ### P0-T06 — Pi 版本、Extension 与 RPC 兼容性 PoC
 
 - **目标：** 固定 Pi 版本、integrity、source commit、Extension API 和 RPC JSONL fixture。
+- **状态：** **in-progress**（2026-07-26；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。第一个独立原子部分已交付：`pi-agent-adapter` 固定并记录 Pi `0.81.1` 的 npm SRI、source commit、repository path 与 Node engine；所有 candidate launch 在读取 scoped Provider key 前执行 `pi --version` 并拒绝版本漂移；strict-LF RPC JSONL parser 用 CRLF、U+2028、malformed/non-object negatives 覆盖。对 pinned package 的 project trust、tool replacement、session event Extension PoC 仍未完成，因此本任务不可标记 `done`。
 - **证据：** registry 0.82.0；仓库 smoke 使用 0.81.1；API 快速变化。
 - **依赖：** P0-T03；不启动 governed background Agent。
 - **文件：** 修改 `apps/pi-agent-adapter` tests/docs；计划新增 `tests/golden/pi-rpc/` 和 Extension PoC。
