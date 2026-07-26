@@ -148,7 +148,7 @@
 | Machine contract | 通用合同仅部分覆盖；移动 account/device/push/lease/R1/floor/revoke carrier 仍未闭合。 | 产品 DEC 或本文映射不使移动 carrier 成为已登记合同。 |
 | Implementation | iOS/Android source slice 均为 `not-implemented`。 | 文档完成不表示客户端、backend carrier、商店集成或 native security flow 已实现。 |
 | Mobile evidence | **mobile evidence none**。 | PoC、模拟器/emulator、真机、push、商店、MDM、security、a11y 均不能写成已通过。 |
-| Existing vectors | 全局 84 vectors：46 `pass` / 38 `not-run`（以 PROGRESS 为准）。 | 全局合同/内核行为 pass 不表示移动平台测试已执行。 |
+| Existing vectors | 计数以 PROGRESS 实测为准（2026-07-26 快照：85 vectors 60 `pass` / 25 `not-run`），本文不硬编码。 | 全局合同/内核行为 pass 不表示移动平台测试已执行。 |
 | Profile | **Profile not implemented**。 | 产品方向 accepted 不表示 iOS 或 Android Console Profile 已符合。 |
 
 ### 6.2 禁止外推

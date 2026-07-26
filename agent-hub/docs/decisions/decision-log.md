@@ -3,6 +3,8 @@
 > 类别：informative product decisions ｜ 日期：2026-07-20 ｜ canonical owner：Lane-CON
 >
 > 本文登记 `CONSOLE-AGENTHUB-V1-DEC-*` 已接受产品决策。决策变化时在此追加 `superseded` 记录（保留原 ID 与原文），并更新受影响专题文档。这些决策不进入 CognitiveOS normative registry。
+>
+> 跨域引用：Agent Hub 平台/Adapter PoC 的证据采集代码豁免与落位遵循 [CLIENTS-DEC-002](../../../governance/decision-log.md#clients-dec-002-poc-证据采集代码豁免与落位)（结构决策，非本日志产品决策；PoC 代码落位仓库根 `poc/`，不构成任何实现声明）。
 
 ## 决策清单
 

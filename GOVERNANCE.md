@@ -1,6 +1,6 @@
 # clients/ 治理规则
 
-> 类别：informative governance ｜ 日期：2026-07-20 ｜ owner：Lane-CON（治理文件由 Lane-DOC 协作）
+> 类别：informative governance ｜ 日期：2026-07-20；2026-07-26 评审优化（§4 计数指针规则、§8 文档系统地图） ｜ owner：Lane-CON（治理文件由 Lane-DOC 协作）
 
 本文件定义 `clients/` 客户端项目根的 canonical 唯一性、状态用语、owner 权威、文档联动、deprecated/superseded 与 ID 规则。它不产生 CognitiveOS 规范要求，也不替代 [AGENTS.md](../AGENTS.md)、[PARALLEL-LANES](../docs/plan/PARALLEL-LANES.md) 或 [docs-sync-contract](../docs/standards/docs-sync-contract.md)。
 
@@ -38,6 +38,8 @@
 
 `.cursor/rules/16-client-directory-index.mdc` 的同批义务与手动 gate（[clients/README.md §9](README.md#9-持续维护与手动-gate)）全程适用。`pnpm run check:consistency` 当前不扫 `clients/`（自动化缺口登记见该 §9 与 READINESS），交付前以手动链接检查代偿。
 
+**计数指针规则（2026-07-26 起）**：全局计数（REQ/错误码/schema/迁移表/向量数及 pass 分布）与里程碑状态**禁止在 `clients/**` 硬编码为裸数值**；必须写成指向 [PROGRESS](../docs/plan/PROGRESS.md) 的指针句，如需快照必须带日期（"2026-07-26 快照：…"）并声明以 PROGRESS 实测为准。历史教训：2026-07-26 评审发现旧计数在 ≥12 处复写、集体失真（design review P0-3）。
+
 ## 5. deprecated / superseded 规则
 
 沿用 Agent Hub GOVERNANCE §5 模式（迁移后见 `clients/agent-hub/docs/GOVERNANCE.md`）：
@@ -59,3 +61,19 @@
 - 全局工程状态、里程碑、计数的唯一真相是 [docs/plan/PROGRESS.md](../docs/plan/PROGRESS.md)；
 - [plan/progress.md](plan/progress.md) 只记录客户端文档/结构的局部准备状态，不承载里程碑推进、REQ 计数或证据声明；
 - 状态变化（gate 过/不过、readiness 结论变化）必须回写全局 PROGRESS 并按会话协议写 handoff。
+
+## 8. 文档系统地图（各层职责与互不冒充）
+
+`clients/` 文档系统分七层，每层只承载自己的职责，不得互相冒充：
+
+| 层 | 载体 | 职责 | 不得承载 |
+|---|---|---|---|
+| 项目地图 | [README.md](README.md) | 唯一目录索引：路径/owner/状态/gate/入口 | 产品事实、gate 定义正文 |
+| 治理 | 本文件 + [governance/](governance/README.md) 六件（ownership/canonical-sources/readiness-gates/decision-log/traceability/evidence-index） | 规则、gate canonical 定义、结构决策（`CLIENTS-DEC-*`）、证据指针 | 产品决策、实现声明 |
+| readiness | [READINESS.md](READINESS.md) | structure/implementation 双结论与 blocked-by | gate 定义（只引用 readiness-gates） |
+| 产品/平台文档 | `pc/docs/`、`mobile/*/docs/`、`shared/docs/`、`agent-hub/docs/` | 产品事实、决策（四本产品决策日志）、平台切片、PoC runbook | 实现/测试/Profile 声明、机器合同正文 |
+| 计划 | [plan/](plan/README.md)、`pc/plan/`、`mobile/*/plan/`、`shared/plan/`、`agent-hub/plan/` | 里程碑、DAG、风险、开发计划；全部尊重 gate | 把计划写成事实或证据 |
+| 提示词 | [prompts/](prompts/README.md)、`agent-hub/prompts/` | 会话接续编排 | 定义产品行为或状态 |
+| 评审 | `review/` | 评审报告与评审产出（informative） | 解除 gate、改写 canonical 状态 |
+
+保留实现入口（`pc/app/`、`mobile/{ios,android}/app/`）只有薄 README；PoC 证据采集代码经 [CLIENTS-DEC-002](governance/decision-log.md#clients-dec-002-poc-证据采集代码豁免与落位) 落位仓库根 `poc/`，不属于本文档系统任何一层。

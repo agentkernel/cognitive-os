@@ -13,7 +13,7 @@
 - machine contract：Direct 多数 `product-only`；Governed 复用部分已登记 `REQ-*` 但关键 carrier 仍缺失。
 - implementation：`not-implemented`。
 - platform / PoC evidence：`none / not-run`（含下方 planned 新 ID，均未执行）。
-- 既有 conformance vectors：`84`（全局 46 `pass` / 38 `not-run`）；这些结果不是 Agent Hub 平台或实现证据。
+- 既有 conformance vectors：计数以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；这些结果不是 Agent Hub 平台或实现证据。
 - Direct / Governed Profile：`not implemented`。
 
 ## 2. Open PoC 清单

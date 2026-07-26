@@ -1,6 +1,6 @@
 # clients/ 开发就绪判定（READINESS）
 
-> 类别：informative readiness review ｜ 日期：2026-07-20（B8 终审；**2026-07-21 Phase 0 PoC prep 注记**）｜ owner：Lane-CON
+> 类别：informative readiness review ｜ 日期：2026-07-20（B8 终审；**2026-07-21 Phase 0 PoC prep 注记；2026-07-26 单一事实源收敛刷新**）｜ owner：Lane-CON
 >
 > 判定口径：structure readiness 与 implementation readiness 分开记录；任何真实 gate 未满足时只能得到 `implementation-ready: no (blocked)`。不得为满足任务目标把 `blocked` 改写成 GO。**implementation-ready 仍为 no。**
 
@@ -20,7 +20,7 @@ structure-ready: yes
 | 4 | 产品 ID、anchor、相对链接可达 | 满足 | 交付前按 [README §9](README.md#9-持续维护与手动-gate) 手动 gate + `check:consistency` |
 | 5 | owner 与 gate 非空 | 满足 | [clients/README.md](README.md) 各域表字段非空 |
 | 6 | 必要文档系统齐全 | 满足 | 治理/计划/shared/PC/mobile/Agent Hub docs-plan-prompts |
-| 7 | rules 已生效 | 满足 | `.cursor/rules/16` + `17-client-project-boundaries.mdc` |
+| 7 | rules 已生效 | 满足 | `.cursor/rules/16` + `17-client-project-boundaries.mdc`（曾被归档致证据链断裂，2026-07-26 已恢复至 `.cursor/rules/` 并补 CLIENTS-DEC-002 PoC 豁免措辞；`11-typescript-clients.mdc` 同批恢复） |
 | 8 | docs-sync/PROGRESS/handoff 已联动 | 满足 | Phase 0 PoC prep handoff 见 `docs/checkpoints/20260721-lane-con-clients-phase0-poc-prep-handoff.md` |
 | 9 | consistency 与 whitespace 检查通过 | 满足 | 每 PR：`pnpm run check:consistency` + `git diff --check` |
 
@@ -33,18 +33,17 @@ structure-ready: yes
 implementation-ready: no
 status: blocked
 blocked-by:
-  - Console 后端依赖组 1/2/7 尚未完整交付（M1–M4 已完成且 F-011 R1 合同已登记；M5 runtime/management/AKP/Shell 集成与组7剩余项待实现）
-  - M5 入口 gate 已达成，但 M5 实现与出口评审尚未完成
-  - 五平台 Open PoC / GA gate 全部 not-run、evidence none：macOS MAC-POC-01..12、Linux LNX-POC-01..12、iPhone IOS-POC-01..18、Android POC-001..018 均未执行；Windows 无独立编号 PoC 表（gate 依赖 windows-v1-scope §10 release gate 与依赖组交付）
+  - Console 后端依赖组 1/2/7 的"完整交付 + 客户端消费验收"尚未按 readiness-gates 逐项核验留证（M0–M6 出口评审已过、M6 为 GO-with-explicit-non-claim v0.1，但该 GO 不等于 Console gate 依赖组条款自动满足，须按 gate 条款逐项对账）
+  - 五平台 Open PoC / GA gate 全部 not-run、evidence none：macOS MAC-POC-01..12、Linux LNX-POC-01..12、iPhone IOS-POC-01..18、Android POC-001..018 均未执行；Windows PoC 表 WIN-RG-01..10 已登记（runbook）但零执行
   - PC/iOS/Android 技术栈 ADR 不存在（Tauri 2 + React/TS 仅为候选；[tech-stack-comparison](pc/docs/architecture/tech-stack-comparison.md) 为非正式比较草案，非 ADR）
   - Agent Hub Paseo/AGPL 法务 gate 未过（POC-LIC-001/002/003 全部 not-run；评估材料已整理，法务评估未执行）
   - Agent Hub Tier 1 runtime/PoC 未闭合（AH-CTR-02 文档级六 provider 一手已回填；Hermes 指认 decided；Adapter 实现仍 blocked，待 PoC + 条款 + 后端/ADR）
-  - 当前 84 份向量中 46 pass / 38 not-run；已执行的 M1–M4 证据不覆盖客户端平台行为，Profile 已符合计数仍为 0
-  - 规则明令 gate 前禁实现（PARALLEL-LANES §2.1、.cursor/rules/16、.cursor/rules/17、readiness-gates canonical）
+  - 向量计数以 [PROGRESS](../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 向量 60 pass / 25 not-run）；已执行证据不覆盖客户端平台行为，Profile 已符合计数仍为 0
+  - 规则明令 gate 前禁实现（PARALLEL-LANES §2.1、.cursor/rules/16、.cursor/rules/17、readiness-gates canonical；唯一豁免=CLIENTS-DEC-002 的 PoC 证据采集代码，落位仓库根 poc/，不解除任何 gate）
   - 21 项威胁已规范登记，oracle/evidence 全 not-run（非「威胁项实测」）；新 planned PoC：POC-HOST-001/TERM-003/PROC-005/RELAY-005/GOV-001
   - 五平台 + Agent Hub PoC 执行手册/模板已提供（informative）；**零执行**，不得当作 pass
 next-unblock:
-  - 启动/推进 M5 Lane-RUN/KRN/TSC/CFR 并完成依赖组 1/2/7 与出口评审
+  - 按 [readiness-gates](governance/readiness-gates.md#console-实现-gate) 条款对 M0–M6 已交付内容做依赖组 1/2/7 逐项对账并留证
   - Lane-CFR 领取 clients 扫描自动防漂移任务
   - 已完成（informative）：AH-CTR-02 文档级；POC-LIC 材料；威胁 oracle；PoC runbook/模板；技术栈比较草案；设计缺口最小登记
   - 下一步：POC-LIC 法务评估执行并留证；在后端/法务边界允许时按 runbook 真实执行首个平台或 Agent Hub PoC；正式技术栈 ADR（须 PoC 留证后）

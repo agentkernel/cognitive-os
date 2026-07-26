@@ -9,4 +9,5 @@
   3. Windows 真实平台 PoC 用真实 API/真实 OS 行为留下可复现实测证据（[windows-v1-scope §10](../docs/platforms/windows/windows-v1-scope.md#10-技术候选与-release-gate)）；
   4. PC 技术栈 ADR 已批准（Tauri 2 + React/TypeScript 仅为候选，非已批准 ADR）。
 - **gate 权威**：[Console 实现 gate](../../governance/readiness-gates.md#console-实现-gate)。
+- **PoC 代码落位**：NO-GO 条件 3 所需的 PoC harness 依 [CLIENTS-DEC-002](../../governance/decision-log.md#clients-dec-002-poc-证据采集代码豁免与落位) 落位仓库根 `poc/windows/`，**不在本目录**；PoC 代码存在不解除本目录 NO-GO，也不构成任何实现声明。
 - 本 README 不含也不得被解读为任何"技术栈已批准"或"实现已启动"的暗示。

@@ -4,7 +4,7 @@
 >
 > canonical 状态：`planned / implementation not-implemented / platform tests none / Profile not implemented`
 >
-> 查询基准日：2026-07-20 ｜ 规范快照：273 REQ / 55 error codes / 61 schemas / 5 transitions / 84 vectors（46 `pass` / 38 `not-run`；不构成 Agent Hub 平台证据）
+> 查询基准日：2026-07-26 ｜ 规范快照以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：273 REQ / 55 error codes / 63 schemas / 5 transitions / 85 vectors 60 `pass` / 25 `not-run`；不构成 Agent Hub 平台证据）
 
 本目录是 CognitiveOS Console **Agent Hub** 的 canonical 产品/架构/安全/研究/追踪文档根。Agent Hub 只存在两种部署模式：**Direct Takeover（直连接管）** 与 **CognitiveOS Governed（完整治理）**；不存在只有 `cognitive-kernel` 的中间模式。
 
@@ -82,7 +82,7 @@
 - machine contract：Direct Takeover carrier 多数 `product-only / unregistered`；Governed 复用既有部分登记合同但关键 carrier 仍缺失。
 - implementation：`not-implemented`。
 - platform / PoC evidence：`none`。
-- 既有 84 conformance vectors：全局 46 `pass` / 38 `not-run`；不构成 Agent Hub 平台或实现证据。
+- 既有 conformance vectors：计数以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub 平台或实现证据。
 - Console/Host/Adapter/Relay/Vault/移动 Profile：`not implemented`。
 
 文档存在、schema 存在、vector 被枚举或产品方向被批准，都不构成实现、测试或符合性证据。

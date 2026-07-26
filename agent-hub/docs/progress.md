@@ -25,7 +25,7 @@
 
 - Console/Agent Hub implementation：`not-implemented`。
 - platform / PoC evidence：`none`。
-- 既有 conformance vectors：`84`（全局 46 `pass` / 38 `not-run`）；不构成 Agent Hub implementation 或平台证据。
+- 既有 conformance vectors：计数以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub implementation 或平台证据。
 - Direct Takeover / Governed Profile：`not implemented`。
 
 ## 3. 更新规则

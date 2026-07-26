@@ -2,7 +2,7 @@
 
 > 类别：plan（informative）｜ 日期：2026-07-20 ｜ owner：Lane-CON
 >
-> Master 计划见 [../agent-hub-development-plan.md](./agent-hub-development-plan.md)。本目录含支撑文档与 12 宏车道 + 6 Adapter 子车道计划。**全部实现任务默认 `blocked`。**
+> Master 计划见 [agent-hub-development-plan.md](./agent-hub-development-plan.md)。本目录含支撑文档与 12 宏车道 + 6 Adapter 子车道计划。**全部实现任务默认 `blocked`。**
 
 ## 支撑文档
 
@@ -42,4 +42,4 @@
 
 ## 提示词
 
-对应自包含接续提示词见 [../../prompts/agent-hub/README.md](../prompts/README.md)。
+对应自包含接续提示词见 [../prompts/README.md](../prompts/README.md)。

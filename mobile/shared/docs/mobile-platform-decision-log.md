@@ -6,7 +6,7 @@
 >
 > Current state：`planned / implementation not-implemented / platform evidence none / Profile not implemented`；全局 conformance 分布见 PROGRESS，不构成移动证据
 >
-> 规范快照：`273 REQ / 55 errors / 61 schemas / 5 transitions / 84 vectors`
+> 规范快照以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：`273 REQ / 55 errors / 63 schemas / 5 transitions / 85 vectors`）
 
 本文只索引已经冻结的 iPhone v1 与 Android phone v1 产品方向。它不新增或修改 requirement、error code、schema、transition、conformance vector 或 Profile，也不把 accepted product direction 写成实现、测试、平台证据或符合性事实。
 
@@ -20,7 +20,7 @@
 - `unregistered`：移动 carrier 尚无已登记 machine contract；通用合同的部分覆盖不能替代该缺口。
 - `partial machine contract`：存在相关通用合同，但不足以表达完整移动 carrier。
 - iOS 与 Android 当前实现状态均为 `not-implemented`。
-- 两个平台的 platform evidence 均为 `none`，全局 84 vectors 的执行分布不得外推为移动证据，移动 Profile 均为 `not implemented`。
+- 两个平台的 platform evidence 均为 `none`，全局 vectors 的执行分布（计数见 PROGRESS）不得外推为移动证据，移动 Profile 均为 `not implemented`。
 
 ## 2. 共同不可降级边界
 

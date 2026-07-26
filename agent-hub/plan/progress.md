@@ -27,7 +27,7 @@
 - implementation：not-implemented。
 - Open PoC：28× not-run + 5× planned（见 [../docs/traceability/evidence-index.md](../docs/traceability/evidence-index.md)）；**零 pass**。
 - POC-LIC-001..003：not-run（评估材料已整理，法务评估未执行）。
-- 既有 conformance vectors：84（全局 46 pass / 38 not-run）；Agent Hub 平台证据仍为 none。
+- 既有 conformance vectors：计数以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 pass / 25 not-run）；Agent Hub 平台证据仍为 none。
 - Direct / Governed Profile：not implemented。
 - 21 项威胁：已规范登记；oracle/evidence 全 not-run（非「实测」）。
 

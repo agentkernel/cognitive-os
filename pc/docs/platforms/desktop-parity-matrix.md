@@ -140,10 +140,10 @@ Windows v1 的 `CONSOLE-V2-*`、legacy `CONSOLE-PRD-*`/`A-*` 映射，以及 `PR
 
 共同阻断：
 
-- Console 依赖组 1/2/7 与 M5 出口未交付；
+- Console 依赖组 1/2/7 的客户端消费验收尚未按 gate 条款逐项对账留证（M0–M6 出口评审已过，以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 为准）；
 - supervision lease、claim、readiness、notification、platform update 等 machine contract 未登记；
 - Console implementation 未提供；
-- 全局 84 个向量中 46 `pass` / 38 `not-run`，但桌面平台产品测试 evidence 仍为 `none`；
+- 向量计数以 PROGRESS 实测为准（2026-07-26：85 向量 60 `pass` / 25 `not-run`），但桌面平台产品测试 evidence 仍为 `none`；
 - Tauri/原生 shell 技术 ADR 未批准。
 
 macOS 特有阻断：

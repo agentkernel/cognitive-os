@@ -15,6 +15,15 @@
 - **不改变**：任何实现 gate、四类状态、产品 ID、机器合同；checker 不扫 `clients/` 的缺口登记为 Lane-CFR `planned` 任务。
 - **落地记录**：批次哈希见 [MIGRATION-MAP §1](../MIGRATION-MAP.md#1-批次与提交哈希)；[ADR-0007](../../docs/adr/0007-clients-project-root-and-doc-migration.md) 已登记（B7）。
 
+### CLIENTS-DEC-002 PoC 证据采集代码豁免与落位
+
+- **日期**：2026-07-26
+- **状态**：accepted（用户 2026-07-26 指示执行评审优化时批准；评审依据见 [design review](../review/2026-07-26-clients-design-review.md) P0-1）
+- **问题**：平台 PoC（如 [windows-poc-runbook](../pc/docs/platforms/windows/windows-poc-runbook.md) WIN-RG-01..10）要求真实分进程、禁 mock——必须编写代码；而"gate 前禁实现"规则未豁免 PoC harness，技术栈 ADR 又依赖 PoC 留证，构成授权死锁。
+- **决策**：PoC harness/证据采集代码属"证据采集工具"，不属产品实现，豁免"gate 前禁实现"；统一落位**仓库根 `poc/`**（按平台分子目录，如 `poc/windows/`、`poc/ios/`），**不得进入 `clients/**`、`apps/**` 产品目录**；PoC 代码不得被产品代码引用、不得携带产品 ID、其存在不构成"实现已提供/测试已执行/Profile 已符合"任何声明；证据按 [poc-execution-record 模板](../shared/docs/poc-execution-record.md) 留档。owner：Lane-CON（平台 PoC）；Agent Hub PoC 同规则（其 decision-log 同步引用本决策）。
+- **不改变**：Console 实现 gate、平台 Open PoC/GA gate、ADR gate 的判定条件本身；`clients/*/app/` 保留入口继续禁实现。
+- **落地记录**：[.cursor/rules/17](../../.cursor/rules/17-client-project-boundaries.mdc) 已补豁免措辞；[pc/app/README](../pc/app/README.md)、[agent-hub prompts README](../agent-hub/prompts/README.md) 同批修订。
+
 ## 2. 四本产品决策日志索引（canonical 各自独立）
 
 | 决策域 | canonical 文件（迁移前现址） | 命名空间 | 迁移批次 |

@@ -5,7 +5,7 @@
 >
 > canonical owner：Lane-CON；治理联动：Lane-DOC
 >
-> 查询基准日：2026-07-20
+> 查询基准日：2026-07-20（B8）；2026-07-26 评审优化刷新（单一事实源收敛、树概览、补索引行）
 
 本文件是仓库内 **PC 客户端、手机 remote companion、共享 SDK/契约消费层与 Agent Hub 客户端项目**的唯一 canonical 项目地图与目录索引（迁移决策 `CLIENTS-DEC-001`，见 [governance/decision-log.md](governance/decision-log.md)）。旧入口 `docs/clients/README.md` 已降为兼容 stub，只链接本文件。本文件只负责"目录在哪里、由谁维护、从哪里开始读、受什么 gate 阻断"，不复制或改写各产品文档、机器合同、计划与证据的正文。
 
@@ -18,7 +18,27 @@
 - Agent Hub 行为与保证以 [Agent Hub canonical 根](agent-hub/docs/README.md) 为准；
 - old→new 迁移对照与兼容 stub 清单以 [MIGRATION-MAP.md](MIGRATION-MAP.md) 为准；readiness 双结论以 [READINESS.md](READINESS.md) 为准。
 
-当前基准是 273 项已登记要求、55 个错误码、61 份 schema、5 份迁移表和 84 份向量；向量分布为 46 `pass` / 38 `not-run`（以全局 PROGRESS 实测为准）。这些结果不构成客户端实现或平台 PoC 证据。Console 与手机 implementation 均为 `not-implemented`，平台 evidence 为 `none`，相关 Profile 为 `not implemented`。
+当前基准（要求/错误码/schema/迁移表/向量计数及 pass 分布）**不在本文件硬编码**，唯一实测真相见 [PROGRESS](../docs/plan/PROGRESS.md)（2026-07-26 快照：273 REQ、55 错误码、63 schema、5 迁移表、85 向量 60 `pass` / 25 `not-run`；M0–M6 出口评审均已通过，M6 为 GO-with-explicit-non-claim v0.1）。这些结果不构成客户端实现或平台 PoC 证据。Console 与手机 implementation 均为 `not-implemented`，平台 evidence 为 `none`，相关 Profile 为 `not implemented`。
+
+## 0. 目录树概览
+
+```text
+clients/
+├── README.md              # 本文件：唯一 canonical 项目地图/目录索引
+├── GOVERNANCE.md          # 客户端文档体系治理规则
+├── READINESS.md           # structure/implementation 双 readiness 判定
+├── MIGRATION-MAP.md       # old→new 迁移对照与兼容 stub 清单
+├── governance/            # ownership / canonical-sources / readiness-gates / decision-log(CLIENTS-DEC-*) / traceability / evidence-index
+├── plan/                  # 客户端全里程碑、依赖 DAG、风险、局部进度、开发计划
+├── prompts/               # 客户端提示词索引
+├── review/                # 设计评审与评审产出（2026-07-26 起）
+├── pc/                    # PC 客户端：README / app(保留入口·禁实现) / docs(product·ux·platforms·security·quality·a11y·release·architecture) / plan
+├── mobile/                # remote companion：README / shared(docs) / ios(docs·app·plan) / android(docs·app·plan)
+├── shared/                # 共享说明域：docs(contracts-sdk·identity-session·relay-pairing·design-system·security-privacy·telemetry-evidence·test-strategy) / plan
+└── agent-hub/             # Agent Hub：README / docs(canonical 根) / plan(Master plan+12 lane+6 adapter) / prompts
+```
+
+不迁移、只被引用的代码 package：`apps/agent-shell/`（Lane-TSC）、`packages/sdk-ts/`（Lane-TSC）、`packages/contracts-ts/`（Lane-CTR）。PoC 证据采集代码按 [CLIENTS-DEC-002](governance/decision-log.md#clients-dec-002-poc-证据采集代码豁免与落位) 落位仓库根 `poc/`，不在本树。
 
 ## 1. 索引口径
 
@@ -54,12 +74,15 @@
 | `clients/mobile/ios/app/` | 手机（iPhone） | 保留入口；**无任何实现** | `blocked` | Lane-CON | [ios/app/README.md](mobile/ios/app/README.md) | iPhone 真实 PoC + 技术栈 ADR + Console 实现 gate | 有 |
 | `clients/mobile/android/` | 手机（Android phone） | Android phone 产品文档/计划/保留实现入口（android-product-design 已迁入） | `planned`；implementation `not-implemented`；evidence `none` | Lane-CON | [Android 产品设计](mobile/android/docs/android-product-design.md) | Console 实现 gate + Android Open PoC/GA gate | 有 |
 | `clients/mobile/android/app/` | 手机（Android phone） | 保留入口；**无任何实现** | `blocked` | Lane-CON | [android/app/README.md](mobile/android/app/README.md) | Android 真实 PoC + 技术栈 ADR + Console 实现 gate | 有 |
+| `clients/mobile/ios/plan/` | 手机（iPhone） | iPhone 平台计划落位 | `planned`；全部 `blocked` | Lane-CON | [ios/plan/README.md](mobile/ios/plan/README.md) | Console 实现 gate + iPhone Open PoC/GA gate | 有 |
+| `clients/mobile/android/plan/` | 手机（Android phone） | Android 平台计划落位 | `planned`；全部 `blocked` | Lane-CON | [android/plan/README.md](mobile/android/plan/README.md) | Console 实现 gate + Android Open PoC/GA gate | 有 |
 
 ## 4. 共享 SDK 与契约（`clients/shared/` + 不迁移的 package）
 
 | 路径 | 平台 | 角色 | 当前状态 | owner | canonical 入口 | 上游 gate | README / 目录说明 |
 |---|---|---|---|---|---|---|---|
 | `clients/shared/` | 共享 | SDK/契约消费关系、身份/session、Relay、设计系统、安全隐私、遥测证据的共享说明域；不复制机器合同 | `planned`；文档域 | Lane-CON | [shared/README.md](shared/README.md) | 各消费方 gate | 有 |
+| `clients/shared/plan/` | 共享 | 共享域计划落位 | `planned` | Lane-CON | [shared/plan/README.md](shared/plan/README.md) | 各消费方 gate | 有 |
 | `packages/sdk-ts/` | 共享 | PC/未来手机消费的 TypeScript SDK；**不迁移**（Lane-TSC 所有） | 双通道、envelope、watch 等 M5 前能力与包内测试已提供；真实 HTTP/SSE 集成仍 `blocked` | Lane-TSC | [package.json](../packages/sdk-ts/package.json)；[源码入口](../packages/sdk-ts/src/index.ts) | [Lane-TSC gate](../docs/plan/PARALLEL-LANES.md)；M5 RUN 集成 | 缺（待 Lane-TSC 补） |
 | `packages/contracts-ts/` | 共享 | TypeScript 机器契约、canonical 编码、digest、projection 与生成绑定；**不迁移**（Lane-CTR 所有） | 实现已提供（包级合同能力）；REQ 级状态以 PROGRESS/matrix 为准；Profile `not implemented` | Lane-CTR | [API barrel](../packages/contracts-ts/src/index.ts)；[代码生成 ADR](../docs/adr/0006-code-generation-policy.md) | Lane-CTR 契约流程；M5 消费已登记 F-011/AKP 合同 | 缺（待 Lane-CTR 补） |
 | `packages/contracts-ts/src/generated/` | 共享 | 从 schema 生成的 TypeScript bindings；禁止手改 | 实现已提供（生成物）；conformance `not-run` | Lane-CTR | [generated barrel](../packages/contracts-ts/src/generated/index.ts)；[代码生成 ADR](../docs/adr/0006-code-generation-policy.md) | schema/codegen 同批一致性 gate | 缺（由 package/ADR 说明） |
@@ -77,6 +100,7 @@
 | `clients/governance/` | 共享 | ownership/canonical/readiness-gates/decision-log/traceability/evidence 六件 | 生效（informative） | Lane-CON | [governance/README.md](governance/README.md) | docs-sync 联动义务 | 有 |
 | `clients/plan/` | 共享 | 客户端全里程碑、依赖 DAG、风险与局部进度 | 全部里程碑 `blocked` | Lane-CON | [plan/README.md](plan/README.md) | 各实现 gate | 有 |
 | `clients/prompts/` | 共享 | 客户端提示词索引（Agent Hub 提示词 B5 批迁入 `clients/agent-hub/prompts/`） | 索引 | Lane-CON | [prompts/README.md](prompts/README.md) | 对应 plan gate | 有 |
+| `clients/review/` | 共享 | 设计评审与评审产出（评审报告、评审版开发计划） | informative；不承载 gate/canonical 状态 | Lane-CON | [2026-07-26 设计评审](review/2026-07-26-clients-design-review.md) | 无（评审产出不解除任何 gate） | 由本行说明 |
 
 本地进度与全局 PROGRESS 的职责边界：`clients/plan/progress.md` 只记录客户端文档/结构状态，全局工程状态、里程碑与计数唯一真相是 [docs/plan/PROGRESS.md](../docs/plan/PROGRESS.md)。
 

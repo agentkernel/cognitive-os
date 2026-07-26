@@ -4,7 +4,8 @@
 
 - **用途**：客户端全域（PC/mobile/shared/Agent Hub）的里程碑、依赖 DAG、风险与局部进度。
 - **文件**：
-  - [milestones.md](milestones.md)：客户端全里程碑（全部 `blocked`）与 gate 引用；
+  - [development-plan.md](development-plan.md)：执行版开发计划（Phase 0–4 任务/状态/出口；2026-07-26 起）；
+  - [milestones.md](milestones.md)：客户端全里程碑（实现里程碑全部 `blocked`）、gate 引用与"当前可执行工作面"；
   - [dependency-dag.md](dependency-dag.md)：依赖关系指针（Console 九组 + Agent Hub DAG）；
   - [risk-register.md](risk-register.md)：迁移与结构风险登记；
   - [progress.md](progress.md)：客户端文档/结构局部状态。

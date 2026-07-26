@@ -26,8 +26,7 @@
 
 ### 0.2 当前仓库状态快照
 
-- 规范已登记：273 requirements、55 error codes、61 schemas、5 transition tables。
-- conformance vectors：84，当前全局分布为 46 `pass` / 38 `not-run`；均不是 Android 平台证据。
+- 规范已登记与向量计数以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26 快照：273 requirements、55 error codes、63 schemas、5 transition tables、85 vectors 60 `pass` / 25 `not-run`）；均不是 Android 平台证据。
 - Android Console implementation：`not-implemented`。
 - Android emulator/physical-device/Play review/Managed Google Play/a11y/security evidence：`none`。
 - Android Console Profile：`planned / not implemented`。

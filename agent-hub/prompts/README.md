@@ -2,7 +2,7 @@
 
 > 类别：prompt（informative）｜ 日期：2026-07-20 ｜ owner：Lane-CON
 >
-> 本目录含 12 宏车道 + 6 Tier 1 Adapter 的自包含接续提示词。每份可直接粘贴到新 Cursor 会话。**全部提示词以 `blocked` 起步**：共享接口未冻结、Console/M5/平台/ADR/AGPL/契约 gate 未满足前，只允许 informative 文档/计划/核验工作，不得启动编码或用 mock 解阻。
+> 本目录含 12 宏车道 + 6 Tier 1 Adapter 的自包含接续提示词。每份可直接粘贴到新 Cursor 会话。**全部提示词以 `blocked` 起步**：共享接口未冻结、Console/M5/平台/ADR/AGPL/契约 gate 未满足前，只允许 informative 文档/计划/核验工作，不得启动**产品**编码或用 mock 解阻。**唯一例外**：经 [CLIENTS-DEC-002](../../governance/decision-log.md#clients-dec-002-poc-证据采集代码豁免与落位) 授权的 PoC 证据采集代码，落位仓库根 `poc/`（不进入 `clients/**`），其存在不构成任何实现/测试/Profile 声明，也不解除任何 gate。
 
 ## 使用
 
