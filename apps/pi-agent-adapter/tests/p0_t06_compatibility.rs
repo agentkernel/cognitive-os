@@ -85,3 +85,28 @@ fn rpc_fixture_rejects_non_object_or_malformed_records() {
     assert!(parse_rpc_jsonl_records("{\"type\":\"prompt\"\n").is_err());
     assert!(parse_rpc_jsonl_records("\n").is_err());
 }
+
+#[test]
+fn extension_poc_denies_project_trust_and_intercepts_mutating_tools() {
+    let extension_source = include_str!("../fixtures/p0_t06_extension.ts");
+
+    assert!(extension_source.contains("pi.on(\"project_trust\""));
+    assert!(extension_source.contains("{ trusted: \"no\" }"));
+    assert!(extension_source.contains("pi.on(\"tool_call\""));
+    for blocked_tool in ["write", "edit", "bash"] {
+        assert!(extension_source.contains(&format!("\"{blocked_tool}\"")));
+    }
+}
+
+#[test]
+fn extension_poc_handles_session_start_without_secret_or_database_access() {
+    let extension_source = include_str!("../fixtures/p0_t06_extension.ts");
+
+    assert!(extension_source.contains("pi.on(\"session_start\""));
+    for forbidden_access in ["process.env", "fs.", "node:fs", "sqlite", "database"] {
+        assert!(
+            !extension_source.contains(forbidden_access),
+            "extension PoC must not access {forbidden_access}"
+        );
+    }
+}
