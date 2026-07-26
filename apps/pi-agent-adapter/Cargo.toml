@@ -9,6 +9,7 @@ license.workspace = true
 
 [dependencies]
 cognitive-runtime = { workspace = true }
+cognitive-secret = { workspace = true }
 serde_json = { workspace = true }
 
 [lints]

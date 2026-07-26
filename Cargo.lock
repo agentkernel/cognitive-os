@@ -808,6 +808,7 @@ name = "pi-agent-adapter"
 version = "0.0.1"
 dependencies = [
  "cognitive-runtime",
+ "cognitive-secret",
  "serde_json",
 ]
 

@@ -6,6 +6,10 @@
 //! authority are prerequisites for a governed AgentInstallation claim.
 
 use cognitive_runtime::SandboxPlatform;
+use cognitive_secret::{
+    ProductionSecretBackend, ProviderConfigRepository, ProviderKeyService, SecretMaterial,
+    select_production_secret_store,
+};
 use pi_agent_adapter::{
     PiCompatibilityPin, PiLaunchPolicy, observed_response_models, redact_secret,
 };
@@ -16,7 +20,15 @@ use std::ffi::OsString;
 use std::process::Command;
 use std::time::Instant;
 
-const USAGE: &str = "pi-agent-adapter <run|evaluate> --pi <path> --model <deepseek-model> --prompt <text> --work-dir <dir> --config-dir <dir> [--runs <1..=20> --expected-text <text>]";
+const LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG: &str =
+    "allow-local-native-provider-secret-development";
+const USAGE: &str = "pi-agent-adapter <run|evaluate> --pi <path> --model <deepseek-model> --prompt <text> --work-dir <dir> --config-dir <pi-dir> --provider-config-dir <personal-provider-config-dir> --allow-local-native-provider-secret-development [--runs <1..=20> --expected-text <text>]";
+
+#[derive(Debug, Default, PartialEq, Eq)]
+struct ParsedFlags {
+    values: BTreeMap<String, String>,
+    enabled_flags: BTreeSet<String>,
+}
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -47,21 +59,22 @@ fn run(args: &[String]) -> Result<Value, String> {
     }
 }
 
-fn candidate_record(flags: &BTreeMap<String, String>) -> Result<Value, String> {
+fn candidate_record(flags: &ParsedFlags) -> Result<Value, String> {
     let pi = required(flags, "pi")?;
     let model = required(flags, "model")?;
     let prompt = required(flags, "prompt")?;
     let work_dir = required(flags, "work-dir")?;
     let config_dir = required(flags, "config-dir")?;
+    let provider_config_dir = required(flags, "provider-config-dir")?;
+    require_local_native_provider_secret_development_flag(flags)?;
 
-    // Verify the executable before reading the scoped provider credential.
+    // Verify all non-secret admission before resolving native secret material.
     verify_pinned_pi_version(pi)?;
-    let key = env::var("DEEPSEEK_API_KEY")
-        .map_err(|_| "DEEPSEEK_API_KEY is required for a DeepSeek candidate run".to_owned())?;
     let policy = PiLaunchPolicy::deepseek_candidate(model)?;
     let args = policy.command_args(prompt)?;
+    let provider_material = resolve_local_development_provider_material(provider_config_dir)?;
 
-    let output = sanitized_command(pi, &key)
+    let output = sanitized_command(pi, &provider_material)?
         .args(args)
         .current_dir(work_dir)
         .env("PI_CODING_AGENT_DIR", config_dir)
@@ -69,8 +82,11 @@ fn candidate_record(flags: &BTreeMap<String, String>) -> Result<Value, String> {
         .output()
         .map_err(|error| format!("Pi launch failed: {error}"))?;
 
-    let stdout = redact_secret(&String::from_utf8_lossy(&output.stdout), &key);
-    let stderr = redact_secret(&String::from_utf8_lossy(&output.stderr), &key);
+    let provider_key = std::str::from_utf8(provider_material.expose_bytes()).map_err(|_| {
+        "native Provider secret must be valid UTF-8 for the Pi development exception".to_owned()
+    })?;
+    let stdout = redact_secret(&String::from_utf8_lossy(&output.stdout), provider_key);
+    let stderr = redact_secret(&String::from_utf8_lossy(&output.stderr), provider_key);
     let observed_models = observed_response_models(&stdout);
     Ok(json!({
         "classification": policy.classification(),
@@ -84,6 +100,55 @@ fn candidate_record(flags: &BTreeMap<String, String>) -> Result<Value, String> {
         "stdout": stdout,
         "stderr": stderr,
     }))
+}
+
+fn require_local_native_provider_secret_development_flag(
+    flags: &ParsedFlags,
+) -> Result<(), String> {
+    if flags
+        .enabled_flags
+        .contains(LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG)
+    {
+        Ok(())
+    } else {
+        Err(format!(
+            "Pi Provider key delivery is disabled by default; pass --{LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG} only for the owner-approved local development exception"
+        ))
+    }
+}
+
+fn resolve_local_development_provider_material(
+    provider_config_dir: &str,
+) -> Result<SecretMaterial, String> {
+    let repository = ProviderConfigRepository::under_config_dir(provider_config_dir);
+    match select_production_secret_store() {
+        ProductionSecretBackend::LinuxSecretTool(secret_store) => {
+            let provider_key_service = ProviderKeyService::new(secret_store, repository);
+            let provider_config = provider_key_service
+                .load_config()
+                .map_err(|error| {
+                    format!("local development Provider configuration is unavailable: {error}")
+                })?
+                .ok_or_else(|| {
+                    "local development Provider configuration is not present".to_owned()
+                })?;
+            if provider_config.provider_id() != "deepseek" {
+                return Err(
+                    "local development exception accepts only the configured deepseek Provider"
+                        .to_owned(),
+                );
+            }
+            provider_key_service
+                .resolve_provider_material()
+                .map_err(|error| {
+                    format!("local development Provider secret is unavailable: {error}")
+                })
+        }
+        ProductionSecretBackend::Unavailable(_) => Err(
+            "local development exception requires an available Linux native Secret Service backend"
+                .to_owned(),
+        ),
+    }
 }
 
 fn verify_pinned_pi_version(pi: &str) -> Result<(), String> {
@@ -104,7 +169,7 @@ fn verify_pinned_pi_version(pi: &str) -> Result<(), String> {
 
 /// Runs a bounded number of identical, no-tools candidate calls. This records
 /// external-process latency only; it is explicitly not a REQ-PERF-004 campaign.
-fn evaluate_candidates(flags: &BTreeMap<String, String>) -> Result<Value, String> {
+fn evaluate_candidates(flags: &ParsedFlags) -> Result<Value, String> {
     let runs = required(flags, "runs")?
         .parse::<usize>()
         .map_err(|_| "--runs must be an integer".to_owned())?;
@@ -198,25 +263,36 @@ fn percentile_ms(samples: &[u128], percentile: u8) -> Option<u128> {
     sorted.get(rank.saturating_sub(1)).copied()
 }
 
-fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
-    let mut flags = BTreeMap::new();
+fn parse_flags(args: &[String]) -> Result<ParsedFlags, String> {
+    let mut flags = ParsedFlags::default();
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {
         let Some(name) = flag.strip_prefix("--") else {
             return Err(format!("unexpected argument `{flag}`"));
         };
+        if name == LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG {
+            if !flags.enabled_flags.insert(name.to_owned()) {
+                return Err(format!("flag --{name} given twice"));
+            }
+            continue;
+        }
         let Some(value) = iter.next() else {
             return Err(format!("flag --{name} requires a value"));
         };
-        if flags.insert(name.to_owned(), value.to_owned()).is_some() {
+        if flags
+            .values
+            .insert(name.to_owned(), value.to_owned())
+            .is_some()
+        {
             return Err(format!("flag --{name} given twice"));
         }
     }
     Ok(flags)
 }
 
-fn required<'a>(flags: &'a BTreeMap<String, String>, name: &str) -> Result<&'a str, String> {
+fn required<'a>(flags: &'a ParsedFlags, name: &str) -> Result<&'a str, String> {
     flags
+        .values
         .get(name)
         .map(String::as_str)
         .ok_or_else(|| format!("missing required flag --{name}"))
@@ -231,8 +307,11 @@ fn platform() -> SandboxPlatform {
 }
 
 /// Child processes receive only operating-system essentials and the scoped
-/// DeepSeek credential; no ambient user API tokens are inherited.
-fn sanitized_command(program: &str, deepseek_key: &str) -> Command {
+/// development credential; no ambient user API tokens are inherited.
+fn sanitized_command(program: &str, provider_material: &SecretMaterial) -> Result<Command, String> {
+    let provider_key = std::str::from_utf8(provider_material.expose_bytes()).map_err(|_| {
+        "native Provider secret must be valid UTF-8 for the Pi development exception".to_owned()
+    })?;
     let mut command = Command::new(program);
     command.env_clear();
     for key in [
@@ -249,8 +328,11 @@ fn sanitized_command(program: &str, deepseek_key: &str) -> Command {
             command.env(key, value);
         }
     }
-    command.env("DEEPSEEK_API_KEY", OsString::from(deepseek_key));
-    command
+    // This exception scopes the key to the initial Pi process. Pi remains
+    // uncontained and may pass its environment to descendants, so it is not
+    // containment evidence and expires at the P2 boundary.
+    command.env("DEEPSEEK_API_KEY", OsString::from(provider_key));
+    Ok(command)
 }
 
 #[cfg(test)]
@@ -270,14 +352,34 @@ mod tests {
     }
 
     #[test]
-    fn child_environment_does_not_inherit_other_api_key_names() {
-        let command = sanitized_command("pi", "test-deepseek-key");
+    fn development_secret_exception_requires_exact_explicit_flag() -> Result<(), String> {
+        let without_exception = parse_flags(&[])?;
+        assert!(require_local_native_provider_secret_development_flag(&without_exception).is_err());
+
+        let with_exception =
+            parse_flags(&[format!("--{LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG}")])?;
+        assert!(require_local_native_provider_secret_development_flag(&with_exception).is_ok());
+
+        let duplicate_exception = vec![
+            format!("--{LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG}"),
+            format!("--{LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG}"),
+        ];
+        assert!(parse_flags(&duplicate_exception).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn child_environment_does_not_inherit_other_api_key_names() -> Result<(), String> {
+        let provider_material =
+            SecretMaterial::from_bytes("test-deepseek-key").map_err(|error| error.to_string())?;
+        let command = sanitized_command("pi", &provider_material)?;
         let names: Vec<String> = command
             .get_envs()
             .filter_map(|(name, value)| value.map(|_| name.to_string_lossy().into_owned()))
             .collect();
         assert!(names.iter().any(|name| name == "DEEPSEEK_API_KEY"));
         assert!(!names.iter().any(|name| name == "OPENAI_API_KEY"));
+        Ok(())
     }
 
     #[test]

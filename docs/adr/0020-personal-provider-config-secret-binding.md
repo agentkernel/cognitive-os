@@ -13,7 +13,10 @@
 P0-T05 froze `SecretStore::{probe, put, get, delete}` and opaque `SecretRef`
 with fail-closed backends (ADR-0018). P1-T02 must let a Personal daemon manage
 a DeepSeek (or OpenAI-compatible) Provider API key without placing secret bytes
-in configuration, SQLite, environment variables, argv, logs, or evidence.
+in configuration, SQLite, argv, logs, or evidence. ADR-0018 records one
+default-deny P0-T06 local-development exception for initial Pi-child
+environment delivery after native-store resolution; it is not a general
+Provider environment-key policy.
 
 Provider configuration must survive daemon restart by reloading a non-secret
 document that references only an opaque `SecretRef`. Production selection must
@@ -44,6 +47,11 @@ never fall back to the ephemeral test double.
    export secret bytes.
 6. This crate remains isolated: no kernel/store/runtime dependency and no
    authority writes.
+7. A P0-T06 caller using the ADR-0018 exception must load this repository from
+   an explicit non-secret Personal Provider config directory, verify
+   `provider_id == "deepseek"`, and resolve material only after its non-secret
+   Pi admission checks pass. The repository continues to persist only the
+   opaque `SecretRef`; it never records that the exception was used.
 
 ## Consequences
 
@@ -55,7 +63,8 @@ never fall back to the ephemeral test double.
 - Headless Linux without a user session bus remains unsupported for native
   secret storage until a future decision.
 - This ADR does not claim G0, B01-B12, Profile conformance, or real Provider
-  key storage in CI.
+  key storage in CI. The P0-T06 exception remains local-only, unavailable on
+  Windows, and expires at the P2 boundary.
 
 ## Rejected Alternatives
 
@@ -66,3 +75,6 @@ never fall back to the ephemeral test double.
 3. **Making Pi or CLI write secrets directly to disk** — clients are
    non-authority and must not own secret persistence.
 4. **Embedding credentials in base_url** — rejected at validation time.
+5. **Reusing Pi's own config directory as Personal Provider configuration** —
+   rejected because `PI_CODING_AGENT_DIR` and the Personal config repository
+   have different ownership and security meanings.

@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：blocked（P0-T01..T05、P0-T07、P1-T01..T06 已完成；P0-T06 因 Provider key 传递边界待 owner 决策；其余任务尚未开始）**
+> **状态：in-progress（P0-T01..T05、P0-T07、P1-T01..T06 已完成；P0-T06 正在推进；其余任务尚未开始）**
 > **最后更新：2026-07-26**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -19,7 +19,7 @@
 
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
-| Phase 0 - 基线与决策 | 7 | 6 | 0 | 1 | 0 | G0 |
+| Phase 0 - 基线与决策 | 7 | 6 | 1 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 6 | 0 | 0 | 3 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
@@ -27,12 +27,12 @@
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 6 | 0 | 0 | 0 | 6 | G7 / RC |
-| **合计** | **51** | **12** | **0** | **1** | **38** | — |
+| **合计** | **51** | **12** | **1** | **0** | **38** | — |
 
 ## 2. 产品边界与不变量
 
 - Rust daemon 是唯一 authority writer；Pi、CLI、Web UI 均为客户端，不可直接写 SQLite 或推进 Task、Effect、Verification 状态。
-- Provider API Key 只保存在原生 Secret Store；不得进入配置、SQLite、Pi、环境变量、命令行、日志或证据。
+- Provider API Key 只保存在原生 Secret Store；不得进入配置、SQLite、命令行、日志或证据。唯一例外为 ADR-0018 已登记的 P0-T06 本机 Linux 开发路径：显式开关后从 native store 解析、仅传给初始 Pi 子进程、默认拒绝、不得用于 CI/发布，并在 P2 结束到期。
 - 所有外部 mutating operation 均须经 Intent/Effect、持久化后派发、幂等键、fencing 和结果 reconcile；外部工具成功不等于 Task 完成。
 - Task 完成由独立 verifier/acceptance authority 推进；Pi Session 不等于 Task，Pi `agent_end` 不等于完成。
 - Personal 计划不改变既有规范优先级，不得用 `PERS-*` ID 冒充 REQ-ID；合同变化必须走 Lane-CTR 流程。
@@ -64,7 +64,7 @@
 | P0-T03 | License、首发平台与分发决策 | P0-T02 | owner GO/NO-GO 与 notices 完整 | done | 2026-07-26；PR [#99](https://github.com/agentkernel/cognitive-os/pull/99) 合入 `main@fd6ff6b`。Owner GO：Apache-2.0；首发产品平台 Linux x86_64 + Windows x86_64；GitHub Release 可检查 bundle；**不** vendor Pi/Node；crates.io/npm 仍不发布。交付：根 `LICENSE`/`NOTICE`、[ADR-0025](../adr/0025-personal-license-platform-distribution.md)、[THIRD-PARTY-NOTICES](../legal/THIRD-PARTY-NOTICES.md)、[PERSONAL-SUPPORT-MATRIX](PERSONAL-SUPPORT-MATRIX.md)；workspace `license=Apache-2.0` 且 `publish=false`/`private=true`。验证：`pnpm run check:consistency`、`git diff --check`；CI [30180002937](https://github.com/agentkernel/cognitive-os/actions/runs/30180002937) / [30179991223](https://github.com/agentkernel/cognitive-os/actions/runs/30179991223) Ubuntu/Windows-MSVC SUCCESS。非 G0/B01-B12/Profile；SBOM/attestation 归 P7-T01。handoff：[20260726-personal-p0-t03-license-platform-distribution-handoff.md](../checkpoints/20260726-personal-p0-t03-license-platform-distribution-handoff.md)。 |
 | P0-T04 | 数据布局、迁移、备份与回滚设计验证 | P0-T02 | migration dry-run、重放与失败恢复评审 | done | 2026-07-25；Lane-KRN `lane/krn-personal-p0-t04-migrations`，PR #89。ADR-0017 + adapter-local `schema_migrations` dry-run/apply/replay/digest-drift/failure-recovery tests；CI run [30150183941](https://github.com/agentkernel/cognitive-os/actions/runs/30150183941) 在 Ubuntu 与 Windows/MSVC 均通过 `cargo test --workspace --locked`。本机 Windows GNU linker exit 121 是已知非支持环境，不再阻断。未修改 registry/schema/vector 或 authority transition 语义。 |
 | P0-T05 | Linux Secret Service PoC | P0-T01 | set/get/rotate/delete 与泄漏负例通过 | done | 2026-07-25；分支 `lane/personal-p0-t05-secret-store-api`，PR [#90](https://github.com/agentkernel/cognitive-os/pull/90)。隔离 crate `cognitive-secret` + ADR-0018：冻结 `SecretStore::{probe,put,get,delete}` 与 opaque `SecretRef`；模拟 put/get/rotate/delete、absent/locked/prompt fail-closed、Debug/Display/env 泄漏负例；Linux native probe-only（mutating D-Bus 归 P1-T02）；无明文 fallback。CI run [30153311857](https://github.com/agentkernel/cognitive-os/actions/runs/30153311857) Ubuntu/Windows-MSVC `cargo test --workspace --locked` 通过（含 `p0_t05_secret_store`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile 声明。handoff：[20260725-personal-p0-t05-secret-store-api-handoff.md](../checkpoints/20260725-personal-p0-t05-secret-store-api-handoff.md)。 |
-| P0-T06 | Pi 版本、Extension 与 RPC 兼容性 PoC | P0-T03 | 固定版本、integrity、Extension/RPC fixture 通过 | blocked | 2026-07-26；Lane-RUN `lane/run-personal-p0-t06-extension-poc`。第一个原子部分已固定 `@earendil-works/pi-coding-agent@0.81.1`、npm SRI、source commit、repository path 与 Node engine；candidate adapter 在读取 scoped Provider key 前以 `pi --version` fail-closed 拒绝版本漂移；strict-LF JSONL parser fixtures覆盖 CRLF normalization、U+2028 preservation、malformed/non-object negative。第二个独立原子部分新增 pinned-API Extension fixture：`project_trust` 固定拒绝、`write`/`edit`/`bash` 在 `tool_call` 前阻断、`session_start` 仅展示 session-local status，且 Rust safety guard 断言无 provider credential/durable-state access。外部元数据实测：`npm view @earendil-works/pi-coding-agent@0.81.1 version dist.integrity gitHead repository engines --json`；native `npx --yes --package="@earendil-works/pi-coding-agent@0.81.1" --call "pi -e apps/pi-agent-adapter/fixtures/p0_t06_extension.ts --version"` 输出 `0.81.1`；WSL test：`CARGO_TARGET_DIR=/tmp/cognitiveos-p0-t06-extension-target cargo test -p pi-agent-adapter --test p0_t06_compatibility --offline`（7 passed）。无 Provider key 的 RPC clean-run 无法自然退出，未将该 CLI 版本检查表述为 Extension runtime load evidence。**阻塞：** 现有 candidate launcher 将 `DEEPSEEK_API_KEY` 注入 Pi 子进程环境，与本计划和当前安全边界“Provider API Key 不得进入 Pi/环境变量”冲突；继续做真实 Pi session/RPC load 前必须由 owner 选择禁用候选执行，或批准并登记一个不把 key 传给 Pi 的受控 Provider-auth 方案。archive integrity/source provenance verifier 仍归 Pi P2，不能由本 pin 冒充。非 G0/B01-B12/C0/C1/Profile 声明。 |
+| P0-T06 | Pi 版本、Extension 与 RPC 兼容性 PoC | P0-T03 | 固定版本、integrity、Extension/RPC fixture 通过 | in-progress | 2026-07-26；Lane-RUN `lane/run-personal-p0-t06-extension-poc`。第一个原子部分已固定 `@earendil-works/pi-coding-agent@0.81.1`、npm SRI、source commit、repository path 与 Node engine；candidate adapter 在读取 scoped Provider key 前以 `pi --version` fail-closed 拒绝版本漂移；strict-LF JSONL parser fixtures覆盖 CRLF normalization、U+2028 preservation、malformed/non-object negative。第二个独立原子部分新增 pinned-API Extension fixture：`project_trust` 固定拒绝、`write`/`edit`/`bash` 在 `tool_call` 前阻断、`session_start` 仅展示 session-local status，且 Rust safety guard 断言无 provider credential/durable-state access。Owner 于 2026-07-26 批准默认关闭的本机 Linux 开发例外：只有显式 `--allow-local-native-provider-secret-development` 与独立 `--provider-config-dir` 同时提供时，adapter 才从 `ProviderKeyService`/native Secret Service 解析已配置的 DeepSeek key，并只注入初始 Pi 子进程；不读取父进程 Key 环境变量，Windows/CI/unavailable backend fail-closed，例外在 P2 结束到期。WSL test：`CARGO_TARGET_DIR=/tmp/cognitiveos-p0-t06-exception-target-two cargo test -p pi-agent-adapter --offline`（16 passed）。无 Provider key 的 RPC clean-run 无法自然退出，未将 CLI version check 表述为 Extension runtime load evidence。**未完成：** 隔离环境中 Extension 的实际 session/RPC load evidence；archive integrity/source provenance verifier 仍归 Pi P2，不能由本例外冒充。非 G0/B01-B12/C0/C1/Profile 声明。 |
 | P0-T07 | daemon transport、认证和威胁模型 | P0-T02 | transport 限制与威胁模型评审完成 | done | 2026-07-25；分支 lane/personal-p0-t07-daemon-transport-threat-model，PR #91 合入 main@ff341ef；CI run 30154100260。ADR-0019 冻结：默认 HTTP/1.1 over UDS（XDG runtime）、可选 loopback TCP、disabled-by-default listener、channel-scoped bearer bootstrap、请求/并发/会话上限；threat model 覆盖 CSRF、DNS rebinding、token theft、channel confusion、replay。不实现业务路由；非 G0/B01-B12/Profile 声明。handoff：[20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md](../checkpoints/20260725-personal-p0-t07-daemon-transport-threat-model-handoff.md)。 |
 
 ### Phase 1 - 安装到首次对话

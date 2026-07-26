@@ -510,13 +510,13 @@ Pi 不可以：
 ### P0-T06 — Pi 版本、Extension 与 RPC 兼容性 PoC
 
 - **目标：** 固定 Pi 版本、integrity、source commit、Extension API 和 RPC JSONL fixture。
-- **状态：** **in-progress**（2026-07-26；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。第一个独立原子部分已交付：`pi-agent-adapter` 固定并记录 Pi `0.81.1` 的 npm SRI、source commit、repository path 与 Node engine；所有 candidate launch 在读取 scoped Provider key 前执行 `pi --version` 并拒绝版本漂移；strict-LF RPC JSONL parser 用 CRLF、U+2028、malformed/non-object negatives 覆盖。对 pinned package 的 project trust、tool replacement、session event Extension PoC 仍未完成，因此本任务不可标记 `done`。
+- **状态：** **in-progress**（2026-07-26；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。第一个独立原子部分已交付：`pi-agent-adapter` 固定并记录 Pi `0.81.1` 的 npm SRI、source commit、repository path 与 Node engine；所有 candidate launch 在读取 scoped Provider key 前执行 `pi --version` 并拒绝版本漂移；strict-LF RPC JSONL parser 用 CRLF、U+2028、malformed/non-object negatives 覆盖。第二个原子部分已交付 pinned Extension fixture：拒绝 project trust、在 `tool_call` 阻断 write/edit/bash，并以 `session_start` 仅设置 session-local status。Owner 已批准 ADR-0018 的临时例外：本机 Linux 上仅在精确显式开关和独立 Personal Provider config 目录存在时，从 native Secret Store 解析已配置 DeepSeek material 并注入初始 Pi 子进程；不读 parent env、默认拒绝、不得用于 Windows/CI/发布，P2 结束到期。对 pinned package 的实际 session/RPC load evidence 仍未完成，因此本任务不可标记 `done`。
 - **证据：** registry 0.82.0；仓库 smoke 使用 0.81.1；API 快速变化。
 - **依赖：** P0-T03；不启动 governed background Agent。
 - **文件：** 修改 `apps/pi-agent-adapter` tests/docs；计划新增 `tests/golden/pi-rpc/` 和 Extension PoC。
 - **API：** 固定 Extension command/provider/event subset；RPC 只做 contract fixture。
 - **验收：** project trust、tool replacement、session event、strict LF framing、version mismatch 均有测试。
-- **安全：** Extension 无 DB/secret；built-in write/edit/bash 在 governed mode 不可用。
+- **安全：** Extension 无 DB/secret；built-in write/edit/bash 在 governed mode 不可用。通常 Provider material 不进入 Pi 或环境；唯一的 ADR-0018 local-development exception 仅传给初始 Pi child，不构成 sandbox/containment 声明，P2 后必须移除、替换为 proxy 或重新批准。
 - **回滚：** pin 回最后兼容版本。
 - **解锁：** P1-T07；其固定 RPC fixture 可作为 P6 设计输入，但不构成 P6 的直接任务依赖。
 
