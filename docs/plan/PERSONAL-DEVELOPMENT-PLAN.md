@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01..T05、P0-T07、P1-T01..T06 已完成；P0-T06 正在推进；其余任务尚未开始）**
+> **状态：in-progress（P0-T01..T05、P0-T07、P1-T01..T06 已完成；P0-T06 与 P1-T07 正在推进；其余任务尚未开始）**
 > **最后更新：2026-07-26**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -44,14 +44,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 6 | 1 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 6 | 0 | 0 | 3 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 6 | 1 | 0 | 2 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 7 | 0 | 0 | 0 | 7 | G7 / RC |
-| **合计** | **52** | **12** | **1** | **0** | **39** | — |
+| **合计** | **52** | **12** | **2** | **0** | **38** | — |
 
 ## 2. 产品边界与不变量
 
@@ -133,7 +133,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | P1-T04 | 有界 Personal daemon 与本地认证 | P0-T07, P1-T01 | auth/size/timeout/concurrency/restart 测试 | done | 2026-07-25；PR #95（auth/size/host/cookie/restart）+ PR [#96](https://github.com/agentkernel/cognitive-os/pull/96)（timeout/concurrency）。`kernel-server --personal`：loopback、daemon lock、bootstrap secret、channel bearer、header/body 读超时 408、connection/in-flight 429、Host/Cookie fail-closed；ADR-0022。CI runs [30162481713](https://github.com/agentkernel/cognitive-os/actions/runs/30162481713) / [30162477963](https://github.com/agentkernel/cognitive-os/actions/runs/30162477963) Ubuntu/Windows-MSVC SUCCESS（含 timeout/concurrency 单元测试与既有 `p1_t04_personal_daemon`）。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile；无 Task/Memory/MCP；无 registry/schema/vector 变更。handoff：[20260725-personal-p1-t04-timeout-concurrency-handoff.md](../checkpoints/20260725-personal-p1-t04-timeout-concurrency-handoff.md)。 |
 | P1-T05 | Readiness、status 与 doctor 应用服务 | P1-T03, P1-T04 | blocked/degraded/ready 事实区分 | done | 2026-07-25；分支 `lane/personal-p1-t05-readiness-doctor`，PR [#97](https://github.com/agentkernel/cognitive-os/pull/97)。`kernel-server` Personal composition root：`evaluate_personal_readiness` + management-auth `GET /personal/status|readiness|doctor`；ADR-0023；blocked/degraded/ready 分离；`static_check_is_not_runtime_ready`；secret_ref/bootstrap 不入投影。CI runs [30164114878](https://github.com/agentkernel/cognitive-os/actions/runs/30164114878) / [30164113787](https://github.com/agentkernel/cognitive-os/actions/runs/30164113787) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)。 |
 | P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | done | 2026-07-25；分支 `lane/personal-p1-t06-cognitive-cli`，PR [#98](https://github.com/agentkernel/cognitive-os/pull/98) 合入 `main@adbb0e5`。`cognitive` bin + `personal_cli`（init/status/doctor/daemon）、ADR-0024、`tests/p1_t06_cognitive_cli.rs`（live daemon 路径以 Ubuntu 为权威；Windows 跑 init/usage）。CI run [30167503487](https://github.com/agentkernel/cognitive-os/actions/runs/30167503487) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)。 |
-| P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | not-started | — |
+| P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | in-progress | 2026-07-26；`lane/personal-p1-t07-pi-package`；`development_track: experimental-local-only`。**第一个原子部分（Extension 包）已交付：** 新增 `packages/pi-cognitiveos/`（`@cognitiveos/pi-cognitiveos`）。`project_trust` 恒返回 `{trusted:"no"}`；`tool_call` **默认拒绝**——`bash`/`edit`/`write` 给出 mutating 理由，其余工具给出 ungoverned 理由，`READ_ONLY_TOOL_ALLOWLIST` 显式为空（依据 ADR-0026：无 catalog 即不可分级，一律 Tier 2；受治理工具执行归 P2-T05/P2-T06 的 daemon 侧）；`session_start` 与 `/cognitive-status` 只读展示 daemon `GET /personal/status` 的真实投影，daemon 不可达/拒绝/投影畸形一律以稳定错误码显式失败，**任何路径都不会渲染成 ready**。发现路径与 `cognitive` 一致（`daemon-endpoint.json` + `local-bootstrap.secret`，非 loopback endpoint 拒绝，`XDG_RUNTIME_DIR` 缺失 fail-closed）。按 ADR-0025 **不 vendor Pi**：以 `src/pi-api.ts` 结构镜像固定 API，Pi 不进入 `pnpm-lock.yaml`（有测试断言）；`src/pin.ts` 与 Rust `PiCompatibilityPin` 逐字段 drift 校验。`src/safety.test.ts` 以源码扫描断言运行时代码不含 Provider key/`provider.json`/`SecretRef`/sqlite/子进程/文件写入，`process.env` 仅作为注入默认值出现一次。测试：`pnpm --filter @cognitiveos/pi-cognitiveos test` **45 passed / 0 failed**（含真实 loopback 假 daemon 覆盖 401 重发一次、持续拒绝显式失败、无 cookie、bootstrap secret 不外泄）。**未完成（P1-T07 仍 in-progress）：** daemon 侧 provider proxy 路由与生产 `ProviderTransport`（仓库当前无 HTTP/TLS 依赖，且 Personal front door 无 streaming/SSE，需单独批次与决策）、`readiness.rs` 的 `pi` 组件从硬编码 `not_configured` 翻转、真实 Pi 进程加载证据（依赖 P0-T06 `extension-load`，仍 `not-run`）。非 G0/B01-B12/Profile 声明。 |
 | P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | not-started | — |
 | P1-T09 | B01 安装到首次对话 Gate | P1-T08 | 20 次 clean-run；redacted evidence 完整；除 API Key 与模型选择外无必选交互（ADR-0026） | not-started | — |
 
