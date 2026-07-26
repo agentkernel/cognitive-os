@@ -5,9 +5,9 @@
 - **工作树**：`D:\agent-kernel-clients`，分支 `work/clients-phase0-poc-prep`（自已合入 PR #18 的 `origin/main` @ `5d4a892`）。
 - **Gate**：implementation-ready 仍 **NO-GO / blocked**（未写 clients 生产代码/manifest/mock）。
 - **合并**：PR #18 squash 合入 main → `5d4a892`（AH-CTR-02 / POC-LIC / 威胁 oracle）。
-- **A. PoC 手册/模板**：共享 [poc-execution-record.md](../../clients/shared/docs/poc-execution-record.md)；五平台 `*-poc-runbook.md`（Windows `WIN-RG-01..10`、macOS/Linux/iOS/Android 全表 not-run）；Agent Hub [poc-prep-checklist.md](../../clients/agent-hub/docs/traceability/poc-prep-checklist.md)。
-- **B. 技术栈比较草案**：[tech-stack-comparison.md](../../clients/pc/docs/architecture/tech-stack-comparison.md)（明确非正式 ADR；未批准栈）。
-- **C. 设计缺口**：更新 [design-system/README.md](../../clients/shared/docs/design-system/README.md)（token/暗色/图标/术语/WCAG SC、`outcome-unknown`→`result-unknown` 建议）。
+- **A. PoC 手册/模板**：共享 [poc-execution-record.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/shared/docs/poc-execution-record.md)；五平台 `*-poc-runbook.md`（Windows `WIN-RG-01..10`、macOS/Linux/iOS/Android 全表 not-run）；Agent Hub [poc-prep-checklist.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/traceability/poc-prep-checklist.md)。
+- **B. 技术栈比较草案**：[tech-stack-comparison.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/architecture/tech-stack-comparison.md)（明确非正式 ADR；未批准栈）。
+- **C. 设计缺口**：更新 [design-system/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/shared/docs/design-system/README.md)（token/暗色/图标/术语/WCAG SC、`outcome-unknown`→`result-unknown` 建议）。
 - **D. 同步**：`clients/plan/progress.md`、`clients/READINESS.md` next-unblock、本 handoff、全局 PROGRESS 最小 Lane-CON 行；evidence-index 与各 README 指针。
 - **关联**：CLIENTS-DEC-001 / ADR-0007 / ADR-0008；无 REQ 实现变更。
 

@@ -134,9 +134,9 @@
 
 依据 `apps/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）与 §20.3（后端依赖结论）。**M0 仅建立依赖追踪**；每组依赖 = 对应机器契约 + 后端能力交付 + gate 通过后，才启动相应 Console 里程碑。
 
-2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。客户端项目根见 [`clients/`](../../clients/README.md)（ADR-0007），实现 gate 见 [`clients/governance/readiness-gates.md`](../../clients/governance/readiness-gates.md#console-实现-gate)。
+2026-07-20 批准 Lane-CON 激活前的窄幅 informative 文档例外：可维护平台研究/产品设计、产品要求与决策、README/roadmap/index、parity matrix、相关治理说明和已登记漂移修正；不得启动 Console 实现、修改 normative 机器资产或扩大实现/测试/Profile 声明。客户端项目根见 [`clients/`](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md)（ADR-0007），实现 gate 见 [`clients/governance/readiness-gates.md`](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate)。
 
-Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + Governed 两部署模式），canonical 文档见 [`clients/agent-hub/docs/`](../../clients/agent-hub/docs/README.md)，Master 计划见 [`clients/agent-hub/plan/agent-hub-development-plan.md`](../../clients/agent-hub/plan/agent-hub-development-plan.md)。同受本节 gate 阻断，另加 Paseo/AGPL 复用法务 gate；当前仅 informative 文档与计划/提示词，`implementation not-implemented / evidence none`，未激活实现车道。
+Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + Governed 两部署模式），canonical 文档见 [`clients/agent-hub/docs/`](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/README.md)，Master 计划见 [`clients/agent-hub/plan/agent-hub-development-plan.md`](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/plan/agent-hub-development-plan.md)。同受本节 gate 阻断，另加 Paseo/AGPL 复用法务 gate；当前仅 informative 文档与计划/提示词，`implementation not-implemented / evidence none`，未激活实现车道。
 
 | # | §20.3 依赖组 | 提供方里程碑 | 状态 |
 |---|---|---|---|
@@ -150,7 +150,7 @@ Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + G
 | 8 | native-app auth redirect/PKCE、offline lease、deep-link、IdP/push/config/update/health | M6+（部署基建） | 未交付 |
 | 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M6 执行能力；当前 84 vectors 中 **55 pass / 29 not-run**（以 PROGRESS / CI pins 实测为准）；RC manifest 可生成且 ≤ experimental；Profile implemented 仍为 0；F-017 阻断 v0.1 GO |
 
-激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](../../clients/governance/readiness-gates.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
+激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
 
 ## 3. IMP-01~18 与 F-001~F-030 → 里程碑映射
 

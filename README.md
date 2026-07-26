@@ -23,8 +23,8 @@ CognitiveOS 是一个"Agent control plane + durable governed runtime"的架构�
 | [apps/kernel-server](apps/kernel-server/) · [apps/admin-cli](apps/admin-cli/) | 单节点组合根 · 确定性管理 CLI |
 | [apps/agent-shell](apps/agent-shell/) | 任务 Shell 客户端（非 authority） |
 | [packages/](packages/) | TypeScript：contracts-ts（与 Rust 共享 golden fixtures）、sdk-ts |
-| [apps/cognitiveos-console/](apps/cognitiveos-console/) | 兼容 stub（Console 产品文档正文迁至 [clients/pc/](clients/pc/)，`planned`） |
-| [clients/](clients/) | 客户端项目根：PC/mobile/shared/Agent Hub 文档域（实现 gate 阻断，ADR-0007） |
+| [apps/cognitiveos-console/](apps/cognitiveos-console/) | 兼容 stub（Console 产品文档正文迁至 [clients/pc/](https://github.com/agentkernel/cognitiveos-clients/tree/main/pc)，`planned`） |
+| [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)（独立仓库） | 客户端项目根：PC/mobile/shared/Agent Hub 文档域（实现 gate 阻断，ADR-0007）。2026-07-26 已从本仓库 `clients/` 拆出，本仓库不再包含该目录 |
 
 ### 3. 测试与证据（tests & evidence）
 
@@ -42,7 +42,7 @@ CognitiveOS 是一个"Agent control plane + durable governed runtime"的架构�
 |---|---|
 | [AGENTS.md](AGENTS.md) | 开发代理入口：命令速查、硬纪律、Definition of Done、会话协议 |
 | [docs/README.md](docs/README.md) | 文档地图与分类口径 |
-| [clients/README.md](clients/README.md) | PC + 手机客户端项目地图与目录索引（canonical；`docs/clients/` 为兼容入口） |
+| [clients/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md) | PC + 手机客户端项目地图与目录索引（canonical；`docs/clients/` 为兼容入口） |
 | [docs/standards/](docs/standards/) | 12 份机器可判定标准（canonical/digest、状态迁移、错误合同…） |
 | [docs/adr/](docs/adr/) | 架构决策记录（0001–0007） |
 | [docs/plan/](docs/plan/) | 开发计划、进度仪表、并行车道 |

@@ -24,9 +24,9 @@
 specs/            规范资产（registry 273 REQ / 55 错误码；5 迁移表；61 schema）——机器合同真相
 conformance/      84 份声明式向量 + 15 测试层（数据包，非 runner）
 crates/           Rust：contracts → domain → kernel/store → runtime/management/akp → conformance
-apps/             kernel-server、admin-cli（Rust）；agent-shell（TS 客户端）；cognitiveos-console（兼容 stub，正文迁 clients/）
+apps/             kernel-server、admin-cli（Rust）；agent-shell（TS 客户端）；cognitiveos-console（兼容 stub，正文迁独立仓 cognitiveos-clients）
 packages/         contracts-ts、sdk-ts
-clients/          客户端项目根（PC/mobile/shared/Agent Hub 文档；实现 gate 阻断；ADR-0007）
+（clients/ 已拆出）客户端项目根迁至独立仓库 https://github.com/agentkernel/cognitiveos-clients（ADR-0007；2026-07-26 拆分）
 tests/            golden（跨语言夹具）/ e2e / faults / security
 tools/            静态一致性检查（Node）
 docs/             standards / adr / plan / traceability / checkpoints / prompts / evaluation
