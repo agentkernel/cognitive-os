@@ -29,7 +29,7 @@
 | `npm view @earendil-works/pi-coding-agent@0.81.1 version dist.integrity gitHead repository engines --json` | executed | version `0.81.1`; SRI `sha512-r6ov...N/P8A==`; gitHead `20be4b18d4c57487f8993d2762bace129f0cf7c6`; Node `>=22.19.0` |
 | WSL `CARGO_TARGET_DIR=/tmp/cognitiveos-p0-t06-target cargo test -p pi-agent-adapter --test p0_t06_compatibility --offline` | executed | 5 passed / 0 failed |
 | Native Windows GNU test | blocked environment | linker exit 121, the documented unsupported GNU baseline; no Windows test-pass claim |
-| Full workspace build/test/clippy | not-run | not proportionate to this focused atomic part; CI remains pending |
+| Full workspace build/test/clippy | not-run locally | not proportionate to this focused atomic part; required GitHub `verify` checks passed on Ubuntu and Windows |
 | Pi binary / Extension execution | not-run | no real Provider key, no external Pi session, and no Extension loaded |
 | G0, B01-B12, C0/C1, Profile | not-run | no claim |
 
@@ -63,8 +63,12 @@ work remains P2 in `PI-AGENT-INTEGRATION-PLAN.md`.
 
 - Formal Personal ledger updated: yes (`P0-T06` is `in-progress`).
 - PROGRESS updated: yes (atomic scope and non-claim recorded).
-- Commit / push / PR / CI: pending at handoff creation; fill after the atomic
-  commit and CI result.
+- Commit: `f5147c5a2945d740dc82c91d64a41106ffab7626`
+  (`feat(personal): start P0-T06 Pi compatibility pin`).
+- Push / PR: pushed to `origin/lane/run-personal-p0-t06-pi-compat`; PR
+  [#100](https://github.com/agentkernel/cognitive-os/pull/100).
+- CI: required GitHub `verify` checks passed on Ubuntu and Windows for both
+  observed workflow runs (`30181128138` and `30181148560`).
 - Suggested prompt: continue `P0-T06` by creating an isolated, pinned Pi
   Extension compatibility compile/load PoC for project trust, tool
   interception, and session events; keep Pi non-authority and do not use a
