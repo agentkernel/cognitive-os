@@ -66,7 +66,8 @@ work remains P2 in `PI-AGENT-INTEGRATION-PLAN.md`.
 - Commit: `f5147c5a2945d740dc82c91d64a41106ffab7626`
   (`feat(personal): start P0-T06 Pi compatibility pin`).
 - Push / PR: pushed to `origin/lane/run-personal-p0-t06-pi-compat`; PR
-  [#100](https://github.com/agentkernel/cognitive-os/pull/100).
+  [#100](https://github.com/agentkernel/cognitive-os/pull/100), merged as
+  `main@a198ed2110c013af0e2a22a68a9a40459b5cbb6e`.
 - CI: required GitHub `verify` checks passed on Ubuntu and Windows for both
   observed workflow runs (`30181128138` and `30181148560`).
 - Suggested prompt: continue `P0-T06` by creating an isolated, pinned Pi
