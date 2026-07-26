@@ -640,14 +640,21 @@ Pi 不可以：
 
 ### P1-T07 — CognitiveOS Pi Package/Extension 与 Provider proxy
 
-- **目标：** 复用 Pi TUI，实现 `cognitive` 首次会话。
-- **文件：** 计划新增 `packages/pi-cognitiveos/`；修改 pnpm workspace/lock；新增 Extension tests。
-- **API：** daemon-authenticated provider proxy、`/cognitive-status`、task placeholders；Session 仅 presentation metadata。
-- **配置：** fixed Pi version/integrity/package path/project trust。
-- **验收：** direct bash/write/edit 禁用；无 API Key/env/SQLite path；daemon unavailable 时明确失败。
-- **性能：** Extension startup 建议 <2 s，首个 proxy token另测。
-- **回滚：** disable/remove Extension 不影响 authority data。
+- **优先级/目标/价值：** P1 收尾前的关键件；复用 Pi TUI 完成 `cognitive` 首次受治理会话，同时把"Pi 是 Shell 不是 authority"（PERS-PR-005）从纸面约束变成进程内可执行的拒绝。
+- **状态：** 以正式台账为准（[PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)）。
+- **证据/研究：** PI-01/PI-05/PI-06/PI-07（§7 来源表）；P0-T06 已固定 `@earendil-works/pi-coding-agent@0.81.1` 的版本/SRI/source commit/Node engine 于 `apps/pi-agent-adapter/src/lib.rs`，并交付 Extension fixture 与 strict-LF RPC parser；`apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 loopback front door、bootstrap secret 与 channel bearer（ADR-0022）；`crates/cognitive-secret` 已有 `ProviderKeyService`/`ProviderTransport`/`ProviderDiscoveryService`（ADR-0020/0021），但**仓库内无生产 `ProviderTransport` 实现，也无 HTTP/TLS 依赖**，且 Personal front door 单请求单连接、无 SSE。
+- **依赖：** P0-T06（Pi 表面固定）、P1-T03、P1-T04、P1-T05。P0-T06 的剩余缺口是 Linux-native 上的运行时加载证据，不阻断本任务的接口实现，按台账"开发状态解耦"注记走 `experimental-local-only`。
+- **不包含：** 真实 Task API 与 watch（P2-T02）、scheduler/worker（P2-T03/T04）、受治理工具执行与 Tool Registry（P2-T05/T06）、Memory、MCP、多 Agent、Pi 供应链 provenance verifier（Pi P2）、OS sandbox（Pi P4）。不得 vendor 或分发 Pi/Node（ADR-0025）。
+- **文件：** 新增 `packages/pi-cognitiveos/`（`pi-api.ts` 固定 API 结构镜像、`pin.ts` 兼容 pin、`tool-policy.ts`、`daemon-discovery.ts`、`daemon-client.ts`、`status.ts`、`extension.ts`、`index.ts` 与对应测试）；修改 `pnpm-lock.yaml`（**不得**出现 `@earendil-works/*`）；后续批次修改 `apps/kernel-server/src/personal/{server,readiness}.rs` 并新增 `apps/kernel-server/tests/p1_t07_provider_proxy.rs`；无删除文件。
+- **数据/API/配置/迁移：** 不新增 SQLite 表、不新增迁移。Extension 只读两个既有本地文件（`$XDG_STATE_HOME/cognitiveos/daemon-endpoint.json`、`$XDG_RUNTIME_DIR/cognitiveos/local-bootstrap.secret`），只调用既有 `POST /local/session` 与 `GET /personal/status`。daemon 侧新增 provider proxy 路由必须复用同一 bearer/bounds/错误信封；Pi 配置固定 version/integrity/package path，且 project trust 恒拒绝。
+- **步骤：** (1) Extension 包与默认拒绝的 tool 策略；(2) daemon 只读事实消费与显式失败路径；(3) daemon 侧 provider proxy 路由与生产 `ProviderTransport`（HTTP/TLS 依赖或子进程方案须单独决策并记录）；(4) `readiness.rs` 的 `pi` 组件从硬编码 `not_configured` 翻转为真实检查，**不改动既有聚合规则**（ADR-0023）；(5) 真实 Pi 进程加载证据（依赖 P0-T06 `extension-load`，须 Linux-native 主机）。
+- **验收：** direct `bash`/`write`/`edit` 禁用（且未分级工具不得放行）；无 API Key、无 env key、无 SQLite path；daemon unavailable 时明确失败且不得渲染为 ready；project trust 恒拒绝；Pi 不进入 lockfile；TS pin 与 Rust `PiCompatibilityPin` 无漂移。
+- **测试：** 包内 `node --test`（工具策略正负例、发现路径 fail-closed、真实 loopback 假 daemon 覆盖 401 重发一次与持续拒绝、投影畸形→协议错误、源码扫描断言无 key/db/子进程/文件写入）；proxy 落地后另加 `kernel-server` 集成测试与跨渠道负例；命令按 §15.2。
+- **基准/性能：** Extension startup 建议 <2 s；首个 proxy token 单独计量。按 §15 四段归因（CognitiveOS 确定性处理 / Pi-Node 进程与 RPC / Provider 网络与模型 / 文件系统与 SQLite），本阶段只记录，不设阈值、不构成 REQ-PERF-004 campaign。
+- **安全/可观测：** Extension 不持有任何 Provider 凭据；bootstrap secret 仅用于一次会话请求，不落盘、不展示、不入错误消息；session token 不得出现在任何 UI 表面；所有失败使用稳定错误码；不得合成 Gate/Profile/release 声明。
+- **回滚/文档：** disable/remove Extension 不影响 authority data（Extension 无写路径）；provider proxy 路由可整体关闭且不改变既有 front door 语义；同批更新台账、PROGRESS、handoff。
 - **解锁：** P1-T09、P2-T02。
+- **风险/不确定：** R-07（Pi Bash 绕过）由进程内默认拒绝 + 启动 flag 双重覆盖；生产 `ProviderTransport` 需引入 HTTP/TLS 依赖或子进程方案，属供应链决策，须在实施批次中显式记录；Personal front door 无 streaming，流式补全在当前表面不可表达，须在 proxy 批次中明确取舍。
 
 ### P1-T08 — 可检查 Linux bundle installer 与 user service
 

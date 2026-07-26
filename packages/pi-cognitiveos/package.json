@@ -1,0 +1,18 @@
+{
+  "name": "@cognitiveos/pi-cognitiveos",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CognitiveOS Pi Extension: non-authority Pi client that blocks direct mutating tools and reads daemon facts only (P1-T07)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"dist/**/*.test.js\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "license": "Apache-2.0"
+}
