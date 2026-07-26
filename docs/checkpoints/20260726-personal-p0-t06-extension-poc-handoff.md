@@ -77,8 +77,9 @@ session/RPC load evidence; do not make a containment, Gate, or Profile claim."
 
 ## 6. Commit and CI status
 
-- Commit: `44509b498f5d886640375a425bce0ead25e3ebfd` recorded the initial
-  fixture and blocker; this follow-up owner-decision implementation is pending
-  a new commit.
-- PR / push / CI: PR #101 has initial fixture CI green; follow-up CI pending.
+- Commits: `44509b498f5d886640375a425bce0ead25e3ebfd` recorded the initial
+  fixture and blocker; `ff74033` implements the owner-approved local
+  development exception.
+- PR / push / CI: PR #101 will receive the follow-up push; CI is pending for
+  `ff74033`.
 - `personal-blog/` was not read, modified, staged, or included.
