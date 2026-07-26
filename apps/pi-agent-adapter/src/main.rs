@@ -6,7 +6,9 @@
 //! authority are prerequisites for a governed AgentInstallation claim.
 
 use cognitive_runtime::SandboxPlatform;
-use pi_agent_adapter::{PiLaunchPolicy, observed_response_models, redact_secret};
+use pi_agent_adapter::{
+    PiCompatibilityPin, PiLaunchPolicy, observed_response_models, redact_secret,
+};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
@@ -51,6 +53,9 @@ fn candidate_record(flags: &BTreeMap<String, String>) -> Result<Value, String> {
     let prompt = required(flags, "prompt")?;
     let work_dir = required(flags, "work-dir")?;
     let config_dir = required(flags, "config-dir")?;
+
+    // Verify the executable before reading the scoped provider credential.
+    verify_pinned_pi_version(pi)?;
     let key = env::var("DEEPSEEK_API_KEY")
         .map_err(|_| "DEEPSEEK_API_KEY is required for a DeepSeek candidate run".to_owned())?;
     let policy = PiLaunchPolicy::deepseek_candidate(model)?;
@@ -79,6 +84,22 @@ fn candidate_record(flags: &BTreeMap<String, String>) -> Result<Value, String> {
         "stdout": stdout,
         "stderr": stderr,
     }))
+}
+
+fn verify_pinned_pi_version(pi: &str) -> Result<(), String> {
+    let output = Command::new(pi)
+        .arg("--version")
+        .output()
+        .map_err(|error| format!("Pi version check failed to launch: {error}"))?;
+    if !output.status.success() {
+        return Err(format!(
+            "Pi version check failed with exit status {:?}",
+            output.status.code()
+        ));
+    }
+
+    let version_output = String::from_utf8_lossy(&output.stdout);
+    PiCompatibilityPin::expected().validate_reported_version(&version_output)
 }
 
 /// Runs a bounded number of identical, no-tools candidate calls. This records
