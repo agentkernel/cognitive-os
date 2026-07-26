@@ -1,6 +1,6 @@
 # ADR-0018: Personal SecretStore Boundary and Fail-Closed Backends
 
-- Status: Accepted for P0-T05 PoC
+- Status: Accepted with a local development exception for P0-T06
 - Date: 2026-07-25
 - Decision owners: CognitiveOS reference implementation maintainers
 - Classification: Personal product secret-handling decision. This ADR freezes a
@@ -11,10 +11,16 @@
 ## Context
 
 Provider API keys for CognitiveOS Personal must never enter configuration,
-SQLite, Pi, environment variables, command lines, logs, or evidence. The
-Personal plan requires a native Linux Secret Service path, with fail-closed
-behavior when the service is absent, locked, or would need an interactive
-prompt that a non-interactive daemon cannot complete.
+SQLite, command lines, logs, or evidence. The Personal plan requires a native
+Linux Secret Service path, with fail-closed behavior when the service is
+absent, locked, or would need an interactive prompt that a non-interactive
+daemon cannot complete.
+
+On 2026-07-26, the decision owners approved a narrow P0-T06 local-development
+exception: an already-configured native Secret Service key may be injected
+into the initial Pi child environment only after an explicit CLI switch. This
+exception is not a production design, containment claim, or authority grant;
+it expires at the end of P2 and must be replaced or re-approved before then.
 
 P0-T05 must freeze the daemon-facing API before P1-T02 builds Provider
 configuration on top of it. A previous environment-only `secret-tool` session
@@ -40,9 +46,22 @@ does not freeze a Rust port or provide automated leak negatives in CI.
 6. `LinuxSecretServiceProbe` classifies native readiness from session-bus
    signals on Linux and reports unavailable on non-Linux hosts. Mutating FreeDesktop Secret Service I/O is delivered by P1-T02
    (`LinuxSecretToolStore` / ADR-0020); P0-T05 freezes the port and fail-closed semantics only.
-7. Secrets must not be written to SQLite, config files, env, argv, logs, test
+7. Secrets must not be written to SQLite, config files, argv, logs, test
    snapshots, or evidence digests. Config may store only opaque `SecretRef`
    identifiers after P1-T02.
+8. The P0-T06 local-development exception is default-deny and is permitted
+   only when all conditions hold:
+   - the caller supplies the exact explicit development switch;
+   - the host has an available Linux native Secret Service backend;
+   - the configured Provider is `deepseek` and material resolves through
+     `ProviderKeyService`, never through a parent-process environment variable,
+     command line, file, or prompt;
+   - the material is supplied only to the initial Pi child-process environment;
+     Pi is uncontained and may pass its environment to descendants, so this is
+     not a containment guarantee;
+   - no Windows, CI, release, Gate, Profile, or production claim is made.
+   The exception expires at the P2 exit. It must be removed, replaced by a
+   local provider-auth proxy, or explicitly re-approved before P2 closes.
 
 ## Consequences
 
@@ -52,15 +71,18 @@ does not freeze a Rust port or provide automated leak negatives in CI.
   simulated backend without requiring gnome-keyring on every runner.
 - Headless Linux without a user session bus remains unsupported until a future
   decision; first-release desktop user session is the intended path.
-- This ADR does not claim G0, B01-B12, Profile conformance, or production
-  Provider key storage.
+- This ADR does not claim G0, B01-B12, Profile conformance, production
+  Provider key storage, Pi containment, or an approved production
+  credential-delivery design.
 
 ## Rejected Alternatives
 
 1. **Plaintext or encrypted SQLite secret table** — violates Personal
    invariants and makes backup/export leak material.
-2. **Environment-variable or config-file Provider keys** — forbidden by plan
-   and redaction rules.
+2. **Ambient environment-variable or config-file Provider keys** — forbidden:
+   the P0-T06 exception permits only a fresh, explicit, initial-child injection
+   after native Secret Service resolution and is not a general environment-key
+   policy.
 3. **Using the ephemeral test double as a product fallback** — would silently
    weaken native-store guarantees.
 4. **Making Pi or CLI write secrets directly** — clients are non-authority and
