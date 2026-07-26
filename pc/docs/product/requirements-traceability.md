@@ -34,7 +34,7 @@
 - `not-applicable`：有绑定声明范围的理由；
 - `documented-degradation`：适用行为降级，必须同步收窄 scope/profile claim。
 
-Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/implemented/unsupported`。Windows v1 当前 Profile 为 `planned`；Console `not-implemented`；全局向量计数以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 vectors 60 `pass` / 25 `not-run`），但产品级端到端证据仍为 `none`。
+Profile 声明不属于 Evidence 档位，单独使用 `planned/experimental/implemented/unsupported`。Windows v1 当前 Profile 为 `planned`；Console `not-implemented`；全局向量计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 vectors 60 `pass` / 25 `not-run`），但产品级端到端证据仍为 `none`。
 
 macOS/Linux 平台专属产品要求使用独立 namespace，见 [桌面平台产品设计](../../README.md)。这些要求不进入 CognitiveOS normative registry；若平台行为缺少机器合同，必须标为 `missing/planned/blocked`。
 

@@ -2,7 +2,7 @@
 
 > 类别：plan（informative）｜ 日期：2026-07-20（2026-07-21 Phase 0 外部阻断回填）｜ owner：Lane-CON
 >
-> 登记开发风险与 blocker；与仓库 [findings-ledger](../../../docs/traceability/findings-ledger.md) 的关系：Agent Hub 特有风险在此，触碰全仓 F/IMP 时同步 ledger。
+> 登记开发风险与 blocker；与仓库 [findings-ledger](https://github.com/agentkernel/cognitive-os/blob/main/docs/traceability/findings-ledger.md) 的关系：Agent Hub 特有风险在此，触碰全仓 F/IMP 时同步 ledger。
 
 ## 风险
 

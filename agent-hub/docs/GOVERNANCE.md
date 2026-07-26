@@ -70,10 +70,10 @@ Direct Takeover 专用事实来源标签（不得升级为 authority）：`host-
 
 | 仓库机制 | Agent Hub 义务 |
 |---|---|
-| [docs/standards/docs-sync-contract.md](../../../docs/standards/docs-sync-contract.md) | 语义/结构型变更执行同批联动；本目录属产品文档分类，至少加漂移标注 |
-| [docs/plan/PROGRESS.md](../../../docs/plan/PROGRESS.md) | 里程碑状态回写全局 PROGRESS；本目录 progress.md 只记局部文档进度 |
-| [docs/traceability/findings-ledger.md](../../../docs/traceability/findings-ledger.md) | 触碰 F/IMP 或登记漂移时同步；本轮登记的计数漂移在此闭合 |
-| [docs/plan/PARALLEL-LANES.md](../../../docs/plan/PARALLEL-LANES.md) | 所有权与 gate 以 lane 表为准；不跨车道改他人 crate/package |
+| [docs/standards/docs-sync-contract.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md) | 语义/结构型变更执行同批联动；本目录属产品文档分类，至少加漂移标注 |
+| [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) | 里程碑状态回写全局 PROGRESS；本目录 progress.md 只记局部文档进度 |
+| [docs/traceability/findings-ledger.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/traceability/findings-ledger.md) | 触碰 F/IMP 或登记漂移时同步；本轮登记的计数漂移在此闭合 |
+| [docs/plan/PARALLEL-LANES.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md) | 所有权与 gate 以 lane 表为准；不跨车道改他人 crate/package |
 | `docs/checkpoints/*-handoff.md` | 会话结束写 handoff，作为跨会话唯一记忆载体 |
 
 ## 7. 实现 gate（不可跳过）

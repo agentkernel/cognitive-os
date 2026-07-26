@@ -12,7 +12,7 @@
 | CL-M4 Android remote companion | 受限远程 Console | `blocked` | Console gate + [Android PoC](../mobile/android/docs/android-product-design.md#18-open-poc-与-ga-gates) + Android ADR |
 | Agent Hub AH-M0..M6 | 见 Master plan | 全部 `blocked` | [Agent Hub 六类 gate](../agent-hub/docs/GOVERNANCE.md#7-实现-gate不可跳过)；里程碑定义见 [milestones](../agent-hub/plan/milestones.md) |
 
-CL-M* 是客户端域的本地编号（非全局里程碑）；全局 M0–M11 唯一定义在 [DEVELOPMENT-PLAN](../../docs/plan/DEVELOPMENT-PLAN.md)，状态唯一真相在 [PROGRESS](../../docs/plan/PROGRESS.md)。
+CL-M* 是客户端域的本地编号（非全局里程碑）；全局 M0–M11 唯一定义在 [DEVELOPMENT-PLAN](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/DEVELOPMENT-PLAN.md)，状态唯一真相在 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)。
 
 ## 当前可执行工作面（2026-07-26）
 

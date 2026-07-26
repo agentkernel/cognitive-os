@@ -10,7 +10,7 @@
 
 任何 Console 实现里程碑仍须同时满足：
 
-1. [DEVELOPMENT-PLAN Console 节](../../docs/plan/DEVELOPMENT-PLAN.md) 依赖组 1、2、7 已交付；
+1. [DEVELOPMENT-PLAN Console 节](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/DEVELOPMENT-PLAN.md) 依赖组 1、2、7 已交付；
 2. M5 出口评审通过；
 3. 目标平台文档的 Open PoC 与 GA gates 使用真实 API/真实 OS 行为完成并留下可复现实测证据（各平台入口见 §2）；
 4. 技术栈 ADR 已批准；
@@ -18,7 +18,7 @@
 
 在此之前，所有平台 Profile 均保持 `planned`，所有平台专属测试证据均为 `none`。
 
-**激活规则**：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 Open PoC/GA gate 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。Lane-CON 激活前 informative 文档例外（[PARALLEL-LANES §2.1](../../docs/plan/PARALLEL-LANES.md)）不改变此 gate。
+**激活规则**：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 Open PoC/GA gate 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。Lane-CON 激活前 informative 文档例外（[PARALLEL-LANES §2.1](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md)）不改变此 gate。
 
 ## 2. 各平台 PoC / GA gate 入口（迁移前现址）
 

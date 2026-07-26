@@ -17,7 +17,7 @@
 
 所有实现任务在以下任一 gate 未满足时保持 `blocked`（详见 [../GOVERNANCE.md](../GOVERNANCE.md#7-实现-gate不可跳过)）：
 
-1. Console 依赖组 1/2/7 未按 gate 条款完成客户端消费验收对账（状态见 [PROGRESS](../../../../docs/plan/PROGRESS.md)）；
+1. Console 依赖组 1/2/7 未按 gate 条款完成客户端消费验收对账（状态见 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)）；
 2. M5 出口未过（**2026-07-21 已过**，M0–M6 出口评审均通过；该分量满足不解除其余 gate）；
 3. 目标平台 Open PoC / GA gate 未用真实 API/OS 行为留证；
 4. 技术栈 ADR 未批准；

@@ -11,14 +11,14 @@
 
 事实边界：
 
-- 工程状态与实测计数以 [PROGRESS](../docs/plan/PROGRESS.md) 为准；本地 [plan/progress.md](plan/progress.md) 只记录客户端文档/结构的局部准备状态，不承载全局工程真相；
-- owner 与车道 gate 以 [PARALLEL-LANES](../docs/plan/PARALLEL-LANES.md) 为准；
-- 文档联动遵循 [docs-sync-contract](../docs/standards/docs-sync-contract.md) 与 [GOVERNANCE.md](GOVERNANCE.md)；
+- 工程状态与实测计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 为准；本地 [plan/progress.md](plan/progress.md) 只记录客户端文档/结构的局部准备状态，不承载全局工程真相；
+- owner 与车道 gate 以 [PARALLEL-LANES](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md) 为准；
+- 文档联动遵循 [docs-sync-contract](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md) 与 [GOVERNANCE.md](GOVERNANCE.md)；
 - Console 实现 gate 的 canonical 定义点是 [governance/readiness-gates.md](governance/readiness-gates.md#console-实现-gate)（B6 已迁入；旧 `docs/platforms/README.md` 为兼容 stub）；
 - Agent Hub 行为与保证以 [Agent Hub canonical 根](agent-hub/docs/README.md) 为准；
 - old→new 迁移对照与兼容 stub 清单以 [MIGRATION-MAP.md](MIGRATION-MAP.md) 为准；readiness 双结论以 [READINESS.md](READINESS.md) 为准。
 
-当前基准（要求/错误码/schema/迁移表/向量计数及 pass 分布）**不在本文件硬编码**，唯一实测真相见 [PROGRESS](../docs/plan/PROGRESS.md)（2026-07-26 快照：273 REQ、55 错误码、63 schema、5 迁移表、85 向量 60 `pass` / 25 `not-run`；M0–M6 出口评审均已通过，M6 为 GO-with-explicit-non-claim v0.1）。这些结果不构成客户端实现或平台 PoC 证据。Console 与手机 implementation 均为 `not-implemented`，平台 evidence 为 `none`，相关 Profile 为 `not implemented`。
+当前基准（要求/错误码/schema/迁移表/向量计数及 pass 分布）**不在本文件硬编码**，唯一实测真相见 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)（2026-07-26 快照：273 REQ、55 错误码、63 schema、5 迁移表、85 向量 60 `pass` / 25 `not-run`；M0–M6 出口评审均已通过，M6 为 GO-with-explicit-non-claim v0.1）。这些结果不构成客户端实现或平台 PoC 证据。Console 与手机 implementation 均为 `not-implemented`，平台 evidence 为 `none`，相关 Profile 为 `not implemented`。
 
 ## 0. 目录树概览
 
@@ -56,9 +56,9 @@ clients/
 | `clients/pc/app/` | PC | 保留的未来实现根；**无任何实现** | `blocked`；NO-GO 条件见 README | Lane-CON | [pc/app/README.md](pc/app/README.md) | 依赖组 1/2/7 + M5 + Windows 真实 PoC + 技术栈 ADR | 有 |
 | `clients/pc/docs/` | PC | Windows v1 产品文档与 macOS/Linux 平台切片的 canonical 文档域 | `planned`；implementation `not-implemented`；platform tests `none` | Lane-CON | [PC README](pc/README.md)；[Windows v1 范围](pc/docs/platforms/windows/windows-v1-scope.md) | Console 依赖组 1/2/7、M5 出口、真实平台 PoC、技术栈 ADR | 各专题由 pc/README 索引 |
 | `clients/pc/plan/` | PC | PC 里程碑与 roadmap 落位（B2 批迁入 roadmap） | `planned` | Lane-CON | [pc/plan/README.md](pc/plan/README.md) | Console 实现 gate | 有 |
-| `apps/agent-shell/` | PC | TypeScript Task Shell 客户端外壳；非 authority；**不迁移**（Lane-TSC 所有） | M5 前骨架与包内测试已提供；真实 server transport 集成仍 `blocked` | Lane-TSC | [package.json](../apps/agent-shell/package.json)；[源码入口](../apps/agent-shell/src/index.ts) | [Lane-TSC 当前 gate](../docs/plan/PARALLEL-LANES.md)；M5 RUN 集成 | 缺（待 Lane-TSC 补） |
+| `apps/agent-shell/` | PC | TypeScript Task Shell 客户端外壳；非 authority；**不迁移**（Lane-TSC 所有） | M5 前骨架与包内测试已提供；真实 server transport 集成仍 `blocked` | Lane-TSC | [package.json](https://github.com/agentkernel/cognitive-os/blob/main/apps/agent-shell/package.json)；[源码入口](https://github.com/agentkernel/cognitive-os/blob/main/apps/agent-shell/src/index.ts) | [Lane-TSC 当前 gate](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md)；M5 RUN 集成 | 缺（待 Lane-TSC 补） |
 
-`apps/cognitiveos-console/` 迁移后只保留 README 与 PRODUCT-DESIGN 兼容 stub（既有 §17/§20.3 与旧章节 anchor 全部保留）。Console 目录当前只有 Markdown 兼容入口，并由 [pnpm workspace](../pnpm-workspace.yaml) 排除；不得据此推断应用脚手架、运行时或发布包已经存在。`agent-shell` 已有 M5 前客户端能力，但仍不提供真实 server transport 或 authority 能力。
+`apps/cognitiveos-console/` 迁移后只保留 README 与 PRODUCT-DESIGN 兼容 stub（既有 §17/§20.3 与旧章节 anchor 全部保留）。Console 目录当前只有 Markdown 兼容入口，并由 [pnpm workspace](https://github.com/agentkernel/cognitive-os/blob/main/pnpm-workspace.yaml) 排除；不得据此推断应用脚手架、运行时或发布包已经存在。`agent-shell` 已有 M5 前客户端能力，但仍不提供真实 server transport 或 authority 能力。
 
 ## 3. 手机 companion（`clients/mobile/`）
 
@@ -83,10 +83,10 @@ clients/
 |---|---|---|---|---|---|---|---|
 | `clients/shared/` | 共享 | SDK/契约消费关系、身份/session、Relay、设计系统、安全隐私、遥测证据的共享说明域；不复制机器合同 | `planned`；文档域 | Lane-CON | [shared/README.md](shared/README.md) | 各消费方 gate | 有 |
 | `clients/shared/plan/` | 共享 | 共享域计划落位 | `planned` | Lane-CON | [shared/plan/README.md](shared/plan/README.md) | 各消费方 gate | 有 |
-| `packages/sdk-ts/` | 共享 | PC/未来手机消费的 TypeScript SDK；**不迁移**（Lane-TSC 所有） | 双通道、envelope、watch 等 M5 前能力与包内测试已提供；真实 HTTP/SSE 集成仍 `blocked` | Lane-TSC | [package.json](../packages/sdk-ts/package.json)；[源码入口](../packages/sdk-ts/src/index.ts) | [Lane-TSC gate](../docs/plan/PARALLEL-LANES.md)；M5 RUN 集成 | 缺（待 Lane-TSC 补） |
-| `packages/contracts-ts/` | 共享 | TypeScript 机器契约、canonical 编码、digest、projection 与生成绑定；**不迁移**（Lane-CTR 所有） | 实现已提供（包级合同能力）；REQ 级状态以 PROGRESS/matrix 为准；Profile `not implemented` | Lane-CTR | [API barrel](../packages/contracts-ts/src/index.ts)；[代码生成 ADR](../docs/adr/0006-code-generation-policy.md) | Lane-CTR 契约流程；M5 消费已登记 F-011/AKP 合同 | 缺（待 Lane-CTR 补） |
-| `packages/contracts-ts/src/generated/` | 共享 | 从 schema 生成的 TypeScript bindings；禁止手改 | 实现已提供（生成物）；conformance `not-run` | Lane-CTR | [generated barrel](../packages/contracts-ts/src/generated/index.ts)；[代码生成 ADR](../docs/adr/0006-code-generation-policy.md) | schema/codegen 同批一致性 gate | 缺（由 package/ADR 说明） |
-| `packages/contracts-ts/src/dev/` | 共享 | golden fixture 开发工具；不是客户端 runtime | 实现已提供（开发工具）；不构成客户端功能或 Profile 证据 | Lane-CTR | [fixture generator](../packages/contracts-ts/src/dev/generate-fixtures.ts)；[golden 说明](../tests/golden/README.md) | Lane-CTR golden/codegen gate | 缺（由 package/golden 说明） |
+| `packages/sdk-ts/` | 共享 | PC/未来手机消费的 TypeScript SDK；**不迁移**（Lane-TSC 所有） | 双通道、envelope、watch 等 M5 前能力与包内测试已提供；真实 HTTP/SSE 集成仍 `blocked` | Lane-TSC | [package.json](https://github.com/agentkernel/cognitive-os/blob/main/packages/sdk-ts/package.json)；[源码入口](https://github.com/agentkernel/cognitive-os/blob/main/packages/sdk-ts/src/index.ts) | [Lane-TSC gate](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md)；M5 RUN 集成 | 缺（待 Lane-TSC 补） |
+| `packages/contracts-ts/` | 共享 | TypeScript 机器契约、canonical 编码、digest、projection 与生成绑定；**不迁移**（Lane-CTR 所有） | 实现已提供（包级合同能力）；REQ 级状态以 PROGRESS/matrix 为准；Profile `not implemented` | Lane-CTR | [API barrel](https://github.com/agentkernel/cognitive-os/blob/main/packages/contracts-ts/src/index.ts)；[代码生成 ADR](https://github.com/agentkernel/cognitive-os/blob/main/docs/adr/0006-code-generation-policy.md) | Lane-CTR 契约流程；M5 消费已登记 F-011/AKP 合同 | 缺（待 Lane-CTR 补） |
+| `packages/contracts-ts/src/generated/` | 共享 | 从 schema 生成的 TypeScript bindings；禁止手改 | 实现已提供（生成物）；conformance `not-run` | Lane-CTR | [generated barrel](https://github.com/agentkernel/cognitive-os/blob/main/packages/contracts-ts/src/generated/index.ts)；[代码生成 ADR](https://github.com/agentkernel/cognitive-os/blob/main/docs/adr/0006-code-generation-policy.md) | schema/codegen 同批一致性 gate | 缺（由 package/ADR 说明） |
+| `packages/contracts-ts/src/dev/` | 共享 | golden fixture 开发工具；不是客户端 runtime | 实现已提供（开发工具）；不构成客户端功能或 Profile 证据 | Lane-CTR | [fixture generator](https://github.com/agentkernel/cognitive-os/blob/main/packages/contracts-ts/src/dev/generate-fixtures.ts)；[golden 说明](https://github.com/agentkernel/cognitive-os/blob/main/tests/golden/README.md) | Lane-CTR golden/codegen gate | 缺（由 package/golden 说明） |
 
 依赖方向固定为 `agent-shell → sdk-ts → contracts-ts`。SDK/客户端只能消费机器合同，不能自行重定义 authority 状态、授权、完成或 canonical digest 规则。canonical encoding/digest 只在 `specs/**` 与 `packages/contracts-ts`，`clients/shared/docs/` 只放消费侧说明。
 
@@ -102,7 +102,7 @@ clients/
 | `clients/prompts/` | 共享 | 客户端提示词索引（Agent Hub 提示词 B5 批迁入 `clients/agent-hub/prompts/`） | 索引 | Lane-CON | [prompts/README.md](prompts/README.md) | 对应 plan gate | 有 |
 | `clients/review/` | 共享 | 设计评审与评审产出（评审报告、评审版开发计划） | informative；不承载 gate/canonical 状态 | Lane-CON | [2026-07-26 设计评审](review/2026-07-26-clients-design-review.md) | 无（评审产出不解除任何 gate） | 由本行说明 |
 
-本地进度与全局 PROGRESS 的职责边界：`clients/plan/progress.md` 只记录客户端文档/结构状态，全局工程状态、里程碑与计数唯一真相是 [docs/plan/PROGRESS.md](../docs/plan/PROGRESS.md)。
+本地进度与全局 PROGRESS 的职责边界：`clients/plan/progress.md` 只记录客户端文档/结构状态，全局工程状态、里程碑与计数唯一真相是 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)。
 
 ## 6. Agent Hub（`clients/agent-hub/`）
 
@@ -122,22 +122,22 @@ Agent Hub 只有 **Direct Takeover** 与 **CognitiveOS Governed** 两种部署�
 ### 7.1 只想了解当前状态
 
 1. 本索引与 [READINESS.md](READINESS.md)；
-2. [PROGRESS](../docs/plan/PROGRESS.md)；
-3. [PARALLEL-LANES](../docs/plan/PARALLEL-LANES.md)。
+2. [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)；
+3. [PARALLEL-LANES](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md)。
 
 ### 7.2 PC Console 产品与平台
 
 1. [pc/README.md](pc/README.md)；
-2. [Console README](../apps/cognitiveos-console/README.md) 与 [PRODUCT-DESIGN](../apps/cognitiveos-console/PRODUCT-DESIGN.md)；
+2. [Console README](https://github.com/agentkernel/cognitive-os/blob/main/apps/cognitiveos-console/README.md) 与 [PRODUCT-DESIGN](https://github.com/agentkernel/cognitive-os/blob/main/apps/cognitiveos-console/PRODUCT-DESIGN.md)；
 3. [Windows v1 范围](pc/docs/platforms/windows/windows-v1-scope.md)；
 4. [客户端实现 gate](governance/readiness-gates.md#console-实现-gate) 与 [pc/docs/platforms 平台切片](pc/README.md)。
 
 ### 7.3 TypeScript Shell / SDK / 契约
 
-1. [shared/README.md](shared/README.md) 与 [Lane-TSC 提示词](../docs/prompts/lane-tsc.md)；
-2. [sdk-ts 入口](../packages/sdk-ts/src/index.ts)；
-3. [agent-shell 入口](../apps/agent-shell/src/index.ts)；
-4. [contracts-ts 入口](../packages/contracts-ts/src/index.ts) 与 [代码生成 ADR](../docs/adr/0006-code-generation-policy.md)。
+1. [shared/README.md](shared/README.md) 与 [Lane-TSC 提示词](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/lane-tsc.md)；
+2. [sdk-ts 入口](https://github.com/agentkernel/cognitive-os/blob/main/packages/sdk-ts/src/index.ts)；
+3. [agent-shell 入口](https://github.com/agentkernel/cognitive-os/blob/main/apps/agent-shell/src/index.ts)；
+4. [contracts-ts 入口](https://github.com/agentkernel/cognitive-os/blob/main/packages/contracts-ts/src/index.ts) 与 [代码生成 ADR](https://github.com/agentkernel/cognitive-os/blob/main/docs/adr/0006-code-generation-policy.md)。
 
 ### 7.4 手机 companion
 
@@ -161,7 +161,7 @@ Agent Hub 只有 **Direct Takeover** 与 **CognitiveOS Governed** 两种部署�
 
 ## 9. 持续维护与手动 gate
 
-持续维护由 [`.cursor/rules/16-client-directory-index.mdc`](../.cursor/rules/16-client-directory-index.mdc) 执行，并入 [docs-sync-contract](../docs/standards/docs-sync-contract.md)；任何目录、状态、owner、gate 或 canonical 入口变化必须同一 PR 更新本文件。
+持续维护由 [`.cursor/rules/16-client-directory-index.mdc`](https://github.com/agentkernel/cognitive-os/blob/main/.cursor/rules/16-client-directory-index.mdc) 执行，并入 [docs-sync-contract](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md)；任何目录、状态、owner、gate 或 canonical 入口变化必须同一 PR 更新本文件。
 
 自动化缺口登记：`tools/src/lib.mjs` 的 `SCAN_ROOTS` 与 `check-consistency.mjs` 的 `LIVING_SCOPES` 均不含 `clients/`，因此 `pnpm run check:consistency` **不扫描本目录**的链接、REQ 引用与结构。自动化后续任务登记为 `planned`：owner Lane-CFR（经所有权确认后修改 `tools/`），义务包含把 `clients/` 纳入扫描根、增加"真实路径、必填字段、唯一 canonical 与覆盖率"校验，并按 docs-sync-contract §5 完成一次注入演练。在该工具任务交付前，每个相关 PR 必须手动执行：
 

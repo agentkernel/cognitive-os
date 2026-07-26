@@ -2,7 +2,7 @@
 
 > 类别：informative pointer matrix ｜ owner：Lane-CON ｜ 日期：2026-07-20
 >
-> **权威唯一**：[PARALLEL-LANES §3 所有权表](../../docs/plan/PARALLEL-LANES.md#3-所有权表当前)。本文件只是指针矩阵，不复制、不另立事实；冲突时以 PARALLEL-LANES 为准。
+> **权威唯一**：[PARALLEL-LANES §3 所有权表](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md#3-所有权表当前)。本文件只是指针矩阵，不复制、不另立事实；冲突时以 PARALLEL-LANES 为准。
 
 | 域 | owner 车道 | 说明 |
 |---|---|---|

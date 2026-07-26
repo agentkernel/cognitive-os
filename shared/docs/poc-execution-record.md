@@ -9,7 +9,7 @@
 | 用途 | 路径 |
 |---|---|
 | 证据指针总索引 | [governance/evidence-index.md](../../governance/evidence-index.md) |
-| 结果五态 / digest 口径 | [conformance-evidence](../../../docs/standards/conformance-evidence.md)（`pass` / `fail` / `not-applicable` / `documented-degradation` + 报告级 `not-run`） |
+| 结果五态 / digest 口径 | [conformance-evidence](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/conformance-evidence.md)（`pass` / `fail` / `not-applicable` / `documented-degradation` + 报告级 `not-run`） |
 | Agent Hub 条目模板 | [agent-hub open-poc](../../agent-hub/docs/templates/open-poc.md) |
 | 共用测试策略 | [test-strategy.md](test-strategy.md) |
 

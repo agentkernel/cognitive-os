@@ -2,7 +2,7 @@
 
 > 类别：plan（局部）｜ owner：Lane-CON ｜ 最后更新：2026-07-21（PR #21 合入后解阻复核；gate 仍 blocked；进入等待上游）
 >
-> **职责边界**：本文件只记录 `clients/` 文档与结构的局部准备状态。全局工程状态、里程碑、REQ/向量计数、证据声明的唯一真相是 [docs/plan/PROGRESS.md](../../docs/plan/PROGRESS.md)；两者冲突时以全局 PROGRESS 为准。
+> **职责边界**：本文件只记录 `clients/` 文档与结构的局部准备状态。全局工程状态、里程碑、REQ/向量计数、证据声明的唯一真相是 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)；两者冲突时以全局 PROGRESS 为准。
 
 | 项 | 状态 |
 |---|---|
@@ -27,4 +27,4 @@
 | structure-ready | **yes**（见 [READINESS](../READINESS.md)） |
 | implementation-ready | **no / blocked**（见 [READINESS](../READINESS.md)；未改 yes） |
 
-客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；Agent Hub Open PoC = 28 not-run + 5 planned；全局向量计数以 [PROGRESS](../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`；M0–M6 出口评审已过，M6 GO-with-explicit-non-claim v0.1），但客户端平台证据仍为 `none`；Profile `not implemented`。Phase 0 文档准备已尽本地所能；剩余等待项：Console gate 依赖组 1/2/7 逐项对账留证 + 外部 PoC/ADR/法务。上游里程碑通过不构成客户端实现授权。
+客户端 implementation 均 `not-implemented`；平台/PoC evidence `none`；Agent Hub Open PoC = 28 not-run + 5 planned；全局向量计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`；M0–M6 出口评审已过，M6 GO-with-explicit-non-claim v0.1），但客户端平台证据仍为 `none`；Profile `not implemented`。Phase 0 文档准备已尽本地所能；剩余等待项：Console gate 依赖组 1/2/7 逐项对账留证 + 外部 PoC/ADR/法务。上游里程碑通过不构成客户端实现授权。

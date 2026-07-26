@@ -40,4 +40,4 @@ iOS 先行（IOS-POC-01..18 → iOS ADR → CL-M3），Android 随后（CL-M4）
 
 ## 里程碑对照与验收
 
-对照表、风险与度量沿用评审版 §6–§8，不在此复写。状态推进唯一回写点：本表状态列 + [PROGRESS](../../docs/plan/PROGRESS.md)（gate/readiness 结论变化时）。
+对照表、风险与度量沿用评审版 §6–§8，不在此复写。状态推进唯一回写点：本表状态列 + [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)（gate/readiness 结论变化时）。

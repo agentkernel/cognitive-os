@@ -9,4 +9,4 @@
   - [dependency-dag.md](dependency-dag.md)：依赖关系指针（Console 九组 + Agent Hub DAG）；
   - [risk-register.md](risk-register.md)：迁移与结构风险登记；
   - [progress.md](progress.md)：客户端文档/结构局部状态。
-- **边界**：全局工程状态唯一真相是 [docs/plan/PROGRESS.md](../../docs/plan/PROGRESS.md)；本目录不承载里程碑推进、REQ 计数或证据声明；排期不构成实现授权。
+- **边界**：全局工程状态唯一真相是 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)；本目录不承载里程碑推进、REQ 计数或证据声明；排期不构成实现授权。

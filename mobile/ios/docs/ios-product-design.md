@@ -18,7 +18,7 @@
 
 ### 0.1 当前工程事实
 
-- 规范已登记与向量计数以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26 快照：273 requirements、55 error codes、63 schemas、5 transition tables、85 vectors 60 `pass` / 25 `not-run`）；均不是 iOS 平台证据。
+- 规范已登记与向量计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26 快照：273 requirements、55 error codes、63 schemas、5 transition tables、85 vectors 60 `pass` / 25 `not-run`）；均不是 iOS 平台证据。
 - Console iOS implementation：`not-implemented`。
 - iOS simulator、真机、APNs、TestFlight、App Store、Custom App、MDM、VoiceOver、安全与恢复测试：`none`。
 - CognitiveOS Console iOS Profile：`planned`，未实现、未测试、未符合。

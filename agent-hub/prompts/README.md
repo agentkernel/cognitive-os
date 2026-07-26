@@ -6,7 +6,7 @@
 
 ## 使用
 
-1. 每份提示词已内联公共前缀（源头 [../common-prefix.md](../../../docs/prompts/common-prefix.md)）。
+1. 每份提示词已内联公共前缀（源头 [../common-prefix.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/common-prefix.md)）。
 2. 先读 canonical 文档（[clients/agent-hub/docs/README.md](../docs/README.md)）、Master 计划（[../../plan/agent-hub-development-plan.md](../plan/agent-hub-development-plan.md)）与对应车道计划。
 3. 确认 gate 状态；未过 gate 只做文档/核验，产出证据前不声明实现/测试/Profile。
 

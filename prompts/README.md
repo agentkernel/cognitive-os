@@ -6,9 +6,9 @@
 - **持续开发执行**：[continuous-development-execution.md](continuous-development-execution.md)——按 [development-plan](../plan/development-plan.md) 自主推进 Phase 0–4 的委托执行提示词（Owner 2026-07-26 授权自动 commit/push/merge；gate 纪律与 PoC 豁免边界内嵌）。
 - **Agent Hub 提示词**（已迁入）：[agent-hub/prompts/README.md](../agent-hub/prompts/README.md)——12 宏车道 + 6 Adapter，全部 `blocked`；唯一不违反 gate 的可推进项是接口一手核验（`AH-CTR-02` 类 informative 工作）。
 - **留在 `docs/prompts/` 的 Console/车道提示词**（不迁移，此处只索引）：
-  - [lane-con.md](../../docs/prompts/lane-con.md)：Lane-CON 车道占位提示词；
-  - [console-agent-hub-direct-mode-product-design.md](../../docs/prompts/console-agent-hub-direct-mode-product-design.md)（已执行）；
-  - [console-client-directory-index-and-maintenance.md](../../docs/prompts/console-client-directory-index-and-maintenance.md)（已执行）；
-  - [console-client-project-foundation-and-doc-migration.md](../../docs/prompts/console-client-project-foundation-and-doc-migration.md)（本次迁移任务规范）；
-  - [console-mobile-platform-product-design.md](../../docs/prompts/console-mobile-platform-product-design.md)（已执行）。
+  - [lane-con.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/lane-con.md)：Lane-CON 车道占位提示词；
+  - [console-agent-hub-direct-mode-product-design.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/console-agent-hub-direct-mode-product-design.md)（已执行）；
+  - [console-client-directory-index-and-maintenance.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/console-client-directory-index-and-maintenance.md)（已执行）；
+  - [console-client-project-foundation-and-doc-migration.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/console-client-project-foundation-and-doc-migration.md)（本次迁移任务规范）；
+  - [console-mobile-platform-product-design.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/prompts/console-mobile-platform-product-design.md)（已执行）。
 - **边界**：`blocked` 提示词在 gate 解阻前不得启动编码或 mock；提示词执行状态以各文件自述与 PROGRESS 为准。

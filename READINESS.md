@@ -38,7 +38,7 @@ blocked-by:
   - PC/iOS/Android 技术栈 ADR 不存在（Tauri 2 + React/TS 仅为候选；[tech-stack-comparison](pc/docs/architecture/tech-stack-comparison.md) 为非正式比较草案，非 ADR）
   - Agent Hub Paseo/AGPL 法务 gate 未过（POC-LIC-001/002/003 全部 not-run；评估材料已整理，法务评估未执行）
   - Agent Hub Tier 1 runtime/PoC 未闭合（AH-CTR-02 文档级六 provider 一手已回填；Hermes 指认 decided；Adapter 实现仍 blocked，待 PoC + 条款 + 后端/ADR）
-  - 向量计数以 [PROGRESS](../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 向量 60 pass / 25 not-run）；已执行证据不覆盖客户端平台行为，Profile 已符合计数仍为 0
+  - 向量计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 向量 60 pass / 25 not-run）；已执行证据不覆盖客户端平台行为，Profile 已符合计数仍为 0
   - 规则明令 gate 前禁实现（PARALLEL-LANES §2.1、.cursor/rules/16、.cursor/rules/17、readiness-gates canonical；唯一豁免=CLIENTS-DEC-002 的 PoC 证据采集代码，落位仓库根 poc/，不解除任何 gate）
   - 21 项威胁已规范登记，oracle/evidence 全 not-run（非「威胁项实测」）；新 planned PoC：POC-HOST-001/TERM-003/PROC-005/RELAY-005/GOV-001
   - 五平台 + Agent Hub PoC 执行手册/模板已提供（informative）；**零执行**，不得当作 pass
@@ -53,6 +53,6 @@ next-unblock:
 ## 3. 自动化缺口登记
 
 - `tools/src/lib.mjs` `SCAN_ROOTS` 与 `tools/src/check-consistency.mjs` `LIVING_SCOPES` 均不含 `clients/`：`pnpm run check:consistency` 不校验 `clients/**` 的链接、REQ 引用、结构与覆盖率。
-- 自动化任务：owner **Lane-CFR**，状态 `planned`；范围=把 `clients/` 纳入扫描根 + 目录索引"真实路径、必填字段、唯一 canonical、覆盖率"校验；按 [docs-sync-contract §5](../docs/standards/docs-sync-contract.md) 修改检查器必须附注入演练输出。
+- 自动化任务：owner **Lane-CFR**，状态 `planned`；范围=把 `clients/` 纳入扫描根 + 目录索引"真实路径、必填字段、唯一 canonical、覆盖率"校验；按 [docs-sync-contract §5](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md) 修改检查器必须附注入演练输出。
 - 交付前手动 gate 生效：每个触碰 `clients/**` 的 PR 按 [clients/README.md §9](README.md#9-持续维护与手动-gate) 手动核对路径/链接/anchor/必填字段，并运行 `check:consistency` + `git diff --check`。
 - 静态检查只能证明目录/链接/追踪一致，不能写成客户端实现、平台 PoC、向量执行或 Profile 证据。

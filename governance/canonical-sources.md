@@ -20,6 +20,6 @@
 | 客户端实现 gate | `clients/governance/readiness-gates.md` | [readiness-gates](readiness-gates.md#console-实现-gate) | B6（已落位） |
 | 客户端结构决策（`CLIENTS-DEC-*`） | `clients/governance/decision-log.md` | [decision-log.md](decision-log.md) | B1（已落位） |
 | readiness 双结论 | `clients/READINESS.md` | [READINESS.md](../READINESS.md) | B1（已落位） |
-| 机器合同（REQ/错误码/schema/transition/vector） | `specs/**`、`conformance/**`（**不在 clients**） | [specs registry](../../specs/registry/requirements.yaml) | 不迁移 |
+| 机器合同（REQ/错误码/schema/transition/vector） | `specs/**`、`conformance/**`（**不在 clients**） | [specs registry](https://github.com/agentkernel/cognitive-os/blob/main/specs/registry/requirements.yaml) | 不迁移 |
 
 一个文件同时拥有多域职责时，先在本表决定唯一 owner 域，再迁移或拆成"canonical 正文 + 薄引用"，不得复制正文。

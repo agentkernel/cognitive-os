@@ -6,7 +6,7 @@
 >
 > Current state：`planned / implementation not-implemented / platform evidence none / Profile not implemented`；全局 conformance 分布见 PROGRESS，不构成移动证据
 >
-> 规范快照以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：`273 REQ / 55 errors / 63 schemas / 5 transitions / 85 vectors`）
+> 规范快照以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：`273 REQ / 55 errors / 63 schemas / 5 transitions / 85 vectors`）
 
 本文只索引已经冻结的 iPhone v1 与 Android phone v1 产品方向。它不新增或修改 requirement、error code、schema、transition、conformance vector 或 Profile，也不把 accepted product direction 写成实现、测试、平台证据或符合性事实。
 

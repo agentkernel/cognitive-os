@@ -2,7 +2,7 @@
 
 > 类别：informative governance ｜ 日期：2026-07-20；2026-07-26 评审优化（§4 计数指针规则、§8 文档系统地图） ｜ owner：Lane-CON（治理文件由 Lane-DOC 协作）
 
-本文件定义 `clients/` 客户端项目根的 canonical 唯一性、状态用语、owner 权威、文档联动、deprecated/superseded 与 ID 规则。它不产生 CognitiveOS 规范要求，也不替代 [AGENTS.md](../AGENTS.md)、[PARALLEL-LANES](../docs/plan/PARALLEL-LANES.md) 或 [docs-sync-contract](../docs/standards/docs-sync-contract.md)。
+本文件定义 `clients/` 客户端项目根的 canonical 唯一性、状态用语、owner 权威、文档联动、deprecated/superseded 与 ID 规则。它不产生 CognitiveOS 规范要求，也不替代 [AGENTS.md](https://github.com/agentkernel/cognitive-os/blob/main/AGENTS.md)、[PARALLEL-LANES](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md) 或 [docs-sync-contract](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md)。
 
 ## 1. canonical 唯一性
 
@@ -13,7 +13,7 @@
 
 ## 2. 四类状态用语
 
-状态口径与 [AGENTS.md](../AGENTS.md) 四类状态用语表完全一致，不得互相替代：
+状态口径与 [AGENTS.md](https://github.com/agentkernel/cognitive-os/blob/main/AGENTS.md) 四类状态用语表完全一致，不得互相替代：
 
 1. 规范已登记（specified）：REQ/schema/vector/transition 在机器资产中存在；
 2. 实现已提供（implementation available）：适用代码存在且可构建；
@@ -24,13 +24,13 @@
 
 ## 3. owner 权威
 
-- owner 与车道 gate 的唯一权威是 [PARALLEL-LANES §3 所有权表](../docs/plan/PARALLEL-LANES.md#3-所有权表当前)；[governance/ownership.md](governance/ownership.md) 只是指针矩阵，不复制、不另立事实。
+- owner 与车道 gate 的唯一权威是 [PARALLEL-LANES §3 所有权表](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md#3-所有权表当前)；[governance/ownership.md](governance/ownership.md) 只是指针矩阵，不复制、不另立事实。
 - `clients/**` 文档域归 Lane-CON（治理由 Lane-DOC 协作）。`apps/agent-shell`、`packages/sdk-ts` 归 Lane-TSC，`packages/contracts-ts` 归 Lane-CTR，`tools/` 归 Lane-CFR；未经所属车道批准不移动、不改写。
 - 接口变更只能经 Lane-CTR 契约流程；`clients/` 文档发现契约缺口时登记 findings-ledger 并通告对应车道，不代替登记。
 
 ## 4. docs-sync 并入声明
 
-`clients/**` 全部文档并入 [docs-sync-contract](../docs/standards/docs-sync-contract.md) 的三分类联动义务：
+`clients/**` 全部文档并入 [docs-sync-contract](https://github.com/agentkernel/cognitive-os/blob/main/docs/standards/docs-sync-contract.md) 的三分类联动义务：
 
 - 修正型（typo/断链/计数）：改动本体 + 提交说明注明；
 - 语义型（状态、gate、边界、canonical 职责变化）：同批更新 `clients/README.md` 索引行、受影响 README、[READINESS.md](READINESS.md)、PROGRESS 与相关 stub；
@@ -38,7 +38,7 @@
 
 `.cursor/rules/16-client-directory-index.mdc` 的同批义务与手动 gate（[clients/README.md §9](README.md#9-持续维护与手动-gate)）全程适用。`pnpm run check:consistency` 当前不扫 `clients/`（自动化缺口登记见该 §9 与 READINESS），交付前以手动链接检查代偿。
 
-**计数指针规则（2026-07-26 起）**：全局计数（REQ/错误码/schema/迁移表/向量数及 pass 分布）与里程碑状态**禁止在 `clients/**` 硬编码为裸数值**；必须写成指向 [PROGRESS](../docs/plan/PROGRESS.md) 的指针句，如需快照必须带日期（"2026-07-26 快照：…"）并声明以 PROGRESS 实测为准。历史教训：2026-07-26 评审发现旧计数在 ≥12 处复写、集体失真（design review P0-3）。
+**计数指针规则（2026-07-26 起）**：全局计数（REQ/错误码/schema/迁移表/向量数及 pass 分布）与里程碑状态**禁止在 `clients/**` 硬编码为裸数值**；必须写成指向 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 的指针句，如需快照必须带日期（"2026-07-26 快照：…"）并声明以 PROGRESS 实测为准。历史教训：2026-07-26 评审发现旧计数在 ≥12 处复写、集体失真（design review P0-3）。
 
 ## 5. deprecated / superseded 规则
 
@@ -58,7 +58,7 @@
 
 ## 7. 本地进度与全局 PROGRESS 边界
 
-- 全局工程状态、里程碑、计数的唯一真相是 [docs/plan/PROGRESS.md](../docs/plan/PROGRESS.md)；
+- 全局工程状态、里程碑、计数的唯一真相是 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md)；
 - [plan/progress.md](plan/progress.md) 只记录客户端文档/结构的局部准备状态，不承载里程碑推进、REQ 计数或证据声明；
 - 状态变化（gate 过/不过、readiness 结论变化）必须回写全局 PROGRESS 并按会话协议写 handoff。
 

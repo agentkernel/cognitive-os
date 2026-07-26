@@ -4,7 +4,7 @@
 >
 > canonical 状态：`planned / implementation not-implemented / platform tests none / Profile not implemented`
 >
-> 查询基准日：2026-07-26 ｜ 规范快照以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：273 REQ / 55 error codes / 63 schemas / 5 transitions / 85 vectors 60 `pass` / 25 `not-run`；不构成 Agent Hub 平台证据）
+> 查询基准日：2026-07-26 ｜ 规范快照以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：273 REQ / 55 error codes / 63 schemas / 5 transitions / 85 vectors 60 `pass` / 25 `not-run`；不构成 Agent Hub 平台证据）
 
 本目录是 CognitiveOS Console **Agent Hub** 的 canonical 产品/架构/安全/研究/追踪文档根。Agent Hub 只存在两种部署模式：**Direct Takeover（直连接管）** 与 **CognitiveOS Governed（完整治理）**；不存在只有 `cognitive-kernel` 的中间模式。
 
@@ -21,7 +21,7 @@
 5. 具体专题文档；
 6. [planning/README.md](./planning/README.md)（开发计划、DAG、进度、提示词入口）。
 
-工程里程碑真相仍以全局 [docs/plan/PROGRESS.md](../../../docs/plan/PROGRESS.md) 为准；本目录的 [progress.md](./progress.md) 只维护 Agent Hub 局部文档进度，不与全局 PROGRESS 平行演化。
+工程里程碑真相仍以全局 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 为准；本目录的 [progress.md](./progress.md) 只维护 Agent Hub 局部文档进度，不与全局 PROGRESS 平行演化。
 
 ## 2. 文档地图
 
@@ -82,15 +82,15 @@
 - machine contract：Direct Takeover carrier 多数 `product-only / unregistered`；Governed 复用既有部分登记合同但关键 carrier 仍缺失。
 - implementation：`not-implemented`。
 - platform / PoC evidence：`none`。
-- 既有 conformance vectors：计数以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub 平台或实现证据。
+- 既有 conformance vectors：计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub 平台或实现证据。
 - Console/Host/Adapter/Relay/Vault/移动 Profile：`not implemented`。
 
 文档存在、schema 存在、vector 被枚举或产品方向被批准，都不构成实现、测试或符合性证据。
 
 ## 4. 上游依赖入口
 
-- Console v2 基线：[apps/cognitiveos-console/PRODUCT-DESIGN.md](../../../apps/cognitiveos-console/PRODUCT-DESIGN.md)（§17/§20.3 anchor 保持不变）。
+- Console v2 基线：[apps/cognitiveos-console/PRODUCT-DESIGN.md](https://github.com/agentkernel/cognitive-os/blob/main/apps/cognitiveos-console/PRODUCT-DESIGN.md)（§17/§20.3 anchor 保持不变）。
 - 平台产品设计：[clients/README.md](../../README.md)（PC/mobile 平台文档域）。
 - Console 实现 gate：[clients/governance/readiness-gates.md#console-实现-gate](../../governance/readiness-gates.md#console-实现-gate)。
 - 开发计划入口：[clients/agent-hub/plan/agent-hub-development-plan.md](../plan/agent-hub-development-plan.md)。
-- 车道机制：[docs/plan/PARALLEL-LANES.md](../../../docs/plan/PARALLEL-LANES.md)。
+- 车道机制：[docs/plan/PARALLEL-LANES.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PARALLEL-LANES.md)。

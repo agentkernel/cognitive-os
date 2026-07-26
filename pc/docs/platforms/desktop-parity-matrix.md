@@ -140,7 +140,7 @@ Windows v1 的 `CONSOLE-V2-*`、legacy `CONSOLE-PRD-*`/`A-*` 映射，以及 `PR
 
 共同阻断：
 
-- Console 依赖组 1/2/7 的客户端消费验收尚未按 gate 条款逐项对账留证（M0–M6 出口评审已过，以 [PROGRESS](../../../../docs/plan/PROGRESS.md) 为准）；
+- Console 依赖组 1/2/7 的客户端消费验收尚未按 gate 条款逐项对账留证（M0–M6 出口评审已过，以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 为准）；
 - supervision lease、claim、readiness、notification、platform update 等 machine contract 未登记；
 - Console implementation 未提供；
 - 向量计数以 PROGRESS 实测为准（2026-07-26：85 向量 60 `pass` / 25 `not-run`），但桌面平台产品测试 evidence 仍为 `none`；

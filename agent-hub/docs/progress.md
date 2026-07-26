@@ -2,7 +2,7 @@
 
 > 类别：informative ｜ 日期：2026-07-20 ｜ owner：Lane-CON
 >
-> 本页只跟踪 Agent Hub **文档** 交付进度。工程里程碑与实现状态真相以全局 [docs/plan/PROGRESS.md](../../../docs/plan/PROGRESS.md) 为准；不得在此声明实现、测试或 Profile 状态。
+> 本页只跟踪 Agent Hub **文档** 交付进度。工程里程碑与实现状态真相以全局 [docs/plan/PROGRESS.md](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 为准；不得在此声明实现、测试或 Profile 状态。
 
 ## 1. 文档交付状态
 
@@ -25,7 +25,7 @@
 
 - Console/Agent Hub implementation：`not-implemented`。
 - platform / PoC evidence：`none`。
-- 既有 conformance vectors：计数以 [PROGRESS](../../../docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub implementation 或平台证据。
+- 既有 conformance vectors：计数以 [PROGRESS](https://github.com/agentkernel/cognitive-os/blob/main/docs/plan/PROGRESS.md) 实测为准（2026-07-26：85 份 60 `pass` / 25 `not-run`）；不构成 Agent Hub implementation 或平台证据。
 - Direct Takeover / Governed Profile：`not implemented`。
 
 ## 3. 更新规则
