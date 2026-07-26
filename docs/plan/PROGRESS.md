@@ -5,7 +5,63 @@
 > 2026-07-24 carrier 批：KRN 已为 existing installation staging/commit record 加入 Custom source acknowledgement evidence，并以同一 SQLite 事务持久化；RUN 的 manager-only query 与 CLI 输出均读取 committed evidence。该批仍须两平台 CI，且不改变官方 provenance、Linux sandbox、Pi adapter、恢复战役、PERF 或 Profile non-claim。
 > 2026-07-24 Pi P4 pre-launch admission 批（`lane/run-pi-batch1`）：新增显式 Windows-native/WSL2 拒绝，且 Linux-host admission 必须精确绑定有效 policy、sandbox adapter、compatibility digest、healthy registered adapter 及 HTTPS DeepSeek egress proxy；permit 不携带 authority/capability/Effect/Task completion，仓库未提供可启动 Pi 的 permissive adapter。WSL2 guest 诊断 runtime tests **52/52** + runtime clippy passed；Windows 本机 MinGW linker error 121，未形成 Windows test pass。没有 Linux-native evidence、F-017 扩大声明、Profile claim 或 release GO。
 
+> 2026-07-26 V01 cross-platform evidence repair：POSIX 与 Windows 编排器均尊重
+> `CARGO_TARGET_DIR`，使用完整 Rust test path 执行 PERF-004（避免 `--exact` 命中 0
+> 个测试仍 exit 0），并复用 conformance runner 生成的完整 schema-shaped builder
+> report；两者都验证 release-candidate manifest 的本地 evidence graph，再复制
+> `performance-report-v01-sample.json`。repo-tools 新增脚本对齐测试。WSL focused
+> evidence：`pi-agent-adapter` **20 substantive tests passed**，PERF-004 exact
+> unit **1 passed**，
+> conformance runner **85 vectors: 60 pass / 25 not-run**；均为 local/builder
+> evidence，不是 Profile、release 或 measured campaign。随后受支持的 WSL/POSIX
+> `verify:local` 全流程以独立 Cargo target 完成：**exit 0 / L3 /
+> stopped=false / release=non_claim_preserved**；manifest、pins、self-check、F-017
+> freeze 与 PERF-004 均 `auto_pass`，`profile_implemented=0`，平台标签保持
+> `windows_wsl2_linux_guest`。编排器还解析 PERF exact 日志确认真实
+> `1 passed; 0 failed`；该结果仍不构成 Windows-native/Linux-native sandbox、
+> Profile、release 或 campaign evidence。
+> Pi real-load 预检随后确认当前 guest 为 WSL2，不能使用 Linux-native secret
+> exception；adapter 已在选择/probe Secret Service 前显式拒绝 WSL、Windows 与
+> enabled CI，更新后的 WSL suite **20 substantive tests passed**。当前 guest 无独立
+> `pi` executable，因而未解析 credential、未启动 Pi、未生成 Extension load evidence。
+
+> 2026-07-26 P2 卡扩写批：`plan.md` 的 P2-T01..P2-T08 压缩卡已按 §11.1 扩写为
+> 完整强制字段集（范围/依赖/验收语义与任务状态零变更，仅补字段、仓库锚点与
+> ADR-0026/0018 等既有决策引用）。该批原停留在工作树且 §15.2 全部 not-run
+> （当时会话沙箱无 shell）；已于本日随下述工具链恢复批一并落盘并真实执行验证。
+> Owner 待办一次性清单见
+> [20260726-personal-p2-cards-expansion-handoff.md](../checkpoints/20260726-personal-p2-cards-expansion-handoff.md)
+> §5（沙箱磁盘项已随环境恢复消解；既有：hal9000 SSH、Linux-native DeepSeek
+> key、干净 Linux VM）。本批非 Gate/Profile/release 声明。
+
+> 2026-07-26 本机 Linux 工具链恢复与工作树落盘批：此前多个窗口把"无 shell /
+> Windows GNU linker exit 121"当作本机不可测试的既定条件。本窗口在 WSL2 guest
+> 内安装了与 `rust-toolchain.toml` 一致的 **Linux-native Rust 1.97.1**、Node
+> 22.14.0 与 pnpm 10.33.2，本机因此首次可以完整执行受支持的测试面。实测结果
+> （均为 `windows_wsl2_linux_guest` 本机执行，非 CI、非 Linux-native Gate 证据）：
+> `cargo test --workspace --locked` **358 passed / 0 failed（67 个 suite）**、
+> `cargo clippy --workspace --all-targets --locked -- -D warnings` 通过、
+> `cargo fmt --all -- --check` 通过、`pnpm -r build` 通过、`pnpm -r test` 通过、
+> `pnpm run check:consistency` OK（273 REQ / 55 码 / 63 schema / 85 向量）。
+> 该批只改变"本机能否执行测试"这一环境事实，**不改变** 任何 Gate、Profile、
+> release、G0/B01-B12 结论，也不把 WSL2 结果升级为 Linux-native evidence。
+
+> 2026-07-26 客户端文档域仓库拆分（owner 执行）：`clients/` 整体迁出至独立仓库
+> [agentkernel/cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)
+> （保留 subtree 历史，外仓根对应原 `clients/` 目录）。本仓已删除 155 个
+> `clients/**` 文件，所有跨仓引用改为 `blob/main/<path>` URL，并修复由此产生的
+> 9 条断链；`docs/clients/`、`docs/platforms/`、`apps/cognitiveos-console/` 兼容
+> stub 保留。ADR-0007、CLIENTS-DEC-001 与 2026-07-20 Lane-CON 例外作为历史记录
+> 注记保留而非删除。本批不改变任何 Gate、readiness、Profile 或 release 结论。
+
 ## 里程碑状态
+
+> 2026-07-26 evidence foundation batch：POSIX V01 pins 已与实测 `85/60/25` 和
+> self-check `41` 对齐；conformance runner 现在写出 schema-valid builder sample，
+> manifest validator 验证本地 result/report 引用及 digest。该批仍是 builder/sample
+> evidence，不是 measured campaign；`verify:local` 现在将 manifest/evidence graph
+> 校验作为 L2 必需项；Personal 后续阶段可在本机或隔离环境以
+> `experimental-local-only` 开发，不改变产品 Gate、Profile 或 release 状态。
 
 | 里程碑 | 状态 | 出口评审 | 备注 |
 |---|---|---|---|
@@ -24,7 +80,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **P0-T06 in-progress；P0-T01..T05/T07 + P1-T01..T06 done；无 Profile 声明** | P0-T06 的 Extension fixture 拒绝 project trust、拦截 write/edit/bash、仅设置 session-local status；WSL targeted test 7 passed。ADR-0018 临时例外已使 native-store-to-initial-Pi-child 开发路径默认拒绝、显式开启、Linux-only 且 P2 到期；实际 Extension session/RPC load evidence 仍未获得，integrity/source provenance verifier 仍归 Pi P2。Personal Gate/B01-B12 仍 `not-run`；**G0 仍待 P0-T06 全部验收**。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **P0-T06 in-progress；P0-T01..T05/T07 + P1-T01..T06 done；无 Profile 声明** | P0-T06 的 Extension fixture 拒绝 project trust、拦截 write/edit/bash、仅设置 session-local status；WSL targeted test 7 passed。ADR-0018 临时例外已使 native-store-to-initial-Pi-child 开发路径默认拒绝、显式开启、Linux-only 且 P2 到期；相和歌设备 `hal9000@192.168.1.2` 已登记为后续 Linux-native `experimental-local-only` SSH 主机，但当前仅是规划元数据，不是已执行 evidence。实际 Extension session/RPC load evidence 仍未获得，integrity/source provenance verifier 仍归 Pi P2。Personal Gate/B01-B12 仍 `not-run`；**G0 仍待 P0-T06 全部验收**。2026-07-26 计划一致性修订：新增 P7-T07（Windows 安装面与专门 B01-W Gate 归宿，PERS-PR-021）、P2-T08 验收增补 ADR-0018 例外到期核查、`plan.md` 状态行改指台账并修正依赖图/critical path/DEC-P-* 编号；不改变任何 Gate/证据结论。2026-07-26 生产就绪与低摩擦授权批：ADR-0026 落地 DEC-P-20 trust profile（Tier 0/1/2、准入预览唯一默认授权点、预算硬轨、不建审批链），仅增补 not-started 任务验收（P1-T09/P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02，含面向用户 backup/restore），新增 PERS-PR-022/023；不改变任何 Gate/证据结论。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
@@ -69,26 +125,28 @@
 | Personal P1-T05 | **readiness/status/doctor done（PR #97 CI green）** | `lane/personal-p1-t05-readiness-doctor` | CI runs 30164114878 + 30164113787 Ubuntu/Windows-MSVC success；ADR-0023；blocked/degraded/ready + auth；非 G0/Profile claim |
 | Personal P1-T06 | **cognitive CLI done（PR #98 CI green）** | `main` @ `adbb0e5` | CI run 30167503487 Ubuntu/Windows-MSVC success；ADR-0024；非 G0/Profile claim |
 | Personal P0-T03 | **License/platform/distribution decision done（PR #99 CI green）** | `main` @ `fd6ff6b` | CI runs 30180002937 + 30179991223 Ubuntu/Windows-MSVC success；ADR-0025；非 G0/Profile claim |
-| Personal P0-T06 | **Pi Extension fixture + local development secret exception in progress** | `lane/run-personal-p0-t06-extension-poc` | Pi 0.81.1 Extension fixture rejects project trust, blocks write/edit/bash at tool_call, and sets session-local status. Owner-approved native-store delivery requires exact CLI opt-in, separate Provider config dir, DeepSeek-only config, Linux native backend, and expires at P2; Windows/CI fail closed. Isolated session/RPC and provenance work remain pending; no G0/Profile claim. |
+| Personal P0-T06 | **Pi Extension fixture + `extension-load` evidence mode + local development secret exception in progress** | `lane/doc-clients-extraction-and-personal-p0-t06` | Pi 0.81.1 Extension fixture rejects project trust, blocks write/edit/bash at tool_call, and sets session-local status. The adapter now also exposes a pinned-fixture-only `extension-load` verb that drives a real RPC session and emits a redacted, candidate-only evidence record. Owner-approved native-store delivery requires exact CLI opt-in, separate Provider config dir, DeepSeek-only config, Linux native backend, and expires at P2; WSL2/Windows/CI fail closed. **The `extension-load` verb has therefore not been executed anywhere yet** — this host is a WSL2 guest and is explicitly ineligible. Isolated session/RPC load evidence and provenance work remain pending; no G0/Profile claim. |
 | Lane-TSC TS 客户端 | **M5 HTTP/SSE 已交付**（PR #28） | `lane/tsc` | proposal/preview/submit 完整 HTTP 面增量（计划标 P2）；channel isolation 已由 RUN+CFR 补 authority 证据 |
 | Lane-RUN 运行时与管理面 | **Pi P4 fail-closed pre-launch admission merged (PR #83)** | `main` @ `937e727` | Custom CLI/durable evidence baseline remains; Pi P4 additionally refuses Windows-native/WSL2 and requires Linux host + valid exact policy/adapter/compatibility digests + healthy registered adapter + HTTPS DeepSeek proxy. No Pi process/authority/Effect/Task completion path exists. WSL2 guest tests 52/52 + clippy pass; Windows local linker blocked; Linux-native evidence, official provenance, lifecycle/I/O adapter and cross-process lease remain pending. |
 | Lane-DOC 文档维护 | **ADR-0015 complexity boundary accepted** | `lane/doc-product-complexity-boundary` | Ordinary Core remains the default product range; strict independent AUDIT/SIG/TARGET work is High-Assurance deferred/tracking. This changes priority only, never factual D-016/D-022 or Profile gates. |
-| Lane-CON Console | tracking-only | — | M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked；计划明确 tracking-only |
+| Lane-CON Console | tracking-only（文档域已迁出本仓） | — | 客户端文档域 2026-07-26 迁至独立仓库 [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)；本仓只余 `apps/cognitiveos-console/`、`docs/platforms/`、`docs/clients/` 兼容 stub。M5 GO 后可复评 gate；仍缺 PoC/ADR；implementation-ready blocked |
 
 ## 最近 handoff / 评审（最多列 3 条，新的在上）
 
-1. [20260726-personal-p0-t06-pi-compat-handoff.md](../checkpoints/20260726-personal-p0-t06-pi-compat-handoff.md)（Personal：P0-T06 version/RPC 第一个原子部分；任务仍 in-progress；非 Gate/Profile）
-2. [20260726-personal-p0-t03-license-platform-distribution-handoff.md](../checkpoints/20260726-personal-p0-t03-license-platform-distribution-handoff.md)（Personal：P0-T03 License/平台/分发 owner GO；非 Gate/Profile）
-1. [20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)（Personal：P1-T06 cognitive CLI done；CI 30167503487 green；非 Gate/Profile）
-2. [20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)（Personal：P1-T05 readiness/status/doctor done；CI 30164114878 green；非 Gate/Profile）
-2. [20260725-personal-p1-t04-timeout-concurrency-handoff.md](../checkpoints/20260725-personal-p1-t04-timeout-concurrency-handoff.md)（Personal：P1-T04 timeout/concurrency done；CI 30162481713 green；非 Gate/Profile）
-3. [20260725-personal-p1-t04-bounded-daemon-handoff.md](../checkpoints/20260725-personal-p1-t04-bounded-daemon-handoff.md)（Personal：P1-T04 bounded daemon/local auth；PR #95；非 Gate/Profile）
+1. [20260726-toolchain-recovery-and-worktree-landing-handoff.md](../checkpoints/20260726-toolchain-recovery-and-worktree-landing-handoff.md)（本机 Linux 工具链恢复、工作树两批落盘、clients 仓库拆分收口；实测 358 Rust tests passed；非 Gate/Profile）
+2. [20260726-personal-p2-cards-expansion-handoff.md](../checkpoints/20260726-personal-p2-cards-expansion-handoff.md)（Personal：P2 卡 §11.1 扩写 docs-only 批；已随本日批落盘；含 owner 待办清单；非 Gate/Profile）
+3. [20260726-personal-p0-t06-extension-poc-handoff.md](../checkpoints/20260726-personal-p0-t06-extension-poc-handoff.md)（Personal：P0-T06 Extension fixture + ADR-0018 本机开发例外；任务仍 in-progress；非 Gate/Profile）
 
 ## 客户端目录治理交付
 
+> **2026-07-26 仓库拆分：** 客户端文档域已整体迁出至独立仓库
+> [agentkernel/cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)；
+> 本仓不再包含 `clients/` 目录，也不得重建。下表是**迁出前**的交付与结论记录，
+> 其后续维护责任归外仓；本仓只保留兼容 stub 与跨仓指针。readiness 结论本身未变。
+
 | 交付 | 状态 | 证据与入口 |
 |---|---|---|
-| 客户端项目根与 canonical 索引 | **done（informative 文档；结构迁移完成）** | canonical 项目地图迁至 [clients/README.md](../../clients/README.md)（ADR-0007、CLIENTS-DEC-001）；PC 13 + mobile 4 + Agent Hub 86 + 索引 1 共 104 文件 `git mv`；4 个旧路径兼容 stub（docs/clients、apps console README/PRODUCT-DESIGN、docs/platforms/README）；Console 实现 gate canonical 迁至 [readiness-gates](../../clients/governance/readiness-gates.md)；未启动任何客户端实现 |
-| readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](../../clients/READINESS.md)：PoC runbook/模板与技术栈比较草案已提供（非执行/非 ADR）；M5 出口已 GO，仍 blocked 于依赖组 1/2/7 完整交付、五平台 PoC 执行、技术栈 ADR、AGPL 法务评估（POC-LIC not-run）、Tier 1 runtime PoC |
-| 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`（canonical 改指 clients/README.md）+ 新增 `.cursor/rules/17-client-project-boundaries.mdc`；专用 consistency 自动校验保持 `planned`（Lane-CFR，checker 不扫 `clients/`），交付前执行 [clients/README.md §9](../../clients/README.md#9-持续维护与手动-gate) 手动 gate |
+| 客户端项目根与 canonical 索引 | **done（informative 文档；结构迁移完成）** | canonical 项目地图迁至 [clients/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md)（ADR-0007、CLIENTS-DEC-001）；PC 13 + mobile 4 + Agent Hub 86 + 索引 1 共 104 文件 `git mv`；4 个旧路径兼容 stub（docs/clients、apps console README/PRODUCT-DESIGN、docs/platforms/README）；Console 实现 gate canonical 迁至 [readiness-gates](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md)；未启动任何客户端实现 |
+| readiness 结论 | **structure-ready: yes；implementation-ready: no (blocked)** | [clients/READINESS.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/READINESS.md)：PoC runbook/模板与技术栈比较草案已提供（非执行/非 ADR）；M5 出口已 GO，仍 blocked 于依赖组 1/2/7 完整交付、五平台 PoC 执行、技术栈 ADR、AGPL 法务评估（POC-LIC not-run）、Tier 1 runtime PoC |
+| 持续维护规则 | **done** | `.cursor/rules/16-client-directory-index.mdc`（canonical 改指 clients/README.md）+ 新增 `.cursor/rules/17-client-project-boundaries.mdc`；专用 consistency 自动校验保持 `planned`（Lane-CFR，checker 不扫 `clients/`），交付前执行 [clients/README.md §9](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md#9-持续维护与手动-gate) 手动 gate |
 | 本轮静态验证 | **pass（非实现/PoC 证据）** | 迁移集成后 `check:consistency` 以 273 REQ / 55 码 / 61 schema / 84 向量为准；clients 专项链接检查仍为手动 gate；[handoff](../checkpoints/20260720-lane-con-clients-root-migration-handoff.md) |

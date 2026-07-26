@@ -16,6 +16,7 @@
 |---|---|---|
 | CI Ubuntu | Authoritative Linux evidence | Required green for code merges |
 | CI Windows/MSVC | Authoritative Windows evidence | Required green for code merges |
+| Xianghege device (`hal9000@192.168.1.2`) | Designated local Linux-native experimental host | Use for `experimental-local-only` / `tested-local` Personal and Pi validation after SSH authentication is available on the operator workstation; local-only evidence here is not CI evidence and does not by itself create a product, Gate, Profile, sandbox, or release claim |
 | Local Windows GNU / MinGW | **Non-supported** | P0-T01 linker exit 121; must not block CI-green work |
 | WSL2 as product runtime | **Not first-ship product** | Existing Pi admission may refuse WSL2; do not market as Personal product host without a later ADR |
 | Linux aarch64 / macOS | Deferred | Out of first-ship matrix |

@@ -37,10 +37,41 @@
 
 | Check | Status | Result |
 |---|---|---|
-| `CARGO_TARGET_DIR=/tmp/cognitiveos-p0-t06-exception-target-two cargo test -p pi-agent-adapter --offline` (WSL) | executed | 16 passed / 0 failed |
+| `CARGO_TARGET_DIR=/tmp/cognitiveos-pi-guard-target cargo test -p pi-agent-adapter --offline` (WSL) | executed | 20 substantive tests passed / 0 failed |
 | `npx --yes --package="@earendil-works/pi-coding-agent@0.81.1" --call "pi -e apps/pi-agent-adapter/fixtures/p0_t06_extension.ts --version"` | executed | printed `0.81.1`; this is pinned CLI resolution only, not Extension runtime-load evidence |
 | credential-free Pi RPC clean-run | not-run to completion | process did not naturally exit; no Provider key was supplied, and no runtime-load claim is made |
 | native Windows GNU focused Rust test | blocked environment | linker exit 121, the documented unsupported GNU baseline |
+
+### V01 cross-platform evidence repair (same local-only batch)
+
+- POSIX and Windows orchestrators now resolve an explicit `CARGO_TARGET_DIR`
+  without re-prefixing absolute paths.
+- Both orchestrators use the complete runner-generated
+  `performance-report-m6-overhead.json`, validate the release-candidate
+  manifest/evidence graph, and preserve `sample_or_builder_only` plus
+  `campaign=not_executed`.
+- PERF-004 uses the fully qualified Rust test path; a report-generation or
+  exact-test failure is `auto_fail`, blocks L3, and returns non-zero rather
+  than silently remaining `skipped_nonclaim`.
+- `pnpm --filter @cognitiveos/repo-tools test`: **4 passed / 0 failed**;
+  PowerShell parser and POSIX `bash -n` checks passed.
+- Supported WSL/POSIX `CARGO_TARGET_DIR=/tmp/cognitiveos-v01-auto-target
+  pnpm run verify:local`: **exit 0**, `level=L3`, `stopped=false`,
+  `release=non_claim_preserved`, run artifact
+  `artifacts/evidence/v01-auto-run/20260726-131132-630/summary.json`.
+  Machine summary reports `BOOT`, `CONNECT`, consistency, manifest graph,
+  pins, regression, self-check, F-017 freeze, and PERF-004 as `auto_pass`;
+  watch/full-demo/PERF-005 campaign and human escalation remain
+  `skipped_nonclaim`. It explicitly records `profile_implemented=0`.
+- The WSL label is `windows_wsl2_linux_guest`; this is not a Windows-native
+  sandbox result and is not Linux-native production evidence.
+- Real-load preflight found that the available guest kernel is WSL2 and no
+  standalone `pi` executable is installed in that guest. The adapter now
+  classifies WSL from `/proc`/kernel markers or WSL environment markers and
+  rejects WSL, Windows, and enabled CI before selecting or probing a Secret
+  Service backend. The updated WSL adapter suite reports **20 substantive
+  tests passed / 0 failed**. No credential was resolved and no Pi process was
+  launched during this preflight.
 
 No conformance report, Profile manifest, Gate, B01-B12, C0/C1, or release
 evidence was created or claimed.
@@ -66,7 +97,8 @@ The adapter implementation and ADR-0018/0020 now enforce/document that scope.
 
 1. Perform an isolated real Extension session/RPC load test using the approved
    local-development route only when an actual Linux native Secret Service
-   configuration is available; preserve only redacted evidence.
+   configuration and pinned Pi executable are available; preserve only
+   redacted evidence. The current WSL guest is intentionally ineligible.
 2. Archive integrity/source provenance verification remains Pi P2 work and
    must not be inferred from the compatibility pin.
 
@@ -80,6 +112,12 @@ session/RPC load evidence; do not make a containment, Gate, or Profile claim."
 - Commits: `44509b498f5d886640375a425bce0ead25e3ebfd` recorded the initial
   fixture and blocker; `ff74033` implements the owner-approved local
   development exception.
-- PR / push / CI: PR #101 will receive the follow-up push; CI is pending for
-  `ff74033`.
+- PR / merge / CI: PR [#101](https://github.com/agentkernel/cognitive-os/pull/101)
+  has merged as `946bffea1c13ece582db7f1bdbfeea6e78c85e0e`. Its Ubuntu and
+  Windows CI jobs succeeded.
+- This merge does not complete P0-T06. Isolated, redacted Extension
+  session/RPC load evidence remains required; no G0, Profile, containment, or
+  release claim is made.
+- The V01 verification/performance repair is local evidence only and does not
+  change the P0-T06 status or any product Gate/Profile state.
 - `personal-blog/` was not read, modified, staged, or included.

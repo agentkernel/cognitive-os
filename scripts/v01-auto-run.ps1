@@ -431,6 +431,23 @@ if (-not $stopped) {
     $reportPath = Join-Path $RepoRoot "artifacts/evidence/conformance/conformance-report.json"
     if (Test-Path $reportPath) {
       Copy-Item $reportPath (Join-Path $RunDir "conformance-report.json") -Force
+      $rcManifestPath = Join-Path $RepoRoot "artifacts/evidence/conformance/release-candidate-profile-manifest.json"
+      if ($r.exit_code -eq 0 -and (Test-Path $rcManifestPath)) {
+        $manifestCheck = Invoke-Logged "manifest-validator" (Join-Path $LogDir "verify-manifest.log") {
+          node tools/src/validate-manifest.mjs $rcManifestPath
+        }
+        $verify.steps += $manifestCheck
+        $manifestOk = $manifestCheck.exit_code -eq 0
+        $results["VERIFY-MANIFEST"] = if ($manifestOk) { "auto_pass" } else { "auto_fail" }
+        if (-not $manifestOk) {
+          $verify.status = "auto_fail"
+          $verify.failures += "release-candidate manifest/evidence graph validation"
+        }
+      } else {
+        $results["VERIFY-MANIFEST"] = "auto_fail"
+        $verify.status = "auto_fail"
+        $verify.failures += "release-candidate profile manifest missing"
+      }
       $report = Get-Content $reportPath -Raw | ConvertFrom-Json
       $s = $report.summary
       $counts = @{
@@ -543,56 +560,57 @@ $perf4 = @{
   failures             = @()
 }
 if (-not $stopped) {
+  $perfUnitLogPath = Join-Path $LogDir "perf004-unit.log"
   $r = Invoke-Logged "perf004-unit" (Join-Path $LogDir "perf004-unit.log") {
-    cargo test -p cognitive-runtime overhead_report_requires_ungoverned_baseline_and_forbids_benefit --locked -- --exact
+    cargo test -p cognitive-runtime --lib perf::tests::overhead_report_requires_ungoverned_baseline_and_forbids_benefit --locked -- --exact
   }
-  if ($r.exit_code -ne 0) {
+  $perfUnitOutput = if (Test-Path $perfUnitLogPath) {
+    Get-Content $perfUnitLogPath -Raw
+  } else {
+    ""
+  }
+  $perfUnitExecuted = $perfUnitOutput -match "test result: ok\. 1 passed; 0 failed"
+  if ($r.exit_code -ne 0 -or -not $perfUnitExecuted) {
     $perf4.status = "auto_fail"
-    $perf4.failures += "overhead unit test failed"
+    if ($r.exit_code -ne 0) { $perf4.failures += "overhead unit test failed" }
+    if (-not $perfUnitExecuted) { $perf4.failures += "overhead unit test did not report one passed test" }
     $results["PERF004-AUTO-REPORT"] = "auto_fail"
   } else {
-    # Honesty envelope + sample numbers matching tip builder/runner (not a HW campaign)
-    $sampleReport = [ordered]@{
-      orchestrator_honesty = [ordered]@{
-        claim_level          = "sample_or_builder_only"
-        campaign             = "not_executed"
-        claims_agent_benefit = $false
-        source               = "cognitive_runtime::GovernanceOverheadSample (same numbers as unit test / conformance-runner embed)"
-        forbid_silent_campaign_pass = $true
-      }
-      schema_version = "cognitiveos.performance-report/0.1"
-      note           = "Sample/builder export for L3 report-ready. NOT a full HW campaign digest."
-      governance_overhead = [ordered]@{
-        ungoverned_baseline = "ungoverned-local-v1"
-        gate_latency_ms     = [ordered]@{
-          authorization = @{ p50 = 0.1; p95 = 0.4; p99 = 0.9 }
-          context_resolution = @{ p50 = 1.0; p95 = 3.0; p99 = 5.0 }
-          effect_protocol = @{ p50 = 0.5; p95 = 1.2; p99 = 2.0 }
-        }
-        cache_hit_preservation_ratio = 0.9
-        extra_persistence_per_governed_call = @{ writes = 2.0; bytes = 1024.0 }
-        approval = [ordered]@{
-          latency_ms = @{ p50 = 10.0; p95 = 50.0; p99 = 100.0 }
-          rubber_stamp_rate = 0.01
-          retry_after_deny_rate = 0.02
-        }
-        overhead_share_by_risk_class = @(
-          @{ risk_class = "R1"; latency_percent = 3.0; cost_percent = 2.0 }
-        )
-      }
-    }
+    # Reuse the complete schema-shaped report emitted by the conformance
+    # runner. Do not hand-build a partial report in one platform script.
+    $builderPath = Join-Path $RepoRoot "artifacts/evidence/conformance/performance-report-m6-overhead.json"
     $perfDir = Join-Path $RepoRoot "artifacts/evidence/performance"
     New-Item -ItemType Directory -Force -Path $perfDir | Out-Null
     $perfPath = Join-Path $perfDir "performance-report-v01-sample.json"
-    Write-JsonFile $perfPath $sampleReport
-    Copy-Item $perfPath (Join-Path $RunDir "performance-report-v01-sample.json") -Force
-    $perf4.status = "auto_pass"
-    $perf4.report_path = "artifacts/evidence/performance/performance-report-v01-sample.json"
-    $perf4.report_sha256 = Get-FileSha256 $perfPath
-    $results["PERF004-AUTO-REPORT"] = "auto_pass"
+    if (Test-Path $builderPath) {
+      $builderReport = Get-Content $builderPath -Raw | ConvertFrom-Json
+      $complete = $builderReport.schema_version -eq "cognitiveos.performance-report/0.1" -and
+        $null -ne $builderReport.benchmark_manifest -and @($builderReport.metrics).Count -gt 0 -and
+        $null -ne $builderReport.governance_overhead -and $builderReport.tail_latency_disclosed -eq $true
+      if ($complete) {
+        Copy-Item $builderPath $perfPath -Force
+        Copy-Item $perfPath (Join-Path $RunDir "performance-report-v01-sample.json") -Force
+        $perf4.status = "auto_pass"
+        $perf4.report_path = "artifacts/evidence/performance/performance-report-v01-sample.json"
+        $perf4.report_sha256 = Get-FileSha256 $perfPath
+        $results["PERF004-AUTO-REPORT"] = "auto_pass"
+      } else {
+        $perf4.status = "auto_fail"
+        $perf4.failures += "conformance runner performance report is incomplete"
+        $results["PERF004-AUTO-REPORT"] = "auto_fail"
+      }
+    } else {
+      $perf4.status = "auto_fail"
+      $perf4.failures += "conformance runner performance report missing"
+      $results["PERF004-AUTO-REPORT"] = "auto_fail"
+    }
   }
 } else {
   $results["PERF004-AUTO-REPORT"] = "skipped_nonclaim"
+}
+if (-not $stopped -and $perf4.status -eq "auto_fail") {
+  $stopped = $true
+  $stopReason = "PERF004 report generation failed: $($perf4.failures -join '; ')"
 }
 # Always assert no silent campaign
 $results["PERF004-NO-SILENT-CAMPAIGN"] = if (

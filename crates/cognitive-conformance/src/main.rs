@@ -106,48 +106,25 @@ fn run() -> Result<ExitCode, Box<dyn std::error::Error>> {
     let report_path = out_dir.join("conformance-report.json");
     let manifest_path = out_dir.join("sample-profile-manifest.json");
     let rc_manifest_path = out_dir.join("release-candidate-profile-manifest.json");
+    let performance_report_path = out_dir.join("performance-report-m6-overhead.json");
     let report_bytes = serde_json::to_string_pretty(&report)? + "\n";
     let report_digest = file_sha256(report_bytes.as_bytes());
-    let perf_digest = cognitive_runtime::GovernanceOverheadSample {
-        ungoverned_baseline: "ungoverned-local-v1".into(),
-        authorization: cognitive_runtime::StageLatencyMs {
-            p50: 0.1,
-            p95: 0.4,
-            p99: 0.9,
-        },
-        context_resolution: cognitive_runtime::StageLatencyMs {
-            p50: 1.0,
-            p95: 3.0,
-            p99: 5.0,
-        },
-        effect_protocol: cognitive_runtime::StageLatencyMs {
-            p50: 0.5,
-            p95: 1.2,
-            p99: 2.0,
-        },
-        cache_hit_preservation_ratio: 0.9,
-        extra_writes: 2.0,
-        extra_bytes: 1024.0,
-        approval_latency: cognitive_runtime::StageLatencyMs {
-            p50: 10.0,
-            p95: 50.0,
-            p99: 100.0,
-        },
-        rubber_stamp_rate: 0.01,
-        retry_after_deny_rate: 0.02,
-        overhead_latency_percent_r1: 3.0,
-        overhead_cost_percent_r1: 2.0,
-    }
-    .report_digest()
-    .ok();
+    let performance_sample =
+        cognitive_runtime::GovernanceOverheadSample::documented_builder_sample();
+    let performance_report = performance_sample.to_report_json();
+    let performance_report_bytes = serde_json::to_string_pretty(&performance_report)? + "\n";
+    let performance_report_digest = performance_sample
+        .report_digest()
+        .map_err(std::io::Error::other)?;
     let rc_manifest = cognitive_conformance::release_candidate_profile_manifest(
         &repo_root,
         &encoding_digest,
         &report,
         &report_digest,
-        perf_digest.as_deref(),
+        Some(&performance_report_digest),
     )?;
     std::fs::write(&report_path, &report_bytes)?;
+    std::fs::write(&performance_report_path, &performance_report_bytes)?;
     std::fs::write(
         &manifest_path,
         serde_json::to_string_pretty(&manifest)? + "\n",
@@ -166,6 +143,11 @@ fn run() -> Result<ExitCode, Box<dyn std::error::Error>> {
     println!(
         "Sample profile manifest (all profiles `planned`): {}",
         manifest_path.display()
+    );
+    println!(
+        "Performance builder sample (not measured): {} ({})",
+        performance_report_path.display(),
+        performance_report_digest
     );
     println!(
         "Release-candidate profile manifest (honest experimental/planned): {}",

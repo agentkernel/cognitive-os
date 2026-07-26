@@ -28,6 +28,12 @@ Local evidence (gitignored, no credential or raw transcript) is recorded at
 
 ## Delivery sequence
 
+Product Gate incompleteness does not block implementation in the
+`experimental-local-only` development track. P2-P6 work may be developed and
+tested locally in parallel, but its product state remains pending/blocked until
+the listed exit evidence exists. Local execution is `tested-local`, never a
+C0/C1, Profile, release, sandbox, or provenance claim.
+
 | Phase | Deliverable | Exit evidence | Current state |
 | --- | --- | --- | --- |
 | P1 | Candidate-only Pi launcher and real DeepSeek smoke/evaluation | no-tools policy tests; actual model and latency output; zero authority/Effect | delivered in this batch |
@@ -38,21 +44,55 @@ Local evidence (gitignored, no credential or raw transcript) is recorded at
 | P6 | Governed installation and evaluation | committed installation with no automatic high-risk capability; prerequisite behavior vectors; preregistered workload report | blocked by P2-P5 |
 | P7 | Performance campaign | REQ-PERF-004 L2-green reference platform, fixed hardware/topology/baseline and measured p50/p95/p99 | not started |
 
+Before P7, the local Personal performance runner must attribute latency to four
+separate boundaries: CognitiveOS deterministic processing, Pi/Node process
+startup and RPC handling, Provider/network/model latency, and filesystem/SQLite
+work. Fixed-platform campaigns and A/B/C/D agent-benefit evaluation remain
+later activities; local samples cannot claim either result.
+
 ## Evaluation protocol for P1
 
-Run only from an isolated work/config directory, with `DEEPSEEK_API_KEY` set
-for one process and removed immediately after. Use:
+Run only from an isolated work/config directory. Current local development
+must use the explicit ADR-0018 exception and an independent Personal Provider
+config directory; it must not read a parent-process `DEEPSEEK_API_KEY`. Use:
 
 ```text
 pi-agent-adapter evaluate --pi <pi-bin> --model <deepseek-model> \
   --prompt <fixed-prompt> --expected-text <expected> --runs <1..=20> \
-  --work-dir <empty-dir> --config-dir <empty-dir>
+  --work-dir <empty-dir> --config-dir <empty-pi-dir> \
+  --provider-config-dir <personal-provider-config-dir> \
+  --allow-local-native-provider-secret-development
 ```
 
 Every sample records success, latency, requested and observed model, and
 whether Pi emitted tool results. A failed, timed-out or model-mismatched sample
 remains in the denominator. This command cannot claim governance overhead,
-agent benefit or deployment readiness.
+agent benefit or deployment readiness. This local exception is Linux native
+only, default-deny, and remains explicitly uncontained because the initial Pi
+child may pass its environment to descendants; it is not a sandbox or release
+credential-delivery design. The future daemon-owned Provider proxy remains the
+normal Personal product path. Adapter admission classifies WSL independently
+from Linux native and rejects WSL, Windows, and enabled CI before selecting or
+probing the native Secret Service backend.
+
+For future Linux-native local runs, the designated experimental SSH host is
+the Xianghege device at `hal9000@192.168.1.2`. Treat it as a local-only
+engineering host, keep its evidence separate from CI Ubuntu and Windows/MSVC,
+and do not upgrade it into a product, sandbox, Gate, Profile, or release
+claim merely because a command succeeded there. Until workstation-side SSH
+authentication is available, this host designation is planning metadata rather
+than executed evidence.
+
+The P0-T06 `extension-load` verb is a bounded local evidence probe. It requires
+the reviewed fixture and `/cognitiveos-p0-t06-status`, starts a real pinned Pi
+RPC session, waits for the Extension status response, and returns only redacted
+event types, status text, timeout state, and timing. It must run only after
+`verify:local` report/evidence validation is green on a supported local path.
+No credential, raw transcript, model content, command argument containing a
+secret, SQLite write, authority transition, or Effect is permitted in its
+output. A successful probe is real Extension/RPC load evidence only; it does
+not satisfy the later compatibility, sandbox, product Gate, Profile, or release
+criteria.
 
 ## Non-negotiable exclusions
 

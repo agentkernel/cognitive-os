@@ -4,6 +4,9 @@
 > **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
 > **研究与审计日期：2026-07-24。**
 > **审计基线：`origin/main@9b53cf4c6c2b744a60283c3ea1431a9d1090aafd`。**
+> **最后对齐：2026-07-26（一致性评审批）。** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
+> **生产就绪与低摩擦授权批（2026-07-26）：** 新增 DEC-P-20 授权交互模型并落地 [ADR-0026](docs/adr/0026-personal-trust-profile-low-friction-authorization.md)（Tier 0/1/2 分层、准入预览为唯一默认授权点、预算硬轨、不建审批链）；P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02 卡增补对应验收 bullet；§14 增 Approval Interactions/Task 指标；§16 R-22 与 §17 企业审批行改引 ADR-0026。
+> **P2 卡扩写批（2026-07-26）：** 依 §11.1 状态纪律，将 P2-T01..P2-T08 压缩卡预先扩写为完整强制字段集：仅补足字段、仓库锚点与既有决策引用（ADR-0026/0018、§12.1/§12.2、§13/§14/§15）；任务范围、依赖、验收语义与 §12 依赖图均不变。documentation-only；本批 §15.2 命令因环境阻断未执行（记 not-run，见当日 handoff），不改变任何任务状态、Gate、证据或 Profile 结论。
 > **本草案不包含生产代码、规范或数据库 Schema 变更。**
 > **落盘说明：** 正式计划与进度台账已保存于 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`；本文件保留研究结论、详细任务卡和原始审计材料。
 
@@ -75,7 +78,10 @@ Linux x86_64 可验证安装包
    - 不引入 Temporal、PostgreSQL、Redis 或消息队列作为 Personal v1 前置条件。
 
 4. **Provider Secret 只保存在原生 Secret Store。**
-   - Pi、配置文件、SQLite、环境继承、命令参数和日志不得持有原始 API Key。
+   - Pi、配置文件、SQLite、环境继承、命令参数和日志不得持有原始 API Key；唯一
+     窄幅例外是 ADR-0018 的 P0-T06 本机 Linux 开发路径：默认拒绝、精确显式开启，
+     仅从 native store 注入初始 Pi child，且在 P2 结束到期。它不适用于 CI、发布或
+     containment 声明。
 
 5. **MCP 只是工具传输适配器。**
    - MCP discovery、connection 和 protocol completion 都不等于 CognitiveOS 授权、Effect 提交或 Task 完成。
@@ -139,7 +145,7 @@ Linux x86_64 可验证安装包
 | CI | `.github/workflows/ci.yml`，Windows/Linux |
 | License | **Apache-2.0**（P0-T03 / ADR-0025）；Rust `publish=false`；TS `private: true`；Pi/Node 不 vendor |
 | 部署 | 无 Dockerfile/Compose、安装器、Homebrew、OS service、release workflow |
-| 迁移 | 无版本化 SQL migrations 框架 |
+| 迁移 | 无版本化 SQL migrations 框架（审计日快照；P1-T01 已交付 adapter 内嵌 migrations，正式状态见台账） |
 
 ## 3.2 已执行命令
 
@@ -157,6 +163,23 @@ Linux x86_64 可验证安装包
 | `pnpm run verify:local` | 1 | L0 停止，诚实记录 BOOT build failure |
 
 远端 GitHub Actions run `30067192424` 对 `main@9b53cf4` 的 Windows/Linux jobs 为 green。该 CI 是当前实现证据，但不等于 Personal B01-B12 或 Profile 证据。
+
+### Personal experimental-local-only 轨道（2026-07-26）
+
+产品 Gate 只控制正式产品主路径、Profile 和 release；不再阻断本机或隔离环境中的
+P1/P2/P3 及后续开发。该轨道允许真实本机 DeepSeek/Pi 调试、Extension/RPC load、
+Pi proxy、Task runtime、scheduler、Effect、recovery、Context、Memory，以及
+kernel/store/runtime benchmark harness。所有结果必须标为 `experimental-local-only`
+或真实执行后的 `tested-local`，不得冒充正式验收。
+
+Personal 端到端性能 runner 先分离四类成本：CognitiveOS deterministic overhead、
+Pi/Node process overhead、Provider/network/model latency、filesystem/SQLite overhead。
+固定平台 campaign 和 A/B/C/D agent-benefit 测评后置；在预注册 workload、固定拓扑和
+独立 verifier 完成前，性能结果只允许 non-claim。
+
+以下边界不可协商：secret 不进入日志、argv、普通配置、SQLite、证据或 CI；Pi、CLI、
+SDK、UI 不成为 authority；sample/fixture/smoke/局部测试不成为 Profile/release
+证据；规范向量不得为实现迎合而改写。
 
 ---
 
@@ -252,7 +275,7 @@ Linux x86_64 可验证安装包
 | Checkpoint | L3 | L5 | SQLite checkpoint rows | scheduler/product resume 未接 | P2-T07 |
 | Recovery | L4 protocol | L5 E2E | `recovery.rs` | 无 daemon/process/task restart E2E | P2-T07/T08 |
 | Metrics | L1 | L5 | PERF sample builder | 无 live trace/store/campaign | P3-T05、P7-T04 |
-| Web UI | L0 code/L1 docs | L4 later | `clients/**` docs only | gate、PoC、ADR、真实 API | P7-T05 |
+| Web UI | L0 code/L1 docs | L4 later | 仅文档，且位于独立仓库 cognitiveos-clients（本仓无 `clients/**`） | gate、PoC、ADR、真实 API | P7-T05 |
 | Deployment | L0 | L5 Linux | 无 | service/manifest/SBOM | P1-T08、P7 |
 | Upgrade | L0 | L5 | 无 | staged migration/health/rollback | P7-T02 |
 | Uninstall | L0 | L5 | 无 | binary/config/data/secret policy | P7-T02 |
@@ -384,31 +407,34 @@ Pi 不可以：
 
 ---
 
-# 9. ADR 决策集
+# 9. 设计决策集（DEC-P-*）
 
-所有 ADR 都必须包含：状态、背景、仓库约束、候选、评价维度、决策、理由、后果、迁移成本、回滚和重评条件。
+本节是研究期的设计决策候选表，编号 `DEC-P-01..20` 为规划 ID，与 `docs/adr/` 的正式 ADR 编号**无对应关系**（正式 Personal ADR 现为 0017–0026；新决策落地时取 `docs/adr/` 下一个可用编号，并在本表补注对应关系）。正式 ADR 都必须包含：状态、背景、仓库约束、候选、评价维度、决策、理由、后果、迁移成本、回滚和重评条件。
 
-| ADR | 候选与决策 | 主要后果、回滚与重评条件 |
+已落地对应：DEC-P-05 → ADR-0018/0020；DEC-P-19（部分）→ ADR-0025；DEC-P-20 → ADR-0026；daemon transport → ADR-0019（P0-T07）。
+
+| DEC | 候选与决策 | 主要后果、回滚与重评条件 |
 |---|---|---|
-| 001 Pi 集成 | SDK / RPC / Interactive Extension；**选择 Interactive Extension** | 保留 Pi TUI；RPC 留给后台；若 Extension API 无法稳定固定或无法禁用 mutating tools，停止并重评 RPC/custom UI |
-| 002 daemon 语言 | Rust / Node / Python；**Rust** | 直接复用 kernel/store；Node 只留 Pi 侧；若 OS/API ecosystem 阻塞，可新增窄 sidecar，不迁 authority |
-| 003 SQLite | SQLite / Postgres / workflow DB；**SQLite 单 writer + migrations** | 适合本地；若写争用、恢复或数据量实测超预算再重评 |
-| 004 Artifact Store | SQLite blob / filesystem CAS / object store；**filesystem CAS + SQLite metadata** | 大文件不塞主 DB；可通过 digest 重建引用 |
-| 005 Secret Store | Pi auth.json / encrypted config / native store；**native Secret Store** | 首发依赖 Linux Secret Service PoC；headless 无可靠 backend 则不支持 |
-| 006 Provider | Pi-owned / daemon OpenAI-compatible / vendor SDK；**daemon OpenAI-compatible** | DeepSeek 默认只是配置，不硬编码模型；vendor 差异放 adapter |
-| 007 Task 状态机 | 新工作流 / Pi Session / 现有 transitions；**复用现有 Task state machine** | 不新增第二套 Task |
-| 008 Event/Snapshot | snapshot-only / event-only / event+projection；**authority event + rebuildable projections** | snapshot 不成为独立 authority |
-| 009 Memory | vector-first / files / SQLite+FTS；**SQLite source + FTS** | Embeddings 仅派生索引 |
-| 010 Embedding | P0 / Phase 4 experiment / never；**Phase 4 实验 gate** | 未证明收益不得进入默认路径 |
-| 011 MCP | direct MCP / MCP authority / adapter；**Tool Registry adapter** | MCP auth 与 CognitiveOS operation auth 分离 |
-| 012 Process | Pi-owned / OS service per task / daemon supervisor；**daemon supervisor** | 进程必须有 task/attempt/epoch identity |
-| 013 Agent Package | raw Pi package / arbitrary git / CognitiveOS manifest；**digest-pinned CognitiveOS manifest** | Pi package 可作为 payload，但 activation 由 daemon 决定 |
-| 014 Tool Package | MCP discovery / arbitrary executable / qualified manifest；**qualified manifest** | schema、risk、sandbox、reconcile、health evidence 必须齐全 |
-| 015 Blackboard | shared chat / mutable KV / append-only findings；**append-only non-authority findings** | 黑板消息不能提交状态 |
-| 016 Git Worktree | shared cwd / mandatory worktree / selective worktree；**仅写任务选择性使用** | read-only research不强制；冲突时取消/重新派发 |
-| 017 Intent-first | 仅高风险 / 所有 mutating external operations；**后者** | read-only 可短路径，但仍审计和 scope-check |
-| 018 Web UI | Next/React/Vite/Tauri；**暂定 React+TS+Vite 静态客户端，gate 后重评** | 不进入 P0-P6；只能调用 daemon API |
-| 019 安装更新 | Homebrew / Compose / attested bundle；**Linux attested bundle + inspectable script** | Brew/macOS 和 Compose 不首发；失败原子回滚 |
+| DEC-P-01 Pi 集成 | SDK / RPC / Interactive Extension；**选择 Interactive Extension** | 保留 Pi TUI；RPC 留给后台；若 Extension API 无法稳定固定或无法禁用 mutating tools，停止并重评 RPC/custom UI |
+| DEC-P-02 daemon 语言 | Rust / Node / Python；**Rust** | 直接复用 kernel/store；Node 只留 Pi 侧；若 OS/API ecosystem 阻塞，可新增窄 sidecar，不迁 authority |
+| DEC-P-03 SQLite | SQLite / Postgres / workflow DB；**SQLite 单 writer + migrations** | 适合本地；若写争用、恢复或数据量实测超预算再重评 |
+| DEC-P-04 Artifact Store | SQLite blob / filesystem CAS / object store；**filesystem CAS + SQLite metadata** | 大文件不塞主 DB；可通过 digest 重建引用 |
+| DEC-P-05 Secret Store | Pi auth.json / encrypted config / native store；**native Secret Store**（已落地 ADR-0018/0020） | 首发依赖 Linux Secret Service PoC；headless 无可靠 backend 则不支持 |
+| DEC-P-06 Provider | Pi-owned / daemon OpenAI-compatible / vendor SDK；**daemon OpenAI-compatible** | DeepSeek 默认只是配置，不硬编码模型；vendor 差异放 adapter |
+| DEC-P-07 Task 状态机 | 新工作流 / Pi Session / 现有 transitions；**复用现有 Task state machine** | 不新增第二套 Task |
+| DEC-P-08 Event/Snapshot | snapshot-only / event-only / event+projection；**authority event + rebuildable projections** | snapshot 不成为独立 authority |
+| DEC-P-09 Memory | vector-first / files / SQLite+FTS；**SQLite source + FTS** | Embeddings 仅派生索引 |
+| DEC-P-10 Embedding | P0 / Phase 4 experiment / never；**Phase 4 实验 gate** | 未证明收益不得进入默认路径 |
+| DEC-P-11 MCP | direct MCP / MCP authority / adapter；**Tool Registry adapter** | MCP auth 与 CognitiveOS operation auth 分离 |
+| DEC-P-12 Process | Pi-owned / OS service per task / daemon supervisor；**daemon supervisor** | 进程必须有 task/attempt/epoch identity |
+| DEC-P-13 Agent Package | raw Pi package / arbitrary git / CognitiveOS manifest；**digest-pinned CognitiveOS manifest** | Pi package 可作为 payload，但 activation 由 daemon 决定 |
+| DEC-P-14 Tool Package | MCP discovery / arbitrary executable / qualified manifest；**qualified manifest** | schema、risk、sandbox、reconcile、health evidence 必须齐全 |
+| DEC-P-15 Blackboard | shared chat / mutable KV / append-only findings；**append-only non-authority findings** | 黑板消息不能提交状态 |
+| DEC-P-16 Git Worktree | shared cwd / mandatory worktree / selective worktree；**仅写任务选择性使用** | read-only research不强制；冲突时取消/重新派发 |
+| DEC-P-17 Intent-first | 仅高风险 / 所有 mutating external operations；**后者** | read-only 可短路径，但仍审计和 scope-check |
+| DEC-P-18 Web UI | Next/React/Vite/Tauri；**暂定 React+TS+Vite 静态客户端，gate 后重评** | 不进入 P0-P6；只能调用 daemon API |
+| DEC-P-19 安装更新 | Homebrew / Compose / attested bundle；**Linux attested bundle + inspectable script**（平台/分发部分已落地 ADR-0025；Windows 安装面归 P7-T07） | Brew/macOS 和 Compose 不首发；失败原子回滚 |
+| DEC-P-20 授权交互模型 | 每动作审批 / 企业审批链 / **风险分层 Trust Profile：Tier 0 静默、Tier 1 首用记住（capability lease）、Tier 2 显式确认 + 任务级准入授权 + 预算硬轨（已落地 ADR-0026）** | 治理记录全保留，仅改交互层；默认路径人工确认 ≤1/task；若 Tier 分类无法由 Operation Catalog 元数据确定性判定，回退该操作到 Tier 2 并重评 |
 
 ---
 
@@ -442,6 +468,8 @@ Pi 不可以：
 
 每张卡以下均覆盖强制字段：目标/价值、证据/研究、依赖/不包含、文件、数据/API/配置/迁移、步骤、验收/测试/基准/性能、安全/可观测、回滚/文档/解锁、风险/不确定项。
 
+状态纪律（2026-07-26 修订）：任务卡不承载正式状态行；正式状态、完成日期与证据一律记录在 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 台账。卡内如出现"状态"字样仅为指向台账的指针。P2 及以后的压缩卡在被认领开工时必须先扩写为完整强制字段集，再开始实现。
+
 ---
 
 ## Phase 0
@@ -473,7 +501,7 @@ Pi 不可以：
 
 ### P0-T03 — License、首发平台与分发决策
 
-- **状态：** **done**（2026-07-26 owner GO；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。
+- **状态：** 以正式台账为准。
 - **目标：** 关闭根仓 License、首发平台 support matrix、Node/Pi redistribution 义务。
 - **Owner 决议：** Apache-2.0；首发产品平台 Linux x86_64 + Windows x86_64；GitHub Release 可检查 bundle；不 vendor Pi/Node；crates.io/npm 仍不发布。
 - **依赖：** P0-T02；不开发 installer。
@@ -510,7 +538,7 @@ Pi 不可以：
 ### P0-T06 — Pi 版本、Extension 与 RPC 兼容性 PoC
 
 - **目标：** 固定 Pi 版本、integrity、source commit、Extension API 和 RPC JSONL fixture。
-- **状态：** **in-progress**（2026-07-26；正式台账见 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`）。第一个独立原子部分已交付：`pi-agent-adapter` 固定并记录 Pi `0.81.1` 的 npm SRI、source commit、repository path 与 Node engine；所有 candidate launch 在读取 scoped Provider key 前执行 `pi --version` 并拒绝版本漂移；strict-LF RPC JSONL parser 用 CRLF、U+2028、malformed/non-object negatives 覆盖。第二个原子部分已交付 pinned Extension fixture：拒绝 project trust、在 `tool_call` 阻断 write/edit/bash，并以 `session_start` 仅设置 session-local status。Owner 已批准 ADR-0018 的临时例外：本机 Linux 上仅在精确显式开关和独立 Personal Provider config 目录存在时，从 native Secret Store 解析已配置 DeepSeek material 并注入初始 Pi 子进程；不读 parent env、默认拒绝、不得用于 Windows/CI/发布，P2 结束到期。对 pinned package 的实际 session/RPC load evidence 仍未完成，因此本任务不可标记 `done`。
+- **状态：** 以正式台账为准（台账记录：in-progress；已交付 version pin/SRI + strict-LF RPC parser、pinned Extension fixture 两个原子部分；剩余：pinned package 的实际 session/RPC load evidence）。ADR-0018 本机开发例外（显式开关 + 独立 Provider config 目录，默认拒绝，不用于 Windows/CI/发布，P2 结束到期）已获 owner 批准，到期核查归属 P2-T08 验收。
 - **证据：** registry 0.82.0；仓库 smoke 使用 0.81.1；API 快速变化。
 - **依赖：** P0-T03；不启动 governed background Agent。
 - **文件：** 修改 `apps/pi-agent-adapter` tests/docs；计划新增 `tests/golden/pi-rpc/` 和 Extension PoC。
@@ -553,7 +581,7 @@ Pi 不可以：
 
 - **目标：** daemon 以 opaque ref 管理 DeepSeek Key。
 - **依赖：** P0-T05、P1-T01。
-- **状态：** done（CI run 30156079691 Ubuntu/Windows-MSVC 全绿）。
+- **状态：** 以正式台账为准。
 - **文件：** 扩展 `crates/cognitive-secret`（ProviderConfig、ProviderKeyService、LinuxSecretToolStore、backend_select、secret_input、tests/p1_t02_provider_secret.rs）；ADR-0020；未改 management/runtime（避免 Lane-RUN 所有权冲突）。
 - **数据：** Provider config 只存 provider、base URL、secret_ref、selected snapshot digest。
 - **API：** put/rotate/delete/probe via ProviderKeyService；hidden-input helper `read_secret_material_from_reader`（CLI echo-off 归 P1-T06）。
@@ -562,10 +590,9 @@ Pi 不可以：
 - **回滚：** 删除 ref；不自动删除用户未确认的数据。
 - **解锁：** P1-T03/P1-T06。
 ### P1-T03 — OpenAI-compatible Provider、模型发现与能力快照
-### P1-T03 — OpenAI-compatible Provider、模型发现与能力快照
 
 - **目标：** DeepSeek 默认初始化，但模型 ID 动态发现和主动验证。
-- **状态：** done（本地 typecheck/clippy 通过；行为测试由 CI Ubuntu/Windows-MSVC 执行 `p1_t03_provider_discovery`）。
+- **状态：** 以正式台账为准。
 - **文件：** 扩展 `crates/cognitive-secret`（`provider_transport` / `provider_snapshot` / `provider_probe`、`tests/p1_t03_provider_discovery.rs`）；ADR-0021。**未**修改 `cognitive-runtime`（避免 Lane-RUN 所有权冲突；HTTPS client 由 daemon 注入 transport）。
 - **API：** `ProviderDiscoveryService::{list_models, discover_probe_and_persist}`；`ModelSelection`；`ProviderCapabilitySnapshot` / readiness snapshot digest。
 - **数据：** observed models、selected model、probe version、capability flags、product-local `fnv1a64` digest 写入 `provider.json` 的 `selected_snapshot_digest`。
@@ -579,7 +606,7 @@ Pi 不可以：
 ### P1-T04 — 有界 Personal daemon 与本地认证
 
 - **目标：** 替换 synthetic composition 的 Personal 入口，建立 loopback 有界 front door 与本地认证。
-- **状态：** in-progress（PR #95 已合入，CI Ubuntu/Windows-MSVC 已执行现有行为测试；timeout 与 concurrency 行为测试尚未提供，P1-T04 未完成）。
+- **状态：** 以正式台账为准（台账记录：done，PR #95 + PR #96，timeout/concurrency 行为测试已由 CI 执行）。
 - **文件：** `apps/kernel-server/src/personal/{mod,auth,bounds,lifecycle,server}.rs`、`main.rs --personal`、`tests/p1_t04_personal_daemon.rs`；layout daemon 路径；ADR-0022。
 - **配置：** loopback-only bind、ADR-0019 body/header/concurrency bounds、single-instance `daemon.lock`、runtime bootstrap secret。
 - **API：** `POST /local/session`；channel-scoped bearer on `/management/*` and `/task/*`；`GET /personal/health`（non-claim）。
@@ -591,7 +618,7 @@ Pi 不可以：
 ### P1-T05 — Readiness、status 和 doctor 应用服务
 
 - **目标：** CLI、Pi、未来 UI 共用同一事实源。
-- **状态：** done（CI Ubuntu/Windows-MSVC SUCCESS：30164114878 / 30164113787）。
+- **状态：** 以正式台账为准。
 - **文件：** `apps/kernel-server/src/personal/readiness.rs`、`server.rs` 路由、`tests/p1_t05_personal_readiness.rs`、ADR-0023。**未**修改 `cognitive-management`（Lane-RUN 所有权；Personal 组合根承载 projection）。
 - **API：** management-channel `GET /personal/status`、`GET /personal/readiness`、`GET /personal/doctor`；组件 system/database/secret/provider/daemon/pi；返回事实、duration、source、error_class 与 non-claim。
 - **验收：** degraded/blocked/ready 分离；静态检查通过不写成 runtime ready（`static_check_is_not_runtime_ready`）；secret_ref/bootstrap 不入投影。
@@ -601,7 +628,7 @@ Pi 不可以：
 
 ### P1-T06 — `cognitive init/doctor/status/daemon`
 
-- **状态（2026-07-25）：** done；PR #98 / `main@adbb0e5`；CI 30167503487 Ubuntu/Windows-MSVC green；ADR-0024；非 G0/Profile。
+- **状态：** 以正式台账为准。
 - **目标：** 将 `admin-cli` 演进为 `cognitive` 产品入口。
 - **文件：** 修改 `apps/admin-cli/Cargo.toml`、`src/main.rs`、tests；计划添加 `cognitive` bin，保留 `admin-cli` 兼容。
 - **API：** 只调用 daemon/application service，不直接编排 SQLite。
@@ -637,7 +664,7 @@ Pi 不可以：
 
 - **目标：** 干净 Linux VM 完成安装、init、DeepSeek、daemon、Pi、首个响应。
 - **文件：** 新增 `tests/e2e/personal/b01-*` 和 evidence schema/runner。
-- **验收：** 连续至少 20 次 clean-run；建议成功率 ≥90%，95% CI 同时报告；TTFC 建议 p95 ≤10 min（含人工 Key 输入但不含下载网络异常）。
+- **验收：** 连续至少 20 次 clean-run；建议成功率 ≥90%，95% CI 同时报告；TTFC 建议 p95 ≤10 min（含人工 Key 输入但不含下载网络异常）；除 API Key 与模型选择外无必选交互步骤（ADR-0026）。
 - **失败条件：** Key 泄漏、工具未禁用、daemon synthetic ready、模型仅凭 `/models`、无法卸载临时安装。
 - **证据：** logs、timestamps、versions、snapshot digests，绝不含 Key。
 - **解锁：** Phase 2。
@@ -648,60 +675,147 @@ Pi 不可以：
 
 ### P2-T01 — TaskApplicationService
 
-- 复用 `intent_chain.rs`、TaskContract、budgets；新增 proposal/clarify/preview/admit/control/query service。
-- 修改 `cognitive-management`/`cognitive-runtime` ports；不得新增平行 Task 类型。
-- 验收 raw intent 先持久化、preview digest 绑定、修订产生新 epoch 并 fence 旧任务。
-- 不含 scheduler、Memory、多 Agent；解锁 P2-T02/T03。
+- **优先级/目标/价值：** P2 首任务；把 L3/L4 意图链内核暴露为 L5 产品应用服务：proposal/clarify/preview/admit/control/query 六个操作面构成任务生命周期的唯一产品入口（§6 Task 行差距）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `crates/cognitive-kernel/src/intent_chain.rs` 已提供 `record_user_intent`、`record_interpretation_candidate`、`admit_interpretation`、`mint_task_contract`、`verify_task_binding_current`、`supersede_task_contract` 与 `GovernanceSeed`/`AcceptanceCommand`/`TaskContractCommand`；`cognitive-store` 已有 `user_intent_records`/`intent_interpretations`/`task_contracts`/`budgets`/`fencing` 表。缺口仅在应用服务与产品 ports（§6：无应用服务、API、queue）。
+- **依赖：** P1-T09（正式验收口径）；experimental-local-only 轨道可先行实现（台账解耦注记）。
+- **不包含：** scheduler（P2-T03）、HTTP/API 路由（P2-T02）、Memory、多 Agent；不得新增平行 Task 类型或第二状态机（DEC-P-07）。
+- **文件：** 修改 `crates/cognitive-management`（task application service 模块与 ports）与 `crates/cognitive-runtime`（组合根接线）；复用 `intent_chain.rs`、TaskContract、budgets，不复制内核逻辑；新增 `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`（先写失败测试）；无删除文件。
+- **数据/API/配置/迁移：** 不新增 SQLite 表；若实测需要投影辅助结构，必须经 P1-T01 迁移框架并单独评审。服务操作：proposal（raw intent 持久化）、clarify（`AmbiguityFact`/`InterpretationCandidate`）、preview（TaskContract 摘要 + preview digest）、admit（`AcceptanceCommand` 绑定 digest）、control（supersede/cancel 请求）、query（只读投影）。
+- **步骤：** (1) service trait/DTO 定义，机器合同不足即停走 Lane-CTR，不建平行 DTO 真相源；(2) raw intent 先持久化再解释；(3) preview digest 生成与 admit 绑定校验；(4) 修订经 `supersede_task_contract` 产生新 epoch 并 fence 旧任务；(5) 组合根接线与负例。
+- **验收：** raw intent 先持久化（崩溃后可重放）；preview digest 与 admit 绑定（digest 不匹配拒绝）；修订产生新 epoch 并 fence 旧任务（`verify_task_binding_current` 拒绝旧绑定）；admission preview 是唯一默认人工授权点：批准即覆盖任务范围内 Tier 0 与既有授权下的 Tier 1 动作（ADR-0026）；预算在准入时冻结为硬轨。
+- **测试：** 纯逻辑单元 + SQLite 集成（restart/replay）；负例：digest mismatch、stale epoch、重复 admit、缺 governance seed；命令按 §15.2。
+- **基准/性能：** 记录 preview/admit 延迟作为 B02/B04 埋点；无目标值。
+- **安全/可观测：** §11.1 默认安全约束；admission 决策与 digest 全审计（REQ-AUDIT-001/002）；intent 原文 redaction 负例。
+- **回滚/文档：** 服务层可整体停用且不影响 kernel 语义；更新台账、PROGRESS、Implementation Record、handoff。
+- **解锁：** P2-T02、P2-T03。
+- **风险/不确定：** preview digest 的 canonical 序列化边界；Tier 1 既有授权（capability lease）在 P5-T01 前仅有本地最小实现，catalog 元数据不足以判 Tier 时回退 Tier 2（ADR-0026）。
 
 ### P2-T02 — 真实 Task API、watch 与自然语言管理映射
 
-- 替换 canned proposal/attach/detach/cancel/watch routes；TS SDK和 Pi Extension消费同一 API。
-- 修改 `kernel-server`、`packages/sdk-ts`、`apps/agent-shell`、Pi package；合同变化经 Lane-CTR。
-- 验收 detach不cancel、watch resume/dedup、cancel只产生 authority request、错误 HTTP status 真实。
-- 解锁 B02 和 P2-T04。
+- **目标/价值：** 把 P2-T01 服务经 Personal daemon 暴露为真实 Task API，替换 canned proposal/attach/detach/cancel/watch routes；TS SDK 和 Pi Extension 消费同一 API；自然语言管理经 management intent 映射到真实投影（B02 基础）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 front door 与 channel bearer（ADR-0022）；`packages/sdk-ts`/`apps/agent-shell` 现消费 M5 HTTP/SSE 面；Pi 表面由 P1-T07 `packages/pi-cognitiveos/` 承载。
+- **依赖：** P1-T07、P2-T01；与 P2-T03 可并行（§12.1）。
+- **不包含：** scheduler/worker 执行（P2-T03/T04）；独立造类型（`packages/sdk-ts` 合同跟随 Lane-CTR，§12.2）。
+- **文件：** 修改 `apps/kernel-server`（task channel 路由）、`packages/sdk-ts`、`apps/agent-shell`、P1-T07 Pi package；新增 `apps/kernel-server/tests/p2_t02_task_api_watch.rs` 与 TS 侧测试；合同（schema/binding/vector）变化一律经 Lane-CTR；无删除文件（canned route 的公开合同废弃亦须 Lane-CTR）。
+- **数据/API/配置/迁移：** 无新表；watch 基于 SSE resume/dedup（复用 event envelope/session 语义与 ADR-0019 bounds）；错误映射真实 HTTP status，无 canned 200。
+- **步骤：** (1) Lane-CTR 对齐 API 合同；(2) 路由接 P2-T01 服务；(3) SDK/agent-shell/Pi 三表面统一消费；(4) watch resume/dedup 与 detach/cancel 语义；(5) 负例与 status 映射测试。
+- **验收：** detach 不 cancel；watch resume 可续传且 dedup 不重复投递；cancel 只产生 authority request（状态推进仍由 daemon/verifier 决定）；错误 HTTP status 真实；trust profile（Tier 0/1/2）在 daemon/CLI/Pi 三个表面一致应用，Tier 分类来自 Operation Catalog 元数据，不来自 Agent 自述，未知/不可判定操作默认 Tier 2（ADR-0026）。
+- **测试：** Rust 集成 + TS build/test；负例：wrong channel、过期 bearer、stale epoch cancel、伪造 watch cursor；命令按 §15.2。
+- **基准/性能：** 记录 NL→management intent→projection 延迟与 token（B02 口径）；无目标值。
+- **安全/可观测：** 三表面均无 secret/authority 泄漏；管理映射来源入审计；SSE 有界。
+- **回滚/文档：** 单 PR 可 revert 回 canned 实现；文档联动 §6 清单。
+- **解锁：** B02（证据采集口）、P2-T04。
+- **风险/不确定：** SSE dedup 键与 event envelope 稳定性；Pi 表面在 P0-T06 收尾前只能以 fixture 验证，不得写成 runtime load evidence。
 
 ### P2-T03 — durable scheduler、lease 和 timer
 
-- 新增 scheduler repository/service；持久化 runnable、lease owner/epoch、next eligible、attempt、cancel request。
-- 数据迁移必须由 P1-T01框架执行。
-- 测 worker crash、duplicate lease、clock shift、deadline/retry/step/cost ceiling。
-- 不引入 Temporal/queue server；解锁 P2-T04/P2-T07。
+- **目标/价值：** 准入后的任务在 daemon 内可恢复地调度：scheduler 状态 durable，worker crash 后无双活、无双派发（§6 Scheduler 现状 L0）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `cognitive-store` 已有 `faults.rs` 故障注入与 `clock.rs`；lease/epoch fencing 模式可复用 `fencing` 表语义。
+- **依赖：** P1-T01、P2-T01；与 P2-T02 可并行（§12.1）。
+- **不包含：** Temporal/queue server 等外部编排；多 Agent 调度策略（P6-T01）；process supervisor（P2-T06）。
+- **文件：** `crates/cognitive-store` 新增 scheduler repository 模块（按 §12.2 先拆模块再占所有权，避开 `sqlite.rs` 热点）；`crates/cognitive-runtime` 新增 scheduler service；新增 `crates/cognitive-runtime/tests/p2_t03_scheduler_lease_timer.rs`；无删除文件。
+- **数据/API/配置/迁移：** 新增 scheduler 持久化：runnable、lease owner/epoch、next eligible、attempt、cancel request；**数据迁移必须由 P1-T01 框架执行**（migration 编号单一分配，§12.2）；配置：poll/timer 间隔、lease TTL、deadline/retry/step/cost ceilings。
+- **步骤：** (1) migration + repository（先失败测试）；(2) lease acquire/renew/expire 与 epoch fence；(3) timer/next-eligible 推进；(4) cancel request 传播；(5) crash/clock 故障注入。
+- **验收：** worker crash 后 lease 到期可被安全接管且旧 epoch 被 fence；duplicate lease 不可能（CAS 负例）；clock shift 不产生双派发或饿死（时钟策略明确记录）；deadline/retry/step/cost ceiling 到达即停并落 authority 事实。
+- **测试：** SQLite 集成 + fault injection（§15.1 层 3/7）；负例：双 worker 抢同 lease、续租已过期 lease、cancel 后再派发；命令按 §15.2。
+- **基准/性能：** 记录调度决策延迟与空转率；无目标值。
+- **安全/可观测：** scheduler 不成为第二 authority：状态推进仍经 kernel transitions；lease 事件可查询。
+- **回滚/文档：** migration 按 P1-T01 backup 语义可回滚；scheduler 可停用回 admit-only 模式；文档联动。
+- **解锁：** P2-T04、P2-T07。
+- **风险/不确定：** 单机多 worker 与 WAL 写争用；wall/monotonic 时钟选型须在实现批固化并记录理由。
 
 ### P2-T04 — 单 Agent worker 与 BoundedHarness 接入
 
-- 连接 scheduler→TaskContract→Context→candidate→progress→LoopDriver。
-- 每轮必须重新加载 contract/governance/lease；模型 self-report 不算 progress。
-- 测 no-progress、strategy switch、wait-user、budget stop、stale lease。
-- 不含 Memory/MCP/background Pi；解锁 P2-T05/T07。
+- **目标/价值：** 把 scheduler 拉起的任务接入既有受治理循环：连接 scheduler→TaskContract→Context→candidate→progress→LoopDriver，形成产品 worker（§6 Agent Loop L3→L5 缺口）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `crates/cognitive-kernel/src/harness.rs`（`LoopDriver`）、`crates/cognitive-runtime/src/harness_loop.rs`（`BoundedHarness`）与 `loop_progress_facts` 表已存在。
+- **依赖：** P2-T02、P2-T03。
+- **不包含：** Memory、MCP、background Pi（PI-AGENT-INTEGRATION-PLAN 分期）、多 Agent。
+- **文件：** `crates/cognitive-runtime` 新增 worker 模块（组装链路，不复制 harness 逻辑）；新增 `crates/cognitive-runtime/tests/p2_t04_worker_harness.rs`；无删除文件。
+- **数据/API/配置/迁移：** 不新增表；progress facts 复用 `loop_progress_facts`；预算绑定取自 TaskContract，准入后为硬轨。
+- **步骤：** (1) worker 拉取 runnable + lease；(2) 每轮重新加载 contract/governance/lease；(3) candidate 产生与 progress 判定接线；(4) no-progress/strategy switch/budget stop 停机路径；(5) wait-user 挂起与恢复。
+- **验收：** 每轮必须重新加载 contract/governance/lease，修订或吊销立即生效；模型 self-report 不算 progress（progress 仅来自可验证事实）；no-progress 触发 strategy switch 或 blocked；wait-user 挂起不消耗预算；budget stop 落 authority 事实；stale lease 循环立即终止且无任何状态写出。
+- **测试：** 纯逻辑 + 集成；负例：stale lease 内尝试提交、self-report 伪 progress、预算溢出后继续执行；命令按 §15.2。
+- **基准/性能：** 记录每轮 overhead，并按 §3 实验轨道口径拆分 CognitiveOS deterministic overhead 与 Provider/network latency。
+- **安全/可观测：** loop telemetry 事实化（P3-T04 输入）；无 secret 进入 loop 记录。
+- **回滚/文档：** worker 可停用且 scheduler 状态不损坏；文档联动。
+- **解锁：** P2-T05、P2-T07。
+- **风险/不确定：** P2-T07 verifier 就绪前 progress 判定的降级口径：保守计 no-progress，不得放宽为 self-report。
 
 ### P2-T05 — Tool Registry 与第一个安全 operation
 
-- 建立 immutable descriptor：schema digest、risk、effect class、query/idempotency、sandbox、verification、health、state。
-- 第一个 operation 应选择可查询、可幂等、影响范围窄的 workspace-local操作；不得选择 generic Bash。
-- 未注册、schema drift、disabled/quarantined、伪造 capability 均拒绝且 dispatch=0。
-- 解锁 P2-T06。
+- **目标/价值：** 建立 immutable ToolDescriptor 注册表与第一个窄范围安全 operation，使 tool call 只能转成 catalog-bound OperationCandidate（DEC-P-11/DEC-P-14、DS-02）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** §6 Tools 现状 L1：`ToolAdapter`、executor ports 存在（`crates/cognitive-kernel/src/{effects,executor,ports}.rs`），无 Registry/real executor。
+- **依赖：** P2-T04。
+- **不包含：** MCP adapter（P5-T03）、动态发现、generic Bash（明确禁止作为第一个 operation）。
+- **文件：** `crates/cognitive-runtime` 新增 tool_registry 模块；新增 `crates/cognitive-runtime/tests/p2_t05_tool_registry.rs`；无删除文件。
+- **数据/API/配置/迁移：** 建立 immutable descriptor：schema digest、risk、effect class、query/idempotency、sandbox、verification、health、state（enabled/disabled/quarantined），并含 ADR-0026 Tier 分类元数据；如需持久化经 P1-T01 迁移框架。
+- **步骤：** (1) descriptor 类型与不可变性（变更即新版本 + 新 digest）；(2) 注册/启停/隔离生命周期；(3) 第一个 operation：可查询、可幂等、影响范围窄的 workspace-local 操作，不得选择 generic Bash；(4) candidate→operation 解析与拒绝路径；(5) 错误实现自检。
+- **验收：** 未注册、schema drift（digest 不符）、disabled/quarantined、伪造 capability 均拒绝且 **dispatch=0**（拒绝本身留审计）；第一个 operation 满足可查询、可幂等、窄影响三条并具 reconcile 查询。
+- **测试：** 合同/纯逻辑/集成；自检：放行 drift descriptor 的故意错误实现必须 fail；命令按 §15.2。
+- **基准/性能：** 记录 registry 解析延迟；无目标值。
+- **安全/可观测：** default deny；descriptor 生命周期全审计；descriptor 无 secret 字段。
+- **回滚/文档：** operation 可禁用；如有表按迁移框架回滚；文档联动。
+- **解锁：** P2-T06。
+- **风险/不确定：** 第一个 operation 具体选型（倾向 workspace 查询/幂等窄写）在实现批定案并记录理由；Tier 元数据与 P5-T01 capability lease 模型的衔接。
 
 ### P2-T06 — Process supervisor 和首个 executor
 
-- 新增 stable process/task/attempt/epoch identity、CWD、stdout/stderr cursor、timeout、stop、restart、reconcile。
-- executor 必须 persist-before-dispatch；stdout zero exit 只作为 evidence。
-- 测 crash before/mid/after dispatch、orphan、output limit、secret redaction、same-key/different-input。
-- 解锁 P2-T07。
+- **目标/价值：** daemon 内进程监督与首个真实 executor：stable identity、有界输出、timeout/stop/restart/reconcile，使 Effect 协议在真实进程上落地（§6 Process 现状 L0）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `crates/cognitive-kernel/src/{executor,effects}.rs` 的 Effect 协议与 `intents`/`outbox` 表；`crates/cognitive-runtime/src/sandbox.rs`；`cognitive-store/src/faults.rs` 故障注入模式。
+- **依赖：** P2-T05。
+- **不包含：** Linux-native OS sandbox 强化（后续专项）、Pi 进程管理（PI-AGENT-INTEGRATION-PLAN）、并行 executor 池。
+- **文件：** `crates/cognitive-runtime` 新增 process_supervisor/executor 模块；新增 `crates/cognitive-runtime/tests/p2_t06_process_executor.rs`；无删除文件。
+- **数据/API/配置/迁移：** 新增 stable process/task/attempt/epoch identity、CWD、stdout/stderr cursor、timeout、stop、restart、reconcile 记录；持久化经 P1-T01 框架；配置：timeout、output limit、restart policy。
+- **步骤：** (1) identity 与 **persist-before-dispatch**（Effect intent 先落库再 spawn）；(2) 输出 cursor 与上限；(3) timeout/stop/restart；(4) orphan 扫描与 reconcile；(5) 幂等冲突拒绝。
+- **验收：** crash before/mid/after dispatch 三相故障后恢复且无重复副作用（稳定幂等键 + reconcile）；orphan 进程被发现并终止/对账；output limit 截断留证据；secret redaction（env/argv/log）负例通过；same-key/different-input 拒绝；stdout zero exit 只作为 evidence，不得直接判 Effect 成功或 Task 完成。
+- **测试：** fault injection 全三相 + 集成；自检：zero-exit 即 completed 的故意错误实现必须 fail；命令按 §15.2。
+- **基准/性能：** 记录 spawn→dispatch 延迟与 reconcile 耗时；无目标值。
+- **安全/可观测：** 子进程环境最小化、不继承 secret；进程事件可查询。
+- **回滚/文档：** executor 可禁用回 candidate-only dry-run；文档联动。
+- **解锁：** P2-T07。
+- **风险/不确定：** OUTCOME_UNKNOWN 判定窗口与对账查询可用性；首发仅 Linux 进程语义（Windows 安装面归 P7-T07）。
 
 ### P2-T07 — Checkpoint、Artifact/Evidence 和独立 Completion Verifier
 
-- 把 checkpoint、effect closure、artifacts、criteria results、verification event 接入 task closure。
-- verifier 与执行 agent分离；每个 criterion 记录 pass/fail/unknown/evidence digest。
-- Partial completion 不得升级为 completed；remote done和receipt不够。
-- recovery 顺序严格使用现有 `recovery.rs`。
-- 解锁 P2-T08。
+- **目标/价值：** 任务闭合证据链：把 checkpoint、effect closure、artifacts、criteria results、verification event 接入 task closure；完成只能由独立 verifier 判定（无假完成）。
+- **状态：** 以正式台账为准。
+- **证据/研究：** `checkpoints` 表与 kernel verification/acceptance 语义已存在（§6 Verification L4 core / Checkpoint L3）；`crates/cognitive-kernel/src/recovery.rs` 恢复协议与 `crates/cognitive-runtime/src/recovery_flow.rs`。
+- **依赖：** P2-T03、P2-T04、P2-T06。
+- **不包含：** Memory 证据（P4）、性能 campaign（P7-T04）、多 Agent reviewer 编排（P6-T03）。
+- **文件：** `crates/cognitive-runtime` 新增 verifier service 与 closure 组装；新增 `crates/cognitive-runtime/tests/p2_t07_verifier_closure.rs`；无删除文件。
+- **数据/API/配置/迁移：** criteria result（criterion、pass/fail/unknown、evidence digest）持久化经 P1-T01 框架；artifact 引用按 DEC-P-04（filesystem CAS + SQLite metadata）最小实现，不建平行 store。
+- **步骤：** (1) verifier port 与执行 agent 分离（独立代码路径与 principal）；(2) criteria evaluation→verification event；(3) effect closure 汇总（存在未闭合 Effect/OUTCOME_UNKNOWN 时拒绝闭合）；(4) partial completion 语义；(5) recovery 顺序严格使用现有 `recovery.rs`，不重排、不复制。
+- **验收：** verifier 与执行 agent 分离；每个 criterion 记录 pass/fail/unknown 与 evidence digest；Partial completion 不得升级为 completed；remote done 和 receipt 不够（须独立证据）；未闭合 Effect 存在时任务不得 completed。
+- **测试：** 集成 + 自检：伪完成实现必须 fail（为 P2-T08 False Completion=0 提供地板）；命令按 §15.2。
+- **基准/性能：** 记录 verification 延迟；B04 verified criteria 口径对齐 §14。
+- **安全/可观测：** evidence digest 链可审计；无 secret 入 evidence。
+- **回滚/文档：** verifier 停用时任务只能停在待验证态，不得自动完成；文档联动。
+- **解锁：** P2-T08。
+- **风险/不确定：** criteria evidence 最小 schema 与 conformance 向量的衔接——若需合同登记走 Lane-CTR。
 
 ### P2-T08 — Phase 2 E2E Gate
 
-- 自动化 B02、B04、B05、B12。
-- 必须覆盖 Shell关闭、daemon关闭、OUTCOME_UNKNOWN、不盲重试、false completion negative。
-- 建议普通重启 authority state recovery=100%；False Completion Rate 在 gate suite 中必须 0/所有故意错误案例。
-- 解锁 Phase 3。
+- **目标/价值：** 自动化 B02、B04、B05、B12 的 E2E 套件与证据采集，构成 Phase 2 出口。
+- **状态：** 以正式台账为准。
+- **证据/研究：** §13 B02/B04/B05/B12 规格与 §14 指标；依赖 P2-T01..T07 全链路。正式 Gate 环境不可得时，suite 本身可按 experimental-local-only 推进，Gate 结果保持 `not-run` + blocked 原因（台账解耦注记）。
+- **依赖：** P2-T07。
+- **不包含：** B01（P1-T09）、B03/B06/B07（P3-T06）、性能 campaign（P7-T04）。
+- **文件：** 新增 `tests/e2e/personal/b02|b04|b05|b12-*` 与 evidence schema/runner（复用 P1-T09 runner 骨架）；无删除文件。
+- **数据/API/配置/迁移：** raw evidence 入 ignored `artifacts/evidence/personal/`；summary 带 suite digest 与 non-claim（§13 通则）。
+- **步骤：** (1) suite harness 与 fixture 任务集；(2) 故障场景：Shell 关闭、daemon 关闭、OUTCOME_UNKNOWN；(3) 负例：false completion、盲重试；(4) ADR-0018 例外到期核查；(5) B04 确认次数与 Tier-2 负例采集；(6) evidence redaction 校验。
+- **验收：** 必须覆盖 Shell 关闭、daemon 关闭、OUTCOME_UNKNOWN、不盲重试（不换幂等键，原键可查证）、false completion negative；建议普通重启 authority state recovery=100%；False Completion Rate 在 gate suite 中必须 0/所有故意错误案例；核查 ADR-0018 本机开发例外已到期移除（或已替换为 daemon proxy 并重新批准），例外残留视为 Gate 不通过；B04 证据记录默认路径人工确认次数（目标 ≤1/task，Tier-2 除外），并含 Tier-2 负例：purge 类操作缺显式确认必须失败（ADR-0026）。
+- **测试：** E2E + 每个关键 gate ≥1 个故意错误实现自检；命令按 §15.2 并追加 suite。
+- **基准/性能：** 按 §13 通则采样（≥30 次有效 run，装机类高成本场景 ≥20 次）并报告 median/p95/bootstrap CI；未测不宣称。
+- **安全/可观测：** evidence 全 redacted、无 key；确认次数字段入 evidence rows（ADR-0026）。
+- **回滚/文档：** Gate fail 只允许修复或 revert，不得带红宣 GO；台账 Gate 行与文档联动。
+- **解锁：** Phase 3。
+- **风险/不确定：** B04/B12 需真实 Provider key 与环境；不可得时按 §3 纪律记 blocked/not-run 并转做其他任务，不停摆。
 
 ---
 
@@ -805,6 +919,7 @@ Pi 不可以：
 - 复用 installation store；补 activation/disable/update/uninstall/rollback lifecycle。
 - source/lockfile/manifest/compatibility/sandbox digests持久化。
 - 卸载保留历史 evidence，不保留运行权限。
+- 首次使用产生一键"授予并记住"的 Tool×scope capability lease（REQ-CAP-003）；`cognitive grants` 可列出/撤销（ADR-0026）。
 - 测浮动依赖、lifecycle scripts、tamper、interrupted update。
 - 解锁 P5-T02/P5-T05。
 
@@ -813,6 +928,7 @@ Pi 不可以：
 - 定义 versioned Agent Definition、实例健康、budget、tool scope、memory policy、workspace scope。
 - 不把 Pi Session 当 AgentInstance；安装不等于 activation。
 - 内置 Agent只做最小 general/reviewer/verifier集合；capability 默认拒绝并验证实例隔离。
+- install ≠ permission 保留（REQ-AGENT-INSTALL-001/002）；低摩擦只改首用授予交互，不改默认拒绝底座（ADR-0026）。
 - 解锁 P5-T05。
 
 ### P5-T03 — Tool package格式和MCP adapter
@@ -885,6 +1001,7 @@ Pi 不可以：
 - update先验证→stage→migration preflight→health→atomic switch。
 - downgrade只在数据兼容明确时允许；否则恢复旧 binary+DB backup。
 - uninstall区分 binary/config/cache/data/secret，删除数据需要显式二次确认。
+- 面向用户的 `cognitive backup`/`cognitive restore` 命令：覆盖 state/config/artifacts，排除 secret；restore 走 migration preflight（ADR-0026）。
 - B01增加upgrade/interruption/uninstall cleanliness。
 - 解锁 P7-T06。
 
@@ -905,7 +1022,7 @@ Pi 不可以：
 ### P7-T05 — 非阻塞 Web UI
 
 - 仅在客户端 readiness gate、技术栈 ADR、法务和 daemon API稳定后启动。
-- 计划路径 `clients/pc/web/`；React/TS/Vite候选。
+- 计划路径为独立仓库 cognitiveos-clients 内的 `pc/web/`（本仓不落 `clients/`）；React/TS/Vite候选。
 - 只渲染 system/provider/tasks/agents/processes/tokens/tools/memory/evidence projections。
 - 不直接打开数据库、不做授权/完成判定。
 - 不阻塞 RC CLI+Pi release。
@@ -916,6 +1033,15 @@ Pi 不可以：
 - `implemented` 仍只能按适用 MUST证据计算，Personal release不得冒充 Profile。
 - 发布 install/init/provider/Pi/task/recovery/update/uninstall runbooks。
 - 所有 open critical risks为0，或明确NO-GO。
+
+### P7-T07 — Windows 安装面：credential 后端、installer/service 与 B01-W Gate
+
+- **目标/价值：** 为 ADR-0025 已决定的 Windows x86_64 首发平台补齐安装面唯一落点；在此之前 Windows 仅为 daemon/CLI 产品路径。
+- **依赖/不包含：** P1-T02（secret 边界）、P7-T01/T02（release/update 管线）；不包含 macOS/aarch64/WSL2、不阻塞 Linux RC。
+- **验收：** Windows credential store 后端满足与 Linux 相同的 fail-closed 边界且无明文 fallback；可检查 installer/service；编写并执行专门 B01-W Gate（清洁 Windows VM install→first dialogue）。
+- **安全：** 与 ADR-0018/0020 同一 secret 边界；ADR-0018 本机开发例外明确不适用于 Windows。
+- **非声明：** 未执行 B01-W 前不得声称 Windows install parity（ADR-0025）；本卡完成不改变 Profile/Gate 结论。
+- **回滚：** installer 失败原子回滚；不影响已发布 Linux bundle。
 
 ---
 
@@ -1008,7 +1134,11 @@ tasks:
   P7-T04: { depends_on: [P3-T06, P4-T05, P5-T05] }
   P7-T05: { depends_on: [P2-T08, P7-T03] }
   P7-T06: { depends_on: [P7-T02, P7-T03, P7-T04, P5-T05, P6-T04] }
+  P7-T07: { depends_on: [P1-T02, P7-T01, P7-T02] }
 
+# critical_path 是串行主干与汇聚节点的并集：P6 链是强制段（B11 Gate 必须执行，
+# 即使结论是保持 multi-agent 默认关闭）；P7-T03 是 P7-T05 的前置。
+# P7-T07 不在 critical path 上（不阻塞 Linux RC，ADR-0025）。
 critical_path:
   - P0-T01
   - P0-T02
@@ -1042,8 +1172,13 @@ critical_path:
   - P5-T01
   - P5-T02
   - P5-T05
+  - P6-T01
+  - P6-T02
+  - P6-T03
+  - P6-T04
   - P7-T01
   - P7-T02
+  - P7-T03
   - P7-T04
   - P7-T06
 ```
@@ -1110,6 +1245,7 @@ critical_path:
 | False Completion Rate | claimed complete but verifier fails / claimed complete | gate suite = 0 |
 | Recovery Completion Rate | recovered and accepted / recoverable interrupted | ≥95%；普通 daemon restart state恢复=100% |
 | Human Intervention Rate | tasks requiring unplanned human action / started | 先测，不盲降 |
+| Approval Interactions/Task | default-path 人工确认次数 / started | ≤1（准入预览；Tier-2 与首用授予除外，ADR-0026） |
 | Total Tokens/Completed Task | total provider tokens / verified completed | 相对 baseline下降≥20%±5% |
 | Repeated Context Ratio | duplicated input tokens / total input tokens | 相对下降≥25%±5% |
 | Tokens/Progress Point | total tokens / accepted progress facts | 相对下降≥20% |
@@ -1196,7 +1332,7 @@ git diff --check
 | R-19 | 工作区越界 | 中/致命 | symlink/path escape | canonical path、root binding、negative tests | P2/P6 |
 | R-20 | 多 Agent写冲突 | 高/高 | 同路径并行修改 | path ownership/worktree/integrator | P6 |
 | R-21 | Token失控 | 高/中 | no-progress/context重复 | budget、metrics、loop guard | P3 |
-| R-22 | 企业模块阻塞个人版 | 中/高 |每次本地动作要求复杂approval | lightweight policy profile、保留边界旁路 | 全阶段 |
+| R-22 | 企业模块阻塞个人版 | 中/高 |每次本地动作要求复杂approval | ADR-0026 trust profile（Tier 0/1/2、准入预览唯一默认授权点、预算硬轨）、保留边界旁路 | 全阶段 |
 | R-23 | 过度工程 | 高/高 | 引入Temporal/vector DB/K8s | phase gates、依赖引入需ADR amendment | 全阶段 |
 | R-24 | 测试只依赖Mock | 高/高 | live/E2E缺失 | recorded+live opt-in+VM E2E | P1/P7 |
 | R-25 | 跨平台安装差异 | 高/中 | Windows/macOS行为未知 | 首发只声明Linux；单独PoC | P7 |
@@ -1214,7 +1350,7 @@ git diff --check
 | 企业 RBAC | 部分 capability/authz | 不进入默认UX | 保留server gate | 不建管理员UI |
 | 完整 ActorChain | domain能力存在 | local owner最小链 | 不删除类型 | 不扩展Personal流程 |
 | Capability Intersection | 已有基础 | delegation前不暴露 | P6才消费 | P1-P5不重做 |
-| 企业审批 | management基础 | 仅destructive confirmation | 企业版另Profile | 不建审批链 |
+| 企业审批 | management基础 | 仅destructive confirmation（=ADR-0026 Tier 2） | 企业版另Profile | 不建审批链（ADR-0026 正式化） |
 | 高保障 Profile | specified/局部实现 | non-claim | 全MUST证据后恢复 | 不宣称implemented |
 | 全量 Conformance | 60/25当前口径 | Personal只跑相关+全回归 | 后续campaign | 不改向量迎合实现 |
 | Kubernetes | 无 | 延后 | 多节点需求实测后 | 不引入 |
@@ -1351,6 +1487,8 @@ sh install.sh
 
 不选择 Homebrew 作为首发，因为首发不是 macOS。
 不选择 Docker Compose 作为首发，因为它使 Pi Interactive TUI、Secret Service、用户工作区和本地工具隔离更复杂；Compose 可作为后续 server/headless候选，但不能替代本地产品链路。
+
+Windows x86_64 是首发产品平台（ADR-0025），但其安装面（credential 后端、installer/service、专门 B01-W Gate）统一延后到 P7-T07；本节安装方式仅覆盖 Linux bundle。
 
 ## 19.2 `cognitive init` 目标流程
 
