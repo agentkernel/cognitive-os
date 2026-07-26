@@ -16,13 +16,18 @@ use pi_agent_adapter::{
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
-use std::ffi::OsString;
-use std::process::Command;
-use std::time::Instant;
+use std::ffi::{OsStr, OsString};
+use std::io::{Read, Write};
+use std::process::{Command, Stdio};
+use std::thread::{self, JoinHandle, sleep};
+use std::time::{Duration, Instant};
 
 const LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG: &str =
     "allow-local-native-provider-secret-development";
-const USAGE: &str = "pi-agent-adapter <run|evaluate> --pi <path> --model <deepseek-model> --prompt <text> --work-dir <dir> --config-dir <pi-dir> --provider-config-dir <personal-provider-config-dir> --allow-local-native-provider-secret-development [--runs <1..=20> --expected-text <text>]";
+const EXTENSION_LOAD_TIMEOUT: Duration = Duration::from_secs(30);
+const P0_T06_EXTENSION_FIXTURE: &str = "apps/pi-agent-adapter/fixtures/p0_t06_extension.ts";
+const P0_T06_EXTENSION_STATUS_COMMAND: &str = "/cognitiveos-p0-t06-status";
+const USAGE: &str = "pi-agent-adapter <run|evaluate|extension-load> --pi <path> --model <deepseek-model> --prompt <text> --work-dir <dir> --config-dir <pi-dir> --provider-config-dir <personal-provider-config-dir> --allow-local-native-provider-secret-development [--runs <1..=20> --expected-text <text>]";
 
 #[derive(Debug, Default, PartialEq, Eq)]
 struct ParsedFlags {
@@ -55,8 +60,231 @@ fn run(args: &[String]) -> Result<Value, String> {
     match verb.as_str() {
         "run" => candidate_record(&flags),
         "evaluate" => evaluate_candidates(&flags),
+        "extension-load" => extension_load_record(&flags),
         _ => Err(format!("unsupported verb `{verb}`")),
     }
+}
+
+/// Attempts one real pinned Pi Extension session without changing the
+/// candidate-only launcher policy. This is local PoC evidence only: the child
+/// receives the approved development credential exception and remains
+/// uncontained. No authority or Effect surface is available in this mode.
+fn extension_load_record(flags: &ParsedFlags) -> Result<Value, String> {
+    let pi = required(flags, "pi")?;
+    let model = required(flags, "model")?;
+    let prompt = required(flags, "prompt")?;
+    let work_dir = required(flags, "work-dir")?;
+    let config_dir = required(flags, "config-dir")?;
+    let provider_config_dir = required(flags, "provider-config-dir")?;
+    require_local_native_provider_secret_development_flag(flags)?;
+    verify_pinned_pi_version(pi)?;
+    let fixture = required_fixture_path(flags)?;
+    if prompt != P0_T06_EXTENSION_STATUS_COMMAND {
+        return Err(format!(
+            "P0-T06 evidence mode requires --prompt {P0_T06_EXTENSION_STATUS_COMMAND}"
+        ));
+    }
+    let provider_material = resolve_local_development_provider_material(provider_config_dir)?;
+    let mut child = sanitized_command(pi, &provider_material)?
+        .arg("-e")
+        .arg(fixture)
+        .arg("--provider")
+        .arg("deepseek")
+        .arg("--model")
+        .arg(model)
+        .arg("--no-tools")
+        // Explicit -e remains enabled while discovery of user or project
+        // extensions is disabled by the pinned Pi CLI.
+        .arg("--no-extensions")
+        .arg("--no-skills")
+        .arg("--no-context-files")
+        .arg("--no-session")
+        .arg("--no-approve")
+        .arg("--mode")
+        .arg("rpc")
+        .current_dir(work_dir)
+        .env("PI_CODING_AGENT_DIR", config_dir)
+        .env("PI_TELEMETRY", "0")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|error| format!("Pi Extension session failed to launch: {error}"))?;
+
+    let stdout_reader = collect_child_stream(
+        child
+            .stdout
+            .take()
+            .ok_or_else(|| "Pi Extension session stdout was not captured".to_owned())?,
+    );
+    let stderr_reader = collect_child_stream(
+        child
+            .stderr
+            .take()
+            .ok_or_else(|| "Pi Extension session stderr was not captured".to_owned())?,
+    );
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "Pi Extension session stdin was not captured".to_owned())?;
+    write_rpc_probe_command(&mut stdin, "p0-t06-commands", "get_commands")?;
+    write_rpc_probe_command(&mut stdin, "p0-t06-state", "get_state")?;
+    write_rpc_prompt(&mut stdin, "p0-t06-status", prompt)?;
+    drop(stdin);
+
+    let started = Instant::now();
+    let (exit_status, timed_out) = loop {
+        match child
+            .try_wait()
+            .map_err(|error| format!("Pi Extension session wait failed: {error}"))?
+        {
+            Some(status) => break (status, false),
+            None if started.elapsed() >= EXTENSION_LOAD_TIMEOUT => {
+                child.kill().map_err(|error| {
+                    format!("Pi Extension session timeout kill failed: {error}")
+                })?;
+                let status = child.wait().map_err(|error| {
+                    format!("Pi Extension session timeout wait failed: {error}")
+                })?;
+                break (status, true);
+            }
+            None => sleep(Duration::from_millis(25)),
+        }
+    };
+    let stdout_bytes = join_child_stream(stdout_reader, "stdout")?;
+    let stderr_bytes = join_child_stream(stderr_reader, "stderr")?;
+    let raw_stdout = String::from_utf8_lossy(&stdout_bytes);
+    let rpc_records = pi_agent_adapter::parse_rpc_jsonl_records(&raw_stdout)
+        .map_err(|error| format!("Pi Extension session emitted invalid RPC JSONL: {error}"))?;
+    let provider_key = std::str::from_utf8(provider_material.expose_bytes()).map_err(|_| {
+        "native Provider secret must be valid UTF-8 for the Pi development exception".to_owned()
+    })?;
+    let stdout = redact_secret(&raw_stdout, provider_key);
+    let stderr = redact_secret(&String::from_utf8_lossy(&stderr_bytes), provider_key);
+    let extension_command_registered = rpc_records.iter().any(|record| {
+        record["id"] == "p0-t06-commands"
+            && record["type"] == "response"
+            && record["command"] == "get_commands"
+            && record["success"] == true
+            && record["data"]["commands"]
+                .as_array()
+                .is_some_and(|commands| {
+                    commands.iter().any(|command| {
+                        command["name"] == "cognitiveos-p0-t06-status"
+                            && command["source"] == "extension"
+                    })
+                })
+    });
+    let session_start_hook_observed = rpc_records.iter().any(|record| {
+        record["type"] == "extension_ui_request"
+            && record["method"] == "setStatus"
+            && record["statusKey"] == "cognitiveos-p0-t06"
+    });
+    let status_command_observed = rpc_records.iter().any(|record| {
+        record["id"] == "p0-t06-status"
+            && record["type"] == "response"
+            && record["command"] == "prompt"
+            && record["success"] == true
+    });
+    Ok(json!({
+        "evidence_kind": "p0_t06_extension_session_load",
+        "status": if timed_out { "timeout" } else if exit_status.success() { "executed" } else { "failed" },
+        "classification": "uncontained_candidate_only",
+        "platform": platform().as_str(),
+        "fixture": P0_T06_EXTENSION_FIXTURE,
+        "extension_load_attempted": true,
+        "extension_command_registered": extension_command_registered,
+        "session_process_exited": !timed_out,
+        "session_start_hook_observed": session_start_hook_observed,
+        "status_command_observed": status_command_observed,
+        "project_trust_hook_observed": false,
+        "mutating_tool_hooks_observed": false,
+        "raw_output_included": false,
+        "output_redacted": true,
+        "pi_exit_code": exit_status.code(),
+        "stdout_length": stdout.len(),
+        "stderr_length": stderr.len(),
+        "authority_committed": false,
+        "effects_created": false,
+        "task_transitions": 0,
+        "capabilities_granted": 0,
+        "non_claims": ["project trust and mutating tool runtime observations not established", "no containment", "no Profile or release claim"]
+    }))
+}
+
+fn collect_child_stream<R>(mut stream: R) -> JoinHandle<Result<Vec<u8>, std::io::Error>>
+where
+    R: Read + Send + 'static,
+{
+    thread::spawn(move || {
+        let mut output = Vec::new();
+        stream.read_to_end(&mut output)?;
+        Ok(output)
+    })
+}
+
+fn join_child_stream(
+    reader: JoinHandle<Result<Vec<u8>, std::io::Error>>,
+    stream_name: &str,
+) -> Result<Vec<u8>, String> {
+    reader
+        .join()
+        .map_err(|_| format!("Pi Extension session {stream_name} reader panicked"))?
+        .map_err(|error| format!("Pi Extension session {stream_name} read failed: {error}"))
+}
+
+fn write_rpc_probe_command(
+    stdin: &mut std::process::ChildStdin,
+    request_id: &str,
+    command_type: &str,
+) -> Result<(), String> {
+    let record = json!({ "id": request_id, "type": command_type });
+    write_rpc_record(stdin, &record)
+}
+
+fn write_rpc_prompt(
+    stdin: &mut std::process::ChildStdin,
+    request_id: &str,
+    message: &str,
+) -> Result<(), String> {
+    let record = json!({ "id": request_id, "type": "prompt", "message": message });
+    write_rpc_record(stdin, &record)
+}
+
+fn write_rpc_record(stdin: &mut std::process::ChildStdin, record: &Value) -> Result<(), String> {
+    let mut line = serde_json::to_vec(record)
+        .map_err(|error| format!("cannot serialize Pi RPC probe command: {error}"))?;
+    line.push(b'\n');
+    stdin
+        .write_all(&line)
+        .and_then(|()| stdin.flush())
+        .map_err(|error| format!("cannot write Pi RPC probe command: {error}"))
+}
+
+fn required_fixture_path(flags: &ParsedFlags) -> Result<String, String> {
+    let fixture = flags
+        .values
+        .get("fixture")
+        .map(String::as_str)
+        .unwrap_or(P0_T06_EXTENSION_FIXTURE);
+    if fixture != P0_T06_EXTENSION_FIXTURE {
+        return Err(format!(
+            "P0-T06 evidence mode only permits the pinned fixture `{P0_T06_EXTENSION_FIXTURE}`"
+        ));
+    }
+    let fixture_path = std::env::current_dir()
+        .map_err(|error| format!("cannot resolve repository root for Pi fixture: {error}"))?
+        .join(fixture);
+    if !fixture_path.is_file() {
+        return Err(format!(
+            "pinned Pi Extension fixture is missing: {}",
+            fixture_path.display()
+        ));
+    }
+    fixture_path
+        .canonicalize()
+        .map(|path| path.to_string_lossy().into_owned())
+        .map_err(|error| format!("cannot canonicalize Pi Extension fixture: {error}"))
 }
 
 fn candidate_record(flags: &ParsedFlags) -> Result<Value, String> {
@@ -120,6 +348,7 @@ fn require_local_native_provider_secret_development_flag(
 fn resolve_local_development_provider_material(
     provider_config_dir: &str,
 ) -> Result<SecretMaterial, String> {
+    require_local_native_provider_secret_host()?;
     let repository = ProviderConfigRepository::under_config_dir(provider_config_dir);
     match select_production_secret_store() {
         ProductionSecretBackend::LinuxSecretTool(secret_store) => {
@@ -149,6 +378,41 @@ fn resolve_local_development_provider_material(
                 .to_owned(),
         ),
     }
+}
+
+fn require_local_native_provider_secret_host() -> Result<(), String> {
+    validate_local_native_provider_secret_host(
+        platform(),
+        environment_value_enables_ci(env::var_os("CI").as_deref()),
+    )
+}
+
+fn validate_local_native_provider_secret_host(
+    host_platform: SandboxPlatform,
+    ci_enabled: bool,
+) -> Result<(), String> {
+    if ci_enabled {
+        return Err("local development Provider secret delivery is forbidden in CI".to_owned());
+    }
+
+    match host_platform {
+        SandboxPlatform::LinuxNative => Ok(()),
+        SandboxPlatform::WindowsWsl2LinuxGuest => Err(
+            "local development Provider secret delivery requires Linux native and rejects WSL2"
+                .to_owned(),
+        ),
+        SandboxPlatform::WindowsNative => Err(
+            "local development Provider secret delivery requires Linux native and rejects Windows"
+                .to_owned(),
+        ),
+    }
+}
+
+fn environment_value_enables_ci(value: Option<&OsStr>) -> bool {
+    value.is_some_and(|value| {
+        let normalized_value = value.to_string_lossy().trim().to_ascii_lowercase();
+        !normalized_value.is_empty() && normalized_value != "0" && normalized_value != "false"
+    })
 }
 
 fn verify_pinned_pi_version(pi: &str) -> Result<(), String> {
@@ -299,8 +563,34 @@ fn required<'a>(flags: &'a ParsedFlags, name: &str) -> Result<&'a str, String> {
 }
 
 fn platform() -> SandboxPlatform {
-    if cfg!(target_os = "windows") {
-        SandboxPlatform::WindowsNative
+    let proc_version = std::fs::read_to_string("/proc/version").unwrap_or_default();
+    let kernel_release = std::fs::read_to_string("/proc/sys/kernel/osrelease").unwrap_or_default();
+    let has_wsl_environment =
+        env::var_os("WSL_DISTRO_NAME").is_some() || env::var_os("WSL_INTEROP").is_some();
+    classify_platform(
+        cfg!(target_os = "windows"),
+        &proc_version,
+        &kernel_release,
+        has_wsl_environment,
+    )
+}
+
+fn classify_platform(
+    is_windows_native: bool,
+    proc_version: &str,
+    kernel_release: &str,
+    has_wsl_environment: bool,
+) -> SandboxPlatform {
+    if is_windows_native {
+        return SandboxPlatform::WindowsNative;
+    }
+
+    let linux_platform_description =
+        format!("{proc_version}\n{kernel_release}").to_ascii_lowercase();
+    let kernel_reports_wsl = linux_platform_description.contains("microsoft")
+        || linux_platform_description.contains("wsl");
+    if has_wsl_environment || kernel_reports_wsl {
+        SandboxPlatform::WindowsWsl2LinuxGuest
     } else {
         SandboxPlatform::LinuxNative
     }
@@ -369,6 +659,59 @@ mod tests {
     }
 
     #[test]
+    fn development_secret_host_classification_rejects_wsl_and_windows() {
+        assert_eq!(
+            classify_platform(false, "Linux version 6.8.0", "6.8.0-generic", false),
+            SandboxPlatform::LinuxNative
+        );
+        assert_eq!(
+            classify_platform(
+                false,
+                "Linux version 6.6.87.2-microsoft-standard-WSL2",
+                "6.6.87.2-microsoft-standard-WSL2",
+                false,
+            ),
+            SandboxPlatform::WindowsWsl2LinuxGuest
+        );
+        assert_eq!(
+            classify_platform(false, "Linux version 6.8.0", "6.8.0-generic", true),
+            SandboxPlatform::WindowsWsl2LinuxGuest
+        );
+        assert_eq!(
+            classify_platform(true, "", "", false),
+            SandboxPlatform::WindowsNative
+        );
+    }
+
+    #[test]
+    fn development_secret_host_classification_rejects_ci_values() {
+        assert!(!environment_value_enables_ci(None));
+        assert!(!environment_value_enables_ci(Some(OsStr::new(""))));
+        assert!(!environment_value_enables_ci(Some(OsStr::new("false"))));
+        assert!(!environment_value_enables_ci(Some(OsStr::new("0"))));
+        assert!(environment_value_enables_ci(Some(OsStr::new("true"))));
+        assert!(environment_value_enables_ci(Some(OsStr::new("1"))));
+
+        assert!(
+            validate_local_native_provider_secret_host(SandboxPlatform::LinuxNative, false).is_ok()
+        );
+        assert!(
+            validate_local_native_provider_secret_host(SandboxPlatform::LinuxNative, true).is_err()
+        );
+        assert!(
+            validate_local_native_provider_secret_host(
+                SandboxPlatform::WindowsWsl2LinuxGuest,
+                false,
+            )
+            .is_err()
+        );
+        assert!(
+            validate_local_native_provider_secret_host(SandboxPlatform::WindowsNative, false)
+                .is_err()
+        );
+    }
+
+    #[test]
     fn child_environment_does_not_inherit_other_api_key_names() -> Result<(), String> {
         let provider_material =
             SecretMaterial::from_bytes("test-deepseek-key").map_err(|error| error.to_string())?;
@@ -389,5 +732,27 @@ mod tests {
         assert_eq!(percentile_ms(&samples, 95), Some(50));
         assert_eq!(percentile_ms(&samples, 99), Some(50));
         assert_eq!(percentile_ms(&[], 50), None);
+    }
+
+    #[test]
+    fn extension_evidence_mode_rejects_unpinned_fixture_paths() -> Result<(), String> {
+        let flags = parse_flags(&[
+            "--fixture".to_owned(),
+            "fixtures/unreviewed-extension.ts".to_owned(),
+        ])?;
+        let error = match required_fixture_path(&flags) {
+            Ok(_) => return Err("unreviewed fixture must fail".to_owned()),
+            Err(error) => error,
+        };
+        assert!(error.contains("only permits the pinned fixture"));
+        Ok(())
+    }
+
+    #[test]
+    fn extension_evidence_mode_uses_only_the_registered_status_command() {
+        assert_eq!(
+            P0_T06_EXTENSION_STATUS_COMMAND,
+            "/cognitiveos-p0-t06-status"
+        );
     }
 }

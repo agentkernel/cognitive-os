@@ -30,6 +30,41 @@ pub struct GovernanceOverheadSample {
 }
 
 impl GovernanceOverheadSample {
+    /// Fixed report-builder sample used to validate report plumbing only.
+    /// These values are never measurements or performance claims.
+    pub fn documented_builder_sample() -> Self {
+        Self {
+            ungoverned_baseline: "ungoverned-local-v1".into(),
+            authorization: StageLatencyMs {
+                p50: 0.1,
+                p95: 0.4,
+                p99: 0.9,
+            },
+            context_resolution: StageLatencyMs {
+                p50: 1.0,
+                p95: 3.0,
+                p99: 5.0,
+            },
+            effect_protocol: StageLatencyMs {
+                p50: 0.5,
+                p95: 1.2,
+                p99: 2.0,
+            },
+            cache_hit_preservation_ratio: 0.9,
+            extra_writes: 2.0,
+            extra_bytes: 1024.0,
+            approval_latency: StageLatencyMs {
+                p50: 10.0,
+                p95: 50.0,
+                p99: 100.0,
+            },
+            rubber_stamp_rate: 0.01,
+            retry_after_deny_rate: 0.02,
+            overhead_latency_percent_r1: 3.0,
+            overhead_cost_percent_r1: 2.0,
+        }
+    }
+
     /// Build a schema-shaped performance report fragment for governance overhead.
     /// Callers must supply measured numbers — never copy vector fixture values.
     pub fn to_report_json(&self) -> Value {
@@ -147,36 +182,7 @@ mod tests {
 
     #[test]
     fn overhead_report_requires_ungoverned_baseline_and_forbids_benefit() {
-        let sample = GovernanceOverheadSample {
-            ungoverned_baseline: "ungoverned-local-v1".into(),
-            authorization: StageLatencyMs {
-                p50: 0.1,
-                p95: 0.4,
-                p99: 0.9,
-            },
-            context_resolution: StageLatencyMs {
-                p50: 1.0,
-                p95: 3.0,
-                p99: 5.0,
-            },
-            effect_protocol: StageLatencyMs {
-                p50: 0.5,
-                p95: 1.2,
-                p99: 2.0,
-            },
-            cache_hit_preservation_ratio: 0.9,
-            extra_writes: 2.0,
-            extra_bytes: 1024.0,
-            approval_latency: StageLatencyMs {
-                p50: 10.0,
-                p95: 50.0,
-                p99: 100.0,
-            },
-            rubber_stamp_rate: 0.01,
-            retry_after_deny_rate: 0.02,
-            overhead_latency_percent_r1: 3.0,
-            overhead_cost_percent_r1: 2.0,
-        };
+        let sample = GovernanceOverheadSample::documented_builder_sample();
         assert!(sample.declares_ungoverned_baseline());
         assert!(!sample.claims_agent_benefit());
         let report = sample.to_report_json();

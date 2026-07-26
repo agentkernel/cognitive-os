@@ -25,7 +25,7 @@ RUN_DIR="$REPO_ROOT/artifacts/evidence/v01-auto-run/$RUN_ID"
 LOG_DIR="$RUN_DIR/logs"
 mkdir -p "$LOG_DIR" "$RUN_DIR/tmp"
 
-PIN_TOTAL=84 PIN_PASS=55 PIN_FAIL=0 PIN_NA=0 PIN_DD=0 PIN_NR=29 PIN_SC=36
+PIN_TOTAL=85 PIN_PASS=60 PIN_FAIL=0 PIN_NA=0 PIN_DD=0 PIN_NR=25 PIN_SC=41
 
 LEVEL="L0"
 STOPPED=0
@@ -48,9 +48,11 @@ run_logged() {
 }
 
 resolve_kernel_bin() {
-  for c in target/debug/kernel-server target/release/kernel-server \
-           target/debug/kernel-server.exe target/release/kernel-server.exe; do
-    if [[ -f "$c" ]]; then echo "$REPO_ROOT/$c"; return 0; fi
+  local target_root="${CARGO_TARGET_DIR:-$REPO_ROOT/target}"
+  if [[ "$target_root" != /* ]]; then target_root="$REPO_ROOT/$target_root"; fi
+  for c in "$target_root/debug/kernel-server" "$target_root/release/kernel-server" \
+           "$target_root/debug/kernel-server.exe" "$target_root/release/kernel-server.exe"; do
+    if [[ -f "$c" ]]; then echo "$c"; return 0; fi
   done
   return 1
 }
@@ -163,6 +165,15 @@ if [[ "$STOPPED" = 0 ]]; then
     REPORT="$REPO_ROOT/artifacts/evidence/conformance/conformance-report.json"
     if [[ -f "$REPORT" ]]; then
       cp "$REPORT" "$RUN_DIR/conformance-report.json"
+      RC_MANIFEST="$REPO_ROOT/artifacts/evidence/conformance/release-candidate-profile-manifest.json"
+      if [[ "$ec" = 0 && -f "$RC_MANIFEST" ]]; then
+        ec_manifest="$(run_logged verify-manifest node tools/src/validate-manifest.mjs "$RC_MANIFEST")"
+        [[ "$ec_manifest" = 0 ]] || VERIFY=auto_fail
+        set_result VERIFY-MANIFEST "$([ "$ec_manifest" = 0 ] && echo auto_pass || echo auto_fail)"
+      else
+        VERIFY=auto_fail
+        set_result VERIFY-MANIFEST auto_fail
+      fi
       if node -e "
         const fs=require('fs');
         const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
@@ -225,50 +236,42 @@ fi
 
 PERF4=skipped_nonclaim
 if [[ "$STOPPED" = 0 ]]; then
-  ec="$(run_logged perf004-unit cargo test -p cognitive-runtime overhead_report_requires_ungoverned_baseline_and_forbids_benefit --locked -- --exact)"
-  if [[ "$ec" = 0 ]]; then
+  PERF_LOG="$LOG_DIR/perf004-unit.log"
+  ec="$(run_logged perf004-unit cargo test -p cognitive-runtime --lib perf::tests::overhead_report_requires_ungoverned_baseline_and_forbids_benefit --locked -- --exact)"
+  if [[ "$ec" = 0 ]] && node -e "
+    const fs=require('fs');
+    const output=fs.readFileSync(process.argv[1], 'utf8');
+    if (!/test result: ok\\. 1 passed; 0 failed/.test(output)) process.exit(2);
+  " "$PERF_LOG"; then
     mkdir -p "$REPO_ROOT/artifacts/evidence/performance"
+    BUILDER_PATH="$REPO_ROOT/artifacts/evidence/conformance/performance-report-m6-overhead.json"
     PERF_PATH="$REPO_ROOT/artifacts/evidence/performance/performance-report-v01-sample.json"
-    cat >"$PERF_PATH" <<'EOF'
-{
-  "orchestrator_honesty": {
-    "claim_level": "sample_or_builder_only",
-    "campaign": "not_executed",
-    "claims_agent_benefit": false,
-    "forbid_silent_campaign_pass": true,
-    "source": "cognitive_runtime::GovernanceOverheadSample (tip unit/runner numbers)"
-  },
-  "schema_version": "cognitiveos.performance-report/0.1",
-  "note": "Sample/builder export for L3 report-ready. NOT a full HW campaign digest.",
-  "governance_overhead": {
-    "ungoverned_baseline": "ungoverned-local-v1",
-    "gate_latency_ms": {
-      "authorization": {"p50": 0.1, "p95": 0.4, "p99": 0.9},
-      "context_resolution": {"p50": 1.0, "p95": 3.0, "p99": 5.0},
-      "effect_protocol": {"p50": 0.5, "p95": 1.2, "p99": 2.0}
-    },
-    "cache_hit_preservation_ratio": 0.9,
-    "extra_persistence_per_governed_call": {"writes": 2.0, "bytes": 1024.0},
-    "approval": {
-      "latency_ms": {"p50": 10.0, "p95": 50.0, "p99": 100.0},
-      "rubber_stamp_rate": 0.01,
-      "retry_after_deny_rate": 0.02
-    },
-    "overhead_share_by_risk_class": [
-      {"risk_class": "R1", "latency_percent": 3.0, "cost_percent": 2.0}
-    ]
-  }
-}
-EOF
-    cp "$PERF_PATH" "$RUN_DIR/performance-report-v01-sample.json"
-    PERF4=auto_pass
-    LEVEL=L3
+    if [[ -f "$BUILDER_PATH" ]] && node -e "
+      const fs=require('fs'); const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+      if (r.schema_version !== 'cognitiveos.performance-report/0.1' || !r.benchmark_manifest ||
+          !r.metrics?.length || !r.governance_overhead || r.tail_latency_disclosed !== true) process.exit(2);
+    " "$BUILDER_PATH"; then
+      cp "$BUILDER_PATH" "$PERF_PATH"
+    else
+      PERF4=auto_fail
+    fi
+    if [[ "$PERF4" != auto_fail && -f "$PERF_PATH" ]]; then
+      cp "$PERF_PATH" "$RUN_DIR/performance-report-v01-sample.json"
+      PERF4=auto_pass
+      LEVEL=L3
+    else
+      PERF4=auto_fail
+    fi
   else
     PERF4=auto_fail
   fi
 fi
 set_result PERF004-AUTO-REPORT "$PERF4"
 set_result PERF004-NO-SILENT-CAMPAIGN auto_pass
+if [[ "$STOPPED" = 0 && "$PERF4" = auto_fail ]]; then
+  STOPPED=1
+  STOP_REASON=PERF004
+fi
 cat >"$RUN_DIR/perf004.json" <<EOF
 {"status":"$PERF4","claim_level":"sample_or_builder_only","campaign":"not_executed","claims_agent_benefit":false}
 EOF

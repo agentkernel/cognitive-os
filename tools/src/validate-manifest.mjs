@@ -9,6 +9,8 @@
 
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { readFileSync } from "node:fs";
+import { validateLocalEvidenceGraph } from "./evidence-graph.mjs";
 import { loadSchemas, readJson, repoPath } from "./lib.mjs";
 
 const manifestPath =
@@ -36,9 +38,32 @@ if (!validate(manifest)) {
   process.exit(1);
 }
 
+const evidenceGraph = validateLocalEvidenceGraph(manifestPath, manifest);
+const validatePerformanceReport = ajv.getSchema("performance-report.schema.json");
+if (!validatePerformanceReport) {
+  console.error("validate-manifest: performance-report.schema.json not registered");
+  process.exit(1);
+}
+for (const performanceReportPath of evidenceGraph.performanceReportPaths) {
+  const performanceReport = JSON.parse(readFileSync(performanceReportPath, "utf8"));
+  if (!validatePerformanceReport(performanceReport)) {
+    evidenceGraph.errors.push(
+      `invalid performance report ${performanceReportPath}: ${ajv.errorsText(validatePerformanceReport.errors, { separator: "\n" })}`,
+    );
+  }
+}
+if (evidenceGraph.errors.length > 0) {
+  console.error(`validate-manifest: INVALID EVIDENCE GRAPH ${manifestPath}`);
+  for (const error of evidenceGraph.errors) {
+    console.error(`- ${error}`);
+  }
+  process.exit(1);
+}
+
 const profiles = manifest.cognitiveos_conformance?.profiles ?? {};
 const nonPlanned = Object.entries(profiles).filter(([, v]) => v !== "planned");
 console.log(
   `validate-manifest: OK ${manifestPath} (${Object.keys(profiles).length} profiles, ` +
-    `${nonPlanned.length} non-planned${nonPlanned.length ? `: ${nonPlanned.map(([k, v]) => `${k}=${v}`).join(", ")}` : ""})`,
+    `${nonPlanned.length} non-planned${nonPlanned.length ? `: ${nonPlanned.map(([k, v]) => `${k}=${v}`).join(", ")}` : ""}; ` +
+    `${evidenceGraph.verifiedTestRuns} test runs and ${evidenceGraph.verifiedPerformanceReports} performance reports verified)`,
 );

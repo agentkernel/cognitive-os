@@ -2,7 +2,7 @@
 
 <a id="doc-top"></a>
 
-> 本文件是 CognitiveOS Console v2 的兼容入口（deprecated；successor：[`clients/pc/`](../../clients/pc/README.md)，`CLIENTS-DEC-001`）。完整产品设计正文在 clients/pc 各专题文档；本文件保留旧路径、仓库依赖的 §17、§20.3 锚点与漂移登记表，不再新增正文。
+> 本文件是 CognitiveOS Console v2 的兼容入口（deprecated；successor：[`clients/pc/`](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/README.md)，`CLIENTS-DEC-001`）。完整产品设计正文在 clients/pc 各专题文档；本文件保留旧路径、仓库依赖的 §17、§20.3 锚点与漂移登记表，不再新增正文。
 >
 > 文档性质：Informative。本文不新增/修改任何 CognitiveOS `REQ-*`、错误码、schema、transition table 或 conformance vector。
 >
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 2026-07-20 | F-003 governed-object 单轨迁移与 M1 runner 负例复验均已完成 | §20.3、产品追踪 BLK-013 | 对齐远端 M1 评审；不外推为客户端实现证据 |
 | 2026-07-20 | D-005 已使 transition table schema 接受 `0.1/0.2` | §20.3、产品追踪 BLK-001 | 移除过时 blocker，保留已关闭历史 |
-| 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`clients/governance/readiness-gates`](../../clients/governance/readiness-gates.md#console-实现-gate) 的 canonical gate |
+| 2026-07-20 | 旧 §12.6 PoC gate 指针在 v2 拆分后失效 | §17.4、§20.3、Lane-CON 治理 | 改指 [`clients/governance/readiness-gates`](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 的 canonical gate |
 | 2026-07-20 | Lane-CTR 缺口批（D-013~D-015）登记 AKP 信封/流帧/shell.control 机器 schema（56→60），错误注册表与 Shell/AKP 族入 codegen；Console 未来消费的 watch/控制 wire 形状自此有登记合同 | 引用 AKP/watch wire 形状的产品章节 | 仅登记标注；正文由 Console 车道对齐 |
 | 2026-07-20 | Lane-CTR F-011 批登记 R1 审批合同（60→61：management-approval-request 新增 + approval-decision R1 条件硬化 + 3 份防疲劳/自批/缺确认负例向量）；Console 审批卡片/确认面的机器合同基线自此存在（分级确认面 schema 条件：R2/R3 禁聊天完成面） | 引用审批/确认交互的产品章节 | 仅登记标注；正文由 Console 车道对齐 |
 
@@ -22,17 +22,17 @@
 
 | 文档 | 负责内容 |
 |---|---|
-| [产品简报](../../clients/pc/docs/product/product-brief.md) | 产品问题、首要 persona/JTBD、价值、边界、成功指标 |
-| [Windows v1 范围](../../clients/pc/docs/platforms/windows/windows-v1-scope.md) | 发布切片、Service/账号/TOFU、R0/R1、能力与 release gates |
-| [信息架构](../../clients/pc/docs/ux/information-architecture.md) | 角色/readiness 落点、任务导航、Shell、术语和页面状态 |
-| [旅程与页面](../../clients/pc/docs/ux/journeys-and-screens.md) | 核心旅程、Windows v1 页面清单、状态矩阵和未来验收 |
-| [Design System](../../clients/pc/docs/ux/design-system.md) | 品牌方向、布局、组件、动效、无障碍和国际化 |
-| [可信与安全体验](../../clients/pc/docs/security/trust-safety-ux.md) | authority、身份、R0/R1、监督 lease、包来源、离线与错误 |
-| [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md) | `CONSOLE-V2-*`、旧 ID 映射、三维状态与上游阻断 |
-| [路线图](../../clients/pc/plan/roadmap.md) | 非 Windows v1 feature briefs |
-| [决策记录](../../clients/pc/docs/product/decision-log.md) | 已确认和被替代的产品决策 |
-| [桌面平台产品设计](../../clients/pc/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
-| [Agent Hub / 直连接管](../../clients/agent-hub/docs/README.md) | Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级/Adapter、威胁模型与受 gate 阻断的开发计划（informative） |
+| [产品简报](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/product-brief.md) | 产品问题、首要 persona/JTBD、价值、边界、成功指标 |
+| [Windows v1 范围](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/windows/windows-v1-scope.md) | 发布切片、Service/账号/TOFU、R0/R1、能力与 release gates |
+| [信息架构](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/information-architecture.md) | 角色/readiness 落点、任务导航、Shell、术语和页面状态 |
+| [旅程与页面](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/journeys-and-screens.md) | 核心旅程、Windows v1 页面清单、状态矩阵和未来验收 |
+| [Design System](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/design-system.md) | 品牌方向、布局、组件、动效、无障碍和国际化 |
+| [可信与安全体验](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/security/trust-safety-ux.md) | authority、身份、R0/R1、监督 lease、包来源、离线与错误 |
+| [产品要求与追踪](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md) | `CONSOLE-V2-*`、旧 ID 映射、三维状态与上游阻断 |
+| [路线图](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/plan/roadmap.md) | 非 Windows v1 feature briefs |
+| [决策记录](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/decision-log.md) | 已确认和被替代的产品决策 |
+| [桌面平台产品设计](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/README.md) | macOS/Linux 独立范围、决策、要求、parity matrix 与真实 PoC gate |
+| [Agent Hub / 直连接管](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/README.md) | Direct Takeover 与 Governed 两部署模式、第三方 Agent 接管层级/Adapter、威胁模型与受 gate 阻断的开发计划（informative） |
 
 ## 1. 当前产品基线
 
@@ -46,7 +46,7 @@
 - 导航：工作、任务、Agent、收件箱、记录、系统；
 - 当前技术：Tauri 2 + React/TypeScript 为候选，尚未形成批准 ADR。
 
-Windows v1 的详细范围以 [windows-v1-scope.md](../../clients/pc/docs/platforms/windows/windows-v1-scope.md) 为准。macOS 与受限 Linux 已有独立的 `planned/blocked` 产品切片，但不属于 Windows v1，也不表示实现车道已激活；移动、远程/多节点、完整治理、Memory、Knowledge、Multi-Agent 和 R2/R3 仍见 [roadmap.md](../../clients/pc/plan/roadmap.md)。
+Windows v1 的详细范围以 [windows-v1-scope.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/windows/windows-v1-scope.md) 为准。macOS 与受限 Linux 已有独立的 `planned/blocked` 产品切片，但不属于 Windows v1，也不表示实现车道已激活；移动、远程/多节点、完整治理、Memory、Knowledge、Multi-Agent 和 R2/R3 仍见 [roadmap.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/plan/roadmap.md)。
 
 ## 2. 状态与事实来源
 
@@ -65,7 +65,7 @@ Windows v1 的详细范围以 [windows-v1-scope.md](../../clients/pc/docs/platfo
 
 Profile 声明单独使用 `planned/experimental/implemented/unsupported`，不混入 Evidence。
 
-完整状态见 [requirements-traceability.md](../../clients/pc/docs/product/requirements-traceability.md)。
+完整状态见 [requirements-traceability.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md)。
 
 ## 3. 不可降级的边界
 
@@ -85,7 +85,7 @@ Profile 声明单独使用 `planned/experimental/implemented/unsupported`，不�
 
 - v2 使用 `CONSOLE-V2-PRD/JRN/PAGE/CMP/DEC-*`。
 - 旧 `CONSOLE-PRD-001..034` 和 `A-01..34` 已停止新增和复用。
-- 旧 ID 到 v2/current/future/deprecated 的完整映射见 [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md#5-旧产品要求映射)。
+- 旧 ID 到 v2/current/future/deprecated 的完整映射见 [产品要求与追踪](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md#5-旧产品要求映射)。
 - 旧单体文档中的失效 V 系列评审引用、未定义“边界 #20”、过时 Memory 缺口、`MANAGEMENT_READY` 全管理可用等表述不再作为 v2 事实。
 
 ---
@@ -131,8 +131,8 @@ Windows v1 是当前唯一冻结的 Console 产品切片：
 6. Governed Memory / Knowledge；
 7. Multi-Agent / Distributed。
 
-每个 phase 的不可变边界和进入门禁见 [roadmap.md](../../clients/pc/plan/roadmap.md)。
-macOS/Linux 已确认的平台产品决策、支持边界和 Open PoC/GA gates 见 [桌面平台产品设计](../../clients/pc/README.md)；这些文档属于激活前 informative 例外，不改变实现 gate。
+每个 phase 的不可变边界和进入门禁见 [roadmap.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/plan/roadmap.md)。
+macOS/Linux 已确认的平台产品决策、支持边界和 Open PoC/GA gates 见 [桌面平台产品设计](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/README.md)；这些文档属于激活前 informative 例外，不改变实现 gate。
 
 ### 17.4 Release gate
 
@@ -145,7 +145,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - 真实证据证明无错误完成声明、无跨用户/channel 泄露、无重复 Effect；
 - Tauri 2 + React/TypeScript（或替代方案）ADR 已批准。
 
-跨平台 Console 实现还必须满足 [平台实现 gate](../../clients/governance/readiness-gates.md#console-实现-gate)，且目标平台 PoC 使用真实 API/真实 OS 行为留证。
+跨平台 Console 实现还必须满足 [平台实现 gate](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate)，且目标平台 PoC 使用真实 API/真实 OS 行为留证。
 
 ---
 
@@ -165,7 +165,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - Windows 通知/托盘泄露正文或被当授权入口；
 - assistant 视觉隐藏状态、freshness 或未知结果。
 
-产品缓解和未来安全验收见 [trust-safety-ux.md](../../clients/pc/docs/security/trust-safety-ux.md)。
+产品缓解和未来安全验收见 [trust-safety-ux.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/security/trust-safety-ux.md)。
 
 ### 20.2 尚未冻结的产品选择
 
@@ -177,7 +177,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 - R2/R3 的 authority-owned browser 与原生可信面取舍；
 - 非 GA 桌面、移动与远程平台支持矩阵。
 
-这些选择不能改变 [决策记录](../../clients/pc/docs/product/decision-log.md) 中已确认的 authority、risk、状态和隔离边界。
+这些选择不能改变 [决策记录](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/decision-log.md) 中已确认的 authority、risk、状态和隔离边界。
 
 ### 20.3 当前最大产品依赖结论
 
@@ -203,7 +203,7 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 6. findings-ledger F-003 单轨迁移、runner 负例、codegen 与 legacy `$defs` 保留/零引用决策均已闭合；
 7. state-store 降级 vector 无条件要求 stop/revoke 可用，但预授权/fencing/audit emergency 合同尚未闭合。
 
-详细证据和影响见 [上游阻断登记](../../clients/pc/docs/product/requirements-traceability.md#3-上游阻断登记)。在对应 contract、implementation 和 executed evidence 闭合前，Console 保持 `planned/blocked`，不得包装成已实现的 CognitiveOS 管理能力。
+详细证据和影响见 [上游阻断登记](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md#3-上游阻断登记)。在对应 contract、implementation 和 executed evidence 闭合前，Console 保持 `planned/blocked`，不得包装成已实现的 CognitiveOS 管理能力。
 
 ---
 
@@ -214,43 +214,43 @@ Windows v1 不能仅凭 UI prototype 发布。至少需要：
 <a id="sec-1"></a>
 - 旧 §1 文档元数据 → 本页 §0/§2
 <a id="sec-2"></a>
-- 旧 §2 产品定义 → [产品简报](../../clients/pc/docs/product/product-brief.md)
+- 旧 §2 产品定义 → [产品简报](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/product-brief.md)
 <a id="sec-3"></a>
-- 旧 §3 用户与权限 → [产品简报](../../clients/pc/docs/product/product-brief.md#3-用户与-jobs-to-be-done)、[路线图](../../clients/pc/plan/roadmap.md)
+- 旧 §3 用户与权限 → [产品简报](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/product-brief.md#3-用户与-jobs-to-be-done)、[路线图](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/plan/roadmap.md)
 <a id="sec-4"></a>
-- 旧 §4 部署与连接 → [Windows v1 范围](../../clients/pc/docs/platforms/windows/windows-v1-scope.md)
+- 旧 §4 部署与连接 → [Windows v1 范围](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/windows/windows-v1-scope.md)
 <a id="sec-5"></a>
-- 旧 §5 平台矩阵 → [路线图](../../clients/pc/plan/roadmap.md)
+- 旧 §5 平台矩阵 → [路线图](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/plan/roadmap.md)
 <a id="sec-6"></a>
-- 旧 §6 信息架构 → [信息架构](../../clients/pc/docs/ux/information-architecture.md)
+- 旧 §6 信息架构 → [信息架构](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/information-architecture.md)
 <a id="sec-7"></a>
-- 旧 §7 Agent Shell → [信息架构](../../clients/pc/docs/ux/information-architecture.md#4-shell-信息结构)
+- 旧 §7 Agent Shell → [信息架构](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/information-architecture.md#4-shell-信息结构)
 <a id="sec-8"></a>
-- 旧 §8 模块设计 → [旅程与页面](../../clients/pc/docs/ux/journeys-and-screens.md)
+- 旧 §8 模块设计 → [旅程与页面](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/journeys-and-screens.md)
 <a id="sec-9"></a>
-- 旧 §9 用户旅程 → [旅程与页面](../../clients/pc/docs/ux/journeys-and-screens.md#2-核心旅程)
+- 旧 §9 用户旅程 → [旅程与页面](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/journeys-and-screens.md#2-核心旅程)
 <a id="sec-10"></a>
-- 旧 §10 状态语义 → [可信与安全体验](../../clients/pc/docs/security/trust-safety-ux.md)
+- 旧 §10 状态语义 → [可信与安全体验](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/security/trust-safety-ux.md)
 <a id="sec-11"></a>
-- 旧 §11 安全隐私 → [可信与安全体验](../../clients/pc/docs/security/trust-safety-ux.md)
+- 旧 §11 安全隐私 → [可信与安全体验](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/security/trust-safety-ux.md)
 <a id="sec-12"></a>
-- 旧 §12 客户端架构 → [Windows v1 范围](../../clients/pc/docs/platforms/windows/windows-v1-scope.md#2-部署边界)
+- 旧 §12 客户端架构 → [Windows v1 范围](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/windows/windows-v1-scope.md#2-部署边界)
 <a id="sec-13"></a>
-- 旧 §13 API 映射 → [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md)
+- 旧 §13 API 映射 → [产品要求与追踪](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md)
 <a id="sec-14"></a>
-- 旧 §14 视觉交互 → [Design System](../../clients/pc/docs/ux/design-system.md)
+- 旧 §14 视觉交互 → [Design System](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/design-system.md)
 <a id="sec-15"></a>
-- 旧 §15 通知审批 → [可信与安全体验](../../clients/pc/docs/security/trust-safety-ux.md#11-通知与深链)
+- 旧 §15 通知审批 → [可信与安全体验](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/security/trust-safety-ux.md#11-通知与深链)
 <a id="sec-16"></a>
-- 旧 §16 发布更新 → [Windows v1 范围](../../clients/pc/docs/platforms/windows/windows-v1-scope.md#10-技术候选与-release-gate)
+- 旧 §16 发布更新 → [Windows v1 范围](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/windows/windows-v1-scope.md#10-技术候选与-release-gate)
 <a id="sec-18"></a>
-- 旧 §18 产品要求 → [产品要求与追踪](../../clients/pc/docs/product/requirements-traceability.md)
+- 旧 §18 产品要求 → [产品要求与追踪](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/requirements-traceability.md)
 <a id="sec-19"></a>
-- 旧 §19 指标 → [产品简报](../../clients/pc/docs/product/product-brief.md#7-成功定义)
+- 旧 §19 指标 → [产品简报](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/product/product-brief.md#7-成功定义)
 <a id="appendix-a"></a>
-- 旧附录 A 页面清单 → [页面清单](../../clients/pc/docs/ux/journeys-and-screens.md#3-windows-v1-页面清单)
+- 旧附录 A 页面清单 → [页面清单](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/journeys-and-screens.md#3-windows-v1-页面清单)
 <a id="appendix-b"></a>
-- 旧附录 B 术语 → [用户术语与机器术语](../../clients/pc/docs/ux/information-architecture.md#6-用户术语与机器术语)
+- 旧附录 B 术语 → [用户术语与机器术语](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/ux/information-architecture.md#6-用户术语与机器术语)
 
 ## 文档结束说明
 

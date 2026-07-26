@@ -15,8 +15,8 @@
 |---|---|---|
 | **L0 Boot-green** | `kernel-server` 非长驻；仅 `--once --bind` | workspace 构建成功 + binary 可解析 |
 | **L1 Connect-green** | admin-cli 四动词 + sdk-ts `http_live` + `m5_http_sse` | 既有测试全绿 |
-| **L2 Verify-green** | CI honesty pins | consistency + pins 84/55/29 + self-check ≥36 + F-011/M6/F-017 |
-| **L3 Perf-report-ready** | builder/sample only | sample 报告 + `campaign=not_executed`；禁止 benefit |
+| **L2 Verify-green** | CI honesty pins | consistency + pins 85/60/25 + self-check ≥41 + F-011/M6/F-017 + manifest/evidence graph |
+| **L3 Perf-report-ready** | builder/sample only | runner 生成的完整 schema-shaped sample + `campaign=not_executed`；禁止 benefit |
 
 人闸门（≤5，默认 skip）：`HUMAN-PLATFORM-LABEL`、`HUMAN-CI-JOB-ADD`、`HUMAN-PERF004-CAMPAIGN`、`HUMAN-PERF005-CLAIM`、`HUMAN-NO-GO`。
 
@@ -73,15 +73,16 @@ Windows-native sandbox unsupported；WSL2 not_tested；durable install = in-proc
 
 ### WP-VERIFY（全自动，默认必跑）
 
-- **入口**：`pnpm run check:consistency`；`cargo run --locked -p cognitive-conformance --bin conformance-runner`；`--self-check`；`cargo test -p cognitive-runtime --lib sandbox::tests`
-- **pins**：`{ total_vectors: 84, pass: 55, fail: 0, not-applicable: 0, documented-degradation: 0, not-run: 29 }`；`must_flip ≥ 36`
+- **入口**：`pnpm run check:consistency`；`cargo run --locked -p cognitive-conformance --bin conformance-runner`；`node tools/src/validate-manifest.mjs artifacts/evidence/conformance/release-candidate-profile-manifest.json`；`--self-check`；`cargo test -p cognitive-runtime --lib sandbox::tests`
+- **pins**：`{ total_vectors: 85, pass: 60, fail: 0, not-applicable: 0, documented-degradation: 0, not-run: 25 }`；`must_flip ≥ 41`
 - **回归**：`MGMT-APPROVAL-R1-009` / `SELF-010` / `FATIGUE-011`；`AGENT-INSTALL-001` / `BYPASS-002` / `OOB-001`
 - **失败**：自动 NO-GO 本流水线
 
 ### WP-PERF-004-AUTO（自动采集，默认不升格）
 
-- **入口**：`cargo test -p cognitive-runtime overhead_report_requires_ungoverned_baseline_and_forbids_benefit -- --exact`
-- **输出**：`artifacts/evidence/performance/performance-report-v01-sample.json` + honesty 字段 `claim_level=sample_or_builder_only`、`campaign=not_executed`
+- **入口**：`cargo test -p cognitive-runtime --lib perf::tests::overhead_report_requires_ungoverned_baseline_and_forbids_benefit -- --exact`
+- **输出**：runner 先生成完整的 `performance-report-m6-overhead.json`；两平台编排器只在必需字段完整时复制为 `artifacts/evidence/performance/performance-report-v01-sample.json`。编排状态另保持 `claim_level=sample_or_builder_only`、`campaign=not_executed`。
+- **失败**：exact unit 未真实通过、builder report 缺失或必需字段不完整均为 `auto_fail`，阻断 L3 且编排器返回非零；不得降为 `skipped_nonclaim` 或保留成功退出状态。
 - **人**：`HUMAN-PERF004-CAMPAIGN` 默认 skip
 
 ### WP-PERF-005-AUTO（默认跳过）
@@ -130,9 +131,9 @@ flowchart TD
 | BOOT-TEARDOWN | 清 tmp | 软 | 否 |
 | CONNECT-MGMT / CONNECT-SHELL | tip 测试绿 | 硬 | 否 |
 | CONNECT-WATCH | 诚实 skip | 软 | 否 |
-| VERIFY-CONSISTENCY / PINS / SELFCHECK | CI 同口径 | 硬 | 否 |
+| VERIFY-CONSISTENCY / PINS / MANIFEST / SELFCHECK | CI 同口径；证据引用存在且 digest/schema 可验证 | 硬 | 否 |
 | REGRESS-V01 / F017-CLAIM-FREEZE | 六向量 + digests | 硬 | 否 |
-| PERF004-AUTO-REPORT | sample + digest/sha256 | →L3 | 否 |
+| PERF004-AUTO-REPORT | sample + digest/sha256 | 硬；成功才进入 L3 | 否 |
 | PERF004-NO-SILENT-CAMPAIGN | campaign≠pass | 硬 | 升格时 |
 | PERF005-DEFAULT-NONCLAIM / NO-SILENT-BENEFIT | skipped；无 benefit | 硬（虚报） | 升格时 |
 | ORCHESTRATOR-ONE-SHOT / SUMMARY-MACHINE-READABLE | 单命令→summary | 硬 | CI 可选 |
@@ -213,3 +214,5 @@ bash scripts/v01-auto-run.sh --skip-build
 - 无人值守默认导出 `CI=true`，避免无 TTY 时 pnpm `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`
 - CONNECT-SHELL 中 `kernel-server` `m5_http_sse` 使用 `--test-threads=1`（降低并行 `--once` 偶发 ConnectionReset；不改变 tip 行为合同）
 - Windows host 若 gnu 缺 libgcc：诚实 L0；WSL2 guest 标签为 `windows_wsl2_linux_guest`，禁止写成 Windows-native sandbox pass
+- POSIX 与 Windows 都尊重 `CARGO_TARGET_DIR`，并由 repo-tools 静态测试钉住 manifest validator、完整性能报告来源和 non-claim 字段的一致性。
+- PERF-004 的 `--exact` 过滤器使用完整 Rust test path，并解析日志确认 `1 passed; 0 failed`，避免命令 exit 0 但实际执行 0 个测试。

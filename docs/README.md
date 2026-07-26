@@ -63,7 +63,7 @@ informative / implementation-private / historical），并为仓库工作文档�
 | [0004-canonical-json.md](adr/0004-canonical-json.md) | canonical JSON 编码 profile（规范基线） |
 | [0005-id-and-clock.md](adr/0005-id-and-clock.md) | UUIDv7 与三时钟域（规范基线） |
 | [0006-code-generation-policy.md](adr/0006-code-generation-policy.md) | schema → Rust/TS 代码生成策略（生成物入库、禁手改） |
-| [0007-clients-project-root-and-doc-migration.md](adr/0007-clients-project-root-and-doc-migration.md) | `clients/` 客户端项目根与文档迁移（canonical 地图、4 stub、不移代码 package） |
+| [0007-clients-project-root-and-doc-migration.md](adr/0007-clients-project-root-and-doc-migration.md) | `clients/` 客户端项目根与文档迁移（canonical 地图、4 stub、不移代码 package）；该树已于 2026-07-26 迁出至独立仓库 [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)，本仓不再含该目录 |
 | [0017-personal-sqlite-migration-and-recovery.md](adr/0017-personal-sqlite-migration-and-recovery.md) | Personal SQLite 迁移/备份/恢复边界（P0-T04；非 Profile） |
 | [0018-personal-secret-store-boundary.md](adr/0018-personal-secret-store-boundary.md) | Personal SecretStore 端口与 fail-closed 后端（P0-T05；非 Profile） |
 | [0019-personal-daemon-transport-auth-threat-model.md](adr/0019-personal-daemon-transport-auth-threat-model.md) | Personal daemon UDS/loopback transport、本地认证与威胁模型（P0-T07；非 Profile） |
@@ -82,27 +82,27 @@ informative / implementation-private / historical），并为仓库工作文档�
 - [plan/PROGRESS.md](plan/PROGRESS.md)：单页进度仪表（合并必更）。
 - [plan/PARALLEL-LANES.md](plan/PARALLEL-LANES.md)：并行车道所有权与合入序。
 - [plan/PERSONAL-DEVELOPMENT-PLAN.md](plan/PERSONAL-DEVELOPMENT-PLAN.md)：CognitiveOS Personal 的正式开发任务、状态和阶段 Gate；其可机读 [PERS-PR trace](plan/personal-trace.yaml) 不属于 registry matrix，也不构成 REQ 或执行证据。
-- [Agent Hub Master Development Plan](../clients/agent-hub/plan/agent-hub-development-plan.md)：受 gate 阻断，未激活实现车道；已迁至 `clients/agent-hub/plan/`（子计划与提示词同树）。
+- [Agent Hub Master Development Plan](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/plan/agent-hub-development-plan.md)：受 gate 阻断，未激活实现车道；已迁至独立仓库 cognitiveos-clients 的 `agent-hub/plan/`（子计划与提示词同树）。
 - [plan/PERSONAL-SUPPORT-MATRIX.md](plan/PERSONAL-SUPPORT-MATRIX.md)：Personal 首发支持矩阵（P0-T03 / ADR-0025；非 G0/B01 证据）。
 - [legal/THIRD-PARTY-NOTICES.md](legal/THIRD-PARTY-NOTICES.md)：第三方 notices 与再分发清单（P0-T03；SBOM 归 P7-T01）。
 
 ## docs/clients/（兼容入口）
 
-- [docs/clients/README.md](clients/README.md)：**deprecated 兼容 stub**。唯一 canonical 客户端项目地图/目录索引已迁至仓库根 [clients/README.md](../clients/README.md)（`CLIENTS-DEC-001`、[ADR-0007](adr/0007-clients-project-root-and-doc-migration.md)）。
-- 持续维护由 [clients/README.md §9](../clients/README.md#9-持续维护与手动-gate) 执行，并入 [docs-sync-contract](standards/docs-sync-contract.md)。
+- [docs/clients/README.md](clients/README.md)：**deprecated 兼容 stub**。唯一 canonical 客户端项目地图/目录索引已迁至独立仓库 [cognitiveos-clients 根 README](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md)（`CLIENTS-DEC-001`、[ADR-0007](adr/0007-clients-project-root-and-doc-migration.md)；2026-07-26 拆分后本仓只保留本 stub）。
+- 持续维护由 [cognitiveos-clients README §9](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md#9-持续维护与手动-gate) 执行，并入 [docs-sync-contract](standards/docs-sync-contract.md)。
 
 ## docs/platforms/（informative 产品设计）
 
-- [platforms/README.md](platforms/README.md)：兼容 stub——平台产品文档已迁至 [clients/](../clients/README.md)，Console 实现 gate canonical 已迁至 [clients/governance/readiness-gates.md](../clients/governance/readiness-gates.md#console-实现-gate)。
-- [platforms/macos-product-design.md](../clients/pc/docs/platforms/macos/macos-product-design.md)：macOS v1 范围、信任边界、生命周期、要求、PoC 与官方来源。
-- [platforms/linux-product-design.md](../clients/pc/docs/platforms/linux/linux-product-design.md)：受限 Linux v1 范围、A/B 更新、要求、PoC 与官方来源。
-- [platforms/ios-product-design.md](../clients/mobile/ios/docs/ios-product-design.md)：iPhone-only v1 范围、APNs/设备绑定/R1、要求、PoC 与 Apple 来源。
-- [platforms/android-product-design.md](../clients/mobile/android/docs/android-product-design.md)：列名 Android phone v1 范围、FCM/Keystore/Play、要求、PoC 与 Google 来源。
-- [platforms/desktop-parity-matrix.md](../clients/pc/docs/platforms/desktop-parity-matrix.md)：Windows/macOS/Linux 直接复用、适配、替换和阻断矩阵。
-- [platforms/mobile-parity-matrix.md](../clients/mobile/shared/docs/mobile-parity-matrix.md)：Windows/macOS/Linux 到 iPhone/Android 的复用、适配、替换、不提供和阻断矩阵。
-- [platforms/platform-decision-log.md](../clients/pc/docs/platforms/platform-decision-log.md)：`CONSOLE-MAC-V1-DEC-*` / `CONSOLE-LNX-V1-DEC-*` 产品决策。
-- [platforms/mobile-platform-decision-log.md](../clients/mobile/shared/docs/mobile-platform-decision-log.md)：`CONSOLE-IOS-V1-DEC-*` / `CONSOLE-AND-V1-DEC-*` canonical 产品决策。
-- [Agent Hub 平台 parity](../clients/agent-hub/docs/platforms/agent-hub-platform-parity.md)：Agent Hub Direct Takeover 接管能力的跨平台差异（已迁至 `clients/agent-hub/docs/platforms/`；canonical 在 `clients/agent-hub/docs/`）。
+- [platforms/README.md](platforms/README.md)：兼容 stub——平台产品文档已迁至 [clients/](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md)，Console 实现 gate canonical 已迁至 [clients/governance/readiness-gates.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate)。
+- [platforms/macos-product-design.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/macos/macos-product-design.md)：macOS v1 范围、信任边界、生命周期、要求、PoC 与官方来源。
+- [platforms/linux-product-design.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/linux/linux-product-design.md)：受限 Linux v1 范围、A/B 更新、要求、PoC 与官方来源。
+- [platforms/ios-product-design.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/mobile/ios/docs/ios-product-design.md)：iPhone-only v1 范围、APNs/设备绑定/R1、要求、PoC 与 Apple 来源。
+- [platforms/android-product-design.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/mobile/android/docs/android-product-design.md)：列名 Android phone v1 范围、FCM/Keystore/Play、要求、PoC 与 Google 来源。
+- [platforms/desktop-parity-matrix.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/desktop-parity-matrix.md)：Windows/macOS/Linux 直接复用、适配、替换和阻断矩阵。
+- [platforms/mobile-parity-matrix.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/mobile/shared/docs/mobile-parity-matrix.md)：Windows/macOS/Linux 到 iPhone/Android 的复用、适配、替换、不提供和阻断矩阵。
+- [platforms/platform-decision-log.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/docs/platforms/platform-decision-log.md)：`CONSOLE-MAC-V1-DEC-*` / `CONSOLE-LNX-V1-DEC-*` 产品决策。
+- [platforms/mobile-platform-decision-log.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/mobile/shared/docs/mobile-platform-decision-log.md)：`CONSOLE-IOS-V1-DEC-*` / `CONSOLE-AND-V1-DEC-*` canonical 产品决策。
+- [Agent Hub 平台 parity](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/platforms/agent-hub-platform-parity.md)：Agent Hub Direct Takeover 接管能力的跨平台差异（已迁至独立仓库 cognitiveos-clients 的 `agent-hub/docs/platforms/`；canonical 在同仓 `agent-hub/docs/`）。
 
 本目录不产生 normative machine requirements，也不表示 Console implementation 已启动。维护受 PARALLEL-LANES 的 Lane-CON informative 文档例外约束。
 
@@ -121,8 +121,8 @@ informative / implementation-private / historical），并为仓库工作文档�
 - [prompts/00-bootstrap-dev-system.md](prompts/00-bootstrap-dev-system.md)：M0 引导提示词（已执行）。
 - [prompts/01-architecture-audit-and-refactor.md](prompts/01-architecture-audit-and-refactor.md)：**复用资产**——未来任何架构审查/重构场景，粘贴到新会话即可开展反方优先审查。
 - [prompts/console-mobile-platform-product-design.md](prompts/console-mobile-platform-product-design.md)：生成 iOS/Android 独立移动产品设计的分阶段研究、决策与交付提示词。
-- [prompts/console-agent-hub-direct-mode-product-design.md](prompts/console-agent-hub-direct-mode-product-design.md)：生成无 CognitiveOS 安全接管与完整治理两种部署下，PC/手机统一管理第三方 Agent 的多代理产品设计和开发任务编排提示词（**已执行**，canonical 见 `clients/agent-hub/docs/`）。
-- Agent Hub 接续提示词（12 宏车道 + 6 Adapter，全部 `blocked`）已迁至 [clients/agent-hub/prompts/](../clients/agent-hub/prompts/README.md)。
+- [prompts/console-agent-hub-direct-mode-product-design.md](prompts/console-agent-hub-direct-mode-product-design.md)：生成无 CognitiveOS 安全接管与完整治理两种部署下，PC/手机统一管理第三方 Agent 的多代理产品设计和开发任务编排提示词（**已执行**，canonical 见独立仓库 [cognitiveos-clients `agent-hub/docs/`](https://github.com/agentkernel/cognitiveos-clients/tree/main/agent-hub/docs)）。
+- Agent Hub 接续提示词（12 宏车道 + 6 Adapter，全部 `blocked`）已迁至 [clients/agent-hub/prompts/](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/prompts/README.md)。
 - [prompts/common-prefix.md](prompts/common-prefix.md)：接续提示词公共前缀（硬纪律 + 会话协议）。
 - `prompts/lane-*.md`（7 份）与 `prompts/milestone-m1..m6.md`（6 份）：各车道/里程碑自包含接续提示词（任务 F 产出）。
 - `prompts/v01-auto-*.md`（4 份）：v0.1 无人值守编排分批提示词（boot-connect / verify-regress / perf-report / orchestrator）；canonical 计划见 [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)。
@@ -136,5 +136,5 @@ informative / implementation-private / historical），并为仓库工作文档�
 ## 其他
 
 - `apps/cognitiveos-console/PRODUCT-DESIGN.md`：informative 产品设计（状态 planned）；后端依赖台账登记于 DEVELOPMENT-PLAN Console 节。
-- `clients/agent-hub/docs/`：Agent Hub / 直连接管 canonical 文档（informative，`not-implemented`）；两部署模式、接管层级、Adapter 研究、威胁模型、决策与追踪。
+- 独立仓库 [cognitiveos-clients `agent-hub/docs/`](https://github.com/agentkernel/cognitiveos-clients/tree/main/agent-hub/docs)：Agent Hub / 直连接管 canonical 文档（informative，`not-implemented`）；两部署模式、接管层级、Adapter 研究、威胁模型、决策与追踪。
 - `History/`：historical——禁止读取、引用、参与构建与符合性声明。
