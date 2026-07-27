@@ -1,5 +1,17 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 first implementation slice (2026-07-27):** P1-T08 is now
+> `in-progress` on `lane/personal-p1-t08-bundle-foundation`. The first
+> failure-first foundation is a local, non-downloading Linux bundle manifest
+> validator plus staged filesystem activation model. It rejects tampered
+> artifacts, missing/unsupported attestation references, incorrect Pi pins,
+> and vendored Node/Pi payloads; interrupted staging and failed health checks
+> retain the prior active version and user data, while a successful check
+> atomically replaces the version pointer and retains the prior version. WSL
+> focused tests passed. This is local implementation evidence only: no release
+> bundle, downloader, systemd user service, trusted attestation verifier,
+> Linux-native Gate, B01, Profile, containment, or release claim exists yet.
+
 > **P1-T07 closeout (2026-07-27):** PR
 > [#105](https://github.com/agentkernel/cognitive-os/pull/105) merged as
 > `main@9d4c3d9` after its Ubuntu and Windows/MSVC CI checks succeeded. The

@@ -14,6 +14,7 @@ pub mod event_envelope;
 pub mod harness_loop;
 pub mod installer;
 pub mod intent_flow;
+pub mod linux_bundle;
 pub mod oob;
 pub mod perf;
 pub mod pi_launcher;
@@ -41,6 +42,10 @@ pub use installer::{
     install_package_durable, package_artifact_digest, reject_package, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
+pub use linux_bundle::{
+    ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
+    verify_linux_bundle,
+};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
 pub use pi_launcher::{
