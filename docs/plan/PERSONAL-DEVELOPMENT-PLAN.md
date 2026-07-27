@@ -1,6 +1,6 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01..T07、P1-T01..T07 已完成；P1-T08 及以后尚未开始）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T07 已完成；P1-T08 正在推进；P1-T09 及以后尚未开始）**
 > **最后更新：2026-07-27**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -44,14 +44,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 7 | 0 | 0 | 2 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 7 | 1 | 0 | 1 | G1 / B01 |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 7 | 0 | 0 | 0 | 7 | G7 / RC |
-| **合计** | **52** | **14** | **0** | **0** | **38** | — |
+| **合计** | **52** | **14** | **1** | **0** | **37** | — |
 
 ## 2. 产品边界与不变量
 
@@ -134,7 +134,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | P1-T05 | Readiness、status 与 doctor 应用服务 | P1-T03, P1-T04 | blocked/degraded/ready 事实区分 | done | 2026-07-25；分支 `lane/personal-p1-t05-readiness-doctor`，PR [#97](https://github.com/agentkernel/cognitive-os/pull/97)。`kernel-server` Personal composition root：`evaluate_personal_readiness` + management-auth `GET /personal/status|readiness|doctor`；ADR-0023；blocked/degraded/ready 分离；`static_check_is_not_runtime_ready`；secret_ref/bootstrap 不入投影。CI runs [30164114878](https://github.com/agentkernel/cognitive-os/actions/runs/30164114878) / [30164113787](https://github.com/agentkernel/cognitive-os/actions/runs/30164113787) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)。 |
 | P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | done | 2026-07-25；分支 `lane/personal-p1-t06-cognitive-cli`，PR [#98](https://github.com/agentkernel/cognitive-os/pull/98) 合入 `main@adbb0e5`。`cognitive` bin + `personal_cli`（init/status/doctor/daemon）、ADR-0024、`tests/p1_t06_cognitive_cli.rs`（live daemon 路径以 Ubuntu 为权威；Windows 跑 init/usage）。CI run [30167503487](https://github.com/agentkernel/cognitive-os/actions/runs/30167503487) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)。 |
 | P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | done | 2026-07-27；PR [#105](https://github.com/agentkernel/cognitive-os/pull/105) merged as `main@9d4c3d9` after the Ubuntu and Windows/MSVC CI checks succeeded. `packages/pi-cognitiveos/` defaults to denying `project_trust` and every Pi tool, displays only daemon facts, and source-scan tests forbid Provider key/config, `SecretRef`, SQLite, subprocess, and filesystem-write access. The daemon exposes a management-authenticated, non-secret selected-model projection and a bounded Pi complete-provider bridge: exactly one daemon-projected model forwards a one-shot `stream:false` completion through the authenticated daemon proxy. Provider material remains daemon-only; the proxy creates no Intent/Effect, capability, or state transition. `RustlsProviderTransport` remains HTTPS-only, redirect-free, time- and 1 MiB-response-bounded, and rejects URL user-info/header injection; `stream:true` remains fail-closed. Local WSL tests and the supported CI matrix passed. This is implementation and test evidence only, not a G0/B01-B12, Profile, containment, or release claim. Handoff: [20260727-personal-p1-t07-closeout-handoff.md](../checkpoints/20260727-personal-p1-t07-closeout-handoff.md). |
-| P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | not-started | — |
+| P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | in-progress | 2026-07-27；`lane/personal-p1-t08-bundle-foundation`；`development_track: experimental-local-only`。P1-T07 已完成，依赖解除。首个失败优先批在 `cognitive-runtime::linux_bundle` 提供离线 manifest structural/digest/Pi-pin/runtime-payload 检查和 staged activation model；focused WSL (`windows_wsl2_linux_guest`) tests **4 passed**，且 strict Clippy 与 formatting 通过。tamper、无/无效 attestation ref、错误 Pi integrity、vendored Node/Pi、interruption、health failure rollback、prior-version/data preservation 均有覆盖。此批不含 trusted attestation cryptographic verifier、downloader、release bundle、systemd user service、uninstall 或 Linux-native Gate；不得将本机或 fixture 结果写为 B01/Gate/Profile/release claim。 |
 
 > **2026-07-27 verification correction for P1-T07:** Cargo is available in the
 > WSL guest at `/root/.cargo/bin/cargo`. The focused provider-proxy process test
