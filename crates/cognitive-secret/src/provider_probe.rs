@@ -16,6 +16,7 @@ use crate::provider_transport::{
     ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse, ProviderTransport,
     ProviderTransportError, bearer_authorization_header_value,
 };
+use crate::selected_model::SelectedModel;
 use crate::store::SecretStore;
 use std::fmt;
 use std::time::Instant;
@@ -196,6 +197,12 @@ impl<'a, S: SecretStore, T: ProviderTransport> ProviderDiscoveryService<'a, S, T
         &self,
         options: &ProviderProbeOptions,
     ) -> Result<ProviderReadinessSnapshot, ProviderProbeError> {
+        // A previous probe cannot authorize a model after this campaign starts.
+        // This leaves failures and non-chat-capable results fail-closed.
+        self.key_service
+            .selected_model_repository()
+            .clear()
+            .map_err(|error| ProviderProbeError::Key(error.into()))?;
         let campaign_started = Instant::now();
         let config = require_config(self.key_service)?;
         let material = self.key_service.resolve_provider_material()?;
@@ -254,8 +261,26 @@ impl<'a, S: SecretStore, T: ProviderTransport> ProviderDiscoveryService<'a, S, T
             cancel,
         )?;
         let snapshot_digest = snapshot.identity_digest();
-        self.key_service
-            .persist_selected_snapshot_digest(Some(snapshot_digest.clone()))?;
+        if snapshot.is_minimally_ready() {
+            let selected_model = SelectedModel::new(
+                snapshot.selected_model().to_owned(),
+                snapshot_digest.clone(),
+                true,
+            )
+            .map_err(|error| ProviderProbeError::Key(error.into()))?;
+            self.key_service
+                .persist_selected_snapshot_digest(Some(snapshot_digest.clone()))?;
+            self.key_service
+                .selected_model_repository()
+                .store(&selected_model)
+                .map_err(|error| ProviderProbeError::Key(error.into()))?;
+        } else {
+            self.key_service.persist_selected_snapshot_digest(None)?;
+            self.key_service
+                .selected_model_repository()
+                .clear()
+                .map_err(|error| ProviderProbeError::Key(error.into()))?;
+        }
         Ok(ProviderReadinessSnapshot {
             snapshot,
             snapshot_digest,

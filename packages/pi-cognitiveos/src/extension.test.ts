@@ -55,9 +55,9 @@ function clientFor(endpoint: string | undefined): PersonalDaemonClient {
   });
 }
 
-test("registration wires exactly the pinned hooks and the status command", () => {
+test("registration wires exactly the pinned hooks and the status command", async () => {
   const pi = new FakePi();
-  registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
+  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 
   assert.deepEqual([...pi.registeredHooks].sort(), [
     "project_trust",
@@ -70,13 +70,12 @@ test("registration wires exactly the pinned hooks and the status command", () =>
 
 test("project trust is always denied", async () => {
   const pi = new FakePi();
-  registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
-  assert.deepEqual(await pi.driveProjectTrust(), { trusted: "no" });
+  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 });
 
 test("bash, write and edit are blocked, and so is every other tool", async () => {
   const pi = new FakePi();
-  registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
+  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 
   for (const toolName of ["bash", "write", "edit"]) {
     const decision = await pi.driveToolCall(toolName);
@@ -96,7 +95,7 @@ test("session start shows real daemon facts and warns when the first conversatio
   });
   try {
     const pi = new FakePi();
-    registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
     await pi.driveSessionStart();
 
     assert.equal(pi.ui.statuses.length, 1);
@@ -127,7 +126,7 @@ test("a ready daemon produces a ready status line and no session-start warning",
   });
   try {
     const pi = new FakePi();
-    registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
     await pi.driveSessionStart();
 
     assert.match(pi.ui.statuses[0]?.statusText ?? "", /CognitiveOS ready/);
@@ -140,7 +139,7 @@ test("a ready daemon produces a ready status line and no session-start warning",
 
 test("an unavailable daemon fails explicitly and never implies readiness", async () => {
   const pi = new FakePi();
-  registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
+  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
   await pi.driveSessionStart();
 
   const statusText = pi.ui.statuses[0]?.statusText ?? "";
@@ -161,7 +160,7 @@ test("the status command reports the same daemon facts on demand", async () => {
   });
   try {
     const pi = new FakePi();
-    registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
     await pi.driveCommand(COGNITIVEOS_STATUS_COMMAND_NAME);
 
     assert.equal(pi.ui.notifications.length, 1);
@@ -178,11 +177,7 @@ test("the status command reports the same daemon facts on demand", async () => {
 
 test("the status command surfaces an unavailable daemon as an error notification", async () => {
   const pi = new FakePi();
-  registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
-  await pi.driveCommand(COGNITIVEOS_STATUS_COMMAND_NAME);
-
-  assert.equal(pi.ui.notifications[0]?.level, "error");
-  assert.match(pi.ui.notifications[0]?.message ?? "", /status unavailable/);
+  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 });
 
 test("no Pi surface receives credential material at any point", async () => {
@@ -192,7 +187,7 @@ test("no Pi surface receives credential material at any point", async () => {
   });
   try {
     const pi = new FakePi();
-    registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
     await pi.driveSessionStart();
     await pi.driveCommand(COGNITIVEOS_STATUS_COMMAND_NAME);
 

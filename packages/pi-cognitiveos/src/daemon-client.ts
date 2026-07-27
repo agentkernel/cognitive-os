@@ -61,6 +61,22 @@ export interface ReadinessProjection {
   readonly authoritySideEffects: boolean;
 }
 
+/** Read-only daemon model identity used to register one Pi model. */
+export interface SelectedModelProjection {
+  readonly schemaVersion: number;
+  readonly surface: string;
+  readonly selectedModel: string;
+  readonly selectedSnapshotDigest: string;
+  readonly chatCapable: true;
+  readonly authoritySideEffects: false;
+}
+
+/** The only completion result accepted by the one-shot bridge. */
+export interface BoundedCompletion {
+  readonly content: string;
+  readonly finishReason: "stop";
+}
+
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 export interface PersonalDaemonClientOptions {
@@ -108,6 +124,56 @@ export class PersonalDaemonClient {
     }
     this.sessionToken = token;
     return parseReadinessProjection(bodyText);
+  }
+
+  /** Fetch the daemon-owned selected model, reminting only before dispatch. */
+  async fetchSelectedModel(signal?: AbortSignal): Promise<SelectedModelProjection> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    if (signal?.aborted) throw abortedRequestError();
+
+    let token = this.sessionToken ?? (await this.issueSession(endpoint, paths));
+    let response = await this.getSelectedModel(endpoint, token, signal);
+    if (response.status === 401) {
+      this.sessionToken = undefined;
+      token = await this.issueSession(endpoint, paths);
+      response = await this.getSelectedModel(endpoint, token, signal);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.sessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "GET /provider/v1/selected-model");
+    }
+    this.sessionToken = token;
+    return parseSelectedModelProjection(bodyText);
+  }
+
+  /**
+   * Dispatch one bounded non-streaming completion. This method never retries:
+   * replaying an accepted completion could duplicate Provider billing/output.
+   */
+  async completeChat(
+    model: string,
+    messages: readonly { readonly role: "system" | "user" | "assistant"; readonly content: string }[],
+    signal?: AbortSignal,
+  ): Promise<BoundedCompletion> {
+    if (signal?.aborted) throw abortedRequestError();
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    const token = this.sessionToken ?? (await this.issueSession(endpoint, paths));
+    const response = await this.send(endpoint, "/provider/v1/chat/completions", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ model, messages, stream: false }),
+      ...(signal === undefined ? {} : { signal }),
+    });
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      if (response.status === 401) this.sessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
+    }
+    this.sessionToken = token;
+    return parseBoundedCompletion(bodyText);
   }
 
   /** Drop the cached bearer, e.g. after the operator restarts the daemon. */
@@ -165,6 +231,18 @@ export class PersonalDaemonClient {
     });
   }
 
+  private async getSelectedModel(
+    endpoint: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    return this.send(endpoint, "/provider/v1/selected-model", {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      ...(signal === undefined ? {} : { signal }),
+    });
+  }
+
   private async send(endpoint: string, route: string, init: RequestInit): Promise<Response> {
     const url = `http://${endpoint}${route}`;
     try {
@@ -173,7 +251,7 @@ export class PersonalDaemonClient {
         // Cookies are forbidden by the daemon; never attach ambient credentials.
         credentials: "omit",
         redirect: "error",
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
+        signal: init.signal ?? AbortSignal.timeout(this.requestTimeoutMs),
       });
     } catch (cause) {
       throw new DaemonClientError(
@@ -183,6 +261,63 @@ export class PersonalDaemonClient {
       );
     }
   }
+}
+
+function abortedRequestError(): DaemonClientError {
+  return new DaemonClientError(
+    "PI_EXTENSION_DAEMON_UNREACHABLE",
+    "the CognitiveOS completion request was cancelled",
+  );
+}
+
+export function parseSelectedModelProjection(bodyText: string): SelectedModelProjection {
+  const record = parseJsonRecord(bodyText, "selected-model response");
+  const schemaVersion = record["schema_version"];
+  const surface = record["surface"];
+  const selectedModel = record["selected_model"];
+  const selectedSnapshotDigest = record["selected_snapshot_digest"];
+  if (
+    schemaVersion !== 1 ||
+    typeof surface !== "string" ||
+    typeof selectedModel !== "string" || selectedModel.length === 0 ||
+    typeof selectedSnapshotDigest !== "string" || selectedSnapshotDigest.length === 0 ||
+    record["chat_capable"] !== true ||
+    record["authority_side_effects"] !== false
+  ) {
+    throw new DaemonClientError("PI_EXTENSION_DAEMON_PROTOCOL_ERROR", "the CognitiveOS daemon returned an invalid selected-model projection");
+  }
+  return { schemaVersion, surface, selectedModel, selectedSnapshotDigest, chatCapable: true, authoritySideEffects: false };
+}
+
+export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
+  const record = parseJsonRecord(bodyText, "completion response");
+  const choices = record["choices"];
+  if (!Array.isArray(choices) || choices.length !== 1) throw completionProtocolError();
+  const choice = choices[0];
+  if (typeof choice !== "object" || choice === null) throw completionProtocolError();
+  const choiceRecord = choice as Record<string, unknown>;
+  const message = choiceRecord["message"];
+  if (typeof message !== "object" || message === null) throw completionProtocolError();
+  const messageRecord = message as Record<string, unknown>;
+  if (typeof messageRecord["content"] !== "string" || "tool_calls" in messageRecord || "function_call" in messageRecord) {
+    throw completionProtocolError();
+  }
+  if (choiceRecord["finish_reason"] !== "stop") throw completionProtocolError();
+  return { content: messageRecord["content"], finishReason: "stop" };
+}
+
+function parseJsonRecord(bodyText: string, label: string): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(bodyText);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error();
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new DaemonClientError("PI_EXTENSION_DAEMON_PROTOCOL_ERROR", `the CognitiveOS daemon ${label} was not a valid JSON object`);
+  }
+}
+
+function completionProtocolError(): DaemonClientError {
+  return new DaemonClientError("PI_EXTENSION_DAEMON_PROTOCOL_ERROR", "the CognitiveOS daemon completion response was unsupported");
 }
 
 function defaultFetch(input: string, init: RequestInit): Promise<Response> {

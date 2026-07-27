@@ -210,6 +210,11 @@ impl ProviderConfigRepository {
         &self.config_path
     }
 
+    /// Directory containing the Provider config and related non-secret state.
+    pub fn config_dir(&self) -> &Path {
+        self.config_path.parent().unwrap_or_else(|| Path::new("."))
+    }
+
     /// Load config when present. Missing file returns [`ProviderConfigError::NotFound`].
     pub fn load(&self) -> Result<ProviderConfig, ProviderConfigError> {
         let document = fs::read_to_string(&self.config_path).map_err(|error| {

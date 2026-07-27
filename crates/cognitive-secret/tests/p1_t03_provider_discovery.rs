@@ -9,7 +9,7 @@ use cognitive_secret::{
     EphemeralSecretStore, ModelSelection, ProbeErrorClass, ProviderConfigRepository,
     ProviderDiscoveryService, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
     ProviderKeyService, ProviderProbeError, ProviderProbeOptions, ProviderTransport,
-    ProviderTransportError, SecretMaterial, redacted_headers,
+    ProviderTransportError, SecretMaterial, SelectedModel, redacted_headers,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -190,6 +190,16 @@ fn happy_path_discovers_probes_and_persists_snapshot_digest() {
     assert!(on_disk.contains(&readiness.snapshot_digest));
     assert!(!on_disk.contains("poc-provider-material"));
     assert!(!on_disk.contains("Bearer "));
+    assert!(!on_disk.contains("deepseek-v4-flash"));
+    assert_eq!(
+        service
+            .selected_model_repository()
+            .load()
+            .expect("selected model state")
+            .expect("chat-capable model selected")
+            .model_id(),
+        "deepseek-v4-flash"
+    );
 
     let requests = transport.captured_requests();
     assert!(requests.iter().any(|request| {
@@ -297,8 +307,12 @@ fn tool_probe_marks_capability_missing_on_http_200_without_tool_calls() {
 }
 
 #[test]
-fn chat_timeout_is_classified_without_leaking_secret() {
+fn chat_timeout_clears_stale_selection_without_leaking_secret() {
     let (service, _) = configured_service("timeout");
+    service
+        .selected_model_repository()
+        .store(&SelectedModel::new("stale-model", "fnv1a64:test", true).expect("selected model"))
+        .expect("stale selection store");
     let discovery =
         ProviderDiscoveryService::new(&service, MockTransport::new(Scenario::TimeoutOnChat));
     let readiness = discovery
@@ -315,6 +329,14 @@ fn chat_timeout_is_classified_without_leaking_secret() {
     let debug = format!("{readiness:?}");
     assert!(!debug.contains("poc-provider-material"));
     assert!(!debug.contains("Bearer "));
+    assert!(
+        service
+            .selected_model_repository()
+            .load()
+            .expect("selected model state")
+            .is_none(),
+        "a failed chat probe must clear stale selection"
+    );
 }
 
 #[test]

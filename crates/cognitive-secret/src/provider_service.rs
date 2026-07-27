@@ -7,6 +7,7 @@
 use crate::error::SecretError;
 use crate::material::{SecretAttributes, SecretLabel, SecretMaterial, SecretRef};
 use crate::provider_config::{ProviderConfig, ProviderConfigError, ProviderConfigRepository};
+use crate::selected_model::{SelectedModelError, SelectedModelRepository};
 use crate::store::{SecretStore, SecretStoreAvailability};
 use std::fmt;
 
@@ -20,6 +21,8 @@ pub enum ProviderKeyServiceError {
     Secret(SecretError),
     /// Non-secret config document rejected the operation.
     Config(ProviderConfigError),
+    /// Durable selected-model state rejected the operation.
+    SelectedModel(SelectedModelError),
     /// Config exists but the secret ref no longer resolves.
     SecretMissing,
     /// No provider configuration has been stored yet.
@@ -31,6 +34,9 @@ impl fmt::Display for ProviderKeyServiceError {
         match self {
             Self::Secret(error) => write!(formatter, "provider key secret failure: {error}"),
             Self::Config(error) => write!(formatter, "provider key config failure: {error}"),
+            Self::SelectedModel(error) => {
+                write!(formatter, "provider selected model state failure: {error}")
+            }
             Self::SecretMissing => write!(
                 formatter,
                 "provider key secret is missing for the configured secret_ref"
@@ -51,6 +57,12 @@ impl From<SecretError> for ProviderKeyServiceError {
 impl From<ProviderConfigError> for ProviderKeyServiceError {
     fn from(error: ProviderConfigError) -> Self {
         Self::Config(error)
+    }
+}
+
+impl From<SelectedModelError> for ProviderKeyServiceError {
+    fn from(error: SelectedModelError) -> Self {
+        Self::SelectedModel(error)
     }
 }
 
@@ -105,6 +117,11 @@ impl<S: SecretStore> ProviderKeyService<S> {
         &self.config_repository
     }
 
+    /// Repository for the separate, non-secret selected-model carrier.
+    pub fn selected_model_repository(&self) -> SelectedModelRepository {
+        SelectedModelRepository::under_config_dir(self.config_repository.config_dir())
+    }
+
     /// Non-mutating readiness probe of the secret backend.
     pub fn probe_secret_store(&self) -> Result<SecretStoreAvailability, ProviderKeyServiceError> {
         Ok(self.secret_store.probe()?)
@@ -127,6 +144,7 @@ impl<S: SecretStore> ProviderKeyService<S> {
         material: SecretMaterial,
         selected_snapshot_digest: Option<String>,
     ) -> Result<ProviderConfig, ProviderKeyServiceError> {
+        self.selected_model_repository().clear()?;
         let label = provider_secret_label()?;
         let attributes = provider_secret_attributes(provider_id)?;
         let secret_ref = self.secret_store.put(&label, &attributes, material)?;
@@ -141,6 +159,7 @@ impl<S: SecretStore> ProviderKeyService<S> {
         &self,
         material: SecretMaterial,
     ) -> Result<ProviderConfig, ProviderKeyServiceError> {
+        self.selected_model_repository().clear()?;
         let existing = self
             .load_config()?
             .ok_or(ProviderKeyServiceError::NotConfigured)?;
@@ -154,6 +173,7 @@ impl<S: SecretStore> ProviderKeyService<S> {
 
     /// Delete the secret material for the configured ref and remove the config.
     pub fn delete_provider_key(&self) -> Result<(), ProviderKeyServiceError> {
+        self.selected_model_repository().clear()?;
         match self.load_config()? {
             Some(config) => {
                 match self.secret_store.delete(config.secret_ref()) {

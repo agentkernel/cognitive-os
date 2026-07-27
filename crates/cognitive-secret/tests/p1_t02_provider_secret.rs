@@ -10,7 +10,7 @@ use cognitive_secret::{
     EphemeralSecretStore, LinuxSecretToolStore, ProviderConfig, ProviderConfigError,
     ProviderConfigRepository, ProviderKeyService, ProviderKeyServiceError, SecretError,
     SecretMaterial, SecretServiceSimulation, SecretStore, SecretStoreAvailability,
-    SecretStoreClass, SimulatedSecretServiceStore, read_secret_material_from_reader,
+    SecretStoreClass, SelectedModel, SimulatedSecretServiceStore, read_secret_material_from_reader,
     select_production_secret_store, select_production_secret_store_with,
 };
 use std::fs;
@@ -41,6 +41,13 @@ fn configure_rotate_and_delete_provider_key() {
         EphemeralSecretStore::default(),
         ProviderConfigRepository::from_file_path(&config_path),
     );
+    service
+        .selected_model_repository()
+        .store(
+            &SelectedModel::new("stale-before-configure", "fnv1a64:test", true)
+                .expect("selected model"),
+        )
+        .expect("selected model store");
 
     let configured = service
         .configure_provider(
@@ -52,6 +59,14 @@ fn configure_rotate_and_delete_provider_key() {
         .expect("configure");
     assert_eq!(configured.provider_id(), "deepseek");
     assert_eq!(configured.base_url(), "https://api.deepseek.com");
+    assert!(
+        service
+            .selected_model_repository()
+            .load()
+            .expect("selected model state")
+            .is_none(),
+        "provider configuration must invalidate a previous selected model"
+    );
 
     let on_disk = fs::read_to_string(&config_path).expect("read config");
     assert!(on_disk.contains("secret_ref"));
@@ -64,6 +79,14 @@ fn configure_rotate_and_delete_provider_key() {
         .expect("resolve after configure");
     assert_eq!(resolved, sample_material("v1"));
 
+    service
+        .selected_model_repository()
+        .store(
+            &SelectedModel::new("stale-after-configure", "fnv1a64:test", true)
+                .expect("selected model"),
+        )
+        .expect("selected model store");
+
     let rotated = service
         .rotate_provider_key(sample_material("v2"))
         .expect("rotate");
@@ -72,10 +95,34 @@ fn configure_rotate_and_delete_provider_key() {
         .resolve_provider_material()
         .expect("resolve after rotate");
     assert_eq!(resolved_rotated, sample_material("v2"));
+    assert!(
+        service
+            .selected_model_repository()
+            .load()
+            .expect("selected model state")
+            .is_none(),
+        "key rotation must invalidate a previous selected model"
+    );
+
+    service
+        .selected_model_repository()
+        .store(
+            &SelectedModel::new("stale-after-rotate", "fnv1a64:test", true)
+                .expect("selected model"),
+        )
+        .expect("selected model store");
 
     service.delete_provider_key().expect("delete");
     assert!(service.load_config().expect("load after delete").is_none());
     assert!(!config_path.exists());
+    assert!(
+        service
+            .selected_model_repository()
+            .load()
+            .expect("selected model state")
+            .is_none(),
+        "provider deletion must invalidate a previous selected model"
+    );
 }
 
 #[test]

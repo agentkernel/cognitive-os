@@ -23,6 +23,7 @@
  */
 
 import { PersonalDaemonClient } from "./daemon-client.js";
+import { createDaemonProvider } from "./daemon-provider.js";
 import type { ReadinessProjection } from "./daemon-client.js";
 import {
   COGNITIVEOS_STATUS_COMMAND_NAME,
@@ -50,10 +51,10 @@ export interface CognitiveOsExtensionOptions {
  *
  * Pi loads this module and calls the default export with its `ExtensionAPI`.
  */
-export function registerCognitiveOsExtension(
+export async function registerCognitiveOsExtension(
   pi: ExtensionAPI,
   options: CognitiveOsExtensionOptions = {},
-): void {
+): Promise<void> {
   const client = options.client ?? new PersonalDaemonClient();
 
   pi.on("project_trust", async () => PROJECT_TRUST_DECISION);
@@ -70,6 +71,9 @@ export function registerCognitiveOsExtension(
       await showStatus(client, context, "command");
     },
   });
+
+  // Registration completes only after the daemon-selected model is available.
+  pi.registerProvider(await createDaemonProvider(client));
 }
 
 export default registerCognitiveOsExtension;

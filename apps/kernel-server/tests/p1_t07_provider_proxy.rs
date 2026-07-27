@@ -132,3 +132,59 @@ fn provider_proxy_requires_management_auth_and_fails_closed_without_provider_con
     daemon.wait().unwrap();
     let _ = std::fs::remove_dir_all(&runtime_root);
 }
+
+#[test]
+fn selected_model_projection_requires_management_auth_without_secret_resolution() {
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let port = free_port();
+    let runtime_root = create_runtime_root();
+    let config_directory = runtime_root.join("config").join("cognitiveos");
+    std::fs::create_dir_all(&config_directory).unwrap();
+    std::fs::write(
+        config_directory.join("selected-model.json"),
+        "{\n  \"schema_version\": 1,\n  \"selected_model\": \"approved-model\",\n  \"selected_snapshot_digest\": \"fnv1a64:approved\",\n  \"chat_capable\": true\n}\n",
+    )
+    .unwrap();
+    let mut daemon = spawn_personal_daemon(port, &runtime_root);
+    let bootstrap_secret = read_bootstrap_secret(&runtime_root);
+    let management_token = issue_management_token(port, &bootstrap_secret);
+
+    let unauthorized_request =
+        "GET /provider/v1/selected-model HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";
+    let unauthorized_response = exchange_http_request(port, unauthorized_request);
+    assert!(
+        unauthorized_response.contains("LOCAL_SESSION_UNAUTHORIZED"),
+        "{unauthorized_response}"
+    );
+
+    let authorized_request = format!(
+        "GET /provider/v1/selected-model HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nConnection: close\r\n\r\n"
+    );
+    let authorized_response = exchange_http_request(port, &authorized_request);
+    assert!(
+        authorized_response.contains("HTTP/1.1 200"),
+        "{authorized_response}"
+    );
+    assert!(
+        authorized_response.contains("\"selected_model\":\"approved-model\""),
+        "{authorized_response}"
+    );
+    assert!(
+        authorized_response.contains("\"chat_capable\":true"),
+        "{authorized_response}"
+    );
+    assert!(
+        !authorized_response.contains("secret_ref"),
+        "{authorized_response}"
+    );
+    assert!(
+        !authorized_response.contains(&management_token),
+        "session credential leaked in selected-model response: {authorized_response}"
+    );
+
+    daemon.kill().unwrap();
+    daemon.wait().unwrap();
+    let _ = std::fs::remove_dir_all(&runtime_root);
+}

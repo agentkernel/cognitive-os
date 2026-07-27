@@ -22,6 +22,7 @@ mod provider_service;
 mod provider_snapshot;
 mod provider_transport;
 mod secret_input;
+mod selected_model;
 mod store;
 
 pub use backend_select::{
@@ -55,4 +56,7 @@ pub use provider_transport::{
     is_authorization_header_name, redacted_headers,
 };
 pub use secret_input::read_secret_material_from_reader;
+pub use selected_model::{
+    SELECTED_MODEL_FILE_NAME, SelectedModel, SelectedModelError, SelectedModelRepository,
+};
 pub use store::{SecretStore, SecretStoreAvailability, SecretStoreClass};
