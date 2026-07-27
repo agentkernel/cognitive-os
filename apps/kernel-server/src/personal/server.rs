@@ -6,6 +6,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use cognitive_secret::{ProviderConfigRepository, select_production_secret_store};
 use cognitive_store::PersonalDataLayout;
 use serde_json::json;
 
@@ -14,6 +15,7 @@ use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
 };
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
+use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
 use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
     status_projection_json,
@@ -236,6 +238,9 @@ fn process_http_request(
     if method_path.starts_with("POST /local/session ") {
         return handle_session_issue(stream, &body, authority);
     }
+    if method_path.starts_with("POST /provider/v1/chat/completions ") {
+        return handle_provider_proxy_route(stream, &headers, &body, layout, authority);
+    }
     if method_path.starts_with("POST /management/") {
         return handle_channel_route(
             stream,
@@ -364,6 +369,53 @@ fn handle_channel_route(
     }
 }
 
+fn handle_provider_proxy_route(
+    stream: &mut TcpStream,
+    headers: &str,
+    request_body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Management, Instant::now())
+    {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+
+    let secret_backend = select_production_secret_store();
+    let transport = RustlsProviderTransport;
+    let service = ProviderProxyService::new(
+        secret_backend.as_secret_store(),
+        ProviderConfigRepository::under_config_dir(layout.config_dir()),
+        &transport,
+    );
+    match service.forward_chat_completion(request_body) {
+        Ok(response) => write_provider_response(stream, response.status, &response.body),
+        Err(error) => write_error_response(
+            stream,
+            error.status_code(),
+            error.code(),
+            "provider proxy request was not completed",
+        ),
+    }
+}
+
 fn handle_readiness_route(
     stream: &mut TcpStream,
     headers: &str,
@@ -392,6 +444,7 @@ fn handle_readiness_route(
                 session_count,
                 secret_probe_override: None,
                 provider_config_path_override: None,
+                pi_observation_override: None,
             });
             let body = if surface == "doctor" {
                 doctor_projection_json(&report).to_string()
@@ -575,6 +628,18 @@ fn extract_json_string(document: &str, field_name: &str) -> Option<String> {
 }
 
 fn write_json_response(stream: &mut TcpStream, status: u16, body: &str) -> Result<(), String> {
+    write_json_bytes_response(stream, status, body.as_bytes())
+}
+
+fn write_provider_response(stream: &mut TcpStream, status: u16, body: &[u8]) -> Result<(), String> {
+    write_json_bytes_response(stream, status, body)
+}
+
+fn write_json_bytes_response(
+    stream: &mut TcpStream,
+    status: u16,
+    body: &[u8],
+) -> Result<(), String> {
     let reason = match status {
         200 => "OK",
         400 => "Bad Request",
@@ -583,14 +648,17 @@ fn write_json_response(stream: &mut TcpStream, status: u16, body: &str) -> Resul
         404 => "Not Found",
         408 => "Request Timeout",
         429 => "Too Many Requests",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable",
         _ => "Error",
     };
-    let wire = format!(
-        "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+    let header = format!(
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
     stream
-        .write_all(wire.as_bytes())
+        .write_all(header.as_bytes())
+        .and_then(|()| stream.write_all(body))
         .map_err(|error| error.to_string())
 }
 

@@ -18,6 +18,8 @@ use cognitive_secret::{
 use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
 
+use super::pi_runtime::{PINNED_PI_VERSION, PiRuntimeObservation, observe_pi_runtime};
+
 /// Product-local schema version for readiness projections (not a registry schema).
 pub const PERSONAL_READINESS_SCHEMA_VERSION: u32 = 1;
 
@@ -102,6 +104,8 @@ pub struct ReadinessEvaluationContext {
     pub secret_probe_override: Option<SecretProbeObservation>,
     /// Optional override for Provider config path (defaults to layout config).
     pub provider_config_path_override: Option<PathBuf>,
+    /// Optional override for the Pi runtime observation (tests inject; production None).
+    pub pi_observation_override: Option<PiRuntimeObservation>,
 }
 
 /// Non-secret SecretStore probe observation.
@@ -120,14 +124,17 @@ pub fn evaluate_personal_readiness(context: &ReadinessEvaluationContext) -> Read
         check_secret(context, evaluated_at_unix_ms),
         check_provider(context, evaluated_at_unix_ms),
         check_daemon(context, evaluated_at_unix_ms),
-        check_pi(evaluated_at_unix_ms),
+        check_pi(context, evaluated_at_unix_ms),
     ];
 
     let overall = aggregate_overall(&components);
     let first_conversation_ready = overall == OverallReadiness::Ready
         && components.iter().all(|component| {
             if component.component == "pi" {
-                // Pi package is P1-T07; first conversation still requires it.
+                // `pi` is optional for the required-set aggregate (ADR-0023),
+                // but a first conversation genuinely needs it, so it is
+                // required here and only here. P1-T07 made this a real
+                // observation; the rule itself is unchanged.
                 component.status == ComponentStatus::Ready
             } else if component.required {
                 component.status == ComponentStatus::Ready
@@ -234,9 +241,14 @@ fn doctor_guidance(report: &ReadinessReport) -> Vec<&'static str> {
             ("daemon", ComponentStatus::Blocked) => {
                 guidance.push("start kernel-server --personal and confirm loopback listen");
             }
-            ("pi", ComponentStatus::NotConfigured | ComponentStatus::Blocked) => {
+            ("pi", ComponentStatus::NotConfigured) => {
                 guidance.push(
-                    "Pi package/extension is deferred to P1-T07; first conversation stays blocked",
+                    "write pi.json with an absolute Pi executable path and CognitiveOS Extension entry path; first conversation stays blocked until Pi is configured",
+                );
+            }
+            ("pi", ComponentStatus::Blocked) => {
+                guidance.push(
+                    "install the pinned Pi version and the built CognitiveOS Extension at the paths recorded in pi.json; see the pi component facts for which check failed",
                 );
             }
             _ => {}
@@ -554,27 +566,55 @@ fn check_daemon(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) 
     }
 }
 
-fn check_pi(observed_at_unix_ms: u64) -> ComponentCheck {
-    // Pi package/extension is P1-T07. This check records absence honestly and
-    // does not invent a synthetic ready state from static repository presence.
+fn check_pi(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) -> ComponentCheck {
+    // P1-T07 replaced the hard-coded placeholder with a real observation. The
+    // component stays optional so ADR-0023's aggregation rules are unchanged;
+    // only its status is now fact-derived. Absence is still reported as
+    // absence: an unconfigured host reads `not_configured`, exactly as before.
+    let started = Instant::now();
+    let observation = match &context.pi_observation_override {
+        Some(observation) => observation.clone(),
+        None => observe_pi_runtime(context.layout.config_dir()),
+    };
+
+    let status = match observation {
+        PiRuntimeObservation::Ready => ComponentStatus::Ready,
+        PiRuntimeObservation::NotConfigured => ComponentStatus::NotConfigured,
+        _ => ComponentStatus::Blocked,
+    };
+
+    let mut facts = vec![
+        ReadinessFact {
+            key: "package_status",
+            value: observation.package_status().to_owned(),
+        },
+        ReadinessFact {
+            key: "pinned_version",
+            value: PINNED_PI_VERSION.to_owned(),
+        },
+    ];
+    if let Some(observed_version) = observation.observed_version() {
+        facts.push(ReadinessFact {
+            key: "observed_version",
+            value: observed_version.to_owned(),
+        });
+    }
+    // The Extension is a client surface; a ready Pi component never implies a
+    // Gate, a sandbox, or a governed AgentInstallation.
+    facts.push(ReadinessFact {
+        key: "containment_claim",
+        value: "not-claimed".to_owned(),
+    });
+
     ComponentCheck {
         component: "pi",
-        status: ComponentStatus::NotConfigured,
+        status,
         required: false,
         source: "product:pi-package",
-        duration_ms: 0,
+        duration_ms: elapsed_ms(started),
         observed_at_unix_ms,
-        error_class: Some("pi_not_configured"),
-        facts: vec![
-            ReadinessFact {
-                key: "package_status",
-                value: "not_configured".to_owned(),
-            },
-            ReadinessFact {
-                key: "deferred_to",
-                value: "P1-T07".to_owned(),
-            },
-        ],
+        error_class: observation.error_class(),
+        facts,
     }
 }
 
@@ -702,6 +742,7 @@ mod tests {
             session_count: 0,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
         assert!(!report.first_conversation_ready);
@@ -729,6 +770,7 @@ mod tests {
             session_count: 1,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            pi_observation_override: None,
         });
         // daemon lock/bootstrap may be missing → degraded or blocked; force
         // only provider path by requiring provider degraded and overall not ready.
@@ -760,6 +802,7 @@ mod tests {
             session_count: 2,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Ready);
         assert!(
@@ -772,15 +815,120 @@ mod tests {
             .find(|component| component.component == "pi")
             .expect("pi");
         assert_eq!(pi.status, ComponentStatus::NotConfigured);
+        assert_eq!(pi.error_class, Some("pi_not_configured"));
         let doctor = doctor_projection_json(&report);
         assert_eq!(doctor["overall"], "ready");
         assert_eq!(doctor["first_conversation_ready"], false);
         assert_eq!(doctor["gate_claim"], "not-claimed");
         let guidance = doctor["guidance"].as_array().expect("guidance array");
-        assert!(guidance.iter().any(|entry| entry.as_str()
-            == Some(
-                "Pi package/extension is deferred to P1-T07; first conversation stays blocked"
-            )));
+        assert!(
+            guidance.iter().any(|entry| entry
+                .as_str()
+                .is_some_and(|text| text.contains("write pi.json"))),
+            "an unconfigured Pi must produce actionable guidance"
+        );
+    }
+
+    #[test]
+    fn a_ready_pi_observation_unblocks_first_conversation_without_changing_aggregation() {
+        let layout = temp_layout("pi-ready");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        fs::write(layout.daemon_lock_path(), b"lock").unwrap();
+        fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
+        let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 1,
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: None,
+            pi_observation_override: Some(PiRuntimeObservation::Ready),
+        });
+        assert_eq!(report.overall, OverallReadiness::Ready);
+        assert!(report.first_conversation_ready);
+        let pi = report
+            .components
+            .iter()
+            .find(|component| component.component == "pi")
+            .expect("pi");
+        assert_eq!(pi.status, ComponentStatus::Ready);
+        assert!(!pi.required, "ADR-0023 keeps the pi component optional");
+        assert_eq!(pi.error_class, None);
+        let doctor = doctor_projection_json(&report);
+        // A ready Pi is still not a Gate, sandbox or Profile claim.
+        assert_eq!(doctor["gate_claim"], "not-claimed");
+        assert_eq!(doctor["profile_claim"], "not-claimed");
+        assert_eq!(doctor["static_check_is_not_runtime_ready"], true);
+        let facts = doctor["components"]
+            .as_array()
+            .expect("components")
+            .iter()
+            .find(|component| component["component"] == "pi")
+            .expect("pi component")["facts"]
+            .as_array()
+            .expect("facts")
+            .clone();
+        assert!(
+            facts
+                .iter()
+                .any(|fact| fact["key"] == "containment_claim" && fact["value"] == "not-claimed")
+        );
+        assert!(
+            facts
+                .iter()
+                .any(|fact| fact["key"] == "observed_version" && fact["value"] == PINNED_PI_VERSION)
+        );
+    }
+
+    #[test]
+    fn a_broken_pi_observation_blocks_the_component_without_blocking_overall() {
+        let cases = [
+            (
+                PiRuntimeObservation::ExecutableMissing,
+                "pi_executable_missing",
+            ),
+            (
+                PiRuntimeObservation::ExtensionMissing,
+                "pi_extension_missing",
+            ),
+            (
+                PiRuntimeObservation::VersionMismatch {
+                    observed: "0.82.0".to_owned(),
+                },
+                "pi_version_mismatch",
+            ),
+            (PiRuntimeObservation::ProbeTimedOut, "pi_probe_timeout"),
+            (
+                PiRuntimeObservation::ConfigUnusable { detail: "bad" },
+                "pi_config_unusable",
+            ),
+        ];
+        for (index, (observation, expected_error_class)) in cases.into_iter().enumerate() {
+            let layout = temp_layout(&format!("pi-broken-{index}"));
+            touch_personal_database_files(&layout).unwrap();
+            write_provider_config(&layout, true);
+            fs::write(layout.daemon_lock_path(), b"lock").unwrap();
+            fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
+            let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+                layout,
+                daemon_listening: true,
+                session_count: 0,
+                secret_probe_override: Some(available_secret_probe()),
+                provider_config_path_override: None,
+                pi_observation_override: Some(observation),
+            });
+            // `pi` is optional, so a broken Pi never rewrites the required-set
+            // aggregate. It only keeps the first conversation blocked.
+            assert_eq!(report.overall, OverallReadiness::Ready);
+            assert!(!report.first_conversation_ready);
+            let pi = report
+                .components
+                .iter()
+                .find(|component| component.component == "pi")
+                .expect("pi");
+            assert_eq!(pi.status, ComponentStatus::Blocked);
+            assert_eq!(pi.error_class, Some(expected_error_class));
+        }
     }
 
     #[test]
@@ -804,6 +952,7 @@ mod tests {
                 availability: SecretStoreAvailability::Locked,
             }),
             provider_config_path_override: None,
+            pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
         let secret = report
@@ -835,6 +984,7 @@ mod tests {
             session_count: 0,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            pi_observation_override: None,
         });
         let doctor_text = doctor_projection_json(&report).to_string();
         let status_text = status_projection_json(&report).to_string();
