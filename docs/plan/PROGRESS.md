@@ -11,6 +11,27 @@
 > and supported CI (including Windows/MSVC) remains required. The unresolved Pi
 > completion-provider hook keeps P1-T07 `in-progress`.
 
+> **P1-T07 post-merge update (2026-07-27):** PR [#104](https://github.com/agentkernel/cognitive-os/pull/104)
+> merged after Ubuntu and Windows/MSVC CI both passed. In addition to the
+> earlier focused WSL checks, `cargo test -p kernel-server --locked` also
+> passed in the WSL guest. This does not upgrade the batch into any Gate,
+> Profile, containment, or release claim; it only closes the provider-proxy
+> implementation checkpoint. P1-T07 still remains `in-progress` because the
+> pinned Pi completion/provider integration surface is not yet verified.
+
+> **P1-T07 integration-surface investigation (2026-07-27):** the exact pinned
+> Pi `0.81.1` source commit documents `ExtensionAPI.registerProvider(...)` and
+> a complete custom-provider streaming API. This is a supported extension
+> surface, not an approved direct-provider bypass. It cannot be wired safely by
+> the current batch: the checked-in structural mirror intentionally omits that
+> API, the daemon proxy deterministically rejects Pi's required `stream:true`
+> requests, and no authenticated, non-secret daemon model projection exists.
+> The legacy provider/interception hooks are insufficient because they could
+> reintroduce Pi credential/config resolution. P1-T07 remains `in-progress`;
+> no Pi-side Provider config, upstream credential, environment-key fallback,
+> SQLite write, or direct Provider route was added. P1-T08 installer work is
+> dependency-blocked until this completion-path boundary is safely closed.
+
 > 2026-07-24 carrier 批：KRN 已为 existing installation staging/commit record 加入 Custom source acknowledgement evidence，并以同一 SQLite 事务持久化；RUN 的 manager-only query 与 CLI 输出均读取 committed evidence。该批仍须两平台 CI，且不改变官方 provenance、Linux sandbox、Pi adapter、恢复战役、PERF 或 Profile non-claim。
 > 2026-07-24 Pi P4 pre-launch admission 批（`lane/run-pi-batch1`）：新增显式 Windows-native/WSL2 拒绝，且 Linux-host admission 必须精确绑定有效 policy、sandbox adapter、compatibility digest、healthy registered adapter 及 HTTPS DeepSeek egress proxy；permit 不携带 authority/capability/Effect/Task completion，仓库未提供可启动 Pi 的 permissive adapter。WSL2 guest 诊断 runtime tests **52/52** + runtime clippy passed；Windows 本机 MinGW linker error 121，未形成 Windows test pass。没有 Linux-native evidence、F-017 扩大声明、Profile claim 或 release GO。
 
