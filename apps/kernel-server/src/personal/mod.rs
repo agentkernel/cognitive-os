@@ -7,6 +7,8 @@
 mod auth;
 mod bounds;
 mod lifecycle;
+mod pi_runtime;
+mod provider_proxy;
 mod readiness;
 mod server;
 
