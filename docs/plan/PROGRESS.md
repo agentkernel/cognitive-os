@@ -19,6 +19,19 @@
 > implementation checkpoint. P1-T07 still remains `in-progress` because the
 > pinned Pi completion/provider integration surface is not yet verified.
 
+> **P1-T07 completion-bridge update (2026-07-27):** the daemon now persists a
+> separate non-secret selected-model projection only after a minimally-ready
+> discovery probe, clears it on lifecycle invalidation and unavailable probes,
+> and exposes it through management-only `GET /provider/v1/selected-model`.
+> The Pi adapter registers exactly one daemon-projected model and forwards one
+> bounded `stream:false` completion through the authenticated daemon proxy;
+> it never receives Provider configuration or secret material. Local focused
+> Rust provider/projection and Pi bridge tests, complete `kernel-server` tests,
+> strict Clippy, formatting, TypeScript build/tests, and static consistency
+> checks passed. This is local implementation and test evidence only: it is not
+> a Gate, Profile, containment, or release claim. P1-T07 remains `in-progress`
+> pending supported CI and any remaining milestone evidence.
+
 > **P1-T07 integration-surface investigation (2026-07-27):** the exact pinned
 > Pi `0.81.1` source commit documents `ExtensionAPI.registerProvider(...)` and
 > a complete custom-provider streaming API. This is a supported extension

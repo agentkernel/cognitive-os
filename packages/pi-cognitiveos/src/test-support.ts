@@ -19,6 +19,7 @@ import type {
   ExtensionContext,
   ExtensionUi,
   ProjectTrustDecision,
+  Provider,
   ToolCallDecision,
   ToolCallEvent,
 } from "./pi-api.js";
@@ -75,6 +76,7 @@ export class FakePi implements ExtensionAPI {
   readonly ui = new FakeUi();
   readonly context: ExtensionContext = { ui: this.ui };
   readonly commands = new Map<string, ExtensionCommandSpec>();
+  readonly providers: Provider[] = [];
 
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
@@ -109,6 +111,10 @@ export class FakePi implements ExtensionAPI {
 
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void {
     this.commands.set(commandName, spec);
+  }
+
+  registerProvider(provider: Provider): void {
+    this.providers.push(provider);
   }
 
   get registeredHooks(): readonly string[] {
@@ -166,6 +172,8 @@ export interface FakeDaemonOptions {
    * daemon starts accepting the bearer. Models a daemon restart.
    */
   readonly unauthorizedStatusResponses?: number;
+  readonly selectedModelBody?: string;
+  readonly completionBody?: string;
 }
 
 export interface FakeDaemon {
@@ -265,6 +273,26 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
         return;
       }
 
+      if (request.method === "GET" && request.url === "/provider/v1/selected-model") {
+        const authorization = headers["authorization"] ?? "";
+        if (!authorization.startsWith("Bearer ") || !issuedTokens.includes(authorization.slice("Bearer ".length))) {
+          respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
+          return;
+        }
+        respond(response, 200, options.selectedModelBody ?? selectedModelProjectionBody());
+        return;
+      }
+
+      if (request.method === "POST" && request.url === "/provider/v1/chat/completions") {
+        const authorization = headers["authorization"] ?? "";
+        if (!authorization.startsWith("Bearer ") || !issuedTokens.includes(authorization.slice("Bearer ".length))) {
+          respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
+          return;
+        }
+        respond(response, 200, options.completionBody ?? boundedCompletionBody());
+        return;
+      }
+
       respond(response, 404, errorBody("PERSONAL_ROUTE_NOT_FOUND"));
     });
   });
@@ -284,6 +312,24 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
       });
     },
   };
+}
+
+export function selectedModelProjectionBody(
+  overrides: Readonly<Record<string, unknown>> = {},
+): string {
+  return JSON.stringify({
+    schema_version: 1,
+    surface: "personal-provider-selected-model",
+    selected_model: "deepseek-v4-flash",
+    selected_snapshot_digest: "fnv1a64:synthetic",
+    chat_capable: true,
+    authority_side_effects: false,
+    ...overrides,
+  });
+}
+
+export function boundedCompletionBody(content = "daemon text"): string {
+  return JSON.stringify({ choices: [{ message: { content }, finish_reason: "stop" }] });
 }
 
 function respond(response: ServerResponse, status: number, body: string): void {

@@ -9,7 +9,7 @@ use std::time::Duration;
 use cognitive_secret::{
     ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
     ProviderKeyService, ProviderKeyServiceError, ProviderTransport, ProviderTransportError,
-    SecretStore, bearer_authorization_header_value,
+    SecretStore, SelectedModelRepository, bearer_authorization_header_value,
 };
 
 const PROVIDER_CHAT_COMPLETIONS_PATH: &str = "/chat/completions";
@@ -23,6 +23,8 @@ pub enum ProviderProxyError {
     SecretUnavailable,
     StreamingUnsupported,
     InvalidRequest,
+    SelectedModelUnavailable,
+    SelectedModelMismatch,
     TransportUnavailable,
     UpstreamRequestFailed,
 }
@@ -35,6 +37,8 @@ impl ProviderProxyError {
             Self::SecretUnavailable => "PERSONAL_PROVIDER_SECRET_UNAVAILABLE",
             Self::StreamingUnsupported => "PERSONAL_PROVIDER_STREAMING_UNSUPPORTED",
             Self::InvalidRequest => "PERSONAL_PROVIDER_REQUEST_INVALID",
+            Self::SelectedModelUnavailable => "PERSONAL_PROVIDER_SELECTED_MODEL_UNAVAILABLE",
+            Self::SelectedModelMismatch => "PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH",
             Self::TransportUnavailable => "PERSONAL_PROVIDER_TRANSPORT_UNAVAILABLE",
             Self::UpstreamRequestFailed => "PERSONAL_PROVIDER_UPSTREAM_REQUEST_FAILED",
         }
@@ -43,8 +47,11 @@ impl ProviderProxyError {
     /// HTTP status returned by the bounded local front door.
     pub fn status_code(self) -> u16 {
         match self {
-            Self::NotConfigured | Self::SecretUnavailable | Self::TransportUnavailable => 503,
-            Self::StreamingUnsupported | Self::InvalidRequest => 400,
+            Self::NotConfigured
+            | Self::SecretUnavailable
+            | Self::SelectedModelUnavailable
+            | Self::TransportUnavailable => 503,
+            Self::StreamingUnsupported | Self::InvalidRequest | Self::SelectedModelMismatch => 400,
             Self::UpstreamRequestFailed => 502,
         }
     }
@@ -76,7 +83,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         &self,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
-        reject_streaming_or_malformed_request(request_body)?;
+        let requested_model = validate_chat_request(request_body)?;
 
         let provider_key_service =
             ProviderKeyService::new(self.secret_store, self.config_repository.clone());
@@ -84,6 +91,14 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
             .load_config()
             .map_err(map_provider_key_error)?
             .ok_or(ProviderProxyError::NotConfigured)?;
+        let selected_model =
+            SelectedModelRepository::under_config_dir(self.config_repository.config_dir())
+                .load()
+                .map_err(|_| ProviderProxyError::SelectedModelUnavailable)?
+                .ok_or(ProviderProxyError::SelectedModelUnavailable)?;
+        if requested_model != selected_model.model_id() {
+            return Err(ProviderProxyError::SelectedModelMismatch);
+        }
         let provider_material = provider_key_service
             .resolve_provider_material()
             .map_err(map_provider_key_error)?;
@@ -168,7 +183,7 @@ impl ProviderTransport for RustlsProviderTransport {
     }
 }
 
-fn reject_streaming_or_malformed_request(request_body: &[u8]) -> Result<(), ProviderProxyError> {
+fn validate_chat_request(request_body: &[u8]) -> Result<String, ProviderProxyError> {
     let request_json: serde_json::Value =
         serde_json::from_slice(request_body).map_err(|_| ProviderProxyError::InvalidRequest)?;
     let request_object = request_json
@@ -177,7 +192,12 @@ fn reject_streaming_or_malformed_request(request_body: &[u8]) -> Result<(), Prov
     if request_object.get("stream") == Some(&serde_json::Value::Bool(true)) {
         return Err(ProviderProxyError::StreamingUnsupported);
     }
-    Ok(())
+    request_object
+        .get("model")
+        .and_then(serde_json::Value::as_str)
+        .filter(|model_id| !model_id.is_empty())
+        .map(str::to_owned)
+        .ok_or(ProviderProxyError::InvalidRequest)
 }
 
 fn map_provider_key_error(error: ProviderKeyServiceError) -> ProviderProxyError {
@@ -186,7 +206,9 @@ fn map_provider_key_error(error: ProviderKeyServiceError) -> ProviderProxyError 
         ProviderKeyServiceError::SecretMissing | ProviderKeyServiceError::Secret(_) => {
             ProviderProxyError::SecretUnavailable
         }
-        ProviderKeyServiceError::Config(_) => ProviderProxyError::NotConfigured,
+        ProviderKeyServiceError::Config(_) | ProviderKeyServiceError::SelectedModel(_) => {
+            ProviderProxyError::NotConfigured
+        }
     }
 }
 
@@ -244,13 +266,12 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{
-        ProviderProxyError, ProviderProxyService, reject_streaming_or_malformed_request,
-        validate_transport_request,
+        ProviderProxyError, ProviderProxyService, validate_chat_request, validate_transport_request,
     };
     use cognitive_secret::{
         EphemeralSecretStore, ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest,
         ProviderHttpResponse, ProviderKeyService, ProviderTransport, ProviderTransportError,
-        SecretMaterial,
+        SecretMaterial, SelectedModel,
     };
 
     #[derive(Clone, Default)]
@@ -295,11 +316,11 @@ mod tests {
     #[test]
     fn streaming_and_malformed_requests_are_rejected_before_secret_resolution() {
         assert_eq!(
-            reject_streaming_or_malformed_request(br#"{"stream":true,"messages":[]}"#),
+            validate_chat_request(br#"{"stream":true,"messages":[]}"#),
             Err(ProviderProxyError::StreamingUnsupported)
         );
         assert_eq!(
-            reject_streaming_or_malformed_request(b"not-json"),
+            validate_chat_request(b"not-json"),
             Err(ProviderProxyError::InvalidRequest)
         );
     }
@@ -347,6 +368,10 @@ mod tests {
                 None,
             )
             .expect("provider configuration");
+        provider_key_service
+            .selected_model_repository()
+            .store(&SelectedModel::new("test-model", "fnv1a64:test", true).expect("selected model"))
+            .expect("selected model store");
         let transport = CapturingTransport::default();
         let proxy = ProviderProxyService::new(&secret_store, config_repository, &transport);
         let request_body = br#"{"model":"test-model","stream":false,"messages":[]}"#;
@@ -378,6 +403,46 @@ mod tests {
                 ("Content-Type".to_owned(), "application/json".to_owned()),
             ]
         );
+
+        std::fs::remove_dir_all(
+            config_path
+                .parent()
+                .expect("temporary config parent directory"),
+        )
+        .expect("temporary config cleanup");
+    }
+
+    #[test]
+    fn proxy_rejects_an_unselected_model_before_provider_secret_resolution() {
+        let config_path = temporary_provider_config_path();
+        let config_repository = ProviderConfigRepository::from_file_path(&config_path);
+        let secret_store = EphemeralSecretStore::default();
+        let provider_key_service =
+            ProviderKeyService::new(&secret_store, config_repository.clone());
+        provider_key_service
+            .configure_provider(
+                "deepseek",
+                "https://provider.example.invalid/v1",
+                SecretMaterial::from_bytes(b"synthetic-provider-key-p1-t07".to_vec())
+                    .expect("synthetic material"),
+                None,
+            )
+            .expect("provider configuration");
+        provider_key_service
+            .selected_model_repository()
+            .store(
+                &SelectedModel::new("approved-model", "fnv1a64:approved", true)
+                    .expect("selected model"),
+            )
+            .expect("selected model store");
+        let transport = CapturingTransport::default();
+        let proxy = ProviderProxyService::new(&secret_store, config_repository, &transport);
+
+        assert!(matches!(
+            proxy.forward_chat_completion(br#"{"model":"other-model","messages":[]}"#),
+            Err(ProviderProxyError::SelectedModelMismatch)
+        ));
+        assert!(transport.requests().is_empty());
 
         std::fs::remove_dir_all(
             config_path

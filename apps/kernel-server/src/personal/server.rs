@@ -6,7 +6,9 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use cognitive_secret::{ProviderConfigRepository, select_production_secret_store};
+use cognitive_secret::{
+    ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
+};
 use cognitive_store::PersonalDataLayout;
 use serde_json::json;
 
@@ -241,6 +243,9 @@ fn process_http_request(
     if method_path.starts_with("POST /provider/v1/chat/completions ") {
         return handle_provider_proxy_route(stream, &headers, &body, layout, authority);
     }
+    if method_path.starts_with("GET /provider/v1/selected-model ") {
+        return handle_selected_model_route(stream, &headers, layout, authority);
+    }
     if method_path.starts_with("POST /management/") {
         return handle_channel_route(
             stream,
@@ -412,6 +417,65 @@ fn handle_provider_proxy_route(
             error.status_code(),
             error.code(),
             "provider proxy request was not completed",
+        ),
+    }
+}
+
+fn handle_selected_model_route(
+    stream: &mut TcpStream,
+    headers: &str,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Management, Instant::now())
+    {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+
+    // This route reads only the dedicated non-secret carrier. It never creates
+    // a SecretStore or resolves Provider material.
+    match SelectedModelRepository::under_config_dir(layout.config_dir()).load() {
+        Ok(Some(selected_model)) => write_json_response(
+            stream,
+            200,
+            &json!({
+                "schema_version": 1,
+                "surface": "personal-provider-selected-model",
+                "selected_model": selected_model.model_id(),
+                "selected_snapshot_digest": selected_model.selected_snapshot_digest(),
+                "chat_capable": selected_model.chat_capable(),
+                "authority_side_effects": false,
+            })
+            .to_string(),
+        ),
+        Ok(None) => write_error_response(
+            stream,
+            503,
+            "PERSONAL_PROVIDER_SELECTED_MODEL_UNAVAILABLE",
+            "selected model state is unavailable",
+        ),
+        Err(_) => write_error_response(
+            stream,
+            503,
+            "PERSONAL_PROVIDER_SELECTED_MODEL_UNAVAILABLE",
+            "selected model state is unavailable",
         ),
     }
 }

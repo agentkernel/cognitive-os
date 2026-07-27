@@ -54,6 +54,101 @@ export interface ExtensionCommandSpec {
   handler(commandArguments: unknown, context: ExtensionContext): Promise<void>;
 }
 
+/**
+ * The exact model shape consumed by the pinned complete-provider surface.
+ * It intentionally carries no Provider endpoint, headers, or credentials.
+ */
+export interface PiModel {
+  readonly id: string;
+  readonly name: string;
+  readonly provider: string;
+  readonly api: string;
+  readonly reasoning: boolean;
+  readonly input: readonly ["text"];
+  readonly cost: {
+    readonly input: number;
+    readonly output: number;
+    readonly cacheRead: number;
+    readonly cacheWrite: number;
+  };
+  readonly contextWindow: number;
+  readonly maxTokens: number;
+}
+
+/** Subset of the pinned Context consumed by the bounded text bridge. */
+export interface PiCompletionContext {
+  readonly systemPrompt?: string;
+  readonly messages: readonly unknown[];
+}
+
+/** The only Pi stream option honored by the daemon bridge is cancellation. */
+export interface PiStreamOptions {
+  readonly signal?: AbortSignal;
+}
+
+/** A keyless availability check; it exposes no Pi credential storage surface. */
+export interface PiProviderAuth {
+  readonly apiKey: {
+    readonly name: string;
+    check(): Promise<{ readonly type: "api_key"; readonly source: string }>;
+    resolve(): Promise<{ readonly auth: Record<string, never>; readonly source: string }>;
+  };
+}
+
+export interface PiAssistantMessage {
+  readonly role: "assistant";
+  readonly content: readonly PiTextContent[];
+  readonly api: string;
+  readonly provider: string;
+  readonly model: string;
+  readonly usage: {
+    readonly input: number;
+    readonly output: number;
+    readonly cacheRead: number;
+    readonly cacheWrite: number;
+    readonly totalTokens: number;
+    readonly cost: {
+      readonly input: number;
+      readonly output: number;
+      readonly cacheRead: number;
+      readonly cacheWrite: number;
+      readonly total: number;
+    };
+  };
+  readonly stopReason: "stop" | "error" | "aborted";
+  readonly timestamp: number;
+  readonly errorMessage?: string;
+}
+
+export interface PiTextContent {
+  readonly type: "text";
+  readonly text: string;
+}
+
+export type PiAssistantMessageEvent =
+  | { readonly type: "start"; readonly partial: PiAssistantMessage }
+  | { readonly type: "text_start"; readonly contentIndex: number; readonly partial: PiTextContent }
+  | { readonly type: "text_delta"; readonly contentIndex: number; readonly delta: string }
+  | { readonly type: "text_end"; readonly contentIndex: number; readonly content: PiTextContent }
+  | { readonly type: "done"; readonly message: PiAssistantMessage }
+  | { readonly type: "error"; readonly error: PiAssistantMessage };
+
+export interface AssistantMessageEventStream extends AsyncIterable<PiAssistantMessageEvent> {
+  push(event: PiAssistantMessageEvent): void;
+  end(result?: PiAssistantMessage): void;
+  result(): Promise<PiAssistantMessage>;
+}
+
+/** The complete custom-provider surface pinned from Pi 0.81.1. */
+export interface Provider {
+  readonly id: string;
+  readonly name: string;
+  readonly auth: PiProviderAuth;
+  getModels(): readonly PiModel[];
+  stream(model: PiModel, context: PiCompletionContext, options?: PiStreamOptions): AssistantMessageEventStream;
+  streamSimple(model: PiModel, context: PiCompletionContext, options?: PiStreamOptions): AssistantMessageEventStream;
+}
+
 /** The pinned Pi Extension registration surface. */
 export interface ExtensionAPI {
   on(event: "project_trust", handler: () => Promise<ProjectTrustDecision>): void;
@@ -63,4 +158,5 @@ export interface ExtensionAPI {
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
   ): void;
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
+  registerProvider(provider: Provider): void;
 }
