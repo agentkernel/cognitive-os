@@ -1,5 +1,17 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T07 closeout (2026-07-27):** PR
+> [#105](https://github.com/agentkernel/cognitive-os/pull/105) merged as
+> `main@9d4c3d9` after its Ubuntu and Windows/MSVC CI checks succeeded. The
+> task is now **done**: the Pi extension registers exactly one daemon-projected
+> model and sends a bounded one-shot `stream:false` completion only through the
+> management-authenticated daemon proxy. The extension neither receives
+> Provider configuration nor secret material; the daemon proxy remains
+> HTTPS-only, redirect-free, bounded, and non-streaming. P1-T07 completion is
+> implementation and test evidence only. It is **not** a G0/B01-B12, Profile,
+> containment, Linux-native Gate, or release claim. P1-T08 is the next planned
+> task; no installer or service claim has been made.
+
 > **每次合并必须更新本页**（`.cursor/rules/02-workflow-docs-sync.mdc`）。计数一律实测（IMP-17），禁止沿用文档旧数。
 > 最后更新：2026-07-27（Personal P0-T06 已完成：在 `wuz@192.168.1.2` 上实际执行 `extension-load` probe，证据记录已脱敏并核对为 `extension_command_registered=true`、`session_start_hook_observed=true`、`status_command_observed=true`、`status=executed`、`raw_output_included=false`、`output_redacted=true`、`authority_committed=false`、`effects_created=false`、`task_transitions=0`、`capabilities_granted=0`；仍是 PoC / non-claim evidence，不构成 containment、Profile 或 release claim。P1-T07 已交付 Pi runtime observation 和 daemon-owned non-streaming Provider proxy：`POST /provider/v1/chat/completions` 只接受 management bearer，Provider material 只在 daemon 内解析并仅送至 outbound request；production transport 是 daemon composition root 的 `reqwest` + Rustls，HTTPS-only、no redirects、1 MiB response bound，且 `stream:true` 稳定拒绝。ADR-0027 记录不采用 subprocess 的原因。focused provider test 目前在 Windows GNU linker exit 121 前未能执行；本 WSL instance 无 `cargo`，必须由 CI 验证。当前 pinned Pi API mirror 尚无已验证 completion-provider hook，故 Pi 未接线至 proxy，P1-T07 仍 in-progress。Owner 已批准 ADR-0018 的**默认关闭、本机 Linux、P2 到期**开发例外：adapter 仅在精确显式开关和独立 Provider config 目录存在时，从 native Secret Store 解析已配置的 DeepSeek key 后传给初始 Pi 子进程；不读取 parent env，Windows/CI/无 native backend 一律 fail-closed。该例外不构成 Pi containment、G0/B01-B12/C0/C1/Profile 或 release claim。此前完整 Windows-native 基线验证保持通过；Pi 外部 Agent 的候选执行边界已交付：Pi 0.81.1 + DeepSeek 实际 5/5 无工具 smoke，观测模型 `deepseek-v4-flash`，p50/p95/p99 = 6081/6451/6451 ms；固定 **authority=0 / Effect=0 / uncontained_candidate_only**。Lane-KRN durable InstallationStore 已合入 `main`：SQLite WAL 暂存/提交、显式崩溃恢复和跨句柄原子可见性测试已提供。Lane-RUN 现通过 in-process `DurableInstallationManager` 消费该 store；验证先于 stage/commit，recovery 仅限 manager，会话不授予 capability。`admin-cli install` 现以已认证 management session 的 `principal://` 为唯一 Custom 确认操作者，显示固定风险提示、构建确定性 `file://` bundle、拒绝无 lockfile/浮动依赖、并仅执行 `npm ci --ignore-scripts --offline`；它记录并输出 bundle/lockfile/adapter/sandbox/compatibility digests 后再 durable commit。来源/确认的**耐久查询记录**尚无 KRN store carrier，因此本批不将该 CLI 输出冒充 release evidence。该确认不是上游签名、C0/C1、Profile 或 sandbox 声明；官方供应链 verifier、Linux-native OS sandbox、lifecycle/I/O adapter 与跨进程 lifecycle lease 仍待完成。见 [PI-AGENT-INTEGRATION-PLAN.md](PI-AGENT-INTEGRATION-PLAN.md)。P0-T01 已完成：`01ceb93` 的跨平台 CI 成功，且本机 Windows GNU linker failure 已如实记录为非支持基线；不构成 Personal 产品、G0、B01-B12 或 Profile 声明。）
 > **P1-T07 verification correction (2026-07-27):** the preceding status text's
