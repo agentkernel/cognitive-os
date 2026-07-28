@@ -164,7 +164,14 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > fake harness verifies candidate unit publication then daemon-reload then
 > fixed candidate start, with candidate work never publishing the canonical
 > active unit. Focused lifecycle tests **10/10 passed** in
-> `windows_wsl2_linux_guest`. This is implementation-fixture evidence only;
+> `windows_wsl2_linux_guest`. PR
+> [#115](https://github.com/agentkernel/cognitive-os/pull/115) merged as
+> `main@aa09f6c` after supported Ubuntu/Windows-MSVC push and pull-request CI
+> passed in runs
+> [30382894322](https://github.com/agentkernel/cognitive-os/actions/runs/30382894322)
+> and
+> [30382932475](https://github.com/agentkernel/cognitive-os/actions/runs/30382932475).
+> This is implementation-fixture evidence only;
 > pointer/unit/service compensation fault injection, Linux-native systemd,
 > B01, Gate, Profile, containment, and release evidence remain absent.
 

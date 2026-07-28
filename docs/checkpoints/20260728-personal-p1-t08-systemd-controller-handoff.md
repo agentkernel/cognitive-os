@@ -3,7 +3,9 @@
 **Date:** 2026-07-28
 **Base:** `main@bc77beb`
 **Branch:** `lane/personal-p1-t08-systemd-controller`
-**Implementation commit:** pending
+**Implementation commit:** `af9d809`
+**Pull request:** [#115](https://github.com/agentkernel/cognitive-os/pull/115)
+**Merge commit:** `aa09f6c1b5e7388e0e1970ee3ef86ff6c78cf96b`
 
 ## Delivered boundary
 
@@ -39,6 +41,13 @@ CARGO_TARGET_DIR=/tmp/cognitiveos-p1-t08-controller \
 
 This is implementation-fixture evidence only. It is not Linux-native systemd,
 B01, Gate, Profile, containment, RC, or release evidence.
+
+Supported Ubuntu/Windows-MSVC push and pull-request matrices passed in
+[30382894322](https://github.com/agentkernel/cognitive-os/actions/runs/30382894322)
+and
+[30382932475](https://github.com/agentkernel/cognitive-os/actions/runs/30382932475).
+This supported-matrix result remains distinct from Linux-native systemd
+evidence.
 
 ## Remaining scope
 

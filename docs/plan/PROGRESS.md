@@ -10,9 +10,15 @@
 > canonical unit. Focused lifecycle tests executed in
 > `windows_wsl2_linux_guest`: **10/10 passed**. This is
 > implementation-fixture evidence only, not Linux-native systemd, B01, Gate,
-> Profile, containment, or release evidence. Pointer/unit/service compensation
-> fault injection, full redaction coverage, and a Linux-native campaign remain
-> separate work.
+> Profile, containment, or release evidence. PR
+> [#115](https://github.com/agentkernel/cognitive-os/pull/115) merged as
+> `main@aa09f6c`; supported Ubuntu/Windows-MSVC push and pull-request matrices
+> passed in runs
+> [30382894322](https://github.com/agentkernel/cognitive-os/actions/runs/30382894322)
+> and
+> [30382932475](https://github.com/agentkernel/cognitive-os/actions/runs/30382932475).
+> Pointer/unit/service compensation fault injection, full redaction coverage,
+> and a Linux-native campaign remain separate work.
 
 > **P1-T08 rendered user-service foundation (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0032
