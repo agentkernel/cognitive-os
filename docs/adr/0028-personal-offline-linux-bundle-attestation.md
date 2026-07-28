@@ -7,7 +7,8 @@
   not add or change a registry requirement, schema, transition, conformance
   vector, Profile claim, Gate claim, or release claim.
 - Related: ADR-0004 canonical JSON, ADR-0025 Personal distribution,
-  P1-T08 Linux installer, P7-T01 release/SBOM/attestation production
+  ADR-0029 bootstrap download trust, P1-T08 Linux installer, P7-T01
+  release/SBOM/attestation production
 
 ## Context
 
@@ -195,6 +196,7 @@ evidence.
 This decision does not mean that a production signing key exists, a release
 bundle or GitHub Release exists, provenance or an SBOM has been generated, or
 P1-T08/P1-T09, B01, G1, any Profile, containment, RC, or release is complete.
-Downloader/inspected installer integration, systemd user service, uninstall,
-cross-process installation lease, interruption campaigns, and Linux-native
-Gate evidence remain separate work.
+The signed HTTPS provenance reference is a binding fact, not authorization to
+dereference a URL. Downloader/inspected installer integration is governed by
+ADR-0029; systemd user service, uninstall, cross-process installation lease,
+interruption campaigns, and Linux-native Gate evidence remain separate work.
