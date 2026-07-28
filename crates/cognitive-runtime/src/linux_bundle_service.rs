@@ -109,8 +109,10 @@ pub fn render_personal_user_service_unit(
     let runtime_root = deployment_root
         .join("runtime")
         .join(unit_kind.runtime_directory());
-    let executable = executable.to_string_lossy();
-    let runtime_root = runtime_root.to_string_lossy();
+    // systemd unit syntax always uses POSIX path separators. Normalizing here
+    // keeps fixture rendering deterministic when tests run on Windows.
+    let executable = executable.to_string_lossy().replace('\\', "/");
+    let runtime_root = runtime_root.to_string_lossy().replace('\\', "/");
     Ok(format!(
         "[Unit]\nDescription=CognitiveOS Personal daemon ({})\nAfter=default.target\n\n[Service]\nType=simple\nExecStart={executable} --personal --bind 127.0.0.1:{} --runtime-root {runtime_root}\nRestart=on-failure\nRestartSec=2\nTimeoutStartSec=15\nTimeoutStopSec=15\nNoNewPrivileges=true\n\n[Install]\nWantedBy=default.target\n",
         unit_kind.runtime_directory(),
