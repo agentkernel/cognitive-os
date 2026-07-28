@@ -1,5 +1,26 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 installer orchestration slice (2026-07-28):** P1-T08 remains
+> `in-progress` on `lane/personal-p1-t08-installer-orchestration` with
+> `development_track: experimental-local-only`. The new
+> `cognitive-runtime::linux_bundle_installation::install_linux_bundle` entry
+> point always completes the merged offline verifier before it may open or
+> create the deployment root, then reads the previous active version, stages
+> only the private-construction `VerifiedLinuxBundle`, invokes one
+> caller-bounded health check, atomically activates only on health success,
+> re-reads the active pointer, and returns a non-secret typed receipt only
+> after confirming the switch. Failure-first WSL tests passed **10/10** after
+> the missing orchestration module was implemented; invalid signatures, trust
+> roots, tampering, Pi pins, and platforms leave an absent deployment root,
+> while failed health retains the prior active version, prior version
+> directory, user data, and the existing ADR-0028 staged candidate behavior.
+> Same-version installation is explicitly tested as idempotent. This is
+> `windows_wsl2_linux_guest` local evidence only. Supported CI and
+> Linux-native evidence are not yet recorded for this slice. No downloader,
+> inspected shell installer, systemd service, process spawning,
+> cross-process lease, uninstall, release bundle, production trust root,
+> B01, Gate, Profile, containment, or release claim is added.
+
 > **P1-T08 offline attestation verifier merge (2026-07-28):** PR
 > [#108](https://github.com/agentkernel/cognitive-os/pull/108) merged as
 > `main@afa1d5d` after both push and pull-request Ubuntu/Windows-MSVC CI

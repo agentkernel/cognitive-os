@@ -15,6 +15,7 @@ pub mod harness_loop;
 pub mod installer;
 pub mod intent_flow;
 pub mod linux_bundle;
+pub mod linux_bundle_installation;
 pub mod oob;
 pub mod perf;
 pub mod pi_launcher;
@@ -46,6 +47,7 @@ pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, VerifiedLinuxBundle, verify_linux_bundle,
 };
+pub use linux_bundle_installation::{LinuxBundleInstallationReceipt, install_linux_bundle};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
 pub use pi_launcher::{
