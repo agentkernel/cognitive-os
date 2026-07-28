@@ -140,6 +140,18 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 
 > **2026-07-28 P1-T08 service-health slice:** `lane/personal-p1-t08-service-health` adds a separate lease-held service-lifecycle transaction, a fail-closed source user-unit template, a fixed-argument `systemctl --user` controller boundary, strict bounded loopback `/personal/health` parsing, and deterministic compensation tests. The existing offline installer callback remains unchanged. The checked-in unit and controller reject unresolved templates and the still-absent safe extracted `bin/kernel-server` layout before any systemd action; no runnable archive or real systemd service is claimed. Focused service tests passed **6/6** in `windows_wsl2_linux_guest`; this is local fixture evidence only. P1-T08 remains `in-progress` with `development_track: experimental-local-only`; P1-T09 remains `not-started`. |
 
+> **2026-07-28 P1-T08 rendered-user-service foundation:** ADR-0032 fixes
+> product-owned candidate and canonical unit identities, disjoint loopback
+> ports, staged-versus-active executable paths, and candidate-stop before
+> pointer activation/canonical restart. The runtime renders fixed unit content
+> only from a constrained version and product deployment root, and fixture unit
+> publication uses a private temporary file followed by atomic rename. Focused
+> service lifecycle tests **9/9 passed** in `windows_wsl2_linux_guest`.
+> This is implementation-fixture evidence only; a production user-systemd
+> installation path, daemon-reload fixture, Linux-native campaign, B01, Gate,
+> Profile, containment, and release evidence remain absent. P1-T08 remains
+> `in-progress`; P1-T09 remains `not-started`. |
+
 > **2026-07-28 P1-T08 safe-extraction slice:** ADR-0031 specifies the
 > implementation-local `tar.gz` extraction policy: a verified artifact is
 > re-hashed and extracted only in the lease-held private staging area; the
