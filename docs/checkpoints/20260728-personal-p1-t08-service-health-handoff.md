@@ -75,7 +75,9 @@ Linux-native systemd evidence. PR #112 merged after both push and pull-request
 CI workflows passed their supported Ubuntu and Windows/MSVC matrices:
 `30359906515` and `30359909728`. That supported-matrix build/test evidence
 does not create Linux-native systemd, B01, Gate, Profile, containment, or
-release evidence.
+release evidence. The follow-up merge-evidence commit `8b51018` also passed
+the post-merge Ubuntu and Windows/MSVC matrix in
+[run 30360532366](https://github.com/agentkernel/cognitive-os/actions/runs/30360532366).
 
 ## Remaining gaps and next safe atomic action
 

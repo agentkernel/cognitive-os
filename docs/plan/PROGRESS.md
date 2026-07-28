@@ -14,7 +14,10 @@
 > real Linux-native systemd evidence nor B01, Gate, Profile, containment, or
 > release evidence. PR [#112](https://github.com/agentkernel/cognitive-os/pull/112)
 > merged as `main@3fc6faf` after both push and pull-request Ubuntu and
-> Windows/MSVC CI matrices passed. Safe archive extraction/runnable layout, real unit
+> Windows/MSVC CI matrices passed. Its follow-up merge-evidence commit
+> `main@8b51018` also passed post-merge CI run
+> [30360532366](https://github.com/agentkernel/cognitive-os/actions/runs/30360532366)
+> on Ubuntu and Windows/MSVC. Safe archive extraction/runnable layout, real unit
 > rendering, production service campaign, uninstall, signing/release material,
 > and all release claims remain absent.
 
