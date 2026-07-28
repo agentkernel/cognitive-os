@@ -3,8 +3,8 @@
 **Date:** 2026-07-28
 **Branch:** `lane/personal-p1-t08-installer-orchestration`
 **Base:** `main@63aa8fb629596284b279b3fac56550baadb79724`
-**Implementation commit:** pending at handoff authoring; record the exact
-commit and merge commit in the post-merge closeout update
+**Implementation commit:** `9d27b58`
+**Merge commit:** pending supported CI and pull-request merge
 **Status:** P1-T08 remains **in-progress**
 **Development track:** `experimental-local-only`
 
