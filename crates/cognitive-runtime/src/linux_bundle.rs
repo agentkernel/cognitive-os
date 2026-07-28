@@ -105,6 +105,11 @@ pub enum LinuxBundleError {
     HealthCheckFailed,
     #[error("Linux bundle active version could not be confirmed after activation")]
     ActiveVersionConfirmationFailed,
+    #[error("Linux bundle deployment is already being installed by another process")]
+    InstallationLeaseHeld,
+    #[cfg(feature = "test-fault-injection")]
+    #[error("Linux bundle test fault injected at {0}")]
+    FaultInjected(&'static str),
     #[error("Linux bundle filesystem operation failed: {0}")]
     Io(#[from] io::Error),
 }
@@ -407,6 +412,25 @@ impl LinuxBundleDeployment {
         }
         if !health_check(&staging_directory) {
             return Err(LinuxBundleError::HealthCheckFailed);
+        }
+
+        self.activate_staged_bundle(verified_bundle)
+    }
+
+    /// Promotes a candidate after its caller-owned health result has already
+    /// succeeded. Keeping this step separate lets the installer place a
+    /// deterministic interruption boundary between health and activation.
+    pub(crate) fn activate_staged_bundle(
+        &self,
+        verified_bundle: &VerifiedLinuxBundle,
+    ) -> Result<(), LinuxBundleError> {
+        let manifest = verified_bundle.manifest();
+        let version_directory = safe_version_directory(&manifest.version)?;
+        let staging_directory = self.root.join("staged").join(version_directory);
+        if !staging_directory.is_dir() {
+            return Err(LinuxBundleError::InvalidManifest(
+                "verified staged version is missing".to_owned(),
+            ));
         }
 
         let version_directory_path = self.root.join("versions").join(version_directory);
