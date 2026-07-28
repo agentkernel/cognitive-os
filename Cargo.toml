@@ -43,6 +43,9 @@ serde_json = "1.0"
 serde_json_canonicalizer = "0.3.2"
 sha2 = "0.10"
 thiserror = "2.0"
+base64 = "0.23.0"
+ed25519-dalek = { version = "3.0.0", features = ["signature"] }
+url = "2.5.8"
 # M2 store adapter (ADR-0002: SQLite WAL). `bundled` compiles the pinned
 # SQLite C source so CI needs no system SQLite on either OS.
 rusqlite = { version = "0.40.1", features = ["bundled"] }
