@@ -182,7 +182,27 @@ fn cookie_auth_and_bad_host_are_rejected() {
         port,
         "GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
     );
-    assert!(health.contains("personal-daemon"), "{health}");
+    assert!(health.contains("HTTP/1.1 200 OK"), "{health}");
+    assert!(health.contains("\"schema_version\":1"), "{health}");
+    assert!(
+        health.contains("\"surface\":\"personal-health\""),
+        "{health}"
+    );
+    assert!(health.contains("\"status\":\"ok\""), "{health}");
+    assert!(
+        health.contains("\"authority_side_effects\":false"),
+        "{health}"
+    );
+    assert!(
+        health.contains("\"readiness_claim\":\"not-claimed\""),
+        "{health}"
+    );
+    assert!(
+        health.contains("\"profile_claim\":\"not-claimed\""),
+        "{health}"
+    );
+    assert!(!health.contains("session_count"), "{health}");
+    assert!(!health.contains("auth_required"), "{health}");
     child.kill().unwrap();
     child.wait().unwrap();
     let _ = std::fs::remove_dir_all(&root);

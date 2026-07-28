@@ -1,0 +1,450 @@
+//! User-service lifecycle transaction for a verified Personal Linux bundle.
+//!
+//! This module owns neither download nor trust-root selection. It reuses the
+//! offline verifier and installer lease, then delegates only fixed service
+//! lifecycle actions to a narrow controller. A controller never receives a
+//! manifest, keyring, artifact bytes, user data, or arbitrary command text.
+
+use crate::linux_bundle::{
+    ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, TrustedKeyring,
+    verify_linux_bundle,
+};
+use crate::linux_bundle_installation::InstallerLifecycleLease;
+use serde::Deserialize;
+use std::fs;
+use std::io::{Read, Write};
+use std::net::{SocketAddr, TcpStream};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
+use thiserror::Error;
+
+const SYSTEMD_USER_UNIT: &str = "cognitiveos-personal.service";
+const MAX_SYSTEMCTL_OUTPUT_BYTES: usize = 8 * 1024;
+const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
+const MAX_HEALTH_ATTEMPTS: u8 = 3;
+
+/// Stable, non-secret failure categories for the user-service boundary.
+#[derive(Debug, Error)]
+pub enum LinuxBundleServiceError {
+    #[error("Linux bundle service controller rejected the candidate")]
+    CandidateStartFailed,
+    #[error("Linux bundle candidate health check failed")]
+    CandidateHealthFailed,
+    #[error("Linux bundle active service could not be confirmed")]
+    FinalServiceConfirmationFailed,
+    #[error("Linux bundle service rollback is incomplete")]
+    RollbackIncomplete,
+    #[error("Linux bundle user-service template is not safely rendered")]
+    UnsafeUnitTemplate,
+    #[error("Linux bundle service configuration is unsafe")]
+    UnsafeServiceConfiguration,
+    #[error("Linux bundle service command exceeded its deadline")]
+    ServiceCommandTimedOut,
+    #[error("Linux bundle health response was invalid")]
+    InvalidHealthResponse,
+    #[error("Linux bundle installation failed: {0}")]
+    Installation(#[from] LinuxBundleError),
+}
+
+/// A controller may perform only product-selected, non-secret service actions.
+pub trait LinuxBundleServiceController {
+    fn start_candidate(
+        &mut self,
+        version: &str,
+        candidate_directory: &Path,
+    ) -> Result<(), LinuxBundleServiceError>;
+    fn stop_candidate(&mut self, version: &str) -> Result<(), LinuxBundleServiceError>;
+    fn confirm_candidate_health(&mut self, version: &str) -> Result<(), LinuxBundleServiceError>;
+    fn start_active(&mut self, version: &str) -> Result<(), LinuxBundleServiceError>;
+    fn confirm_active(&mut self, version: &str) -> Result<(), LinuxBundleServiceError>;
+}
+
+/// Non-secret receipt issued only after both pointer and active service agree.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LinuxBundleServiceReceipt {
+    pub installed_version: String,
+    pub previous_active_version: Option<String>,
+    pub resulting_active_version: String,
+    pub trusted_key_id: String,
+    pub trusted_keyring_version: String,
+}
+
+/// Verify, stage, start, health-check, activate, confirm, or compensate.
+pub fn install_linux_bundle_service(
+    bundle_directory: &Path,
+    deployment_root: &Path,
+    expected_pi_compatibility: &ExpectedPiCompatibility,
+    trusted_keyring: &TrustedKeyring,
+    service_controller: &mut impl LinuxBundleServiceController,
+) -> Result<LinuxBundleServiceReceipt, LinuxBundleServiceError> {
+    // Verification is intentionally complete before a lease, deployment root,
+    // unit, service, or other installation state can be mutated.
+    let verified_bundle =
+        verify_linux_bundle(bundle_directory, expected_pi_compatibility, trusted_keyring)?;
+    let target_version = verified_bundle.manifest().version.clone();
+    let _installer_lease = InstallerLifecycleLease::acquire(deployment_root)?;
+    let deployment = LinuxBundleDeployment::open(deployment_root)?;
+    let previous_active_version = deployment.validated_active_version()?;
+
+    if previous_active_version.as_deref() == Some(target_version.as_str())
+        && service_controller.confirm_active(&target_version).is_ok()
+    {
+        return Ok(service_receipt(
+            &target_version,
+            previous_active_version,
+            trusted_keyring,
+            verified_bundle.trusted_key_id(),
+        ));
+    }
+
+    let candidate_directory =
+        deployment.stage_verified_bundle(bundle_directory, &verified_bundle)?;
+    let candidate_started = service_controller
+        .start_candidate(&target_version, &candidate_directory)
+        .is_ok();
+    if !candidate_started {
+        return compensate_failure(
+            &deployment,
+            previous_active_version.as_deref(),
+            &target_version,
+            service_controller,
+            LinuxBundleServiceError::CandidateStartFailed,
+        );
+    }
+    if service_controller
+        .confirm_candidate_health(&target_version)
+        .is_err()
+    {
+        return compensate_failure(
+            &deployment,
+            previous_active_version.as_deref(),
+            &target_version,
+            service_controller,
+            LinuxBundleServiceError::CandidateHealthFailed,
+        );
+    }
+    if deployment.activate_staged_bundle(&verified_bundle).is_err() {
+        return compensate_failure(
+            &deployment,
+            previous_active_version.as_deref(),
+            &target_version,
+            service_controller,
+            LinuxBundleServiceError::Installation(
+                LinuxBundleError::ActiveVersionConfirmationFailed,
+            ),
+        );
+    }
+    let pointer_confirmed =
+        deployment.validated_active_version()?.as_deref() == Some(target_version.as_str());
+    let active_confirmed = service_controller.confirm_active(&target_version).is_ok();
+    if !pointer_confirmed || !active_confirmed {
+        return compensate_failure(
+            &deployment,
+            previous_active_version.as_deref(),
+            &target_version,
+            service_controller,
+            LinuxBundleServiceError::FinalServiceConfirmationFailed,
+        );
+    }
+
+    Ok(service_receipt(
+        &target_version,
+        previous_active_version,
+        trusted_keyring,
+        verified_bundle.trusted_key_id(),
+    ))
+}
+
+fn service_receipt(
+    target_version: &str,
+    previous_active_version: Option<String>,
+    trusted_keyring: &TrustedKeyring,
+    trusted_key_id: &str,
+) -> LinuxBundleServiceReceipt {
+    LinuxBundleServiceReceipt {
+        installed_version: target_version.to_owned(),
+        previous_active_version,
+        resulting_active_version: target_version.to_owned(),
+        trusted_key_id: trusted_key_id.to_owned(),
+        trusted_keyring_version: trusted_keyring.version().to_owned(),
+    }
+}
+
+fn compensate_failure(
+    deployment: &LinuxBundleDeployment,
+    previous_active_version: Option<&str>,
+    target_version: &str,
+    service_controller: &mut impl LinuxBundleServiceController,
+    original_error: LinuxBundleServiceError,
+) -> Result<LinuxBundleServiceReceipt, LinuxBundleServiceError> {
+    let candidate_stopped = service_controller.stop_candidate(target_version).is_ok();
+    let rollback_succeeded = match previous_active_version {
+        Some(previous_version) => {
+            deployment.restore_active_version(previous_version).is_ok()
+                && service_controller.start_active(previous_version).is_ok()
+                && service_controller.confirm_active(previous_version).is_ok()
+        }
+        None => deployment.clear_active_version().is_ok(),
+    };
+    if candidate_stopped && rollback_succeeded {
+        Err(original_error)
+    } else {
+        Err(LinuxBundleServiceError::RollbackIncomplete)
+    }
+}
+
+/// Fixed, user-only systemd controller. It fails before unit mutation when a
+/// release has not supplied the future safe extracted daemon layout.
+pub struct SystemdUserServiceController {
+    deployment_root: PathBuf,
+    rendered_unit_template: PathBuf,
+    health_address: SocketAddr,
+    command_timeout: Duration,
+    health_timeout: Duration,
+}
+
+impl SystemdUserServiceController {
+    pub fn new(
+        deployment_root: impl Into<PathBuf>,
+        rendered_unit_template: impl Into<PathBuf>,
+        health_address: SocketAddr,
+    ) -> Result<Self, LinuxBundleServiceError> {
+        if !health_address.ip().is_loopback() {
+            return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+        }
+        Ok(Self {
+            deployment_root: deployment_root.into(),
+            rendered_unit_template: rendered_unit_template.into(),
+            health_address,
+            command_timeout: Duration::from_secs(15),
+            health_timeout: Duration::from_secs(10),
+        })
+    }
+
+    fn ensure_rendered_unit_and_layout(
+        &self,
+        version: &str,
+    ) -> Result<(), LinuxBundleServiceError> {
+        if !safe_service_version(version) {
+            return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+        }
+        let template = fs::read_to_string(&self.rendered_unit_template)
+            .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+        if template.contains('@')
+            || !template.contains("[Service]")
+            || template.contains("sudo")
+            || template.contains("/root")
+            || template.contains("systemctl")
+        {
+            return Err(LinuxBundleServiceError::UnsafeUnitTemplate);
+        }
+        let executable = self
+            .deployment_root
+            .join("versions")
+            .join(version)
+            .join("bin/kernel-server");
+        if !executable.is_file() {
+            return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+        }
+        Ok(())
+    }
+
+    fn invoke_systemctl(&self, action: &str) -> Result<(), LinuxBundleServiceError> {
+        let mut child = Command::new("systemctl")
+            .args([
+                "--user",
+                "--no-ask-password",
+                "--no-pager",
+                action,
+                SYSTEMD_USER_UNIT,
+            ])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|_| LinuxBundleServiceError::CandidateStartFailed)?;
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or(LinuxBundleServiceError::CandidateStartFailed)?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or(LinuxBundleServiceError::CandidateStartFailed)?;
+        let stdout_reader = thread::spawn(move || drain_capped_output(stdout));
+        let stderr_reader = thread::spawn(move || drain_capped_output(stderr));
+        let deadline = Instant::now() + self.command_timeout;
+        let timed_out = loop {
+            match child.try_wait() {
+                Ok(Some(_)) => break false,
+                Ok(None) if Instant::now() >= deadline => {
+                    let _ = child.kill();
+                    break true;
+                }
+                Ok(None) => thread::sleep(Duration::from_millis(20)),
+                Err(_) => return Err(LinuxBundleServiceError::CandidateStartFailed),
+            }
+        };
+        let status = child
+            .wait()
+            .map_err(|_| LinuxBundleServiceError::CandidateStartFailed)?;
+        let stdout_exceeded_cap = stdout_reader
+            .join()
+            .map_err(|_| LinuxBundleServiceError::CandidateStartFailed)?;
+        let stderr_exceeded_cap = stderr_reader
+            .join()
+            .map_err(|_| LinuxBundleServiceError::CandidateStartFailed)?;
+        if timed_out {
+            return Err(LinuxBundleServiceError::ServiceCommandTimedOut);
+        }
+        if status.success() && !stdout_exceeded_cap && !stderr_exceeded_cap {
+            Ok(())
+        } else {
+            Err(LinuxBundleServiceError::CandidateStartFailed)
+        }
+    }
+}
+
+/// Drain output fully so a hostile or misconfigured child cannot block on a
+/// full pipe. Only the cap outcome survives; no output becomes an error,
+/// receipt, diagnostic, or log payload.
+fn drain_capped_output(mut reader: impl Read) -> bool {
+    let mut buffer = [0_u8; 1024];
+    let mut total_bytes = 0_usize;
+    loop {
+        match reader.read(&mut buffer) {
+            Ok(0) | Err(_) => return total_bytes > MAX_SYSTEMCTL_OUTPUT_BYTES,
+            Ok(read_bytes) => total_bytes = total_bytes.saturating_add(read_bytes),
+        }
+    }
+}
+
+impl LinuxBundleServiceController for SystemdUserServiceController {
+    fn start_candidate(
+        &mut self,
+        version: &str,
+        _candidate_directory: &Path,
+    ) -> Result<(), LinuxBundleServiceError> {
+        // A canonical active unit cannot launch a staged candidate without
+        // changing the active pointer. Future safe extraction must supply a
+        // separately reviewed candidate unit/layout before this call gains a
+        // systemctl action; the current opaque archive fails closed here.
+        self.ensure_rendered_unit_and_layout(version)?;
+        Err(LinuxBundleServiceError::UnsafeServiceConfiguration)
+    }
+
+    fn stop_candidate(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
+        self.invoke_systemctl("stop")
+    }
+
+    fn confirm_candidate_health(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
+        probe_personal_health(self.health_address, self.health_timeout)
+    }
+
+    fn start_active(&mut self, version: &str) -> Result<(), LinuxBundleServiceError> {
+        self.ensure_rendered_unit_and_layout(version)?;
+        self.invoke_systemctl("restart")
+    }
+
+    fn confirm_active(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
+        probe_personal_health(self.health_address, self.health_timeout)
+    }
+}
+
+/// Strict bounded liveness probe; it is deliberately not a readiness check.
+pub fn probe_personal_health(
+    address: SocketAddr,
+    overall_timeout: Duration,
+) -> Result<(), LinuxBundleServiceError> {
+    if !address.ip().is_loopback() {
+        return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+    }
+    let deadline = Instant::now() + overall_timeout;
+    for _attempt in 0..MAX_HEALTH_ATTEMPTS {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            break;
+        }
+        let per_attempt = remaining.min(Duration::from_secs(2));
+        if health_attempt(address, per_attempt).is_ok() {
+            return Ok(());
+        }
+    }
+    Err(LinuxBundleServiceError::CandidateHealthFailed)
+}
+
+fn health_attempt(address: SocketAddr, timeout: Duration) -> Result<(), LinuxBundleServiceError> {
+    let mut stream = TcpStream::connect_timeout(&address, timeout)
+        .map_err(|_| LinuxBundleServiceError::CandidateHealthFailed)?;
+    stream
+        .set_read_timeout(Some(timeout))
+        .map_err(|_| LinuxBundleServiceError::CandidateHealthFailed)?;
+    stream
+        .set_write_timeout(Some(timeout))
+        .map_err(|_| LinuxBundleServiceError::CandidateHealthFailed)?;
+    stream
+        .write_all(b"GET /personal/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+        .map_err(|_| LinuxBundleServiceError::CandidateHealthFailed)?;
+    let mut response = Vec::new();
+    stream
+        .take((MAX_HEALTH_RESPONSE_BYTES + 1) as u64)
+        .read_to_end(&mut response)
+        .map_err(|_| LinuxBundleServiceError::CandidateHealthFailed)?;
+    if response.len() > MAX_HEALTH_RESPONSE_BYTES {
+        return Err(LinuxBundleServiceError::InvalidHealthResponse);
+    }
+    validate_health_response(&response)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PersonalHealthResponse {
+    schema_version: u8,
+    surface: String,
+    status: String,
+    authority_side_effects: bool,
+    readiness_claim: String,
+    profile_claim: String,
+}
+
+fn validate_health_response(response: &[u8]) -> Result<(), LinuxBundleServiceError> {
+    let response_text = std::str::from_utf8(response)
+        .map_err(|_| LinuxBundleServiceError::InvalidHealthResponse)?;
+    let (header_text, body_text) = response_text
+        .split_once("\r\n\r\n")
+        .ok_or(LinuxBundleServiceError::InvalidHealthResponse)?;
+    if !header_text.starts_with("HTTP/1.1 200 ") || header_text.contains("Transfer-Encoding") {
+        return Err(LinuxBundleServiceError::InvalidHealthResponse);
+    }
+    let content_length = header_text
+        .lines()
+        .find_map(|line| line.strip_prefix("Content-Length: "))
+        .and_then(|value| value.parse::<usize>().ok())
+        .ok_or(LinuxBundleServiceError::InvalidHealthResponse)?;
+    if content_length != body_text.len() {
+        return Err(LinuxBundleServiceError::InvalidHealthResponse);
+    }
+    let health: PersonalHealthResponse = serde_json::from_str(body_text)
+        .map_err(|_| LinuxBundleServiceError::InvalidHealthResponse)?;
+    if health.schema_version == 1
+        && health.surface == "personal-health"
+        && health.status == "ok"
+        && !health.authority_side_effects
+        && health.readiness_claim == "not-claimed"
+        && health.profile_claim == "not-claimed"
+    {
+        Ok(())
+    } else {
+        Err(LinuxBundleServiceError::InvalidHealthResponse)
+    }
+}
+
+fn safe_service_version(version: &str) -> bool {
+    !version.is_empty()
+        && version.len() <= 128
+        && version
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
+}

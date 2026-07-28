@@ -267,15 +267,11 @@ fn process_http_request(
         return handle_readiness_route(stream, &headers, layout, authority, "doctor");
     }
     if method_path.starts_with("GET /personal/health ") {
-        let session_count = authority
-            .lock()
-            .map(|guard| guard.session_count())
-            .unwrap_or(0);
         let body = json!({
+            "schema_version": 1,
+            "surface": "personal-health",
             "status": "ok",
-            "surface": "personal-daemon",
-            "auth_required": true,
-            "session_count": session_count,
+            "authority_side_effects": false,
             "readiness_claim": "not-claimed",
             "profile_claim": "not-claimed"
         })

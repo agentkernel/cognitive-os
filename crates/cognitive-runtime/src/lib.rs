@@ -16,6 +16,7 @@ pub mod installer;
 pub mod intent_flow;
 pub mod linux_bundle;
 pub mod linux_bundle_installation;
+pub mod linux_bundle_service;
 pub mod oob;
 pub mod perf;
 pub mod pi_launcher;
@@ -50,6 +51,10 @@ pub use linux_bundle::{
 #[cfg(feature = "test-fault-injection")]
 pub use linux_bundle_installation::{InstallFaultPoint, install_linux_bundle_with_fault_injection};
 pub use linux_bundle_installation::{LinuxBundleInstallationReceipt, install_linux_bundle};
+pub use linux_bundle_service::{
+    LinuxBundleServiceController, LinuxBundleServiceError, LinuxBundleServiceReceipt,
+    SystemdUserServiceController, install_linux_bundle_service, probe_personal_health,
+};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
 pub use pi_launcher::{
