@@ -4,7 +4,8 @@
 **Branch:** `lane/personal-p1-t08-installer-orchestration`
 **Base:** `main@63aa8fb629596284b279b3fac56550baadb79724`
 **Implementation commit:** `9d27b58`
-**Merge commit:** pending supported CI and pull-request merge
+**Pull request:** [#109](https://github.com/agentkernel/cognitive-os/pull/109)
+**Merge commit:** `407b6c78cca59a07f6a21c70244674c9d25624f3`
 **Status:** P1-T08 remains **in-progress**
 **Development track:** `experimental-local-only`
 
@@ -115,8 +116,9 @@ post-verification artifact-mutation re-hash boundary.
 
 - **WSL2 local (`windows_wsl2_linux_guest`):** focused tests, complete runtime
   tests, strict runtime Clippy, and formatting passed as listed above.
-- **Supported Ubuntu and Windows/MSVC CI for this batch:** not run at handoff
-  authoring; must pass on the pull request before merge.
+- **Supported Ubuntu and Windows/MSVC CI for this batch:** passed on PR #109;
+  the Ubuntu job completed in 1m35s and the Windows/MSVC job completed in
+  5m04s.
 - **Linux-native host/campaign:** not run. No result in this handoff is
   Linux-native evidence.
 - **Workspace-wide Rust test/Clippy:** not run locally for this batch; the
