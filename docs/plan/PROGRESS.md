@@ -1,5 +1,23 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 safe-extraction slice (2026-07-28):** P1-T08 remains
+> `in-progress` with `development_track: experimental-local-only`. ADR-0031
+> specifies a bounded, fixed-layout `tar.gz` extraction boundary. The
+> implementation verifies the existing signed artifact before any lease or
+> deployment mutation, then re-hashes it under the existing per-root OS lease
+> and extracts only into private staging. It rejects unsafe paths, links,
+> special entries, non-executable or privileged entry modes, and layouts other
+> than `bin/kernel-server`; only a fully validated candidate is atomically
+> published as `staged/<version>`. Extraction failure leaves the active pointer
+> unchanged and creates no receipt. Focused local tests executed in
+> `windows_wsl2_linux_guest`: installation **12/12**, lifecycle **12/12** with
+> one ignored child entrypoint, and service lifecycle **6/6**; strict feature
+> Clippy, formatting, and consistency also passed. The successful fixture
+> layout satisfies static controller preflight only: the checked-in user unit
+> remains unrendered and the controller still makes no systemd action. This is
+> neither Linux-native systemd, B01, Gate, Profile, containment, nor release
+> evidence. PR, supported CI, and merge evidence remain pending.
+
 > **P1-T08 service-lifecycle slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`.
 > Implementation commit `26bbf12` adds a separate service-aware transaction

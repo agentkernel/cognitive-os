@@ -11,6 +11,7 @@ use cognitive_runtime::{
     probe_personal_health,
 };
 use ed25519_dalek::{Signer, SigningKey};
+use flate2::{Compression, write::GzEncoder};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::collections::VecDeque;
@@ -19,6 +20,7 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::thread;
 use std::time::Duration;
+use tar::{Builder as TarBuilder, Header as TarHeader};
 
 #[test]
 fn service_lifecycle_api_is_explicit_and_separate_from_offline_installation() {
@@ -187,7 +189,7 @@ fn valid_health_response() -> String {
     )
 }
 
-const ARTIFACT: &[u8] = b"service-lifecycle-fixture";
+const KERNEL_SERVER_CONTENT: &[u8] = b"p1t08-service-lifecycle-kernel-server";
 
 struct BundleFixture {
     temporary_directory: tempfile::TempDir,
@@ -197,13 +199,14 @@ struct BundleFixture {
 fn signed_bundle(version: &str) -> BundleFixture {
     let temporary_directory = tempfile::tempdir().unwrap();
     let signing_key = SigningKey::from_bytes(&[0x61; 32]);
+    let artifact_bytes = runnable_archive_bytes();
     let manifest = LinuxBundleManifest {
         schema_version: 1,
         product: "cognitiveos-personal".to_owned(),
         platform: "linux-x86_64".to_owned(),
         version: version.to_owned(),
         artifact_file: "bundle.tar.gz".to_owned(),
-        artifact_sha256: format!("sha256:{:x}", Sha256::digest(ARTIFACT)),
+        artifact_sha256: format!("sha256:{:x}", Sha256::digest(&artifact_bytes)),
         attestation_reference: format!("https://example.invalid/{version}"),
         attestation_statement_file: "statement.json".to_owned(),
         attestation_signature_file: "signature.json".to_owned(),
@@ -224,7 +227,11 @@ fn signed_bundle(version: &str) -> BundleFixture {
     });
     let statement_bytes = serde_json_canonicalizer::to_vec(&statement).unwrap();
     let signature = signing_key.sign(&statement_bytes);
-    fs::write(temporary_directory.path().join("bundle.tar.gz"), ARTIFACT).unwrap();
+    fs::write(
+        temporary_directory.path().join("bundle.tar.gz"),
+        artifact_bytes,
+    )
+    .unwrap();
     fs::write(
         temporary_directory.path().join("manifest.json"),
         serde_json::to_vec(&manifest).unwrap(),
@@ -261,6 +268,20 @@ fn signed_bundle(version: &str) -> BundleFixture {
         temporary_directory,
         keyring,
     }
+}
+
+fn runnable_archive_bytes() -> Vec<u8> {
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(0o755);
+    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, "bin/kernel-server", KERNEL_SERVER_CONTENT)
+        .unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
 }
 
 fn expected_pi() -> ExpectedPiCompatibility {

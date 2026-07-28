@@ -12,6 +12,7 @@ use cognitive_runtime::linux_bundle_installation::install_linux_bundle;
 #[cfg(feature = "test-fault-injection")]
 use cognitive_runtime::{InstallFaultPoint, install_linux_bundle_with_fault_injection};
 use ed25519_dalek::{Signer, SigningKey};
+use flate2::{Compression, write::GzEncoder};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::env;
@@ -20,6 +21,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
+use tar::{Builder as TarBuilder, Header as TarHeader};
 
 const TEST_ONLY_PRIVATE_SIGNING_SEED: [u8; 32] = [0x4d; 32];
 const TEST_ONLY_KEY_ID: &str = "p1t08-lifecycle-test-key";
@@ -30,7 +32,7 @@ const PI_VERSION: &str = "0.81.1";
 const PI_INTEGRITY: &str = "sha512:pinned-pi-integrity";
 const STATEMENT_FILE: &str = "attestation.statement.json";
 const SIGNATURE_FILE: &str = "attestation.signature.json";
-const ARTIFACT_CONTENT: &[u8] = b"p1t08-lifecycle-artifact-content";
+const KERNEL_SERVER_CONTENT: &[u8] = b"p1t08-lifecycle-kernel-server";
 const USER_DATA_SENTINEL: &[u8] = b"p1t08-lifecycle-user-data-sentinel";
 const CHILD_MODE_ENVIRONMENT: &str = "COGNITIVEOS_P1T08_CHILD_MODE";
 const CHILD_BUNDLE_DIRECTORY_ENVIRONMENT: &str = "COGNITIVEOS_P1T08_BUNDLE_DIRECTORY";
@@ -52,13 +54,14 @@ impl SignedBundleFixture {
     fn new(version: &str) -> Self {
         let signing_key = SigningKey::from_bytes(&TEST_ONLY_PRIVATE_SIGNING_SEED);
         let temporary_directory = tempfile::tempdir().unwrap();
+        let artifact_bytes = runnable_archive_bytes();
         let manifest = LinuxBundleManifest {
             schema_version: 1,
             product: PRODUCT.to_owned(),
             platform: PLATFORM.to_owned(),
             version: version.to_owned(),
             artifact_file: "cognitiveos-linux-x86_64.tar.gz".to_owned(),
-            artifact_sha256: sha256_digest(ARTIFACT_CONTENT),
+            artifact_sha256: sha256_digest(&artifact_bytes),
             attestation_reference: format!("https://example.invalid/provenance/{version}"),
             attestation_statement_file: STATEMENT_FILE.to_owned(),
             attestation_signature_file: SIGNATURE_FILE.to_owned(),
@@ -67,7 +70,7 @@ impl SignedBundleFixture {
         };
         fs::write(
             temporary_directory.path().join(&manifest.artifact_file),
-            ARTIFACT_CONTENT,
+            artifact_bytes,
         )
         .unwrap();
         let statement = statement_for_manifest(&manifest);
@@ -119,6 +122,20 @@ impl SignedBundleFixture {
         )
         .unwrap();
     }
+}
+
+fn runnable_archive_bytes() -> Vec<u8> {
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(0o755);
+    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, "bin/kernel-server", KERNEL_SERVER_CONTENT)
+        .unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
 }
 
 fn statement_for_manifest(manifest: &LinuxBundleManifest) -> Value {
@@ -809,7 +826,7 @@ fn lease_failure_debug_output_contains_no_sensitive_material() {
                 .verifying_key()
                 .to_bytes(),
         ),
-        String::from_utf8_lossy(ARTIFACT_CONTENT).into_owned(),
+        String::from_utf8_lossy(KERNEL_SERVER_CONTENT).into_owned(),
         String::from_utf8_lossy(USER_DATA_SENTINEL).into_owned(),
         deployment_root.to_string_lossy().into_owned(),
         lease_path.to_string_lossy().into_owned(),

@@ -10,11 +10,13 @@ use cognitive_runtime::linux_bundle::{
 };
 use cognitive_runtime::linux_bundle_installation::install_linux_bundle;
 use ed25519_dalek::{Signer, SigningKey};
+use flate2::{Compression, write::GzEncoder};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::cell::Cell;
 use std::fs;
 use std::path::Path;
+use tar::{Builder as TarBuilder, EntryType, Header as TarHeader};
 
 const TEST_ONLY_PRIVATE_SIGNING_SEED: [u8; 32] = [0x39; 32];
 const TEST_ONLY_KEY_ID: &str = "p1t08-installation-test-key";
@@ -25,7 +27,7 @@ const PI_VERSION: &str = "0.81.1";
 const PI_INTEGRITY: &str = "sha512:pinned-pi-integrity";
 const STATEMENT_FILE: &str = "attestation.statement.json";
 const SIGNATURE_FILE: &str = "attestation.signature.json";
-const ARTIFACT_CONTENT: &[u8] = b"p1t08-installation-artifact-content";
+const KERNEL_SERVER_CONTENT: &[u8] = b"p1t08-test-kernel-server";
 const USER_DATA_SENTINEL: &[u8] = b"p1t08-private-user-data-sentinel";
 
 struct SignedBundleFixture {
@@ -40,13 +42,14 @@ impl SignedBundleFixture {
         // Deterministic test-only signing material never leaves this test binary.
         let signing_key = SigningKey::from_bytes(&TEST_ONLY_PRIVATE_SIGNING_SEED);
         let temporary_directory = tempfile::tempdir().unwrap();
+        let artifact_bytes = runnable_archive_bytes();
         let manifest = LinuxBundleManifest {
             schema_version: 1,
             product: PRODUCT.to_owned(),
             platform: PLATFORM.to_owned(),
             version: version.to_owned(),
             artifact_file: "cognitiveos-linux-x86_64.tar.gz".to_owned(),
-            artifact_sha256: sha256_digest(ARTIFACT_CONTENT),
+            artifact_sha256: sha256_digest(&artifact_bytes),
             attestation_reference: format!("https://example.invalid/provenance/{version}"),
             attestation_statement_file: STATEMENT_FILE.to_owned(),
             attestation_signature_file: SIGNATURE_FILE.to_owned(),
@@ -55,7 +58,7 @@ impl SignedBundleFixture {
         };
         fs::write(
             temporary_directory.path().join(&manifest.artifact_file),
-            ARTIFACT_CONTENT,
+            artifact_bytes,
         )
         .unwrap();
         let statement = statement_for_manifest(&manifest);
@@ -111,6 +114,18 @@ impl SignedBundleFixture {
         .unwrap();
     }
 
+    fn replace_with_signed_artifact(&mut self, artifact_bytes: Vec<u8>) {
+        self.manifest.artifact_sha256 = sha256_digest(&artifact_bytes);
+        self.statement = statement_for_manifest(&self.manifest);
+        fs::write(
+            self.bundle_directory().join(&self.manifest.artifact_file),
+            artifact_bytes,
+        )
+        .unwrap();
+        self.write_manifest();
+        self.sign_and_write_statement();
+    }
+
     fn trusted_keyring(&self) -> TrustedKeyring {
         TrustedKeyring::new(
             TEST_ONLY_KEYRING_VERSION,
@@ -123,6 +138,108 @@ impl SignedBundleFixture {
             }],
         )
         .unwrap()
+    }
+}
+
+fn runnable_archive_bytes() -> Vec<u8> {
+    archive_with_regular_entry("bin/kernel-server", 0o755)
+}
+
+fn archive_with_regular_entry(entry_path: &str, mode: u32) -> Vec<u8> {
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, entry_path, KERNEL_SERVER_CONTENT)
+        .unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
+}
+
+fn archive_with_symbolic_link() -> Vec<u8> {
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_entry_type(EntryType::Symlink);
+    header.set_size(0);
+    header.set_link_name("/outside-staging-root").unwrap();
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, "bin/kernel-server", &[][..])
+        .unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
+}
+
+fn archive_with_raw_traversal_entry() -> Vec<u8> {
+    let entry_path = b"../escape";
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(0o755);
+    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
+    header.as_mut_bytes()[..entry_path.len()].copy_from_slice(entry_path);
+    header.set_cksum();
+    tar_builder.append(&header, KERNEL_SERVER_CONTENT).unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
+}
+
+#[test]
+fn verified_archive_with_wrong_layout_fails_without_pointer_or_receipt() {
+    let mut fixture = SignedBundleFixture::new("2.0.0");
+    fixture
+        .replace_with_signed_artifact(archive_with_regular_entry("bin/not-kernel-server", 0o755));
+    let deployment_root = fixture.deployment_root("wrong-layout-deployment");
+    prepare_existing_installation(&deployment_root, "1.0.0");
+
+    let result = install_linux_bundle(
+        fixture.bundle_directory(),
+        &deployment_root,
+        &expected_pi(),
+        &fixture.trusted_keyring(),
+        |_| true,
+    );
+
+    assert!(matches!(result, Err(LinuxBundleError::UnsafeArchive)));
+    assert_eq!(
+        fs::read_to_string(deployment_root.join("active-version")).unwrap(),
+        "1.0.0\n"
+    );
+    assert!(!deployment_root.join("staged/2.0.0").exists());
+}
+
+#[test]
+fn traversal_link_and_non_executable_archives_fail_without_active_state_mutation() {
+    let unsafe_archives = [
+        archive_with_raw_traversal_entry(),
+        archive_with_symbolic_link(),
+        archive_with_regular_entry("bin/kernel-server", 0o644),
+    ];
+
+    for (case_index, unsafe_archive) in unsafe_archives.into_iter().enumerate() {
+        let mut fixture = SignedBundleFixture::new("2.0.0");
+        fixture.replace_with_signed_artifact(unsafe_archive);
+        let deployment_root = fixture.deployment_root(&format!("unsafe-archive-{case_index}"));
+        prepare_existing_installation(&deployment_root, "1.0.0");
+
+        let result = install_linux_bundle(
+            fixture.bundle_directory(),
+            &deployment_root,
+            &expected_pi(),
+            &fixture.trusted_keyring(),
+            |_| true,
+        );
+
+        assert!(matches!(result, Err(LinuxBundleError::UnsafeArchive)));
+        assert_eq!(
+            fs::read_to_string(deployment_root.join("active-version")).unwrap(),
+            "1.0.0\n"
+        );
+        assert!(!deployment_root.join("staged/2.0.0").exists());
     }
 }
 
@@ -182,13 +299,18 @@ fn valid_signed_bundle_runs_the_complete_order_and_returns_non_secret_receipt() 
         &fixture.trusted_keyring(),
         |staged_candidate| {
             health_check_calls.set(health_check_calls.get() + 1);
-            staged_candidate.join("manifest.json").is_file()
+            staged_candidate.join("bin/kernel-server").is_file()
         },
     )
     .unwrap();
 
     assert_eq!(health_check_calls.get(), 1);
     assert!(deployment_root.join("versions/1.2.3").is_dir());
+    assert!(
+        deployment_root
+            .join("versions/1.2.3/bin/kernel-server")
+            .is_file()
+    );
     assert_eq!(
         fs::read_to_string(deployment_root.join("active-version")).unwrap(),
         "1.2.3\n"
@@ -412,7 +534,7 @@ fn health_failure_preserves_previous_version_user_data_and_staged_candidate() {
         &fixture.trusted_keyring(),
         |staged_candidate| {
             health_check_calls.set(health_check_calls.get() + 1);
-            assert!(staged_candidate.join("manifest.json").is_file());
+            assert!(staged_candidate.join("bin/kernel-server").is_file());
             false
         },
     );
@@ -442,7 +564,7 @@ fn successful_upgrade_retains_previous_version_and_user_data() {
         &deployment_root,
         &expected_pi(),
         &fixture.trusted_keyring(),
-        |staged_candidate| staged_candidate.join("manifest.json").is_file(),
+        |staged_candidate| staged_candidate.join("bin/kernel-server").is_file(),
     )
     .unwrap();
 
@@ -519,7 +641,7 @@ fn failures_and_receipts_do_not_disclose_bundle_key_or_user_data_bytes() {
         URL_SAFE_NO_PAD.encode(TEST_ONLY_PRIVATE_SIGNING_SEED),
         public_key_text,
         signature_text,
-        String::from_utf8_lossy(ARTIFACT_CONTENT).into_owned(),
+        String::from_utf8_lossy(KERNEL_SERVER_CONTENT).into_owned(),
         statement_text,
         String::from_utf8_lossy(USER_DATA_SENTINEL).into_owned(),
     ];
