@@ -3,9 +3,10 @@
 **Date:** 2026-07-28
 **Branch:** `lane/personal-p1-t08-installer-lease`
 **Base:** `main@afef1e73d48a11873b5ee165686e579a00f3ddac`
-**Implementation commit:** pending local commit
-**Pull request:** pending
-**Merge commit:** pending
+**Implementation commit:** `92ee13a4572cabc16de696e980f9e9bff4951bce`
+**Documentation commit:** `e48accc001298de716d2a60e1b30b9af69ae9cba`
+**Pull request:** [#110](https://github.com/agentkernel/cognitive-os/pull/110)
+**Merge commit:** `8aa003195dcbac01dadb421899c452a6b020f926`
 **Status:** P1-T08 remains **in-progress**
 **Development track:** `experimental-local-only`
 
@@ -122,15 +123,19 @@ boundary test was added and passed as part of the 14-test focused feature
 command. All production code and the complete lifecycle test target were then
 checked by the final strict feature Clippy command.
 
-## 4. Evidence separation and pending CI
+## 4. Evidence separation and supported CI
 
 - **WSL2 local (`windows_wsl2_linux_guest`):** focused lifecycle tests,
   complete runtime tests, strict feature Clippy, formatting, consistency, and
   diff checks passed as listed above.
-- **Supported Ubuntu CI:** pending pull request.
-- **Supported Windows/MSVC CI:** pending pull request; this is the required
-  proof for Windows file-open sharing, `LockFileEx` contention/release,
-  process termination, stale-file behavior, and active-pointer replacement.
+- **Supported Ubuntu CI:** both push and pull-request workflows passed in runs
+  [30341756259](https://github.com/agentkernel/cognitive-os/actions/runs/30341756259)
+  and
+  [30341916006](https://github.com/agentkernel/cognitive-os/actions/runs/30341916006).
+- **Supported Windows/MSVC CI:** both workflows passed in the same runs. This
+  supplies the supported-matrix evidence for Windows file-open sharing,
+  `LockFileEx` contention/release, process termination, stale-file behavior,
+  and active-pointer replacement.
 - **Linux-native host/campaign:** not run. WSL2 evidence is not Linux-native
   evidence.
 
@@ -154,9 +159,7 @@ untouched.
 
 ## 6. Recommended next entry
 
-First complete this slice's supported Ubuntu and Windows/MSVC PR checks and
-record the implementation, PR, merge, and CI identifiers here. Then continue
-P1-T08 in separate batches, in order:
+Continue P1-T08 in separate batches, in order:
 
 1. inspectable Linux shell bootstrap/download/temporary-directory flow;
 2. systemd user unit, bounded service-health protocol, and rollback;

@@ -19,8 +19,11 @@
 > redaction. Local WSL feature tests passed **14/14** with one child entrypoint
 > ignored; the complete non-feature runtime surface passed **91/91** with one
 > child entrypoint ignored. Strict feature Clippy, formatting, and consistency
-> checks passed. This is `windows_wsl2_linux_guest` evidence only; supported
-> Ubuntu and Windows/MSVC CI remain pending for this slice. No downloader,
+> checks passed. PR [#110](https://github.com/agentkernel/cognitive-os/pull/110)
+> merged as `main@8aa0031` after push and pull-request workflows passed on
+> both supported Ubuntu and Windows/MSVC runners. Local test results remain
+> `windows_wsl2_linux_guest` evidence and are not Linux-native evidence. No
+> downloader,
 > inspected shell installer, systemd service, uninstall, production signing
 > key/trust root, release bundle, Linux-native campaign, B01, Gate, Profile,
 > containment, or release claim is added.
