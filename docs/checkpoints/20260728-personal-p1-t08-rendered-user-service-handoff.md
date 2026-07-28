@@ -1,11 +1,11 @@
 # Personal P1-T08 Rendered User-Service Foundation Handoff
 
 **Date:** 2026-07-28
-**Base:** `main@f3eec66` (local continuation baseline; fetched
-`origin/main@7eae31b` is an ancestor of this known merged P1-T08 snapshot)
+**Base:** `main@f3eec66` (local continuation baseline)
 **Branch:** `lane/personal-p1-t08-rendered-user-service`
 **Implementation commit:** `4761905`
-**Pull request / merge:** not yet created
+**Pull request:** [#114](https://github.com/agentkernel/cognitive-os/pull/114)
+**Merge commit:** `b151b5403de6a373d5c4af59af73f72d10e1245e`
 
 ## Delivered boundary
 
@@ -52,8 +52,14 @@ wsl bash -lc 'cd /mnt/d/agent-kernel; /root/.cargo/bin/cargo fmt \
 ```
 
 This is local implementation-fixture evidence only. Ubuntu/Windows-MSVC CI is
-not yet run for this branch. Linux-native systemd is `not-run`; WSL2 must not
-be reported as Linux-native evidence.
+not Linux-native systemd evidence. After a Windows path-separator correction
+(`0a90033`), both supported push and pull-request matrices passed on Ubuntu
+and Windows/MSVC: push run
+[30379506413](https://github.com/agentkernel/cognitive-os/actions/runs/30379506413)
+and pull-request run
+[30379508772](https://github.com/agentkernel/cognitive-os/actions/runs/30379508772).
+Linux-native systemd is `not-run`; WSL2 and supported CI must not be reported
+as Linux-native evidence.
 
 ## Completed and remaining scope
 

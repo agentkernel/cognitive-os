@@ -11,10 +11,17 @@
 > then confirms the canonical active service after the pointer changes; failed
 > flows retain deterministic compensation and never issue a receipt. Focused
 > service lifecycle tests executed in `windows_wsl2_linux_guest`: **9/9
-> passed**. This is implementation-fixture evidence only, not Linux-native
-> systemd, B01, Gate, Profile, containment, or release evidence. A production
-> user-systemd installation path, daemon-reload fixture, and Linux-native
-> systemd campaign remain separate work.
+> passed**. PR [#114](https://github.com/agentkernel/cognitive-os/pull/114)
+> merged as `main@b151b54` after the initial Windows path-separator failure was
+> corrected in `0a90033`; its supported Ubuntu/Windows-MSVC push and
+> pull-request CI matrices passed in runs
+> [30379506413](https://github.com/agentkernel/cognitive-os/actions/runs/30379506413)
+> and
+> [30379508772](https://github.com/agentkernel/cognitive-os/actions/runs/30379508772).
+> This is implementation-fixture and supported-matrix evidence only, not
+> Linux-native systemd, B01, Gate, Profile, containment, or release evidence.
+> A production user-systemd installation path, daemon-reload fixture, and
+> Linux-native systemd campaign remain separate work.
 
 > **P1-T08 safe-extraction slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0031

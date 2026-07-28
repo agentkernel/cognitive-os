@@ -147,10 +147,16 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > only from a constrained version and product deployment root, and fixture unit
 > publication uses a private temporary file followed by atomic rename. Focused
 > service lifecycle tests **9/9 passed** in `windows_wsl2_linux_guest`.
-> This is implementation-fixture evidence only; a production user-systemd
-> installation path, daemon-reload fixture, Linux-native campaign, B01, Gate,
-> Profile, containment, and release evidence remain absent. P1-T08 remains
-> `in-progress`; P1-T09 remains `not-started`. |
+> PR [#114](https://github.com/agentkernel/cognitive-os/pull/114) merged as
+> `main@b151b54`; after a Windows path-separator correction (`0a90033`), both
+> supported Ubuntu/Windows-MSVC push and pull-request matrices passed in runs
+> [30379506413](https://github.com/agentkernel/cognitive-os/actions/runs/30379506413)
+> and
+> [30379508772](https://github.com/agentkernel/cognitive-os/actions/runs/30379508772).
+> This remains implementation-fixture and supported-matrix evidence only; a
+> production user-systemd installation path, daemon-reload fixture,
+> Linux-native campaign, B01, Gate, Profile, containment, and release evidence
+> remain absent. P1-T08 remains `in-progress`; P1-T09 remains `not-started`. |
 
 > **2026-07-28 P1-T08 safe-extraction slice:** ADR-0031 specifies the
 > implementation-local `tar.gz` extraction policy: a verified artifact is
