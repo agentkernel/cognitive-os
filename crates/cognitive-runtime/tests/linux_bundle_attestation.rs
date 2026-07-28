@@ -9,10 +9,12 @@ use cognitive_runtime::linux_bundle::{
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, verify_linux_bundle,
 };
 use ed25519_dalek::{Signer, SigningKey};
+use flate2::{Compression, write::GzEncoder};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
+use tar::{Builder as TarBuilder, Header as TarHeader};
 
 const TEST_ONLY_KEY_ID: &str = "p1t08-test-only-key-2026";
 const PRODUCT: &str = "cognitiveos-personal";
@@ -35,14 +37,14 @@ impl AttestedBundleFixture {
         // never written to a bundle, release path, log, or production keyring.
         let signing_key = SigningKey::from_bytes(&[0x5a; 32]);
         let temporary_directory = tempfile::tempdir().unwrap();
-        let artifact = b"cognitiveos daemon bundle";
+        let artifact = runnable_archive_bytes();
         let manifest = LinuxBundleManifest {
             schema_version: 1,
             product: PRODUCT.to_owned(),
             platform: PLATFORM.to_owned(),
             version: "1.2.3".to_owned(),
             artifact_file: "cognitiveos-linux-x86_64.tar.gz".to_owned(),
-            artifact_sha256: sha256_digest(artifact),
+            artifact_sha256: sha256_digest(&artifact),
             attestation_reference: "https://example.invalid/provenance/1.2.3".to_owned(),
             attestation_statement_file: STATEMENT_FILE.to_owned(),
             attestation_signature_file: SIGNATURE_FILE.to_owned(),
@@ -108,6 +110,21 @@ impl AttestedBundleFixture {
     ) -> Result<cognitive_runtime::linux_bundle::VerifiedLinuxBundle, LinuxBundleError> {
         verify_linux_bundle(self.path(), &expected_pi(), &self.trusted_keyring())
     }
+}
+
+fn runnable_archive_bytes() -> Vec<u8> {
+    let executable_contents = b"attestation-test-kernel-server";
+    let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar_builder = TarBuilder::new(gzip_encoder);
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(0o755);
+    header.set_size(executable_contents.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, "bin/kernel-server", &executable_contents[..])
+        .unwrap();
+    let gzip_encoder = tar_builder.into_inner().unwrap();
+    gzip_encoder.finish().unwrap()
 }
 
 fn statement_for_manifest(manifest: &LinuxBundleManifest) -> Value {

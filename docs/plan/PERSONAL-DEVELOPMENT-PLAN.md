@@ -140,6 +140,25 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 
 > **2026-07-28 P1-T08 service-health slice:** `lane/personal-p1-t08-service-health` adds a separate lease-held service-lifecycle transaction, a fail-closed source user-unit template, a fixed-argument `systemctl --user` controller boundary, strict bounded loopback `/personal/health` parsing, and deterministic compensation tests. The existing offline installer callback remains unchanged. The checked-in unit and controller reject unresolved templates and the still-absent safe extracted `bin/kernel-server` layout before any systemd action; no runnable archive or real systemd service is claimed. Focused service tests passed **6/6** in `windows_wsl2_linux_guest`; this is local fixture evidence only. P1-T08 remains `in-progress` with `development_track: experimental-local-only`; P1-T09 remains `not-started`. |
 
+> **2026-07-28 P1-T08 safe-extraction slice:** ADR-0031 specifies the
+> implementation-local `tar.gz` extraction policy: a verified artifact is
+> re-hashed and extracted only in the lease-held private staging area; the
+> direct fixed layout is `bin/kernel-server`; traversal, links, special files,
+> unsafe modes, duplicate/conflicting paths, unsupported layouts, and bounded
+> resource violations are fail-closed. `cognitive-runtime` now provides the
+> bounded in-process extraction and only publishes `staged/<version>` after the
+> fixed layout validates; an extraction failure leaves the active pointer and
+> canonical active service untouched and returns no receipt. Successful fixture
+> candidates satisfy the controller's static layout preflight, but the
+> unresolved user-unit still prevents every systemd action. Focused installation
+> tests executed **12/12**, lifecycle tests **12/12** plus one ignored child
+> entrypoint, and service-lifecycle tests **6/6** in
+> `windows_wsl2_linux_guest`; strict feature Clippy, formatting, and consistency
+> checks also executed successfully. This is implementation and local-test
+> evidence only. P1-T08 remains `in-progress` with
+> `development_track: experimental-local-only`; it is not Linux-native systemd,
+> B01, Gate, Profile, containment, or release evidence. |
+
 > **2026-07-28 P1-T08 verifier merge update:** PR
 > [#108](https://github.com/agentkernel/cognitive-os/pull/108) merged as
 > `main@afa1d5d`; both push and pull-request Ubuntu/Windows-MSVC CI matrices
