@@ -6,9 +6,9 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use cognitive_runtime::{
     ExpectedPiCompatibility, LinuxBundleManifest, LinuxBundleServiceController,
-    LinuxBundleServiceError, LinuxBundleServiceReceipt, SystemdUserServiceController,
-    PersonalUserServiceUnitKind, TrustedKeyInput, TrustedKeyStatus, TrustedKeyring,
-    install_linux_bundle_service, render_personal_user_service_unit, probe_personal_health,
+    LinuxBundleServiceError, LinuxBundleServiceReceipt, PersonalUserServiceUnitKind,
+    SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus, TrustedKeyring,
+    install_linux_bundle_service, probe_personal_health, render_personal_user_service_unit,
     write_rendered_personal_user_service_unit,
 };
 use ed25519_dalek::{Signer, SigningKey};
@@ -88,12 +88,14 @@ fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
     }
 
     for unsafe_version in ["../2.0.0", "2.0.0/escape", "2.0.0\nExecStart=/bin/sh"] {
-        assert!(render_personal_user_service_unit(
-            PersonalUserServiceUnitKind::Candidate,
-            deployment_root.path(),
-            unsafe_version,
-        )
-        .is_err());
+        assert!(
+            render_personal_user_service_unit(
+                PersonalUserServiceUnitKind::Candidate,
+                deployment_root.path(),
+                unsafe_version,
+            )
+            .is_err()
+        );
     }
 }
 
@@ -115,10 +117,12 @@ fn rendered_unit_publication_uses_fixed_names_and_never_leaves_a_partial_file() 
     );
     let unit_contents = fs::read_to_string(&unit_path).unwrap();
     assert!(unit_contents.contains("staged/2.0.0/bin/kernel-server"));
-    assert!(!unit_root
-        .path()
-        .join(".cognitiveos-personal-candidate.service-0.tmp")
-        .exists());
+    assert!(
+        !unit_root
+            .path()
+            .join(".cognitiveos-personal-candidate.service-0.tmp")
+            .exists()
+    );
 }
 
 #[test]
@@ -241,9 +245,13 @@ fn rollback_restart_failure_is_reported_without_a_success_receipt() {
 #[test]
 fn upgrade_stops_candidate_before_starting_and_confirming_canonical_active_service() {
     let fixture = signed_bundle("2.0.0");
-    let deployment_root = fixture.temporary_directory.path().join("upgrade-deployment");
+    let deployment_root = fixture
+        .temporary_directory
+        .path()
+        .join("upgrade-deployment");
     prepare_existing_installation(&deployment_root, "1.0.0");
-    let mut controller = RecordingController::with_outcomes([Ok(()), Ok(()), Ok(()), Ok(()), Ok(())]);
+    let mut controller =
+        RecordingController::with_outcomes([Ok(()), Ok(()), Ok(()), Ok(()), Ok(())]);
 
     let receipt = install_linux_bundle_service(
         fixture.temporary_directory.path(),

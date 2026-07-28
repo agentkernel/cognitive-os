@@ -163,7 +163,8 @@ pub fn write_rendered_personal_user_service_unit(
         .and_then(|()| temporary_file.sync_all())
         .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
     set_private_file_permissions(&temporary_path)?;
-    fs::rename(&temporary_path, &unit_path).map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    fs::rename(&temporary_path, &unit_path)
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
     Ok(unit_path)
 }
 
@@ -297,7 +298,8 @@ pub fn install_linux_bundle_service(
     let pointer_confirmed =
         deployment.validated_active_version()?.as_deref() == Some(target_version.as_str());
     let active_started = service_controller.start_active(&target_version).is_ok();
-    let active_confirmed = active_started && service_controller.confirm_active(&target_version).is_ok();
+    let active_confirmed =
+        active_started && service_controller.confirm_active(&target_version).is_ok();
     if !pointer_confirmed || !active_confirmed {
         return compensate_failure(
             &deployment,
