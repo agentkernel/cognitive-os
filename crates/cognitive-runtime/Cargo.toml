@@ -7,6 +7,9 @@ rust-version.workspace = true
 publish.workspace = true
 license.workspace = true
 
+[features]
+test-fault-injection = []
+
 [dependencies]
 cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }

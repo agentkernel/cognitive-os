@@ -47,6 +47,8 @@ pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, VerifiedLinuxBundle, verify_linux_bundle,
 };
+#[cfg(feature = "test-fault-injection")]
+pub use linux_bundle_installation::{InstallFaultPoint, install_linux_bundle_with_fault_injection};
 pub use linux_bundle_installation::{LinuxBundleInstallationReceipt, install_linux_bundle};
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
