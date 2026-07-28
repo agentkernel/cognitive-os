@@ -103,6 +103,8 @@ pub enum LinuxBundleError {
     UnsafePath(String),
     #[error("Linux bundle activation health check failed")]
     HealthCheckFailed,
+    #[error("Linux bundle active version could not be confirmed after activation")]
+    ActiveVersionConfirmationFailed,
     #[error("Linux bundle filesystem operation failed: {0}")]
     Io(#[from] io::Error),
 }
