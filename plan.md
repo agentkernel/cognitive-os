@@ -662,6 +662,12 @@ Pi 不可以：
 - **文件：** 新增 `deploy/linux/install.sh`、manifest、systemd user unit、uninstall skeleton；修改 CI release dry-run。
 - **数据：** staged install state；不迁移用户数据直到 verifier通过。
 - **步骤：** platform check→download manifest/artifacts→digest/attestation→stage→health→atomic switch。
+- **bootstrap slice clarification (ADR-0029):** checked-in `install.sh` is an
+  unrendered fail-closed release template; an inspected rendered script binds
+  its URL/version/redirect host/bootstrap digest/public keyring/Pi pin, cleans
+  only its private download directory, authenticates a verify-only adapter,
+  and delegates to ADR-0028 before any future health-gated activation. This
+  slice does not invent a health callback or call systemd.
 - **验收：** tamper、interrupted download/install、no Node、wrong Pi integrity、existing version。
 - **不包含：** Homebrew、Docker、root service、自动更新。
 - **回滚：** 切回前一版本；保留数据备份。

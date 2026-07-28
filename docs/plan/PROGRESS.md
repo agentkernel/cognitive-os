@@ -1,5 +1,20 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 inspectable bootstrap/download slice (2026-07-28):** P1-T08 remains
+> `in-progress` with `development_track: experimental-local-only`. The new
+> `deploy/linux/install.sh` is an inspectable, unrendered source template that
+> fails before network access until release rendering binds its fixed version,
+> HTTPS object directory, redirect host, verifier SHA-256, public keyring and
+> Pi pin. Its bounded `curl --disable` download path uses private temporary
+> directories, partial files, one restricted HTTPS redirect, and cleanup traps.
+> A digest-authenticated `linux-bundle-verifier` adapter delegates to the
+> existing offline Rust verifier only; it does not stage, activate, invoke a
+> health callback, start systemd, or create authority state. Focused shell
+> behavior tests passed locally in `windows_wsl2_linux_guest`; that is not
+> Linux-native evidence. Production keys/releases, service health/rollback,
+> uninstall, campaign, B01, Gate, Profile, containment, and release claims
+> remain absent.
+
 > **P1-T08 installer lifecycle lease slice (2026-07-28):** P1-T08 remains
 > `in-progress` on `lane/personal-p1-t08-installer-lease` with
 > `development_track: experimental-local-only`. The official
