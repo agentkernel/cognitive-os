@@ -6,9 +6,10 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use cognitive_runtime::{
     ExpectedPiCompatibility, LinuxBundleManifest, LinuxBundleServiceController,
-    LinuxBundleServiceError, LinuxBundleServiceReceipt, SystemdUserServiceController,
-    TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, install_linux_bundle_service,
-    probe_personal_health,
+    LinuxBundleServiceError, LinuxBundleServiceReceipt, PersonalUserServiceUnitKind,
+    SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus, TrustedKeyring,
+    install_linux_bundle_service, probe_personal_health, render_personal_user_service_unit,
+    write_rendered_personal_user_service_unit,
 };
 use ed25519_dalek::{Signer, SigningKey};
 use flate2::{Compression, write::GzEncoder};
@@ -47,13 +48,80 @@ fn checked_in_user_unit_is_unrendered_and_rejected_before_systemctl() {
     let mut controller = SystemdUserServiceController::new(
         tempfile::tempdir().unwrap().path(),
         template,
-        "127.0.0.1:1".parse().unwrap(),
+        "127.0.0.1:48181".parse().unwrap(),
     )
     .unwrap();
     assert!(
         controller
             .start_candidate("2.0.0", std::path::Path::new("."))
             .is_err()
+    );
+}
+
+#[test]
+fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
+    let deployment_root = tempfile::tempdir().unwrap();
+    let candidate_unit = render_personal_user_service_unit(
+        PersonalUserServiceUnitKind::Candidate,
+        deployment_root.path(),
+        "2.0.0",
+    )
+    .unwrap();
+    let active_unit = render_personal_user_service_unit(
+        PersonalUserServiceUnitKind::Active,
+        deployment_root.path(),
+        "2.0.0",
+    )
+    .unwrap();
+
+    assert!(candidate_unit.contains("staged/2.0.0/bin/kernel-server"));
+    assert!(candidate_unit.contains("--bind 127.0.0.1:48182"));
+    assert!(candidate_unit.contains("runtime/candidate"));
+    assert!(active_unit.contains("versions/2.0.0/bin/kernel-server"));
+    assert!(active_unit.contains("--bind 127.0.0.1:48181"));
+    assert!(active_unit.contains("runtime/active"));
+    for unit in [&candidate_unit, &active_unit] {
+        assert!(!unit.contains('@'));
+        assert!(!unit.contains("sudo"));
+        assert!(!unit.contains("systemctl"));
+        assert!(!unit.contains("sh -c"));
+    }
+
+    for unsafe_version in ["../2.0.0", "2.0.0/escape", "2.0.0\nExecStart=/bin/sh"] {
+        assert!(
+            render_personal_user_service_unit(
+                PersonalUserServiceUnitKind::Candidate,
+                deployment_root.path(),
+                unsafe_version,
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
+fn rendered_unit_publication_uses_fixed_names_and_never_leaves_a_partial_file() {
+    let deployment_root = tempfile::tempdir().unwrap();
+    let unit_root = tempfile::tempdir().unwrap();
+    let unit_path = write_rendered_personal_user_service_unit(
+        PersonalUserServiceUnitKind::Candidate,
+        unit_root.path(),
+        deployment_root.path(),
+        "2.0.0",
+    )
+    .unwrap();
+
+    assert_eq!(
+        unit_path.file_name().unwrap(),
+        "cognitiveos-personal-candidate.service"
+    );
+    let unit_contents = fs::read_to_string(&unit_path).unwrap();
+    assert!(unit_contents.contains("staged/2.0.0/bin/kernel-server"));
+    assert!(
+        !unit_root
+            .path()
+            .join(".cognitiveos-personal-candidate.service-0.tmp")
+            .exists()
     );
 }
 
@@ -171,6 +239,43 @@ fn rollback_restart_failure_is_reported_without_a_success_receipt() {
     assert_eq!(
         fs::read_to_string(deployment_root.join("active-version")).unwrap(),
         "1.0.0\n"
+    );
+}
+
+#[test]
+fn upgrade_stops_candidate_before_starting_and_confirming_canonical_active_service() {
+    let fixture = signed_bundle("2.0.0");
+    let deployment_root = fixture
+        .temporary_directory
+        .path()
+        .join("upgrade-deployment");
+    prepare_existing_installation(&deployment_root, "1.0.0");
+    let mut controller =
+        RecordingController::with_outcomes([Ok(()), Ok(()), Ok(()), Ok(()), Ok(())]);
+
+    let receipt = install_linux_bundle_service(
+        fixture.temporary_directory.path(),
+        &deployment_root,
+        &expected_pi(),
+        &fixture.keyring,
+        &mut controller,
+    )
+    .unwrap();
+
+    assert_eq!(receipt.resulting_active_version, "2.0.0");
+    assert_eq!(
+        fs::read_to_string(deployment_root.join("active-version")).unwrap(),
+        "2.0.0\n"
+    );
+    assert_eq!(
+        controller.actions,
+        [
+            "start-candidate:2.0.0",
+            "candidate-health:2.0.0",
+            "stop-candidate:2.0.0",
+            "start-active:2.0.0",
+            "confirm-active:2.0.0"
+        ]
     );
 }
 

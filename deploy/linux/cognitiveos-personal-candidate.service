@@ -1,0 +1,17 @@
+# Source-controlled Personal candidate user-service template. It remains
+# intentionally unrendered and is not a directly installable production unit.
+[Unit]
+Description=CognitiveOS Personal candidate daemon
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=@COGNITIVEOS_CANDIDATE_ROOT@/bin/kernel-server --personal --bind 127.0.0.1:@COGNITIVEOS_CANDIDATE_HEALTH_PORT@ --runtime-root @COGNITIVEOS_CANDIDATE_RUNTIME_ROOT@
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=15
+TimeoutStopSec=15
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

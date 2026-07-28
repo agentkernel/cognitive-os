@@ -1,5 +1,21 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 rendered user-service foundation (2026-07-28):** P1-T08 remains
+> `in-progress` with `development_track: experimental-local-only`. ADR-0032
+> fixes two product-owned user-unit identities, disjoint loopback liveness
+> ports, staged-versus-active executable paths, and the candidate-stop before
+> canonical-active-start ordering. `cognitive-runtime` now renders only fixed
+> candidate/active unit content, atomically publishes a fixture unit through a
+> private temporary file, and rejects unsafe version/path input. The existing
+> service transaction stops a healthy candidate before activation and starts
+> then confirms the canonical active service after the pointer changes; failed
+> flows retain deterministic compensation and never issue a receipt. Focused
+> service lifecycle tests executed in `windows_wsl2_linux_guest`: **9/9
+> passed**. This is implementation-fixture evidence only, not Linux-native
+> systemd, B01, Gate, Profile, containment, or release evidence. A production
+> user-systemd installation path, daemon-reload fixture, and Linux-native
+> systemd campaign remain separate work.
+
 > **P1-T08 safe-extraction slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0031
 > specifies a bounded, fixed-layout `tar.gz` extraction boundary. The

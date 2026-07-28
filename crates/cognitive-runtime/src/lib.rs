@@ -53,7 +53,9 @@ pub use linux_bundle_installation::{InstallFaultPoint, install_linux_bundle_with
 pub use linux_bundle_installation::{LinuxBundleInstallationReceipt, install_linux_bundle};
 pub use linux_bundle_service::{
     LinuxBundleServiceController, LinuxBundleServiceError, LinuxBundleServiceReceipt,
-    SystemdUserServiceController, install_linux_bundle_service, probe_personal_health,
+    PersonalUserServiceUnitKind, SystemdUserServiceController, install_linux_bundle_service,
+    probe_personal_health, render_personal_user_service_unit,
+    write_rendered_personal_user_service_unit,
 };
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};

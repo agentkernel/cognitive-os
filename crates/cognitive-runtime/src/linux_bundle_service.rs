@@ -20,7 +20,10 @@ use std::thread;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
-const SYSTEMD_USER_UNIT: &str = "cognitiveos-personal.service";
+const ACTIVE_SYSTEMD_USER_UNIT: &str = "cognitiveos-personal.service";
+const CANDIDATE_SYSTEMD_USER_UNIT: &str = "cognitiveos-personal-candidate.service";
+const ACTIVE_HEALTH_PORT: u16 = 48181;
+const CANDIDATE_HEALTH_PORT: u16 = 48182;
 const MAX_SYSTEMCTL_OUTPUT_BYTES: usize = 8 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
 const MAX_HEALTH_ATTEMPTS: u8 = 3;
@@ -46,6 +49,151 @@ pub enum LinuxBundleServiceError {
     InvalidHealthResponse,
     #[error("Linux bundle installation failed: {0}")]
     Installation(#[from] LinuxBundleError),
+}
+
+/// The only two product-owned user-unit roles. Bundle metadata never chooses
+/// a unit identity, bind address, runtime root, executable name, or argument.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersonalUserServiceUnitKind {
+    Candidate,
+    Active,
+}
+
+impl PersonalUserServiceUnitKind {
+    fn unit_name(self) -> &'static str {
+        match self {
+            Self::Candidate => CANDIDATE_SYSTEMD_USER_UNIT,
+            Self::Active => ACTIVE_SYSTEMD_USER_UNIT,
+        }
+    }
+
+    fn health_port(self) -> u16 {
+        match self {
+            Self::Candidate => CANDIDATE_HEALTH_PORT,
+            Self::Active => ACTIVE_HEALTH_PORT,
+        }
+    }
+
+    fn executable_directory(self) -> &'static str {
+        match self {
+            Self::Candidate => "staged",
+            Self::Active => "versions",
+        }
+    }
+
+    fn runtime_directory(self) -> &'static str {
+        match self {
+            Self::Candidate => "candidate",
+            Self::Active => "active",
+        }
+    }
+}
+
+/// Render one complete fixed user unit from product-owned values.
+///
+/// This renderer deliberately accepts only the checked deployment root and a
+/// constrained version. It does not read a bundle, manifest, environment, or
+/// source template, so none of those inputs can select a command or address.
+pub fn render_personal_user_service_unit(
+    unit_kind: PersonalUserServiceUnitKind,
+    deployment_root: &Path,
+    version: &str,
+) -> Result<String, LinuxBundleServiceError> {
+    if !safe_service_version(version) || !safe_unit_path(deployment_root) {
+        return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+    }
+    let executable = deployment_root
+        .join(unit_kind.executable_directory())
+        .join(version)
+        .join("bin/kernel-server");
+    let runtime_root = deployment_root
+        .join("runtime")
+        .join(unit_kind.runtime_directory());
+    // systemd unit syntax always uses POSIX path separators. Normalizing here
+    // keeps fixture rendering deterministic when tests run on Windows.
+    let executable = executable.to_string_lossy().replace('\\', "/");
+    let runtime_root = runtime_root.to_string_lossy().replace('\\', "/");
+    Ok(format!(
+        "[Unit]\nDescription=CognitiveOS Personal daemon ({})\nAfter=default.target\n\n[Service]\nType=simple\nExecStart={executable} --personal --bind 127.0.0.1:{} --runtime-root {runtime_root}\nRestart=on-failure\nRestartSec=2\nTimeoutStartSec=15\nTimeoutStopSec=15\nNoNewPrivileges=true\n\n[Install]\nWantedBy=default.target\n",
+        unit_kind.runtime_directory(),
+        unit_kind.health_port(),
+    ))
+}
+
+/// Atomically publish one rendered unit into a product-selected user-unit
+/// directory. Test fixtures may inject an isolated directory; callers must
+/// never derive this path from a bundle or manifest.
+pub fn write_rendered_personal_user_service_unit(
+    unit_kind: PersonalUserServiceUnitKind,
+    unit_directory: &Path,
+    deployment_root: &Path,
+    version: &str,
+) -> Result<PathBuf, LinuxBundleServiceError> {
+    if !safe_unit_path(unit_directory) {
+        return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+    }
+    fs::create_dir_all(unit_directory).map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    let directory_metadata = fs::symlink_metadata(unit_directory)
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    if !directory_metadata.file_type().is_dir() || directory_metadata.file_type().is_symlink() {
+        return Err(LinuxBundleServiceError::UnsafeUnitTemplate);
+    }
+    set_private_directory_permissions(unit_directory)?;
+
+    let unit_path = unit_directory.join(unit_kind.unit_name());
+    if unit_path.exists()
+        && !fs::symlink_metadata(&unit_path)
+            .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?
+            .file_type()
+            .is_file()
+    {
+        return Err(LinuxBundleServiceError::UnsafeUnitTemplate);
+    }
+    let temporary_path = unit_directory.join(format!(
+        ".{}-{}.tmp",
+        unit_kind.unit_name(),
+        std::process::id()
+    ));
+    let unit_contents = render_personal_user_service_unit(unit_kind, deployment_root, version)?;
+    let mut temporary_file = fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&temporary_path)
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    temporary_file
+        .write_all(unit_contents.as_bytes())
+        .and_then(|()| temporary_file.sync_all())
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    set_private_file_permissions(&temporary_path)?;
+    fs::rename(&temporary_path, &unit_path)
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
+    Ok(unit_path)
+}
+
+#[cfg(unix)]
+fn set_private_directory_permissions(path: &Path) -> Result<(), LinuxBundleServiceError> {
+    use std::os::unix::fs::PermissionsExt;
+
+    fs::set_permissions(path, fs::Permissions::from_mode(0o700))
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)
+}
+
+#[cfg(not(unix))]
+fn set_private_directory_permissions(_path: &Path) -> Result<(), LinuxBundleServiceError> {
+    Ok(())
+}
+
+#[cfg(unix)]
+fn set_private_file_permissions(path: &Path) -> Result<(), LinuxBundleServiceError> {
+    use std::os::unix::fs::PermissionsExt;
+
+    fs::set_permissions(path, fs::Permissions::from_mode(0o600))
+        .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)
+}
+
+#[cfg(not(unix))]
+fn set_private_file_permissions(_path: &Path) -> Result<(), LinuxBundleServiceError> {
+    Ok(())
 }
 
 /// A controller may perform only product-selected, non-secret service actions.
@@ -127,12 +275,22 @@ pub fn install_linux_bundle_service(
             LinuxBundleServiceError::CandidateHealthFailed,
         );
     }
-    if deployment.activate_staged_bundle(&verified_bundle).is_err() {
+    if service_controller.stop_candidate(&target_version).is_err() {
         return compensate_failure(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
             true,
+            service_controller,
+            LinuxBundleServiceError::CandidateStartFailed,
+        );
+    }
+    if deployment.activate_staged_bundle(&verified_bundle).is_err() {
+        return compensate_failure(
+            &deployment,
+            previous_active_version.as_deref(),
+            &target_version,
+            false,
             service_controller,
             LinuxBundleServiceError::Installation(
                 LinuxBundleError::ActiveVersionConfirmationFailed,
@@ -141,13 +299,15 @@ pub fn install_linux_bundle_service(
     }
     let pointer_confirmed =
         deployment.validated_active_version()?.as_deref() == Some(target_version.as_str());
-    let active_confirmed = service_controller.confirm_active(&target_version).is_ok();
+    let active_started = service_controller.start_active(&target_version).is_ok();
+    let active_confirmed =
+        active_started && service_controller.confirm_active(&target_version).is_ok();
     if !pointer_confirmed || !active_confirmed {
         return compensate_failure(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
-            true,
+            false,
             service_controller,
             LinuxBundleServiceError::FinalServiceConfirmationFailed,
         );
@@ -208,7 +368,8 @@ fn compensate_failure(
 pub struct SystemdUserServiceController {
     deployment_root: PathBuf,
     rendered_unit_template: PathBuf,
-    health_address: SocketAddr,
+    active_health_address: SocketAddr,
+    candidate_health_address: SocketAddr,
     command_timeout: Duration,
     health_timeout: Duration,
 }
@@ -219,13 +380,15 @@ impl SystemdUserServiceController {
         rendered_unit_template: impl Into<PathBuf>,
         health_address: SocketAddr,
     ) -> Result<Self, LinuxBundleServiceError> {
-        if !health_address.ip().is_loopback() {
+        if !health_address.ip().is_loopback() || health_address.port() != ACTIVE_HEALTH_PORT {
             return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
         }
+        let candidate_health_address = SocketAddr::new(health_address.ip(), CANDIDATE_HEALTH_PORT);
         Ok(Self {
             deployment_root: deployment_root.into(),
             rendered_unit_template: rendered_unit_template.into(),
-            health_address,
+            active_health_address: health_address,
+            candidate_health_address,
             command_timeout: Duration::from_secs(15),
             health_timeout: Duration::from_secs(10),
         })
@@ -234,6 +397,7 @@ impl SystemdUserServiceController {
     fn ensure_rendered_unit_and_layout(
         &self,
         version: &str,
+        unit_kind: PersonalUserServiceUnitKind,
     ) -> Result<(), LinuxBundleServiceError> {
         if !safe_service_version(version) {
             return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
@@ -250,7 +414,7 @@ impl SystemdUserServiceController {
         }
         let executable = self
             .deployment_root
-            .join("versions")
+            .join(unit_kind.executable_directory())
             .join(version)
             .join("bin/kernel-server");
         if !executable.is_file() {
@@ -259,14 +423,18 @@ impl SystemdUserServiceController {
         Ok(())
     }
 
-    fn invoke_systemctl(&self, action: &str) -> Result<(), LinuxBundleServiceError> {
+    fn invoke_systemctl(
+        &self,
+        action: &str,
+        unit_kind: PersonalUserServiceUnitKind,
+    ) -> Result<(), LinuxBundleServiceError> {
         let mut child = Command::new("systemctl")
             .args([
                 "--user",
                 "--no-ask-password",
                 "--no-pager",
                 action,
-                SYSTEMD_USER_UNIT,
+                unit_kind.unit_name(),
             ])
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
@@ -339,25 +507,25 @@ impl LinuxBundleServiceController for SystemdUserServiceController {
         // changing the active pointer. Future safe extraction must supply a
         // separately reviewed candidate unit/layout before this call gains a
         // systemctl action; the current opaque archive fails closed here.
-        self.ensure_rendered_unit_and_layout(version)?;
-        Err(LinuxBundleServiceError::UnsafeServiceConfiguration)
+        self.ensure_rendered_unit_and_layout(version, PersonalUserServiceUnitKind::Candidate)?;
+        self.invoke_systemctl("start", PersonalUserServiceUnitKind::Candidate)
     }
 
     fn stop_candidate(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
-        self.invoke_systemctl("stop")
+        self.invoke_systemctl("stop", PersonalUserServiceUnitKind::Candidate)
     }
 
     fn confirm_candidate_health(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
-        probe_personal_health(self.health_address, self.health_timeout)
+        probe_personal_health(self.candidate_health_address, self.health_timeout)
     }
 
     fn start_active(&mut self, version: &str) -> Result<(), LinuxBundleServiceError> {
-        self.ensure_rendered_unit_and_layout(version)?;
-        self.invoke_systemctl("restart")
+        self.ensure_rendered_unit_and_layout(version, PersonalUserServiceUnitKind::Active)?;
+        self.invoke_systemctl("restart", PersonalUserServiceUnitKind::Active)
     }
 
     fn confirm_active(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
-        probe_personal_health(self.health_address, self.health_timeout)
+        probe_personal_health(self.active_health_address, self.health_timeout)
     }
 }
 
@@ -455,4 +623,14 @@ fn safe_service_version(version: &str) -> bool {
         && version
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
+}
+
+fn safe_unit_path(path: &Path) -> bool {
+    let path_text = path.to_string_lossy();
+    !path_text.is_empty()
+        && path_text.len() <= 4096
+        && !path_text.chars().any(char::is_control)
+        && !path_text.contains('@')
+        && !path_text.contains('"')
+        && !path_text.contains('\'')
 }
