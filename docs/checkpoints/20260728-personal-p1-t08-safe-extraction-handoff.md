@@ -4,7 +4,8 @@
 **Base:** `main@74dac13df0bc84af1336ed550673e7e2e7077d56`
 **Branch:** `lane/personal-p1-t08-safe-extraction`
 **Implementation commit:** `1b5462f`
-**Pull request:** pending
+**Pull request:** [#113](https://github.com/agentkernel/cognitive-os/pull/113)
+**Merge commit:** `d57efc179de1d78b59b9e08e2c72b2642db65709`
 
 ## Delivered boundary
 
@@ -74,8 +75,10 @@ Linux-native systemd, B01, Gate, Profile, containment, or release evidence.
 
 No production archive, signing key, release rendering, rendered unit, systemd
 campaign, uninstall/upgrade campaign, Linux-native evidence, B01, Gate,
-Profile, containment, RC, or release claim exists. No PR or supported CI run
-has been created yet for this branch.
+Profile, containment, RC, or release claim exists. PR #113 merged after both
+push and pull-request CI matrices passed on supported Ubuntu and Windows/MSVC
+runners. This supported build/test evidence does not become Linux-native
+systemd, B01, Gate, Profile, containment, or release evidence.
 
 Before any future systemd campaign, independently review this extracted
 runnable-layout boundary, then decide whether a separately controlled

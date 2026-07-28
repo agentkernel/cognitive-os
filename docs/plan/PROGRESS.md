@@ -16,7 +16,11 @@
 > layout satisfies static controller preflight only: the checked-in user unit
 > remains unrendered and the controller still makes no systemd action. This is
 > neither Linux-native systemd, B01, Gate, Profile, containment, nor release
-> evidence. PR, supported CI, and merge evidence remain pending.
+> evidence. PR [#113](https://github.com/agentkernel/cognitive-os/pull/113)
+> merged as `main@d57efc1` after both push and pull-request CI matrices passed
+> on Ubuntu and Windows/MSVC. That supported-matrix evidence remains distinct
+> from Linux-native systemd, B01, Gate, Profile, containment, and release
+> evidence.
 
 > **P1-T08 service-lifecycle slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`.
