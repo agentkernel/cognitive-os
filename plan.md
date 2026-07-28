@@ -661,7 +661,7 @@ Pi 不可以：
 - **目标：** 支持 `curl -o install.sh; less; sh`，不是 `curl|sh`。
 - **文件：** 新增 `deploy/linux/install.sh`、manifest、systemd user unit、uninstall skeleton；修改 CI release dry-run。
 - **数据：** staged install state；不迁移用户数据直到 verifier通过。
-- **步骤：** platform check→download manifest/artifacts→digest/attestation→stage→health→atomic switch。
+- **步骤：** platform check→download manifest/artifacts→digest/attestation→stage→candidate-service liveness→atomic switch→pointer/service confirmation；candidate liveness 只证明 daemon 存活，不证明 product readiness。
 - **bootstrap slice clarification (ADR-0029):** checked-in `install.sh` is an
   unrendered fail-closed release template; an inspected rendered script binds
   its URL/version/redirect host/bootstrap digest/public keyring/Pi pin, cleans
@@ -671,6 +671,9 @@ Pi 不可以：
 - **验收：** tamper、interrupted download/install、no Node、wrong Pi integrity、existing version。
 - **不包含：** Homebrew、Docker、root service、自动更新。
 - **回滚：** 切回前一版本；保留数据备份。
+- **后续前置项：** 当前 artifact 尚无经过审计的安全解包和可运行
+  `kernel-server` archive layout；该独立前置项完成前，user-unit/controller
+  必须 fail-closed，不能把 fake/WSL/CI 结果写成真实 systemd 或 release 证据。
 - **解锁：** P1-T09；为 P7-T01/P7-T02 提供安装器输入。
 
 ### P1-T09 — B01 首次安装到首次对话 Gate
