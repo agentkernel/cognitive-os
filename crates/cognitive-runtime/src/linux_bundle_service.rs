@@ -367,7 +367,8 @@ fn compensate_failure(
 /// release has not supplied the future safe extracted daemon layout.
 pub struct SystemdUserServiceController {
     deployment_root: PathBuf,
-    rendered_unit_template: PathBuf,
+    unit_directory: Option<PathBuf>,
+    systemctl_binary: PathBuf,
     active_health_address: SocketAddr,
     candidate_health_address: SocketAddr,
     command_timeout: Duration,
@@ -377,7 +378,7 @@ pub struct SystemdUserServiceController {
 impl SystemdUserServiceController {
     pub fn new(
         deployment_root: impl Into<PathBuf>,
-        rendered_unit_template: impl Into<PathBuf>,
+        _rendered_unit_template: impl Into<PathBuf>,
         health_address: SocketAddr,
     ) -> Result<Self, LinuxBundleServiceError> {
         if !health_address.ip().is_loopback() || health_address.port() != ACTIVE_HEALTH_PORT {
@@ -386,9 +387,34 @@ impl SystemdUserServiceController {
         let candidate_health_address = SocketAddr::new(health_address.ip(), CANDIDATE_HEALTH_PORT);
         Ok(Self {
             deployment_root: deployment_root.into(),
-            rendered_unit_template: rendered_unit_template.into(),
+            unit_directory: None,
+            systemctl_binary: PathBuf::from("systemctl"),
             active_health_address: health_address,
             candidate_health_address,
+            command_timeout: Duration::from_secs(15),
+            health_timeout: Duration::from_secs(10),
+        })
+    }
+
+    /// Construct the private controller fixture used by focused tests. The
+    /// caller supplies only isolated filesystem/process locations; service
+    /// identity, argument vectors, executable paths, and health endpoints stay
+    /// product-owned.
+    pub fn new_fixture(
+        deployment_root: impl Into<PathBuf>,
+        unit_directory: impl Into<PathBuf>,
+        systemctl_binary: impl Into<PathBuf>,
+        health_address: SocketAddr,
+    ) -> Result<Self, LinuxBundleServiceError> {
+        if !health_address.ip().is_loopback() || health_address.port() != ACTIVE_HEALTH_PORT {
+            return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+        }
+        Ok(Self {
+            deployment_root: deployment_root.into(),
+            unit_directory: Some(unit_directory.into()),
+            systemctl_binary: systemctl_binary.into(),
+            active_health_address: health_address,
+            candidate_health_address: SocketAddr::new(health_address.ip(), CANDIDATE_HEALTH_PORT),
             command_timeout: Duration::from_secs(15),
             health_timeout: Duration::from_secs(10),
         })
@@ -402,14 +428,11 @@ impl SystemdUserServiceController {
         if !safe_service_version(version) {
             return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
         }
-        let template = fs::read_to_string(&self.rendered_unit_template)
-            .map_err(|_| LinuxBundleServiceError::UnsafeUnitTemplate)?;
-        if template.contains('@')
-            || !template.contains("[Service]")
-            || template.contains("sudo")
-            || template.contains("/root")
-            || template.contains("systemctl")
-        {
+        let unit_directory = self
+            .unit_directory
+            .as_ref()
+            .ok_or(LinuxBundleServiceError::UnsafeUnitTemplate)?;
+        if !safe_unit_path(unit_directory) {
             return Err(LinuxBundleServiceError::UnsafeUnitTemplate);
         }
         let executable = self
@@ -423,19 +446,39 @@ impl SystemdUserServiceController {
         Ok(())
     }
 
+    fn publish_rendered_unit(
+        &self,
+        version: &str,
+        unit_kind: PersonalUserServiceUnitKind,
+    ) -> Result<(), LinuxBundleServiceError> {
+        let unit_directory = self
+            .unit_directory
+            .as_ref()
+            .ok_or(LinuxBundleServiceError::UnsafeUnitTemplate)?;
+        write_rendered_personal_user_service_unit(
+            unit_kind,
+            unit_directory,
+            &self.deployment_root,
+            version,
+        )?;
+        self.invoke_daemon_reload()
+    }
+
+    fn invoke_daemon_reload(&self) -> Result<(), LinuxBundleServiceError> {
+        self.invoke_systemctl("daemon-reload", None)
+    }
+
     fn invoke_systemctl(
         &self,
         action: &str,
-        unit_kind: PersonalUserServiceUnitKind,
+        unit_kind: Option<PersonalUserServiceUnitKind>,
     ) -> Result<(), LinuxBundleServiceError> {
-        let mut child = Command::new("systemctl")
-            .args([
-                "--user",
-                "--no-ask-password",
-                "--no-pager",
-                action,
-                unit_kind.unit_name(),
-            ])
+        let mut command_arguments = vec!["--user", "--no-ask-password", "--no-pager", action];
+        if let Some(unit_kind) = unit_kind {
+            command_arguments.push(unit_kind.unit_name());
+        }
+        let mut child = Command::new(&self.systemctl_binary)
+            .args(command_arguments)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -508,11 +551,12 @@ impl LinuxBundleServiceController for SystemdUserServiceController {
         // separately reviewed candidate unit/layout before this call gains a
         // systemctl action; the current opaque archive fails closed here.
         self.ensure_rendered_unit_and_layout(version, PersonalUserServiceUnitKind::Candidate)?;
-        self.invoke_systemctl("start", PersonalUserServiceUnitKind::Candidate)
+        self.publish_rendered_unit(version, PersonalUserServiceUnitKind::Candidate)?;
+        self.invoke_systemctl("start", Some(PersonalUserServiceUnitKind::Candidate))
     }
 
     fn stop_candidate(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
-        self.invoke_systemctl("stop", PersonalUserServiceUnitKind::Candidate)
+        self.invoke_systemctl("stop", Some(PersonalUserServiceUnitKind::Candidate))
     }
 
     fn confirm_candidate_health(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {
@@ -521,7 +565,8 @@ impl LinuxBundleServiceController for SystemdUserServiceController {
 
     fn start_active(&mut self, version: &str) -> Result<(), LinuxBundleServiceError> {
         self.ensure_rendered_unit_and_layout(version, PersonalUserServiceUnitKind::Active)?;
-        self.invoke_systemctl("restart", PersonalUserServiceUnitKind::Active)
+        self.publish_rendered_unit(version, PersonalUserServiceUnitKind::Active)?;
+        self.invoke_systemctl("restart", Some(PersonalUserServiceUnitKind::Active))
     }
 
     fn confirm_active(&mut self, _version: &str) -> Result<(), LinuxBundleServiceError> {

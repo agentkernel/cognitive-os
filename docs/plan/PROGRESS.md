@@ -1,5 +1,19 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 fake-systemctl controller fixture (2026-07-28):** P1-T08 remains
+> `in-progress` with `development_track: experimental-local-only`. ADR-0033
+> specifies a private/injected unit-root controller boundary and fixed
+> daemon-reload, candidate start/stop, and canonical active restart actions.
+> The controller renders and atomically publishes the candidate unit before a
+> fixed-argument daemon-reload and candidate start; a focused Unix fake harness
+> records the exact action order and confirms candidate isolation from the
+> canonical unit. Focused lifecycle tests executed in
+> `windows_wsl2_linux_guest`: **10/10 passed**. This is
+> implementation-fixture evidence only, not Linux-native systemd, B01, Gate,
+> Profile, containment, or release evidence. Pointer/unit/service compensation
+> fault injection, full redaction coverage, and a Linux-native campaign remain
+> separate work.
+
 > **P1-T08 rendered user-service foundation (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0032
 > fixes two product-owned user-unit identities, disjoint loopback liveness
