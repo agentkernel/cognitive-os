@@ -1,5 +1,21 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 offline attestation verifier slice (2026-07-28):** P1-T08 remains
+> `in-progress` on `lane/personal-p1-t08-attestation-verifier`. ADR-0028 now
+> fixes an offline Ed25519 detached-signature mechanism over an RFC 8785 JCS
+> canonical, closed attestation statement. `cognitive-runtime::linux_bundle`
+> accepts only an explicitly supplied product-owned versioned keyring; unknown,
+> revoked, malformed, duplicate, or bundle-selected trust roots fail closed.
+> The signed statement binds product, platform, version, artifact filename and
+> digest, the caller-fixed Pi version/integrity, and a strict HTTPS provenance
+> reference. Metadata reads are bounded; unsafe, colliding, non-regular, and
+> symlink bundle files are rejected; staging re-hashes artifact bytes to reject
+> post-verification tampering before candidate creation. Focused WSL tests
+> passed **14/14**, and strict runtime Clippy plus formatting passed. No
+> production signing key, release attestation, downloader, inspected installer,
+> systemd user service, uninstall path, Linux-native campaign, B01, Gate,
+> Profile, containment, or release claim exists.
+
 > **P1-T08 first implementation slice (2026-07-27):** P1-T08 is now
 > `in-progress` on `lane/personal-p1-t08-bundle-foundation`. The first
 > failure-first foundation is a local, non-downloading Linux bundle manifest

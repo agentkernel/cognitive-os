@@ -44,7 +44,7 @@ pub use installer::{
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
-    verify_linux_bundle,
+    TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, VerifiedLinuxBundle, verify_linux_bundle,
 };
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{GovernanceOverheadSample, StageLatencyMs};
