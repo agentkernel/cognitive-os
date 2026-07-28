@@ -3,6 +3,12 @@
 **Date:** 2026-07-28  
 **Base:** `main@3e205450b5ecbee74a1dbaf9f48231180d6d3228`  
 **Branch:** `lane/personal-p1-t08-linux-bootstrap`  
+
+**Implementation commit:** `0ec5ff8951df5339d2d351615cc08cff7156de70`
+**Documentation commit:** `5895b103966d858e87918cd8dfb0e17f42a570a5`
+**Pull request:** [#111](https://github.com/agentkernel/cognitive-os/pull/111)
+**Merge commit:** `35115d3134244261febbddfaf23e3241d415b32a`
+
 **Status:** P1-T08 remains **in-progress**  
 **Development track:** `experimental-local-only`
 
@@ -61,9 +67,11 @@ bundle truth; its provenance URL is not permission to fetch a bundle URL.
 ## Evidence separation and remaining work
 
 The focused result above is `windows_wsl2_linux_guest`, not Linux-native
-evidence. Supported Ubuntu and Windows/MSVC CI are pending PR execution.
-No Linux-native campaign was run. ShellCheck is `not-run` unless present on
-the host; shell syntax is checked with `sh -n`.
+evidence. PR #111 push and pull-request workflows passed on both supported
+Ubuntu and Windows/MSVC runners; post-merge main CI run
+[30350642356](https://github.com/agentkernel/cognitive-os/actions/runs/30350642356)
+also passed on both runners. No Linux-native campaign was run. ShellCheck is
+`not-run` because it was not present; shell syntax was checked with `sh -n`.
 
 This batch does not provide a production key/trust root, real release or
 GitHub Release, SBOM/provenance, systemd user unit, service health/rollback,

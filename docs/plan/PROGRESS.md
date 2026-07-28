@@ -10,10 +10,14 @@
 > A digest-authenticated `linux-bundle-verifier` adapter delegates to the
 > existing offline Rust verifier only; it does not stage, activate, invoke a
 > health callback, start systemd, or create authority state. Focused shell
-> behavior tests passed locally in `windows_wsl2_linux_guest`; that is not
-> Linux-native evidence. Production keys/releases, service health/rollback,
-> uninstall, campaign, B01, Gate, Profile, containment, and release claims
-> remain absent.
+> behavior tests passed locally in `windows_wsl2_linux_guest`; supported
+> Ubuntu and Windows/MSVC push/pull-request CI passed for PR
+> [#111](https://github.com/agentkernel/cognitive-os/pull/111), merged as
+> `main@35115d3`, and post-merge CI run
+> [30350642356](https://github.com/agentkernel/cognitive-os/actions/runs/30350642356)
+> also passed. This is not Linux-native evidence. Production keys/releases,
+> service health/rollback, uninstall, campaign, B01, Gate, Profile,
+> containment, and release claims remain absent.
 
 > **P1-T08 installer lifecycle lease slice (2026-07-28):** P1-T08 remains
 > `in-progress` on `lane/personal-p1-t08-installer-lease` with
