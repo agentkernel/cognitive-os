@@ -362,6 +362,22 @@ impl LinuxBundleDeployment {
         }
     }
 
+    /// Read the active pointer only when it names an existing, safe version
+    /// directory. Service rollback must never turn pointer text into a path
+    /// without this validation.
+    pub(crate) fn validated_active_version(&self) -> Result<Option<String>, LinuxBundleError> {
+        let Some(version) = self.active_version()? else {
+            return Ok(None);
+        };
+        let version_directory = safe_version_directory(&version)?;
+        if !self.root.join("versions").join(version_directory).is_dir() {
+            return Err(LinuxBundleError::InvalidManifest(
+                "active version does not name an installed version".to_owned(),
+            ));
+        }
+        Ok(Some(version))
+    }
+
     /// Copies only a verified bundle to a version-specific staging location.
     /// It never changes the active pointer, so process interruption after this
     /// method leaves the prior version active.
@@ -440,6 +456,28 @@ impl LinuxBundleDeployment {
             fs::remove_dir_all(&staging_directory)?;
         }
         self.replace_active_version(&manifest.version)
+    }
+
+    /// Restore a previously validated active version while the caller holds
+    /// the installer lifecycle lease.
+    pub(crate) fn restore_active_version(&self, version: &str) -> Result<(), LinuxBundleError> {
+        let version_directory = safe_version_directory(version)?;
+        if !self.root.join("versions").join(version_directory).is_dir() {
+            return Err(LinuxBundleError::InvalidManifest(
+                "rollback version is not installed".to_owned(),
+            ));
+        }
+        self.replace_active_version(version)
+    }
+
+    /// Remove an active pointer after a failed first install. The candidate
+    /// version directory remains inspectable; user data is never removed.
+    pub(crate) fn clear_active_version(&self) -> Result<(), LinuxBundleError> {
+        match fs::remove_file(self.root.join(ACTIVE_VERSION_FILE)) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error.into()),
+        }
     }
 
     fn replace_active_version(&self, version: &str) -> Result<(), LinuxBundleError> {

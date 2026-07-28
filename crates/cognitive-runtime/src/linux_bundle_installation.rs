@@ -17,12 +17,17 @@ use std::path::{Path, PathBuf};
 const INSTALLER_LEASE_FILE_PREFIX: &str = ".cognitiveos-personal-installer-lease-v1-";
 const INSTALLER_LEASE_FILE_SUFFIX: &str = ".lock";
 
-struct InstallerLifecycleLease {
+/// Crate-private guard for every mutable installer lifecycle transaction.
+///
+/// The lock stays intentionally hidden from public callers: service-aware
+/// orchestration can share this OS-backed lease without exposing lock paths,
+/// owner data, or a second locking model.
+pub(crate) struct InstallerLifecycleLease {
     lock_file: File,
 }
 
 impl InstallerLifecycleLease {
-    fn acquire(deployment_root: &Path) -> Result<Self, LinuxBundleError> {
+    pub(crate) fn acquire(deployment_root: &Path) -> Result<Self, LinuxBundleError> {
         let lock_path = installer_lease_path(deployment_root)?;
         let lock_file = OpenOptions::new()
             .create(true)

@@ -1,0 +1,17 @@
+# Source-controlled Personal user-service template. This checked-in template
+# is intentionally unrendered and must be rejected before installation.
+[Unit]
+Description=CognitiveOS Personal daemon
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=@COGNITIVEOS_RELEASE_ROOT@/bin/kernel-server --personal --bind 127.0.0.1:@COGNITIVEOS_PERSONAL_HEALTH_PORT@ --runtime-root @COGNITIVEOS_RUNTIME_ROOT@
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=15
+TimeoutStopSec=15
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

@@ -1,5 +1,21 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 service-lifecycle slice (2026-07-28):** P1-T08 remains
+> `in-progress` with `development_track: experimental-local-only`.
+> Implementation commit `26bbf12` adds a separate service-aware transaction
+> that retains the existing per-root OS lifecycle
+> lease across verified staging, candidate controller calls, bounded liveness,
+> pointer activation/final confirmation, and deterministic compensation. The
+> checked-in systemd user-unit is intentionally unrendered; the production
+> controller rejects that template and the absent safe extracted daemon layout
+> before any systemd action. `/personal/health` is now a small stable liveness
+> response and is explicitly not readiness. Focused fake-controller/loopback
+> tests passed **6/6** locally in `windows_wsl2_linux_guest`; this is neither
+> real Linux-native systemd evidence nor B01, Gate, Profile, containment, or
+> release evidence. Safe archive extraction/runnable layout, real unit
+> rendering, production service campaign, uninstall, signing/release material,
+> and all release claims remain absent.
+
 > **P1-T08 inspectable bootstrap/download slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. The new
 > `deploy/linux/install.sh` is an inspectable, unrendered source template that
