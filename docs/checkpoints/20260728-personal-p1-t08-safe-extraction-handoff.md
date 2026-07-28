@@ -3,7 +3,7 @@
 **Date:** 2026-07-28
 **Base:** `main@74dac13df0bc84af1336ed550673e7e2e7077d56`
 **Branch:** `lane/personal-p1-t08-safe-extraction`
-**Implementation commit:** pending
+**Implementation commit:** `1b5462f`
 **Pull request:** pending
 
 ## Delivered boundary
