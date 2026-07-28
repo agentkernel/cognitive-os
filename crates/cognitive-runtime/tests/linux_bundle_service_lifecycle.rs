@@ -125,6 +125,59 @@ fn rendered_unit_publication_uses_fixed_names_and_never_leaves_a_partial_file() 
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn fixture_controller_publishes_candidate_then_reloads_before_fixed_start() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let fixture_root = tempfile::tempdir().unwrap();
+    let deployment_root = fixture_root.path().join("deployment");
+    let candidate_executable = deployment_root.join("staged/2.0.0/bin/kernel-server");
+    fs::create_dir_all(candidate_executable.parent().unwrap()).unwrap();
+    fs::write(&candidate_executable, b"fixture executable").unwrap();
+    let action_log = fixture_root.path().join("systemctl-actions.log");
+    let fake_systemctl = fixture_root.path().join("fake-systemctl");
+    fs::write(
+        &fake_systemctl,
+        format!(
+            "#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{}'\n",
+            action_log.display()
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&fake_systemctl, fs::Permissions::from_mode(0o700)).unwrap();
+
+    let mut controller = SystemdUserServiceController::new_fixture(
+        &deployment_root,
+        fixture_root.path().join("units"),
+        &fake_systemctl,
+        "127.0.0.1:48181".parse().unwrap(),
+    )
+    .unwrap();
+
+    controller
+        .start_candidate("2.0.0", candidate_executable.parent().unwrap())
+        .unwrap();
+    let candidate_unit = fs::read_to_string(
+        fixture_root
+            .path()
+            .join("units/cognitiveos-personal-candidate.service"),
+    )
+    .unwrap();
+    assert!(candidate_unit.contains("staged/2.0.0/bin/kernel-server"));
+    assert!(candidate_unit.contains("--bind 127.0.0.1:48182"));
+    assert!(
+        !fixture_root
+            .path()
+            .join("units/cognitiveos-personal.service")
+            .exists()
+    );
+    assert_eq!(
+        fs::read_to_string(action_log).unwrap(),
+        "--user --no-ask-password --no-pager daemon-reload\n--user --no-ask-password --no-pager start cognitiveos-personal-candidate.service\n"
+    );
+}
+
 #[test]
 fn bounded_loopback_health_requires_the_exact_liveness_contract() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

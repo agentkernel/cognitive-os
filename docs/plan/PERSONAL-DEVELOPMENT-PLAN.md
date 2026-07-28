@@ -158,6 +158,16 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > Linux-native campaign, B01, Gate, Profile, containment, and release evidence
 > remain absent. P1-T08 remains `in-progress`; P1-T09 remains `not-started`. |
 
+> **2026-07-28 P1-T08 fake-systemctl controller fixture:** ADR-0033 fixes the
+> private/injected unit-root controller boundary and the fixed daemon-reload,
+> candidate start/stop, and canonical active restart actions. The focused Unix
+> fake harness verifies candidate unit publication then daemon-reload then
+> fixed candidate start, with candidate work never publishing the canonical
+> active unit. Focused lifecycle tests **10/10 passed** in
+> `windows_wsl2_linux_guest`. This is implementation-fixture evidence only;
+> pointer/unit/service compensation fault injection, Linux-native systemd,
+> B01, Gate, Profile, containment, and release evidence remain absent.
+
 > **2026-07-28 P1-T08 safe-extraction slice:** ADR-0031 specifies the
 > implementation-local `tar.gz` extraction policy: a verified artifact is
 > re-hashed and extracted only in the lease-held private staging area; the
