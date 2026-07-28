@@ -12,7 +12,9 @@
 > response and is explicitly not readiness. Focused fake-controller/loopback
 > tests passed **6/6** locally in `windows_wsl2_linux_guest`; this is neither
 > real Linux-native systemd evidence nor B01, Gate, Profile, containment, or
-> release evidence. Safe archive extraction/runnable layout, real unit
+> release evidence. PR [#112](https://github.com/agentkernel/cognitive-os/pull/112)
+> merged as `main@3fc6faf` after both push and pull-request Ubuntu and
+> Windows/MSVC CI matrices passed. Safe archive extraction/runnable layout, real unit
 > rendering, production service campaign, uninstall, signing/release material,
 > and all release claims remain absent.
 

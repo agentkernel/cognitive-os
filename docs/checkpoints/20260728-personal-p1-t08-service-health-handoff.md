@@ -4,7 +4,8 @@
 **Base:** `main@7eae31be8e7125620db7bf67488d5bdf0c430f01`
 **Branch:** `lane/personal-p1-t08-service-health`
 **Implementation commit:** `26bbf12`
-**Pull request / merge commit:** pending
+**Pull request:** [#112](https://github.com/agentkernel/cognitive-os/pull/112)
+**Merge commit:** `3fc6faff44ec6a739852cb74c4ca3c55dac87fd7`
 
 ## Delivered boundary
 
@@ -70,8 +71,11 @@ pnpm run check:consistency
 ```
 
 All local Linux commands above ran in a Windows WSL2 guest. They are not
-Linux-native systemd evidence. Supported Ubuntu and Windows/MSVC CI, PR, and
-post-merge evidence are pending at this checkpoint.
+Linux-native systemd evidence. PR #112 merged after both push and pull-request
+CI workflows passed their supported Ubuntu and Windows/MSVC matrices:
+`30359906515` and `30359909728`. That supported-matrix build/test evidence
+does not create Linux-native systemd, B01, Gate, Profile, containment, or
+release evidence.
 
 ## Remaining gaps and next safe atomic action
 
