@@ -136,10 +136,7 @@ fn first_install_failure_clears_pointer_without_inventing_a_rollback_target() {
         Err(LinuxBundleServiceError::CandidateStartFailed)
     ));
     assert!(!deployment_root.join("active-version").exists());
-    assert_eq!(
-        controller.actions,
-        ["start-candidate:2.0.0", "stop-candidate:2.0.0"]
-    );
+    assert_eq!(controller.actions, ["start-candidate:2.0.0"]);
 }
 
 #[test]

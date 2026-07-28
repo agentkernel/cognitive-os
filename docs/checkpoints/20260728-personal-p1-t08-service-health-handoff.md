@@ -17,9 +17,9 @@ both succeed.
 
 The narrow controller interface receives a checked version and candidate path,
 not a manifest, keyring, artifact bytes, secret, user data, or free-form
-command. Candidate start, health, activation, pointer confirmation, or final
-service confirmation failure stops the candidate and restores the previous
-pointer/service. First-install failure clears the pointer. A failed stop,
+command. A failure after candidate start stops the candidate and restores the
+previous pointer/service; a fail-closed start preflight does not stop the
+canonical active unit. First-install failure clears the pointer. A failed stop,
 pointer restore, restart, or confirmation is reported as distinct
 `rollback incomplete`; it never yields a receipt. Staging and user data remain
 inspectable.

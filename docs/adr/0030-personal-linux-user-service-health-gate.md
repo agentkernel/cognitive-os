@@ -49,12 +49,13 @@ daemon liveness probe, or compensation after an active-pointer change.
    `/personal/readiness`, and `/personal/doctor` are not activation predicates.
 6. The fixed transaction is offline verify -> lease -> stage -> candidate
    start -> bounded candidate liveness -> atomic pointer activation -> pointer
-   and active-service confirmation -> non-secret receipt. On any candidate
-   start, health, activation, pointer, or final-service failure: stop the
-   candidate, restore the prior complete pointer and restart/confirm the prior
-   service; on first install remove the pointer rather than inventing a prior
-   target. If any compensation action fails, return `rollback incomplete` and
-   never a success receipt. Staging and user data remain inspectable.
+   and active-service confirmation -> non-secret receipt. A failure after a
+   candidate has started stops that candidate, restores the prior complete
+   pointer, and restarts/confirms the prior service. A fail-closed candidate
+   start preflight does not stop the canonical active unit. On first install,
+   remove the pointer rather than inventing a prior target. If any required
+   compensation action fails, return `rollback incomplete` and never a success
+   receipt. Staging and user data remain inspectable.
 
 ## Current limitation and evidence boundary
 

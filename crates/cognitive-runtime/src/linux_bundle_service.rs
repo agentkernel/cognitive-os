@@ -109,6 +109,7 @@ pub fn install_linux_bundle_service(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
+            false,
             service_controller,
             LinuxBundleServiceError::CandidateStartFailed,
         );
@@ -121,6 +122,7 @@ pub fn install_linux_bundle_service(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
+            true,
             service_controller,
             LinuxBundleServiceError::CandidateHealthFailed,
         );
@@ -130,6 +132,7 @@ pub fn install_linux_bundle_service(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
+            true,
             service_controller,
             LinuxBundleServiceError::Installation(
                 LinuxBundleError::ActiveVersionConfirmationFailed,
@@ -144,6 +147,7 @@ pub fn install_linux_bundle_service(
             &deployment,
             previous_active_version.as_deref(),
             &target_version,
+            true,
             service_controller,
             LinuxBundleServiceError::FinalServiceConfirmationFailed,
         );
@@ -176,10 +180,14 @@ fn compensate_failure(
     deployment: &LinuxBundleDeployment,
     previous_active_version: Option<&str>,
     target_version: &str,
+    candidate_started: bool,
     service_controller: &mut impl LinuxBundleServiceController,
     original_error: LinuxBundleServiceError,
 ) -> Result<LinuxBundleServiceReceipt, LinuxBundleServiceError> {
-    let candidate_stopped = service_controller.stop_candidate(target_version).is_ok();
+    // A fail-closed start preflight has not touched a unit. Stopping the
+    // canonical unit in that case could interrupt the still-healthy release.
+    let candidate_stopped =
+        !candidate_started || service_controller.stop_candidate(target_version).is_ok();
     let rollback_succeeded = match previous_active_version {
         Some(previous_version) => {
             deployment.restore_active_version(previous_version).is_ok()
