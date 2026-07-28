@@ -92,7 +92,16 @@ installation.
   release claim.
 - Production key approval/ceremony and real release evidence remain P7-T01.
 
-## Current worktree state
+## Post-handoff merge status
+
+PR [#108](https://github.com/agentkernel/cognitive-os/pull/108) merged as
+`main@afa1d5d` on 2026-07-28 after both push and pull-request
+Ubuntu/Windows-MSVC CI matrices passed. The implementation commit is
+`5e97b6a`. This changes the batch from an uncommitted handoff snapshot to a
+merged implementation checkpoint; it does not change P1-T08's `in-progress`
+status or any non-claim in this document.
+
+## Worktree state at handoff creation
 
 Changes are intentionally **uncommitted** in this handoff:
 
