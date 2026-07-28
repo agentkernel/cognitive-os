@@ -20,7 +20,9 @@
 > merged as `main@d57efc1` after both push and pull-request CI matrices passed
 > on Ubuntu and Windows/MSVC. That supported-matrix evidence remains distinct
 > from Linux-native systemd, B01, Gate, Profile, containment, and release
-> evidence.
+> evidence. The merge-evidence documentation commit `main@6ee68a2` also
+> passed post-merge Ubuntu and Windows/MSVC CI run
+> [30367954074](https://github.com/agentkernel/cognitive-os/actions/runs/30367954074).
 
 > **P1-T08 service-lifecycle slice (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`.
