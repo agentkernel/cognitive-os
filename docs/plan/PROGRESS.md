@@ -1,5 +1,23 @@
 # PROGRESS — 单页进度仪表
 
+> **Fail-closed Pi launch preparation slice (2026-07-30):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-started`. `cognitive pi launch` now admits only a daemon-owned,
+> numeric loopback endpoint document and an authenticated ready Personal doctor
+> projection before it reads the fixed non-secret `pi.json`. It requires all
+> first-conversation components (including native SecretStore, Provider and
+> digest-matched selected model) to be ready; corrupt/missing endpoint or
+> configuration, relative/missing Pi paths, readiness failures, and exact Pi
+> `0.81.1` version drift reject launch. The spawned client receives only the
+> confirmed `--extension <absolute-path>` argument and a cleared,
+> OS-execution allowlist environment; it receives no Provider or secret
+> material. Focused `windows_wsl2_linux_guest` admin-cli Personal units
+> **15/15**, Pi/readiness **1/1**, Personal readiness **1/1**, Provider-proxy
+> **2/2**, and cognitive CLI **5/5** passed; strict changed-package Clippy
+> passed. This is implementation and local-test evidence only: it does not
+> demonstrate a real Pi Extension load, Provider conversation, native Secret
+> Service, B01, Gate, release, or Profile claim.
+
 > **Non-secret Pi configuration slice (2026-07-30):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
 > remains `not-started`. Trusted public upstream source at the reviewed Pi

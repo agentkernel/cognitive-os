@@ -1,7 +1,7 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
 > **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 及以后尚未开始）**
-> **最后更新：2026-07-29**
+> **最后更新：2026-07-30**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -255,7 +255,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | dev smoke 与 usability campaign 先行但均 non-claim；正式 Gate 仍需至少 20 次 clean Linux VM、redacted evidence 完整、除 API Key 与模型选择外无必选交互（ADR-0026/0034） | not-started | 2026-07-29 的前置实现批已提供共享 Rustls Provider transport、`cognitive init` 的 exact-catalog discovery 与 `selected-model.json` 原子持久化/失败清理。后续 readiness/XDG slice 将 Provider `ready` 收紧为 provider snapshot digest 与有效 chat-capable `selected-model.json` digest 一致；selected-model 缺失、损坏或 drift 均 fail closed。`cognitive daemon start` 在非 hermetic 启动时不再传递 `--runtime-root`，并默认 canonical `127.0.0.1:48181`，从而与 init/Pi 的真实 XDG layout 对齐；显式 root 仅保留给测试。2026-07-30 已从 pinned upstream commit 确认 Pi `--extension` / `-e <path>` 语法；`cognitive pi configure` 原子写入既有非秘密 `pi.json`，拒绝相对路径及 Provider secret flags，且不读取 Provider config、SecretRef、SecretStore、SQLite 或 authority state。WSL focused admin Personal unit 9/9 已执行。这些均仅为 implementation/local-test evidence：尚未提供 Pi launch、真实 Pi Extension load、deterministic binary Provider fixture、真实首次对话、native Secret Service、dev smoke、usability campaign 或 clean-VM B01，故 P1-T09 状态保持 `not-started`。 |
+| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | dev smoke 与 usability campaign 先行但均 non-claim；正式 Gate 仍需至少 20 次 clean Linux VM、redacted evidence 完整、除 API Key 与模型选择外无必选交互（ADR-0026/0034） | not-started | 2026-07-29 的前置实现批已提供共享 Rustls Provider transport、`cognitive init` 的 exact-catalog discovery 与 `selected-model.json` 原子持久化/失败清理。后续 readiness/XDG slice 将 Provider `ready` 收紧为 provider snapshot digest 与有效 chat-capable `selected-model.json` digest 一致；selected-model 缺失、损坏或 drift 均 fail closed。`cognitive daemon start` 在非 hermetic 启动时不再传递 `--runtime-root`，并默认 canonical `127.0.0.1:48181`，从而与 init/Pi 的真实 XDG layout 对齐；显式 root 仅保留给测试。2026-07-30 已从 pinned upstream commit 确认 Pi `--extension` / `-e <path>` 语法；`cognitive pi configure` 原子写入既有非秘密 `pi.json`，拒绝相对路径及 Provider secret flags，且不读取 Provider config、SecretRef、SecretStore、SQLite 或 authority state。新增 `cognitive pi launch` 只接受 daemon-owned numeric loopback endpoint、authenticated ready doctor projection 与固定 non-secret `pi.json`；它以 exact `0.81.1` probe、`--extension <absolute-path>` 和清空后的 OS allowlist environment fail closed，绝不传递 Provider/secret material。WSL focused admin Personal unit 15/15、Pi/readiness 1/1、Personal readiness 1/1、Provider-proxy 2/2 及 cognitive CLI 5/5 已执行。这些均仅为 implementation/local-test evidence：尚未提供真实 Pi Extension load、deterministic binary Provider fixture、真实首次对话、native Secret Service、dev smoke、usability campaign 或 clean-VM B01，故 P1-T09 状态保持 `not-started`。 |
 
 ### Phase 2 - 单 Agent 任务闭环
 

@@ -21,7 +21,7 @@ use serde_json::Value;
 
 pub use init::run_init;
 pub use layout::{LayoutRoots, resolve_layout_roots};
-pub use pi::PiConfigureOptions;
+pub use pi::{PiConfigureOptions, PiLaunchOptions};
 
 /// Top-level `cognitive` verb.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -66,6 +66,7 @@ pub enum DaemonCommand {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PiCommand {
     Configure(PiConfigureOptions),
+    Launch(PiLaunchOptions),
 }
 
 /// Options for `cognitive daemon start`.
@@ -121,15 +122,18 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
         }
         "pi" => {
             let Some((subcommand, pi_rest)) = rest.split_first() else {
-                return Err("pi requires subcommand configure".to_owned());
+                return Err("pi requires subcommand configure|launch".to_owned());
             };
             let flags = parse_flags(pi_rest)?;
             match subcommand.as_str() {
                 "configure" => Ok(CognitiveCommand::Pi(PiCommand::Configure(
                     parse_pi_configure_options(&flags)?,
                 ))),
+                "launch" => Ok(CognitiveCommand::Pi(PiCommand::Launch(
+                    parse_pi_launch_options(&flags)?,
+                ))),
                 other => Err(format!(
-                    "unknown pi subcommand `{other}` (expected configure)"
+                    "unknown pi subcommand `{other}` (expected configure|launch)"
                 )),
             }
         }
@@ -159,6 +163,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             }
         }
         CognitiveCommand::Pi(PiCommand::Configure(options)) => match pi::configure(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Pi(PiCommand::Launch(options)) => match pi::launch(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
                 EXIT_SUCCESS
@@ -264,6 +275,13 @@ fn parse_pi_configure_options(
     })
 }
 
+fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchOptions, String> {
+    reject_unexpected_flags(flags, &["runtime-root"])?;
+    Ok(PiLaunchOptions {
+        layout_roots: LayoutRoots::from_flags(flags)?,
+    })
+}
+
 fn required_path_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<PathBuf, String> {
     flags
         .get(name)
@@ -363,10 +381,12 @@ USAGE:
   cognitive daemon stop   [--runtime-root <dir>]
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
+  cognitive pi launch [--runtime-root <dir>]
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
   - Pi configuration writes only non-secret executable and Extension paths
+  - Pi launch requires daemon-owned ready state and passes only --extension
   - never advances Task/Effect/Verification authority state
   - admin-cli management verbs remain available as the emergency path
   - --allow-ephemeral-secret-backend is for hermetic tests only
@@ -430,6 +450,35 @@ mod tests {
             "/tmp/key".to_owned(),
         ])
         .expect_err("Pi configuration must reject Provider secret flags");
+
+        assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn pi_launch_accepts_only_the_hermetic_runtime_root_flag() {
+        let command = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "launch".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+        ])
+        .expect("parse constrained Pi launch command");
+        assert_eq!(
+            command,
+            CognitiveCommand::Pi(PiCommand::Launch(PiLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+            }))
+        );
+
+        let rejected = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "launch".to_owned(),
+            "--api-key-file".to_owned(),
+            "/tmp/key".to_owned(),
+        ])
+        .expect_err("Pi launch must reject Provider secret flags");
 
         assert!(rejected.contains("not accepted"), "{rejected}");
     }
