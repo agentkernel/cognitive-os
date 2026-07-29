@@ -383,7 +383,7 @@ impl LinuxBundleDeployment {
             return Ok(None);
         };
         let version_directory = safe_version_directory(&version)?;
-        if !self.root.join("versions").join(version_directory).is_dir() {
+        if !is_real_directory(&self.root.join("versions").join(version_directory))? {
             return Err(LinuxBundleError::InvalidManifest(
                 "active version does not name an installed version".to_owned(),
             ));
@@ -458,6 +458,18 @@ impl LinuxBundleDeployment {
         &self,
         verified_bundle: &VerifiedLinuxBundle,
     ) -> Result<(), LinuxBundleError> {
+        self.publish_staged_bundle(verified_bundle)?;
+        self.activate_published_version(&verified_bundle.manifest().version)
+    }
+
+    /// Publish verified executable bytes as an immutable version without
+    /// changing the active pointer. The single-service installer uses this
+    /// boundary to render and health-check the canonical service before the
+    /// new version becomes the committed active selection.
+    pub(crate) fn publish_staged_bundle(
+        &self,
+        verified_bundle: &VerifiedLinuxBundle,
+    ) -> Result<PathBuf, LinuxBundleError> {
         let manifest = verified_bundle.manifest();
         let version_directory = safe_version_directory(&manifest.version)?;
         let staging_directory = self.root.join("staged").join(version_directory);
@@ -468,19 +480,44 @@ impl LinuxBundleDeployment {
         }
 
         let version_directory_path = self.root.join("versions").join(version_directory);
-        if !version_directory_path.exists() {
-            fs::rename(&staging_directory, &version_directory_path)?;
-        } else {
-            fs::remove_dir_all(&staging_directory)?;
+        match fs::symlink_metadata(&version_directory_path) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                fs::rename(&staging_directory, &version_directory_path)?;
+            }
+            Ok(metadata) if metadata.file_type().is_dir() => {
+                if !version_directories_match(&staging_directory, &version_directory_path)? {
+                    return Err(LinuxBundleError::InvalidManifest(
+                        "published version differs from the verified candidate".to_owned(),
+                    ));
+                }
+                fs::remove_dir_all(&staging_directory)?;
+            }
+            Ok(_) => {
+                return Err(LinuxBundleError::InvalidManifest(
+                    "published version is not a real directory".to_owned(),
+                ));
+            }
+            Err(error) => return Err(error.into()),
         }
-        self.replace_active_version(&manifest.version)
+        Ok(version_directory_path)
+    }
+
+    /// Atomically select an already-published immutable version.
+    pub(crate) fn activate_published_version(&self, version: &str) -> Result<(), LinuxBundleError> {
+        let version_directory = safe_version_directory(version)?;
+        if !is_real_directory(&self.root.join("versions").join(version_directory))? {
+            return Err(LinuxBundleError::InvalidManifest(
+                "active version is not published".to_owned(),
+            ));
+        }
+        self.replace_active_version(version)
     }
 
     /// Restore a previously validated active version while the caller holds
     /// the installer lifecycle lease.
     pub(crate) fn restore_active_version(&self, version: &str) -> Result<(), LinuxBundleError> {
         let version_directory = safe_version_directory(version)?;
-        if !self.root.join("versions").join(version_directory).is_dir() {
+        if !is_real_directory(&self.root.join("versions").join(version_directory))? {
             return Err(LinuxBundleError::InvalidManifest(
                 "rollback version is not installed".to_owned(),
             ));
@@ -651,6 +688,27 @@ fn validate_extracted_layout(staging_directory: &Path) -> Result<(), LinuxBundle
         return Err(LinuxBundleError::UnsafeArchive);
     }
     Ok(())
+}
+
+fn version_directories_match(
+    staged_directory: &Path,
+    published_directory: &Path,
+) -> Result<bool, LinuxBundleError> {
+    validate_extracted_layout(staged_directory)?;
+    validate_extracted_layout(published_directory)?;
+    let staged_executable = staged_directory.join(REQUIRED_EXECUTABLE_PATH);
+    let published_executable = published_directory.join(REQUIRED_EXECUTABLE_PATH);
+    let mut staged_file = open_regular_file(&staged_executable)?;
+    let mut published_file = open_regular_file(&published_executable)?;
+    Ok(sha256_digest_reader(&mut staged_file)? == sha256_digest_reader(&mut published_file)?)
+}
+
+fn is_real_directory(path: &Path) -> Result<bool, LinuxBundleError> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) => Ok(metadata.file_type().is_dir() && !metadata.file_type().is_symlink()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error.into()),
+    }
 }
 
 #[cfg(unix)]

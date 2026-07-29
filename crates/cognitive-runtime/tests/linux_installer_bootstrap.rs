@@ -24,7 +24,7 @@ fn production_template_contains_only_inspected_fail_closed_bootstrap_primitives(
         "curl --disable",
         "mktemp -d",
         "trap cleanup_temporary_directory EXIT",
-        "run_local_verifier",
+        "run_local_installer",
         "@COGNITIVEOS_RELEASE_VERSION@",
     ] {
         assert!(
@@ -76,10 +76,10 @@ mod unix {
         rendered_installer: PathBuf,
         fake_curl_directory: PathBuf,
         curl_log: PathBuf,
-        verifier_log: PathBuf,
+        installer_log: PathBuf,
         temporary_base: PathBuf,
         public_key: String,
-        verifier_digest: String,
+        installer_digest: String,
     }
 
     impl BootstrapFixture {
@@ -96,24 +96,24 @@ mod unix {
             let public_key = URL_SAFE_NO_PAD.encode(signing_key.verifying_key().to_bytes());
             write_signed_bundle(&release_directory, &signing_key);
 
-            let verifier_wrapper = release_directory.join("cognitiveos-linux-bundle-verifier");
+            let installer_wrapper = release_directory.join("cognitiveos-linux-bundle-installer");
             fs::write(
-                &verifier_wrapper,
+                &installer_wrapper,
                 "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$COGNITIVEOS_TEST_VERIFIER_LOG\"\nexec \"$COGNITIVEOS_TEST_REAL_VERIFIER\" \"$@\"\n",
             )
             .unwrap();
-            fs::set_permissions(&verifier_wrapper, fs::Permissions::from_mode(0o700)).unwrap();
-            let verifier_digest = sha256_file(&verifier_wrapper);
+            fs::set_permissions(&installer_wrapper, fs::Permissions::from_mode(0o700)).unwrap();
+            let installer_digest = sha256_file(&installer_wrapper);
 
             let rendered_installer = temporary_directory.path().join("install.sh");
             let template =
                 fs::read_to_string(repository_root().join("deploy/linux/install.sh")).unwrap();
-            let rendered = render_template(&template, &public_key, &verifier_digest);
+            let rendered = render_template(&template, &public_key, &installer_digest);
             fs::write(&rendered_installer, rendered).unwrap();
             fs::set_permissions(&rendered_installer, fs::Permissions::from_mode(0o700)).unwrap();
 
             let curl_log = temporary_directory.path().join("curl.log");
-            let verifier_log = temporary_directory.path().join("verifier.log");
+            let installer_log = temporary_directory.path().join("installer.log");
             write_fake_curl(&fake_curl_directory.join("curl"));
 
             Self {
@@ -122,10 +122,10 @@ mod unix {
                 rendered_installer,
                 fake_curl_directory,
                 curl_log,
-                verifier_log,
+                installer_log,
                 temporary_base,
                 public_key,
-                verifier_digest,
+                installer_digest,
             }
         }
 
@@ -142,7 +142,7 @@ mod unix {
                     &self.release_directory,
                 )
                 .env("COGNITIVEOS_TEST_CURL_LOG", &self.curl_log)
-                .env("COGNITIVEOS_TEST_VERIFIER_LOG", &self.verifier_log)
+                .env("COGNITIVEOS_TEST_VERIFIER_LOG", &self.installer_log)
                 .env(
                     "COGNITIVEOS_TEST_REAL_VERIFIER",
                     env!("CARGO_BIN_EXE_linux_bundle_verifier"),
@@ -162,15 +162,15 @@ mod unix {
     }
 
     #[test]
-    fn rendered_bootstrap_downloads_private_partials_and_calls_the_existing_verifier_once() {
+    fn rendered_bootstrap_downloads_private_partials_and_calls_the_installer_adapter_once() {
         let fixture = BootstrapFixture::new();
         let output = fixture.run("success");
 
         assert!(output.status.success(), "stderr: {}", stderr(&output));
-        let verifier_invocations = fs::read_to_string(&fixture.verifier_log).unwrap();
-        assert_eq!(verifier_invocations.lines().count(), 1);
-        assert!(verifier_invocations.contains("--bundle-directory"));
-        assert!(verifier_invocations.contains("cognitiveos-bootstrap."));
+        let installer_invocations = fs::read_to_string(&fixture.installer_log).unwrap();
+        assert_eq!(installer_invocations.lines().count(), 1);
+        assert!(installer_invocations.contains("--bundle-directory"));
+        assert!(installer_invocations.contains("cognitiveos-bootstrap."));
         assert!(stdout(&output).contains("verified-linux-bundle version=1.2.3"));
         assert!(!stdout(&output).contains("p1t08-bootstrap-artifact"));
         assert!(fixture.bootstrap_directories().is_empty());
@@ -200,17 +200,17 @@ mod unix {
     }
 
     #[test]
-    fn failed_artifact_download_never_executes_verifier_and_cleans_private_downloads() {
+    fn failed_artifact_download_never_executes_installer_and_cleans_private_downloads() {
         let fixture = BootstrapFixture::new();
         let output = fixture.run("artifact-failure");
 
         assert!(!output.status.success());
-        assert!(!fixture.verifier_log.exists());
+        assert!(!fixture.installer_log.exists());
         assert!(fixture.bootstrap_directories().is_empty());
     }
 
     #[test]
-    fn verifier_rejection_preserves_external_deployment_state_and_cleans_downloads() {
+    fn installer_rejection_preserves_external_deployment_state_and_cleans_downloads() {
         let fixture = BootstrapFixture::new();
         fs::write(
             fixture.release_directory.join(ARTIFACT_FILENAME),
@@ -237,7 +237,7 @@ mod unix {
     }
 
     #[test]
-    fn verifier_digest_mismatch_prevents_execution() {
+    fn installer_digest_mismatch_prevents_execution() {
         let fixture = BootstrapFixture::new();
         let rendered = render_template(
             &fs::read_to_string(repository_root().join("deploy/linux/install.sh")).unwrap(),
@@ -249,11 +249,11 @@ mod unix {
         let output = fixture.run("success");
 
         assert!(!output.status.success());
-        assert!(stderr(&output).contains("bootstrap verifier digest does not match"));
-        assert!(!fixture.verifier_log.exists());
+        assert!(stderr(&output).contains("bootstrap installer digest does not match"));
+        assert!(!fixture.installer_log.exists());
         assert!(fixture.bootstrap_directories().is_empty());
         assert_ne!(
-            fixture.verifier_digest,
+            fixture.installer_digest,
             "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         );
     }
@@ -312,7 +312,7 @@ mod unix {
         .unwrap();
     }
 
-    fn render_template(template: &str, public_key: &str, verifier_digest: &str) -> String {
+    fn render_template(template: &str, public_key: &str, installer_digest: &str) -> String {
         let replacements = [
             ("@COGNITIVEOS_RELEASE_VERSION@", "1.2.3"),
             (
@@ -323,7 +323,7 @@ mod unix {
                 "@COGNITIVEOS_ALLOWED_REDIRECT_HOST@",
                 "redirect.example.test",
             ),
-            ("@COGNITIVEOS_VERIFIER_SHA256@", verifier_digest),
+            ("@COGNITIVEOS_INSTALLER_SHA256@", installer_digest),
             (
                 "@COGNITIVEOS_TRUSTED_KEYRING_VERSION@",
                 TEST_KEYRING_VERSION,

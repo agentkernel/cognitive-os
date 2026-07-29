@@ -533,7 +533,7 @@ fn verifier_failure_creates_neither_deployment_nor_lease_mutation() {
 }
 
 #[test]
-fn missing_lease_parent_fails_without_creating_deployment_state() {
+fn verified_first_install_creates_a_private_deployment_parent() {
     let fixture = SignedBundleFixture::new("2.0.0");
     let absent_parent = fixture.deployment_root("absent-lease-parent");
     let deployment_root = absent_parent.join("deployment");
@@ -550,10 +550,12 @@ fn missing_lease_parent_fails_without_creating_deployment_state() {
         },
     );
 
-    assert!(matches!(result, Err(LinuxBundleError::Io(_))));
-    assert_eq!(health_calls.get(), 0);
-    assert!(!absent_parent.exists());
-    assert!(installer_lease_files(fixture.bundle_directory()).is_empty());
+    let receipt = result.unwrap();
+    assert_eq!(receipt.resulting_active_version, "2.0.0");
+    assert_eq!(health_calls.get(), 1);
+    assert!(absent_parent.is_dir());
+    assert!(deployment_root.join("versions/2.0.0").is_dir());
+    assert_eq!(installer_lease_files(&absent_parent).len(), 1);
 }
 
 #[test]

@@ -6,10 +6,10 @@ use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use cognitive_runtime::{
     ExpectedPiCompatibility, LinuxBundleManifest, LinuxBundleServiceController,
-    LinuxBundleServiceError, LinuxBundleServiceReceipt, PersonalUserServiceUnitKind,
-    SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus, TrustedKeyring,
-    install_linux_bundle_service, probe_personal_health, render_personal_user_service_unit,
-    write_rendered_personal_user_service_unit,
+    LinuxBundleServiceError, LinuxBundleServiceReceipt, LinuxBundleSingleServiceController,
+    PersonalUserServiceUnitKind, SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus,
+    TrustedKeyring, install_linux_bundle_service, probe_personal_health,
+    render_personal_user_service_unit, write_rendered_personal_user_service_unit,
 };
 use ed25519_dalek::{Signer, SigningKey};
 use flate2::{Compression, write::GzEncoder};
@@ -79,7 +79,7 @@ fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
     assert!(candidate_unit.contains("runtime/candidate"));
     assert!(active_unit.contains("versions/2.0.0/bin/kernel-server"));
     assert!(active_unit.contains("--bind 127.0.0.1:48181"));
-    assert!(active_unit.contains("runtime/active"));
+    assert!(!active_unit.contains("--runtime-root"));
     for unit in [&candidate_unit, &active_unit] {
         assert!(!unit.contains('@'));
         assert!(!unit.contains("sudo"));
@@ -97,6 +97,15 @@ fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
             .is_err()
         );
     }
+
+    let escaped_path = tempfile::tempdir().unwrap().path().join("space % value");
+    let escaped_unit = render_personal_user_service_unit(
+        PersonalUserServiceUnitKind::Active,
+        &escaped_path,
+        "2.0.0",
+    )
+    .unwrap();
+    assert!(escaped_unit.contains("space\\x20%%\\x20value"));
 }
 
 #[test]
@@ -175,6 +184,56 @@ fn fixture_controller_publishes_candidate_then_reloads_before_fixed_start() {
     assert_eq!(
         fs::read_to_string(action_log).unwrap(),
         "--user --no-ask-password --no-pager daemon-reload\n--user --no-ask-password --no-pager start cognitiveos-personal-candidate.service\n"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn fixture_controller_publishes_only_the_canonical_unit_before_fixed_restart() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let fixture_root = tempfile::tempdir().unwrap();
+    let deployment_root = fixture_root.path().join("deployment");
+    let active_executable = deployment_root.join("versions/2.0.0/bin/kernel-server");
+    fs::create_dir_all(active_executable.parent().unwrap()).unwrap();
+    fs::write(&active_executable, b"fixture executable").unwrap();
+    let action_log = fixture_root.path().join("systemctl-actions.log");
+    let fake_systemctl = fixture_root.path().join("fake-systemctl");
+    fs::write(
+        &fake_systemctl,
+        format!(
+            "#!/bin/sh\nprintf '%s\n' \"$*\" >> '{}'\n",
+            action_log.display()
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&fake_systemctl, fs::Permissions::from_mode(0o700)).unwrap();
+
+    let unit_directory = fixture_root.path().join("units");
+    let mut controller = SystemdUserServiceController::new_fixture(
+        &deployment_root,
+        &unit_directory,
+        &fake_systemctl,
+        "127.0.0.1:48181".parse().unwrap(),
+    )
+    .unwrap();
+
+    controller.publish_active_unit("2.0.0").unwrap();
+    controller.restart_active_service().unwrap();
+
+    let active_unit =
+        fs::read_to_string(unit_directory.join("cognitiveos-personal.service")).unwrap();
+    assert!(active_unit.contains("versions/2.0.0/bin/kernel-server"));
+    assert!(active_unit.contains("--bind 127.0.0.1:48181"));
+    assert!(!active_unit.contains("--runtime-root"));
+    assert!(
+        !unit_directory
+            .join("cognitiveos-personal-candidate.service")
+            .exists()
+    );
+    assert_eq!(
+        fs::read_to_string(action_log).unwrap(),
+        "--user --no-ask-password --no-pager daemon-reload\n--user --no-ask-password --no-pager restart cognitiveos-personal.service\n"
     );
 }
 

@@ -8,7 +8,7 @@
 
 use crate::linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, TrustedKeyring,
-    verify_linux_bundle,
+    VerifiedLinuxBundle, verify_linux_bundle,
 };
 use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
@@ -93,6 +93,123 @@ enum InternalFaultPoint {
     ActivationCompletedBeforeReceiptConfirmation,
 }
 
+/// Shared verified, leased and staged transaction prefix for every Personal
+/// Linux installer. Holding this value keeps the OS lifecycle lease alive.
+/// Service-specific orchestration must build on this prefix rather than
+/// repeating verification, lease acquisition, deployment opening or staging.
+pub(crate) struct PreparedLinuxBundleInstallation {
+    _installer_lease: InstallerLifecycleLease,
+    deployment: LinuxBundleDeployment,
+    verified_bundle: VerifiedLinuxBundle,
+    previous_active_version: Option<String>,
+    staged_candidate: PathBuf,
+    trusted_keyring_version: String,
+}
+
+impl PreparedLinuxBundleInstallation {
+    pub(crate) fn prepare(
+        bundle_directory: &Path,
+        deployment_root: &Path,
+        expected_pi_compatibility: &ExpectedPiCompatibility,
+        trusted_keyring: &TrustedKeyring,
+    ) -> Result<Self, LinuxBundleError> {
+        Self::prepare_with_callback(
+            bundle_directory,
+            deployment_root,
+            expected_pi_compatibility,
+            trusted_keyring,
+            |_| Ok(()),
+        )
+    }
+
+    fn prepare_with_callback(
+        bundle_directory: &Path,
+        deployment_root: &Path,
+        expected_pi_compatibility: &ExpectedPiCompatibility,
+        trusted_keyring: &TrustedKeyring,
+        fault_callback: impl Fn(InternalFaultPoint) -> Result<(), LinuxBundleError>,
+    ) -> Result<Self, LinuxBundleError> {
+        let verified_bundle =
+            verify_linux_bundle(bundle_directory, expected_pi_compatibility, trusted_keyring)?;
+        create_deployment_parent_after_verification(deployment_root)?;
+        let installer_lease = InstallerLifecycleLease::acquire(deployment_root)?;
+        fault_callback(InternalFaultPoint::LeaseAcquiredBeforeDeploymentOpen)?;
+
+        let deployment = LinuxBundleDeployment::open(deployment_root)?;
+        fault_callback(InternalFaultPoint::DeploymentOpenedBeforeStage)?;
+        let previous_active_version = deployment.validated_active_version()?;
+        let staged_candidate =
+            deployment.stage_verified_bundle(bundle_directory, &verified_bundle)?;
+        fault_callback(InternalFaultPoint::StageCompletedBeforeHealth)?;
+
+        Ok(Self {
+            _installer_lease: installer_lease,
+            deployment,
+            verified_bundle,
+            previous_active_version,
+            staged_candidate,
+            trusted_keyring_version: trusted_keyring.version().to_owned(),
+        })
+    }
+
+    pub(crate) fn deployment(&self) -> &LinuxBundleDeployment {
+        &self.deployment
+    }
+
+    pub(crate) fn verified_bundle(&self) -> &VerifiedLinuxBundle {
+        &self.verified_bundle
+    }
+
+    pub(crate) fn target_version(&self) -> &str {
+        &self.verified_bundle.manifest().version
+    }
+
+    pub(crate) fn trusted_key_id(&self) -> &str {
+        self.verified_bundle.trusted_key_id()
+    }
+
+    pub(crate) fn trusted_keyring_version(&self) -> &str {
+        &self.trusted_keyring_version
+    }
+
+    pub(crate) fn previous_active_version(&self) -> Option<&str> {
+        self.previous_active_version.as_deref()
+    }
+
+    pub(crate) fn staged_candidate(&self) -> &Path {
+        &self.staged_candidate
+    }
+}
+
+fn create_deployment_parent_after_verification(
+    deployment_root: &Path,
+) -> Result<(), LinuxBundleError> {
+    let deployment_parent = deployment_root.parent().ok_or_else(|| {
+        LinuxBundleError::UnsafePath("deployment root must have a parent".to_owned())
+    })?;
+    fs::create_dir_all(deployment_parent)?;
+    let parent_metadata = fs::symlink_metadata(deployment_parent)?;
+    if !parent_metadata.file_type().is_dir() || parent_metadata.file_type().is_symlink() {
+        return Err(LinuxBundleError::UnsafePath(
+            "deployment parent must be a real directory".to_owned(),
+        ));
+    }
+    set_private_deployment_parent_permissions(deployment_parent)
+}
+
+#[cfg(unix)]
+fn set_private_deployment_parent_permissions(path: &Path) -> Result<(), LinuxBundleError> {
+    use std::os::unix::fs::PermissionsExt;
+
+    fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn set_private_deployment_parent_permissions(_path: &Path) -> Result<(), LinuxBundleError> {
+    Ok(())
+}
+
 #[cfg(feature = "test-fault-injection")]
 fn fault_injection_error(point: InstallFaultPoint) -> LinuxBundleError {
     LinuxBundleError::FaultInjected(match point {
@@ -127,8 +244,9 @@ pub struct LinuxBundleInstallationReceipt {
 /// product-fixed Pi compatibility pin, the product-owned trusted keyring, and
 /// a health check whose duration and resource bounds are enforced by the
 /// caller. The health check is invoked exactly once, and only after staging.
-/// The deployment root may be absent, but its immediate parent must already
-/// exist because the stable lease file is deliberately kept outside the root.
+/// The deployment root and immediate parent may be absent. After complete
+/// offline verification, Rust creates and private-modes the parent before the
+/// stable lease file is opened outside the deployment root.
 ///
 /// The order is fixed and failure-closed:
 ///
@@ -227,41 +345,36 @@ fn install_linux_bundle_internal(
     fault_callback: impl Fn(InternalFaultPoint) -> Result<(), LinuxBundleError>,
     health_check: impl FnOnce(&Path) -> bool,
 ) -> Result<LinuxBundleInstallationReceipt, LinuxBundleError> {
-    let verified_bundle =
-        verify_linux_bundle(bundle_directory, expected_pi_compatibility, trusted_keyring)?;
-
-    // Complete verification precedes both lease creation and deployment-root
-    // mutation. The lease is process-backed and has no TTL or owner metadata.
-    let _installer_lease = InstallerLifecycleLease::acquire(deployment_root)?;
-    fault_callback(InternalFaultPoint::LeaseAcquiredBeforeDeploymentOpen)?;
-
-    let deployment = LinuxBundleDeployment::open(deployment_root)?;
-    fault_callback(InternalFaultPoint::DeploymentOpenedBeforeStage)?;
-    let previous_active_version = deployment.active_version()?;
-    deployment.stage_verified_bundle(bundle_directory, &verified_bundle)?;
-    fault_callback(InternalFaultPoint::StageCompletedBeforeHealth)?;
-
-    let staged_candidate = deployment_root
-        .join("staged")
-        .join(&verified_bundle.manifest().version);
-    if !health_check(&staged_candidate) {
+    let prepared_installation = PreparedLinuxBundleInstallation::prepare_with_callback(
+        bundle_directory,
+        deployment_root,
+        expected_pi_compatibility,
+        trusted_keyring,
+        &fault_callback,
+    )?;
+    if !health_check(prepared_installation.staged_candidate()) {
         return Err(LinuxBundleError::HealthCheckFailed);
     }
     fault_callback(InternalFaultPoint::HealthSucceededBeforeActivation)?;
-    deployment.activate_staged_bundle(&verified_bundle)?;
+    prepared_installation
+        .deployment()
+        .activate_staged_bundle(prepared_installation.verified_bundle())?;
     fault_callback(InternalFaultPoint::ActivationCompletedBeforeReceiptConfirmation)?;
 
-    let installed_version = verified_bundle.manifest().version.clone();
-    let resulting_active_version = deployment
+    let installed_version = prepared_installation.target_version().to_owned();
+    let resulting_active_version = prepared_installation
+        .deployment()
         .active_version()?
         .filter(|active_version| active_version == &installed_version)
         .ok_or(LinuxBundleError::ActiveVersionConfirmationFailed)?;
 
     Ok(LinuxBundleInstallationReceipt {
         installed_version,
-        previous_active_version,
+        previous_active_version: prepared_installation
+            .previous_active_version()
+            .map(str::to_owned),
         resulting_active_version,
-        trusted_key_id: verified_bundle.trusted_key_id().to_owned(),
-        trusted_keyring_version: trusted_keyring.version().to_owned(),
+        trusted_key_id: prepared_installation.trusted_key_id().to_owned(),
+        trusted_keyring_version: prepared_installation.trusted_keyring_version().to_owned(),
     })
 }

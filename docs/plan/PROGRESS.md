@@ -1,5 +1,34 @@
 # PROGRESS — 单页进度仪表
 
+> **P1-T08 MVP single-service installer transaction (2026-07-29):** P1-T08
+> remains `in-progress` with `development_track: experimental-local-only`.
+> The inspected shell now verifies a release-bound Rust installer digest and
+> hands the complete downloaded bundle to `linux-bundle-installer`. The Rust
+> path shares one offline verify → OS lease → private staging prefix, publishes
+> immutable bytes, atomically publishes the fixed canonical user unit, runs
+> fixed `systemctl --user` daemon-reload/restart actions, checks the exact
+> 48181 liveness contract before and after active-pointer publication, and
+> deterministically restores the previous pointer/unit/service or removes the
+> first-install unit without issuing a receipt. Focused tests executed in
+> `windows_wsl2_linux_guest`: **46 passed, 0 failed, 1 ignored child
+> entrypoint**; runtime strict Clippy, formatting, repository consistency, and
+> diff whitespace checks passed. This is implementation and fixture evidence
+> only. Linux-native user-systemd, release artifact/signing, B01, Gate,
+> Profile, containment, uninstall and first-conversation evidence remain
+> `not-run` or not provided.
+
+> **Personal MVP-first route decision (2026-07-29):** ADR-0034 records the
+> owner-approved first production path: one canonical user service,
+> `cognitiveos-personal.service`, on `127.0.0.1:48181`, with bounded downtime
+> during explicit Alpha upgrades. ADR-0032/0033 dual-service fixtures remain
+> valid implementation-fixture evidence and an optional future upgrade design,
+> but no longer block P1-T08/P1-T09. Existing task IDs remain stable;
+> `P7-T08 / GMVP-LINUX` is added as a product-only convergence Gate after B01,
+> P2 and P7-T01..T03. P1-T08 remains `in-progress`, P1-T09 and P7-T08 remain
+> `not-started`, all Personal product Gates remain `not-run`, and Profile
+> `implemented` remains 0. This planning decision provides no single-service,
+> Linux-native, B01, release, containment or Profile evidence.
+
 > **P1-T08 fake-systemctl controller fixture (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0033
 > specifies a private/injected unit-root controller boundary and fixed
@@ -302,7 +331,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **P1-T07 in-progress；P0-T01..T07 / P1-T01..T06 done；无 Profile 声明** | P0-T06 的 Extension fixture 拒绝 project trust、拦截 write/edit/bash、仅设置 session-local status；2026-07-27 在 `wuz@192.168.1.2` 上实际拿到 redacted `extension-load` evidence（`status=executed`，但仍 non-claim）。ADR-0018 临时例外已使 native-store-to-initial-Pi-child 开发路径默认拒绝、显式开启、Linux-only 且 P2 到期；`wuz@192.168.1.2` 已登记为后续 Linux-native `experimental-local-only` SSH 主机。P1-T07 已交付真实 Pi runtime observation 与 daemon-owned Provider proxy；production `reqwest` + Rustls transport 是 HTTPS-only、redirect-free、bounded non-streaming egress，Provider material 只在 daemon 内解析。当前 Pi API mirror 未验证 completion-provider hook，因而尚未接线且任务继续 in-progress；不得用 Pi-side Provider config/secret 规避。focused provider test 本机因 Windows GNU linker exit 121 未运行，CI 仍 required。Personal Gate/B01-B12 仍 `not-run`；G0 已满足于 P0-T06 完成。2026-07-26 计划一致性修订：新增 P7-T07（Windows 安装面与专门 B01-W Gate 归宿，PERS-PR-021）、P2-T08 验收增补 ADR-0018 例外到期核查、`plan.md` 状态行改指台账并修正依赖图/critical path/DEC-P-* 编号；不改变任何 Gate/证据结论。2026-07-26 生产就绪与低摩擦授权批：ADR-0026 落地 DEC-P-20 trust profile（Tier 0/1/2、准入预览唯一默认授权点、预算硬轨、不建审批链），仅增补 not-started 任务验收（P1-T09/P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02，含面向用户 backup/restore），新增 PERS-PR-022/023；不改变任何 Gate/证据结论。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **P1-T08 in-progress；P0-T01..T07 / P1-T01..T07 done；无产品 Gate/Profile 声明** | P1-T07 已交付 daemon-owned Provider proxy 与 Pi completion bridge；P1-T08 已有 verifier、lease、安全解包和 dual-service controller fixture，但 production single-service installer、native systemd、完整 XDG/Provider/Pi 首聊和 B01 均未提供或未执行。ADR-0034 将 single service/48181 定为首个生产路径，新增 P7-T08/GMVP-LINUX；所有 local/WSL/fake/CI 证据继续按其原始范围记账。Personal B01-B12/GMVP-LINUX 仍 `not-run`，Profile implemented 仍为 0。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal task `done` 不代表 product Gate 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 

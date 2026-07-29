@@ -7,6 +7,7 @@
 > **最后对齐：2026-07-26（一致性评审批）。** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
 > **生产就绪与低摩擦授权批（2026-07-26）：** 新增 DEC-P-20 授权交互模型并落地 [ADR-0026](docs/adr/0026-personal-trust-profile-low-friction-authorization.md)（Tier 0/1/2 分层、准入预览为唯一默认授权点、预算硬轨、不建审批链）；P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02 卡增补对应验收 bullet；§14 增 Approval Interactions/Task 指标；§16 R-22 与 §17 企业审批行改引 ADR-0026。
 > **P2 卡扩写批（2026-07-26）：** 依 §11.1 状态纪律，将 P2-T01..P2-T08 压缩卡预先扩写为完整强制字段集：仅补足字段、仓库锚点与既有决策引用（ADR-0026/0018、§12.1/§12.2、§13/§14/§15）；任务范围、依赖、验收语义与 §12 依赖图均不变。documentation-only；本批 §15.2 命令因环境阻断未执行（记 not-run，见当日 handoff），不改变任何任务状态、Gate、证据或 Profile 结论。
+> **MVP-first 对齐（2026-07-29，ADR-0034）：** 保留现有任务 ID，首个生产安装路径改为 single canonical user service/48181；新增 P7-T08 / `GMVP-LINUX`。P7-T01..T03 前移为受治理 Task MVP 后的 Linux 发布可运维链；P3/P4/P5、Windows、Web UI 与 Multi-Agent 不阻塞 scoped Linux MVP。Multi-Agent 改为独立 go/no-go，NO-GO 且默认关闭是合法结果。§2.1 仍是 2026-07-24 审计快照，不用于覆盖正式台账当前状态。
 > **本草案不包含生产代码、规范或数据库 Schema 变更。**
 > **落盘说明：** 正式计划与进度台账已保存于 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`；本文件保留研究结论、详细任务卡和原始审计材料。
 
@@ -1059,6 +1060,15 @@ Pi 不可以：
 - **非声明：** 未执行 B01-W 前不得声称 Windows install parity（ADR-0025）；本卡完成不改变 Profile/Gate 结论。
 - **回滚：** installer 失败原子回滚；不影响已发布 Linux bundle。
 
+### P7-T08 — Public Linux MVP Gate（GMVP-LINUX）
+
+- **目标/价值：** 在不等待 Context、Memory、Agent/Tool 生态、Multi-Agent、Web UI 或 Windows installer 的情况下，发布范围明确的受治理 Linux Personal MVP。
+- **依赖：** P1-T09、P2-T08、P7-T01、P7-T02、P7-T03。
+- **验收：** production-owned signing/trust、可检查 Linux artifact、Linux-native user-systemd、B01、B02/B04/B05/B12、update/rollback/uninstall、backup/restore、doctor/support bundle 均有 executed evidence；open critical risk 为 0 或明确 NO-GO。
+- **声明边界：** release manifest 必须逐项列出包含和排除能力；未执行的 P3-P6、P7-T05/P7-T07 不得被暗示为可用。`GMVP-LINUX` 是 product Gate，不是 REQ、registry Gate 或 Profile。
+- **失败语义：** 任一 trust、native service、B01、Task authority、rollback、secret redaction 或 support evidence 缺失即 NO-GO；CI/WSL/fixture 不能替代。
+- **回滚：** 保持最新可信 non-release artifact；不提升 B01、RC 或 Profile 状态。
+
 ---
 
 # 12. 机器可读依赖图
@@ -1088,8 +1098,8 @@ phases:
     depends_on: [G5_B09_B10]
     gate: G6_B11
   P7:
-    depends_on: [G6_B11]
-    gate: G7_RC
+    depends_on: [G2_B02_B04_B05_B12]
+    gate: GMVP_LINUX_then_G7_RC
 
 tasks:
   P0-T01: { depends_on: [] }
@@ -1144,18 +1154,18 @@ tasks:
   P6-T03: { depends_on: [P6-T02] }
   P6-T04: { depends_on: [P6-T03] }
 
-  P7-T01: { depends_on: [P5-T05, P0-T03] }
-  P7-T02: { depends_on: [P7-T01, P1-T01] }
-  P7-T03: { depends_on: [P7-T02] }
+  P7-T01: { depends_on: [P0-T03, P1-T08, P2-T08] }
+  P7-T02: { depends_on: [P1-T01, P1-T08, P2-T08, P7-T01] }
+  P7-T03: { depends_on: [P1-T05, P2-T08, P7-T02] }
   P7-T04: { depends_on: [P3-T06, P4-T05, P5-T05] }
   P7-T05: { depends_on: [P2-T08, P7-T03] }
-  P7-T06: { depends_on: [P7-T02, P7-T03, P7-T04, P5-T05, P6-T04] }
+  P7-T06: { depends_on: [P7-T08, P7-T04, P5-T05] }
   P7-T07: { depends_on: [P1-T02, P7-T01, P7-T02] }
+  P7-T08: { depends_on: [P1-T09, P2-T08, P7-T01, P7-T02, P7-T03] }
 
-# critical_path 是串行主干与汇聚节点的并集：P6 链是强制段（B11 Gate 必须执行，
-# 即使结论是保持 multi-agent 默认关闭）；P7-T03 是 P7-T05 的前置。
-# P7-T07 不在 critical path 上（不阻塞 Linux RC，ADR-0025）。
-critical_path:
+# MVP critical path 只包含 install-to-conversation、受治理单 Agent 和公开 Linux
+# MVP 汇聚。P3-P6、P7-T05 与 P7-T07 均不阻塞 GMVP-LINUX。
+mvp_critical_path:
   - P0-T01
   - P0-T02
   - P0-T04
@@ -1175,6 +1185,15 @@ critical_path:
   - P2-T06
   - P2-T07
   - P2-T08
+  - P7-T01
+  - P7-T02
+  - P7-T03
+  - P7-T08
+
+# Full RC 在公开 Linux MVP 后汇合已选择的能力列车。Multi-Agent 的明确
+# NO-GO/disabled disposition 不要求 P6-T01..T04 成为强制路径。
+full_rc_critical_path:
+  - P7-T08
   - P3-T01
   - P3-T02
   - P3-T03
@@ -1188,13 +1207,6 @@ critical_path:
   - P5-T01
   - P5-T02
   - P5-T05
-  - P6-T01
-  - P6-T02
-  - P6-T03
-  - P6-T04
-  - P7-T01
-  - P7-T02
-  - P7-T03
   - P7-T04
   - P7-T06
 ```

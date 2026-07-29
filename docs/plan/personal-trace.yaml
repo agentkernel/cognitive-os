@@ -24,6 +24,10 @@ gate_catalog:
   G5: { phase: P5, benchmarks: [B09, B10] }
   G6: { phase: P6, benchmarks: [B11] }
   G7: { phase: P7, benchmarks: [RC] }
+  GMVP-LINUX:
+    phase: P7
+    classification: product-only
+    benchmarks: [B01, B02, B04, B05, B12]
 
 # P0-T01 is an enabling baseline rather than a product requirement delivery.
 enabling_tasks: [P0-T01]
@@ -33,16 +37,16 @@ personal_requirements:
     classification: product-only
     statement: Linux users can verify installation and roll back.
     direct_registry_requirements: []
-    tasks: [P0-T03, P1-T08, P1-T09, P7-T01, P7-T02, P7-T06]
-    gates: [G1, B01, G7, RC]
+    tasks: [P0-T03, P1-T08, P1-T09, P7-T01, P7-T02, P7-T08, P7-T06]
+    gates: [G1, B01, GMVP-LINUX, G7, RC]
     evidence_status: not-run
 
   - id: PERS-PR-002
     classification: product-only
     statement: cognitive init initializes directories, Secret Store, Provider, daemon, and Pi.
     direct_registry_requirements: []
-    tasks: [P0-T05, P0-T06, P0-T07, P1-T01, P1-T02, P1-T03, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09]
-    gates: [G1, B01]
+    tasks: [P0-T05, P0-T06, P0-T07, P1-T01, P1-T02, P1-T03, P1-T04, P1-T05, P1-T06, P1-T07, P1-T08, P1-T09, P7-T08]
+    gates: [G1, B01, GMVP-LINUX]
     evidence_status: not-run
 
   - id: PERS-PR-003
@@ -172,24 +176,24 @@ personal_requirements:
     classification: product-only
     statement: API keys do not appear in configuration, SQLite, Pi, environment, logs, or evidence.
     direct_registry_requirements: []
-    tasks: [P0-T05, P1-T02, P1-T07, P1-T09, P2-T06, P7-T03]
-    gates: [G1, B01, G7, RC]
+    tasks: [P0-T05, P1-T02, P1-T07, P1-T09, P2-T06, P7-T03, P7-T08]
+    gates: [G1, B01, GMVP-LINUX, G7, RC]
     evidence_status: not-run
 
   - id: PERS-PR-019
     classification: product-only
     statement: A failed update restores prior binary, configuration, and database compatibility.
     direct_registry_requirements: []
-    tasks: [P0-T04, P1-T01, P1-T08, P7-T01, P7-T02, P7-T06]
-    gates: [G1, B01, G7, RC]
+    tasks: [P0-T04, P1-T01, P1-T08, P7-T01, P7-T02, P7-T08, P7-T06]
+    gates: [G1, B01, GMVP-LINUX, G7, RC]
     evidence_status: not-run
 
   - id: PERS-PR-020
     classification: product-only
     statement: Enterprise governance stays outside the Personal default critical path.
     direct_registry_requirements: []
-    tasks: [P0-T02, P0-T07, P7-T05, P7-T06]
-    gates: [G0, G7, RC]
+    tasks: [P0-T02, P0-T07, P7-T05, P7-T08, P7-T06]
+    gates: [G0, GMVP-LINUX, G7, RC]
     evidence_status: not-run
 
   # Added 2026-07-26 (plan consistency revision): Windows install surface per ADR-0025.
@@ -214,6 +218,15 @@ personal_requirements:
     classification: product-only
     statement: Users can back up and restore their data excluding secrets with user-facing commands.
     direct_registry_requirements: []
-    tasks: [P7-T02, P7-T06]
-    gates: [G7, RC]
+    tasks: [P7-T02, P7-T08, P7-T06]
+    gates: [GMVP-LINUX, G7, RC]
+    evidence_status: not-run
+
+  # Added 2026-07-29 (ADR-0034 MVP-first release train).
+  - id: PERS-PR-024
+    classification: product-only
+    statement: The public Linux MVP includes only capabilities with executed scoped evidence and does not wait for Memory, ecosystem, Multi-Agent, Web UI, or Windows install parity.
+    direct_registry_requirements: []
+    tasks: [P1-T09, P2-T08, P7-T01, P7-T02, P7-T03, P7-T08]
+    gates: [B01, G2, B02, B04, B05, B12, GMVP-LINUX]
     evidence_status: not-run

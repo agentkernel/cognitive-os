@@ -1,8 +1,8 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
 > **状态：in-progress（P0-T01..T07、P1-T01..T07 已完成；P1-T08 正在推进；P1-T09 及以后尚未开始）**
-> **最后更新：2026-07-28**
-> **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **最后更新：2026-07-29**
+> **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -20,6 +20,16 @@
 > 指向本台账、ADR 候选表改用 DEC-P-* 编号以消除与 `docs/adr/0017-0025` 的编号冲突、
 > 依赖图补 P7-T07 并修正 critical path。本批不改变任何既有任务状态、Gate、证据或
 > Profile 结论。
+
+> **MVP-first 路线修订（2026-07-29，ADR-0034）：** 首个生产安装路径收敛为
+> 一个 canonical user service（`cognitiveos-personal.service`）和一个固定
+> loopback 端口（48181），接受 Alpha 显式升级的有界停机。ADR-0032/0033
+> 的 candidate unit、48182 和双服务 promotion 保留为后续数据触发的升级优化，
+> 不再阻塞 P1-T08/P1-T09。既有任务 ID 不重编号；新增 `P7-T08 / GMVP-LINUX`
+> 作为 P1/B01、P2 与 P7-T01..T03 的公开 Linux MVP 汇合 Gate。Context、Memory、
+> Agent/Tool、Windows 安装面、Web UI 和 Multi-Agent 改为后续独立能力列车；
+> Multi-Agent NO-GO 且默认关闭是合法结果。本修订不改变任何既有任务状态、
+> 已执行证据、规范机器资产或 Profile 结论。
 
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -50,8 +60,8 @@
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 7 | 0 | 0 | 0 | 7 | G7 / RC |
-| **合计** | **52** | **14** | **1** | **0** | **37** | — |
+| Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
+| **合计** | **53** | **14** | **1** | **0** | **38** | — |
 
 ## 2. 产品边界与不变量
 
@@ -62,7 +72,7 @@
 - Task 完成由独立 verifier/acceptance authority 推进；Pi Session 不等于 Task，Pi `agent_end` 不等于完成。
 - Personal 计划不改变既有规范优先级，不得用 `PERS-*` ID 冒充 REQ-ID；合同变化必须走 Lane-CTR 流程。
 - **低摩擦授权（ADR-0026）：** 治理记录（Intent/Effect、audit、verifier、capability）全保留；人机交互分层——Tier 0（只读与任务范围内可逆本地写）静默自动授权、Tier 1（幂等/可对账外部 mutating）首用一次授予并默认记住为 capability lease、Tier 2（不可逆/毁灭性/超预算）始终显式确认。任务准入预览是唯一默认人工授权点，默认路径人工确认 ≤1/task；预算与边界是硬轨，不建审批链；企业审批留在 Deferred Backlog。
-- 首发产品平台为 **Linux x86_64 + Windows x86_64**（ADR-0025）；首个公开可检查安装包仍为 Linux bundle（P1-T08）。Windows 的 credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07；其证据齐备前，任何 install/B01 声明仅覆盖 Linux。Memory、MCP、Multi-Agent、Web UI 按阶段 Gate 进入，不得提前作为主路径实现。
+- 产品目标平台仍为 **Linux x86_64 + Windows x86_64**（ADR-0025）；首个公开 MVP 是 Linux x86_64 single-service bundle（ADR-0034）。Windows 的 credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07；其证据齐备前，任何 install/B01 声明仅覆盖 Linux。Memory、MCP、Multi-Agent、Web UI 与 Windows 安装面均不阻塞 `GMVP-LINUX`。
 
 ## 3. 阶段路线图
 
@@ -74,8 +84,21 @@
 | P3 | Context、Token 与 Loop 效率 | P2 稳定 | B03/B06/B07 通过，指标可采集 | Memory consolidation、多 Agent |
 | P4 | 有 provenance 的 durable Memory | P3 基线冻结 | B08 通过，Embedding 有明确 go/no-go | 自动跨工作区记忆 |
 | P5 | 可审核的 Agent/Tool 生态 | P4 稳定 | B09/B10 通过 | 自动市场发现 |
-| P6 | 有收益证据的 Multi-Agent | 单 Agent benchmark 稳定 | B11 显示收益且无越权/写冲突 | 默认启用多 Agent |
-| P7 | 发布、升级、支持与 RC | B01-B12 功能证据齐全 | attested RC、升级/卸载、支持矩阵 | 企业 Console、五平台客户端 |
+| P6 | 有收益证据的 Multi-Agent 可选实验 | 单 Agent benchmark 稳定且存在可并行收益假设 | B11 产生 GO 或保持默认关闭的 NO-GO | 未达收益 Gate 即默认启用多 Agent |
+| P7 | Linux MVP、能力列车与完整 RC | P2 稳定后可启动 Linux MVP 发布可运维链 | `GMVP-LINUX` 后按声明范围汇合完整 RC | 用未执行能力扩大 MVP/RC 声明 |
+
+### MVP-first release train（不替代现有任务 ID）
+
+| Release train | 任务范围 | 出口 | 不阻塞该出口的能力 |
+|---|---|---|---|
+| RP1 Foundation | 已完成的 P0 与 P1-T01..T07 | 当前实现基线 | 后续产品能力 |
+| RP2 Install-to-Conversation Alpha | P1-T08、P1-T09 | B01 clean Linux VM | Task、Memory、MCP、Multi-Agent、UI、Windows installer |
+| RP3 Governed Single-Agent MVP | P2-T01..T08 | B02/B04/B05/B12 | Context 优化、Memory、生态、多 Agent |
+| RP4 Public Linux MVP | P7-T01..T03、P7-T08 | `GMVP-LINUX` | P3..P6、P7-T05、P7-T07 |
+| RP5 Context Efficiency Beta | P3-T01..T06 | B03/B06/B07 | Memory 与生态 |
+| RP6 Durable Memory Beta | P4-T01..T06 | B08；embedding GO/NO-GO | embedding GO、生态、多 Agent |
+| RP7 Optional Capability Trains | P5、P6、P7-T05、P7-T07 | 各自独立 Gate | 任何未声明能力 |
+| RP8 Full-Scope RC | P7-T04、P7-T06 与已选择能力 | 声明范围内 B01-B12 / RC | 明确 DEFER/NO-GO 的能力 |
 
 ### 本机实验轨道（不改变产品 Gate）
 
@@ -208,7 +231,31 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > including Windows/MSVC. Windows GNU linker exit 121 remains a non-supported
 > local limitation.
 
-| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | 20 次 clean-run；redacted evidence 完整；除 API Key 与模型选择外无必选交互（ADR-0026） | not-started | — |
+> **2026-07-29 P1-T08 production-path amendment:** ADR-0034 supersedes the
+> dual-service controller only as the first production path. P1-T08 now closes
+> against one canonical `cognitiveos-personal.service`, port 48181, a shared
+> verify/lease/stage transaction, deterministic single-service rollback and a
+> Linux-native user-systemd campaign. Existing candidate/active fixture results
+> remain valid implementation-fixture evidence, but candidate port 48182 and
+> zero-downtime promotion no longer block P1-T08 or B01. P1-T08 remains
+> `in-progress`; no implementation or Gate status changes in this planning batch.
+
+> **2026-07-29 P1-T08 single-service implementation slice:** the shell-to-Rust
+> handoff now invokes a digest-bound `linux-bundle-installer`; the runtime
+> shares the existing offline verification, OS lifecycle lease and private
+> staging prefix before separately publishing immutable version bytes and the
+> active pointer. A narrow canonical-service controller owns only
+> `cognitiveos-personal.service`, fixed 48181 health, fixed user-systemd
+> actions and Rust-rendered unit content. Upgrade and first-install failures
+> compensate pointer/unit/service state deterministically and issue no receipt;
+> incomplete compensation returns `RollbackIncomplete`. Focused WSL2 Linux
+> guest tests passed **46/46** with one ignored child-process entrypoint;
+> runtime strict Clippy, formatting, consistency and diff checks passed. This
+> is implementation/fixture evidence only. P1-T08 remains `in-progress`;
+> Linux-native user-systemd, production release/signing, uninstall, B01,
+> product Gate, Profile and first-conversation evidence remain outstanding.
+
+| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | dev smoke 与 usability campaign 先行但均 non-claim；正式 Gate 仍需至少 20 次 clean Linux VM、redacted evidence 完整、除 API Key 与模型选择外无必选交互（ADR-0026/0034） | not-started | — |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -262,19 +309,20 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | P6-T01 | Multi-Agent policy 与 scheduler 扩展 | P5-T05 | 默认关闭、budget/lease/isolation 正确 | not-started | — |
 | P6-T02 | Mailbox 与 append-only findings | P6-T01 | 消息不可作为 authority；replay 可处理 | not-started | — |
 | P6-T03 | Reviewer/Verifier/Integrator 编排 | P6-T02 | child success 不可绕过 verifier | not-started | — |
-| P6-T04 | B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用 | not-started | — |
+| P6-T04 | B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | — |
 
 ### Phase 7 - 产品化与发布
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P7-T01 | Release pipeline、SBOM 与 attestation | P5-T05, P0-T03 | 可验证 Linux artifact；无 secret/dev path | not-started | — |
-| P7-T02 | Transactional update、rollback 与 uninstall | P7-T01, P1-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
-| P7-T03 | Doctor、support bundle 与故障排查 | P7-T02 | 仅 redacted facts；stable error code | not-started | — |
+| P7-T01 | Release pipeline、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | 可验证 Linux artifact；无 secret/dev path；先交付 Linux MVP slice，后续能力补充 inventory | not-started | — |
+| P7-T02 | Transactional update、rollback 与 uninstall | P1-T01, P1-T08, P2-T08, P7-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
+| P7-T03 | Doctor、support bundle 与故障排查 | P1-T05, P2-T08, P7-T02 | 仅 redacted facts；stable error code；GMVP-LINUX 前可操作恢复路径 | not-started | — |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 固定环境、raw evidence、CI 与阈值 | not-started | — |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
-| P7-T06 | RC、文档、支持矩阵与 B01-B12 | P7-T02, P7-T03, P7-T04, P5-T05, P6-T04 | clean VM suite 与 release claim evidence | not-started | — |
+| P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
+| P7-T08 | Public Linux MVP Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P7-T01, P7-T02, P7-T03 | production trust/signing、native user-systemd、B01、受治理单 Agent、update/rollback/uninstall、doctor/support 证据汇合；功能声明明确排除未执行能力；不构成 Profile | not-started | — |
 
 ## 5. Gate 与证据要求
 
@@ -287,6 +335,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | B08 | Memory 生命周期与隐私 | provenance/freshness/conflict/forget 测试 |
 | B09/B10 | Agent/Tool/MCP 资格与隔离 | manifest、health、disable/uninstall、negative tests |
 | B11 | Multi-Agent 相对单 Agent 有可复现收益 | 相同模型/预算/任务的 baseline 对比 |
+| GMVP-LINUX | scoped public Linux MVP 可发布 | B01 + P2 Gate + production trust + native systemd + update/rollback/uninstall + doctor/support；明确 non-Profile 与能力排除项 |
 | RC | 完整发布声明 | CI、SBOM、attestation、升级/卸载、支持矩阵 |
 
 Windows install parity 声明需要 P7-T07 的专门 B01-W Gate 与已执行证据；在此之前，
