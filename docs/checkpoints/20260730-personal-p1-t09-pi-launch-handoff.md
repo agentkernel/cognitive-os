@@ -68,4 +68,7 @@ Provider fixture without introducing a public contract or passing Provider
 material to Pi. Retain the existing dirty `server.rs` boundary.
 
 **Implementation commit:** `1487ebd` (`P1-T09: add fail-closed Pi launch admission`).  
-**Push/remote visibility:** pending; must be checked after this handoff commit.
+**Handoff commit:** `ebdc068` (`docs: record P1-T09 Pi launch handoff`).  
+**Push/remote visibility:** `git push -u origin HEAD` succeeded, and
+`git ls-remote origin refs/heads/lane/personal-p1-t08-mvp-single-service`
+confirmed `ebdc068901ef32ba231a74f61c17e5a86e48525c`.
