@@ -5,6 +5,10 @@
 **Task status:** install-to-first-conversation route `in-progress`; P1-T09 / B01
 `not-started`
 
+**Commit:** `702125d` (`P1-T09`). A lane-branch push was attempted after the
+commit but made no progress locally and was stopped; remote visibility remains
+unconfirmed.
+
 ## Completed local implementation batch
 
 This batch provides the Provider-discovery prerequisite while preserving the
