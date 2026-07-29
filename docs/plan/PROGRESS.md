@@ -1,5 +1,24 @@
 # PROGRESS — 单页进度仪表
 
+> **Readiness truth and installed XDG launch slice (2026-07-29):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-started`. A Provider component now becomes `ready` only when
+> its non-secret `provider.json` snapshot digest has a matching valid,
+> chat-capable `selected-model.json`; missing, malformed, or digest-mismatched
+> selected-model state blocks both aggregate and first-conversation readiness
+> with redacted local error classes. `cognitive daemon start` now leaves
+> `--runtime-root` absent for installed XDG launches, so `kernel-server`,
+> `cognitive init`, and the Pi extension share the real user layout; an
+> explicit hermetic root is still forwarded only for tests. The CLI default is
+> aligned with the canonical loopback service at `127.0.0.1:48181`. Focused
+> `windows_wsl2_linux_guest` evidence: kernel-server unit suite **32/32**,
+> Pi/readiness integration **1/1** each, Provider-proxy regression **2/2**,
+> admin-cli Personal units **6/6**, and cognitive CLI regression **5/5**
+> passed. This is implementation and local-test evidence only: it does not
+> provide a Pi configuration/launch command, actual Pi Extension loading, a
+> deterministic binary Provider fixture, a real Provider conversation, native
+> Secret Service evidence, B01, a Gate, release, or Profile claim.
+
 > **Provider discovery and selected-model prerequisite (2026-07-29):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
 > remains `not-started`. A new shared `cognitive-provider-transport` adapter

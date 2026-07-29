@@ -13,7 +13,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_secret::{
     ProviderConfigError, ProviderConfigRepository, SecretStoreAvailability, SecretStoreClass,
-    select_production_secret_store,
+    SelectedModelRepository, select_production_secret_store,
 };
 use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
@@ -231,6 +231,20 @@ fn doctor_guidance(report: &ReadinessReport) -> Vec<&'static str> {
             ("secret", ComponentStatus::Blocked) => {
                 guidance.push("configure a native SecretStore backend and store the Provider key");
             }
+            ("provider", ComponentStatus::Blocked)
+                if matches!(
+                    component.error_class,
+                    Some(
+                        "provider_selected_model_missing"
+                            | "provider_selected_model_unusable"
+                            | "provider_selected_model_digest_mismatch"
+                    )
+                ) =>
+            {
+                guidance.push(
+                    "rerun cognitive init with the configured Provider and exact model so a successful probe can persist matching selected-model state",
+                );
+            }
             ("provider", ComponentStatus::Blocked) => {
                 guidance.push("write provider.json via cognitive init with an opaque secret_ref");
             }
@@ -426,7 +440,8 @@ fn check_provider(
     let repository = ProviderConfigRepository::from_file_path(&config_path);
     match repository.load() {
         Ok(config) => {
-            let digest_present = config.selected_snapshot_digest().is_some();
+            let selected_snapshot_digest = config.selected_snapshot_digest();
+            let digest_present = selected_snapshot_digest.is_some();
             let mut facts = vec![
                 ReadinessFact {
                     key: "provider_id",
@@ -458,13 +473,64 @@ fn check_provider(
                 key: "secret_ref_redacted",
                 value: "true".to_owned(),
             });
-            let (status, error_class) = if digest_present {
-                (ComponentStatus::Ready, None)
-            } else {
-                (
+            let (status, error_class) = match selected_snapshot_digest {
+                None => (
                     ComponentStatus::Degraded,
                     Some("provider_snapshot_digest_missing"),
-                )
+                ),
+                Some(expected_digest) => {
+                    let selected_model_repository =
+                        SelectedModelRepository::under_config_dir(repository.config_dir());
+                    match selected_model_repository.load() {
+                        Ok(Some(selected_model))
+                            if selected_model.selected_snapshot_digest() == expected_digest =>
+                        {
+                            facts.push(ReadinessFact {
+                                key: "selected_model_present",
+                                value: "true".to_owned(),
+                            });
+                            facts.push(ReadinessFact {
+                                key: "selected_model_digest_matches",
+                                value: "true".to_owned(),
+                            });
+                            (ComponentStatus::Ready, None)
+                        }
+                        Ok(Some(_)) => {
+                            facts.push(ReadinessFact {
+                                key: "selected_model_present",
+                                value: "true".to_owned(),
+                            });
+                            facts.push(ReadinessFact {
+                                key: "selected_model_digest_matches",
+                                value: "false".to_owned(),
+                            });
+                            (
+                                ComponentStatus::Blocked,
+                                Some("provider_selected_model_digest_mismatch"),
+                            )
+                        }
+                        Ok(None) => {
+                            facts.push(ReadinessFact {
+                                key: "selected_model_present",
+                                value: "false".to_owned(),
+                            });
+                            (
+                                ComponentStatus::Blocked,
+                                Some("provider_selected_model_missing"),
+                            )
+                        }
+                        Err(_) => {
+                            facts.push(ReadinessFact {
+                                key: "selected_model_present",
+                                value: "unusable".to_owned(),
+                            });
+                            (
+                                ComponentStatus::Blocked,
+                                Some("provider_selected_model_unusable"),
+                            )
+                        }
+                    }
+                }
             };
             ComponentCheck {
                 component: "provider",
@@ -673,7 +739,7 @@ fn unix_now_ms() -> u64 {
 #[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
-    use cognitive_secret::{ProviderConfig, SecretRef};
+    use cognitive_secret::{ProviderConfig, SecretRef, SelectedModel, SelectedModelRepository};
     use std::fs;
 
     fn touch_personal_database_files(layout: &PersonalDataLayout) -> std::io::Result<()> {
@@ -733,6 +799,14 @@ mod tests {
             .expect("store config");
     }
 
+    fn write_selected_model(layout: &PersonalDataLayout, digest: &str) {
+        let selected_model =
+            SelectedModel::new("test-chat-model", digest, true).expect("selected model");
+        SelectedModelRepository::under_config_dir(layout.config_dir())
+            .store(&selected_model)
+            .expect("store selected model");
+    }
+
     #[test]
     fn missing_databases_and_provider_are_blocked_not_ready() {
         let layout = temp_layout("blocked");
@@ -789,10 +863,63 @@ mod tests {
     }
 
     #[test]
+    fn selected_model_must_match_the_successful_provider_snapshot() {
+        let layout = temp_layout("selected-model-required");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        fs::write(layout.daemon_lock_path(), b"lock").unwrap();
+        fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
+
+        let missing_selected_model = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout: layout.clone(),
+            daemon_listening: true,
+            session_count: 1,
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: None,
+            pi_observation_override: Some(PiRuntimeObservation::Ready),
+        });
+        assert_eq!(missing_selected_model.overall, OverallReadiness::Blocked);
+        assert!(!missing_selected_model.first_conversation_ready);
+        let missing_provider = missing_selected_model
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider component");
+        assert_eq!(missing_provider.status, ComponentStatus::Blocked);
+        assert_eq!(
+            missing_provider.error_class,
+            Some("provider_selected_model_missing")
+        );
+
+        write_selected_model(&layout, "fnv1a64:different-snapshot");
+        let mismatched_selected_model = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 1,
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: None,
+            pi_observation_override: Some(PiRuntimeObservation::Ready),
+        });
+        assert_eq!(mismatched_selected_model.overall, OverallReadiness::Blocked);
+        assert!(!mismatched_selected_model.first_conversation_ready);
+        let mismatched_provider = mismatched_selected_model
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider component");
+        assert_eq!(mismatched_provider.status, ComponentStatus::Blocked);
+        assert_eq!(
+            mismatched_provider.error_class,
+            Some("provider_selected_model_digest_mismatch")
+        );
+    }
+
+    #[test]
     fn full_runtime_facts_yield_ready_overall_but_first_conversation_blocked_without_pi() {
         let layout = temp_layout("ready");
         touch_personal_database_files(&layout).unwrap();
         write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
         // Simulate daemon runtime artifacts without starting a server.
         fs::write(layout.daemon_lock_path(), b"lock").unwrap();
         fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
@@ -834,6 +961,7 @@ mod tests {
         let layout = temp_layout("pi-ready");
         touch_personal_database_files(&layout).unwrap();
         write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
         fs::write(layout.daemon_lock_path(), b"lock").unwrap();
         fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
         let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
@@ -873,11 +1001,9 @@ mod tests {
                 .iter()
                 .any(|fact| fact["key"] == "containment_claim" && fact["value"] == "not-claimed")
         );
-        assert!(
-            facts
-                .iter()
-                .any(|fact| fact["key"] == "observed_version" && fact["value"] == PINNED_PI_VERSION)
-        );
+        assert!(facts
+            .iter()
+            .any(|fact| fact["key"] == "observed_version" && fact["value"] == PINNED_PI_VERSION));
     }
 
     #[test]
@@ -907,6 +1033,7 @@ mod tests {
             let layout = temp_layout(&format!("pi-broken-{index}"));
             touch_personal_database_files(&layout).unwrap();
             write_provider_config(&layout, true);
+            write_selected_model(&layout, "fnv1a64:0123456789abcdef");
             fs::write(layout.daemon_lock_path(), b"lock").unwrap();
             fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
             let report = evaluate_personal_readiness(&ReadinessEvaluationContext {

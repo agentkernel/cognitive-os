@@ -216,7 +216,7 @@ fn parse_daemon_start_options(
         bind_address: flags
             .get("bind")
             .cloned()
-            .unwrap_or_else(|| "127.0.0.1:7420".to_owned()),
+            .unwrap_or_else(|| "127.0.0.1:48181".to_owned()),
         kernel_server_path: flags.get("kernel-server").map(PathBuf::from),
     })
 }
@@ -292,7 +292,7 @@ USAGE:
                    [--allow-ephemeral-secret-backend]
   cognitive status [--runtime-root <dir>] [--endpoint <host:port>]
   cognitive doctor [--runtime-root <dir>] [--endpoint <host:port>]
-  cognitive daemon start  [--runtime-root <dir>] [--bind 127.0.0.1:7420]
+  cognitive daemon start  [--runtime-root <dir>] [--bind 127.0.0.1:48181]
                           [--kernel-server <path>]
   cognitive daemon status [--runtime-root <dir>]
   cognitive daemon stop   [--runtime-root <dir>]
@@ -304,3 +304,24 @@ Hard rules:
   - --allow-ephemeral-secret-backend is for hermetic tests only
 
 Exit codes: 0 success, 1 operational error, 2 usage error.";
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn daemon_start_defaults_to_the_canonical_personal_loopback_port() {
+        let arguments = vec!["daemon".to_owned(), "start".to_owned()];
+        let command = parse_cognitive_args(&arguments).expect("parse daemon start");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Daemon(DaemonCommand::Start(DaemonStartOptions {
+                layout_roots: LayoutRoots { runtime_root: None },
+                bind_address: "127.0.0.1:48181".to_owned(),
+                kernel_server_path: None,
+            }))
+        );
+    }
+}
