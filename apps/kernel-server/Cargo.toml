@@ -18,7 +18,7 @@ cognitive-runtime = { workspace = true }
 cognitive-management = { workspace = true }
 cognitive-akp = { workspace = true }
 cognitive-secret = { workspace = true }
-reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "rustls"] }
+cognitive-provider-transport = { workspace = true }
 serde_json = { workspace = true }
 
 [lints]

@@ -1,5 +1,25 @@
 # PROGRESS — 单页进度仪表
 
+> **Provider discovery and selected-model prerequisite (2026-07-29):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-started`. A new shared `cognitive-provider-transport` adapter
+> now owns the bounded Rustls-only Provider egress boundary used by both the
+> daemon proxy (through its compatibility re-export) and `cognitive init`.
+> The adapter preserves HTTPS-only URLs, no redirects, URL-user-info and
+> header-injection rejection, timeout/cancellation behavior, and the 1 MiB
+> response limit. When Provider flags are supplied, `cognitive init` now
+> configures the SecretStore binding and runs `ProviderDiscoveryService`; a
+> supplied `--model-id` is `ExactCatalog`, never a manual fallback. Only a
+> chat-capable probe persists `selected-model.json` and the non-secret snapshot
+> digest; a failed or missing catalog model clears stale selection and reports
+> a redacted actionable error. Focused `windows_wsl2_linux_guest` evidence:
+> private init discovery tests **2/2 passed**, shared transport tests **2/2
+> passed**, daemon proxy regression **2/2 passed**, and hermetic cognitive CLI
+> regression **5/5 passed**. Strict Clippy for the changed packages and
+> formatter passed. This is implementation and local-test evidence only: no
+> real Provider, Pi launch, first conversation, native campaign, B01, Gate,
+> release, or Profile claim is made.
+
 > **Install-to-first-conversation XDG/endpoint foundation (2026-07-29):** The
 > current first-conversation work item is `in-progress`. `kernel-server
 > --personal` now resolves the real user XDG layout when its explicit

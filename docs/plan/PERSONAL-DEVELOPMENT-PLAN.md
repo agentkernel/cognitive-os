@@ -255,7 +255,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | dev smoke 与 usability campaign 先行但均 non-claim；正式 Gate 仍需至少 20 次 clean Linux VM、redacted evidence 完整、除 API Key 与模型选择外无必选交互（ADR-0026/0034） | not-started | — |
+| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | dev smoke 与 usability campaign 先行但均 non-claim；正式 Gate 仍需至少 20 次 clean Linux VM、redacted evidence 完整、除 API Key 与模型选择外无必选交互（ADR-0026/0034） | not-started | 2026-07-29 的前置实现批已提供共享 Rustls Provider transport、`cognitive init` 的 exact-catalog discovery 与 `selected-model.json` 原子持久化/失败清理；本地 WSL focused tests、proxy regression、CLI regression 与 strict Clippy 已执行。该批仅推进 install-to-first-conversation route，未执行 Pi launch/真实首次对话/开发 smoke/usability campaign/clean-VM B01，故 P1-T09 状态保持 `not-started`。 |
 
 ### Phase 2 - 单 Agent 任务闭环
 

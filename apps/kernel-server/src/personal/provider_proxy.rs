@@ -3,9 +3,7 @@
 //! The proxy is deliberately not an authority writer. It only attaches the
 //! daemon-resolved Provider credential to a bounded outbound HTTPS request.
 
-use std::io::Read;
-use std::time::Duration;
-
+pub use cognitive_provider_transport::RustlsProviderTransport;
 use cognitive_secret::{
     ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
     ProviderKeyService, ProviderKeyServiceError, ProviderTransport, ProviderTransportError,
@@ -13,8 +11,6 @@ use cognitive_secret::{
 };
 
 const PROVIDER_CHAT_COMPLETIONS_PATH: &str = "/chat/completions";
-const MAX_PROVIDER_RESPONSE_BYTES: usize = 1_048_576;
-const MAX_PROVIDER_RESPONSE_READ_BYTES: u64 = 1_048_577;
 
 /// Stable failures exposed by the local Provider proxy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -126,63 +122,6 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     }
 }
 
-/// Production HTTPS transport. The only TLS implementation is Rustls; no
-/// Provider credential is put in a subprocess argument or inherited environment.
-#[derive(Debug, Default)]
-pub struct RustlsProviderTransport;
-
-impl ProviderTransport for RustlsProviderTransport {
-    fn exchange(
-        &self,
-        request: &ProviderHttpRequest,
-    ) -> Result<ProviderHttpResponse, ProviderTransportError> {
-        validate_transport_request(request)?;
-        if request.cancel_requested {
-            return Err(ProviderTransportError::Timeout);
-        }
-
-        let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = reqwest::blocking::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .timeout(timeout)
-            .use_rustls_tls()
-            .build()
-            .map_err(|_| ProviderTransportError::Backend {
-                detail: "failed to construct Rustls Provider transport",
-            })?;
-        let method = match request.method {
-            ProviderHttpMethod::Get => reqwest::Method::GET,
-            ProviderHttpMethod::Post => reqwest::Method::POST,
-        };
-        let mut request_builder = client.request(method, &request.url);
-        for (header_name, header_value) in &request.headers {
-            request_builder = request_builder.header(header_name, header_value);
-        }
-        if let Some(request_body) = &request.body {
-            request_builder = request_builder.body(request_body.clone());
-        }
-
-        let mut response = request_builder.send().map_err(map_reqwest_error)?;
-        let mut response_body = Vec::new();
-        let bytes_read = response
-            .by_ref()
-            .take(MAX_PROVIDER_RESPONSE_READ_BYTES)
-            .read_to_end(&mut response_body)
-            .map_err(|_| ProviderTransportError::Network {
-                detail: "failed to read Provider response",
-            })?;
-        if bytes_read > MAX_PROVIDER_RESPONSE_BYTES {
-            return Err(ProviderTransportError::Policy {
-                detail: "Provider response exceeds local limit",
-            });
-        }
-        Ok(ProviderHttpResponse {
-            status: response.status().as_u16(),
-            body: response_body,
-        })
-    }
-}
-
 fn validate_chat_request(request_body: &[u8]) -> Result<String, ProviderProxyError> {
     let request_json: serde_json::Value =
         serde_json::from_slice(request_body).map_err(|_| ProviderProxyError::InvalidRequest)?;
@@ -223,39 +162,6 @@ fn map_transport_error(error: ProviderTransportError) -> ProviderProxyError {
     }
 }
 
-fn validate_transport_request(request: &ProviderHttpRequest) -> Result<(), ProviderTransportError> {
-    if !request.url.starts_with("https://") || request.url.contains('@') {
-        return Err(ProviderTransportError::Policy {
-            detail: "Provider request URL must be credential-free HTTPS",
-        });
-    }
-    if request.timeout_ms == 0 {
-        return Err(ProviderTransportError::Policy {
-            detail: "Provider request timeout must be non-zero",
-        });
-    }
-    if request
-        .headers
-        .iter()
-        .any(|(name, value)| name.contains(['\r', '\n']) || value.contains(['\r', '\n']))
-    {
-        return Err(ProviderTransportError::Policy {
-            detail: "Provider request header contains an invalid line break",
-        });
-    }
-    Ok(())
-}
-
-fn map_reqwest_error(error: reqwest::Error) -> ProviderTransportError {
-    if error.is_timeout() {
-        ProviderTransportError::Timeout
-    } else {
-        ProviderTransportError::Network {
-            detail: "Provider HTTPS exchange failed",
-        }
-    }
-}
-
 // Test doubles and temporary fixture setup intentionally use direct assertion
 // failures; production proxy code remains subject to the strict lint set.
 #[cfg(test)]
@@ -265,13 +171,11 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{
-        ProviderProxyError, ProviderProxyService, validate_chat_request, validate_transport_request,
-    };
+    use super::{ProviderProxyError, ProviderProxyService, validate_chat_request};
     use cognitive_secret::{
-        EphemeralSecretStore, ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest,
-        ProviderHttpResponse, ProviderKeyService, ProviderTransport, ProviderTransportError,
-        SecretMaterial, SelectedModel,
+        EphemeralSecretStore, ProviderConfigRepository, ProviderHttpRequest, ProviderHttpResponse,
+        ProviderKeyService, ProviderTransport, ProviderTransportError, SecretMaterial,
+        SelectedModel,
     };
 
     #[derive(Clone, Default)]
@@ -323,32 +227,6 @@ mod tests {
             validate_chat_request(b"not-json"),
             Err(ProviderProxyError::InvalidRequest)
         );
-    }
-
-    #[test]
-    fn transport_requires_https_and_rejects_header_injection() {
-        let http_request = ProviderHttpRequest {
-            method: ProviderHttpMethod::Post,
-            url: "http://provider.invalid/v1/chat/completions".to_owned(),
-            headers: Vec::new(),
-            body: None,
-            timeout_ms: 1,
-            cancel_requested: false,
-        };
-        assert!(matches!(
-            validate_transport_request(&http_request),
-            Err(ProviderTransportError::Policy { .. })
-        ));
-
-        let injected_header_request = ProviderHttpRequest {
-            url: "https://provider.invalid/v1/chat/completions".to_owned(),
-            headers: vec![("X-Test".to_owned(), "safe\r\nunsafe".to_owned())],
-            ..http_request
-        };
-        assert!(matches!(
-            validate_transport_request(&injected_header_request),
-            Err(ProviderTransportError::Policy { .. })
-        ));
     }
 
     #[test]

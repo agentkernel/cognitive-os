@@ -83,27 +83,12 @@ fn write_key_file(dir: &Path, contents: &str) -> PathBuf {
 }
 
 #[test]
-fn init_prepares_layout_and_is_idempotent_without_wiping_provider() {
+fn init_prepares_layout_and_is_idempotent_without_provider_egress() {
     let _guard = PERSONAL_CLI_TEST_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     let root = runtime_root("init-idempotent");
-    let key_path = write_key_file(&root, "test-secret-material-not-for-production\n");
-
-    let first = run_cognitive(&[
-        "init",
-        "--runtime-root",
-        root.to_str().unwrap(),
-        "--provider",
-        "deepseek",
-        "--base-url",
-        "https://api.deepseek.com/v1/",
-        "--model-id",
-        "deepseek-chat",
-        "--api-key-file",
-        key_path.to_str().unwrap(),
-        "--allow-ephemeral-secret-backend",
-    ]);
+    let first = run_cognitive(&["init", "--runtime-root", root.to_str().unwrap()]);
     assert!(
         first.status.success(),
         "stdout={} stderr={}",
@@ -113,41 +98,14 @@ fn init_prepares_layout_and_is_idempotent_without_wiping_provider() {
     let first_out = stdout_str(&first);
     assert!(first_out.contains("\"status\": \"ok\""), "{first_out}");
     assert!(first_out.contains("authority_database"), "{first_out}");
-    assert!(first_out.contains("\"configured\": true"), "{first_out}");
-    assert!(
-        first_out.contains("https://api.deepseek.com/v1"),
-        "{first_out}"
-    );
-    assert!(
-        !first_out.contains("test-secret-material-not-for-production"),
-        "secret leaked in stdout: {first_out}"
-    );
-    assert!(
-        !stderr_str(&first).contains("test-secret-material-not-for-production"),
-        "secret leaked in stderr"
-    );
+    assert!(first_out.contains("\"configured\": false"), "{first_out}");
 
     let authority = root
         .join("data")
         .join("cognitiveos")
         .join("authority.sqlite");
     assert!(authority.is_file(), "authority db missing at {authority:?}");
-    let provider_config = root
-        .join("config")
-        .join("cognitiveos")
-        .join("provider.json");
-    assert!(
-        provider_config.is_file(),
-        "provider config missing at {provider_config:?}"
-    );
-    let config_text = fs::read_to_string(&provider_config).unwrap();
-    assert!(
-        !config_text.contains("test-secret-material-not-for-production"),
-        "secret written into provider.json"
-    );
-    assert!(config_text.contains("secret_ref"), "{config_text}");
-
-    // Re-init without key flags must preserve configuration (idempotent).
+    // Re-init remains local and does not initiate Provider egress without flags.
     let second = run_cognitive(&["init", "--runtime-root", root.to_str().unwrap()]);
     assert!(
         second.status.success(),
@@ -161,12 +119,11 @@ fn init_prepares_layout_and_is_idempotent_without_wiping_provider() {
         "{second_out}"
     );
     assert!(
-        second_out.contains("unchanged") || second_out.contains("preserved"),
+        second_out.contains("skipped")
+            || second_out.contains("unchanged")
+            || second_out.contains("preserved"),
         "{second_out}"
     );
-    let config_after = fs::read_to_string(&provider_config).unwrap();
-    assert_eq!(config_text, config_after, "re-init wiped provider config");
-
     let _ = fs::remove_dir_all(&root);
 }
 

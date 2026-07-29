@@ -1,0 +1,15 @@
+[package]
+name = "cognitive-provider-transport"
+description = "Bounded Rustls HTTPS transport for Personal Provider probes and proxying"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+cognitive-secret = { workspace = true }
+reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "rustls"] }
+
+[lints]
+workspace = true

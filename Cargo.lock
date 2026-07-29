@@ -16,6 +16,7 @@ dependencies = [
  "cognitive-domain",
  "cognitive-kernel",
  "cognitive-management",
+ "cognitive-provider-transport",
  "cognitive-runtime",
  "cognitive-secret",
  "cognitive-store",
@@ -281,6 +282,14 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror",
+]
+
+[[package]]
+name = "cognitive-provider-transport"
+version = "0.0.1"
+dependencies = [
+ "cognitive-secret",
+ "reqwest",
 ]
 
 [[package]]
@@ -1092,10 +1101,10 @@ dependencies = [
  "cognitive-domain",
  "cognitive-kernel",
  "cognitive-management",
+ "cognitive-provider-transport",
  "cognitive-runtime",
  "cognitive-secret",
  "cognitive-store",
- "reqwest",
  "serde_json",
 ]
 
