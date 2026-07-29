@@ -99,5 +99,7 @@ stop at that contract boundary and use Lane-CTR.
    `apps/kernel-server/src/personal/server.rs` modification untouched and out
    of all staging/commits for this route.
 
-**Push status:** pending at creation of this handoff; update from the actual
-push result only. Remote visibility is not claimed before a successful push.
+**Push status:** successful. Implementation commit `40d779a` and the initial
+handoff commit `4abd006` were pushed to
+`origin/lane/personal-p1-t08-mvp-single-service`; remote visibility was
+confirmed with `git ls-remote` at `4abd006fbd1511f7710ee248bcac93f59c7f7bfd`.
