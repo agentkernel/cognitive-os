@@ -103,3 +103,7 @@ stop at that contract boundary and use Lane-CTR.
 handoff commit `4abd006` were pushed to
 `origin/lane/personal-p1-t08-mvp-single-service`; remote visibility was
 confirmed with `git ls-remote` at `4abd006fbd1511f7710ee248bcac93f59c7f7bfd`.
+The subsequent documentation status-update push returned exit code 0, but a
+final direct `git ls-remote` check failed with `schannel: failed to receive
+handshake, SSL/TLS connection failed`; visibility of the later documentation
+tip is therefore unconfirmed.
