@@ -4,12 +4,14 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+#[cfg(unix)]
+use cognitive_runtime::LinuxBundleSingleServiceController;
 use cognitive_runtime::{
     ExpectedPiCompatibility, LinuxBundleManifest, LinuxBundleServiceController,
-    LinuxBundleServiceError, LinuxBundleServiceReceipt, LinuxBundleSingleServiceController,
-    PersonalUserServiceUnitKind, SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus,
-    TrustedKeyring, install_linux_bundle_service, probe_personal_health,
-    render_personal_user_service_unit, write_rendered_personal_user_service_unit,
+    LinuxBundleServiceError, LinuxBundleServiceReceipt, PersonalUserServiceUnitKind,
+    SystemdUserServiceController, TrustedKeyInput, TrustedKeyStatus, TrustedKeyring,
+    install_linux_bundle_service, probe_personal_health, render_personal_user_service_unit,
+    write_rendered_personal_user_service_unit,
 };
 use ed25519_dalek::{Signer, SigningKey};
 use flate2::{Compression, write::GzEncoder};
