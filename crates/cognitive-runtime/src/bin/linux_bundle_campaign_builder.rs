@@ -454,6 +454,8 @@ fn write_private_file(path: PathBuf, contents: &[u8], executable: bool) -> Resul
     let mut output_file = File::create(&path).map_err(|_| ())?;
     output_file.write_all(contents).map_err(|_| ())?;
     output_file.sync_all().map_err(|_| ())?;
+    #[cfg(not(unix))]
+    let _ = executable;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
