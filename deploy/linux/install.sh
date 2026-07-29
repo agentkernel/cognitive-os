@@ -208,6 +208,7 @@ verify_installer_digest() {
 run_local_installer() {
     "$INSTALLER_PATH" \
         --bundle-directory "$BUNDLE_DIRECTORY" \
+        --expected-release-version "$RELEASE_VERSION" \
         --expected-pi-version "$EXPECTED_PI_VERSION" \
         --expected-pi-integrity "$EXPECTED_PI_INTEGRITY" \
         --keyring-version "$TRUSTED_KEYRING_VERSION" \

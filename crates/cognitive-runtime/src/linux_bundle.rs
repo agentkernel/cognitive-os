@@ -351,6 +351,23 @@ pub fn verify_linux_bundle(
     })
 }
 
+/// Verify a local bundle and bind it to an inspected release version before
+/// any deployment, lease, service, or user data state can be touched.
+pub fn verify_linux_bundle_for_release(
+    bundle_directory: &Path,
+    expected_release_version: &str,
+    expected_pi: &ExpectedPiCompatibility,
+    trusted_keyring: &TrustedKeyring,
+) -> Result<VerifiedLinuxBundle, LinuxBundleError> {
+    let verified_bundle = verify_linux_bundle(bundle_directory, expected_pi, trusted_keyring)?;
+    if verified_bundle.manifest().version != expected_release_version {
+        return Err(LinuxBundleError::InvalidManifest(
+            "bundle version does not match the inspected release".to_owned(),
+        ));
+    }
+    Ok(verified_bundle)
+}
+
 /// Filesystem deployment state. `active-version` is a small text pointer that
 /// is atomically replaced with `rename`, which keeps this model testable on the
 /// supported Windows CI host without pretending it is a systemd service.

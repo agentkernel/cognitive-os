@@ -13,6 +13,8 @@ use serde::Deserialize;
 use std::fs;
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -593,6 +595,33 @@ impl SystemdUserServiceController {
         })
     }
 
+    /// Construct an isolated fixture controller with a bounded command
+    /// deadline. Production callers must use the fixed production deadline.
+    #[cfg(unix)]
+    pub fn new_fixture_with_command_timeout(
+        deployment_root: impl Into<PathBuf>,
+        unit_directory: impl Into<PathBuf>,
+        systemctl_binary: impl Into<PathBuf>,
+        health_address: SocketAddr,
+        command_timeout: Duration,
+    ) -> Result<Self, LinuxBundleServiceError> {
+        if !health_address.ip().is_loopback()
+            || health_address.port() != ACTIVE_HEALTH_PORT
+            || command_timeout.is_zero()
+        {
+            return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
+        }
+        Ok(Self {
+            deployment_root: deployment_root.into(),
+            unit_directory: Some(unit_directory.into()),
+            systemctl_binary: systemctl_binary.into(),
+            active_health_address: health_address,
+            candidate_health_address: SocketAddr::new(health_address.ip(), CANDIDATE_HEALTH_PORT),
+            command_timeout,
+            health_timeout: Duration::from_secs(10),
+        })
+    }
+
     /// Construct the production single-service controller from product-fixed
     /// Linux user-systemd conventions. Unlike the fixture constructor, the
     /// service manager binary is never resolved through ambient `PATH`.
@@ -783,13 +812,18 @@ impl SystemdUserServiceController {
         if let Some(unit_kind) = unit_kind {
             command_arguments.push(unit_kind.unit_name());
         }
-        let mut child = Command::new(&self.systemctl_binary)
+        let mut systemctl_command = Command::new(&self.systemctl_binary);
+        systemctl_command
             .args(command_arguments)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stderr(Stdio::piped());
+        #[cfg(unix)]
+        systemctl_command.process_group(0);
+        let mut child = systemctl_command
             .spawn()
             .map_err(|_| LinuxBundleServiceError::CandidateStartFailed)?;
+        let process_identifier = child.id();
         let stdout = child
             .stdout
             .take()
@@ -805,7 +839,7 @@ impl SystemdUserServiceController {
             match child.try_wait() {
                 Ok(Some(_)) => break false,
                 Ok(None) if Instant::now() >= deadline => {
-                    let _ = child.kill();
+                    terminate_systemctl_process_tree(&mut child, process_identifier);
                     break true;
                 }
                 Ok(None) => thread::sleep(Duration::from_millis(20)),
@@ -830,6 +864,23 @@ impl SystemdUserServiceController {
             Err(LinuxBundleServiceError::CandidateStartFailed)
         }
     }
+}
+
+#[cfg(unix)]
+fn terminate_systemctl_process_tree(child: &mut std::process::Child, process_identifier: u32) {
+    let process_group_identifier = i32::try_from(process_identifier).ok();
+    if let Some(process_group_identifier) = process_group_identifier.filter(|value| *value > 0) {
+        let _ = nix::sys::signal::kill(
+            nix::unistd::Pid::from_raw(-process_group_identifier),
+            nix::sys::signal::Signal::SIGKILL,
+        );
+    }
+    let _ = child.kill();
+}
+
+#[cfg(not(unix))]
+fn terminate_systemctl_process_tree(child: &mut std::process::Child, _process_identifier: u32) {
+    let _ = child.kill();
 }
 
 #[cfg(unix)]

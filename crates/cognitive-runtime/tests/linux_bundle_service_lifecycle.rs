@@ -237,6 +237,42 @@ fn fixture_controller_publishes_only_the_canonical_unit_before_fixed_restart() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn systemctl_timeout_kills_pipe_holding_descendants_before_releasing_the_controller() {
+    use std::os::unix::fs::PermissionsExt;
+    use std::time::Instant;
+
+    let fixture_root = tempfile::tempdir().unwrap();
+    let fake_systemctl = fixture_root.path().join("fake-systemctl");
+    fs::write(
+        &fake_systemctl,
+        "#!/bin/sh\n(sleep 30) &\nwhile :; do sleep 30; done\n",
+    )
+    .unwrap();
+    fs::set_permissions(&fake_systemctl, fs::Permissions::from_mode(0o700)).unwrap();
+    let mut controller = SystemdUserServiceController::new_fixture_with_command_timeout(
+        fixture_root.path().join("deployment"),
+        fixture_root.path().join("units"),
+        &fake_systemctl,
+        "127.0.0.1:48181".parse().unwrap(),
+        Duration::from_millis(100),
+    )
+    .unwrap();
+
+    let started_at = Instant::now();
+    let result = controller.restart_active_service();
+
+    assert!(matches!(
+        result,
+        Err(LinuxBundleServiceError::ServiceCommandTimedOut)
+    ));
+    assert!(
+        started_at.elapsed() < Duration::from_secs(2),
+        "timeout must include pipe-holder cleanup"
+    );
+}
+
 #[test]
 fn bounded_loopback_health_requires_the_exact_liveness_contract() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

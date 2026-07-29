@@ -110,8 +110,9 @@ CARGO_TARGET_DIR=/mnt/d/agent-kernel/target/wsl-single-service \
   --test linux_bundle_service_lifecycle \
   --test linux_bundle_installation \
   --test linux_bundle_installation_lifecycle \
-  --test linux_installer_bootstrap
-# 46 passed; 0 failed; 1 ignored child-process entrypoint
+  --test linux_installer_bootstrap \
+  --test linux_bundle_installer_adapter
+# 50 passed; 0 failed; 1 ignored child-process entrypoint
 
 CARGO_TARGET_DIR=/mnt/d/agent-kernel/target/wsl-single-service \
   cargo clippy -p cognitive-runtime --all-targets -- -D warnings
@@ -126,6 +127,15 @@ pnpm run check:consistency
 git diff --check
 # passed
 ```
+
+Follow-up adapter hardening extracted fixed bootstrap-fact parsing,
+release-version verification, and transaction orchestration into the runtime
+library. The production executable remains a redacted process wrapper that
+derives the product deployment root and constructs only the fixed production
+user-systemd controller. The focused adapter test executes a fully signed,
+positive transaction through an isolated controller boundary; it proves receipt,
+immutable publication, pointer activation, and fixed controller action order
+without adding a production manager/path/environment override.
 
 The local Windows GNU toolchain still fails in dependency build-script linking
 with the known unsupported MinGW linker exit. It did not reach these tests and

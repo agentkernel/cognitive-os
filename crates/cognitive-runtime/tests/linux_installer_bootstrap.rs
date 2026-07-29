@@ -99,7 +99,7 @@ mod unix {
             let installer_wrapper = release_directory.join("cognitiveos-linux-bundle-installer");
             fs::write(
                 &installer_wrapper,
-                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$COGNITIVEOS_TEST_VERIFIER_LOG\"\nexec \"$COGNITIVEOS_TEST_REAL_VERIFIER\" \"$@\"\n",
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$COGNITIVEOS_TEST_VERIFIER_LOG\"\nbundle_directory=\nwhile [ \"$#\" -gt 0 ]; do\n  if [ \"$1\" = --bundle-directory ]; then bundle_directory=$2; break; fi\n  shift\ndone\nexec \"$COGNITIVEOS_TEST_REAL_VERIFIER\" --bundle-directory \"$bundle_directory\" --expected-pi-version \"$COGNITIVEOS_TEST_PI_VERSION\" --expected-pi-integrity \"$COGNITIVEOS_TEST_PI_INTEGRITY\" --keyring-version \"$COGNITIVEOS_TEST_KEYRING_VERSION\" --key-id \"$COGNITIVEOS_TEST_KEY_ID\" --public-key-base64url \"$COGNITIVEOS_TEST_PUBLIC_KEY\"\n",
             )
             .unwrap();
             fs::set_permissions(&installer_wrapper, fs::Permissions::from_mode(0o700)).unwrap();
@@ -143,6 +143,11 @@ mod unix {
                 )
                 .env("COGNITIVEOS_TEST_CURL_LOG", &self.curl_log)
                 .env("COGNITIVEOS_TEST_VERIFIER_LOG", &self.installer_log)
+                .env("COGNITIVEOS_TEST_PI_VERSION", PI_VERSION)
+                .env("COGNITIVEOS_TEST_PI_INTEGRITY", PI_INTEGRITY)
+                .env("COGNITIVEOS_TEST_KEYRING_VERSION", TEST_KEYRING_VERSION)
+                .env("COGNITIVEOS_TEST_KEY_ID", TEST_KEY_ID)
+                .env("COGNITIVEOS_TEST_PUBLIC_KEY", &self.public_key)
                 .env(
                     "COGNITIVEOS_TEST_REAL_VERIFIER",
                     env!("CARGO_BIN_EXE_linux_bundle_verifier"),
@@ -162,7 +167,7 @@ mod unix {
     }
 
     #[test]
-    fn rendered_bootstrap_downloads_private_partials_and_calls_the_installer_adapter_once() {
+    fn rendered_bootstrap_binds_the_inspected_release_version_at_installer_handoff() {
         let fixture = BootstrapFixture::new();
         let output = fixture.run("success");
 
@@ -170,6 +175,7 @@ mod unix {
         let installer_invocations = fs::read_to_string(&fixture.installer_log).unwrap();
         assert_eq!(installer_invocations.lines().count(), 1);
         assert!(installer_invocations.contains("--bundle-directory"));
+        assert!(installer_invocations.contains("--expected-release-version 1.2.3"));
         assert!(installer_invocations.contains("cognitiveos-bootstrap."));
         assert!(stdout(&output).contains("verified-linux-bundle version=1.2.3"));
         assert!(!stdout(&output).contains("p1t08-bootstrap-artifact"));
@@ -179,6 +185,37 @@ mod unix {
         assert!(curl_log.contains("--disable"));
         assert!(curl_log.contains(".partial"));
         assert!(!curl_log.contains(&fixture.public_key));
+    }
+
+    #[test]
+    fn production_installer_rejects_a_valid_bundle_with_a_mismatched_inspected_version_before_xdg_mutation()
+     {
+        let fixture = BootstrapFixture::new();
+        let xdg_data_home = fixture.temporary_directory.path().join("xdg-data");
+        let output = Command::new(env!("CARGO_BIN_EXE_linux_bundle_installer"))
+            .args([
+                "--bundle-directory",
+                fixture.release_directory.to_str().unwrap(),
+                "--expected-release-version",
+                "9.9.9",
+                "--expected-pi-version",
+                PI_VERSION,
+                "--expected-pi-integrity",
+                PI_INTEGRITY,
+                "--keyring-version",
+                TEST_KEYRING_VERSION,
+                "--key-id",
+                TEST_KEY_ID,
+                "--public-key-base64url",
+                &fixture.public_key,
+            ])
+            .env("XDG_DATA_HOME", &xdg_data_home)
+            .output()
+            .unwrap();
+
+        assert!(!output.status.success());
+        assert!(stderr(&output).contains("CognitiveOS Linux bundle installation failed"));
+        assert!(!xdg_data_home.join("cognitiveos/deployment").exists());
     }
 
     #[test]

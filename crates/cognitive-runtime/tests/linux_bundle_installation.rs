@@ -7,6 +7,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use cognitive_runtime::linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, verify_linux_bundle,
+    verify_linux_bundle_for_release,
 };
 use cognitive_runtime::linux_bundle_installation::install_linux_bundle;
 use ed25519_dalek::{Signer, SigningKey};
@@ -29,6 +30,22 @@ const STATEMENT_FILE: &str = "attestation.statement.json";
 const SIGNATURE_FILE: &str = "attestation.signature.json";
 const KERNEL_SERVER_CONTENT: &[u8] = b"p1t08-test-kernel-server";
 const USER_DATA_SENTINEL: &[u8] = b"p1t08-private-user-data-sentinel";
+
+#[test]
+fn inspected_release_version_must_match_a_valid_signed_manifest_before_deployment_mutation() {
+    let fixture = SignedBundleFixture::new("2.0.0");
+    let deployment_root = fixture.temporary_directory.path().join("deployment");
+
+    let result = verify_linux_bundle_for_release(
+        fixture.temporary_directory.path(),
+        "1.0.0",
+        &expected_pi(),
+        &fixture.trusted_keyring(),
+    );
+
+    assert!(matches!(result, Err(LinuxBundleError::InvalidManifest(_))));
+    assert!(!deployment_root.exists());
+}
 
 struct SignedBundleFixture {
     temporary_directory: tempfile::TempDir,

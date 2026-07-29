@@ -9,8 +9,12 @@
 > fixed `systemctl --user` daemon-reload/restart actions, checks the exact
 > 48181 liveness contract before and after active-pointer publication, and
 > deterministically restores the previous pointer/unit/service or removes the
-> first-install unit without issuing a receipt. Focused tests executed in
-> `windows_wsl2_linux_guest`: **46 passed, 0 failed, 1 ignored child
+> first-install unit without issuing a receipt. The adapter runner now owns
+> fixed bootstrap-fact parsing, release-version verification, and controller
+> injection while the production binary still creates only the fixed
+> `/usr/bin/systemctl` controller; its positive transaction test uses an
+> isolated controller boundary. Focused tests executed in
+> `windows_wsl2_linux_guest`: **50 passed, 0 failed, 1 ignored child
 > entrypoint**; runtime strict Clippy, formatting, repository consistency, and
 > diff whitespace checks passed. This is implementation and fixture evidence
 > only. Linux-native user-systemd, release artifact/signing, B01, Gate,

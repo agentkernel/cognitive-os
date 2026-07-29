@@ -16,6 +16,7 @@ pub mod installer;
 pub mod intent_flow;
 pub mod linux_bundle;
 pub mod linux_bundle_installation;
+pub mod linux_bundle_installer_adapter;
 pub mod linux_bundle_service;
 pub mod oob;
 pub mod perf;
@@ -47,10 +48,14 @@ pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, VerifiedLinuxBundle, verify_linux_bundle,
+    verify_linux_bundle_for_release,
 };
 #[cfg(feature = "test-fault-injection")]
 pub use linux_bundle_installation::{InstallFaultPoint, install_linux_bundle_with_fault_injection};
 pub use linux_bundle_installation::{LinuxBundleInstallationReceipt, install_linux_bundle};
+pub use linux_bundle_installer_adapter::{
+    LinuxBundleInstallerAdapterError, install_linux_bundle_with_controller, product_deployment_root,
+};
 pub use linux_bundle_service::{
     LinuxBundleServiceController, LinuxBundleServiceError, LinuxBundleServiceReceipt,
     LinuxBundleSingleServiceController, PersonalUserServiceUnitKind, SystemdUserServiceController,
