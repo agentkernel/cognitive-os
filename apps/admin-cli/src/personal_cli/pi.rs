@@ -85,6 +85,7 @@ fn atomic_write_configuration(path: &std::path::Path, contents: &[u8]) -> Result
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 

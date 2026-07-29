@@ -51,7 +51,8 @@ cargo test -p admin-cli --test p1_t06_cognitive_cli --locked
 
 cargo clippy -p kernel-server -p admin-cli -p pi-agent-adapter \
   -p cognitive-provider-transport --all-targets -- -D warnings
-# passed
+# initially rejected test-only expect calls; after adding the local test-module
+# lint allowance, the same strict command passed
 
 cargo fmt --all -- --check
 pnpm run check:consistency
