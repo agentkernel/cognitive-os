@@ -1,7 +1,43 @@
 # PROGRESS — 单页进度仪表
 
+> **Install-to-first-conversation XDG/endpoint foundation (2026-07-29):** The
+> current first-conversation work item is `in-progress`. `kernel-server
+> --personal` now resolves the real user XDG layout when its explicit
+> hermetic-only `--runtime-root` is absent; it no longer creates a PID-scoped
+> temporary layout for the installed user service. After a successful loopback
+> bind, the daemon atomically publishes its actual bound endpoint to the shared
+> non-secret `state/cognitiveos/daemon-endpoint.json` document and removes it
+> during orderly shutdown. `cognitive daemon start` no longer pre-publishes an
+> endpoint: it waits for the lock, bootstrap secret, and daemon-owned endpoint
+> before reporting success. Focused `windows_wsl2_linux_guest` evidence:
+> kernel-server Personal daemon integration **5/5 passed**, CLI daemon lifecycle
+> integration **1/1 passed**, and strict Clippy passed for both crates. This is
+> implementation and local-test evidence only, not Provider discovery,
+> selected-model persistence, Pi launch, first conversation, B01, a product
+> Gate, or Profile conformance.
+
+> **P1-T08 Linux-native closeout (2026-07-29):** P1-T08 is `done`.
+> The experimental release-shaped campaign executed the inspected shell through
+> the fixed production Rust adapter and `/usr/bin/systemctl --user` on the
+> designated independent Linux-native host `personal-linux-native-01`.
+> Evidence covers a clean install of `0.0.0-campaign.20260729.3`, a healthy
+> upgrade to `.4`, a pre-pointer failure for `.5`, and a post-pointer final
+> confirmation failure for `.6`. Both failure cases returned the stable
+> installer failure boundary; after the runs, the canonical unit and service
+> were active, the exact 48181 liveness endpoint was healthy, and the bounded
+> non-secret `active-version` pointer was restored to `.4`. Immutable `.2`
+> through `.6` campaign versions remained retained. Focused WSL implementation
+> tests passed **19/19** (`linux_bundle_campaign_builder`,
+> `linux_bundle_service_lifecycle`, and `linux_bundle_single_service`) and
+> strict runtime Clippy passed. This provides Linux-native experimental test
+> evidence for the P1-T08 installer transaction only; it is not a production
+> release/signing, B01, product Gate, Profile, containment, uninstall, or
+> first-conversation claim. P1-T09 remains `not-started`; the next active
+> work item is the install-to-first-conversation route.
+
 > **P1-T08 MVP single-service installer transaction (2026-07-29):** P1-T08
-> remains `in-progress` with `development_track: experimental-local-only`.
+> was `in-progress` with `development_track: experimental-local-only` before
+> the Linux-native closeout recorded above.
 > The inspected shell now verifies a release-bound Rust installer digest and
 > hands the complete downloaded bundle to `linux-bundle-installer`. The Rust
 > path shares one offline verify → OS lease → private staging prefix, publishes

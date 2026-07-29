@@ -1,8 +1,10 @@
 //! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
 
+use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -23,6 +25,9 @@ use super::readiness::{
     status_projection_json,
 };
 
+const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
+static ENDPOINT_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
 /// Configuration for the Personal loopback daemon surface.
 #[derive(Debug, Clone)]
 pub struct PersonalDaemonConfig {
@@ -40,6 +45,21 @@ pub enum PersonalDaemonError {
     Lifecycle(DaemonLifecycleError),
     Auth(LocalAuthError),
     Io { detail: String },
+}
+
+/// Owns the endpoint document for the lifetime of the bound listener.
+///
+/// The document is published only after a successful loopback bind and is
+/// removed during orderly shutdown. A forced process termination can leave a
+/// stale document, so consumers must still verify the daemon lock/process.
+struct EndpointPublication {
+    path: PathBuf,
+}
+
+impl Drop for EndpointPublication {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
 }
 
 impl std::fmt::Display for PersonalDaemonError {
@@ -92,9 +112,13 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: error.to_string(),
         }
     })?;
-    if let Ok(local_address) = listener.local_addr() {
-        eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
-    }
+    let local_address = listener
+        .local_addr()
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: error.to_string(),
+        })?;
+    let _endpoint_publication = publish_endpoint(&config.layout, local_address.to_string())?;
+    eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
 
     if config.once {
         let (stream, _) = listener.accept().map_err(|error| PersonalDaemonError::Io {
@@ -143,6 +167,47 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         }
     }
     Ok(())
+}
+
+fn publish_endpoint(
+    layout: &PersonalDataLayout,
+    endpoint: String,
+) -> Result<EndpointPublication, PersonalDaemonError> {
+    let endpoint_path = layout.state_dir().join(ENDPOINT_FILE_NAME);
+    let temporary_path = endpoint_path.with_file_name(format!(
+        ".{ENDPOINT_FILE_NAME}.{}-{}",
+        std::process::id(),
+        ENDPOINT_TEMPORARY_SEQUENCE.fetch_add(1, Ordering::Relaxed),
+    ));
+    let document = json!({
+        "schema_version": 1,
+        "endpoint": endpoint,
+        "surface": "personal-daemon-endpoint"
+    });
+    let serialized_document =
+        serde_json::to_vec_pretty(&document).map_err(|error| PersonalDaemonError::Io {
+            detail: error.to_string(),
+        })?;
+    let write_result = (|| -> Result<(), std::io::Error> {
+        let mut temporary_file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary_path)?;
+        temporary_file.write_all(&serialized_document)?;
+        temporary_file.sync_all()?;
+        drop(temporary_file);
+        fs::rename(&temporary_path, &endpoint_path)?;
+        File::open(layout.state_dir())?.sync_all()
+    })();
+    if let Err(error) = write_result {
+        let _ = fs::remove_file(&temporary_path);
+        return Err(PersonalDaemonError::Io {
+            detail: format!("unable to publish daemon endpoint: {error}"),
+        });
+    }
+    Ok(EndpointPublication {
+        path: endpoint_path,
+    })
 }
 
 fn ensure_loopback_bind(bind_address: &str) -> Result<(), PersonalDaemonError> {

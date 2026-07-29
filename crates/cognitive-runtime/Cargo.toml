@@ -9,6 +9,21 @@ license.workspace = true
 
 [features]
 test-fault-injection = []
+native-campaign-faults = []
+
+[[bin]]
+name = "linux_bundle_campaign_builder"
+path = "src/bin/linux_bundle_campaign_builder.rs"
+
+[[bin]]
+name = "linux_bundle_campaign_pre_pointer_fault_daemon"
+path = "src/bin/linux_bundle_campaign_pre_pointer_fault_daemon.rs"
+required-features = ["native-campaign-faults"]
+
+[[bin]]
+name = "linux_bundle_campaign_post_pointer_fault_daemon"
+path = "src/bin/linux_bundle_campaign_post_pointer_fault_daemon.rs"
+required-features = ["native-campaign-faults"]
 
 [dependencies]
 cognitive-contracts = { workspace = true }

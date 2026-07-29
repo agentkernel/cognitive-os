@@ -296,6 +296,22 @@ fn bounded_loopback_health_requires_the_exact_liveness_contract() {
 }
 
 #[test]
+fn bounded_loopback_health_allows_a_short_daemon_startup_delay() {
+    let reserved_listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = reserved_listener.local_addr().unwrap();
+    drop(reserved_listener);
+
+    let server = thread::spawn(move || {
+        thread::sleep(Duration::from_millis(50));
+        let listener = TcpListener::bind(address).unwrap();
+        respond_once(listener, valid_health_response());
+    });
+
+    assert!(probe_personal_health(address, Duration::from_secs(1)).is_ok());
+    server.join().unwrap();
+}
+
+#[test]
 fn candidate_health_failure_stops_candidate_and_restores_previous_service_and_pointer() {
     let fixture = signed_bundle("2.0.0");
     let deployment_root = fixture.temporary_directory.path().join("deployment");

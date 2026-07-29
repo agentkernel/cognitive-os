@@ -2,7 +2,7 @@
 #
 # CognitiveOS Personal Linux bootstrap template.
 #
-# Release automation renders every @COGNITIVEOS_*@ value below into a reviewed,
+# Release automation renders every CognitiveOS policy placeholder below into a reviewed,
 # version-specific script before publication. The source template deliberately
 # fails closed and must not be represented as a usable release installer.
 

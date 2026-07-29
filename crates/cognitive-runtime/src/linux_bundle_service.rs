@@ -29,6 +29,7 @@ const CANDIDATE_HEALTH_PORT: u16 = 48182;
 const MAX_SYSTEMCTL_OUTPUT_BYTES: usize = 8 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
 const MAX_HEALTH_ATTEMPTS: u8 = 3;
+const HEALTH_RETRY_DELAY: Duration = Duration::from_millis(100);
 static UNIT_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Stable, non-secret failure categories for the user-service boundary.
@@ -1003,7 +1004,7 @@ pub fn probe_personal_health(
         return Err(LinuxBundleServiceError::UnsafeServiceConfiguration);
     }
     let deadline = Instant::now() + overall_timeout;
-    for _attempt in 0..MAX_HEALTH_ATTEMPTS {
+    for attempt in 0..MAX_HEALTH_ATTEMPTS {
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
             break;
@@ -1011,6 +1012,14 @@ pub fn probe_personal_health(
         let per_attempt = remaining.min(Duration::from_secs(2));
         if health_attempt(address, per_attempt).is_ok() {
             return Ok(());
+        }
+        if attempt + 1 < MAX_HEALTH_ATTEMPTS {
+            // `Type=simple` reports a successful start before the daemon has
+            // necessarily bound its loopback listener. Retrying is bounded by
+            // both the fixed attempt count and the caller's overall deadline.
+            thread::sleep(
+                HEALTH_RETRY_DELAY.min(deadline.saturating_duration_since(Instant::now())),
+            );
         }
     }
     Err(LinuxBundleServiceError::CandidateHealthFailed)
