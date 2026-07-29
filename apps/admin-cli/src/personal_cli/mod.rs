@@ -10,6 +10,7 @@ mod client;
 mod daemon;
 mod init;
 mod layout;
+mod pi;
 mod secret_input;
 mod url;
 
@@ -20,6 +21,7 @@ use serde_json::Value;
 
 pub use init::run_init;
 pub use layout::{LayoutRoots, resolve_layout_roots};
+pub use pi::PiConfigureOptions;
 
 /// Top-level `cognitive` verb.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,6 +30,7 @@ pub enum CognitiveCommand {
     Status(StatusOptions),
     Doctor(StatusOptions),
     Daemon(DaemonCommand),
+    Pi(PiCommand),
 }
 
 /// Options for `cognitive init`.
@@ -57,6 +60,12 @@ pub enum DaemonCommand {
     Start(DaemonStartOptions),
     Status(StatusOptions),
     Stop(StatusOptions),
+}
+
+/// `cognitive pi` subcommands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PiCommand {
+    Configure(PiConfigureOptions),
 }
 
 /// Options for `cognitive daemon start`.
@@ -110,8 +119,22 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
                 )),
             }
         }
+        "pi" => {
+            let Some((subcommand, pi_rest)) = rest.split_first() else {
+                return Err("pi requires subcommand configure".to_owned());
+            };
+            let flags = parse_flags(pi_rest)?;
+            match subcommand.as_str() {
+                "configure" => Ok(CognitiveCommand::Pi(PiCommand::Configure(
+                    parse_pi_configure_options(&flags)?,
+                ))),
+                other => Err(format!(
+                    "unknown pi subcommand `{other}` (expected configure)"
+                )),
+            }
+        }
         other => Err(format!(
-            "unknown verb `{other}` (expected init|status|doctor|daemon)"
+            "unknown verb `{other}` (expected init|status|doctor|daemon|pi)"
         )),
     }
 }
@@ -135,6 +158,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
                 Err(error) => print_operational_error(&error),
             }
         }
+        CognitiveCommand::Pi(PiCommand::Configure(options)) => match pi::configure(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
         CognitiveCommand::Doctor(options) => {
             match fetch_projection(&options, ProjectionKind::Doctor) {
                 Ok(body) => {
@@ -221,6 +251,41 @@ fn parse_daemon_start_options(
     })
 }
 
+fn parse_pi_configure_options(
+    flags: &BTreeMap<String, String>,
+) -> Result<PiConfigureOptions, String> {
+    reject_unexpected_flags(flags, &["runtime-root", "executable", "extension-entry"])?;
+    let executable_path = required_path_flag(flags, "executable")?;
+    let extension_entry_path = required_path_flag(flags, "extension-entry")?;
+    Ok(PiConfigureOptions {
+        layout_roots: LayoutRoots::from_flags(flags)?,
+        executable_path,
+        extension_entry_path,
+    })
+}
+
+fn required_path_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<PathBuf, String> {
+    flags
+        .get(name)
+        .map(PathBuf::from)
+        .ok_or_else(|| format!("Pi configuration requires --{name} <absolute-path>"))
+}
+
+fn reject_unexpected_flags(
+    flags: &BTreeMap<String, String>,
+    allowed_flags: &[&str],
+) -> Result<(), String> {
+    if let Some(unexpected) = flags
+        .keys()
+        .find(|name| !allowed_flags.contains(&name.as_str()))
+    {
+        return Err(format!(
+            "flag --{unexpected} is not accepted for this command"
+        ));
+    }
+    Ok(())
+}
+
 fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
     let mut flags = BTreeMap::new();
     let mut iter = args.iter();
@@ -296,9 +361,12 @@ USAGE:
                           [--kernel-server <path>]
   cognitive daemon status [--runtime-root <dir>]
   cognitive daemon stop   [--runtime-root <dir>]
+  cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
+                         --extension-entry <absolute-path>
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
+  - Pi configuration writes only non-secret executable and Extension paths
   - never advances Task/Effect/Verification authority state
   - admin-cli management verbs remain available as the emergency path
   - --allow-ephemeral-secret-backend is for hermetic tests only
@@ -323,5 +391,46 @@ mod tests {
                 kernel_server_path: None,
             }))
         );
+    }
+
+    #[test]
+    fn pi_configuration_accepts_only_non_secret_path_flags() {
+        let arguments = vec![
+            "pi".to_owned(),
+            "configure".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--executable".to_owned(),
+            "/opt/pi/bin/pi".to_owned(),
+            "--extension-entry".to_owned(),
+            "/opt/cognitiveos/pi-cognitiveos/index.js".to_owned(),
+        ];
+
+        let command = parse_cognitive_args(&arguments).expect("parse Pi configuration");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Pi(PiCommand::Configure(PiConfigureOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                executable_path: PathBuf::from("/opt/pi/bin/pi"),
+                extension_entry_path: PathBuf::from("/opt/cognitiveos/pi-cognitiveos/index.js"),
+            }))
+        );
+
+        let rejected = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "configure".to_owned(),
+            "--executable".to_owned(),
+            "/opt/pi/bin/pi".to_owned(),
+            "--extension-entry".to_owned(),
+            "/opt/cognitiveos/pi-cognitiveos/index.js".to_owned(),
+            "--api-key-file".to_owned(),
+            "/tmp/key".to_owned(),
+        ])
+        .expect_err("Pi configuration must reject Provider secret flags");
+
+        assert!(rejected.contains("not accepted"), "{rejected}");
     }
 }

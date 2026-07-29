@@ -1,5 +1,21 @@
 # PROGRESS — 单页进度仪表
 
+> **Non-secret Pi configuration slice (2026-07-30):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-started`. Trusted public upstream source at the reviewed Pi
+> `0.81.1` commit confirms `--extension` / `-e <path>` as the exact Extension
+> loading option. The Personal CLI now offers `cognitive pi configure`, which
+> atomically writes only the existing non-secret `pi.json` fields after
+> rejecting relative paths and all non-configuration flags (including Provider
+> secret inputs). It does not start Pi, access Provider configuration,
+> SecretRefs, SecretStore, SQLite, or authority state; the daemon still owns
+> Pi file/version readiness observation. Focused `windows_wsl2_linux_guest`
+> admin-cli Personal units **9/9** passed after a failure-first relative-path
+> test. This is implementation and local-test evidence only: it does not
+> provide a Pi launch, Pi Extension load, deterministic binary Provider
+> fixture, first conversation, native Secret Service, B01, Gate, release, or
+> Profile claim.
+
 > **Readiness truth and installed XDG launch slice (2026-07-29):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
 > remains `not-started`. A Provider component now becomes `ready` only when
