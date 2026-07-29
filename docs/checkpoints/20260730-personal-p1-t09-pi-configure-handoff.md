@@ -86,5 +86,8 @@ claim.
    `apps/kernel-server/src/personal/server.rs` modification untouched and out
    of all staging and commits.
 
-**Commit:** pending.
-**Push status:** pending; remote visibility is not yet asserted.
+**Commit:** `c34f59e` (`P1-T09: add non-secret Pi configuration`).
+**Push status:** successful. `git push -u origin HEAD` completed successfully;
+local tracking is `origin/lane/personal-p1-t08-mvp-single-service`, and
+`git ls-remote` confirmed
+`c34f59e083db91dbb405a9cf4cab7167275a4938` at that remote branch.
