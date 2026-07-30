@@ -29,8 +29,15 @@ impl RunningProviderFixture {
         let fixture_root = unique_temporary_directory(scenario);
         let certificate_path = fixture_root.join("fixture-ca.der");
         let observations_path = fixture_root.join("observations.txt");
-        let fixture_binary_path = std::env::var_os("CARGO_BIN_EXE_p1_t09_provider_fixture")
-            .expect("Cargo publishes the deterministic Provider fixture path");
+        let fixture_binary_path = std::env::current_exe()
+            .expect("test executable path is available")
+            .parent()
+            .and_then(Path::parent)
+            .expect("test executable is under the Cargo debug target")
+            .join(format!(
+                "p1_t09_provider_fixture{}",
+                std::env::consts::EXE_SUFFIX
+            ));
         let mut child = Command::new(fixture_binary_path)
             .args([
                 "--scenario",
