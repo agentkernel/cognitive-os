@@ -29,7 +29,9 @@ impl RunningProviderFixture {
         let fixture_root = unique_temporary_directory(scenario);
         let certificate_path = fixture_root.join("fixture-ca.der");
         let observations_path = fixture_root.join("observations.txt");
-        let mut child = Command::new(env!("CARGO_BIN_EXE_p1-t09-provider-fixture"))
+        let fixture_binary_path = std::env::var_os("CARGO_BIN_EXE_p1-t09-provider-fixture")
+            .expect("Cargo publishes the deterministic Provider fixture path");
+        let mut child = Command::new(fixture_binary_path)
             .args([
                 "--scenario",
                 scenario,
