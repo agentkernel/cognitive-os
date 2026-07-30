@@ -18,6 +18,31 @@
 
 本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。工具链钉在 `rust-toolchain.toml`（1.97.1）。
 
+## Personal Linux-native 开发主机
+
+`personal-linux-native-01`（`wuz@192.168.1.2`）是已验证可访问的
+Linux-native **实验性开发**主机，优先用于明确授权的 Personal/Pi
+`experimental-local-only` 与 `tested-local` 验证。2026-07-30 的无 secret
+资格探针确认：Linux x86_64、native user-systemd 与用户 DBus 均 active，且
+Rust `1.97.1`、Node `22.19.0` 可用。它不是唯一允许主机，也不是 B01、
+release、Profile、containment 或正式产品 Gate 环境。
+
+- 先使用非交互 SSH 探针：
+  `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
+  不在 SSH 命令、环境变量、终端输出或版本控制 evidence 中传递 credential、
+  `SecretRef`、Provider config、SQLite 路径、authority state 或 selected-model
+  内部材料。
+- 每个实际 Pi slice 在远端重新确认 Linux/native user-systemd、Rust/Node、
+  exact Pi `0.81.1` 与可清理独立目录；若任一项不满足，fail closed 并记录
+  `not-run` 或 blocker。`pi` 不在 PATH 不是 pin 已满足的证据；只可使用
+  经过实际 `--version` 校验的 exact package/binary。
+- 真实 Pi load 只允许 `--extension <absolute-path>` 与脱敏 session-local
+  observation。Pi、CLI、fixture 仍不是 authority writer，且不得创建或推进
+  Task、Effect、Verification 或 capability。
+- 所有来自该主机的证据都与 CI Ubuntu、Windows/MSVC 和预注册 clean-VM B01
+  campaign 分列。一次成功的 SSH、systemd、Pi 或 Provider 命令不改变 B01、
+  GMVP-LINUX、release 或 Profile 状态。
+
 ## 目录地图
 
 ```text

@@ -19,7 +19,7 @@
 |---|---|---|
 | CI Ubuntu | Supported Linux build/test matrix evidence | Required green for code merges; not Linux-native systemd, B01, `GMVP-LINUX`, or release evidence |
 | CI Windows/MSVC | Supported Windows build/test matrix evidence | Required green for code merges; not B01-W or install-parity evidence |
-| `personal-linux-native-01` (`wuz@192.168.1.2`) | Designated local Linux-native experimental host | Use for explicitly authorized `experimental-local-only` / `tested-local` Personal and Pi validation; local-only evidence here is not CI evidence and does not by itself create a product, Gate, Profile, containment, or release claim |
+| `personal-linux-native-01` (`wuz@192.168.1.2`) | Designated local Linux-native experimental host | 2026-07-30 no-secret SSH qualification confirmed Linux x86_64, native user-systemd/user D-Bus, Rust 1.97.1, Node 22.19.0, and SSH access. Use only for explicitly authorized `experimental-local-only` / `tested-local` Personal and Pi validation in disposable roots; each slice must re-check exact Pi pin availability. Local-only evidence here is not CI evidence and does not by itself create a product, Gate, Profile, containment, or release claim |
 | Local Windows GNU / MinGW | **Non-supported** | P0-T01 linker exit 121; must not block CI-green work |
 | WSL2 as product runtime | **Not first-ship product** | Existing Pi admission may refuse WSL2; do not market as Personal product host without a later ADR |
 | Linux aarch64 / macOS | Deferred | Out of first-ship matrix |

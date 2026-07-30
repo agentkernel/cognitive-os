@@ -98,3 +98,22 @@ is explicitly **not-run**, not pass evidence.
 - Next entry: claim a separate non-overlapping Lane-RUN lease for the smallest
   real pinned Pi Extension-load slice. Do not run B01 until all route
   acceptance prerequisites and campaign pre-registration are complete.
+
+## Linux-native environment qualification follow-up
+
+On 2026-07-30, non-interactive no-secret SSH to
+`personal-linux-native-01` (`wuz@192.168.1.2`) confirmed an available native
+Linux x86_64 environment: a present user runtime directory, running
+user-systemd, active user D-Bus, Rust `1.97.1`, and Node `22.19.0`. This
+qualifies the host only for disposable `experimental-local-only` /
+`tested-local` debugging; it is not B01, release, containment, Profile, or
+product-Gate evidence.
+
+`pi` was absent from PATH. An uncredentialed exact-package probe,
+`npm exec --yes --package=@earendil-works/pi-coding-agent@0.81.1 -- pi --version`,
+did not emit a version after two minutes and was stopped. Exact Pi availability
+and a real P1-T09 Extension load therefore remain `not-run`. The next slice
+must first resolve the version-verified package/binary in a disposable remote
+directory, then run the smallest `--extension <absolute-path>` load with only
+redacted session-local observations and no Provider/secret/SQLite/authority
+material in the child environment.
