@@ -18,6 +18,10 @@
 
 本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。工具链钉在 `rust-toolchain.toml`（1.97.1）。
 
+> PowerShell 5.1 不支持 `&&`。本地需要按前一命令成功才继续时，使用
+> `if ($LASTEXITCODE -eq 0) { <next-command> }`；仅需顺序执行时使用 `;`。
+> `&&` 仅用于标注为 bash/CI 的命令，或已经确认运行 PowerShell 7+ 的环境。
+
 ## Personal Linux-native 开发主机
 
 `personal-linux-native-01`（`wuz@192.168.1.2`）是已验证可访问的
