@@ -50,7 +50,7 @@ flowchart LR
 
 | Task | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|
-| Personal governance operating-model correction | Lane-DOC | `lane/personal-p1-t08-mvp-single-service` | `AGENTS.md`, `plan.md`, `docs/README.md`, `docs/governance/**`, `docs/plan/**`, `docs/traceability/findings-ledger.md`, `docs/standards/docs-sync-contract.md`, `docs/adr/0008-*`, current governance handoff | current governance session | 2026-07-30 / 2026-07-30 | active; documentation-only |
+| Personal governance operating-model correction | Lane-DOC | `lane/personal-p1-t08-mvp-single-service` | `AGENTS.md`, `plan.md`, `docs/README.md`, `docs/governance/**`, `docs/plan/**`, `docs/traceability/findings-ledger.md`, `docs/standards/docs-sync-contract.md`, `docs/adr/0008-*`, current governance handoff | current governance session | 2026-07-30 / 2026-07-30 | closed; handoff `20260730-governance-operating-model-handoff.md` |
 | P1-T09 implementation continuation | Lane-RUN | next task-correct `lane/personal-p1-t09-*` branch | must be declared when claimed; existing user-dirty `apps/kernel-server/src/personal/server.rs` excluded until owner releases it | unclaimed | — | available after governance closure |
 
 Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
