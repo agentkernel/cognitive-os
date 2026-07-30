@@ -7,11 +7,11 @@ evidence journal` preserve execution-time facts and cannot override it.
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| P1-T09 route implementation | `in-progress` | `experimental-local-only`; prior `tested-local` launch/readiness evidence; deterministic binary Provider fixture implementation staged but focused execution is `not-run` in this unsupported local linker environment | execute the fixture/discovery focused suite on supported Linux CI, then add the real pinned Pi Extension load |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; route has prior `tested-local` launch/readiness evidence and `tested-supported-ci` deterministic Provider fixture evidence; no product-Gate, release, or Profile claim | add the real pinned Pi Extension load |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | P1-T09 deterministic binary Provider fixture CI repair active in [PARALLEL-LANES](PARALLEL-LANES.md) | CI repair only; normative assets remain Lane-CTR-owned | repair the observed Ubuntu/Windows focused-fixture failures, then re-run focused validation |
+| Active task lease | P1-T09 deterministic binary Provider fixture CI repair closed in [handoff](../checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md) | no active P1-T09 writable lease; normative assets remain Lane-CTR-owned | re-claim only for the separate real pinned Pi Extension-load slice |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
@@ -21,9 +21,11 @@ an additional-root test seam that preserves the production Rustls policy. Its
 failure-first integration suite covers real discovery serialization, malformed
 and unauthorized responses, non-chat capability, timeout, oversized response,
 redirect refusal, selected-model persistence, deterministic request counts, and
-secret redaction. The suite has not yet executed locally because the supported
-Linux toolchain is unavailable and the Windows GNU linker exits 121 before the
-tests start; this is not pass evidence.
+secret redaction. The exact suite passed **3/3** within the supported Ubuntu
+and Windows CI workspace tests for PR #117 (run 30513254161). Local focused
+test and Clippy commands remain `not-run` to completion because the Windows GNU
+linker exits 121 before tests start; that limitation neither invalidates the
+supported-CI evidence nor creates a Gate, release, or Profile claim.
 
 ## Historical evidence journal
 

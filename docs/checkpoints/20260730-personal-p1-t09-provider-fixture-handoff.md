@@ -3,10 +3,10 @@
 - Date: 2026-07-30
 - Task: P1-T09 install-to-first-conversation route
 - Classification: implementation-only; normative surface unchanged
-- Implementation commit: `96844b8`
+- Implementation commits: `96844b8`, CI repair `56d0f7f`
 - Branch: `lane/personal-p1-t09-provider-fixture`
 - Remote visibility: PR [#117](https://github.com/agentkernel/cognitive-os/pull/117);
-  latest pushed commit `32fd4f6`; replacement CI is pending
+  latest pushed commit `56d0f7f`; required Ubuntu/Windows CI is green
 
 ## Completed
 
@@ -29,6 +29,9 @@
    Lane-RUN lease. No registry, schema, public DTO, registered error,
    transition, generated contract, conformance vector, Pi argv/environment,
    Task, Effect, Verification, capability, or authority writer was changed.
+5. Repaired the two real CI failures: the non-chat scenario now returns no
+   `choices` marker, and the test child preserves only OS execution variables
+   required by the Windows loader after clearing its inherited environment.
 
 ## CI follow-up
 
@@ -37,8 +40,9 @@ without changing the fixture contract: existing composition roots now use the
 configured transport's `Default` value (`006ccff`), and the process test now
 derives the fixture beside the Cargo test executable rather than relying on an
 unset `CARGO_BIN_EXE_*` environment variable (`c424093`, `b4beb50`,
-`62c6782`). The replacement Ubuntu and Windows checks are pending; no CI pass
-or supported-CI evidence claim is made yet.
+`62c6782`). The replacement checks passed in PR #117: the exact fixture
+integration suite ran **3/3** in both Ubuntu and Windows workspace test jobs
+of CI run 30513254161. All required Ubuntu/Windows checks are green.
 
 ## Failure-first evidence
 
@@ -61,20 +65,22 @@ is explicitly **not-run**, not pass evidence.
 - `cargo fmt --all -- --check` — passed.
 - `git diff --check` — passed.
 - IDE lint diagnostics for the three changed Rust source/test paths — none.
-- `cargo test ...p1_t09_deterministic_provider_fixture...` — not-run to
+- Local `cargo test ...p1_t09_deterministic_provider_fixture...` — not-run to
   completion; unsupported Windows GNU linker exit 121 before tests.
-- `cargo check -p cognitive-provider-transport --tests --locked` — not-run to
-  completion; same linker limitation.
-- WSL Linux focused tests — not-run; WSL has no Cargo/Rust toolchain.
-- Strict Clippy — not-run for the same unsupported local toolchain limitation.
+- Local strict Clippy — not-run for the same unsupported local toolchain
+  limitation.
+- Supported CI `cargo test --workspace --locked` — passed; the exact fixture
+  suite was **3/3** in both Ubuntu and Windows jobs of run 30513254161.
+- Supported CI strict Clippy and formatter — passed in both required jobs.
 - `pnpm run check:consistency` — passed: 273 requirements, 55 error codes, 63
   schemas, 85 vectors, links, and traceability verified.
 - Secret scan, full workspace regression, and real Pi load — not-run.
 
 ## Status and explicit non-claims
 
-- `P1-T09`: `in-progress`; `experimental-local-only`; prior route evidence
-  remains `tested-local`, while this fixture focused execution is `not-run`.
+- `P1-T09`: `in-progress`; `experimental-local-only`;
+  `implementation_evidence: tested-supported-ci` for the deterministic
+  fixture, with prior route evidence retained at `tested-local`.
 - `B01`: `not-run`.
 - `GMVP-LINUX`: `not-run`.
 - Profile `implemented`: `0`.
@@ -86,15 +92,9 @@ is explicitly **not-run**, not pass evidence.
 
 ## Lease and next entry
 
-- The P1-T09 Lane-RUN follow-up lease is closed after the compile fixes and
-  closure docs. Its paths included the Provider transport crate, the two
-  composition-root construction sites, and the listed plan/progress/handoff
-  documents.
-- Next entry: inspect the replacement required CI, and run the focused
-  fixture suite on supported Linux. Fix any CI findings before promoting
-  implementation evidence. Then add the smallest separate real pinned Pi
-  Extension-load slice; do not run B01 until all route acceptance prerequisites
-  and campaign pre-registration are complete.
-        - docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md
-| P1-T09 deterministic binary Provider fixture | Lane-RUN | `lane/personal-p1-t09-provider-fixture` | `crates/cognitive-provider-transport/**`, `Cargo.lock`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PROGRESS.md`, `docs/plan/personal-trace.yaml`, `docs/plan/PARALLEL-LANES.md`, `docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md`; secondary local control-plan path `C:/Users/wuron/.cursor/plans/personal_linux_mvp_fd48be65.plan.md` | current Provider fixture session | 2026-07-30 / 2026-07-30 | closed; implementation-only, normative surface unchanged; handoff above |
-| Active task lease | P1-T09 deterministic binary Provider fixture lease closed in [handoff](../checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md) | no active P1-T09 writable lease; normative assets remain Lane-CTR-owned | re-claim a task-correct lease after CI result, then run/fix the focused fixture suite |
+- The P1-T09 Lane-RUN CI-repair lease is closed after the green required CI
+  and closure docs. Its paths included the Provider transport crate and the
+  listed plan/progress/handoff documents.
+- Next entry: claim a separate non-overlapping Lane-RUN lease for the smallest
+  real pinned Pi Extension-load slice. Do not run B01 until all route
+  acceptance prerequisites and campaign pre-registration are complete.

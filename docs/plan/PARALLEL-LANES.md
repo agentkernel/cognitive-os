@@ -51,7 +51,7 @@ flowchart LR
 | Task | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|
 | Personal governance operating-model correction | Lane-DOC | `lane/personal-p1-t08-mvp-single-service` | `AGENTS.md`, `plan.md`, `docs/README.md`, `docs/governance/**`, `docs/plan/**`, `docs/traceability/findings-ledger.md`, `docs/standards/docs-sync-contract.md`, `docs/adr/0008-*`, current governance handoff | current governance session | 2026-07-30 / 2026-07-30 | closed; handoff `20260730-governance-operating-model-handoff.md` |
-| P1-T09 deterministic binary Provider fixture CI repair | Lane-RUN | `lane/personal-p1-t09-provider-fixture` | `crates/cognitive-provider-transport/**`, `docs/plan/PARALLEL-LANES.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md` | current Provider fixture CI repair session | 2026-07-30 / 2026-07-30 | active; non-overlapping CI-failure repair only, implementation-only, normative surface unchanged |
+| P1-T09 deterministic binary Provider fixture CI repair | Lane-RUN | `lane/personal-p1-t09-provider-fixture` | `crates/cognitive-provider-transport/**`, `docs/plan/PARALLEL-LANES.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md` | current Provider fixture CI repair session | 2026-07-30 / 2026-07-30 | closed; PR #117 Ubuntu/Windows required CI green, implementation-only, normative surface unchanged |
 
 Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
 
