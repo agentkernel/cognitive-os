@@ -244,7 +244,7 @@ fn fixture_response(scenario: FixtureScenario, request: &FixtureRequest) -> Vec<
     }
     if request.method == "POST" && request.path == "/v1/chat/completions" {
         if scenario == FixtureScenario::NonChatCapable {
-            return http_response(200, "OK", &[], br#"{"choices":[]}"#);
+            return http_response(200, "OK", &[], b"{}");
         }
         let body_text = std::str::from_utf8(&request.body).unwrap_or_default();
         if body_text.contains("\"tools\"") {

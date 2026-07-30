@@ -16,6 +16,16 @@ use cognitive_secret::{
 
 const FIXTURE_MODEL_ID: &str = "p1-t09-deterministic-chat-model";
 const SECRET_MARKER: &str = "p1t09-secret-material-must-not-leak";
+const FIXTURE_EXECUTION_ENVIRONMENT_ALLOWLIST: [&str; 8] = [
+    "ComSpec",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "WINDIR",
+];
 
 struct RunningProviderFixture {
     child: Child,
@@ -52,6 +62,7 @@ impl RunningProviderFixture {
                     .expect("fixture observations path is UTF-8"),
             ])
             .env_clear()
+            .envs(fixture_execution_environment())
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -94,6 +105,17 @@ impl Drop for RunningProviderFixture {
         let _ = self.child.kill();
         let _ = self.child.wait();
     }
+}
+
+fn fixture_execution_environment() -> Vec<(String, std::ffi::OsString)> {
+    // The child is isolated from Provider material while retaining the Windows
+    // loader variables required to execute a Rust binary.
+    FIXTURE_EXECUTION_ENVIRONMENT_ALLOWLIST
+        .into_iter()
+        .filter_map(|variable_name| {
+            std::env::var_os(variable_name).map(|value| (variable_name.to_owned(), value))
+        })
+        .collect()
 }
 
 fn unique_temporary_directory(label: &str) -> PathBuf {
