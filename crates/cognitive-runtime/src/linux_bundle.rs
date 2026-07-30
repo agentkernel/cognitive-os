@@ -1096,22 +1096,43 @@ mod tests {
     }
 
     fn runnable_archive_bytes() -> Vec<u8> {
-        let executable_contents = b"unit-test-kernel-server";
         let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
         let mut tar_builder = TarBuilder::new(gzip_encoder);
-        let mut header = TarHeader::new_gnu();
-        header.set_mode(0o755);
-        header.set_size(executable_contents.len() as u64);
-        header.set_cksum();
-        tar_builder
-            .append_data(
-                &mut header,
-                REQUIRED_EXECUTABLE_PATH,
-                &executable_contents[..],
-            )
-            .unwrap();
+        append_test_archive_file(
+            &mut tar_builder,
+            REQUIRED_KERNEL_SERVER_PATH,
+            b"unit-test-kernel-server",
+            0o755,
+        );
+        append_test_archive_file(
+            &mut tar_builder,
+            REQUIRED_COGNITIVE_CLI_PATH,
+            b"unit-test-cognitive",
+            0o755,
+        );
+        append_test_archive_file(
+            &mut tar_builder,
+            REQUIRED_EXTENSION_ENTRY_PATH,
+            b"export {};\n",
+            0o644,
+        );
         let gzip_encoder = tar_builder.into_inner().unwrap();
         gzip_encoder.finish().unwrap()
+    }
+
+    fn append_test_archive_file(
+        tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+        path: &str,
+        contents: &[u8],
+        mode: u32,
+    ) {
+        let mut header = TarHeader::new_gnu();
+        header.set_mode(mode);
+        header.set_size(contents.len() as u64);
+        header.set_cksum();
+        tar_builder
+            .append_data(&mut header, path, contents)
+            .unwrap();
     }
 
     #[test]
@@ -1243,7 +1264,7 @@ mod tests {
 
         deployment
             .activate_after_health_check(&verified_bundle, |staged_directory| {
-                staged_directory.join(REQUIRED_EXECUTABLE_PATH).is_file()
+                staged_directory.join(REQUIRED_KERNEL_SERVER_PATH).is_file()
             })
             .unwrap();
 
