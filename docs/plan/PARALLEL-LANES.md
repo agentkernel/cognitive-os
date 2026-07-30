@@ -57,7 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — | — |
+| `lease/personal/P1-T09/experimental-campaign-artifact` | correct the experimental campaign's public-key facts check and rerun the signed artifact build | Lane-RUN | `lane/personal-p1-t09-campaign-verifier-fix-v2` | `.github/workflows/personal-experimental-linux-campaign.yml`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-experimental-campaign-artifact-handoff.md` | Cursor session 2026-07-30 | 2026-07-30 / 2026-07-30 | active |
 
 ### 3.1 最近关闭的 leases
 
