@@ -67,8 +67,8 @@ is explicitly **not-run**, not pass evidence.
   completion; same linker limitation.
 - WSL Linux focused tests — not-run; WSL has no Cargo/Rust toolchain.
 - Strict Clippy — not-run for the same unsupported local toolchain limitation.
-- `pnpm run check:consistency` — not-run; this implementation-only batch did
-  not modify normative assets, but supported CI remains required evidence.
+- `pnpm run check:consistency` — passed: 273 requirements, 55 error codes, 63
+  schemas, 85 vectors, links, and traceability verified.
 - Secret scan, full workspace regression, and real Pi load — not-run.
 
 ## Status and explicit non-claims
