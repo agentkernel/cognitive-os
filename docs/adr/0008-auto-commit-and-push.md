@@ -11,15 +11,23 @@
 
 ## Decision
 
-1. 仓库所有者明确授权：**完成且测试通过**的原子任务由代理自动提交并自动 push，无需逐次请示。
+1. 仓库所有者明确授权：通过相应验证阶段的原子批由代理自动提交并自动 push，无需逐次请示。任务是否 `done`、远端 CI 是否完成、产品 Gate 是否通过分别记账，不再互相替代。
 2. 授权附带的硬条件（违反任何一条即失去本授权的适用性）：
-   - 禁止提交失败状态（构建/测试/lint/一致性检查未全绿不得提交）；
+   - 提交前必须通过受影响 package 的 focused tests/lint/format 与相关负例；禁止提交已知受影响失败。远端 CI pending、非支持本地环境或明确无影响的检查记为 `not-run`，不虚报通过，也不自动禁止隔离 commit；
    - 禁止 `git add -A` / `git add .`，一律逐路径 `git add`；禁止混入无关改动或他人工作区状态；
    - 禁止 force-push 任何已推送分支；
    - 禁止推送 `personal-blog/**`（独立子工程）；`clients/**` 仅允许核心 gate 变化引起的最小 Markdown 状态同步；
    - push 前必须运行 `git log --name-only origin/main..HEAD`（或 lane 分支对其远端比对）逐文件核对推送面。
 3. 直推 `main` 仅限 docs-only 低风险批；代码批沿用 lane 分支 + PR + CI 全绿后合并的惯例。若分支保护拒绝直推，自动改走 lane 分支 + PR，不得绕过。
-4. 执行细则固化为 `.cursor/rules/18-auto-commit-and-doc-sync.mdc`（alwaysApply）。
+4. 工具无关执行细则以 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md) 为准；`.cursor/rules/` 如存在，仅是编辑器适配层。
+
+## Validation stages
+
+1. **Pre-commit:** failure-first 证据（行为变更）、受影响测试/lint/format、相关 secret/diff 检查通过；无已知受影响失败。
+2. **Pre-push:** 在可用受支持工具链执行相关广域回归与 consistency；未执行项及原因写入 handoff/PR；核对 staged 和 branch push surface。
+3. **Merge/task completion:** required protected CI 全绿，状态/PROGRESS/handoff 对齐。任何 required red check 禁止 merge 或完成声明。
+
+实现与 closure documentation 属于同一 atomic delivery/PR，但不要求同一 commit。允许一个实现 commit 后跟一个 handoff/docs commit，以便 handoff 记录前者的 immutable hash。
 
 ## Alternatives considered
 
@@ -33,6 +41,6 @@
 
 ## Consequences
 
-- 代理会话在任务完成且验证矩阵全绿后即提交并 push；CI 观察到结论为止。
+- 代理在 pre-commit/pre-push 条件满足后提交并 push；远端 CI 结论用于 merge/任务完成门禁。
 - 红灯处置责任随授权转移给代理：push 后 CI 红必须立即修复或回退。
-- 所有既有红线（`AGENTS.md`、`.cursor/rules/`）不因本授权放宽；本 ADR 只取消"逐次请示"这一步。
+- 所有既有红线（`AGENTS.md` 与 tracked governance documents）不因本授权放宽；本 ADR 只取消"逐次请示"这一步。

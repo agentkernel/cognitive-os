@@ -140,15 +140,15 @@ Agent Hub / 直连接管是 Lane-CON 下的独立产品线（Direct Takeover + G
 
 | # | §20.3 依赖组 | 提供方里程碑 | 状态 |
 |---|---|---|---|
-| 1 | Shell/Management/Watch API 与 AKP envelope/transport | M5 | 未交付 |
-| 2 | AgentExecution/Task/Verification 生命周期载体、AcceptanceDecision | M2+M4+M5 | 未交付 |
-| 3 | installer/sandbox/adapter/compatibility runner 与安装迁移表 | M6 | 未交付 |
+| 1 | Shell/Management/Watch API 与 AKP envelope/transport | M5 | 后端实现与局部行为证据已提供；Console 平台 E2E/消费 gate 仍未执行 |
+| 2 | AgentExecution/Task/Verification 生命周期载体、AcceptanceDecision | M2+M4+M5 | 核心合同与后端实现已提供；Personal P2 应用服务和 Console 消费仍未开始 |
+| 3 | installer/sandbox/adapter/compatibility runner 与 installation lifecycle orchestration | M6 | M6 参考实现有局部证据；不得声称存在安装迁移表（D-020）；Personal single-service 产品路径仍 in-progress |
 | 4 | approval queue/challenge/quorum/trusted surface/anti-fatigue | M5（R1 最低集）→ R2/R3 后置 | 未交付 |
 | 5 | approval canonical projection/域分离/密钥轮换、server-side risk floor、idle 规则 | M5~M6 | 未交付 |
 | 6 | Memory private working set、Knowledge Evidence/Claim schemas | M7 | 未交付 |
-| 7 | AuditRecord/export、StateSnapshot/ack、reconciliation/recovery report | M4~M6 | 未交付 |
+| 7 | AuditRecord/export、StateSnapshot/ack、reconciliation/recovery report | M4~M6 | Ordinary Core 局部实现与证据已提供；完整 Console 消费面和高保证登记仍受 D-016/D-022 阻断 |
 | 8 | native-app auth redirect/PKCE、offline lease、deep-link、IdP/push/config/update/health | M6+（部署基建） | 未交付 |
-| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M6 执行能力；当前 84 vectors 中 **55 pass / 29 not-run**（以 PROGRESS / CI pins 实测为准）；RC manifest 可生成且 ≤ experimental；Profile implemented 仍为 0；F-017 阻断 v0.1 GO |
+| 9 | conformance runner、executed vectors、profile-manifest 实例 | M1（runner）→ M6（真实 manifest） | runner 已具 M1–M6 执行能力；当前 **85 vectors / 60 pass / 25 not-run**（以 PROGRESS / CI pins 实测为准）；RC manifest 可生成且 ≤ experimental；Profile implemented 仍为 0 |
 
 激活规则：依赖组 1/2/7 交付并过 M5 出口评审后，且目标平台 [Open PoC 与 GA gates](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 用真实 API/真实 OS 行为出具可复现实测报告，才可启动 Console "MVP Desktop 只读监督"实现里程碑规划；不得用 mock 冒充。文档例外不改变此 gate。
 

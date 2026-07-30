@@ -1,10 +1,10 @@
 # Findings 台账：F-001~F-030 与 IMP-01~18 逐条现状
 
 - 状态：M0 首次逐条核验（2026-07-20，基于 `CognitiveOS-Review-Conclusions.md` v2.0 §6.4 处置记录 + 对 v1.0.1 机器资产的抽查复验）
-- 用途：**M1 入口 gate 的依据**。开放 P0 未闭合前，对应子系统不得进入实现里程碑（AGENTS.md 硬纪律 6）。
+- 用途：风险与证据 Gate 的依据。开放 P0 只阻断明确列出的 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` 的验收和推广，不阻断调查、failure-first 测试或修复实现；既有条目在下次触碰前以“阻断”列作为 legacy scope。
 - 状态取值：`closed-by-1.0.1`（1.0.1 静态反例复验关闭）/ `partially-closed`（部分收敛，余项列明）/ `open`（未闭合，阻断标注的里程碑）/ `framework`（判定框架级/非可修缺陷，以证据推进消解，不阻断单项合同）。
 - 独立审查针对白皮书 v1.0.0（commit `f2f826a`）；1.0.1（commit `4e02bbf`）为其后的修复轮。里程碑编号以 `docs/plan/DEVELOPMENT-PLAN.md` 为准。
-- 更新义务：触碰任一条目的 PR 必须同步本台账（`.cursor/rules/02-workflow-docs-sync.mdc`）。
+- 更新义务：触碰任一条目的 PR 必须同步本台账并显式补齐阻断范围；工具无关规则见 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)。
 
 ## 一、独立审查 F-001~F-030
 
@@ -95,6 +95,7 @@
 | D-021 | M6 readiness（MANAGEMENT_READY→USER_READY→OPERATIONAL）仅有白皮书/DEVELOPMENT-PLAN prose 与 `apps/kernel-server` 常量，无登记 REQ/schema/vector/carrier | **decided（2026-07-21 Lane-CTR M6 Batch-0A）**：裁决 = **不新增** readiness carrier/REQ/schema/vector（IMP-01）。M6 验收以 milestone e2e/fault 证据满足 DEVELOPMENT-PLAN M6 判据 5；**不得**写入 registry conformance 或 Profile implemented 声明。若未来跨信任边界暴露 readiness 投影，再以实现反馈驱动修正型登记 | decided（M6 实现消费边界） |
 | D-022 | Configuration Authority CA-0 发现三项合同未闭合：① D-016 未登记 Management wire operation set，configure action 无 payload/target/readback profile；② `PrivilegedManagementSession.authority_signature` 无 canonical standard §12 要求的 algorithm/key ID/domain/signed projection/exclusions 与一般无效签名错误映射；③ REQ-AUDIT-001/002 只有性质/prose，无可机器验证顺序、完整性、保留、敏感度、导出及 authority-commit 原子性的 audit carrier/port | **AUDIT review component complete / independent privileged-read registration NO-GO / four registrations pending blocker（2026-07-23）**：PR #54 merge/main CI 后，owner-authorized security/audit/compliance review 未发现阻断性 AUDIT design defect；该 provenance 不是外部人类、第三方或 GitHub review。SIG independent security/cryptography review 仍 pending。OPS audit 证明八项全部 blocked、foundation 未闭合；TARGET/SIG/AUDIT exact machine refs 仍不能填入 OPS descriptor。四类精确 schemas/digests/policies/keys/errors/ports/sets/profiles 均未登记；Event、transition、receipt、`audit_ref`、SQLite row、boolean、log 或 vector fact 仍不是 authoritative audit。只有四类 machine contracts 全部闭合后才可独立 CA-0 re-review | blocker：AUDIT owner-authorized review component completed；SIG independent review + OPS member closure + four machine registrations + CA-0 GO pending（not closed；CA-1～CA-8 blocked；8 个 Management 向量保持 not-run） |
 | D-023 | `PROGRESS.md` 声明 matrix 非空 `impl` 为 68，但 shell-channel 与 shell-target 两批回填后，当前 `matrix.yaml` 中带至少一个实现路径的条目实数为 70 | **CA-0 执行窗口闭合（2026-07-22）**：使用仓库既有 `yaml` 解析器按 `requirements[*].impl.length > 0` 重算为 70；`gen-matrix --check` 证明生成矩阵最新，`check:consistency` 证明 273 条 REQ、路径与 traceability 有效。PROGRESS 修正为 70；不改变“实现已提供”与“测试已执行/Profile 已符合”的边界 | closed-by-CA0-count-remeasurement |
+| D-024 | Personal 计划把 Context、Memory、Agent/Tool 和 Multi-Agent 全部置于首个公开产品之前，同时 P1-T08 的双 unit/双端口升级模型先于完整 install-to-conversation 路径；该依赖图与 owner 选择的 MVP-first 产品顺序不一致 | **owner decision（2026-07-29，ADR-0034）**：不重编号既有任务；首个生产安装面收敛为单 canonical user service/48181，双 unit 模型后移为数据触发的升级优化；新增产品 Gate `P7-T08 / GMVP-LINUX`，在 P1/B01、P2 与 P7-T01..T03 汇合后发布 scoped Linux MVP。P3/P4/P5、Windows、UI 与 Multi-Agent 变为后续独立能力列车；不改变任何 REQ/schema/vector/Profile 或已执行证据状态 | decided-by-ADR-0034；implementation and Gate evidence pending |
 
 ### 2026-07-23 v0.2 owner-choice closure note
 

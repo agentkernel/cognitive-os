@@ -1,7 +1,11 @@
-# PARALLEL-LANES — 并行车道机制（面向 Cursor Multitask）
+# PARALLEL-LANES — CognitiveOS Personal ownership lease 台账
 
-- 状态：v1.0（M0 产出）；类别 plan
+- 状态：v1.1（active ownership lease model）；类别 plan
 - 更新责任：车道启动/交还/换分支时必更所有权表；接口冻结状态变化时必更 §3
+
+`cognitiveos-personal` 是唯一活动实现项目。下列 Lane 是一个项目内的架构责任角色，
+不是可各自推进的产品或 backlog。任务来自 `PERSONAL-DEVELOPMENT-PLAN.md`；本文件只
+决定当前可写路径，不能改变任务、Gate 或当前产品状态。
 
 ## 1. 车道划分
 
@@ -30,13 +34,13 @@ flowchart LR
 
 ## 2. 并行规则（违反 = PR 拒收）
 
-1. **一个车道 = 一个 git 分支（`lane/<名>`，建议配 `git worktree`）= 一个 Cursor Multitask 代理会话**。会话开工先对照本表认领；一个会话不得同时跨两条车道。
+1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。每个 lease 使用稳定 `lease_id`，格式为 `lease/personal/<task>/<slice>`。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
-3. **两个车道禁止同时修改同一 crate/package**（所有权表 §3 为准）；共享文件（PROGRESS、findings-ledger）冲突时后合并者负责 rebase 合并。
+3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
-5. 一律经 PR + CI 门禁合并（两 OS 全绿 + DoD 清单）；禁止直接推 main。
+5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
 6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
-7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`（见 `.cursor/rules/19-personal-blog-boundary.mdc`）。
+7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`。
 
 ### 2.1 Lane-CON 激活前文档例外
 
@@ -46,7 +50,35 @@ flowchart LR
 
 该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
-## 3. 所有权表（当前）
+## 3. 活动 ownership leases（唯一当前台账）
+
+只有下表中的 `active` 行授予当前写权限。开始写入前必须新增一行；`PROGRESS.md`
+只能引用这里存在的 `lease_id` 或写 `none`。
+
+| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
+|---|---|---|---|---|---|---|---|
+| None | — | — | — | — | — | — | — |
+
+### 3.1 最近关闭的 leases
+
+| Lease ID | Task / slice | Branch | Closed | Closure |
+|---|---|---|---|---|
+| `lease/personal/P1-T09/protected-experimental-signing-workflow` | provide a protected experimental campaign signing workflow for the coherent bundle | `lane/personal-p1-t09-coherent-bundle-delivery` | 2026-07-30 | workflow YAML and repository consistency passed; GitHub Environment and signing secret are absent, so dispatch, artifact, deployment, and route validation are not-run; see `20260730-personal-p1-t09-protected-experimental-signing-workflow-handoff.md` |
+| `lease/personal/P1-T09/redacted-product-route-runner` | add a reproducible non-secret first-response route runner and focused negative coverage | `lane/personal-p1-t09-coherent-bundle-delivery` | 2026-07-30 | local and Linux-native non-secret fixtures passed; installed-product invocation remains blocked by authorized signing/deployment workflow; see `20260730-personal-p1-t09-product-route-runner-handoff.md` |
+| `lease/personal/P1-T09/coherent-bundle-delivery` | deliver verified product CLI and complete Pi Extension with the daemon bundle | `lane/personal-p1-t09-coherent-bundle-delivery` | 2026-07-30 | implementation and supported CI complete; Linux-native payload build complete; protected signing-material workflow unavailable, so no archive was signed/installed/deployed; see `20260730-personal-p1-t09-coherent-bundle-delivery-handoff.md` |
+| `lease/personal/P1-T09/product-pi-configuration-timeout-diagnosis` | configure the non-secret product Pi route, diagnose bounded first-response timeout | `lane/personal-p1-t09-product-pi-configuration-timeout-diagnosis` | 2026-07-30 | bounded blocker: exact Pi and restored service available, but product CLI and deployed Extension entry are absent; `cognitive pi configure`, doctor, launch, and direct first response not-run; see `20260730-personal-p1-t09-product-pi-configuration-timeout-diagnosis-handoff.md` |
+| `lease/personal/P1-T09/linux-real-provider-prerequisites` | native SecretStore correction and real daemon-owned Provider connectivity | `lane/personal-p1-t09-real-provider-prerequisites` | 2026-07-30 | `20260730-personal-p1-t09-real-provider-prerequisites-handoff.md`; native secret and Provider proxy tested-local, direct Pi smoke timed out, B01 remains not-run |
+| `lease/personal/P1-T09/exact-pi-extension-load` | exact Pi `0.81.1` availability and real Extension default-export invocation observation | `lane/personal-p1-t09-exact-pi-extension-load` | 2026-07-30 | `20260730-personal-p1-t09-exact-pi-extension-load-handoff.md`; session-local real Pi observation recorded; B01 remains not-run |
+| `lease/personal/governance/project-identity-rules-20260730` | Personal project identity and development-rule refactor | `lane/doc-personal-project-identity` | 2026-07-30 | `20260730-personal-project-identity-governance-handoff.md`; local checks and failure injection passed |
+| `lease/personal/governance/operating-model-20260730` | Personal governance operating-model correction | `lane/personal-p1-t08-mvp-single-service` | 2026-07-30 | `20260730-governance-operating-model-handoff.md` |
+| `lease/personal/P1-T09/provider-fixture-ci-repair` | deterministic binary Provider fixture CI repair | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | PR #117 required CI green |
+| `lease/personal/P1-T09/linux-environment-qualification` | Linux-native Pi environment qualification | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | SSH qualification recorded; exact Pi availability remains `not-run` |
+
+Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
+
+## 3.2 Historical architecture ownership snapshot
+
+The table below is retained as historical coordination context. Its branches and status text do not grant an active lease and cannot block new work without a current §3 lease.
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|

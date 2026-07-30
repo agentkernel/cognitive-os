@@ -1,8 +1,17 @@
-# CognitiveOS Reference Implementation Monorepo
+# CognitiveOS Architecture + CognitiveOS Personal
 
-CognitiveOS 是一个"Agent control plane + durable governed runtime"的架构与参考实现工程。
-本仓库同时承载**规范资产**（digest 固定的机器合同）与**参考实现**（Rust + TypeScript）。
-规范与实现严格分离：规范资产的存在不代表实现存在；实现的存在不代表符合性成立。
+本仓库承载两层内容，但只有一个活动项目：
+
+- **CognitiveOS Architecture**：Agent control plane 与 durable governed runtime 的设计、
+  机器合同、符合性资产和可复用内核；它是架构参考层，不是并行产品项目。
+- **`cognitiveos-personal` / CognitiveOS Personal**：当前唯一活动实现项目，复用并验证
+  上述架构，目标是交付可安装、可治理、可验证的个人 Agent 产品。
+
+项目身份和默认工作范围以
+[PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md) 为准；Personal 正式任务以
+[PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) 为准，当前事实
+以 [PROGRESS.md](docs/plan/PROGRESS.md) 的 `Current snapshot` 为准。规范存在不代表
+实现存在；实现存在不代表 Gate、release 或 Profile 符合。
 
 ## 四区导航
 
@@ -15,7 +24,7 @@ CognitiveOS 是一个"Agent control plane + durable governed runtime"的架构�
 | [specs/](specs/) | 11 份 companion 规范 + registry（273 REQ / 55 错误码 / 5 状态域）+ 5 份状态迁移表 + 61 份 JSON Schema（draft 2020-12） |
 | [CognitiveOS-Review-Conclusions.md](CognitiveOS-Review-Conclusions.md) · [CognitiveOS-Architecture-Independent-Review.md](CognitiveOS-Architecture-Independent-Review.md) | 两轮评审（V1–V17 / IMP-01~18 / F-001~F-030） |
 
-### 2. 实现（reference implementation）
+### 2. Personal 实现（唯一活动项目）
 
 | 路径 | 内容 |
 |---|---|

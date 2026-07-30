@@ -1,0 +1,29 @@
+version: "1.0"
+repository_workspace: "d:/agent-kernel"
+repository_role: architecture-reference-plus-single-active-project
+architecture_layer:
+  id: cognitiveos-architecture
+  status: reference-and-contract-foundation
+  sources:
+    - CognitiveOS-Architecture.md
+    - RFC-0001-cognitiveos-governance-context-access.md
+    - specs/
+    - conformance/
+active_project:
+  id: cognitiveos-personal
+  name: CognitiveOS Personal
+  status: active
+  formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+  current_snapshot: docs/plan/PROGRESS.md
+  lease_ledger: docs/plan/PARALLEL-LANES.md
+work_policy:
+  default_scope: active-project-only
+  architecture_changes: personal-driven-and-lane-ctr-controlled
+  non_active_projects: design-or-deferred-only
+excluded_from_active_project:
+  - personal-blog/
+  - History/
+  - independent-client-product-implementation
+claim_policy:
+  local_fixture_wsl_and_ordinary_ci: non-claim-unless-gate-campaign-declares-them
+  profile_implemented: requires-independent-applicable-must-evidence

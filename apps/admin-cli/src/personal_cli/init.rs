@@ -1,7 +1,9 @@
 //! `cognitive init` — layout, migrations, Provider binding, self-check.
 
+use cognitive_provider_transport::RustlsProviderTransport;
 use cognitive_secret::{
-    EphemeralSecretStore, ProviderConfig, ProviderConfigRepository, ProviderKeyService,
+    EphemeralSecretStore, ModelSelection, ProviderConfig, ProviderConfigRepository,
+    ProviderDiscoveryService, ProviderKeyService, ProviderProbeOptions, ProviderTransport,
     SecretMaterial, SecretStore, select_production_secret_store,
 };
 use cognitive_store::prepare_personal_databases;
@@ -113,61 +115,32 @@ fn configure_provider_if_requested(
     })?;
     let base_url = normalize_provider_base_url(&base_url_raw)?;
 
-    if already_configured
-        && !options.rotate_key
-        && options.api_key_file.is_none()
-        && let Ok(existing) = config_repository.load()
-    {
-        let selected = options
-            .model_id
-            .as_ref()
-            .map(|model_id| format!("manual-model:{model_id}"));
-        let updated = ProviderConfig::new(
-            provider_id.clone(),
-            base_url.clone(),
-            existing.secret_ref().clone(),
-            selected.or_else(|| existing.selected_snapshot_digest().map(str::to_owned)),
-        )
-        .map_err(|error| format!("invalid provider config refresh: {error}"))?;
-        config_repository
-            .store(&updated)
-            .map_err(|error| format!("unable to refresh provider config: {error}"))?;
-        return Ok(json!({
-            "action": "refreshed_non_secret",
-            "configured": true,
-            "provider_id": provider_id,
-            "base_url": base_url,
-            "model_selection": updated.selected_snapshot_digest(),
-            "secret_material_written": false
-        }));
-    }
-
-    let material = read_api_key_material(options.api_key_file.as_deref())?;
-    let selected_snapshot_digest = options
-        .model_id
-        .as_ref()
-        .map(|model_id| format!("manual-model:{model_id}"));
-    let put_request = PutProviderKeyRequest {
-        config_repository,
-        provider_id: &provider_id,
-        base_url: &base_url,
-        material,
-        selected_snapshot_digest,
-        backend_class: if options.allow_ephemeral_secret_backend {
-            "ephemeral-test-double"
-        } else {
-            "linux-secret-tool"
-        },
-        rotate: options.rotate_key && already_configured,
-    };
-
     if options.allow_ephemeral_secret_backend {
-        return put_with_store(EphemeralSecretStore::default(), put_request);
+        let secret_store = EphemeralSecretStore::default();
+        return configure_and_discover_with_store(
+            &secret_store,
+            &RustlsProviderTransport::default(),
+            options,
+            config_repository,
+            already_configured,
+            &provider_id,
+            &base_url,
+            "ephemeral-test-double",
+        );
     }
 
     match select_production_secret_store() {
         cognitive_secret::ProductionSecretBackend::LinuxSecretTool(store) => {
-            put_with_store(store, put_request)
+            configure_and_discover_with_store(
+                &store,
+                &RustlsProviderTransport::default(),
+                options,
+                config_repository,
+                already_configured,
+                &provider_id,
+                &base_url,
+                "linux-secret-tool",
+            )
         }
         cognitive_secret::ProductionSecretBackend::Unavailable(_) => Err(
             "no production SecretStore is available on this host. On Linux install \
@@ -178,21 +151,97 @@ fn configure_provider_if_requested(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn configure_and_discover_with_store<S: SecretStore, T: ProviderTransport>(
+    secret_store: &S,
+    transport: &T,
+    options: &InitOptions,
+    config_repository: &ProviderConfigRepository,
+    already_configured: bool,
+    provider_id: &str,
+    base_url: &str,
+    backend_class: &str,
+) -> Result<Value, String> {
+    let provider_key_service = ProviderKeyService::new(secret_store, config_repository.clone());
+    let secret_material_written =
+        !already_configured || options.rotate_key || options.api_key_file.is_some();
+    let action = if secret_material_written {
+        let material = read_api_key_material(options.api_key_file.as_deref())?;
+        let request = PutProviderKeyRequest {
+            config_repository,
+            provider_id,
+            base_url,
+            material,
+            rotate: options.rotate_key && already_configured,
+        };
+        put_with_store(&provider_key_service, request)?
+    } else {
+        let existing = provider_key_service
+            .load_config()
+            .map_err(|error| format!("provider config reload failed: {error}"))?
+            .ok_or_else(|| "provider configuration disappeared during refresh".to_owned())?;
+        let refreshed = ProviderConfig::new(
+            provider_id.to_owned(),
+            base_url.to_owned(),
+            existing.secret_ref().clone(),
+            None,
+        )
+        .map_err(|error| format!("invalid provider config refresh: {error}"))?;
+        config_repository
+            .store(&refreshed)
+            .map_err(|error| format!("unable to refresh provider config: {error}"))?;
+        "refreshed_non_secret"
+    };
+
+    let model_selection = match &options.model_id {
+        Some(model_id) => ModelSelection::ExactCatalog {
+            model_id: model_id.clone(),
+        },
+        None => ModelSelection::FirstDiscovered,
+    };
+    let discovery = ProviderDiscoveryService::new(&provider_key_service, transport);
+    let readiness = discovery
+        .discover_probe_and_persist(&ProviderProbeOptions {
+            selection: model_selection,
+            ..ProviderProbeOptions::default()
+        })
+        .map_err(|error| {
+            format!(
+                "provider discovery and capability probe did not select a usable model: {error}"
+            )
+        })?;
+    if !readiness.snapshot.is_minimally_ready() {
+        return Err(
+            "provider discovery completed but the selected model is not chat-capable; selected-model state was cleared"
+                .to_owned(),
+        );
+    }
+
+    Ok(json!({
+        "action": action,
+        "configured": true,
+        "provider_id": readiness.snapshot.provider_id(),
+        "base_url": readiness.snapshot.base_url(),
+        "selected_model": readiness.snapshot.selected_model(),
+        "snapshot_digest": readiness.snapshot_digest,
+        "secret_backend": backend_class,
+        "secret_material_written": secret_material_written,
+        "secret_ref_redacted": true
+    }))
+}
+
 struct PutProviderKeyRequest<'a> {
     config_repository: &'a ProviderConfigRepository,
     provider_id: &'a str,
     base_url: &'a str,
     material: SecretMaterial,
-    selected_snapshot_digest: Option<String>,
-    backend_class: &'a str,
     rotate: bool,
 }
 
 fn put_with_store<S: SecretStore>(
-    store: S,
+    service: &ProviderKeyService<S>,
     request: PutProviderKeyRequest<'_>,
-) -> Result<Value, String> {
-    let service = ProviderKeyService::new(store, request.config_repository.clone());
+) -> Result<&'static str, String> {
     let config = if request.rotate {
         service
             .rotate_provider_key(request.material)
@@ -205,10 +254,7 @@ fn put_with_store<S: SecretStore>(
             request.provider_id,
             request.base_url,
             existing.secret_ref().clone(),
-            request
-                .selected_snapshot_digest
-                .clone()
-                .or_else(|| existing.selected_snapshot_digest().map(str::to_owned)),
+            None,
         )
         .map_err(|error| format!("invalid provider config after rotate: {error}"))?;
         request
@@ -222,21 +268,17 @@ fn put_with_store<S: SecretStore>(
                 request.provider_id,
                 request.base_url,
                 request.material,
-                request.selected_snapshot_digest.clone(),
+                None,
             )
             .map_err(|error| format!("provider key configure failed: {error}"))?
     };
 
-    Ok(json!({
-        "action": if request.rotate { "rotated" } else { "configured" },
-        "configured": true,
-        "provider_id": config.provider_id(),
-        "base_url": config.base_url(),
-        "model_selection": config.selected_snapshot_digest(),
-        "secret_backend": request.backend_class,
-        "secret_material_written": true,
-        "secret_ref_redacted": true
-    }))
+    let _ = config;
+    Ok(if request.rotate {
+        "rotated"
+    } else {
+        "configured"
+    })
 }
 
 fn run_self_check(
@@ -275,4 +317,149 @@ fn run_self_check(
         "pi_package": "not_configured",
         "static_check_is_not_runtime_ready": true
     }))
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod tests {
+    use std::fs;
+
+    use super::{InitOptions, configure_and_discover_with_store};
+    use crate::personal_cli::layout::LayoutRoots;
+    use cognitive_secret::{
+        EphemeralSecretStore, ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest,
+        ProviderHttpResponse, ProviderKeyService, ProviderTransport, ProviderTransportError,
+        SecretMaterial, SelectedModel,
+    };
+
+    #[derive(Debug, Default)]
+    struct DeterministicProviderTransport;
+
+    impl ProviderTransport for DeterministicProviderTransport {
+        fn exchange(
+            &self,
+            request: &ProviderHttpRequest,
+        ) -> Result<ProviderHttpResponse, ProviderTransportError> {
+            if request.method == ProviderHttpMethod::Get && request.url.ends_with("/models") {
+                return Ok(ProviderHttpResponse {
+                    status: 200,
+                    body: br#"{"object":"list","data":[{"id":"catalog-model","object":"model"}]}"#
+                        .to_vec(),
+                });
+            }
+
+            let request_body = request.body.as_deref().unwrap_or_default();
+            let request_text = std::str::from_utf8(request_body).unwrap_or_default();
+            if request_text.contains("\"tools\"") {
+                return Ok(ProviderHttpResponse {
+                    status: 200,
+                    body: br#"{"choices":[{"message":{"role":"assistant","tool_calls":[{"id":"call-1","type":"function","function":{"name":"cognitiveos_probe_noop","arguments":"{}"}}]}}]}"#.to_vec(),
+                });
+            }
+            if request_text.contains("\"stream\":true") {
+                return Ok(ProviderHttpResponse {
+                    status: 200,
+                    body: b"data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n".to_vec(),
+                });
+            }
+            Ok(ProviderHttpResponse {
+                status: 200,
+                body: br#"{"choices":[{"message":{"role":"assistant","content":"ok"}}]}"#.to_vec(),
+            })
+        }
+    }
+
+    fn init_options(api_key_file: Option<std::path::PathBuf>, model_id: &str) -> InitOptions {
+        InitOptions {
+            layout_roots: LayoutRoots { runtime_root: None },
+            provider_id: Some("test-provider".to_owned()),
+            base_url: Some("https://provider.example/v1".to_owned()),
+            model_id: Some(model_id.to_owned()),
+            api_key_file,
+            allow_ephemeral_secret_backend: true,
+            rotate_key: false,
+        }
+    }
+
+    #[test]
+    fn exact_catalog_discovery_persists_selection_without_secret_output() {
+        let temporary_directory = tempfile::tempdir().expect("temporary directory");
+        let api_key_path = temporary_directory.path().join("provider-key.txt");
+        let synthetic_key = "synthetic-provider-secret";
+        fs::write(&api_key_path, format!("{synthetic_key}\n")).expect("write synthetic key");
+        let config_repository = ProviderConfigRepository::from_file_path(
+            temporary_directory.path().join("provider.json"),
+        );
+        let secret_store = EphemeralSecretStore::default();
+
+        let result = configure_and_discover_with_store(
+            &secret_store,
+            &DeterministicProviderTransport,
+            &init_options(Some(api_key_path), "catalog-model"),
+            &config_repository,
+            false,
+            "test-provider",
+            "https://provider.example/v1",
+            "ephemeral-test-double",
+        )
+        .expect("exact catalog discovery must succeed");
+
+        assert_eq!(result["selected_model"], "catalog-model");
+        assert!(result["snapshot_digest"].as_str().is_some());
+        assert!(!result.to_string().contains(synthetic_key));
+        let selected_model = ProviderKeyService::new(&secret_store, config_repository)
+            .selected_model_repository()
+            .load()
+            .expect("load selected model")
+            .expect("discovery must persist selected model");
+        assert_eq!(selected_model.model_id(), "catalog-model");
+    }
+
+    #[test]
+    fn missing_catalog_model_clears_stale_selection() {
+        let temporary_directory = tempfile::tempdir().expect("temporary directory");
+        let config_repository = ProviderConfigRepository::from_file_path(
+            temporary_directory.path().join("provider.json"),
+        );
+        let secret_store = EphemeralSecretStore::default();
+        let provider_key_service =
+            ProviderKeyService::new(&secret_store, config_repository.clone());
+        provider_key_service
+            .configure_provider(
+                "test-provider",
+                "https://provider.example/v1",
+                SecretMaterial::from_bytes(b"synthetic-provider-secret".to_vec())
+                    .expect("synthetic material"),
+                None,
+            )
+            .expect("configure provider");
+        provider_key_service
+            .selected_model_repository()
+            .store(
+                &SelectedModel::new("stale-model", "fnv1a64:stale", true).expect("stale selection"),
+            )
+            .expect("persist stale selection");
+
+        let error = configure_and_discover_with_store(
+            &secret_store,
+            &DeterministicProviderTransport,
+            &init_options(None, "missing-model"),
+            &config_repository,
+            true,
+            "test-provider",
+            "https://provider.example/v1",
+            "ephemeral-test-double",
+        )
+        .expect_err("missing exact catalog model must fail");
+
+        assert!(error.contains("capability probe"));
+        assert!(!error.contains("synthetic-provider-secret"));
+        assert!(
+            provider_key_service
+                .selected_model_repository()
+                .load()
+                .expect("load selected model")
+                .is_none()
+        );
+    }
 }

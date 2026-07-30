@@ -1,16 +1,19 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
-> **状态：in-progress（P0-T01..T07、P1-T01..T07 已完成；P1-T08 正在推进；P1-T09 及以后尚未开始）**
-> **最后更新：2026-07-28**
-> **计划追踪 ID：** `P0-T01` 至 `P7-T06` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
+> 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
+> 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
+> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 not-run；P2 及以后正式验收尚未开始）**
+> **最后更新：2026-07-30**
+> **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
-> **开发状态解耦（2026-07-26）：** `not-started` 只表示对应产品任务尚未满足
-> 正式验收，不再禁止其实现进入本机或隔离测试环境。后续 P1/P2/P3 工作可在
+> **开发状态解耦（2026-07-30 修订）：** `not-started` 表示尚无任务专属实现或测试
+> slice；纯研究、讨论和未提交计划草稿不改变状态，首个真实实现或测试 slice 开始后
+> 必须改为 `in-progress`。`done` 才表示完整正式验收已满足。后续 P1/P2/P3 工作可在
 > `experimental-local-only` 开发轨道推进，并将真实执行记录为 `tested-local`；这两个
-> 是开发/证据标签，不是本表的正式任务状态，也不得改写 G0/B01-B12、Profile 或
-> release 结论。真实 Provider/Pi 测试仍须使用当前 SecretStore/daemon 边界并脱敏记录。
+> 是开发/证据标签，不是 Gate、Profile 或 release 结论。任务状态、实现证据、Gate 状态与声明范围按 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md) 分列；真实 Provider/Pi 测试仍须使用当前 SecretStore/daemon 边界并脱敏记录。
 
 > **计划修订（2026-07-26，一致性评审批）：** (a) 新增 P7-T07，为 ADR-0025 已决定但此前
 > 无任务归宿的 Windows x86_64 安装面（credential 后端、installer/service、专门
@@ -20,6 +23,16 @@
 > 指向本台账、ADR 候选表改用 DEC-P-* 编号以消除与 `docs/adr/0017-0025` 的编号冲突、
 > 依赖图补 P7-T07 并修正 critical path。本批不改变任何既有任务状态、Gate、证据或
 > Profile 结论。
+
+> **MVP-first 路线修订（2026-07-29，ADR-0034）：** 首个生产安装路径收敛为
+> 一个 canonical user service（`cognitiveos-personal.service`）和一个固定
+> loopback 端口（48181），接受 Alpha 显式升级的有界停机。ADR-0032/0033
+> 的 candidate unit、48182 和双服务 promotion 保留为后续数据触发的升级优化，
+> 不再阻塞 P1-T08/P1-T09。既有任务 ID 不重编号；新增 `P7-T08 / GMVP-LINUX`
+> 作为 P1/B01、P2 与 P7-T01..T03 的公开 Linux MVP 汇合 Gate。Context、Memory、
+> Agent/Tool、Windows 安装面、Web UI 和 Multi-Agent 改为后续独立能力列车；
+> Multi-Agent NO-GO 且默认关闭是合法结果。本修订不改变任何既有任务状态、
+> 已执行证据、规范机器资产或 Profile 结论。
 
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -32,39 +45,49 @@
 
 ## 1. 使用与更新规则
 
-1. 开始任务前，在本表把对应任务标为 `in-progress`，填入负责人/分支、开始日期和关联 PR（如有）；若未达到产品 Gate，额外填写 `development_track: experimental-local-only`，不得把 Gate 阻断写成实现阻断。
+1. 纯研究、讨论和未提交的计划草稿不改变任务状态。首个任务专属实现或测试 slice
+   （包括 failure-first 测试）开始时，在本表把对应任务标为 `in-progress`，并在同一
+   atomic delivery 内补齐负责人/分支、开始日期和关联 PR（如有）；若未达到产品 Gate，
+   额外填写 `development_track: experimental-local-only`，不得把 acceptance/promotion
+   Gate 写成实现阻断。
 2. 一个任务只有在其验收条件满足、相关测试真实执行并留有证据后，才可标为 `done`；未执行的测试必须明确标 `not-run`，不得推断为通过。
-3. 每次完成一个开发部分，同一提交必须更新该任务的状态、完成日期、证据链接或命令结果，以及阻塞项；同时按仓库纪律更新 `docs/plan/PROGRESS.md` 和 handoff。
+3. 每个 atomic delivery/PR 必须更新该任务的状态、证据链接或命令结果及阻塞项；实现 commit 后可跟一个 closure docs commit 记录其 immutable hash。PROGRESS 与 handoff 必须在 merge 或会话移交前完成，不要求与实现位于同一 commit。
 4. 发生范围、依赖、验收或安全边界变化时，先将任务标为 `blocked`，记录原因和决策，再更新详细任务卡与依赖图；不得静默改写完成标准。
-5. 允许的正式任务状态仅为：`not-started`、`in-progress`、`blocked`、`done`、`cancelled`。另可填写开发轨道标签 `experimental-local-only` / `tested-local`；它们不改变正式任务状态。`done` 不等于 Profile `implemented`。
+5. 允许的任务状态为：`not-started`、`in-progress`、`blocked`、`done`、`cancelled`；实现证据为 `none` / `provided` / `tested-local` / `tested-supported-ci`；Gate 为 `not-run` / `running` / `pass` / `fail` / `blocked`。`done` 不等于 Gate pass 或 Profile `implemented`。
 6. 如本表与 `plan.md` 的任务卡或依赖图不一致，应先按本表执行并在同一文档修正批中对齐 `plan.md`；不得仅凭详细卡片重新解释或复用既有 `P*-T*` ID。
+7. 每次领取任务后必须选择一个最小可交付出口：垂直实现切片、failure-first 回归修复、
+   可验证治理修正，或带 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner /
+   next action 的阻塞记录。任务、依赖和安全路径已经明确时，不得用继续研究或新建平行
+   计划替代实现。
 
 ### 进度汇总
 
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 7 | 1 | 0 | 1 | G1 / B01 |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `not-run` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 7 | 0 | 0 | 0 | 7 | G7 / RC |
-| **合计** | **52** | **14** | **1** | **0** | **37** | — |
+| Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
+| **合计** | **53** | **15** | **1** | **0** | **37** | — |
 
 ## 2. 产品边界与不变量
 
 - Rust daemon 是唯一 authority writer；Pi、CLI、Web UI 均为客户端，不可直接写 SQLite 或推进 Task、Effect、Verification 状态。
 - Provider API Key 只保存在原生 Secret Store；不得进入配置、SQLite、命令行、日志或证据。唯一例外为 ADR-0018 已登记的 P0-T06 本机 Linux 开发路径：显式开关后从 native store 解析、仅传给初始 Pi 子进程、默认拒绝、不得用于 CI/发布，并在 P2 结束到期。
-- 已指定相和歌设备 `wuz@192.168.1.2` 作为后续 Linux-native 本地实验主机；在操作侧具备 SSH 认证之前，它只表示候选测试环境，不表示测试已执行、Linux Gate 已通过或 release 证据已获得。
+- Linux-native development smoke 以环境资格清单为准；`wuz@192.168.1.2` 是优先候选而非唯一主机。只有预注册 formal campaign 可推进 B01，任何候选主机名称本身都不表示测试、Gate 或 release 证据。
 - 所有外部 mutating operation 均须经 Intent/Effect、持久化后派发、幂等键、fencing 和结果 reconcile；外部工具成功不等于 Task 完成。
 - Task 完成由独立 verifier/acceptance authority 推进；Pi Session 不等于 Task，Pi `agent_end` 不等于完成。
 - Personal 计划不改变既有规范优先级，不得用 `PERS-*` ID 冒充 REQ-ID；合同变化必须走 Lane-CTR 流程。
 - **低摩擦授权（ADR-0026）：** 治理记录（Intent/Effect、audit、verifier、capability）全保留；人机交互分层——Tier 0（只读与任务范围内可逆本地写）静默自动授权、Tier 1（幂等/可对账外部 mutating）首用一次授予并默认记住为 capability lease、Tier 2（不可逆/毁灭性/超预算）始终显式确认。任务准入预览是唯一默认人工授权点，默认路径人工确认 ≤1/task；预算与边界是硬轨，不建审批链；企业审批留在 Deferred Backlog。
-- 首发产品平台为 **Linux x86_64 + Windows x86_64**（ADR-0025）；首个公开可检查安装包仍为 Linux bundle（P1-T08）。Windows 的 credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07；其证据齐备前，任何 install/B01 声明仅覆盖 Linux。Memory、MCP、Multi-Agent、Web UI 按阶段 Gate 进入，不得提前作为主路径实现。
+- 产品目标平台仍为 **Linux x86_64 + Windows x86_64**（ADR-0025）；首个公开 MVP 是 Linux x86_64 single-service bundle（ADR-0034）。Windows 的 credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07；其证据齐备前，任何 install/B01 声明仅覆盖 Linux。Memory、MCP、Multi-Agent、Web UI 与 Windows 安装面均不阻塞 `GMVP-LINUX`。
 
 ## 3. 阶段路线图
+
+下表的入场条件和“禁止提前作为产品主路径”只约束任务 `done`、产品集成、推广和声明范围；不禁止满足 `implementation_requires` 的隔离实现与 failure-first 测试。具体依赖必须区分 implementation、acceptance 与 promotion，禁止把后两者当作开发互斥锁。
 
 | 阶段 | 目标 | 入场条件 | 出场条件 | 禁止提前作为产品主路径 |
 |---|---|---|---|---|
@@ -74,8 +97,21 @@
 | P3 | Context、Token 与 Loop 效率 | P2 稳定 | B03/B06/B07 通过，指标可采集 | Memory consolidation、多 Agent |
 | P4 | 有 provenance 的 durable Memory | P3 基线冻结 | B08 通过，Embedding 有明确 go/no-go | 自动跨工作区记忆 |
 | P5 | 可审核的 Agent/Tool 生态 | P4 稳定 | B09/B10 通过 | 自动市场发现 |
-| P6 | 有收益证据的 Multi-Agent | 单 Agent benchmark 稳定 | B11 显示收益且无越权/写冲突 | 默认启用多 Agent |
-| P7 | 发布、升级、支持与 RC | B01-B12 功能证据齐全 | attested RC、升级/卸载、支持矩阵 | 企业 Console、五平台客户端 |
+| P6 | 有收益证据的 Multi-Agent 可选实验 | 单 Agent benchmark 稳定且存在可并行收益假设 | B11 产生 GO 或保持默认关闭的 NO-GO | 未达收益 Gate 即默认启用多 Agent |
+| P7 | Linux MVP、能力列车与完整 RC | P2 稳定后可启动 Linux MVP 发布可运维链 | `GMVP-LINUX` 后按声明范围汇合完整 RC | 用未执行能力扩大 MVP/RC 声明 |
+
+### MVP-first release train（不替代现有任务 ID）
+
+| Release train | 任务范围 | 出口 | 不阻塞该出口的能力 |
+|---|---|---|---|
+| RP1 Foundation | 已完成的 P0 与 P1-T01..T07 | 当前实现基线 | 后续产品能力 |
+| RP2 Install-to-Conversation Alpha | P1-T08、P1-T09 | B01 clean Linux VM | Task、Memory、MCP、Multi-Agent、UI、Windows installer |
+| RP3 Governed Single-Agent MVP | P2-T01..T08 | B02/B04/B05/B12 | Context 优化、Memory、生态、多 Agent |
+| RP4 Public Linux MVP | P7-T01..T03、P7-T08 | `GMVP-LINUX` | P3..P6、P7-T05、P7-T07 |
+| RP5 Context Efficiency Beta | P3-T01..T06 | B03/B06/B07 | Memory 与生态 |
+| RP6 Durable Memory Beta | P4-T01..T06 | B08；embedding GO/NO-GO | embedding GO、生态、多 Agent |
+| RP7 Optional Capability Trains | P5、P6、P7-T05、P7-T07 | 各自独立 Gate | 任何未声明能力 |
+| RP8 Full-Scope RC | P7-T04、P7-T06 与已选择能力 | 声明范围内 B01-B12 / RC | 明确 DEFER/NO-GO 的能力 |
 
 ### 本机实验轨道（不改变产品 Gate）
 
@@ -98,10 +134,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 预算、幂等、fencing、Effect 提交和完成验收只能由确定性服务端代码执行；规范向量
 只能被真实规范修正流程修改，不能为实现迎合。
 
-后续如需真实 Linux-native 本地验证，优先使用相和歌设备
-`wuz@192.168.1.2` 这一独立 SSH 主机，而不是把 WSL2 guest 结果混写成
-Linux-native evidence。该设备上的执行结果仍须按 `experimental-local-only` /
-`tested-local` 记账，并与 CI Ubuntu、Windows/MSVC 证据分开陈述。
+后续 Linux-native development smoke 使用环境资格清单，而不是绑定唯一主机：Linux x86_64、non-WSL、native user-systemd、支持的 Secret Service、可清理/重置、exact artifact/Pi pins 和脱敏 evidence collector。`wuz@192.168.1.2` 是优先候选而非唯一允许环境。只有预注册的 formal campaign 环境能推进 B01；其他合格主机仍按 `experimental-local-only` / `tested-local` 记账，并与 CI Ubuntu、Windows/MSVC 证据分开陈述。
 
 正式平台 campaign 与 A/B/C/D agent-benefit 测评后置到固定平台、固定拓扑、
 预注册 workload 和独立 verifier 准备完成之后；在此之前所有 Personal 性能结果
@@ -134,7 +167,26 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | P1-T05 | Readiness、status 与 doctor 应用服务 | P1-T03, P1-T04 | blocked/degraded/ready 事实区分 | done | 2026-07-25；分支 `lane/personal-p1-t05-readiness-doctor`，PR [#97](https://github.com/agentkernel/cognitive-os/pull/97)。`kernel-server` Personal composition root：`evaluate_personal_readiness` + management-auth `GET /personal/status|readiness|doctor`；ADR-0023；blocked/degraded/ready 分离；`static_check_is_not_runtime_ready`；secret_ref/bootstrap 不入投影。CI runs [30164114878](https://github.com/agentkernel/cognitive-os/actions/runs/30164114878) / [30164113787](https://github.com/agentkernel/cognitive-os/actions/runs/30164113787) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t05-readiness-doctor-handoff.md](../checkpoints/20260725-personal-p1-t05-readiness-doctor-handoff.md)。 |
 | P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | done | 2026-07-25；分支 `lane/personal-p1-t06-cognitive-cli`，PR [#98](https://github.com/agentkernel/cognitive-os/pull/98) 合入 `main@adbb0e5`。`cognitive` bin + `personal_cli`（init/status/doctor/daemon）、ADR-0024、`tests/p1_t06_cognitive_cli.rs`（live daemon 路径以 Ubuntu 为权威；Windows 跑 init/usage）。CI run [30167503487](https://github.com/agentkernel/cognitive-os/actions/runs/30167503487) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)。 |
 | P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | done | 2026-07-27；PR [#105](https://github.com/agentkernel/cognitive-os/pull/105) merged as `main@9d4c3d9` after the Ubuntu and Windows/MSVC CI checks succeeded. `packages/pi-cognitiveos/` defaults to denying `project_trust` and every Pi tool, displays only daemon facts, and source-scan tests forbid Provider key/config, `SecretRef`, SQLite, subprocess, and filesystem-write access. The daemon exposes a management-authenticated, non-secret selected-model projection and a bounded Pi complete-provider bridge: exactly one daemon-projected model forwards a one-shot `stream:false` completion through the authenticated daemon proxy. Provider material remains daemon-only; the proxy creates no Intent/Effect, capability, or state transition. `RustlsProviderTransport` remains HTTPS-only, redirect-free, time- and 1 MiB-response-bounded, and rejects URL user-info/header injection; `stream:true` remains fail-closed. Local WSL tests and the supported CI matrix passed. This is implementation and test evidence only, not a G0/B01-B12, Profile, containment, or release claim. Handoff: [20260727-personal-p1-t07-closeout-handoff.md](../checkpoints/20260727-personal-p1-t07-closeout-handoff.md). |
-| P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | in-progress | 2026-07-28；`lane/personal-p1-t08-installer-lease`；`development_track: experimental-local-only`。P1-T07 已完成，依赖解除。第二个失败优先批在 `cognitive-runtime::linux_bundle` 固定 ADR-0028 的离线 Ed25519 detached signature、JCS canonical closed statement、产品拥有的 versioned keyring、revocation、strict HTTPS provenance 与 bounded regular-file inputs；staging 在写入前重新校验 artifact digest。focused WSL (`windows_wsl2_linux_guest`) attestation tests **14/14 passed**，strict Clippy 与 formatting 通过。第三个失败优先批新增官方本地安装编排入口：完整 verifier 成功前 deployment root 不得创建，随后固定 previous-active read → verified staging → 单次 caller-bounded health check → health-gated atomic activation → active pointer 复核 → non-secret typed receipt；orchestration focused WSL tests **10/10 passed**。第四个失败优先批为该官方入口增加真实跨进程、OS-backed、per-root lifecycle lease：完整 verifier 成功后才创建稳定 product-owned lock file，只有 lease holder 才能打开 deployment root；ownership 只来自 live descriptor 与 OS lock，不使用进程内 mutex、TTL、owner metadata 或 stale-file takeover。feature lifecycle WSL tests **14/14 passed**（另有一个 ignored child entrypoint），覆盖同 root/跨 version 互斥、不同 root 独立、success/staging/health/activation/fault/panic/真实子进程终止后的释放、verifier zero mutation、缺失 lease parent 的无 mutation 失败、stale lock contents、untorn active pointer、activation 后 receipt 前中断及错误脱敏；完整 non-feature runtime surface **91/91 passed**（另有一个 ignored child entrypoint），strict feature Clippy、formatting 与 consistency 通过。PR [#110](https://github.com/agentkernel/cognitive-os/pull/110) 已合入 `main@8aa0031`，push 与 pull-request 的 Ubuntu/Windows-MSVC workflow 均通过。此批仍不含 production signing key/trust root、release attestation、downloader、inspected shell installer、systemd user service、uninstall 或 Linux-native Gate；不得将本机、fixture 或支持矩阵结果写为 B01/Gate/Profile/release claim。 |
+| P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | done | 2026-07-29；`lane/personal-p1-t08-mvp-single-service`。已交付固定单服务安装事务、release-shaped campaign builder 与 Linux-native user-systemd 验证：clean install `.3`、healthy upgrade `.4`、pre-pointer `.5` failure 与 post-pointer `.6` failure；两种 failure 后均恢复 canonical unit/service、48181 liveness 及 non-secret `active-version=.4`，并保留 immutable campaign versions。聚焦 WSL tests：campaign builder、service lifecycle、single-service 及 adapter **20/20 passed**；strict runtime Clippy、formatting、consistency 和 whitespace 均通过。该结论仅完成 P1-T08 installer 验收；campaign 仍为 `experimental-local-only` / `tested-local` evidence，不构成 production release/signing、B01、Gate、Profile、containment、uninstall 或 first-conversation claim。 |
+| P1-T09 | 首次安装到首次对话 route 与 B01 campaign | P1-T08 及现有 Secret/Provider/daemon/Pi contracts | deterministic binary Provider fixture、真实 pinned Pi Extension load、真实首个响应、native Secret Service smoke 与预注册 B01 runner；B01 仍由独立 formal campaign 决定 | in-progress | `experimental-local-only`；deterministic binary Provider fixture 已在 supported Ubuntu/Windows CI **3/3** 通过，coherent bundle layout 与 route runner 已分别在 supported Ubuntu/Windows CI runs `30537927521`、`30543563029` 通过。2026-07-30 在 SSH-qualified `personal-linux-native-01`（`wuz@192.168.1.2`）以实际 `pi --version` 确认 exact Pi `0.81.1`；从该版本 Pi 执行最小 `--extension <absolute-path>` session-local observation。孤立 XDG child environment 未提供 Provider config、Provider/user secret、SecretRef、SQLite 路径、selected-model 或 authority state；built ESM import 和 Pi default-export invocation marker 均成功观察到。该 host 的隔离 non-secret source tree 已原生构建 `kernel-server`、`cognitive`、installer wrapper、campaign builder 和 Extension entry。新增可复现、脱敏的 product-route runner：它只配置 product Pi paths，拒绝不安全输入，检查 daemon readiness、exact Pi，并在清空 child environment 后执行单次 bounded response；focused positive/negative fixture 在本机和 Linux-native host 均通过。新增 manual、least-privilege experimental campaign workflow；它不发布 release，仅以 Environment-protected secret 临时签名并上传 offline-verifiable artifact。当前远端尚不存在该 Environment 或其 secret，故 workflow 未 dispatch，未签名、安装或部署 archive。无 Task、Effect、Verification、capability 或 authority side effect；B01、GMVP-LINUX、release 与 Profile 仍为 non-claim。尚缺受控 deployment、真实首个响应、native Secret Service smoke、usability 与 formal B01。handoff：[20260730-personal-p1-t09-protected-experimental-signing-workflow-handoff.md](../checkpoints/20260730-personal-p1-t09-protected-experimental-signing-workflow-handoff.md)。 |
+
+> **P1-T09 product-route bounded blocker (2026-07-30; corrective evidence,
+> normative surface unchanged):** The experimental host retains an active
+> restored user service and exact Pi `0.81.1`, but has neither a product
+> `cognitive` CLI nor a deployed built CognitiveOS Extension entry. The
+> non-secret configure, doctor, launch, and direct first-response commands are
+> therefore `not-run`; no secret or Provider/internal state was read. This is
+> a blocker, not a failed first-response result: `blocked_paths` are the
+> product bundle deployment paths; `blocked_task_ids`: `P1-T09`;
+> `blocked_gate_ids`: `B01`, `GMVP-LINUX`, Profile; owner: P1-T08
+> bundle/release artifact owner; next action: deploy a coherent CLI-plus-
+> Extension bundle and rerun the bounded redacted route diagnostic. P1-T09
+> remains `in-progress`, and B01 remains `not-run`. Handoff:
+> [20260730-personal-p1-t09-product-pi-configuration-timeout-diagnosis-handoff.md](../checkpoints/20260730-personal-p1-t09-product-pi-configuration-timeout-diagnosis-handoff.md).
+
+#### Historical P1-T08 slice journal
+
+以下 blockquote 保留各原子批当时的状态与 non-claim，属于历史记录；不得覆盖上表当前状态。
 
 > **2026-07-28 P1-T08 bootstrap/download slice:** `lane/personal-p1-t08-linux-bootstrap` adds an inspectable POSIX `deploy/linux/install.sh` template and a narrow `linux-bundle-verifier` adapter. The unrendered source template rejects before network access; release rendering must bind the version, HTTPS object directory, allowed redirect host, bootstrap verifier digest, public keyring, and Pi pin. Downloads use a private temporary directory, partial paths, bounded HTTPS curl calls, and invocation-owned cleanup. The adapter verifies its script-bound SHA-256 before execution and delegates only to the existing offline `verify_linux_bundle`; it performs no activation because bounded service health is not yet defined. Focused WSL behavior tests are local `windows_wsl2_linux_guest` evidence only. P1-T08 remains `in-progress` with `development_track: experimental-local-only`; P1-T09 remains `not-started`. No production key/release, service/health/rollback, uninstall, Linux-native campaign, B01, Gate, Profile, containment, or release claim is added. |
 
@@ -208,7 +260,31 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 > including Windows/MSVC. Windows GNU linker exit 121 remains a non-supported
 > local limitation.
 
-| P1-T09 | B01 安装到首次对话 Gate | P1-T08 | 20 次 clean-run；redacted evidence 完整；除 API Key 与模型选择外无必选交互（ADR-0026） | not-started | — |
+> **2026-07-29 P1-T08 production-path amendment:** ADR-0034 supersedes the
+> dual-service controller only as the first production path. P1-T08 now closes
+> against one canonical `cognitiveos-personal.service`, port 48181, a shared
+> verify/lease/stage transaction, deterministic single-service rollback and a
+> Linux-native user-systemd campaign. Existing candidate/active fixture results
+> remain valid implementation-fixture evidence, but candidate port 48182 and
+> zero-downtime promotion no longer block P1-T08 or B01. P1-T08 remains
+> `in-progress`; no implementation or Gate status changes in this planning batch.
+
+> **2026-07-29 P1-T08 single-service implementation slice:** the shell-to-Rust
+> handoff now invokes a digest-bound `linux-bundle-installer`; the runtime
+> shares the existing offline verification, OS lifecycle lease and private
+> staging prefix before separately publishing immutable version bytes and the
+> active pointer. A narrow canonical-service controller owns only
+> `cognitiveos-personal.service`, fixed 48181 health, fixed user-systemd
+> actions and Rust-rendered unit content. Upgrade and first-install failures
+> compensate pointer/unit/service state deterministically and issue no receipt;
+> incomplete compensation returns `RollbackIncomplete`. Focused WSL2 Linux
+> guest tests passed **46/46** with one ignored child-process entrypoint;
+> runtime strict Clippy, formatting, consistency and diff checks passed. This
+> is implementation/fixture evidence only. P1-T08 remains `in-progress`;
+> Linux-native user-systemd, production release/signing, uninstall, B01,
+> product Gate, Profile and first-conversation evidence remain outstanding.
+
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 预注册至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-07-30；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: not-run`。已提供 shared Rustls Provider discovery、digest-matched selected model readiness、真实 XDG/daemon endpoint、非秘密 `cognitive pi configure` 及 fail-closed `cognitive pi launch`：launch 只接受 daemon-owned numeric loopback endpoint、authenticated ready doctor projection、exact Pi `0.81.1` 与 `--extension <absolute-path>`，子进程环境清空后只恢复 OS allowlist，绝不传递 Provider/secret material。deterministic binary Provider fixture 的真实 Rustls discovery focused suite 在 PR #117 的 Ubuntu 与 Windows supported CI workspace job 均 **3/3 passed**（Ubuntu run 30513254161；Windows run 30513254161）；它保持 loopback-only HTTPS、secret redaction 和无 Task/Effect/Verification/capability/authority side effect。2026-07-30 Linux-native observation 实际确认 Pi `0.81.1`，并经 `--extension <absolute-path>` 调用 built Extension default export；session-local wrapper marker 在 Production hooks/command 注册前后边界中确认 Pi 已 invoke。随后以 hidden input 写入 native `linux-secret-tool` 的 redacted DeepSeek binding，selected model 为 `deepseek-v4-flash`；daemon-owned bounded Provider-proxy smoke 收到预期短响应（`finish_reason: stop`，无 authority side effect）。直接 Pi `--print` 仍在 90 秒超时，doctor 仍为 `pi_not_configured`，故不构成 Pi usability、真实产品首对话或 route acceptance。尚缺 product Pi configuration/diagnosis、native Secret Service route smoke、usability 和 formal B01；因此任务如实为 `in-progress`，B01 仍 `not-run`，无 Gate/release/Profile 声明。 |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -262,19 +338,20 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | P6-T01 | Multi-Agent policy 与 scheduler 扩展 | P5-T05 | 默认关闭、budget/lease/isolation 正确 | not-started | — |
 | P6-T02 | Mailbox 与 append-only findings | P6-T01 | 消息不可作为 authority；replay 可处理 | not-started | — |
 | P6-T03 | Reviewer/Verifier/Integrator 编排 | P6-T02 | child success 不可绕过 verifier | not-started | — |
-| P6-T04 | B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用 | not-started | — |
+| P6-T04 | B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | — |
 
 ### Phase 7 - 产品化与发布
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P7-T01 | Release pipeline、SBOM 与 attestation | P5-T05, P0-T03 | 可验证 Linux artifact；无 secret/dev path | not-started | — |
-| P7-T02 | Transactional update、rollback 与 uninstall | P7-T01, P1-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
-| P7-T03 | Doctor、support bundle 与故障排查 | P7-T02 | 仅 redacted facts；stable error code | not-started | — |
+| P7-T01 | Release pipeline、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | 可验证 Linux artifact；无 secret/dev path；先交付 Linux MVP slice，后续能力补充 inventory | not-started | — |
+| P7-T02 | Transactional update、rollback 与 uninstall | P1-T01, P1-T08, P2-T08, P7-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
+| P7-T03 | Doctor、support bundle 与故障排查 | P1-T05, P2-T08, P7-T02 | 仅 redacted facts；stable error code；GMVP-LINUX 前可操作恢复路径 | not-started | — |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 固定环境、raw evidence、CI 与阈值 | not-started | — |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
-| P7-T06 | RC、文档、支持矩阵与 B01-B12 | P7-T02, P7-T03, P7-T04, P5-T05, P6-T04 | clean VM suite 与 release claim evidence | not-started | — |
+| P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
+| P7-T08 | Public Linux MVP Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P7-T01, P7-T02, P7-T03 | production trust/signing、native user-systemd、B01、受治理单 Agent、update/rollback/uninstall、doctor/support 证据汇合；功能声明明确排除未执行能力；不构成 Profile | not-started | — |
 
 ## 5. Gate 与证据要求
 
@@ -287,6 +364,7 @@ Linux-native evidence。该设备上的执行结果仍须按 `experimental-local
 | B08 | Memory 生命周期与隐私 | provenance/freshness/conflict/forget 测试 |
 | B09/B10 | Agent/Tool/MCP 资格与隔离 | manifest、health、disable/uninstall、negative tests |
 | B11 | Multi-Agent 相对单 Agent 有可复现收益 | 相同模型/预算/任务的 baseline 对比 |
+| GMVP-LINUX | scoped public Linux MVP 可发布 | B01 + P2 Gate + production trust + native systemd + update/rollback/uninstall + doctor/support；明确 non-Profile 与能力排除项 |
 | RC | 完整发布声明 | CI、SBOM、attestation、升级/卸载、支持矩阵 |
 
 Windows install parity 声明需要 P7-T07 的专门 B01-W Gate 与已执行证据；在此之前，

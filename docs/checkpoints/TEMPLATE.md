@@ -5,7 +5,9 @@
 - 会话交接：`YYYYMMDD-<车道或里程碑>-handoff.md`（如 `20260801-lane-ctr-handoff.md`）
 - 里程碑评审：`YYYYMMDD-<里程碑>-milestone-review.md`（如 `20260901-m1-milestone-review.md`）
 
-交接文档是跨会话唯一记忆载体：写给一个**没有本次对话历史**的接续代理。
+交接文档是跨会话操作连续性载体：写给一个**没有本次对话历史**的接续代理。它只记录
+交接时事实，不是当前状态源，不能覆盖正式 Personal 台账、`PROGRESS.md` Current
+snapshot 或活动 lease 台账。
 
 ---
 
@@ -13,6 +15,19 @@
 
 ```markdown
 # YYYYMMDD <车道/里程碑> Handoff
+
+## Record metadata
+
+- record_type: handoff
+- project_id: cognitiveos-personal
+- task_id: <P*-T* 或 governance id>
+- lease_id: <lease/personal/...>
+- status_at_handoff: <not-started/in-progress/blocked/done/cancelled>
+- gate_status_at_handoff: <not-run/running/pass/fail/blocked/not-applicable>
+- claim_scope_at_handoff: <non-claim/product-gate/release/profile>
+- current_status_source: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md + docs/plan/PROGRESS.md
+- supersedes: <较早 handoff 或 none>
+- superseded_by: <后续 handoff 或 none-known-at-write-time>
 
 ## 1. 本次会话完成
 - （逐条：交付物 + 涉及 REQ-ID/F/IMP 条目 + 提交哈希）
@@ -35,6 +50,7 @@
 
 ## 6. 快照
 - PROGRESS 已更新：<是/否>
+- active lease：<已关闭/移交给 lease_id/仍 active 及原因>
 - 本次提交列表：<hash 列表>
 ```
 

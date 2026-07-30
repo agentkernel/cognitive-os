@@ -241,3 +241,52 @@ fn second_instance_lock_and_restart() {
     third.wait().unwrap();
     let _ = std::fs::remove_dir_all(&root);
 }
+
+#[test]
+fn production_xdg_daemon_publishes_its_bound_loopback_endpoint() {
+    let _guard = PERSONAL_PROCESS_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let port = free_port();
+    let root = runtime_root("production-xdg");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_kernel-server"));
+    command
+        .args(["--personal", "--bind", &format!("127.0.0.1:{port}")])
+        .env("XDG_CONFIG_HOME", root.join("config"))
+        .env("XDG_DATA_HOME", root.join("data"))
+        .env("XDG_STATE_HOME", root.join("state"))
+        .env("XDG_CACHE_HOME", root.join("cache"))
+        .env("XDG_RUNTIME_DIR", root.join("runtime"));
+    let mut child = command.spawn().unwrap();
+
+    let endpoint_path = root
+        .join("state")
+        .join("cognitiveos")
+        .join("daemon-endpoint.json");
+    for _ in 0..100 {
+        if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
+            assert!(document.contains("\"schema_version\": 1"), "{document}");
+            assert!(
+                document.contains(&format!("\"endpoint\": \"127.0.0.1:{port}\"")),
+                "{document}"
+            );
+            assert!(
+                document.contains("\"surface\": \"personal-daemon-endpoint\""),
+                "{document}"
+            );
+            child.kill().unwrap();
+            child.wait().unwrap();
+            let _ = std::fs::remove_dir_all(&root);
+            return;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+
+    child.kill().unwrap();
+    child.wait().unwrap();
+    let _ = std::fs::remove_dir_all(&root);
+    panic!(
+        "daemon endpoint was not published at {}",
+        endpoint_path.display()
+    );
+}

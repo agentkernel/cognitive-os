@@ -1,0 +1,152 @@
+# Builds a signed, non-production P1-T09 Linux campaign artifact.
+#
+# This workflow is intentionally manual and Environment-protected. It does not
+# create a GitHub Release, start a daemon, install software, or make a B01,
+# release, GMVP-LINUX, or Profile claim. The Environment secret is written only
+# to a private temporary file consumed by the campaign builder; it is never an
+# argument, environment variable, workflow output, or uploaded artifact.
+name: Personal experimental Linux campaign
+
+on:
+  workflow_dispatch:
+    inputs:
+      campaign_version:
+        description: "Immutable experimental campaign version (for example 0.0.0-campaign.20260730.7)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-experimental-linux-campaign-${{ inputs.campaign_version }}
+  cancel-in-progress: false
+
+jobs:
+  build-signed-campaign:
+    name: Build signed experimental Linux campaign
+    runs-on: ubuntu-latest
+    environment:
+      name: personal-linux-experimental-campaign
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the reviewed dispatch revision
+        uses: actions/checkout@v4
+
+      - name: Set up Rust pinned by repository policy
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+
+      - name: Set up pnpm from package manager metadata
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate non-secret campaign input
+        env:
+          CAMPAIGN_VERSION: ${{ inputs.campaign_version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$CAMPAIGN_VERSION" =~ ^0\.0\.0-campaign\.[0-9]{8}\.[0-9]+$ ]]; then
+            echo "campaign_version must use 0.0.0-campaign.YYYYMMDD.N" >&2
+            exit 2
+          fi
+
+      - name: Build and test reviewed product inputs
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm -r build
+          pnpm -r test
+          cargo test --workspace --locked
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo fmt --all -- --check
+          pnpm run check:consistency
+
+      - name: Build immutable Linux payload tools
+        run: |
+          set -euo pipefail
+          cargo build --release --locked -p kernel-server --bin kernel-server
+          cargo build --release --locked -p admin-cli --bin cognitive
+          cargo build --release --locked -p cognitive-runtime --bin linux_bundle_installer
+          cargo build --release --locked -p cognitive-runtime --bin linux_bundle_campaign_builder
+
+      - name: Build the reviewed Pi Extension distribution
+        run: |
+          set -euo pipefail
+          pnpm --filter @cognitiveos/pi-cognitiveos build
+          test -f packages/pi-cognitiveos/dist/index.js
+
+      - name: Build and offline-verify signed campaign
+        env:
+          CAMPAIGN_VERSION: ${{ inputs.campaign_version }}
+        run: |
+          set -euo pipefail
+          umask 077
+          signing_seed_file="$(mktemp)"
+          cleanup() {
+            shred --remove --zero "$signing_seed_file" 2>/dev/null || rm -f "$signing_seed_file"
+          }
+          trap cleanup EXIT
+
+          # GitHub masks this protected Environment secret. Do not move it to
+          # env, outputs, artifacts, command arguments, or diagnostic output.
+          printf '%s' '${{ secrets.PERSONAL_EXPERIMENTAL_CAMPAIGN_SIGNING_SEED_BASE64 }}' | base64 --decode > "$signing_seed_file"
+          test "$(wc -c < "$signing_seed_file")" -eq 32
+
+          output_directory="artifacts/experimental-campaign/$CAMPAIGN_VERSION"
+          mkdir -p "$(dirname "$output_directory")"
+          target/release/linux_bundle_campaign_builder \
+            --kernel-server-binary "$(pwd)/target/release/kernel-server" \
+            --cognitive-cli-binary "$(pwd)/target/release/cognitive" \
+            --pi-extension-dist-directory "$(pwd)/packages/pi-cognitiveos/dist" \
+            --installer-binary "$(pwd)/target/release/linux_bundle_installer" \
+            --campaign-signing-seed-file "$signing_seed_file" \
+            --output-directory "$(pwd)/$output_directory" \
+            --release-version "$CAMPAIGN_VERSION" \
+            --release-object-directory "https://github.com/agentkernel/cognitive-os/actions/runs/${{ github.run_id }}" \
+            --allowed-redirect-host github.com \
+            --keyring-version p1-t09-experimental-20260730 \
+            --key-id p1-t09-experimental \
+            --expected-pi-version 0.81.1 \
+            --expected-pi-integrity sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==
+
+          node - "$output_directory" "$CAMPAIGN_VERSION" <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const [outputDirectory, campaignVersion] = process.argv.slice(2);
+          const bootstrap = fs.readFileSync(path.join(outputDirectory, "install.sh"), "utf8");
+          const keyMatch = bootstrap.match(/^PUBLIC_KEY_BASE64URL="([A-Za-z0-9_-]{43})"$/m);
+          if (!keyMatch) throw new Error("rendered bootstrap lacks a valid public key");
+          fs.writeFileSync(
+            path.join(outputDirectory, "offline-install-facts.json"),
+            JSON.stringify({
+              schema_version: 1,
+              surface: "cognitiveos-personal-experimental-offline-install",
+              campaign_version: campaignVersion,
+              keyring_version: "p1-t09-experimental-20260730",
+              key_id: "p1-t09-experimental",
+              public_key_base64url: keyMatch[1],
+              pi_version: "0.81.1",
+              pi_integrity: "sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==",
+              claim_scope: "non-claim"
+            }) + "\n",
+            { mode: 0o600 },
+          );
+          NODE
+
+      - name: Upload signed experimental campaign
+        uses: actions/upload-artifact@v4
+        with:
+          name: personal-experimental-linux-campaign-${{ inputs.campaign_version }}
+          path: artifacts/experimental-campaign/${{ inputs.campaign_version }}
+          if-no-files-found: error
+          retention-days: 7

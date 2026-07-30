@@ -42,15 +42,18 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
 
     ensure_loopback_bind(&options.bind_address)?;
     let kernel_server = resolve_kernel_server_path(options.kernel_server_path.as_deref())?;
-    let runtime_root = resolve_runtime_root_for_spawn(&options.layout_roots, &layout)?;
-    write_endpoint(&layout, &options.bind_address)?;
-
-    let mut child =
-        spawn_detached_kernel_server(&kernel_server, &options.bind_address, &runtime_root)?;
+    let mut child = spawn_detached_kernel_server(
+        &kernel_server,
+        &options.bind_address,
+        options.layout_roots.runtime_root.as_deref(),
+    )?;
 
     // Windows MSVC debug and cold disks can take longer than a tight local loop.
     for _ in 0..250 {
-        if layout.daemon_lock_path().exists() && layout.local_bootstrap_secret_path().exists() {
+        if layout.daemon_lock_path().exists()
+            && layout.local_bootstrap_secret_path().exists()
+            && let Ok(endpoint) = load_endpoint(&layout)
+        {
             // Intentionally leak the Child handle so Drop does not close OS process
             // handles while the daemon continues as an independent process.
             let daemon_pid = child.id();
@@ -59,7 +62,7 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
                 "status": "ok",
                 "surface": "cognitive-daemon",
                 "action": "started",
-                "endpoint": options.bind_address,
+                "endpoint": endpoint,
                 "pid": daemon_pid,
                 "kernel_server": kernel_server.display().to_string(),
                 "lock_path": layout.daemon_lock_path().display().to_string(),
@@ -176,21 +179,6 @@ pub fn load_endpoint(layout: &PersonalDataLayout) -> Result<String, String> {
         .ok_or_else(|| "daemon endpoint file missing endpoint field".to_owned())
 }
 
-fn write_endpoint(layout: &PersonalDataLayout, endpoint: &str) -> Result<(), String> {
-    let path = endpoint_path(layout);
-    let document = json!({
-        "schema_version": 1,
-        "endpoint": endpoint,
-        "surface": "personal-daemon-endpoint"
-    });
-    fs::write(
-        &path,
-        serde_json::to_string_pretty(&document).map_err(|error| error.to_string())?,
-    )
-    .map_err(|error| format!("unable to write endpoint file {}: {error}", path.display()))?;
-    Ok(())
-}
-
 fn endpoint_path(layout: &PersonalDataLayout) -> PathBuf {
     layout.state_dir().join(ENDPOINT_FILE_NAME)
 }
@@ -210,20 +198,12 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), String> {
 fn spawn_detached_kernel_server(
     kernel_server: &Path,
     bind_address: &str,
-    runtime_root: &Path,
+    runtime_root: Option<&Path>,
 ) -> Result<std::process::Child, String> {
-    let runtime_root_text = runtime_root
-        .to_str()
-        .ok_or_else(|| "runtime root path is not valid UTF-8".to_owned())?;
+    let arguments = kernel_server_arguments(bind_address, runtime_root)?;
     let mut command = Command::new(kernel_server);
     command
-        .args([
-            "--personal",
-            "--bind",
-            bind_address,
-            "--runtime-root",
-            runtime_root_text,
-        ])
+        .args(&arguments)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
@@ -252,13 +232,7 @@ fn spawn_detached_kernel_server(
                 const DETACHED_PROCESS: u32 = 0x0000_0008;
                 let mut fallback = Command::new(kernel_server);
                 fallback
-                    .args([
-                        "--personal",
-                        "--bind",
-                        bind_address,
-                        "--runtime-root",
-                        runtime_root_text,
-                    ])
+                    .args(&arguments)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
                     .stderr(Stdio::null())
@@ -273,6 +247,30 @@ fn spawn_detached_kernel_server(
             ))
         }
     }
+}
+
+/// Build Personal daemon arguments without inventing a hermetic root.
+///
+/// Installed CLI launches must let `kernel-server --personal` resolve the same
+/// live XDG roots as `cognitive init` and the Pi extension. The explicit root
+/// remains a test-only isolation option and is forwarded unchanged.
+fn kernel_server_arguments(
+    bind_address: &str,
+    runtime_root: Option<&Path>,
+) -> Result<Vec<String>, String> {
+    let mut arguments = vec![
+        "--personal".to_owned(),
+        "--bind".to_owned(),
+        bind_address.to_owned(),
+    ];
+    if let Some(runtime_root) = runtime_root {
+        let runtime_root_text = runtime_root
+            .to_str()
+            .ok_or_else(|| "runtime root path is not valid UTF-8".to_owned())?;
+        arguments.push("--runtime-root".to_owned());
+        arguments.push(runtime_root_text.to_owned());
+    }
+    Ok(arguments)
 }
 
 fn resolve_kernel_server_path(explicit: Option<&Path>) -> Result<PathBuf, String> {
@@ -312,20 +310,6 @@ fn resolve_kernel_server_path(explicit: Option<&Path>) -> Result<PathBuf, String
     } else {
         "kernel-server"
     }))
-}
-
-fn resolve_runtime_root_for_spawn(
-    roots: &super::layout::LayoutRoots,
-    layout: &PersonalDataLayout,
-) -> Result<PathBuf, String> {
-    if let Some(runtime_root) = &roots.runtime_root {
-        return Ok(runtime_root.clone());
-    }
-    layout
-        .runtime_dir()
-        .parent()
-        .map(Path::to_path_buf)
-        .ok_or_else(|| "unable to derive runtime root parent for kernel-server".to_owned())
 }
 
 fn read_lock_pid(layout: &PersonalDataLayout) -> Result<Option<u32>, String> {
@@ -399,5 +383,43 @@ fn terminate_pid(pid: u32) -> Result<(), String> {
             return Ok(());
         }
         Err(format!("kill exited with {status:?}"))
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn daemon_spawn_uses_real_xdg_roots_when_no_hermetic_root_is_requested() {
+        let arguments = kernel_server_arguments("127.0.0.1:48181", None).expect("arguments");
+
+        assert_eq!(
+            arguments,
+            vec![
+                "--personal".to_owned(),
+                "--bind".to_owned(),
+                "127.0.0.1:48181".to_owned(),
+            ]
+        );
+    }
+
+    #[test]
+    fn daemon_spawn_preserves_an_explicit_hermetic_runtime_root() {
+        let hermetic_root = Path::new("/tmp/cognitiveos-hermetic-root");
+        let arguments =
+            kernel_server_arguments("127.0.0.1:48181", Some(hermetic_root)).expect("arguments");
+
+        assert_eq!(
+            arguments,
+            vec![
+                "--personal".to_owned(),
+                "--bind".to_owned(),
+                "127.0.0.1:48181".to_owned(),
+                "--runtime-root".to_owned(),
+                "/tmp/cognitiveos-hermetic-root".to_owned(),
+            ]
+        );
     }
 }

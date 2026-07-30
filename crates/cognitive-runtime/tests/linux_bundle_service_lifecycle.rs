@@ -4,6 +4,8 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+#[cfg(unix)]
+use cognitive_runtime::LinuxBundleSingleServiceController;
 use cognitive_runtime::{
     ExpectedPiCompatibility, LinuxBundleManifest, LinuxBundleServiceController,
     LinuxBundleServiceError, LinuxBundleServiceReceipt, PersonalUserServiceUnitKind,
@@ -79,7 +81,7 @@ fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
     assert!(candidate_unit.contains("runtime/candidate"));
     assert!(active_unit.contains("versions/2.0.0/bin/kernel-server"));
     assert!(active_unit.contains("--bind 127.0.0.1:48181"));
-    assert!(active_unit.contains("runtime/active"));
+    assert!(!active_unit.contains("--runtime-root"));
     for unit in [&candidate_unit, &active_unit] {
         assert!(!unit.contains('@'));
         assert!(!unit.contains("sudo"));
@@ -97,6 +99,15 @@ fn rendered_units_use_only_fixed_candidate_and_active_inputs() {
             .is_err()
         );
     }
+
+    let escaped_path = tempfile::tempdir().unwrap().path().join("space % value");
+    let escaped_unit = render_personal_user_service_unit(
+        PersonalUserServiceUnitKind::Active,
+        &escaped_path,
+        "2.0.0",
+    )
+    .unwrap();
+    assert!(escaped_unit.contains("space\\x20%%\\x20value"));
 }
 
 #[test]
@@ -178,6 +189,92 @@ fn fixture_controller_publishes_candidate_then_reloads_before_fixed_start() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn fixture_controller_publishes_only_the_canonical_unit_before_fixed_restart() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let fixture_root = tempfile::tempdir().unwrap();
+    let deployment_root = fixture_root.path().join("deployment");
+    let active_executable = deployment_root.join("versions/2.0.0/bin/kernel-server");
+    fs::create_dir_all(active_executable.parent().unwrap()).unwrap();
+    fs::write(&active_executable, b"fixture executable").unwrap();
+    let action_log = fixture_root.path().join("systemctl-actions.log");
+    let fake_systemctl = fixture_root.path().join("fake-systemctl");
+    fs::write(
+        &fake_systemctl,
+        format!(
+            "#!/bin/sh\nprintf '%s\n' \"$*\" >> '{}'\n",
+            action_log.display()
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&fake_systemctl, fs::Permissions::from_mode(0o700)).unwrap();
+
+    let unit_directory = fixture_root.path().join("units");
+    let mut controller = SystemdUserServiceController::new_fixture(
+        &deployment_root,
+        &unit_directory,
+        &fake_systemctl,
+        "127.0.0.1:48181".parse().unwrap(),
+    )
+    .unwrap();
+
+    controller.publish_active_unit("2.0.0").unwrap();
+    controller.restart_active_service().unwrap();
+
+    let active_unit =
+        fs::read_to_string(unit_directory.join("cognitiveos-personal.service")).unwrap();
+    assert!(active_unit.contains("versions/2.0.0/bin/kernel-server"));
+    assert!(active_unit.contains("--bind 127.0.0.1:48181"));
+    assert!(!active_unit.contains("--runtime-root"));
+    assert!(
+        !unit_directory
+            .join("cognitiveos-personal-candidate.service")
+            .exists()
+    );
+    assert_eq!(
+        fs::read_to_string(action_log).unwrap(),
+        "--user --no-ask-password --no-pager daemon-reload\n--user --no-ask-password --no-pager restart cognitiveos-personal.service\n"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn systemctl_timeout_kills_pipe_holding_descendants_before_releasing_the_controller() {
+    use std::os::unix::fs::PermissionsExt;
+    use std::time::Instant;
+
+    let fixture_root = tempfile::tempdir().unwrap();
+    let fake_systemctl = fixture_root.path().join("fake-systemctl");
+    fs::write(
+        &fake_systemctl,
+        "#!/bin/sh\n(sleep 30) &\nwhile :; do sleep 30; done\n",
+    )
+    .unwrap();
+    fs::set_permissions(&fake_systemctl, fs::Permissions::from_mode(0o700)).unwrap();
+    let mut controller = SystemdUserServiceController::new_fixture_with_command_timeout(
+        fixture_root.path().join("deployment"),
+        fixture_root.path().join("units"),
+        &fake_systemctl,
+        "127.0.0.1:48181".parse().unwrap(),
+        Duration::from_millis(100),
+    )
+    .unwrap();
+
+    let started_at = Instant::now();
+    let result = controller.restart_active_service();
+
+    assert!(matches!(
+        result,
+        Err(LinuxBundleServiceError::ServiceCommandTimedOut)
+    ));
+    assert!(
+        started_at.elapsed() < Duration::from_secs(2),
+        "timeout must include pipe-holder cleanup"
+    );
+}
+
 #[test]
 fn bounded_loopback_health_requires_the_exact_liveness_contract() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -197,6 +294,22 @@ fn bounded_loopback_health_requires_the_exact_liveness_contract() {
     });
 
     assert!(probe_personal_health(address, Duration::from_millis(250)).is_err());
+    server.join().unwrap();
+}
+
+#[test]
+fn bounded_loopback_health_allows_a_short_daemon_startup_delay() {
+    let reserved_listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = reserved_listener.local_addr().unwrap();
+    drop(reserved_listener);
+
+    let server = thread::spawn(move || {
+        thread::sleep(Duration::from_millis(50));
+        let listener = TcpListener::bind(address).unwrap();
+        respond_once(listener, valid_health_response());
+    });
+
+    assert!(probe_personal_health(address, Duration::from_secs(1)).is_ok());
     server.join().unwrap();
 }
 
@@ -431,15 +544,41 @@ fn signed_bundle(version: &str) -> BundleFixture {
 fn runnable_archive_bytes() -> Vec<u8> {
     let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar_builder = TarBuilder::new(gzip_encoder);
-    let mut header = TarHeader::new_gnu();
-    header.set_mode(0o755);
-    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
-    header.set_cksum();
-    tar_builder
-        .append_data(&mut header, "bin/kernel-server", KERNEL_SERVER_CONTENT)
-        .unwrap();
+    append_file(
+        &mut tar_builder,
+        "bin/kernel-server",
+        KERNEL_SERVER_CONTENT,
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "bin/cognitive",
+        b"service-cognitive",
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "extensions/pi-cognitiveos/dist/index.js",
+        b"export {};\n",
+        0o644,
+    );
     let gzip_encoder = tar_builder.into_inner().unwrap();
     gzip_encoder.finish().unwrap()
+}
+
+fn append_file(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    path: &str,
+    contents: &[u8],
+    mode: u32,
+) {
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(contents.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, path, contents)
+        .unwrap();
 }
 
 fn expected_pi() -> ExpectedPiCompatibility {

@@ -41,17 +41,26 @@ fn main() {
             .iter()
             .position(|arg| arg == "--runtime-root")
             .and_then(|i| args.get(i + 1))
-            .map(std::path::PathBuf::from)
-            .unwrap_or_else(|| {
-                std::env::temp_dir().join(format!("cognitiveos-personal-{}", std::process::id()))
-            });
-        let layout = PersonalDataLayout::from_xdg_roots(
-            runtime_root.join("config"),
-            runtime_root.join("data"),
-            runtime_root.join("state"),
-            runtime_root.join("cache"),
-            runtime_root.clone(),
-        );
+            .map(std::path::PathBuf::from);
+        let layout = match runtime_root {
+            Some(runtime_root) => PersonalDataLayout::from_xdg_roots(
+                runtime_root.join("config"),
+                runtime_root.join("data"),
+                runtime_root.join("state"),
+                runtime_root.join("cache"),
+                runtime_root,
+            ),
+            // The installed systemd service intentionally supplies no
+            // test-only root. It must share the user's real XDG layout with
+            // `cognitive init`, CLI discovery, and the Pi client.
+            None => match PersonalDataLayout::resolve_from_env() {
+                Ok(layout) => layout,
+                Err(error) => {
+                    eprintln!("kernel-server personal: unable to resolve XDG layout: {error}");
+                    std::process::exit(1);
+                }
+            },
+        };
         let config = PersonalDaemonConfig {
             bind_address: bind,
             layout,

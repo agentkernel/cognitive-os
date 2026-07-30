@@ -27,6 +27,7 @@ cognitive-management = { workspace = true }
 cognitive-runtime = { workspace = true }
 cognitive-store = { workspace = true }
 cognitive-secret = { workspace = true }
+cognitive-provider-transport = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

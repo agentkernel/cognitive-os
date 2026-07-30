@@ -2,7 +2,7 @@
 #
 # CognitiveOS Personal Linux bootstrap template.
 #
-# Release automation renders every @COGNITIVEOS_*@ value below into a reviewed,
+# Release automation renders every CognitiveOS policy placeholder below into a reviewed,
 # version-specific script before publication. The source template deliberately
 # fails closed and must not be represented as a usable release installer.
 
@@ -12,19 +12,19 @@ umask 077
 RELEASE_VERSION="@COGNITIVEOS_RELEASE_VERSION@"
 RELEASE_OBJECT_DIRECTORY="@COGNITIVEOS_RELEASE_OBJECT_DIRECTORY@"
 ALLOWED_REDIRECT_HOST="@COGNITIVEOS_ALLOWED_REDIRECT_HOST@"
-VERIFIER_SHA256="@COGNITIVEOS_VERIFIER_SHA256@"
+INSTALLER_SHA256="@COGNITIVEOS_INSTALLER_SHA256@"
 TRUSTED_KEYRING_VERSION="@COGNITIVEOS_TRUSTED_KEYRING_VERSION@"
 TRUSTED_KEY_ID="@COGNITIVEOS_TRUSTED_KEY_ID@"
 TRUSTED_PUBLIC_KEY_BASE64URL="@COGNITIVEOS_TRUSTED_PUBLIC_KEY_BASE64URL@"
 EXPECTED_PI_VERSION="@COGNITIVEOS_EXPECTED_PI_VERSION@"
 EXPECTED_PI_INTEGRITY="@COGNITIVEOS_EXPECTED_PI_INTEGRITY@"
 
-VERIFIER_FILENAME="cognitiveos-linux-bundle-verifier"
+INSTALLER_FILENAME="cognitiveos-linux-bundle-installer"
 MANIFEST_FILENAME="manifest.json"
 ARTIFACT_FILENAME="cognitiveos-linux-x86_64.tar.gz"
 STATEMENT_FILENAME="attestation.statement.json"
 SIGNATURE_FILENAME="attestation.signature.json"
-MAX_VERIFIER_BYTES=33554432
+MAX_INSTALLER_BYTES=33554432
 MAX_METADATA_BYTES=65536
 MAX_ARTIFACT_BYTES=536870912
 CONNECT_TIMEOUT_SECONDS=10
@@ -70,7 +70,7 @@ validate_release_policy() {
     require_rendered_value "$RELEASE_VERSION"
     require_rendered_value "$RELEASE_OBJECT_DIRECTORY"
     require_rendered_value "$ALLOWED_REDIRECT_HOST"
-    require_rendered_value "$VERIFIER_SHA256"
+    require_rendered_value "$INSTALLER_SHA256"
     require_rendered_value "$TRUSTED_KEYRING_VERSION"
     require_rendered_value "$TRUSTED_KEY_ID"
     require_rendered_value "$TRUSTED_PUBLIC_KEY_BASE64URL"
@@ -88,16 +88,16 @@ validate_release_policy() {
     case "$ALLOWED_REDIRECT_HOST" in
         *[!A-Za-z0-9.-]*|""|.*|*..*) print_error "redirect host policy is invalid"; exit 64 ;;
     esac
-    case "$VERIFIER_SHA256" in
-        sha256:*) verifier_digest_hex=${VERIFIER_SHA256#sha256:} ;;
-        *) print_error "verifier digest policy is invalid"; exit 64 ;;
+    case "$INSTALLER_SHA256" in
+        sha256:*) installer_digest_hex=${INSTALLER_SHA256#sha256:} ;;
+        *) print_error "installer digest policy is invalid"; exit 64 ;;
     esac
-    if [ "${#verifier_digest_hex}" -ne 64 ]; then
-        print_error "verifier digest policy is invalid"
+    if [ "${#installer_digest_hex}" -ne 64 ]; then
+        print_error "installer digest policy is invalid"
         exit 64
     fi
-    case "$verifier_digest_hex" in
-        *[!0123456789abcdef]*) print_error "verifier digest policy is invalid"; exit 64 ;;
+    case "$installer_digest_hex" in
+        *[!0123456789abcdef]*) print_error "installer digest policy is invalid"; exit 64 ;;
     esac
 }
 
@@ -193,21 +193,22 @@ download_file() {
     mv -f -- "$partial_path" "$final_path"
 }
 
-verify_verifier_digest() {
-    actual_digest=$(sha256sum "$VERIFIER_PATH" | awk '{print $1}') || {
-        print_error "bootstrap verifier digest could not be computed"
+verify_installer_digest() {
+    actual_digest=$(sha256sum "$INSTALLER_PATH" | awk '{print $1}') || {
+        print_error "bootstrap installer digest could not be computed"
         exit 69
     }
-    if [ "sha256:${actual_digest}" != "$VERIFIER_SHA256" ]; then
-        print_error "bootstrap verifier digest does not match release policy"
+    if [ "sha256:${actual_digest}" != "$INSTALLER_SHA256" ]; then
+        print_error "bootstrap installer digest does not match release policy"
         exit 69
     fi
-    chmod 0700 "$VERIFIER_PATH"
+    chmod 0700 "$INSTALLER_PATH"
 }
 
-run_local_verifier() {
-    "$VERIFIER_PATH" \
+run_local_installer() {
+    "$INSTALLER_PATH" \
         --bundle-directory "$BUNDLE_DIRECTORY" \
+        --expected-release-version "$RELEASE_VERSION" \
         --expected-pi-version "$EXPECTED_PI_VERSION" \
         --expected-pi-integrity "$EXPECTED_PI_INTEGRITY" \
         --keyring-version "$TRUSTED_KEYRING_VERSION" \
@@ -228,17 +229,17 @@ main() {
     validate_release_policy
     create_private_temporary_directory
     BUNDLE_DIRECTORY="${TEMP_DIRECTORY}/bundle"
-    VERIFIER_PATH="${TEMP_DIRECTORY}/${VERIFIER_FILENAME}"
+    INSTALLER_PATH="${TEMP_DIRECTORY}/${INSTALLER_FILENAME}"
     mkdir -p "$BUNDLE_DIRECTORY"
 
-    download_file "$VERIFIER_FILENAME" "$MAX_VERIFIER_BYTES"
-    mv -f -- "${BUNDLE_DIRECTORY}/${VERIFIER_FILENAME}" "$VERIFIER_PATH"
-    verify_verifier_digest
+    download_file "$INSTALLER_FILENAME" "$MAX_INSTALLER_BYTES"
+    mv -f -- "${BUNDLE_DIRECTORY}/${INSTALLER_FILENAME}" "$INSTALLER_PATH"
+    verify_installer_digest
     download_file "$MANIFEST_FILENAME" "$MAX_METADATA_BYTES"
     download_file "$STATEMENT_FILENAME" "$MAX_METADATA_BYTES"
     download_file "$SIGNATURE_FILENAME" "$MAX_METADATA_BYTES"
     download_file "$ARTIFACT_FILENAME" "$MAX_ARTIFACT_BYTES"
-    run_local_verifier
+    run_local_installer
 }
 
 trap cleanup_temporary_directory EXIT

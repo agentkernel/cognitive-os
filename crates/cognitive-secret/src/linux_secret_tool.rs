@@ -43,12 +43,20 @@ impl LinuxSecretToolStore {
 
     fn secret_tool_on_path() -> bool {
         Command::new("secret-tool")
-            .arg("--version")
+            // libsecret's `secret-tool` reports usage with exit status 2 for
+            // both `--version` and `--help`. Starting a lookup with complete,
+            // non-sensitive probe attributes confirms the executable can be
+            // invoked without interpreting lookup success as availability.
+            // The actual `store` call remains the authoritative fail-closed
+            // Secret Service operation.
+            .arg("lookup")
+            .arg("application")
+            .arg("cognitiveos-secret-store-probe")
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .status()
-            .map(|status| status.success())
-            .unwrap_or(false)
+            .spawn()
+            .and_then(|mut child| child.wait())
+            .is_ok()
     }
 
     fn require_available(&self) -> Result<(), SecretError> {

@@ -76,12 +76,25 @@ from Linux native and rejects WSL, Windows, and enabled CI before selecting or
 probing the native Secret Service backend.
 
 For future Linux-native local runs, the designated experimental SSH host is
-the Xianghege device at `hal9000@192.168.1.2`. Treat it as a local-only
-engineering host, keep its evidence separate from CI Ubuntu and Windows/MSVC,
-and do not upgrade it into a product, sandbox, Gate, Profile, or release
-claim merely because a command succeeded there. Until workstation-side SSH
-authentication is available, this host designation is planning metadata rather
-than executed evidence.
+`personal-linux-native-01` at `wuz@192.168.1.2`. A no-secret qualification
+probe on 2026-07-30 confirmed non-WSL Linux x86_64, a running native
+user-systemd and user D-Bus, Rust `1.97.1`, and Node `22.19.0`; SSH
+authentication is available. Treat it as a local-only engineering host, keep
+its evidence separate from CI Ubuntu and Windows/MSVC, and do not upgrade it
+into a product, sandbox, Gate, Profile, or release claim merely because a
+command succeeded there.
+
+Each remote slice must run through non-interactive SSH, use a disposable
+remote work directory, and re-check the exact Pi package/binary version before
+load. Do not put credentials, `SecretRef`, Provider configuration, SQLite or
+authority paths, selected-model material, or raw Pi output in SSH arguments,
+environment, terminal captures, or committed evidence. On 2026-07-30, `pi`
+was absent from PATH and an uncredentialed
+`npm exec --package=@earendil-works/pi-coding-agent@0.81.1 -- pi --version`
+probe produced no version output after two minutes and was stopped. Therefore
+exact Pi availability remains `not-run`, not a satisfied pin and not a product
+blocker. The next real-load slice must resolve this availability check before
+attempting `--extension <absolute-path>`.
 
 The P0-T06 `extension-load` verb is a bounded local evidence probe. It requires
 the reviewed fixture and `/cognitiveos-p0-t06-status`, starts a real pinned Pi

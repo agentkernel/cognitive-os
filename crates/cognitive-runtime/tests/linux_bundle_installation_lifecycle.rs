@@ -127,15 +127,41 @@ impl SignedBundleFixture {
 fn runnable_archive_bytes() -> Vec<u8> {
     let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar_builder = TarBuilder::new(gzip_encoder);
-    let mut header = TarHeader::new_gnu();
-    header.set_mode(0o755);
-    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
-    header.set_cksum();
-    tar_builder
-        .append_data(&mut header, "bin/kernel-server", KERNEL_SERVER_CONTENT)
-        .unwrap();
+    append_file(
+        &mut tar_builder,
+        "bin/kernel-server",
+        KERNEL_SERVER_CONTENT,
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "bin/cognitive",
+        b"lifecycle-cognitive",
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "extensions/pi-cognitiveos/dist/index.js",
+        b"export {};\n",
+        0o644,
+    );
     let gzip_encoder = tar_builder.into_inner().unwrap();
     gzip_encoder.finish().unwrap()
+}
+
+fn append_file(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    path: &str,
+    contents: &[u8],
+    mode: u32,
+) {
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(contents.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, path, contents)
+        .unwrap();
 }
 
 fn statement_for_manifest(manifest: &LinuxBundleManifest) -> Value {
@@ -533,7 +559,7 @@ fn verifier_failure_creates_neither_deployment_nor_lease_mutation() {
 }
 
 #[test]
-fn missing_lease_parent_fails_without_creating_deployment_state() {
+fn verified_first_install_creates_a_private_deployment_parent() {
     let fixture = SignedBundleFixture::new("2.0.0");
     let absent_parent = fixture.deployment_root("absent-lease-parent");
     let deployment_root = absent_parent.join("deployment");
@@ -550,10 +576,12 @@ fn missing_lease_parent_fails_without_creating_deployment_state() {
         },
     );
 
-    assert!(matches!(result, Err(LinuxBundleError::Io(_))));
-    assert_eq!(health_calls.get(), 0);
-    assert!(!absent_parent.exists());
-    assert!(installer_lease_files(fixture.bundle_directory()).is_empty());
+    let receipt = result.unwrap();
+    assert_eq!(receipt.resulting_active_version, "2.0.0");
+    assert_eq!(health_calls.get(), 1);
+    assert!(absent_parent.is_dir());
+    assert!(deployment_root.join("versions/2.0.0").is_dir());
+    assert_eq!(installer_lease_files(&absent_parent).len(), 1);
 }
 
 #[test]

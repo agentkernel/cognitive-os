@@ -9,6 +9,21 @@ license.workspace = true
 
 [features]
 test-fault-injection = []
+native-campaign-faults = []
+
+[[bin]]
+name = "linux_bundle_campaign_builder"
+path = "src/bin/linux_bundle_campaign_builder.rs"
+
+[[bin]]
+name = "linux_bundle_campaign_pre_pointer_fault_daemon"
+path = "src/bin/linux_bundle_campaign_pre_pointer_fault_daemon.rs"
+required-features = ["native-campaign-faults"]
+
+[[bin]]
+name = "linux_bundle_campaign_post_pointer_fault_daemon"
+path = "src/bin/linux_bundle_campaign_post_pointer_fault_daemon.rs"
+required-features = ["native-campaign-faults"]
 
 [dependencies]
 cognitive-contracts = { workspace = true }
@@ -26,6 +41,7 @@ url = { workspace = true }
 # Safe extraction does not preserve archive ownership or extended attributes.
 tar = { version = "0.4.46", default-features = false }
 flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
+nix = { version = "0.31.3", features = ["signal", "process"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }

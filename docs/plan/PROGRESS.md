@@ -1,5 +1,218 @@
 # PROGRESS — 单页进度仪表
 
+## Current snapshot (2026-07-30)
+
+This section is the authoritative current view. Entries below `Historical
+evidence journal` preserve execution-time facts and cannot override it.
+
+Repository identity: `cognitiveos-personal` is the only active implementation
+project. CognitiveOS design, specifications, conformance assets, and reusable
+kernel code are the architecture/contract foundation for Personal, not a
+second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md).
+
+| Area | Current status | Evidence boundary | Next actionable step |
+|---|---|---|---|
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; exact Pi `0.81.1` was observed by actual `pi --version` on SSH-qualified `personal-linux-native-01` (`wuz@192.168.1.2`). The same Pi received a minimal `--extension <absolute-path>` session-local observation: the built module imported and Pi invoked its default export through an ephemeral marker wrapper. A native Linux Secret Service initialization completed with redacted `deepseek` configuration and selected model `deepseek-v4-flash`; secret material remains in `linux-secret-tool`. A bounded daemon-owned Provider-proxy chat smoke received the expected short response (`finish_reason: stop`) with `authority_side_effects: false`. The coherent-bundle implementation requires an immutable archive to include `kernel-server`, product `cognitive`, and the complete built Pi Extension distribution. Supported CI runs `30537927521` and `30543563029` passed their Ubuntu and Windows matrices. On the designated Linux-native host, an isolated non-secret source tree produced the daemon, CLI, installer wrapper, campaign builder, and Extension entry. A reproducible runner configures only the product Pi paths, rejects unsafe inputs, reads only readiness booleans, verifies exact Pi, clears the child environment, bounds one response, and emits only outcome flags; its focused positive and negative fixtures passed locally and on the Linux-native host. The checked-in manual workflow now defines the protected experimental campaign build path, but its required GitHub Environment and protected signing secret are absent; no archive was signed, installed, or deployed. No Task, Effect, Verification, capability or authority side effect was created. Prior route evidence remains `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | create and protect the fixed experimental GitHub Environment, add its signing secret, then dispatch and offline-verify the coherent artifact before controlled deployment and installed-path runner execution |
+| B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
+| GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
+| Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
+| Active task lease | `none` | the protected experimental signing-workflow implementation slice is closed; dispatch remains blocked by missing GitHub Environment configuration | configure the Environment and secret, then claim a deployment-only P1-T09 lease |
+
+The P1-T09 implementation evidence is real but incomplete. The current status is
+therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
+
+The current product-route slice is boundedly blocked before configuration: the
+restored Linux user service is active and exact Pi `0.81.1` remains available,
+but the host has no product `cognitive` executable or deployed built CognitiveOS
+Extension entry. No Provider configuration, SecretRef, bootstrap secret, SQLite
+path, selected-model digest, token, key, or model response was read or output.
+Consequently `cognitive pi configure`, `cognitive doctor`, `cognitive pi launch`,
+and the direct Pi first-response verification are explicitly `not-run`, rather
+than failed or passed. `blocked_paths`: product bundle deployment paths on the
+experimental host; `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`,
+`GMVP-LINUX`, and Profile; owner: P1-T08 bundle/release artifact owner; next
+action: use an authorized protected signing-material workflow to build and verify
+a coherent bundle containing the product CLI and built Extension, then deploy it
+and rerun the bounded, redacted product-route diagnostics. This is a non-claim
+blocker and does not alter the active service, Secret Service, or Provider state.
+
+The current atomic slice adds a reusable Linux-native Pi observation probe. It
+first imports the built ESM module, then passes a session-local wrapper through
+the exact Pi's explicit `--extension <absolute-path>` flag. The wrapper only
+writes a disposable marker before delegating to the actual default export;
+that marker was observed, confirming Pi invoked the CognitiveOS Extension entry
+point. The isolated child has no daemon endpoint or Provider material, and the
+expected no-daemon print-mode execution timed out after 45 seconds (exit 124).
+This is `tested-local` Extension-load evidence only, not a daemon, Provider,
+conversation, command-output, B01, release, or Profile result.
+
+The current Linux-native Provider-prerequisite slice corrects the SecretStore
+executable probe for the host's `secret-tool` behavior, then rechecks the
+native Secret Service, current daemon endpoint, and non-secret Provider state.
+An operator entered a key only through the CLI's hidden-input prompt; the
+resulting `cognitive init` output confirms a redacted native-secret binding and
+the selected `deepseek-v4-flash` model. A one-shot daemon-owned Provider-proxy
+request returned the expected bounded response without an authority side
+effect. This is `tested-local` connectivity evidence only. The direct Pi smoke
+timed out and Pi remains unconfigured, so it is not a claim that the product
+Pi route, first conversation, B01, release, or Profile is ready.
+
+The current atomic slice adds a loopback-only HTTPS Provider fixture process and
+an additional-root test seam that preserves the production Rustls policy. Its
+failure-first integration suite covers real discovery serialization, malformed
+and unauthorized responses, non-chat capability, timeout, oversized response,
+redirect refusal, selected-model persistence, deterministic request counts, and
+secret redaction. The exact suite passed **3/3** within the supported Ubuntu
+and Windows CI workspace tests for PR #117 (run 30513254161). Local focused
+test and Clippy commands remain `not-run` to completion because the Windows GNU
+linker exits 121 before tests start; that limitation neither invalidates the
+supported-CI evidence nor creates a Gate, release, or Profile claim.
+
+## Historical evidence journal
+
+> **Fail-closed Pi launch preparation slice (2026-07-30):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-run` while task P1-T09 is `in-progress`. `cognitive pi launch` now admits only a daemon-owned,
+> numeric loopback endpoint document and an authenticated ready Personal doctor
+> projection before it reads the fixed non-secret `pi.json`. It requires all
+> first-conversation components (including native SecretStore, Provider and
+> digest-matched selected model) to be ready; corrupt/missing endpoint or
+> configuration, relative/missing Pi paths, readiness failures, and exact Pi
+> `0.81.1` version drift reject launch. The spawned client receives only the
+> confirmed `--extension <absolute-path>` argument and a cleared,
+> OS-execution allowlist environment; it receives no Provider or secret
+> material. Focused `windows_wsl2_linux_guest` admin-cli Personal units
+> **15/15**, Pi/readiness **1/1**, Personal readiness **1/1**, Provider-proxy
+> **2/2**, and cognitive CLI **5/5** passed; strict changed-package Clippy
+> passed. This is implementation and local-test evidence only: it does not
+> demonstrate a real Pi Extension load, Provider conversation, native Secret
+> Service, B01, Gate, release, or Profile claim.
+
+> **Non-secret Pi configuration slice (2026-07-30):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-run` while task P1-T09 is `in-progress`. Trusted public upstream source at the reviewed Pi
+> `0.81.1` commit confirms `--extension` / `-e <path>` as the exact Extension
+> loading option. The Personal CLI now offers `cognitive pi configure`, which
+> atomically writes only the existing non-secret `pi.json` fields after
+> rejecting relative paths and all non-configuration flags (including Provider
+> secret inputs). It does not start Pi, access Provider configuration,
+> SecretRefs, SecretStore, SQLite, or authority state; the daemon still owns
+> Pi file/version readiness observation. Focused `windows_wsl2_linux_guest`
+> admin-cli Personal units **9/9** passed after a failure-first relative-path
+> test. This is implementation and local-test evidence only: it does not
+> provide a Pi launch, Pi Extension load, deterministic binary Provider
+> fixture, first conversation, native Secret Service, B01, Gate, release, or
+> Profile claim.
+
+> **Readiness truth and installed XDG launch slice (2026-07-29):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-run` while task P1-T09 is `in-progress`. A Provider component now becomes `ready` only when
+> its non-secret `provider.json` snapshot digest has a matching valid,
+> chat-capable `selected-model.json`; missing, malformed, or digest-mismatched
+> selected-model state blocks both aggregate and first-conversation readiness
+> with redacted local error classes. `cognitive daemon start` now leaves
+> `--runtime-root` absent for installed XDG launches, so `kernel-server`,
+> `cognitive init`, and the Pi extension share the real user layout; an
+> explicit hermetic root is still forwarded only for tests. The CLI default is
+> aligned with the canonical loopback service at `127.0.0.1:48181`. Focused
+> `windows_wsl2_linux_guest` evidence: kernel-server unit suite **32/32**,
+> Pi/readiness integration **1/1** each, Provider-proxy regression **2/2**,
+> admin-cli Personal units **6/6**, and cognitive CLI regression **5/5**
+> passed. This is implementation and local-test evidence only: it does not
+> provide a Pi configuration/launch command, actual Pi Extension loading, a
+> deterministic binary Provider fixture, a real Provider conversation, native
+> Secret Service evidence, B01, a Gate, release, or Profile claim.
+
+> **Provider discovery and selected-model prerequisite (2026-07-29):** The
+> install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
+> remains `not-run` while task P1-T09 is `in-progress`. A new shared `cognitive-provider-transport` adapter
+> now owns the bounded Rustls-only Provider egress boundary used by both the
+> daemon proxy (through its compatibility re-export) and `cognitive init`.
+> The adapter preserves HTTPS-only URLs, no redirects, URL-user-info and
+> header-injection rejection, timeout/cancellation behavior, and the 1 MiB
+> response limit. When Provider flags are supplied, `cognitive init` now
+> configures the SecretStore binding and runs `ProviderDiscoveryService`; a
+> supplied `--model-id` is `ExactCatalog`, never a manual fallback. Only a
+> chat-capable probe persists `selected-model.json` and the non-secret snapshot
+> digest; a failed or missing catalog model clears stale selection and reports
+> a redacted actionable error. Focused `windows_wsl2_linux_guest` evidence:
+> private init discovery tests **2/2 passed**, shared transport tests **2/2
+> passed**, daemon proxy regression **2/2 passed**, and hermetic cognitive CLI
+> regression **5/5 passed**. Strict Clippy for the changed packages and
+> formatter passed. This is implementation and local-test evidence only: no
+> real Provider, Pi launch, first conversation, native campaign, B01, Gate,
+> release, or Profile claim is made.
+
+> **Install-to-first-conversation XDG/endpoint foundation (2026-07-29):** The
+> current first-conversation work item is `in-progress`. `kernel-server
+> --personal` now resolves the real user XDG layout when its explicit
+> hermetic-only `--runtime-root` is absent; it no longer creates a PID-scoped
+> temporary layout for the installed user service. After a successful loopback
+> bind, the daemon atomically publishes its actual bound endpoint to the shared
+> non-secret `state/cognitiveos/daemon-endpoint.json` document and removes it
+> during orderly shutdown. `cognitive daemon start` no longer pre-publishes an
+> endpoint: it waits for the lock, bootstrap secret, and daemon-owned endpoint
+> before reporting success. Focused `windows_wsl2_linux_guest` evidence:
+> kernel-server Personal daemon integration **5/5 passed**, CLI daemon lifecycle
+> integration **1/1 passed**, and strict Clippy passed for both crates. This is
+> implementation and local-test evidence only, not Provider discovery,
+> selected-model persistence, Pi launch, first conversation, B01, a product
+> Gate, or Profile conformance.
+
+> **P1-T08 Linux-native closeout (2026-07-29):** P1-T08 is `done`.
+> The experimental release-shaped campaign executed the inspected shell through
+> the fixed production Rust adapter and `/usr/bin/systemctl --user` on the
+> designated independent Linux-native host `personal-linux-native-01`.
+> Evidence covers a clean install of `0.0.0-campaign.20260729.3`, a healthy
+> upgrade to `.4`, a pre-pointer failure for `.5`, and a post-pointer final
+> confirmation failure for `.6`. Both failure cases returned the stable
+> installer failure boundary; after the runs, the canonical unit and service
+> were active, the exact 48181 liveness endpoint was healthy, and the bounded
+> non-secret `active-version` pointer was restored to `.4`. Immutable `.2`
+> through `.6` campaign versions remained retained. Focused WSL implementation
+> tests passed **19/19** (`linux_bundle_campaign_builder`,
+> `linux_bundle_service_lifecycle`, and `linux_bundle_single_service`) and
+> strict runtime Clippy passed. This provides Linux-native experimental test
+> evidence for the P1-T08 installer transaction only; it is not a production
+> release/signing, B01, product Gate, Profile, containment, uninstall, or
+> first-conversation claim. P1-T09 remains `not-started`; the next active
+> work item is the install-to-first-conversation route.
+
+> **P1-T08 MVP single-service installer transaction (2026-07-29):** P1-T08
+> was `in-progress` with `development_track: experimental-local-only` before
+> the Linux-native closeout recorded above.
+> The inspected shell now verifies a release-bound Rust installer digest and
+> hands the complete downloaded bundle to `linux-bundle-installer`. The Rust
+> path shares one offline verify → OS lease → private staging prefix, publishes
+> immutable bytes, atomically publishes the fixed canonical user unit, runs
+> fixed `systemctl --user` daemon-reload/restart actions, checks the exact
+> 48181 liveness contract before and after active-pointer publication, and
+> deterministically restores the previous pointer/unit/service or removes the
+> first-install unit without issuing a receipt. The adapter runner now owns
+> fixed bootstrap-fact parsing, release-version verification, and controller
+> injection while the production binary still creates only the fixed
+> `/usr/bin/systemctl` controller; its positive transaction test uses an
+> isolated controller boundary. Focused tests executed in
+> `windows_wsl2_linux_guest`: **50 passed, 0 failed, 1 ignored child
+> entrypoint**; runtime strict Clippy, formatting, repository consistency, and
+> diff whitespace checks passed. This is implementation and fixture evidence
+> only. Linux-native user-systemd, release artifact/signing, B01, Gate,
+> Profile, containment, uninstall and first-conversation evidence remain
+> `not-run` or not provided.
+
+> **Personal MVP-first route decision (2026-07-29):** ADR-0034 records the
+> owner-approved first production path: one canonical user service,
+> `cognitiveos-personal.service`, on `127.0.0.1:48181`, with bounded downtime
+> during explicit Alpha upgrades. ADR-0032/0033 dual-service fixtures remain
+> valid implementation-fixture evidence and an optional future upgrade design,
+> but no longer block P1-T08/P1-T09. Existing task IDs remain stable;
+> `P7-T08 / GMVP-LINUX` is added as a product-only convergence Gate after B01,
+> P2 and P7-T01..T03. P1-T08 remains `in-progress`, P1-T09 and P7-T08 remain
+> `not-started`, all Personal product Gates remain `not-run`, and Profile
+> `implemented` remains 0. This planning decision provides no single-service,
+> Linux-native, B01, release, containment or Profile evidence.
+
 > **P1-T08 fake-systemctl controller fixture (2026-07-28):** P1-T08 remains
 > `in-progress` with `development_track: experimental-local-only`. ADR-0033
 > specifies a private/injected unit-root controller boundary and fixed
@@ -302,7 +515,7 @@
 | 子工程 | 状态 | 测试证据 | 与 Profile 的关系 |
 |---|---|---|---|
 | `personal-blog/` CognitiveOS Research | **实现已提供；本地测试已执行**（嵌套独立仓；**不入** Cos `origin/main`） | Next.js 静态/SSG；Vitest / Playwright / axe 证据以 **blog 仓** 为准 | 仅研究发布与展示层；不改变 REQ/向量/Profile。**唯一路径** `personal-blog/`；远程 [`agentkernel/blog`](https://github.com/agentkernel/blog)；纪律见 `.cursor/rules/19-personal-blog-boundary.mdc` |
-| Personal 产品化计划 | **P1-T07 in-progress；P0-T01..T07 / P1-T01..T06 done；无 Profile 声明** | P0-T06 的 Extension fixture 拒绝 project trust、拦截 write/edit/bash、仅设置 session-local status；2026-07-27 在 `wuz@192.168.1.2` 上实际拿到 redacted `extension-load` evidence（`status=executed`，但仍 non-claim）。ADR-0018 临时例外已使 native-store-to-initial-Pi-child 开发路径默认拒绝、显式开启、Linux-only 且 P2 到期；`wuz@192.168.1.2` 已登记为后续 Linux-native `experimental-local-only` SSH 主机。P1-T07 已交付真实 Pi runtime observation 与 daemon-owned Provider proxy；production `reqwest` + Rustls transport 是 HTTPS-only、redirect-free、bounded non-streaming egress，Provider material 只在 daemon 内解析。当前 Pi API mirror 未验证 completion-provider hook，因而尚未接线且任务继续 in-progress；不得用 Pi-side Provider config/secret 规避。focused provider test 本机因 Windows GNU linker exit 121 未运行，CI 仍 required。Personal Gate/B01-B12 仍 `not-run`；G0 已满足于 P0-T06 完成。2026-07-26 计划一致性修订：新增 P7-T07（Windows 安装面与专门 B01-W Gate 归宿，PERS-PR-021）、P2-T08 验收增补 ADR-0018 例外到期核查、`plan.md` 状态行改指台账并修正依赖图/critical path/DEC-P-* 编号；不改变任何 Gate/证据结论。2026-07-26 生产就绪与低摩擦授权批：ADR-0026 落地 DEC-P-20 trust profile（Tier 0/1/2、准入预览唯一默认授权点、预算硬轨、不建审批链），仅增补 not-started 任务验收（P1-T09/P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02，含面向用户 backup/restore），新增 PERS-PR-022/023；不改变任何 Gate/证据结论。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal `done` 不代表 G0、B01-B12 或 Profile 已符合。 |
+| Personal 产品化计划 | **P1-T08 in-progress；P0-T01..T07 / P1-T01..T07 done；无产品 Gate/Profile 声明** | P1-T07 已交付 daemon-owned Provider proxy 与 Pi completion bridge；P1-T08 已有 verifier、lease、安全解包和 dual-service controller fixture，但 production single-service installer、native systemd、完整 XDG/Provider/Pi 首聊和 B01 均未提供或未执行。ADR-0034 将 single service/48181 定为首个生产路径，新增 P7-T08/GMVP-LINUX；所有 local/WSL/fake/CI 证据继续按其原始范围记账。Personal B01-B12/GMVP-LINUX 仍 `not-run`，Profile implemented 仍为 0。 | 正式台账：[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)；[PERS-PR trace](personal-trace.yaml) 独立于 registry matrix。Personal task `done` 不代表 product Gate 或 Profile 已符合。 |
 
 ## REQ 覆盖计数（实测：`node tools/src/check-consistency.mjs` / `gen-matrix`）
 
