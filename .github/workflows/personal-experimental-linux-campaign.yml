@@ -23,8 +23,44 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-reviewed-inputs:
+    name: Validate reviewed campaign inputs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the reviewed dispatch revision
+        uses: actions/checkout@v4
+
+      - name: Set up Rust pinned by repository policy
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+
+      - name: Set up pnpm from package manager metadata
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Build and test reviewed product inputs
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm -r build
+          pnpm -r test
+          cargo test --workspace --locked
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo fmt --all -- --check
+          pnpm run check:consistency
+
   build-signed-campaign:
     name: Build signed experimental Linux campaign
+    needs: validate-reviewed-inputs
     # The qualified experimental Linux host uses glibc 2.35. Pin the payload
     # build baseline so its daemon, CLI, and installer remain executable there.
     runs-on: ubuntu-22.04
@@ -61,16 +97,10 @@ jobs:
             exit 2
           fi
 
-      - name: Build and test reviewed product inputs
+      - name: Install payload build dependencies
         run: |
           set -euo pipefail
           pnpm install --frozen-lockfile
-          pnpm -r build
-          pnpm -r test
-          cargo test --workspace --locked
-          cargo clippy --workspace --all-targets --locked -- -D warnings
-          cargo fmt --all -- --check
-          pnpm run check:consistency
 
       - name: Build immutable Linux payload tools
         run: |
