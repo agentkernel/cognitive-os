@@ -8,7 +8,9 @@
  *  3. registry <-> schema <-> vector bidirectional orphan freedom;
  *  4. relative markdown links in living docs resolve;
  *  5. traceability matrix and findings ledger are complete and their
- *     referenced paths exist.
+ *     referenced paths exist;
+ *  6. repository project identity, Personal current snapshot, and active
+ *     ownership leases have one consistent source of truth.
  *
  * Exit code 0 = green; 1 = at least one violation, each printed with file
  * and reason. History/ is never scanned (frozen archive).
@@ -409,6 +411,158 @@ if (!existsSync(ledgerPath)) {
   }
 }
 
+// ---------- 6: project identity, Personal snapshot, and active leases
+
+const projectScopePath = repoPath("docs", "governance", "project-scope.yaml");
+if (!existsSync(projectScopePath)) {
+  fail("docs/governance/project-scope.yaml", "project identity machine mirror missing");
+} else {
+  try {
+    const projectScope = readYaml(projectScopePath);
+    if (projectScope?.repository_role !== "architecture-reference-plus-single-active-project") {
+      fail(
+        "docs/governance/project-scope.yaml",
+        "repository_role must separate the architecture reference from one active project",
+      );
+    }
+    if (projectScope?.active_project?.id !== "cognitiveos-personal") {
+      fail(
+        "docs/governance/project-scope.yaml",
+        "active_project.id must be cognitiveos-personal",
+      );
+    }
+    if (projectScope?.active_project?.status !== "active") {
+      fail("docs/governance/project-scope.yaml", "cognitiveos-personal must be active");
+    }
+    for (const sourceField of ["formal_plan", "current_snapshot", "lease_ledger"]) {
+      const sourcePath = projectScope?.active_project?.[sourceField];
+      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+        fail(
+          "docs/governance/project-scope.yaml",
+          `active_project.${sourceField} must reference an existing repository path`,
+        );
+      }
+    }
+  } catch (err) {
+    fail("docs/governance/project-scope.yaml", `unparseable project identity: ${err.message}`);
+  }
+}
+
+const projectIdentityPath = repoPath("docs", "governance", "PROJECT-IDENTITY.md");
+if (!existsSync(projectIdentityPath)) {
+  fail("docs/governance/PROJECT-IDENTITY.md", "project identity governance document missing");
+} else {
+  const projectIdentity = readText(projectIdentityPath);
+  if (!projectIdentity.includes("`cognitiveos-personal`")) {
+    fail(
+      "docs/governance/PROJECT-IDENTITY.md",
+      "canonical cognitiveos-personal project id is not declared",
+    );
+  }
+  if (!projectIdentity.includes("唯一活动实现项目")) {
+    fail(
+      "docs/governance/PROJECT-IDENTITY.md",
+      "the sole active implementation project boundary is not explicit",
+    );
+  }
+}
+
+const progressPath = repoPath("docs", "plan", "PROGRESS.md");
+const lanesPath = repoPath("docs", "plan", "PARALLEL-LANES.md");
+if (existsSync(progressPath) && existsSync(lanesPath)) {
+  const progressText = readText(progressPath);
+  const currentSnapshot = progressText.split(/^## Historical evidence journal/m, 1)[0];
+  if (!currentSnapshot.includes("`cognitiveos-personal`")) {
+    fail("docs/plan/PROGRESS.md", "Current snapshot does not identify cognitiveos-personal");
+  }
+
+  const lanesText = readText(lanesPath);
+  const activeLeaseSectionMatch = lanesText.match(
+    /^## 3\. 活动 ownership leases[^\n]*\n([\s\S]*?)(?=^### 3\.1 )/m,
+  );
+  if (!activeLeaseSectionMatch) {
+    fail("docs/plan/PARALLEL-LANES.md", "canonical active lease section is missing");
+  } else {
+    const activeLeaseRows = activeLeaseSectionMatch[1]
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("| `lease/"));
+    const activeLeases = [];
+    const seenLeaseIds = new Set();
+    const writableOwners = [];
+
+    for (const row of activeLeaseRows) {
+      const columns = row
+        .split("|")
+        .slice(1, -1)
+        .map((column) => column.trim());
+      if (columns.length !== 8) {
+        fail("docs/plan/PARALLEL-LANES.md", `active lease row must have 8 columns: ${row}`);
+        continue;
+      }
+      const leaseId = columns[0].replaceAll("`", "");
+      const writablePaths = [...columns[4].matchAll(/`([^`]+)`/g)].map((match) => match[1]);
+      const status = columns[7];
+      if (!/^lease\/personal\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+$/.test(leaseId)) {
+        fail("docs/plan/PARALLEL-LANES.md", `invalid active lease_id: ${leaseId}`);
+      }
+      if (seenLeaseIds.has(leaseId)) {
+        fail("docs/plan/PARALLEL-LANES.md", `duplicate active lease_id: ${leaseId}`);
+      }
+      seenLeaseIds.add(leaseId);
+      if (status !== "active") {
+        fail(
+          "docs/plan/PARALLEL-LANES.md",
+          `non-active lease ${leaseId} must move out of the active table`,
+        );
+      }
+      if (writablePaths.length === 0) {
+        fail("docs/plan/PARALLEL-LANES.md", `active lease ${leaseId} has no writable paths`);
+      }
+      activeLeases.push(leaseId);
+      for (const writablePath of writablePaths) {
+        const normalizedPath = writablePath.replace(/\/\*\*$/, "").replaceAll("\\", "/");
+        for (const existingOwner of writableOwners) {
+          const pathsOverlap =
+            normalizedPath === existingOwner.path ||
+            normalizedPath.startsWith(`${existingOwner.path}/`) ||
+            existingOwner.path.startsWith(`${normalizedPath}/`);
+          if (pathsOverlap && existingOwner.leaseId !== leaseId) {
+            fail(
+              "docs/plan/PARALLEL-LANES.md",
+              `overlapping active writable paths: ${existingOwner.leaseId}:${existingOwner.path} and ${leaseId}:${normalizedPath}`,
+            );
+          }
+        }
+        writableOwners.push({ leaseId, path: normalizedPath });
+      }
+    }
+
+    const progressLeaseRow = currentSnapshot
+      .split(/\r?\n/)
+      .find((line) => line.startsWith("| Active task lease |"));
+    if (!progressLeaseRow) {
+      fail("docs/plan/PROGRESS.md", "Current snapshot has no Active task lease row");
+    } else {
+      const referencedLeaseIds = [...progressLeaseRow.matchAll(/`(lease\/personal\/[^`]+)`/g)].map(
+        (match) => match[1],
+      );
+      for (const activeLease of activeLeases) {
+        if (!referencedLeaseIds.includes(activeLease)) {
+          fail("docs/plan/PROGRESS.md", `active lease is not referenced: ${activeLease}`);
+        }
+      }
+      for (const referencedLeaseId of referencedLeaseIds) {
+        if (!activeLeases.includes(referencedLeaseId)) {
+          fail("docs/plan/PROGRESS.md", `referenced lease is not active: ${referencedLeaseId}`);
+        }
+      }
+      if (activeLeases.length === 0 && !progressLeaseRow.includes("`none`")) {
+        fail("docs/plan/PROGRESS.md", "zero active leases must be represented as `none`");
+      }
+    }
+  }
+}
+
 // ---------- report
 
 const schemaCount = schemas.length;
@@ -425,5 +579,5 @@ if (failures.length > 0) {
 }
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
-    `${schemaCount} schemas, ${vectorCount} vectors, markdown links and traceability verified)`,
+    `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, project identity, and leases verified)`,
 );

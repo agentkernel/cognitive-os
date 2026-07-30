@@ -1,6 +1,50 @@
-# AGENTS.md — CognitiveOS 参考实现开发代理入口
+# AGENTS.md — CognitiveOS Personal 开发代理入口
 
-新会话接入：**① 读本文件与 [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md) → ② 读正式任务计划 → ③ 读 `PROGRESS.md` 当前快照 → ④ 读与所选任务/车道匹配的最新 handoff**，确认活动 ownership lease 后领取任务。handoff 承载操作连续性，但不得覆盖正式任务或 Gate 状态；禁止依赖对话历史承载工程状态。
+本仓库的唯一活动实现项目是 **`cognitiveos-personal`（CognitiveOS Personal）**。
+原 CognitiveOS 设计、白皮书、规范和通用内核是架构参考与合同基础，不是第二个待交付
+项目。完整边界见 [PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md)；本文件只
+保留代理必须立即知道的操作规则，通用治理正文见
+[DEVELOPMENT-OPERATING-MODEL.md](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
+
+## 新会话启动顺序
+
+1. 阅读本文件和 [项目身份](docs/governance/PROJECT-IDENTITY.md)；
+2. 阅读 [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)；
+3. 阅读 Personal 正式计划 [PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)；
+4. 只读 `PROGRESS.md` 的 `Current snapshot`；
+5. 只读 [PARALLEL-LANES.md](docs/plan/PARALLEL-LANES.md) 的活动 lease；
+6. 再阅读所选任务对应的最新 handoff 和根 `plan.md` 任务卡。
+
+正式计划决定任务和 Gate，`PROGRESS.md` 决定当前事实，Parallel Lanes 决定当前可写路径，
+handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历史 handoff、旧提示词和
+聊天上下文不能覆盖正式来源。禁止读取或引用 `History/`。
+
+## 任务领取与反循环协议
+
+- 默认只领取 `cognitiveos-personal` 的 `P*-T*` 任务；架构层改动必须服务于当前 Personal
+  切片，规范合同改动必须走 Lane-CTR。
+- 纯阅读、研究、计划草稿不会改变任务状态。第一个任务专属实现或测试 slice（包括
+  failure-first 测试）开始时，将任务设为 `in-progress`。
+- 领取前确认没有路径重叠的活动 lease；领取后立即实施最小垂直切片。不要把 acceptance
+  或 promotion Gate 当成 implementation mutex。
+- 每次会话必须产出实现、失败优先测试、可验证文档修正，或带
+  `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的阻塞记录。
+  已确认依赖后不得继续无出口审计。
+- 结束会话前同步正式计划、`PROGRESS.md` current snapshot 和 handoff；未执行检查写
+  `not-run`，不可推断为通过。
+
+## 不可放松的不变量
+
+1. Rust daemon 是唯一 authority writer；Pi、CLI、SDK、UI 和 fixture 都是客户端。
+2. 概率组件只能产 candidate/proposal；授权、CAS、状态迁移、预算、幂等、fencing、
+   Effect 提交、reconcile 和最终验收由确定性服务端执行。
+3. 外部 mutating operation 必须使用 persist-before-dispatch 的 Intent/Effect；外部成功、
+   Provider response 或 Pi `agent_end` 都不等于 Task 完成。
+4. Provider/user secret 只能进入批准的 Secret Store，绝不进入 argv、普通配置、SQLite、
+   日志、CI、测试输出或 evidence。
+5. 负例、规范向量和合同不能为了迎合实现而删除、放宽或改写。
+6. local、WSL、fixture 和 ordinary CI 只有在 Gate 预注册 campaign 明确纳入时才能贡献
+   Gate 证据；否则只能是 non-claim implementation evidence。
 
 ## 命令速查
 
@@ -12,100 +56,33 @@
 | TS 安装 | `pnpm install` | `pnpm install --frozen-lockfile` |
 | TS 构建/测试 | `pnpm -r build ; pnpm -r test` | `pnpm -r build && pnpm -r test` |
 | 静态一致性检查 | `pnpm run check:consistency` | 同左 |
-| 本地一键 Boot→Verify→Perf（non-claim） | `pnpm run verify:local` | 同左（见 `docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`） |
-| 符合性 runner（枚举） | `cargo run -p cognitive-conformance --bin conformance-runner` | 同左 |
-| 跨语言 golden 对比 | 见 `.github/workflows/ci.yml` golden job | CI 自动 |
+| 符合性 runner | `cargo run -p cognitive-conformance --bin conformance-runner` | 同左 |
 
-本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。工具链钉在 `rust-toolchain.toml`（1.97.1）。
+本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。
+工具链钉在 `rust-toolchain.toml`（1.97.1）。PowerShell 5.1 不支持 `&&`；需要条件
+串联时使用 `if ($LASTEXITCODE -eq 0) { <next-command> }`。
 
-> PowerShell 5.1 不支持 `&&`。本地需要按前一命令成功才继续时，使用
-> `if ($LASTEXITCODE -eq 0) { <next-command> }`；仅需顺序执行时使用 `;`。
-> `&&` 仅用于标注为 bash/CI 的命令，或已经确认运行 PowerShell 7+ 的环境。
+## Personal 实验环境边界
 
-## Personal Linux-native 开发主机
+`personal-linux-native-01`（`wuz@192.168.1.2`）只是已资格化的实验性开发主机，优先
+用于明确授权的 `experimental-local-only` / `tested-local` 验证，不是 B01、release、
+Profile、containment 或正式产品 Gate 环境。每个 Pi slice 都必须重新确认 Linux/native
+user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PATH 不是 pin 已
+满足的证据。真实 load 只允许 `--extension <absolute-path>` 与脱敏 observation。
 
-`personal-linux-native-01`（`wuz@192.168.1.2`）是已验证可访问的
-Linux-native **实验性开发**主机，优先用于明确授权的 Personal/Pi
-`experimental-local-only` 与 `tested-local` 验证。2026-07-30 的无 secret
-资格探针确认：Linux x86_64、native user-systemd 与用户 DBus 均 active，且
-Rust `1.97.1`、Node `22.19.0` 可用。它不是唯一允许主机，也不是 B01、
-release、Profile、containment 或正式产品 Gate 环境。
+SSH 仅使用非交互、无 secret 探针，例如：
+`ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
-- 先使用非交互 SSH 探针：
-  `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
-  不在 SSH 命令、环境变量、终端输出或版本控制 evidence 中传递 credential、
-  `SecretRef`、Provider config、SQLite 路径、authority state 或 selected-model
-  内部材料。
-- 每个实际 Pi slice 在远端重新确认 Linux/native user-systemd、Rust/Node、
-  exact Pi `0.81.1` 与可清理独立目录；若任一项不满足，fail closed 并记录
-  `not-run` 或 blocker。`pi` 不在 PATH 不是 pin 已满足的证据；只可使用
-  经过实际 `--version` 校验的 exact package/binary。
-- 真实 Pi load 只允许 `--extension <absolute-path>` 与脱敏 session-local
-  observation。Pi、CLI、fixture 仍不是 authority writer，且不得创建或推进
-  Task、Effect、Verification 或 capability。
-- 所有来自该主机的证据都与 CI Ubuntu、Windows/MSVC 和预注册 clean-VM B01
-  campaign 分列。一次成功的 SSH、systemd、Pi 或 Provider 命令不改变 B01、
-  GMVP-LINUX、release 或 Profile 状态。
+## 目录和变更边界
 
-## 目录地图
+- `specs/`、`conformance/`：架构合同和符合性资产；不得为实现改写。
+- `crates/`、`apps/`、`packages/`、`tests/`、`tools/`：Personal 实现及其验证工作面。
+- `docs/governance/`、`docs/plan/`、`docs/checkpoints/`：治理、正式计划、快照和移交。
+- `apps/cognitiveos-console/`、独立客户端和其他 deferred 能力：默认只维护设计/台账，
+  不启动独立实现。
+- `personal-blog/` 是独立仓库，禁止推入本仓库；禁止在其他路径建立平行副本。
 
-```text
-specs/            规范资产（registry 273 REQ / 55 错误码；5 迁移表；61 schema）——机器合同真相
-conformance/      84 份声明式向量 + 15 测试层（数据包，非 runner）
-crates/           Rust：contracts → domain → kernel/store → runtime/management/akp → conformance
-apps/             kernel-server、admin-cli（Rust）；agent-shell（TS 客户端）；cognitiveos-console（兼容 stub，正文迁独立仓 cognitiveos-clients）
-packages/         contracts-ts、sdk-ts
-（clients/ 已拆出）客户端项目根迁至独立仓库 https://github.com/agentkernel/cognitiveos-clients（ADR-0007；2026-07-26 拆分）
-tests/            golden（跨语言夹具）/ e2e / faults / security
-tools/            静态一致性检查（Node）
-docs/             standards / adr / plan / traceability / checkpoints / prompts / evaluation
-artifacts/        运行证据（gitignore）
-History/          冻结归档：禁止读取、引用、参与构建
-personal-blog/    嵌套独立仓 CognitiveOS Research（根 .gitignore；远程 github.com/agentkernel/blog；不入 Cos origin/main）
-docs/_local/      本机草稿（gitignore；非 Cos 交付物）
-```
-
-## 硬纪律摘要（工具无关正文见 `docs/governance/`；`.cursor/rules/` 仅可作为本机编辑器适配层）
-
-1. **确定性边界**：概率组件只产 candidate/proposal；授权、CAS、状态迁移、硬预算、幂等、fencing 与最终提交必须由确定性代码执行。
-2. **规范优先级**：机器 schema/registry/transition/vector 与 normative companion > 固定版本 RFC/Core/Profile > 白皮书 > 实现建议；冲突取不扩大权限/范围/风险/预算/完成声明的解释。
-3. **状态正交**：任务状态、实现证据、产品 Gate 与 release/Profile 声明分列；首个任务专属实现/测试批即把任务标为 `in-progress`，但 local/WSL/fixture/CI 不得升级正式 Gate。
-4. **测试先行**：先写失败测试再实现；schema-valid ≠ behavior-pass；完成证明只来自 authority 状态、Effect、Verification 与 Event。
-5. **规范表面冻结**：v0.1 前不新增对象族、Profile、REQ 域；只允许修正型规范变更（IMP-01）。
-6. **P0 门禁**：开放 P0 必须列出 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids`；只阻断这些范围的验收/推广，不阻断调查、测试和修复工作。
-7. **可追溯提交**：每个提交/PR 关联 REQ-ID、F/IMP 条目或文档条目；确无关联时写明原因。
-
-## 四类状态用语
-
-| 用语 | 含义 | 不代表 |
-|---|---|---|
-| 规范已登记 specified | REQ/schema/vector 在 registry 存在 | 实现存在 |
-| 实现已提供 | 代码存在且构建通过 | 行为被证明 |
-| 测试已执行 | runner 真实执行并保留证据 | Profile 符合 |
-| Profile 已符合 implemented | 全部适用 MUST 有通过证据或有据 not-applicable | ——（安全负例不可豁免） |
-
-## 分阶段验证与 Definition of Done
-
-1. **提交前：** failure-first 证据（行为变更）、受影响 package 测试/lint/format、相关负例和 diff/secret 检查通过；不得存在已知受影响失败。
-2. **push 前：** 在受支持且可用的本地工具链执行相关广域回归/一致性检查，未执行项准确记为 `not-run` 并说明原因；核对 staged 与完整 push 面。
-3. **merge/任务 done 前：** 所需 Windows/Linux protected CI 全绿；相关向量真实 `pass` 或有据 `not-applicable`；状态、当前快照和 handoff 已对齐。
-4. commit 可以在 remote CI pending 时存在；required red check 禁止 merge、禁止任务完成声明。非支持本地环境不是 pass，也不是隔离 commit 的自动阻断。
-5. 文档联动按 `docs-sync-contract.md` 四分类执行；实现未改 normative surface 时走 `implementation-only`，不得为凑联动修改 registry/schema/vector。
-
-## 会话协议
-
-- 开始：AGENTS/Operating Model → 正式任务计划 → PROGRESS 当前快照 → 当前任务/车道 handoff → 活动 ownership lease。
-- 结束或移交：更新正式状态与 PROGRESS 当前快照 → 写 handoff（已完成/未完成、实现 commit、测试/证据、non-claims、风险、下一入口、remote visibility）→ 完成 closure docs commit。
-- 实现与 closure docs 必须属于同一 atomic delivery/PR，不要求同一 commit；允许 handoff commit 引用前一实现 commit 的 immutable hash。
-- 上下文接近极限：提前执行结束协议，剩余工作写入接续提示词。
-
-## 自动提交与自动 push（所有者已授权）
-
-通过提交前验证的原子批由代理自动提交并 push，无需逐次请示（ADR-0008）。硬条件：禁止提交已知受影响失败；逐路径 `git add`；push 前必查 `git log --name-only origin/main..HEAD`；禁止 force-push；禁止推送 `personal-blog/**`；docs-only 低风险批可直推 main，代码批走 lane 分支 + PR，并仅在 required CI 全绿后合并。
-
-## 红线
-
-- 禁止读取/引用 `History/`；禁止虚构规范资产；禁止改写向量迎合实现。
-- 既有未提交改动（他人工作区状态)不覆盖、不回退、不混入自己的提交（逐路径 `git add`，禁 `git add -A`）。
-- Console 车道未过后端 gate 前只维护依赖台账（`docs/plan/DEVELOPMENT-PLAN.md` Console 节），不启动实现。
-- **`personal-blog/`**：唯一副本在本工作树该目录；远程固定 `https://github.com/agentkernel/blog.git`；禁止推入 Cos；禁止为对齐 Cos 基线而删除/清空嵌套仓；禁止在 `D:\blog-*` 等路径散落平行克隆。
+变更必须声明 `implementation-only`、`corrective`、`normative-semantic` 或 `structural`，
+并按 [docs-sync-contract](docs/standards/docs-sync-contract.md) 完成联动。提交/PR 必须
+关联 Personal 任务或 REQ/F/IMP；没有关联时说明原因。未知工作树改动不得覆盖、回退、
+混入或使用 `git add -A`。

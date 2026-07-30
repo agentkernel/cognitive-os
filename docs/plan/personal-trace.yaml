@@ -5,6 +5,7 @@ classification: documentation-only
 # This is a Personal product-plan trace. It is intentionally separate from the
 # registry-derived matrix: PERS-PR IDs are planning IDs, not REQ IDs.
 sources:
+  project_identity: docs/governance/project-scope.yaml
   formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   research_plan: plan.md
   registry: specs/registry/requirements.yaml
@@ -14,8 +15,8 @@ rules:
   direct_registry_requirements: exact registered REQ IDs only
   product_only: no direct registry requirement is claimed
   evidence_status: legacy requirement-level field; represents formal gate evidence only and does not erase task or implementation progress
-  task_status: not-started means no task-specific work has begun; first task slice changes it to in-progress
-  claim_boundary: local, fixture, WSL, and ordinary CI evidence cannot promote product Gate, release, or Profile status
+  task_status: pure research and uncommitted planning do not change status; first implementation or test slice changes not-started to in-progress
+  claim_boundary: local, fixture, WSL, and ordinary CI evidence cannot promote product Gate, release, or Profile status unless included in the Gate's predeclared campaign
 
 status_dimensions:
   task_status: [not-started, in-progress, blocked, done, cancelled]
@@ -30,7 +31,7 @@ current_snapshot:
     P1-T09:
       task_status: in-progress
       development_track: experimental-local-only
-      implementation_evidence: tested-local
+      implementation_evidence: tested-supported-ci
       claim_scope: non-claim
       evidence_refs:
         - docs/checkpoints/20260730-personal-p1-t09-pi-launch-handoff.md

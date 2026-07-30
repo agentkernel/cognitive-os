@@ -9,6 +9,9 @@ informative / implementation-private / historical），并为仓库工作文档�
 
 规范资产状态用语（规范已登记 / 实现已提供 / 测试已执行 / Profile 已符合）定义见
 [conformance/README.md](../conformance/README.md) 与根 [README.md](../README.md)。
+仓库身份与唯一活动项目由
+[PROJECT-IDENTITY.md](governance/PROJECT-IDENTITY.md) 定义：CognitiveOS 是架构和合同
+参考层，`cognitiveos-personal` 是唯一活动实现项目。
 Personal 任务的 task/evidence/Gate/claim 正交状态以
 [Development Operating Model](governance/DEVELOPMENT-OPERATING-MODEL.md) 为准；
 文档不得用单一状态覆盖这些维度。
@@ -22,7 +25,9 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 | [CognitiveOS-Review-Conclusions.md](../CognitiveOS-Review-Conclusions.md) | informative（评审处置记录 v2.0） | 冻结；后续处置写 findings-ledger |
 | [CognitiveOS-Architecture-Independent-Review.md](../CognitiveOS-Architecture-Independent-Review.md) | informative（独立审查 F-001~F-030） | 冻结；现状核验写 findings-ledger |
 | [README.md](../README.md) | informative（四区导航） | 结构变化时同批更新 |
-| [AGENTS.md](../AGENTS.md) | informative（代理入口/DoD/会话协议） | 流程变更时更新 |
+| [AGENTS.md](../AGENTS.md) | informative（精简代理入口；不复制治理正文） | 项目入口或流程链接变化时更新 |
+| [PROJECT-IDENTITY.md](governance/PROJECT-IDENTITY.md) | governance（仓库架构层与唯一活动项目边界） | 项目身份或默认工作范围变化时更新 |
+| [project-scope.yaml](governance/project-scope.yaml) | governance-machine（项目身份机器镜像） | 与 PROJECT-IDENTITY 同批更新 |
 | [DEVELOPMENT-OPERATING-MODEL.md](governance/DEVELOPMENT-OPERATING-MODEL.md) | governance（工具无关开发/evidence/Gate/lease 规则） | 治理变更时更新 |
 
 ## specs/ 与 conformance/
@@ -75,6 +80,10 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 | [0022-personal-bounded-daemon-local-auth.md](adr/0022-personal-bounded-daemon-local-auth.md) | Personal bounded daemon + local auth（P1-T04；非 Profile） |
 
 ## docs/plan/（plan 类；每次合并更新 PROGRESS）
+
+只有 `PERSONAL-DEVELOPMENT-PLAN.md` 能生成当前产品任务和 Gate。其余 M0-M11、M6、
+v0.1 和 Post-v0.1 计划是 CognitiveOS 架构形成过程或验证参考，除非被 Personal 正式
+计划明确引用，否则不得作为并行 backlog 领取。
 
 - [plan/DEVELOPMENT-PLAN.md](plan/DEVELOPMENT-PLAN.md)：v0.1 定义、M0~M11 里程碑、映射表、风险清单。
 - [plan/M6-PLAN.md](plan/M6-PLAN.md)：M6 安装与适配 / v0.1 发布开发与验收计划。

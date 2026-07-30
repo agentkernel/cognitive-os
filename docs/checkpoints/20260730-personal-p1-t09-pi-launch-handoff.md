@@ -1,8 +1,23 @@
 # Personal P1-T09 Fail-closed Pi Launch Handoff
 
+## Record metadata
+
+- record_type: historical-handoff
+- project_id: cognitiveos-personal
+- task_id: P1-T09 precursor slice
+- lease_id: historical-unstructured-lease (closed)
+- status_at_handoff: alpha-conversation in-progress; formal P1-T09 not-started
+- gate_status_at_handoff: B01 not-run
+- claim_scope_at_handoff: non-claim
+- current_status_source: `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` and
+  `docs/plan/PROGRESS.md` Current snapshot
+- supersedes: none-recorded
+- superseded_by: `20260730-personal-p1-t09-provider-fixture-handoff.md`
+
 **Date:** 2026-07-30  
 **Branch:** `lane/personal-p1-t08-mvp-single-service`  
-**Task state:** alpha-conversation `in-progress`; `P1-T09 / B01` remains `not-started`
+**Historical state at handoff time (not current):** alpha-conversation `in-progress`;
+formal P1-T09 `not-started`; B01 `not-run`
 
 ## Completed atomic slice
 

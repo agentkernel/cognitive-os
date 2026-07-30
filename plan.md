@@ -1,5 +1,8 @@
 # CognitiveOS Personal 产品化研究与任务卡草案
 
+> **项目身份：** `cognitiveos-personal` 是当前唯一活动实现项目；原 CognitiveOS 设计、
+> 规范和通用实现是其架构/合同基础，不是并行项目。身份与工作范围以
+> [PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md) 为准。
 > **文档状态：研究与任务卡草案；不代表实现已提供、测试已执行或 Profile 已符合。**
 > **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
 > **研究与审计日期：2026-07-24。**
@@ -24,9 +27,12 @@
 
 # 2. 执行摘要
 
-## 2.1 当前真实状态
+## 2.1 2026-07-24 历史审计快照（非当前状态）
 
-CognitiveOS 当前不是 Personal 产品，而是一个具有较强确定性内核、规范合同和符合性基础的参考实现：
+> 本节只保存审计时事实，不能覆盖正式计划或 `PROGRESS.md` Current snapshot。
+
+在 2026-07-24 审计时，CognitiveOS 尚不是可用的 Personal 产品，而是一个具有较强
+确定性内核、规范合同和符合性基础的参考实现：
 
 - 合同、生成绑定、状态迁移、CAS、事件、预算、Intent/Effect、恢复、授权和 Context 解析具备 L3-L4 基础；
 - Rust/TS 两端在远端 Windows/Linux CI 通过；

@@ -1,5 +1,19 @@
 # Personal P1-T09 deterministic Provider fixture handoff
 
+## Record metadata
+
+- record_type: historical-handoff
+- project_id: cognitiveos-personal
+- task_id: P1-T09
+- lease_id: `lease/personal/P1-T09/provider-fixture-ci-repair` (closed)
+- status_at_handoff: in-progress
+- gate_status_at_handoff: B01 not-run
+- claim_scope_at_handoff: non-claim
+- current_status_source: `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` and
+  `docs/plan/PROGRESS.md` Current snapshot
+- supersedes: `20260730-personal-p1-t09-pi-launch-handoff.md`
+- superseded_by: none-known-at-write-time
+
 - Date: 2026-07-30
 - Task: P1-T09 install-to-first-conversation route
 - Classification: implementation-only; normative surface unchanged

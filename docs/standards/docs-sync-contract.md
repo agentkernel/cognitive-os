@@ -6,6 +6,11 @@
 - Date: 2026-07-20
 - 执行机制：[Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)（会话义务）+ `tools/src/check-consistency.mjs`（机器一致性红灯）；`.cursor/rules/` 如存在仅为编辑器适配层
 
+仓库身份由 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md) 和机器镜像
+`docs/governance/project-scope.yaml` 共同维护：CognitiveOS 是架构/合同参考层，
+`cognitiveos-personal` 是唯一活动实现项目。编辑器规则、计划、handoff 和提示词不得
+创建第二个活动项目身份或当前状态源。
+
 ## 1. 变更四分类
 
 | 类型 | 定义 | 例子 |
@@ -68,6 +73,10 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 4. 活文档中完整 REQ-ID 引用必须存在于 registry（孤儿引用红灯）；
 5. `matrix.yaml` 覆盖全部 273 REQ 且引用路径真实存在；`gen-matrix --check` 无 drift；
 6. findings-ledger 覆盖 F-001~F-030 与 IMP-01~18 全部条目。
+7. 项目身份机器镜像声明唯一活动项目 `cognitiveos-personal`，且正式计划、Current
+   snapshot 和 lease ledger 路径真实存在；`PROGRESS.md` 的活动 lease 引用必须与
+   `PARALLEL-LANES.md` 唯一活动表一致，活动 lease ID 唯一、状态为 `active` 且可写
+   路径不重叠。
 
 破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。此后每次**修改检查器本身**的 PR 必须重跑一次注入演练并在 PR 描述附输出。
 
@@ -78,3 +87,4 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 - [ ] §3 扫描结果贴入 PR 描述
 - [ ] `pnpm run check:consistency` 本地绿
 - [ ] PROGRESS 已更新；触碰 F/IMP/漂移时 findings-ledger 已更新
+- [ ] 项目身份、Current snapshot 与 active lease 引用没有产生平行事实源

@@ -1,0 +1,21 @@
+---
+description: Distinguish CognitiveOS architecture from the sole active Personal project
+alwaysApply: true
+---
+
+# Project identity
+
+- `cognitiveos-personal` is the repository's only active implementation project.
+- CognitiveOS whitepapers, specifications, conformance assets, and reusable kernel
+  code form the architecture/contract layer; they are not a second product backlog.
+- Read `AGENTS.md` and `docs/governance/PROJECT-IDENTITY.md` before selecting work.
+- Select tasks from `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` only.
+
+# Current facts and writes
+
+- `docs/plan/PROGRESS.md` `Current snapshot` owns current status.
+- `docs/plan/PARALLEL-LANES.md` owns active writable leases.
+- Handoffs and root `plan.md` are historical/detail sources and cannot override current facts.
+- Claim a non-overlapping `lease/personal/...` before writing.
+- Deliver a smallest vertical slice; do not replace known implementation work with repeated audits.
+- Never read or cite `History/`; never mix `personal-blog/` into this repository.

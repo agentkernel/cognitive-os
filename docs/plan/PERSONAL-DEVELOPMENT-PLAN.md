@@ -1,12 +1,17 @@
 # CognitiveOS Personal 产品化开发计划与进度表
 
+> **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
+> 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
+> 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
 > **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 not-run；P2 及以后正式验收尚未开始）**
 > **最后更新：2026-07-30**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
-> **开发状态解耦（2026-07-30 修订）：** `not-started` 表示尚无任务专属设计、实现或测试批；首个真实任务批开始后必须改为 `in-progress`。`done` 才表示完整正式验收已满足。后续 P1/P2/P3 工作可在
+> **开发状态解耦（2026-07-30 修订）：** `not-started` 表示尚无任务专属实现或测试
+> slice；纯研究、讨论和未提交计划草稿不改变状态，首个真实实现或测试 slice 开始后
+> 必须改为 `in-progress`。`done` 才表示完整正式验收已满足。后续 P1/P2/P3 工作可在
 > `experimental-local-only` 开发轨道推进，并将真实执行记录为 `tested-local`；这两个
 > 是开发/证据标签，不是 Gate、Profile 或 release 结论。任务状态、实现证据、Gate 状态与声明范围按 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md) 分列；真实 Provider/Pi 测试仍须使用当前 SecretStore/daemon 边界并脱敏记录。
 
@@ -40,12 +45,20 @@
 
 ## 1. 使用与更新规则
 
-1. 首个任务专属设计、实现或测试批开始时，在本表把对应任务标为 `in-progress`，填入负责人/分支、开始日期和关联 PR（如有）；若未达到产品 Gate，额外填写 `development_track: experimental-local-only`，不得把 acceptance/promotion Gate 写成实现阻断。
+1. 纯研究、讨论和未提交的计划草稿不改变任务状态。首个任务专属实现或测试 slice
+   （包括 failure-first 测试）开始时，在本表把对应任务标为 `in-progress`，并在同一
+   atomic delivery 内补齐负责人/分支、开始日期和关联 PR（如有）；若未达到产品 Gate，
+   额外填写 `development_track: experimental-local-only`，不得把 acceptance/promotion
+   Gate 写成实现阻断。
 2. 一个任务只有在其验收条件满足、相关测试真实执行并留有证据后，才可标为 `done`；未执行的测试必须明确标 `not-run`，不得推断为通过。
 3. 每个 atomic delivery/PR 必须更新该任务的状态、证据链接或命令结果及阻塞项；实现 commit 后可跟一个 closure docs commit 记录其 immutable hash。PROGRESS 与 handoff 必须在 merge 或会话移交前完成，不要求与实现位于同一 commit。
 4. 发生范围、依赖、验收或安全边界变化时，先将任务标为 `blocked`，记录原因和决策，再更新详细任务卡与依赖图；不得静默改写完成标准。
 5. 允许的任务状态为：`not-started`、`in-progress`、`blocked`、`done`、`cancelled`；实现证据为 `none` / `provided` / `tested-local` / `tested-supported-ci`；Gate 为 `not-run` / `running` / `pass` / `fail` / `blocked`。`done` 不等于 Gate pass 或 Profile `implemented`。
 6. 如本表与 `plan.md` 的任务卡或依赖图不一致，应先按本表执行并在同一文档修正批中对齐 `plan.md`；不得仅凭详细卡片重新解释或复用既有 `P*-T*` ID。
+7. 每次领取任务后必须选择一个最小可交付出口：垂直实现切片、failure-first 回归修复、
+   可验证治理修正，或带 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner /
+   next action 的阻塞记录。任务、依赖和安全路径已经明确时，不得用继续研究或新建平行
+   计划替代实现。
 
 ### 进度汇总
 

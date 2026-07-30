@@ -5,13 +5,19 @@
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
 
+Repository identity: `cognitiveos-personal` is the only active implementation
+project. CognitiveOS design, specifications, conformance assets, and reusable
+kernel code are the architecture/contract foundation for Personal, not a
+second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md).
+
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
 | P1-T09 route implementation | `in-progress` | `experimental-local-only`; `personal-linux-native-01` (`wuz@192.168.1.2`) is SSH-qualified for disposable Linux-native debugging, while exact Pi `0.81.1` availability remains `not-run`; prior route evidence includes `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | resolve exact Pi availability on the qualified host, then run the real pinned Pi Extension load |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | P1-T09 Linux-native Pi environment qualification closed in [handoff](../checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md) | no active P1-T09 writable lease; exact Pi availability remains `not-run`; normative assets remain Lane-CTR-owned | claim the separate real pinned Pi Extension-load slice only after resolving exact Pi availability |
+| Active task lease | `none` | project-identity governance lease closed after local verification; normative assets remain Lane-CTR-owned | claim a separate P1-T09 exact-Pi/Pi-load lease before writing |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.

@@ -1,7 +1,11 @@
-# PARALLEL-LANES — 并行车道机制（面向 Cursor Multitask）
+# PARALLEL-LANES — CognitiveOS Personal ownership lease 台账
 
 - 状态：v1.1（active ownership lease model）；类别 plan
 - 更新责任：车道启动/交还/换分支时必更所有权表；接口冻结状态变化时必更 §3
+
+`cognitiveos-personal` 是唯一活动实现项目。下列 Lane 是一个项目内的架构责任角色，
+不是可各自推进的产品或 backlog。任务来自 `PERSONAL-DEVELOPMENT-PLAN.md`；本文件只
+决定当前可写路径，不能改变任务、Gate 或当前产品状态。
 
 ## 1. 车道划分
 
@@ -30,9 +34,9 @@ flowchart LR
 
 ## 2. 并行规则（违反 = PR 拒收）
 
-1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。
+1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。每个 lease 使用稳定 `lease_id`，格式为 `lease/personal/<task>/<slice>`。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
-3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。merged/abandoned/stale lease 自动成为历史，不再阻断新任务。共享文件由后合并者负责整合当前快照。
+3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
 5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
 6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
@@ -46,17 +50,26 @@ flowchart LR
 
 该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
-## 3. 活动 ownership leases（当前）
+## 3. 活动 ownership leases（唯一当前台账）
 
-| Task | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
-|---|---|---|---|---|---|---|
-| Personal governance operating-model correction | Lane-DOC | `lane/personal-p1-t08-mvp-single-service` | `AGENTS.md`, `plan.md`, `docs/README.md`, `docs/governance/**`, `docs/plan/**`, `docs/traceability/findings-ledger.md`, `docs/standards/docs-sync-contract.md`, `docs/adr/0008-*`, current governance handoff | current governance session | 2026-07-30 / 2026-07-30 | closed; handoff `20260730-governance-operating-model-handoff.md` |
-| P1-T09 deterministic binary Provider fixture CI repair | Lane-RUN | `lane/personal-p1-t09-provider-fixture` | `crates/cognitive-provider-transport/**`, `docs/plan/PARALLEL-LANES.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md` | current Provider fixture CI repair session | 2026-07-30 / 2026-07-30 | closed; PR #117 Ubuntu/Windows required CI green, implementation-only, normative surface unchanged |
-| P1-T09 Linux-native Pi environment qualification | Lane-RUN | `lane/personal-p1-t09-provider-fixture` | `AGENTS.md`, `docs/plan/PI-AGENT-INTEGRATION-PLAN.md`, `docs/plan/PERSONAL-SUPPORT-MATRIX.md`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PARALLEL-LANES.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md`, `C:/Users/wuron/.cursor/plans/personal_linux_mvp_fd48be65.plan.md` | current P1-T09 Linux-native environment session | 2026-07-30 / 2026-07-30 | closed; formal P1-T09 row reconciled, SSH qualification documented, exact Pi availability remains not-run, implementation-only, normative surface unchanged |
+只有下表中的 `active` 行授予当前写权限。开始写入前必须新增一行；`PROGRESS.md`
+只能引用这里存在的 `lease_id` 或写 `none`。
+
+| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
+|---|---|---|---|---|---|---|---|
+
+### 3.1 最近关闭的 leases
+
+| Lease ID | Task / slice | Branch | Closed | Closure |
+|---|---|---|---|---|
+| `lease/personal/governance/project-identity-rules-20260730` | Personal project identity and development-rule refactor | `lane/doc-personal-project-identity` | 2026-07-30 | `20260730-personal-project-identity-governance-handoff.md`; local checks and failure injection passed |
+| `lease/personal/governance/operating-model-20260730` | Personal governance operating-model correction | `lane/personal-p1-t08-mvp-single-service` | 2026-07-30 | `20260730-governance-operating-model-handoff.md` |
+| `lease/personal/P1-T09/provider-fixture-ci-repair` | deterministic binary Provider fixture CI repair | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | PR #117 required CI green |
+| `lease/personal/P1-T09/linux-environment-qualification` | Linux-native Pi environment qualification | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | SSH qualification recorded; exact Pi availability remains `not-run` |
 
 Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
 
-## 3.1 Historical ownership snapshot
+## 3.2 Historical architecture ownership snapshot
 
 The table below is retained as historical coordination context. Its branches and status text do not grant an active lease and cannot block new work without a current §3 lease.
 
