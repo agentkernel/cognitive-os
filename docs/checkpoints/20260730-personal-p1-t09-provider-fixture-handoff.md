@@ -5,8 +5,8 @@
 - Classification: implementation-only; normative surface unchanged
 - Implementation commit: `96844b8`
 - Branch: `lane/personal-p1-t09-provider-fixture`
-- Remote visibility: branch pushed at `c608dd7`; pull request creation is
-  pending because the GitHub GraphQL request returned EOF
+- Remote visibility: PR [#117](https://github.com/agentkernel/cognitive-os/pull/117);
+  latest pushed commit `62c6782`; replacement CI is pending
 
 ## Completed
 
@@ -29,6 +29,16 @@
    Lane-RUN lease. No registry, schema, public DTO, registered error,
    transition, generated contract, conformance vector, Pi argv/environment,
    Task, Effect, Verification, capability, or authority writer was changed.
+
+## CI follow-up
+
+The first CI run found two compile integration issues and both were corrected
+without changing the fixture contract: existing composition roots now use the
+configured transport's `Default` value (`006ccff`), and the process test now
+derives the fixture beside the Cargo test executable rather than relying on an
+unset `CARGO_BIN_EXE_*` environment variable (`c424093`, `b4beb50`,
+`62c6782`). The replacement Ubuntu and Windows checks are pending; no CI pass
+or supported-CI evidence claim is made yet.
 
 ## Failure-first evidence
 
@@ -76,10 +86,11 @@ is explicitly **not-run**, not pass evidence.
 
 ## Lease and next entry
 
-- The P1-T09 Lane-RUN lease is closed for this atomic slice after the closure
-  docs are committed. Its paths were limited to the Provider transport crate,
-  `Cargo.lock`, and the listed plan/progress/handoff documents.
-- Next entry: create the pull request, inspect required CI, and run the focused
+- The P1-T09 Lane-RUN follow-up lease is closed after the compile fixes and
+  closure docs. Its paths included the Provider transport crate, the two
+  composition-root construction sites, and the listed plan/progress/handoff
+  documents.
+- Next entry: inspect the replacement required CI, and run the focused
   fixture suite on supported Linux. Fix any CI findings before promoting
   implementation evidence. Then add the smallest separate real pinned Pi
   Extension-load slice; do not run B01 until all route acceptance prerequisites
