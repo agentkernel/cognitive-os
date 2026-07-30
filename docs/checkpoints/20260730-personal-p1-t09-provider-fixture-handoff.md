@@ -5,7 +5,8 @@
 - Classification: implementation-only; normative surface unchanged
 - Implementation commit: `96844b8`
 - Branch: `lane/personal-p1-t09-provider-fixture`
-- Remote visibility: pending push and pull request creation at handoff time
+- Remote visibility: branch pushed at `c608dd7`; pull request creation is
+  pending because the GitHub GraphQL request returned EOF
 
 ## Completed
 
@@ -78,7 +79,7 @@ is explicitly **not-run**, not pass evidence.
 - The P1-T09 Lane-RUN lease is closed for this atomic slice after the closure
   docs are committed. Its paths were limited to the Provider transport crate,
   `Cargo.lock`, and the listed plan/progress/handoff documents.
-- Next entry: push this branch, inspect required CI, and run the focused
+- Next entry: create the pull request, inspect required CI, and run the focused
   fixture suite on supported Linux. Fix any CI findings before promoting
   implementation evidence. Then add the smallest separate real pinned Pi
   Extension-load slice; do not run B01 until all route acceptance prerequisites
