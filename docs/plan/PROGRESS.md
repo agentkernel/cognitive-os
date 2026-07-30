@@ -13,11 +13,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only`; exact Pi `0.81.1` was observed by actual `pi --version` on SSH-qualified `personal-linux-native-01` (`wuz@192.168.1.2`). The same Pi received a minimal `--extension <absolute-path>` session-local observation: the built module imported and Pi invoked its default export through an ephemeral marker wrapper. With no daemon endpoint, print mode timed out (exit 124), so no daemon/provider/session/command success is claimed. The child received no Provider config, Provider/user secret, SecretRef, SQLite path, selected-model or authority state; no Task, Effect, Verification, capability or authority side effect was created. Prior route evidence remains `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | implement and run the remaining real first-response plus native Secret Service smoke slices before B01 pre-registration |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; exact Pi `0.81.1` was observed by actual `pi --version` on SSH-qualified `personal-linux-native-01` (`wuz@192.168.1.2`). The same Pi received a minimal `--extension <absolute-path>` session-local observation: the built module imported and Pi invoked its default export through an ephemeral marker wrapper. A native Linux Secret Service initialization completed with redacted `deepseek` configuration and selected model `deepseek-v4-flash`; secret material remains in `linux-secret-tool`. A bounded daemon-owned Provider-proxy chat smoke received the expected short response (`finish_reason: stop`) with `authority_side_effects: false`. A direct Pi `--print` run still timed out and doctor still reports Pi `not_configured`; neither Pi usability nor the first-conversation route is claimed. No Task, Effect, Verification, capability or authority side effect was created. Prior route evidence remains `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | configure the product Pi package, then diagnose and rerun a bounded real Pi first-response plus native Secret Service smoke before B01 pre-registration |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | P1-T09 exact-Pi/load lease closed after its formal-plan, Current snapshot, and handoff record updates; normative assets remain Lane-CTR-owned | claim a non-overlapping P1-T09 first-response/Secret-Service route slice before writing |
+| Active task lease | `none` | P1-T09 native-secret/Provider prerequisite lease closed after recording the corrective implementation and redacted local result; normative assets remain Lane-CTR-owned | claim a non-overlapping P1-T09 product-Pi configuration/timeout-diagnosis slice before writing |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
@@ -31,6 +31,17 @@ point. The isolated child has no daemon endpoint or Provider material, and the
 expected no-daemon print-mode execution timed out after 45 seconds (exit 124).
 This is `tested-local` Extension-load evidence only, not a daemon, Provider,
 conversation, command-output, B01, release, or Profile result.
+
+The current Linux-native Provider-prerequisite slice corrects the SecretStore
+executable probe for the host's `secret-tool` behavior, then rechecks the
+native Secret Service, current daemon endpoint, and non-secret Provider state.
+An operator entered a key only through the CLI's hidden-input prompt; the
+resulting `cognitive init` output confirms a redacted native-secret binding and
+the selected `deepseek-v4-flash` model. A one-shot daemon-owned Provider-proxy
+request returned the expected bounded response without an authority side
+effect. This is `tested-local` connectivity evidence only. The direct Pi smoke
+timed out and Pi remains unconfigured, so it is not a claim that the product
+Pi route, first conversation, B01, release, or Profile is ready.
 
 The current atomic slice adds a loopback-only HTTPS Provider fixture process and
 an additional-root test seam that preserves the production Rustls policy. Its
