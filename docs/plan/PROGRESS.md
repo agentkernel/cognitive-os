@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-07-30)
+## Current snapshot (2026-07-31)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -13,29 +13,28 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only`; campaign `30553835734` built, signed, offline-verified, and uploaded the coherent bundle after protected Environment approval. Local and remote SHA-256 checks passed, and the host-built verifier independently accepted the signed archive, expected Pi pin, and public key. The qualified Linux host is glibc `2.35`; the signed CI payload requires glibc `2.38/2.39`, so verified installation published then compensated/rolled back before active-pointer promotion. Campaign `30562532613` proved the split workflow's secret-free full validation on `ubuntu-latest`; its approved signing job then failed before signing/artifact creation when Ubuntu 22's system linker could not resolve `__isoc23_sscanf` / `__isoc23_strtol`. The corrective workflow now uses pinned Zig and target `x86_64-unknown-linux-gnu.2.35` for all four published Rust binaries, rejecting any resulting `GLIBC_2.36+` dynamic requirement before signing. Exact Pi is not persistently installed on the host; prior exact-Pi evidence was a pin-bound package invocation only. No Task, Effect, Verification, capability, or authority side effect was created. No product-Gate, release, B01, GMVP-LINUX, or Profile claim is made | merge the explicit ABI-targeted workflow correction, issue a fresh protected signed campaign, validate its payload compatibility, then rerun verified installation and configure an exact Pi executable path before installed-route diagnostics |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; protected campaign `30566251554` produced signed bundle `.11` after PR [#123](https://github.com/agentkernel/cognitive-os/pull/123). A host verifier was built from a SHA-256-fixed source bundle after `git fsck` and exact immutable commit `2523efd1af9d860b861d5f0ddb755237adc06001` verification; it accepted the signed bundle, expected Pi pin and key. Installer and payload ABI checks rejected no `GLIBC_2.36+` requirement, then the verified installer activated `.11` and its single user service. The persistent exact Pi `0.81.1` package was installed only after its registry SRI matched the signed manifest. The corrected product-route probe reached real Pi first-response invocation, then timed out at 90 seconds with no response output; it emitted no Provider material, SecretRef, SQLite path, Task, Effect, Verification, capability, or authority data. Native SecretStore was ready in the redacted doctor projection. This is failed `tested-local` route evidence, not a product-Gate, release, B01, GMVP-LINUX, or Profile claim | diagnose the installed Pi first-response timeout before B01 preregistration; retain P1-T09 `in-progress` |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/verified-experimental-deployment` | scoped to the explicit glibc-2.35 campaign build correction and compatible signed-bundle deployment retry; Provider/secret configuration and B01 paths remain unleased | merge the corrective workflow change and rerun the protected experimental campaign |
+| Active task lease | `lease/personal/P1-T09/route-probe-reconciliation` | scoped to correcting the real doctor-contract runner defect and recording the 90-second Pi timeout; B01 paths remain unleased | complete bounded timeout diagnosis or record its blocker |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
 
-The current product-route slice is boundedly blocked before configuration: the
-restored Linux user service is active and exact Pi `0.81.1` remains available,
-but the host has no product `cognitive` executable or deployed built CognitiveOS
-Extension entry. No Provider configuration, SecretRef, bootstrap secret, SQLite
-path, selected-model digest, token, key, or model response was read or output.
-Consequently `cognitive pi configure`, `cognitive doctor`, `cognitive pi launch`,
-and the direct Pi first-response verification are explicitly `not-run`, rather
-than failed or passed. `blocked_paths`: product bundle deployment paths on the
-experimental host; `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`,
-`GMVP-LINUX`, and Profile; owner: P1-T08 bundle/release artifact owner; next
-action: use an authorized protected signing-material workflow to build and verify
-a coherent bundle containing the product CLI and built Extension, then deploy it
-and rerun the bounded, redacted product-route diagnostics. This is a non-claim
-blocker and does not alter the active service, Secret Service, or Provider state.
+The current product-route slice is no longer blocked by the compatible bundle,
+installed CLI/Extension, persistent exact Pi, or post-configure readiness race.
+The verified installer activated campaign `.11`; its user service is active, the
+redacted doctor projection reports native SecretStore and first-conversation
+readiness, but the bounded direct Pi route timed out after 90 seconds without
+response output. It printed no Provider, SecretRef, SQLite, or authority
+material; no Task, Effect, Verification, capability, or authority side effect
+was created. The remaining P1-T09 work is first-response timeout diagnosis,
+then B01 runner preregistration and campaign evidence: `blocked_paths`: the
+installed Pi first-response route; `blocked_task_ids`: `P1-T09`;
+`blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile; owner: P1-T09
+route-probe-reconciliation lease holder; next action: diagnose the bounded Pi
+first-response timeout without logging or exposing Provider material.
 
 The current atomic slice adds a reusable Linux-native Pi observation probe. It
 first imports the built ESM module, then passes a session-local wrapper through
