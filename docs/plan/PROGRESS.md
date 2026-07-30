@@ -11,7 +11,7 @@ evidence journal` preserve execution-time facts and cannot override it.
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | P1-T09 deterministic binary Provider fixture; Lane-RUN lease active on `lane/personal-p1-t09-provider-fixture` | writable paths are limited to the Provider transport crate, Cargo.lock, and listed closure docs; normative assets remain Lane-CTR-owned | execute focused fixture evidence, then close or renew the lease with the next handoff |
+| Active task lease | P1-T09 deterministic binary Provider fixture lease closed in [handoff](../checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md) | no active P1-T09 writable lease; normative assets remain Lane-CTR-owned | re-claim a task-correct lease after CI result, then run/fix the focused fixture suite |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.

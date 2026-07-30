@@ -34,6 +34,7 @@ current_snapshot:
       claim_scope: non-claim
       evidence_refs:
         - docs/checkpoints/20260730-personal-p1-t09-pi-launch-handoff.md
+        - docs/checkpoints/20260730-personal-p1-t09-provider-fixture-handoff.md
   gates:
     B01: { gate_status: not-run, claim_scope: non-claim }
     GMVP-LINUX: { gate_status: not-run, claim_scope: non-claim }
