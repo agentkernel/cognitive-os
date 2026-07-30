@@ -25,7 +25,9 @@ concurrency:
 jobs:
   build-signed-campaign:
     name: Build signed experimental Linux campaign
-    runs-on: ubuntu-latest
+    # The qualified experimental Linux host uses glibc 2.35. Pin the payload
+    # build baseline so its daemon, CLI, and installer remain executable there.
+    runs-on: ubuntu-22.04
     environment:
       name: personal-linux-experimental-campaign
     defaults:
