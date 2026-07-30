@@ -35,6 +35,7 @@ fake_cognitive="$fixture_directory/cognitive"
 fake_pi="$fixture_directory/pi"
 fake_extension="$fixture_directory/index.js"
 fake_pi_environment="$fixture_directory/pi-environment"
+fake_pi_arguments="$fixture_directory/pi-arguments"
 fake_node="$fixture_directory/node"
 cat > "$fake_cognitive" <<'EOF'
 #!/usr/bin/env bash
@@ -66,6 +67,7 @@ if [[ "$1" == "--version" ]]; then
     exit 0
 fi
 env | sort > "$TMPDIR/pi-environment"
+printf '%s\n' "$@" > "$TMPDIR/pi-arguments"
 printf 'cognitiveos-first-response-ok\n'
 EOF
 cat > "$fake_node" <<'EOF'
@@ -94,5 +96,6 @@ successful_output="$(PATH="$fixture_directory:/usr/bin:/bin" PROVIDER_API_KEY=mu
 [[ "$successful_output" == *'"expected_reply_observed":true'* ]]
 [[ ! -s "$fake_pi_environment" || "$(<"$fake_pi_environment")" != *"PROVIDER_API_KEY="* ]]
 [[ "$(<"$fixture_directory/doctor-count")" -ge 2 ]]
+[[ "$(<"$fake_pi_arguments")" == *$'--provider\ncognitiveos'* ]]
 
 printf 'p1-t09-product-route-smoke focused negatives: PASS\n'

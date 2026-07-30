@@ -55,17 +55,27 @@ function clientFor(endpoint: string | undefined): PersonalDaemonClient {
   });
 }
 
-test("registration wires exactly the pinned hooks and the status command", async () => {
-  const pi = new FakePi();
-  await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
+test("registration wires the pinned hooks, status command, and daemon-selected model", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+  });
+  try {
+    const pi = new FakePi();
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
 
-  assert.deepEqual([...pi.registeredHooks].sort(), [
-    "project_trust",
-    "session_start",
-    "tool_call",
-  ]);
-  assert.ok(pi.commands.has(COGNITIVEOS_STATUS_COMMAND_NAME));
-  assert.match(pi.commands.get(COGNITIVEOS_STATUS_COMMAND_NAME)?.description ?? "", /read-only/);
+    assert.deepEqual([...pi.registeredHooks].sort(), [
+      "project_trust",
+      "session_start",
+      "tool_call",
+    ]);
+    assert.ok(pi.commands.has(COGNITIVEOS_STATUS_COMMAND_NAME));
+    assert.match(pi.commands.get(COGNITIVEOS_STATUS_COMMAND_NAME)?.description ?? "", /read-only/);
+    assert.equal(pi.selectedModels.length, 1);
+    assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
+  } finally {
+    await daemon.close();
+  }
 });
 
 test("project trust is always denied", async () => {

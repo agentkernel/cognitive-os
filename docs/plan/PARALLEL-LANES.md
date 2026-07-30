@@ -57,7 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/route-probe-reconciliation` | reconcile conflicting installed route-probe execution evidence and correct the bounded runner if required | Lane-RUN | `lane/personal-p1-t09-abi-targeted-campaign-v2` | `tools/personal/p1-t09-product-route-smoke.sh`; `tools/personal/p1-t09-product-route-smoke.test.sh`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-verified-experimental-deployment-handoff.md` | Cursor session 2026-07-31 | 2026-07-31 / 2026-07-31 | active |
+| `lease/personal/P1-T09/route-probe-reconciliation` | reconcile conflicting installed route-probe execution evidence and correct the bounded runner or pinned Pi Extension model selection if required | Lane-RUN | `lane/personal-p1-t09-abi-targeted-campaign-v2` | `tools/personal/p1-t09-product-route-smoke.sh`; `tools/personal/p1-t09-product-route-smoke.test.sh`; `packages/pi-cognitiveos/src/extension.ts`; `packages/pi-cognitiveos/src/extension.test.ts`; `packages/pi-cognitiveos/src/pi-api.ts`; `packages/pi-cognitiveos/src/test-support.ts`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-verified-experimental-deployment-handoff.md` | Cursor session 2026-07-31 | 2026-07-31 / 2026-07-31 | active |
 
 ### 3.1 最近关闭的 leases
 

@@ -72,8 +72,15 @@ export async function registerCognitiveOsExtension(
     },
   });
 
-  // Registration completes only after the daemon-selected model is available.
-  pi.registerProvider(await createDaemonProvider(client));
+  // Pi's provider option only scopes an explicit model. Select the single
+  // daemon-owned model so a normal Pi launch cannot silently retain its
+  // unrelated default provider.
+  const daemonProvider = await createDaemonProvider(client);
+  const daemonSelectedModel = daemonProvider.getModels()[0];
+  pi.registerProvider(daemonProvider);
+  if (daemonSelectedModel === undefined || !(await pi.setModel(daemonSelectedModel))) {
+    throw new Error("the daemon-selected CognitiveOS model could not be activated");
+  }
 }
 
 export default registerCognitiveOsExtension;

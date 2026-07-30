@@ -170,6 +170,7 @@ timeout "$timeout_seconds" env -i \
     XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
     "$pi_executable" \
         --extension "$extension_entry" \
+        --provider cognitiveos \
         --print "Reply exactly: $expected_marker" >"$pi_response_output" 2>&1
 pi_exit_code="$?"
 set -e

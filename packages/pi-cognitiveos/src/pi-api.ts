@@ -9,9 +9,10 @@
  * live in `./pin.js` and are drift-checked against the Rust
  * `PiCompatibilityPin` by `pin.test.ts`.
  *
- * Only the four surfaces the CognitiveOS Extension actually uses are declared:
+ * Only the five surfaces the CognitiveOS Extension actually uses are declared:
  * `on("project_trust")`, `on("tool_call")`, `on("session_start")` and
- * `registerCommand`. If Pi changes any of these shapes, the compatibility pin
+ * `registerCommand`, plus `setModel` for the daemon-selected model. If Pi
+ * changes any of these shapes, the compatibility pin
  * must be re-reviewed before the version is moved — a wider mirror would only
  * create a second, unverified source of truth for Pi's API.
  */
@@ -159,4 +160,5 @@ export interface ExtensionAPI {
   ): void;
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
   registerProvider(provider: Provider): void;
+  setModel(model: PiModel): Promise<boolean>;
 }

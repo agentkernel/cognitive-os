@@ -13,11 +13,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; protected campaign `30566251554` produced signed bundle `.11` after PR [#123](https://github.com/agentkernel/cognitive-os/pull/123). A host verifier was built from a SHA-256-fixed source bundle after `git fsck` and exact immutable commit `2523efd1af9d860b861d5f0ddb755237adc06001` verification; it accepted the signed bundle, expected Pi pin and key. Installer and payload ABI checks rejected no `GLIBC_2.36+` requirement, then the verified installer activated `.11` and its single user service. The persistent exact Pi `0.81.1` package was installed only after its registry SRI matched the signed manifest. The corrected product-route probe reached real Pi first-response invocation, then timed out at 90 seconds with no response output; it emitted no Provider material, SecretRef, SQLite path, Task, Effect, Verification, capability, or authority data. Native SecretStore was ready in the redacted doctor projection. This is failed `tested-local` route evidence, not a product-Gate, release, B01, GMVP-LINUX, or Profile claim | diagnose the installed Pi first-response timeout before B01 preregistration; retain P1-T09 `in-progress` |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; protected campaign `30566251554` produced signed bundle `.11` after PR [#123](https://github.com/agentkernel/cognitive-os/pull/123). A host verifier was built from a SHA-256-fixed source bundle after `git fsck` and exact immutable commit `2523efd1af9d860b861d5f0ddb755237adc06001` verification; it accepted the signed bundle, expected Pi pin and key. Installer and payload ABI checks rejected no `GLIBC_2.36+` requirement, then the verified installer activated `.11` and its single user service. The persistent exact Pi `0.81.1` package was installed only after its registry SRI matched the signed manifest. The corrected product-route probe reached real Pi first-response invocation, then timed out at 90 seconds with no response output; it emitted no Provider material, SecretRef, SQLite path, Task, Effect, Verification, capability, or authority data. Native SecretStore was ready in the redacted doctor projection. Diagnosis found that Pi ignores `--provider` without `--model`, while the Extension registered but did not activate its single daemon-selected model. The bounded runner now passes the explicit provider and a failure-first Extension regression covers pinned `setModel`; this implementation fix is locally tested but not yet in a signed installed bundle. This remains failed `tested-local` route evidence, not a product-Gate, release, B01, GMVP-LINUX, or Profile claim | rebuild and independently verify/install a signed campaign containing the Extension model-selection fix, then rerun the redacted installed route before B01 preregistration; retain P1-T09 `in-progress` |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/route-probe-reconciliation` | scoped to correcting the real doctor-contract runner defect and recording the 90-second Pi timeout; B01 paths remain unleased | complete bounded timeout diagnosis or record its blocker |
+| Active task lease | `lease/personal/P1-T09/route-probe-reconciliation` | scoped to correcting the doctor-contract/explicit-provider runner defects and the pinned Extension daemon-model activation defect; B01 paths remain unleased | rebuild, independently verify, and install the corrected signed campaign before rerunning the bounded route |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
@@ -29,9 +29,13 @@ redacted doctor projection reports native SecretStore and first-conversation
 readiness, but the bounded direct Pi route timed out after 90 seconds without
 response output. It printed no Provider, SecretRef, SQLite, or authority
 material; no Task, Effect, Verification, capability, or authority side effect
-was created. The remaining P1-T09 work is first-response timeout diagnosis,
-then B01 runner preregistration and campaign evidence: `blocked_paths`: the
-installed Pi first-response route; `blocked_task_ids`: `P1-T09`;
+was created. Diagnosis found Pi does not select a provider without an explicit
+model and the Extension never activated its daemon-selected model. The local
+Extension fix is tested, but the installed signed bundle does not contain it.
+The remaining P1-T09 work is corrected-campaign build, verification,
+installation, and route rerun, then B01 runner preregistration and campaign
+evidence: `blocked_paths`: the installed Pi first-response route;
+`blocked_task_ids`: `P1-T09`;
 `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile; owner: P1-T09
 route-probe-reconciliation lease holder; next action: diagnose the bounded Pi
 first-response timeout without logging or exposing Provider material.
