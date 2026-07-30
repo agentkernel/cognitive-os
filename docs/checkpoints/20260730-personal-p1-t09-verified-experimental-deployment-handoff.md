@@ -3,7 +3,7 @@
 - Date: 2026-07-30
 - Task: P1-T09 install-to-first-conversation route
 - Lease: `lease/personal/P1-T09/verified-experimental-deployment`
-- Branch: `lane/personal-p1-t09-verified-deployment`
+- Branch: `lane/personal-p1-t09-abi-targeted-campaign`
 - Change class: implementation-only
 - Normative surface: unchanged
 - Development track: `experimental-local-only`

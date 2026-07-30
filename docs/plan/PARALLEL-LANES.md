@@ -57,7 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/verified-experimental-deployment` | correct the signed campaign's glibc baseline, then independently verify and install the compatible coherent bundle | Lane-RUN | `lane/personal-p1-t09-verified-deployment` | `.github/workflows/personal-experimental-linux-campaign.yml`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-verified-experimental-deployment-handoff.md` | Cursor session 2026-07-30 | 2026-07-30 / 2026-07-30 | active |
+| `lease/personal/P1-T09/verified-experimental-deployment` | correct the signed campaign's glibc baseline, then independently verify and install the compatible coherent bundle | Lane-RUN | `lane/personal-p1-t09-abi-targeted-campaign` | `.github/workflows/personal-experimental-linux-campaign.yml`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-verified-experimental-deployment-handoff.md` | Cursor session 2026-07-30 | 2026-07-30 / 2026-07-30 | active |
 
 ### 3.1 最近关闭的 leases
 
