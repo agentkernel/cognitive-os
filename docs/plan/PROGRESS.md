@@ -7,14 +7,23 @@ evidence journal` preserve execution-time facts and cannot override it.
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| P1-T09 route implementation | `in-progress` | `experimental-local-only`; `tested-local`; Pi launch admission and focused tests | add deterministic binary Provider fixture, then real pinned Pi Extension load |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; prior `tested-local` launch/readiness evidence; deterministic binary Provider fixture implementation staged but focused execution is `not-run` in this unsupported local linker environment | execute the fixture/discovery focused suite on supported Linux CI, then add the real pinned Pi Extension load |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | governance correction closed in [handoff](../checkpoints/20260730-governance-operating-model-handoff.md); next P1-T09 lease unclaimed | declare exact paths and avoid only active overlapping leases | claim a fresh task-correct P1-T09 Lane-RUN lease |
+| Active task lease | P1-T09 deterministic binary Provider fixture; Lane-RUN lease active on `lane/personal-p1-t09-provider-fixture` | writable paths are limited to the Provider transport crate, Cargo.lock, and listed closure docs; normative assets remain Lane-CTR-owned | execute focused fixture evidence, then close or renew the lease with the next handoff |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
+
+The current atomic slice adds a loopback-only HTTPS Provider fixture process and
+an additional-root test seam that preserves the production Rustls policy. Its
+failure-first integration suite covers real discovery serialization, malformed
+and unauthorized responses, non-chat capability, timeout, oversized response,
+redirect refusal, selected-model persistence, deterministic request counts, and
+secret redaction. The suite has not yet executed locally because the supported
+Linux toolchain is unavailable and the Windows GNU linker exits 121 before the
+tests start; this is not pass evidence.
 
 ## Historical evidence journal
 

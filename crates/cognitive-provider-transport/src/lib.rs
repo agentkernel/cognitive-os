@@ -21,7 +21,52 @@ const MAX_PROVIDER_RESPONSE_READ_BYTES: u64 = 1_048_577;
 /// redirects, uses Rustls, applies the caller's bounded timeout, and bounds
 /// response bodies before returning them to a composition root.
 #[derive(Debug, Default)]
-pub struct RustlsProviderTransport;
+pub struct RustlsProviderTransport {
+    additional_root_certificates_der: Vec<Vec<u8>>,
+}
+
+impl RustlsProviderTransport {
+    /// Construct a transport that additionally trusts one caller-supplied DER
+    /// certificate while retaining every production transport policy.
+    ///
+    /// This seam supports hermetic HTTPS integration fixtures without adding a
+    /// plaintext HTTP exception or changing the process-wide trust store.
+    pub fn with_additional_root_certificate_der(
+        certificate_der: Vec<u8>,
+    ) -> Result<Self, ProviderTransportError> {
+        reqwest::Certificate::from_der(&certificate_der).map_err(|_| {
+            ProviderTransportError::Policy {
+                detail: "additional Provider root certificate is invalid",
+            }
+        })?;
+        Ok(Self {
+            additional_root_certificates_der: vec![certificate_der],
+        })
+    }
+
+    fn build_client(
+        &self,
+        timeout: Duration,
+    ) -> Result<reqwest::blocking::Client, ProviderTransportError> {
+        let mut client_builder = reqwest::blocking::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(timeout)
+            .use_rustls_tls();
+        for certificate_der in &self.additional_root_certificates_der {
+            let certificate = reqwest::Certificate::from_der(certificate_der).map_err(|_| {
+                ProviderTransportError::Policy {
+                    detail: "additional Provider root certificate is invalid",
+                }
+            })?;
+            client_builder = client_builder.add_root_certificate(certificate);
+        }
+        client_builder
+            .build()
+            .map_err(|_| ProviderTransportError::Backend {
+                detail: "failed to construct Rustls Provider transport",
+            })
+    }
+}
 
 impl ProviderTransport for RustlsProviderTransport {
     fn exchange(
@@ -34,14 +79,7 @@ impl ProviderTransport for RustlsProviderTransport {
         }
 
         let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = reqwest::blocking::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .timeout(timeout)
-            .use_rustls_tls()
-            .build()
-            .map_err(|_| ProviderTransportError::Backend {
-                detail: "failed to construct Rustls Provider transport",
-            })?;
+        let client = self.build_client(timeout)?;
         let method = match request.method {
             ProviderHttpMethod::Get => reqwest::Method::GET,
             ProviderHttpMethod::Post => reqwest::Method::POST,
