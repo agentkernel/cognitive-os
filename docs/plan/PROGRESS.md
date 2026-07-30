@@ -13,14 +13,28 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only`; exact Pi `0.81.1` was observed by actual `pi --version` on SSH-qualified `personal-linux-native-01` (`wuz@192.168.1.2`). The same Pi received a minimal `--extension <absolute-path>` session-local observation: the built module imported and Pi invoked its default export through an ephemeral marker wrapper. A native Linux Secret Service initialization completed with redacted `deepseek` configuration and selected model `deepseek-v4-flash`; secret material remains in `linux-secret-tool`. A bounded daemon-owned Provider-proxy chat smoke received the expected short response (`finish_reason: stop`) with `authority_side_effects: false`. A direct Pi `--print` run still timed out and doctor still reports Pi `not_configured`; neither Pi usability nor the first-conversation route is claimed. No Task, Effect, Verification, capability or authority side effect was created. Prior route evidence remains `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | configure the product Pi package, then diagnose and rerun a bounded real Pi first-response plus native Secret Service smoke before B01 pre-registration |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; exact Pi `0.81.1` was observed by actual `pi --version` on SSH-qualified `personal-linux-native-01` (`wuz@192.168.1.2`). The same Pi received a minimal `--extension <absolute-path>` session-local observation: the built module imported and Pi invoked its default export through an ephemeral marker wrapper. A native Linux Secret Service initialization completed with redacted `deepseek` configuration and selected model `deepseek-v4-flash`; secret material remains in `linux-secret-tool`. A bounded daemon-owned Provider-proxy chat smoke received the expected short response (`finish_reason: stop`) with `authority_side_effects: false`. The current host has exact Pi but lacks both a product `cognitive` CLI and a deployed CognitiveOS Extension entry, so the required non-secret `cognitive pi configure`, `cognitive doctor`, `cognitive pi launch`, and bounded direct Pi first-response commands were not runnable against the restored product service. No Task, Effect, Verification, capability or authority side effect was created. Prior route evidence remains `tested-local` launch/readiness and `tested-supported-ci` deterministic Provider fixture coverage; no product-Gate, release, or Profile claim | P1-T08 bundle/release artifact owner must deploy a coherent product bundle containing `cognitive` and the built Extension entry; then configure only their absolute paths and rerun redacted doctor, launch, and bounded first-response diagnostics |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | P1-T09 native-secret/Provider prerequisite lease closed after recording the corrective implementation and redacted local result; normative assets remain Lane-CTR-owned | claim a non-overlapping P1-T09 product-Pi configuration/timeout-diagnosis slice before writing |
+| Active task lease | `none` | P1-T09 product-Pi configuration/timeout-diagnosis lease closed after recording the bounded product-bundle blocker; normative assets remain Lane-CTR-owned | deploy a coherent product CLI-plus-Extension bundle before claiming a follow-up P1-T09 route-validation slice |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
+
+The current product-route slice is boundedly blocked before configuration: the
+restored Linux user service is active and exact Pi `0.81.1` remains available,
+but the host has no product `cognitive` executable or deployed built CognitiveOS
+Extension entry. No Provider configuration, SecretRef, bootstrap secret, SQLite
+path, selected-model digest, token, key, or model response was read or output.
+Consequently `cognitive pi configure`, `cognitive doctor`, `cognitive pi launch`,
+and the direct Pi first-response verification are explicitly `not-run`, rather
+than failed or passed. `blocked_paths`: product bundle deployment paths on the
+experimental host; `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`,
+`GMVP-LINUX`, and Profile; owner: P1-T08 bundle/release artifact owner; next
+action: deploy a coherent bundle containing the product CLI and built Extension,
+then rerun the bounded, redacted product-route diagnostics. This is a non-claim
+blocker and does not alter the active service, Secret Service, or Provider state.
 
 The current atomic slice adds a reusable Linux-native Pi observation probe. It
 first imports the built ESM module, then passes a session-local wrapper through

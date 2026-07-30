@@ -170,6 +170,20 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | done | 2026-07-29；`lane/personal-p1-t08-mvp-single-service`。已交付固定单服务安装事务、release-shaped campaign builder 与 Linux-native user-systemd 验证：clean install `.3`、healthy upgrade `.4`、pre-pointer `.5` failure 与 post-pointer `.6` failure；两种 failure 后均恢复 canonical unit/service、48181 liveness 及 non-secret `active-version=.4`，并保留 immutable campaign versions。聚焦 WSL tests：campaign builder、service lifecycle、single-service 及 adapter **20/20 passed**；strict runtime Clippy、formatting、consistency 和 whitespace 均通过。该结论仅完成 P1-T08 installer 验收；campaign 仍为 `experimental-local-only` / `tested-local` evidence，不构成 production release/signing、B01、Gate、Profile、containment、uninstall 或 first-conversation claim。 |
 | P1-T09 | 首次安装到首次对话 route 与 B01 campaign | P1-T08 及现有 Secret/Provider/daemon/Pi contracts | deterministic binary Provider fixture、真实 pinned Pi Extension load、真实首个响应、native Secret Service smoke 与预注册 B01 runner；B01 仍由独立 formal campaign 决定 | in-progress | `experimental-local-only`；deterministic binary Provider fixture 已在 supported Ubuntu/Windows CI **3/3** 通过，故该 slice 的 `implementation_evidence: tested-supported-ci`。2026-07-30 在 SSH-qualified `personal-linux-native-01`（`wuz@192.168.1.2`）以实际 `pi --version` 确认 exact Pi `0.81.1`；从该版本 Pi 执行最小 `--extension <absolute-path>` session-local observation。孤立 XDG child environment 未提供 Provider config、Provider/user secret、SecretRef、SQLite 路径、selected-model 或 authority state；built ESM import 和 Pi default-export invocation marker 均成功观察到。Pi print mode 在无 daemon 的预期 fail-closed 条件下超时（exit 124），故这不是会话、Provider、command-output 或 daemon-readiness 成功。无 Task、Effect、Verification、capability 或 authority side effect；B01、GMVP-LINUX、release 与 Profile 仍为 non-claim。尚缺真实首个响应、native Secret Service smoke、usability 与 formal B01。handoff：[20260730-personal-p1-t09-exact-pi-extension-load-handoff.md](../checkpoints/20260730-personal-p1-t09-exact-pi-extension-load-handoff.md)。 |
 
+> **P1-T09 product-route bounded blocker (2026-07-30; corrective evidence,
+> normative surface unchanged):** The experimental host retains an active
+> restored user service and exact Pi `0.81.1`, but has neither a product
+> `cognitive` CLI nor a deployed built CognitiveOS Extension entry. The
+> non-secret configure, doctor, launch, and direct first-response commands are
+> therefore `not-run`; no secret or Provider/internal state was read. This is
+> a blocker, not a failed first-response result: `blocked_paths` are the
+> product bundle deployment paths; `blocked_task_ids`: `P1-T09`;
+> `blocked_gate_ids`: `B01`, `GMVP-LINUX`, Profile; owner: P1-T08
+> bundle/release artifact owner; next action: deploy a coherent CLI-plus-
+> Extension bundle and rerun the bounded redacted route diagnostic. P1-T09
+> remains `in-progress`, and B01 remains `not-run`. Handoff:
+> [20260730-personal-p1-t09-product-pi-configuration-timeout-diagnosis-handoff.md](../checkpoints/20260730-personal-p1-t09-product-pi-configuration-timeout-diagnosis-handoff.md).
+
 #### Historical P1-T08 slice journal
 
 以下 blockquote 保留各原子批当时的状态与 non-claim，属于历史记录；不得覆盖上表当前状态。
