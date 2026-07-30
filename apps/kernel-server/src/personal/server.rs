@@ -469,7 +469,7 @@ fn handle_provider_proxy_route(
     drop(authority_guard);
 
     let secret_backend = select_production_secret_store();
-    let transport = RustlsProviderTransport;
+    let transport = RustlsProviderTransport::default();
     let service = ProviderProxyService::new(
         secret_backend.as_secret_store(),
         ProviderConfigRepository::under_config_dir(layout.config_dir()),

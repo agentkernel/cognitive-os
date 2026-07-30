@@ -119,7 +119,7 @@ fn configure_provider_if_requested(
         let secret_store = EphemeralSecretStore::default();
         return configure_and_discover_with_store(
             &secret_store,
-            &RustlsProviderTransport,
+            &RustlsProviderTransport::default(),
             options,
             config_repository,
             already_configured,
@@ -133,7 +133,7 @@ fn configure_provider_if_requested(
         cognitive_secret::ProductionSecretBackend::LinuxSecretTool(store) => {
             configure_and_discover_with_store(
                 &store,
-                &RustlsProviderTransport,
+                &RustlsProviderTransport::default(),
                 options,
                 config_repository,
                 already_configured,
