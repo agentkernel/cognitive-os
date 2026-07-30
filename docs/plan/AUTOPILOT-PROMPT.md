@@ -27,8 +27,8 @@
 - git worktree list
 
 若发现未声明的用户改动、路径重叠 lease、基线漂移或 secret 风险，立即停止写入，
-保护现状并重建最小安全路径。禁止读取/引用 History/；禁止触碰、回退、暂存或提交
-apps/kernel-server/src/personal/server.rs，除非其 owner 明确释放该文件。
+保护现状并重建最小安全路径。禁止读取或引用 `History/`。已获授权、已审查且属于
+当前 task lease 的改动可作为正常工作的一部分测试、暂存和提交。
 
 当前治理状态（2026-07-30）：
 - P1-T09 task_status = in-progress；development_track = experimental-local-only；

@@ -11,7 +11,7 @@ evidence journal` preserve execution-time facts and cannot override it.
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | governance correction closed in [handoff](../checkpoints/20260730-governance-operating-model-handoff.md); next P1-T09 lease unclaimed | `apps/kernel-server/src/personal/server.rs` remains user-owned and excluded | claim a fresh task-correct P1-T09 Lane-RUN lease |
+| Active task lease | governance correction closed in [handoff](../checkpoints/20260730-governance-operating-model-handoff.md); next P1-T09 lease unclaimed | declare exact paths and avoid only active overlapping leases | claim a fresh task-correct P1-T09 Lane-RUN lease |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.

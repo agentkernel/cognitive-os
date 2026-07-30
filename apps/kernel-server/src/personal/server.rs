@@ -1,6 +1,8 @@
 //! Bounded loopback Personal HTTP front door (P1-T04 / ADR-0019).
 
-use std::fs::{self, File, OpenOptions};
+#[cfg(unix)]
+use std::fs::File;
+use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
@@ -197,7 +199,9 @@ fn publish_endpoint(
         temporary_file.sync_all()?;
         drop(temporary_file);
         fs::rename(&temporary_path, &endpoint_path)?;
-        File::open(layout.state_dir())?.sync_all()
+        #[cfg(unix)]
+        File::open(layout.state_dir())?.sync_all()?;
+        Ok(())
     })();
     if let Err(error) = write_result {
         let _ = fs::remove_file(&temporary_path);
