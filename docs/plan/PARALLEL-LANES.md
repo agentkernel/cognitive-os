@@ -57,7 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| _None_ | — | — | — | — | — | — | — |
+| `lease/personal/P1-T09/coherent-bundle-delivery` | deliver verified product CLI and complete Pi Extension with the daemon bundle | Lane-RUN | `lane/personal-p1-t09-coherent-bundle-delivery` | `crates/cognitive-runtime/src/linux_bundle.rs`; `crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs`; `crates/cognitive-runtime/tests/linux_bundle_*.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260730-personal-p1-t09-coherent-bundle-delivery-handoff.md` | Cursor session 2026-07-30 | 2026-07-30 / 2026-07-30 | active |
 
 ### 3.1 最近关闭的 leases
 

@@ -30,11 +30,17 @@ const SIGNATURE_FILENAME: &str = "attestation.signature.json";
 const BOOTSTRAP_FILENAME: &str = "install.sh";
 const MAX_INSTALLER_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_KERNEL_SERVER_BYTES: u64 = 512 * 1024 * 1024;
+const MAX_COGNITIVE_CLI_BYTES: u64 = 512 * 1024 * 1024;
+const MAX_EXTENSION_DISTRIBUTION_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_EXTENSION_FILE_BYTES: u64 = 16 * 1024 * 1024;
+const EXTENSION_ARCHIVE_ROOT: &str = "extensions/pi-cognitiveos/dist";
 const BOOTSTRAP_TEMPLATE: &str = include_str!("../../../../deploy/linux/install.sh");
 
 #[derive(Default)]
 struct CampaignArguments {
     kernel_server_binary: Option<PathBuf>,
+    cognitive_cli_binary: Option<PathBuf>,
+    pi_extension_dist_directory: Option<PathBuf>,
     installer_binary: Option<PathBuf>,
     campaign_signing_seed_file: Option<PathBuf>,
     output_directory: Option<PathBuf>,
@@ -61,6 +67,12 @@ fn build_campaign_release(arguments: &[String]) -> Result<(), CampaignBuildError
     let parsed_arguments = parse_arguments(arguments).map_err(|_| CampaignBuildError::Arguments)?;
     let kernel_server_binary = parsed_arguments
         .kernel_server_binary
+        .ok_or(CampaignBuildError::Arguments)?;
+    let cognitive_cli_binary = parsed_arguments
+        .cognitive_cli_binary
+        .ok_or(CampaignBuildError::Arguments)?;
+    let pi_extension_dist_directory = parsed_arguments
+        .pi_extension_dist_directory
         .ok_or(CampaignBuildError::Arguments)?;
     let installer_binary = parsed_arguments
         .installer_binary
@@ -106,6 +118,10 @@ fn build_campaign_release(arguments: &[String]) -> Result<(), CampaignBuildError
     reject_existing_output_directory(&output_directory).map_err(|_| CampaignBuildError::Output)?;
     validate_input_binary(&kernel_server_binary, MAX_KERNEL_SERVER_BYTES)
         .map_err(|_| CampaignBuildError::KernelServer)?;
+    validate_input_binary(&cognitive_cli_binary, MAX_COGNITIVE_CLI_BYTES)
+        .map_err(|_| CampaignBuildError::CognitiveCli)?;
+    validate_extension_distribution(&pi_extension_dist_directory)
+        .map_err(|_| CampaignBuildError::ExtensionDistribution)?;
     validate_input_binary(&installer_binary, MAX_INSTALLER_BYTES)
         .map_err(|_| CampaignBuildError::Installer)?;
     let signing_key = read_campaign_signing_key(&campaign_signing_seed_file)
@@ -129,6 +145,8 @@ fn build_campaign_release(arguments: &[String]) -> Result<(), CampaignBuildError
     let result = write_campaign_release(
         &temporary_output_directory,
         &kernel_server_binary,
+        &cognitive_cli_binary,
+        &pi_extension_dist_directory,
         &installer_binary,
         &signing_key,
         &release_version,
@@ -155,6 +173,8 @@ fn build_campaign_release(arguments: &[String]) -> Result<(), CampaignBuildError
 enum CampaignBuildError {
     Arguments,
     KernelServer,
+    CognitiveCli,
+    ExtensionDistribution,
     Installer,
     SigningKey,
     Output,
@@ -177,6 +197,8 @@ enum CampaignReleaseError {
 fn write_campaign_release(
     output_directory: &Path,
     kernel_server_binary: &Path,
+    cognitive_cli_binary: &Path,
+    pi_extension_dist_directory: &Path,
     installer_binary: &Path,
     signing_key: &SigningKey,
     release_version: &str,
@@ -187,8 +209,12 @@ fn write_campaign_release(
     expected_pi_version: &str,
     expected_pi_integrity: &str,
 ) -> Result<(), CampaignReleaseError> {
-    let artifact =
-        archive_kernel_server(kernel_server_binary).map_err(|_| CampaignReleaseError::Archive)?;
+    let artifact = archive_product_payload(
+        kernel_server_binary,
+        cognitive_cli_binary,
+        pi_extension_dist_directory,
+    )
+    .map_err(|_| CampaignReleaseError::Archive)?;
     let artifact_sha256 = sha256_digest(&artifact);
     let manifest = LinuxBundleManifest {
         schema_version: 1,
@@ -294,21 +320,102 @@ fn write_campaign_release(
     Ok(())
 }
 
-fn archive_kernel_server(kernel_server_binary: &Path) -> Result<Vec<u8>, ()> {
+fn archive_product_payload(
+    kernel_server_binary: &Path,
+    cognitive_cli_binary: &Path,
+    pi_extension_dist_directory: &Path,
+) -> Result<Vec<u8>, ()> {
     let binary_bytes = fs::read(kernel_server_binary).map_err(|_| ())?;
+    let cognitive_cli_bytes = fs::read(cognitive_cli_binary).map_err(|_| ())?;
     let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar_builder = TarBuilder::new(gzip_encoder);
-    let mut header = TarHeader::new_gnu();
-    header.set_mode(0o755);
-    header.set_size(binary_bytes.len().try_into().map_err(|_| ())?);
-    header.set_cksum();
-    tar_builder
-        .append_data(&mut header, "bin/kernel-server", binary_bytes.as_slice())
-        .map_err(|_| ())?;
+    append_archive_directory(&mut tar_builder, "bin")?;
+    append_archive_file(&mut tar_builder, "bin/kernel-server", &binary_bytes, 0o755)?;
+    append_archive_file(
+        &mut tar_builder,
+        "bin/cognitive",
+        &cognitive_cli_bytes,
+        0o755,
+    )?;
+    append_archive_directory(&mut tar_builder, "extensions")?;
+    append_archive_directory(&mut tar_builder, "extensions/pi-cognitiveos")?;
+    append_extension_distribution(
+        &mut tar_builder,
+        pi_extension_dist_directory,
+        Path::new(EXTENSION_ARCHIVE_ROOT),
+    )?;
     tar_builder
         .into_inner()
         .map_err(|_| ())?
         .finish()
+        .map_err(|_| ())
+}
+
+fn append_extension_distribution(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    source_directory: &Path,
+    archive_directory: &Path,
+) -> Result<(), ()> {
+    append_archive_directory(tar_builder, archive_directory)?;
+    let mut source_entries = fs::read_dir(source_directory)
+        .map_err(|_| ())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| ())?;
+    source_entries.sort_by_key(|entry| entry.file_name());
+
+    for source_entry in source_entries {
+        let file_name = source_entry.file_name();
+        let file_name = file_name.to_str().ok_or(())?;
+        if !is_safe_extension_path_component(file_name) {
+            return Err(());
+        }
+        let source_path = source_entry.path();
+        let source_metadata = fs::symlink_metadata(&source_path).map_err(|_| ())?;
+        let archive_path = archive_directory.join(file_name);
+        if source_metadata.file_type().is_symlink() {
+            return Err(());
+        }
+        if source_metadata.is_dir() {
+            append_extension_distribution(tar_builder, &source_path, &archive_path)?;
+        } else if source_metadata.is_file() {
+            if source_metadata.len() > MAX_EXTENSION_FILE_BYTES {
+                return Err(());
+            }
+            let source_bytes = fs::read(source_path).map_err(|_| ())?;
+            append_archive_file(tar_builder, &archive_path, &source_bytes, 0o644)?;
+        } else {
+            return Err(());
+        }
+    }
+    Ok(())
+}
+
+fn append_archive_directory(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    archive_path: impl AsRef<Path>,
+) -> Result<(), ()> {
+    let mut header = TarHeader::new_gnu();
+    header.set_entry_type(tar::EntryType::Directory);
+    header.set_mode(0o755);
+    header.set_size(0);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, archive_path, std::io::empty())
+        .map_err(|_| ())
+}
+
+fn append_archive_file(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    archive_path: impl AsRef<Path>,
+    contents: &[u8],
+    mode: u32,
+) -> Result<(), ()> {
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(contents.len().try_into().map_err(|_| ())?);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, archive_path, contents)
         .map_err(|_| ())
 }
 
@@ -436,6 +543,58 @@ fn validate_input_binary(binary_path: &Path, maximum_bytes: u64) -> Result<(), (
         .ok_or(())
 }
 
+fn validate_extension_distribution(extension_directory: &Path) -> Result<(), ()> {
+    let metadata = fs::symlink_metadata(extension_directory).map_err(|_| ())?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return Err(());
+    }
+    let entry_path = extension_directory.join("index.js");
+    let entry_metadata = fs::symlink_metadata(entry_path).map_err(|_| ())?;
+    if !entry_metadata.is_file() || entry_metadata.file_type().is_symlink() {
+        return Err(());
+    }
+    let total_bytes = count_extension_distribution_bytes(extension_directory)?;
+    (total_bytes > 0 && total_bytes <= MAX_EXTENSION_DISTRIBUTION_BYTES)
+        .then_some(())
+        .ok_or(())
+}
+
+fn count_extension_distribution_bytes(directory: &Path) -> Result<u64, ()> {
+    let mut total_bytes = 0_u64;
+    for entry in fs::read_dir(directory).map_err(|_| ())? {
+        let entry = entry.map_err(|_| ())?;
+        let file_name = entry.file_name();
+        let file_name = file_name.to_str().ok_or(())?;
+        if !is_safe_extension_path_component(file_name) {
+            return Err(());
+        }
+        let metadata = fs::symlink_metadata(entry.path()).map_err(|_| ())?;
+        if metadata.file_type().is_symlink() {
+            return Err(());
+        }
+        if metadata.is_dir() {
+            total_bytes = total_bytes
+                .checked_add(count_extension_distribution_bytes(&entry.path())?)
+                .ok_or(())?;
+        } else if metadata.is_file() && metadata.len() <= MAX_EXTENSION_FILE_BYTES {
+            total_bytes = total_bytes.checked_add(metadata.len()).ok_or(())?;
+        } else {
+            return Err(());
+        }
+    }
+    Ok(total_bytes)
+}
+
+fn is_safe_extension_path_component(component: &str) -> bool {
+    !component.is_empty()
+        && component != "."
+        && component != ".."
+        && component.len() <= 255
+        && component
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
+}
+
 fn read_campaign_signing_key(seed_file: &Path) -> Result<SigningKey, ()> {
     #[cfg(unix)]
     {
@@ -480,6 +639,12 @@ fn parse_arguments(arguments: &[String]) -> Result<CampaignArguments, ()> {
             "--kernel-server-binary" => {
                 set_path_once(&mut parsed_arguments.kernel_server_binary, value)?
             }
+            "--cognitive-cli-binary" => {
+                set_path_once(&mut parsed_arguments.cognitive_cli_binary, value)?
+            }
+            "--pi-extension-dist-directory" => {
+                set_path_once(&mut parsed_arguments.pi_extension_dist_directory, value)?
+            }
             "--installer-binary" => set_path_once(&mut parsed_arguments.installer_binary, value)?,
             "--campaign-signing-seed-file" => {
                 set_path_once(&mut parsed_arguments.campaign_signing_seed_file, value)?
@@ -502,6 +667,8 @@ fn parse_arguments(arguments: &[String]) -> Result<CampaignArguments, ()> {
         }
     }
     let all_required_arguments_present = parsed_arguments.kernel_server_binary.is_some()
+        && parsed_arguments.cognitive_cli_binary.is_some()
+        && parsed_arguments.pi_extension_dist_directory.is_some()
         && parsed_arguments.installer_binary.is_some()
         && parsed_arguments.campaign_signing_seed_file.is_some()
         && parsed_arguments.output_directory.is_some()

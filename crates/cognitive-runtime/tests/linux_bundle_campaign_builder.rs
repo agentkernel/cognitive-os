@@ -25,10 +25,14 @@ const PI_INTEGRITY: &str = "sha512:pinned-pi-integrity";
 fn campaign_builder_emits_an_offline_verifiable_release_without_unrendered_bootstrap_policy() {
     let fixture_directory = tempfile::tempdir().unwrap();
     let kernel_server_binary = fixture_directory.path().join("kernel-server");
+    let cognitive_cli_binary = fixture_directory.path().join("cognitive");
+    let extension_distribution_directory = fixture_directory.path().join("pi-cognitiveos-dist");
     let installer_binary = fixture_directory.path().join("linux-bundle-installer");
     let signing_seed_file = fixture_directory.path().join("campaign-signing-seed");
     let output_directory = fixture_directory.path().join("release");
     write_elf_fixture(&kernel_server_binary);
+    write_elf_fixture(&cognitive_cli_binary);
+    write_extension_distribution(&extension_distribution_directory);
     write_elf_fixture(&installer_binary);
     fs::write(&signing_seed_file, [0x62; 32]).unwrap();
     #[cfg(unix)]
@@ -36,6 +40,8 @@ fn campaign_builder_emits_an_offline_verifiable_release_without_unrendered_boots
 
     let output = run_campaign_builder(
         &kernel_server_binary,
+        &cognitive_cli_binary,
+        &extension_distribution_directory,
         &installer_binary,
         &signing_seed_file,
         &output_directory,
@@ -47,6 +53,11 @@ fn campaign_builder_emits_an_offline_verifiable_release_without_unrendered_boots
         fs::read(output_directory.join("cognitiveos-linux-bundle-installer")).unwrap(),
         fs::read(&installer_binary).unwrap()
     );
+    let artifact_paths = archive_paths(&output_directory.join("cognitiveos-linux-x86_64.tar.gz"));
+    assert!(artifact_paths.contains(&"bin/kernel-server".to_owned()));
+    assert!(artifact_paths.contains(&"bin/cognitive".to_owned()));
+    assert!(artifact_paths.contains(&"extensions/pi-cognitiveos/dist/index.js".to_owned()));
+    assert!(artifact_paths.contains(&"extensions/pi-cognitiveos/dist/daemon-client.js".to_owned()));
     verify_linux_bundle_for_release(
         &output_directory,
         RELEASE_VERSION,
@@ -62,6 +73,8 @@ fn campaign_builder_emits_an_offline_verifiable_release_without_unrendered_boots
 
     let overwrite_attempt = run_campaign_builder(
         &kernel_server_binary,
+        &cognitive_cli_binary,
+        &extension_distribution_directory,
         &installer_binary,
         &signing_seed_file,
         &output_directory,
@@ -75,6 +88,8 @@ fn campaign_builder_emits_an_offline_verifiable_release_without_unrendered_boots
 
 fn run_campaign_builder(
     kernel_server_binary: &Path,
+    cognitive_cli_binary: &Path,
+    extension_distribution_directory: &Path,
     installer_binary: &Path,
     signing_seed_file: &Path,
     output_directory: &Path,
@@ -83,6 +98,10 @@ fn run_campaign_builder(
         .args([
             "--kernel-server-binary",
             kernel_server_binary.to_str().unwrap(),
+            "--cognitive-cli-binary",
+            cognitive_cli_binary.to_str().unwrap(),
+            "--pi-extension-dist-directory",
+            extension_distribution_directory.to_str().unwrap(),
             "--installer-binary",
             installer_binary.to_str().unwrap(),
             "--campaign-signing-seed-file",
@@ -124,6 +143,38 @@ fn trusted_campaign_keyring() -> TrustedKeyring {
 
 fn write_elf_fixture(path: &Path) {
     fs::write(path, [0x7f, b'E', b'L', b'F', 2, 1, 1, 0]).unwrap();
+}
+
+fn write_extension_distribution(directory: &Path) {
+    fs::create_dir_all(directory).unwrap();
+    fs::write(
+        directory.join("index.js"),
+        "export { client } from './daemon-client.js';\n",
+    )
+    .unwrap();
+    fs::write(
+        directory.join("daemon-client.js"),
+        "export const client = 'daemon-client';\n",
+    )
+    .unwrap();
+}
+
+fn archive_paths(artifact_path: &Path) -> Vec<String> {
+    let artifact_file = fs::File::open(artifact_path).unwrap();
+    let gzip_decoder = flate2::read::GzDecoder::new(artifact_file);
+    let mut archive = tar::Archive::new(gzip_decoder);
+    archive
+        .entries()
+        .unwrap()
+        .map(|entry| {
+            entry
+                .unwrap()
+                .path()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect()
 }
 
 fn stderr(output: &std::process::Output) -> String {

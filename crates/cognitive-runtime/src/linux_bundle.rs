@@ -34,7 +34,10 @@ const MAX_REGULAR_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_REGULAR_FILE_ENTRIES: u64 = 1024;
 const MAX_DIRECTORY_ENTRIES: u64 = 128;
 const MAX_ARCHIVE_PATH_BYTES: usize = 4096;
-const REQUIRED_EXECUTABLE_PATH: &str = "bin/kernel-server";
+const REQUIRED_KERNEL_SERVER_PATH: &str = "bin/kernel-server";
+const REQUIRED_COGNITIVE_CLI_PATH: &str = "bin/cognitive";
+const REQUIRED_EXTENSION_ROOT_PATH: &str = "extensions/pi-cognitiveos/dist";
+const REQUIRED_EXTENSION_ENTRY_PATH: &str = "extensions/pi-cognitiveos/dist/index.js";
 const REQUIRED_EXECUTABLE_MODE: u32 = 0o100;
 const FORBIDDEN_EXECUTABLE_MODE: u32 = 0o7000;
 
@@ -580,7 +583,9 @@ fn extract_verified_archive(
     let mut regular_file_entries = 0_u64;
     let mut directory_entries = 0_u64;
     let mut expanded_bytes = 0_u64;
-    let mut executable_was_written = false;
+    let mut kernel_server_was_written = false;
+    let mut cognitive_cli_was_written = false;
+    let mut extension_entry_was_written = false;
 
     for entry_result in entries {
         let entry = entry_result.map_err(|_| LinuxBundleError::UnsafeArchive)?;
@@ -592,15 +597,15 @@ fn extract_verified_archive(
 
         if entry.header().entry_type().is_dir() {
             directory_entries = directory_entries.saturating_add(1);
-            if directory_entries > MAX_DIRECTORY_ENTRIES || canonical_path != Path::new("bin") {
+            if directory_entries > MAX_DIRECTORY_ENTRIES
+                || !is_allowed_archive_directory(&canonical_path)
+            {
                 return Err(LinuxBundleError::UnsafeArchive);
             }
-            fs::create_dir(private_staging_directory.join(canonical_path))?;
+            fs::create_dir_all(private_staging_directory.join(canonical_path))?;
             continue;
         }
-        if !entry.header().entry_type().is_file()
-            || canonical_path != Path::new(REQUIRED_EXECUTABLE_PATH)
-        {
+        if !entry.header().entry_type().is_file() || !is_allowed_archive_file(&canonical_path) {
             return Err(LinuxBundleError::UnsafeArchive);
         }
 
@@ -608,8 +613,10 @@ fn extract_verified_archive(
             .header()
             .mode()
             .map_err(|_| LinuxBundleError::UnsafeArchive)?;
-        if archive_mode & REQUIRED_EXECUTABLE_MODE == 0
-            || archive_mode & FORBIDDEN_EXECUTABLE_MODE != 0
+        let requires_executable_mode = is_required_executable_path(&canonical_path);
+        if archive_mode & FORBIDDEN_EXECUTABLE_MODE != 0
+            || (requires_executable_mode && archive_mode & REQUIRED_EXECUTABLE_MODE == 0)
+            || (!requires_executable_mode && archive_mode & REQUIRED_EXECUTABLE_MODE != 0)
         {
             return Err(LinuxBundleError::UnsafeArchive);
         }
@@ -628,12 +635,15 @@ fn extract_verified_archive(
             return Err(LinuxBundleError::UnsafeArchive);
         }
 
-        fs::create_dir_all(private_staging_directory.join("bin"))?;
-        let executable_path = private_staging_directory.join(&canonical_path);
+        let output_path = private_staging_directory.join(&canonical_path);
+        let output_parent = output_path
+            .parent()
+            .ok_or(LinuxBundleError::UnsafeArchive)?;
+        fs::create_dir_all(output_parent)?;
         let mut output_file = fs::OpenOptions::new()
             .create_new(true)
             .write(true)
-            .open(&executable_path)?;
+            .open(&output_path)?;
         let copied_bytes = io::copy(
             &mut entry.take(declared_size.saturating_add(1)),
             &mut output_file,
@@ -645,11 +655,17 @@ fn extract_verified_archive(
             .checked_add(copied_bytes)
             .filter(|total| *total <= MAX_EXPANDED_ARTIFACT_BYTES)
             .ok_or(LinuxBundleError::UnsafeArchive)?;
-        set_executable_permissions(&executable_path)?;
-        executable_was_written = true;
+        if requires_executable_mode {
+            set_executable_permissions(&output_path)?;
+        } else {
+            set_readonly_data_permissions(&output_path)?;
+        }
+        kernel_server_was_written |= canonical_path == Path::new(REQUIRED_KERNEL_SERVER_PATH);
+        cognitive_cli_was_written |= canonical_path == Path::new(REQUIRED_COGNITIVE_CLI_PATH);
+        extension_entry_was_written |= canonical_path == Path::new(REQUIRED_EXTENSION_ENTRY_PATH);
     }
 
-    if !executable_was_written || regular_file_entries != 1 {
+    if !kernel_server_was_written || !cognitive_cli_was_written || !extension_entry_was_written {
         return Err(LinuxBundleError::UnsafeArchive);
     }
     validate_extracted_layout(private_staging_directory)
@@ -668,42 +684,20 @@ fn validate_archive_entry_path(entry_path: &Path) -> Result<PathBuf, LinuxBundle
     {
         return Err(LinuxBundleError::UnsafeArchive);
     }
-    let allowed_path = entry_path_text == "bin" || entry_path_text == REQUIRED_EXECUTABLE_PATH;
-    if !allowed_path {
+    if !is_allowed_archive_directory(&PathBuf::from(entry_path_text))
+        && !is_allowed_archive_file(&PathBuf::from(entry_path_text))
+    {
         return Err(LinuxBundleError::UnsafeArchive);
     }
     Ok(PathBuf::from(entry_path_text))
 }
 
 fn validate_extracted_layout(staging_directory: &Path) -> Result<(), LinuxBundleError> {
-    let executable_path = staging_directory.join(REQUIRED_EXECUTABLE_PATH);
-    let executable_metadata =
-        fs::symlink_metadata(&executable_path).map_err(|_| LinuxBundleError::UnsafeArchive)?;
-    if !executable_metadata.file_type().is_file() {
-        return Err(LinuxBundleError::UnsafeArchive);
+    for required_executable_path in [REQUIRED_KERNEL_SERVER_PATH, REQUIRED_COGNITIVE_CLI_PATH] {
+        validate_regular_file(staging_directory.join(required_executable_path))?;
     }
-    let mut staging_entries = fs::read_dir(staging_directory)?;
-    let Some(bin_entry_result) = staging_entries.next() else {
-        return Err(LinuxBundleError::UnsafeArchive);
-    };
-    let bin_entry = bin_entry_result?;
-    if staging_entries.next().is_some()
-        || bin_entry.file_name() != "bin"
-        || !bin_entry.file_type()?.is_dir()
-    {
-        return Err(LinuxBundleError::UnsafeArchive);
-    }
-    let mut bin_entries = fs::read_dir(bin_entry.path())?;
-    let Some(executable_entry_result) = bin_entries.next() else {
-        return Err(LinuxBundleError::UnsafeArchive);
-    };
-    let executable_entry = executable_entry_result?;
-    if bin_entries.next().is_some()
-        || executable_entry.file_name() != "kernel-server"
-        || !executable_entry.file_type()?.is_file()
-    {
-        return Err(LinuxBundleError::UnsafeArchive);
-    }
+    validate_regular_file(staging_directory.join(REQUIRED_EXTENSION_ENTRY_PATH))?;
+    validate_extension_directory(&staging_directory.join(REQUIRED_EXTENSION_ROOT_PATH))?;
     Ok(())
 }
 
@@ -713,11 +707,81 @@ fn version_directories_match(
 ) -> Result<bool, LinuxBundleError> {
     validate_extracted_layout(staged_directory)?;
     validate_extracted_layout(published_directory)?;
-    let staged_executable = staged_directory.join(REQUIRED_EXECUTABLE_PATH);
-    let published_executable = published_directory.join(REQUIRED_EXECUTABLE_PATH);
-    let mut staged_file = open_regular_file(&staged_executable)?;
-    let mut published_file = open_regular_file(&published_executable)?;
-    Ok(sha256_digest_reader(&mut staged_file)? == sha256_digest_reader(&mut published_file)?)
+    Ok(directory_file_digests(staged_directory)? == directory_file_digests(published_directory)?)
+}
+
+fn is_allowed_archive_directory(path: &Path) -> bool {
+    matches!(
+        path.to_str(),
+        Some("bin" | "extensions" | "extensions/pi-cognitiveos" | "extensions/pi-cognitiveos/dist")
+    ) || path.starts_with(REQUIRED_EXTENSION_ROOT_PATH)
+}
+
+fn is_allowed_archive_file(path: &Path) -> bool {
+    is_required_executable_path(path) || path.starts_with(REQUIRED_EXTENSION_ROOT_PATH)
+}
+
+fn is_required_executable_path(path: &Path) -> bool {
+    path == Path::new(REQUIRED_KERNEL_SERVER_PATH) || path == Path::new(REQUIRED_COGNITIVE_CLI_PATH)
+}
+
+fn validate_regular_file(path: PathBuf) -> Result<(), LinuxBundleError> {
+    let metadata = fs::symlink_metadata(path).map_err(|_| LinuxBundleError::UnsafeArchive)?;
+    if metadata.file_type().is_file() {
+        Ok(())
+    } else {
+        Err(LinuxBundleError::UnsafeArchive)
+    }
+}
+
+fn validate_extension_directory(path: &Path) -> Result<(), LinuxBundleError> {
+    let metadata = fs::symlink_metadata(path).map_err(|_| LinuxBundleError::UnsafeArchive)?;
+    if !metadata.file_type().is_dir() || metadata.file_type().is_symlink() {
+        return Err(LinuxBundleError::UnsafeArchive);
+    }
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = fs::symlink_metadata(entry.path())?;
+        if metadata.file_type().is_symlink()
+            || (!metadata.file_type().is_file() && !metadata.file_type().is_dir())
+        {
+            return Err(LinuxBundleError::UnsafeArchive);
+        }
+        if metadata.file_type().is_dir() {
+            validate_extension_directory(&entry.path())?;
+        }
+    }
+    Ok(())
+}
+
+fn directory_file_digests(directory: &Path) -> Result<BTreeMap<PathBuf, String>, LinuxBundleError> {
+    let mut digests = BTreeMap::new();
+    collect_directory_file_digests(directory, Path::new(""), &mut digests)?;
+    Ok(digests)
+}
+
+fn collect_directory_file_digests(
+    directory: &Path,
+    relative_directory: &Path,
+    digests: &mut BTreeMap<PathBuf, String>,
+) -> Result<(), LinuxBundleError> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let relative_path = relative_directory.join(entry.file_name());
+        let metadata = fs::symlink_metadata(entry.path())?;
+        if metadata.file_type().is_symlink() {
+            return Err(LinuxBundleError::UnsafeArchive);
+        }
+        if metadata.file_type().is_dir() {
+            collect_directory_file_digests(&entry.path(), &relative_path, digests)?;
+        } else if metadata.file_type().is_file() {
+            let mut file = open_regular_file(&entry.path())?;
+            digests.insert(relative_path, sha256_digest_reader(&mut file)?);
+        } else {
+            return Err(LinuxBundleError::UnsafeArchive);
+        }
+    }
+    Ok(())
 }
 
 fn is_real_directory(path: &Path) -> Result<bool, LinuxBundleError> {
@@ -733,6 +797,19 @@ fn set_executable_permissions(path: &Path) -> Result<(), LinuxBundleError> {
     use std::os::unix::fs::PermissionsExt;
 
     fs::set_permissions(path, fs::Permissions::from_mode(0o755))?;
+    Ok(())
+}
+
+#[cfg(unix)]
+fn set_readonly_data_permissions(path: &Path) -> Result<(), LinuxBundleError> {
+    use std::os::unix::fs::PermissionsExt;
+
+    fs::set_permissions(path, fs::Permissions::from_mode(0o644))?;
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn set_readonly_data_permissions(_path: &Path) -> Result<(), LinuxBundleError> {
     Ok(())
 }
 

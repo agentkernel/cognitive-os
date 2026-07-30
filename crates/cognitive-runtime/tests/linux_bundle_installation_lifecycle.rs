@@ -127,15 +127,41 @@ impl SignedBundleFixture {
 fn runnable_archive_bytes() -> Vec<u8> {
     let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar_builder = TarBuilder::new(gzip_encoder);
-    let mut header = TarHeader::new_gnu();
-    header.set_mode(0o755);
-    header.set_size(KERNEL_SERVER_CONTENT.len() as u64);
-    header.set_cksum();
-    tar_builder
-        .append_data(&mut header, "bin/kernel-server", KERNEL_SERVER_CONTENT)
-        .unwrap();
+    append_file(
+        &mut tar_builder,
+        "bin/kernel-server",
+        KERNEL_SERVER_CONTENT,
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "bin/cognitive",
+        b"lifecycle-cognitive",
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "extensions/pi-cognitiveos/dist/index.js",
+        b"export {};\n",
+        0o644,
+    );
     let gzip_encoder = tar_builder.into_inner().unwrap();
     gzip_encoder.finish().unwrap()
+}
+
+fn append_file(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    path: &str,
+    contents: &[u8],
+    mode: u32,
+) {
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(contents.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, path, contents)
+        .unwrap();
 }
 
 fn statement_for_manifest(manifest: &LinuxBundleManifest) -> Value {

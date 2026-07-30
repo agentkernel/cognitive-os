@@ -53,6 +53,16 @@ fn upgrade_confirms_service_before_and_after_pointer_publication() {
             .join("versions/2.0.0/bin/kernel-server")
             .is_file()
     );
+    assert!(
+        deployment_root
+            .join("versions/2.0.0/bin/cognitive")
+            .is_file()
+    );
+    assert!(
+        deployment_root
+            .join("versions/2.0.0/extensions/pi-cognitiveos/dist/index.js")
+            .is_file()
+    );
     assert_eq!(
         controller.actions,
         ["publish:2.0.0", "restart", "confirm:2.0.0", "confirm:2.0.0"]
@@ -345,17 +355,63 @@ fn signed_bundle(version: &str) -> BundleFixture {
 }
 
 fn runnable_archive_bytes() -> Vec<u8> {
-    let executable = b"single-service-kernel-server";
     let gzip_encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar_builder = TarBuilder::new(gzip_encoder);
+    append_directory(&mut tar_builder, "bin");
+    append_file(
+        &mut tar_builder,
+        "bin/kernel-server",
+        b"single-service-kernel-server",
+        0o755,
+    );
+    append_file(
+        &mut tar_builder,
+        "bin/cognitive",
+        b"single-service-cognitive",
+        0o755,
+    );
+    append_directory(&mut tar_builder, "extensions");
+    append_directory(&mut tar_builder, "extensions/pi-cognitiveos");
+    append_directory(&mut tar_builder, "extensions/pi-cognitiveos/dist");
+    append_file(
+        &mut tar_builder,
+        "extensions/pi-cognitiveos/dist/index.js",
+        b"export { client } from './daemon-client.js';\n",
+        0o644,
+    );
+    append_file(
+        &mut tar_builder,
+        "extensions/pi-cognitiveos/dist/daemon-client.js",
+        b"export const client = 'daemon-client';\n",
+        0o644,
+    );
+    tar_builder.into_inner().unwrap().finish().unwrap()
+}
+
+fn append_directory(tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>, path: &str) {
     let mut header = TarHeader::new_gnu();
+    header.set_entry_type(tar::EntryType::Directory);
     header.set_mode(0o755);
-    header.set_size(executable.len() as u64);
+    header.set_size(0);
     header.set_cksum();
     tar_builder
-        .append_data(&mut header, "bin/kernel-server", &executable[..])
+        .append_data(&mut header, path, std::io::empty())
         .unwrap();
-    tar_builder.into_inner().unwrap().finish().unwrap()
+}
+
+fn append_file(
+    tar_builder: &mut TarBuilder<GzEncoder<Vec<u8>>>,
+    path: &str,
+    contents: &[u8],
+    mode: u32,
+) {
+    let mut header = TarHeader::new_gnu();
+    header.set_mode(mode);
+    header.set_size(contents.len() as u64);
+    header.set_cksum();
+    tar_builder
+        .append_data(&mut header, path, contents)
+        .unwrap();
 }
 
 fn expected_pi() -> ExpectedPiCompatibility {
@@ -364,6 +420,13 @@ fn expected_pi() -> ExpectedPiCompatibility {
 
 fn prepare_existing_installation(deployment_root: &Path, version: &str) {
     fs::create_dir_all(deployment_root.join("versions").join(version).join("bin")).unwrap();
+    fs::create_dir_all(
+        deployment_root
+            .join("versions")
+            .join(version)
+            .join("extensions/pi-cognitiveos/dist"),
+    )
+    .unwrap();
     fs::create_dir_all(deployment_root.join("staged")).unwrap();
     fs::create_dir_all(deployment_root.join("user-data")).unwrap();
     fs::write(
@@ -372,6 +435,22 @@ fn prepare_existing_installation(deployment_root: &Path, version: &str) {
             .join(version)
             .join("bin/kernel-server"),
         b"previous-kernel-server",
+    )
+    .unwrap();
+    fs::write(
+        deployment_root
+            .join("versions")
+            .join(version)
+            .join("bin/cognitive"),
+        b"previous-cognitive",
+    )
+    .unwrap();
+    fs::write(
+        deployment_root
+            .join("versions")
+            .join(version)
+            .join("extensions/pi-cognitiveos/dist/index.js"),
+        b"previous-extension",
     )
     .unwrap();
     fs::write(
