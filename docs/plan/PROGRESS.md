@@ -1,8 +1,26 @@
 # PROGRESS — 单页进度仪表
 
+## Current snapshot (2026-07-30)
+
+This section is the authoritative current view. Entries below `Historical
+evidence journal` preserve execution-time facts and cannot override it.
+
+| Area | Current status | Evidence boundary | Next actionable step |
+|---|---|---|---|
+| P1-T09 route implementation | `in-progress` | `experimental-local-only`; `tested-local`; Pi launch admission and focused tests | add deterministic binary Provider fixture, then real pinned Pi Extension load |
+| B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
+| GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
+| Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
+| Active task lease | Lane-DOC governance correction | `apps/kernel-server/src/personal/server.rs` remains user-owned and excluded | close governance docs, then claim a task-correct P1-T09 lease |
+
+The P1-T09 implementation evidence is real but incomplete. The current status is
+therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
+
+## Historical evidence journal
+
 > **Fail-closed Pi launch preparation slice (2026-07-30):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
-> remains `not-started`. `cognitive pi launch` now admits only a daemon-owned,
+> remains `not-run` while task P1-T09 is `in-progress`. `cognitive pi launch` now admits only a daemon-owned,
 > numeric loopback endpoint document and an authenticated ready Personal doctor
 > projection before it reads the fixed non-secret `pi.json`. It requires all
 > first-conversation components (including native SecretStore, Provider and
@@ -20,7 +38,7 @@
 
 > **Non-secret Pi configuration slice (2026-07-30):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
-> remains `not-started`. Trusted public upstream source at the reviewed Pi
+> remains `not-run` while task P1-T09 is `in-progress`. Trusted public upstream source at the reviewed Pi
 > `0.81.1` commit confirms `--extension` / `-e <path>` as the exact Extension
 > loading option. The Personal CLI now offers `cognitive pi configure`, which
 > atomically writes only the existing non-secret `pi.json` fields after
@@ -36,7 +54,7 @@
 
 > **Readiness truth and installed XDG launch slice (2026-07-29):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
-> remains `not-started`. A Provider component now becomes `ready` only when
+> remains `not-run` while task P1-T09 is `in-progress`. A Provider component now becomes `ready` only when
 > its non-secret `provider.json` snapshot digest has a matching valid,
 > chat-capable `selected-model.json`; missing, malformed, or digest-mismatched
 > selected-model state blocks both aggregate and first-conversation readiness
@@ -55,7 +73,7 @@
 
 > **Provider discovery and selected-model prerequisite (2026-07-29):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`
-> remains `not-started`. A new shared `cognitive-provider-transport` adapter
+> remains `not-run` while task P1-T09 is `in-progress`. A new shared `cognitive-provider-transport` adapter
 > now owns the bounded Rustls-only Provider egress boundary used by both the
 > daemon proxy (through its compatibility re-export) and `cognitive init`.
 > The adapter preserves HTTPS-only URLs, no redirects, URL-user-info and

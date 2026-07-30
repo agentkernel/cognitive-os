@@ -4,10 +4,11 @@
 > **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
 > **研究与审计日期：2026-07-24。**
 > **审计基线：`origin/main@9b53cf4c6c2b744a60283c3ea1431a9d1090aafd`。**
-> **最后对齐：2026-07-26（一致性评审批）。** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
+> **2026-07-26 一致性评审批：** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
 > **生产就绪与低摩擦授权批（2026-07-26）：** 新增 DEC-P-20 授权交互模型并落地 [ADR-0026](docs/adr/0026-personal-trust-profile-low-friction-authorization.md)（Tier 0/1/2 分层、准入预览为唯一默认授权点、预算硬轨、不建审批链）；P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02 卡增补对应验收 bullet；§14 增 Approval Interactions/Task 指标；§16 R-22 与 §17 企业审批行改引 ADR-0026。
 > **P2 卡扩写批（2026-07-26）：** 依 §11.1 状态纪律，将 P2-T01..P2-T08 压缩卡预先扩写为完整强制字段集：仅补足字段、仓库锚点与既有决策引用（ADR-0026/0018、§12.1/§12.2、§13/§14/§15）；任务范围、依赖、验收语义与 §12 依赖图均不变。documentation-only；本批 §15.2 命令因环境阻断未执行（记 not-run，见当日 handoff），不改变任何任务状态、Gate、证据或 Profile 结论。
 > **MVP-first 对齐（2026-07-29，ADR-0034）：** 保留现有任务 ID，首个生产安装路径改为 single canonical user service/48181；新增 P7-T08 / `GMVP-LINUX`。P7-T01..T03 前移为受治理 Task MVP 后的 Linux 发布可运维链；P3/P4/P5、Windows、Web UI 与 Multi-Agent 不阻塞 scoped Linux MVP。Multi-Agent 改为独立 go/no-go，NO-GO 且默认关闭是合法结果。§2.1 仍是 2026-07-24 审计快照，不用于覆盖正式台账当前状态。
+> **开发治理对齐（2026-07-30）：** task status、implementation evidence、Gate 和 claim scope 正交记账；P1-T09 当前为 `in-progress` / `tested-local`，B01 仍 `not-run`。Gate/阶段依赖不再作为 isolated implementation mutex；B01 的 attempt、阈值、零容忍失败与 cleanup 边界已明确。工具无关规则见 [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
 > **本草案不包含生产代码、规范或数据库 Schema 变更。**
 > **落盘说明：** 正式计划与进度台账已保存于 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`；本文件保留研究结论、详细任务卡和原始审计材料。
 
@@ -441,6 +442,8 @@ Pi 不可以：
 
 # 10. 阶段路线图和门禁
 
+> **依赖解释（2026-07-30）：** Entry / Exit / “禁止提前开发”约束产品集成、任务 `done`、promotion 和声明范围，不是 isolated implementation mutex。满足 `implementation_requires` 的工作可在 `experimental-local-only` 先行；acceptance/promotion requirements 仍须在相应 Gate 前真实满足。后续任务依赖应写为 `implementation_requires`、`acceptance_requires`、`promotion_requires`，不得再用一个“依赖”字段阻断所有开发。
+
 | Phase | Entry | Exit | Blocking tests/evidence | Rollback point | 禁止提前开发 |
 |---|---|---|---|---|---|
 | 0 基线 | 当前计划批准 | toolchain、ADR、platform、Secret/Pi PoC、benchmark spec 完成 | CI、Linux runner、PoC reports、plan consistency | `main@9b53cf4` | 功能实现、Memory/Multi-Agent/UI |
@@ -469,7 +472,7 @@ Pi 不可以：
 
 每张卡以下均覆盖强制字段：目标/价值、证据/研究、依赖/不包含、文件、数据/API/配置/迁移、步骤、验收/测试/基准/性能、安全/可观测、回滚/文档/解锁、风险/不确定项。
 
-状态纪律（2026-07-26 修订）：任务卡不承载正式状态行；正式状态、完成日期与证据一律记录在 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 台账。卡内如出现"状态"字样仅为指向台账的指针。P2 及以后的压缩卡在被认领开工时必须先扩写为完整强制字段集，再开始实现。
+状态纪律（2026-07-30 修订）：任务卡不承载正式状态行；正式 task status、implementation evidence、Gate status、完成日期与证据一律记录在 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 台账。`not-started` 表示尚无任务专属工作；首个设计/实现/测试批开始即改为 `in-progress`。P2 及以后压缩卡须在首个 atomic delivery 内补齐本批实际需要的强制字段，不再把“先完整扩写整张卡”作为实现前置锁。
 
 ---
 
@@ -677,13 +680,14 @@ Pi 不可以：
   必须 fail-closed，不能把 fake/WSL/CI 结果写成真实 systemd 或 release 证据。
 - **解锁：** P1-T09；为 P7-T01/P7-T02 提供安装器输入。
 
-### P1-T09 — B01 首次安装到首次对话 Gate
+### P1-T09 — 首次安装到首次对话 route 与 B01 campaign
 
-- **目标：** 干净 Linux VM 完成安装、init、DeepSeek、daemon、Pi、首个响应。
-- **文件：** 新增 `tests/e2e/personal/b01-*` 和 evidence schema/runner。
-- **验收：** 连续至少 20 次 clean-run；建议成功率 ≥90%，95% CI 同时报告；TTFC 建议 p95 ≤10 min（含人工 Key 输入但不含下载网络异常）；除 API Key 与模型选择外无必选交互步骤（ADR-0026）。
-- **失败条件：** Key 泄漏、工具未禁用、daemon synthetic ready、模型仅凭 `/models`、无法卸载临时安装。
-- **证据：** logs、timestamps、versions、snapshot digests，绝不含 Key。
+- **目标：** 分阶段完成 route implementation、deterministic binary fixture、development smoke、usability learning 和 formal B01；只有最后一项决定 B01 Gate。
+- **依赖：** `implementation_requires`: P1-T08 及现有 Secret/Provider/daemon/Pi contracts；`acceptance_requires`: 当前 route 的真实 pinned Pi Extension load、真实首个响应、native Secret Service smoke 与可复现 runner；`promotion_requires`: formal B01 pass。
+- **文件：** route/fixture 使用现有内部 seam；formal campaign 新增 `tests/e2e/personal/b01-*` 和 evidence schema/runner。公共 DTO/schema/error/transition/vector 缺口走 Lane-CTR。
+- **验收：** 预注册 `N >= 20` 个独立 clean Linux VM attempts；每个已启动 attempt 均计入，retry 是新 attempt 且不得抹去失败；首个有效响应成功率 ≥90%，报告全部结果、median/p95 TTFC 与 binomial 95% CI；Key 泄漏、direct mutating-tool bypass、synthetic readiness acceptance、丢弃/漏报 attempt 均须为 0；除 API Key 与模型选择外无必选交互（ADR-0026）。TTFC p95 ≤10 min 在 owner 明确升级前保持 advisory。
+- **失败条件：** Key 泄漏、工具未禁用、daemon synthetic ready、模型仅凭 `/models`、漏报 attempt 或 test-root cleanup 失败。B01 只要求 disposable VM/owned test root cleanup；产品 uninstall 归 P7-T02，不构成 B01 循环依赖。
+- **证据：** logs、timestamps、versions、snapshot digests 和全部 attempt outcome，绝不含 Key。fixture/WSL/dev smoke 只推进 implementation evidence，不推进 B01。
 - **解锁：** Phase 2。
 
 ---
@@ -695,7 +699,7 @@ Pi 不可以：
 - **优先级/目标/价值：** P2 首任务；把 L3/L4 意图链内核暴露为 L5 产品应用服务：proposal/clarify/preview/admit/control/query 六个操作面构成任务生命周期的唯一产品入口（§6 Task 行差距）。
 - **状态：** 以正式台账为准。
 - **证据/研究：** `crates/cognitive-kernel/src/intent_chain.rs` 已提供 `record_user_intent`、`record_interpretation_candidate`、`admit_interpretation`、`mint_task_contract`、`verify_task_binding_current`、`supersede_task_contract` 与 `GovernanceSeed`/`AcceptanceCommand`/`TaskContractCommand`；`cognitive-store` 已有 `user_intent_records`/`intent_interpretations`/`task_contracts`/`budgets`/`fencing` 表。缺口仅在应用服务与产品 ports（§6：无应用服务、API、queue）。
-- **依赖：** P1-T09（正式验收口径）；experimental-local-only 轨道可先行实现（台账解耦注记）。
+- **依赖：** `implementation_requires`: 既有 authority/store/Intent/TaskContract contracts；`acceptance_requires`: P1-T09 route implementation 可集成；`promotion_requires`: B01 pass。`experimental-local-only` 可先行实现，不得把 B01 当作代码开工锁。
 - **不包含：** scheduler（P2-T03）、HTTP/API 路由（P2-T02）、Memory、多 Agent；不得新增平行 Task 类型或第二状态机（DEC-P-07）。
 - **文件：** 修改 `crates/cognitive-management`（task application service 模块与 ports）与 `crates/cognitive-runtime`（组合根接线）；复用 `intent_chain.rs`、TaskContract、budgets，不复制内核逻辑；新增 `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`（先写失败测试）；无删除文件。
 - **数据/API/配置/迁移：** 不新增 SQLite 表；若实测需要投影辅助结构，必须经 P1-T01 迁移框架并单独评审。服务操作：proposal（raw intent 持久化）、clarify（`AmbiguityFact`/`InterpretationCandidate`）、preview（TaskContract 摘要 + preview digest）、admit（`AcceptanceCommand` 绑定 digest）、control（supersede/cancel 请求）、query（只读投影）。
@@ -1318,20 +1322,17 @@ full_rc_critical_path:
 9. **Performance campaign**：固定环境、重复次数、CI非阻塞趋势和release blocking threshold分离；
 10. **Wrong-implementation self-check**：每个关键 gate 至少一个故意错误实现必须 fail。
 
-## 15.2 每次任务最低命令
+## 15.2 影响面验证矩阵
 
-```text
-cargo fmt --all -- --check
-cargo test -p <affected-package>
-cargo clippy -p <affected-package> --all-targets -- -D warnings
-pnpm -r build
-pnpm -r test
-pnpm run check:consistency
-node tools/src/gen-matrix.mjs --check
-git diff --check
-```
+每批先声明 impact class，不再要求无关生态的全量命令作为 commit 前置：
 
-根据影响面追加 workspace、conformance、security、fault、E2E。
+- **Rust implementation-only:** affected Rust tests、focused integration/security negatives、affected Clippy、`cargo fmt --all -- --check`、`git diff --check`；
+- **TS implementation-only:** affected package build/test/lint、`git diff --check`；
+- **contract-affecting:** consistency、matrix、codegen、golden、conformance 与受影响双端测试；
+- **cross-cutting/release:** 在受支持本地环境运行 full workspace；所有 code PR 在 merge 前仍须 protected CI 全绿；
+- **docs-only governance/corrective:** Markdown links/consistency、`git diff --check` 与针对性状态核对。
+
+提交前执行受影响检查；push 前执行可用的相关广域检查；merge/任务完成前执行 required CI。不可用或明确无影响的检查记录为 `not-run`/`not-affected` 及理由，不得虚报通过。根据实际影响追加 workspace、conformance、security、fault、E2E。
 
 ---
 

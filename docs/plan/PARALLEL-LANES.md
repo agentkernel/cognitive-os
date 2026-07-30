@@ -1,6 +1,6 @@
 # PARALLEL-LANES — 并行车道机制（面向 Cursor Multitask）
 
-- 状态：v1.0（M0 产出）；类别 plan
+- 状态：v1.1（active ownership lease model）；类别 plan
 - 更新责任：车道启动/交还/换分支时必更所有权表；接口冻结状态变化时必更 §3
 
 ## 1. 车道划分
@@ -30,13 +30,13 @@ flowchart LR
 
 ## 2. 并行规则（违反 = PR 拒收）
 
-1. **一个车道 = 一个 git 分支（`lane/<名>`，建议配 `git worktree`）= 一个 Cursor Multitask 代理会话**。会话开工先对照本表认领；一个会话不得同时跨两条车道。
+1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
-3. **两个车道禁止同时修改同一 crate/package**（所有权表 §3 为准）；共享文件（PROGRESS、findings-ledger）冲突时后合并者负责 rebase 合并。
+3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。merged/abandoned/stale lease 自动成为历史，不再阻断新任务。共享文件由后合并者负责整合当前快照。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
-5. 一律经 PR + CI 门禁合并（两 OS 全绿 + DoD 清单）；禁止直接推 main。
+5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
 6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
-7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`（见 `.cursor/rules/19-personal-blog-boundary.mdc`）。
+7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`。
 
 ### 2.1 Lane-CON 激活前文档例外
 
@@ -46,7 +46,18 @@ flowchart LR
 
 该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
-## 3. 所有权表（当前）
+## 3. 活动 ownership leases（当前）
+
+| Task | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
+|---|---|---|---|---|---|---|
+| Personal governance operating-model correction | Lane-DOC | `lane/personal-p1-t08-mvp-single-service` | `AGENTS.md`, `plan.md`, `docs/README.md`, `docs/governance/**`, `docs/plan/**`, `docs/traceability/findings-ledger.md`, `docs/standards/docs-sync-contract.md`, `docs/adr/0008-*`, current governance handoff | current governance session | 2026-07-30 / 2026-07-30 | active; documentation-only |
+| P1-T09 implementation continuation | Lane-RUN | next task-correct `lane/personal-p1-t09-*` branch | must be declared when claimed; existing user-dirty `apps/kernel-server/src/personal/server.rs` excluded until owner releases it | unclaimed | — | available after governance closure |
+
+Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
+
+## 3.1 Historical ownership snapshot
+
+The table below is retained as historical coordination context. Its branches and status text do not grant an active lease and cannot block new work without a current §3 lease.
 
 | crate / package / 目录 | 车道 | 当前分支 | 当前会话/状态 |
 |---|---|---|---|

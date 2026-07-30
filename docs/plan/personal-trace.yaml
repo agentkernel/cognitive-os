@@ -1,4 +1,4 @@
-version: "0.1"
+version: "0.2"
 status: planning
 classification: documentation-only
 
@@ -13,7 +13,33 @@ sources:
 rules:
   direct_registry_requirements: exact registered REQ IDs only
   product_only: no direct registry requirement is claimed
-  evidence_status: not-run does not inherit conformance or Profile status
+  evidence_status: legacy requirement-level field; represents formal gate evidence only and does not erase task or implementation progress
+  task_status: not-started means no task-specific work has begun; first task slice changes it to in-progress
+  claim_boundary: local, fixture, WSL, and ordinary CI evidence cannot promote product Gate, release, or Profile status
+
+status_dimensions:
+  task_status: [not-started, in-progress, blocked, done, cancelled]
+  development_track: [production-path, experimental-local-only]
+  implementation_evidence: [none, provided, tested-local, tested-supported-ci]
+  gate_status: [not-run, running, pass, fail, blocked]
+  claim_scope: [non-claim, product-gate, release, profile]
+
+current_snapshot:
+  as_of: "2026-07-30"
+  tasks:
+    P1-T09:
+      task_status: in-progress
+      development_track: experimental-local-only
+      implementation_evidence: tested-local
+      claim_scope: non-claim
+      evidence_refs:
+        - docs/checkpoints/20260730-personal-p1-t09-pi-launch-handoff.md
+  gates:
+    B01: { gate_status: not-run, claim_scope: non-claim }
+    GMVP-LINUX: { gate_status: not-run, claim_scope: non-claim }
+  profile:
+    implemented_count: 0
+    claim_scope: non-claim
 
 gate_catalog:
   G0: { phase: P0, benchmarks: [] }

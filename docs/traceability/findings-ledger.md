@@ -1,10 +1,10 @@
 # Findings 台账：F-001~F-030 与 IMP-01~18 逐条现状
 
 - 状态：M0 首次逐条核验（2026-07-20，基于 `CognitiveOS-Review-Conclusions.md` v2.0 §6.4 处置记录 + 对 v1.0.1 机器资产的抽查复验）
-- 用途：**M1 入口 gate 的依据**。开放 P0 未闭合前，对应子系统不得进入实现里程碑（AGENTS.md 硬纪律 6）。
+- 用途：风险与证据 Gate 的依据。开放 P0 只阻断明确列出的 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` 的验收和推广，不阻断调查、failure-first 测试或修复实现；既有条目在下次触碰前以“阻断”列作为 legacy scope。
 - 状态取值：`closed-by-1.0.1`（1.0.1 静态反例复验关闭）/ `partially-closed`（部分收敛，余项列明）/ `open`（未闭合，阻断标注的里程碑）/ `framework`（判定框架级/非可修缺陷，以证据推进消解，不阻断单项合同）。
 - 独立审查针对白皮书 v1.0.0（commit `f2f826a`）；1.0.1（commit `4e02bbf`）为其后的修复轮。里程碑编号以 `docs/plan/DEVELOPMENT-PLAN.md` 为准。
-- 更新义务：触碰任一条目的 PR 必须同步本台账（`.cursor/rules/02-workflow-docs-sync.mdc`）。
+- 更新义务：触碰任一条目的 PR 必须同步本台账并显式补齐阻断范围；工具无关规则见 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)。
 
 ## 一、独立审查 F-001~F-030
 

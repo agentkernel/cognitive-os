@@ -7,9 +7,11 @@ informative / implementation-private / historical），并为仓库工作文档�
 本地类别：**plan / adr / checkpoint / prompt**（均属 informative 派生类，不产生
 规范要求）。
 
-四类状态用语（规范已登记 / 实现已提供 / 测试已执行 / Profile 已符合）定义见
-[conformance/README.md](../conformance/README.md) 与根 [README.md](../README.md)；
-所有文档引用状态时必须使用这四个用语之一。
+规范资产状态用语（规范已登记 / 实现已提供 / 测试已执行 / Profile 已符合）定义见
+[conformance/README.md](../conformance/README.md) 与根 [README.md](../README.md)。
+Personal 任务的 task/evidence/Gate/claim 正交状态以
+[Development Operating Model](governance/DEVELOPMENT-OPERATING-MODEL.md) 为准；
+文档不得用单一状态覆盖这些维度。
 
 ## 根目录
 
@@ -21,13 +23,14 @@ informative / implementation-private / historical），并为仓库工作文档�
 | [CognitiveOS-Architecture-Independent-Review.md](../CognitiveOS-Architecture-Independent-Review.md) | informative（独立审查 F-001~F-030） | 冻结；现状核验写 findings-ledger |
 | [README.md](../README.md) | informative（四区导航） | 结构变化时同批更新 |
 | [AGENTS.md](../AGENTS.md) | informative（代理入口/DoD/会话协议） | 流程变更时更新 |
+| [DEVELOPMENT-OPERATING-MODEL.md](governance/DEVELOPMENT-OPERATING-MODEL.md) | governance（工具无关开发/evidence/Gate/lease 规则） | 治理变更时更新 |
 
 ## specs/ 与 conformance/
 
 | 资产 | 类别 | 更新责任 |
 |---|---|---|
 | `specs/registry/*.yaml` | normative-machine | 仅修正型变更（冻结期）；同批过 tools 检查 |
-| `specs/schemas/*.json` | normative-machine | 同上；遵循 `.cursor/rules/12-schemas-protocol.mdc` |
+| `specs/schemas/*.json` | normative-machine | 同上；遵循 tracked normative standards；`.cursor/rules/` 如存在仅为编辑器适配层 |
 | `specs/transitions/*.json` | normative-machine（可执行迁移表） | 同上 |
 | `specs/*/README.md`（11 份 companion） | normative-behavior | 契约变更联动 |
 | `conformance/README.md` | normative-behavior（测试层与状态用语） | Lane-CFR |
@@ -114,7 +117,7 @@ informative / implementation-private / historical），并为仓库工作文档�
 ## docs/checkpoints/（checkpoint 类）
 
 命名 `YYYYMMDD-<车道或里程碑>-handoff.md` / `YYYYMMDD-<里程碑>-milestone-review.md`；
-模板见 [checkpoints/TEMPLATE.md](checkpoints/TEMPLATE.md)。交接文档是跨会话唯一记忆载体。
+模板见 [checkpoints/TEMPLATE.md](checkpoints/TEMPLATE.md)。handoff 承载跨会话操作连续性，但正式任务台账、PROGRESS current snapshot 与 Gate ledger 优先，历史 handoff 不得覆盖当前状态。
 
 ## docs/prompts/（prompt 类）
 
