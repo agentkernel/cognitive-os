@@ -124,7 +124,7 @@ jobs:
 
           const [outputDirectory, campaignVersion] = process.argv.slice(2);
           const bootstrap = fs.readFileSync(path.join(outputDirectory, "install.sh"), "utf8");
-          const keyMatch = bootstrap.match(/^PUBLIC_KEY_BASE64URL="([A-Za-z0-9_-]{43})"$/m);
+          const keyMatch = bootstrap.match(/^TRUSTED_PUBLIC_KEY_BASE64URL="([A-Za-z0-9_-]{43})"$/m);
           if (!keyMatch) throw new Error("rendered bootstrap lacks a valid public key");
           fs.writeFileSync(
             path.join(outputDirectory, "offline-install-facts.json"),
