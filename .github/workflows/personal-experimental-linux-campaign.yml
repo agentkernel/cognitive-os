@@ -61,9 +61,7 @@ jobs:
   build-signed-campaign:
     name: Build signed experimental Linux campaign
     needs: validate-reviewed-inputs
-    # The qualified experimental Linux host uses glibc 2.35. Pin the payload
-    # build baseline so its daemon, CLI, and installer remain executable there.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment:
       name: personal-linux-experimental-campaign
     defaults:
@@ -87,6 +85,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Set up Zig for the qualified Linux ABI
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.0
+
       - name: Validate non-secret campaign input
         env:
           CAMPAIGN_VERSION: ${{ inputs.campaign_version }}
@@ -102,13 +105,23 @@ jobs:
           set -euo pipefail
           pnpm install --frozen-lockfile
 
-      - name: Build immutable Linux payload tools
+      - name: Build a glibc-2.35-compatible Linux payload
         run: |
           set -euo pipefail
-          cargo build --release --locked -p kernel-server --bin kernel-server
-          cargo build --release --locked -p admin-cli --bin cognitive
-          cargo build --release --locked -p cognitive-runtime --bin linux_bundle_installer
-          cargo build --release --locked -p cognitive-runtime --bin linux_bundle_campaign_builder
+          cargo install cargo-zigbuild --version 0.23.0 --locked
+          cargo zigbuild --release --locked --target x86_64-unknown-linux-gnu.2.35 -p kernel-server --bin kernel-server
+          cargo zigbuild --release --locked --target x86_64-unknown-linux-gnu.2.35 -p admin-cli --bin cognitive
+          cargo zigbuild --release --locked --target x86_64-unknown-linux-gnu.2.35 -p cognitive-runtime --bin linux_bundle_installer
+          cargo zigbuild --release --locked --target x86_64-unknown-linux-gnu.2.35 -p cognitive-runtime --bin linux_bundle_campaign_builder
+
+          payload_directory="target/x86_64-unknown-linux-gnu/release"
+          for payload_binary in kernel-server cognitive linux_bundle_installer linux_bundle_campaign_builder; do
+            test -x "$payload_directory/$payload_binary"
+            if readelf --version-info "$payload_directory/$payload_binary" | grep -Eq 'GLIBC_2\.(3[6-9]|[4-9][0-9])'; then
+              echo "$payload_binary requires a glibc version newer than 2.35" >&2
+              exit 1
+            fi
+          done
 
       - name: Build the reviewed Pi Extension distribution
         run: |
@@ -135,11 +148,11 @@ jobs:
 
           output_directory="artifacts/experimental-campaign/$CAMPAIGN_VERSION"
           mkdir -p "$(dirname "$output_directory")"
-          target/release/linux_bundle_campaign_builder \
-            --kernel-server-binary "$(pwd)/target/release/kernel-server" \
-            --cognitive-cli-binary "$(pwd)/target/release/cognitive" \
+          target/x86_64-unknown-linux-gnu/release/linux_bundle_campaign_builder \
+            --kernel-server-binary "$(pwd)/target/x86_64-unknown-linux-gnu/release/kernel-server" \
+            --cognitive-cli-binary "$(pwd)/target/x86_64-unknown-linux-gnu/release/cognitive" \
             --pi-extension-dist-directory "$(pwd)/packages/pi-cognitiveos/dist" \
-            --installer-binary "$(pwd)/target/release/linux_bundle_installer" \
+            --installer-binary "$(pwd)/target/x86_64-unknown-linux-gnu/release/linux_bundle_installer" \
             --campaign-signing-seed-file "$signing_seed_file" \
             --output-directory "$(pwd)/$output_directory" \
             --release-version "$CAMPAIGN_VERSION" \
