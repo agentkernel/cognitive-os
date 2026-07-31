@@ -111,28 +111,30 @@ evidence.
 
 ## Next executable action
 
-The current implementation-only slice inspected the exact Pi `0.81.1`
-declarations and provider composer on the qualified experimental host. It
-confirms that provider-model definitions are composed into runtime models with
-a `baseUrl`, and that `setModel` receives the runtime model rather than the
-provider-only definition. The Extension had omitted that loopback-only URL
-from its selected model. A focused regression first failed at the missing
-runtime field; the repair and package build/test now pass locally. The custom
-stream selection remains `model.api === extension.api`; the non-secret marker
-remains an availability value rather than a credential, and all completion
-traffic remains on the daemon-owned bounded bridge. The repair is uncommitted
-and has not been sent to a protected campaign. Review, commit, push, merge to
-`main`, then repeat the protected campaign, independent verification/install,
-and redacted route. Do not treat the experimental-host route as B01, release,
-GMVP-LINUX, or Profile evidence.
+Campaign `.4` now closes the P1-T09 provider-route blocker at the implementation
+level. The exact Pi `0.81.1` runtime-model repair was merged as
+`main@c044f2f`; its protected workflow `30603971105` passed validation and
+signing/upload. The campaign artifact and a SHA-256-fixed source bundle were
+copied to the qualified host. The host passed `git fsck`, checked out the exact
+commit, built the locked verifier, and independently accepted the campaign
+signature, key and expected Pi pin. The host's direct GitHub bootstrap download
+failed closed; no bootstrap install occurred. The independently verified local
+installer initially encountered the documented stale lock. After stopping the
+unit and confirming no `kernel-server` process, the stale lock was removed and
+the same installer retry succeeded. Exact Pi, installed CLI/Extension and user
+service prerequisites passed. The bounded redacted route observed the expected
+first response in 4267 ms with `authority_side_effects:false`; no Provider,
+secret, request/response, SQLite or authority material was emitted. This is
+`experimental-local-only` / `tested-local` implementation evidence only. It
+does not run or pass B01, GMVP-LINUX, release, or Profile.
 
 ## Current blocker record
 
-- `blocked_paths`: installed Pi first-response route; B01 campaign design paths
-  require a separate lease.
+- `blocked_paths`: clean-Linux B01 campaign design and runner paths require a
+  separate lease.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
-- Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: review, commit, push, and merge the focused runtime-model
-  routing repair; dispatch only from `main`, then independently
-  verify/install/rerun the route before B01 preregistration.
+- Owner: next P1-T09 B01-preregistration lease holder.
+- Next action: claim a non-overlapping P1-T09 lease and pre-register the
+  separate clean-Linux B01 campaign; do not reuse this experimental host result
+  as B01 evidence.

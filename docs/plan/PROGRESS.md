@@ -13,50 +13,39 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; signed campaign `.3` (`30595882821`) from `main@7bf69f3` was independently verified on the qualified host from a SHA-256-fixed source bundle and installed after documented stale-lock recovery. The former 90-second route timeout was caused by the runner passing an open non-TTY stdin to Pi. Closing stdin lets Pi enter the agent lifecycle, but the installed `.3` extension now exits nonzero after 2.9 seconds with redacted response output and no expected marker or authority side effect. B01, GMVP-LINUX, release, and Profile remain non-claim | correct and regression-test the pinned Pi provider contract, then build, verify, install, and rerun a protected campaign |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. This is implementation evidence only: B01, GMVP-LINUX, release, and Profile remain non-claim | pre-register the separate clean-Linux B01 campaign environment and runner |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/route-probe-reconciliation` | scoped to correcting the doctor-contract/explicit-provider runner defects and the pinned Extension daemon-model activation defect; `30591622368` cannot sign from this branch because the Environment permits only `main`; B01 paths remain unleased | merge the reviewed branch to `main`, then dispatch and independently verify the corrected signed campaign |
+| Active task lease | `none` | the route-probe-reconciliation lease is closed after campaign `.4` independent verification, installation, and redacted expected response; B01 paths remain unleased | claim a separate B01 preregistration slice before altering B01 paths |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
 
-The current implementation-only provider-contract slice inspected the exact
-installed Pi `0.81.1` declarations and composer on the qualified experimental
-host. Pi composes provider-model definitions into a runtime model with a
-required `baseUrl`, then receives the selected runtime model through
-`setModel`. The Extension previously passed provider-only metadata without
-that URL to `setModel`; the source-level focused regression failed first at the
-missing field and now passes after the loopback-only URL is included. The
-custom stream condition remains `model.api === extension.api`; the fixed
-non-secret availability marker is still not a credential, and the bridge still
-uses only the daemon-owned bounded completion path. This is local package-test
-evidence only. It is not installed-host first-response, B01, GMVP-LINUX,
-release, or Profile evidence. The fix is uncommitted and has not been sent to a
-protected campaign: `blocked_paths`: installed Pi first-response route;
+The implementation-only provider-contract slice inspected the exact installed
+Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
+composes provider-model definitions into a runtime model with a required
+`baseUrl`, then receives the selected runtime model through `setModel`. The
+Extension previously passed provider-only metadata without that loopback URL;
+the focused regression failed first and passed after the repair. Campaign `.4`
+from `main@c044f2f` passed its protected workflow, was independently verified
+from a SHA-256-fixed source bundle after `git fsck` and exact checkout, and was
+installed after documented stale-lock recovery. The bounded redacted route
+reported `status:ok`, expected reply observed, response received, 4267 ms, and
+`authority_side_effects:false`. It printed no Provider, SecretRef, SQLite,
+model, request, response, Task, Effect, Verification, capability, or authority
+material. This is `tested-local` implementation evidence only, not B01,
+GMVP-LINUX, release, or Profile evidence. The route-probe lease is closed;
+`blocked_paths`: clean-Linux B01 campaign design and runner paths;
 `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and
-Profile; owner: P1-T09 route-probe-reconciliation lease holder; next action:
-review, commit, push, merge, and dispatch from `main`, then independently
-verify/install and run one bounded redacted route probe.
+Profile; owner: next B01 preregistration lease holder; next action: claim a
+separate lease and pre-register the formal B01 campaign.
 
-The verified installer activated campaign `.3`; its user service is active.
-The redacted doctor projection reports native SecretStore and first-conversation
-readiness. The original 90-second route timeout was a runner defect: Pi blocks
-on an inherited non-TTY stdin before starting its prompt lifecycle. The runner
-now binds Pi stdin to `/dev/null`, which reaches the agent lifecycle. The
-installed `.3` extension still exits nonzero in 2.9 seconds, producing only
-redacted output and no expected marker. It printed no Provider, SecretRef,
-SQLite, model, response, or authority material; no Task, Effect, Verification,
-capability, or authority side effect was created. The remaining P1-T09 work is
-a pinned Pi provider-contract correction with a focused regression, then
-campaign build, independent verification, installation, and route rerun,
-followed only then by B01 runner preregistration and campaign evidence:
-`blocked_paths`: installed Pi first-response route;
-`blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and
-Profile; owner: P1-T09 route-probe-reconciliation lease holder; next action:
-correct the exact pinned Pi provider contract without logging or exposing
-Provider material.
+Campaign `.3`'s prior 2.9-second redacted nonzero route result is superseded
+as the current route fact by the independently verified and installed `.4`
+result above. The former 90-second timeout remains attributed to inherited
+non-TTY stdin, with the runner binding Pi stdin to `/dev/null`; the missing
+runtime-model loopback `baseUrl` was the subsequent provider-contract repair.
 The current atomic slice adds a reusable Linux-native Pi observation probe. It
 first imports the built ESM module, then passes a session-local wrapper through
 the exact Pi's explicit `--extension <absolute-path>` flag. The wrapper only
