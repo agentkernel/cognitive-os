@@ -111,10 +111,20 @@ evidence.
 
 ## Next executable action
 
-Correct the exact Pi `0.81.1` provider contract, add a focused regression for
-the evidenced pre-dispatch boundary, then repeat the protected
-campaign, independent verification/install, and redacted route. Do not treat
-the experimental-host route as B01, release, GMVP-LINUX, or Profile evidence.
+The current implementation-only slice inspected the exact Pi `0.81.1`
+declarations and provider composer on the qualified experimental host. It
+confirms that provider-model definitions are composed into runtime models with
+a `baseUrl`, and that `setModel` receives the runtime model rather than the
+provider-only definition. The Extension had omitted that loopback-only URL
+from its selected model. A focused regression first failed at the missing
+runtime field; the repair and package build/test now pass locally. The custom
+stream selection remains `model.api === extension.api`; the non-secret marker
+remains an availability value rather than a credential, and all completion
+traffic remains on the daemon-owned bounded bridge. The repair is uncommitted
+and has not been sent to a protected campaign. Review, commit, push, merge to
+`main`, then repeat the protected campaign, independent verification/install,
+and redacted route. Do not treat the experimental-host route as B01, release,
+GMVP-LINUX, or Profile evidence.
 
 ## Current blocker record
 
@@ -123,6 +133,6 @@ the experimental-host route as B01, release, GMVP-LINUX, or Profile evidence.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
 - Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: identify the exact Pi 0.81.1 provider-contract failure, add
-  focused regression coverage, then dispatch a protected campaign and
-  independently verify/install/rerun the route before B01 preregistration.
+- Next action: review, commit, push, and merge the focused runtime-model
+  routing repair; dispatch only from `main`, then independently
+  verify/install/rerun the route before B01 preregistration.

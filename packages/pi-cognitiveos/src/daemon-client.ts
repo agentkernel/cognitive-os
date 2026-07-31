@@ -100,6 +100,11 @@ export class PersonalDaemonClient {
     this.requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
   }
 
+  /** Read the daemon's validated loopback endpoint for Pi's in-memory model metadata. */
+  readLoopbackEndpoint(): string {
+    return readDaemonEndpoint(resolvePersonalDaemonPaths(this.environment), this.files);
+  }
+
   /**
    * Fetch the readiness projection. Throws `DaemonClientError` on every
    * failure path; there is no degraded-but-silent return.

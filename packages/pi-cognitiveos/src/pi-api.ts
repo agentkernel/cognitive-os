@@ -56,14 +56,18 @@ export interface ExtensionCommandSpec {
 }
 
 /**
- * The exact model shape consumed by the pinned complete-provider surface.
- * It intentionally carries no Provider endpoint, headers, or credentials.
+ * The runtime model accepted by the pinned `setModel` surface. Pi composes
+ * provider model definitions with their ProviderConfig base URL before use;
+ * the extension must hand that same complete routing metadata to `setModel`.
+ * The URL is loopback-only and the headers are intentionally absent so neither
+ * Provider credentials nor the daemon bearer enter Pi configuration.
  */
 export interface PiModel {
   readonly id: string;
   readonly name: string;
   readonly provider: string;
   readonly api: string;
+  readonly baseUrl: string;
   readonly reasoning: boolean;
   readonly input: readonly ["text"];
   readonly cost: {
@@ -140,14 +144,19 @@ export interface AssistantMessageEventStream extends AsyncIterable<PiAssistantMe
   result(): Promise<PiAssistantMessage>;
 }
 
-/** The complete custom-provider surface pinned from Pi 0.81.1. */
-export interface Provider {
-  readonly id: string;
+/** Provider configuration passed to Pi's queued extension registration API. */
+export interface ProviderConfig {
   readonly name: string;
-  readonly auth: PiProviderAuth;
-  getModels(): readonly PiModel[];
-  stream(model: PiModel, context: PiCompletionContext, options?: PiStreamOptions): AssistantMessageEventStream;
-  streamSimple(model: PiModel, context: PiCompletionContext, options?: PiStreamOptions): AssistantMessageEventStream;
+  readonly baseUrl: string;
+  /** Fixed availability marker, never a Provider credential or daemon bearer. */
+  readonly apiKey: string;
+  readonly api: "openai-completions";
+  readonly models: readonly PiModel[];
+  streamSimple(
+    model: PiModel,
+    context: PiCompletionContext,
+    options?: PiStreamOptions,
+  ): AssistantMessageEventStream;
 }
 
 /** The pinned Pi Extension registration surface. */
@@ -159,6 +168,6 @@ export interface ExtensionAPI {
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
   ): void;
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
-  registerProvider(provider: Provider): void;
+  registerProvider(providerName: string, config: ProviderConfig): void;
   setModel(model: PiModel): Promise<boolean>;
 }

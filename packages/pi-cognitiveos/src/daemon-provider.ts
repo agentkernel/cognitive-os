@@ -9,20 +9,23 @@ import type {
   PiModel,
   PiStreamOptions,
   PiTextContent,
-  Provider,
+  ProviderConfig,
 } from "./pi-api.js";
 
 const PROVIDER_ID = "cognitiveos";
-const PROVIDER_API = "cognitiveos-daemon";
+const PROVIDER_API = "openai-completions";
+const PI_AVAILABILITY_MARKER = "cognitiveos-local-daemon";
 
-/** Load one daemon-selected model and construct the complete Pi provider. */
-export async function createDaemonProvider(client: PersonalDaemonClient): Promise<Provider> {
+/** Load one daemon-selected model and configure Pi's custom stream transport. */
+export async function createDaemonProvider(client: PersonalDaemonClient): Promise<ProviderConfig> {
   const projection = await client.fetchSelectedModel();
+  const loopbackBaseUrl = `http://${client.readLoopbackEndpoint()}/provider/v1`;
   const model: PiModel = {
     id: projection.selectedModel,
     name: projection.selectedModel,
     provider: PROVIDER_ID,
     api: PROVIDER_API,
+    baseUrl: loopbackBaseUrl,
     reasoning: false,
     input: ["text"],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -30,17 +33,11 @@ export async function createDaemonProvider(client: PersonalDaemonClient): Promis
     maxTokens: 1_024,
   };
   return {
-    id: PROVIDER_ID,
     name: "CognitiveOS",
-    auth: {
-      apiKey: {
-        name: "CognitiveOS daemon session",
-        async check() { return { type: "api_key", source: "CognitiveOS daemon" }; },
-        async resolve() { return { auth: {}, source: "CognitiveOS daemon" }; },
-      },
-    },
-    getModels: () => [model],
-    stream: (requestedModel, context, options) => streamCompletion(client, requestedModel, context, options),
+    baseUrl: loopbackBaseUrl,
+    apiKey: PI_AVAILABILITY_MARKER,
+    api: PROVIDER_API,
+    models: [model],
     streamSimple: (requestedModel, context, options) => streamCompletion(client, requestedModel, context, options),
   };
 }

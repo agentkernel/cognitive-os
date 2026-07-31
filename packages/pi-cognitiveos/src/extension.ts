@@ -81,11 +81,11 @@ export async function registerCognitiveOsExtension(
   // Initial extension loading queues providers until Pi binds its session
   // context. The session_start hook activates this model after that binding.
   const daemonProvider = await createDaemonProvider(client);
-  daemonSelectedModel = daemonProvider.getModels()[0];
+  daemonSelectedModel = daemonProvider.models[0];
   if (daemonSelectedModel === undefined) {
     throw new Error("the daemon provider registered no selectable model");
   }
-  pi.registerProvider(daemonProvider);
+  pi.registerProvider(daemonSelectedModel.provider, daemonProvider);
 }
 
 export default registerCognitiveOsExtension;

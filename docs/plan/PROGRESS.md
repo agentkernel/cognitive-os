@@ -22,6 +22,24 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
 
+The current implementation-only provider-contract slice inspected the exact
+installed Pi `0.81.1` declarations and composer on the qualified experimental
+host. Pi composes provider-model definitions into a runtime model with a
+required `baseUrl`, then receives the selected runtime model through
+`setModel`. The Extension previously passed provider-only metadata without
+that URL to `setModel`; the source-level focused regression failed first at the
+missing field and now passes after the loopback-only URL is included. The
+custom stream condition remains `model.api === extension.api`; the fixed
+non-secret availability marker is still not a credential, and the bridge still
+uses only the daemon-owned bounded completion path. This is local package-test
+evidence only. It is not installed-host first-response, B01, GMVP-LINUX,
+release, or Profile evidence. The fix is uncommitted and has not been sent to a
+protected campaign: `blocked_paths`: installed Pi first-response route;
+`blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and
+Profile; owner: P1-T09 route-probe-reconciliation lease holder; next action:
+review, commit, push, merge, and dispatch from `main`, then independently
+verify/install and run one bounded redacted route probe.
+
 The verified installer activated campaign `.3`; its user service is active.
 The redacted doctor projection reports native SecretStore and first-conversation
 readiness. The original 90-second route timeout was a runner defect: Pi blocks
