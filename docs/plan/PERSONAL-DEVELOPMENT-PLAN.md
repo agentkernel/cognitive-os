@@ -177,10 +177,15 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > opt-in, reset, attempt accounting, redaction, and cleanup requirements are
 > fixed in [the preregistration record](../checkpoints/20260731-personal-p1-t09-b01-preregistration.md), but all execution fields are `not-run`.
 > The previously qualified experimental host and campaign `.4` are excluded.
-> B01, GMVP-LINUX, release, and Profile remain non-claims. The next action
-> requires owner allocation of a new clean Linux VM and designation of the B01
-> operator and independent verifier before a separate execution lease can be
-> claimed.
+> B01, GMVP-LINUX, release, and Profile remain non-claims. A separately leased
+> KVM Ubuntu 24.04/x86_64 guest now exists with a clean pre-install reset
+> snapshot, and Operator A / Verifier B are assigned. Its non-secret OS,
+> architecture, user-systemd, and clean-state checks passed. `gnome-keyring`
+> and `secret-tool` support a non-sensitive transient-session probe, but the
+> Product-compatible persistent default/login collection is absent. No B01
+> attempt has started. The next action is owner initialization of that
+> persistent native Secret Service collection without entering a Provider
+> credential; see [the clean-VM handoff](../checkpoints/20260731-personal-p1-t09-b01-clean-vm-handoff.md).
 
 > **P1-T09 product-route bounded blocker (2026-07-30; corrective evidence,
 > normative surface unchanged):** The experimental host retains an active

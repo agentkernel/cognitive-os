@@ -57,6 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P1-T09/b01-clean-vm-execution` | allocate and qualify the separately clean KVM B01 guest, register artifact and attempt controls, then run B01 only after operator and verifier checkpoints | Lane-RUN | `main` | `docs/checkpoints/20260731-personal-p1-t09-b01-preregistration.md`; `docs/checkpoints/20260731-personal-p1-t09-b01-clean-vm-handoff.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md` | Cursor session 2026-07-31 | 2026-07-31 / 2026-07-31 | active |
 
 ### 3.1 最近关闭的 leases
 
