@@ -48,6 +48,15 @@ Accordingly, the native Secret Service start-gate item is `incomplete`, B01
 attempt 1 has **not** started, and the existing reset snapshot remains the
 only valid pre-install reset point.
 
+The runner additionally attempted the standard FreeDesktop
+`Secret.Service.CreateCollection` call for the `default` alias. The service
+returned a `login` alias path, but querying that path failed with the fixed
+`object-does-not-exist` class. This is the expected headless-prompt state: a
+native GUI Secret Service prompt agent must approve collection creation before
+the persistent collection exists. The runner did not retry, approve an
+unprotected collection, use a session collection, or enter any Provider
+material.
+
 ## Assigned human roles
 
 - Operator A: hidden-input Provider credential opt-in only, after all start
@@ -57,11 +66,11 @@ only valid pre-install reset point.
 
 ## Required owner action
 
-Initialize and unlock a persistent default/login collection for
-`b01operator` in the guest's native GNOME Keyring/Secret Service session, then
-confirm that a non-sensitive Product-compatible `secret-tool store` / lookup /
-clear cycle succeeds **without** specifying `--collection`. Do not enter a
-Provider credential during this preparation.
+Use a graphical Secret Service prompt agent on the B01 guest to initialize and
+unlock an encrypted persistent default/login collection for `b01operator`,
+then confirm that a non-sensitive Product-compatible `secret-tool store` /
+lookup / clear cycle succeeds **without** specifying `--collection`. Do not
+enter a Provider credential during this preparation.
 
 After that confirmation, the runner can re-run the redacted platform probe,
 take a new platform-qualified reset snapshot, register the immutable reviewed
