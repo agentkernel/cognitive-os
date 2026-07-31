@@ -29,7 +29,7 @@ import {
   COGNITIVEOS_STATUS_COMMAND_NAME,
   COGNITIVEOS_STATUS_KEY,
 } from "./pin.js";
-import type { ExtensionAPI, ExtensionContext } from "./pi-api.js";
+import type { ExtensionAPI, ExtensionContext, PiModel } from "./pi-api.js";
 import {
   statusDetailFromFailure,
   statusDetailFromProjection,
@@ -56,12 +56,18 @@ export async function registerCognitiveOsExtension(
   options: CognitiveOsExtensionOptions = {},
 ): Promise<void> {
   const client = options.client ?? new PersonalDaemonClient();
+  let daemonSelectedModel: PiModel | undefined;
 
   pi.on("project_trust", async () => PROJECT_TRUST_DECISION);
 
   pi.on("tool_call", async (event) => decideToolCall(event));
 
   pi.on("session_start", async (_event, context) => {
+    if (daemonSelectedModel === undefined) {
+      await showStatus(client, context, "session_start");
+      return;
+    }
+    await activateDaemonSelectedModel(pi, daemonSelectedModel);
     await showStatus(client, context, "session_start");
   });
 
@@ -72,15 +78,14 @@ export async function registerCognitiveOsExtension(
     },
   });
 
-  // Pi's provider option only scopes an explicit model. Select the single
-  // daemon-owned model so a normal Pi launch cannot silently retain its
-  // unrelated default provider.
+  // Initial extension loading queues providers until Pi binds its session
+  // context. The session_start hook activates this model after that binding.
   const daemonProvider = await createDaemonProvider(client);
-  const daemonSelectedModel = daemonProvider.getModels()[0];
-  pi.registerProvider(daemonProvider);
-  if (daemonSelectedModel === undefined || !(await pi.setModel(daemonSelectedModel))) {
-    throw new Error("the daemon-selected CognitiveOS model could not be activated");
+  daemonSelectedModel = daemonProvider.getModels()[0];
+  if (daemonSelectedModel === undefined) {
+    throw new Error("the daemon provider registered no selectable model");
   }
+  pi.registerProvider(daemonProvider);
 }
 
 export default registerCognitiveOsExtension;
@@ -114,5 +119,14 @@ async function showStatus(
     // Surfacing this at session start is the difference between "the operator
     // knows the first conversation is blocked" and a silently degraded session.
     context.ui.notify(statusDetailFromProjection(projection), "warn");
+  }
+}
+
+async function activateDaemonSelectedModel(
+  pi: ExtensionAPI,
+  daemonSelectedModel: PiModel,
+): Promise<void> {
+  if (!(await pi.setModel(daemonSelectedModel))) {
+    throw new Error("the daemon-selected CognitiveOS model could not be activated");
   }
 }
