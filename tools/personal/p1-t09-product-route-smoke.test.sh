@@ -36,6 +36,7 @@ fake_pi="$fixture_directory/pi"
 fake_extension="$fixture_directory/index.js"
 fake_pi_environment="$fixture_directory/pi-environment"
 fake_pi_arguments="$fixture_directory/pi-arguments"
+fake_pi_stdin="$fixture_directory/pi-stdin"
 fake_node="$fixture_directory/node"
 cat > "$fake_cognitive" <<'EOF'
 #!/usr/bin/env bash
@@ -68,6 +69,11 @@ if [[ "$1" == "--version" ]]; then
 fi
 env | sort > "$TMPDIR/pi-environment"
 printf '%s\n' "$@" > "$TMPDIR/pi-arguments"
+if [[ "$(readlink /proc/self/fd/0)" != "/dev/null" ]]; then
+    printf 'stdin must be closed for Pi print mode\n' >&2
+    exit 91
+fi
+printf 'closed\n' > "$TMPDIR/pi-stdin"
 printf 'cognitiveos-first-response-ok\n'
 EOF
 cat > "$fake_node" <<'EOF'
@@ -97,5 +103,6 @@ successful_output="$(PATH="$fixture_directory:/usr/bin:/bin" PROVIDER_API_KEY=mu
 [[ ! -s "$fake_pi_environment" || "$(<"$fake_pi_environment")" != *"PROVIDER_API_KEY="* ]]
 [[ "$(<"$fixture_directory/doctor-count")" -ge 2 ]]
 [[ "$(<"$fake_pi_arguments")" == *$'--provider\ncognitiveos'* ]]
+[[ "$(<"$fake_pi_stdin")" == "closed" ]]
 
 printf 'p1-t09-product-route-smoke focused negatives: PASS\n'

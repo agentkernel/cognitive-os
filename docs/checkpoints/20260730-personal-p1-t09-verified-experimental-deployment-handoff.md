@@ -68,14 +68,15 @@ and uploaded campaign `.3` from `main@7bf69f35658489ea6141b3367989924d9049c6a8`.
 A host verifier rebuilt from a SHA-256-fixed source bundle for that exact commit
 accepted its signature, expected Pi pin, and public key. After the documented
 stale-lock recovery procedure, the verified installer activated `.3`. Its
-redacted installed route again timed out at 90 seconds with no response or
-authority side effect. Pi print mode registers the provider and obtains its
-model catalog, but invokes no extension hook, Provider auth check, or Provider
-stream method; an explicit daemon-selected model and a session-local
-nonblocking initial `setModel` probe also timed out. Those probes displayed no
-model, token, Provider request, Provider response, or authority material. The
-print-mode session/prompt lifecycle remains unresolved; no corrective source
-change is retained from the unsuccessful probe.
+initial 90-second timeout was caused by the route runner passing open non-TTY
+stdin to Pi. Binding Pi stdin to `/dev/null` causes the exact Pi to enter its
+agent lifecycle. The installed `.3` extension then exits nonzero in 2.9
+seconds with redacted response output, no expected marker, and no authority
+side effect. This confirms the remaining defect is Pi provider-contract
+behavior rather than a blocked print-mode session/prompt lifecycle. The probe
+displayed no model, token, Provider request, Provider response, or authority
+material. No unverified provider-contract correction is retained as release
+evidence.
 
 ## Verification for this corrective slice
 
@@ -90,7 +91,7 @@ change is retained from the unsuccessful probe.
 | Verified installer activation | pass; `.11` active and `cognitiveos-personal.service` active |
 | Persistent exact Pi | pass; manifest-matching registry SRI and absolute executable `0.81.1` |
 | Native SecretStore / first-conversation readiness | pass; redacted doctor projection only |
-| Redacted installed first-response route | fail; reached Pi invocation but timed out at 90 seconds with no response output and no authority side effect |
+| Redacted installed first-response route | fail; initial 90-second timeout was an open-stdin runner defect; closed-stdin installed route now exits nonzero in 2.9 seconds with only redacted output, no expected marker, and no authority side effect |
 | Delayed-doctor focused regression | pass after failure-first observation |
 | Daemon-selected model activation regression | pass after failure-first observation |
 | Campaign `30591622368` reviewed-input validation | pass |
@@ -103,15 +104,15 @@ change is retained from the unsuccessful probe.
 | Campaign `30595882821` reviewed-input validation and signed upload | pass; approved `main` deployment |
 | Campaign `.3` host-side independent verification | pass; SHA-256-fixed source, `git fsck`, exact `main@7bf69f3`, signature, key, and Pi pin |
 | Campaign `.3` verified installation | pass after confirmed stale-lock cleanup and installer retry |
-| Campaign `.3` redacted installed route | fail; 90-second timeout, no response output or authority side effect |
-| Pi print-mode lifecycle trace | provider registration/catalog observed; no extension-hook, Provider-auth, or Provider-stream invocation; explicit-model probe also timed out |
+| Campaign `.3` redacted installed route | fail; closed-stdin route exits nonzero in 2.9 seconds with redacted output, no expected marker, and no authority side effect |
+| Pi print-mode lifecycle trace | closed stdin reaches the agent lifecycle; the remaining provider-contract failure occurs before a verified daemon completion dispatch |
 | `git diff --check` | pass before documentation closure |
 | B01 / GMVP-LINUX / release / Profile | not-run / non-claim |
 
 ## Next executable action
 
-Review the exact Pi `0.81.1` print-mode session/prompt lifecycle, add a focused
-regression for the evidenced pre-dispatch boundary, then repeat the protected
+Correct the exact Pi `0.81.1` provider contract, add a focused regression for
+the evidenced pre-dispatch boundary, then repeat the protected
 campaign, independent verification/install, and redacted route. Do not treat
 the experimental-host route as B01, release, GMVP-LINUX, or Profile evidence.
 
@@ -122,7 +123,6 @@ the experimental-host route as B01, release, GMVP-LINUX, or Profile evidence.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
 - Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: identify the exact Pi 0.81.1 print-mode session/prompt
-  pre-dispatch boundary, add focused regression coverage, then dispatch a protected
-  campaign and independently verify/install/rerun the route before B01
-  preregistration.
+- Next action: identify the exact Pi 0.81.1 provider-contract failure, add
+  focused regression coverage, then dispatch a protected campaign and
+  independently verify/install/rerun the route before B01 preregistration.
