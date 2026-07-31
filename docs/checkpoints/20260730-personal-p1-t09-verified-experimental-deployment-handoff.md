@@ -51,6 +51,19 @@ check, and whitespace check passed locally. Dispatch `30591622368` for
 artifact because the protected signing Environment rejected this branch: its
 custom branch policy permits only `main`.
 
+After PR #124 merged, campaign `30592948805` signed and uploaded campaign
+`.2` from `main@106789b`. A host verifier rebuilt from a SHA-256-fixed source
+bundle for that exact commit accepted its signature, expected Pi pin, and
+public key. The first installer attempt failed closed because a crash-stale
+daemon lock prevented service activation. After confirming no `kernel-server`
+process existed, the stale lock was removed and the same verified installer
+successfully activated `.2`; this is the documented lifecycle recovery path,
+not a manual deployment edit. The redacted installed route still timed out at
+90 seconds. A session-local trace observed provider registration, selected
+model retrieval, and initial-load `setModel`, but no stream or completion
+dispatch. The next correction defers `setModel` until `session_start`; it has
+focused local test evidence only and is not in campaign `.2`.
+
 ## Verification for this corrective slice
 
 | Check | Result |
@@ -69,23 +82,28 @@ custom branch policy permits only `main`.
 | Daemon-selected model activation regression | pass after failure-first observation |
 | Campaign `30591622368` reviewed-input validation | pass |
 | Campaign `30591622368` signing/upload | blocked; no artifact because the protected Environment permits only `main` |
+| Campaign `30592948805` reviewed-input validation and signed upload | pass; approved `main` deployment |
+| Campaign `.2` host-side independent verification | pass; SHA-256-fixed source, `git fsck`, exact `main@106789b`, signature, key, and Pi pin |
+| Campaign `.2` verified installation | pass after confirmed stale-lock cleanup and installer retry |
+| Campaign `.2` redacted installed route | fail; 90-second timeout, no response output or authority side effect |
+| Redacted lifecycle trace | initial-load `setModel` observed; no provider stream or completion dispatch |
 | `git diff --check` | pass before documentation closure |
 | B01 / GMVP-LINUX / release / Profile | not-run / non-claim |
 
 ## Next executable action
 
-Merge `33a05a9` to `main`, then dispatch the protected experimental campaign
-from `main`. Independently verify and install the resulting artifact before
-rerunning the redacted first-response route. Do not treat the experimental-host
-route as B01, release, GMVP-LINUX, or Profile evidence.
+Merge the deferred-session-start model activation correction to `main`, then
+repeat the protected campaign, independent verification/install, and redacted
+route. Do not treat the experimental-host route as B01, release, GMVP-LINUX,
+or Profile evidence.
 
 ## Current blocker record
 
-- `blocked_paths`: installed Pi first-response route and the protected signing
-  Environment branch policy; B01 campaign design paths require a separate lease.
+- `blocked_paths`: installed Pi first-response route; B01 campaign design paths
+  require a separate lease.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
 - Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: merge the reviewed branch to `main`, dispatch the protected
-  campaign, then independently verify/install and rerun the route before B01
-  preregistration.
+- Next action: merge the deferred activation correction to `main`, dispatch
+  the protected campaign, then independently verify/install and rerun the
+  route before B01 preregistration.

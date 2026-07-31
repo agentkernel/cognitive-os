@@ -55,7 +55,7 @@ function clientFor(endpoint: string | undefined): PersonalDaemonClient {
   });
 }
 
-test("registration wires the pinned hooks, status command, and daemon-selected model", async () => {
+test("registration queues the daemon provider and activates its model at session start", async () => {
   const daemon = await startFakeDaemon({
     bootstrapSecret: BOOTSTRAP_SECRET,
     statusBody: readinessProjectionBody(),
@@ -71,6 +71,10 @@ test("registration wires the pinned hooks, status command, and daemon-selected m
     ]);
     assert.ok(pi.commands.has(COGNITIVEOS_STATUS_COMMAND_NAME));
     assert.match(pi.commands.get(COGNITIVEOS_STATUS_COMMAND_NAME)?.description ?? "", /read-only/);
+    assert.equal(pi.providers.length, 1);
+    assert.equal(pi.selectedModels.length, 0);
+
+    await pi.driveSessionStart();
     assert.equal(pi.selectedModels.length, 1);
     assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
   } finally {
