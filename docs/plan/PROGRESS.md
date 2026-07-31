@@ -13,11 +13,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. This is implementation evidence only: B01, GMVP-LINUX, release, and Profile remain non-claim | pre-register the separate clean-Linux B01 campaign environment and runner |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. B01 preregistration fixes the required clean-VM, artifact, reset, attempt, redaction, and cleanup conditions but does not allocate or execute them | owner allocates a clean Linux VM and names the B01 operator and independent verifier |
 | B01 first-install/first-conversation Gate | `not-run` | no product-Gate, release, or Profile claim | pre-register qualified Linux campaign environment and runner |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | the route-probe-reconciliation lease is closed after campaign `.4` independent verification, installation, and redacted expected response; B01 paths remain unleased | claim a separate B01 preregistration slice before altering B01 paths |
+| Active task lease | `none` | the B01-preregistration lease is closed after fixing the formal campaign contract; no B01 environment or attempt has been started | owner action is required before an execution lease |
 
 The P1-T09 implementation evidence is real but incomplete. The current status is
 therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
@@ -38,8 +38,10 @@ material. This is `tested-local` implementation evidence only, not B01,
 GMVP-LINUX, release, or Profile evidence. The route-probe lease is closed;
 `blocked_paths`: clean-Linux B01 campaign design and runner paths;
 `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and
-Profile; owner: next B01 preregistration lease holder; next action: claim a
-separate lease and pre-register the formal B01 campaign.
+Profile; owner: product owner for VM allocation and credential opt-in; next
+action: allocate a new clean Linux VM and name the B01 operator and independent
+verifier. The closed preregistration lease records the fixed campaign contract;
+no attempt has started.
 
 Campaign `.3`'s prior 2.9-second redacted nonzero route result is superseded
 as the current route fact by the independently verified and installed `.4`
