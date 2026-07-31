@@ -42,6 +42,15 @@ SecretRef, SQLite path, Task, Effect, Verification, capability, or authority
 data was printed, and no authority side effect was created. Session-owned
 campaign and source material was removed.
 
+Follow-up commit `33a05a9` corrects the Pi model-selection path: Pi does not
+apply `--provider` without an explicit model, and the Extension had registered
+but not activated its daemon-selected model. The focused failure-first
+regressions, package build, package tests, route-runner tests, consistency
+check, and whitespace check passed locally. Dispatch `30591622368` for
+`0.0.0-campaign.20260731.1` passed reviewed-input validation but produced no
+artifact because the protected signing Environment rejected this branch: its
+custom branch policy permits only `main`.
+
 ## Verification for this corrective slice
 
 | Check | Result |
@@ -57,21 +66,26 @@ campaign and source material was removed.
 | Native SecretStore / first-conversation readiness | pass; redacted doctor projection only |
 | Redacted installed first-response route | fail; reached Pi invocation but timed out at 90 seconds with no response output and no authority side effect |
 | Delayed-doctor focused regression | pass after failure-first observation |
+| Daemon-selected model activation regression | pass after failure-first observation |
+| Campaign `30591622368` reviewed-input validation | pass |
+| Campaign `30591622368` signing/upload | blocked; no artifact because the protected Environment permits only `main` |
 | `git diff --check` | pass before documentation closure |
 | B01 / GMVP-LINUX / release / Profile | not-run / non-claim |
 
 ## Next executable action
 
-Claim a separate, non-overlapping P1-T09 first-response timeout diagnosis
-slice before B01 preregistration. Do not treat the experimental-host route as
-B01, release, GMVP-LINUX, or Profile evidence.
+Merge `33a05a9` to `main`, then dispatch the protected experimental campaign
+from `main`. Independently verify and install the resulting artifact before
+rerunning the redacted first-response route. Do not treat the experimental-host
+route as B01, release, GMVP-LINUX, or Profile evidence.
 
 ## Current blocker record
 
-- `blocked_paths`: installed Pi first-response route; B01 campaign design paths
-  require a separate lease.
+- `blocked_paths`: installed Pi first-response route and the protected signing
+  Environment branch policy; B01 campaign design paths require a separate lease.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
 - Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: diagnose the bounded first-response timeout, then claim B01
-  preregistration separately.
+- Next action: merge the reviewed branch to `main`, dispatch the protected
+  campaign, then independently verify/install and rerun the route before B01
+  preregistration.
