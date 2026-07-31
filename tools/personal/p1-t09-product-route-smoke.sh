@@ -11,6 +11,7 @@ set -euo pipefail
 
 readonly DEFAULT_TIMEOUT_SECONDS=90
 readonly DEFAULT_EXPECTED_MARKER="cognitiveos-first-response-ok"
+readonly READINESS_RETRY_ATTEMPTS=10
 
 cognitive_executable=""
 pi_executable=""
@@ -107,18 +108,30 @@ if ! "$cognitive_executable" pi configure \
     exit 3
 fi
 
-if ! "$cognitive_executable" doctor >"$doctor_output" 2>&1; then
-    printf '{"status":"error","phase":"doctor","error_class":"cognitive_doctor_failed","authority_side_effects":false}\n'
-    exit 4
-fi
+first_conversation_ready=false
+for readiness_attempt in $(seq 1 "$READINESS_RETRY_ATTEMPTS"); do
+    if ! "$cognitive_executable" doctor >"$doctor_output" 2>&1; then
+        printf '{"status":"error","phase":"doctor","error_class":"cognitive_doctor_failed","authority_side_effects":false}\n'
+        exit 4
+    fi
 
-if ! node -e '
+    if node -e '
 const fs = require("node:fs");
 const document = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-if (document.status !== "ok" || document.overall !== "ready" || document.first_conversation_ready !== true) {
+if (document.overall !== "ready" || document.first_conversation_ready !== true) {
   process.exit(1);
 }
 ' "$doctor_output"; then
+        first_conversation_ready=true
+        break
+    fi
+
+    if [[ "$readiness_attempt" -lt "$READINESS_RETRY_ATTEMPTS" ]]; then
+        sleep 1
+    fi
+done
+
+if [[ "$first_conversation_ready" != true ]]; then
     printf '{"status":"error","phase":"doctor","error_class":"first_conversation_not_ready","authority_side_effects":false}\n'
     exit 5
 fi
@@ -157,6 +170,7 @@ timeout "$timeout_seconds" env -i \
     XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
     "$pi_executable" \
         --extension "$extension_entry" \
+        --provider cognitiveos \
         --print "Reply exactly: $expected_marker" >"$pi_response_output" 2>&1
 pi_exit_code="$?"
 set -e

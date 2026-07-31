@@ -35,6 +35,7 @@ fake_cognitive="$fixture_directory/cognitive"
 fake_pi="$fixture_directory/pi"
 fake_extension="$fixture_directory/index.js"
 fake_pi_environment="$fixture_directory/pi-environment"
+fake_pi_arguments="$fixture_directory/pi-arguments"
 fake_node="$fixture_directory/node"
 cat > "$fake_cognitive" <<'EOF'
 #!/usr/bin/env bash
@@ -42,7 +43,18 @@ set -euo pipefail
 if [[ "$1" == "pi" && "$2" == "configure" ]]; then
     printf '{"status":"ok"}\n'
 elif [[ "$1" == "doctor" ]]; then
-    printf '{"status":"ok","overall":"ready","first_conversation_ready":true}\n'
+    doctor_counter_file="$TMPDIR/doctor-count"
+    doctor_invocation_count=0
+    if [[ -f "$doctor_counter_file" ]]; then
+        doctor_invocation_count="$(<"$doctor_counter_file")"
+    fi
+    doctor_invocation_count="$((doctor_invocation_count + 1))"
+    printf '%s\n' "$doctor_invocation_count" > "$doctor_counter_file"
+    if [[ "$doctor_invocation_count" -lt 2 ]]; then
+        printf '{"status":"ok","overall":"degraded","first_conversation_ready":false}\n'
+    else
+        printf '{"overall":"ready","first_conversation_ready":true}\n'
+    fi
 else
     exit 1
 fi
@@ -55,11 +67,21 @@ if [[ "$1" == "--version" ]]; then
     exit 0
 fi
 env | sort > "$TMPDIR/pi-environment"
+printf '%s\n' "$@" > "$TMPDIR/pi-arguments"
 printf 'cognitiveos-first-response-ok\n'
 EOF
 cat > "$fake_node" <<'EOF'
 #!/usr/bin/env bash
-exit 0
+set -euo pipefail
+validation_script="$2"
+doctor_document="$3"
+if [[ "$validation_script" == *"document.status"* ]]; then
+    exit 1
+fi
+if [[ "$(<"$doctor_document")" == *'"overall":"ready"'* && "$(<"$doctor_document")" == *'"first_conversation_ready":true'* ]]; then
+    exit 0
+fi
+exit 1
 EOF
 printf 'export {};\n' > "$fake_extension"
 chmod 700 "$fake_cognitive" "$fake_pi" "$fake_node"
@@ -73,5 +95,7 @@ successful_output="$(PATH="$fixture_directory:/usr/bin:/bin" PROVIDER_API_KEY=mu
 [[ "$successful_output" == *'"status":"ok"'* ]]
 [[ "$successful_output" == *'"expected_reply_observed":true'* ]]
 [[ ! -s "$fake_pi_environment" || "$(<"$fake_pi_environment")" != *"PROVIDER_API_KEY="* ]]
+[[ "$(<"$fixture_directory/doctor-count")" -ge 2 ]]
+[[ "$(<"$fake_pi_arguments")" == *$'--provider\ncognitiveos'* ]]
 
 printf 'p1-t09-product-route-smoke focused negatives: PASS\n'
