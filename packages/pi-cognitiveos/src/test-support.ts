@@ -19,8 +19,8 @@ import type {
   ExtensionContext,
   ExtensionUi,
   PiModel,
+  ProviderConfig,
   ProjectTrustDecision,
-  Provider,
   ToolCallDecision,
   ToolCallEvent,
 } from "./pi-api.js";
@@ -77,7 +77,7 @@ export class FakePi implements ExtensionAPI {
   readonly ui = new FakeUi();
   readonly context: ExtensionContext = { ui: this.ui };
   readonly commands = new Map<string, ExtensionCommandSpec>();
-  readonly providers: Provider[] = [];
+  readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
 
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
@@ -115,8 +115,8 @@ export class FakePi implements ExtensionAPI {
     this.commands.set(commandName, spec);
   }
 
-  registerProvider(provider: Provider): void {
-    this.providers.push(provider);
+  registerProvider(providerName: string, config: ProviderConfig): void {
+    this.providers.push({ providerName, config });
   }
 
   async setModel(model: PiModel): Promise<boolean> {

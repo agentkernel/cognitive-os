@@ -61,8 +61,22 @@ successfully activated `.2`; this is the documented lifecycle recovery path,
 not a manual deployment edit. The redacted installed route still timed out at
 90 seconds. A session-local trace observed provider registration, selected
 model retrieval, and initial-load `setModel`, but no stream or completion
-dispatch. The next correction defers `setModel` until `session_start`; it has
-focused local test evidence only and is not in campaign `.2`.
+dispatch. The next correction deferred `setModel` until `session_start`.
+
+PR #125 then merged that correction. Protected campaign `30595882821` signed
+and uploaded campaign `.3` from `main@7bf69f35658489ea6141b3367989924d9049c6a8`.
+A host verifier rebuilt from a SHA-256-fixed source bundle for that exact commit
+accepted its signature, expected Pi pin, and public key. After the documented
+stale-lock recovery procedure, the verified installer activated `.3`. Its
+initial 90-second timeout was caused by the route runner passing open non-TTY
+stdin to Pi. Binding Pi stdin to `/dev/null` causes the exact Pi to enter its
+agent lifecycle. The installed `.3` extension then exits nonzero in 2.9
+seconds with redacted response output, no expected marker, and no authority
+side effect. This confirms the remaining defect is Pi provider-contract
+behavior rather than a blocked print-mode session/prompt lifecycle. The probe
+displayed no model, token, Provider request, Provider response, or authority
+material. No unverified provider-contract correction is retained as release
+evidence.
 
 ## Verification for this corrective slice
 
@@ -77,7 +91,7 @@ focused local test evidence only and is not in campaign `.2`.
 | Verified installer activation | pass; `.11` active and `cognitiveos-personal.service` active |
 | Persistent exact Pi | pass; manifest-matching registry SRI and absolute executable `0.81.1` |
 | Native SecretStore / first-conversation readiness | pass; redacted doctor projection only |
-| Redacted installed first-response route | fail; reached Pi invocation but timed out at 90 seconds with no response output and no authority side effect |
+| Redacted installed first-response route | fail; initial 90-second timeout was an open-stdin runner defect; closed-stdin installed route now exits nonzero in 2.9 seconds with only redacted output, no expected marker, and no authority side effect |
 | Delayed-doctor focused regression | pass after failure-first observation |
 | Daemon-selected model activation regression | pass after failure-first observation |
 | Campaign `30591622368` reviewed-input validation | pass |
@@ -87,15 +101,30 @@ focused local test evidence only and is not in campaign `.2`.
 | Campaign `.2` verified installation | pass after confirmed stale-lock cleanup and installer retry |
 | Campaign `.2` redacted installed route | fail; 90-second timeout, no response output or authority side effect |
 | Redacted lifecycle trace | initial-load `setModel` observed; no provider stream or completion dispatch |
+| Campaign `30595882821` reviewed-input validation and signed upload | pass; approved `main` deployment |
+| Campaign `.3` host-side independent verification | pass; SHA-256-fixed source, `git fsck`, exact `main@7bf69f3`, signature, key, and Pi pin |
+| Campaign `.3` verified installation | pass after confirmed stale-lock cleanup and installer retry |
+| Campaign `.3` redacted installed route | fail; closed-stdin route exits nonzero in 2.9 seconds with redacted output, no expected marker, and no authority side effect |
+| Pi print-mode lifecycle trace | closed stdin reaches the agent lifecycle; the remaining provider-contract failure occurs before a verified daemon completion dispatch |
 | `git diff --check` | pass before documentation closure |
 | B01 / GMVP-LINUX / release / Profile | not-run / non-claim |
 
 ## Next executable action
 
-Merge the deferred-session-start model activation correction to `main`, then
-repeat the protected campaign, independent verification/install, and redacted
-route. Do not treat the experimental-host route as B01, release, GMVP-LINUX,
-or Profile evidence.
+The current implementation-only slice inspected the exact Pi `0.81.1`
+declarations and provider composer on the qualified experimental host. It
+confirms that provider-model definitions are composed into runtime models with
+a `baseUrl`, and that `setModel` receives the runtime model rather than the
+provider-only definition. The Extension had omitted that loopback-only URL
+from its selected model. A focused regression first failed at the missing
+runtime field; the repair and package build/test now pass locally. The custom
+stream selection remains `model.api === extension.api`; the non-secret marker
+remains an availability value rather than a credential, and all completion
+traffic remains on the daemon-owned bounded bridge. The repair is uncommitted
+and has not been sent to a protected campaign. Review, commit, push, merge to
+`main`, then repeat the protected campaign, independent verification/install,
+and redacted route. Do not treat the experimental-host route as B01, release,
+GMVP-LINUX, or Profile evidence.
 
 ## Current blocker record
 
@@ -104,6 +133,6 @@ or Profile evidence.
 - `blocked_task_ids`: `P1-T09`.
 - `blocked_gate_ids`: `B01`, `GMVP-LINUX`, and Profile.
 - Owner: P1-T09 route-probe-reconciliation lease holder.
-- Next action: merge the deferred activation correction to `main`, dispatch
-  the protected campaign, then independently verify/install and rerun the
-  route before B01 preregistration.
+- Next action: review, commit, push, and merge the focused runtime-model
+  routing repair; dispatch only from `main`, then independently
+  verify/install/rerun the route before B01 preregistration.

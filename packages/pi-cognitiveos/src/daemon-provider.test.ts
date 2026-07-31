@@ -24,13 +24,14 @@ function clientFor(endpoint: string): PersonalDaemonClient {
   return new PersonalDaemonClient({ environment: ENVIRONMENT, files, requestTimeoutMs: 2_000 });
 }
 
-test("complete daemon provider registers one projected model and emits bounded text events", async () => {
+test("custom Pi provider configuration registers one projected model and emits bounded text events", async () => {
   const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}" });
   try {
     const provider = await createDaemonProvider(clientFor(daemon.endpoint));
-    assert.equal(provider.id, "cognitiveos");
-    assert.equal(provider.getModels().length, 1);
-    const model = provider.getModels()[0]!;
+    assert.equal(provider.api, "openai-completions");
+    assert.equal(provider.models.length, 1);
+    assert.equal(provider.apiKey, "cognitiveos-local-daemon");
+    const model = provider.models[0]!;
     const stream = provider.streamSimple(model, { messages: [{ role: "user", content: "hello" }] });
     const events = [];
     for await (const event of stream) events.push(event.type);
@@ -60,7 +61,7 @@ test("unsupported tool output produces one terminal error without tool events", 
   });
   try {
     const provider = await createDaemonProvider(clientFor(daemon.endpoint));
-    const model = provider.getModels()[0]!;
+    const model = provider.models[0]!;
     const stream = provider.streamSimple(model, { messages: [{ role: "user", content: "hello" }] });
     const events = [];
     for await (const event of stream) events.push(event.type);
@@ -77,7 +78,7 @@ test("pre-dispatch abort creates no completion request", async () => {
     const provider = await createDaemonProvider(clientFor(daemon.endpoint));
     const controller = new AbortController();
     controller.abort();
-    const stream = provider.streamSimple(provider.getModels()[0]!, { messages: [] }, { signal: controller.signal });
+    const stream = provider.streamSimple(provider.models[0]!, { messages: [] }, { signal: controller.signal });
     const events = [];
     for await (const event of stream) events.push(event.type);
     assert.deepEqual(events, ["error"]);
