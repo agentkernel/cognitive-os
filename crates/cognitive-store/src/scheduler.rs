@@ -93,18 +93,11 @@ pub struct SchedulerRepository {
 impl SchedulerRepository {
     /// Open the scheduler repository on a database file (creates schema).
     pub fn open(path: &Path) -> Result<Self, SchedulerRepositoryError> {
-        let mut conn = Connection::open(path).map_err(|e| {
-            SchedulerRepositoryError::Unavailable(format!("open: {e}"))
-        })?;
-        conn.execute_batch(SCHEDULER_SCHEMA_V2).map_err(|e| {
-            SchedulerRepositoryError::Unavailable(format!("schema: {e}"))
-        })?;
+        let conn = Connection::open(path)
+            .map_err(|e| SchedulerRepositoryError::Unavailable(format!("open: {e}")))?;
+        conn.execute_batch(SCHEDULER_SCHEMA_V2)
+            .map_err(|e| SchedulerRepositoryError::Unavailable(format!("schema: {e}")))?;
         Ok(Self { conn })
-    }
-
-    /// Borrow the underlying connection for transaction composition.
-    pub(crate) fn connection(&mut self) -> &mut Connection {
-        &mut self.conn
     }
 
     /// Insert or replace one scheduler row (upsert by task_ref).
@@ -193,15 +186,11 @@ impl SchedulerRepository {
                      WHERE task_ref=?1",
                     rusqlite::params![task_ref, owner, lease_epoch, expires],
                 )
-                .map_err(|e| {
-                    SchedulerRepositoryError::Unavailable(format!("lease: {e}"))
-                })?;
-                tx.commit().map_err(|e| {
-                    SchedulerRepositoryError::Unavailable(format!("commit: {e}"))
-                })?;
-                self.load(task_ref)?.ok_or_else(|| {
-                    SchedulerRepositoryError::NotFound(task_ref.to_owned())
-                })
+                .map_err(|e| SchedulerRepositoryError::Unavailable(format!("lease: {e}")))?;
+                tx.commit()
+                    .map_err(|e| SchedulerRepositoryError::Unavailable(format!("commit: {e}")))?;
+                self.load(task_ref)?
+                    .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
             }
         }
     }
@@ -215,23 +204,30 @@ impl SchedulerRepository {
         next_state: SchedulerState,
         next_eligible: &str,
     ) -> Result<SchedulerRow, SchedulerRepositoryError> {
-        let updated = self.conn.execute(
-            "UPDATE scheduler_entries \
+        let updated = self
+            .conn
+            .execute(
+                "UPDATE scheduler_entries \
              SET state=?2, lease_owner=NULL, lease_epoch=lease_epoch, \
                  lease_expires=NULL, next_eligible=?3 \
              WHERE task_ref=?1 AND lease_owner=?4",
-            rusqlite::params![task_ref, next_state.as_str(), next_eligible, owner],
-        ).map_err(|e| SchedulerRepositoryError::Unavailable(format!("release: {e}")))?;
+                rusqlite::params![task_ref, next_state.as_str(), next_eligible, owner],
+            )
+            .map_err(|e| SchedulerRepositoryError::Unavailable(format!("release: {e}")))?;
         if updated == 0 {
             return Err(SchedulerRepositoryError::LeaseConflict(
                 "lease owner mismatch on release".to_owned(),
             ));
         }
-        self.load(task_ref)?.ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
+        self.load(task_ref)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
     }
 
     /// Load one row.
-    pub fn load(&mut self, task_ref: &str) -> Result<Option<SchedulerRow>, SchedulerRepositoryError> {
+    pub fn load(
+        &mut self,
+        task_ref: &str,
+    ) -> Result<Option<SchedulerRow>, SchedulerRepositoryError> {
         self.conn
             .query_row(
                 "SELECT task_ref, state, lease_owner, lease_epoch, lease_expires, \
