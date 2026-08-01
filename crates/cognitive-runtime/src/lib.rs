@@ -78,7 +78,10 @@ pub use sandbox::{
     ChannelClaim, PlatformChannelRow, SandboxChannel, SandboxGate, SandboxPlatform, SandboxPolicy,
     refuse_cross_platform_merge,
 };
-pub use scheduler_service::{SchedulerDispatch, SchedulerService, SchedulerServiceError};
+pub use scheduler_service::{
+    SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
+    SchedulerStopReason,
+};
 pub use shell::{ShellError, ShellPhase, ShellService};
 pub use target_resolution::{
     TargetSelectorDecision, TargetSelectorRequest, admit_target_selector, is_strong_reference,
