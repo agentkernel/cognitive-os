@@ -29,6 +29,7 @@ pub mod governance;
 pub mod model;
 pub mod plane;
 pub mod session;
+pub mod task_application;
 pub use approval::{ApprovalGate, ApprovalPresentation, ManagementActionProposal};
 pub use audit::{
     AuditPortFailure, AuditedInspectError, FileManagementAuditLog, ManagementAuditPort,
@@ -59,6 +60,9 @@ pub use plane::{
 pub use session::{
     ManagementAction, ManagementSessionArchive, PrivilegedManagementSession, RiskClass,
     SessionScope, SessionState,
+};
+pub use task_application::{
+    ContractPreview, KernelTaskApplicationService, TaskApplicationError, TaskApplicationService,
 };
 
 /// Deterministic management verbs that must work without any model.
