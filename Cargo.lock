@@ -1177,6 +1177,7 @@ dependencies = [
  "cognitive-runtime",
  "cognitive-secret",
  "cognitive-store",
+ "serde",
  "serde_json",
  "thiserror",
 ]
