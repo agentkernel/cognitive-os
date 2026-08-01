@@ -35,6 +35,18 @@ evidence: P2-T01 service tests 4/4, management lib 3/3, store
 `experimental-local-only` implementation evidence; P2 acceptance (B02/B04/
 B05/B12) remains not-run.
 
+The current P2 slice adds the durable scheduler persistence layer (P2-T03):
+`scheduler_entries` (migration v2) with lease owner/epoch/expiry,
+next-eligible, attempt count and cancel flag; `SchedulerRepository` in
+`crates/cognitive-store/src/scheduler.rs` provides transactional CAS lease
+acquire (duplicate/cancelled refused), owner-bound release that fails closed
+on mismatch, and durable cancel. Merged as `main@f3bacbe` (PR #128).
+Linux-host evidence: P2-T03 scheduler tests 4/4, `cognitive-store` full
+suite (migration 7/7), clippy/fmt clean, required CI green. The
+timer/clock-policy and budget-ceiling enforcement that consumes this
+repository is the next slice; P2 acceptance (B02/B04/B05/B12) remains
+not-run.
+
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
 composes provider-model definitions into a runtime model with a required

@@ -309,7 +309,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 |---|---|---|---|---|---|
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | in-progress | 2026-08-01；`crates/cognitive-management/src/task_application.rs`（proposal/clarify/preview/admit/control/query 六操作面，仅组合 kernel 意图链原语）；PR #127 `lane/personal-p2-t01-task-application-service`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t01_task_application_service` 4/4 pass；clippy clean；`cognitive-store` m5_intent_chain 6/6 pass |
 | P2-T02 | 真实 Task API、watch 与自然语言管理映射 | P2-T01, P1-T07 | detach/watch/cancel 的 authority 语义正确；trust profile Tier 0/1/2 在 daemon/CLI/Pi 一致应用（ADR-0026） | not-started | — |
-| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget 测试 | not-started | — |
+| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget 测试 | in-progress | 2026-08-01；`crates/cognitive-store/src/scheduler.rs`（durable `scheduler_entries` + migration v2 + lease CAS/release owner-bound/cancel/attempt）；PR #128 `lane/personal-p2-t03-durable-scheduler`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t03_scheduler_lease_timer` 4/4 pass；`cognitive-store` 全量 + `p1_t01_layout_migrations` 7/7 pass；clippy/fmt/CI（Ubuntu+Windows/MSVC）green |
 | P2-T04 | 单 Agent worker 与 BoundedHarness 接入 | P2-T02, P2-T03 | no-progress/budget/stale-lease 测试 | not-started | — |
 | P2-T05 | Tool Registry 与第一个安全 operation | P2-T04 | 未注册、drift、disabled 均 dispatch=0 | not-started | — |
 | P2-T06 | Process supervisor 与首个 executor | P2-T05 | dispatch 故障、orphan、redaction、idempotency | not-started | — |
