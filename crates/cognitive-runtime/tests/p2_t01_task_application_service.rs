@@ -22,8 +22,8 @@ use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
     SupersedeCommand, TaskContractCommand, UserIntentCommand, verify_task_binding_current,
 };
-use cognitive_kernel::ports::{Clock, IdGenerator, PortFailure, TaskBinding};
-use cognitive_management::{ContractPreview, KernelTaskApplicationService, TaskApplicationService};
+use cognitive_kernel::ports::{Clock, IdGenerator, PortFailure, ProtocolStore, TaskBinding};
+use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::SqliteAuthorityStore;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -94,7 +94,7 @@ fn seed() -> GovernanceSeed {
 
 fn intent_cmd(record_n: u64, expression: &str) -> UserIntentCommand {
     UserIntentCommand {
-        record_id: oid(record_n),
+        record_id: oid(1000 * record_n),
         actor_chain_digest: format!("sha256:{}", "aa11".repeat(16)),
         conversation_or_scope_ref: uri("conversation://tenant-a/thread-1"),
         input_refs: vec![uri("state://tenant-a/attachments/spec-v1")],
@@ -107,7 +107,7 @@ fn intent_cmd(record_n: u64, expression: &str) -> UserIntentCommand {
 
 fn clean_candidate(interp_n: u64) -> InterpretationCandidate {
     InterpretationCandidate {
-        interpretation_id: oid(interp_n),
+        interpretation_id: oid(2000 * interp_n),
         objectives: vec!["roll out service v2 to staging".to_owned()],
         constraints: vec!["no production changes".to_owned()],
         forbidden: vec!["deleting user data".to_owned()],
@@ -124,7 +124,7 @@ fn clean_candidate(interp_n: u64) -> InterpretationCandidate {
 
 fn contract_cmd(contract_n: u64, task_ref: &str) -> TaskContractCommand {
     TaskContractCommand {
-        contract_id: oid(contract_n),
+        contract_id: oid(3000 * contract_n),
         task_ref: uri(task_ref),
         objective: "staging rollout of service v2".to_owned(),
         in_scope: vec!["staging deployment".to_owned()],
@@ -188,7 +188,7 @@ fn proposal_persists_raw_intent_before_any_interpretation_or_task_contract() {
     // survived durably.
     drop(service);
     let mut service2 = make_service(&dir);
-    let loaded = service2.query_intent(&oid(1)).unwrap();
+    let loaded = service2.query_intent(&oid(1000)).unwrap();
     assert!(loaded.is_some());
     assert_eq!(loaded.unwrap().raw_expression, "roll out service v2 to staging");
 
