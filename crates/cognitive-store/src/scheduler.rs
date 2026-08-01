@@ -13,6 +13,7 @@
 //! addition to the authority database after the P1-T01 v1 full schema.
 
 use crate::migration::MigrationPlanEntry;
+use cognitive_domain::WallTimestamp;
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior};
 use std::path::Path;
 use thiserror::Error;
@@ -83,6 +84,8 @@ pub enum SchedulerRepositoryError {
     LeaseConflict(String),
     #[error("scheduler row not found: {0}")]
     NotFound(String),
+    #[error("scheduler timestamp is invalid: {0}")]
+    InvalidTimestamp(String),
 }
 
 /// Durable scheduler repository over one authority database connection.
@@ -195,6 +198,75 @@ impl SchedulerRepository {
         }
     }
 
+    /// Atomically claim work that is eligible at `now`. A currently leased
+    /// entry can be reclaimed only after its persisted expiry; the successor
+    /// must use a strictly greater epoch to fence the former worker.
+    pub fn acquire_eligible_lease(
+        &mut self,
+        task_ref: &str,
+        owner: &str,
+        lease_epoch: i64,
+        now: &str,
+        expires: &str,
+    ) -> Result<SchedulerRow, SchedulerRepositoryError> {
+        let now_timestamp = parse_scheduler_timestamp(now)?;
+        let expires_timestamp = parse_scheduler_timestamp(expires)?;
+        if expires_timestamp.instant_key() <= now_timestamp.instant_key() {
+            return Err(SchedulerRepositoryError::LeaseConflict(
+                "lease expiry must be after the trusted scheduler time".to_owned(),
+            ));
+        }
+
+        let existing = self
+            .load(task_ref)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))?;
+        let next_eligible = parse_scheduler_timestamp(&existing.next_eligible)?;
+        let lease_is_expired = existing
+            .lease_expires
+            .as_deref()
+            .map(parse_scheduler_timestamp)
+            .transpose()?
+            .is_some_and(|lease_expiry| lease_expiry.instant_key() <= now_timestamp.instant_key());
+        let is_runnable_now = existing.state == SchedulerState::Runnable.as_str()
+            && next_eligible.instant_key() <= now_timestamp.instant_key();
+        let is_expired_lease =
+            existing.state == SchedulerState::Leased.as_str() && lease_is_expired;
+
+        if existing.cancel_requested || (!is_runnable_now && !is_expired_lease) {
+            return Err(SchedulerRepositoryError::LeaseConflict(
+                "task is not eligible for dispatch".to_owned(),
+            ));
+        }
+        if lease_epoch <= existing.lease_epoch {
+            return Err(SchedulerRepositoryError::LeaseConflict(
+                "lease epoch must advance the existing fence".to_owned(),
+            ));
+        }
+
+        let updated = self
+            .conn
+            .execute(
+                "UPDATE scheduler_entries \
+                 SET state='leased', lease_owner=?2, lease_epoch=?3, lease_expires=?4, \
+                     attempt_count=attempt_count + 1 \
+                 WHERE task_ref=?1 AND cancel_requested=0 AND lease_epoch < ?3 \
+                   AND ((state='runnable' AND julianday(next_eligible) <= julianday(?5)) \
+                     OR (state='leased' AND lease_expires IS NOT NULL \
+                         AND julianday(lease_expires) <= julianday(?5)))",
+                rusqlite::params![task_ref, owner, lease_epoch, expires, now],
+            )
+            .map_err(|error| {
+                SchedulerRepositoryError::Unavailable(format!("eligible lease: {error}"))
+            })?;
+        if updated != 1 {
+            return Err(SchedulerRepositoryError::LeaseConflict(
+                "concurrent scheduler update refused lease acquisition".to_owned(),
+            ));
+        }
+        self.load(task_ref)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
+    }
+
     /// Release a lease (worker finished or crashed and a successor must
     /// reclaim). Returns the row.
     pub fn release_lease(
@@ -261,4 +333,9 @@ impl SchedulerRepository {
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("cancel: {e}")))?;
         Ok(())
     }
+}
+
+fn parse_scheduler_timestamp(value: &str) -> Result<WallTimestamp, SchedulerRepositoryError> {
+    WallTimestamp::parse(value)
+        .map_err(|_| SchedulerRepositoryError::InvalidTimestamp(value.to_owned()))
 }
