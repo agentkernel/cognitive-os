@@ -13,14 +13,15 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. A dedicated Ubuntu Desktop 24.04.4 B01 candidate is qualified with a native encrypted login keyring and clean state; no artifact, Pi, or Provider credential has entered that guest | select and independently verify the immutable reviewed-`main` artifact, then run the remaining start-gate checks |
-| B01 first-install/first-conversation Gate | `not-run` | dedicated `B01-Desktop-Linux-002` guest passed OS, x86_64/non-WSL, native user-systemd, clean-state, and Product-compatible default SecretStore probes (operator-held login password is the encrypted keyring master). Reset snapshot `b01-platform-qualified-baseline` exists. No B01 attempt has started | register the immutable artifact and complete start gate before attempt 1 |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. B01 attempt 1 on the dedicated Ubuntu Desktop 24.04.4 guest passed all phases with the immutable campaign artifact | B01 acceptance evidence is recorded; next is P2 governed single-agent MVP per the formal plan |
+| B01 first-install/first-conversation Gate | **pass** | `B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4, x86_64, non-WSL, native user-systemd): immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b` independently verified; exact Pi `0.81.1` SRI matched; verified installer activated; readiness `first_conversation_ready=true`; Operator A hidden-input credential opt-in; bounded first response `status:ok` in 6295 ms with expected marker, `authority_side_effects:false`; cleanup passed including secret deletion with post-clear not-found | verifier B reviews the redacted ledger; then claim the next P2 task |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/b01-desktop-candidate` | dedicated Ubuntu Desktop B01 candidate provisioned and qualified; keyring probe passed; reset baseline taken. B01 remains `not-run`; remaining start-gate is immutable artifact selection/verification and formal runner review | runner dispatches and independently verifies the immutable campaign artifact, then completes the start gate before attempt 1 |
+| Active task lease | `none` | B01 attempt 1 passed and cleanup completed; attempt ledger: `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md`. Execution lease is closed | verifier B independent review; then select the next P2 task |
 
-The P1-T09 implementation evidence is real but incomplete. The current status is
-therefore intentionally `in-progress`, not `done`; B01 remains `not-run`.
+The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
+current status remains `in-progress` because GMVP-LINUX requires P2 and P7
+acceptance evidence in addition to B01.
 
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
