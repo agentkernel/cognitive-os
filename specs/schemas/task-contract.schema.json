@@ -16,9 +16,6 @@
     "budget",
     "max_iterations",
     "max_retries",
-    "deadline",
-    "loop_object_id",
-    "budget_id",
     "allowed_state_domains",
     "allowed_tools"
   ],
@@ -204,6 +201,89 @@
   },
   "additionalProperties": false,
   "allOf": [
+    {
+      "description": "Only the explicitly supported historical and execution-bound schema versions are valid TaskContract payloads.",
+      "properties": {
+        "header": {
+          "properties": {
+            "schema_version": {
+              "enum": [
+                "cognitiveos.task-contract/0.1",
+                "cognitiveos.task-contract/0.2"
+              ]
+            }
+          },
+          "required": [
+            "schema_version"
+          ]
+        }
+      },
+      "required": [
+        "header"
+      ]
+    },
+    {
+      "description": "Historical v0.1 contracts remain auditable but cannot contain execution bindings introduced by v0.2.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.1"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "deadline"
+              ]
+            },
+            {
+              "required": [
+                "loop_object_id"
+              ]
+            },
+            {
+              "required": [
+                "budget_id"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "description": "Execution-bound v0.2 contracts require all authority bindings as one atomic set.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.2"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "deadline",
+          "loop_object_id",
+          "budget_id"
+        ]
+      }
+    },
     {
       "description": "A TaskContract must declare at least one acceptance condition so completion is decidable.",
       "properties": {

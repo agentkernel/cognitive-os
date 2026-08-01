@@ -59,7 +59,9 @@ where
         .current_contract_epoch(&binding.task_ref)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     if contract_epoch == 0 {
-        return Err(SchedulerAuthorityError::MissingContract(binding.task_ref.clone()));
+        return Err(SchedulerAuthorityError::MissingContract(
+            binding.task_ref.clone(),
+        ));
     }
     let contract_row = store
         .load_task_contract(&binding.task_ref, contract_epoch)
@@ -80,11 +82,14 @@ where
     let loop_object = store
         .load_object(LifecycleDomain::Loop, &loop_object_id)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-        .ok_or_else(|| SchedulerAuthorityError::LoopUnavailable(loop_object_id.as_str().to_owned()))?;
+        .ok_or_else(|| {
+            SchedulerAuthorityError::LoopUnavailable(loop_object_id.as_str().to_owned())
+        })?;
     if !matches!(loop_object.state.as_str(), "START" | "CONTINUE") {
         return Err(SchedulerAuthorityError::LoopUnavailable(format!(
             "{} is {}",
-            loop_object_id.as_str(), loop_object.state.as_str()
+            loop_object_id.as_str(),
+            loop_object.state.as_str()
         )));
     }
 
@@ -110,7 +115,9 @@ where
                 .remaining()
                 .get("money_microunits")
                 .copied()
-                .ok_or_else(|| SchedulerAuthorityError::BudgetUnavailable(budget_id.as_str().to_owned()))?;
+                .ok_or_else(|| {
+                    SchedulerAuthorityError::BudgetUnavailable(budget_id.as_str().to_owned())
+                })?;
             if remaining_cost > cost_ceiling {
                 return Err(SchedulerAuthorityError::BudgetUnavailable(
                     budget_id.as_str().to_owned(),

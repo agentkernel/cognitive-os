@@ -57,7 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T03/authority-adapter` | daemon-owned reload of bound scheduler ceiling facts before lease dispatch | Lane-RUN | `lane/personal-p2-t03-authority-adapter` | `apps/kernel-server/src/personal/**`, `apps/kernel-server/tests/p2_t03_scheduler_durable_authority.rs`, `crates/cognitive-runtime/src/scheduler_service.rs`, `crates/cognitive-runtime/tests/p2_t03_scheduler_ceiling_authority.rs`, `docs/plan/**`, `docs/checkpoints/20260801-personal-p2-t03-authority-adapter-handoff.md` | Cursor session 2026-08-01 | 2026-08-01 / 2026-08-01 | active |
+| `lease/personal/P2-T03/fenced-quiescence-contract` | TaskContract compatibility and loop ceiling-stop quiescence contract | Lane-CTR | `lane/ctr-p2-t03-fenced-quiescence` | `specs/schemas/task-contract.schema.json`, `specs/transitions/loop.transitions.json`, `specs/schemas/**`, `specs/registry/**`, `crates/cognitive-contracts/**`, `packages/contracts-ts/**`, `crates/cognitive-kernel/**`, `crates/cognitive-store/**`, `conformance/**`, `docs/adr/**`, `docs/standards/**`, `docs/traceability/**`, `docs/plan/**`, `docs/checkpoints/20260801-personal-p2-t03-fenced-quiescence-contract-handoff.md` | Cursor session 2026-08-01 | 2026-08-01 / 2026-08-01 | active |
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |

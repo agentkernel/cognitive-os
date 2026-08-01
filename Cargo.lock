@@ -1178,6 +1178,7 @@ dependencies = [
  "cognitive-secret",
  "cognitive-store",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]

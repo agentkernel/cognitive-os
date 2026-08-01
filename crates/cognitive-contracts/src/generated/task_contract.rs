@@ -16,7 +16,8 @@ pub const SCHEMA_ID: &str = "task-contract.schema.json";
 /// Canonical content digest of the source schema (canonical bytes,
 /// domain `schema-bundle/0.1` — the schema-bundle manifest per-asset
 /// digest); the envelope `schema_digest` pin for this payload.
-pub const SCHEMA_DIGEST: &str = "sha256:81075c52c5ca3f850814caed906a3e16c4bef1db8eea56f5d2637bcafab3742a";
+pub const SCHEMA_DIGEST: &str =
+    "sha256:81075c52c5ca3f850814caed906a3e16c4bef1db8eea56f5d2637bcafab3742a";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ContractConditionKind {

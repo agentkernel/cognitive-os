@@ -18,7 +18,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use jsonschema::{Retrieve, Uri};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -101,6 +101,120 @@ fn vector_object(file: &str) -> Value {
         .and_then(|i| i.get("object"))
         .cloned()
         .unwrap_or_else(|| panic!("{file} has no input.object"))
+}
+
+fn strong_reference() -> Value {
+    json!({
+        "kind": "strong",
+        "id": "01890a5d-ac96-774b-bcce-b302099a805d",
+        "object_version": 1,
+        "content_digest": format!("sha256:{}", "a".repeat(64)),
+    })
+}
+
+fn task_contract_fixture(schema_version: &str) -> Value {
+    let strong_reference = strong_reference();
+    json!({
+        "header": {
+            "id": "01890a5d-ac96-774b-bcce-b302099a805d",
+            "type": "TaskContract",
+            "schema_version": schema_version,
+            "object_version": 1,
+            "scope_domain": "platform",
+            "resource_scope_ref": strong_reference,
+            "owner_ref": strong_reference,
+            "authority_ref": strong_reference,
+            "policy_refs": [],
+            "purpose_constraints": ["task_execution"],
+            "sensitivity": "internal",
+            "compartments": [],
+            "retention": {
+                "policy": "test",
+                "expires_at": null,
+                "legal_hold": false
+            },
+            "provenance": {
+                "created_by": "principal://system/test",
+                "source_refs": []
+            },
+            "lineage": {
+                "parents": [],
+                "transform": "test_fixture"
+            },
+            "content_digest": format!("sha256:{}", "b".repeat(64)),
+            "created_at": "2026-08-01T00:00:00Z",
+            "valid_time": {
+                "from": "2026-08-01T00:00:00Z",
+                "until": null
+            }
+        },
+        "task_ref": "task://tenant-a/rollout",
+        "contract_epoch": 1,
+        "intent_acceptance_ref": strong_reference,
+        "intent_interpretation_ref": strong_reference,
+        "user_intent_ref": strong_reference,
+        "objective": "Deploy the bounded rollout.",
+        "scope": {
+            "in_scope": ["service://tenant-a/api"],
+            "out_of_scope": []
+        },
+        "conditions": [{
+            "id": "acceptance",
+            "kind": "acceptance",
+            "description": "The verifier accepts the deployment."
+        }],
+        "budget": {},
+        "max_iterations": 2,
+        "max_retries": 1,
+        "allowed_state_domains": ["loop"],
+        "allowed_tools": []
+    })
+}
+
+#[test]
+fn task_contract_schema_versions_preserve_auditable_v01_and_require_v02_bindings() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "task-contract.schema.json");
+    let legacy_contract = task_contract_fixture("cognitiveos.task-contract/0.1");
+    assert!(
+        validator.is_valid(&legacy_contract),
+        "the finite compatibility window must retain historical v0.1 contracts"
+    );
+
+    let mut mixed_legacy_contract = legacy_contract.clone();
+    mixed_legacy_contract["deadline"] = json!("2026-08-02T00:00:00Z");
+    assert!(
+        !validator.is_valid(&mixed_legacy_contract),
+        "v0.1 contracts must not silently acquire a partial v0.2 execution binding"
+    );
+
+    let mut execution_bound_contract = task_contract_fixture("cognitiveos.task-contract/0.2");
+    execution_bound_contract["deadline"] = json!("2026-08-02T00:00:00Z");
+    execution_bound_contract["loop_object_id"] = json!("01890a5d-ac96-774b-bcce-b302099a805d");
+    execution_bound_contract["budget_id"] = json!("01890a5d-ac96-774b-bcce-b302099a805e");
+    assert!(
+        validator.is_valid(&execution_bound_contract),
+        "v0.2 contracts with all execution bindings must validate"
+    );
+
+    for missing_binding in ["deadline", "loop_object_id", "budget_id"] {
+        let mut incomplete_contract = execution_bound_contract.clone();
+        incomplete_contract
+            .as_object_mut()
+            .expect("TaskContract fixture must be an object")
+            .remove(missing_binding);
+        assert!(
+            !validator.is_valid(&incomplete_contract),
+            "v0.2 contract missing {missing_binding} must fail closed"
+        );
+    }
+
+    let mut unknown_version_contract = execution_bound_contract;
+    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.3");
+    assert!(
+        !validator.is_valid(&unknown_version_contract),
+        "unsupported TaskContract versions must not enter the compatibility window"
+    );
 }
 
 #[test]
