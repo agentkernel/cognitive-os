@@ -44,18 +44,28 @@ SSH-key-only server user has no such collection. A default collection write
 failed closed with a fixed missing-login-collection class; no Provider material
 was involved or retained.
 
-Accordingly, the native Secret Service start-gate item is `incomplete`, B01
-attempt 1 has **not** started, and the existing reset snapshot remains the
-only valid pre-install reset point.
+Accordingly, B01 attempt 1 has **not** started. The original clean snapshot
+remains historical qualification evidence only: reverting or rebooting from it
+would remove the later native Secret Service preparation.
 
-The runner additionally attempted the standard FreeDesktop
+The runner initially attempted the standard FreeDesktop
 `Secret.Service.CreateCollection` call for the `default` alias. The service
 returned a `login` alias path, but querying that path failed with the fixed
-`object-does-not-exist` class. This is the expected headless-prompt state: a
-native GUI Secret Service prompt agent must approve collection creation before
-the persistent collection exists. The runner did not retry, approve an
-unprotected collection, use a session collection, or enter any Provider
-material.
+`object-does-not-exist` class because this cloud image has no prompt agent.
+The temporary GUI route was also unsuitable: QXL, VirtIO, standard VGA, and
+VMware SVGA all failed under this guest's Xorg mode handling, so no graphical
+secret was entered.
+
+Under the owner's approved disposable-agent path, the runner instead used the
+native GNOME Keyring encrypted-collection API with a cryptographically random
+one-time master value held only in the guest process memory and cleared before
+the probe. It created an encrypted persistent collection, made it the default,
+and passed the Product-compatible `secret-tool store` / lookup / clear cycle
+without `--collection`. Only fixed non-sensitive sentinels were used and all
+were cleared. LightDM was disabled afterwards; the same default-collection
+probe passed in the restored headless user-systemd session. No Provider or user
+credential was entered, printed, logged, persisted outside the native encrypted
+collection, or made available to the runner.
 
 ## Assigned human roles
 
@@ -64,17 +74,44 @@ material.
 - Verifier B: independent verifier; must not receive, enter, or inspect the
   Provider credential.
 
-## Required owner action
+## Dedicated Desktop B01 candidate (2026-08-01)
 
-Use a graphical Secret Service prompt agent on the B01 guest to initialize and
-unlock an encrypted persistent default/login collection for `b01operator`,
-then confirm that a non-sensitive Product-compatible `secret-tool store` /
-lookup / clear cycle succeeds **without** specifying `--collection`. Do not
-enter a Provider credential during this preparation.
+The cloud-image guest's graphical stack failed across QXL, VirtIO, VGA/VESA,
+and VMware SVGA, so the runner replaced it with a dedicated Ubuntu Desktop
+candidate from the official Canonical image instead of retrying display
+drivers on the same guest.
 
-After that confirmation, the runner can re-run the redacted platform probe,
-take a new platform-qualified reset snapshot, register the immutable reviewed
-artifact, and complete the remaining B01 start-gate checks before attempt 1.
+| Field | Value |
+|---|---|
+| Libvirt domain | `B01-Desktop-Linux-002` |
+| Guest operating system | Ubuntu Desktop 24.04.4 LTS (`ubuntu-24.04.4-desktop-amd64.iso`) |
+| ISO digest | `3a4c9877b483ab46d7c3fbe165a0db275e1ae3cfe56a5657e5a47c2f99a99d1e`, matched the official `releases.ubuntu.com/24.04/SHA256SUMS` manifest |
+| Guest architecture | `x86_64`; non-WSL; `pid 1 = systemd`; user systemd `running` |
+| Guest user | `hal9001` (created during desktop install with a password held only by the operator) |
+| Network | libvirt default NAT; guest endpoint `192.168.123.160` (non-public access info) |
+| Access | SSH enabled with a dedicated `b01_desktop_guest` ed25519 key; password SSH also configured by the desktop install |
+| Clean state | no `cognitive` CLI, no Pi CLI or `~/.pi`, no `~/.config/cognitiveos`, no `~/.local/share/cognitiveos` |
+| Secret Service | native `secret-tool` present; encrypted login keyring created by the operator's desktop login password |
+| Keyring probe | Product-compatible `secret-tool store` / lookup / clear **without** `--collection` passed with fixed non-sensitive sentinel `b01-keyring-sentinel`; post-clear not-found verified; sentinel removed |
+| Reset point | libvirt snapshot `b01-platform-qualified-baseline` (shutoff, taken after install, first login, keyring creation, and SSH provisioning) |
+
+This resolves the prior reset-capable keyring blocker: the operator's desktop
+login password is the recoverable encrypted keyring master, and the baseline
+snapshot is the preregistered clean/reset checkpoint. No CognitiveOS artifact,
+Pi runtime, Provider credential, or B01 attempt has entered this guest.
+
+## Remaining start-gate work (owner + runner)
+
+- Select and independently verify an immutable reviewed-`main` campaign
+  artifact (source commit, SHA-256, signature, trusted-key/version, Pi `0.81.1`
+  pin) before installation.
+- Name the operator and independent verifier in the campaign record.
+- Record the workload, timeout, attempt ledger location, redacted evidence
+  collector, and cleanup procedure; review the B01 runner as a formal Gate
+  runner.
+- Operator A then performs the hidden-input Provider credential opt-in through
+  the approved SecretStore flow on this guest only; no credential is copied to
+  chat, argv, config, logs, evidence, or Git.
 
 ## Non-claims
 
