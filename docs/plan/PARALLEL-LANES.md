@@ -57,6 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/execution-binding-contract` | TaskContract execution binding and scheduler ceiling-stop transition | Lane-CTR | `lane/ctr-p2-t03-execution-binding` | `specs/schemas/task-contract.schema.json`, `specs/transitions/loop.transitions.json`, `crates/cognitive-contracts/**`, `packages/contracts-ts/**`, `crates/cognitive-kernel/src/intent_chain.rs`, `crates/cognitive-kernel/tests/engine_gate.rs`, `crates/cognitive-store/tests/m5_intent_chain.rs`, `crates/cognitive-store/tests/m5_harness.rs`, `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`, `crates/cognitive-conformance/**`, `docs/standards/**`, `docs/plan/**`, `docs/checkpoints/20260801-personal-p2-t03-execution-binding-contract-handoff.md` | Cursor session 2026-08-01 | 2026-08-01 / 2026-08-01 | active |
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |

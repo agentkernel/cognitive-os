@@ -151,6 +151,12 @@ fn contract_cmd(contract_n: u64, task_ref: &str) -> TaskContractCommand {
         },
         max_iterations: 8,
         max_retries: 3,
+        deadline: WallTimestamp::parse("2026-08-02T12:00:00Z").unwrap(),
+        loop_object_id: oid(contract_n + 100),
+        budget_id: cognitive_domain::BudgetId::parse(&format!(
+            "00000000-0000-7000-b000-{contract_n:012x}"
+        ))
+        .unwrap(),
         allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
         allowed_tools: vec!["operation://tenant-a/payments/refund".to_owned()],
         governance: seed(),

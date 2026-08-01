@@ -16,6 +16,9 @@
     "budget",
     "max_iterations",
     "max_retries",
+    "deadline",
+    "loop_object_id",
+    "budget_id",
     "allowed_state_domains",
     "allowed_tools"
   ],
@@ -123,6 +126,19 @@
     "max_retries": {
       "type": "integer",
       "minimum": 0
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Absolute task-execution deadline. This is task authority, not an AKP request deadline."
+    },
+    "loop_object_id": {
+      "$ref": "object-reference.schema.json#/$defs/uuidV7",
+      "description": "Durable Loop lifecycle object identity bound by this immutable contract epoch."
+    },
+    "budget_id": {
+      "$ref": "object-reference.schema.json#/$defs/uuidV7",
+      "description": "Durable authority budget ledger identity bound by this immutable contract epoch."
     },
     "allowed_state_domains": {
       "type": "array",

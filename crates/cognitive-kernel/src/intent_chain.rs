@@ -52,7 +52,7 @@ use cognitive_contracts::generated::task_contract::{
     ContractCondition, ContractConditionKind, TaskContract, TaskScope,
 };
 use cognitive_contracts::generated::user_intent_record::UserIntentRecord;
-use cognitive_domain::{LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
+use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
 use serde_json::{Value, json};
 
 // ---------------------------------------------------------------------
@@ -768,6 +768,12 @@ pub struct TaskContractCommand {
     pub max_iterations: i64,
     /// Hard same-action retry ceiling (REQ-RUN-008).
     pub max_retries: i64,
+    /// Absolute task-execution deadline, independent of transport deadlines.
+    pub deadline: WallTimestamp,
+    /// Durable Loop lifecycle identity bound by this contract epoch.
+    pub loop_object_id: ObjectId,
+    /// Durable authority budget identity bound by this contract epoch.
+    pub budget_id: BudgetId,
     /// Authority-managed state domains the loop may touch (at least one).
     pub allowed_state_domains: Vec<String>,
     /// Allowed tool URIs.
@@ -839,7 +845,7 @@ where
     let header = compose_header(
         &cmd.contract_id,
         "TaskContract",
-        "cognitiveos.task-contract/0.1",
+        "cognitiveos.task-contract/0.2",
         &cmd.governance,
         vec![format!(
             "state://task/interpretation/{}",
@@ -878,6 +884,7 @@ where
             })
             .collect(),
         contract_epoch,
+        deadline: cmd.deadline.as_str().to_owned(),
         header,
         human_gates: None,
         intent_acceptance_ref: acceptance_ref,
@@ -887,12 +894,14 @@ where
         ),
         max_iterations: cmd.max_iterations,
         max_retries: cmd.max_retries,
+        loop_object_id: cmd.loop_object_id.to_generated(),
         objective: cmd.objective.clone(),
         scope: TaskScope {
             in_scope: cmd.in_scope.clone(),
             out_of_scope: cmd.out_of_scope.clone(),
         },
         task_ref: cmd.task_ref.as_str().to_owned(),
+        budget_id: cmd.budget_id.to_generated(),
         user_intent_ref: strong_ref_to(
             &admitted.record().record_id,
             &admitted.record().intent_digest,
