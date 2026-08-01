@@ -884,7 +884,7 @@ where
             })
             .collect(),
         contract_epoch,
-        deadline: cmd.deadline.as_str().to_owned(),
+        deadline: Some(cmd.deadline.as_str().to_owned()),
         header,
         human_gates: None,
         intent_acceptance_ref: acceptance_ref,
@@ -894,14 +894,14 @@ where
         ),
         max_iterations: cmd.max_iterations,
         max_retries: cmd.max_retries,
-        loop_object_id: cmd.loop_object_id.to_generated(),
+        loop_object_id: Some(cmd.loop_object_id.to_generated()),
         objective: cmd.objective.clone(),
         scope: TaskScope {
             in_scope: cmd.in_scope.clone(),
             out_of_scope: cmd.out_of_scope.clone(),
         },
         task_ref: cmd.task_ref.as_str().to_owned(),
-        budget_id: cmd.budget_id.to_generated(),
+        budget_id: Some(cmd.budget_id.to_generated()),
         user_intent_ref: strong_ref_to(
             &admitted.record().record_id,
             &admitted.record().intent_digest,

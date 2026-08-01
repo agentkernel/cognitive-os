@@ -163,7 +163,9 @@ fn task_contract_fixture(schema_version: &str) -> Value {
             "kind": "acceptance",
             "description": "The verifier accepts the deployment."
         }],
-        "budget": {},
+        "budget": {
+            "tool_calls": 1
+        },
         "max_iterations": 2,
         "max_retries": 1,
         "allowed_state_domains": ["loop"],
