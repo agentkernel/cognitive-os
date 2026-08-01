@@ -399,6 +399,16 @@ where
         &self,
         cmd: &TransitionCommand,
     ) -> Result<CommittedTransition, TransitionRejection> {
+        self.commit_transition_with_dispatch_admission(cmd, None)
+    }
+
+    /// Apply a transition while consuming a loop-scoped dispatch permit in
+    /// the same authority transaction as the object CAS.
+    pub fn commit_transition_with_dispatch_admission(
+        &self,
+        cmd: &TransitionCommand,
+        dispatch_admission: Option<crate::ports::DispatchAdmission>,
+    ) -> Result<CommittedTransition, TransitionRejection> {
         // 1. Registered table, pinned by version + canonical digest.
         let loaded = load_table(cmd.domain)?;
         if cmd.table_pin.version != loaded.table.version || cmd.table_pin.digest != loaded.digest {
@@ -696,6 +706,7 @@ where
                 })
                 .collect(),
             fencing_epoch: cmd.fencing_epoch,
+            dispatch_admission,
         };
         let receipt = self
             .store

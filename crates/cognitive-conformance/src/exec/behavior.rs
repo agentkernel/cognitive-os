@@ -390,6 +390,7 @@ fn bypass_gate_commit(
             budget: None,
             outbox: vec![],
             fencing_epoch: None,
+            dispatch_admission: None,
         })
         .map_err(|err| env_err(format!("bypass commit failed unexpectedly: {err}")))?;
     Ok(())

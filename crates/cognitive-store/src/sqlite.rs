@@ -26,12 +26,13 @@ use cognitive_domain::{
 };
 use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, GovernanceObjectStore,
-    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry,
-    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, DispatchAdmission,
+    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
+    LoopDispatchBarrier, ObjectAdmission, OutboxEntry, ProgressFactRow, ProtocolStore,
+    QuiescenceStore, StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow,
+    TransitionCommit, UserIntentRecordRow,
 };
-use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
+use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 
@@ -134,6 +135,13 @@ CREATE TABLE IF NOT EXISTS fencing (
 
 INSERT OR IGNORE INTO fencing (id, epoch) VALUES (1, 1);
 
+CREATE TABLE IF NOT EXISTS loop_dispatch_barriers (
+  loop_object_id  TEXT PRIMARY KEY,
+  generation      INTEGER NOT NULL CHECK (generation >= 1),
+  dispatch_enabled INTEGER NOT NULL CHECK (dispatch_enabled IN (0, 1)),
+  fencing_epoch   INTEGER NOT NULL CHECK (fencing_epoch >= 1)
+) STRICT;
+
 CREATE TABLE IF NOT EXISTS checkpoints (
   checkpoint_seq       INTEGER PRIMARY KEY AUTOINCREMENT,
   checkpoint_id        TEXT NOT NULL UNIQUE,
@@ -230,6 +238,17 @@ BEGIN SELECT RAISE(ABORT, 'append-only: progress facts are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS progress_facts_append_only_delete
 BEFORE DELETE ON loop_progress_facts
 BEGIN SELECT RAISE(ABORT, 'append-only: progress facts are immutable'); END;
+";
+
+/// Additive Personal authority migration v3: loop-scoped fenced dispatch
+/// barriers. The table is also included in fresh-schema creation above.
+pub(crate) const QUIESCENCE_SCHEMA_V3: &str = "
+CREATE TABLE IF NOT EXISTS loop_dispatch_barriers (
+  loop_object_id  TEXT PRIMARY KEY,
+  generation      INTEGER NOT NULL CHECK (generation >= 1),
+  dispatch_enabled INTEGER NOT NULL CHECK (dispatch_enabled IN (0, 1)),
+  fencing_epoch   INTEGER NOT NULL CHECK (fencing_epoch >= 1)
+) STRICT;
 ";
 
 /// SQLite-backed [`AuthorityStore`].
@@ -440,6 +459,45 @@ impl AuthorityStore for SqliteAuthorityStore {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(unavailable("begin transition"))?;
         verify_fencing_in_tx(&tx, commit.fencing_epoch)?;
+
+        if let Some(admission) = &commit.dispatch_admission {
+            if commit.cas.domain != LifecycleDomain::Effect
+                || commit.cas.from_state.as_str() != "AUTHORIZED"
+                || commit.cas.to_state.as_str() != "EXECUTING"
+            {
+                return Err(StorePortError::Conflict {
+                    detail: "dispatch admission is valid only for AUTHORIZED to EXECUTING"
+                        .to_owned(),
+                });
+            }
+            verify_fencing_in_tx(&tx, Some(admission.expected_fencing_epoch))?;
+            let current_contract_epoch: Option<i64> = tx
+                .query_row(
+                    "SELECT MAX(contract_epoch) FROM task_contracts WHERE task_ref = ?1",
+                    [admission.binding.task_ref.as_str()],
+                    |row| row.get(0),
+                )
+                .map_err(unavailable("read dispatch contract epoch"))?;
+            if current_contract_epoch != Some(admission.binding.contract_epoch) {
+                return Err(StorePortError::Conflict {
+                    detail: "dispatch contract epoch is no longer current".to_owned(),
+                });
+            }
+            let barrier: Option<(i64, i64)> = tx
+                .query_row(
+                    "SELECT generation, dispatch_enabled FROM loop_dispatch_barriers
+                     WHERE loop_object_id = ?1",
+                    [admission.binding.loop_object_id.as_str()],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .optional()
+                .map_err(unavailable("read dispatch barrier"))?;
+            if barrier != Some((admission.binding.dispatch_generation, 1)) {
+                return Err(StorePortError::Conflict {
+                    detail: "loop dispatch barrier is closed or generation is stale".to_owned(),
+                });
+            }
+        }
 
         // ADR-0002 rule 3: CAS via WHERE version = expected (plus identity,
         // domain and source state); zero affected rows -> Conflict, and the
@@ -669,6 +727,135 @@ impl AuthorityStore for SqliteAuthorityStore {
                 detail: format!("no pending outbox row {outbox_sequence}"),
             });
         }
+        Ok(())
+    }
+}
+
+impl QuiescenceStore for SqliteAuthorityStore {
+    fn open_loop_dispatch_barrier(
+        &self,
+        barrier: &LoopDispatchBarrier,
+    ) -> Result<LoopDispatchBarrier, StorePortError> {
+        if barrier.generation < 1 || barrier.fencing_epoch < 1 || !barrier.dispatch_enabled {
+            return Err(StorePortError::Conflict {
+                detail: "initial dispatch barrier must be enabled with positive epochs".to_owned(),
+            });
+        }
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin barrier open"))?;
+        verify_fencing_in_tx(&tx, Some(barrier.fencing_epoch))?;
+        let inserted = tx
+            .execute(
+                "INSERT INTO loop_dispatch_barriers
+                   (loop_object_id, generation, dispatch_enabled, fencing_epoch)
+                 VALUES (?1, ?2, 1, ?3)",
+                (
+                    barrier.loop_object_id.as_str(),
+                    barrier.generation,
+                    barrier.fencing_epoch,
+                ),
+            )
+            .map_err(unavailable("insert dispatch barrier"))?;
+        if inserted != 1 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "dispatch barrier already exists for {}",
+                    barrier.loop_object_id
+                ),
+            });
+        }
+        tx.commit().map_err(unavailable("commit barrier open"))?;
+        Ok(barrier.clone())
+    }
+
+    fn close_loop_dispatch_barrier(
+        &self,
+        loop_object_id: &ObjectId,
+        expected_generation: i64,
+        expected_fencing_epoch: i64,
+    ) -> Result<LoopDispatchBarrier, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin barrier close"))?;
+        verify_fencing_in_tx(&tx, Some(expected_fencing_epoch))?;
+        let next_generation =
+            expected_generation
+                .checked_add(1)
+                .ok_or_else(|| StorePortError::Conflict {
+                    detail: "dispatch barrier generation overflow".to_owned(),
+                })?;
+        let changed = tx
+            .execute(
+                "UPDATE loop_dispatch_barriers
+                 SET generation = ?1, dispatch_enabled = 0, fencing_epoch = ?2
+                 WHERE loop_object_id = ?3 AND generation = ?4 AND dispatch_enabled = 1",
+                (
+                    next_generation,
+                    expected_fencing_epoch,
+                    loop_object_id.as_str(),
+                    expected_generation,
+                ),
+            )
+            .map_err(unavailable("close dispatch barrier"))?;
+        if changed != 1 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "dispatch barrier close raced for {} generation {expected_generation}",
+                    loop_object_id
+                ),
+            });
+        }
+        tx.commit().map_err(unavailable("commit barrier close"))?;
+        Ok(LoopDispatchBarrier {
+            loop_object_id: loop_object_id.clone(),
+            generation: next_generation,
+            dispatch_enabled: false,
+            fencing_epoch: expected_fencing_epoch,
+        })
+    }
+
+    fn admit_dispatch(&self, admission: &DispatchAdmission) -> Result<(), StorePortError> {
+        if admission.binding.task_ref.is_empty() || admission.binding.contract_epoch < 1 {
+            return Err(StorePortError::Conflict {
+                detail: "dispatch binding requires a task reference and positive contract epoch"
+                    .to_owned(),
+            });
+        }
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin dispatch admission"))?;
+        verify_fencing_in_tx(&tx, Some(admission.expected_fencing_epoch))?;
+        let barrier: Option<(i64, i64)> = tx
+            .query_row(
+                "SELECT generation, dispatch_enabled FROM loop_dispatch_barriers
+                 WHERE loop_object_id = ?1",
+                [admission.binding.loop_object_id.as_str()],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("read dispatch barrier"))?;
+        let Some((generation, dispatch_enabled)) = barrier else {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "no dispatch barrier for loop {}",
+                    admission.binding.loop_object_id
+                ),
+            });
+        };
+        if generation != admission.binding.dispatch_generation || dispatch_enabled != 1 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "dispatch fenced for loop {} generation {}",
+                    admission.binding.loop_object_id, admission.binding.dispatch_generation
+                ),
+            });
+        }
+        tx.commit()
+            .map_err(unavailable("commit dispatch admission"))?;
         Ok(())
     }
 }

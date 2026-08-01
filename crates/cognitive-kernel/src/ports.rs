@@ -164,6 +164,10 @@ pub struct TransitionCommit {
     /// against the current epoch INSIDE the transaction and reject stale
     /// writers with a conflict. `None` = unfenced M2 path.
     pub fencing_epoch: Option<i64>,
+    /// Optional loop-scoped dispatch binding consumed atomically with this
+    /// transition. It is used only for `AUTHORIZED -> EXECUTING`; storage
+    /// validates it in the same transaction as the Effect CAS.
+    pub dispatch_admission: Option<DispatchAdmission>,
 }
 
 /// Receipt of one committed admission or transition.
@@ -278,6 +282,83 @@ pub struct TaskBinding {
     pub task_ref: String,
     /// Contract epoch the proposal was made under.
     pub contract_epoch: i64,
+}
+
+/// Immutable authority binding for a dispatch attempt within one loop.
+///
+/// This closes the gap between a task-level contract epoch and a specific
+/// loop's dispatch permit. The generation is advanced when stop preparation
+/// closes the loop barrier, so an already leased worker cannot commit a new
+/// `AUTHORIZED -> EXECUTING` transition after quiescence begins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DispatchBinding {
+    /// Task URI whose immutable contract fixed the loop identity.
+    pub task_ref: String,
+    /// Current TaskContract epoch at binding creation.
+    pub contract_epoch: i64,
+    /// Loop which owns this effect dispatch.
+    pub loop_object_id: ObjectId,
+    /// Durable loop-barrier generation required for dispatch.
+    pub dispatch_generation: i64,
+}
+
+/// Durable dispatch permission for one loop.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoopDispatchBarrier {
+    /// Loop governed object protected by this barrier.
+    pub loop_object_id: ObjectId,
+    /// Monotonic generation fencing workers that observed an older permit.
+    pub generation: i64,
+    /// Whether a new Effect may enter EXECUTING for this loop.
+    pub dispatch_enabled: bool,
+    /// Global authority writer epoch that persisted this barrier state.
+    pub fencing_epoch: i64,
+}
+
+impl LoopDispatchBarrier {
+    /// Construct the initial enabled barrier for an admitted dispatchable loop.
+    pub fn open(loop_object_id: ObjectId, generation: i64, fencing_epoch: i64) -> Self {
+        Self {
+            loop_object_id,
+            generation,
+            dispatch_enabled: true,
+            fencing_epoch,
+        }
+    }
+}
+
+/// Inputs validated before a loop-bound dispatch can commit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DispatchAdmission {
+    /// Immutable task/loop/generation binding carried by the candidate.
+    pub binding: DispatchBinding,
+    /// Current global fencing epoch expected by this writer.
+    pub expected_fencing_epoch: i64,
+}
+
+/// Persistence operations for loop-scoped dispatch quiescence.
+///
+/// These operations are deliberately store-owned. Scheduler workers and
+/// clients can present bindings but cannot advance or reopen the barrier.
+pub trait QuiescenceStore {
+    /// Create an initial enabled barrier. Duplicate loop identity conflicts.
+    fn open_loop_dispatch_barrier(
+        &self,
+        barrier: &LoopDispatchBarrier,
+    ) -> Result<LoopDispatchBarrier, StorePortError>;
+
+    /// Atomically disable new activity and advance the loop generation.
+    fn close_loop_dispatch_barrier(
+        &self,
+        loop_object_id: &ObjectId,
+        expected_generation: i64,
+        expected_fencing_epoch: i64,
+    ) -> Result<LoopDispatchBarrier, StorePortError>;
+
+    /// Validate a dispatch binding against the durable barrier in an authority
+    /// transaction. A successful result is only an admission token; the
+    /// future Effect transition commit must consume this check atomically.
+    fn admit_dispatch(&self, admission: &DispatchAdmission) -> Result<(), StorePortError>;
 }
 
 /// One persisted Intent row (immutable once inserted; the storage layer

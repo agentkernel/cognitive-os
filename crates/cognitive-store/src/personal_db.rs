@@ -12,7 +12,7 @@ use crate::migration::{
     execute_sqlite_migration_plan,
 };
 use crate::scheduler::scheduler_migration_entry;
-use crate::sqlite::AUTHORITY_SCHEMA_V1;
+use crate::sqlite::{AUTHORITY_SCHEMA_V1, QUIESCENCE_SCHEMA_V3};
 use rusqlite::Connection;
 use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
@@ -50,11 +50,12 @@ impl PersonalDatabasePrepareReport {
 }
 
 /// Production authority migration plan: v1 = full base schema, v2 =
-/// durable scheduler persistence (P2-T03).
+/// durable scheduler persistence, v3 = loop dispatch barriers (P2-T03).
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
         scheduler_migration_entry(),
+        MigrationPlanEntry::new(3, QUIESCENCE_SCHEMA_V3),
     ]
 }
 

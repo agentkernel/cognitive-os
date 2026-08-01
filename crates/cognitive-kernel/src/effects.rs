@@ -1,4 +1,4 @@
-﻿//! The Intent → Effect protocol driver
+//! The Intent → Effect protocol driver
 //! (`docs/standards/intent-effect-idempotency.md`; REQ-EFF-001..006,
 //! REQ-EFF-STATE-001; `.cursor/rules/13-effect-recovery.mdc`).
 //!
@@ -44,8 +44,8 @@ use crate::executor::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
 use crate::ports::{
-    AuthorityStore, Clock, EventDraft, IdGenerator, IntentRow, PortFailure, ProtocolStore,
-    StorePortError, TaskBinding,
+    AuthorityStore, Clock, DispatchAdmission, DispatchBinding, EventDraft, IdGenerator, IntentRow,
+    PortFailure, ProtocolStore, StorePortError, TaskBinding,
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
@@ -795,6 +795,97 @@ where
         let outcome = executor
             .dispatch(&call)
             .map_err(|err| port_rejection("executor", err))
+            .map_err(EffectError::Rejected)?;
+        Ok((committed, outcome))
+    }
+
+    /// Dispatch through a loop-scoped durable generation permit. The store
+    /// consumes the permit in the same transaction that writes EXECUTING,
+    /// so stop preparation cannot lose a check-then-dispatch race.
+    #[allow(clippy::too_many_arguments)]
+    pub fn dispatch_effect_fenced(
+        &self,
+        effect_id: &ObjectId,
+        expected_version: Version,
+        grant: &AuthorizationGrant,
+        currency: &GovernanceCurrency,
+        dispatch_binding: DispatchBinding,
+        executor: &dyn EffectExecutor,
+        lease: &WriterLease,
+    ) -> Result<(CommittedTransition, DispatchOutcome), EffectError> {
+        self.verify_lease(lease)?;
+        let intent = self
+            .store
+            .load_intent_for_effect(effect_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| ProtocolDenial {
+                registered: STATE_CONFLICT,
+                detail: "no durable intent for effect: dispatch refused (fail-before-effect)"
+                    .to_owned(),
+            })?;
+        let task_binding = intent.task_binding.as_ref().ok_or_else(|| ProtocolDenial {
+            registered: STATE_CONFLICT,
+            detail: "loop-fenced dispatch requires a task-bound intent".to_owned(),
+        })?;
+        if task_binding.task_ref != dispatch_binding.task_ref
+            || task_binding.contract_epoch != dispatch_binding.contract_epoch
+        {
+            return Err(ProtocolDenial {
+                registered: STATE_CONFLICT,
+                detail: "dispatch binding does not match immutable task intent binding".to_owned(),
+            }
+            .into());
+        }
+
+        let now = self.now()?;
+        let mut established = BTreeSet::new();
+        established.insert("fencing_epoch_current".to_owned());
+        established.insert("intent_durably_persisted".to_owned());
+        if !intent.idempotency_key.is_empty() && !intent.parameters_digest.is_empty() {
+            established.insert("idempotency_binding_valid".to_owned());
+        }
+        if crate::authz::capability_and_revocation_current(
+            grant,
+            currency.revocation_epoch,
+            currency.capability_set_version,
+            &now,
+        ) {
+            established.insert("capability_and_revocation_current".to_owned());
+        }
+        let dispatch_event_id = self.next_object_id()?;
+        let mut evidence = BTreeMap::new();
+        evidence.insert(
+            "dispatch_event".to_owned(),
+            strong_ref(&dispatch_event_id, 1, &intent.canonical_json)?,
+        );
+        let command = self.command(
+            effect_id,
+            "AUTHORIZED",
+            "EXECUTING",
+            "DISPATCHED",
+            established,
+            evidence,
+            expected_version,
+            lease,
+        )?;
+        let committed = self.engine().commit_transition_with_dispatch_admission(
+            &command,
+            Some(DispatchAdmission {
+                binding: dispatch_binding,
+                expected_fencing_epoch: lease.epoch,
+            }),
+        )?;
+        let call = ExecutorCall {
+            action: intent.action.clone(),
+            target: intent.target.clone(),
+            idempotency_key: intent.idempotency_key.clone(),
+            parameters_digest: intent.parameters_digest.clone(),
+            authorization_digest: format!("epoch:{}", grant.decided_at_epoch),
+            fencing_epoch: lease.epoch,
+        };
+        let outcome = executor
+            .dispatch(&call)
+            .map_err(|error| port_rejection("executor", error))
             .map_err(EffectError::Rejected)?;
         Ok((committed, outcome))
     }
