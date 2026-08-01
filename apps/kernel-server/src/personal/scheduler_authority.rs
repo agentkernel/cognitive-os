@@ -4,6 +4,8 @@
 //! It reloads the immutable TaskContract and the identities it binds, deriving
 //! ceiling inputs solely from authority-store facts.
 
+#![allow(dead_code)] // Activated only after the fenced quiescence protocol exists.
+
 use cognitive_contracts::generated::task_contract::TaskContract;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId};
 use cognitive_kernel::ports::{AuthorityStore, HarnessStore, IntentChainStore, ProtocolStore};
