@@ -38,10 +38,16 @@ fn runnable_row(task_ref: &str) -> SchedulerRow {
 fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
     let dir = tempfile::tempdir().unwrap();
     let mut repo = open_repo(&dir);
-    repo.upsert(&runnable_row("task://tenant-a/rollout-v2")).unwrap();
+    repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
+        .unwrap();
 
     let leased = repo
-        .acquire_lease("task://tenant-a/rollout-v2", "worker-1", 1, "2026-08-01T12:10:00Z")
+        .acquire_lease(
+            "task://tenant-a/rollout-v2",
+            "worker-1",
+            1,
+            "2026-08-01T12:10:00Z",
+        )
         .unwrap();
     assert_eq!(leased.state, SchedulerState::Leased.as_str());
     assert_eq!(leased.lease_owner.as_deref(), Some("worker-1"));
@@ -56,7 +62,10 @@ fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
         "2026-08-01T12:10:00Z",
     );
     assert!(
-        matches!(duplicate, Err(cognitive_store::scheduler::SchedulerRepositoryError::LeaseConflict(_))),
+        matches!(
+            duplicate,
+            Err(cognitive_store::scheduler::SchedulerRepositoryError::LeaseConflict(_))
+        ),
         "duplicate lease must be refused"
     );
 }
@@ -69,9 +78,15 @@ fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
 fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
     let dir = tempfile::tempdir().unwrap();
     let mut repo = open_repo(&dir);
-    repo.upsert(&runnable_row("task://tenant-a/rollout-v2")).unwrap();
-    repo.acquire_lease("task://tenant-a/rollout-v2", "worker-1", 1, "2026-08-01T12:10:00Z")
+    repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
         .unwrap();
+    repo.acquire_lease(
+        "task://tenant-a/rollout-v2",
+        "worker-1",
+        1,
+        "2026-08-01T12:10:00Z",
+    )
+    .unwrap();
 
     // Wrong owner release is refused (a crashed worker's identity cannot
     // release someone else's lease).
@@ -98,7 +113,12 @@ fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
 
     // Takeover now succeeds and advances the attempt counter.
     let taken = repo
-        .acquire_lease("task://tenant-a/rollout-v2", "worker-2", 2, "2026-08-01T12:20:00Z")
+        .acquire_lease(
+            "task://tenant-a/rollout-v2",
+            "worker-2",
+            2,
+            "2026-08-01T12:20:00Z",
+        )
         .unwrap();
     assert_eq!(taken.lease_owner.as_deref(), Some("worker-2"));
     assert_eq!(taken.lease_epoch, 2);
@@ -114,9 +134,15 @@ fn scheduler_rows_survive_reopen_like_a_crash_replay() {
     let dir = tempfile::tempdir().unwrap();
     {
         let mut repo = open_repo(&dir);
-        repo.upsert(&runnable_row("task://tenant-a/rollout-v2")).unwrap();
-        repo.acquire_lease("task://tenant-a/rollout-v2", "worker-1", 1, "2026-08-01T12:10:00Z")
+        repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
             .unwrap();
+        repo.acquire_lease(
+            "task://tenant-a/rollout-v2",
+            "worker-1",
+            1,
+            "2026-08-01T12:10:00Z",
+        )
+        .unwrap();
         repo.request_cancel("task://tenant-a/rollout-v2").unwrap();
     }
     // Drop = crash. Reopen sees the committed lease + cancel.
@@ -144,7 +170,8 @@ fn scheduler_rows_survive_reopen_like_a_crash_replay() {
 fn cancel_request_blocks_future_lease_acquisition() {
     let dir = tempfile::tempdir().unwrap();
     let mut repo = open_repo(&dir);
-    repo.upsert(&runnable_row("task://tenant-a/rollout-v2")).unwrap();
+    repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
+        .unwrap();
     repo.request_cancel("task://tenant-a/rollout-v2").unwrap();
 
     let acquire = repo.acquire_lease(
