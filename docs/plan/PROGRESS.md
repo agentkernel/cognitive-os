@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-07-31)
+## Current snapshot (2026-08-01)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -17,7 +17,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | B01 first-install/first-conversation Gate | **pass** | `B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4, x86_64, non-WSL, native user-systemd): immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b` independently verified; exact Pi `0.81.1` SRI matched; verified installer activated; readiness `first_conversation_ready=true`; Operator A hidden-input credential opt-in; bounded first response `status:ok` in 6295 ms with expected marker, `authority_side_effects:false`; cleanup passed including secret deletion with post-clear not-found | verifier B reviews the redacted ledger; then claim the next P2 task |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | B01 attempt 1 passed and cleanup completed; attempt ledger: `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md`. Execution lease is closed | verifier B independent review; then select the next P2 task |
+| Active task lease | `lease/personal/P2-T03/fenced-quiescence-contract` | Lane-CTR owns the finite TaskContract compatibility window and loop-scoped fenced-quiescence contract | add failure-first schema coverage, regenerate bindings, then define the durable dispatch-barrier and stop-preparation surfaces |
 
 The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
 current status remains `in-progress` because GMVP-LINUX requires P2 and P7
@@ -35,7 +35,7 @@ evidence: P2-T01 service tests 4/4, management lib 3/3, store
 `experimental-local-only` implementation evidence; P2 acceptance (B02/B04/
 B05/B12) remains not-run.
 
-The current P2 slice adds the durable scheduler persistence layer (P2-T03):
+The previous P2 slice added the durable scheduler persistence layer (P2-T03):
 `scheduler_entries` (migration v2) with lease owner/epoch/expiry,
 next-eligible, attempt count and cancel flag; `SchedulerRepository` in
 `crates/cognitive-store/src/scheduler.rs` provides transactional CAS lease
@@ -44,8 +44,43 @@ on mismatch, and durable cancel. Merged as `main@f3bacbe` (PR #128).
 Linux-host evidence: P2-T03 scheduler tests 4/4, `cognitive-store` full
 suite (migration 7/7), clippy/fmt clean, required CI green. The
 timer/clock-policy and budget-ceiling enforcement that consumes this
-repository is the next slice; P2 acceptance (B02/B04/B05/B12) remains
+repository was the next slice; P2 acceptance (B02/B04/B05/B12) remains
 not-run.
+
+The completed P2-T03 scheduler-service slice adds deterministic eligibility over
+that repository. `SchedulerService` clamps backwards canonical wall-clock
+samples to a per-worker monotonic floor, calculates a positive lease TTL, and
+calls the repository's conditional acquisition path. The store only grants a
+runnable entry after `next_eligible`, or reclaims an expired lease under a
+strictly higher epoch, so stale workers stay fenced. The failure-first focused
+test initially failed because `SchedulerService` did not exist, then passed
+5/5 on the Linux host; `cognitive-store` full tests, `cargo fmt --all --
+--check`, and focused runtime/store Clippy also passed. This is
+`experimental-local-only` / `tested-local` implementation evidence, not a
+P2 Gate, release, or Profile claim. Deadline/retry/step/cost-ceiling authority
+facts and BoundedHarness worker integration remain not-run.
+
+The follow-up P2-T03 ceiling-admission slice adds inclusive deadline, retry,
+step, and cost ceiling evaluation to `SchedulerService`. The service validates
+the supplied authority-fact snapshot, compares parsed deadline instants against
+its monotonic wall-clock floor, and returns the first reached stop reason before
+a caller starts another dispatch. The failure-first test initially did not
+compile because the ceiling types and evaluator did not exist; after `fb2baa8`,
+the Linux-host focused suite passed 2/2 with workspace fmt and focused Clippy.
+This is `experimental-local-only` / `tested-local` implementation evidence,
+not a P2 Gate, release, or Profile claim. The caller still has to reload these
+facts from durable TaskContract, progress, and budget authority records and
+persist the resulting stop fact before worker integration; those paths remain
+not-run.
+
+The P2-T03 contract unblock added a TaskContract deadline and immutable
+task-to-loop/budget bindings, together with registered ceiling STOP edges. The
+closed daemon authority-adapter lease reloads those durable facts and passed
+Linux `cargo check -p kernel-server`; it deliberately does not fabricate the
+remaining STOP guards. The active Lane-CTR slice restores finite v0.1/v0.2
+TaskContract compatibility and defines the required loop-scoped, fenced
+dispatch-quiescence contract. P2-T03 remains `in-progress`; all Gates remain
+`not-run`, and no worker dispatch or completion claim exists.
 
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi

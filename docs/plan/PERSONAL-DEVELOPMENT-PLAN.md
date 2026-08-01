@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 not-run；P2 及以后正式验收尚未开始）**
-> **最后更新：2026-07-31**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 pass；P2-T01/P2-T03 in-progress，P2 正式验收尚未开始）**
+> **最后更新：2026-08-01**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -65,14 +65,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `not-run` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 0 | 0 | 8 | G2 / B02、B04、B05、B12 |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `pass` |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 2 | 0 | 6 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **15** | **1** | **0** | **37** | — |
+| **合计** | **53** | **15** | **3** | **0** | **35** | — |
 
 ## 2. 产品边界与不变量
 
@@ -301,7 +301,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 预注册至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-07-30；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: not-run`。已提供 shared Rustls Provider discovery、digest-matched selected model readiness、真实 XDG/daemon endpoint、非秘密 `cognitive pi configure` 及 fail-closed `cognitive pi launch`：launch 只接受 daemon-owned numeric loopback endpoint、authenticated ready doctor projection、exact Pi `0.81.1` 与 `--extension <absolute-path>`，子进程环境清空后只恢复 OS allowlist，绝不传递 Provider/secret material。deterministic binary Provider fixture 的真实 Rustls discovery focused suite 在 PR #117 的 Ubuntu 与 Windows supported CI workspace job 均 **3/3 passed**（Ubuntu run 30513254161；Windows run 30513254161）；它保持 loopback-only HTTPS、secret redaction 和无 Task/Effect/Verification/capability/authority side effect。2026-07-30 Linux-native observation 实际确认 Pi `0.81.1`，并经 `--extension <absolute-path>` 调用 built Extension default export；session-local wrapper marker 在 Production hooks/command 注册前后边界中确认 Pi 已 invoke。随后以 hidden input 写入 native `linux-secret-tool` 的 redacted DeepSeek binding，selected model 为 `deepseek-v4-flash`；daemon-owned bounded Provider-proxy smoke 收到预期短响应（`finish_reason: stop`，无 authority side effect）。直接 Pi `--print` 仍在 90 秒超时，doctor 仍为 `pi_not_configured`，故不构成 Pi usability、真实产品首对话或 route acceptance。尚缺 product Pi configuration/diagnosis、native Secret Service route smoke、usability 和 formal B01；因此任务如实为 `in-progress`，B01 仍 `not-run`，无 Gate/release/Profile 声明。 |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 预注册至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-01；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: pass`。`B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on dedicated `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4 x86_64, non-WSL, native user-systemd) with independently verified immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, redacted expected first response in 6295 ms, `authority_side_effects:false`, and verified post-clear secret deletion. Evidence: [20260801-personal-p1-t09-b01-attempt-ledger.md](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md). This one passed attempt does not complete P1-T09 or establish release/Profile scope; GMVP-LINUX still requires P2 and P7 acceptance evidence. |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -309,7 +309,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 |---|---|---|---|---|---|
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | in-progress | 2026-08-01；`crates/cognitive-management/src/task_application.rs`（proposal/clarify/preview/admit/control/query 六操作面，仅组合 kernel 意图链原语）；PR #127 `lane/personal-p2-t01-task-application-service`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t01_task_application_service` 4/4 pass；clippy clean；`cognitive-store` m5_intent_chain 6/6 pass |
 | P2-T02 | 真实 Task API、watch 与自然语言管理映射 | P2-T01, P1-T07 | detach/watch/cancel 的 authority 语义正确；trust profile Tier 0/1/2 在 daemon/CLI/Pi 一致应用（ADR-0026） | not-started | — |
-| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget 测试 | in-progress | 2026-08-01；`crates/cognitive-store/src/scheduler.rs`（durable `scheduler_entries` + migration v2 + lease CAS/release owner-bound/cancel/attempt）；PR #128 `lane/personal-p2-t03-durable-scheduler`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t03_scheduler_lease_timer` 4/4 pass；`cognitive-store` 全量 + `p1_t01_layout_migrations` 7/7 pass；clippy/fmt/CI（Ubuntu+Windows/MSVC）green |
+| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget 测试 | in-progress | 2026-08-01；repository slice merged as PR #128 `main@f3bacbe`. Scheduler-service slice adds monotonic wall-clock eligibility and fenced expiry takeover. Ceiling-authority slice `fb2baa8` adds inclusive deadline/retry/step/cost admission evaluation from daemon-supplied durable authority snapshots; Linux-host focused test 2/2, fmt, and focused clippy passed. The daemon authority-loader slice reloads the contract-bound loop, progress, and budget facts and passes Linux `cargo check -p kernel-server`, but intentionally does not assert the ceiling-stop guards: loop-scoped durable dispatch disablement and Effect closure proof are not yet represented. The next Lane-CTR slice corrects TaskContract v0.1/v0.2 compatibility and specifies the fenced quiescence contract before daemon stop integration. Worker-side durable stop handling and BoundedHarness integration remain not-run; P2 Gate B02/B04/B05/B12 remains not-run. |
 | P2-T04 | 单 Agent worker 与 BoundedHarness 接入 | P2-T02, P2-T03 | no-progress/budget/stale-lease 测试 | not-started | — |
 | P2-T05 | Tool Registry 与第一个安全 operation | P2-T04 | 未注册、drift、disabled 均 dispatch=0 | not-started | — |
 | P2-T06 | Process supervisor 与首个 executor | P2-T05 | dispatch 故障、orphan、redaction、idempotency | not-started | — |

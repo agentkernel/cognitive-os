@@ -10,6 +10,7 @@ mod lifecycle;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
+mod scheduler_authority;
 mod server;
 
 pub use bounds::PersonalResourceBounds;

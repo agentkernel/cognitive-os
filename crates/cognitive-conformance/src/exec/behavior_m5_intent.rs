@@ -20,8 +20,8 @@ use cognitive_contracts::generated::common_defs::Budget;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
 use cognitive_domain::{
-    EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version, WallTimestamp,
-    table,
+    BudgetId, EventId, LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version,
+    WallTimestamp, table,
 };
 use cognitive_kernel::authz::{
     AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
@@ -211,6 +211,11 @@ fn contract_cmd(contract_n: u64, task_ref: &str) -> Result<TaskContractCommand, 
         },
         max_iterations: 8,
         max_retries: 3,
+        deadline: WallTimestamp::parse("2026-08-02T12:00:00Z")
+            .map_err(|error| env_err(error.to_string()))?,
+        loop_object_id: oid(contract_n + 100)?,
+        budget_id: BudgetId::parse(&format!("00000000-0000-7000-b000-{contract_n:012x}"))
+            .map_err(|error| env_err(error.to_string()))?,
         allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
         allowed_tools: vec!["operation://tenant-a/payments/refund".to_owned()],
         governance: seed()?,

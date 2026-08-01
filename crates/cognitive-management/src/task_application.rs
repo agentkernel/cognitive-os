@@ -251,6 +251,9 @@ fn contract_preview_digest(contract: &TaskContractCommand) -> Result<String, Tas
         budget: BudgetPreview,
         max_iterations: i64,
         max_retries: i64,
+        deadline: &'a str,
+        loop_object_id: &'a str,
+        budget_id: &'a str,
         allowed_tools: &'a [String],
     }
 
@@ -294,6 +297,9 @@ fn contract_preview_digest(contract: &TaskContractCommand) -> Result<String, Tas
         },
         max_iterations: contract.max_iterations,
         max_retries: contract.max_retries,
+        deadline: contract.deadline.as_str(),
+        loop_object_id: contract.loop_object_id.as_str(),
+        budget_id: contract.budget_id.as_str(),
         allowed_tools: &contract.allowed_tools,
     };
     let value =

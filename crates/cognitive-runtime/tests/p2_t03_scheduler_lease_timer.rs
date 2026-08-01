@@ -11,6 +11,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use cognitive_runtime::SchedulerService;
 use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
 
 fn open_repo(dir: &tempfile::TempDir) -> SchedulerRepository {
@@ -181,4 +182,56 @@ fn cancel_request_blocks_future_lease_acquisition() {
         "2026-08-01T12:10:00Z",
     );
     assert!(acquire.is_err(), "cancelled task must refuse dispatch");
+}
+
+// ---------------------------------------------------------------------
+// 5. the service clamps backwards wall time and permits expired takeover
+// ---------------------------------------------------------------------
+
+#[test]
+fn scheduler_service_prevents_clock_rollback_double_dispatch_and_reclaims_expired_lease() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut repo = open_repo(&dir);
+    repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
+        .unwrap();
+    let mut scheduler = SchedulerService::new("worker-1", 60).unwrap();
+
+    let first_dispatch = scheduler
+        .claim_eligible(
+            &mut repo,
+            "task://tenant-a/rollout-v2",
+            1,
+            "2026-08-01T12:00:00Z",
+        )
+        .unwrap();
+    assert_eq!(first_dispatch.lease_epoch, 1);
+
+    // A backwards wall-clock observation stays at the last trusted value,
+    // so it cannot make an earlier work window eligible again.
+    assert_eq!(
+        scheduler.observe_wall_time("2026-08-01T11:59:00Z").unwrap(),
+        "2026-08-01T12:00:00Z"
+    );
+    assert!(
+        scheduler
+            .claim_eligible(
+                &mut repo,
+                "task://tenant-a/rollout-v2",
+                2,
+                "2026-08-01T11:59:00Z",
+            )
+            .is_err()
+    );
+
+    let mut takeover_scheduler = SchedulerService::new("worker-2", 60).unwrap();
+    let takeover = takeover_scheduler
+        .claim_eligible(
+            &mut repo,
+            "task://tenant-a/rollout-v2",
+            2,
+            "2026-08-01T12:01:01Z",
+        )
+        .unwrap();
+    assert_eq!(takeover.lease_owner, "worker-2");
+    assert_eq!(takeover.attempt_count, 2);
 }

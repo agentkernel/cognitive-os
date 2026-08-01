@@ -124,6 +124,19 @@
       "type": "integer",
       "minimum": 0
     },
+    "deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Absolute task-execution deadline. This is task authority, not an AKP request deadline."
+    },
+    "loop_object_id": {
+      "$ref": "object-reference.schema.json#/$defs/uuidV7",
+      "description": "Durable Loop lifecycle object identity bound by this immutable contract epoch."
+    },
+    "budget_id": {
+      "$ref": "object-reference.schema.json#/$defs/uuidV7",
+      "description": "Durable authority budget ledger identity bound by this immutable contract epoch."
+    },
     "allowed_state_domains": {
       "type": "array",
       "description": "Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.",
@@ -188,6 +201,89 @@
   },
   "additionalProperties": false,
   "allOf": [
+    {
+      "description": "Only the explicitly supported historical and execution-bound schema versions are valid TaskContract payloads.",
+      "properties": {
+        "header": {
+          "properties": {
+            "schema_version": {
+              "enum": [
+                "cognitiveos.task-contract/0.1",
+                "cognitiveos.task-contract/0.2"
+              ]
+            }
+          },
+          "required": [
+            "schema_version"
+          ]
+        }
+      },
+      "required": [
+        "header"
+      ]
+    },
+    {
+      "description": "Historical v0.1 contracts remain auditable but cannot contain execution bindings introduced by v0.2.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.1"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "deadline"
+              ]
+            },
+            {
+              "required": [
+                "loop_object_id"
+              ]
+            },
+            {
+              "required": [
+                "budget_id"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "description": "Execution-bound v0.2 contracts require all authority bindings as one atomic set.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.2"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "deadline",
+          "loop_object_id",
+          "budget_id"
+        ]
+      }
+    },
     {
       "description": "A TaskContract must declare at least one acceptance condition so completion is decidable.",
       "properties": {

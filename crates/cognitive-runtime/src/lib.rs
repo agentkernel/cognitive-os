@@ -24,6 +24,7 @@ pub mod pi_launcher;
 pub mod readiness;
 pub mod recovery_flow;
 pub mod sandbox;
+pub mod scheduler_service;
 pub mod shell;
 pub mod target_resolution;
 
@@ -76,6 +77,10 @@ pub use recovery_flow::{
 pub use sandbox::{
     ChannelClaim, PlatformChannelRow, SandboxChannel, SandboxGate, SandboxPlatform, SandboxPolicy,
     refuse_cross_platform_merge,
+};
+pub use scheduler_service::{
+    SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
+    SchedulerStopReason,
 };
 pub use shell::{ShellError, ShellPhase, ShellService};
 pub use target_resolution::{
