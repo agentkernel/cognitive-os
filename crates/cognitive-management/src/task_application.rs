@@ -234,9 +234,7 @@ where
         &self,
         record_id: &ObjectId,
     ) -> Result<Option<UserIntentRecordRow>, TaskApplicationError> {
-        self.store
-            .load_user_intent(record_id)
-            .map_err(TaskApplicationError::Kernel)
+        self.store.load_user_intent(record_id).map_err(TaskApplicationError::Store)
     }
 }
 
