@@ -22,6 +22,7 @@ pub mod installation;
 pub mod layout;
 pub mod migration;
 pub mod personal_db;
+pub mod scheduler;
 pub mod sqlite;
 
 pub use clock::SystemClock;
