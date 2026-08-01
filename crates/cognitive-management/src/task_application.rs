@@ -22,10 +22,9 @@ use cognitive_contracts::canonical;
 use cognitive_domain::{ObjectId, UriRef};
 use cognitive_kernel::effects::{EffectError, WriterLease};
 use cognitive_kernel::intent_chain::{
-    AcceptanceCommand, GovernanceSeed, InterpretationCandidate, SupersedeCommand,
-    SupersedeReport, TaskContractCommand, UserIntentCommand, admit_interpretation,
-    mint_task_contract, record_interpretation_candidate, record_user_intent,
-    supersede_task_contract,
+    AcceptanceCommand, GovernanceSeed, InterpretationCandidate, SupersedeCommand, SupersedeReport,
+    TaskContractCommand, UserIntentCommand, admit_interpretation, mint_task_contract,
+    record_interpretation_candidate, record_user_intent, supersede_task_contract,
 };
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, IdGenerator, IntentChainStore, InterpretationRow, ProtocolStore,
@@ -207,8 +206,8 @@ where
         if preview_digest != recomputed {
             return Err(TaskApplicationError::PreviewDigestMismatch);
         }
-        let admitted = admit_interpretation(&self.store, acceptance)
-            .map_err(TaskApplicationError::Kernel)?;
+        let admitted =
+            admit_interpretation(&self.store, acceptance).map_err(TaskApplicationError::Kernel)?;
         mint_task_contract(
             &self.store,
             &self.clock,
@@ -234,14 +233,14 @@ where
         &self,
         record_id: &ObjectId,
     ) -> Result<Option<UserIntentRecordRow>, TaskApplicationError> {
-        self.store.load_user_intent(record_id).map_err(TaskApplicationError::Store)
+        self.store
+            .load_user_intent(record_id)
+            .map_err(TaskApplicationError::Store)
     }
 }
 
 /// Canonical digest over the TaskContract composition content.
-fn contract_preview_digest(
-    contract: &TaskContractCommand,
-) -> Result<String, TaskApplicationError> {
+fn contract_preview_digest(contract: &TaskContractCommand) -> Result<String, TaskApplicationError> {
     #[derive(Serialize)]
     struct PreviewBody<'a> {
         task_ref: &'a str,
@@ -297,8 +296,8 @@ fn contract_preview_digest(
         max_retries: contract.max_retries,
         allowed_tools: &contract.allowed_tools,
     };
-    let value = serde_json::to_value(body)
-        .map_err(|_| TaskApplicationError::PreviewCanonicalization)?;
+    let value =
+        serde_json::to_value(body).map_err(|_| TaskApplicationError::PreviewCanonicalization)?;
     let bytes = canonical::canonical_bytes_of_value(&value)
         .map_err(|_| TaskApplicationError::PreviewCanonicalization)?;
     canonical::digest(&bytes, "cognitiveos.personal.task-contract-preview")

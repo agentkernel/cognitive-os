@@ -70,7 +70,10 @@ fn oid(n: u64) -> ObjectId {
 
 fn evidence_ref(n: u64) -> StrongReference {
     StrongReference {
-        content_digest: Digest(format!("sha256:{}", format!("{n:x}").repeat(64)[..64].to_owned())),
+        content_digest: Digest(format!(
+            "sha256:{}",
+            format!("{n:x}").repeat(64)[..64].to_owned()
+        )),
         id: cognitive_contracts::generated::object_reference::UuidV7(format!(
             "00000000-0000-7000-a000-{n:012x}"
         )),
@@ -190,7 +193,10 @@ fn proposal_persists_raw_intent_before_any_interpretation_or_task_contract() {
     let mut service2 = make_service(&dir);
     let loaded = service2.query_intent(&oid(1000)).unwrap();
     assert!(loaded.is_some());
-    assert_eq!(loaded.unwrap().raw_expression, "roll out service v2 to staging");
+    assert_eq!(
+        loaded.unwrap().raw_expression,
+        "roll out service v2 to staging"
+    );
 
     // The kernel ordering gate refuses an interpretation before a record;
     // there is no record 999, so clarify must fail closed.
@@ -201,7 +207,10 @@ fn proposal_persists_raw_intent_before_any_interpretation_or_task_contract() {
         &seed(),
         &uri("corr://tenant-a/p2-t01"),
     );
-    assert!(result.is_err(), "interpretation without a durable record must be refused");
+    assert!(
+        result.is_err(),
+        "interpretation without a durable record must be refused"
+    );
 }
 
 // ---------------------------------------------------------------------
@@ -226,7 +235,9 @@ fn preview_digest_mismatch_is_refused_before_any_kernel_mutation() {
         )
         .unwrap();
 
-    let preview = service.preview(&contract_cmd(2, "task://tenant-a/rollout-v2")).unwrap();
+    let preview = service
+        .preview(&contract_cmd(2, "task://tenant-a/rollout-v2"))
+        .unwrap();
     assert!(!preview.preview_digest.is_empty());
     assert_eq!(preview.objective, "staging rollout of service v2");
     assert_eq!(preview.condition_count, 1);
@@ -281,7 +292,13 @@ fn preview_digest_mismatch_is_refused_before_any_kernel_mutation() {
         result,
         Err(cognitive_management::TaskApplicationError::PreviewDigestMismatch)
     ));
-    assert_eq!(service2.store().current_contract_epoch("task://tenant-a/rollout-v2").unwrap(), 0);
+    assert_eq!(
+        service2
+            .store()
+            .current_contract_epoch("task://tenant-a/rollout-v2")
+            .unwrap(),
+        0
+    );
 }
 
 // ---------------------------------------------------------------------
@@ -305,7 +322,9 @@ fn supersede_mints_new_epoch_and_fences_old_binding() {
             &uri("corr://tenant-a/p2-t01"),
         )
         .unwrap();
-    let preview = service.preview(&contract_cmd(4, "task://tenant-a/rollout-v2")).unwrap();
+    let preview = service
+        .preview(&contract_cmd(4, "task://tenant-a/rollout-v2"))
+        .unwrap();
     let contract = service
         .admit(
             &lease(1),
@@ -353,7 +372,13 @@ fn supersede_mints_new_epoch_and_fences_old_binding() {
         .unwrap();
 
     // The authoritative epoch is now 2; an old-epoch binding is fenced.
-    assert_eq!(service.store().current_contract_epoch("task://tenant-a/rollout-v2").unwrap(), 2);
+    assert_eq!(
+        service
+            .store()
+            .current_contract_epoch("task://tenant-a/rollout-v2")
+            .unwrap(),
+        2
+    );
     assert_eq!(report.new_contract.contract_epoch, 2);
     let stale_binding = TaskBinding {
         task_ref: "task://tenant-a/rollout-v2".to_owned(),
