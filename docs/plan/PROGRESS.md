@@ -23,6 +23,18 @@ The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
 current status remains `in-progress` because GMVP-LINUX requires P2 and P7
 acceptance evidence in addition to B01.
 
+The current P2 slice implements the TaskApplicationService (P2-T01): the L5
+task lifecycle entry point over the intent-chain kernel. `proposal` durably
+fixes raw intent before interpretation, `preview` emits a canonical
+digest-bound contract preview, `admit` rejects preview-digest mismatch before
+any kernel mutation and mints the contract under epoch CAS, `control`
+supersedes to a new epoch fencing old bindings, and `query` exposes the
+read-only intent projection. Merged as `main@7f763c8` (PR #127). Linux-host
+evidence: P2-T01 service tests 4/4, management lib 3/3, store
+`m5_intent_chain` 6/6, clippy clean, required CI green. This is
+`experimental-local-only` implementation evidence; P2 acceptance (B02/B04/
+B05/B12) remains not-run.
+
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
 composes provider-model definitions into a runtime model with a required
