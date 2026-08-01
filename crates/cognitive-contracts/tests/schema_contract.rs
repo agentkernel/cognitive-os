@@ -176,10 +176,9 @@ fn task_contract_schema_versions_preserve_auditable_v01_and_require_v02_bindings
     let schemas = load_schemas();
     let validator = validator_for(&schemas, "task-contract.schema.json");
     let legacy_contract = task_contract_fixture("cognitiveos.task-contract/0.1");
-    assert!(
-        validator.is_valid(&legacy_contract),
-        "the finite compatibility window must retain historical v0.1 contracts"
-    );
+    if let Some(error) = validator.validate(&legacy_contract).err() {
+        panic!("the finite compatibility window must retain historical v0.1 contracts: {error}");
+    }
 
     let mut mixed_legacy_contract = legacy_contract.clone();
     mixed_legacy_contract["deadline"] = json!("2026-08-02T00:00:00Z");
