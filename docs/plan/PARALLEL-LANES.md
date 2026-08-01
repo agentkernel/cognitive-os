@@ -57,6 +57,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/ceiling-authority` | durable deadline, retry, step, and cost-ceiling stop facts | Lane-RUN | `lane/personal-p2-t03-ceiling-authority` | `crates/cognitive-store/src/scheduler.rs`, `crates/cognitive-store/tests/p2_t03_scheduler_ceiling_authority.rs`, `crates/cognitive-runtime/src/**`, `crates/cognitive-runtime/tests/p2_t03_scheduler_lease_timer.rs`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PROGRESS.md`, `docs/plan/PARALLEL-LANES.md`, `docs/checkpoints/20260801-personal-p2-t03-ceiling-authority-handoff.md` | Cursor session 2026-08-01 | 2026-08-01 / 2026-08-01 | active |
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
