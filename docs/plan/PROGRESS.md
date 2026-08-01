@@ -17,7 +17,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | B01 first-install/first-conversation Gate | **pass** | `B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4, x86_64, non-WSL, native user-systemd): immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b` independently verified; exact Pi `0.81.1` SRI matched; verified installer activated; readiness `first_conversation_ready=true`; Operator A hidden-input credential opt-in; bounded first response `status:ok` in 6295 ms with expected marker, `authority_side_effects:false`; cleanup passed including secret deletion with post-clear not-found | verifier B reviews the redacted ledger; then claim the next P2 task |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | P2-T03 ceiling-authority admission slice is closed; handoff: `docs/checkpoints/20260801-personal-p2-t03-ceiling-authority-handoff.md` | claim a non-overlapping P2-T03 durable-fact/BoundedHarness slice or P2-T02 API/watch slice |
+| Active task lease | `none` | P2-T03 durable-authority slice is closed as a contract-bound blocker; handoff: `docs/checkpoints/20260801-personal-p2-t03-durable-authority-handoff.md` | obtain Lane-CTR decision for a durable Task deadline and ceiling-stop transition, or claim non-overlapping P2-T02 API/watch work |
 
 The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
 current status remains `in-progress` because GMVP-LINUX requires P2 and P7
@@ -72,6 +72,18 @@ not a P2 Gate, release, or Profile claim. The caller still has to reload these
 facts from durable TaskContract, progress, and budget authority records and
 persist the resulting stop fact before worker integration; those paths remain
 not-run.
+
+The attempted P2-T03 durable-authority continuation is bounded by missing
+authority contracts, not by a recoverable implementation detail. Current
+`TaskContract` has no deadline field, no durable task-to-loop or task-to-budget
+binding exists, and the loop transition table has no legal ceiling-stop edge.
+The daemon must not infer a task deadline from an AKP transport deadline, map
+independent durable identities heuristically, or create a lifecycle stop fact
+outside the registered transition surface. This only blocks the affected
+deadline/stop-fact path; P2-T03 stays `in-progress`, P2-T02 can proceed in
+parallel, and all Gates remain `not-run`. See
+`20260801-personal-p2-t03-durable-authority-handoff.md` for the required
+Lane-CTR next action.
 
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
