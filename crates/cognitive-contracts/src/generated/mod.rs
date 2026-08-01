@@ -206,7 +206,7 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 42] = [
     ),
     (
         "task-contract.schema.json",
-        "sha256:a5f8b7ecd3bc78aeede571e24f9c4103cc5cbb2d73accf44d791b58ed532a072",
+        "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
     ),
     (
         "user-intent-record.schema.json",
