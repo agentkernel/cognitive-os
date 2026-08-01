@@ -29,7 +29,7 @@ use cognitive_kernel::intent_chain::{
 };
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, IdGenerator, IntentChainStore, InterpretationRow, ProtocolStore,
-    TaskContractRow, UserIntentRecordRow,
+    StorePortError, TaskContractRow, UserIntentRecordRow,
 };
 use serde::Serialize;
 
@@ -117,6 +117,9 @@ pub enum TaskApplicationError {
     /// Canonical encoding of the preview failed (fail closed).
     #[error("contract preview canonicalization failed")]
     PreviewCanonicalization,
+    /// The authority store failed (fail closed).
+    #[error(transparent)]
+    Store(#[from] StorePortError),
 }
 
 /// Concrete composition root over the kernel store/clock/id ports.
