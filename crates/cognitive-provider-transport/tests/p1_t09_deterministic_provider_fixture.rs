@@ -154,8 +154,11 @@ fn configured_key_service(
 
 fn exact_model_options() -> ProviderProbeOptions {
     ProviderProbeOptions {
-        budget_ms: 3_000,
-        exchange_timeout_ms: 500,
+        // Windows CI can schedule the fixture process between individual TLS
+        // exchanges. Keep this integration route bounded without requiring a
+        // sub-second response from every loopback handshake.
+        budget_ms: 10_000,
+        exchange_timeout_ms: 1_500,
         selection: ModelSelection::ExactCatalog {
             model_id: FIXTURE_MODEL_ID.to_owned(),
         },
