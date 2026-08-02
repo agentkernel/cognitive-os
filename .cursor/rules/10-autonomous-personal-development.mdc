@@ -1,0 +1,138 @@
+---
+description: Autonomously continue CognitiveOS Personal tasks with documented handoffs and guarded user confirmation
+alwaysApply: true
+---
+
+# Autonomous continuation command
+
+Treat a user message of `继续任务`, `继续`, `continue task`, or an equivalent
+request as authorization to autonomously continue the next safe CognitiveOS
+Personal development slice. Do not require the user to repeat project context,
+task IDs, prior prompts, or handoff details.
+
+Before selecting or changing work, establish the current repository truth in
+this order:
+
+1. Read `AGENTS.md`, `docs/governance/PROJECT-IDENTITY.md`, and
+   `docs/governance/DEVELOPMENT-OPERATING-MODEL.md`.
+2. Read `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` for tasks, acceptance, and
+   Gates.
+3. Read only the `Current snapshot` in `docs/plan/PROGRESS.md` for current
+   task, Gate, and claim facts.
+4. Read the active ownership table in `docs/plan/PARALLEL-LANES.md` before
+   choosing writable paths.
+5. Read the matching product/architecture design index, latest matching
+   handoff, and relevant root `plan.md` task card.
+6. Inspect Git status, branch, upstream, and relevant local changes.
+
+Never read, cite, or use `History/` as an operational source. Never treat
+chat history, a previous prompt, a branch name, or an old handoff as a source
+that can override the documents above.
+
+# Selecting and executing work
+
+- Work only on `cognitiveos-personal`, the repository's sole active
+  implementation project.
+- Select the smallest unblocked, implementation-ready vertical slice from the
+  formal Personal plan. Prefer continuing an existing `in-progress` task whose
+  remaining implementation requirement is clear; otherwise select the next
+  `not-started` task with a safe, bounded first slice.
+- Do not re-audit, re-plan, or rewrite completed design work when an
+  implementation slice is available. A task acceptance Gate or promotion Gate
+  is not an implementation mutex.
+- Before changing task-specific paths, claim one exact, non-overlapping
+  `lease/personal/...` row in `PARALLEL-LANES.md`. Update `PROGRESS.md` only
+  with real current facts and only while the lease is active.
+- Treat unexpected or user-owned dirty worktree changes as protected. Do not
+  overwrite, revert, stage, commit, or mix them into the delivery. Stop and
+  ask the user how to proceed if their ownership cannot be determined from the
+  lease ledger and Git state.
+- Implement a minimal coherent slice. For behavioral work, start with a
+  focused failure-first or negative/regression test when feasible, then make
+  the smallest readable fix. Do not add speculative abstractions, broad
+  refactors, or low-value tests.
+- Respect Rust daemon authority, persist-before-dispatch Intent/Effect,
+  deterministic authorization/CAS/budget/fencing, independent verification,
+  secret isolation, and all other invariants in `AGENTS.md` and the formal
+  design. Pi, sidecars, CLIs, SDKs, UI, fixtures, and models are clients or
+  candidate/observation sources, never authority writers.
+- Do not change `specs/`, `conformance/`, public schemas, generated bindings,
+  errors, transitions, or vectors unless the selected slice proves a contract
+  change is necessary. In that case, stop implementation on those paths and
+  use a narrow Lane-CTR lease and the full docs-sync contract workflow.
+
+# Required user-confirmation boundaries
+
+Continue autonomously without asking for approval for ordinary local editing,
+focused tests, non-secret diagnostics, documentation closure, commits, pushes,
+PR creation, and PR merge when the conditions below are met.
+
+Stop and obtain explicit, interactive user confirmation before any action that
+would:
+
+1. request, display, paste, persist, transmit, log, or otherwise handle a
+   Provider/user secret, token, password, recovery material, private key, or
+   credential; instruct the user to enter secrets only through an approved
+   Secret Store or secure interactive prompt, never chat, command arguments,
+   ordinary configuration, logs, SQLite, CI output, or evidence;
+2. use privilege elevation, `sudo`, administrator/root access, service-manager
+   changes, package installation/removal, firewall/network policy changes,
+   kernel/device changes, or any action outside the repository's ordinary
+   developer permissions;
+3. access a non-local machine, SSH target, cloud account, paid API, external
+   Provider, or a user filesystem outside the approved task boundary;
+4. delete, reset, overwrite, migrate, or irreversibly mutate user data,
+   credentials, production state, remote branches, releases, tags, or shared
+   infrastructure;
+5. make a product-semantic, normative-semantic, structural, release, support,
+   security-policy, Gate-threshold, benchmark, or default-Agent decision not
+   already explicitly decided in the canonical documentation;
+6. expand filesystem, network, process, model, secret, budget, or capability
+   scope beyond the documented Standard Workspace/Extended Home and Tool
+   boundaries; or
+7. bypass a failing test, required CI check, branch protection, signature,
+   review requirement, or other governance control.
+
+When confirmation is required, explain the exact action, scope, risk, whether
+it is reversible, alternatives, and the smallest confirmation needed. Keep the
+current task lease active only while actively working; otherwise record a
+bounded blocker in the documentation system with `blocked_paths`,
+`blocked_task_ids`, `blocked_gate_ids`, owner, evidence, and next action.
+
+# Validation, documentation, and Git delivery
+
+- Classify every delivery as `implementation-only`, `corrective`,
+  `product-semantic`, `normative-semantic`, or `structural`; apply the required
+  synchronization in `docs/standards/docs-sync-contract.md`.
+- Before commit, run the focused tests, negative/regression tests, formatting,
+  lint, secret/diff checks, and documentation consistency checks relevant to
+  the changed paths. Record unavailable checks as `not-run` with a reason;
+  never infer a pass.
+- Before push, inspect the complete staged and branch push surface, run broader
+  applicable checks, and ensure there are no known failures in changed
+  behavior.
+- Communicate all durable development state through the documentation system:
+  formal plan for task/Gate definitions, `PROGRESS.md` for current facts,
+  `PARALLEL-LANES.md` for ownership, and a matching checkpoint handoff for
+  session/task continuity. Do not create a parallel current-status document or
+  rely on chat as a handoff.
+- On completing a slice, update the formal plan, trace/support/evidence
+  documents when required by the change class, current snapshot, and handoff.
+  Close the lease in the same closure delivery. Preserve historical evidence;
+  do not edit prior attempts to improve outcomes.
+
+The user authorizes this development window to perform ordinary Git delivery
+without another approval: stage only its owned files, create commits, push the
+current task branch, create or update a pull request, and merge it when all
+required checks are green and repository policy permits it. Prefer a task
+branch and PR for code, contract, governance, or protected-branch work. A
+low-risk docs-only delivery may push directly to `main` only when repository
+policy permits it. Never force-push, amend a published commit, bypass hooks or
+branch protections, merge with unresolved required failures, or include
+unknown/unowned changes.
+
+After each completed autonomous delivery, report concisely: selected task and
+slice, implementation result, checks run and not run, documentation/handoff
+updates, commit and remote/PR/merge status, remaining blockers, and the next
+safe action. Then await the next user message; another `继续任务` restarts this
+workflow from the canonical documents.
