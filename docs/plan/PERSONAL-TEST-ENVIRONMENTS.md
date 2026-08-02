@@ -113,6 +113,31 @@ terminal captures and committed evidence.
   implementation evidence.
 - **Cannot claim:** B01/B09, product Gate, release, containment or Profile.
 
+### Execution routing and KVM isolation
+
+Linux daemon, Pi/sidecar, installer, user-service, native integration and
+experimental deployment slices use this SSH host as their primary execution
+environment. Before a remote build, test or experimental deployment, the
+operator must create a disposable Git worktree from an already pushed/reviewed
+revision, record `git rev-parse HEAD`, and verify it equals the local candidate
+commit. An old source tree, a no-Git snapshot, or copied uncommitted local
+files are invalid test inputs.
+
+Windows may perform formatting, static, documentation and platform-independent
+checks, but does not substitute for this native Linux validation. If the host,
+toolchain, exact revision or disposable root is unavailable, record the Linux
+check as `not-run` or blocked; do not silently fall back to Windows and label
+the result Linux-native.
+
+The host's `B01-Clean-Linux-001` and `B01-Desktop-Linux-002` libvirt guests are
+reserved formal-campaign environments. Ordinary development must not start,
+stop, snapshot, install on or deploy to them. Only the respective preregistered
+B01 procedure and active B01 lease may alter either guest. Ordinary
+experimental deployment uses a task-declared disposable host root, still has
+only `experimental-local-only` / `tested-local` evidence scope, and requires
+separate user approval before any user-service change, privilege use, secret
+handling or external Provider interaction.
+
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 
 - **Trigger/runner:** manual workflow dispatch on `ubuntu-latest` with GitHub

@@ -60,6 +60,20 @@ that can override the documents above.
   errors, transitions, or vectors unless the selected slice proves a contract
   change is necessary. In that case, stop implementation on those paths and
   use a narrow Lane-CTR lease and the full docs-sync contract workflow.
+- Route Linux daemon, Pi/sidecar, installer, user-service, native integration,
+  and experimental deployment validation to `personal-linux-native-01` through
+  non-interactive, no-secret SSH as the primary execution target. Before a
+  remote build or test, provision a disposable remote Git worktree from an
+  already committed, remotely reachable revision, then record and verify its
+  exact commit. Never copy uncommitted local sources or use a stale/non-Git
+  snapshot as remote test input. Windows may run static, formatting,
+  documentation, or platform-independent checks, but cannot substitute for
+  native Linux runtime validation.
+- Treat `B01-Clean-Linux-001` and `B01-Desktop-Linux-002` as reserved KVM
+  campaign guests. Do not start, stop, snapshot, deploy to, install on, or
+  otherwise change either guest outside its preregistered B01 procedure and
+  active B01 lease. Use only a task-declared disposable root on the SSH host
+  for ordinary experimental deployment.
 
 # Required user-confirmation boundaries
 

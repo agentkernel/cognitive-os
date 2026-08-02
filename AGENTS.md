@@ -75,6 +75,17 @@ user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PA
 SSH 仅使用非交互、无 secret 探针，例如：
 `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
+Linux daemon、Pi/sidecar、installer、user-service、native integration 和实验部署切片必须
+优先在 `personal-linux-native-01`（`wuz@192.168.1.2`）上执行。先将**已提交并可追溯的**
+revision 同步到该主机的可清理 Git worktree，再在该 exact revision 上构建、测试和记录证据；
+不得复制未提交本地代码，也不得用旧的无 Git source snapshot 替代当前 revision。Windows
+只可运行格式、静态、文档或不依赖 Linux runtime 的检查，不能替代 native Linux 结果。
+
+`B01-Clean-Linux-001` 和 `B01-Desktop-Linux-002` 是专用 KVM campaign guests，不能作为
+普通开发/部署目标。只有对应的预注册 B01 lease 与 campaign procedure 可改变其状态、快照、
+产品安装或凭据。其他实验部署只可使用 SSH 宿主上任务声明的可清理目录；涉及 user-service
+修改、任何提权、远程 secret 或外部 Provider 前必须向用户确认。
+
 ## 目录和变更边界
 
 - `specs/`、`conformance/`：架构合同和符合性资产；不得为实现改写。

@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/linux-native-execution-routing` | Route Linux-native P2-T03 validation and future experimental deployment to a reviewed SSH worktree without consuming B01 KVM campaign guests | Lane-RUN | `main` | `AGENTS.md`; `.cursor/rules/10-autonomous-personal-development.mdc`; `docs/plan/PERSONAL-TEST-ENVIRONMENTS.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p2-t03-linux-native-execution-routing-handoff.md` | Cursor session | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
