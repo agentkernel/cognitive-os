@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P1-T09/b01-attempt-2-execution` | Execute preregistered B01 clean-Linux first-install/first-conversation attempt 2 after authorized system-libvirt reset | Lane-RUN | `lane/personal-p1-t09-b01-attempt-2-execution` | `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md`; `docs/checkpoints/20260802-personal-p1-t09-b01-attempt-2-execution-handoff.md` | Cursor session 2026-08-02 | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
