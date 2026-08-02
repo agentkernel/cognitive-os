@@ -60,6 +60,9 @@
 | 1 | Operator A credential opt-in | pass | hidden-input `read -s` through `cognitive init`; no credential entered argv, chat, config, logs, or evidence |
 | 1 | bounded first response | **pass** | `{"status":"ok","phase":"first_response","duration_ms":6295,"expected_reply_observed":true,"response_received":true,"authority_side_effects":false}` |
 | 1 | cleanup | **pass** | service stopped/disabled; deployment, Pi runtime, campaign copies, temp files removed; operator-entered secret deleted through product-equivalent SecretStore delete (`secret-tool clear` with product `provider_secret_attributes`); post-clear not-found verified (`secret-residual=absent`) |
+| 2 | clean-reset checkpoint | pass | exact `b01-platform-qualified-baseline` restored through authorized system-libvirt control; guest started only for readiness verification |
+| 2 | guest network readiness | **fail** | bounded SSH readiness probes to the preregistered guest address timed out; no artifact, Pi, product service, Provider, credential, prompt, or route runner was used |
+| 2 | cleanup | **pass** | exact baseline restored again; domain confirmed `shut off`; no post-baseline state retained |
 
 ## Attempt 1 result
 
@@ -69,9 +72,20 @@ response (6295 ms), zero authority side effects, and no unredacted
 secret/internal material. The redacted route output above is the retained
 evidence record.
 
+## Attempt 2 result
+
+`B01-clean-linux-first-install-first-conversation-001` attempt 2 failed during
+bounded guest network readiness after the clean-reset checkpoint. The
+preregistered guest address did not accept SSH before the bounded readiness
+probes elapsed. No installation, Pi state, Provider credential, Provider
+request, prompt, expected marker, response, authority side effect, Task,
+Effect, or Verification was created. Cleanup restored the exact baseline and
+left the domain shut off. This is a recorded failed attempt in the fixed
+N=20 denominator, not a retry or a critical-safety failure.
+
 ## Checks for this slice
 
 | Check | Result |
 |---|---|
-| `pnpm run check:consistency` | not-run until documentation closure |
-| `git diff --check` | not-run until documentation closure |
+| `pnpm run check:consistency` | pass |
+| `git diff --check` | pass |
