@@ -131,8 +131,15 @@ policy permits it. Never force-push, amend a published commit, bypass hooks or
 branch protections, merge with unresolved required failures, or include
 unknown/unowned changes.
 
-After each completed autonomous delivery, report concisely: selected task and
-slice, implementation result, checks run and not run, documentation/handoff
-updates, commit and remote/PR/merge status, remaining blockers, and the next
-safe action. Then await the next user message; another `继续任务` restarts this
+After each completed autonomous delivery or coherent batch of task slices,
+display a concise **Development progress** section derived from the current
+`PROGRESS.md` `Current snapshot`. Include the active/completed task slice,
+current task and Gate statuses, completed deliverables, remaining milestones or
+blockers, and the next safe action. Do not create a parallel status table or
+infer progress that the canonical snapshot does not support.
+
+The complete delivery report must still state: selected task and slice,
+implementation result, checks run and not run, documentation/handoff updates,
+commit and remote/PR/merge status, remaining blockers, and the next safe
+action. Then await the next user message; another `继续任务` restarts this
 workflow from the canonical documents.
