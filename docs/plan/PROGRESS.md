@@ -17,7 +17,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | B01 first-install/first-conversation Gate | **pass** | `B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4, x86_64, non-WSL, native user-systemd): immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b` independently verified; exact Pi `0.81.1` SRI matched; verified installer activated; readiness `first_conversation_ready=true`; Operator A hidden-input credential opt-in; bounded first response `status:ok` in 6295 ms with expected marker, `authority_side_effects:false`; cleanup passed including secret deletion with post-clear not-found | verifier B reviews the redacted ledger; then claim the next P2 task |
 | GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P2-T03/fenced-quiescence-contract` | Lane-CTR owns the finite TaskContract compatibility window and loop-scoped fenced-quiescence contract | add failure-first schema coverage, regenerate bindings, then define the durable dispatch-barrier and stop-preparation surfaces |
+| Active task lease | `none` | The P2-T03 fenced-quiescence lease was closed at user request; its declared paths are released | another session may claim a non-overlapping P2-T03 lease after reviewing the cancellation handoff |
 
 The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
 current status remains `in-progress` because GMVP-LINUX requires P2 and P7
@@ -77,10 +77,10 @@ The P2-T03 contract unblock added a TaskContract deadline and immutable
 task-to-loop/budget bindings, together with registered ceiling STOP edges. The
 closed daemon authority-adapter lease reloads those durable facts and passed
 Linux `cargo check -p kernel-server`; it deliberately does not fabricate the
-remaining STOP guards. The active Lane-CTR slice restores finite v0.1/v0.2
-TaskContract compatibility and defines the required loop-scoped, fenced
-dispatch-quiescence contract. P2-T03 remains `in-progress`; all Gates remain
-`not-run`, and no worker dispatch or completion claim exists.
+remaining STOP guards. The former Lane-CTR fenced-quiescence slice was closed
+at user request before validation or delivery; its unpushed local branch work
+does not change current implementation evidence. P2-T03 remains `in-progress`;
+all Gates remain `not-run`, and no worker dispatch or completion claim exists.
 
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
