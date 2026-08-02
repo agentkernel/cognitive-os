@@ -16,6 +16,8 @@ active_project:
   formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   current_snapshot: docs/plan/PROGRESS.md
   lease_ledger: docs/plan/PARALLEL-LANES.md
+  product_design: docs/product/personal/README.md
+  architecture_design: docs/architecture/personal/README.md
 work_policy:
   default_scope: active-project-only
   architecture_changes: personal-driven-and-lane-ctr-controlled

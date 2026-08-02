@@ -1086,6 +1086,13 @@ Session 同时受 idle timeout 和 absolute timeout 约束，并可被即时撤�
 ### 12.9 Agent Shell 双通道与统一命名空间
 Agent Shell 同时提供普通**任务通道**与特权**管理通道**。任务通道使用 AuthenticationSession、ConversationBinding、用户 delegation 与 TaskContract，管理 OS/Agent package、安装、配置或跨租户控制时才建立独立 PrivilegedManagementSession。两者可共享自然语言 parser、资源发现和展示组件，但 credential、ContextView、KV/prompt cache、proposal、approval 和审计必须隔离；普通 Conversation 不能通过措辞切换为管理通道。
 
+Agent Shell 是客户端**角色**，不是某个 Agent package、AgentInstance 或
+AgentExecution 的同义词。同一个外部 runtime 可以承载 Shell 交互面，同时又以独立的
+package/installation/instance/execution 身份被系统管理；共享进程不合并 credential、
+session、capability、生命周期或完成语义。特别地，ShellSession、外部 Agent session、
+AgentInstance、AgentExecution、载体进程、Conversation 与 Task 必须保持不同身份；
+Agent session 结束、Provider 成功或进程退出不能推进 Task 完成。
+
 统一命名空间至少覆盖 `os://`、`agent-package://`、`installation://`、`execution://`、`task://`、`episode://`、`activity://`、`conversation://`、`operation://`、`resource://`、`context://`、`memory://`、`effect://`、`approval://` 与 `audit://`。名称、别名和自然语言指代只形成 `TargetSelector` 候选；写操作必须解析为唯一、固定版本的强引用。“停掉它”等存在多目标或目标漂移的命令返回 `SHELL_TARGET_AMBIGUOUS` 或重新预览，不允许猜测。
 
 Shell 操作族包括：

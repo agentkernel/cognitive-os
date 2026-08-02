@@ -23,9 +23,17 @@ snapshot 或活动 lease 台账。
 - task_id: <P*-T* 或 governance id>
 - lease_id: <lease/personal/...>
 - status_at_handoff: <not-started/in-progress/blocked/done/cancelled>
+- development_track_at_handoff: <production-path/experimental-local-only/not-applicable>
+- implementation_evidence_at_handoff: <none/provided/tested-local/tested-supported-ci>
 - gate_status_at_handoff: <not-run/running/pass/fail/blocked/not-applicable>
 - claim_scope_at_handoff: <non-claim/product-gate/release/profile>
-- current_status_source: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md + docs/plan/PROGRESS.md
+- task_definition_source: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+- current_status_source: docs/plan/PROGRESS.md Current snapshot
+- blocked_paths: <列表或 none>
+- blocked_task_ids: <列表或 none>
+- blocked_gate_ids: <列表或 none>
+- blocker_owner: <owner 或 none>
+- next_executable_action: <具体动作>
 - supersedes: <较早 handoff 或 none>
 - superseded_by: <后续 handoff 或 none-known-at-write-time>
 
@@ -36,22 +44,26 @@ snapshot 或活动 lease 台账。
 - （逐条：状态、卡点、剩余步骤）
 
 ## 3. 测试与证据状态
-- CI：<绿/红 + 链接或本地命令输出摘要>
+- 每个检查：<命令或 campaign；pass/fail/not-run；环境；摘要>
+- CI：<pass/fail/not-run + 链接>
 - 向量：<not-run/pass 计数变化>
-- 证据：<artifacts/evidence/ 下产物与 digest>
+- 证据：<路径、immutable digest、collector/version、redaction>
 
 ## 4. 未决风险与漂移
 - （新发现漂移是否已登记 findings-ledger；开放风险）
 
 ## 5. 下一步入口
-- 建议提示词：docs/prompts/<文件>
+- 正式任务：<task ID 与 formal-plan anchor>
+- matching handoff 规则：<project_id + task_id + lease_id + date/supersedes>
 - 工作分支：<branch>
-- 第一个动作：<具体命令或文件>
+- 第一个动作：<next_executable_action 的具体命令或文件>
 
 ## 6. 快照
 - PROGRESS 已更新：<是/否>
-- active lease：<已关闭/移交给 lease_id/仍 active 及原因>
+- active lease：<已关闭/移交给 lease_id/仍 active 及原因；merged PR 不得遗留 active>
 - 本次提交列表：<hash 列表>
+- immutable implementation commit：<hash 或 not-applicable>
+- remote visibility：<PR/remote commit/pending/not-applicable>
 ```
 
 ---

@@ -11,12 +11,13 @@
 `cognitiveos-personal` 是唯一活动实现项目。编辑器规则、计划、handoff 和提示词不得
 创建第二个活动项目身份或当前状态源。
 
-## 1. 变更四分类
+## 1. 变更五分类
 
 | 类型 | 定义 | 例子 |
 |---|---|---|
 | **实现型（implementation-only）** | 实现或修正已经存在且未变化的 normative/product contract；不改 public DTO/schema/error/transition/vector/验收语义 | 为已登记行为补 service；修复实现使既有负例通过；增加内部 test seam |
 | **修正型** | typo、断链、漂移修复、计数更新——**不改语义** | 修 `$ref` 路径；D-005 版本枚举放宽；更新 PROGRESS 计数 |
+| **产品语义型（product-semantic）** | 改 Personal 产品版本、支持平台、release scope、正式任务验收、Gate/benchmark 阈值或默认 Agent/adapter inclusion，但不改变 CognitiveOS public machine/behavior contract | 将 GMVP-LINUX 定义为 Personal 1.0；改变 B01 denominator；把 Pi 加入发布范围 |
 | **规范语义型** | 改 public 行为、状态机、错误码、schema 约束、transition/vector expectation 或验收口径 | 收紧 schema 字段；新增 public error；改验收判据 |
 | **结构型** | 重构、新增/删除对象族、Profile、子系统 | F-003 单轨迁移；新增 Profile（v0.1 前禁止） |
 
@@ -27,6 +28,20 @@
 **实现型**：实现与 focused tests + 受影响实现文档/任务证据；提交/PR 明确列出所实现的既有 REQ-ID 或产品任务 ID，并声明 `normative surface unchanged`。不得为凑联动修改 registry/schema/vector。实现与 closure docs 可以是同一 delivery/PR 的不同 commit。
 
 **修正型**：改动本体 + 提交说明注明"修正型" + 若属漂移修复，findings-ledger 漂移节登记/闭合。
+
+**产品语义型**：必须由产品 owner 明确决定；支持平台、产品版本、默认 Agent 或 release
+scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步：
+
+1. `docs/product/personal/` 与受影响 Personal architecture 文档；
+2. `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 的任务、typed dependency、Gate 与验收；
+3. `docs/plan/personal-trace.yaml`、`PERSONAL-SUPPORT-MATRIX.md` 与根 `plan.md` 细节；
+4. `PROGRESS.md` Current snapshot（只记录真实当前事实，不把新目标写成实现）；
+5. 受影响 campaign preregistration、environment qualification、release/claim 文档；
+6. handoff 与 consistency checks。
+
+产品语义型不得仅在 handoff、attempt ledger 或产品 README 中改写正式 Gate threshold；
+也不得为了联动而修改 registry/schema/vector。若 public contract 确实变化，则同时升级为
+规范语义型或结构型并走 Lane-CTR。
 
 **规范语义型**，除上述外必须同批联动更新以下受影响项（无影响者在 PR 描述写明"无"）：
 
@@ -71,18 +86,29 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 2. registry↔schema↔vector 双向无孤儿（REQ 无测试映射、测试 ID 无向量、向量 REQ/错误码不在 registry、schema 不可达均为红灯）；
 3. 活文档相对链接不断链、不指向 `History/`；
 4. 活文档中完整 REQ-ID 引用必须存在于 registry（孤儿引用红灯）；
-5. `matrix.yaml` 覆盖全部 273 REQ 且引用路径真实存在；`gen-matrix --check` 无 drift；
+5. `matrix.yaml` 覆盖 registry 当前全部 REQ 且引用路径真实存在；`gen-matrix --check` 无 drift；
 6. findings-ledger 覆盖 F-001~F-030 与 IMP-01~18 全部条目。
 7. 项目身份机器镜像声明唯一活动项目 `cognitiveos-personal`，且正式计划、Current
-   snapshot 和 lease ledger 路径真实存在；`PROGRESS.md` 的活动 lease 引用必须与
-   `PARALLEL-LANES.md` 唯一活动表一致，活动 lease ID 唯一、状态为 `active` 且可写
-   路径不重叠。
+   snapshot、lease ledger、canonical product design 和 Personal architecture 路径真实；
+8. Personal 正式计划无重复 task definition，phase/total 计数与 task row 一致；trace
+   不得复制 `current_snapshot`，其 task/Gate/source 引用必须存在；
+9. B01 当前 denominator 必须与正式 Gate 一致；denominator 未满或 independent verifier
+   未肯定闭合时不得标 `pass`；
+10. `PROGRESS.md` 活动 lease 引用必须与 `PARALLEL-LANES.md` 唯一活动表一致；活动 lease
+    ID 唯一、状态为 `active`、metadata/date 合法、可写路径不重叠，不得 broad-own
+    protected tree 或 ledger 自身；
+11. 旧 prompt 公共入口必须保持 dated non-executable，不能恢复成 Personal 当前任务源。
 
-破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。此后每次**修改检查器本身**的 PR 必须重跑一次注入演练并在 PR 描述附输出。
+破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ
+引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。
+此后每次**修改检查器本身**的 PR 必须重跑注入演练并在 PR 描述附输出。Personal 治理
+检查使用只读 override fixture 注入 duplicate task、parallel current snapshot、missing
+design source、premature Gate pass、broad lease 和 executable legacy prompt；不得为演练
+直接改坏工作树。
 
 ## 6. 完成前检查（作者自查清单）
 
-- [ ] 变更分类已声明（实现型/修正型/规范语义型/结构型）
+- [ ] 变更分类已声明（实现型/修正型/产品语义型/规范语义型/结构型）
 - [ ] §2 对应档位的联动清单逐项完成或写明"无影响"
 - [ ] §3 扫描结果贴入 PR 描述
 - [ ] `pnpm run check:consistency` 本地绿

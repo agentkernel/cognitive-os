@@ -13,7 +13,9 @@
 3. 阅读 Personal 正式计划 [PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)；
 4. 只读 `PROGRESS.md` 的 `Current snapshot`；
 5. 只读 [PARALLEL-LANES.md](docs/plan/PARALLEL-LANES.md) 的活动 lease；
-6. 再阅读所选任务对应的最新 handoff 和根 `plan.md` 任务卡。
+6. 产品/架构任务再读 [Personal 产品设计](docs/product/personal/README.md) 与
+   [Personal 架构](docs/architecture/personal/README.md) 的相关章节；
+7. 再阅读所选任务对应的最新 matching handoff 和根 `plan.md` 任务卡。
 
 正式计划决定任务和 Gate，`PROGRESS.md` 决定当前事实，Parallel Lanes 决定当前可写路径，
 handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历史 handoff、旧提示词和
@@ -82,7 +84,8 @@ SSH 仅使用非交互、无 secret 探针，例如：
   不启动独立实现。
 - `personal-blog/` 是独立仓库，禁止推入本仓库；禁止在其他路径建立平行副本。
 
-变更必须声明 `implementation-only`、`corrective`、`normative-semantic` 或 `structural`，
+变更必须声明 `implementation-only`、`corrective`、`product-semantic`、
+`normative-semantic` 或 `structural`，
 并按 [docs-sync-contract](docs/standards/docs-sync-contract.md) 完成联动。提交/PR 必须
 关联 Personal 任务或 REQ/F/IMP；没有关联时说明原因。未知工作树改动不得覆盖、回退、
 混入或使用 `git add -A`。

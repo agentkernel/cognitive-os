@@ -26,6 +26,8 @@ Each fact has exactly one canonical owner:
 | Personal tasks, acceptance, and Gates | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` | reference task IDs |
 | current task/Gate/claim snapshot | `docs/plan/PROGRESS.md` `Current snapshot` | preserve dated history |
 | active writable ownership | `docs/plan/PARALLEL-LANES.md` active lease table | reference a lease ID |
+| stable Personal product intent and UX | `docs/product/personal/` | link tasks/Gates without copying status |
+| Personal architecture composition | `docs/architecture/personal/` | explain registered contracts and accepted decisions without creating them |
 | detailed research and task cards | root `plan.md` | provide non-current detail |
 | operational continuity | latest matching handoff | record `status_at_handoff` only |
 
@@ -120,14 +122,22 @@ formal task plan or Gate ledger.
   contract; requires implementation, focused tests, affected docs, and an
   explicit statement that the normative surface is unchanged;
 - `corrective`: non-semantic drift, typo, count, or link repair;
+- `product-semantic`: changes a Personal product version, supported platform,
+  release scope, formal task acceptance, product Gate threshold, default Agent
+  or adapter inclusion without changing a CognitiveOS public machine/behavior
+  contract;
 - `normative-semantic`: changes public behavior, DTO/schema, registered error,
   transition, vector expectation, or acceptance semantics;
 - `structural`: adds/removes an object family, Profile, subsystem, or migration
   track.
 
-Only normative-semantic and structural changes require Lane-CTR contract
-coordination. An implementation-only change must not create a parallel DTO,
-schema, error, transition, or vector.
+Product-semantic changes require owner decision, a Personal ADR when release or
+platform scope changes, and synchronized formal-plan/trace/support/campaign
+updates. They do not require registry/schema/vector changes unless the public
+CognitiveOS contract also changes. Only normative-semantic and structural
+contract changes require Lane-CTR contract coordination. An
+implementation-only or product-semantic change must not create a parallel DTO,
+schema, error, transition or vector.
 
 ## 6. Ownership leases
 
@@ -136,6 +146,12 @@ ownership by a historical branch name. Each active lease records task, branch,
 primary lane, owned paths, owner/session, claim time, and last heartbeat.
 
 - Active leases must not overlap writable paths.
+- Leases must name exact files or narrow feature directories. Broad
+  `docs/plan/**`, `docs/standards/**`, `docs/adr/**`, `specs/**` or equivalent
+  protected-tree ownership is invalid.
+- `PARALLEL-LANES.md` itself uses a narrow coordination update: a session may
+  add/heartbeat/close only its own row while preserving every unrelated row.
+  The ledger cannot be exclusively owned through a parent-directory glob.
 - One cohesive task may declare secondary paths across runtime, CLI, tests, and
   docs in one PR.
 - Normative contract assets remain Lane-CTR-owned.
@@ -148,6 +164,11 @@ primary lane, owned paths, owner/session, claim time, and last heartbeat.
 for claim and heartbeat. `PROGRESS.md` may only reference an active `lease_id`
 or `none`; it must not maintain a second lease status table. Closed leases move
 out of the active table and cannot block future work.
+
+A merged PR must close its lease in the same closure delivery. If a merged
+branch is later found still active, the first non-overlapping governance
+session may move that row to closed while preserving the merged work and all
+unrelated lease rows.
 
 ## 7. Forward-progress protocol
 

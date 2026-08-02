@@ -9,19 +9,18 @@
  *  4. relative markdown links in living docs resolve;
  *  5. traceability matrix and findings ledger are complete and their
  *     referenced paths exist;
- *  6. repository project identity, Personal current snapshot, and active
- *     ownership leases have one consistent source of truth.
+ *  6. Personal plan/trace/Gate facts, project identity, prompt status, and
+ *     active ownership leases have one consistent source of truth.
  *
  * Exit code 0 = green; 1 = at least one violation, each printed with file
  * and reason. History/ is never scanned (frozen archive).
  */
 
-import { existsSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import {
-  REPO_ROOT,
   listMarkdownFiles,
   loadRegistries,
   loadSchemas,
@@ -34,6 +33,44 @@ import {
 
 const failures = [];
 const fail = (file, reason) => failures.push({ file, reason });
+
+function parseMarkdownTableRow(line) {
+  if (!line.startsWith("|") || !line.endsWith("|")) {
+    return [];
+  }
+  return line
+    .split("|")
+    .slice(1, -1)
+    .map((column) => column.trim());
+}
+
+function normalizeMarkdownCell(cell) {
+  return cell.replaceAll("**", "").replaceAll("`", "").trim();
+}
+
+function containsObjectKey(value, searchedKey) {
+  if (Array.isArray(value)) {
+    return value.some((item) => containsObjectKey(item, searchedKey));
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value).some(
+      ([key, childValue]) =>
+        key === searchedKey || containsObjectKey(childValue, searchedKey),
+    );
+  }
+  return false;
+}
+
+function parseIsoCalendarDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+  const timestamp = Date.parse(`${value}T00:00:00Z`);
+  if (Number.isNaN(timestamp)) {
+    return undefined;
+  }
+  return new Date(timestamp).toISOString().slice(0, 10) === value ? timestamp : undefined;
+}
 
 // ---------- 1 + 2: schemas parse and compile (draft 2020-12, relative $refs)
 
@@ -411,7 +448,175 @@ if (!existsSync(ledgerPath)) {
   }
 }
 
-// ---------- 6: project identity, Personal snapshot, and active leases
+// ---------- 6a: Personal plan task definitions, summary counts, and trace
+
+const personalPlanPath = repoPath("docs", "plan", "PERSONAL-DEVELOPMENT-PLAN.md");
+const personalTracePath = repoPath("docs", "plan", "personal-trace.yaml");
+const knownTaskStatuses = new Set([
+  "not-started",
+  "in-progress",
+  "blocked",
+  "done",
+  "cancelled",
+]);
+const personalTaskIds = new Set();
+let personalPlanText = "";
+
+if (!existsSync(personalPlanPath)) {
+  fail("docs/plan/PERSONAL-DEVELOPMENT-PLAN.md", "formal Personal plan missing");
+} else {
+  personalPlanText = readText(personalPlanPath);
+  const taskDefinitions = [];
+  for (const line of personalPlanText.split(/\r?\n/)) {
+    const columns = parseMarkdownTableRow(line);
+    if (columns.length < 6) {
+      continue;
+    }
+    const taskId = normalizeMarkdownCell(columns[0]);
+    const taskStatus = normalizeMarkdownCell(columns[4]);
+    const taskIdMatch = taskId.match(/^P(\d+)-T\d+$/);
+    if (!taskIdMatch || !knownTaskStatuses.has(taskStatus)) {
+      continue;
+    }
+    if (personalTaskIds.has(taskId)) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `duplicate formal task definition: ${taskId}`,
+      );
+    }
+    personalTaskIds.add(taskId);
+    taskDefinitions.push({
+      id: taskId,
+      phase: Number(taskIdMatch[1]),
+      status: taskStatus,
+    });
+  }
+
+  const summaryRows = new Map();
+  let declaredTotals;
+  for (const line of personalPlanText.split(/\r?\n/)) {
+    const columns = parseMarkdownTableRow(line);
+    if (columns.length !== 7) {
+      continue;
+    }
+    const summaryLabel = normalizeMarkdownCell(columns[0]);
+    const phaseMatch = summaryLabel.match(/^Phase (\d+)\b/);
+    const parsedCounts = columns.slice(1, 6).map((column) => Number(normalizeMarkdownCell(column)));
+    if (parsedCounts.some((count) => !Number.isInteger(count))) {
+      continue;
+    }
+    if (phaseMatch) {
+      summaryRows.set(Number(phaseMatch[1]), parsedCounts);
+    } else if (summaryLabel === "合计") {
+      declaredTotals = parsedCounts;
+    }
+  }
+
+  const computedTotals = [0, 0, 0, 0, 0];
+  for (const [phase, declaredCounts] of summaryRows) {
+    const phaseTasks = taskDefinitions.filter((task) => task.phase === phase);
+    const computedCounts = [
+      phaseTasks.length,
+      phaseTasks.filter((task) => task.status === "done").length,
+      phaseTasks.filter((task) => task.status === "in-progress").length,
+      phaseTasks.filter((task) => task.status === "blocked").length,
+      phaseTasks.filter((task) => task.status === "not-started").length,
+    ];
+    for (let countIndex = 0; countIndex < computedCounts.length; countIndex += 1) {
+      computedTotals[countIndex] += computedCounts[countIndex];
+    }
+    if (declaredCounts.some((count, countIndex) => count !== computedCounts[countIndex])) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `Phase ${phase} summary counts ${declaredCounts.join("/")} do not match task rows ${computedCounts.join("/")}`,
+      );
+    }
+  }
+  if (summaryRows.size === 0) {
+    fail("docs/plan/PERSONAL-DEVELOPMENT-PLAN.md", "progress summary has no Phase rows");
+  }
+  for (const taskDefinition of taskDefinitions) {
+    if (!summaryRows.has(taskDefinition.phase)) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `${taskDefinition.id} belongs to Phase ${taskDefinition.phase}, which has no summary row`,
+      );
+    }
+  }
+  if (!declaredTotals) {
+    fail("docs/plan/PERSONAL-DEVELOPMENT-PLAN.md", "progress summary has no total row");
+  } else if (
+    declaredTotals.some((declaredCount, countIndex) => declaredCount !== computedTotals[countIndex])
+  ) {
+    fail(
+      "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+      `summary totals ${declaredTotals.join("/")} do not match task rows ${computedTotals.join("/")}`,
+    );
+  }
+}
+
+if (!existsSync(personalTracePath)) {
+  fail("docs/plan/personal-trace.yaml", "Personal plan trace missing");
+} else {
+  try {
+    const personalTrace = readYaml(personalTracePath);
+    if (containsObjectKey(personalTrace, "current_snapshot")) {
+      fail(
+        "docs/plan/personal-trace.yaml",
+        "trace must not copy a parallel current_snapshot; PROGRESS.md owns current facts",
+      );
+    }
+
+    for (const [sourceName, sourcePath] of Object.entries(personalTrace?.sources ?? {})) {
+      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+        fail(
+          "docs/plan/personal-trace.yaml",
+          `sources.${sourceName} must reference an existing repository path`,
+        );
+      }
+    }
+
+    const referencedTasks = new Set(personalTrace?.enabling_tasks ?? []);
+    const referencedGates = new Set();
+    for (const requirement of personalTrace?.personal_requirements ?? []) {
+      for (const taskId of requirement.tasks ?? []) {
+        referencedTasks.add(taskId);
+      }
+      for (const gateId of requirement.gates ?? []) {
+        referencedGates.add(gateId);
+      }
+    }
+    for (const gateDefinition of Object.values(personalTrace?.gate_catalog ?? {})) {
+      for (const taskId of gateDefinition?.tasks ?? []) {
+        referencedTasks.add(taskId);
+      }
+      for (const benchmarkId of gateDefinition?.benchmarks ?? []) {
+        referencedGates.add(benchmarkId);
+      }
+    }
+    for (const taskId of referencedTasks) {
+      if (!personalTaskIds.has(taskId)) {
+        fail("docs/plan/personal-trace.yaml", `trace references unknown formal task: ${taskId}`);
+      }
+    }
+
+    const formalGateIds = new Set(
+      personalPlanText.match(/\b(?:G\d+|B\d{2}(?:-W)?|GMVP-LINUX|RC)\b/g) ?? [],
+    );
+    for (const gateId of [
+      ...Object.keys(personalTrace?.gate_catalog ?? {}),
+      ...referencedGates,
+    ]) {
+      if (!formalGateIds.has(gateId)) {
+        fail("docs/plan/personal-trace.yaml", `trace references unknown formal Gate: ${gateId}`);
+      }
+    }
+  } catch (err) {
+    fail("docs/plan/personal-trace.yaml", `unparseable Personal plan trace: ${err.message}`);
+  }
+}
+
+// ---------- 6b: project identity and canonical design sources
 
 const projectScopePath = repoPath("docs", "governance", "project-scope.yaml");
 if (!existsSync(projectScopePath)) {
@@ -434,7 +639,13 @@ if (!existsSync(projectScopePath)) {
     if (projectScope?.active_project?.status !== "active") {
       fail("docs/governance/project-scope.yaml", "cognitiveos-personal must be active");
     }
-    for (const sourceField of ["formal_plan", "current_snapshot", "lease_ledger"]) {
+    for (const sourceField of [
+      "formal_plan",
+      "current_snapshot",
+      "lease_ledger",
+      "product_design",
+      "architecture_design",
+    ]) {
       const sourcePath = projectScope?.active_project?.[sourceField];
       if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
         fail(
@@ -467,6 +678,24 @@ if (!existsSync(projectIdentityPath)) {
   }
 }
 
+// ---------- 6c: dated prompt boundary and B01 Gate honesty
+
+const legacyPromptPrefixPath = repoPath("docs", "prompts", "common-prefix.md");
+if (!existsSync(legacyPromptPrefixPath)) {
+  fail("docs/prompts/common-prefix.md", "legacy prompt boundary document missing");
+} else {
+  const legacyPromptPrefix = readText(legacyPromptPrefixPath);
+  if (
+    !legacyPromptPrefix.includes("dated non-executable reference") ||
+    !legacyPromptPrefix.includes("不是 CognitiveOS Personal 的可执行任务入口")
+  ) {
+    fail(
+      "docs/prompts/common-prefix.md",
+      "legacy prompts must be explicitly non-executable for current Personal work",
+    );
+  }
+}
+
 const progressPath = repoPath("docs", "plan", "PROGRESS.md");
 const lanesPath = repoPath("docs", "plan", "PARALLEL-LANES.md");
 if (existsSync(progressPath) && existsSync(lanesPath)) {
@@ -475,6 +704,72 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
   if (!currentSnapshot.includes("`cognitiveos-personal`")) {
     fail("docs/plan/PROGRESS.md", "Current snapshot does not identify cognitiveos-personal");
   }
+
+  const formalB01Row = personalPlanText
+    .split(/\r?\n/)
+    .map(parseMarkdownTableRow)
+    .find((columns) => normalizeMarkdownCell(columns[0] ?? "") === "B01");
+  const formalB01MinimumMatch = formalB01Row?.join(" ").match(/至少\s*(\d+)/);
+  const formalB01Minimum = formalB01MinimumMatch
+    ? Number(formalB01MinimumMatch[1])
+    : undefined;
+  if (!formalB01Minimum || formalB01Minimum < 2) {
+    fail(
+      "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+      "B01 formal Gate must declare a multi-attempt minimum denominator",
+    );
+  }
+
+  const currentB01Line = currentSnapshot
+    .split(/\r?\n/)
+    .find((line) => line.startsWith("| B01 first-install/first-conversation Gate |"));
+  if (!currentB01Line) {
+    fail("docs/plan/PROGRESS.md", "Current snapshot has no canonical B01 Gate row");
+  } else {
+    const currentB01Columns = parseMarkdownTableRow(currentB01Line);
+    const currentB01Status = normalizeMarkdownCell(currentB01Columns[1] ?? "");
+    const currentB01Evidence = normalizeMarkdownCell(currentB01Columns[2] ?? "");
+    const currentAttemptMatch = currentB01Evidence.match(/Attempt\s+(\d+)/i);
+    const currentMinimumMatch = currentB01Evidence.match(/minimum\s+(\d+)/i);
+    const currentAttemptCount = currentAttemptMatch ? Number(currentAttemptMatch[1]) : undefined;
+    const currentMinimum = currentMinimumMatch ? Number(currentMinimumMatch[1]) : undefined;
+
+    if (formalB01Minimum && currentMinimum !== formalB01Minimum) {
+      fail(
+        "docs/plan/PROGRESS.md",
+        `B01 Current snapshot denominator ${String(currentMinimum)} does not match formal minimum ${formalB01Minimum}`,
+      );
+    }
+    if (currentB01Status === "pass") {
+      if (!currentAttemptCount || !formalB01Minimum || currentAttemptCount < formalB01Minimum) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          "B01 cannot pass before the formal attempt denominator is complete",
+        );
+      }
+      const verifierClosureIsMissing =
+        !/independent verifier/i.test(currentB01Evidence) ||
+        /not yet|missing|尚未|未完成|不完整/i.test(currentB01Evidence);
+      if (verifierClosureIsMissing) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          "B01 cannot pass without affirmative independent verifier closure",
+        );
+      }
+      if (
+        !/(?:success rate|成功率)/i.test(currentB01Evidence) ||
+        !/(?:zero critical|关键安全失败为?\s*0)/i.test(currentB01Evidence) ||
+        !/(?:aggregate|汇总|统计)/i.test(currentB01Evidence)
+      ) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          "B01 pass must record success rate, zero critical failures, and aggregate statistics",
+        );
+      }
+    }
+  }
+
+  // ---------- 6d: active ownership leases
 
   const lanesText = readText(lanesPath);
   const activeLeaseSectionMatch = lanesText.match(
@@ -489,6 +784,12 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
     const activeLeases = [];
     const seenLeaseIds = new Set();
     const writableOwners = [];
+    const forbiddenBroadProtectedTrees = new Set([
+      "docs/plan/**",
+      "docs/standards/**",
+      "docs/adr/**",
+      "specs/**",
+    ]);
 
     for (const row of activeLeaseRows) {
       const columns = row
@@ -502,6 +803,13 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       const leaseId = columns[0].replaceAll("`", "");
       const writablePaths = [...columns[4].matchAll(/`([^`]+)`/g)].map((match) => match[1]);
       const status = columns[7];
+      const taskDescription = normalizeMarkdownCell(columns[1]);
+      const primaryLane = normalizeMarkdownCell(columns[2]);
+      const branch = normalizeMarkdownCell(columns[3]);
+      const ownerSession = normalizeMarkdownCell(columns[5]);
+      const claimedHeartbeatMatch = normalizeMarkdownCell(columns[6]).match(
+        /^(\d{4}-\d{2}-\d{2})\s*\/\s*(\d{4}-\d{2}-\d{2})$/,
+      );
       if (!/^lease\/personal\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+$/.test(leaseId)) {
         fail("docs/plan/PARALLEL-LANES.md", `invalid active lease_id: ${leaseId}`);
       }
@@ -518,8 +826,48 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       if (writablePaths.length === 0) {
         fail("docs/plan/PARALLEL-LANES.md", `active lease ${leaseId} has no writable paths`);
       }
+      if (!taskDescription || !primaryLane || !branch || !ownerSession) {
+        fail(
+          "docs/plan/PARALLEL-LANES.md",
+          `active lease ${leaseId} must declare task, lane, branch, and owner/session`,
+        );
+      }
+      if (!claimedHeartbeatMatch) {
+        fail(
+          "docs/plan/PARALLEL-LANES.md",
+          `active lease ${leaseId} must declare claimed/heartbeat as YYYY-MM-DD / YYYY-MM-DD`,
+        );
+      } else {
+        const claimedTimestamp = parseIsoCalendarDate(claimedHeartbeatMatch[1]);
+        const heartbeatTimestamp = parseIsoCalendarDate(claimedHeartbeatMatch[2]);
+        const tomorrowTimestamp = Date.now() + 24 * 60 * 60 * 1000;
+        if (
+          claimedTimestamp === undefined ||
+          heartbeatTimestamp === undefined ||
+          heartbeatTimestamp < claimedTimestamp ||
+          heartbeatTimestamp > tomorrowTimestamp
+        ) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `active lease ${leaseId} has invalid or non-monotonic claimed/heartbeat dates`,
+          );
+        }
+      }
       activeLeases.push(leaseId);
       for (const writablePath of writablePaths) {
+        const normalizedDeclaredPath = writablePath.replaceAll("\\", "/");
+        if (forbiddenBroadProtectedTrees.has(normalizedDeclaredPath)) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `active lease ${leaseId} claims forbidden broad protected tree: ${normalizedDeclaredPath}`,
+          );
+        }
+        if (normalizedDeclaredPath === "docs/plan/PARALLEL-LANES.md") {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `active lease ${leaseId} must not own the lease ledger itself`,
+          );
+        }
         const normalizedPath = writablePath.replace(/\/\*\*$/, "").replaceAll("\\", "/");
         for (const existingOwner of writableOwners) {
           const pathsOverlap =
@@ -579,5 +927,6 @@ if (failures.length > 0) {
 }
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
-    `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, project identity, and leases verified)`,
+    `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, Personal plan/Gates, ` +
+    `design sources, prompt boundary, and leases verified)`,
 );

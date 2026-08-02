@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,12 +12,83 @@ import {
 } from "../src/evidence-graph.mjs";
 
 const toolsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const repositoryRoot = path.resolve(toolsDir, "..");
+const consistencyCheckerPath = path.join(toolsDir, "src", "check-consistency.mjs");
 
-test("check-consistency passes on the committed tree", () => {
-  const out = execFileSync(process.execPath, [path.join(toolsDir, "src", "check-consistency.mjs")], {
+function runConsistencyFailureInjection(overrides) {
+  const overrideDirectory = mkdtempSync(path.join(os.tmpdir(), "cognitiveos-consistency-"));
+  try {
+    for (const [repositoryRelativePath, transformSource] of Object.entries(overrides)) {
+      const sourcePath = path.join(repositoryRoot, ...repositoryRelativePath.split("/"));
+      const overridePath = path.join(overrideDirectory, ...repositoryRelativePath.split("/"));
+      const originalSource = readFileSync(sourcePath, "utf8");
+      const transformedSource = transformSource(originalSource);
+      assert.notEqual(
+        transformedSource,
+        originalSource,
+        `failure injection did not change ${repositoryRelativePath}`,
+      );
+      mkdirSync(path.dirname(overridePath), { recursive: true });
+      writeFileSync(overridePath, transformedSource);
+    }
+
+    return spawnSync(process.execPath, [consistencyCheckerPath], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        COGNITIVEOS_CONSISTENCY_OVERRIDE_DIR: overrideDirectory,
+      },
+    });
+  } finally {
+    rmSync(overrideDirectory, { recursive: true, force: true });
+  }
+}
+
+test("check-consistency passes on the current repository tree", () => {
+  const out = execFileSync(process.execPath, [consistencyCheckerPath], {
     encoding: "utf-8",
   });
   assert.match(out, /check-consistency: OK/);
+});
+
+test("Personal governance drift is rejected by failure injection", () => {
+  const result = runConsistencyFailureInjection({
+    "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
+      const taskRow = source
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| P7-T08 |") && line.includes("| not-started |"));
+      assert.ok(taskRow, "P7-T08 task row must exist for duplicate injection");
+      return source.replace(taskRow, `${taskRow}\n${taskRow}`);
+    },
+    "docs/plan/personal-trace.yaml": (source) =>
+      `${source}\ncurrent_snapshot:\n  B01: pass\n`,
+    "docs/plan/PARALLEL-LANES.md": (source) =>
+      source.replace(
+        "### 3.1 最近关闭的 leases",
+        "| `lease/personal/P0-T01/broad-fixture` | fixture | Lane-DOC | `fixture` | `docs/plan/**` | test fixture | 2026-08-02 / 2026-08-02 | active |\n### 3.1 最近关闭的 leases",
+      ),
+    "docs/plan/PROGRESS.md": (source) =>
+      source.replace(
+        "| B01 first-install/first-conversation Gate | **running** |",
+        "| B01 first-install/first-conversation Gate | **pass** |",
+      ),
+    "docs/governance/project-scope.yaml": (source) =>
+      source.replace(
+        "product_design: docs/product/personal/README.md",
+        "product_design: docs/product/personal/MISSING.md",
+      ),
+    "docs/prompts/common-prefix.md": (source) =>
+      source.replace("dated non-executable reference", "legacy executable prompt"),
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
+  assert.match(result.stderr, /summary counts .* do not match task rows/);
+  assert.match(result.stderr, /trace must not copy a parallel current_snapshot/);
+  assert.match(result.stderr, /active_project\.product_design must reference an existing/);
+  assert.match(result.stderr, /legacy prompts must be explicitly non-executable/);
+  assert.match(result.stderr, /B01 cannot pass before the formal attempt denominator is complete/);
+  assert.match(result.stderr, /claims forbidden broad protected tree: docs\/plan\/\*\*/);
 });
 
 test("gen-matrix --check confirms the committed matrix is fresh", () => {

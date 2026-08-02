@@ -17,9 +17,9 @@
  *   - `/cognitive-status` prints the same daemon facts on demand.
  *
  * The Extension holds no Provider credential. It never reads `provider.json`,
- * never resolves a `SecretRef`, and never reads a Provider API key from the
- * environment. Provider traffic is not proxied here yet: the daemon-owned
- * Provider proxy is the remaining half of P1-T07 and is tracked in the ledger.
+ * resolves a `SecretRef`, or reads a Provider API key from the environment.
+ * The registered daemon Provider routes model traffic through the daemon-owned
+ * proxy, so Pi receives model responses without becoming secret authority.
  */
 
 import { PersonalDaemonClient } from "./daemon-client.js";

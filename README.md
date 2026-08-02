@@ -19,9 +19,9 @@
 
 | 路径 | 内容 |
 |---|---|
-| [CognitiveOS-Architecture.md](CognitiveOS-Architecture.md) | 白皮书 v1.0.1（informative，非机器合同） |
+| [CognitiveOS-Architecture.md](CognitiveOS-Architecture.md) | 白皮书 v1.0.2（informative，非机器合同） |
 | [RFC-0001-cognitiveos-governance-context-access.md](RFC-0001-cognitiveos-governance-context-access.md) | 治理/Context/访问 normative companion RFC v0.2 |
-| [specs/](specs/) | 11 份 companion 规范 + registry（273 REQ / 55 错误码 / 5 状态域）+ 5 份状态迁移表 + 61 份 JSON Schema（draft 2020-12） |
+| [specs/](specs/) | companion 规范、registry、状态迁移表与 JSON Schema（draft 2020-12）；具体数量由一致性检查报告 |
 | [CognitiveOS-Review-Conclusions.md](CognitiveOS-Review-Conclusions.md) · [CognitiveOS-Architecture-Independent-Review.md](CognitiveOS-Architecture-Independent-Review.md) | 两轮评审（V1–V17 / IMP-01~18 / F-001~F-030） |
 
 ### 2. Personal 实现（唯一活动项目）
@@ -30,8 +30,11 @@
 |---|---|
 | [crates/](crates/) | Rust：contracts → domain → kernel/store → runtime/management/akp → conformance（依赖方向固定） |
 | [apps/kernel-server](apps/kernel-server/) · [apps/admin-cli](apps/admin-cli/) | 单节点组合根 · 确定性管理 CLI |
-| [apps/agent-shell](apps/agent-shell/) | 任务 Shell 客户端（非 authority） |
-| [packages/](packages/) | TypeScript：contracts-ts（与 Rust 共享 golden fixtures）、sdk-ts |
+| [apps/agent-shell](apps/agent-shell/) | Personal Task Shell 的共享客户端/会话核心（非 authority；供 Pi-hosted Shell 等入口复用） |
+| [packages/pi-cognitiveos](packages/pi-cognitiveos/) | Pi-hosted Agent Shell Extension；Provider 流量经 daemon，Pi 工具 default-deny |
+| [apps/pi-agent-adapter](apps/pi-agent-adapter/) | Pi compatibility/candidate adapter；不是 managed Pi lifecycle authority |
+| [packages/](packages/) | TypeScript：contracts-ts、sdk-ts、Pi Shell host adapter |
+| [docs/product/personal/](docs/product/personal/) · [docs/architecture/personal/](docs/architecture/personal/) | Personal canonical 产品设计 · 产品组合架构 |
 | [apps/cognitiveos-console/](apps/cognitiveos-console/) | 兼容 stub（Console 产品文档正文迁至 [clients/pc/](https://github.com/agentkernel/cognitiveos-clients/tree/main/pc)，`planned`） |
 | [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)（独立仓库） | 客户端项目根：PC/mobile/shared/Agent Hub 文档域（实现 gate 阻断，ADR-0007）。2026-07-26 已从本仓库 `clients/` 拆出，本仓库不再包含该目录 |
 
@@ -39,10 +42,10 @@
 
 | 路径 | 内容 |
 |---|---|
-| [conformance/](conformance/) | 84 份声明式向量 + 15 测试层定义（当前 46 `pass` / 38 `not-run`） |
-| [crates/cognitive-conformance](crates/cognitive-conformance/) | runner（M1–M4 已具静态合同、内核行为与错误实现自检能力） |
+| [conformance/](conformance/) | 声明式规范向量与测试层定义；执行结果必须由 runner/evidence 报告，不由 README 固定计数 |
+| [crates/cognitive-conformance](crates/cognitive-conformance/) | 符合性 runner；局部通过不自动构成 Personal Gate 或 Profile 结论 |
 | [tests/](tests/) | golden（跨语言 canonical/digest 夹具）/ e2e / faults / security |
-| [tools/](tools/) | 静态一致性检查（registry↔schema↔vector 无孤儿、断链检查），接入 CI |
+| [tools/](tools/) | 静态一致性检查（registry/schema/vector/docs/Personal 治理关系），接入 CI |
 | `artifacts/evidence/` | 运行证据目录（gitignore，凭 digest 引用；由本地 runner 按需创建） |
 
 ### 4. 文档体系（docs system）
@@ -51,13 +54,15 @@
 |---|---|
 | [AGENTS.md](AGENTS.md) | 开发代理入口：命令速查、硬纪律、Definition of Done、会话协议 |
 | [docs/README.md](docs/README.md) | 文档地图与分类口径 |
+| [docs/product/personal/](docs/product/personal/) | 愿景、资源模型、Linux 1.0 范围和用户旅程（不拥有当前状态） |
+| [docs/architecture/personal/](docs/architecture/personal/) | Agent Shell、managed Agent、authority、数据与恢复组合设计 |
 | [clients/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md) | PC + 手机客户端项目地图与目录索引（canonical；`docs/clients/` 为兼容入口） |
-| [docs/standards/](docs/standards/) | 12 份机器可判定标准（canonical/digest、状态迁移、错误合同…） |
-| [docs/adr/](docs/adr/) | 架构决策记录（0001–0007） |
-| [docs/plan/](docs/plan/) | 开发计划、进度仪表、并行车道 |
+| [docs/standards/](docs/standards/) | 机器可判定行为标准（canonical/digest、状态迁移、错误合同、文档同步等） |
+| [docs/adr/](docs/adr/) | 架构与 Personal 产品决策记录；Linux 1.0/Pi 双角色见 ADR-0035/0036 |
+| [docs/plan/](docs/plan/) | Personal 正式计划、current snapshot、lease、支持矩阵和测试环境注册表 |
 | [docs/traceability/](docs/traceability/) | REQ 追溯矩阵 + F/IMP findings 台账 |
 | [docs/checkpoints/](docs/checkpoints/) | 会话交接与里程碑评审 |
-| [docs/prompts/](docs/prompts/) | 各车道/里程碑接续提示词 |
+| [docs/prompts/](docs/prompts/) | 历史/复用提示词；不能生成当前 Personal task、lease、Gate 或状态 |
 
 ## 四类状态用语（全仓强制）
 
@@ -68,7 +73,10 @@
 3. **测试已执行（test executed）**：runner 真实执行向量并保留证据。schema-valid ≠ behavior-pass。
 4. **Profile 已符合（implemented）**：该 Profile 全部适用 MUST 有通过证据或有据 not-applicable。安全负例不可被降级豁免。
 
-当前状态以 [PROGRESS](docs/plan/PROGRESS.md) 为准：273 条 REQ 已登记，M1–M4 已交付部分实现与行为证据，84 向量中 46 `pass` / 38 `not-run`；全部 Profile 仍未符合。
+当前 Personal task、implementation evidence、Gate 和 claim scope 以
+[PROGRESS](docs/plan/PROGRESS.md) 的 `Current snapshot` 为准。README 不复制易漂移的
+REQ、vector 或结果计数；任何 release/Profile 声明必须链接对应 campaign 与独立 verifier
+证据。
 
 ## 快速开始
 

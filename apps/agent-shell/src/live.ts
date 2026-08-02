@@ -1,5 +1,5 @@
 /**
- * Live Shell wiring against a real kernel-server (M5 Lane-TSC).
+ * Live Personal Shell wiring against the daemon Task application boundary.
  *
  * The Shell remains a non-authority client: HttpSseTransport only moves
  * envelopes; displayed state still comes exclusively from authority

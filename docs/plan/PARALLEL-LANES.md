@@ -7,19 +7,22 @@
 不是可各自推进的产品或 backlog。任务来自 `PERSONAL-DEVELOPMENT-PLAN.md`；本文件只
 决定当前可写路径，不能改变任务、Gate 或当前产品状态。
 
-## 1. 车道划分
+## 1. 架构责任角色
 
-**接口先行原则**：`cognitive-contracts`/`packages/contracts-ts` 的生成合同与 `cognitive-kernel` 的端口 trait 冻结后，各车道方可分叉并行；此前只有 Lane-CTR 与 Lane-CFR 可动。
+Lane 只表示一个 Personal task 内的 primary architecture responsibility，不能生成任务、
+固定分支或实现顺序。当前执行入口始终是 `AGENTS.md`、Personal 正式计划、Current
+snapshot 和本文件 active lease table。旧 `docs/prompts/lane-*` 与 milestone/v0.1 prompts
+是 dated non-executable reference。
 
-| 车道 | 职责 | 启动条件 | 接续提示词 |
-|---|---|---|---|
-| **Lane-CTR** 契约与生成 | contracts 双端（Rust/TS）+ golden fixtures + codegen + F-003 schema 单轨迁移——**所有车道的地基，最先完成** | 立即（M1） | [prompts/lane-ctr.md](../prompts/lane-ctr.md) |
-| **Lane-CFR** 符合性与工具 | runner 执行能力、tools、CI 演进（M1 起持续） | 立即（M1，可与 CTR 并行） | [prompts/lane-cfr.md](../prompts/lane-cfr.md) |
-| **Lane-KRN** 内核主线 | domain → store → kernel（M2–M4） | M1 出口（生成合同冻结） | [prompts/lane-krn.md](../prompts/lane-krn.md) |
-| **Lane-TSC** TS 客户端 | sdk-ts、admin-cli 交互层、agent-shell | CTR golden 对齐后与 KRN 并行；M5 集成 | [prompts/lane-tsc.md](../prompts/lane-tsc.md) |
-| **Lane-RUN** 运行时与管理面 | runtime、management、akp、kernel-server | M4 出口（tracer bullet 后） | [prompts/lane-run.md](../prompts/lane-run.md) |
-| **Lane-DOC** 文档与计划维护 | 标准/计划/台账/白皮书对齐；可随各车道 PR 附带 | 持续 | [prompts/lane-doc.md](../prompts/lane-doc.md) |
-| **Lane-CON** Console 产品 | 激活前仅 informative 产品研究/设计与依赖台账；实现仍由后端 gate 阻断 | 文档例外已批准；实现须后端 gate | [prompts/lane-con.md](../prompts/lane-con.md) |
+| 车道 | 当前责任 |
+|---|---|
+| **Lane-CTR** 契约与生成 | public contracts、Rust/TS bindings、schema/transition/vector 协同 |
+| **Lane-CFR** 符合性与工具 | runner、consistency、CI、evidence tooling |
+| **Lane-KRN** 内核主线 | domain、authority store、kernel primitives |
+| **Lane-TSC** TS 客户端 | sdk-ts、Agent Shell client core、client contract use |
+| **Lane-RUN** 运行时与管理面 | runtime、management、AKP、Personal daemon composition |
+| **Lane-DOC** 文档与计划维护 | product/architecture/governance/plan/trace closure |
+| **Lane-CON** Console 产品 | inactive compatibility/design role only; no implementation task source |
 
 ```mermaid
 flowchart LR
@@ -36,11 +39,15 @@ flowchart LR
 
 1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。每个 lease 使用稳定 `lease_id`，格式为 `lease/personal/<task>/<slice>`。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
-3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。
+3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。禁止用 `docs/plan/**`、`docs/standards/**`、`docs/adr/**`、`specs/**` 等 broad protected-tree glob 取得排他所有权；应列精确文件或窄 feature directory。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
 5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
 6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
 7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`。
+8. Lease ledger 使用窄幅协调更新：会话只能新增、heartbeat、关闭自己的行并保留其他行。
+   `docs/plan/PARALLEL-LANES.md` 不得列入任何 lease 的 writable paths；更新自己的 ledger
+   row 是不授予其他路径的协调操作。父目录 lease 不能独占本文件。PR 合并时必须在同一
+   closure delivery 关闭 lease；已合并但遗留 active 的行由下一治理 session 诚实关闭。
 
 ### 2.1 Lane-CON 激活前文档例外
 
@@ -57,16 +64,17 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T03/fenced-quiescence-contract` | TaskContract compatibility and loop ceiling-stop quiescence contract | Lane-CTR | `lane/ctr-p2-t03-fenced-quiescence` | `specs/schemas/task-contract.schema.json`, `specs/transitions/loop.transitions.json`, `specs/schemas/**`, `specs/registry/**`, `crates/cognitive-contracts/**`, `packages/contracts-ts/**`, `crates/cognitive-kernel/**`, `crates/cognitive-store/**`, `apps/kernel-server/Cargo.toml`, `apps/kernel-server/src/personal/scheduler_authority.rs`, `conformance/**`, `docs/adr/**`, `docs/standards/**`, `docs/traceability/**`, `docs/plan/**`, `docs/checkpoints/20260801-personal-p2-t03-fenced-quiescence-contract-handoff.md` | Cursor session 2026-08-01 | 2026-08-01 / 2026-08-01 | active |
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/governance/personal-1-0-docs` | Personal 1.0 architecture, product, governance, plan and consistency refactor | `lane/doc-personal-1-0-restructure` | 2026-08-02 | Product-semantic/structural/corrective documentation delivery completed locally: ADR-0035/0036, canonical product/architecture docs, Linux 1.0/Pi dual-track planning, environment/support registry, governance alignment, stale implementation-doc correction and strengthened consistency/failure-injection checks. Focused tools, Agent Shell and Pi Extension builds/tests plus consistency and diff checks passed; Rust, remote CI, Gate, release and Profile evidence are not-run. The branch remains uncommitted pending explicit authorization. See `20260802-personal-1-0-doc-restructure-handoff.md`. |
+| `lease/personal/P2-T03/fenced-quiescence-contract` | TaskContract compatibility and loop ceiling-stop quiescence contract | `lane/ctr-p2-t03-fenced-quiescence` | 2026-08-02 | PR #129 merged as `main@7ea1cde`; finite TaskContract compatibility, scheduler ceiling authority, and related contract/runtime slices landed with their recorded focused evidence. Worker dispatch, durable stop integration, P2 Gates, release, and Profile claims remain not-run. The broad lease is released. |
 | `lease/personal/P2-T03/execution-binding-contract` | TaskContract execution binding and scheduler ceiling-stop transition | `lane/ctr-p2-t03-execution-binding` | 2026-08-01 | Contract unblock committed as `4187250`; Linux m5 intent-chain regression passed 6/6. Remaining exhaustive contract/transition/vector evidence and protected CI are not-run. See `20260801-personal-p2-t03-execution-binding-contract-handoff.md`. |
 | `lease/personal/P2-T03/durable-authority` | assess daemon-owned durable ceiling fact loading and fenced stop-fact persistence | `lane/personal-p2-t03-durable-authority` | 2026-08-01 | Bounded blocker: no authoritative TaskContract deadline or task-to-loop/budget binding exists, and a ceiling stop lifecycle transition is not registered. No implementation was started; see `20260801-personal-p2-t03-durable-authority-handoff.md`. |
 | `lease/personal/P2-T03/ceiling-authority` | inclusive deadline/retry/step/cost scheduler admission from supplied authority-fact snapshots | `lane/personal-p2-t03-ceiling-authority` | 2026-08-01 | Failure-first evaluator test passed 2/2 on the Linux host; fmt and focused Clippy passed. Durable fact loading, stop-fact persistence, and BoundedHarness worker wiring remain not-run. No Gate, release, or Profile claim. See `20260801-personal-p2-t03-ceiling-authority-handoff.md`. |
 | `lease/personal/P2-T03/scheduler-service` | deterministic scheduler eligibility, TTL lease-expiry takeover, and clock-shift no-double-dispatch protections | `lane/personal-p2-t03-scheduler-service` | 2026-08-01 | Linux-host failure-first test repaired and passed 5/5; store suite, fmt, and focused Clippy passed. No Gate, release, or Profile claim. See `20260801-personal-p2-t03-scheduler-service-handoff.md`. |
-| `lease/personal/P1-T09/b01-execution` | execute the preregistered clean-Linux B01 first-install/first-conversation attempt 1 on `B01-Desktop-Linux-002`, collect redacted evidence, and record the attempt | `main` | 2026-08-01 | Attempt 1 passed all phases with immutable artifact `0.0.0-campaign.20260801.1`; bounded first response in 6295 ms with expected marker and `authority_side_effects:false`; cleanup passed including operator-secret deletion with post-clear not-found. B01 Gate is `pass`. See `20260801-personal-p1-t09-b01-attempt-ledger.md`. |
+| `lease/personal/P1-T09/b01-execution` | execute the preregistered clean-Linux B01 first-install/first-conversation attempt 1 on `B01-Desktop-Linux-002`, collect redacted evidence, and record the attempt | `main` | 2026-08-01 | Attempt 1 passed all phases with immutable artifact `0.0.0-campaign.20260801.1`; bounded first response in 6295 ms with expected marker and `authority_side_effects:false`; cleanup passed including operator-secret deletion with post-clear not-found. B01 Gate remains `running` pending the formal campaign denominator, aggregate threshold calculation, zero-critical-failure closure and independent verifier disposition. See `20260801-personal-p1-t09-b01-attempt-ledger.md`. |
 | `lease/personal/P1-T09/b01-desktop-candidate` | provision a dedicated Ubuntu Desktop 24.04.4 x86_64 B01 candidate with a reset-capable operator-held keyring master and requalify the native Secret Service prerequisite | `main` | 2026-08-01 | `B01-Desktop-Linux-002` provisioned from the official verified ISO; keyring probe passed with the operator-held login password as the recoverable master; reset snapshot `b01-platform-qualified-baseline` taken; campaign `0.0.0-campaign.20260801.1` built from `main@0a5524b` and independently verified by a locked verifier; B01 remains not-run at this lease close. See `20260731-personal-p1-t09-b01-clean-vm-handoff.md`. |
 | `lease/personal/P1-T09/b01-gui-keyring-enablement` | add native persistent Secret Service qualification to the dedicated B01 guest | `main` | 2026-07-31 | Desktop console attempts exposed Xorg mode failures across QXL, VirtIO, VGA/VESA, and VMware SVGA. The approved one-time agent master then created an encrypted persistent default collection and Product-compatible non-sensitive store/lookup/clear probes passed before and after headless cleanup. B01 remains not-run because that master cannot be retained for the preregistered reset procedure; no artifact, Pi state, Provider secret, or attempt was created. See `20260731-personal-p1-t09-b01-clean-vm-handoff.md`. |
 | `lease/personal/P1-T09/b01-clean-vm-execution` | allocate and qualify the separately clean KVM B01 guest and native Secret Service start-gate prerequisites | `main` | 2026-07-31 | Dedicated Ubuntu 24.04/x86_64 KVM guest, clean baseline snapshot, native user-systemd, and no-product-state checks are recorded. Native transient Secret Service probe passed, but Product-compatible persistent default collection creation stops at a required GUI prompt with no headless prompt agent; no B01 attempt, Provider secret, artifact, Pi state, or claim was created. See `20260731-personal-p1-t09-b01-clean-vm-handoff.md`. |

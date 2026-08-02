@@ -6,6 +6,10 @@
 - Classification: Personal product decision. Not a CognitiveOS specification
   requirement, registry REQ, schema, transition, vector, Profile claim, G0
   claim, B01-B12 claim, containment claim, or supply-chain provenance claim.
+- Extended by: ADR-0035 separates Pi's Shell-host role from its managed-Agent
+  role; ADR-0036 replaces the Linux 1.0 default user-installed Pi path with
+  product-owned official npm acquisition. This ADR's non-authority Extension,
+  secret, readiness and tool-denial boundaries remain in force.
 
 ## Context
 

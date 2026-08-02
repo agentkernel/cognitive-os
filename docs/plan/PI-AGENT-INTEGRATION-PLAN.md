@@ -1,136 +1,181 @@
-# Pi Agent integration plan
+# Pi Integration Map for CognitiveOS Personal
 
-- Status: active, staged integration plan
-- Owner: Lane-RUN
-- Scope: Pi (`@earendil-works/pi-coding-agent`) as an external DeepSeek-backed
-  candidate source; no Console work
+**Status:** Informative implementation map
 
-## Current evidence
+**Last updated:** 2026-08-02
 
-- Official package installed in an isolated local directory: version `0.81.1`,
-  repository `https://github.com/earendil-works/pi.git`, MIT license, npm SRI
-  `sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==`.
-- `pi-agent-adapter` disables tools, extensions, skills, project context,
-  session persistence and project trust; it clears inherited API-token
-  environment variables and redacts the process-scoped DeepSeek key from child
-  output.
-- Actual Windows-native DeepSeek smoke: 5/5 fixed-output runs passed with no
-  tool results, no authority commit and no Effect. Requested `deepseek-chat`;
-  provider-reported model was `deepseek-v4-flash`. Candidate-process latency:
-  p50 6081 ms, p95 6451 ms, p99 6451 ms.
+**Decisions:** [ADR-0035](../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
+[ADR-0036](../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 
-This is a candidate-only smoke measurement, not a REQ-PERF-004 hardware
-campaign, a REQ-PERF-005 benefit claim, a C0/C1 compatibility claim, or an
-AgentInstallation commit.
+This document explains how the two Pi integration tracks compose. It is not a task backlog,
+current-status ledger, release Gate, or evidence source. Task definitions come only from
+[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md), current facts come only from the
+`Current snapshot` in [PROGRESS.md](PROGRESS.md), and writable paths come only from active leases in
+[PARALLEL-LANES.md](PARALLEL-LANES.md).
 
-Local evidence (gitignored, no credential or raw transcript) is recorded at
-`artifacts/evidence/pi-agent/20260724-deepseek-candidate-evaluation.json`.
+## 1. Two independent roles
 
-## Delivery sequence
+Pi can participate in Personal in two roles without merging their identities or authority.
 
-Product Gate incompleteness does not block implementation in the
-`experimental-local-only` development track. P2-P6 work may be developed and
-tested locally in parallel, but its product state remains pending/blocked until
-the listed exit evidence exists. Local execution is `tested-local`, never a
-C0/C1, Profile, release, sandbox, or provenance claim.
+| Track | Pi role | Product purpose | Formal task ownership |
+|---|---|---|---|
+| A | Pi-hosted Agent Shell | Natural-language entry point for inspecting and proposing changes to cognitive resources | P2-T02 |
+| B | Managed Pi Agent | Product-acquired, installed, registered, supervised, upgraded, rolled back, and uninstalled Agent | P5-T01, P5-T02, P5-T05, P7-T08 |
 
-| Phase | Deliverable | Exit evidence | Current state |
-| --- | --- | --- | --- |
-| P1 | Candidate-only Pi launcher and real DeepSeek smoke/evaluation | no-tools policy tests; actual model and latency output; zero authority/Effect | delivered in this batch |
-| P2 | Pi supply-chain verifier | immutable package source, digest/SRI plus a trusted signature/provenance policy accepted by `SignatureProvenancePort` | official-publisher path remains blocked: npm SRI alone is not trusted signature/provenance evidence. Custom User-Provided mode now requires the user to review a fixed risk notice and confirm a digest-pinned `file://` project bundle bound to a `principal://` operator. After acknowledgement it uses the same normal installation, authorization and runtime path; it is still not an official-publisher, C0/C1, Profile or sandbox claim. |
-| P3 | Durable InstallationStore | SQLite process-recovery, atomic visibility and management-authority commit for `AgentInstallation` | KRN SQLite WAL staging/commit/recovery slice is merged. Lane-RUN now consumes it through an exclusive in-process `DurableInstallationManager` session: verification precedes stage/commit, recovery is manager-only, and durable persistence grants zero capabilities. Targeted runtime tests and lint passed locally; cross-process lifecycle leasing remains a separate KRN API decision. This is still not a governed `AgentInstallation` completion or C0/C1 claim. |
-| P4 | OS sandbox adapter | Linux-native negative evidence for filesystem/network/secrets/subprocess/tool-proxy and no cross-platform claim merge | pre-launch admission is provided on `lane/run-pi-batch1`: Windows-native is refused, WSL2 is separately refused, and a Linux request requires exact policy/adapter/compatibility digests, a healthy registered adapter and an HTTPS model egress proxy to the exact DeepSeek endpoint. No concrete sandbox adapter or Pi subprocess launch exists; Linux-native evidence remains pending. |
-| P5 | Pi lifecycle/I/O adapter | mediated tool/memory/completion/checkpoint/recovery mapping; bypass, revoke and OOB tests | pending after P3/P4 |
-| P6 | Governed installation and evaluation | committed installation with no automatic high-risk capability; prerequisite behavior vectors; preregistered workload report | blocked by P2-P5 |
-| P7 | Performance campaign | REQ-PERF-004 L2-green reference platform, fixed hardware/topology/baseline and measured p50/p95/p99 | not started |
+Track A does not prove that Pi is installed as a managed Agent. Track B does not grant its Pi
+process Shell authority. One runtime may participate in both tracks, but shared bytes or a shared
+process never merge credentials, sessions, capabilities, lifecycle state, or completion semantics.
 
-Before P7, the local Personal performance runner must attribute latency to four
-separate boundaries: CognitiveOS deterministic processing, Pi/Node process
-startup and RPC handling, Provider/network/model latency, and filesystem/SQLite
-work. Fixed-platform campaigns and A/B/C/D agent-benefit evaluation remain
-later activities; local samples cannot claim either result.
+## 2. Track A: Pi-hosted Agent Shell
 
-## Evaluation protocol for P1
-
-Run only from an isolated work/config directory. Current local development
-must use the explicit ADR-0018 exception and an independent Personal Provider
-config directory; it must not read a parent-process `DEEPSEEK_API_KEY`. Use:
+### 2.1 Composition
 
 ```text
-pi-agent-adapter evaluate --pi <pi-bin> --model <deepseek-model> \
-  --prompt <fixed-prompt> --expected-text <expected> --runs <1..=20> \
-  --work-dir <empty-dir> --config-dir <empty-pi-dir> \
-  --provider-config-dir <personal-provider-config-dir> \
-  --allow-local-native-provider-secret-development
+Pi Interactive CLI
+  -> packages/pi-cognitiveos Extension
+  -> apps/agent-shell shared client/session core
+  -> daemon local API
+  -> TaskApplicationService and resource-management services
+  -> deterministic authority
 ```
 
-Every sample records success, latency, requested and observed model, and
-whether Pi emitted tool results. A failed, timed-out or model-mismatched sample
-remains in the denominator. This command cannot claim governance overhead,
-agent benefit or deployment readiness. This local exception is Linux native
-only, default-deny, and remains explicitly uncontained because the initial Pi
-child may pass its environment to descendants; it is not a sandbox or release
-credential-delivery design. The future daemon-owned Provider proxy remains the
-normal Personal product path. Adapter admission classifies WSL independently
-from Linux native and rejects WSL, Windows, and enabled CI before selecting or
-probing the native Secret Service backend.
+The Shell is a non-authority UI adapter. It may interpret natural language, render daemon
+projections, collect confirmation, and submit typed proposals. It may not write authority state,
+commit Effects, infer completion, or bypass daemon authorization.
 
-For future Linux-native local runs, the designated experimental SSH host is
-`personal-linux-native-01` at `wuz@192.168.1.2`. A no-secret qualification
-probe on 2026-07-30 confirmed non-WSL Linux x86_64, a running native
-user-systemd and user D-Bus, Rust `1.97.1`, and Node `22.19.0`; SSH
-authentication is available. Treat it as a local-only engineering host, keep
-its evidence separate from CI Ubuntu and Windows/MSVC, and do not upgrade it
-into a product, sandbox, Gate, Profile, or release claim merely because a
-command succeeded there.
+### 2.2 Channel separation
 
-Each remote slice must run through non-interactive SSH, use a disposable
-remote work directory, and re-check the exact Pi package/binary version before
-load. Do not put credentials, `SecretRef`, Provider configuration, SQLite or
-authority paths, selected-model material, or raw Pi output in SSH arguments,
-environment, terminal captures, or committed evidence. On 2026-07-30, `pi`
-was absent from PATH and an uncredentialed
-`npm exec --package=@earendil-works/pi-coding-agent@0.81.1 -- pi --version`
-probe produced no version output after two minutes and was stopped. Therefore
-exact Pi availability remains `not-run`, not a satisfied pin and not a product
-blocker. The next real-load slice must resolve this availability check before
-attempting `--extension <absolute-path>`.
+The implementation must keep these channels distinct:
 
-The P0-T06 `extension-load` verb is a bounded local evidence probe. It requires
-the reviewed fixture and `/cognitiveos-p0-t06-status`, starts a real pinned Pi
-RPC session, waits for the Extension status response, and returns only redacted
-event types, status text, timeout state, and timing. It must run only after
-`verify:local` report/evidence validation is green on a supported local path.
-No credential, raw transcript, model content, command argument containing a
-secret, SQLite write, authority transition, or Effect is permitted in its
-output. A successful probe is real Extension/RPC load evidence only; it does
-not satisfy the later compatibility, sandbox, product Gate, Profile, or release
-criteria.
+| Channel | Examples | Required boundary |
+|---|---|---|
+| Task channel | create, inspect, watch, pause, resume, stop a Task | Task application services and Task-scoped capability |
+| Management channel | install, activate, upgrade, roll back, uninstall an Agent | Resource-management services, explicit preview, stronger lifecycle capability |
 
-## Non-negotiable exclusions
+Pi built-in mutating tools remain default-deny. Natural-language and deterministic CLI commands
+must converge before authorization so the Shell cannot create a second policy path.
 
-- Never put a credential in repository files, logs, evidence committed to Git,
-  command arguments or `auth.json`.
-- Never let candidate output produce an authorization decision, capability,
-  Effect or Task completion.
-- Custom User-Provided installation requires explicit risk acknowledgement for a
-  digest-pinned local bundle. It never upgrades a user declaration into publisher
-  provenance; later runtime permission remains governed by the same normal
-  authorization path.
-- Never claim Windows-native sandbox coverage from WSL2/Linux evidence.
-- Do not promote the candidate launcher to C0/C1 without P2-P5 evidence.
+### 2.3 Reused implementation
 
-## P4 pre-launch admission evidence (2026-07-24)
+- `packages/pi-cognitiveos`: Pi Extension and provider-facing Shell host adapter.
+- `apps/agent-shell`: reusable task-channel/session/watch client core.
+- daemon local API and `TaskApplicationService`: sole application-service boundary.
+- native Secret Store and daemon Provider proxy: sole approved provider-secret path.
 
-`cognitive_runtime::admit_pi_launch` has no success path on Windows-native or
-WSL2. On a non-Linux host it also refuses a caller-supplied `linux_native`
-label. The only Linux-host admission shape is an opaque permit; it carries no
-authority and no concrete adapter in this repository can turn it into a
-subprocess. Missing/faulted/unregistered adapters, any binding digest mismatch,
-missing proxy, a non-HTTPS proxy, malformed/empty digest binding, and a non-registered model endpoint all fail
-closed with the existing `AGENT_ADAPTER_BYPASS_DETECTED` code.
+### 2.4 Acceptance mapping
 
-The verification run for this code was a WSL2 Linux guest diagnostic only:
-`cargo test -p cognitive-runtime --offline` = 52 passed / 0 failed and
-`cargo clippy -p cognitive-runtime --all-targets -- -D warnings` = pass.
-It is not Linux-native evidence and does not update F-017 or Profile status.
+P2-T02 owns Shell composition and must demonstrate:
+
+- real Task API use rather than fixture-only state;
+- daemon projection and watch/recovery behavior;
+- parity with deterministic CLI application services;
+- Task/management channel isolation;
+- no authority side effects from Pi output, Provider success, process exit, or `agent_end`.
+
+## 3. Track B: managed Pi Agent
+
+### 3.1 Acquisition and installation
+
+P5-T01 owns the Linux 1.0 acquisition transaction:
+
+```text
+fixed official npm origin
+  -> exact @earendil-works/pi-coding-agent@0.81.1
+  -> package identity and version checks
+  -> npm SRI and package/dependency digests
+  -> Node compatibility and adapter digest
+  -> private immutable staging
+  -> compatibility and health checks
+  -> production-signed acquisition lock
+  -> durable installation commit
+```
+
+Pi and Node are not bundled in the CognitiveOS release artifact. An incompatible or missing Node
+fails closed; Pi acquisition must not silently download an unapproved Node runtime. npm SRI is an
+integrity input, not a claim of publisher signature or provenance.
+
+### 3.2 Registry, instance, and execution
+
+P5-T02 owns these separate durable identities:
+
+```text
+AgentPackage
+  -> AgentInstallation
+  -> Agent definition and policy
+  -> AgentInstance
+  -> Task-bound AgentExecution
+  -> supervised OS process
+```
+
+The following are also distinct: `ShellSession`, Pi session, Conversation, Task, Loop, and Effect.
+Installation never implies activation or permission. A healthy process never implies Task
+acceptance.
+
+### 3.3 Lifecycle
+
+Managed Pi lifecycle includes:
+
+- register and inspect;
+- activate and health-check;
+- pause, resume, stop, and supervise;
+- upgrade and rollback using immutable installations;
+- uninstall while retaining or explicitly removing Personal-owned data according to policy;
+- recover and reconcile interrupted lifecycle operations;
+- emit redacted evidence for independent verification.
+
+Every external mutation uses persist-before-dispatch Intent/Effect. `OUTCOME_UNKNOWN` is reconciled
+with the original dispatch identity and idempotency key; it is never retried under a new key without
+closure or quarantine.
+
+### 3.4 Acceptance mapping
+
+- P5-T01: acquisition, immutable installation, acquisition lock, upgrade/rollback/uninstall
+  negatives.
+- P5-T02: registry, instance, health, supervision, lifecycle, and identity separation.
+- P5-T05: managed-Pi B09 evidence. B10 covers the independent Tool/MCP slice and does not block
+  Linux 1.0.
+- P7-T08: Linux 1.0 release composition and promotion through `GMVP-LINUX`.
+
+## 4. Completion and authority invariant
+
+Both tracks share the same deterministic completion path:
+
+```text
+Pi output or proposal
+  -> daemon authorization and admission
+  -> durable Task/Intent/Effect state
+  -> supervised execution
+  -> receipt or reconciliation
+  -> evidence
+  -> independent verification
+  -> authority acceptance transition
+```
+
+None of these alone completes a Task:
+
+- Pi `agent_end`;
+- Provider response or success;
+- process exit zero;
+- Tool or Agent receipt;
+- Shell-rendered success;
+- AgentExecution terminal state.
+
+## 5. Linux 1.0 and future adapters
+
+Linux 1.0 product-qualifies Pi only. The package/installation/definition/instance/execution model
+and adapter test harness must remain Agent-neutral, but OpenClaw, Hermes, Codex, WorkBuddy, and
+other adapters remain deferred until each has its own acquisition policy, lifecycle adapter,
+negative tests, benchmark evidence, and promotion decision.
+
+Multiple installed Agents are not Multi-Agent orchestration. Multi-Agent planning, delegation, and
+shared-budget coordination remain a separate post-1.0 capability and Gate decision.
+
+## 6. Evidence and environment use
+
+Environment capabilities and claim limits are registered in
+[PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md). Local, WSL, fixture, and ordinary CI
+results are implementation evidence unless a formal campaign preregistration explicitly admits
+them. The B01 first-install campaign and managed-Pi B09 campaign remain distinct evidence sets.
+
+Historical handoffs and attempt records may explain a run but cannot redefine task acceptance,
+campaign denominator, Gate threshold, current status, or release scope.

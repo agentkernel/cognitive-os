@@ -16,8 +16,9 @@
  *   state on its own — remote completed reports, receipts, or local
  *   "looks done" signals change nothing (REQ-GW-002).
  *
- * The interactive CLI front end is deferred to M5; this command layer and
- * state machine are its complete non-visual core.
+ * This command layer and state machine are the reusable non-visual core for
+ * Personal Shell adapters. P2-T02 owns composition with the real governed Task
+ * application service and Pi-hosted user experience.
  */
 
 import {

@@ -1,6 +1,9 @@
 # `@cognitiveos/pi-cognitiveos`
 
-CognitiveOS Pi Extension for the Personal product (task **P1-T07**).
+CognitiveOS Pi-hosted Agent Shell adapter for Personal. The initial Provider
+proxy and first-conversation integration was delivered by task **P1-T07**;
+composition with governed Task and resource-management application services is
+owned by **P2-T02**.
 
 Pi (`@earendil-works/pi-coding-agent`) is reused as a terminal UI. This package
 is the CognitiveOS surface that runs *inside* Pi and keeps it a **non-authority
@@ -15,6 +18,7 @@ and advances no Task.
 | `tool_call` | **default-deny.** `bash`, `edit` and `write` are refused with a mutating-tool reason; every other tool is refused as ungoverned |
 | `session_start` | reads `GET /personal/status` from the Personal daemon and shows the real projection; warns when the first conversation is blocked |
 | `/cognitive-status` | prints the same daemon facts on demand |
+| Provider adapter | registers the daemon-selected model and sends Provider traffic through the daemon-owned proxy without exposing its secret to Pi |
 
 ## Why default-deny on tools
 
@@ -40,12 +44,14 @@ place where a future batch may admit a tool.
 
 `src/safety.test.ts` enforces all of the above by scanning the runtime sources.
 
-## Pi is not a dependency
+## Pi acquisition is separate from this package
 
-ADR-0025 forbids vendoring or redistributing Pi; the user installs a compliant
-Pi locally. This package therefore declares a structural mirror of the pinned
-Pi Extension API in `src/pi-api.ts` instead of importing `@earendil-works/*`,
-and nothing Pi-related enters `pnpm-lock.yaml`. The compatibility pin in
+ADR-0025 and ADR-0036 forbid vendoring or redistributing Pi in a CognitiveOS
+release. The planned Linux 1.0 installation path instead acquires the exact
+approved Pi package from the fixed official npm origin and commits a verified,
+immutable managed installation. Pi is therefore not a workspace dependency of
+this Extension: `src/pi-api.ts` declares the reviewed structural API mirror and
+nothing Pi-related enters `pnpm-lock.yaml`. The compatibility pin in
 `src/pin.ts` is drift-checked against the authoritative Rust
 `PiCompatibilityPin` in `apps/pi-agent-adapter/src/lib.rs`.
 
@@ -63,12 +69,12 @@ Exactly two local files are read, the same ones `cognitive` reads:
 
 ## Status and non-claims
 
-P1-T07 is **not complete**. This package delivers the Extension half. The
-daemon-owned Provider proxy and the readiness `pi` component flip are the
-remaining halves and are tracked in
-[`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`](../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md).
+P1-T07 is complete in the formal task ledger, including daemon-owned Provider
+proxy integration and recorded real-Pi load/first-response implementation
+evidence. That evidence does not deliver P2-T02's governed Task/resource
+composition and does not install, register, supervise, upgrade, roll back, or
+uninstall Pi as a managed Agent; those are the separate P5-T01/P5-T02 track.
 
-Nothing here is a G0, B01-B12, C0/C1, Profile or release claim. The Extension
-has not been loaded by a real Pi process in this repository: that evidence
-belongs to P0-T06's `extension-load` verb, which requires a Linux-native host
-and remains `not-run`.
+Nothing in this package alone is a B01-B12, `GMVP-LINUX`, C0/C1, Profile, or
+release claim. Current status and evidence scope are owned by
+[`PROGRESS.md`](../../docs/plan/PROGRESS.md), not by this README.

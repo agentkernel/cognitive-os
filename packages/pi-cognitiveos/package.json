@@ -2,7 +2,7 @@
   "name": "@cognitiveos/pi-cognitiveos",
   "version": "0.0.1",
   "private": true,
-  "description": "CognitiveOS Pi Extension: non-authority Pi client that blocks direct mutating tools and reads daemon facts only (P1-T07)",
+  "description": "Pi-hosted Personal Agent Shell adapter with daemon Provider proxy and default-deny direct tools",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -1,8 +1,6 @@
 /**
- * `@cognitiveos/agent-shell`: task Shell client of the CognitiveOS reference
- * implementation (M5 delivery per `docs/plan/DEVELOPMENT-PLAN.md`; M0
- * skeleton only). Coexists with `apps/cognitiveos-console` (separate planned
- * product; see its PRODUCT-DESIGN.md).
+ * `@cognitiveos/agent-shell`: reusable Task-channel client and session core for
+ * CognitiveOS Personal Shell surfaces, including the Pi-hosted Agent Shell.
  *
  * Hard rules (whitepaper Shell semantics; vectors `shell-*.json`): the Shell
  * is a client, never an authority; detaching or exiting the Shell does not
@@ -16,8 +14,8 @@ import { CLIENT_CHANNELS } from "@cognitiveos/sdk-ts";
 export * from "./live.js";
 export * from "./session.js";
 
-/** Shell verbs (the CLI front end binds them at M5). */
+/** Task-channel verbs exposed to an interactive Shell adapter. */
 export const SHELL_VERBS = ["propose", "preview", "attach", "detach", "cancel", "watch"] as const;
 
-/** The Shell binds the task channel only; management uses admin-cli/Console. */
+/** This client binds only the task channel; management uses separate clients. */
 export const SHELL_CHANNEL: (typeof CLIENT_CHANNELS)[number] = "task";

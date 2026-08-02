@@ -20,7 +20,7 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 
 | 文档 | 类别 | 更新责任 |
 |---|---|---|
-| [CognitiveOS-Architecture.md](../CognitiveOS-Architecture.md) | informative（白皮书 v1.0.1；语义真相在 registry/schema/companion，白皮书随后对齐） | 语义/结构型变更时按 docs-sync-contract 联动 |
+| [CognitiveOS-Architecture.md](../CognitiveOS-Architecture.md) | informative（白皮书 v1.0.2；语义真相在 registry/schema/companion，白皮书随后对齐） | 语义/结构型变更时按 docs-sync-contract 联动 |
 | [RFC-0001-...md](../RFC-0001-cognitiveos-governance-context-access.md) | normative-behavior（v0.2 Draft companion） | 契约变更经 Lane-CTR 流程 |
 | [CognitiveOS-Review-Conclusions.md](../CognitiveOS-Review-Conclusions.md) | informative（评审处置记录 v2.0） | 冻结；后续处置写 findings-ledger |
 | [CognitiveOS-Architecture-Independent-Review.md](../CognitiveOS-Architecture-Independent-Review.md) | informative（独立审查 F-001~F-030） | 冻结；现状核验写 findings-ledger |
@@ -29,6 +29,15 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 | [PROJECT-IDENTITY.md](governance/PROJECT-IDENTITY.md) | governance（仓库架构层与唯一活动项目边界） | 项目身份或默认工作范围变化时更新 |
 | [project-scope.yaml](governance/project-scope.yaml) | governance-machine（项目身份机器镜像） | 与 PROJECT-IDENTITY 同批更新 |
 | [DEVELOPMENT-OPERATING-MODEL.md](governance/DEVELOPMENT-OPERATING-MODEL.md) | governance（工具无关开发/evidence/Gate/lease 规则） | 治理变更时更新 |
+
+## Personal 产品与组合架构（informative canonical design）
+
+这两组文档拥有稳定设计，但不拥有 task、current status、Gate 或 evidence。
+
+| 入口 | 责任 |
+|---|---|
+| [product/personal/README.md](product/personal/README.md) | 产品愿景、用户模型、认知资源、Linux 1.0 范围和用户旅程 |
+| [architecture/personal/README.md](architecture/personal/README.md) | Personal 分层架构、Pi 双角色、Agent lifecycle、authority/data/recovery |
 
 ## specs/ 与 conformance/
 
@@ -43,7 +52,7 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 
 ## docs/standards/（normative-behavior，机器可判定口径）
 
-既有 4 份 + M0 新增 8 份 + 防漂移契约 1 份：
+本目录登记当前 normative-behavior 与防漂移标准；具体数量由目录和一致性检查决定：
 
 | 标准 | 主题 |
 |---|---|
@@ -78,6 +87,8 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 | [0024-personal-cognitive-cli-product-entry.md](adr/0024-personal-cognitive-cli-product-entry.md) | Personal `cognitive` CLI 产品入口（P1-T06；非 Profile） |
 | [0025-personal-license-platform-distribution.md](adr/0025-personal-license-platform-distribution.md) | Personal License / 首发平台 / 分发决策（P0-T03；非 Profile） |
 | [0022-personal-bounded-daemon-local-auth.md](adr/0022-personal-bounded-daemon-local-auth.md) | Personal bounded daemon + local auth（P1-T04；非 Profile） |
+| [0035-personal-pi-shell-and-managed-agent-role-separation.md](adr/0035-personal-pi-shell-and-managed-agent-role-separation.md) | Pi-hosted Agent Shell 与 managed Pi Agent 角色/身份分离 |
+| [0036-personal-linux-1-0-and-official-pi-acquisition.md](adr/0036-personal-linux-1-0-and-official-pi-acquisition.md) | Linux 1.0 范围与固定官方 npm Pi acquisition |
 
 ## docs/plan/（plan 类；每次合并更新 PROGRESS）
 
@@ -94,8 +105,10 @@ v0.1 和 Post-v0.1 计划是 CognitiveOS 架构形成过程或验证参考，除
 - [plan/PROGRESS.md](plan/PROGRESS.md)：单页进度仪表（合并必更）。
 - [plan/PARALLEL-LANES.md](plan/PARALLEL-LANES.md)：并行车道所有权与合入序。
 - [plan/PERSONAL-DEVELOPMENT-PLAN.md](plan/PERSONAL-DEVELOPMENT-PLAN.md)：CognitiveOS Personal 的正式开发任务、状态和阶段 Gate；其可机读 [PERS-PR trace](plan/personal-trace.yaml) 不属于 registry matrix，也不构成 REQ 或执行证据。
+- [plan/PI-AGENT-INTEGRATION-PLAN.md](plan/PI-AGENT-INTEGRATION-PLAN.md)：Pi-hosted Shell 与 managed Pi 的双轨实现映射；非 backlog/状态源。
 - [Agent Hub Master Development Plan](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/plan/agent-hub-development-plan.md)：受 gate 阻断，未激活实现车道；已迁至独立仓库 cognitiveos-clients 的 `agent-hub/plan/`（子计划与提示词同树）。
 - [plan/PERSONAL-SUPPORT-MATRIX.md](plan/PERSONAL-SUPPORT-MATRIX.md)：Personal 首发支持矩阵（P0-T03 / ADR-0025；非 G0/B01 证据）。
+- [plan/PERSONAL-TEST-ENVIRONMENTS.md](plan/PERSONAL-TEST-ENVIRONMENTS.md)：已知开发、fixture、CI 与 campaign 环境的 pins、用途和 claim limits。
 - [legal/THIRD-PARTY-NOTICES.md](legal/THIRD-PARTY-NOTICES.md)：第三方 notices 与再分发清单（P0-T03；SBOM 归 P7-T01）。
 
 ## docs/clients/（兼容入口）
@@ -135,9 +148,8 @@ v0.1 和 Post-v0.1 计划是 CognitiveOS 架构形成过程或验证参考，除
 - [prompts/console-mobile-platform-product-design.md](prompts/console-mobile-platform-product-design.md)：生成 iOS/Android 独立移动产品设计的分阶段研究、决策与交付提示词。
 - [prompts/console-agent-hub-direct-mode-product-design.md](prompts/console-agent-hub-direct-mode-product-design.md)：生成无 CognitiveOS 安全接管与完整治理两种部署下，PC/手机统一管理第三方 Agent 的多代理产品设计和开发任务编排提示词（**已执行**，canonical 见独立仓库 [cognitiveos-clients `agent-hub/docs/`](https://github.com/agentkernel/cognitiveos-clients/tree/main/agent-hub/docs)）。
 - Agent Hub 接续提示词（12 宏车道 + 6 Adapter，全部 `blocked`）已迁至 [clients/agent-hub/prompts/](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/prompts/README.md)。
-- [prompts/common-prefix.md](prompts/common-prefix.md)：接续提示词公共前缀（硬纪律 + 会话协议）。
-- `prompts/lane-*.md`（7 份）与 `prompts/milestone-m1..m6.md`（6 份）：各车道/里程碑自包含接续提示词（任务 F 产出）。
-- `prompts/v01-auto-*.md`（4 份）：v0.1 无人值守编排分批提示词（boot-connect / verify-regress / perf-report / orchestrator）；canonical 计划见 [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)。
+- [prompts/common-prefix.md](prompts/common-prefix.md)：dated non-executable reference；当前 Personal 会话必须从 `AGENTS.md` 和正式计划启动。
+- `prompts/lane-*.md`、`prompts/milestone-m1..m6.md` 与 `prompts/v01-auto-*.md`：历史/复用输入；不得生成当前 Personal task、branch、lease、Gate 或状态。
 - [prompts/cfr-m5-intent-authority-slice.md](prompts/cfr-m5-intent-authority-slice.md)：Post-v0.1 推荐主战役执行提示词（Lane-CFR；计划见 [POST-V01-NEXT-PHASE-PLAN.md](plan/POST-V01-NEXT-PHASE-PLAN.md)）。
 - [prompts/post-v01-next-phase-planning.md](prompts/post-v01-next-phase-planning.md)：生成下一阶段计划的规划会话入口提示词（已执行）。
 

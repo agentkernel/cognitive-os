@@ -30,6 +30,16 @@ export function toRepoRelative(absPath) {
 }
 
 export function readText(absPath) {
+  const overrideDirectory = process.env.COGNITIVEOS_CONSISTENCY_OVERRIDE_DIR;
+  const repositoryRelativePath = toRepoRelative(absPath);
+  const pathIsInsideRepository =
+    repositoryRelativePath !== ".." && !repositoryRelativePath.startsWith("../");
+  if (overrideDirectory && pathIsInsideRepository) {
+    const overridePath = path.join(overrideDirectory, ...repositoryRelativePath.split("/"));
+    if (statSync(overridePath, { throwIfNoEntry: false })?.isFile()) {
+      return readFileSync(overridePath, "utf-8");
+    }
+  }
   return readFileSync(absPath, "utf-8");
 }
 
