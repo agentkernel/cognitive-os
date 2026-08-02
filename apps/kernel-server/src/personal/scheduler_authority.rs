@@ -106,7 +106,24 @@ fn parse_execution_bound_contract(
 
 #[cfg(test)]
 mod tests {
-    use super::{SchedulerAuthorityError, parse_execution_bound_contract};
+    use super::{
+        SchedulerAuthorityError, SchedulerDispatchAdmission, complete_scheduler_admission,
+        parse_execution_bound_contract,
+    };
+    use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
+    use cognitive_kernel::engine::CommittedTransition;
+    use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
+    use std::cell::Cell;
+
+    fn committed_ceiling_stop() -> CommittedTransition {
+        CommittedTransition {
+            record_id: RecordId::parse("00000000-0000-7000-8000-000000000001").unwrap(),
+            event_id: EventId::parse("00000000-0000-7000-8000-000000000002").unwrap(),
+            event_sequence: 1,
+            after_version: Version::new(2).unwrap(),
+            committed_at: WallTimestamp::parse("2026-08-02T00:00:00Z").unwrap(),
+        }
+    }
 
     #[test]
     fn legacy_contract_is_rejected_before_execution_binding_deserialization() {
@@ -133,6 +150,46 @@ mod tests {
             parse_execution_bound_contract(incomplete_execution_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
         ));
+    }
+
+    #[test]
+    fn reached_ceiling_returns_durable_stop_without_attempting_a_scheduler_lease() {
+        let lease_acquisition_attempted = Cell::new(false);
+
+        let admission = complete_scheduler_admission(
+            SchedulerCeilingDispatch::Stopped(committed_ceiling_stop()),
+            || {
+                lease_acquisition_attempted.set(true);
+                unreachable!("a reached ceiling must not acquire a scheduler lease")
+            },
+        )
+        .unwrap();
+
+        assert!(matches!(admission, SchedulerDispatchAdmission::Stopped(_)));
+        assert!(
+            !lease_acquisition_attempted.get(),
+            "a terminal ceiling STOP must precede every lease attempt"
+        );
+    }
+
+    #[test]
+    fn clear_ceiling_acquires_exactly_one_scheduler_lease() {
+        let lease_acquisition_count = Cell::new(0);
+
+        let admission = complete_scheduler_admission(SchedulerCeilingDispatch::Proceed, || {
+            lease_acquisition_count.set(lease_acquisition_count.get() + 1);
+            Ok(SchedulerDispatch {
+                task_ref: "task://personal/admission-order".to_owned(),
+                lease_owner: "scheduler-worker".to_owned(),
+                lease_epoch: 3,
+                lease_expires: "2026-08-02T00:01:00Z".to_owned(),
+                attempt_count: 1,
+            })
+        })
+        .unwrap();
+
+        assert!(matches!(admission, SchedulerDispatchAdmission::Leased(_)));
+        assert_eq!(lease_acquisition_count.get(), 1);
     }
 }
 
@@ -265,6 +322,23 @@ where
     })
 }
 
+/// Finish daemon admission after the runtime has evaluated the fresh ceiling
+/// snapshot. A committed STOP is terminal for this attempt: the lease closure
+/// remains uncalled, ensuring no scheduler worker is admitted after a ceiling.
+fn complete_scheduler_admission(
+    ceiling_dispatch: SchedulerCeilingDispatch,
+    acquire_lease: impl FnOnce() -> Result<SchedulerDispatch, SchedulerServiceError>,
+) -> Result<SchedulerDispatchAdmission, SchedulerAuthorityError> {
+    match ceiling_dispatch {
+        SchedulerCeilingDispatch::Stopped(transition) => {
+            Ok(SchedulerDispatchAdmission::Stopped(transition))
+        }
+        SchedulerCeilingDispatch::Proceed => {
+            Ok(SchedulerDispatchAdmission::Leased(acquire_lease()?))
+        }
+    }
+}
+
 /// Commit a reached ceiling STOP before a worker can obtain a scheduler lease.
 ///
 /// This is the daemon composition boundary: it reloads the current authority
@@ -289,7 +363,7 @@ where
     G: IdGenerator,
 {
     let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
-    match scheduler_service.stop_before_dispatch_when_ceiling_reached(
+    let ceiling_dispatch = scheduler_service.stop_before_dispatch_when_ceiling_reached(
         &snapshot.ceiling_facts,
         observed_wall_time,
         driver,
@@ -298,17 +372,13 @@ where
         &binding.task_ref,
         &snapshot.budget_id,
         writer_lease,
-    )? {
-        SchedulerCeilingDispatch::Stopped(transition) => {
-            Ok(SchedulerDispatchAdmission::Stopped(transition))
-        }
-        SchedulerCeilingDispatch::Proceed => Ok(SchedulerDispatchAdmission::Leased(
-            scheduler_service.claim_eligible(
-                scheduler_repository,
-                &binding.task_ref,
-                lease_epoch,
-                observed_wall_time,
-            )?,
-        )),
-    }
+    )?;
+    complete_scheduler_admission(ceiling_dispatch, || {
+        scheduler_service.claim_eligible(
+            scheduler_repository,
+            &binding.task_ref,
+            lease_epoch,
+            observed_wall_time,
+        )
+    })
 }
