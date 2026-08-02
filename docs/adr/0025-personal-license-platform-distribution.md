@@ -10,6 +10,10 @@
   `docs/plan/DEVELOPMENT-PLAN.md` section 6 for Personal scope
 - Related: P0-T01 baseline, ADR-0018/0020 secret boundary, P0-T06 Pi pin,
   P1-T08 Linux installer, P7-T01 release/SBOM
+- Updated by: ADR-0036. The no-vendoring/no-Node-bundle decision remains in
+  force; the former user-manual Pi installation requirement is superseded for
+  the Linux 1.0 default path by product-owned acquisition from the fixed
+  official npm source.
 
 ## Context
 
@@ -73,8 +77,11 @@ fallback remains forbidden.
    verifier, interruption/rollback tests in P1-T08; SBOM/attestation in P7-T01).
 3. **Do not redistribute:** Pi binaries/packages, Node.js runtimes, Provider
    keys, user data, or unredacted secrets in any release or support artifact.
-4. **Pi obligation:** pin version + integrity in P0-T06; require user-local
-   compliant install; Extension/RPC remain non-authority clients.
+4. **Pi obligation (updated by ADR-0036):** pin version + integrity in P0-T06;
+   the Linux 1.0 default path performs product-owned acquisition of the exact
+   approved package from the fixed official npm origin. Pi remains outside the
+   release bundle, and Extension/RPC remain non-authority clients. Manual
+   user-local Pi paths are development/import modes, not the default 1.0 path.
 5. **crates.io / npm public publish:** remain **disabled**. Enabling publish is
    a separate P7 owner decision and is not authorized by this ADR.
 6. **Release manifest fields (define only; implement in P7-T01):**

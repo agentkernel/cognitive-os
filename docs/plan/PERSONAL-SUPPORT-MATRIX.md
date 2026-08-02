@@ -1,53 +1,67 @@
-# CognitiveOS Personal — Support Matrix (P0-T03)
+# CognitiveOS Personal Support Matrix
 
-> **Status:** owner-accepted 2026-07-26 (ADR-0025)
-> **MVP-first update:** owner-accepted 2026-07-29 (ADR-0034). Linux is the
-> first public MVP train; Windows remains a product target with an independent
-> B01-W claim gate.
-> **Not:** B01-B12 evidence, `GMVP-LINUX`, Profile claim, or release GO.
+- Status: owner-accepted product support policy
+- Original decision: ADR-0025, 2026-07-26
+- Linux 1.0 updates: ADR-0034 and ADR-0036
+- Current Gate status: [PROGRESS.md](PROGRESS.md) `Current snapshot`
+- Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)
 
-## 1. Product platforms (first ship)
+This file owns supported/deferred platform and distribution policy. It does not
+copy current campaign results and is not B01-B12, `GMVP-LINUX`, release or
+Profile evidence.
 
-| Platform | Arch | Product status | Install surface (planned) | Secret backend direction | Evidence host today |
-|---|---|---|---|---|---|
-| Linux | x86_64 | **First public MVP platform** | GitHub Release checkable bundle + one canonical systemd **user** service on loopback port 48181 (P1-T08/P7-T08) | FreeDesktop Secret Service / `secret-tool` path (ADR-0018/0020) | CI Ubuntu build/test; Linux-native product evidence not-run |
-| Windows | x86_64 | **Product target; install parity independent** | Daemon/CLI product path; native installer/service and B01-W in P7-T07 | Platform credential store direction (same fail-closed boundary) | CI Windows/MSVC build/test; B01-W not-run |
+## 1. Product platforms
 
-## 2. Engineering and non-product hosts
+| Platform | Architecture | Product policy | Installation/secret boundary |
+|---|---|---|---|
+| Linux | x86_64 | **Personal 1.0 target and first public release** | GitHub Release checkable bundle; one `cognitiveos-personal.service` user unit; loopback 48181; FreeDesktop Secret Service; `GMVP-LINUX` required |
+| Windows | x86_64 | product target after Linux 1.0; no install-parity claim yet | P7-T07 owns native credential backend, installer/service and independent B01-W |
+| WSL2 | x86_64 guest | engineering environment only, not a 1.0 product runtime | cannot substitute for native Linux/Windows product evidence |
+| Linux aarch64, macOS, mobile | various | deferred | requires later product decision and independent qualification |
 
-| Host | Status | Notes |
-|---|---|---|
-| CI Ubuntu | Supported Linux build/test matrix evidence | Required green for code merges; not Linux-native systemd, B01, `GMVP-LINUX`, or release evidence |
-| CI Windows/MSVC | Supported Windows build/test matrix evidence | Required green for code merges; not B01-W or install-parity evidence |
-| `personal-linux-native-01` (`wuz@192.168.1.2`) | Designated local Linux-native experimental host | 2026-07-30 no-secret SSH qualification confirmed Linux x86_64, native user-systemd/user D-Bus, Rust 1.97.1, Node 22.19.0, and SSH access. Use only for explicitly authorized `experimental-local-only` / `tested-local` Personal and Pi validation in disposable roots; each slice must re-check exact Pi pin availability. Local-only evidence here is not CI evidence and does not by itself create a product, Gate, Profile, containment, or release claim |
-| Local Windows GNU / MinGW | **Non-supported** | P0-T01 linker exit 121; must not block CI-green work |
-| WSL2 as product runtime | **Not first-ship product** | Existing Pi admission may refuse WSL2; do not market as Personal product host without a later ADR |
-| Linux aarch64 / macOS | Deferred | Out of first-ship matrix |
+## 2. Agent support
 
-## 3. Distribution
-
-| Channel | Decision |
+| Agent | Linux 1.0 support policy |
 |---|---|
-| GitHub Releases | **Yes** — public checkable artifacts |
-| First public artifact | Linux x86_64 single-service bundle (`P1-T08` foundation; `P7-T01..T03` operability; `P7-T08 / GMVP-LINUX` release gate) |
-| Vendor Pi in bundle | **No** — user-local pin (P0-T06) |
-| Vendor Node in bundle | **No** |
-| crates.io publish | **No** (until later P7 decision) |
-| npm public publish | **No** (until later P7 decision) |
+| Pi `0.81.1` | only planned product-qualified Agent; also hosts the Shell under a separate client identity; requires B09 and release manifest inclusion |
+| OpenClaw, Hermes, Codex, WorkBuddy, others | not supported by Linux 1.0; each requires exact adapter/package/protocol pins, independent campaigns and explicit release inclusion |
 
-## 4. Gate mapping (honest)
+Installing several Agent packages does not imply Multi-Agent orchestration.
+Pi Shell evidence and Pi managed-Agent evidence are separate, and neither can
+qualify another adapter.
 
-| Gate | Relation to this matrix |
+## 3. Distribution and acquisition
+
+| Surface | Decision |
 |---|---|
-| G0 | Phase 0 task-level baseline is complete; this matrix alone neither proves nor reopens it. |
-| B01 | Clean Linux VM install-to-first-dialogue campaign; WSL, fake systemd and ordinary CI do not substitute. |
-| GMVP-LINUX / P7-T08 | Scoped public Linux MVP after B01, governed Task MVP and release-operability evidence; not a Profile Gate. |
-| B01-W / P7-T07 | Independent Windows install-parity Gate; it does not block Linux MVP. |
-| RC / P7-T06 | Full declared-scope support claims only with executed evidence; Multi-Agent may remain disabled after a valid no-go. |
+| CognitiveOS product | public, verifiable Linux x86_64 artifacts through GitHub Releases after `GMVP-LINUX` |
+| Pi in product archive | **No**; Pi is not vendored or redistributed in the CognitiveOS bundle |
+| Pi default acquisition | Personal fetches exact `@earendil-works/pi-coding-agent@0.81.1` from the fixed official npm origin after user preview, verifies identity/SRI/digests and commits a production-signed acquisition lock |
+| Node in product archive | **No**; a compatible user/system Node is an explicit prerequisite |
+| crates.io/npm publication of CognitiveOS packages | disabled until a later owner decision |
+| Provider/user secret | native approved Secret Store only; never product/Agent archive, argv, ordinary config, SQLite, logs or evidence |
+
+Npm SRI is an integrity input, not publisher provenance. The acquisition lock
+means CognitiveOS admitted exact upstream bytes; it does not claim upstream
+authorship.
+
+## 4. Claim boundaries
+
+- Linux 1.0 requires formal B01, P2 B02/B04/B05/B12, managed-Pi B09 and P7
+  production-operability evidence.
+- B10/MCP, Memory, Multi-Agent, Web UI and Windows B01-W do not block Linux
+  1.0 and cannot appear in its release claim.
+- Ordinary Ubuntu/Windows CI, WSL, fake-systemd fixtures and
+  `personal-linux-native-01` provide only their registered implementation
+  evidence unless a formal campaign explicitly includes them.
+- Product release does not imply CognitiveOS Core Profile `implemented`.
 
 ## 5. References
 
+- [Linux 1.0 scope](../product/personal/linux-1.0-scope.md)
 - [ADR-0025](../adr/0025-personal-license-platform-distribution.md)
 - [ADR-0034](../adr/0034-personal-mvp-first-single-service-release-train.md)
+- [ADR-0035](../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md)
+- [ADR-0036](../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 - [THIRD-PARTY-NOTICES.md](../legal/THIRD-PARTY-NOTICES.md)
 - [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)

@@ -2,7 +2,7 @@
   "name": "@cognitiveos/agent-shell",
   "version": "0.0.1",
   "private": true,
-  "description": "Task Shell client (proposal/preview/attach/cancel; never an authority; M0 skeleton)",
+  "description": "Reusable non-authority Personal Task Shell client and session core",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

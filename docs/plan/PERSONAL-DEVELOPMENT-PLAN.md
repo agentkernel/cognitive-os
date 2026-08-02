@@ -3,10 +3,10 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 pass；P2-T01/P2-T03 in-progress，P2 正式验收尚未开始）**
-> **最后更新：2026-08-01**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 running：1/至少20个 attempt 已通过；P2-T01/P2-T03 in-progress，P2/B09/GMVP-LINUX 正式验收尚未完成）**
+> **最后更新：2026-08-02**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
-> **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式入口和唯一进度台账**。任务 ID 的名称、范围、依赖和阶段 Gate 以本文件为准；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
+> **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
 > **开发状态解耦（2026-07-30 修订）：** `not-started` 表示尚无任务专属实现或测试
@@ -34,6 +34,16 @@
 > Multi-Agent NO-GO 且默认关闭是合法结果。本修订不改变任何既有任务状态、
 > 已执行证据、规范机器资产或 Profile 结论。
 
+> **Linux 1.0 与 Agent 管理修订（2026-08-02，ADR-0035/0036）：**
+> `GMVP-LINUX` 是 Personal `1.0.0` 的既有发布 Gate，不新增平行 Gate。Pi-hosted
+> Agent Shell 与 managed Pi Agent 是独立角色：P2-T02 负责 Shell 到 Task/management
+> application service，P5-T01/T02 与 B09 负责官方 npm Pi acquisition、installation、
+> registry/instance/supervision/lifecycle。Linux 1.0 只 product-qualify Pi，同时交付可供
+> 后续 Agent 独立 qualification 的通用 adapter framework；OpenClaw、Hermes、Codex、
+> WorkBuddy、MCP、Memory、Multi-Agent、Web UI 与 Windows installer 均不进入 1.0 claim。
+> 该 product-semantic 修订不修改 registry/schema/transition/vector，也不产生实现、Gate、
+> release 或 Profile 证据。
+
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
 > 落地 Personal 低摩擦授权模型（DEC-P-20）：交互分层 Tier 0/1/2、任务准入预览为
@@ -60,12 +70,21 @@
    next action 的阻塞记录。任务、依赖和安全路径已经明确时，不得用继续研究或新建平行
    计划替代实现。
 
+### Typed dependency 规则
+
+- `implementation_requires`：开始独立 implementation slice 前必须已有的代码/合同；
+- `acceptance_requires`：任务标为 `done` 前必须满足的任务或证据；
+- `promotion_requires`：进入产品 Gate、release 或扩大 claim 前必须通过的 Gate。
+
+下方旧表“依赖”列是便于阅读的摘要；遇到顺序歧义，以 release-critical typed dependency
+表为准。Acceptance/promotion dependency 不是 implementation mutex。
+
 ### 进度汇总
 
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `pass` |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 2 | 0 | 6 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
@@ -81,24 +100,34 @@
 - Linux-native development smoke 以环境资格清单为准；`wuz@192.168.1.2` 是优先候选而非唯一主机。只有预注册 formal campaign 可推进 B01，任何候选主机名称本身都不表示测试、Gate 或 release 证据。
 - 所有外部 mutating operation 均须经 Intent/Effect、持久化后派发、幂等键、fencing 和结果 reconcile；外部工具成功不等于 Task 完成。
 - Task 完成由独立 verifier/acceptance authority 推进；Pi Session 不等于 Task，Pi `agent_end` 不等于完成。
+- **Pi 双角色（ADR-0035）：** Pi-hosted Agent Shell 是自然语言 UI/client；managed Pi
+  是 package/installation/registry/instance/execution 资源。ShellSession、Pi session、
+  AgentInstallation、Agent instance、AgentExecution、process 与 Task 身份不得合并；task
+  与 management bearer/cache/projection 必须隔离。
 - Personal 计划不改变既有规范优先级，不得用 `PERS-*` ID 冒充 REQ-ID；合同变化必须走 Lane-CTR 流程。
 - **低摩擦授权（ADR-0026）：** 治理记录（Intent/Effect、audit、verifier、capability）全保留；人机交互分层——Tier 0（只读与任务范围内可逆本地写）静默自动授权、Tier 1（幂等/可对账外部 mutating）首用一次授予并默认记住为 capability lease、Tier 2（不可逆/毁灭性/超预算）始终显式确认。任务准入预览是唯一默认人工授权点，默认路径人工确认 ≤1/task；预算与边界是硬轨，不建审批链；企业审批留在 Deferred Backlog。
-- 产品目标平台仍为 **Linux x86_64 + Windows x86_64**（ADR-0025）；首个公开 MVP 是 Linux x86_64 single-service bundle（ADR-0034）。Windows 的 credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07；其证据齐备前，任何 install/B01 声明仅覆盖 Linux。Memory、MCP、Multi-Agent、Web UI 与 Windows 安装面均不阻塞 `GMVP-LINUX`。
+- 产品目标平台仍为 **Linux x86_64 + Windows x86_64**（ADR-0025）；Personal
+  `1.0.0` 是 Linux x86_64 single-service release（ADR-0034/0036），由现有
+  `GMVP-LINUX` Gate 推广。1.0 只正式支持官方 npm 获取并受管的 exact Pi；通用 adapter
+  framework 必须可供后续独立 qualification，但其他 Agent 不继承 Pi 证据。Windows 的
+  credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07。Memory、通用 Context
+  优化、MCP、Multi-Agent、Web UI 与 Windows 安装面均不阻塞 `GMVP-LINUX`。
 
 ## 3. 阶段路线图
 
 下表的入场条件和“禁止提前作为产品主路径”只约束任务 `done`、产品集成、推广和声明范围；不禁止满足 `implementation_requires` 的隔离实现与 failure-first 测试。具体依赖必须区分 implementation、acceptance 与 promotion，禁止把后两者当作开发互斥锁。
 
-| 阶段 | 目标 | 入场条件 | 出场条件 | 禁止提前作为产品主路径 |
+| 能力组 | 目标 | Implementation start | Acceptance exit | 禁止扩大声明 |
 |---|---|---|---|---|
-| P0 | 冻结平台、架构和安全决策 | 本计划批准 | 工具链、ADR、Secret/Pi PoC、benchmark 规格完成 | 产品功能、Memory、Multi-Agent、UI |
-| P1 | 从安装到受治理的首次对话 | G0 | 干净 Linux VM 的 B01 通过 | Task autonomy、Memory、MCP、多 Agent |
-| P2 | 单 Agent 可恢复任务闭环 | B01 | B02/B04/B05/B12 通过 | Memory、embedding、多 Agent |
-| P3 | Context、Token 与 Loop 效率 | P2 稳定 | B03/B06/B07 通过，指标可采集 | Memory consolidation、多 Agent |
-| P4 | 有 provenance 的 durable Memory | P3 基线冻结 | B08 通过，Embedding 有明确 go/no-go | 自动跨工作区记忆 |
-| P5 | 可审核的 Agent/Tool 生态 | P4 稳定 | B09/B10 通过 | 自动市场发现 |
-| P6 | 有收益证据的 Multi-Agent 可选实验 | 单 Agent benchmark 稳定且存在可并行收益假设 | B11 产生 GO 或保持默认关闭的 NO-GO | 未达收益 Gate 即默认启用多 Agent |
-| P7 | Linux MVP、能力列车与完整 RC | P2 稳定后可启动 Linux MVP 发布可运维链 | `GMVP-LINUX` 后按声明范围汇合完整 RC | 用未执行能力扩大 MVP/RC 声明 |
+| P0 | 平台、架构和安全决策 | 本计划批准 | 工具链、ADR、Secret/Pi PoC、benchmark 规格完成 | 产品功能、Memory、Multi-Agent、UI |
+| P1 | 安装到首次对话 | 对应 P0/P1 implementation requirements | 至少 20 次正式 B01 campaign 达标 | 用 dev smoke 或单次 attempt 宣称 B01 |
+| P2 | 单 Agent 可恢复任务闭环与 Shell | P1 contracts + 对应 P2 implementation requirements；B01 不是实现 mutex | B02/B04/B05/B12 | Memory、embedding、多 Agent |
+| P3 | Context、Token 与 Loop 效率 | P2 稳定接口 | B03/B06/B07 | 未执行的性能收益 |
+| P4 | 有 provenance 的 durable Memory | P3 Context 基线 | B08 与 embedding GO/NO-GO | 自动跨工作区记忆 |
+| P5A | managed Pi 与通用 adapter framework | P0-T06/P1-T08 和所需 P2 supervisor contracts | B09 | 非 Pi Agent support |
+| P5B | MCP/通用 Tool 生态 | P2 Tool/Effect 闭环 | B10 | 自动市场发现或未资格化 MCP |
+| P6 | Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 未达收益 Gate 即默认启用 |
+| P7 | Linux 1.0 与后续完整 RC | 对应 P1/P2/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
 
 ### MVP-first release train（不替代现有任务 ID）
 
@@ -106,12 +135,26 @@
 |---|---|---|---|
 | RP1 Foundation | 已完成的 P0 与 P1-T01..T07 | 当前实现基线 | 后续产品能力 |
 | RP2 Install-to-Conversation Alpha | P1-T08、P1-T09 | B01 clean Linux VM | Task、Memory、MCP、Multi-Agent、UI、Windows installer |
-| RP3 Governed Single-Agent MVP | P2-T01..T08 | B02/B04/B05/B12 | Context 优化、Memory、生态、多 Agent |
-| RP4 Public Linux MVP | P7-T01..T03、P7-T08 | `GMVP-LINUX` | P3..P6、P7-T05、P7-T07 |
-| RP5 Context Efficiency Beta | P3-T01..T06 | B03/B06/B07 | Memory 与生态 |
-| RP6 Durable Memory Beta | P4-T01..T06 | B08；embedding GO/NO-GO | embedding GO、生态、多 Agent |
-| RP7 Optional Capability Trains | P5、P6、P7-T05、P7-T07 | 各自独立 Gate | 任何未声明能力 |
-| RP8 Full-Scope RC | P7-T04、P7-T06 与已选择能力 | 声明范围内 B01-B12 / RC | 明确 DEFER/NO-GO 的能力 |
+| RP3 Governed Single-Agent MVP | P2-T01..T08；Pi-hosted Shell 接真实 Task/management service | B02/B04/B05/B12 | Context 优化、Memory、MCP、多 Agent |
+| RP4 Managed Pi Foundation | P5-T01、P5-T02、P5-T05 的 B09 slice | B09 | 非 Pi Agent、MCP、Multi-Agent |
+| RP5 Public Linux 1.0 | P7-T01..T03、P7-T08 + RP2/RP3/RP4 evidence | `GMVP-LINUX` / `1.0.0` | P3/P4、B10、P6、P7-T05、P7-T07 |
+| RP6 Context Efficiency Beta | P3-T01..T06 | B03/B06/B07 | Memory 与生态 |
+| RP7 Durable Memory Beta | P4-T01..T06 | B08；embedding GO/NO-GO | embedding GO、MCP、多 Agent |
+| RP8 Optional Capability Trains | P5-T03..T05/B10、P6、P7-T05、P7-T07、non-Pi adapters | 各自独立 Gate | 任何未声明能力 |
+| RP9 Full-Scope RC | P7-T04、P7-T06 与已选择能力 | 声明范围内 B01-B12 / RC | 明确 DEFER/NO-GO 的能力 |
+
+### Linux 1.0 release-critical typed dependencies
+
+| Task/Gate | implementation_requires | acceptance_requires | promotion_requires |
+|---|---|---|---|
+| P1-T09 / B01 | P1-T08 与既有 Secret/Provider/daemon/Pi contracts | 至少 20 个 clean-Linux attempts、成功率 ≥90%、关键安全失败 0、完整统计和 independent verifier | B01 只在完整 campaign 后 pass |
+| P2-T02 | P2-T01、P1-T07、task/management channel contracts | real Personal Task API/watch；Pi Shell 与 CLI 调同一 application service；channel isolation negatives | G2: B02/B04/B05/B12 |
+| P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
+| P5-T01 | P0-T04、P0-T06、P1-T08 | official npm exact Pi acquisition；SRI/digest/acquisition-lock；install/upgrade/rollback/uninstall negatives | B09 |
+| P5-T02 | P5-T01、P2-T03、P2-T06 supervision ports | registry/instance health、epoch fencing、pause/resume/stop、install ≠ permission、PiSession ≠ instance | B09 |
+| P5-T05 | P5-T02 for B09 slice；P5-T04 for B10 slice | B09 与 B10 各自 campaign；两者均完成后任务才 done | GMVP-LINUX 只 requires B09；G5/RC 按声明 requires B09+B10 |
+| P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
+| P7-T08 | P1-T09、P2-T08、P5-T01、P5-T02、P7-T01..T03 | Linux 1.0 release manifest、native systemd、managed Pi、Task/Tool/recovery、update/uninstall/backup/doctor evidence | B01 + B02/B04/B05/B12 + B09 |
 
 ### 本机实验轨道（不改变产品 Gate）
 
@@ -168,8 +211,6 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P1-T06 | `cognitive init/doctor/status/daemon` | P1-T02, P1-T05 | 重复 init、hidden input、可操作错误 | done | 2026-07-25；分支 `lane/personal-p1-t06-cognitive-cli`，PR [#98](https://github.com/agentkernel/cognitive-os/pull/98) 合入 `main@adbb0e5`。`cognitive` bin + `personal_cli`（init/status/doctor/daemon）、ADR-0024、`tests/p1_t06_cognitive_cli.rs`（live daemon 路径以 Ubuntu 为权威；Windows 跑 init/usage）。CI run [30167503487](https://github.com/agentkernel/cognitive-os/actions/runs/30167503487) Ubuntu/Windows-MSVC SUCCESS。本机 Windows GNU linker exit 121 为非支持基线。非 G0/B01-B12/Profile。handoff：[20260725-personal-p1-t06-cognitive-cli-handoff.md](../checkpoints/20260725-personal-p1-t06-cognitive-cli-handoff.md)。 |
 | P1-T07 | CognitiveOS Pi Package/Extension 与 proxy | P0-T06, P1-T03, P1-T04, P1-T05 | 禁用直接 mutating tool；无 key 泄漏 | done | 2026-07-27；PR [#105](https://github.com/agentkernel/cognitive-os/pull/105) merged as `main@9d4c3d9` after the Ubuntu and Windows/MSVC CI checks succeeded. `packages/pi-cognitiveos/` defaults to denying `project_trust` and every Pi tool, displays only daemon facts, and source-scan tests forbid Provider key/config, `SecretRef`, SQLite, subprocess, and filesystem-write access. The daemon exposes a management-authenticated, non-secret selected-model projection and a bounded Pi complete-provider bridge: exactly one daemon-projected model forwards a one-shot `stream:false` completion through the authenticated daemon proxy. Provider material remains daemon-only; the proxy creates no Intent/Effect, capability, or state transition. `RustlsProviderTransport` remains HTTPS-only, redirect-free, time- and 1 MiB-response-bounded, and rejects URL user-info/header injection; `stream:true` remains fail-closed. Local WSL tests and the supported CI matrix passed. This is implementation and test evidence only, not a G0/B01-B12, Profile, containment, or release claim. Handoff: [20260727-personal-p1-t07-closeout-handoff.md](../checkpoints/20260727-personal-p1-t07-closeout-handoff.md). |
 | P1-T08 | 可检查 Linux bundle installer 与 user service | P0-T03, P1-T01, P1-T04, P1-T06, P1-T07 | verifier、interruption、rollback 测试 | done | 2026-07-29；`lane/personal-p1-t08-mvp-single-service`。已交付固定单服务安装事务、release-shaped campaign builder 与 Linux-native user-systemd 验证：clean install `.3`、healthy upgrade `.4`、pre-pointer `.5` failure 与 post-pointer `.6` failure；两种 failure 后均恢复 canonical unit/service、48181 liveness 及 non-secret `active-version=.4`，并保留 immutable campaign versions。聚焦 WSL tests：campaign builder、service lifecycle、single-service 及 adapter **20/20 passed**；strict runtime Clippy、formatting、consistency 和 whitespace 均通过。该结论仅完成 P1-T08 installer 验收；campaign 仍为 `experimental-local-only` / `tested-local` evidence，不构成 production release/signing、B01、Gate、Profile、containment、uninstall 或 first-conversation claim。 |
-| P1-T09 | 首次安装到首次对话 route 与 B01 campaign | P1-T08 及现有 Secret/Provider/daemon/Pi contracts | deterministic binary Provider fixture、真实 pinned Pi Extension load、真实首个响应、native Secret Service smoke 与预注册 B01 runner；B01 仍由独立 formal campaign 决定 | in-progress | `experimental-local-only` / `tested-local`；deterministic binary Provider fixture 已在 supported Ubuntu/Windows CI **3/3** 通过。PR #126 merged the exact Pi runtime-model `baseUrl` repair as `main@c044f2f`; focused failure-first package regression and PR CI passed. Protected campaign `30603971105` signed/uploaded `0.0.0-campaign.20260731.4` from that `main` revision. On the SSH-qualified Linux x86_64/glibc `2.35`/native user-systemd host, copied artifact and source-bundle SHA-256 values matched; host `git fsck`, exact source checkout, and locked verifier build succeeded, and the verifier accepted signature, expected Pi pin and trusted key. Direct GitHub bootstrap download failed closed (host transport limitation); the independently verified local installer was then run after a documented stale-lock recovery (unit stopped, no kernel-server, stale lock removed) and activated `.4`. Exact Pi `0.81.1`, installed CLI/Extension and user service prerequisites passed. The `/dev/null`-bound redacted route returned expected first response in **4267 ms** with `authority_side_effects:false`; no Provider material, SecretRef, SQLite, Task, Effect, Verification, capability, authority data, request, model, or response content was printed. This completes tested-local first-response implementation evidence only. P1-T09 remains `in-progress`; B01 and GMVP-LINUX remain `not-run`; release and Profile remain non-claim. Next action: separately lease and pre-register the clean-Linux B01 campaign. Handoff: [20260730-personal-p1-t09-verified-experimental-deployment-handoff.md](../checkpoints/20260730-personal-p1-t09-verified-experimental-deployment-handoff.md). |
-
 > **P1-T09 B01 preregistration (2026-07-31; implementation-only):** campaign
 > `B01-clean-linux-first-install-first-conversation-001` is registered as a
 > future, separate clean-Linux Gate attempt. Its environment, immutable
@@ -301,15 +342,15 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 预注册至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-01；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: pass`。`B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on dedicated `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4 x86_64, non-WSL, native user-systemd) with independently verified immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, redacted expected first response in 6295 ms, `authority_side_effects:false`, and verified post-clear secret deletion. Evidence: [20260801-personal-p1-t09-b01-attempt-ledger.md](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md). This one passed attempt does not complete P1-T09 or establish release/Profile scope; GMVP-LINUX still requires P2 and P7 acceptance evidence. |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-02；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md). The campaign still lacks the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
 
 ### Phase 2 - 单 Agent 任务闭环
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | in-progress | 2026-08-01；`crates/cognitive-management/src/task_application.rs`（proposal/clarify/preview/admit/control/query 六操作面，仅组合 kernel 意图链原语）；PR #127 `lane/personal-p2-t01-task-application-service`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t01_task_application_service` 4/4 pass；clippy clean；`cognitive-store` m5_intent_chain 6/6 pass |
-| P2-T02 | 真实 Task API、watch 与自然语言管理映射 | P2-T01, P1-T07 | detach/watch/cancel 的 authority 语义正确；trust profile Tier 0/1/2 在 daemon/CLI/Pi 一致应用（ADR-0026） | not-started | — |
-| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget 测试 | in-progress | 2026-08-01；repository slice merged as PR #128 `main@f3bacbe`. Scheduler-service slice adds monotonic wall-clock eligibility and fenced expiry takeover. Ceiling-authority slice `fb2baa8` adds inclusive deadline/retry/step/cost admission evaluation from daemon-supplied durable authority snapshots; Linux-host focused test 2/2, fmt, and focused clippy passed. The daemon authority-loader slice reloads the contract-bound loop, progress, and budget facts and passes Linux `cargo check -p kernel-server`, but intentionally does not assert the ceiling-stop guards: loop-scoped durable dispatch disablement and Effect closure proof are not yet represented. The next Lane-CTR slice corrects TaskContract v0.1/v0.2 compatibility and specifies the fenced quiescence contract before daemon stop integration. Worker-side durable stop handling and BoundedHarness integration remain not-run; P2 Gate B02/B04/B05/B12 remains not-run. |
+| P2-T02 | 真实 Task API、watch 与自然语言管理映射 | P2-T01, P1-T07 | Pi-hosted Shell 复用 `apps/agent-shell` task session core 并调用与 deterministic CLI 相同的 daemon application services；task/management bearer、cache、projection 隔离；detach/watch/cancel 与 Tier 0/1/2 语义正确（ADR-0026/0035） | not-started | — |
+| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-02；repository/service/ceiling/authority/contract slices merged through PR #129 `main@7ea1cde`. Existing evidence covers durable scheduler rows, CAS lease, monotonic eligibility, higher-epoch takeover, inclusive deadline/retry/step/cost evaluation, finite TaskContract compatibility and daemon durable-fact loading. Worker-side durable stop persistence, dispatch quiescence/Effect closure integration, BoundedHarness wiring and P2 Gates remain not-run. |
 | P2-T04 | 单 Agent worker 与 BoundedHarness 接入 | P2-T02, P2-T03 | no-progress/budget/stale-lease 测试 | not-started | — |
 | P2-T05 | Tool Registry 与第一个安全 operation | P2-T04 | 未注册、drift、disabled 均 dispatch=0 | not-started | — |
 | P2-T06 | Process supervisor 与首个 executor | P2-T05 | dispatch 故障、orphan、redaction、idempotency | not-started | — |
@@ -342,11 +383,11 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P5-T01 | Agent package manifest 与安装生命周期 | P4-T05 | digest/health/activate/stop/uninstall；首用一键授予并记住为 capability lease（ADR-0026） | not-started | — |
-| P5-T02 | Agent registry 与 instance lifecycle | P5-T01 | capability 默认拒绝、实例隔离；install ≠ permission 保留（ADR-0026） | not-started | — |
-| P5-T03 | MCP Tool adapter qualification | P2-T05, P4-T05 | MCP 不成为 authority；drift/timeout 测试 | not-started | — |
+| P5-T01 | Agent adapter/package acquisition 与安装生命周期 | P0-T04, P0-T06, P1-T08 | adapter-neutral framework；固定官方 npm source 获取 exact Pi；package identity/version/SRI/digest/dependency lock/Node compatibility；production-signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权（ADR-0036） | not-started | — |
+| P5-T02 | Agent registry、instance lifecycle 与 supervision | P5-T01, P2-T03, P2-T06 | Pi 是 1.0 首个 managed Agent；health/activate/pause/resume/stop/recover、epoch fencing、capability 默认拒绝；PiSession ≠ AgentInstance，install ≠ permission（ADR-0035/0036） | not-started | — |
+| P5-T03 | MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；drift/timeout 测试；1.0 后独立能力 train | not-started | — |
 | P5-T04 | Tool lifecycle、sandbox 与审计 | P5-T03 | enable/disable/quarantine/reconcile | not-started | — |
-| P5-T05 | B09/B10 生态 Gate | P5-T02, P5-T04 | agent/tool 安装与负例 E2E 通过 | not-started | — |
+| P5-T05 | B09 managed-Pi 与 B10 Tool/MCP 独立 Gate | P5-T02, P5-T04 | B09 可在 P5-T02 后独立执行并只资格化 Pi + adapter framework；B10 在 P5-T04 后资格化 MCP/Tool；两者证据和 claim 不互相继承 | not-started | — |
 
 ### Phase 6 - Multi-Agent
 
@@ -361,14 +402,14 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P7-T01 | Release pipeline、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | 可验证 Linux artifact；无 secret/dev path；先交付 Linux MVP slice，后续能力补充 inventory | not-started | — |
+| P7-T01 | Release pipeline、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | 可验证 Linux artifact；无 secret/dev path；production trust 签署 release manifest 与 Pi acquisition lock；actions/toolchain/environment immutable pins；后续能力补充 inventory | not-started | — |
 | P7-T02 | Transactional update、rollback 与 uninstall | P1-T01, P1-T08, P2-T08, P7-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
 | P7-T03 | Doctor、support bundle 与故障排查 | P1-T05, P2-T08, P7-T02 | 仅 redacted facts；stable error code；GMVP-LINUX 前可操作恢复路径 | not-started | — |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 固定环境、raw evidence、CI 与阈值 | not-started | — |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
-| P7-T08 | Public Linux MVP Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P7-T01, P7-T02, P7-T03 | production trust/signing、native user-systemd、B01、受治理单 Agent、update/rollback/uninstall、doctor/support 证据汇合；功能声明明确排除未执行能力；不构成 Profile | not-started | — |
+| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P5-T01, P5-T02, P7-T01, P7-T02, P7-T03 | production trust/signing、native user-systemd、B01、B02/B04/B05/B12、B09 managed Pi、Pi-hosted Shell、受治理单 Agent/安全 Tool、update/rollback/uninstall、backup/restore、doctor/support 证据汇合；只声明 Pi/Linux x86_64，明确排除未执行能力；不构成 Profile | not-started | — |
 
 ## 5. Gate 与证据要求
 
@@ -379,10 +420,21 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | B02/B04/B05/B12 | 管理、任务、恢复、unknown outcome 闭环 | E2E logs、effect/verification evidence、负例、默认路径人工确认次数记录（ADR-0026） |
 | B03/B06/B07 | Context 正确性与效率控制 | benchmark raw run、预算/loss/telemetry evidence |
 | B08 | Memory 生命周期与隐私 | provenance/freshness/conflict/forget 测试 |
-| B09/B10 | Agent/Tool/MCP 资格与隔离 | manifest、health、disable/uninstall、negative tests |
+| B09 | Managed Pi 与 adapter framework 资格 | official npm Pi package/acquisition lock、install/health/activate/pause/resume/upgrade/rollback/uninstall、install ≠ permission、PiSession ≠ instance、recovery negatives；只支持 Pi |
+| B10 | Tool/MCP 资格与隔离 | MCP/Tool manifest、drift/timeout、enable/disable/quarantine/reconcile、sandbox/bypass negatives；不阻塞 Linux 1.0 |
 | B11 | Multi-Agent 相对单 Agent 有可复现收益 | 相同模型/预算/任务的 baseline 对比 |
-| GMVP-LINUX | scoped public Linux MVP 可发布 | B01 + P2 Gate + production trust + native systemd + update/rollback/uninstall + doctor/support；明确 non-Profile 与能力排除项 |
+| GMVP-LINUX | Personal `1.0.0` Linux x86_64 可发布 | B01 + B02/B04/B05/B12 + B09 + production trust + native systemd + official managed Pi + safe Tool + update/rollback/uninstall + backup/restore + doctor/support；明确 non-Pi Agent/Memory/MCP/Multi-Agent/Web UI/Windows/Profile 排除项 |
 | RC | 完整发布声明 | CI、SBOM、attestation、升级/卸载、支持矩阵 |
+
+### Formal campaign preregistration minimum
+
+B01、B02/B04/B05/B12、B09、GMVP-LINUX 与后续产品 Gate 的 preregistration 必须在
+attempt 开始前固定：formal-plan revision/digest、campaign/Gate ID、exact OS image 与
+reset、source/artifact/signature/SBOM/attestation、Node/Pi/package/SRI/adapter digest、
+SecretStore/operator opt-in、workload/attempt denominator/threshold、所有失败计入规则、
+evidence collector/redaction/cleanup、operator 与 independent verifier、允许 claim 和
+non-claims。Handoff/attempt ledger 不得覆盖本表 threshold；不一致必须 fail closed 并走
+`product-semantic` 修订。环境明细见 [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)。
 
 Windows install parity 声明需要 P7-T07 的专门 B01-W Gate 与已执行证据；在此之前，
 RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daemon/CLI 产品路径，

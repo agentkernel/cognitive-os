@@ -10,12 +10,16 @@ alwaysApply: true
   code form the architecture/contract layer; they are not a second product backlog.
 - Read `AGENTS.md` and `docs/governance/PROJECT-IDENTITY.md` before selecting work.
 - Select tasks from `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` only.
+- For product or architecture work, use `docs/product/personal/` and
+  `docs/architecture/personal/` as stable design indexes; neither owns current
+  task or Gate status.
 
 # Current facts and writes
 
 - `docs/plan/PROGRESS.md` `Current snapshot` owns current status.
 - `docs/plan/PARALLEL-LANES.md` owns active writable leases.
 - Handoffs and root `plan.md` are historical/detail sources and cannot override current facts.
-- Claim a non-overlapping `lease/personal/...` before writing.
+- Claim a non-overlapping, exact-path `lease/personal/...` before writing;
+  broad protected-tree globs are invalid.
 - Deliver a smallest vertical slice; do not replace known implementation work with repeated audits.
 - Never read or cite `History/`; never mix `personal-blog/` into this repository.

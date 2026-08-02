@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-01)
+## Current snapshot (2026-08-02)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -13,15 +13,17 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-local`; campaign `.4` (`30603971105`) from `main@c044f2f` passed reviewed-input validation and protected signing/upload. Its independently verified installation on the qualified host reached the redacted expected first response in 4267 ms with `authority_side_effects:false`. B01 attempt 1 on the dedicated Ubuntu Desktop 24.04.4 guest passed all phases with the immutable campaign artifact | B01 acceptance evidence is recorded; next is P2 governed single-agent MVP per the formal plan |
-| B01 first-install/first-conversation Gate | **pass** | `B01-clean-linux-first-install-first-conversation-001` attempt 1 passed on `B01-Desktop-Linux-002` (Ubuntu Desktop 24.04.4, x86_64, non-WSL, native user-systemd): immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b` independently verified; exact Pi `0.81.1` SRI matched; verified installer activated; readiness `first_conversation_ready=true`; Operator A hidden-input credential opt-in; bounded first response `status:ok` in 6295 ms with expected marker, `authority_side_effects:false`; cleanup passed including secret deletion with post-clear not-found | verifier B reviews the redacted ledger; then claim the next P2 task |
-| GMVP-LINUX | `not-run` | no release claim | waits for B01 plus P2 and P7 acceptance evidence |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-supported-ci`; route, fixture and native observations exist, and formal B01 attempt 1 passed all executed phases | execute and retain the remaining preregistered clean-Linux attempts; do not promote one attempt to campaign acceptance |
+| B01 first-install/first-conversation Gate | **running** | Attempt 1 of the formally required minimum 20 clean-Linux attempts passed on `B01-Desktop-Linux-002`: immutable artifact `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, bounded response in 6295 ms, `authority_side_effects:false`, and cleanup including secret deletion. The complete denominator, success rate of at least 90%, zero critical safety failures, aggregate statistics and final independent verifier disposition are not yet present | pre-register a superseding campaign addendum at the formal threshold, then continue with attempt 2 without editing, deleting or rerunning attempt 1 |
+| GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01, P2, managed-Pi B09, and P7 production-operability evidence |
+| Personal 1.0 design baseline | `documented` | ADR-0035/0036, canonical product/architecture docs, Pi dual-track map, typed release dependencies, support/environment registry and governance checks are synchronized; this is design/tooling evidence only | select the next non-overlapping implementation or campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P2-T03/fenced-quiescence-contract` | Lane-CTR owns the finite TaskContract compatibility window and loop-scoped fenced-quiescence contract | add failure-first schema coverage, regenerate bindings, then define the durable dispatch-barrier and stop-preparation surfaces |
+| Active task lease | `none` | the Personal 1.0 documentation lease closed with local consistency, focused TS and failure-injection checks passing; remote CI is not-run | claim a new exact-path lease before any follow-up write |
 
-The P1-T09 implementation evidence is real and B01 attempt 1 passed; the
-current status remains `in-progress` because GMVP-LINUX requires P2 and P7
-acceptance evidence in addition to B01.
+The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
+The campaign-level B01 status is `running`, not `pass`, because the formal plan
+requires at least 20 attempts with a success rate of at least 90%, zero critical
+safety failures, complete attempt accounting and independent verification.
 
 The current P2 slice implements the TaskApplicationService (P2-T01): the L5
 task lifecycle entry point over the intent-chain kernel. `proposal` durably
@@ -73,14 +75,17 @@ facts from durable TaskContract, progress, and budget authority records and
 persist the resulting stop fact before worker integration; those paths remain
 not-run.
 
-The P2-T03 contract unblock added a TaskContract deadline and immutable
-task-to-loop/budget bindings, together with registered ceiling STOP edges. The
-closed daemon authority-adapter lease reloads those durable facts and passed
-Linux `cargo check -p kernel-server`; it deliberately does not fabricate the
-remaining STOP guards. The active Lane-CTR slice restores finite v0.1/v0.2
-TaskContract compatibility and defines the required loop-scoped, fenced
-dispatch-quiescence contract. P2-T03 remains `in-progress`; all Gates remain
-`not-run`, and no worker dispatch or completion claim exists.
+The P2-T03 contract and scheduler slices merged in PR #129 as `main@7ea1cde`.
+They add finite TaskContract compatibility, deadline and immutable
+task-to-loop/budget bindings, scheduler ceiling evaluation, daemon-side durable
+fact loading, and registered ceiling STOP edges. P2-T03 remains `in-progress`:
+worker dispatch, durable stop handling, Effect closure, BoundedHarness
+integration and all P2 Gates remain `not-run`.
+
+## Historical evidence journal
+
+The entries below are preserved execution-time facts. Their old blocker and
+next-action language cannot override the Current snapshot above.
 
 The implementation-only provider-contract slice inspected the exact installed
 Pi `0.81.1` declarations and composer on the qualified experimental host. Pi
@@ -140,7 +145,7 @@ test and Clippy commands remain `not-run` to completion because the Windows GNU
 linker exits 121 before tests start; that limitation neither invalidates the
 supported-CI evidence nor creates a Gate, release, or Profile claim.
 
-## Historical evidence journal
+### Earlier historical entries
 
 > **Fail-closed Pi launch preparation slice (2026-07-30):** The
 > install-to-first-conversation route remains `in-progress`; `P1-T09 / B01`

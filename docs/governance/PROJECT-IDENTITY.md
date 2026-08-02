@@ -39,6 +39,12 @@ Personal 实现所依赖的架构、合同、研究和验证基础。当前开�
 milestone 状态只作为架构形成过程、验证资产或复用参考保留。除非 Personal 正式计划
 明确引用，它们不能生成当前任务、活动 lease、产品 Gate 或发布要求。
 
+Personal 的稳定产品愿景、用户资源模型和 release-scope 设计位于
+[`docs/product/personal/`](../product/personal/README.md)；Personal 如何组合 CognitiveOS
+合同、daemon、Shell 与 Agent runtime 的说明位于
+[`docs/architecture/personal/`](../architecture/personal/README.md)。两者都是 informative
+设计源：前者不拥有任务/Gate/current status，后者不创建 public schema/transition/REQ。
+
 ## 3. 默认工作范围
 
 没有额外决策时，代理只能：
@@ -65,8 +71,9 @@ Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等
 3. [PERSONAL-DEVELOPMENT-PLAN.md](../plan/PERSONAL-DEVELOPMENT-PLAN.md)（正式任务与 Gate）；
 4. [PROGRESS.md](../plan/PROGRESS.md) 的 `Current snapshot`（当前事实）；
 5. [PARALLEL-LANES.md](../plan/PARALLEL-LANES.md) 的活动 lease（当前可写路径）；
-6. handoff（历史操作连续性）；
-7. 根目录 `plan.md`（研究和详细任务卡，不是状态源）。
+6. Personal 产品/架构文档（稳定设计与组合说明）；
+7. handoff（历史操作连续性）；
+8. 根目录 `plan.md`（研究和详细任务卡，不是状态源）。
 
 任何历史记录、旧提示词、旧分支名称或聊天上下文都不能覆盖上述来源。
 

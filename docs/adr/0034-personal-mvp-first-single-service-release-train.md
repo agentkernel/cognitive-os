@@ -8,6 +8,10 @@
   transition, conformance vector, Profile, or executed product Gate.
 - Related: ADR-0018, ADR-0025, ADR-0026, ADR-0028 through ADR-0033,
   P1-T08, P1-T09, P2-T01 through P2-T08, P7-T01 through P7-T08.
+- Extended by: ADR-0035 and ADR-0036. `GMVP-LINUX` is the release Gate for
+  Personal `1.0.0`; managed-Pi B09 evidence is an additional promotion
+  dependency, while the single-service topology and non-Profile boundary stay
+  unchanged.
 
 ## Context
 
