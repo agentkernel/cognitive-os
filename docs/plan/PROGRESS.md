@@ -78,8 +78,8 @@ task-to-loop/budget bindings, together with registered ceiling STOP edges. The
 closed daemon authority-adapter lease reloads those durable facts and passed
 Linux `cargo check -p kernel-server`; it deliberately does not fabricate the
 remaining STOP guards. The former Lane-CTR fenced-quiescence slice was closed
-at user request before validation or delivery; its unpushed local branch work
-does not change current implementation evidence. P2-T03 remains `in-progress`;
+at user request before validation or delivery; its pushed but unmerged branch
+work does not change current implementation evidence. P2-T03 remains `in-progress`;
 all Gates remain `not-run`, and no worker dispatch or completion claim exists.
 
 The implementation-only provider-contract slice inspected the exact installed

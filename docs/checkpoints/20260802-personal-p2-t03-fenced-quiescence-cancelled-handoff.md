@@ -16,16 +16,18 @@ release, Profile, or B01 status.
 
 ## Local branch state
 
-The branch contains unpushed local commits, including `1be4d33`, which began a
-dispatch-barrier foundation. They were not validated on the Linux host, were
-not pushed, have no PR, and must not be treated as delivered implementation
+The branch contains pushed but unmerged commits, including `1be4d33`, which
+began a dispatch-barrier foundation. The branch is tracked by PR #130 and its
+required Ubuntu and Windows/MSVC CI passed; that CI result does not replace the
+missing Linux-host focused validation or make the work delivered implementation
 evidence. No attempt was made to rewrite, revert, or delete those commits.
 
 The only commands actually run after starting the slice were local formatting
 checks and a local focused test attempt. The focused test could not start
 because the unsupported Windows GNU linker exited 121. Linux validation,
-affected-package tests, codegen checks, daemon checks, protected CI, and PR
-creation are all `not-run`.
+affected-package tests, codegen checks, and daemon checks are `not-run`.
+Required Ubuntu and Windows/MSVC CI passed after the branch was pushed; PR #130
+is open and must not be merged without explicit user authorization.
 
 ## Non-claims and successor boundary
 
@@ -34,6 +36,6 @@ integration, BoundedHarness integration, external dispatch proof, Gate result,
 release claim, Profile claim, task completion, or B01 attempt was produced.
 
 Any successor must begin from canonical sources and a new non-overlapping
-lease. It must independently review the unpushed branch before choosing to
-reuse, revise, or abandon it; the branch is not an authority or evidence
-source.
+lease. It must independently review the pushed but unmerged branch before
+choosing to reuse, revise, or abandon it; the branch is not an authority or
+evidence source.
