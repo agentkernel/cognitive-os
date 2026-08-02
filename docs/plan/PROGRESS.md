@@ -149,6 +149,17 @@ lookup/closure/release wiring, BoundedHarness integration and all P2 Gates
 remain not-run. See
 `20260803-personal-p2-t03-durable-task-effect-lookup-handoff.md`.
 
+The pushed exact revision `a74ad74856b4cef6d05668acf42832ea18351b8a` was
+cloned into a disposable Git worktree on the qualified Linux host, verified
+before execution, and passed `cargo test -p cognitive-store --test
+m5_intent_chain` and `cargo test -p kernel-server scheduler_authority::tests`.
+The cleanup trap removed the worktree after the tests. This confirms
+`experimental-local-only` / `tested-local` implementation evidence for the
+durable task-to-Effect lookup; it does not advance a P2 Gate, release, or
+Profile claim. Concrete worker lookup/closure/release wiring and BoundedHarness
+integration remain not-run. See
+`20260803-personal-p2-t03-linux-native-task-effect-validation-handoff.md`.
+
 ## Historical evidence journal
 
 The entries below are preserved execution-time facts. Their old blocker and
