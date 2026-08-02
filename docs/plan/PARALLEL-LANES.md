@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/scheduler-closure-ci-blocker-record` | Record the replacement CI result and bounded unrelated P1-T09 Windows fixture blocker | Lane-RUN | `main` | `docs/plan/PARALLEL-LANES.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p2-t03-scheduler-worker-effect-closure-handoff.md` | Cursor session 2026-08-02 | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
