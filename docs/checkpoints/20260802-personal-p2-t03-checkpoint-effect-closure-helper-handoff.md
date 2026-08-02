@@ -30,19 +30,24 @@ that allows STOP and an `EXECUTING` inventory that prevents it.
 - `cargo fmt --all -- --check`: passed after formatting.
 - `git diff --check`: passed.
 - `pnpm run check:consistency`: passed after this handoff was added.
-- Focused local and Linux-native kernel/runtime tests, Clippy, workspace tests,
-  protected CI and P2 Gates: pending the committed revision.
+- Linux-native exact-revision worktree
+  `d5e5024b6c130f33f465e934cf88a5a2d354385b`:
+  - `cargo test -p cognitive-store --test m5_harness scheduler_ceiling_stop_fences_future_iterations_and_requires_closed_effects`:
+    passed (1/1).
+  - `cargo test -p cognitive-runtime scheduler_service::tests::maps_each_scheduler_ceiling_to_its_registered_kernel_stop_reason`:
+    passed (1/1).
+- Focused local test, Clippy, workspace tests, protected CI and P2 Gates:
+  not-run.
 
 ## Remaining work
 
-- `blocked_paths`: none for source work; Linux-native validation requires the
-  committed revision in the existing disposable exact-revision worktree.
+- `blocked_paths`: none.
 - `blocked_task_ids`: none.
 - `blocked_gate_ids`: B02, B04, B05, B12, GMVP-LINUX.
-- owner: current P2-T03 Lane-KRN session.
-- next action: commit and push this repair, update the disposable Linux Git
-  worktree to that exact revision, run the focused kernel STOP regression and
-  the runtime adapter regression, then record only the resulting evidence.
+- owner: next P2-T03 Lane-RUN session.
+- next action: reload durable ceiling facts at the scheduler worker boundary,
+  invoke the runtime adapter before worker lease acquisition, and persist any
+  resulting STOP fact before dispatch.
 
 ## Non-claims
 
