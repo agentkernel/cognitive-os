@@ -64,12 +64,12 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T03/scheduler-closure-ci-blocker-record` | Record the replacement CI result and bounded unrelated P1-T09 Windows fixture blocker | Lane-RUN | `main` | `docs/plan/PARALLEL-LANES.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p2-t03-scheduler-worker-effect-closure-handoff.md` | Cursor session 2026-08-02 | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P2-T03/scheduler-closure-ci-blocker-record` | Record the replacement CI result and bounded unrelated P1-T09 Windows fixture blocker | `main` | 2026-08-02 | Replacement CI `30753436524` passed the P2-T03 correction on Linux but failed in unrelated Windows P1-T09 Provider fixture discovery with `Transport(Timeout)`. The fixture path and P1-T09 owner are recorded in the handoff; P2 evidence and Gate status remain unchanged. |
 | `lease/personal/P2-T03/scheduler-closure-ci-correction` | Record and deliver the narrow corrective Clippy lint scoping after the scheduler closure slice CI failure | `main` | 2026-08-02 | Scoped the required test `unwrap` allowance and the pre-existing test-module ordering allowance after CI `30753039014` reported those warnings. Local formatting and consistency passed; the replacement CI run is pending after this corrective commit. |
 | `lease/personal/P2-T03/scheduler-closure-clippy-fix` | Correct test-module Clippy scope for the scheduler Effect-closure slice | `main` | 2026-08-02 | Scoped the required test `unwrap` allowance and the pre-existing test-module ordering allowance after CI reported those warnings. A replacement CI run is pending. |
 | `lease/personal/P2-T03/scheduler-worker-effect-closure` | Integrate fenced scheduler worker admission with durable Effect-closure disposition while tightening stale lease release fencing | `main` | 2026-08-02 | Release now matches both owner and epoch, preventing an old worker from closing a successor lease even when the owner identity is reused. A daemon-private Effect-closure boundary skips callback after ceiling STOP and retains unresolved dispatches for reconciliation. Windows GNU linker exit 121 blocked focused Rust execution; no evidence level, Gate, release or Profile claim advanced. See `20260802-personal-p2-t03-scheduler-worker-effect-closure-handoff.md`. |

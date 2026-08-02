@@ -50,15 +50,33 @@ an external receipt is not an Effect closure.
   remotely reachable revision and a disposable Git worktree; no SSH or other
   external action was taken in this slice.
 
+## Post-push CI correction
+
+The delivery commit `64e8c0d` ran CI `30753039014`. Its Linux and Windows
+Clippy jobs failed because this module keeps its test module ahead of production
+items and the test fixtures use `unwrap`. The corrective commit `0acf720`
+scopes the test-only `unwrap_used` allowance to the module and explicitly
+acknowledges the existing module ordering. It does not change runtime behavior,
+contracts, tests, task status or claims.
+
+Replacement CI `30753436524` passed every Linux verification step, including
+workspace tests, Clippy, formatting, codegen, consistency and conformance. Its
+Windows job failed in the unrelated P1-T09 Provider fixture test
+`binary_fixture_drives_real_rustls_discovery_without_leaking_provider_material`:
+deterministic Provider discovery returned `Transport(Timeout)`. This P2-T03
+slice neither touches nor claims to repair that fixture.
+
 ## Remaining work
 
-- `blocked_paths`: none.
-- `blocked_task_ids`: none.
+- `blocked_paths`: `crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs`.
+- `blocked_task_ids`: P1-T09.
 - `blocked_gate_ids`: B02, B04, B05, B12 and GMVP-LINUX.
-- owner: next P2-T03 Lane-RUN session.
-- next action: add a durable task-to-Effect lookup and use it to wire the
-  daemon worker closure/release path while preserving Effect protocol ordering
-  and independent Task verification.
+- owner: P1-T09 Provider fixture owner for the Windows timeout; next P2-T03
+  Lane-RUN session for worker integration.
+- next action: P1-T09 reproduces the Windows fixture timeout; independently,
+  the next P2-T03 session may add a durable task-to-Effect lookup and use it to
+  wire the daemon worker closure/release path while preserving Effect protocol
+  ordering and independent Task verification.
 
 ## Non-claims
 
