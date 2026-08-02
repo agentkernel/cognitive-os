@@ -64,12 +64,12 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/windows-provider-fixture-timeout` | Reproduce and repair the Windows deterministic Provider fixture discovery timeout | Lane-RUN | `lane/personal-p1-t09-windows-fixture-timeout` | `crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs`; `crates/cognitive-provider-transport/src/bin/p1_t09_provider_fixture.rs`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p1-t09-windows-provider-fixture-timeout-handoff.md` | Cursor session 2026-08-02 | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P1-T09/windows-provider-fixture-timeout` | Reproduce and repair the Windows deterministic Provider fixture discovery timeout | `lane/personal-p1-t09-windows-fixture-timeout` | 2026-08-02 | `035e5c9` raises the deterministic fixture's bounded test-only budget and exchange deadline to tolerate Windows CI process scheduling. Both Ubuntu and Windows workflows passed, including the formerly timing-out fixture test. Normative surface, task/Gate status, evidence level and claims are unchanged; see `20260802-personal-p1-t09-windows-provider-fixture-timeout-handoff.md`. |
 | `lease/personal/P2-T03/scheduler-closure-ci-blocker-record` | Record the replacement CI result and bounded unrelated P1-T09 Windows fixture blocker | `main` | 2026-08-02 | Replacement CI `30753436524` passed the P2-T03 correction on Linux but failed in unrelated Windows P1-T09 Provider fixture discovery with `Transport(Timeout)`. The fixture path and P1-T09 owner are recorded in the handoff; P2 evidence and Gate status remain unchanged. |
 | `lease/personal/P2-T03/scheduler-closure-ci-correction` | Record and deliver the narrow corrective Clippy lint scoping after the scheduler closure slice CI failure | `main` | 2026-08-02 | Scoped the required test `unwrap` allowance and the pre-existing test-module ordering allowance after CI `30753039014` reported those warnings. Local formatting and consistency passed; the replacement CI run is pending after this corrective commit. |
 | `lease/personal/P2-T03/scheduler-closure-clippy-fix` | Correct test-module Clippy scope for the scheduler Effect-closure slice | `main` | 2026-08-02 | Scoped the required test `unwrap` allowance and the pre-existing test-module ordering allowance after CI reported those warnings. A replacement CI run is pending. |
