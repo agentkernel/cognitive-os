@@ -7,44 +7,45 @@
 - Change class: implementation-only evidence closure
 - Task status: `in-progress`
 - Development track: `experimental-local-only`
-- Implementation evidence: `tested-local`
+- Implementation evidence: unchanged (`tested-local` only from prior P2-T03 slices)
 - Normative surface: unchanged
 
 ## Exact revision and environment
 
-The already pushed revision
-`a74ad74856b4cef6d05668acf42832ea18351b8a` was cloned from the remote into a
-fresh `mktemp` worktree on the qualified Linux host. The remote command fetched
-and detached at that exact hash, compared `git rev-parse HEAD` to the expected
-revision, and registered a cleanup trap before any test ran. The command did
-not use the stale non-Git `/home/wuz/agent-kernel` source snapshot.
+The intended target was the already pushed revision
+`a74ad74856b4cef6d05668acf42832ea18351b8a` in a fresh `mktemp` worktree on
+the qualified Linux host. The SSH connection failed during host-key
+verification (exit 255), before the remote shell began. No clone, fetch,
+checkout, exact-revision comparison, test, or cleanup trap executed. The stale
+non-Git `/home/wuz/agent-kernel` source snapshot was not used.
 
 ## Validation result
 
-Both focused commands passed:
+The intended focused commands were not run:
 
 ```text
 cargo test -p cognitive-store --test m5_intent_chain
 cargo test -p kernel-server scheduler_authority::tests
 ```
 
-The remote command exited 0 and its cleanup trap removed the disposable
-worktree. This validates the durable task-to-Effect lookup on Linux without
-running a Provider, Pi, service, secret, B01 guest, installation, or external
-mutating operation.
+The remote command exited 255 before it could access a repository or start a
+test. It did not run a Provider, Pi, service, secret, B01 guest, installation,
+or external mutating operation.
 
 ## Scope and non-claims
 
-This is `experimental-local-only` / `tested-local` implementation evidence for
-P2-T03. It does not pass B02, B04, B05, B12, GMVP-LINUX, a release, or a
-Profile. The task remains `in-progress`.
+This attempt contributes no new implementation evidence. Existing prior
+`tested-local` P2-T03 evidence remains unchanged. It does not pass B02, B04,
+B05, B12, GMVP-LINUX, a release, or a Profile. The task remains `in-progress`.
 
 ## Remaining work
 
-- `blocked_paths`: none.
+- `blocked_paths`: SSH host-key trust configuration for the qualified Linux host.
 - `blocked_task_ids`: none.
 - `blocked_gate_ids`: B02, B04, B05, B12 and GMVP-LINUX.
-- owner: next P2-T03 Lane-RUN/CTR session.
-- next action: bind one unambiguous durable Effect resolution into the concrete
-  worker closure and exact owner/epoch-fenced scheduler release operation,
-  while retaining pending reconciliation and independent Task verification.
+- owner: product owner for approved host-key trust configuration; next P2-T03
+  Lane-RUN/CTR session for implementation.
+- next action: after approved SSH host-key trust is available, recreate a
+  disposable exact-revision worktree and run the focused tests; independently,
+  obtain the action-selection and release-disposition decision required before
+  concrete worker closure/release wiring.
