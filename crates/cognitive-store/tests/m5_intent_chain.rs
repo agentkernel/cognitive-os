@@ -618,6 +618,18 @@ fn user_correction_advances_epoch_and_fences_old_dispatch() {
         )
         .unwrap();
 
+    // Scheduler authority must reload all and only the immutable Intents
+    // bound to the dispatching TaskContract epoch.
+    let epoch_one_intents = store
+        .list_intents_for_task_binding(&TaskBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        })
+        .unwrap();
+    assert_eq!(epoch_one_intents.len(), 2);
+    assert_eq!(epoch_one_intents[0].effect_object_id, pending_effect);
+    assert_eq!(epoch_one_intents[1].effect_object_id, undispatched_effect);
+
     // The user corrects: "no, roll out to staging EU only". The
     // correction is fixed as a NEW record; the original stays untouched.
     let correction_record = record_user_intent(

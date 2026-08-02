@@ -12,7 +12,7 @@ use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
+    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, TaskBinding,
 };
 use cognitive_runtime::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
@@ -69,6 +69,17 @@ pub(crate) enum SchedulerEffectClosure {
     PendingReconciliation,
 }
 
+/// The single durable Effect resolved for one scheduler TaskContract epoch.
+///
+/// A later worker integration must use this object identity to derive an
+/// outcome from the authority store; it must not substitute a receipt or
+/// process-local result.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SchedulerEffectResolution {
+    pub effect_object_id: ObjectId,
+    pub closure: SchedulerEffectClosure,
+}
+
 /// Daemon-owned outcome after scheduler admission reaches the Effect boundary.
 ///
 /// This remains distinct from Task acceptance. A closed Effect only permits a
@@ -100,6 +111,28 @@ pub(crate) enum SchedulerAuthorityError {
     LoopUnavailable(String),
     #[error("scheduler bound budget is unavailable or inconsistent: {0}")]
     BudgetUnavailable(String),
+    #[error("scheduler task contract epoch must be positive: {0}")]
+    InvalidContractEpoch(i64),
+    #[error(
+        "scheduler task contract epoch has no durable Effect binding: {task_ref} at {contract_epoch}"
+    )]
+    MissingEffectBinding {
+        task_ref: String,
+        contract_epoch: i64,
+    },
+    #[error(
+        "scheduler task contract epoch has ambiguous durable Effect bindings: {task_ref} at {contract_epoch}"
+    )]
+    AmbiguousEffectBindings {
+        task_ref: String,
+        contract_epoch: i64,
+    },
+    #[error("scheduler durable Intent binding is inconsistent: {0}")]
+    InconsistentEffectBinding(String),
+    #[error("scheduler durable Effect is unavailable: {0}")]
+    MissingEffect(String),
+    #[error("scheduler durable Effect state is unsupported: {0}")]
+    UnsupportedEffectState(String),
     #[error(transparent)]
     Scheduler(#[from] SchedulerServiceError),
     #[error(transparent)]
@@ -130,8 +163,9 @@ fn parse_execution_bound_contract(
 mod tests {
     use super::{
         SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
-        SchedulerWorkerAttempt, complete_scheduler_admission, complete_scheduler_worker_attempt,
-        parse_execution_bound_contract, release_closed_effect_dispatch,
+        SchedulerWorkerAttempt, classify_scheduler_effect_closure, complete_scheduler_admission,
+        complete_scheduler_worker_attempt, parse_execution_bound_contract,
+        release_closed_effect_dispatch,
     };
     use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
@@ -314,6 +348,100 @@ mod tests {
             !release_attempted.get(),
             "a pending Effect must not release its scheduler lease"
         );
+    }
+
+    #[test]
+    fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
+        assert_eq!(
+            classify_scheduler_effect_closure("RECONCILED").unwrap(),
+            SchedulerEffectClosure::Closed
+        );
+        assert_eq!(
+            classify_scheduler_effect_closure("EXECUTING").unwrap(),
+            SchedulerEffectClosure::PendingReconciliation
+        );
+        assert!(matches!(
+            classify_scheduler_effect_closure("UNRECOGNIZED"),
+            Err(SchedulerAuthorityError::UnsupportedEffectState(state)) if state == "UNRECOGNIZED"
+        ));
+    }
+}
+
+/// Resolve the exact durable Effect bound to one scheduler TaskContract epoch.
+///
+/// This is deliberately a read-only authority boundary. It rejects zero or
+/// multiple bindings, missing objects, adapter-inconsistent rows, and unknown
+/// states before any worker can turn a process result into a scheduler outcome.
+pub(crate) fn resolve_scheduler_effect_for_task_binding<S>(
+    store: &S,
+    task_binding: &TaskBinding,
+) -> Result<SchedulerEffectResolution, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore,
+{
+    if task_binding.task_ref.is_empty() {
+        return Err(SchedulerAuthorityError::EmptyTaskReference);
+    }
+    if task_binding.contract_epoch <= 0 {
+        return Err(SchedulerAuthorityError::InvalidContractEpoch(
+            task_binding.contract_epoch,
+        ));
+    }
+
+    let intent_rows = store
+        .list_intents_for_task_binding(task_binding)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let intent_row = match intent_rows.as_slice() {
+        [] => {
+            return Err(SchedulerAuthorityError::MissingEffectBinding {
+                task_ref: task_binding.task_ref.clone(),
+                contract_epoch: task_binding.contract_epoch,
+            });
+        }
+        [intent_row] => intent_row,
+        _ => {
+            return Err(SchedulerAuthorityError::AmbiguousEffectBindings {
+                task_ref: task_binding.task_ref.clone(),
+                contract_epoch: task_binding.contract_epoch,
+            });
+        }
+    };
+    if intent_row.task_binding.as_ref() != Some(task_binding) {
+        return Err(SchedulerAuthorityError::InconsistentEffectBinding(
+            intent_row.intent_id.as_str().to_owned(),
+        ));
+    }
+
+    let effect_object = store
+        .load_object(LifecycleDomain::Effect, &intent_row.effect_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffect(intent_row.effect_object_id.as_str().to_owned())
+        })?;
+    let closure = classify_scheduler_effect_closure(effect_object.state.as_str())?;
+
+    Ok(SchedulerEffectResolution {
+        effect_object_id: intent_row.effect_object_id.clone(),
+        closure,
+    })
+}
+
+/// Classify an Effect only from its durable lifecycle state.
+///
+/// The states accepted as closed mirror the fail-closed checkpoint inventory:
+/// reconciliation or verification has reached a terminal disposition. Every
+/// in-flight state retains the fenced dispatch for reconciliation; unknown
+/// values are rejected rather than treated as a successful closure.
+fn classify_scheduler_effect_closure(
+    state: &str,
+) -> Result<SchedulerEffectClosure, SchedulerAuthorityError> {
+    match state {
+        "RECONCILED" | "VERIFIED" | "VERIFY_FAILED" => Ok(SchedulerEffectClosure::Closed),
+        "PROPOSED" | "AUTHORIZED" | "EXECUTING" | "OUTCOME_UNKNOWN" | "EXECUTED"
+        | "COMPENSATING" | "QUARANTINED" => Ok(SchedulerEffectClosure::PendingReconciliation),
+        _ => Err(SchedulerAuthorityError::UnsupportedEffectState(
+            state.to_owned(),
+        )),
     }
 }
 

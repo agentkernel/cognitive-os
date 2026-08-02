@@ -820,6 +820,28 @@ impl ProtocolStore for SqliteAuthorityStore {
             })
     }
 
+    fn list_intents_for_task_binding(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Vec<IntentRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {INTENT_COLUMNS} FROM intents
+                 WHERE task_ref = ?1 AND contract_epoch = ?2
+                 ORDER BY intent_id"
+            ))
+            .map_err(unavailable("prepare list_intents_for_task_binding"))?;
+        let rows = statement
+            .query_map(
+                (task_binding.task_ref.as_str(), task_binding.contract_epoch),
+                row_to_intent,
+            )
+            .map_err(unavailable("query list_intents_for_task_binding"))?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read list_intents_for_task_binding"))
+    }
+
     fn current_fencing_epoch(&self) -> Result<i64, StorePortError> {
         let conn = self.lock()?;
         conn.query_row("SELECT epoch FROM fencing WHERE id = 1", [], |row| {

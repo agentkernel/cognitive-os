@@ -335,6 +335,14 @@ pub trait ProtocolStore {
         effect_object_id: &ObjectId,
     ) -> Result<Option<IntentRow>, StorePortError>;
 
+    /// List immutable Intent rows bound to exactly one task contract epoch,
+    /// in stable identity order. Scheduler authority uses this reverse index
+    /// to resolve a fenced dispatch only from durable facts.
+    fn list_intents_for_task_binding(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Vec<IntentRow>, StorePortError>;
+
     /// Current fencing epoch of this authority store (starts at 1).
     fn current_fencing_epoch(&self) -> Result<i64, StorePortError>;
 

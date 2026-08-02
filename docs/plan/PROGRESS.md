@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | The P2-T03 durable-dispatch-closure slice is closed. Its private boundary forwards an exact fenced dispatch to lease release only after durable Effect closure and retains pending reconciliation; no Gate, release, or Profile claim advanced | next P2-T03 slice: durable task-to-Effect lookup and concrete worker closure/release integration |
+| Active task lease | `none` | The P2-T03 durable-task-effect-lookup slice is closed. It introduces a deterministic TaskContract-epoch-to-Intent reverse lookup and fail-closed durable Effect resolution/classification; no Gate, release, or Profile claim advanced | next P2-T03 slice: bind an unambiguous resolved durable Effect to the concrete worker closure/release call while retaining reconciliation and independent verification boundaries |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -131,6 +131,23 @@ Linux-host validation, Gates, release and Profile claims remain not-run; the
 next implementation requirement is a durable task-to-Effect lookup and the
 concrete worker integration. See
 `20260803-personal-p2-t03-durable-dispatch-closure-handoff.md`.
+
+The follow-up P2-T03 implementation-only slice adds the durable task-to-Effect
+authority read required before concrete worker closure wiring. `ProtocolStore`
+now lists immutable Intent rows for an exact `TaskBinding` in deterministic
+identity order, and the SQLite adapter reads the persisted task/epoch columns
+without a schema migration. The daemon resolver rejects missing or ambiguous
+bindings, binding inconsistency, missing Effects and unknown states; only
+durable reconciliation/verification terminal states permit `Closed`, while
+all in-flight states retain `PendingReconciliation`. The focused storage and
+classifier regressions were added before the implementation. `cargo fmt --all
+-- --check`, `git diff --check`, and `pnpm run check:consistency` passed;
+focused Rust tests did not reach crate compilation because the Windows GNU
+linker returned exit 121. This is implementation-only work with no new
+implementation-evidence level, Gate, release or Profile claim. Concrete worker
+lookup/closure/release wiring, BoundedHarness integration and all P2 Gates
+remain not-run. See
+`20260803-personal-p2-t03-durable-task-effect-lookup-handoff.md`.
 
 ## Historical evidence journal
 
