@@ -4,7 +4,13 @@
 //! normalizes untrusted wall-clock samples into a monotonic local floor and
 //! asks the durable repository to atomically acquire a fenced lease.
 
-use cognitive_domain::WallTimestamp;
+use cognitive_domain::{BudgetId, ObjectId, Version, WallTimestamp};
+use cognitive_kernel::effects::{EffectError, WriterLease};
+use cognitive_kernel::engine::CommittedTransition;
+use cognitive_kernel::harness::{CeilingStopReason, LoopDriver};
+use cognitive_kernel::ports::{
+    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
+};
 use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError};
 use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
@@ -45,6 +51,18 @@ pub enum SchedulerStopReason {
     CostCeilingReached,
 }
 
+/// Fail-closed result of evaluating one worker's dispatch ceiling.
+///
+/// A reached ceiling is not merely a local scheduler refusal. The runtime must
+/// persist the corresponding terminal loop transition before it can consider
+/// a worker dispatch. `Stopped` carries the committed kernel transition so
+/// callers cannot substitute an in-memory flag for durable authority state.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SchedulerCeilingDispatch {
+    Proceed,
+    Stopped(CommittedTransition),
+}
+
 /// Scheduler-service validation and persistence failures.
 #[derive(Debug, Error)]
 pub enum SchedulerServiceError {
@@ -60,6 +78,15 @@ pub enum SchedulerServiceError {
     InvalidAuthorityFact(String),
     #[error(transparent)]
     Repository(#[from] SchedulerRepositoryError),
+}
+
+/// Errors while converting a scheduler ceiling into a durable loop STOP.
+#[derive(Debug, Error)]
+pub enum SchedulerCeilingDispatchError {
+    #[error(transparent)]
+    Scheduler(#[from] SchedulerServiceError),
+    #[error(transparent)]
+    Effect(#[from] EffectError),
 }
 
 /// Scheduler eligibility policy for one worker identity.
@@ -182,6 +209,54 @@ impl SchedulerService {
         }
         Ok(None)
     }
+
+    /// Evaluate fresh daemon-owned ceiling facts and durably STOP the loop
+    /// before a worker can acquire a dispatch lease.
+    ///
+    /// The caller supplies facts it has just reloaded from the TaskContract,
+    /// loop progress, and budget authority records. When a boundary is
+    /// reached, this method invokes the kernel's fenced STOP transition rather
+    /// than returning a retryable local refusal. A clear result performs no
+    /// worker lease acquisition; that remains a later caller operation.
+    #[allow(clippy::too_many_arguments)]
+    pub fn stop_before_dispatch_when_ceiling_reached<S, C, G>(
+        &mut self,
+        facts: &SchedulerCeilingFacts,
+        observed_wall_time: &str,
+        driver: &LoopDriver<'_, S, C, G>,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        budget_id: &BudgetId,
+        writer_lease: &WriterLease,
+    ) -> Result<SchedulerCeilingDispatch, SchedulerCeilingDispatchError>
+    where
+        S: AuthorityStore + ProtocolStore + IntentChainStore + HarnessStore,
+        C: Clock,
+        G: IdGenerator,
+    {
+        let Some(stop_reason) = self.evaluate_authority_ceilings(facts, observed_wall_time)? else {
+            return Ok(SchedulerCeilingDispatch::Proceed);
+        };
+        let transition = driver.stop_for_ceiling(
+            loop_id,
+            expected_version,
+            task_ref,
+            budget_id,
+            kernel_stop_reason(stop_reason),
+            writer_lease,
+        )?;
+        Ok(SchedulerCeilingDispatch::Stopped(transition))
+    }
+}
+
+fn kernel_stop_reason(stop_reason: SchedulerStopReason) -> CeilingStopReason {
+    match stop_reason {
+        SchedulerStopReason::DeadlineReached => CeilingStopReason::DeadlineReached,
+        SchedulerStopReason::RetryCeilingReached => CeilingStopReason::RetryCeilingReached,
+        SchedulerStopReason::StepCeilingReached => CeilingStopReason::StepCeilingReached,
+        SchedulerStopReason::CostCeilingReached => CeilingStopReason::CostCeilingReached,
+    }
 }
 
 fn validate_non_negative(field_name: &str, value: i64) -> Result<(), SchedulerServiceError> {
@@ -201,4 +276,32 @@ fn add_lease_ttl(wall_time: &str, lease_ttl_seconds: i64) -> Result<String, Sche
         .ok_or_else(|| SchedulerServiceError::TimestampArithmetic(wall_time.to_owned()))?
         .format(&Rfc3339)
         .map_err(|error| SchedulerServiceError::TimestampArithmetic(error.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{SchedulerStopReason, kernel_stop_reason};
+    use cognitive_kernel::harness::CeilingStopReason;
+
+    /// Regression coverage for the scheduler-to-kernel reason boundary:
+    /// every evaluated ceiling must map to the registered terminal STOP edge.
+    #[test]
+    fn maps_each_scheduler_ceiling_to_its_registered_kernel_stop_reason() {
+        assert_eq!(
+            kernel_stop_reason(SchedulerStopReason::DeadlineReached),
+            CeilingStopReason::DeadlineReached
+        );
+        assert_eq!(
+            kernel_stop_reason(SchedulerStopReason::RetryCeilingReached),
+            CeilingStopReason::RetryCeilingReached
+        );
+        assert_eq!(
+            kernel_stop_reason(SchedulerStopReason::StepCeilingReached),
+            CeilingStopReason::StepCeilingReached
+        );
+        assert_eq!(
+            kernel_stop_reason(SchedulerStopReason::CostCeilingReached),
+            CeilingStopReason::CostCeilingReached
+        );
+    }
 }

@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/ceiling-stop-dispatch-adapter` | Map fresh durable scheduler ceiling decisions into the fenced kernel STOP transition before any worker lease is acquired | Lane-RUN | `main` | `crates/cognitive-runtime/src/scheduler_service.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p2-t03-ceiling-stop-dispatch-adapter-handoff.md` | Cursor autonomous session | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 

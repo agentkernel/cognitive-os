@@ -79,8 +79,8 @@ pub use sandbox::{
     refuse_cross_platform_merge,
 };
 pub use scheduler_service::{
-    SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
-    SchedulerStopReason,
+    SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
+    SchedulerDispatch, SchedulerService, SchedulerServiceError, SchedulerStopReason,
 };
 pub use shell::{ShellError, ShellPhase, ShellService};
 pub use target_resolution::{
