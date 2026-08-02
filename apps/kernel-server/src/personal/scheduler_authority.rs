@@ -7,9 +7,18 @@
 #![allow(dead_code)] // Activated only after the fenced quiescence protocol exists.
 
 use cognitive_contracts::generated::task_contract::TaskContract;
-use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId};
-use cognitive_kernel::ports::{AuthorityStore, HarnessStore, IntentChainStore, ProtocolStore};
-use cognitive_runtime::SchedulerCeilingFacts;
+use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version};
+use cognitive_kernel::effects::WriterLease;
+use cognitive_kernel::engine::CommittedTransition;
+use cognitive_kernel::harness::LoopDriver;
+use cognitive_kernel::ports::{
+    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
+};
+use cognitive_runtime::{
+    SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
+    SchedulerDispatch, SchedulerService, SchedulerServiceError,
+};
+use cognitive_store::scheduler::SchedulerRepository;
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -32,6 +41,25 @@ pub(crate) struct SchedulerAuthorityBinding {
     pub action_fingerprint: String,
 }
 
+/// Durable authority inputs required to decide one scheduler admission.
+///
+/// These facts are reloaded from the current immutable TaskContract and the
+/// authority store for every attempt. They are never taken from the worker or
+/// a prior scheduler projection.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SchedulerAuthoritySnapshot {
+    pub ceiling_facts: SchedulerCeilingFacts,
+    pub loop_object_id: ObjectId,
+    pub budget_id: BudgetId,
+}
+
+/// One daemon-owned scheduler admission result.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum SchedulerDispatchAdmission {
+    Stopped(CommittedTransition),
+    Leased(SchedulerDispatch),
+}
+
 /// Fail-closed authority-read failures before scheduler lease acquisition.
 #[derive(Debug, Error)]
 pub(crate) enum SchedulerAuthorityError {
@@ -51,6 +79,10 @@ pub(crate) enum SchedulerAuthorityError {
     LoopUnavailable(String),
     #[error("scheduler bound budget is unavailable or inconsistent: {0}")]
     BudgetUnavailable(String),
+    #[error(transparent)]
+    Scheduler(#[from] SchedulerServiceError),
+    #[error(transparent)]
+    CeilingStop(#[from] SchedulerCeilingDispatchError),
 }
 
 /// Parse only a current execution-bound contract before reading its bindings.
@@ -109,6 +141,17 @@ pub(crate) fn load_scheduler_ceiling_facts<S>(
     store: &S,
     binding: &SchedulerAuthorityBinding,
 ) -> Result<SchedulerCeilingFacts, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
+{
+    Ok(load_scheduler_authority_snapshot(store, binding)?.ceiling_facts)
+}
+
+/// Reload the full durable input set required before scheduler admission.
+pub(crate) fn load_scheduler_authority_snapshot<S>(
+    store: &S,
+    binding: &SchedulerAuthorityBinding,
+) -> Result<SchedulerAuthoritySnapshot, SchedulerAuthorityError>
 where
     S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
 {
@@ -207,13 +250,65 @@ where
         None => (0, i64::MAX),
     };
 
-    Ok(SchedulerCeilingFacts {
-        deadline: Some(deadline),
-        retry_count,
-        retry_ceiling: contract.max_retries,
-        completed_steps,
-        step_ceiling: contract.max_iterations,
-        spent_cost_microunits,
-        cost_ceiling_microunits,
+    Ok(SchedulerAuthoritySnapshot {
+        ceiling_facts: SchedulerCeilingFacts {
+            deadline: Some(deadline),
+            retry_count,
+            retry_ceiling: contract.max_retries,
+            completed_steps,
+            step_ceiling: contract.max_iterations,
+            spent_cost_microunits,
+            cost_ceiling_microunits,
+        },
+        loop_object_id,
+        budget_id,
     })
+}
+
+/// Commit a reached ceiling STOP before a worker can obtain a scheduler lease.
+///
+/// This is the daemon composition boundary: it reloads the current authority
+/// snapshot, delegates the fenced STOP commit to the kernel, and only calls
+/// the scheduler repository when no hard ceiling was reached. It deliberately
+/// stops before external worker or Effect dispatch.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn admit_scheduler_dispatch<S, C, G>(
+    authority_store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    scheduler_service: &mut SchedulerService,
+    driver: &LoopDriver<'_, S, C, G>,
+    binding: &SchedulerAuthorityBinding,
+    lease_epoch: i64,
+    observed_wall_time: &str,
+    expected_loop_version: Version,
+    writer_lease: &WriterLease,
+) -> Result<SchedulerDispatchAdmission, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
+    match scheduler_service.stop_before_dispatch_when_ceiling_reached(
+        &snapshot.ceiling_facts,
+        observed_wall_time,
+        driver,
+        &snapshot.loop_object_id,
+        expected_loop_version,
+        &binding.task_ref,
+        &snapshot.budget_id,
+        writer_lease,
+    )? {
+        SchedulerCeilingDispatch::Stopped(transition) => {
+            Ok(SchedulerDispatchAdmission::Stopped(transition))
+        }
+        SchedulerCeilingDispatch::Proceed => Ok(SchedulerDispatchAdmission::Leased(
+            scheduler_service.claim_eligible(
+                scheduler_repository,
+                &binding.task_ref,
+                lease_epoch,
+                observed_wall_time,
+            )?,
+        )),
+    }
 }

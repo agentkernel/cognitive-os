@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/daemon-ceiling-dispatch-admission` | Add daemon-owned ceiling-stop-or-lease admission ordering before any scheduler worker dispatch | Lane-RUN | `main` | `apps/kernel-server/src/personal/scheduler_authority.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p2-t03-daemon-ceiling-dispatch-admission-handoff.md` | Cursor autonomous session | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
