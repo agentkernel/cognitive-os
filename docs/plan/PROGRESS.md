@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-02)
+## Current snapshot (2026-08-03)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | Attempt 2 is closed: the reset guest did not accept bounded SSH readiness probes, and cleanup restored `b01-platform-qualified-baseline` with the domain shut off. No secret or product mutation occurred | diagnose the baseline guest network before separately claiming attempt 3 |
+| Active task lease | `none` | The P2-T03 durable-dispatch-closure slice is closed. Its private boundary forwards an exact fenced dispatch to lease release only after durable Effect closure and retains pending reconciliation; no Gate, release, or Profile claim advanced | next P2-T03 slice: durable task-to-Effect lookup and concrete worker closure/release integration |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -119,6 +119,18 @@ path. The new focused regression was failure-first but did not compile locally
 because the Windows GNU linker exited 121 while building dependencies. Workspace
 formatting and `git diff --check` passed. This is implementation work only,
 with no new implementation-evidence level, Gate, release or Profile claim.
+
+The latest P2-T03 implementation-only slice adds a daemon-private release
+boundary after Effect closure. It forwards a closed Effect's exact
+task/owner/epoch-fenced dispatch to the durable scheduler release operation,
+while a STOP or pending reconciliation bypasses release and cannot imply
+scheduler or Task success. The two regressions were added before the helper;
+their local Rust test attempt was blocked before crate compilation by the
+Windows GNU linker (exit 121). Formatting, diff and consistency checks passed.
+Linux-host validation, Gates, release and Profile claims remain not-run; the
+next implementation requirement is a durable task-to-Effect lookup and the
+concrete worker integration. See
+`20260803-personal-p2-t03-durable-dispatch-closure-handoff.md`.
 
 ## Historical evidence journal
 

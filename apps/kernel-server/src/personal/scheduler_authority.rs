@@ -131,7 +131,7 @@ mod tests {
     use super::{
         SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
         SchedulerWorkerAttempt, complete_scheduler_admission, complete_scheduler_worker_attempt,
-        parse_execution_bound_contract,
+        parse_execution_bound_contract, release_closed_effect_dispatch,
     };
     use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
@@ -258,6 +258,61 @@ mod tests {
             attempt,
             SchedulerWorkerAttempt::AwaitingReconciliation(dispatch),
             "an unresolved Effect must not be converted into a scheduler success"
+        );
+    }
+
+    #[test]
+    fn only_a_closed_effect_can_release_the_exact_fenced_scheduler_dispatch() {
+        let dispatch = SchedulerDispatch {
+            task_ref: "task://personal/closed-effect".to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 8,
+            lease_expires: "2026-08-02T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+        let release_count = Cell::new(0);
+
+        let released = release_closed_effect_dispatch(
+            SchedulerWorkerAttempt::EffectClosed(dispatch.clone()),
+            |received_dispatch| {
+                release_count.set(release_count.get() + 1);
+                assert_eq!(received_dispatch, dispatch);
+                Ok(())
+            },
+        )
+        .unwrap();
+
+        assert_eq!(released, SchedulerWorkerAttempt::EffectClosed(dispatch));
+        assert_eq!(release_count.get(), 1);
+    }
+
+    #[test]
+    fn pending_effect_reconciliation_does_not_release_its_scheduler_lease() {
+        let dispatch = SchedulerDispatch {
+            task_ref: "task://personal/pending-effect".to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 9,
+            lease_expires: "2026-08-02T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+        let release_attempted = Cell::new(false);
+
+        let retained = release_closed_effect_dispatch(
+            SchedulerWorkerAttempt::AwaitingReconciliation(dispatch.clone()),
+            |_| {
+                release_attempted.set(true);
+                unreachable!("a pending Effect must retain its fenced scheduler lease")
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            retained,
+            SchedulerWorkerAttempt::AwaitingReconciliation(dispatch)
+        );
+        assert!(
+            !release_attempted.get(),
+            "a pending Effect must not release its scheduler lease"
         );
     }
 }
@@ -429,6 +484,31 @@ fn complete_scheduler_worker_attempt(
                 Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
             }
         },
+    }
+}
+
+/// Release a fenced scheduler lease only after durable Effect closure.
+///
+/// The supplied release operation must call `SchedulerRepository::release_lease`
+/// with the exact dispatch task reference, owner, and epoch. This boundary
+/// intentionally retains stopped and reconciliation-pending attempts: neither
+/// state proves that an Effect is closed, and neither may become scheduler or
+/// Task success through lease release.
+fn release_closed_effect_dispatch(
+    worker_attempt: SchedulerWorkerAttempt,
+    release_lease: impl FnOnce(SchedulerDispatch) -> Result<(), SchedulerAuthorityError>,
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError> {
+    match worker_attempt {
+        SchedulerWorkerAttempt::EffectClosed(dispatch) => {
+            release_lease(dispatch.clone())?;
+            Ok(SchedulerWorkerAttempt::EffectClosed(dispatch))
+        }
+        SchedulerWorkerAttempt::Stopped(transition) => {
+            Ok(SchedulerWorkerAttempt::Stopped(transition))
+        }
+        SchedulerWorkerAttempt::AwaitingReconciliation(dispatch) => {
+            Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
+        }
     }
 }
 
