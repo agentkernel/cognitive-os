@@ -433,7 +433,13 @@ fn scheduler_ceiling_stop_fences_future_iterations_and_requires_closed_effects()
     let continuing_version =
         drive_observe_to_continue(&store, &clock, &ids, &loop_id, started.after_version);
     store
-        .append_checkpoint(&checkpoint_row(446, &loop_id, 1, 1))
+        .append_checkpoint(&CheckpointRow {
+            checkpoint_id: oid(446),
+            loop_object_id: loop_id.clone(),
+            event_high_watermark: 1,
+            fencing_epoch: 1,
+            canonical_json: "{\"pending_effects\":[{\"state\":\"RECONCILED\"}]}".to_owned(),
+        })
         .unwrap();
 
     let stopped = harness

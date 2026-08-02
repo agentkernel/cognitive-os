@@ -130,6 +130,35 @@ impl CeilingStopReason {
     }
 }
 
+/// Decide whether a checkpoint's pending Effect inventory supports a terminal
+/// ceiling STOP. The checkpoint is authority evidence, so malformed inventory
+/// data fails closed instead of being treated as an empty list.
+fn checkpoint_effects_are_closed(canonical_json: &str) -> Result<bool, EffectError> {
+    let checkpoint: serde_json::Value = serde_json::from_str(canonical_json).map_err(|error| {
+        denial(
+            STATE_CONFLICT,
+            format!("checkpoint effect inventory is not valid JSON: {error}"),
+        )
+    })?;
+    let Some(pending_effects) = checkpoint.get("pending_effects") else {
+        return Ok(true);
+    };
+    let pending_effects = pending_effects.as_array().ok_or_else(|| {
+        denial(
+            STATE_CONFLICT,
+            "checkpoint pending_effects must be an array".to_owned(),
+        )
+    })?;
+    Ok(pending_effects.iter().all(|pending_effect| {
+        matches!(
+            pending_effect
+                .get("state")
+                .and_then(serde_json::Value::as_str),
+            Some("RECONCILED" | "VERIFIED" | "VERIFY_FAILED")
+        )
+    }))
+}
+
 fn denial(registered: crate::error::RegisteredError, detail: String) -> ProtocolDenial {
     ProtocolDenial { registered, detail }
 }
