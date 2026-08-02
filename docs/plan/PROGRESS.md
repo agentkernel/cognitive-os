@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | the six-family/sidecar documentation and ADR-0036 supersession clarification are complete; no runtime, Gate, release or Profile evidence is implied | claim the next exact, non-overlapping implementation or campaign lease before writing |
+| Active task lease | `none` | the P2-T03 daemon authority parsing regression is delivered with static validation; its focused test is not yet runnable on the qualified Linux host because that host only has a stale no-Git source snapshot without the target module | provision a reviewed current Linux source snapshot, or claim the next exact non-overlapping Personal implementation lease |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -81,6 +81,19 @@ task-to-loop/budget bindings, scheduler ceiling evaluation, daemon-side durable
 fact loading, and registered ceiling STOP edges. P2-T03 remains `in-progress`:
 worker dispatch, durable stop handling, Effect closure, BoundedHarness
 integration and all P2 Gates remain `not-run`.
+
+The follow-up P2-T03 daemon authority parsing slice centralizes the current
+v0.2 TaskContract parse path used by `load_scheduler_ceiling_facts`, rejecting
+v0.1 rows before execution-binding deserialization and rejecting incomplete
+v0.2 rows as malformed. `git diff --check` and `cargo fmt --all -- --check`
+passed. The focused `kernel-server` test invocation did not run to completion:
+the local Windows GNU linker exited 121 while building dependencies, before
+this crate compiled. The qualified Linux host `wuz@192.168.1.2` reports Linux
+x86_64 and Rust/Cargo 1.97.1, but `/home/wuz/agent-kernel` is a July no-Git
+snapshot without `scheduler_authority.rs`; stale-source testing and copying
+uncommitted local code were refused. This is `implementation_evidence: provided`, not
+`tested-local`; durable STOP handling, worker dispatch, Effect closure,
+BoundedHarness integration, Gates, release and Profile claims remain not-run.
 
 ## Historical evidence journal
 

@@ -53,6 +53,57 @@ pub(crate) enum SchedulerAuthorityError {
     BudgetUnavailable(String),
 }
 
+/// Parse only a current execution-bound contract before reading its bindings.
+///
+/// The explicit version check preserves old contract rows for audit while
+/// preventing their deserialization from becoming a scheduler admission path.
+fn parse_execution_bound_contract(
+    canonical_json: &str,
+) -> Result<TaskContract, SchedulerAuthorityError> {
+    let version_envelope: TaskContractVersionEnvelope = serde_json::from_str(canonical_json)
+        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_VERSION {
+        return Err(SchedulerAuthorityError::LegacyContract(
+            version_envelope.header.schema_version,
+        ));
+    }
+
+    serde_json::from_str(canonical_json)
+        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{SchedulerAuthorityError, parse_execution_bound_contract};
+
+    #[test]
+    fn legacy_contract_is_rejected_before_execution_binding_deserialization() {
+        let legacy_contract = r#"{
+            "header": {
+                "schema_version": "cognitiveos.task-contract/0.1"
+            }
+        }"#;
+
+        assert!(matches!(parse_execution_bound_contract(legacy_contract),
+            Err(SchedulerAuthorityError::LegacyContract(version))
+            if version == "cognitiveos.task-contract/0.1"));
+    }
+
+    #[test]
+    fn execution_schema_without_required_bindings_is_rejected_as_malformed() {
+        let incomplete_execution_contract = r#"{
+            "header": {
+                "schema_version": "cognitiveos.task-contract/0.2"
+            }
+        }"#;
+
+        assert!(matches!(
+            parse_execution_bound_contract(incomplete_execution_contract),
+            Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+}
+
 /// Reload durable facts that must precede a scheduler dispatch decision.
 pub(crate) fn load_scheduler_ceiling_facts<S>(
     store: &S,
@@ -80,16 +131,7 @@ where
         .load_task_contract(&binding.task_ref, contract_epoch)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
         .ok_or_else(|| SchedulerAuthorityError::MissingContract(binding.task_ref.clone()))?;
-    let version_envelope: TaskContractVersionEnvelope =
-        serde_json::from_str(&contract_row.canonical_json)
-            .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
-    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_VERSION {
-        return Err(SchedulerAuthorityError::LegacyContract(
-            version_envelope.header.schema_version,
-        ));
-    }
-    let contract: TaskContract = serde_json::from_str(&contract_row.canonical_json)
-        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
 
     let deadline = contract.deadline.ok_or_else(|| {
         SchedulerAuthorityError::MalformedContract("v0.2 contract has no deadline".to_owned())
