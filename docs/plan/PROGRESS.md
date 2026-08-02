@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | P2-T03 Linux-native admission-order regression validation is closed: exact `ac12a04` was shallow-fetched into a disposable Git worktree and `cargo test -p kernel-server scheduler_authority::tests` passed 4/4; this confirms the focused implementation slice as `experimental-local-only` / `tested-local` only | begin the separate worker dispatch and Effect-closure integration slice; P2 Gates remain not-run |
+| Active task lease | `none` | P2-T03 scheduler worker/Effect-closure boundary lease is closed. The implementation fences release on both owner and epoch, skips the closure callback after a durable ceiling STOP, and preserves an unresolved closure as a fenced reconciliation outcome. Windows GNU linker exit 121 prevented focused Rust execution, so no implementation-evidence level changed | add a durable task-to-Effect lookup and concrete worker closure/release wiring; P2 Gates remain not-run |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -73,6 +73,21 @@ This is `experimental-local-only` / `tested-local` implementation evidence,
 not a P2 Gate, release, or Profile claim. The caller still has to reload these
 facts from durable TaskContract, progress, and budget authority records and
 persist the resulting stop fact before worker integration; those paths remain
+not-run.
+
+The latest P2-T03 implementation-only slice tightens scheduler release fencing
+so both lease owner and epoch must match the durable row. It also adds a
+daemon-private post-admission Effect-closure boundary: a ceiling STOP skips the
+closure callback, and an unresolved closure retains the exact fenced dispatch
+for reconciliation rather than reporting scheduler or Task success. The new
+stale-release, STOP-ordering and unresolved-closure regressions were written
+before the implementation. `cargo test -p cognitive-runtime --test
+p2_t03_scheduler_lease_timer` and `cargo test -p kernel-server
+scheduler_authority::tests` were not completed because the Windows GNU linker
+returned exit 121 while linking dependency build scripts; formatting and diff
+checks passed. This is implementation-only work with no new evidence level,
+Gate, release or Profile claim. Durable task-to-Effect lookup, concrete worker
+closure/release wiring, BoundedHarness integration and all P2 Gates remain
 not-run.
 
 The P2-T03 contract and scheduler slices merged in PR #129 as `main@7ea1cde`.

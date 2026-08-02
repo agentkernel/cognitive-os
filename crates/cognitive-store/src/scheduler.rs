@@ -267,12 +267,16 @@ impl SchedulerRepository {
             .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
     }
 
-    /// Release a lease (worker finished or crashed and a successor must
-    /// reclaim). Returns the row.
+    /// Release the exact fenced lease held by a worker.
+    ///
+    /// Both worker identity and lease epoch must match the persisted lease.
+    /// This prevents a timed-out attempt from releasing a successor lease when
+    /// a restarted worker reuses the same logical owner identity.
     pub fn release_lease(
         &mut self,
         task_ref: &str,
         owner: &str,
+        lease_epoch: i64,
         next_state: SchedulerState,
         next_eligible: &str,
     ) -> Result<SchedulerRow, SchedulerRepositoryError> {
@@ -282,13 +286,19 @@ impl SchedulerRepository {
                 "UPDATE scheduler_entries \
              SET state=?2, lease_owner=NULL, lease_epoch=lease_epoch, \
                  lease_expires=NULL, next_eligible=?3 \
-             WHERE task_ref=?1 AND lease_owner=?4",
-                rusqlite::params![task_ref, next_state.as_str(), next_eligible, owner],
+             WHERE task_ref=?1 AND lease_owner=?4 AND lease_epoch=?5",
+                rusqlite::params![
+                    task_ref,
+                    next_state.as_str(),
+                    next_eligible,
+                    owner,
+                    lease_epoch
+                ],
             )
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("release: {e}")))?;
         if updated == 0 {
             return Err(SchedulerRepositoryError::LeaseConflict(
-                "lease owner mismatch on release".to_owned(),
+                "lease owner or epoch mismatch on release".to_owned(),
             ));
         }
         self.load(task_ref)?

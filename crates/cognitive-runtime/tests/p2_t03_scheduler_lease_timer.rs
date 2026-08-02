@@ -4,7 +4,7 @@
 //! Acceptance invariants exercised:
 //! - a lease is exclusive (duplicate worker acquire is refused by CAS);
 //! - after a worker crash the lease can be taken over only by an explicit
-//!   release path that fails closed on owner mismatch;
+//!   release path that fails closed on owner or epoch mismatch;
 //! - attempt_count advances per acquire;
 //! - cancel_requested is durable and blocks re-acquire;
 //! - a fresh repository reopen (crash/replay) sees only committed rows.
@@ -72,11 +72,11 @@ fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
 }
 
 // ---------------------------------------------------------------------
-// 2. crash takeover: release is owner-bound and fails closed
+// 2. crash takeover: release is owner- and epoch-bound and fails closed
 // ---------------------------------------------------------------------
 
 #[test]
-fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
+fn release_lease_fails_closed_on_owner_or_epoch_mismatch_and_releases_on_match() {
     let dir = tempfile::tempdir().unwrap();
     let mut repo = open_repo(&dir);
     repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
@@ -94,6 +94,7 @@ fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
     let wrong = repo.release_lease(
         "task://tenant-a/rollout-v2",
         "worker-2",
+        1,
         SchedulerState::Runnable,
         "2026-08-01T12:05:00Z",
     );
@@ -104,6 +105,7 @@ fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
         .release_lease(
             "task://tenant-a/rollout-v2",
             "worker-1",
+            1,
             SchedulerState::Runnable,
             "2026-08-01T12:05:00Z",
         )
@@ -124,6 +126,54 @@ fn release_lease_fails_closed_on_owner_mismatch_and_releases_on_match() {
     assert_eq!(taken.lease_owner.as_deref(), Some("worker-2"));
     assert_eq!(taken.lease_epoch, 2);
     assert_eq!(taken.attempt_count, 2);
+}
+
+#[test]
+fn stale_epoch_cannot_release_a_successor_lease_owned_by_the_same_worker() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut repo = open_repo(&dir);
+    repo.upsert(&runnable_row("task://tenant-a/stale-release"))
+        .unwrap();
+
+    let mut first_worker = SchedulerService::new("worker-1", 60).unwrap();
+    first_worker
+        .claim_eligible(
+            &mut repo,
+            "task://tenant-a/stale-release",
+            1,
+            "2026-08-01T12:00:00Z",
+        )
+        .unwrap();
+
+    let mut successor_worker = SchedulerService::new("worker-1", 60).unwrap();
+    let successor_dispatch = successor_worker
+        .claim_eligible(
+            &mut repo,
+            "task://tenant-a/stale-release",
+            2,
+            "2026-08-01T12:01:01Z",
+        )
+        .unwrap();
+
+    let stale_release = repo.release_lease(
+        "task://tenant-a/stale-release",
+        "worker-1",
+        1,
+        SchedulerState::Succeeded,
+        "2026-08-01T12:01:01Z",
+    );
+    assert!(
+        stale_release.is_err(),
+        "stale epoch release must be refused"
+    );
+
+    let current = repo
+        .load("task://tenant-a/stale-release")
+        .unwrap()
+        .expect("the successor lease must remain durable");
+    assert_eq!(current.state, SchedulerState::Leased.as_str());
+    assert_eq!(current.lease_owner.as_deref(), Some("worker-1"));
+    assert_eq!(current.lease_epoch, successor_dispatch.lease_epoch);
 }
 
 // ---------------------------------------------------------------------

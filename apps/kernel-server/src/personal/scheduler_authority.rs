@@ -60,6 +60,27 @@ pub(crate) enum SchedulerDispatchAdmission {
     Leased(SchedulerDispatch),
 }
 
+/// The only scheduler-facing result a daemon worker may accept from Effect
+/// processing. The worker callback must derive either state from the durable
+/// Effect protocol; an external receipt is not a closed Effect.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SchedulerEffectClosure {
+    Closed,
+    PendingReconciliation,
+}
+
+/// Daemon-owned outcome after scheduler admission reaches the Effect boundary.
+///
+/// This remains distinct from Task acceptance. A closed Effect only permits a
+/// later fenced scheduler release; independent verification still decides
+/// whether a Task may complete.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum SchedulerWorkerAttempt {
+    Stopped(CommittedTransition),
+    EffectClosed(SchedulerDispatch),
+    AwaitingReconciliation(SchedulerDispatch),
+}
+
 /// Fail-closed authority-read failures before scheduler lease acquisition.
 #[derive(Debug, Error)]
 pub(crate) enum SchedulerAuthorityError {
@@ -107,7 +128,8 @@ fn parse_execution_bound_contract(
 #[cfg(test)]
 mod tests {
     use super::{
-        SchedulerAuthorityError, SchedulerDispatchAdmission, complete_scheduler_admission,
+        SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
+        SchedulerWorkerAttempt, complete_scheduler_admission, complete_scheduler_worker_attempt,
         parse_execution_bound_contract,
     };
     use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
@@ -190,6 +212,52 @@ mod tests {
 
         assert!(matches!(admission, SchedulerDispatchAdmission::Leased(_)));
         assert_eq!(lease_acquisition_count.get(), 1);
+    }
+
+    #[test]
+    fn ceiling_stop_skips_the_effect_closure_callback() {
+        let effect_closure_attempted = Cell::new(false);
+
+        let attempt = complete_scheduler_worker_attempt(
+            SchedulerDispatchAdmission::Stopped(committed_ceiling_stop()),
+            |_| {
+                effect_closure_attempted.set(true);
+                unreachable!("a stopped scheduler attempt must not process an Effect")
+            },
+        )
+        .unwrap();
+
+        assert!(matches!(attempt, SchedulerWorkerAttempt::Stopped(_)));
+        assert!(
+            !effect_closure_attempted.get(),
+            "a durable ceiling STOP must precede every Effect-closure callback"
+        );
+    }
+
+    #[test]
+    fn unresolved_effect_keeps_the_fenced_dispatch_for_reconciliation() {
+        let dispatch = SchedulerDispatch {
+            task_ref: "task://personal/effect-reconciliation".to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 7,
+            lease_expires: "2026-08-02T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+
+        let attempt = complete_scheduler_worker_attempt(
+            SchedulerDispatchAdmission::Leased(dispatch.clone()),
+            |received_dispatch| {
+                assert_eq!(received_dispatch, dispatch);
+                Ok(SchedulerEffectClosure::PendingReconciliation)
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            attempt,
+            SchedulerWorkerAttempt::AwaitingReconciliation(dispatch),
+            "an unresolved Effect must not be converted into a scheduler success"
+        );
     }
 }
 
@@ -336,6 +404,30 @@ fn complete_scheduler_admission(
         SchedulerCeilingDispatch::Proceed => {
             Ok(SchedulerDispatchAdmission::Leased(acquire_lease()?))
         }
+    }
+}
+
+/// Invoke the daemon-owned Effect-closure boundary only after a fenced lease.
+///
+/// A persisted ceiling STOP never reaches the callback. A callback error or a
+/// pending reconciliation leaves the durable lease untouched so a stale or
+/// uncertain Effect cannot be reported as a scheduler or Task success.
+fn complete_scheduler_worker_attempt(
+    admission: SchedulerDispatchAdmission,
+    complete_effect: impl FnOnce(
+        SchedulerDispatch,
+    ) -> Result<SchedulerEffectClosure, SchedulerAuthorityError>,
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError> {
+    match admission {
+        SchedulerDispatchAdmission::Stopped(transition) => {
+            Ok(SchedulerWorkerAttempt::Stopped(transition))
+        }
+        SchedulerDispatchAdmission::Leased(dispatch) => match complete_effect(dispatch.clone())? {
+            SchedulerEffectClosure::Closed => Ok(SchedulerWorkerAttempt::EffectClosed(dispatch)),
+            SchedulerEffectClosure::PendingReconciliation => {
+                Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
+            }
+        },
     }
 }
 
