@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P1-T09/windows-provider-fixture-timeout` | Reproduce and repair the Windows deterministic Provider fixture discovery timeout | Lane-RUN | `lane/personal-p1-t09-windows-fixture-timeout` | `crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs`; `crates/cognitive-provider-transport/src/bin/p1_t09_provider_fixture.rs`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260802-personal-p1-t09-windows-provider-fixture-timeout-handoff.md` | Cursor session 2026-08-02 | 2026-08-02 / 2026-08-02 | active |
 
 ### 3.1 最近关闭的 leases
 
