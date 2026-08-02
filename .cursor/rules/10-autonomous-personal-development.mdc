@@ -135,6 +135,27 @@ bounded blocker in the documentation system with `blocked_paths`,
   Close the lease in the same closure delivery. Preserve historical evidence;
   do not edit prior attempts to improve outcomes.
 
+Treat every completed, independently verifiable execution action or coherent
+task batch as a delivery boundary. Once its implementation, required evidence,
+documentation closure and applicable checks are complete, automatically:
+
+1. inspect the owned/staged file set and confirm no unknown change is included;
+2. stage only the delivery's owned files;
+3. create the closure commit or commits with an accurate task-linked message;
+4. push the current task branch without waiting for another user message; and
+5. if repository policy requires or favors a pull request, create or update it,
+   monitor all required CI/checks to a terminal result, and merge when every
+   required check is green and merge policy permits.
+
+Do not defer a completed batch merely to wait for a user message. A pending
+non-required check may be recorded as pending/not-run and must not be presented
+as passing. A required failure, unknown/unowned change, active overlapping
+lease, required confirmation boundary, rejected push, unavailable required
+remote environment, or blocked merge must fail closed for that delivery: record
+the truthful status and blocker in the documentation system, preserve the
+commit when safe, and do not bypass, force-push, merge, or retry around the
+control.
+
 The user authorizes this development window to perform ordinary Git delivery
 without another approval: stage only its owned files, create commits, push the
 current task branch, create or update a pull request, and merge it when all

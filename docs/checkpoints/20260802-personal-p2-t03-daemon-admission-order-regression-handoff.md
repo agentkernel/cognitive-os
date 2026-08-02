@@ -7,7 +7,9 @@
 
 - Date: 2026-08-02
 - Task: P2-T03 durable scheduler, lease and timer
-- Lease: `lease/personal/P2-T03/daemon-admission-order-regression` (closed)
+- Lease: `lease/personal/P2-T03/daemon-admission-order-regression` (closed);
+  validation lease `lease/personal/P2-T03/linux-native-admission-regression-validation`
+  (closed)
 - Branch: `main`
 - Implementation commit: `ac12a04`
 - Change class: implementation-only
@@ -38,26 +40,24 @@ worker dispatch, external Effect dispatch, Effect closure or reconciliation.
 - `git diff --check`: passed.
 - `pnpm run check:consistency`: passed.
 - IDE diagnostics for modified files: none.
-- Post-push approved Linux-native exact-revision attempt: not-run to
-  completion. The non-interactive host cloned no source because its GitHub
-  clone of `ac12a04` timed out after 60 seconds below 1000 bytes/sec. The
-  disposable `/tmp/cognitiveos-personal-p2t03-ac12a04` directory was removed.
-- Focused test pass, Clippy, workspace tests, protected CI and P2 Gates:
-  not-run. The remote source acquisition failure prevented native compilation;
-  no passing test result is claimed.
+- Initial post-push Linux-native exact-revision attempt: not-run to completion.
+  The non-interactive host cloned no source because its GitHub clone timed out
+  after 60 seconds below 1000 bytes/sec; its disposable worktree was removed.
+- Remediated Linux-native validation: passed. The host shallow-fetched
+  `main` with process-scoped `http.lowSpeedLimit=1` and
+  `http.lowSpeedTime=300`, checked out exact `ac12a04`, and ran
+  `cargo test -p kernel-server scheduler_authority::tests`: **4 passed, 0
+  failed**. The cleanup trap removed the disposable worktree afterward.
+- Clippy, workspace tests, protected CI and P2 Gates: not-run.
 
 ## Remaining work
 
-- `blocked_paths`: no source path is blocked; Linux native validation needs a
-  reachable remote Git source.
+- `blocked_paths`: none.
 - `blocked_task_ids`: none.
 - `blocked_gate_ids`: B02, B04, B05, B12 and GMVP-LINUX.
 - owner: next P2-T03 Lane-RUN session.
-- next action: create a disposable Linux Git worktree at `ac12a04` (or a
-  later committed revision) from a reachable remote source, verify its exact
-  commit, and run `cargo test -p kernel-server scheduler_authority::tests`.
-  Then proceed to the separate worker dispatch and Effect-closure integration
-  slice.
+- next action: begin the separate worker dispatch and Effect-closure
+  integration slice.
 
 ## Non-claims
 
