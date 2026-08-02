@@ -15,7 +15,7 @@ use cognitive_contracts::generated::task_contract::ContractConditionKind;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version};
 use cognitive_kernel::budget::{BudgetCharge, BudgetState};
 use cognitive_kernel::effects::EffectError;
-use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
+use cognitive_kernel::harness::{CeilingStopReason, LoopDriver, ProgressStatus};
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
     TaskContractCommand, UserIntentCommand, admit_interpretation, mint_task_contract,
@@ -397,6 +397,112 @@ fn begin_iteration_enforces_hard_preconditions_and_debits_budget() {
         .unwrap()
         .unwrap();
     assert_eq!(still.state.as_str(), "CONTINUE", "no transition committed");
+}
+
+/// P2-T03: a scheduler ceiling becomes a durable, loop-scoped STOP fact.
+/// A stopped loop cannot admit a further iteration, and an executing effect
+/// named by its latest checkpoint prevents the STOP transition from claiming
+/// closure prematurely.
+#[test]
+fn scheduler_ceiling_stop_fences_future_iterations_and_requires_closed_effects() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = fresh_store(&dir);
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let harness = driver(&store, &clock, &ids);
+    let task_ref = "task://tenant-a/ceiling-stop";
+    let loop_id = oid(445);
+    let budget = budget_id(445);
+    mint_contract(&store, &clock, &ids, 440, task_ref, 8, 3);
+    admit(&store, &clock, &ids, &loop_id, LifecycleDomain::Loop, None);
+    create_budget(&store, &clock, &ids, &budget, 10);
+
+    let started = harness
+        .start_loop(&loop_id, Version::INITIAL, task_ref, &budget, &lease(1))
+        .unwrap();
+    harness
+        .record_progress(
+            &loop_id,
+            1,
+            ProgressStatus::NoProgress,
+            "fp-ceiling-stop",
+            &[],
+            &lease(1),
+        )
+        .unwrap();
+    let continuing_version =
+        drive_observe_to_continue(&store, &clock, &ids, &loop_id, started.after_version);
+    store
+        .append_checkpoint(&checkpoint_row(446, &loop_id, 1, 1))
+        .unwrap();
+
+    let stopped = harness
+        .stop_for_ceiling(
+            &loop_id,
+            continuing_version,
+            task_ref,
+            &budget,
+            CeilingStopReason::RetryCeilingReached,
+            &lease(1),
+        )
+        .expect("a closed loop checkpoint permits a durable ceiling STOP");
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Loop, &loop_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "STOP"
+    );
+    let rejected_dispatch = harness.begin_iteration(
+        &loop_id,
+        stopped.after_version,
+        task_ref,
+        2,
+        &budget,
+        &charge(1),
+        &lease(1),
+    );
+    assert!(
+        rejected_dispatch.is_err(),
+        "STOP must fence a new iteration"
+    );
+
+    let blocked_loop_id = oid(450);
+    admit(
+        &store,
+        &clock,
+        &ids,
+        &blocked_loop_id,
+        LifecycleDomain::Loop,
+        None,
+    );
+    let blocked_task_ref = "task://tenant-a/ceiling-stop-pending";
+    let blocked_budget = budget_id(450);
+    mint_contract(&store, &clock, &ids, 451, blocked_task_ref, 8, 3);
+    create_budget(&store, &clock, &ids, &blocked_budget, 10);
+    store
+        .append_checkpoint(&CheckpointRow {
+            checkpoint_id: oid(454),
+            loop_object_id: blocked_loop_id.clone(),
+            event_high_watermark: 1,
+            fencing_epoch: 1,
+            canonical_json: "{\"pending_effects\":[{\"state\":\"EXECUTING\"}]}".to_owned(),
+        })
+        .unwrap();
+    let pending_effect_stop = harness.stop_for_ceiling(
+        &blocked_loop_id,
+        Version::INITIAL,
+        blocked_task_ref,
+        &blocked_budget,
+        CeilingStopReason::DeadlineReached,
+        &lease(1),
+    );
+    assert!(
+        pending_effect_stop.is_err(),
+        "an executing checkpoint effect must be reconciled or quarantined first"
+    );
 }
 
 /// An over-budget charge fails closed inside the engine: no debit, no

@@ -107,6 +107,29 @@ pub struct ContractFacts {
     pub contract_digest: String,
 }
 
+/// Registered ceiling reason for a scheduler-driven terminal loop transition.
+///
+/// The daemon derives this value from a freshly loaded authority snapshot;
+/// the kernel exposes only the registered ceiling reason-code set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CeilingStopReason {
+    DeadlineReached,
+    RetryCeilingReached,
+    StepCeilingReached,
+    CostCeilingReached,
+}
+
+impl CeilingStopReason {
+    fn as_reason_code(self) -> &'static str {
+        match self {
+            Self::DeadlineReached => "DEADLINE_REACHED",
+            Self::RetryCeilingReached => "RETRY_CEILING_REACHED",
+            Self::StepCeilingReached => "STEP_CEILING_REACHED",
+            Self::CostCeilingReached => "COST_CEILING_REACHED",
+        }
+    }
+}
+
 fn denial(registered: crate::error::RegisteredError, detail: String) -> ProtocolDenial {
     ProtocolDenial { registered, detail }
 }
@@ -412,6 +435,137 @@ where
             lease,
         )?;
         Ok(self.engine().commit_transition(&cmd)?)
+    }
+
+    /// Persist a ceiling decision as a terminal, fenced loop transition.
+    ///
+    /// The scheduler must derive `reason` from fresh durable authority facts
+    /// before calling this method. The kernel reloads the contract, latest
+    /// checkpoint and budget itself, then refuses a checkpoint that still
+    /// reports an unresolved effect. Once committed, the loop is in `STOP`,
+    /// so the normal `CONTINUE -> OBSERVE` iteration path is unavailable.
+    #[allow(clippy::too_many_arguments)]
+    pub fn stop_for_ceiling(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        budget_id: &BudgetId,
+        reason: CeilingStopReason,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        self.verify_lease(lease)?;
+        let contract_facts = self.contract_facts(task_ref)?;
+        let contract_row = self
+            .store
+            .load_task_contract(task_ref, contract_facts.contract_epoch)
+            .map_err(store_rejection)?
+            .ok_or_else(|| denial(STATE_CONFLICT, "contract row vanished".to_owned()))?;
+        let checkpoint = self
+            .store
+            .latest_checkpoint(loop_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "a ceiling STOP requires a durable loop checkpoint".to_owned(),
+                )
+            })?;
+        if checkpoint.fencing_epoch != lease.epoch {
+            return Err(denial(
+                STATE_CONFLICT,
+                format!(
+                    "checkpoint epoch {} does not match current writer epoch {}",
+                    checkpoint.fencing_epoch, lease.epoch
+                ),
+            )
+            .into());
+        }
+        if !checkpoint_effects_are_closed(&checkpoint.canonical_json)? {
+            return Err(denial(
+                STATE_CONFLICT,
+                "a ceiling STOP requires every checkpointed effect to be reconciled or terminal"
+                    .to_owned(),
+            )
+            .into());
+        }
+        let budget = self
+            .store
+            .load_budget(budget_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "ceiling STOP budget is unavailable".to_owned(),
+                )
+            })?;
+        let loop_object = self
+            .store
+            .load_object(LifecycleDomain::Loop, loop_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "ceiling STOP loop is unavailable".to_owned(),
+                )
+            })?;
+        let source_state = match loop_object.state.as_str() {
+            "START" | "CONTINUE" => loop_object.state.as_str(),
+            state => {
+                return Err(denial(
+                    STATE_CONFLICT,
+                    format!("ceiling STOP requires START or CONTINUE, found {state}"),
+                )
+                .into());
+            }
+        };
+
+        let budget_object_id = ObjectId::parse(budget_id.as_str()).map_err(|error| {
+            denial(
+                STATE_CONFLICT,
+                format!("budget identity cannot form STOP evidence: {error}"),
+            )
+        })?;
+        let budget_json = canonical_text(
+            &serde_json::to_value(&budget.state)
+                .map_err(|error| denial(STATE_CONFLICT, error.to_string()))?,
+        )
+        .map_err(EffectError::Denied)?;
+        let mut established = BTreeSet::new();
+        established.insert("ceiling_facts_current".to_owned());
+        established.insert("new_activity_dispatch_disabled".to_owned());
+        established.insert("pending_effects_closed_or_quarantined".to_owned());
+        let mut evidence = BTreeMap::new();
+        evidence.insert(
+            "task_contract".to_owned(),
+            strong_ref(
+                &contract_row.contract_id,
+                contract_row.contract_epoch,
+                &contract_row.canonical_json,
+            )
+            .map_err(EffectError::Denied)?,
+        );
+        evidence.insert(
+            "loop_checkpoint".to_owned(),
+            strong_ref(&checkpoint.checkpoint_id, 1, &checkpoint.canonical_json)
+                .map_err(EffectError::Denied)?,
+        );
+        evidence.insert(
+            "budget_ledger".to_owned(),
+            strong_ref(&budget_object_id, 1, &budget_json).map_err(EffectError::Denied)?,
+        );
+        let command = self.command(
+            loop_id,
+            source_state,
+            "STOP",
+            reason.as_reason_code(),
+            established,
+            evidence,
+            expected_version,
+            None,
+            lease,
+        )?;
+        Ok(self.engine().commit_transition(&command)?)
     }
 
     /// Record one typed progress fact (REQ-RUN-007). Deterministic rules,

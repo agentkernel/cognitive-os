@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | the P2-T03 Linux-native execution-routing slice is closed: the focused test passed from an exact disposable SSH Git worktree; no service deployment or B01 guest action occurred | claim the next exact, non-overlapping implementation or campaign lease before writing |
+| Active task lease | `none` | the P2-T03 fenced-ceiling-stop implementation slice is closed with formatting, diff and consistency checks passed; the focused Rust regression did not compile locally because the Windows GNU linker exited 121 | run the focused regression from an exact committed Linux Git worktree after user authorization, then wire durable scheduler ceiling decisions to this kernel STOP path |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -93,6 +93,17 @@ the focused `scheduler_authority::tests` suite passed 2/2. The old
 `/home/wuz/agent-kernel` no-Git snapshot remains invalid as test input. This is
 `implementation_evidence: tested-local`; durable STOP handling, worker dispatch, Effect closure,
 BoundedHarness integration, Gates, release and Profile claims remain not-run.
+
+The current P2-T03 kernel slice adds `LoopDriver::stop_for_ceiling`: a bounded
+ceiling reason can now commit the already-registered `START|CONTINUE -> STOP`
+edge only after the daemon-owned writer lease, current TaskContract, latest
+same-epoch checkpoint and budget ledger have been reloaded. The checkpoint
+inventory rejects unresolved effects; the transition records the required
+contract/checkpoint/budget evidence and prevents the normal next-iteration
+path. The new focused regression was failure-first but did not compile locally
+because the Windows GNU linker exited 121 while building dependencies. Workspace
+formatting and `git diff --check` passed. This is implementation work only,
+with no new implementation-evidence level, Gate, release or Profile claim.
 
 ## Historical evidence journal
 
