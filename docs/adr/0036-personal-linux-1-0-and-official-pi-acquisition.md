@@ -49,9 +49,12 @@ The release candidate must provide and verify:
    rollback and uninstall;
 9. backup/restore excluding secrets, and redacted doctor/support output.
 
-Durable Memory, general Context optimization, MCP, Multi-Agent, Web UI,
-Windows installer/service and any non-Pi adapter are deferred and excluded from
-the 1.0 claim.
+At this ADR's original decision time, durable Memory and general Context work
+were deferred. ADR-0037 partially supersedes that deferral for the Linux 1.0
+minimum durable Memory and deterministic Context slices. Advanced Memory
+retrieval and complex Context optimization, MCP, Multi-Agent, Web UI, Windows
+installer/service and any non-Pi adapter remain deferred and excluded from the
+1.0 claim.
 
 ### 3. Official Pi acquisition
 

@@ -12,31 +12,70 @@ campaign results, evidence or Profile claims.
 
 ## Vision
 
-CognitiveOS Personal is an Agent Shell-led personal cognitive-resource
-management system. It brings Agents, models, tools, Context, Memory, Tasks,
-budgets, permissions, artifacts and execution evidence under one local control
-plane so that users can install, connect, supervise, pause, upgrade and remove
-Agents while execution remains recoverable, auditable and bounded.
+CognitiveOS Personal is a single-user, local unified cognitive-resource
+substrate for Agents. It gives one owner a low-friction place to organize and
+govern six user-visible families: Memory, Skill, Tool, Context, Task and
+Runtime/Process. A Pi-hosted Agent Shell is the primary conversational entry,
+while the Rust daemon remains the sole authority writer.
 
-The Linux 1.0 realization is intentionally narrower: Pi hosts the Shell and is
-the only product-qualified managed Agent. The generic adapter framework is
-prepared for later Agents, but their presence in a roadmap is not support or
-release evidence.
+Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
+cross-cutting objects, not extra resource families. The product does not
+collapse the six families into a giant `Resource` table or universal state
+machine.
+
+Linux 1.0 delivers a minimum real slice of every family. The per-Agent sidecar
+is the primary Agent integration boundary, and Pi is the only qualified Agent
+and sidecar combination for 1.0. Other Agents remain independently qualified
+future work.
+
+## Stable product shape
+
+- **Authority:** Pi, sidecars, CLI, SDK and future UI are clients; only the
+  daemon authorizes, applies CAS/epoch guards, schedules, commits Effects,
+  reconciles and accepts Tasks.
+- **Workspace:** a Standard Workspace provides low-friction bounded access;
+  Extended Home adds explicitly selected document/project roots and ordinary
+  outbound network access, while credential stores, authority data, system
+  sockets/directories and privilege management stay hard-denied.
+- **Local modes:** desktop, headless and foreground operation use the same
+  signed artifact, daemon and application services. Desktop uses Secret
+  Service; headless can use a locked encrypted vault with TTY unlock and an
+  optional systemd encrypted-credential unlock path.
+- **Evolution:** Linux and hardware integration stabilize bounded software
+  ports. Linux 1.0 does not include a kernel module, eBPF control plane, device
+  scheduler or distributed authority.
+
+## Information architecture
+
+The stable top-level spaces are:
+
+1. **Home** - readiness, active work, health and blockers;
+2. **Agents** - package, installation, registration, instance and sidecar;
+3. **Tasks** - intent, preview, bounds, progress and acceptance;
+4. **Resources** - Memory, Skills, Tools and Context;
+5. **Activity** - Run, Process, Effect and Evidence.
 
 ## Documents
 
 | Document | Responsibility |
 |---|---|
-| [Product design](product-design.md) | positioning, users, principles, entry surfaces and success criteria |
-| [Cognitive resource model](cognitive-resource-model.md) | user-visible resources, actions, sources of truth and release state |
-| [Linux 1.0 scope](linux-1.0-scope.md) | included, framework-ready, deferred, unsupported and non-claim boundaries |
-| [User journeys](user-journeys.md) | install, first conversation, Task and Agent lifecycle, recovery and support flows |
+| [Product design](product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
+| [Cognitive resource model](cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
+| [Linux 1.0 scope](linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
+| [User journeys](user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
 
-## Non-duplication rule
+The baseline decisions are
+[ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md) and
+[ADR-0038](../../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md).
+
+## Non-duplication and non-claim rules
 
 - Product requirements link to `PERS-PR-*`; they do not invent REQ IDs.
-- Tasks and Gate thresholds are linked, not copied as current status.
+- Tasks and Gate targets are linked, not copied as current status.
+- `CognitiveResourceManifest` keeps its normative ActivityContext discovery
+  meaning; it is not redefined as this product taxonomy.
 - Environment results are linked from
   [PERSONAL-TEST-ENVIRONMENTS.md](../../plan/PERSONAL-TEST-ENVIRONMENTS.md).
-- Release claims use the exact scope proved by `GMVP-LINUX`; deferred features
-  cannot be inferred from the product vision.
+- Release claims use only the exact scope proved by `GMVP-LINUX`.
+- Architecture presence, a documented Gate composition and these product
+  decisions do not imply implementation, Gate, release or Profile evidence.

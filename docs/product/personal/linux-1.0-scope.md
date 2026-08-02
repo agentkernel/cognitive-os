@@ -1,52 +1,171 @@
 # CognitiveOS Personal Linux 1.0 Scope
 
-- Product version: `1.0.0`
+- Product version target: `1.0.0`
 - Release Gate: `GMVP-LINUX`
-- Platform: Linux x86_64
-- Decision: [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Platform target: Linux x86_64
+- Decisions: [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md),
+  [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md),
+  [ADR-0038](../../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
 
-This document defines the stable release boundary. Current readiness and Gate
-status remain in [PROGRESS.md](../../plan/PROGRESS.md).
+This document defines the stable release target. Current readiness, task state
+and every Gate status remain exclusively in
+[PROGRESS.md](../../plan/PROGRESS.md).
 
-## 1. Included and required
+## 1. Release identity and authority
 
-| Capability | Linux 1.0 requirement |
+Linux 1.0 is the first public realization of CognitiveOS Personal as a
+single-user local Agent cognitive-resource substrate. It delivers a minimum
+real slice of Memory, Skill, Tool, Context, Task and Runtime/Process. These are
+six user-visible families, not rows in a universal Resource table.
+
+The Rust daemon is the only authority writer. Pi, the Pi sidecar, the
+Pi-hosted Shell, CLI, SDK and future UI are clients. They cannot authorize,
+advance state, commit Effects, reconcile or decide Task completion.
+
+Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
+cross-cutting objects included where the six families require them.
+
+## 2. Required product foundation
+
+| Capability | Linux 1.0 target requirement |
 |---|---|
-| Product topology | one `cognitiveos-personal.service` user unit, loopback `127.0.0.1:48181` |
-| Installation trust | production-signed Linux bundle, safe extraction, SBOM and attestation |
-| Secret boundary | native Secret Service; no plaintext fallback |
+| Product topology | one `cognitiveos-personal.service` user unit and numeric loopback `127.0.0.1:48181` |
+| Local modes | desktop, headless and foreground use the same production-signed artifact, daemon and application services |
+| Installation trust | safe extraction, production signing, SBOM, attestation and immutable release manifest |
+| Secret boundary | desktop Secret Service or approved headless encrypted vault; locked start + SSH TTY unlock, with optional systemd encrypted-credential unlock material; no plaintext fallback or Provider/user secret in units/credentials/SQLite/config/argv/logs/evidence |
 | Provider/model | daemon-owned Provider egress, active capability probe and selected-model snapshot |
-| Agent Shell | Pi-hosted natural-language Shell plus deterministic `cognitive` fallback |
-| Managed Agent | exact official Pi npm package, verified acquisition lock, registry/instance health and lifecycle |
-| Task | one governed single-Agent Task/Loop with preview, admission, watch, control and recovery |
-| Tool | at least one safe catalog-bound operation; no generic ambient shell |
-| Budget/permission | deadline/retry/step/cost enforcement and Tier 0/1/2 capability policy |
-| Effect/recovery | persist-before-dispatch, idempotency, epoch fencing, unknown-outcome reconciliation |
-| Completion | criterion evidence and independent verifier; false-completion negatives |
-| Product lifecycle | update, rollback and uninstall with durable receipts/compensation |
+| Workspace | low-friction Standard Workspace plus Extended Home selected document/project roots and optional ordinary outbound network; credential/authority/system/privilege paths stay hard-denied |
+| Agent Shell | Pi-hosted natural-language Shell plus deterministic `cognitive` fallback on the same daemon services |
+| Agent integration | versioned per-Agent sidecar boundary; sidecar remains a non-authority client |
+| Managed Agent | exact official Pi npm package, verified acquisition lock, registration/instance/sidecar health and lifecycle |
+| Product lifecycle | update, rollback and uninstall with durable receipts or explicit incomplete outcome |
 | Data operations | backup/restore excluding secret material |
-| Supportability | redacted doctor and support bundle with stable error guidance |
+| Supportability | redacted doctor/support bundle with stable error guidance and explicit unknown/not-run facts |
 
-Passing one component Gate cannot replace another. `GMVP-LINUX` composes the
-formal B01, P2, managed-Pi B09 and P7 production-operability evidence.
+## 3. Minimum real resource slices
 
-## 2. Framework-ready but not multi-adapter support
+### 3.1 Memory
 
-Linux 1.0 must include reusable package acquisition, adapter identity,
-installation, registry/instance lifecycle and qualification test seams. Pi is
-the only adapter allowed in the product support claim.
+Linux 1.0 must exercise `MemoryCandidate -> MemoryAdmissionDecision ->
+MemoryObject` from both explicit user `remember` and an Agent proposal. The
+slice includes scope, purpose, provenance, version, conflict handling, expiry,
+forget and tombstone. Daemon-owned SQLite is the source of truth; FTS5 and
+metadata filters are derived retrieval indexes.
 
-The framework is successful when a future adapter can declare and test its own
-package/protocol identity, capabilities, sandbox, lifecycle, recovery and
-negative boundaries without changing daemon authority rules. It is not
-successful merely because an adapter interface or manifest file exists.
+Embeddings, vector storage, graph Memory and automatic full-conversation
+extraction are not required.
 
-## 3. Explicitly deferred
+### 3.2 Skill
 
-- OpenClaw, Hermes, Codex, WorkBuddy and all non-Pi Agent qualification;
-- general MCP server/Tool ecosystem;
-- durable governed Memory, FTS and embedding;
-- broad Context source management and optimization benchmarks;
+Skill is an independent first-class family. Linux 1.0 supports immutable local
+package/revision import compatible with `SKILL.md` plus bounded `resources/`
+and `scripts/`, and install, list, inspect, pin, enable, disable and remove.
+
+Authorized instructions/resources may enter Context. Scripts run only through
+a separately registered Tool. A Skill grants no permission and cannot execute
+directly. Marketplace, chaining and automatic download are not required.
+
+### 3.3 Tool
+
+The static Tool registry must cover:
+
+- Standard Workspace read and search;
+- Standard Workspace write and patch with a recoverable journal;
+- bounded process and check execution;
+- read-only HTTP fetch.
+
+Descriptors and availability are daemon facts. Unknown, descriptor-drifted,
+disabled or quarantined Tools have dispatch count zero. External or
+irreversible mutations use persisted Intent/Effect; a reversible local
+workspace mutation uses the bounded journal rather than ambient Agent writes.
+
+### 3.4 Context
+
+Every admitted Task has a real `ContextRequest` and `ContextView` that can
+combine Task/current state, Memory, Skill instructions/resources, Tool
+summaries, artifacts/evidence, workspace inputs and explicit Task inputs.
+
+Authorization and filtering precede ranking. Required unavailable input fails
+closed. Omission, truncation, conflict, staleness and budget loss are explicit.
+Selection uses deterministic priority, metadata filters and FTS with stable
+tie-breaking. Views preserve a stable prefix, canonical digest and bounded
+delta. Complex learned ranking is not required.
+
+### 3.5 Task
+
+The Task slice retains durable raw intent, a server-issued digest-bound
+preview, exact admission under CAS/epoch guards, budgets, scheduler/watch,
+checkpoint, Intent/Effect and independent verification. Provider response,
+Agent output, sidecar success and process exit do not complete a Task.
+
+A future `TaskContract` is intended to fix exact resource refs/constraints,
+adapter identity and Context policy. Those future fields are not claimed as
+implemented or required by this document without a separate contract change.
+
+### 3.6 Runtime/Process
+
+The Runtime slice keeps package, installation, registration, instance,
+sidecar, execution and process identities separate. Process is daemon-owned
+observation/supervision data and does not create a new domain or completion
+authority.
+
+Pi is the only Agent/sidecar combination qualified for Linux 1.0. The generic
+sidecar framework is reusable but transfers no Pi evidence to another Agent.
+
+## 4. Information architecture requirement
+
+The Linux 1.0 Shell and deterministic projection model use:
+
+- **Home**;
+- **Agents**;
+- **Tasks**;
+- **Resources**, with Memory, Skills, Tools and Context;
+- **Activity**, with Run, Process, Effect and Evidence.
+
+Model, Budget, Permission, Artifact and Event appear contextually rather than
+as additional top-level spaces.
+
+## 5. Gate composition target
+
+`GMVP-LINUX` targets the composition:
+
+`B01 + B02 + B03 + B04 + B05 + B08 + B09 + B12 + P7 operability`
+
+For this composition, P7 operability means the production release operations
+required by P7-T08, including signing/trust, update/rollback/uninstall,
+backup/restore, doctor/support and release-manifest closure. It is not a new
+parallel Gate.
+
+`B06`, `B07`, `B10` and `B11` do not block Linux 1.0:
+
+- B06/B07 advanced Context efficiency/optimization evidence is deferred beyond
+  the deterministic Context slice and B03 target;
+- B10 broad Tool/MCP ecosystem qualification is deferred beyond the static
+  Linux 1.0 Tool family;
+- B11 Multi-Agent value qualification is deferred and default-off.
+
+Passing one component cannot replace another. This section sets target
+composition only. Whether any Gate is `not-run`, `running`, `pass`, `fail` or
+`blocked` is stated only by `PROGRESS.md` and preregistered campaign evidence.
+
+## 6. Pi-only sidecar qualification
+
+Linux 1.0 must bind exact Pi package, installation, registration, sidecar,
+instance and execution identities and qualify drift, channel separation,
+permission, lifecycle, recovery and out-of-band mutation negatives.
+
+OpenClaw, Hermes, Codex, WorkBuddy and other Agents require independent
+package/protocol/sidecar identity, capability, sandbox, lifecycle, recovery,
+negative campaign and release inclusion decisions. MCP integration does not
+inherit Tool or Agent support merely because a bridge can connect.
+
+## 7. Explicitly deferred
+
+- embedding/vector/graph Memory and automatic extraction of all conversations;
+- Skill marketplace, chaining, automatic download and autonomous dependencies;
+- learned/complex Context ranking and advanced B06/B07 optimization claims;
+- broad dynamic Tool catalogs and general MCP ecosystem qualification;
+- OpenClaw, Hermes, Codex, WorkBuddy and every non-Pi Agent qualification;
 - Multi-Agent delegation/orchestration;
 - Web UI and independent Console product;
 - Windows installer, service and credential-store parity;
@@ -54,46 +173,67 @@ successful merely because an adapter interface or manifest file exists.
 - enterprise approval chains, multi-tenancy, HA and cloud sync.
 
 These may be developed in isolated tracks after their implementation
-requirements are met, but they cannot expand a 1.0 release statement.
+requirements are met, but cannot expand a Linux 1.0 release statement.
 
-## 4. Unsupported or forbidden in 1.0
+## 8. Unsupported or forbidden in 1.0
 
-- non-loopback daemon binding;
-- Provider/user keys in Pi, argv, ordinary config, SQLite, logs or evidence;
-- Pi built-in tools as an authority bypass;
-- unpinned/latest Agent acquisition;
-- treating npm SRI as publisher signature;
-- installing an Agent and automatically granting runtime capability;
+- a universal Resource table or one state machine for all families;
+- redefining `CognitiveResourceManifest` beyond ActivityContext discovery;
+- non-loopback daemon binding or a second authority writer;
+- Provider/user keys in Pi, sidecars, argv, ordinary config, SQLite, logs,
+  Context, Memory or evidence;
+- ambient full-home filesystem access;
+- Secret Store contents, SSH/GPG keys, browser credential/profile stores,
+  CognitiveOS authority/bootstrap data, Docker/system sockets, system
+  directories or privilege management through Extended Home;
+- Pi built-in tools or Skill scripts as an authority bypass;
+- dispatch of unknown, drifted, disabled or quarantined Tools/sidecars;
+- unpinned/latest Agent acquisition or treating npm SRI as publisher signature;
+- installing an Agent or Skill and automatically granting runtime capability;
 - blind redispatch after an unknown external outcome;
-- marking a Task complete from Provider response, Agent output or process exit;
-- claiming Windows install parity, containment or Core Profile implementation.
+- marking a Task complete from Provider response, Agent/sidecar output, Tool
+  result or process exit;
+- separate desktop/headless/foreground authority implementations;
+- kernel module, eBPF control plane, device scheduler or distributed authority;
+- claims of Windows install parity, containment or CognitiveOS Profile
+  implementation.
 
-## 5. Release evidence composition
+## 9. Release evidence composition
 
 The release campaign must identify exact:
 
-- Linux image/environment and reset procedure;
+- Linux image/environment, mode and reset procedure;
 - product source revision, artifact digest, signing key and attestation;
-- Node version, Pi package/version/SRI/digest and adapter digest;
+- Node version, Pi package/version/SRI/digest and sidecar digest;
 - native Secret Service behavior and cleanup;
+- headless vault locked start, TTY unlock and optional unattended unlock without
+  Provider/user secret in service or credential material;
+- Standard Workspace and Extended Home negative boundaries;
 - B01 attempt denominator and statistics;
-- P2 workload, Tool, failure injection and verifier;
-- B09 acquisition/lifecycle/rollback/uninstall cases;
-- upgrade, backup/restore, doctor and support-bundle checks;
+- Memory candidate/admission/object, retrieval and forget/tombstone cases;
+- Skill import/revision/action/permission and script-through-Tool cases;
+- Tool registry/availability/journal/Intent-Effect failure cases;
+- per-Task ContextRequest/View, authorization-before-ranking, required-source
+  failure, loss, stable-prefix/digest/delta cases;
+- Task, scheduler, checkpoint, Effect and independent verifier cases;
+- Pi acquisition/lifecycle/sidecar/recovery and identity-separation cases;
+- update, backup/restore, doctor and support-bundle checks;
 - independent verifier identity and evidence collector version.
 
 Ordinary CI, WSL, fixtures and experimental native hosts remain implementation
-evidence unless the preregistered campaign explicitly includes them.
+evidence unless a preregistered campaign explicitly includes them.
 
-## 6. Release statement template
+## 10. Release statement template
 
-A valid release statement is bounded:
+A valid post-Gate release statement is bounded:
 
 > CognitiveOS Personal 1.0 supports Linux x86_64 with the pinned, qualified Pi
-> Agent and Pi-hosted Shell. It provides the executed Task, Tool, recovery and
-> product-lifecycle capabilities listed in the release manifest. Other Agents,
-> Memory, MCP, Multi-Agent, Web UI, Windows installation and Profile
-> conformance are not included.
+> Agent, Pi sidecar and Pi-hosted Shell. It provides the executed minimum
+> Memory, Skill, Tool, Context, Task and Runtime/Process capabilities listed in
+> the release manifest through one daemon authority. Other Agents, advanced
+> retrieval/ranking, Skill marketplaces, MCP, Multi-Agent, Web UI, Windows
+> installation, kernel/hardware control and Profile conformance are not
+> included.
 
-Before `GMVP-LINUX` passes, the same wording must use “target” or “planned” and
-must not say “supports” or “released.”
+Before `GMVP-LINUX` passes, the same wording must use "target" or "planned" and
+must not say "supports" or "released".

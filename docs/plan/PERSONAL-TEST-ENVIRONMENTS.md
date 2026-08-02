@@ -199,15 +199,28 @@ terminal captures and committed evidence.
 
 ## 14. Formal campaign qualification template
 
-Before an environment contributes to B01, P2 Gates, B09 or `GMVP-LINUX`, its
+Before an environment contributes to B01, P2/P3/P4 Gates, B09 or `GMVP-LINUX`, its
 preregistration must bind:
 
 1. campaign and Gate ID plus formal-plan revision/digest;
 2. exact OS image, architecture, native/virtual classification and reset;
 3. source revision, product artifact/signature/SBOM/attestation;
-4. Node, Pi package/version/SRI/digest and adapter digest where applicable;
-5. Secret Service and operator credential opt-in boundaries;
-6. workload, attempt denominator, thresholds and failure accounting;
-7. evidence collector version, redaction and cleanup;
-8. operator and independent verifier identities;
-9. allowed claim scope and explicit non-claims.
+4. Node and Agent package/version/SRI/digest plus sidecar package, protocol,
+   adapter, instance and process-identity pins where applicable;
+5. local Skill package/revision digest and binding set;
+6. Memory/Context schema and migration versions plus source/index rebuild policy;
+7. native Tool descriptor/catalog version and digest, including the exact
+   enabled operation set;
+8. selected SecretStore backend and operator credential opt-in boundaries;
+   desktop campaigns pin Secret Service behavior, while headless campaigns pin
+   encrypted-vault version, locked start, SSH TTY unlock and any systemd
+   encrypted-credential unlock path without retaining unlock or Provider/user
+   secret material;
+9. workload, attempt denominator, thresholds and failure accounting; when
+   applicable bind the exact
+   [UCR-01 workload](../evaluation/personal-unified-cognitive-resource-workload.md)
+   revision/digest and the six-resource same-Task trace;
+10. evidence collector version, redaction and cleanup;
+11. operator and independent verifier identities;
+12. allowed claim scope and explicit non-claims, including that one UCR-01 run
+    cannot automatically pass multiple Gates.

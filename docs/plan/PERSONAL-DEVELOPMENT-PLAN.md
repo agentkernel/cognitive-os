@@ -29,8 +29,9 @@
 > loopback 端口（48181），接受 Alpha 显式升级的有界停机。ADR-0032/0033
 > 的 candidate unit、48182 和双服务 promotion 保留为后续数据触发的升级优化，
 > 不再阻塞 P1-T08/P1-T09。既有任务 ID 不重编号；新增 `P7-T08 / GMVP-LINUX`
-> 作为 P1/B01、P2 与 P7-T01..T03 的公开 Linux MVP 汇合 Gate。Context、Memory、
-> Agent/Tool、Windows 安装面、Web UI 和 Multi-Agent 改为后续独立能力列车；
+> 作为 P1/B01、P2 与 P7-T01..T03 的公开 Linux MVP 汇合 Gate。该日将 Context、Memory
+> 放在后续能力列车的范围，已由 2026-08-02 ADR-0037/0038 六资源 1.0 重基线取代；
+> MCP/dynamic Tool、Windows 安装面、Web UI 和 Multi-Agent 仍为后续独立能力列车；
 > Multi-Agent NO-GO 且默认关闭是合法结果。本修订不改变任何既有任务状态、
 > 已执行证据、规范机器资产或 Profile 结论。
 
@@ -39,10 +40,23 @@
 > Agent Shell 与 managed Pi Agent 是独立角色：P2-T02 负责 Shell 到 Task/management
 > application service，P5-T01/T02 与 B09 负责官方 npm Pi acquisition、installation、
 > registry/instance/supervision/lifecycle。Linux 1.0 只 product-qualify Pi，同时交付可供
-> 后续 Agent 独立 qualification 的通用 adapter framework；OpenClaw、Hermes、Codex、
-> WorkBuddy、MCP、Memory、Multi-Agent、Web UI 与 Windows installer 均不进入 1.0 claim。
+> 后续 Agent 独立 qualification 的通用 adapter framework；该日排除 Memory 的 1.0
+> scope 已由 ADR-0037 取代。OpenClaw、Hermes、Codex、WorkBuddy、MCP、Multi-Agent、
+> Web UI 与 Windows installer 仍不进入 1.0 claim。
 > 该 product-semantic 修订不修改 registry/schema/transition/vector，也不产生实现、Gate、
 > release 或 Profile 证据。
+
+> **统一认知资源基座与 Agent sidecar 修订（2026-08-02，ADR-0037/0038）：**
+> Personal Linux 1.0 重新定位为统一认知资源基座，交付 Memory、Skill、Tool、Context、
+> Task、Runtime 六类资源的最小真实 slice；三条 1.0 release track 为 Runtime Spine、
+> Resource Value 与 Product Operability。Agent 集成采用 per-Agent sidecar-first 边界，
+> Pi 仍是唯一 qualified Agent。复杂 Context 优化和收益 Gate 不阻塞 1.0，但 Context
+> correctness 属于 1.0；embedding/vector/graph、MCP/dynamic Tool ecosystem、Multi-Agent、
+> Web UI 与 Windows 安装面移入 post-1.0。该 owner-approved `product-semantic + structural`
+> 修订不新增、删除或重编号任务，也不改变任何已有 task status、attempt、evidence 或 Gate
+> current status：P1-T09 仍为 `in-progress`，B01 仍为 `running`（1/至少 20），P2-T01/
+> P2-T03 仍为 `in-progress`，`GMVP-LINUX` 仍为 `not-run`，Profile `implemented: 0`。
+> 本批不修改规范或实现，不产生 implementation、Gate、release 或 Profile evidence。
 
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -86,17 +100,21 @@
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 2 | 0 | 6 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context 与效率 | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
-| Phase 4 - Memory | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
-| Phase 5 - Agent 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
-| Phase 6 - Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
+| Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
+| Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
+| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
+| Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
 | **合计** | **53** | **15** | **3** | **0** | **35** | — |
 
 ## 2. 产品边界与不变量
 
 - Rust daemon 是唯一 authority writer；Pi、CLI、Web UI 均为客户端，不可直接写 SQLite 或推进 Task、Effect、Verification 状态。
-- Provider API Key 只保存在原生 Secret Store；不得进入配置、SQLite、命令行、日志或证据。唯一例外为 ADR-0018 已登记的 P0-T06 本机 Linux 开发路径：显式开关后从 native store 解析、仅传给初始 Pi 子进程、默认拒绝、不得用于 CI/发布，并在 P2 结束到期。
+- Provider API Key 只保存在 approved `SecretStore` backend（desktop Secret Service 或
+  headless encrypted vault）；不得进入 service unit/credential material、环境、配置、
+  SQLite、命令行、日志或证据。唯一例外为 ADR-0018 已登记的 P0-T06 本机 Linux 开发
+  路径：显式开关后从 native store 解析、仅传给初始 Pi 子进程、默认拒绝、不得用于
+  CI/发布，并在 P2 结束到期。
 - Linux-native development smoke 以环境资格清单为准；`wuz@192.168.1.2` 是优先候选而非唯一主机。只有预注册 formal campaign 可推进 B01，任何候选主机名称本身都不表示测试、Gate 或 release 证据。
 - 所有外部 mutating operation 均须经 Intent/Effect、持久化后派发、幂等键、fencing 和结果 reconcile；外部工具成功不等于 Task 完成。
 - Task 完成由独立 verifier/acceptance authority 推进；Pi Session 不等于 Task，Pi `agent_end` 不等于完成。
@@ -104,14 +122,30 @@
   是 package/installation/registry/instance/execution 资源。ShellSession、Pi session、
   AgentInstallation、Agent instance、AgentExecution、process 与 Task 身份不得合并；task
   与 management bearer/cache/projection 必须隔离。
+- **统一认知资源基座（ADR-0037）：** Linux 1.0 必须提供 Memory、Skill、Tool、Context、
+  Task、Runtime 六类资源的最小真实 slice。六类资源经 daemon application services 和
+  私有、versioned Personal projection 统一呈现，但不合并各自 authority、生命周期或
+  schema，也不新增巨型 `Resource` schema 或 `Process` domain。
+- **Sidecar-first（ADR-0038）：** Shell 经 per-Agent sidecar 调用 daemon application
+  services；sidecar、Pi Extension、CLI 和其他 client 都不是 authority，不得持有 daemon
+  bootstrap/management authority。Linux 1.0 只资格化 pinned Pi + sidecar；其他 Agent 和
+  client 必须各自独立 qualification，不能继承 Pi 证据。
+- **部署与授权边界（ADR-0038）：** Standard Workspace 保持低摩擦；Extended Home 只扩展
+  显式 document/project roots 与可撤销的普通联网，不得触达 Secret/SSH/GPG/browser
+  credential、authority/bootstrap、Docker/system socket、system directory 或 privilege
+  management。desktop 使用 Secret Service；headless 使用 approved encrypted vault，locked
+  start + SSH TTY unlock，optional unattended 仅使用 systemd encrypted credential 的 vault
+  unlock material。三种 mode 共用同一 artifact/daemon/ports。
 - Personal 计划不改变既有规范优先级，不得用 `PERS-*` ID 冒充 REQ-ID；合同变化必须走 Lane-CTR 流程。
 - **低摩擦授权（ADR-0026）：** 治理记录（Intent/Effect、audit、verifier、capability）全保留；人机交互分层——Tier 0（只读与任务范围内可逆本地写）静默自动授权、Tier 1（幂等/可对账外部 mutating）首用一次授予并默认记住为 capability lease、Tier 2（不可逆/毁灭性/超预算）始终显式确认。任务准入预览是唯一默认人工授权点，默认路径人工确认 ≤1/task；预算与边界是硬轨，不建审批链；企业审批留在 Deferred Backlog。
 - 产品目标平台仍为 **Linux x86_64 + Windows x86_64**（ADR-0025）；Personal
-  `1.0.0` 是 Linux x86_64 single-service release（ADR-0034/0036），由现有
-  `GMVP-LINUX` Gate 推广。1.0 只正式支持官方 npm 获取并受管的 exact Pi；通用 adapter
-  framework 必须可供后续独立 qualification，但其他 Agent 不继承 Pi 证据。Windows 的
-  credential 后端、安装面与专门 Gate 的唯一任务归宿是 P7-T07。Memory、通用 Context
-  优化、MCP、Multi-Agent、Web UI 与 Windows 安装面均不阻塞 `GMVP-LINUX`。
+  `1.0.0` 是 Linux x86_64 single-service、Extended Home、headless/foreground release
+  （ADR-0034/0036/0037/0038），由现有 `GMVP-LINUX` Gate 推广。1.0 只正式支持官方 npm
+  获取并受管的 exact Pi + per-Agent sidecar；Memory 使用 SQLite FTS5 baseline，Skill
+  使用 local package/revision/import/binding，Tool 使用 native catalog，Context/Task/Runtime
+  使用真实 daemon ports。复杂 Context 收益优化不阻塞；embedding/vector/graph、MCP、
+  dynamic marketplace、Multi-Agent、Web UI 与 Windows 安装面 post-1.0，Windows 专门
+  Gate 的唯一任务归宿仍是 P7-T07。
 
 ## 3. 阶段路线图
 
@@ -121,27 +155,34 @@
 |---|---|---|---|---|
 | P0 | 平台、架构和安全决策 | 本计划批准 | 工具链、ADR、Secret/Pi PoC、benchmark 规格完成 | 产品功能、Memory、Multi-Agent、UI |
 | P1 | 安装到首次对话 | 对应 P0/P1 implementation requirements | 至少 20 次正式 B01 campaign 达标 | 用 dev smoke 或单次 attempt 宣称 B01 |
-| P2 | 单 Agent 可恢复任务闭环与 Shell | P1 contracts + 对应 P2 implementation requirements；B01 不是实现 mutex | B02/B04/B05/B12 | Memory、embedding、多 Agent |
-| P3 | Context、Token 与 Loop 效率 | P2 稳定接口 | B03/B06/B07 | 未执行的性能收益 |
-| P4 | 有 provenance 的 durable Memory | P3 Context 基线 | B08 与 embedding GO/NO-GO | 自动跨工作区记忆 |
+| P2 | Runtime Spine、统一 projection 与 native Tool | P1 contracts + 对应 P2 implementation requirements；B01 不是实现 mutex | B02/B04/B05/B12 | 未资格化 sidecar/adapter |
+| P3 | 真实 Context、Artifact CAS 与 UCR-01 | P2-T01/P2-T02 稳定 application contracts；不等待 P2-T08 acceptance | B03 correctness；采集 B06/B07 | 未执行的 Context 收益 |
+| P4 | Memory + Skill 资源价值 | P3-T01/P3-T02 stable ports | B08 correctness/actual consumption | embedding/vector/graph claims |
 | P5A | managed Pi 与通用 adapter framework | P0-T06/P1-T08 和所需 P2 supervisor contracts | B09 | 非 Pi Agent support |
-| P5B | MCP/通用 Tool 生态 | P2 Tool/Effect 闭环 | B10 | 自动市场发现或未资格化 MCP |
-| P6 | Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 未达收益 Gate 即默认启用 |
-| P7 | Linux 1.0 与后续完整 RC | 对应 P1/P2/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
+| P5B | post-1.0 MCP/dynamic Tool ecosystem | P2 native Tool/Effect 闭环 | B10 | 自动市场发现或未资格化 MCP |
+| P6 | post-1.0 Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 默认开启 Multi-Agent |
+| P7 | Linux 1.0 Product Operability 与后续 RC | 对应 P1/P2/P3/P4/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
 
-### MVP-first release train（不替代现有任务 ID）
+### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
-| Release train | 任务范围 | 出口 | 不阻塞该出口的能力 |
+| Active track | 1.0 任务范围 | 出口 | 非阻塞项 |
 |---|---|---|---|
-| RP1 Foundation | 已完成的 P0 与 P1-T01..T07 | 当前实现基线 | 后续产品能力 |
-| RP2 Install-to-Conversation Alpha | P1-T08、P1-T09 | B01 clean Linux VM | Task、Memory、MCP、Multi-Agent、UI、Windows installer |
-| RP3 Governed Single-Agent MVP | P2-T01..T08；Pi-hosted Shell 接真实 Task/management service | B02/B04/B05/B12 | Context 优化、Memory、MCP、多 Agent |
-| RP4 Managed Pi Foundation | P5-T01、P5-T02、P5-T05 的 B09 slice | B09 | 非 Pi Agent、MCP、Multi-Agent |
-| RP5 Public Linux 1.0 | P7-T01..T03、P7-T08 + RP2/RP3/RP4 evidence | `GMVP-LINUX` / `1.0.0` | P3/P4、B10、P6、P7-T05、P7-T07 |
-| RP6 Context Efficiency Beta | P3-T01..T06 | B03/B06/B07 | Memory 与生态 |
-| RP7 Durable Memory Beta | P4-T01..T06 | B08；embedding GO/NO-GO | embedding GO、MCP、多 Agent |
-| RP8 Optional Capability Trains | P5-T03..T05/B10、P6、P7-T05、P7-T07、non-Pi adapters | 各自独立 Gate | 任何未声明能力 |
-| RP9 Full-Scope RC | P7-T04、P7-T06 与已选择能力 | 声明范围内 B01-B12 / RC | 明确 DEFER/NO-GO 的能力 |
+| Runtime Spine | P1-T08/T09；P2-T01..T08；P5-T01/T02/T05 的 B09；真实 Task/Runtime/native Tool 与 Pi sidecar | B01、B02、B04、B05、B09、B12 | B10、B11、non-Pi adapters |
+| Resource Value | P3-T01..T06；P4-T01..T06；真实 Context/Artifact/Memory/Skill 与 UCR-01 | B03、B08；B06/B07 仅采集 | 复杂 Context 收益、embedding/vector/graph |
+| Product Operability | P7-T01..T03、P7-T08 汇合 Runtime Spine 与 Resource Value | `GMVP-LINUX` / `1.0.0` | P5-T03/T04、P6、P7-T05、P7-T07 |
+
+P3/P4 是 Linux 1.0 的 active Resource Value track，不是 1.0 之后的 Beta。已完成 P0 与
+P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track。
+
+### Post-1.0 capability trains
+
+| Capability train | 任务归宿 | 边界 |
+|---|---|---|
+| Embedding/semantic retrieval/vector/graph | P4 后续独立决策 | 不替代 SQLite FTS5 authority-first baseline，不阻塞 1.0 |
+| MCP 与 dynamic Tool marketplace | P5-T03、P5-T04、B10 | MCP 只做 adapter，dynamic discovery 不自动启用 |
+| Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
+| Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
+| non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
 
@@ -150,11 +191,40 @@
 | P1-T09 / B01 | P1-T08 与既有 Secret/Provider/daemon/Pi contracts | 至少 20 个 clean-Linux attempts、成功率 ≥90%、关键安全失败 0、完整统计和 independent verifier | B01 只在完整 campaign 后 pass |
 | P2-T02 | P2-T01、P1-T07、task/management channel contracts | real Personal Task API/watch；Pi Shell 与 CLI 调同一 application service；channel isolation negatives | G2: B02/B04/B05/B12 |
 | P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
+| P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、revocation negatives | B03 |
+| P3-T02 | P3-T01 stable Context source port | minimum Context Builder、required fail-closed、显式 loss 与预算 | B03 |
+| P3-T06 | P3-T05 | B03 Context correctness；同 campaign 可采集 B06/B07；UCR-01 固定场景 utility assertions 单独进入 P7-T08 acceptance | GMVP-LINUX Gate composition 只 requires B03；B06/B07 不阻塞 |
+| P4-T01 | P3-T01/P3-T02 stable ports | Memory store/admission/policy 与 provenance/scope/freshness | B08 |
+| P4-T05 | P4-T01/P4-T02/P4-T03/P4-T04；**不依赖 embedding** | Memory/Skill APIs、统一 projection、actual Context/Task consumption | B08 |
+| P4-T06 | P4-T05 | B08 Memory + Skill lifecycle/correctness 与 UCR-01 actual consumption | GMVP-LINUX requires B08 |
 | P5-T01 | P0-T04、P0-T06、P1-T08 | official npm exact Pi acquisition；SRI/digest/acquisition-lock；install/upgrade/rollback/uninstall negatives | B09 |
-| P5-T02 | P5-T01、P2-T03、P2-T06 supervision ports | registry/instance health、epoch fencing、pause/resume/stop、install ≠ permission、PiSession ≠ instance | B09 |
-| P5-T05 | P5-T02 for B09 slice；P5-T04 for B10 slice | B09 与 B10 各自 campaign；两者均完成后任务才 done | GMVP-LINUX 只 requires B09；G5/RC 按声明 requires B09+B10 |
+| P5-T02 | P5-T01 与所需 P2-T03/P2-T06 supervision contracts | sidecar contract/registration、instance/process identity、health、epoch fencing、pause/resume/stop、Pi foundation | B09 |
+| P5-T05 | P5-T02 | B09 managed Pi + sidecar qualification；任务完成与 B10 解耦 | GMVP-LINUX requires B09 |
 | P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
-| P7-T08 | P1-T09、P2-T08、P5-T01、P5-T02、P7-T01..T03 | Linux 1.0 release manifest、native systemd、managed Pi、Task/Tool/recovery、update/uninstall/backup/doctor evidence | B01 + B02/B04/B05/B12 + B09 |
+| P7-T08 | P1-T09、P2-T08、P3-T06、P4-T06、P5-T01/P5-T02/P5-T05 B09、P7-T01..T03 | Linux 1.0 六类资源 release manifest、native systemd、desktop/headless SecretStore、Pi sidecar、UCR-01 fixed-scenario correctness/utility、lifecycle/backup/doctor evidence | **B01+B02+B03+B04+B05+B08+B09+B12**；B06/B07/B10/B11 不阻塞 |
+
+### Lane-CTR public-contract prerequisites（仅登记，不在本批实施）
+
+后续实际需要 public machine contract 时，Lane-CTR 分别登记并评审
+`skill-manifest`、`operation-descriptor`、`agent-adapter-manifest`、TaskContract resource
+bindings、server-issued preview 与 Memory codegen；本批不修改 `specs/`、bindings 或
+实现。统一 Personal projection 先保持 private + versioned，出现第二个真实 adapter/client
+后再评估最小 public `ResourceSummary`。禁止为此新增 `Process` domain 或 giant
+`Resource` schema。
+
+### Informative open-source references
+
+| Reference | 可吸收边界 | 明确拒绝/不得推断 |
+|---|---|---|
+| Letta Code、Mem0 | Memory/agent-memory UX、provenance 和 lifecycle 研究输入 | 不采纳其存储为 authority，不据宣传推断 B08 |
+| LangGraph | checkpoint/thread/store 概念对照 | 不替代 CognitiveOS recovery、fencing、Effect 顺序 |
+| OpenHands ACP、Goose | Agent/sidecar protocol、headless lifecycle 研究输入 | 不继承 adapter qualification，不授予 daemon authority |
+| ToolHive | MCP/tool packaging、隔离与 operation catalog 研究输入 | MCP/dynamic marketplace 保持 post-1.0，不绕过 native Tool Registry |
+| Anthropic Agent Skills | local Skill package、revision、binding 的 informative 输入 | 不允许 skill 自授权、直接执行或成为 public contract 真相源 |
+| ElizaOS | 多 Agent/plugin 生态对照 | Multi-Agent 保持 post-1.0 默认关闭 |
+
+这些参考的 star 数、下载量、宣传文案或自报 benchmark 均不是 CognitiveOS
+implementation、Gate、release、Profile 或选型证据。
 
 ### 本机实验轨道（不改变产品 Gate）
 
@@ -349,92 +419,112 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | in-progress | 2026-08-01；`crates/cognitive-management/src/task_application.rs`（proposal/clarify/preview/admit/control/query 六操作面，仅组合 kernel 意图链原语）；PR #127 `lane/personal-p2-t01-task-application-service`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t01_task_application_service` 4/4 pass；clippy clean；`cognitive-store` m5_intent_chain 6/6 pass |
-| P2-T02 | 真实 Task API、watch 与自然语言管理映射 | P2-T01, P1-T07 | Pi-hosted Shell 复用 `apps/agent-shell` task session core 并调用与 deterministic CLI 相同的 daemon application services；task/management bearer、cache、projection 隔离；detach/watch/cancel 与 Tier 0/1/2 语义正确（ADR-0026/0035） | not-started | — |
+| P2-T02 | 真实 Resource + Task API/watch、统一 projection 与 CLI/Shell parity | P2-T01, P1-T07 | 六类资源的 private versioned projection；真实 Task API/watch；deterministic CLI 与 Shell 经 sidecar 调同一 daemon application services；task/management bearer、cache、retry、cursor、projection 隔离（ADR-0026/0035/0037/0038） | not-started | — |
 | P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-02；repository/service/ceiling/authority/contract slices merged through PR #129 `main@7ea1cde`. Existing evidence covers durable scheduler rows, CAS lease, monotonic eligibility, higher-epoch takeover, inclusive deadline/retry/step/cost evaluation, finite TaskContract compatibility and daemon durable-fact loading. Worker-side durable stop persistence, dispatch quiescence/Effect closure integration, BoundedHarness wiring and P2 Gates remain not-run. |
-| P2-T04 | 单 Agent worker 与 BoundedHarness 接入 | P2-T02, P2-T03 | no-progress/budget/stale-lease 测试 | not-started | — |
-| P2-T05 | Tool Registry 与第一个安全 operation | P2-T04 | 未注册、drift、disabled 均 dispatch=0 | not-started | — |
-| P2-T06 | Process supervisor 与首个 executor | P2-T05 | dispatch 故障、orphan、redaction、idempotency | not-started | — |
-| P2-T07 | Checkpoint、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | criteria evidence；partial 不得 complete | not-started | — |
-| P2-T08 | Phase 2 E2E Gate | P2-T07 | B02/B04/B05/B12 与 false-completion negative；核查 ADR-0018 本机开发例外已到期移除（或已替换为 daemon proxy 并重新批准）；B04 记录默认路径人工确认次数 ≤1/task 并含 Tier-2 负例（ADR-0026） | not-started | — |
+| P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | not-started | — |
+| P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | not-started | — |
+| P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | not-started | — |
+| P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | not-started | — |
+| P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | not-started | — |
 
 ### Phase 3 - Context、Token 与 Loop 效率
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P3-T01 | Context source/retrieval port | P2-T08 | scope-filter 先于 ranking；revocation 测试 | not-started | — |
-| P3-T02 | 最小充分 Context Builder 与预算 | P3-T01 | required fail-closed；loss 显式 | not-started | — |
-| P3-T03 | Artifact Store 与 Context externalization | P3-T02 | CAS/partial-write/GC/access 测试 | not-started | — |
-| P3-T04 | Loop telemetry、progress 与 strategy controls | P3-T02, P3-T03 | no-progress/repeat/strategy 控制可观测 | not-started | — |
-| P3-T05 | Benchmark harness 与性能基线 | P3-T04 | raw run、CI、non-claim 与稳定基线 | not-started | — |
-| P3-T06 | Phase 3 E2E Gate | P3-T05 | B03/B06/B07 通过 | not-started | — |
+| P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | not-started | — |
+| P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | not-started | — |
+| P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | not-started | — |
+| P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | not-started | — |
+| P3-T05 | UCR-01 benefit runner 与稳定基线 | P3-T04 | 跨 Gate workload runner、raw run/CI/non-claim；B06/B07 收益只采集，不作为 1.0 pass 前提 | not-started | — |
+| P3-T06 | B03 Context correctness 与收益采集 | P3-T05 | B03 correctness 通过；采集 B06/B07，收益未达或未运行不阻塞 1.0；一次 UCR-01 run 不自动通过多个 Gate | not-started | — |
 
-### Phase 4 - Memory
-
-| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
-|---|---|---|---|---|---|
-| P4-T01 | Memory schema、repository 与 policy | P3-T06 | scope/provenance/freshness/forgetting 语义 | not-started | — |
-| P4-T02 | FTS retrieval 与 authority-first ranking | P4-T01 | unauthorized/stale/conflict 负例通过 | not-started | — |
-| P4-T03 | Memory lifecycle、retention 与 privacy | P4-T01 | update/expire/forget/audit 可验证 | not-started | — |
-| P4-T04 | Embedding 实验 Gate | P4-T02, P4-T03 | 与 FTS baseline 对比后 go/no-go | not-started | — |
-| P4-T05 | Memory API、CLI/Pi projection 与 B08 | P4-T04 | B08、隐私和删除语义通过 | not-started | — |
-| P4-T06 | Phase 4 E2E Gate | P4-T05 | memory 回归与 benchmark 证据完整 | not-started | — |
-
-### Phase 5 - Agent 与 Tool 生态
+### Phase 4 - Memory 与 Skill
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P5-T01 | Agent adapter/package acquisition 与安装生命周期 | P0-T04, P0-T06, P1-T08 | adapter-neutral framework；固定官方 npm source 获取 exact Pi；package identity/version/SRI/digest/dependency lock/Node compatibility；production-signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权（ADR-0036） | not-started | — |
-| P5-T02 | Agent registry、instance lifecycle 与 supervision | P5-T01, P2-T03, P2-T06 | Pi 是 1.0 首个 managed Agent；health/activate/pause/resume/stop/recover、epoch fencing、capability 默认拒绝；PiSession ≠ AgentInstance，install ≠ permission（ADR-0035/0036） | not-started | — |
-| P5-T03 | MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；drift/timeout 测试；1.0 后独立能力 train | not-started | — |
-| P5-T04 | Tool lifecycle、sandbox 与审计 | P5-T03 | enable/disable/quarantine/reconcile | not-started | — |
-| P5-T05 | B09 managed-Pi 与 B10 Tool/MCP 独立 Gate | P5-T02, P5-T04 | B09 可在 P5-T02 后独立执行并只资格化 Pi + adapter framework；B10 在 P5-T04 后资格化 MCP/Tool；两者证据和 claim 不互相继承 | not-started | — |
+| P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | not-started | — |
+| P4-T02 | SQLite FTS5 + metadata filter baseline | P4-T01 | authority metadata pre-filter 后检索；unauthorized/stale/conflict/delete/rebuild 负例 | not-started | — |
+| P4-T03 | Memory lifecycle、retention 与 forget | P4-T01 | version/update/conflict/expire/forget/tombstone/audit 可验证；派生索引可完整失效 | not-started | — |
+| P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | not-started | — |
+| P4-T05 | Memory/Skill API 与统一 projection | P4-T01, P4-T02, P4-T03, P4-T04 | CLI/Shell/sidecar 同 application services；Memory/Skill 可解释、可撤销、可实际进入 Context/Task；不依赖 embedding | not-started | — |
+| P4-T06 | B08 Memory+Skill correctness 与 UCR-01 consumption | P4-T05 | lifecycle/privacy/forget/binding/actual consumption 证据；UCR-01 同一 Task trace 消费 Memory 与 Skill | not-started | — |
+
+### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P5-T01 | Agent + sidecar package acquisition/install lifecycle | P0-T04, P0-T06, P1-T08 | adapter-neutral Agent/sidecar package pins；fixed official npm exact Pi；identity/version/SRI/digest/dependency/Node checks；signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权 | not-started | — |
+| P5-T02 | Sidecar contract、registration、instance/process identity 与 Pi foundation | P5-T01, P2-T03, P2-T06 | versioned sidecar protocol/adapter/instance pin；AgentInstallation/Instance/Execution、SidecarSession、PiSession、process、Task 分离；health/activate/pause/resume/stop/recover 与 epoch fencing | not-started | — |
+| P5-T03 | Post-1.0 MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；protocol/manifest drift、timeout、direct-bypass 测试；不阻塞 1.0 | not-started | — |
+| P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | not-started | — |
+| P5-T05 | B09 managed Pi + sidecar qualification | P5-T02 | 只负责 Pi + sidecar acquisition/install/registration/instance/process/lifecycle/recovery qualification；Pi 证据不资格化其他 adapter；任务完成与 B10 解耦 | not-started | — |
 
 ### Phase 6 - Multi-Agent
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P6-T01 | Multi-Agent policy 与 scheduler 扩展 | P5-T05 | 默认关闭、budget/lease/isolation 正确 | not-started | — |
-| P6-T02 | Mailbox 与 append-only findings | P6-T01 | 消息不可作为 authority；replay 可处理 | not-started | — |
-| P6-T03 | Reviewer/Verifier/Integrator 编排 | P6-T02 | child success 不可绕过 verifier | not-started | — |
-| P6-T04 | B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | — |
+| P6-T01 | Post-1.0 Multi-Agent policy 与 scheduler 扩展 | P5-T05 | 默认关闭、budget/lease/isolation 正确 | not-started | — |
+| P6-T02 | Post-1.0 mailbox 与 append-only findings | P6-T01 | 消息不可作为 authority；replay 可处理；默认关闭 | not-started | — |
+| P6-T03 | Post-1.0 Reviewer/Verifier/Integrator 编排 | P6-T02 | child success 不可绕过 verifier；默认关闭 | not-started | — |
+| P6-T04 | Post-1.0 B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | — |
 
 ### Phase 7 - 产品化与发布
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P7-T01 | Release pipeline、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | 可验证 Linux artifact；无 secret/dev path；production trust 签署 release manifest 与 Pi acquisition lock；actions/toolchain/environment immutable pins；后续能力补充 inventory | not-started | — |
-| P7-T02 | Transactional update、rollback 与 uninstall | P1-T01, P1-T08, P2-T08, P7-T01 | stage/health/rollback/uninstall 语义通过；面向用户的 `cognitive backup`/`restore` 命令（排除 secret，ADR-0026） | not-started | — |
-| P7-T03 | Doctor、support bundle 与故障排查 | P1-T05, P2-T08, P7-T02 | 仅 redacted facts；stable error code；GMVP-LINUX 前可操作恢复路径 | not-started | — |
+| P7-T01 | Release pipeline、六资源 manifest、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | release manifest 固定六类 schema/version/digest，以及 sidecar/adapter/skill/tool pins；可验证 Linux artifact；production trust、SBOM/attestation、immutable actions/toolchain/environment | not-started | — |
+| P7-T02 | Transactional lifecycle、Memory/Skill backup/restore | P1-T01, P1-T08, P2-T08, P7-T01 | update/rollback/uninstall；`cognitive backup`/`restore` 覆盖 Memory、Skill 与 bindings，排除 secret；migration preflight 与恢复证据 | not-started | — |
+| P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | not-started | — |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 固定环境、raw evidence、CI 与阈值 | not-started | — |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
-| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P5-T01, P5-T02, P7-T01, P7-T02, P7-T03 | production trust/signing、native user-systemd、B01、B02/B04/B05/B12、B09 managed Pi、Pi-hosted Shell、受治理单 Agent/安全 Tool、update/rollback/uninstall、backup/restore、doctor/support 证据汇合；只声明 Pi/Linux x86_64，明确排除未执行能力；不构成 Profile | not-started | — |
+| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | not-started | — |
 
 ## 5. Gate 与证据要求
 
 | Gate | 必需结果 | 最低证据 |
 |---|---|---|
 | G0 | 基线、决策和 PoC 已完成或明确 NO-GO | ADR、PoC report、支持矩阵、handoff |
-| B01 | 安装、初始化、Provider、daemon、Pi 首次响应 | 至少 20 次 clean Linux VM redacted run |
-| B02/B04/B05/B12 | 管理、任务、恢复、unknown outcome 闭环 | E2E logs、effect/verification evidence、负例、默认路径人工确认次数记录（ADR-0026） |
-| B03/B06/B07 | Context 正确性与效率控制 | benchmark raw run、预算/loss/telemetry evidence |
-| B08 | Memory 生命周期与隐私 | provenance/freshness/conflict/forget 测试 |
-| B09 | Managed Pi 与 adapter framework 资格 | official npm Pi package/acquisition lock、install/health/activate/pause/resume/upgrade/rollback/uninstall、install ≠ permission、PiSession ≠ instance、recovery negatives；只支持 Pi |
-| B10 | Tool/MCP 资格与隔离 | MCP/Tool manifest、drift/timeout、enable/disable/quarantine/reconcile、sandbox/bypass negatives；不阻塞 Linux 1.0 |
-| B11 | Multi-Agent 相对单 Agent 有可复现收益 | 相同模型/预算/任务的 baseline 对比 |
-| GMVP-LINUX | Personal `1.0.0` Linux x86_64 可发布 | B01 + B02/B04/B05/B12 + B09 + production trust + native systemd + official managed Pi + safe Tool + update/rollback/uninstall + backup/restore + doctor/support；明确 non-Pi Agent/Memory/MCP/Multi-Agent/Web UI/Windows/Profile 排除项 |
+| B01 | 安装、初始化、Provider、daemon、Pi 首次响应 | 至少 20 次 clean Linux VM attempts（当前 campaign fixed N=20）；全部 started attempts 入 denominator；成功率 ≥90%；zero critical；aggregate median/p95/CI；independent verifier |
+| B02/B04/B05/B12 | 管理、Task/Tool、恢复、unknown outcome 闭环 | 真实六资源 projection、Effect/verification evidence、负例、默认路径人工确认次数记录（ADR-0026） |
+| B03 | Context correctness | scope-before-ranking、required fail-closed、explicit loss、revocation/cache/Artifact access negatives；收益不是 pass 前提 |
+| B06/B07 | Context/Loop benefit observations | delta/stable-prefix/cache/telemetry raw evidence；采集但不阻塞 Linux 1.0 |
+| B08 | Memory + Skill lifecycle 与 actual consumption | provenance/freshness/conflict/forget、package/revision/binding，以及同一 Task trace 的真实 Context/Task consumption |
+| B09 | Managed Pi + sidecar lifecycle qualification | exact Agent/sidecar package与 protocol/adapter/instance pins；acquire/install/register/health/activate/pause/resume/upgrade/rollback/stop/uninstall/recover；identity isolation；只支持 Pi |
+| B10 | Post-1.0 MCP/dynamic Tool qualification | MCP/dynamic package/manifest、drift/timeout、enable/disable/quarantine/reconcile、sandbox/bypass negatives；不阻塞 Linux 1.0 |
+| B11 | Post-1.0 Multi-Agent benefit | 相同模型/预算/任务的 single-Agent baseline；默认关闭且不阻塞 Linux 1.0 |
+| GMVP-LINUX | Personal `1.0.0` Linux x86_64 可发布 | benchmark composition **精确为 B01+B02+B03+B04+B05+B08+B09+B12**；P7-T08 acceptance 另汇合 production trust/native systemd/desktop-headless SecretStore/六资源 manifest/UCR-01 fixed-scenario assertions/lifecycle/backup/doctor evidence；不新增第二 release Gate |
 | RC | 完整发布声明 | CI、SBOM、attestation、升级/卸载、支持矩阵 |
+
+### UCR-01 cross-Gate preregistered workload（不是新 Gate）
+
+[UCR-01](../evaluation/personal-unified-cognitive-resource-workload.md) 在同一个 Task trace 中
+使用 Memory、Skill、Tool、Context、Task、Runtime 六类最小真实资源。它可贡献 B02、
+B03、B04、B05、B08、B09、B12，但仅当对应 Gate **分别**绑定自己的 preregistration、
+qualified environment、threshold、failure accounting、evidence collector 与 independent
+verifier。一次 UCR-01 run 不自动 pass 多个 Gate，某 Gate 的证据也不向其他 Gate 继承；
+UCR-01 不创建 B13、第二个 release Gate 或新的 task ID。
+
+其中 required recall、unauthorized/stale exposure、Skill reuse、duplicate Effect、false
+completion、stale epoch，以及 stable/changed Context 相对 full replay 的 `>=20%` 重复输入
+token 降低且 verified completion 不下降，是该固定 workload 的 P7-T08 acceptance assertions。
+这不等于 B06/B07 Gate 阻塞，也不能据此产生跨 W1/W2 的一般 Agent-benefit claim。
 
 ### Formal campaign preregistration minimum
 
-B01、B02/B04/B05/B12、B09、GMVP-LINUX 与后续产品 Gate 的 preregistration 必须在
+B01、B02/B03/B04/B05/B08/B09/B12、GMVP-LINUX 与后续产品 Gate 的 preregistration 必须在
 attempt 开始前固定：formal-plan revision/digest、campaign/Gate ID、exact OS image 与
 reset、source/artifact/signature/SBOM/attestation、Node/Pi/package/SRI/adapter digest、
 SecretStore/operator opt-in、workload/attempt denominator/threshold、所有失败计入规则、
 evidence collector/redaction/cleanup、operator 与 independent verifier、允许 claim 和
 non-claims。Handoff/attempt ledger 不得覆盖本表 threshold；不一致必须 fail closed 并走
 `product-semantic` 修订。环境明细见 [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)。
+
+B01 的统计解释见
+[2026-08-02 addendum](../checkpoints/20260802-personal-p1-t09-b01-statistical-interpretation-addendum.md)：
+它不改原 preregistration、attempt 1、fixed minimum `N=20`、成功率 ≥90% 或 zero-critical
+threshold，也不把当前 `running` 状态提升为 `pass`。
 
 Windows install parity 声明需要 P7-T07 的专门 B01-W Gate 与已执行证据；在此之前，
 RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daemon/CLI 产品路径，

@@ -1,4 +1,4 @@
-version: "0.2"
+version: "0.3"
 status: planning
 classification: product-plan-trace-only
 
@@ -43,7 +43,7 @@ gate_catalog:
     phase: P7
     classification: product-only
     product_version: "1.0.0"
-    benchmarks: [B01, B02, B04, B05, B12, B09]
+    benchmarks: [B01, B02, B03, B04, B05, B08, B09, B12]
 
 # P0-T01 is an enabling baseline rather than a product requirement delivery.
 enabling_tasks: [P0-T01]
@@ -143,7 +143,7 @@ personal_requirements:
     classification: direct
     statement: Memory has provenance, scope, freshness, and forgetting.
     direct_registry_requirements: [REQ-MEM-OBJECT-001, REQ-MEM-ADMIT-001, REQ-MEM-ADMIT-002, REQ-MEM-PROMOTE-001, REQ-MEM-DELETE-001, REQ-MEM-MUTATE-001]
-    tasks: [P4-T01, P4-T02, P4-T03, P4-T04, P4-T05, P4-T06]
+    tasks: [P4-T01, P4-T02, P4-T03, P4-T05, P4-T06]
     gates: [G4, B08]
     evidence_status: not-run
 
@@ -241,10 +241,10 @@ personal_requirements:
   # Added 2026-07-29 (ADR-0034 MVP-first release train).
   - id: PERS-PR-024
     classification: product-only
-    statement: Personal Linux 1.0 is promoted by GMVP-LINUX and includes only executed scoped evidence for Linux x86_64, the Pi-hosted Shell, managed Pi, governed single-Agent Task and product operability; it excludes Memory, non-Pi Agents, MCP, Multi-Agent, Web UI, Windows installation and Profile claims.
+    statement: Personal Linux 1.0 is promoted by GMVP-LINUX as a unified cognitive-resource substrate with minimum real Memory, Skill, Tool, Context, Task, and Runtime slices, the Pi-hosted Shell, independently qualified managed Pi plus its per-Agent sidecar, and product operability; it excludes non-Pi Agents, embedding/vector/graph retrieval, MCP/dynamic Tool ecosystem, Multi-Agent, Web UI, Windows installation, and Profile claims.
     direct_registry_requirements: []
-    tasks: [P1-T09, P2-T08, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03, P7-T08]
-    gates: [B01, G2, B02, B04, B05, B12, B09, GMVP-LINUX]
+    tasks: [P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03, P7-T08]
+    gates: [B01, G2, B02, B03, B04, B05, B08, B09, B12, GMVP-LINUX]
     evidence_status: not-run
 
   # Added 2026-08-02 (ADR-0035/0036 Linux 1.0 and managed Pi decision).
@@ -270,4 +270,29 @@ personal_requirements:
     direct_registry_requirements: []
     tasks: [P5-T01, P5-T02, P5-T05, P7-T06]
     gates: [B09, G5, RC]
+    evidence_status: not-run
+
+  # Added 2026-08-02 (ADR-0037/0038 unified resource and sidecar rebaseline).
+  - id: PERS-PR-028
+    classification: product-only
+    statement: Linux 1.0 exposes minimum real Memory, Skill, Tool, Context, Task, and Runtime slices through daemon-owned application services and a private versioned Personal projection without merging their authority or schemas.
+    direct_registry_requirements: []
+    tasks: [P2-T02, P2-T05, P2-T08, P3-T01, P3-T02, P3-T03, P3-T06, P4-T01, P4-T02, P4-T03, P4-T04, P4-T05, P4-T06, P7-T01, P7-T03, P7-T08]
+    gates: [B02, B03, B04, B05, B08, B12, GMVP-LINUX]
+    evidence_status: not-run
+
+  - id: PERS-PR-029
+    classification: product-only
+    statement: Each managed Agent uses a separately versioned sidecar and independently qualified package, protocol, adapter, instance, process, and lifecycle evidence; Linux 1.0 qualifies only Pi plus its sidecar and that evidence cannot qualify another Agent.
+    direct_registry_requirements: []
+    tasks: [P2-T02, P2-T04, P5-T01, P5-T02, P5-T05, P7-T01, P7-T03, P7-T08]
+    gates: [B09, GMVP-LINUX]
+    evidence_status: not-run
+
+  - id: PERS-PR-030
+    classification: product-only
+    statement: Future Linux distributions, hardware architectures, Agents, and clients evolve through narrow versioned ports and independent qualification; the Linux x86_64 and Pi 1.0 evidence makes no broader substrate support claim.
+    direct_registry_requirements: []
+    tasks: [P2-T02, P3-T01, P5-T01, P5-T02, P7-T01, P7-T08]
+    gates: [B09, GMVP-LINUX]
     evidence_status: not-run

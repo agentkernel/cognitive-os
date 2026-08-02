@@ -1,211 +1,325 @@
 # CognitiveOS Personal System Architecture
 
-- Status: informative target architecture
+- Status: informative target/design architecture
+- Change class: owner-approved `product-semantic + structural` documentation
 - Product release target: Linux 1.0 through `GMVP-LINUX`
-- Decisions: [ADR-0035](../../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
+- Existing decisions: [ADR-0035](../../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
   [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 
-## 1. Architectural purpose
+## 1. Architectural purpose and invariant
 
-Personal is not a replacement for the Linux kernel. It is a local operating
-layer for cognitive resources and Agent work. Linux owns hardware, processes,
-filesystems, networking and user isolation. Personal owns the higher-level
-facts that make Agent work bounded and recoverable: identity, admission,
-permissions, Task contracts, budgets, scheduling, external Effects, evidence
-and acceptance.
+Personal is not a replacement for the Linux kernel. Linux owns hardware,
+processes, filesystems, networking and user isolation. Personal is the local
+control plane for the higher-level cognitive-resource facts that make Agent
+work inspectable, bounded and recoverable.
 
-The design optimizes for one invariant:
+The design has one authority invariant:
 
-> A probabilistic component may suggest what should happen; only the
-> deterministic daemon may decide what is authorized, persist what will
-> happen, dispatch an external mutation, reconcile its result or accept a Task.
+> A probabilistic component may produce a candidate or observation. Only the
+> deterministic Rust daemon may authorize, apply CAS, advance lifecycle state,
+> grant budget or capability, persist and reconcile an Effect, or accept a
+> Task.
+
+The unified control plane therefore means one discovery and management
+projection over six domain services. It does not mean a universal persisted
+resource object, one lifecycle enum or a second authority beside the daemon.
 
 ## 2. Layered model
 
 ```mermaid
 flowchart TB
-  subgraph experienceLayer [Experience]
+  subgraph experienceLayer["Experience"]
     piShell["Pi-hosted Agent Shell"]
     cognitiveCli["Deterministic cognitive CLI"]
     sdkClients["SDK and future clients"]
   end
-  subgraph apiLayer [Local API and application services]
-    localAuth["Loopback auth and channel sessions"]
-    taskService["TaskApplicationService"]
-    resourceService["Resource and Agent management services"]
-    watchService["Projection and watch services"]
-  end
-  subgraph authorityLayer [Deterministic authority]
-    kernel["Authorization, CAS and transitions"]
-    scheduler["Scheduler, leases and budgets"]
-    effectProtocol["Intent and Effect protocol"]
-    verifier["Evidence and acceptance"]
-  end
-  subgraph runtimeLayer [Managed execution]
-    agentManager["Agent acquisition and lifecycle"]
-    worker["Fenced worker and process supervisor"]
-    providerProxy["Daemon-owned Provider proxy"]
-    toolAdapters["Catalog-bound Tool adapters"]
-  end
-  subgraph persistenceLayer [Persistence and host services]
-    authorityStore["SQLite authority store"]
-    secretStore["Native Secret Store"]
-    artifactStore["Artifacts and evidence"]
-    linuxHost["Linux user-systemd and filesystem"]
+
+  subgraph applicationLayer["Resource and Task application services"]
+    channelSessions["Loopback authentication and isolated channels"]
+    resourceApplication["ResourceApplicationService"]
+    taskApplication["TaskApplicationService"]
+    bindingPolicy["Resource bindings and cross-cutting policy"]
   end
 
-  experienceLayer --> apiLayer
-  apiLayer --> authorityLayer
-  authorityLayer --> runtimeLayer
-  authorityLayer --> persistenceLayer
-  runtimeLayer --> persistenceLayer
+  subgraph domainLayer["Six independent domain services"]
+    memoryDomain["MemoryDomainService"]
+    skillDomain["SkillDomainService"]
+    toolDomain["ToolDomainService"]
+    contextDomain["ContextDomainService"]
+    taskDomain["TaskDomainService"]
+    runtimeDomain["RuntimeDomainService"]
+  end
+
+  subgraph executionLayer["Sidecar, scheduler, executor and verifier"]
+    sidecarBoundary["Per-Agent logical sidecar boundary"]
+    schedulerAuthority["Daemon scheduler, leases and budgets"]
+    toolExecutor["Catalog-bound Tool executor"]
+    verifierAuthority["Evidence and acceptance verifier"]
+  end
+
+  subgraph platformLayer["Persistence and Linux host ports"]
+    sqlitePort["Daemon-owned SQLite WAL"]
+    artifactPort["Artifact and evidence store"]
+    secretPort["Approved SecretStore backend"]
+    linuxHostPorts["Linux process, filesystem and network ports"]
+  end
+
+  piShell --> channelSessions
+  cognitiveCli --> channelSessions
+  sdkClients --> channelSessions
+  channelSessions --> resourceApplication
+  channelSessions --> taskApplication
+  resourceApplication --> bindingPolicy
+  taskApplication --> bindingPolicy
+
+  resourceApplication --> memoryDomain
+  resourceApplication --> skillDomain
+  resourceApplication --> toolDomain
+  resourceApplication --> contextDomain
+  resourceApplication --> taskDomain
+  resourceApplication --> runtimeDomain
+  taskApplication --> taskDomain
+  taskApplication --> runtimeDomain
+  taskApplication --> toolDomain
+  taskApplication --> contextDomain
+  taskApplication --> memoryDomain
+  taskApplication --> skillDomain
+
+  runtimeDomain --> sidecarBoundary
+  taskDomain --> schedulerAuthority
+  contextDomain --> sidecarBoundary
+  memoryDomain --> sidecarBoundary
+  skillDomain --> sidecarBoundary
+  toolDomain --> toolExecutor
+  bindingPolicy --> schedulerAuthority
+  schedulerAuthority --> sidecarBoundary
+  sidecarBoundary --> toolExecutor
+  toolExecutor --> verifierAuthority
+  sidecarBoundary --> verifierAuthority
+
+  memoryDomain --> sqlitePort
+  skillDomain --> sqlitePort
+  toolDomain --> sqlitePort
+  contextDomain --> sqlitePort
+  taskDomain --> sqlitePort
+  runtimeDomain --> sqlitePort
+  bindingPolicy --> sqlitePort
+  schedulerAuthority --> sqlitePort
+  verifierAuthority --> sqlitePort
+  verifierAuthority --> artifactPort
+  sidecarBoundary --> linuxHostPorts
+  toolExecutor --> linuxHostPorts
+  bindingPolicy --> secretPort
 ```
 
-### 2.1 Experience layer
+The boxes describe responsibility, not one-process-per-box deployment. Linux
+1.0 keeps one canonical daemon service. A sidecar may be a separately supervised
+OS process, but it remains subordinate to that daemon and does not become a
+service authority.
 
-- `packages/pi-cognitiveos` is the Linux 1.0 Pi-hosted Shell adapter. Today it
-  provides readiness and daemon-owned completion; P2-T02 adds governed natural
-  language Task and management mapping.
-- `apps/agent-shell` is the reusable task-channel session core for proposal,
-  preview, submit, attach, watch, detach and cancel semantics. It is not a
-  second product frontend.
-- `apps/admin-cli` provides deterministic recovery and administration when the
-  model or Pi is unavailable. Its commands call the same daemon application
-  services as the Shell.
+## 3. Experience and application services
 
-Every experience component is a client. Client-local UI state is never a
-substitute for an authority projection.
+Every experience component is a client. The Pi-hosted Shell and deterministic
+CLI call the same application services; client-local caches, conversation text
+and optimistic UI state never replace authority projections. Task and
+management channels have separate credentials, retry identities, watch cursors,
+projection caches and operation sets.
 
-### 2.2 Local API and application services
+`TaskApplicationService` is the specialized command path for the Task family:
+persist raw intent,
+clarify, construct a digest-bound preview, admit the exact `TaskContract`,
+control it under epoch CAS, and expose authority-backed Task/watch projections.
+It composes typed references to Memory, Skill, Tool, Context and Runtime while
+leaving every family lifecycle independent. Model, Budget, Permission,
+Artifact, Intent/Effect, Evidence and Event bind across those families through
+deterministic policy rather than becoming additional domains.
 
-The daemon binds only a numeric loopback address and authenticates each local
-session. Task and management channels have separate credentials, retry
-contexts, projection caches and operation sets.
+### 3.1 ResourceApplicationService
 
-Application services translate client contracts into existing kernel
-primitives. They do not create a parallel state machine. In particular,
-`TaskApplicationService` fixes raw intent, emits a digest-bound preview, admits
-the exact contract under epoch CAS and exposes read-only intent projections.
+`ResourceApplicationService` is a narrow, versioned management projection. Its
+common operation vocabulary is limited to:
 
-### 2.3 Deterministic authority
+| Operation | Common meaning | Domain responsibility |
+|---|---|---|
+| `list` | return a bounded family/scope page at a declared projection version | select and authorize domain records |
+| `inspect` | return one exact stable ID and current projection version | supply domain-specific details and lifecycle state |
+| `watch` | resume a bounded event projection from a versioned cursor | emit typed events and deduplicate delivery |
+| `bind` | request a typed relationship under expected-version guards | validate relationship and run the domain transition |
+| `unbind` | request removal of a typed relationship under guards | enforce safety, dependencies and domain transition |
+| `enable` | request admission to domain-defined usable state | apply typed health, policy and lifecycle rules |
+| `disable` | stop new use without fabricating removal or completion | quiesce/fence according to the domain lifecycle |
+| `revoke` | invalidate a grant, binding or usable revision | fence affected use and expose consequences |
 
-The Rust authority layer owns:
+Every mutating request includes exact stable IDs, expected object/projection
+versions, idempotency identity and the authenticated channel. The common
+service does not expose generic `create`, `install`, `execute`, `complete` or
+arbitrary state transitions. Acquisition, admission, execution, reconciliation,
+retention and purge remain typed domain or Task workflows.
 
-- principal/capability authorization and Tier 0/1/2 policy results;
-- object version guards, task/loop epochs and stale-worker fencing;
-- deadline, retry, step, token and cost ceilings;
-- state-transition legality and atomic event/outbox commits;
-- Intent/Effect idempotency and reconciliation;
-- acceptance criteria, evidence digests and final Task completion.
+### 3.2 Common resource projection
 
-No Agent adapter, Provider response, process supervisor or fixture may bypass
-these decisions.
+Each list/inspect/watch item exposes a stable envelope with:
 
-### 2.4 Managed execution
+- stable ID;
+- resource family;
+- revision digest, or an explicit reason why the domain object has no immutable
+  revision;
+- scope and owner;
+- health;
+- typed bindings;
+- current usage and bounded budget/lease facts when applicable;
+- blocked reason;
+- currently allowed actions;
+- object version, projection version and watch cursor.
 
-The Agent manager acquires and verifies immutable packages, commits durable
-installations, registers policy bindings, supervises instances and binds a
-fresh `AgentExecution` to a Task/Loop epoch. The worker receives only scoped,
-digest-bound inputs and has no authority to enlarge them.
+The envelope is assembled from domain authority facts. It is not a universal
+SQLite row, does not normalize domain state names, and cannot be written back
+as a generic resource object. Unknown or unavailable data stays explicit.
 
-The Provider proxy resolves credentials from the native Secret Store only at
-the egress boundary. Tool adapters receive an admitted operation descriptor;
-mutating operations require a persisted Effect before dispatch.
+## 4. Six independent domain services
 
-### 2.5 Persistence and host services
+| Domain service | Own schema and lifecycle examples | Common projection examples |
+|---|---|---|
+| Memory | admitted records, provenance, conflict set and tombstone; propose/admit/retrieve/forget | admitted revision, owner/scope, retrieval use and conflicts |
+| Skill | package/revision identity, provenance and Task pin; import/qualify/pin/deprecate/revoke | stable Skill ID, `SkillRevision` digest, Task bindings and reuse |
+| Tool | immutable descriptor, operation candidate and availability; register/qualify/enable/quarantine/revoke | descriptor digest, effect class, capability and health |
+| Context | source references, `ContextRequest`, `ContextView`, provenance, losses and delta; resolve/render/invalidate | view digest, source bindings, token usage and stale blockers |
+| Task | raw intent, `TaskContract`, Task/Loop, checkpoint and verification binding; propose/preview/admit/control/accept | objective, current state, budget, resource bindings and acceptance blockers |
+| Runtime/Process | package, installation, registration, instance, sidecar binding, `AgentExecution` and process observation; acquire/install/register/activate/suspend/replace/remove | exact package/adapter digests, instance health, execution/process usage |
 
-- SQLite WAL stores authority objects, events, budgets, scheduler facts,
-  installation records and reconciliation state.
-- The native Secret Store holds Provider/user secret material; SQLite and
-  ordinary configuration hold only non-secret references.
-- Artifacts and evidence are content-addressed and access-controlled; release
-  or support bundles contain only redacted facts and digests.
-- Linux 1.0 uses one `cognitiveos-personal.service` user unit and
-  `127.0.0.1:48181`.
+Model, Budget, Permission, Artifact, Intent/Effect, Evidence and Event remain
+cross-cutting authority concepts composed with these domains; they are not
+silently promoted into a seventh generic resource lifecycle. Agent is the
+user-facing Runtime projection, but package, installation, registration,
+instance, sidecar, execution and process identities are not collapsed merely
+because the Shell lists them together.
 
-## 3. Core control flows
+## 5. Per-Agent sidecar execution boundary
 
-### 3.1 Natural-language Task flow
+For every active `AgentInstance`, the daemon supervises exactly one logical
+sidecar session. Linux 1.0 may realize that session as one separate OS process.
+The daemon creates private stdio pipes or a socketpair and runs framed AKP over
+that transport.
+
+```mermaid
+flowchart LR
+  daemonSupervisor["Daemon supervisor and authority"] --> privateTransport["Private stdio or socketpair"]
+  privateTransport --> sidecarSession["Logical sidecar session"]
+  sidecarSession --> adapterBoundary["Pinned Agent adapter"]
+  adapterBoundary --> agentRuntime["Agent runtime process"]
+  sidecarSession --> candidateStream["Candidates and bounded observations"]
+  candidateStream --> daemonSupervisor
+```
+
+The sidecar has no public listener. This local parent-child boundary does not
+require TLS PKI, service discovery or a service mesh. The transport carries no
+daemon bootstrap or ambient management authority. On daemon restart, inherited
+transport closure or parent-death supervision makes the old sidecar exit. The
+daemon reloads authority state, establishes a higher epoch, then creates a new
+sidecar session; it never adopts the old session as current.
+
+The sidecar may translate Agent protocol, construct candidates and report
+bounded process/progress observations. It cannot authorize a Tool, change a
+budget, commit an Effect, reconcile an external mutation or complete a Task.
+
+## 6. Control plane and data plane
+
+The private AKP boundary separates two logical planes even if both use the same
+framed transport:
+
+| Plane | Allowed content | Rules |
+|---|---|---|
+| Control plane | handshake; package, adapter, instance and execution identities; protocol digest; lifecycle request/observation; budget/capability snapshot; current epoch | daemon validates exact digests and versions; stale epoch or adapter/protocol digest drift fails closed |
+| Data plane | governed Context and Skill references; Memory and Tool candidates; progress; artifact references; bounded stdout/stderr or event streams; content-addressed references | references are scoped and digest-bound; sidecar output remains candidate/observation until deterministic validation |
+
+Provider/user secret material belongs to neither plane. The daemon resolves it
+only at an approved Secret Store/egress boundary.
+
+A mutating Tool permit is issued only after the daemon has authorized the exact
+operation and durably persisted its Intent, Effect, stable idempotency key,
+dispatch identity and epoch. The permit is narrow, short-lived and bound to the
+Task, execution, sidecar session, Tool descriptor, capability, budget and
+Effect. A sidecar receipt is an observation: it is not an Effect commit,
+reconciliation result, verification result or Task completion.
+
+## 7. Core flows
+
+### 7.1 Governed Task flow
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant Shell as PiShell
+  participant Shell
+  participant Applications
   participant Daemon
-  participant Kernel
-  participant Worker
+  participant Sidecar
   participant Verifier
 
-  User->>Shell: Natural-language goal
-  Shell->>Daemon: Record intent and request interpretation
-  Daemon->>Kernel: Persist raw intent
-  Daemon-->>Shell: Candidate interpretation and canonical preview
+  User->>Shell: Goal or resource intent
+  Shell->>Applications: Task or isolated management request
+  Applications->>Daemon: Persist raw intent and resolve typed references
+  Daemon-->>Shell: Candidate plus canonical digest-bound preview
   User->>Shell: Admit exact preview
-  Shell->>Daemon: Preview digest and idempotency key
-  Daemon->>Kernel: Authorization, CAS and TaskContract mint
-  Kernel->>Worker: Eligible epoch-fenced execution
-  Worker->>Kernel: Progress, Effect and evidence facts
-  Kernel->>Verifier: Closed Effect set and criteria evidence
-  Verifier->>Kernel: Acceptance result
-  Kernel-->>Shell: Authority projection over watch
+  Shell->>Applications: Preview digest and idempotency key
+  Applications->>Daemon: Authorization, CAS, TaskContract and schedule
+  Daemon->>Sidecar: Current epoch and governed data references
+  Sidecar-->>Daemon: Candidates, progress and artifact references
+  Daemon->>Verifier: Closed Effects and criterion evidence
+  Verifier->>Daemon: Acceptance disposition
+  Daemon-->>Shell: Authority projection over watch
 ```
 
-The Shell cannot turn its own proposal, optimistic display or Pi completion
-into a Task state.
+The Shell cannot convert its proposal, Pi `agent_end`, sidecar output or an
+optimistic display into authority state.
 
-### 3.2 Agent installation and activation
+### 7.2 External mutation
 
 ```mermaid
 flowchart LR
-  preview["Source and capability preview"] --> acquire["Acquire exact npm artifact"]
-  acquire --> verify["Verify identity, SRI and digests"]
-  verify --> stage["Private immutable staging"]
-  stage --> qualify["Compatibility and health qualification"]
-  qualify --> commit["Durable AgentInstallation commit"]
-  commit --> register["Registry and policy binding"]
-  register --> activate["Epoch-fenced activation"]
+  operationCandidate["Tool operation candidate"] --> authorizeOperation["Daemon catalog, capability and budget checks"]
+  authorizeOperation --> persistIntent["Persist Intent"]
+  persistIntent --> persistEffect["Persist Effect and original key"]
+  persistEffect --> issuePermit["Issue epoch-bound dispatch permit"]
+  issuePermit --> externalDispatch["Executor dispatch"]
+  externalDispatch --> receiptObservation["Receipt or unknown observation"]
+  receiptObservation --> reconcileEffect["Daemon query and reconcile with original key"]
+  reconcileEffect --> verifyOutcome["Artifact, evidence and acceptance"]
 ```
 
-Acquisition is a network mutation and is governed independently from runtime
-permission. A verified package receives no workspace, Tool, model or secret
-capability automatically.
+An unknown dispatch outcome is never retried under a new identity. External
+success and receipt persistence are distinct from authoritative Effect closure,
+which is distinct again from Task completion.
 
-### 3.3 External mutation
+## 8. Future Linux and hardware evolution ports
 
-```mermaid
-flowchart LR
-  proposal["Operation proposal"] --> authorize["Catalog, capability and budget checks"]
-  authorize --> persistIntent["Persist Intent"]
-  persistIntent --> persistEffect["Persist Effect and dispatch identity"]
-  persistEffect --> dispatch["External dispatch"]
-  dispatch --> reconcile["Receipt, query or reconciliation"]
-  reconcile --> evidence["Evidence and verifier"]
-```
+The architecture preserves narrow ports so later product work can evolve
+without moving authority out of the daemon:
 
-An unknown dispatch outcome remains unknown until query/reconcile resolves it;
-the caller must not blindly retry with a new idempotency key.
+| Port | Target responsibility |
+|---|---|
+| Identity/store | durable identity records, versions, CAS and migration |
+| Scope/capability | owner, tenant/workspace scope, policy and revocation |
+| Scheduler/lease/budget | eligibility, fencing, placement constraints and hard ceilings |
+| Agent/sidecar execution | private protocol, lifecycle supervision and bounded observations |
+| Tool executor | descriptor-bound execution, idempotency, query and reconciliation |
+| Context/Memory source | authorized source resolution, provenance and content-addressed reads |
+| Artifact/evidence | governed output, immutable evidence and verifier references |
+| Secret | desktop Secret Service or headless encrypted-vault reference resolution at approved egress only |
+| Event/watch/transport | bounded events, cursors, resumable projection and private framed transport |
+| Placement description | declarative host/device requirements and observed compatibility, not a scheduling authority |
 
-## 4. Reuse and refactor map
+These are design ports, not current generalized infrastructure. The target does
+not now implement a kernel module, eBPF policy system, cgroup orchestrator,
+container or VM abstraction, device scheduler, TPM framework, shared-memory
+protocol, device bus or distributed authority. Such work requires a separate
+approved task, threat model and evidence plan; placement descriptions cannot
+grant capability or dispatch work by themselves.
 
-| Existing asset | Personal 1.0 role | Required change |
-|---|---|---|
-| `packages/pi-cognitiveos` | Pi Shell host adapter | add separate task-channel integration and natural-language resource operations |
-| `apps/agent-shell` | reusable task-channel/session core | remove obsolete milestone framing; compose behind Pi rather than ship as a competing frontend |
-| `apps/pi-agent-adapter` | Pi compatibility/candidate boundary | reuse pin and observations; do not promote candidate output to authority |
-| `cognitive-management::TaskApplicationService` | Task lifecycle application service | expose through real Personal business routes |
-| runtime/store installer | durable acquisition/installation substrate | bind official npm Pi package and production acquisition lock |
-| scheduler repository/service | durable eligibility, leases and ceilings | connect durable stop facts, worker and Effect closure |
-| Agent package/installation schemas | shared contract foundation | reuse unchanged where sufficient |
+## 9. Current-versus-target boundary
 
-If stable adapter identity, Agent definition or Agent instance must become a
-public client contract, a later Lane-CTR structural task must update schemas,
-registries, generated bindings and negative vectors together. Personal-private
-implementation types must not pre-empt that decision.
-
-## 5. Current-versus-target boundary
-
-The repository currently has a real Pi first-conversation route and partial P2
-Task/scheduler foundations. The real Task API, managed Pi acquisition and
-lifecycle, worker/Tool/verification closure, B09 and Linux 1.0 release Gate are
-not established merely by this design. Current facts remain in
-[PROGRESS.md](../../plan/PROGRESS.md).
+This document defines target composition only. It does not assert that all six
+domain services, the sidecar, UCR-01, managed Pi lifecycle, Task/Tool/recovery
+closure, any Gate, Linux release or Profile are implemented or passed. Exact
+current facts remain only in [PROGRESS.md](../../plan/PROGRESS.md); formal task
+and Gate meaning remains in the
+[Personal development plan](../../plan/PERSONAL-DEVELOPMENT-PLAN.md).
