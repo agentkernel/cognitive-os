@@ -44,7 +44,7 @@ an external receipt is not an Effect closure.
   compilation.
 - `cargo fmt --all -- --check`: passed.
 - `git diff --check`: passed.
-- `pnpm run check:consistency`: pending at handoff creation.
+- `pnpm run check:consistency`: passed before the corrective commit.
 - Focused Clippy, workspace tests, protected CI and P2 Gates: not-run.
 - Linux-native exact-revision validation: not-run. It requires a committed,
   remotely reachable revision and a disposable Git worktree; no SSH or other

@@ -4,7 +4,7 @@
 //! It reloads the immutable TaskContract and the identities it binds, deriving
 //! ceiling inputs solely from authority-store facts.
 
-#![allow(dead_code)] // Activated only after the fenced quiescence protocol exists.
+#![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
 use cognitive_contracts::generated::task_contract::TaskContract;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version};
@@ -126,6 +126,7 @@ fn parse_execution_bound_contract(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
         SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
