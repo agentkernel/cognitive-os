@@ -22,7 +22,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P2-T02/acceptance-assessment` | P2-T02 acceptance assessment reconciles completed D01-D04 evidence to the formal task exit. | close the documentation-only assessment; no P2 Gate, release, or Profile claim is created |
+| Active task lease | `none` | P2-T02 is task-complete after the closed D01-D04 acceptance assessment; B02/B04/B05/B12, release, and Profile remain separate and incomplete. | select an unrelated ready formal task; no P2 Gate, release, or Profile claim is created |
 
 ### Layer 1 — Formal task progress
 
