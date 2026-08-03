@@ -20,6 +20,7 @@
 //! `BEFORE UPDATE` / `BEFORE DELETE` triggers on `events` and
 //! `transition_records` abort any rewrite attempt, from any connection.
 
+use crate::scheduler::SCHEDULER_SCHEMA_V2;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
@@ -274,7 +275,7 @@ impl SqliteAuthorityStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(unavailable("set pragmas"))?;
-        conn.execute_batch(AUTHORITY_SCHEMA_V1)
+        conn.execute_batch(&format!("{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_V2}"))
             .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
