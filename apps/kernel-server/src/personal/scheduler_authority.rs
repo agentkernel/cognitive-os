@@ -7,7 +7,7 @@
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
 use cognitive_contracts::generated::task_contract::TaskContract;
-use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version};
+use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
@@ -18,7 +18,7 @@ use cognitive_runtime::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
     SchedulerDispatch, SchedulerService, SchedulerServiceError,
 };
-use cognitive_store::scheduler::SchedulerRepository;
+use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -133,6 +133,12 @@ pub(crate) enum SchedulerAuthorityError {
     MissingEffect(String),
     #[error("scheduler durable Effect state is unsupported: {0}")]
     UnsupportedEffectState(String),
+    #[error("scheduler dispatch does not match the resolved TaskContract binding: {0}")]
+    DispatchBindingMismatch(String),
+    #[error("scheduler lease release time is invalid: {0}")]
+    InvalidReleaseTime(String),
+    #[error(transparent)]
+    Repository(#[from] SchedulerRepositoryError),
     #[error(transparent)]
     Scheduler(#[from] SchedulerServiceError),
     #[error(transparent)]
@@ -163,14 +169,29 @@ fn parse_execution_bound_contract(
 mod tests {
     use super::{
         SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
-        SchedulerWorkerAttempt, classify_scheduler_effect_closure, complete_scheduler_admission,
+        SchedulerWorkerAttempt, classify_scheduler_effect_closure,
+        complete_resolved_effect_and_release, complete_scheduler_admission,
         complete_scheduler_worker_attempt, parse_execution_bound_contract,
         release_closed_effect_dispatch,
     };
     use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
+    use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
     use std::cell::Cell;
+
+    fn scheduler_row(task_ref: &str) -> SchedulerRow {
+        SchedulerRow {
+            task_ref: task_ref.to_owned(),
+            state: SchedulerState::Runnable.as_str().to_owned(),
+            lease_owner: None,
+            lease_epoch: 0,
+            lease_expires: None,
+            next_eligible: "2026-08-03T00:00:00Z".to_owned(),
+            attempt_count: 0,
+            cancel_requested: false,
+        }
+    }
 
     fn committed_ceiling_stop() -> CommittedTransition {
         CommittedTransition {
@@ -348,6 +369,43 @@ mod tests {
             !release_attempted.get(),
             "a pending Effect must not release its scheduler lease"
         );
+    }
+
+    #[test]
+    fn closed_effect_releases_the_matching_durable_lease_without_completing_the_task() {
+        let temporary_directory = tempfile::tempdir().unwrap();
+        let mut scheduler_repository =
+            SchedulerRepository::open(&temporary_directory.path().join("scheduler.db")).unwrap();
+        let task_ref = "task://personal/durable-effect-closure";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(task_ref, "scheduler-worker", 10, "2026-08-03T00:00:00Z")
+            .unwrap();
+        let dispatch = SchedulerDispatch {
+            task_ref: task_ref.to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 10,
+            lease_expires: "2026-08-03T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+
+        let completed_attempt = complete_resolved_effect_and_release(
+            SchedulerWorkerAttempt::EffectClosed(dispatch.clone()),
+            &mut scheduler_repository,
+            "2026-08-03T00:00:30Z",
+        )
+        .unwrap();
+
+        assert_eq!(
+            completed_attempt,
+            SchedulerWorkerAttempt::EffectClosed(dispatch),
+            "a closed Effect ends this scheduler attempt, not Task acceptance"
+        );
+        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        assert_eq!(durable_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(durable_row.lease_owner, None);
     }
 
     #[test]
@@ -638,6 +696,59 @@ fn release_closed_effect_dispatch(
             Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
         }
     }
+}
+
+/// Resolve a dispatch's durable Effect and close only the matching scheduler
+/// lease. This is the concrete worker closure boundary: it accepts neither a
+/// process receipt nor a caller-provided Effect state.
+///
+/// `task_binding` is fixed before worker entry and must match the leased task.
+/// The repository release retains the dispatch owner and epoch, while the
+/// durable Effect resolver supplies the only closure disposition. A scheduler
+/// `Succeeded` row means this dispatch's Effect reached a terminal durable
+/// state; it does not accept or complete the Task.
+fn complete_durable_scheduler_effect_closure<S>(
+    admission: SchedulerDispatchAdmission,
+    store: &S,
+    task_binding: &TaskBinding,
+    scheduler_repository: &mut SchedulerRepository,
+    released_at: &str,
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore,
+{
+    let worker_attempt = complete_scheduler_worker_attempt(admission, |dispatch| {
+        if dispatch.task_ref != task_binding.task_ref {
+            return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
+                "leased task {} does not match bound task {}",
+                dispatch.task_ref, task_binding.task_ref
+            )));
+        }
+        Ok(resolve_scheduler_effect_for_task_binding(store, task_binding)?.closure)
+    })?;
+    complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
+}
+
+/// Release an already resolved closed Effect through the real scheduler
+/// repository. Pending reconciliation and durable ceiling STOP attempts keep
+/// their leases untouched.
+fn complete_resolved_effect_and_release(
+    worker_attempt: SchedulerWorkerAttempt,
+    scheduler_repository: &mut SchedulerRepository,
+    released_at: &str,
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError> {
+    WallTimestamp::parse(released_at)
+        .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(released_at.to_owned()))?;
+    release_closed_effect_dispatch(worker_attempt, |dispatch| {
+        scheduler_repository.release_lease(
+            &dispatch.task_ref,
+            &dispatch.lease_owner,
+            dispatch.lease_epoch,
+            SchedulerState::Succeeded,
+            released_at,
+        )?;
+        Ok(())
+    })
 }
 
 /// Commit a reached ceiling STOP before a worker can obtain a scheduler lease.

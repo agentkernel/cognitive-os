@@ -18,7 +18,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | The P2-T03 durable-task-effect-lookup slice is closed. It introduces a deterministic TaskContract-epoch-to-Intent reverse lookup and fail-closed durable Effect resolution/classification; no Gate, release, or Profile claim advanced | next P2-T03 slice: bind an unambiguous resolved durable Effect to the concrete worker closure/release call while retaining reconciliation and independent verification boundaries |
+| Active task lease | `none` | The P2-T03 concrete-effect-closure-release slice is closed. A daemon-only boundary now binds the resolved durable Effect to the exact owner/epoch-fenced scheduler lease release; no Gate, release, or Profile claim advanced | next P2-T03 slice: integrate the bounded scheduler worker with BoundedHarness while retaining durable reconciliation and independent Task-verification boundaries |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
@@ -157,6 +157,21 @@ not change existing P2-T03 `tested-local` evidence, any P2 Gate, release, or
 Profile claim. Concrete worker lookup/closure/release wiring and BoundedHarness
 integration remain not-run. See
 `20260803-personal-p2-t03-linux-native-task-effect-validation-handoff.md`.
+
+The P2-T03 concrete-effect-closure-release slice adds the daemon-private
+worker boundary that requires a leased task to match its exact TaskBinding,
+classifies the associated Effect only from durable authority state, and calls
+the scheduler repository with the exact owner and epoch only after durable
+closure. A closed Effect records scheduler completion without accepting the
+Task; pending reconciliation and a ceiling STOP retain their leases. The
+failure-first focused regression was blocked before crate compilation by the
+Windows GNU linker (exit 121); `cargo fmt --all -- --check`, `git diff
+--check`, and `pnpm run check:consistency` are recorded separately by this
+closure. Linux-native validation is not run because approved SSH host-key
+trust is unavailable. This is implementation-only work with no new
+implementation-evidence level, Gate, release, or Profile claim. BoundedHarness
+integration and all P2 Gates remain not-run. See
+`20260803-personal-p2-t03-concrete-effect-closure-release-handoff.md`.
 
 ## Historical evidence journal
 
