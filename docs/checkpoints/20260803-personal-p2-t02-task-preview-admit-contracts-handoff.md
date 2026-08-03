@@ -3,8 +3,8 @@
 - Date: 2026-08-03
 - Task and slice: `P2-T02/D01`
 - Change class: normative-semantic
-- Lease: `lease/personal/P2-T02/task-preview-admit-contracts`, active pending
-  Draft PR review and merge
+- Lease: `lease/personal/P2-T02/task-preview-admit-contracts`, closed in the
+  PR #138 merge delivery
 - Status at handoff: contract prerequisite implemented and validated; the
   parent `P2-T02/D01` remains `in-progress`
 
@@ -13,10 +13,10 @@
 | Field | Value |
 |---|---|
 | Branch | `lane/ctr-p2-t02-task-preview-admit-contracts` |
-| Immutable validated checkpoint | `ed9f05923f739d8b07b28f5dbc3554417ba39060` |
+| Immutable validated checkpoint | `aa5007f9ce1c74d5d309101806233d9a6d3a8771` |
 | Upstream | `origin/lane/ctr-p2-t02-task-preview-admit-contracts` at the validated checkpoint |
-| Pull request | [#138](https://github.com/agentkernel/cognitive-os/pull/138), Draft |
-| Worktree | clean before this handoff metadata delivery |
+| Pull request | [#138](https://github.com/agentkernel/cognitive-os/pull/138), ready for merge after required CI passed |
+| Worktree | clean at lease closure |
 
 ## Implemented contract
 
@@ -58,13 +58,11 @@ used.
 
 ## Remaining work and next action
 
-After PR #138 has all required CI checks green and is merged, close this
-Lane-CTR lease in the merge closure. Then open a new narrow Lane-RUN lease for
-the real daemon composition: authenticated `task.preview` / `task.admit`
-routing through `TaskApplicationService`, followed by the already-registered
-Task watch endpoint and Rust/TypeScript integration negatives. Do not create
-parallel public DTOs or alter the existing watch contract without a new
-Lane-CTR lease.
+After PR #138 merges, open a new narrow Lane-RUN lease for the real daemon
+composition: authenticated `task.preview` / `task.admit` routing through
+`TaskApplicationService`, followed by the already-registered Task watch
+endpoint and Rust/TypeScript integration negatives. Do not create parallel
+public DTOs or alter the existing watch contract without a new Lane-CTR lease.
 
 ## Non-claims
 
