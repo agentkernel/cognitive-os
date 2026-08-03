@@ -188,15 +188,33 @@ fn parse_execution_bound_contract(
         .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))
 }
 
+/// Reject scheduler work that was bound to a superseded TaskContract epoch.
+/// This fence runs before any lease mutation or harness invocation.
+fn ensure_current_contract_epoch(
+    binding: &SchedulerAuthorityBinding,
+    current_contract_epoch: i64,
+) -> Result<(), SchedulerAuthorityError> {
+    if binding.contract_epoch == current_contract_epoch {
+        return Ok(());
+    }
+
+    Err(SchedulerAuthorityError::StaleContractEpoch {
+        task_ref: binding.task_ref.clone(),
+        requested_epoch: binding.contract_epoch,
+        current_epoch: current_contract_epoch,
+    })
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
-        SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
-        SchedulerWorkerAttempt, classify_scheduler_effect_closure,
+        SchedulerAuthorityBinding, SchedulerAuthorityError, SchedulerDispatchAdmission,
+        SchedulerEffectClosure, SchedulerWorkerAttempt, classify_scheduler_effect_closure,
         complete_resolved_effect_and_release, complete_scheduler_admission,
-        complete_scheduler_worker_attempt, parse_execution_bound_contract,
-        release_closed_effect_dispatch, select_single_effect_intent,
+        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
+        parse_execution_bound_contract, release_closed_effect_dispatch,
+        select_single_effect_intent,
     };
     use cognitive_domain::{EventId, ObjectId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
@@ -301,6 +319,24 @@ mod tests {
         assert!(matches!(
             parse_execution_bound_contract(incomplete_execution_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn stale_contract_epoch_is_rejected_before_scheduler_admission() {
+        let binding = SchedulerAuthorityBinding {
+            task_ref: "task://personal/superseded-contract".to_owned(),
+            contract_epoch: 4,
+            action_fingerprint: "scheduler.effect:sha256:test".to_owned(),
+        };
+
+        assert!(matches!(
+            ensure_current_contract_epoch(&binding, 5),
+            Err(SchedulerAuthorityError::StaleContractEpoch {
+                task_ref,
+                requested_epoch: 4,
+                current_epoch: 5,
+            }) if task_ref == binding.task_ref
         ));
     }
 
@@ -815,13 +851,7 @@ where
             binding.task_ref.clone(),
         ));
     }
-    if binding.contract_epoch != contract_epoch {
-        return Err(SchedulerAuthorityError::StaleContractEpoch {
-            task_ref: binding.task_ref.clone(),
-            requested_epoch: binding.contract_epoch,
-            current_epoch: contract_epoch,
-        });
-    }
+    ensure_current_contract_epoch(binding, contract_epoch)?;
     let contract_row = store
         .load_task_contract(&binding.task_ref, contract_epoch)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
