@@ -236,6 +236,7 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), PersonalDaemonError> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
 fn handle_connection_with_task_api(
     mut stream: TcpStream,
     bounds: &PersonalResourceBounds,
