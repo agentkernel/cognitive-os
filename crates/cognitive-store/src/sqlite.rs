@@ -1537,11 +1537,12 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                 detail: "candidate admission bundle has inconsistent authority bindings".to_owned(),
             });
         }
-        if loop_transition
-            .budget
-            .as_ref()
-            .is_some_and(|budget| budget.budget_id != authorization.budget_id)
-        {
+        let Some(budget) = loop_transition.budget.as_ref() else {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission requires an exact budget debit".to_owned(),
+            });
+        };
+        if budget.budget_id != authorization.budget_id {
             return Err(StorePortError::Conflict {
                 detail: "candidate admission budget does not match worker authorization".to_owned(),
             });
@@ -1552,6 +1553,43 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(unavailable("begin candidate admission"))?;
         verify_fencing_in_tx(&tx, Some(commit.fencing_epoch))?;
+
+        let candidate_binding = tx.query_row(
+            "SELECT task_ref, contract_epoch, parameters_digest, action, target,
+                        expected_state_version
+                 FROM operation_candidate_proposals WHERE candidate_id=?1",
+            (commit.selected_candidate_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, i64>(5)?,
+                ))
+            },
+        );
+        let candidate_binding = match candidate_binding {
+            Ok(binding) => binding,
+            Err(rusqlite::Error::QueryReturnedNoRows) => {
+                return Err(StorePortError::Conflict {
+                    detail: "candidate admission proposal is not persisted".to_owned(),
+                });
+            }
+            Err(error) => return Err(unavailable("load candidate admission proposal")(error)),
+        };
+        let candidate_matches_authorization = candidate_binding.0 == authorization.task_ref
+            && candidate_binding.1 == authorization.contract_epoch
+            && candidate_binding.2 == intent.parameters_digest
+            && candidate_binding.3 == intent.action
+            && candidate_binding.4 == intent.target
+            && candidate_binding.5 == intent.expected_state_version.get();
+        if !candidate_matches_authorization {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission does not match persisted proposal".to_owned(),
+            });
+        }
 
         let insert_intent = tx.execute(
             "INSERT INTO intents
