@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T02/bootstrap-governance-context` | P2-T02/D01 Personal bootstrap governance-context contract decision | Lane-CTR | `lane/ctr-p2-t02-bootstrap-governance-context` | `docs/adr/0022-personal-bounded-daemon-local-auth.md`; `docs/standards/governed-object-contract.md`; `docs/architecture/personal/authority-data-and-recovery.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t02-bootstrap-governance-context-handoff.md` | Cursor autonomous session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 
