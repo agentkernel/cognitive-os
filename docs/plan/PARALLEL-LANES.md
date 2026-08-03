@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T02/daemon-task-api-watch` | P2-T02/D01 daemon-owned governance context, authenticated Task API, and process-lifetime watch | Lane-RUN | `lane/run-p2-t02-daemon-task-api-watch` | `apps/kernel-server/src/personal/auth.rs`; `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/src/personal/task_api.rs`; `apps/kernel-server/src/personal/mod.rs`; `apps/kernel-server/tests/p2_t02_task_api_watch.rs`; `packages/sdk-ts/src/client.ts`; `packages/sdk-ts/src/transport.ts`; `packages/sdk-ts/src/transport.test.ts`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t02-daemon-task-api-watch-handoff.md` | Cursor autonomous session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 
