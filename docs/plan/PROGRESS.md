@@ -16,23 +16,24 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-supported-ci`; route, fixture and native observations exist, and formal B01 attempt 1 passed all executed phases | execute and retain the remaining preregistered clean-Linux attempts; do not promote one attempt to campaign acceptance |
 | B01 first-install/first-conversation Gate | **running** | `B01-Desktop-Linux-002` is the sole active B01 guest. Attempt 1 of the formal minimum 20 attempts passed. Attempt 2 crossed the clean-reset checkpoint but failed bounded guest-network readiness before any artifact, Pi, service, Provider, credential, prompt, or route was used; cleanup restored the exact baseline and left the domain shut off. The ordered ledger has 2 of 20 attempts: 1 success / 1 failure, with no critical safety failure observed. `B01-Clean-Linux-001` is retired historical failed-qualification evidence and cannot substitute for an attempt. The campaign still lacks 18 attempts, a >=90% final success rate, aggregate statistics, and final independent verifier disposition | diagnose the reset guest's SSH/network readiness without altering the Desktop baseline or treating attempt 2 as retryable; only a fresh Desktop reset can begin attempt 3 |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
+| P2-T02 Personal application service | **done** | D01-D04 now satisfy the unchanged acceptance: authenticated daemon-owned intent record/interpret, server-issued preview/admit and bounded Task watch; private six-family projection/watch; deterministic CLI and Pi sidecar parity with isolated Task/management channels and read-only client boundaries. Each slice has exact Linux evidence and required Ubuntu/Windows CI. | P2 Gates B02/B04/B05/B12 remain `not-run`; select an unrelated ready formal task |
 | P2-T03 scheduler/runtime | `in-progress` | `P2-T03/D01` and `D02` are done with prior Linux evidence. D03/D04 implementation exists but supported exact-revision Linux tests did not start because SSH host-key verification failed; those slices are blocked, not done | establish approved Linux validation access and run D03/D04 focused tests; do not add another P2-T03 helper slice or begin D05 before validation closes |
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | `P2-T02/D04` is done at `ed01c271ee3b8f5dee46d3c230b58ec4e3b4d2e5`: Pi Shell uses isolated Task/management read-only sessions for the private resource projection/watch and Task watch, verifies snapshot-first streams, and remains a non-authority client. TS tests, exact Linux daemon-side path, and required CI passed. | assess the completed P2-T02 acceptance evidence; no P2 Gate, release, or Profile claim is created |
+| Active task lease | `lease/personal/P2-T02/acceptance-assessment` | P2-T02 acceptance assessment reconciles completed D01-D04 evidence to the formal task exit. | close the documentation-only assessment; no P2 Gate, release, or Profile claim is created |
 
 ### Layer 1 — Formal task progress
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 16 | 3 | 0 | 34 | 37 |
+| 53 | 17 | 2 | 0 | 34 | 36 |
 
-`P2-T01` advances from `in-progress` to `done` because its original acceptance
-criteria and required evidence were already satisfied by PR #127; no criterion
-was removed or weakened. The three tasks in progress are P1-T09, P2-T02 and
-P2-T03. Formal task completion remains independent from every product Gate.
+`P2-T01` and `P2-T02` are done because their original acceptance criteria and
+required evidence were satisfied without removing or weakening any criterion.
+The two tasks in progress are P1-T09 and P2-T03. Formal task completion remains
+independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
 
