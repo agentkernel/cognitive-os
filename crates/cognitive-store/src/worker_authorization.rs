@@ -93,3 +93,37 @@ BEGIN SELECT RAISE(ABORT, 'append-only: daemon authorization snapshots are immut
 pub fn daemon_authorization_snapshot_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(6, DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6)
 }
+
+/// Migration v7: immutable pre-dispatch WorkerIterationAuthorization rows.
+pub const WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7: &str = "
+CREATE TABLE IF NOT EXISTS worker_iteration_authorizations (
+  authorization_id             TEXT PRIMARY KEY,
+  worker_authorization_root_id TEXT NOT NULL,
+  task_ref                     TEXT NOT NULL,
+  contract_epoch               INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  loop_object_id               TEXT NOT NULL,
+  iteration                    INTEGER NOT NULL CHECK (iteration >= 1),
+  expected_loop_version        INTEGER NOT NULL CHECK (expected_loop_version >= 1),
+  selected_candidate_id        TEXT NOT NULL UNIQUE,
+  intent_id                    TEXT NOT NULL UNIQUE,
+  effect_object_id             TEXT NOT NULL UNIQUE,
+  budget_id                    TEXT NOT NULL,
+  budget_charge_json           TEXT NOT NULL,
+  action_fingerprint           TEXT NOT NULL,
+  issued_fencing_epoch         INTEGER NOT NULL CHECK (issued_fencing_epoch >= 1),
+  canonical_json               TEXT NOT NULL,
+  UNIQUE (worker_authorization_root_id, iteration),
+  UNIQUE (loop_object_id, iteration)
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS worker_iteration_authorizations_append_only_update
+BEFORE UPDATE ON worker_iteration_authorizations
+BEGIN SELECT RAISE(ABORT, 'append-only: worker iteration authorizations are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS worker_iteration_authorizations_append_only_delete
+BEFORE DELETE ON worker_iteration_authorizations
+BEGIN SELECT RAISE(ABORT, 'append-only: worker iteration authorizations are immutable'); END;
+";
+
+/// The version-7 worker authorization storage migration entry.
+pub fn worker_iteration_authorization_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(7, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7)
+}
