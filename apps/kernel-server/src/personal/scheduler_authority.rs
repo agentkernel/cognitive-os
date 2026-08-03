@@ -172,10 +172,11 @@ mod tests {
         SchedulerWorkerAttempt, classify_scheduler_effect_closure,
         complete_resolved_effect_and_release, complete_scheduler_admission,
         complete_scheduler_worker_attempt, parse_execution_bound_contract,
-        release_closed_effect_dispatch,
+        release_closed_effect_dispatch, select_single_effect_intent,
     };
-    use cognitive_domain::{EventId, RecordId, Version, WallTimestamp};
+    use cognitive_domain::{EventId, ObjectId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
+    use cognitive_kernel::ports::{IntentRow, TaskBinding};
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
     use std::cell::Cell;
@@ -215,6 +216,33 @@ mod tests {
         }
     }
 
+    fn task_binding() -> TaskBinding {
+        TaskBinding {
+            task_ref: "task://personal/durable-effect-resolution".to_owned(),
+            contract_epoch: 4,
+        }
+    }
+
+    fn effect_intent(intent_suffix: u64, binding: Option<TaskBinding>) -> IntentRow {
+        IntentRow {
+            intent_id: ObjectId::parse(&format!("00000000-0000-7000-8000-{intent_suffix:012x}"))
+                .unwrap(),
+            idempotency_key: format!("scheduler-effect-{intent_suffix}"),
+            parameters_digest: format!("sha256:{}", "ab".repeat(32)),
+            action: "scheduler.effect".to_owned(),
+            target: "effect://personal/scheduler".to_owned(),
+            effect_object_id: ObjectId::parse(&format!(
+                "00000000-0000-7000-9000-{intent_suffix:012x}"
+            ))
+            .unwrap(),
+            expected_state_version: Version::INITIAL,
+            grant_epoch: 1,
+            capability_set_version: 1,
+            task_binding: binding,
+            canonical_json: "{}".to_owned(),
+        }
+    }
+
     #[test]
     fn legacy_contract_is_rejected_before_execution_binding_deserialization() {
         let legacy_contract = r#"{
@@ -239,6 +267,41 @@ mod tests {
         assert!(matches!(
             parse_execution_bound_contract(incomplete_execution_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn effect_resolution_rejects_missing_ambiguous_and_inconsistent_bindings() {
+        let binding = task_binding();
+
+        assert!(matches!(
+            select_single_effect_intent(&binding, &[]),
+            Err(SchedulerAuthorityError::MissingEffectBinding {
+                task_ref,
+                contract_epoch: 4,
+            }) if task_ref == binding.task_ref
+        ));
+
+        let first_intent = effect_intent(11, Some(binding.clone()));
+        let second_intent = effect_intent(12, Some(binding.clone()));
+        assert!(matches!(
+            select_single_effect_intent(&binding, &[first_intent, second_intent]),
+            Err(SchedulerAuthorityError::AmbiguousEffectBindings {
+                task_ref,
+                contract_epoch: 4,
+            }) if task_ref == binding.task_ref
+        ));
+
+        let inconsistent_intent = effect_intent(
+            13,
+            Some(TaskBinding {
+                task_ref: binding.task_ref.clone(),
+                contract_epoch: 5,
+            }),
+        );
+        assert!(matches!(
+            select_single_effect_intent(&binding, &[inconsistent_intent]),
+            Err(SchedulerAuthorityError::InconsistentEffectBinding(_))
         ));
     }
 
@@ -462,7 +525,29 @@ where
     let intent_rows = store
         .list_intents_for_task_binding(task_binding)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
-    let intent_row = match intent_rows.as_slice() {
+    let intent_row = select_single_effect_intent(task_binding, &intent_rows)?;
+
+    let effect_object = store
+        .load_object(LifecycleDomain::Effect, &intent_row.effect_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffect(intent_row.effect_object_id.as_str().to_owned())
+        })?;
+    let closure = classify_scheduler_effect_closure(effect_object.state.as_str())?;
+
+    Ok(SchedulerEffectResolution {
+        effect_object_id: intent_row.effect_object_id.clone(),
+        closure,
+    })
+}
+
+/// Select exactly one immutable Intent and verify that its stored binding
+/// agrees with the reverse-index query used to find it.
+fn select_single_effect_intent<'intent>(
+    task_binding: &TaskBinding,
+    intent_rows: &'intent [cognitive_kernel::ports::IntentRow],
+) -> Result<&'intent cognitive_kernel::ports::IntentRow, SchedulerAuthorityError> {
+    let intent_row = match intent_rows {
         [] => {
             return Err(SchedulerAuthorityError::MissingEffectBinding {
                 task_ref: task_binding.task_ref.clone(),
@@ -483,18 +568,7 @@ where
         ));
     }
 
-    let effect_object = store
-        .load_object(LifecycleDomain::Effect, &intent_row.effect_object_id)
-        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-        .ok_or_else(|| {
-            SchedulerAuthorityError::MissingEffect(intent_row.effect_object_id.as_str().to_owned())
-        })?;
-    let closure = classify_scheduler_effect_closure(effect_object.state.as_str())?;
-
-    Ok(SchedulerEffectResolution {
-        effect_object_id: intent_row.effect_object_id.clone(),
-        closure,
-    })
+    Ok(intent_row)
 }
 
 /// Classify an Effect only from its durable lifecycle state.
