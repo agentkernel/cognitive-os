@@ -128,7 +128,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         let (stream, _) = listener.accept().map_err(|error| PersonalDaemonError::Io {
             detail: error.to_string(),
         })?;
-        handle_connection(
+        handle_connection_with_task_api(
             stream,
             &config.bounds,
             &config.layout,
@@ -157,7 +157,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
-                    handle_connection(
+                    handle_connection_with_task_api(
                         stream,
                         &bounds,
                         &layout,
@@ -231,7 +231,7 @@ fn ensure_loopback_bind(bind_address: &str) -> Result<(), PersonalDaemonError> {
     Ok(())
 }
 
-fn handle_connection(
+fn handle_connection_with_task_api(
     mut stream: TcpStream,
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
@@ -288,6 +288,30 @@ fn handle_connection(
 
     in_flight.fetch_sub(1, Ordering::SeqCst);
     active_connections.fetch_sub(1, Ordering::SeqCst);
+}
+
+/// Single-connection test helper. Production keeps one shared TaskApi for
+/// process-lifetime watch continuity; pre-existing front-door tests do not
+/// exercise that state and use an isolated instance.
+#[cfg(test)]
+fn handle_connection(
+    stream: TcpStream,
+    bounds: &PersonalResourceBounds,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    active_connections: &Arc<AtomicUsize>,
+    in_flight: &Arc<AtomicUsize>,
+) {
+    let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
+    handle_connection_with_task_api(
+        stream,
+        bounds,
+        layout,
+        authority,
+        &task_api,
+        active_connections,
+        in_flight,
+    );
 }
 
 fn process_http_request(
@@ -961,12 +985,10 @@ mod tests {
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
         let (layout, authority) = test_fixture("timeout");
-        let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
-            let task_api = Arc::clone(&task_api);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -975,7 +997,6 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
-                    &task_api,
                     &active_connections,
                     &in_flight,
                 );
@@ -1014,12 +1035,10 @@ mod tests {
         bounds.read_header_timeout_secs = 1;
         bounds.request_body_read_timeout_secs = 1;
         let (layout, authority) = test_fixture("body-timeout");
-        let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
-            let task_api = Arc::clone(&task_api);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1028,7 +1047,6 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
-                    &task_api,
                     &active_connections,
                     &in_flight,
                 );
