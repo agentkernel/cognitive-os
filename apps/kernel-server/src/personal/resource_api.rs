@@ -158,7 +158,7 @@ fn family_projection(family: &str) -> Value {
     })
 }
 
-fn query_parameter<'a>(query: &'a str, name: &str) -> Option<&'a str> {
+fn query_parameter(query: &str, name: &str) -> Option<&str> {
     query
         .split('&')
         .find_map(|pair| pair.strip_prefix(&format!("{name}=")))
