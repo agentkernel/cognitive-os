@@ -2897,8 +2897,10 @@ requirements:
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
+      - TASK-PREVIEW-ADMIT-008
     vectors:
       - conformance/vectors/spec-contract-coverage.json
+      - conformance/vectors/task-preview-admit-008.json
     impl:
       - crates/cognitive-kernel/src/intent_chain.rs
       - crates/cognitive-store/src/sqlite.rs
