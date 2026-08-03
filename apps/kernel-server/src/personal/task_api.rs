@@ -41,7 +41,7 @@ use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
     TaskContractCommand, UserIntentCommand,
 };
-use cognitive_kernel::ports::{AuthorityStore, ProtocolStore};
+use cognitive_kernel::ports::ProtocolStore;
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde::{Deserialize, Serialize};
@@ -369,14 +369,8 @@ impl TaskApi {
                     contract_digest: Digest(row.contract_digest),
                     contract_epoch: row.contract_epoch,
                     schema_version: TaskAdmitResultSchemaVersion::CognitiveosTaskAdmitResult01,
-                    task_contract_ref: match uri(&format!("task-contract://{}", row.contract_id)) {
-                        Ok(value) => value,
-                        Err(response) => return response,
-                    },
-                    task_ref: match uri(&row.task_ref) {
-                        Ok(value) => value,
-                        Err(response) => return response,
-                    },
+                    task_contract_ref: format!("task-contract://{}", row.contract_id),
+                    task_ref: row.task_ref,
                 };
                 self.publish(
                     "task.admitted",
