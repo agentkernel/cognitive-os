@@ -99,7 +99,7 @@ test("Personal governance drift is rejected by failure injection", () => {
           "| B01 first-install/first-conversation Gate | **pass** |",
         )
         .replace("| `P2-T03/D03` | `done` |", "| `P2-T03/D03` | `in-progress` |")
-        .replace("| `P2-T03/D04` | `blocked` |", "| `P2-T03/D04` | `in-progress` |"),
+        .replace("| `P2-T03/D05` | `ready` |", "| `P2-T03/D05` | `in-progress` |"),
     "docs/governance/project-scope.yaml": (source) =>
       source.replace(
         "product_design: docs/product/personal/README.md",
