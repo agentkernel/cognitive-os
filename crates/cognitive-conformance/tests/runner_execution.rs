@@ -37,9 +37,9 @@ fn repo_root() -> PathBuf {
 /// 2026-07-20 Lane-CTR F-011 batch: +3 behavioral management-approval
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
-const TOTAL: usize = 88;
+const TOTAL: usize = 89;
 const PASS: usize = 60;
-const NOT_RUN: usize = 28;
+const NOT_RUN: usize = 29;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
