@@ -485,6 +485,93 @@ mod tests {
     }
 
     #[test]
+    fn malformed_release_time_preserves_the_closed_effects_fenced_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/malformed-release-time";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(task_ref, "scheduler-worker", 11, "2026-08-03T00:00:00Z")
+            .unwrap();
+        let dispatch = SchedulerDispatch {
+            task_ref: task_ref.to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 11,
+            lease_expires: "2026-08-03T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+
+        assert!(matches!(
+            complete_resolved_effect_and_release(
+                SchedulerWorkerAttempt::EffectClosed(dispatch),
+                &mut scheduler_repository,
+                "not-a-timestamp",
+            ),
+            Err(SchedulerAuthorityError::InvalidReleaseTime(value)) if value == "not-a-timestamp"
+        ));
+
+        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
+        assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
+        assert_eq!(durable_row.lease_epoch, 11);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn stale_closed_effect_release_preserves_a_successor_fenced_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/stale-closed-effect";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_eligible_lease(
+                task_ref,
+                "scheduler-worker",
+                12,
+                "2026-08-03T00:00:00Z",
+                "2026-08-03T00:00:30Z",
+            )
+            .unwrap();
+        scheduler_repository
+            .acquire_eligible_lease(
+                task_ref,
+                "scheduler-worker",
+                13,
+                "2026-08-03T00:00:30Z",
+                "2026-08-03T00:01:30Z",
+            )
+            .unwrap();
+        let stale_dispatch = SchedulerDispatch {
+            task_ref: task_ref.to_owned(),
+            lease_owner: "scheduler-worker".to_owned(),
+            lease_epoch: 12,
+            lease_expires: "2026-08-03T00:01:00Z".to_owned(),
+            attempt_count: 1,
+        };
+
+        assert!(matches!(
+            complete_resolved_effect_and_release(
+                SchedulerWorkerAttempt::EffectClosed(stale_dispatch),
+                &mut scheduler_repository,
+                "2026-08-03T00:01:30Z",
+            ),
+            Err(SchedulerAuthorityError::Repository(_))
+        ));
+
+        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
+        assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
+        assert_eq!(durable_row.lease_epoch, 13);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
     fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
         assert_eq!(
             classify_scheduler_effect_closure("RECONCILED").unwrap(),
