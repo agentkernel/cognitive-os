@@ -61,13 +61,13 @@ impl ResourceApi {
                 "private resource projection version 1 is required",
             );
         }
-        if path.starts_with("GET /resource/v1/projection ") {
+        if path == "GET /resource/v1/projection" {
             return json_response(
                 200,
                 snapshot(family, self.next_watch_sequence.saturating_sub(1)),
             );
         }
-        if path.starts_with("GET /resource/v1/watch ") {
+        if path == "GET /resource/v1/watch" {
             return self.watch(family, query);
         }
         error(
