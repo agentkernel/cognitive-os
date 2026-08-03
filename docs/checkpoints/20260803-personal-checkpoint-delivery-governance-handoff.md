@@ -4,8 +4,8 @@
 - Task association: P0-T01 governance/tooling baseline; motivated by P2-T02/D01
 - Change class: corrective governance and tooling
 - Lease: `lease/personal/P0-T01/checkpoint-delivery-governance`
-- Status at handoff: implementation and locally eligible validation complete;
-  owner authorized automatic checkpoint delivery and requested a Draft PR
+- Status at handoff: checkpoint pushed and Draft PR open; required GitHub CI
+  remains pending
 - Normative/product surface: unchanged
 
 ## Recovery tuple
@@ -14,9 +14,10 @@
 |---|---|
 | Branch | `lane/governance-checkpoint-delivery` |
 | Base HEAD | `cfa4d70a502e36733180ceebd3db7da6082a7243` |
-| Upstream | not configured; branch has not been pushed |
-| Pull request | not created |
-| Worktree | dirty only with this governance delivery |
+| Immutable governance checkpoint | `26ccce7f864f880fb5fd7bf95d523785e7dc38c9` |
+| Upstream | `origin/lane/governance-checkpoint-delivery`; remote SHA verified equal to the checkpoint |
+| Pull request | [#136](https://github.com/agentkernel/cognitive-os/pull/136), Draft |
+| Worktree | clean after checkpoint push; this handoff-only metadata update follows it |
 | Active lease | `lease/personal/P0-T01/checkpoint-delivery-governance` |
 
 ## Outcome
@@ -64,17 +65,17 @@ branch and lease; the merged checkpoint does not satisfy D01 or any P2 Gate.
 | `git diff --check` | pass |
 | local Rust linking checks | not-run; prohibited by `RUST-LINK-DEV-WIN-GNU-01` and unnecessary for this tooling/docs delivery |
 
-## Delivery action
+## Delivery result
 
 - Affected paths: `AGENTS.md`, Operating Model, docs-sync contract,
   consistency checker/test, lease/progress coordination and this handoff.
-- Reason: this is the final pre-commit recovery record; the user explicitly
-  requested commit, push and Draft PR creation.
+- Result: checkpoint `26ccce7f864f880fb5fd7bf95d523785e7dc38c9`
+  was pushed and Draft PR #136 was created.
 - Owner: current governance session.
-- Single recovery action: review the scoped diff, commit and push this branch,
-  create a Draft PR, then update this recovery tuple with the immutable
-  checkpoint HEAD and PR URL. Keep this PR Draft because it is the delivery
-  vehicle requested for review; do not merge solely because checks pass.
+- Single next action: observe required GitHub CI on Draft PR #136. Keep the PR
+  Draft during review; do not merge solely because checks pass. If the delivery
+  is accepted as complete and all required checks/review pass, reconcile the
+  lease/progress closure before applying the standing ready/merge rule.
 
 ## Non-claims
 
