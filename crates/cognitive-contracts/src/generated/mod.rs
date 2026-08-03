@@ -30,6 +30,7 @@ pub mod management_action_proposal;
 pub mod management_approval_decision;
 pub mod management_approval_request;
 pub mod object_reference;
+pub mod operation_candidate_proposal;
 pub mod operation_summary;
 pub mod performance_report;
 pub mod principal;
@@ -60,7 +61,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 51] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 52] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -160,6 +161,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 51] = [
     (
         "object-reference.schema.json",
         "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
+    ),
+    (
+        "operation-candidate-proposal.schema.json",
+        "sha256:45ca2c1c4b437e9c3f7458c5bb7ffced95e4ef60f94be7da4374f04e37c36699",
     ),
     (
         "operation-summary.schema.json",

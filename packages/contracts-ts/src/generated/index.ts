@@ -32,6 +32,7 @@ export * as managementActionProposal from "./management-action-proposal.js";
 export * as managementApprovalDecision from "./management-approval-decision.js";
 export * as managementApprovalRequest from "./management-approval-request.js";
 export * as objectReference from "./object-reference.js";
+export * as operationCandidateProposal from "./operation-candidate-proposal.js";
 export * as operationSummary from "./operation-summary.js";
 export * as performanceReport from "./performance-report.js";
 export * as principal from "./principal.js";
@@ -91,6 +92,7 @@ export const SCHEMA_DIGESTS = {
   "management-approval-decision.schema.json": "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
   "management-approval-request.schema.json": "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
   "object-reference.schema.json": "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
+  "operation-candidate-proposal.schema.json": "sha256:45ca2c1c4b437e9c3f7458c5bb7ffced95e4ef60f94be7da4374f04e37c36699",
   "operation-summary.schema.json": "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
   "performance-report.schema.json": "sha256:558e100166417da952cb320713cd90ace47e1e3b7378eb0f9ef795d087101268",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",
