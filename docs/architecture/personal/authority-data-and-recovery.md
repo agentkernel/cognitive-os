@@ -31,6 +31,19 @@ the owning domain service, which keeps its own schema and lifecycle. There is no
 generic resource row or universal transition function that can bypass a typed
 domain guard.
 
+### Personal local governance-root provisioning
+
+For the first authenticated Task-chain mutation of a local Personal principal,
+the daemon may provision a durable local governance-root context rather than
+requiring a separately pre-created external governance object. The daemon
+creates canonical immutable owner, authority, and ResourceScope anchors,
+persists their identity/digest binding before the governed mutation, and binds
+the context to that authenticated principal. Subsequent mutations reload the
+same context; missing, corrupt, ambiguous, or principal-mismatched state fails
+closed. This narrow bootstrap rule does not let Pi, CLI, SDK, Shell, sidecar,
+or any request body supply governance facts, a writer lease, actor chain, or
+governed object identity.
+
 ## 2. Durable relationships and observation identities
 
 ```mermaid

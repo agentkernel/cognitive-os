@@ -43,6 +43,17 @@ for Personal operation with a fail-closed loopback front door.
 8. **Host / CSRF controls:** reject non-loopback `Host`; reject `Cookie` auth.
 9. **Non-claims:** no Task scheduler, Memory, MCP, full readiness projection
    (P1-T05), Provider proxy, G0, B01-B12, or Profile `implemented`.
+10. **Personal bootstrap governance context:** the authenticated daemon MAY
+    bootstrap one local governance-root context for a principal when no prior
+    context exists. The daemon MUST generate its immutable owner, authority,
+    and resource-scope anchors; derive their content digests from canonical
+    context content; persist the context atomically before any Task authority
+    mutation; and bind it to the authenticated principal. Later mutations MUST
+    load and verify that same durable binding. A missing, corrupt, ambiguous,
+    or principal-mismatched context MUST fail closed. Clients MUST NOT submit
+    governance anchors, governed headers, object identities, actor chains, or
+    writer leases. This is a Personal local-root provisioning rule, not a
+    general relaxation of governed-reference or authorization requirements.
 
 ## Consequences
 

@@ -45,6 +45,15 @@ Schema registration does not claim implementation or conformance. A claim MUST p
 
 [REQ-GOBJ-REF-001] A strong reference contains exactly `kind=strong`, `id`, `object_version`, and `content_digest`. It fixes one immutable version of one logical object. IDs, URIs, digests, and successful resolution are not authorization.
 
+**Personal local-root exception.** A Personal daemon may bootstrap and persist
+the owner, authority, and ResourceScope anchor objects needed to seed its first
+authenticated local Task chain when no prior context exists. The daemon MUST
+derive the anchors and their canonical digests itself, bind the persisted
+context to the authenticated principal, and verify the binding on every later
+mutation. This provisions a local governance root; it does not make a caller's
+principal, request ID, URI, or client-provided digest a strong reference, and
+it does not waive authorization, policy, CAS, fencing, or purpose checks.
+
 [REQ-GOBJ-REF-002] A weak reference contains `kind=weak`, `id`, `freshness`, and `resolution`. Freshness declares acceptable age or version. Resolution declares selection timing and strategy, failure behavior, and mandatory result pinning.
 
 [REQ-GOBJ-REF-003] Weak references MUST resolve under the current GovernanceDomainContext, ActorChain, purpose, ResourceScope, policy, membership, and revocation versions. Before mutation, external Effect, or authority commit, the selected result MUST be fixed as a strong reference. Audit evidence MUST retain resolution time, resolver policy/version, selected `object_version`, and `content_digest`.
