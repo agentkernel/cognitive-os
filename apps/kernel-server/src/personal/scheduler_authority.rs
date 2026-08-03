@@ -529,10 +529,22 @@ mod tests {
             .upsert(&scheduler_row(task_ref))
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 12, "2026-08-03T00:00:00Z")
+            .acquire_eligible_lease(
+                task_ref,
+                "scheduler-worker",
+                12,
+                "2026-08-03T00:00:00Z",
+                "2026-08-03T00:00:30Z",
+            )
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 13, "2026-08-03T00:01:00Z")
+            .acquire_eligible_lease(
+                task_ref,
+                "scheduler-worker",
+                13,
+                "2026-08-03T00:00:30Z",
+                "2026-08-03T00:01:30Z",
+            )
             .unwrap();
         let stale_dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
