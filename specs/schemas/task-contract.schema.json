@@ -137,6 +137,10 @@
       "$ref": "object-reference.schema.json#/$defs/uuidV7",
       "description": "Durable authority budget ledger identity bound by this immutable contract epoch."
     },
+    "worker_authorization_root_id": {
+      "$ref": "object-reference.schema.json#/$defs/uuidV7",
+      "description": "Daemon-issued immutable namespace for WorkerIterationAuthorization records bound to this TaskContract epoch. It equals the daemon-minted TaskContract identity and is not client-supplied."
+    },
     "allowed_state_domains": {
       "type": "array",
       "description": "Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.",
@@ -209,7 +213,8 @@
             "schema_version": {
               "enum": [
                 "cognitiveos.task-contract/0.1",
-                "cognitiveos.task-contract/0.2"
+                "cognitiveos.task-contract/0.2",
+                "cognitiveos.task-contract/0.3"
               ]
             }
           },
@@ -255,13 +260,18 @@
               "required": [
                 "budget_id"
               ]
+            },
+            {
+              "required": [
+                "worker_authorization_root_id"
+              ]
             }
           ]
         }
       }
     },
     {
-      "description": "Execution-bound v0.2 contracts require all authority bindings as one atomic set.",
+      "description": "Execution-bound v0.2 contracts require all authority bindings as one atomic set and cannot claim the later worker-authorization namespace.",
       "if": {
         "properties": {
           "header": {
@@ -277,10 +287,46 @@
         }
       },
       "then": {
+        "allOf": [
+          {
+            "required": [
+              "deadline",
+              "loop_object_id",
+              "budget_id"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "worker_authorization_root_id"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Execution-bound v0.3 contracts add one daemon-issued, immutable worker-authorization namespace. Per-iteration charge, loop CAS version, candidate and observations remain in append-only WorkerIterationAuthorization and LoopCheckpoint records.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.3"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
         "required": [
           "deadline",
           "loop_object_id",
-          "budget_id"
+          "budget_id",
+          "worker_authorization_root_id"
         ]
       }
     },

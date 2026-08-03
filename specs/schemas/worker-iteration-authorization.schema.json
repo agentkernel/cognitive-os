@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "worker-iteration-authorization.schema.json",
+  "title": "WorkerIterationAuthorization",
+  "description": "Immutable daemon-issued pre-dispatch authority for exactly one bounded worker iteration. Worker observations, receipts, progress and completion are excluded and must be validated through the LoopCheckpoint and Effect protocols.",
+  "type": "object",
+  "required": [
+    "header",
+    "task_contract_ref",
+    "worker_authorization_root_id",
+    "contract_epoch",
+    "iteration",
+    "expected_loop_version",
+    "selected_candidate_ref",
+    "intent_ref",
+    "effect_ref",
+    "budget_id",
+    "budget_charge",
+    "action_fingerprint",
+    "issued_fencing_epoch"
+  ],
+  "properties": {
+    "header": {
+      "allOf": [
+        { "$ref": "governed-object-header.schema.json" },
+        { "properties": { "type": { "const": "WorkerIterationAuthorization" } } }
+      ]
+    },
+    "task_contract_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "worker_authorization_root_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "contract_epoch": { "type": "integer", "minimum": 1 },
+    "iteration": { "type": "integer", "minimum": 1 },
+    "expected_loop_version": { "type": "integer", "minimum": 1 },
+    "selected_candidate_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "intent_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "effect_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "budget_id": { "$ref": "object-reference.schema.json#/$defs/uuidV7" },
+    "budget_charge": { "$ref": "common-defs.schema.json#/$defs/budget" },
+    "action_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "issued_fencing_epoch": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}
