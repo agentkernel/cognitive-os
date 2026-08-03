@@ -54,6 +54,16 @@ pub(crate) struct SchedulerAuthoritySnapshot {
     pub budget_id: BudgetId,
 }
 
+/// Immutable scheduler identity reconstructed from durable work during every
+/// daemon tick. The scheduler table intentionally stores only task lifecycle
+/// and fencing fields; binding identity remains anchored in Intent protocol
+/// rows and is never copied from a worker-local queue.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ResolvedSchedulerWork {
+    pub authority_binding: SchedulerAuthorityBinding,
+    pub task_binding: TaskBinding,
+}
+
 /// One daemon-owned scheduler admission result.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SchedulerDispatchAdmission {
@@ -628,6 +638,49 @@ where
     Ok(SchedulerEffectResolution {
         effect_object_id: intent_row.effect_object_id.clone(),
         closure,
+    })
+}
+
+/// Reconstruct the sole dispatchable TaskBinding from durable task work.
+///
+/// A scheduler row does not carry a mutable copy of contract or action
+/// identity. Each worker tick instead reads the current immutable contract
+/// epoch and requires exactly one matching persisted Intent. Missing,
+/// ambiguous, or internally inconsistent binding rows fail before lease
+/// acquisition, so recovery cannot guess which Effect a task should drive.
+pub(crate) fn resolve_scheduler_work_for_task<S>(
+    store: &S,
+    task_ref: &str,
+) -> Result<ResolvedSchedulerWork, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore,
+{
+    if task_ref.is_empty() {
+        return Err(SchedulerAuthorityError::EmptyTaskReference);
+    }
+    let contract_epoch = store
+        .current_contract_epoch(task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if contract_epoch <= 0 {
+        return Err(SchedulerAuthorityError::MissingContract(
+            task_ref.to_owned(),
+        ));
+    }
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    };
+    let intent_rows = store
+        .list_intents_for_task_binding(&task_binding)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
+    let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
+    Ok(ResolvedSchedulerWork {
+        authority_binding: SchedulerAuthorityBinding {
+            task_ref: task_ref.to_owned(),
+            action_fingerprint,
+        },
+        task_binding,
     })
 }
 
