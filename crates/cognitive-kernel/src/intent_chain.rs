@@ -845,7 +845,7 @@ where
     let header = compose_header(
         &cmd.contract_id,
         "TaskContract",
-        "cognitiveos.task-contract/0.2",
+        "cognitiveos.task-contract/0.3",
         &cmd.governance,
         vec![format!(
             "state://task/interpretation/{}",
@@ -906,6 +906,9 @@ where
             &admitted.record().record_id,
             &admitted.record().intent_digest,
         ),
+        // The daemon-minted TaskContract object identity is the immutable
+        // namespace root for its daemon-only per-iteration authorizations.
+        worker_authorization_root_id: Some(cmd.contract_id.to_generated()),
     };
     let value = serde_json::to_value(&contract)
         .map_err(|err| denial(format!("contract serialization: {err}")))

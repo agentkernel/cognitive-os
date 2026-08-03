@@ -25,7 +25,7 @@ use cognitive_store::scheduler::{
 use serde::Deserialize;
 use thiserror::Error;
 
-const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.2";
+const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.3";
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -184,8 +184,14 @@ fn parse_execution_bound_contract(
         ));
     }
 
-    serde_json::from_str(canonical_json)
-        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))
+    let contract: TaskContract = serde_json::from_str(canonical_json)
+        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    if contract.worker_authorization_root_id.is_none() {
+        return Err(SchedulerAuthorityError::MalformedContract(
+            "v0.3 contract has no worker authorization namespace".to_owned(),
+        ));
+    }
+    Ok(contract)
 }
 
 /// Reject scheduler work that was bound to a superseded TaskContract epoch.
@@ -312,7 +318,7 @@ mod tests {
     fn execution_schema_without_required_bindings_is_rejected_as_malformed() {
         let incomplete_execution_contract = r#"{
             "header": {
-                "schema_version": "cognitiveos.task-contract/0.2"
+                "schema_version": "cognitiveos.task-contract/0.3"
             }
         }"#;
 
