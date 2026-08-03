@@ -179,6 +179,7 @@ mod tests {
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
     use std::cell::Cell;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     fn scheduler_row(task_ref: &str) -> SchedulerRow {
         SchedulerRow {
@@ -191,6 +192,17 @@ mod tests {
             attempt_count: 0,
             cancel_requested: false,
         }
+    }
+
+    fn temporary_scheduler_database_path() -> std::path::PathBuf {
+        let unique_suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock must be after the Unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "cognitiveos-scheduler-authority-{}-{unique_suffix}.db",
+            std::process::id()
+        ))
     }
 
     fn committed_ceiling_stop() -> CommittedTransition {
@@ -373,9 +385,8 @@ mod tests {
 
     #[test]
     fn closed_effect_releases_the_matching_durable_lease_without_completing_the_task() {
-        let temporary_directory = tempfile::tempdir().unwrap();
-        let mut scheduler_repository =
-            SchedulerRepository::open(&temporary_directory.path().join("scheduler.db")).unwrap();
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
         let task_ref = "task://personal/durable-effect-closure";
         scheduler_repository
             .upsert(&scheduler_row(task_ref))
@@ -406,6 +417,8 @@ mod tests {
         let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
         assert_eq!(durable_row.state, SchedulerState::Succeeded.as_str());
         assert_eq!(durable_row.lease_owner, None);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
     }
 
     #[test]
