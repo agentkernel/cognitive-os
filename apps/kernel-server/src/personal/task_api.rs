@@ -554,12 +554,18 @@ fn writer_lease(store: &SqliteAuthorityStore) -> Result<WriterLease, TaskApiResp
             )
         })
 }
-fn correlation(principal: &str) -> UriRef {
+fn correlation(principal: &str) -> Result<UriRef, TaskApiResponse> {
     UriRef::parse(&format!(
         "corr://personal/{}",
         principal_digest(principal).trim_start_matches("sha256:")
     ))
-    .expect("derived correlation is a URI")
+    .map_err(|_| {
+        error(
+            503,
+            "TASK_CORRELATION_DERIVATION_FAILED",
+            "daemon could not derive a canonical correlation reference",
+        )
+    })
 }
 fn principal_digest(principal: &str) -> String {
     let mut hash: u64 = 0xcbf29ce484222325;
