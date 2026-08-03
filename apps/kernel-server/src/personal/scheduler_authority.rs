@@ -128,6 +128,14 @@ pub(crate) enum SchedulerAuthorityError {
     #[error("scheduler task contract epoch must be positive: {0}")]
     InvalidContractEpoch(i64),
     #[error(
+        "scheduler work binding is stale: {task_ref} requested epoch {requested_epoch}, current epoch {current_epoch}"
+    )]
+    StaleContractEpoch {
+        task_ref: String,
+        requested_epoch: i64,
+        current_epoch: i64,
+    },
+    #[error(
         "scheduler task contract epoch has no durable Effect binding: {task_ref} at {contract_epoch}"
     )]
     MissingEffectBinding {
@@ -807,6 +815,13 @@ where
             binding.task_ref.clone(),
         ));
     }
+    if binding.contract_epoch != contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: binding.task_ref.clone(),
+            requested_epoch: binding.contract_epoch,
+            current_epoch: contract_epoch,
+        });
+    }
     let contract_row = store
         .load_task_contract(&binding.task_ref, contract_epoch)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
@@ -988,10 +1003,15 @@ where
     S: AuthorityStore + ProtocolStore,
 {
     let worker_attempt = complete_scheduler_worker_attempt(admission, |dispatch| {
-        if dispatch.task_ref != task_binding.task_ref {
+        if dispatch.task_ref != task_binding.task_ref
+            || dispatch.contract_epoch != task_binding.contract_epoch
+        {
             return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
-                "leased task {} does not match bound task {}",
-                dispatch.task_ref, task_binding.task_ref
+                "leased task {} at epoch {} does not match bound task {} at epoch {}",
+                dispatch.task_ref,
+                dispatch.contract_epoch,
+                task_binding.task_ref,
+                task_binding.contract_epoch,
             )));
         }
         Ok(resolve_scheduler_effect_for_task_binding(store, task_binding)?.closure)

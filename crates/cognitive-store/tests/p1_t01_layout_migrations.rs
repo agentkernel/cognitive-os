@@ -8,7 +8,8 @@
 
 use cognitive_store::{
     MigrationPlanEntry, PersonalDataLayout, PersonalLayoutError, SqliteAuthorityStore,
-    SqliteInstallationStore, apply_database_migration_plan, prepare_personal_databases,
+    SqliteInstallationStore, apply_database_migration_plan, authority_migration_plan,
+    prepare_personal_databases,
 };
 use rusqlite::Connection;
 use std::fs;
@@ -128,6 +129,54 @@ fn reapply_prepare_is_replay_safe() {
         recorded_migration_versions(&layout.authority_database_path()),
         vec![1, 2, 3]
     );
+}
+
+#[test]
+fn scheduler_v2_work_migrates_to_epoch_one_without_losing_its_fence() {
+    let temporary_directory = TempDir::new().expect("temp dir");
+    let layout = hermetic_layout(&temporary_directory);
+    layout.ensure_directories().expect("ensure dirs");
+    let database_path = layout.data_dir().join("scheduler-v2.sqlite");
+    let migration_plan = authority_migration_plan();
+
+    apply_database_migration_plan(
+        &database_path,
+        &layout.backups_dir().join("scheduler.before-v2.sqlite"),
+        &migration_plan[..2],
+    )
+    .expect("apply v1 and v2 scheduler schema");
+    let connection = Connection::open(&database_path).expect("open v2 scheduler database");
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries \
+             (task_ref, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
+             VALUES (?1, 'leased', 'crashed-worker', 7, ?2, ?3, 4, 0)",
+            [
+                "task://tenant-a/v2-work",
+                "2026-08-01T12:01:00Z",
+                "2026-08-01T12:00:00Z",
+            ],
+        )
+        .expect("seed v2 scheduler lease");
+    drop(connection);
+
+    let report = apply_database_migration_plan(
+        &database_path,
+        &layout.backups_dir().join("scheduler.before-v3.sqlite"),
+        &migration_plan,
+    )
+    .expect("upgrade scheduler identity");
+    assert_eq!(report.applied_versions(), &[3]);
+    let connection = Connection::open(&database_path).expect("open v3 scheduler database");
+    let migrated_row: (i64, String, i64, i64) = connection
+        .query_row(
+            "SELECT contract_epoch, lease_owner, lease_epoch, attempt_count \
+             FROM scheduler_entries WHERE task_ref=?1 AND contract_epoch=1",
+            ["task://tenant-a/v2-work"],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .expect("v2 work is retained at epoch one");
+    assert_eq!(migrated_row, (1, "crashed-worker".to_owned(), 7, 4));
 }
 
 #[test]
