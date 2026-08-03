@@ -38,6 +38,20 @@ const MGMT_REQUEST = buildRequestEnvelope({
   messageId: "msg-m",
 });
 
+function buildWatchRequest(operation: "watch.open" | "watch.resume", payload: object) {
+  return buildRequestEnvelope({
+    operation,
+    kind: "read",
+    sender: "principal://tenant-a/user-1",
+    audience: "kernel://tenant-a/node-1",
+    correlationId: "corr-watch",
+    deadline: "2026-07-20T12:00:00Z",
+    schemaDigest: `sha256:${"ab".repeat(32)}`,
+    payload,
+    messageId: `msg-${operation}`,
+  });
+}
+
 test("in-memory transport records request envelopes and replies from the script", async () => {
   const transport = new InMemoryTransport("task", (envelope) =>
     buildResultEnvelope({
@@ -111,12 +125,63 @@ test("http transport parses SSE data lines into frame texts from GET /task/watch
     bearer: "task-secret",
     fetchImpl: fetchStub,
   });
+  const watchRequest = buildWatchRequest("watch.open", { cursor: null });
   const frames: string[] = [];
-  for await (const frame of transport.openStream(serializeEnvelope(REQUEST))) {
+  for await (const frame of transport.openStream(serializeEnvelope(watchRequest))) {
     frames.push(frame);
   }
   assert.deepEqual(frames, ['{"sequence":1}', '{"sequence":2}', '{"sequence":3}']);
-  assert.equal(seen[0], "GET https://kernel.local/task/watch");
+  assert.equal(
+    seen[0],
+    `GET https://kernel.local/task/watch?request=${encodeURIComponent(serializeEnvelope(watchRequest))}`,
+  );
+});
+
+test("task watch forwards its open envelope so the daemon can resume the authoritative cursor", async () => {
+  const seen: string[] = [];
+  const fetchStub: typeof fetch = (input, init) => {
+    seen.push(`${init?.method ?? "GET"} ${String(input)}`);
+    return Promise.resolve(new Response("", { status: 200 }));
+  };
+  const transport = new HttpSseTransport({
+    baseUrl: "https://kernel.local",
+    channel: "task",
+    bearer: "task-secret",
+    fetchImpl: fetchStub,
+  });
+  const watchRequest = buildWatchRequest("watch.resume", {
+    cursor: 7,
+    snapshot_version: 3,
+    high_watermark: 7,
+    dedupe_window: 32,
+  });
+
+  for await (const _ of transport.openStream(serializeEnvelope(watchRequest))) {
+    // This fixture emits no frames.
+  }
+
+  assert.equal(
+    seen[0],
+    `GET https://kernel.local/task/watch?request=${encodeURIComponent(serializeEnvelope(watchRequest))}`,
+  );
+});
+
+test("task watch rejects non-watch operations before opening a stream", async () => {
+  const transport = new HttpSseTransport({
+    baseUrl: "https://kernel.local",
+    channel: "task",
+    bearer: "task-secret",
+    fetchImpl: () => Promise.reject(new Error("network should not be touched")),
+  });
+
+  await assert.rejects(
+    async () => {
+      for await (const _ of transport.openStream(serializeEnvelope(REQUEST))) {
+        // A shell request must never be silently transformed into a watch.
+      }
+    },
+    /watch operation/,
+  );
 });
 
 test("management channel refuses to open a watch stream", async () => {

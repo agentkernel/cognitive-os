@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T02/task-api-watch` | P2-T02/D01 real Task API/watch vertical path | Lane-RUN | `lane/personal-p2-t02-task-api-watch` | `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/tests/p2_t02_task_api_watch.rs`; `packages/sdk-ts/src/transport.ts`; `packages/sdk-ts/src/transport.test.ts`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t02-task-api-watch-handoff.md` | Cursor session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 

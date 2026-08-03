@@ -164,10 +164,17 @@ export class HttpSseTransport implements AkpTransport {
     if (this.channel !== "task") {
       throw new Error("HttpSseTransport: watch streams bind the task channel only");
     }
-    // Parse (and discard) the open envelope so malformed opens fail closed
-    // before any network I/O; M5 --once watch is GET /task/watch.
-    parseRequestEnvelope(envelopeText);
-    const response = await this.fetchImpl(`${this.baseUrl}/task/watch`, {
+    // Parse before I/O and forward the exact envelope. The daemon owns the
+    // subscription/cursor decision; clients must not turn a reconnect into a
+    // fresh watch by silently discarding the resume position.
+    const envelope = parseRequestEnvelope(envelopeText);
+    if (!envelope.operation.startsWith("watch.")) {
+      throw new Error(
+        `HttpSseTransport: watch streams require a watch operation, received ${envelope.operation}`,
+      );
+    }
+    const requestParameter = encodeURIComponent(envelopeText);
+    const response = await this.fetchImpl(`${this.baseUrl}/task/watch?request=${requestParameter}`, {
       method: "GET",
       headers: { ...this.headers(), accept: "text/event-stream" },
     });
