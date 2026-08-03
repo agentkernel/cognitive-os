@@ -197,7 +197,7 @@ mod tests {
     fn temporary_scheduler_database_path() -> std::path::PathBuf {
         let unique_suffix = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("system clock must be after the Unix epoch")
+            .unwrap_or_default()
             .as_nanos();
         std::env::temp_dir().join(format!(
             "cognitiveos-scheduler-authority-{}-{unique_suffix}.db",
