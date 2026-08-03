@@ -929,8 +929,7 @@ mod tests {
     use cognitive_store::PersonalDataLayout;
 
     use super::{
-        LocalSessionAuthority, PersonalResourceBounds, TaskApi, ensure_loopback_bind,
-        handle_connection,
+        LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
     };
 
     fn test_fixture(test_name: &str) -> (PersonalDataLayout, Arc<Mutex<LocalSessionAuthority>>) {
