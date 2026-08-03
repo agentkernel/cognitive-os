@@ -54,8 +54,8 @@ create an unregistered public contract and violate the contract boundary.
 |---|---|
 | formal P2-T02/D01 slice and Lane-CTR prerequisite review | pass |
 | active lease conflict review | pass; no other active lease |
-| `pnpm run check:consistency` | not-run; pending this documentation checkpoint |
-| `git diff --check` | not-run; pending this documentation checkpoint |
+| `pnpm run check:consistency` | pass |
+| `git diff --check` | pass |
 | Rust build/test/Clippy | not-run; no implementation was started and local GNU Rust linking is prohibited |
 
 ## Non-claims
