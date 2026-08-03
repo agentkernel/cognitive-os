@@ -116,6 +116,16 @@ export function kernelServerPath(channel: ClientChannel, operation: string): str
     }
     return `/shell/${verb}`;
   }
+  const taskApiPaths: Record<string, string> = {
+    "intent.record": "/task/intent/record",
+    "intent.interpret": "/task/intent/interpret",
+    "task.preview": "/task/preview",
+    "task.admit": "/task/admit",
+  };
+  const taskApiPath = taskApiPaths[operation];
+  if (taskApiPath !== undefined) {
+    return taskApiPath;
+  }
   if (operation.startsWith("watch.")) {
     throw new Error(
       `HttpSseTransport(task): watch operations use openStream → GET /task/watch, not request()`,
