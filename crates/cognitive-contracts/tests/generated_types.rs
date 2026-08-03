@@ -179,7 +179,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        50,
+        52,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).

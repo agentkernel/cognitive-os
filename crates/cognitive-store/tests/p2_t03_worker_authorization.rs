@@ -6,10 +6,10 @@
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-use cognitive_domain::ObjectId;
+use cognitive_domain::{ObjectId, WallTimestamp};
 use cognitive_kernel::ports::{
-    DaemonOperationDescriptorRow, OperationCandidateProposalRow, StorePortError,
-    WorkerAuthorizationStore,
+    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, OperationCandidateProposalRow,
+    StorePortError, WorkerAuthorizationStore,
 };
 use cognitive_kernel::{EffectClass, ExecutorCapabilities, OperationDescriptor};
 use cognitive_store::SqliteAuthorityStore;
@@ -49,6 +49,24 @@ fn daemon_descriptor(descriptor_sequence: u64) -> DaemonOperationDescriptorRow {
             descriptor_version: 1,
         },
         canonical_json: format!("{{\"descriptor\":{descriptor_sequence}}}"),
+    }
+}
+
+fn authorization_snapshot(
+    snapshot_sequence: u64,
+    observed_at: &str,
+) -> DaemonAuthorizationSnapshotRow {
+    DaemonAuthorizationSnapshotRow {
+        snapshot_id: object_id(snapshot_sequence),
+        subject_ref: "principal://personal/daemon".to_owned(),
+        target_ref: "file:///workspace/input.txt".to_owned(),
+        action: "filesystem.read".to_owned(),
+        purpose: "task_execution".to_owned(),
+        grant_epoch: 1,
+        capability_set_version: 1,
+        revocation_epoch: 1,
+        observed_at: WallTimestamp::parse(observed_at).unwrap(),
+        canonical_json: format!("{{\"authorization_snapshot\":{snapshot_sequence}}}"),
     }
 }
 
@@ -105,4 +123,49 @@ fn daemon_descriptor_registry_is_append_only_and_resolves_exact_reference() {
         Some(original),
         "candidate admission must resolve the daemon-recorded descriptor, not a replacement"
     );
+}
+
+#[test]
+fn latest_daemon_authorization_snapshot_is_binding_specific_and_immutable() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&temporary_directory.path().join("authority.db"))
+        .expect("fresh authority database opens");
+    let first = authorization_snapshot(300, "2026-08-03T12:00:00Z");
+    let latest = authorization_snapshot(301, "2026-08-03T12:01:00Z");
+
+    store
+        .append_daemon_authorization_snapshot(&first)
+        .expect("first daemon authorization snapshot persists");
+    store
+        .append_daemon_authorization_snapshot(&latest)
+        .expect("later daemon authorization snapshot persists");
+
+    assert_eq!(
+        store
+            .load_latest_daemon_authorization_snapshot(
+                "principal://personal/daemon",
+                "file:///workspace/input.txt",
+                "filesystem.read",
+                "task_execution",
+            )
+            .expect("snapshot lookup succeeds"),
+        Some(latest.clone())
+    );
+    assert!(
+        store
+            .load_latest_daemon_authorization_snapshot(
+                "principal://personal/daemon",
+                "file:///workspace/input.txt",
+                "filesystem.delete",
+                "task_execution",
+            )
+            .expect("mismatched lookup succeeds")
+            .is_none(),
+        "an authorization snapshot cannot be reused for another action"
+    );
+
+    let duplicate = store
+        .append_daemon_authorization_snapshot(&latest)
+        .expect_err("snapshot identities are append-only");
+    assert!(matches!(duplicate, StorePortError::Conflict { .. }));
 }
