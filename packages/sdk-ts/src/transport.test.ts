@@ -83,6 +83,10 @@ test("kernel-server path map keeps management and task roots disjoint", () => {
   assert.equal(kernelServerPath("management", "management.inspect"), "/management/inspect");
   assert.equal(kernelServerPath("task", "shell.detach"), "/shell/detach");
   assert.equal(kernelServerPath("task", "shell.control"), "/shell/cancel");
+  assert.equal(kernelServerPath("task", "intent.record"), "/task/intent/record");
+  assert.equal(kernelServerPath("task", "intent.interpret"), "/task/intent/interpret");
+  assert.equal(kernelServerPath("task", "task.preview"), "/task/preview");
+  assert.equal(kernelServerPath("task", "task.admit"), "/task/admit");
   assert.throws(() => kernelServerPath("management", "shell.detach"), /refusing/);
   assert.throws(() => kernelServerPath("task", "management.inspect"), /unsupported/);
 });

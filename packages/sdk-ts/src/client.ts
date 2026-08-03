@@ -48,8 +48,8 @@ import type { commonDefs } from "@cognitiveos/contracts-ts";
 export const TASK_CHANNEL_OPERATIONS = [
   "intent.record",
   "intent.interpret",
-  "intent.admit",
-  "intent.supersede",
+  "task.preview",
+  "task.admit",
   "shell.preview",
   "shell.submit",
   "shell.attach",

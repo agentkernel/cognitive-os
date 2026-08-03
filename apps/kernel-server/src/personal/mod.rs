@@ -12,6 +12,7 @@ mod provider_proxy;
 mod readiness;
 mod scheduler_authority;
 mod server;
+mod task_api;
 
 pub use bounds::PersonalResourceBounds;
 pub use server::{PersonalDaemonConfig, serve_personal_loopback};
