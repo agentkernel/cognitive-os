@@ -519,11 +519,55 @@ pub struct DaemonOperationDescriptorRow {
     pub canonical_json: String,
 }
 
+/// One immutable daemon-only authorization snapshot. It records the current
+/// authorization currency and a previously evaluated grant for one exact
+/// subject, target, action, and purpose binding. Candidate producers cannot
+/// supply or replace these authority facts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaemonAuthorizationSnapshotRow {
+    /// Immutable snapshot identity.
+    pub snapshot_id: ObjectId,
+    /// Authenticated subject the grant applies to.
+    pub subject_ref: String,
+    /// Exact governed target reference.
+    pub target_ref: String,
+    /// Exact authorized action.
+    pub action: String,
+    /// Exact authorized purpose.
+    pub purpose: String,
+    /// Revocation epoch under which the grant was evaluated.
+    pub grant_epoch: i64,
+    /// Capability set version under which the grant was evaluated.
+    pub capability_set_version: i64,
+    /// Current revocation epoch at snapshot issuance.
+    pub revocation_epoch: i64,
+    /// Canonical decision-time wall timestamp.
+    pub observed_at: WallTimestamp,
+    /// Canonical daemon-issued authorization evidence.
+    pub canonical_json: String,
+}
+
 /// Durable append-only candidate input boundary for daemon-only worker
 /// authorization. Persisting a candidate merely makes it auditable; a
 /// separate daemon admission path must validate it before creating Intent,
 /// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
 pub trait WorkerAuthorizationStore {
+    /// Append an immutable daemon-only authorization snapshot.
+    fn append_daemon_authorization_snapshot(
+        &self,
+        snapshot: &DaemonAuthorizationSnapshotRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load the newest daemon authorization snapshot for an exact binding.
+    /// A missing snapshot is not an authorization grant and must fail closed.
+    fn load_latest_daemon_authorization_snapshot(
+        &self,
+        subject_ref: &str,
+        target_ref: &str,
+        action: &str,
+        purpose: &str,
+    ) -> Result<Option<DaemonAuthorizationSnapshotRow>, StorePortError>;
+
     /// Append a daemon-owned immutable descriptor. Non-authority clients,
     /// Pi, worker, and Provider components do not receive this write path.
     fn append_daemon_operation_descriptor(

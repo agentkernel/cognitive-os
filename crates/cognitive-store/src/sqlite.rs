@@ -22,18 +22,19 @@
 
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
-    DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5, WORKER_AUTHORIZATION_SCHEMA_V4,
+    DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
+    WORKER_AUTHORIZATION_SCHEMA_V4,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, DaemonOperationDescriptorRow,
-    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
-    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
-    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, WorkerAuthorizationStore,
+    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, DaemonAuthorizationSnapshotRow,
+    DaemonOperationDescriptorRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
+    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, WorkerAuthorizationStore,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
@@ -301,7 +302,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -1509,6 +1510,102 @@ impl IntentChainStore for SqliteAuthorityStore {
 }
 
 impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn append_daemon_authorization_snapshot(
+        &self,
+        snapshot: &DaemonAuthorizationSnapshotRow,
+    ) -> Result<(), StorePortError> {
+        let conn = self.lock()?;
+        let inserted = conn.execute(
+            "INSERT INTO daemon_authorization_snapshots
+               (snapshot_id, subject_ref, target_ref, action, purpose, grant_epoch,
+                capability_set_version, revocation_epoch, observed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            (
+                snapshot.snapshot_id.as_str(),
+                snapshot.subject_ref.as_str(),
+                snapshot.target_ref.as_str(),
+                snapshot.action.as_str(),
+                snapshot.purpose.as_str(),
+                snapshot.grant_epoch,
+                snapshot.capability_set_version,
+                snapshot.revocation_epoch,
+                snapshot.observed_at.as_str(),
+                snapshot.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "daemon authorization snapshot {} already persisted",
+                    snapshot.snapshot_id
+                ),
+            }),
+            Err(error) => Err(unavailable("insert daemon authorization snapshot")(error)),
+        }
+    }
+
+    fn load_latest_daemon_authorization_snapshot(
+        &self,
+        subject_ref: &str,
+        target_ref: &str,
+        action: &str,
+        purpose: &str,
+    ) -> Result<Option<DaemonAuthorizationSnapshotRow>, StorePortError> {
+        let conn = self.lock()?;
+        let result = conn.query_row(
+            "SELECT snapshot_id, subject_ref, target_ref, action, purpose, grant_epoch,
+                    capability_set_version, revocation_epoch, observed_at, canonical_json
+             FROM daemon_authorization_snapshots
+             WHERE subject_ref=?1 AND target_ref=?2 AND action=?3 AND purpose=?4
+             ORDER BY snapshot_sequence DESC LIMIT 1",
+            (subject_ref, target_ref, action, purpose),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                    row.get(7)?,
+                    row.get::<_, String>(8)?,
+                    row.get(9)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                snapshot_id,
+                subject_ref,
+                target_ref,
+                action,
+                purpose,
+                grant_epoch,
+                capability_set_version,
+                revocation_epoch,
+                observed_at,
+                canonical_json,
+            )) => Ok(Some(DaemonAuthorizationSnapshotRow {
+                snapshot_id: ObjectId::parse(&snapshot_id)
+                    .map_err(|error| corrupt("daemon authorization snapshot id", error))?,
+                subject_ref,
+                target_ref,
+                action,
+                purpose,
+                grant_epoch,
+                capability_set_version,
+                revocation_epoch,
+                observed_at: WallTimestamp::parse(&observed_at)
+                    .map_err(|error| corrupt("daemon authorization snapshot time", error))?,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query daemon authorization snapshot")(error)),
+        }
+    }
+
     fn append_daemon_operation_descriptor(
         &self,
         descriptor: &DaemonOperationDescriptorRow,

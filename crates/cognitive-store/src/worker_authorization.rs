@@ -63,3 +63,33 @@ BEGIN SELECT RAISE(ABORT, 'append-only: daemon operation descriptors are immutab
 pub fn daemon_operation_descriptor_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(5, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5)
 }
+
+/// Migration v6: daemon-only append-only authorization decision snapshots.
+pub const DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6: &str = "
+CREATE TABLE IF NOT EXISTS daemon_authorization_snapshots (
+  snapshot_sequence       INTEGER PRIMARY KEY AUTOINCREMENT,
+  snapshot_id             TEXT NOT NULL UNIQUE,
+  subject_ref             TEXT NOT NULL,
+  target_ref              TEXT NOT NULL,
+  action                  TEXT NOT NULL,
+  purpose                 TEXT NOT NULL,
+  grant_epoch             INTEGER NOT NULL CHECK (grant_epoch >= 1),
+  capability_set_version  INTEGER NOT NULL CHECK (capability_set_version >= 1),
+  revocation_epoch         INTEGER NOT NULL CHECK (revocation_epoch >= 1),
+  observed_at             TEXT NOT NULL,
+  canonical_json          TEXT NOT NULL
+) STRICT;
+CREATE INDEX IF NOT EXISTS daemon_authorization_snapshots_binding
+ON daemon_authorization_snapshots (subject_ref, target_ref, action, purpose, snapshot_sequence DESC);
+CREATE TRIGGER IF NOT EXISTS daemon_authorization_snapshots_append_only_update
+BEFORE UPDATE ON daemon_authorization_snapshots
+BEGIN SELECT RAISE(ABORT, 'append-only: daemon authorization snapshots are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS daemon_authorization_snapshots_append_only_delete
+BEFORE DELETE ON daemon_authorization_snapshots
+BEGIN SELECT RAISE(ABORT, 'append-only: daemon authorization snapshots are immutable'); END;
+";
+
+/// The version-6 daemon authorization snapshot migration entry.
+pub fn daemon_authorization_snapshot_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(6, DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6)
+}
