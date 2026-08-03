@@ -31,6 +31,51 @@ fn runnable_row(task_ref: &str) -> SchedulerRow {
     }
 }
 
+#[test]
+fn durable_discovery_reopens_only_non_terminal_scheduler_work() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut repository = open_repo(&dir);
+    repository
+        .upsert(&runnable_row("task://tenant-a/runnable"))
+        .unwrap();
+    repository
+        .upsert(&SchedulerRow {
+            task_ref: "task://tenant-a/leased".to_owned(),
+            state: SchedulerState::Leased.as_str().to_owned(),
+            lease_owner: Some("crashed-worker".to_owned()),
+            lease_epoch: 4,
+            lease_expires: Some("2026-08-01T12:00:30Z".to_owned()),
+            next_eligible: "2026-08-01T12:00:00Z".to_owned(),
+            attempt_count: 1,
+            cancel_requested: false,
+        })
+        .unwrap();
+    repository
+        .upsert(&SchedulerRow {
+            task_ref: "task://tenant-a/closed".to_owned(),
+            state: SchedulerState::Succeeded.as_str().to_owned(),
+            lease_owner: None,
+            lease_epoch: 2,
+            lease_expires: None,
+            next_eligible: "2026-08-01T12:00:00Z".to_owned(),
+            attempt_count: 1,
+            cancel_requested: false,
+        })
+        .unwrap();
+    drop(repository);
+
+    // Reopen models a daemon crash: discovery includes runnable and leased
+    // recovery candidates, but never a terminal row.
+    let recovered = open_repo(&dir).list_recoverable().unwrap();
+    assert_eq!(
+        recovered
+            .iter()
+            .map(|row| row.task_ref.as_str())
+            .collect::<Vec<_>>(),
+        vec!["task://tenant-a/leased", "task://tenant-a/runnable"]
+    );
+}
+
 // ---------------------------------------------------------------------
 // 1. lease is exclusive (duplicate worker acquire refused by CAS)
 // ---------------------------------------------------------------------
