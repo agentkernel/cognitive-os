@@ -1,0 +1,18 @@
+{
+  "id": "TASK-INTENT-API-009",
+  "title": "Reject client-supplied governance facts on Task intent record",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": ["core_digital"],
+  "requirement_ids": ["REQ-INTENT-RECORD-001"],
+  "input": {
+    "operation": "intent.record",
+    "authenticated_task_channel": true,
+    "request_contains": ["raw_expression", "governance", "writer_lease"]
+  },
+  "expected": {
+    "recorded": false,
+    "error": {"code": "SCHEMA_MISMATCH", "category": "protocol"},
+    "authority_mutation": false
+  }
+}
