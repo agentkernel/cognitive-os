@@ -1,0 +1,26 @@
+{
+  "id": "TASK-PREVIEW-ADMIT-008",
+  "title": "Reject a forged preview digest before TaskContract admission",
+  "version": "0.1",
+  "layer": "shell-intent-lifecycle",
+  "profiles": [
+    "core_digital"
+  ],
+  "requirement_ids": [
+    "REQ-INTENT-ADMISSION-001"
+  ],
+  "input": {
+    "operation": "task.admit",
+    "server_issued_preview_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "submitted_preview_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "authority_mutation_started": false
+  },
+  "expected": {
+    "admitted": false,
+    "error": {
+      "code": "DIGEST_MISMATCH",
+      "category": "protocol"
+    },
+    "authority_mutation": false
+  }
+}

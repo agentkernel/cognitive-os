@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-preview-request.schema.json",
+  "title": "CognitiveOS TaskPreviewRequest",
+  "description": "Client composition input for the daemon-owned task.preview operation. This is a pre-admission draft, not a TaskContract and not authority state. The authenticated daemon derives governance facts and the contract identity; callers cannot provide a governed header, contract epoch, acceptance fact, or preview digest.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_contract_draft"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.task-preview-request/0.1"
+    },
+    "task_contract_draft": {
+      "$ref": "#/$defs/taskContractDraft"
+    }
+  },
+  "$defs": {
+    "taskContractDraft": {
+      "title": "Pre-admission TaskContract composition",
+      "type": "object",
+      "required": [
+        "task_ref",
+        "objective",
+        "scope",
+        "conditions",
+        "budget",
+        "max_iterations",
+        "max_retries",
+        "deadline",
+        "loop_object_id",
+        "budget_id",
+        "allowed_state_domains",
+        "allowed_tools"
+      ],
+      "properties": {
+        "task_ref": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "in_scope",
+            "out_of_scope"
+          ],
+          "properties": {
+            "in_scope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "out_of_scope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind",
+              "description"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "acceptance",
+                  "stop",
+                  "escalation",
+                  "wait",
+                  "constraint"
+                ]
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "verifier_ref": {
+                "$ref": "common-defs.schema.json#/$defs/uriRef"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "contains": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "acceptance"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "budget": {
+          "$ref": "common-defs.schema.json#/$defs/budget"
+        },
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "loop_object_id": {
+          "$ref": "object-reference.schema.json#/$defs/uuidV7"
+        },
+        "budget_id": {
+          "$ref": "object-reference.schema.json#/$defs/uuidV7"
+        },
+        "allowed_state_domains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowed_tools": {
+          "type": "array",
+          "items": {
+            "$ref": "common-defs.schema.json#/$defs/uriRef"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

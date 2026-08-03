@@ -45,7 +45,11 @@ export * as shellControlRequest from "./shell-control-request.js";
 export * as shellStatusView from "./shell-status-view.js";
 export * as stateTransitionRecord from "./state-transition-record.js";
 export * as stateTransitionRequest from "./state-transition-request.js";
+export * as taskAdmitRequest from "./task-admit-request.js";
+export * as taskAdmitResult from "./task-admit-result.js";
 export * as taskContract from "./task-contract.js";
+export * as taskPreviewRequest from "./task-preview-request.js";
+export * as taskPreviewResult from "./task-preview-result.js";
 export * as userIntentRecord from "./user-intent-record.js";
 export * as watchSubscription from "./watch-subscription.js";
 export * as worldState from "./world-state.js";
@@ -95,7 +99,11 @@ export const SCHEMA_DIGESTS = {
   "shell-status-view.schema.json": "sha256:d4cf8856c906db93052aaebc1f3cfa59a49fa7a242b31bbea3a3d7205fcb12ab",
   "state-transition-record.schema.json": "sha256:520f8b1bddb55b64c9bdc489ef971cbe22cad3bb281527e1d83e240c18c7429c",
   "state-transition-request.schema.json": "sha256:d63cb89d20e15ad9cd0ee43d0e8b6df21dec463dede71613759f20e5fdf95f59",
+  "task-admit-request.schema.json": "sha256:c7fa6c8fb1baa16fc0235a2456d64da0ee3b2984bb676b203e8233345ad52e27",
+  "task-admit-result.schema.json": "sha256:4f1c320b4ced96360bb6df59b53fce6af91ab733db97c39a1f5a63765b6eb4bd",
   "task-contract.schema.json": "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+  "task-preview-request.schema.json": "sha256:683f0f6109630741619d9f8d071d6cdcc3ceea8043a2ab025be486cdc6560cd9",
+  "task-preview-result.schema.json": "sha256:d036fcfd1815228b0cb6e850f14dbb1af3a18bb8daf75e70ed6dd4d18d968986",
   "user-intent-record.schema.json": "sha256:b3064740e47c0e67bd5646f20a87db33662858e913e90ff631fe182ef51383b5",
   "watch-subscription.schema.json": "sha256:1e2b2d6439b306cf558fdb22ad6c45bfcaee41b146940d97d377cd71fa321e3a",
   "world-state.schema.json": "sha256:e5a82a6eabc95d11f1404e055c3e818fc30c4a46788d2c9a0c280109b74fb4d1",

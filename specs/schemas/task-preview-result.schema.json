@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-preview-result.schema.json",
+  "title": "CognitiveOS TaskPreviewResult",
+  "description": "Daemon-issued, digest-bound preview returned by task.preview. The preview is reviewable input to task.admit; it is not an admitted TaskContract, dispatch receipt, Effect result, or Task completion signal.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "preview_digest",
+    "task_ref",
+    "objective",
+    "condition_count",
+    "budget"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.task-preview-result/0.1"
+    },
+    "preview_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "task_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "condition_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "budget": {
+      "$ref": "common-defs.schema.json#/$defs/budget"
+    }
+  },
+  "additionalProperties": false
+}

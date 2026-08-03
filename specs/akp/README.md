@@ -175,7 +175,7 @@ AKP 可传递或引用 package/installation/compatibility、memory candidate/adm
 
 
 ## 13. Shell、意图与观察协议映射
-AKP 可传递 `UserIntentRecord`、`IntentInterpretation`、`IntentAdmissionDecision`、`ShellActionProposal`、`ShellCommandPreview`、`TargetResolution`、`WatchSubscription` 与 `ShellStatusView`。操作族为 `intent.record|interpret|admit|supersede`、`shell.preview|submit|attach|control` 和 `watch.open|ack|resume|close`。
+AKP 可传递 `UserIntentRecord`、`IntentInterpretation`、`IntentAdmissionDecision`、`ShellActionProposal`、`ShellCommandPreview`、`TargetResolution`、`WatchSubscription` 与 `ShellStatusView`。操作族为 `intent.record|interpret|admit|supersede`、`task.preview|admit`、`shell.preview|submit|attach|control` 和 `watch.open|ack|resume|close`。`task.preview` 使用 [task-preview-request.schema.json](../schemas/task-preview-request.schema.json) 与 [task-preview-result.schema.json](../schemas/task-preview-result.schema.json)；它生成服务端签发的 digest-bound preview，但不持久化 TaskContract。`task.admit` 使用 [task-admit-request.schema.json](../schemas/task-admit-request.schema.json) 与 [task-admit-result.schema.json](../schemas/task-admit-result.schema.json)；接收方 MUST 重算 draft digest，并在任何 authority mutation 前同时核验服务端 preview digest、显式 interpretation acceptance 和 expected contract epoch。admitted result 仅标识 immutable TaskContract，不表示 dispatch、Effect、verification 或 Task completion。
 
 [REQ-AKP-SHELL-001] `shell.submit` **MUST** 固定 channel、proposal/preview digest、resolved target strong refs、expected versions、contract epoch、idempotency key 与 authorization/approval refs；接收方不得重新解释原始自然语言来改变已确认动作。
 

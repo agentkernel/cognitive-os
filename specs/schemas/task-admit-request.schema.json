@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-admit-request.schema.json",
+  "title": "CognitiveOS TaskAdmitRequest",
+  "description": "Client request for the daemon-owned task.admit operation. The caller returns the server-issued preview digest and explicit interpretation acceptance; the daemon recomputes the draft digest and performs the authoritative acceptance and epoch-CAS checks before any mutation.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "preview_digest",
+    "acceptance",
+    "task_contract_draft",
+    "expected_current_epoch"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.task-admit-request/0.1"
+    },
+    "preview_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "interpretation_id",
+        "accepted_by",
+        "accepted_digest"
+      ],
+      "properties": {
+        "interpretation_id": {
+          "$ref": "object-reference.schema.json#/$defs/uuidV7"
+        },
+        "accepted_by": {
+          "$ref": "common-defs.schema.json#/$defs/uriRef"
+        },
+        "accepted_digest": {
+          "$ref": "common-defs.schema.json#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "task_contract_draft": {
+      "$ref": "task-preview-request.schema.json#/$defs/taskContractDraft"
+    },
+    "expected_current_epoch": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}
