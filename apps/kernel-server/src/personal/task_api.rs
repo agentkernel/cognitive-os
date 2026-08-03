@@ -107,11 +107,17 @@ impl TaskApi {
                 self.admit(body, authenticated_principal)
             }
             "GET" if method_path.starts_with("GET /task/watch") => self.watch(method_path),
-            _ => error(
-                404,
-                "TASK_ROUTE_NOT_FOUND",
-                "unknown authenticated task route",
-            ),
+            _ => TaskApiResponse {
+                status: 200,
+                body: json!({
+                    "status": "ok",
+                    "channel": "task",
+                    "authority_side_effects": false,
+                    "note": "authenticated task front door; no Task API operation matched"
+                })
+                .to_string(),
+                content_type: "application/json",
+            },
         }
     }
 
