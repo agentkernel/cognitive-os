@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/scheduler-bounded-harness-worker-recovery` | P2-T03/D05 scheduler-to-BoundedHarness worker and restart-safe recovery | Lane-RUN | `lane/run-p2-t03-d05-worker-recovery` | `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/**`; focused D05 tests; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t03-d05-*.md` | Cursor session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 
