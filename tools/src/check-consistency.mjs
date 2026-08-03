@@ -815,6 +815,69 @@ for (const commandEnvironmentGuardDocument of commandEnvironmentGuardDocuments) 
   }
 }
 
+// ---------- 6c.1: recoverable checkpoint and merge-boundary guards
+
+const checkpointDeliveryGuardDocuments = [
+  {
+    path: "AGENTS.md",
+    requiredFragments: [
+      "CHECKPOINT-DELIVERY-01",
+      "checkpoint commit",
+      "Draft PR",
+      "持续 Git 交付权限",
+      "自动转为 ready 并合并",
+      "禁止 merge",
+      "dirty handoff",
+    ],
+  },
+  {
+    path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
+    requiredFragments: [
+      "CHECKPOINT-DELIVERY-01",
+      "Checkpoint persistence is not Slice closure",
+      "standing delivery authorization",
+      "mark the PR ready and merge it",
+      "Draft PR",
+      "ready PR",
+      "Fast resume protocol",
+      "dirty handoff",
+    ],
+  },
+  {
+    path: "docs/standards/docs-sync-contract.md",
+    requiredFragments: [
+      "CHECKPOINT-DELIVERY-01",
+      "checkpoint-delivery guard removal",
+      "standing delivery authorization",
+      "自动 ready/merge",
+      "未完成 Slice 的 PR 必须保持 Draft",
+      "coherent dirty handoff",
+    ],
+  },
+];
+
+for (const checkpointDeliveryGuardDocument of checkpointDeliveryGuardDocuments) {
+  const checkpointDeliveryGuardPath = repoPath(
+    ...checkpointDeliveryGuardDocument.path.split("/"),
+  );
+  if (!existsSync(checkpointDeliveryGuardPath)) {
+    fail(
+      checkpointDeliveryGuardDocument.path,
+      "checkpoint-delivery guard document is missing",
+    );
+    continue;
+  }
+  const checkpointDeliveryGuardText = readText(checkpointDeliveryGuardPath);
+  for (const requiredFragment of checkpointDeliveryGuardDocument.requiredFragments) {
+    if (!checkpointDeliveryGuardText.includes(requiredFragment)) {
+      fail(
+        checkpointDeliveryGuardDocument.path,
+        `checkpoint-delivery guard is missing required fragment: ${requiredFragment}`,
+      );
+    }
+  }
+}
+
 // ---------- 6d: dated prompt boundary and B01 Gate honesty
 
 const legacyPromptPrefixPath = repoPath("docs", "prompts", "common-prefix.md");
@@ -1161,5 +1224,5 @@ if (failures.length > 0) {
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
     `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, Personal plan/Gates, ` +
-    `design sources, command/environment routing, prompt boundary, and leases verified)`,
+    `design sources, command/environment routing, checkpoint delivery, prompt boundary, and leases verified)`,
 );

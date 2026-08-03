@@ -43,6 +43,30 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   validation 实际通过后才能关闭。实现已存在但验证环境不可用时，记录为 `blocked`
   并转移到预先声明的 Linux/CI 验证路径；不得把格式或 consistency 通过写成切片完成。
 
+### Git checkpoint 与交付协议
+
+- **`CHECKPOINT-DELIVERY-01`：** Git 持久化与 Slice 完成是独立维度。一个 coherent、
+  secret-free、归属清晰且通过全部本地 eligible checks 的 `in-progress` / `blocked` Slice
+  通常应形成 checkpoint commit；required remote CI 是 ready/merge 和 Slice `done` 的
+  条件，不是创建 checkpoint commit 的前置条件。
+- 实现任务不得直接在 `main` 累积。仓库 owner 已授予持续 Git 交付权限：使用 Slice 专属
+  branch，coherent 改动通过本地 eligible checks 后，代理必须自动 commit、push，并创建或
+  更新 **Draft PR**，不在每个新窗口重复等待授权。Draft PR 用于 CI、exact-revision Linux
+  验证和跨窗口恢复，必须保持 Draft，禁止 merge，也不得因为 commit、push、PR 或绿色的
+  非完整检查而把 Slice 标为 `done`；用户明确要求暂停交付时除外。
+- 同一 PR 可随实现推进自动追加 checkpoint；只有正式 Slice 出口、focused negatives、
+  supported validation、required CI、文档/证据同步和 review 要求全部满足后，代理才默认
+  自动转为 ready 并合并。未完成 checkpoint、失败/待运行检查、产品/规范语义待决或需要
+  用户批准的 secret/基础设施操作存在时禁止合并；force push 永不包含在持续授权中。
+- 新窗口优先做快速恢复：确认 branch、clean/dirty、HEAD 与 upstream、Draft PR/checks、最新
+  handoff 和 active lease；若它们一致，不重复全仓 Git 审计。Linux/native validation 只消费
+  已 push 的 immutable checkpoint revision。
+- 正常会话禁止留下未提交的 coherent 任务改动。`dirty handoff` 只允许用于 non-coherent
+  中间态、未知改动、ownership/safety 冲突或用户明确暂停交付；必须列出 affected paths、
+  原因、已执行检查、owner 和单一 recovery action，而不是无说明退出。
+- Handoff 至少记录：Slice/status、branch、完整 HEAD、upstream、PR URL/状态、worktree 状态、
+  implemented、remaining、validation 的 pass/fail/not-run、non-claims 和 next action。
+
 ## 不可放松的不变量
 
 1. Rust daemon 是唯一 authority writer；Pi、CLI、SDK、UI 和 fixture 都是客户端。

@@ -126,6 +126,53 @@ delivery-slice status, and Gate/campaign status. A task can remain
 `blocked` without blocking unrelated tasks whose `implementation_requires` are
 satisfied.
 
+## 2.2 Git delivery states and recoverable checkpoints
+
+**`CHECKPOINT-DELIVERY-01`: Checkpoint persistence is not Slice closure.** Git
+delivery state is a fourth operational dimension and does not replace task,
+Slice, evidence or Gate status:
+
+| Git delivery state | Purpose | What it does not mean |
+|---|---|---|
+| coherent worktree | locally reviewable change owned by one lease | durable or remotely recoverable |
+| checkpoint commit | immutable, scoped and secret-free recovery point | Slice `done` or CI pass |
+| pushed checkpoint | exact revision available to CI/Linux and another window | ready to merge |
+| Draft PR | review/CI container for one active Slice | approval to merge or close the lease |
+| ready PR | complete Slice exit submitted for final review | automatic Gate/release/Profile promotion |
+| merged closure | accepted repository delivery with lease closed | product Gate pass unless separately proven |
+
+An incomplete Slice normally accumulates coherent checkpoint commits on its
+dedicated branch. The repository owner grants standing delivery authorization:
+after locally eligible safeguards pass, the agent automatically commits, pushes
+and creates or updates a Draft PR without asking again in each window, unless
+the user explicitly pauses delivery. Required remote CI is a precondition for
+ready/merge and Slice closure, not for persisting a checkpoint. A Draft PR must
+remain Draft even if its currently applicable checks are green; green checks do
+not prove that missing Slice exit items exist.
+
+One PR may graduate from Draft to ready after all formal exit items are present.
+When focused negative tests, supported validation, required CI, evidence
+synchronization and review requirements all pass, standing authorization also
+allows the agent to mark the PR ready and merge it without another routine
+confirmation. The authorization never permits merging an incomplete Slice,
+bypassing a failed/pending check, resolving a product/normative decision,
+performing a secret/infrastructure operation or force pushing. Direct feature
+work on `main` and merging an explicitly incomplete checkpoint are prohibited.
+
+A coherent checkpoint must satisfy all locally eligible safeguards: declared
+lease scope, reviewed staged paths, no secret material, no unexpected syntax or
+behavior failure, and explicit `not-run`/blocker records for validation that
+requires another environment. An intentionally failing failure-first checkpoint
+is allowed only when its failure is isolated, expected and named in the Draft
+PR/handoff; it cannot be ready or merged.
+
+Native Linux and remote CI consume pushed immutable revisions. Copying an
+uncommitted tree, testing a stale remote snapshot or reporting a local diff as
+the tested revision is invalid. If a checkpoint PR is accidentally merged while
+the Slice is incomplete, preserve the honest Slice status, close the merged
+branch lease, record the premature merge, and require a new continuation branch
+and lease. Do not rewrite history or retroactively claim closure.
+
 ## 3. Validation stages
 
 ### 3.0 Command shell and environment routing
@@ -160,26 +207,34 @@ The canonical capability registry is
 Handoffs may record an execution result but cannot redefine these routing
 rules.
 
-### Before commit
+### Before checkpoint commit
 
 - observe the intended failure-first test fail for behavior changes;
-- run affected package tests and focused negative/regression tests;
+- run affected package tests and focused negative/regression tests available on
+  the selected environment;
 - run affected lint and formatting checks;
 - run secret/diff checks applicable to the changed paths;
-- have no known failure in behavior affected by the commit.
+- have no unexpected known failure in behavior affected by the commit;
+- inspect and stage only paths owned by the active lease.
 
-### Before push
+### Before checkpoint push or Draft PR update
 
 - run broader relevant regressions and repository consistency checks where the
   supported local toolchain is available;
 - record every required check that was not run and why;
 - inspect staged paths and the complete branch push surface.
+- record the full commit hash and confirm that remote validation will consume
+  that exact revision;
+- keep the PR Draft while any formal Slice exit item remains incomplete.
 
-### Before merge or task completion
+### Before ready, merge or task completion
 
 - all required protected-branch CI checks are green;
 - no required failure is unresolved;
+- every formal Slice exit item and supported validation is satisfied;
 - canonical task status, current progress snapshot, and handoff are reconciled.
+- the PR is explicitly changed from Draft to ready only after these facts are
+  true; auto-merge must not bypass this transition.
 
 Before delivery-slice closure, the author must also reconcile the slice ID,
 its exact exit checklist, the strongest actual evidence level, and the next
@@ -187,10 +242,10 @@ executable slice. If a required environment is unavailable, close the
 implementation lease only with a `blocked` slice record; do not label the
 slice `done` merely because formatting or consistency checks passed.
 
-A commit may exist while remote CI is pending. Unsupported local environments
-are recorded as `not-run`; they are neither pass evidence nor an automatic
-blocker for an isolated commit. A required red check must never be merged or
-used for a completion claim.
+A checkpoint commit and Draft PR may exist while remote CI is pending.
+Unsupported local environments are recorded as `not-run`; they are neither pass
+evidence nor an automatic blocker for an isolated checkpoint. A required red
+check must never be merged or used for a completion claim.
 
 ## 4. Documentation closure
 
@@ -201,7 +256,33 @@ test evidence, non-claims, and remote visibility.
 
 Update a handoff when transferring or ending a task/session, not after every
 mechanical commit. Handoffs carry operational continuity but never override the
-formal task plan or Gate ledger.
+formal task plan or Gate ledger. A normal handoff records:
+
+- Slice ID and honest status;
+- branch, full HEAD hash and upstream branch;
+- PR URL and Draft/ready/merged state;
+- clean or dirty worktree state;
+- implemented and remaining exit items;
+- each required validation as `pass`, `fail` or `not-run` with environment;
+- evidence boundary, non-claims and one next executable action.
+
+Ending a session with coherent task changes only in the worktree is not the
+normal path. A `dirty handoff` is allowed only for a non-coherent intermediate
+state, unexpected pre-existing changes, an ownership/safety conflict, or an
+explicit user pause. It must list every affected path, the reason it cannot be
+checkpointed, checks already run, owner and one recovery action. Absent a user
+pause, the standing delivery authorization requires automatic checkpoint
+commit, push and Draft PR update instead of forcing the next window to
+rediscover the worktree.
+
+### Fast resume protocol
+
+A new window first verifies only the recorded recovery tuple: current branch,
+worktree clean/dirty state, local HEAD, upstream HEAD, PR state/checks, active
+lease and latest matching handoff. When that tuple is consistent, continue from
+the handoff's next action without repeating a broad repository Git audit. Expand
+inspection only if the tuple differs, the tree is dirty, the lease is missing,
+the PR was merged/closed unexpectedly, or new unowned changes appear.
 
 ## 5. Change classification
 
@@ -252,10 +333,12 @@ for claim and heartbeat. `PROGRESS.md` may only reference an active `lease_id`
 or `none`; it must not maintain a second lease status table. Closed leases move
 out of the active table and cannot block future work.
 
-A merged PR must close its lease in the same closure delivery. If a merged
-branch is later found still active, the first non-overlapping governance
-session may move that row to closed while preserving the merged work and all
-unrelated lease rows.
+A Draft PR does not close its lease. A ready PR that merges must close its lease
+in the same closure delivery. If any merged branch is later found still active,
+the first non-overlapping governance session may move that row to closed while
+preserving the merged work and all unrelated lease rows. If the underlying Slice
+is incomplete, it remains `in-progress` or `blocked` and needs a new continuation
+branch/lease; the old merged lease must not be reused.
 
 ## 7. Forward-progress protocol
 
