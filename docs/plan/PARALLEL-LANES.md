@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T02/pi-sidecar-parity` | P2-T02/D04 Pi Shell private sidecar Task/resource application parity and non-authority isolation | Lane-RUN | `lane/run-p2-t02-pi-sidecar-parity` | `packages/pi-cognitiveos/src/daemon-client.ts`; `packages/pi-cognitiveos/src/daemon-client.test.ts`; `packages/pi-cognitiveos/src/test-support.ts`; `packages/pi-cognitiveos/src/extension.ts`; `packages/pi-cognitiveos/src/extension.test.ts`; `packages/pi-cognitiveos/src/index.ts`; `packages/pi-cognitiveos/README.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t02-pi-sidecar-parity-handoff.md` | Cursor autonomous session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 

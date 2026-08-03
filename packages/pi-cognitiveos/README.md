@@ -19,6 +19,7 @@ and advances no Task.
 | `session_start` | reads `GET /personal/status` from the Personal daemon and shows the real projection; warns when the first conversation is blocked |
 | `/cognitive-status` | prints the same daemon facts on demand |
 | Provider adapter | registers the daemon-selected model and sends Provider traffic through the daemon-owned proxy without exposing its secret to Pi |
+| Private sidecar client | reads the versioned Resource projection/watch over a management session and Task watch over a separate Task session; both streams require a snapshot-first response |
 
 ## Why default-deny on tools
 
@@ -65,7 +66,11 @@ Exactly two local files are read, the same ones `cognitive` reads:
   bootstrap, used once to mint a `management`-channel bearer and never logged,
   displayed or stored.
 
-`XDG_RUNTIME_DIR` is required and fails closed, matching the Rust layout.
+`XDG_RUNTIME_DIR` is required and fails closed, matching the Rust layout. The
+sidecar keeps management and Task bearers separately, never moves a cursor
+between those paths, remints a refused read bearer at most once, and makes no
+mutation request. Task completion, Effect progression, verification, dispatch,
+and SQLite authority writes remain daemon-only operations.
 
 ## Status and non-claims
 

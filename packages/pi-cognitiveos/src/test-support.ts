@@ -174,6 +174,12 @@ export interface FakeDaemonOptions {
   readonly bootstrapSecret: string;
   /** Projection returned from `GET /personal/status`. */
   readonly statusBody: string;
+  /** Private projection returned from `GET /resource/v1/projection`. */
+  readonly resourceProjectionBody?: string;
+  /** Snapshot-first resource stream returned from `GET /resource/v1/watch`. */
+  readonly resourceWatchBody?: string;
+  /** Snapshot-first Task stream returned from `GET /task/watch`. */
+  readonly taskWatchBody?: string;
   /**
    * How many `GET /personal/status` requests are answered `401` before the
    * daemon starts accepting the bearer. Models a daemon restart.
@@ -197,6 +203,7 @@ export interface FakeDaemon {
 export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeDaemon> {
   const requests: RecordedRequest[] = [];
   const issuedTokens: string[] = [];
+  const sessionChannels = new Map<string, "management" | "task">();
   let remainingUnauthorized = options.unauthorizedStatusResponses ?? 0;
   let tokenCounter = 0;
 
@@ -238,20 +245,22 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
           respond(response, 401, errorBody("LOCAL_BOOTSTRAP_MISMATCH"));
           return;
         }
-        if (parsed["channel"] !== "management") {
+        const channel = parsed["channel"];
+        if (channel !== "management" && channel !== "task") {
           respond(response, 401, errorBody("LOCAL_AUTH_INVALID_REQUEST"));
           return;
         }
         tokenCounter += 1;
         const token = `sess-fake-${tokenCounter}`;
         issuedTokens.push(token);
+        sessionChannels.set(token, channel);
         respond(
           response,
           200,
           JSON.stringify({
             status: "ok",
             token,
-            channel: "management",
+            channel,
             session_id: `session-${tokenCounter}`,
             absolute_expiry_secs: 43_200,
             idle_expiry_secs: 1_800,
@@ -277,6 +286,33 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
           return;
         }
         respond(response, 200, options.statusBody);
+        return;
+      }
+
+      if (request.method === "GET" && request.url === "/resource/v1/projection?family=runtime&version=1") {
+        if (!hasChannelBearer(headers, sessionChannels, "management")) {
+          respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
+          return;
+        }
+        respond(response, 200, options.resourceProjectionBody ?? resourceProjectionBody());
+        return;
+      }
+
+      if (request.method === "GET" && request.url?.startsWith("/resource/v1/watch?family=runtime&version=1")) {
+        if (!hasChannelBearer(headers, sessionChannels, "management")) {
+          respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
+          return;
+        }
+        respond(response, 200, options.resourceWatchBody ?? resourceWatchSnapshotBody());
+        return;
+      }
+
+      if (request.method === "GET" && request.url?.startsWith("/task/watch")) {
+        if (!hasChannelBearer(headers, sessionChannels, "task")) {
+          respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
+          return;
+        }
+        respond(response, 200, options.taskWatchBody ?? taskWatchSnapshotBody());
         return;
       }
 
@@ -339,6 +375,31 @@ export function boundedCompletionBody(content = "daemon text"): string {
   return JSON.stringify({ choices: [{ message: { content }, finish_reason: "stop" }] });
 }
 
+export function resourceProjectionBody(
+  overrides: Readonly<Record<string, unknown>> = {},
+): string {
+  return JSON.stringify({
+    kind: "snapshot",
+    projection_version: "personal-resource-projection/1",
+    family: "runtime",
+    latest_sequence: 6,
+    projection: {
+      family: "runtime",
+      availability: "not-backed",
+      authority_side_effects: false,
+    },
+    ...overrides,
+  });
+}
+
+export function taskWatchSnapshotBody(): string {
+  return "event: snapshot\ndata: {\"sequence\":0,\"tasks\":[]}\n\n";
+}
+
+export function resourceWatchSnapshotBody(): string {
+  return "event: snapshot\ndata: {\"kind\":\"snapshot\",\"family\":\"runtime\"}\n\n";
+}
+
 function respond(response: ServerResponse, status: number, body: string): void {
   response.writeHead(status, {
     "content-type": "application/json",
@@ -346,6 +407,16 @@ function respond(response: ServerResponse, status: number, body: string): void {
     connection: "close",
   });
   response.end(body);
+}
+
+function hasChannelBearer(
+  headers: Readonly<Record<string, string>>,
+  sessionChannels: ReadonlyMap<string, "management" | "task">,
+  expectedChannel: "management" | "task",
+): boolean {
+  const authorization = headers["authorization"] ?? "";
+  if (!authorization.startsWith("Bearer ")) return false;
+  return sessionChannels.get(authorization.slice("Bearer ".length)) === expectedChannel;
 }
 
 function errorBody(code: string): string {

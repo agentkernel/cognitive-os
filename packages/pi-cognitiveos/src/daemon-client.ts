@@ -6,7 +6,8 @@
  *
  *   - `POST /local/session` with `{channel, principal_id, bootstrap_secret}`
  *     mints a channel-scoped bearer;
- *   - `GET /personal/status` requires that bearer on the `management` channel;
+ *   - status and resource projections require a management-channel bearer;
+ *   - Task observation requires a separately minted Task-channel bearer;
  *   - cookies are forbidden, and the `Host` header must be loopback.
  *
  * The daemon holds sessions in memory, so a daemon restart invalidates every
@@ -33,8 +34,14 @@ import { DaemonClientError } from "./errors.js";
 /** Principal the Personal CLI uses for the local owner session. */
 export const LOCAL_OWNER_PRINCIPAL = "principal://local/owner";
 
-/** The Extension only ever asks for the read-only management channel. */
-export const EXTENSION_CHANNEL = "management";
+/** The management channel reads daemon-owned readiness and resource projections. */
+export const MANAGEMENT_CHANNEL = "management";
+
+/** The Task channel is isolated from management state and cursor namespaces. */
+export const TASK_CHANNEL = "task";
+
+/** Backwards-compatible name for the Extension's readiness channel. */
+export const EXTENSION_CHANNEL = MANAGEMENT_CHANNEL;
 
 /** Default per-request deadline. The daemon's own header budget is 10s. */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 5_000;
@@ -77,6 +84,16 @@ export interface BoundedCompletion {
   readonly finishReason: "stop";
 }
 
+/** Private versioned resource projection accepted from the Personal daemon. */
+export interface ResourceProjection {
+  readonly projectionVersion: "personal-resource-projection/1";
+  readonly family: ResourceFamily;
+  readonly availability: "available" | "not-backed";
+  readonly authoritySideEffects: false;
+}
+
+export type ResourceFamily = "memory" | "skill" | "tool" | "context" | "task" | "runtime";
+
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 export interface PersonalDaemonClientOptions {
@@ -91,7 +108,8 @@ export class PersonalDaemonClient {
   private readonly files: FileReader;
   private readonly fetchImpl: FetchLike;
   private readonly requestTimeoutMs: number;
-  private sessionToken: string | undefined;
+  private managementSessionToken: string | undefined;
+  private taskSessionToken: string | undefined;
 
   constructor(options: PersonalDaemonClientOptions = {}) {
     this.environment = options.environment ?? process.env;
@@ -113,13 +131,13 @@ export class PersonalDaemonClient {
     const paths = resolvePersonalDaemonPaths(this.environment);
     const endpoint = readDaemonEndpoint(paths, this.files);
 
-    let token = this.sessionToken ?? (await this.issueSession(endpoint, paths));
+    let token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
     let response = await this.getStatus(endpoint, token);
     if (response.status === 401) {
       // The daemon keeps sessions in memory; a restart invalidates the bearer.
       // Re-mint exactly once, then fail explicitly.
-      this.sessionToken = undefined;
-      token = await this.issueSession(endpoint, paths);
+      this.managementSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL);
       response = await this.getStatus(endpoint, token);
     }
 
@@ -127,7 +145,7 @@ export class PersonalDaemonClient {
     if (response.status !== 200) {
       throw authOrProtocolError(response.status, bodyText, "GET /personal/status");
     }
-    this.sessionToken = token;
+    this.managementSessionToken = token;
     return parseReadinessProjection(bodyText);
   }
 
@@ -137,19 +155,19 @@ export class PersonalDaemonClient {
     const endpoint = readDaemonEndpoint(paths, this.files);
     if (signal?.aborted) throw abortedRequestError();
 
-    let token = this.sessionToken ?? (await this.issueSession(endpoint, paths));
+    let token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
     let response = await this.getSelectedModel(endpoint, token, signal);
     if (response.status === 401) {
-      this.sessionToken = undefined;
-      token = await this.issueSession(endpoint, paths);
+      this.managementSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL);
       response = await this.getSelectedModel(endpoint, token, signal);
     }
     const bodyText = await readBodyText(response);
     if (response.status !== 200) {
-      this.sessionToken = undefined;
+      this.managementSessionToken = undefined;
       throw authOrProtocolError(response.status, bodyText, "GET /provider/v1/selected-model");
     }
-    this.sessionToken = token;
+    this.managementSessionToken = token;
     return parseSelectedModelProjection(bodyText);
   }
 
@@ -165,7 +183,7 @@ export class PersonalDaemonClient {
     if (signal?.aborted) throw abortedRequestError();
     const paths = resolvePersonalDaemonPaths(this.environment);
     const endpoint = readDaemonEndpoint(paths, this.files);
-    const token = this.sessionToken ?? (await this.issueSession(endpoint, paths));
+    const token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
     const response = await this.send(endpoint, "/provider/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -174,22 +192,92 @@ export class PersonalDaemonClient {
     });
     const bodyText = await readBodyText(response);
     if (response.status !== 200) {
-      if (response.status === 401) this.sessionToken = undefined;
+      if (response.status === 401) this.managementSessionToken = undefined;
       throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
     }
-    this.sessionToken = token;
+    this.managementSessionToken = token;
     return parseBoundedCompletion(bodyText);
+  }
+
+  /** Read one private resource projection through the management channel. */
+  async fetchResourceProjection(family: ResourceFamily): Promise<ResourceProjection> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    let token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+    let response = await this.getResourceProjection(endpoint, token, family);
+    if (response.status === 401) {
+      this.managementSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL);
+      response = await this.getResourceProjection(endpoint, token, family);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.managementSessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "GET /resource/v1/projection");
+    }
+    this.managementSessionToken = token;
+    return parseResourceProjection(bodyText, family);
+  }
+
+  /** Read a bounded snapshot-first resource watch through the management channel. */
+  async fetchResourceWatch(
+    family: ResourceFamily,
+    resumeFrom?: number,
+  ): Promise<string> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    let token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+    let response = await this.getResourceWatch(endpoint, token, family, resumeFrom);
+    if (response.status === 401) {
+      this.managementSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL);
+      response = await this.getResourceWatch(endpoint, token, family, resumeFrom);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.managementSessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "GET /resource/v1/watch");
+    }
+    assertSnapshotFirstWatch(bodyText, "resource");
+    this.managementSessionToken = token;
+    return bodyText;
+  }
+
+  /** Read the bounded snapshot-first Task watch through the isolated Task channel. */
+  async fetchTaskWatch(resumeFrom?: number): Promise<string> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    let token = this.taskSessionToken ?? (await this.issueSession(endpoint, paths, TASK_CHANNEL));
+    let response = await this.getTaskWatch(endpoint, token, resumeFrom);
+    if (response.status === 401) {
+      this.taskSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, TASK_CHANNEL);
+      response = await this.getTaskWatch(endpoint, token, resumeFrom);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.taskSessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "GET /task/watch");
+    }
+    assertSnapshotFirstWatch(bodyText, "Task");
+    this.taskSessionToken = token;
+    return bodyText;
   }
 
   /** Drop the cached bearer, e.g. after the operator restarts the daemon. */
   forgetSession(): void {
-    this.sessionToken = undefined;
+    this.managementSessionToken = undefined;
+    this.taskSessionToken = undefined;
   }
 
-  private async issueSession(endpoint: string, paths: PersonalDaemonPaths): Promise<string> {
+  private async issueSession(
+    endpoint: string,
+    paths: PersonalDaemonPaths,
+    expectedChannel: typeof MANAGEMENT_CHANNEL | typeof TASK_CHANNEL,
+  ): Promise<string> {
     const bootstrapSecret = readBootstrapSecret(paths, this.files);
     const body = JSON.stringify({
-      channel: EXTENSION_CHANNEL,
+      channel: expectedChannel,
       principal_id: LOCAL_OWNER_PRINCIPAL,
       bootstrap_secret: bootstrapSecret,
     });
@@ -217,15 +305,14 @@ export class PersonalDaemonClient {
         { httpStatus: response.status },
       );
     }
-    const channel = extractStringField(bodyText, "channel");
-    if (channel !== EXTENSION_CHANNEL) {
+    const issuedChannel = extractStringField(bodyText, "channel");
+    if (issuedChannel !== expectedChannel) {
       throw new DaemonClientError(
         "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
-        `daemon issued a session on channel ${channel ?? "<absent>"}, expected ${EXTENSION_CHANNEL}`,
+        `daemon issued a session on channel ${issuedChannel ?? "<absent>"}, expected ${expectedChannel}`,
         { httpStatus: response.status },
       );
     }
-    this.sessionToken = token;
     return token;
   }
 
@@ -245,6 +332,40 @@ export class PersonalDaemonClient {
       method: "GET",
       headers: { authorization: `Bearer ${token}` },
       ...(signal === undefined ? {} : { signal }),
+    });
+  }
+
+  private async getResourceProjection(
+    endpoint: string,
+    token: string,
+    family: ResourceFamily,
+  ): Promise<Response> {
+    return this.send(endpoint, `/resource/v1/projection?family=${family}&version=1`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+    });
+  }
+
+  private async getResourceWatch(
+    endpoint: string,
+    token: string,
+    family: ResourceFamily,
+    resumeFrom: number | undefined,
+  ): Promise<Response> {
+    return this.send(endpoint, `/resource/v1/watch?family=${family}&version=1${watchCursorQuery(resumeFrom)}`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+    });
+  }
+
+  private async getTaskWatch(
+    endpoint: string,
+    token: string,
+    resumeFrom: number | undefined,
+  ): Promise<Response> {
+    return this.send(endpoint, `/task/watch${watchCursorQuery(resumeFrom, true)}`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
     });
   }
 
@@ -294,6 +415,35 @@ export function parseSelectedModelProjection(bodyText: string): SelectedModelPro
   return { schemaVersion, surface, selectedModel, selectedSnapshotDigest, chatCapable: true, authoritySideEffects: false };
 }
 
+export function parseResourceProjection(
+  bodyText: string,
+  expectedFamily: ResourceFamily,
+): ResourceProjection {
+  const record = parseJsonRecord(bodyText, "resource projection response");
+  const projection = record["projection"];
+  if (typeof projection !== "object" || projection === null || Array.isArray(projection)) {
+    throw resourceProjectionProtocolError();
+  }
+  const projectionRecord = projection as Record<string, unknown>;
+  if (
+    record["kind"] !== "snapshot" ||
+    record["projection_version"] !== "personal-resource-projection/1" ||
+    record["family"] !== expectedFamily ||
+    !Number.isSafeInteger(record["latest_sequence"]) ||
+    projectionRecord["family"] !== expectedFamily ||
+    (projectionRecord["availability"] !== "available" && projectionRecord["availability"] !== "not-backed") ||
+    projectionRecord["authority_side_effects"] !== false
+  ) {
+    throw resourceProjectionProtocolError();
+  }
+  return {
+    projectionVersion: "personal-resource-projection/1",
+    family: expectedFamily,
+    availability: projectionRecord["availability"],
+    authoritySideEffects: false,
+  };
+}
+
 export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
@@ -323,6 +473,33 @@ function parseJsonRecord(bodyText: string, label: string): Record<string, unknow
 
 function completionProtocolError(): DaemonClientError {
   return new DaemonClientError("PI_EXTENSION_DAEMON_PROTOCOL_ERROR", "the CognitiveOS daemon completion response was unsupported");
+}
+
+function resourceProjectionProtocolError(): DaemonClientError {
+  return new DaemonClientError(
+    "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
+    "the CognitiveOS daemon returned an invalid private resource projection",
+  );
+}
+
+function assertSnapshotFirstWatch(bodyText: string, surface: string): void {
+  if (!bodyText.startsWith("event: snapshot\n")) {
+    throw new DaemonClientError(
+      "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
+      `the CognitiveOS daemon returned a ${surface} watch without its required snapshot`,
+    );
+  }
+}
+
+function watchCursorQuery(resumeFrom: number | undefined, isFirstQueryParameter = false): string {
+  if (resumeFrom === undefined) return "";
+  if (!Number.isSafeInteger(resumeFrom) || resumeFrom < 0) {
+    throw new DaemonClientError(
+      "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
+      "a Personal daemon watch cursor must be a non-negative safe integer",
+    );
+  }
+  return `${isFirstQueryParameter ? "?" : "&"}resume_from=${resumeFrom}`;
 }
 
 function defaultFetch(input: string, init: RequestInit): Promise<Response> {

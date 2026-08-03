@@ -18,11 +18,16 @@ export {
   DEFAULT_REQUEST_TIMEOUT_MS,
   EXTENSION_CHANNEL,
   LOCAL_OWNER_PRINCIPAL,
+  MANAGEMENT_CHANNEL,
+  TASK_CHANNEL,
+  parseResourceProjection,
   type FetchLike,
   type OverallReadiness,
   type PersonalDaemonClientOptions,
   type ReadinessComponent,
   type ReadinessProjection,
+  type ResourceFamily,
+  type ResourceProjection,
 } from "./daemon-client.js";
 
 export {
