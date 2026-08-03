@@ -21,17 +21,17 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | B01 Clean candidate retirement governance is closed: Desktop is the sole active B01 guest, Clean is historical failed-qualification evidence only, and no KVM lifecycle operation was performed | select a ready implementation outlet and predeclare its supported validation environment before running tests |
+| Active task lease | `lease/personal/P2-T02/task-api-watch` | P2-T02/D01 is active on `lane/personal-p2-t02-task-api-watch`; it is implementation-only and remains non-claim pending focused Rust/TS integration and required CI | complete the daemon-owned preview/admit and authenticated watch path without adding a public contract |
 
 ### Layer 1 — Formal task progress
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 16 | 2 | 0 | 35 | 37 |
+| 53 | 16 | 3 | 0 | 34 | 37 |
 
 `P2-T01` advances from `in-progress` to `done` because its original acceptance
 criteria and required evidence were already satisfied by PR #127; no criterion
-was removed or weakened. The two tasks still in progress are P1-T09 and
+was removed or weakened. The three tasks in progress are P1-T09, P2-T02 and
 P2-T03. Formal task completion remains independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
@@ -44,7 +44,7 @@ P2-T03. Formal task completion remains independent from every product Gate.
 | `P2-T03/D03` | `blocked` | implementation present; Windows GNU tests did not compile and exact-Linux SSH failed before remote execution | approve host-key trust, then run store/classifier tests at the immutable revision |
 | `P2-T03/D04` | `blocked` | implementation present; focused runtime/kernel validation has not run on the supported environment | after D03 validation, run closure/release regressions and required CI |
 | `P2-T03/D05` | `blocked` | no BoundedHarness worker/recovery evidence; D03/D04 exits are unmet | start only after D03/D04 are done; no additional helper-only slice |
-| `P2-T02/D01` | `ready` | P2-T01 service and P1-T07 channel contracts are available | may proceed independently as the real Task API/watch vertical path |
+| `P2-T02/D01` | `in-progress` | P2-T01 service and P1-T07 channel contracts are available; the task-channel transport now preserves the authoritative watch open/resume envelope | complete daemon-owned preview→admit and authenticated watch handling, then run required Rust/TS integration and CI |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
