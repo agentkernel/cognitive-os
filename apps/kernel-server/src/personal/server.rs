@@ -26,6 +26,7 @@ use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
     status_projection_json,
 };
+use super::task_api::TaskApi;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
 static ENDPOINT_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -105,6 +106,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     );
     let _lock = lock;
     let authority = Arc::new(Mutex::new(authority));
+    let task_api = Arc::new(Mutex::new(TaskApi::new(config.layout.clone())));
     let active_connections = Arc::new(AtomicUsize::new(0));
     let in_flight = Arc::new(AtomicUsize::new(0));
     let shutting_down = Arc::new(AtomicBool::new(false));
@@ -131,6 +133,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             &config.bounds,
             &config.layout,
             &authority,
+            &task_api,
             &active_connections,
             &in_flight,
         );
@@ -150,6 +153,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                 let bounds = config.bounds;
                 let layout = config.layout.clone();
                 let authority = Arc::clone(&authority);
+                let task_api = Arc::clone(&task_api);
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
@@ -158,6 +162,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                         &bounds,
                         &layout,
                         &authority,
+                        &task_api,
                         &active_connections,
                         &in_flight,
                     );
@@ -231,6 +236,7 @@ fn handle_connection(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    task_api: &Arc<Mutex<TaskApi>>,
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
@@ -270,7 +276,7 @@ fn handle_connection(
         return;
     }
 
-    let result = process_http_request(&mut stream, bounds, layout, authority);
+    let result = process_http_request(&mut stream, bounds, layout, authority, task_api);
     if let Err(error) = result {
         let (status, code) = if error == "PERSONAL_REQUEST_READ_TIMEOUT" {
             (408, error.as_str())
@@ -289,6 +295,7 @@ fn process_http_request(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    task_api: &Arc<Mutex<TaskApi>>,
 ) -> Result<(), String> {
     let (request_line, headers, body) = read_bounded_http_request(stream, bounds)?;
     if headers_contain_cookie(&headers) {
@@ -325,7 +332,7 @@ fn process_http_request(
         );
     }
     if method_path.starts_with("POST /task/") || method_path.starts_with("GET /task/") {
-        return handle_channel_route(stream, &headers, ChannelClass::Task, authority, "task");
+        return handle_task_route(stream, &method_path, &headers, &body, authority, task_api);
     }
     if method_path.starts_with("GET /personal/status ")
         || method_path.starts_with("GET /personal/readiness ")
@@ -437,6 +444,49 @@ fn handle_channel_route(
             write_error_response(stream, status, error.code(), &error.to_string())
         }
     }
+}
+
+fn handle_task_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    task_api: &Arc<Mutex<TaskApi>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let principal = match authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?
+        .authorize_principal(&token, ChannelClass::Task, Instant::now())
+    {
+        Ok(principal) => principal,
+        Err(error) => {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+    };
+    let response = task_api
+        .lock()
+        .map_err(|_| "task API lock poisoned".to_owned())?
+        .handle(method_path, body, &principal);
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
 }
 
 fn handle_provider_proxy_route(
@@ -758,6 +808,32 @@ fn extract_json_string(document: &str, field_name: &str) -> Option<String> {
 
 fn write_json_response(stream: &mut TcpStream, status: u16, body: &str) -> Result<(), String> {
     write_json_bytes_response(stream, status, body.as_bytes())
+}
+
+fn write_response(
+    stream: &mut TcpStream,
+    status: u16,
+    content_type: &str,
+    body: &[u8],
+) -> Result<(), String> {
+    let reason = match status {
+        200 => "OK",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        503 => "Service Unavailable",
+        _ => "Error",
+    };
+    let header = format!(
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    stream
+        .write_all(header.as_bytes())
+        .and_then(|()| stream.write_all(body))
+        .map_err(|error| error.to_string())
 }
 
 fn write_provider_response(stream: &mut TcpStream, status: u16, body: &[u8]) -> Result<(), String> {

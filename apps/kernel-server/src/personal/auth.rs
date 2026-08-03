@@ -259,6 +259,20 @@ impl LocalSessionAuthority {
         required_channel: ChannelClass,
         now: Instant,
     ) -> Result<(), LocalAuthError> {
+        self.authorize_principal(bearer_token, required_channel, now)
+            .map(|_| ())
+    }
+
+    /// Authorize a bearer and return its authenticated principal identity.
+    ///
+    /// Task governance derives its actor and acceptance authority from this
+    /// value; clients must never be trusted to repeat or select it.
+    pub fn authorize_principal(
+        &mut self,
+        bearer_token: &str,
+        required_channel: ChannelClass,
+        now: Instant,
+    ) -> Result<String, LocalAuthError> {
         if bearer_token.is_empty() {
             return Err(LocalAuthError::Unauthorized);
         }
@@ -278,8 +292,7 @@ impl LocalSessionAuthority {
             return Err(LocalAuthError::Unauthorized);
         }
         record.last_seen_at = now;
-        let _ = &record.principal_id;
-        Ok(())
+        Ok(record.principal_id.clone())
     }
 
     /// Invalidate all outstanding tokens (restart / explicit revoke).
