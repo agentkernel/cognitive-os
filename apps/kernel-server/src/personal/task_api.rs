@@ -160,7 +160,10 @@ impl TaskApi {
                 Ok(governance) => governance,
                 Err(response) => return response,
             },
-            correlation_id: correlation(principal),
+            correlation_id: match correlation(principal) {
+                Ok(correlation_id) => correlation_id,
+                Err(response) => return response,
+            },
         };
         let lease = match writer_lease(service.store()) {
             Ok(lease) => lease,
@@ -258,6 +261,10 @@ impl TaskApi {
             Ok(lease) => lease,
             Err(response) => return response,
         };
+        let correlation_id = match correlation(principal) {
+            Ok(correlation_id) => correlation_id,
+            Err(response) => return response,
+        };
         match service.clarify(
             &lease,
             &record_id,
@@ -266,7 +273,7 @@ impl TaskApi {
                 Ok(governance) => governance,
                 Err(response) => return response,
             },
-            &correlation(principal),
+            &correlation_id,
         ) {
             Ok(row) => {
                 let material_ambiguity_count = candidate
@@ -588,7 +595,7 @@ fn contract_from_draft(
         allowed_state_domains: draft.allowed_state_domains,
         allowed_tools: draft.allowed_tools,
         governance,
-        correlation_id: correlation(principal),
+        correlation_id: correlation(principal)?,
     })
 }
 
