@@ -106,14 +106,20 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
     `&&`/`||`，当前 Windows GNU linker exit 121 是禁止 feature Slice 重复探测的已知
     unsupported boundary，Rust compiling/linking validation 必须预路由到 supported
     CI/MSVC 或 exact-revision native Linux。
+13. 代理入口、Operating Model 与本契约必须保留 `CHECKPOINT-DELIVERY-01`：仓库 owner 的
+    standing delivery authorization 要求 coherent 改动通过 eligible checks 后自动
+    commit/push/创建或更新 Draft PR，不在新窗口重复等待；未完成 Slice 的 PR 必须保持 Draft
+    且禁止 merge；只有完整出口、supported validation、required CI、review 与 evidence
+    closure 满足后才能自动 ready/merge。Handoff 必须携带 branch/full HEAD/upstream/PR/
+    worktree/remaining/validation/next action；coherent dirty handoff 不得成为默认会话出口。
 
 破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ
 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。
 此后每次**修改检查器本身**的 PR 必须重跑注入演练并在 PR 描述附输出。Personal 治理
 检查使用只读 override fixture 注入 duplicate task/slice、Delivery Slice WIP overflow、
-trace status drift、command/environment guard removal、parallel current snapshot、missing
-design source、premature Gate pass、broad lease 和 executable legacy prompt；不得为演练
-直接改坏工作树。
+trace status drift、command/environment guard removal、checkpoint-delivery guard removal、
+parallel current snapshot、missing design source、premature Gate pass、broad lease 和
+executable legacy prompt；不得为演练直接改坏工作树。
 
 ## 6. 完成前检查（作者自查清单）
 
@@ -126,4 +132,8 @@ design source、premature Gate pass、broad lease 和 executable legacy prompt�
       `not-run` 则当前状态保持 `blocked` 而非 `done`
 - [ ] 本地命令遵守 `COMMAND-SHELL-PS51`，Rust 验证环境遵守
       `RUST-LINK-DEV-WIN-GNU-01`，未重复执行已知无效语法或 linker 探测
+- [ ] `CHECKPOINT-DELIVERY-01` 已遵守：coherent checkpoint 已自动 commit/push 到 Slice
+      branch 并使用 Draft PR；完整出口与 required checks 通过后已自动 ready/merge；未完成
+      Slice 未 merge；handoff 记录完整恢复 tuple，或 dirty handoff 明确列出受影响路径和
+      recovery action
 - [ ] 项目身份、Current snapshot 与 active lease 引用没有产生平行事实源

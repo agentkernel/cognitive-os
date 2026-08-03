@@ -1,0 +1,82 @@
+# Checkpoint delivery governance handoff
+
+- Date: 2026-08-03
+- Task association: P0-T01 governance/tooling baseline; motivated by P2-T02/D01
+- Change class: corrective governance and tooling
+- Lease: `lease/personal/P0-T01/checkpoint-delivery-governance`
+- Status at handoff: implementation and locally eligible validation complete;
+  owner authorized automatic checkpoint delivery and requested a Draft PR
+- Normative/product surface: unchanged
+
+## Recovery tuple
+
+| Field | Value |
+|---|---|
+| Branch | `lane/governance-checkpoint-delivery` |
+| Base HEAD | `cfa4d70a502e36733180ceebd3db7da6082a7243` |
+| Upstream | not configured; branch has not been pushed |
+| Pull request | not created |
+| Worktree | dirty only with this governance delivery |
+| Active lease | `lease/personal/P0-T01/checkpoint-delivery-governance` |
+
+## Outcome
+
+Added `CHECKPOINT-DELIVERY-01` to separate Git persistence from formal Slice
+closure. The workflow now distinguishes coherent worktree, checkpoint commit,
+pushed checkpoint, Draft PR, ready PR and merged closure.
+
+The rules require an incomplete but coherent Slice to use a dedicated branch,
+automatic checkpoint commits and a pushed Draft PR for CI, exact-revision
+Linux validation and cross-window recovery. The repository owner granted
+standing delivery authorization, so new windows do not repeatedly ask before
+routine commit/push/Draft PR updates. Draft PRs cannot merge. After the complete
+Slice exit, focused negatives, supported validation, required CI, evidence
+closure and review requirements pass, the agent may automatically mark the PR
+ready and merge it. Force push and incomplete/failed/pending closure are never
+authorized.
+
+The handoff contract now records Slice/status, branch/full HEAD/upstream,
+PR/worktree state, implemented/remaining items, validation outcomes,
+non-claims and one next action. A dirty handoff is limited to non-coherent or
+unsafe work, unknown ownership, or an explicit user pause. New windows use the
+recorded recovery tuple before expanding to a broad Git audit.
+
+The consistency checker now protects the checkpoint/merge boundary in
+`AGENTS.md`, the Operating Model and docs-sync contract. Failure injection
+proves removal of the stable rule is rejected.
+
+## P2-T02/D01 reconciliation
+
+PR #135 merged checkpoint `287de70` into `main@cfa4d70` while D01 remained
+incomplete. No history was rewritten and D01 remains honestly `in-progress`.
+The merged branch lease was closed because it can no longer grant isolated
+writable ownership. Further D01 implementation requires a new continuation
+branch and lease; the merged checkpoint does not satisfy D01 or any P2 Gate.
+
+## Validation
+
+| Check | Result |
+|---|---|
+| `node --check tools/src/check-consistency.mjs` | pass |
+| `node --check tools/test/check.test.mjs` | pass |
+| `pnpm run check:consistency` | pass |
+| `node --test tools/test/check.test.mjs` | pass (5/5) |
+| `git diff --check` | pass |
+| local Rust linking checks | not-run; prohibited by `RUST-LINK-DEV-WIN-GNU-01` and unnecessary for this tooling/docs delivery |
+
+## Delivery action
+
+- Affected paths: `AGENTS.md`, Operating Model, docs-sync contract,
+  consistency checker/test, lease/progress coordination and this handoff.
+- Reason: this is the final pre-commit recovery record; the user explicitly
+  requested commit, push and Draft PR creation.
+- Owner: current governance session.
+- Single recovery action: review the scoped diff, commit and push this branch,
+  create a Draft PR, then update this recovery tuple with the immutable
+  checkpoint HEAD and PR URL. Keep this PR Draft because it is the delivery
+  vehicle requested for review; do not merge solely because checks pass.
+
+## Non-claims
+
+No formal task acceptance, Delivery Slice completion, Gate, release, Profile,
+implementation evidence level or CognitiveOS normative contract is advanced.

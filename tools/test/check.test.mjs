@@ -54,7 +54,19 @@ test("check-consistency passes on the current repository tree", () => {
 test("Personal governance drift is rejected by failure injection", () => {
   const result = runConsistencyFailureInjection({
     "AGENTS.md": (source) =>
-      source.replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD"),
+      source
+        .replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD")
+        .replace("CHECKPOINT-DELIVERY-01", "REMOVED-CHECKPOINT-DELIVERY-GUARD"),
+    "docs/governance/DEVELOPMENT-OPERATING-MODEL.md": (source) =>
+      source.replace(
+        "CHECKPOINT-DELIVERY-01",
+        "REMOVED-CHECKPOINT-DELIVERY-GUARD",
+      ),
+    "docs/standards/docs-sync-contract.md": (source) =>
+      source.replaceAll(
+        "CHECKPOINT-DELIVERY-01",
+        "REMOVED-CHECKPOINT-DELIVERY-GUARD",
+      ),
     "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md": (source) =>
       source.replaceAll("RUST-LINK-DEV-WIN-GNU-01", "REMOVED-RUST-LINK-GUARD"),
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
@@ -105,6 +117,18 @@ test("Personal governance drift is rejected by failure injection", () => {
   assert.match(
     result.stderr,
     /PERSONAL-TEST-ENVIRONMENTS\.md[\s\S]*command\/environment guard is missing required fragment: RUST-LINK-DEV-WIN-GNU-01/,
+  );
+  assert.match(
+    result.stderr,
+    /AGENTS\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /DEVELOPMENT-OPERATING-MODEL\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /docs-sync-contract\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
   );
   assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
   assert.match(result.stderr, /duplicate formal delivery slice definition: P2-T02\/D01/);
