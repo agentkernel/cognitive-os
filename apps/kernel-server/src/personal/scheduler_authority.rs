@@ -19,7 +19,9 @@ use cognitive_runtime::{
     BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
     SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
 };
-use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState};
+use cognitive_store::scheduler::{
+    SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey,
+};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -39,6 +41,7 @@ struct TaskContractVersionHeader {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SchedulerAuthorityBinding {
     pub task_ref: String,
+    pub contract_epoch: i64,
     pub action_fingerprint: String,
 }
 
@@ -191,13 +194,16 @@ mod tests {
     use cognitive_kernel::engine::CommittedTransition;
     use cognitive_kernel::ports::{IntentRow, TaskBinding};
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
-    use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
+    use cognitive_store::scheduler::{
+        SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey,
+    };
     use std::cell::Cell;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn scheduler_row(task_ref: &str) -> SchedulerRow {
         SchedulerRow {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             state: SchedulerState::Runnable.as_str().to_owned(),
             lease_owner: None,
             lease_epoch: 0,
@@ -205,6 +211,13 @@ mod tests {
             next_eligible: "2026-08-03T00:00:00Z".to_owned(),
             attempt_count: 0,
             cancel_requested: false,
+        }
+    }
+
+    fn scheduler_work_key(task_ref: &str) -> SchedulerWorkKey {
+        SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
         }
     }
 
@@ -346,6 +359,7 @@ mod tests {
             lease_acquisition_count.set(lease_acquisition_count.get() + 1);
             Ok(SchedulerDispatch {
                 task_ref: "task://personal/admission-order".to_owned(),
+                contract_epoch: 1,
                 lease_owner: "scheduler-worker".to_owned(),
                 lease_epoch: 3,
                 lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -382,6 +396,7 @@ mod tests {
     fn unresolved_effect_keeps_the_fenced_dispatch_for_reconciliation() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/effect-reconciliation".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 7,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -408,6 +423,7 @@ mod tests {
     fn only_a_closed_effect_can_release_the_exact_fenced_scheduler_dispatch() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/closed-effect".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 8,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -433,6 +449,7 @@ mod tests {
     fn pending_effect_reconciliation_does_not_release_its_scheduler_lease() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/pending-effect".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 9,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -468,10 +485,16 @@ mod tests {
             .upsert(&scheduler_row(task_ref))
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 10, "2026-08-03T00:00:00Z")
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                10,
+                "2026-08-03T00:00:00Z",
+            )
             .unwrap();
         let dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 10,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -490,7 +513,10 @@ mod tests {
             SchedulerWorkerAttempt::EffectClosed(dispatch),
             "a closed Effect ends this scheduler attempt, not Task acceptance"
         );
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Succeeded.as_str());
         assert_eq!(durable_row.lease_owner, None);
         drop(scheduler_repository);
@@ -506,10 +532,16 @@ mod tests {
             .upsert(&scheduler_row(task_ref))
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 11, "2026-08-03T00:00:00Z")
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                11,
+                "2026-08-03T00:00:00Z",
+            )
             .unwrap();
         let dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 11,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -525,7 +557,10 @@ mod tests {
             Err(SchedulerAuthorityError::InvalidReleaseTime(value)) if value == "not-a-timestamp"
         ));
 
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
         assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
         assert_eq!(durable_row.lease_epoch, 11);
@@ -543,7 +578,7 @@ mod tests {
             .unwrap();
         scheduler_repository
             .acquire_eligible_lease(
-                task_ref,
+                &scheduler_work_key(task_ref),
                 "scheduler-worker",
                 12,
                 "2026-08-03T00:00:00Z",
@@ -552,7 +587,7 @@ mod tests {
             .unwrap();
         scheduler_repository
             .acquire_eligible_lease(
-                task_ref,
+                &scheduler_work_key(task_ref),
                 "scheduler-worker",
                 13,
                 "2026-08-03T00:00:30Z",
@@ -561,6 +596,7 @@ mod tests {
             .unwrap();
         let stale_dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 12,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -576,7 +612,10 @@ mod tests {
             Err(SchedulerAuthorityError::Repository(_))
         ));
 
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
         assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
         assert_eq!(durable_row.lease_epoch, 13);
@@ -678,6 +717,7 @@ where
     Ok(ResolvedSchedulerWork {
         authority_binding: SchedulerAuthorityBinding {
             task_ref: task_ref.to_owned(),
+            contract_epoch,
             action_fingerprint,
         },
         task_binding,
@@ -1044,7 +1084,10 @@ fn complete_resolved_effect_and_release(
         .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(released_at.to_owned()))?;
     release_closed_effect_dispatch(worker_attempt, |dispatch| {
         scheduler_repository.release_lease(
-            &dispatch.task_ref,
+            &SchedulerWorkKey {
+                task_ref: dispatch.task_ref.clone(),
+                contract_epoch: dispatch.contract_epoch,
+            },
             &dispatch.lease_owner,
             dispatch.lease_epoch,
             SchedulerState::Succeeded,
@@ -1091,7 +1134,10 @@ where
     complete_scheduler_admission(ceiling_dispatch, || {
         scheduler_service.claim_eligible(
             scheduler_repository,
-            &binding.task_ref,
+            &SchedulerWorkKey {
+                task_ref: binding.task_ref.clone(),
+                contract_epoch: binding.contract_epoch,
+            },
             lease_epoch,
             observed_wall_time,
         )

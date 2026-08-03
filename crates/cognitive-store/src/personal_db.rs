@@ -11,7 +11,7 @@ use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
 };
-use crate::scheduler::scheduler_migration_entry;
+use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::sqlite::AUTHORITY_SCHEMA_V1;
 use rusqlite::Connection;
 use std::fs::{self, File, OpenOptions};
@@ -49,12 +49,13 @@ impl PersonalDatabasePrepareReport {
     }
 }
 
-/// Production authority migration plan: v1 = full base schema, v2 =
-/// durable scheduler persistence (P2-T03).
+/// Production authority migration plan: v1 = full base schema, v2 = durable
+/// scheduler persistence, v3 = immutable scheduler TaskBinding identity.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
         scheduler_migration_entry(),
+        scheduler_binding_migration_entry(),
     ]
 }
 

@@ -20,7 +20,7 @@
 //! `BEFORE UPDATE` / `BEFORE DELETE` triggers on `events` and
 //! `transition_records` abort any rewrite attempt, from any connection.
 
-use crate::scheduler::SCHEDULER_SCHEMA_V2;
+use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
@@ -275,8 +275,10 @@ impl SqliteAuthorityStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(unavailable("set pragmas"))?;
-        conn.execute_batch(&format!("{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_V2}"))
-            .map_err(unavailable("install schema"))?;
+        conn.execute_batch(&format!(
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}"
+        ))
+        .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
         })
@@ -769,10 +771,14 @@ impl ProtocolStore for SqliteAuthorityStore {
             let eligible_at = scheduler_eligible_at(event)?;
             tx.execute(
                 "INSERT INTO scheduler_entries \
-                 (task_ref, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
-                 VALUES (?1, 'runnable', NULL, 0, NULL, ?2, 0, 0) \
-                 ON CONFLICT(task_ref) DO NOTHING",
-                (task_binding.task_ref.as_str(), eligible_at.as_str()),
+                 (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
+                 VALUES (?1, ?2, 'runnable', NULL, 0, NULL, ?3, 0, 0) \
+                 ON CONFLICT(task_ref, contract_epoch) DO NOTHING",
+                (
+                    task_binding.task_ref.as_str(),
+                    task_binding.contract_epoch,
+                    eligible_at.as_str(),
+                ),
             )
             .map_err(unavailable("register scheduler work"))?;
         }

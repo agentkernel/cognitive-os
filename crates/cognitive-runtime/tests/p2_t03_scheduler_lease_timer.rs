@@ -12,7 +12,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use cognitive_runtime::SchedulerService;
-use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
+use cognitive_store::scheduler::{
+    SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey,
+};
 
 fn open_repo(dir: &tempfile::TempDir) -> SchedulerRepository {
     SchedulerRepository::open(&dir.path().join("scheduler.db")).unwrap()
@@ -21,6 +23,7 @@ fn open_repo(dir: &tempfile::TempDir) -> SchedulerRepository {
 fn runnable_row(task_ref: &str) -> SchedulerRow {
     SchedulerRow {
         task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
         state: SchedulerState::Runnable.as_str().to_owned(),
         lease_owner: None,
         lease_epoch: 0,
@@ -29,6 +32,63 @@ fn runnable_row(task_ref: &str) -> SchedulerRow {
         attempt_count: 0,
         cancel_requested: false,
     }
+}
+
+fn work_key(task_ref: &str, contract_epoch: i64) -> SchedulerWorkKey {
+    SchedulerWorkKey {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    }
+}
+
+#[test]
+fn contract_epoch_work_keys_isolate_superseded_task_leases() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut repository = open_repo(&dir);
+    let task_ref = "task://tenant-a/superseded-contract";
+    repository.upsert(&runnable_row(task_ref)).unwrap();
+    repository
+        .upsert(&SchedulerRow {
+            contract_epoch: 2,
+            ..runnable_row(task_ref)
+        })
+        .unwrap();
+
+    let mut epoch_one_worker = SchedulerService::new("epoch-one-worker", 60).unwrap();
+    epoch_one_worker
+        .claim_eligible(
+            &mut repository,
+            &work_key(task_ref, 1),
+            1,
+            "2026-08-01T12:00:00Z",
+        )
+        .unwrap();
+
+    // A newer immutable contract epoch is independently runnable. Its claim
+    // never overwrites or releases the fenced predecessor lease.
+    let mut epoch_two_worker = SchedulerService::new("epoch-two-worker", 60).unwrap();
+    let epoch_two_dispatch = epoch_two_worker
+        .claim_eligible(
+            &mut repository,
+            &work_key(task_ref, 2),
+            1,
+            "2026-08-01T12:00:00Z",
+        )
+        .unwrap();
+    assert_eq!(epoch_two_dispatch.contract_epoch, 2);
+
+    let epoch_one_row = repository.load(&work_key(task_ref, 1)).unwrap().unwrap();
+    let epoch_two_row = repository.load(&work_key(task_ref, 2)).unwrap().unwrap();
+    assert_eq!(
+        epoch_one_row.lease_owner.as_deref(),
+        Some("epoch-one-worker")
+    );
+    assert_eq!(
+        epoch_two_row.lease_owner.as_deref(),
+        Some("epoch-two-worker")
+    );
+    assert_eq!(epoch_one_row.lease_epoch, 1);
+    assert_eq!(epoch_two_row.lease_epoch, 1);
 }
 
 #[test]
@@ -41,6 +101,7 @@ fn durable_discovery_reopens_only_non_terminal_scheduler_work() {
     repository
         .upsert(&SchedulerRow {
             task_ref: "task://tenant-a/leased".to_owned(),
+            contract_epoch: 1,
             state: SchedulerState::Leased.as_str().to_owned(),
             lease_owner: Some("crashed-worker".to_owned()),
             lease_epoch: 4,
@@ -53,6 +114,7 @@ fn durable_discovery_reopens_only_non_terminal_scheduler_work() {
     repository
         .upsert(&SchedulerRow {
             task_ref: "task://tenant-a/closed".to_owned(),
+            contract_epoch: 1,
             state: SchedulerState::Succeeded.as_str().to_owned(),
             lease_owner: None,
             lease_epoch: 2,
@@ -89,7 +151,7 @@ fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
 
     let leased = repo
         .acquire_lease(
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             "worker-1",
             1,
             "2026-08-01T12:10:00Z",
@@ -102,7 +164,7 @@ fn lease_acquire_is_exclusive_and_rejects_duplicate_owner() {
 
     // A second worker (or the same worker twice) is refused while leased.
     let duplicate = repo.acquire_lease(
-        "task://tenant-a/rollout-v2",
+        &work_key("task://tenant-a/rollout-v2", 1),
         "worker-2",
         1,
         "2026-08-01T12:10:00Z",
@@ -127,7 +189,7 @@ fn release_lease_fails_closed_on_owner_or_epoch_mismatch_and_releases_on_match()
     repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
         .unwrap();
     repo.acquire_lease(
-        "task://tenant-a/rollout-v2",
+        &work_key("task://tenant-a/rollout-v2", 1),
         "worker-1",
         1,
         "2026-08-01T12:10:00Z",
@@ -137,7 +199,7 @@ fn release_lease_fails_closed_on_owner_or_epoch_mismatch_and_releases_on_match()
     // Wrong owner release is refused (a crashed worker's identity cannot
     // release someone else's lease).
     let wrong = repo.release_lease(
-        "task://tenant-a/rollout-v2",
+        &work_key("task://tenant-a/rollout-v2", 1),
         "worker-2",
         1,
         SchedulerState::Runnable,
@@ -148,7 +210,7 @@ fn release_lease_fails_closed_on_owner_or_epoch_mismatch_and_releases_on_match()
     // Correct owner release makes the task runnable again for takeover.
     let released = repo
         .release_lease(
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             "worker-1",
             1,
             SchedulerState::Runnable,
@@ -162,7 +224,7 @@ fn release_lease_fails_closed_on_owner_or_epoch_mismatch_and_releases_on_match()
     // Takeover now succeeds and advances the attempt counter.
     let taken = repo
         .acquire_lease(
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             "worker-2",
             2,
             "2026-08-01T12:20:00Z",
@@ -184,7 +246,7 @@ fn stale_epoch_cannot_release_a_successor_lease_owned_by_the_same_worker() {
     first_worker
         .claim_eligible(
             &mut repo,
-            "task://tenant-a/stale-release",
+            &work_key("task://tenant-a/stale-release", 1),
             1,
             "2026-08-01T12:00:00Z",
         )
@@ -194,14 +256,14 @@ fn stale_epoch_cannot_release_a_successor_lease_owned_by_the_same_worker() {
     let successor_dispatch = successor_worker
         .claim_eligible(
             &mut repo,
-            "task://tenant-a/stale-release",
+            &work_key("task://tenant-a/stale-release", 1),
             2,
             "2026-08-01T12:01:01Z",
         )
         .unwrap();
 
     let stale_release = repo.release_lease(
-        "task://tenant-a/stale-release",
+        &work_key("task://tenant-a/stale-release", 1),
         "worker-1",
         1,
         SchedulerState::Succeeded,
@@ -213,7 +275,7 @@ fn stale_epoch_cannot_release_a_successor_lease_owned_by_the_same_worker() {
     );
 
     let current = repo
-        .load("task://tenant-a/stale-release")
+        .load(&work_key("task://tenant-a/stale-release", 1))
         .unwrap()
         .expect("the successor lease must remain durable");
     assert_eq!(current.state, SchedulerState::Leased.as_str());
@@ -233,24 +295,28 @@ fn scheduler_rows_survive_reopen_like_a_crash_replay() {
         repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
             .unwrap();
         repo.acquire_lease(
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             "worker-1",
             1,
             "2026-08-01T12:10:00Z",
         )
         .unwrap();
-        repo.request_cancel("task://tenant-a/rollout-v2").unwrap();
+        repo.request_cancel(&work_key("task://tenant-a/rollout-v2", 1))
+            .unwrap();
     }
     // Drop = crash. Reopen sees the committed lease + cancel.
     let mut repo = open_repo(&dir);
-    let row = repo.load("task://tenant-a/rollout-v2").unwrap().unwrap();
+    let row = repo
+        .load(&work_key("task://tenant-a/rollout-v2", 1))
+        .unwrap()
+        .unwrap();
     assert_eq!(row.lease_owner.as_deref(), Some("worker-1"));
     assert_eq!(row.attempt_count, 1);
     assert!(row.cancel_requested);
 
     // Cancelled tasks cannot be re-acquired.
     let acquire = repo.acquire_lease(
-        "task://tenant-a/rollout-v2",
+        &work_key("task://tenant-a/rollout-v2", 1),
         "worker-2",
         2,
         "2026-08-01T12:20:00Z",
@@ -268,10 +334,11 @@ fn cancel_request_blocks_future_lease_acquisition() {
     let mut repo = open_repo(&dir);
     repo.upsert(&runnable_row("task://tenant-a/rollout-v2"))
         .unwrap();
-    repo.request_cancel("task://tenant-a/rollout-v2").unwrap();
+    repo.request_cancel(&work_key("task://tenant-a/rollout-v2", 1))
+        .unwrap();
 
     let acquire = repo.acquire_lease(
-        "task://tenant-a/rollout-v2",
+        &work_key("task://tenant-a/rollout-v2", 1),
         "worker-1",
         1,
         "2026-08-01T12:10:00Z",
@@ -294,7 +361,7 @@ fn scheduler_service_prevents_clock_rollback_double_dispatch_and_reclaims_expire
     let first_dispatch = scheduler
         .claim_eligible(
             &mut repo,
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             1,
             "2026-08-01T12:00:00Z",
         )
@@ -311,7 +378,7 @@ fn scheduler_service_prevents_clock_rollback_double_dispatch_and_reclaims_expire
         scheduler
             .claim_eligible(
                 &mut repo,
-                "task://tenant-a/rollout-v2",
+                &work_key("task://tenant-a/rollout-v2", 1),
                 2,
                 "2026-08-01T11:59:00Z",
             )
@@ -322,7 +389,7 @@ fn scheduler_service_prevents_clock_rollback_double_dispatch_and_reclaims_expire
     let takeover = takeover_scheduler
         .claim_eligible(
             &mut repo,
-            "task://tenant-a/rollout-v2",
+            &work_key("task://tenant-a/rollout-v2", 1),
             2,
             "2026-08-01T12:01:01Z",
         )

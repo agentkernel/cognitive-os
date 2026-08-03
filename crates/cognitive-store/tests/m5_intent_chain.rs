@@ -30,7 +30,7 @@ use cognitive_kernel::ports::{
 };
 use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
-use cognitive_store::scheduler::SchedulerRepository;
+use cognitive_store::scheduler::{SchedulerRepository, SchedulerWorkKey};
 use m4_common::*;
 
 fn fresh_store(dir: &tempfile::TempDir) -> SqliteAuthorityStore {
@@ -638,7 +638,13 @@ fn user_correction_advances_epoch_and_fences_old_dispatch() {
     // an existing scheduler row or its recovery fences.
     let mut scheduler_repository =
         SchedulerRepository::open(&dir.path().join("authority.db")).unwrap();
-    let scheduler_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+    let scheduler_row = scheduler_repository
+        .load(&SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        })
+        .unwrap()
+        .unwrap();
     assert_eq!(scheduler_row.state, "runnable");
     assert_eq!(scheduler_row.lease_epoch, 0);
     assert_eq!(scheduler_row.attempt_count, 0);
