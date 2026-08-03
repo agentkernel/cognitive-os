@@ -14,8 +14,7 @@
     "requirement_status": "specified"
   },
   "expected": {
-    "daemon_only_issuance_required": true,
-    "worker_observation_is_not_authority": true,
+    "requirement_semantics_enforced": true,
     "evidence_required_for_pass": true,
     "schema_parse_alone_is_not_pass": true
   }

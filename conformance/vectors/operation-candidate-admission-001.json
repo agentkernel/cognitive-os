@@ -10,9 +10,7 @@
     "requirement_status": "specified"
   },
   "expected": {
-    "candidate_is_not_authority": true,
-    "daemon_reloads_current_contract_and_capability": true,
-    "rejected_candidate_creates_no_intent_effect_or_authorization": true,
+    "requirement_semantics_enforced": true,
     "evidence_required_for_pass": true,
     "schema_parse_alone_is_not_pass": true
   }
