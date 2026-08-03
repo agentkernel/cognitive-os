@@ -14,18 +14,58 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
 | P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-supported-ci`; route, fixture and native observations exist, and formal B01 attempt 1 passed all executed phases | execute and retain the remaining preregistered clean-Linux attempts; do not promote one attempt to campaign acceptance |
-| B01 first-install/first-conversation Gate | **running** | Attempt 1 of the formal minimum 20 attempts passed. Attempt 2 crossed the clean-reset checkpoint but failed bounded guest-network readiness before any artifact, Pi, service, Provider, credential, prompt, or route was used; cleanup restored the exact baseline and left the domain shut off. The ordered ledger has 2 of 20 attempts: 1 success / 1 failure, with no critical safety failure observed. The campaign still lacks 18 attempts, a >=90% final success rate, aggregate statistics, and final independent verifier disposition | diagnose the reset guest's SSH/network readiness without altering the baseline or treating attempt 2 as retryable; only a fresh reset can begin attempt 3 |
+| B01 first-install/first-conversation Gate | **running** | `B01-Desktop-Linux-002` is the sole active B01 guest. Attempt 1 of the formal minimum 20 attempts passed. Attempt 2 crossed the clean-reset checkpoint but failed bounded guest-network readiness before any artifact, Pi, service, Provider, credential, prompt, or route was used; cleanup restored the exact baseline and left the domain shut off. The ordered ledger has 2 of 20 attempts: 1 success / 1 failure, with no critical safety failure observed. `B01-Clean-Linux-001` is retired historical failed-qualification evidence and cannot substitute for an attempt. The campaign still lacks 18 attempts, a >=90% final success rate, aggregate statistics, and final independent verifier disposition | diagnose the reset guest's SSH/network readiness without altering the Desktop baseline or treating attempt 2 as retryable; only a fresh Desktop reset can begin attempt 3 |
+| P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
+| P2-T03 scheduler/runtime | `in-progress` | `P2-T03/D01` and `D02` are done with prior Linux evidence. D03/D04 implementation exists but supported exact-revision Linux tests did not start because SSH host-key verification failed; those slices are blocked, not done | establish approved Linux validation access and run D03/D04 focused tests; do not add another P2-T03 helper slice or begin D05 before validation closes |
 | GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
+| Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | The P2-T03 concrete-effect-closure-release slice is closed. A daemon-only boundary now binds the resolved durable Effect to the exact owner/epoch-fenced scheduler lease release; no Gate, release, or Profile claim advanced | next P2-T03 slice: integrate the bounded scheduler worker with BoundedHarness while retaining durable reconciliation and independent Task-verification boundaries |
+| Active task lease | `none` | B01 Clean candidate retirement governance is closed: Desktop is the sole active B01 guest, Clean is historical failed-qualification evidence only, and no KVM lifecycle operation was performed | select a ready implementation outlet and predeclare its supported validation environment before running tests |
+
+### Layer 1 — Formal task progress
+
+| Total | Done | In progress | Blocked | Not started | Remaining |
+|---:|---:|---:|---:|---:|---:|
+| 53 | 16 | 2 | 0 | 35 | 37 |
+
+`P2-T01` advances from `in-progress` to `done` because its original acceptance
+criteria and required evidence were already satisfied by PR #127; no criterion
+was removed or weakened. The two tasks still in progress are P1-T09 and
+P2-T03. Formal task completion remains independent from every product Gate.
+
+### Layer 2 — Current Delivery Slice queue
+
+| Slice | Status | Actual evidence boundary | Executable next action |
+|---|---|---|---|
+| `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
+| `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
+| `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |
+| `P2-T03/D03` | `blocked` | implementation present; Windows GNU tests did not compile and exact-Linux SSH failed before remote execution | approve host-key trust, then run store/classifier tests at the immutable revision |
+| `P2-T03/D04` | `blocked` | implementation present; focused runtime/kernel validation has not run on the supported environment | after D03 validation, run closure/release regressions and required CI |
+| `P2-T03/D05` | `blocked` | no BoundedHarness worker/recovery evidence; D03/D04 exits are unmet | start only after D03/D04 are done; no additional helper-only slice |
+| `P2-T02/D01` | `ready` | P2-T01 service and P1-T07 channel contracts are available | may proceed independently as the real Task API/watch vertical path |
+
+This queue is the only current slice-status view. The formal plan owns slice
+definitions and exits. Handoffs and the chronological evidence detail below do
+not override this table.
+
+### Layer 3 — Gate and campaign progress
+
+| Gate/campaign | Status | Accounted progress | Missing exit |
+|---|---|---|---|
+| B01 | `running` | fixed N=20: 2 outcomes, 1 success / 1 failure, zero observed critical-safety failures | 18 outcomes, final >=90%, aggregate report and affirmative independent verifier |
+| B02/B04/B05/B12 | `not-run` | implementation evidence only | preregistered P2 acceptance campaigns |
+| B03/B08/B09 | `not-run` | no Gate evidence | corresponding Resource Value and managed-Pi task exits |
+| GMVP-LINUX | `not-run` | no release evidence | all typed promotion dependencies |
+| Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
 The P1-T09 implementation evidence and successful B01 attempt 1 are retained.
 The campaign-level B01 status is `running`, not `pass`, because the formal plan
 requires at least 20 attempts with a success rate of at least 90%, zero critical
 safety failures, complete attempt accounting and independent verification.
 
-The current P2 slice implements the TaskApplicationService (P2-T01): the L5
+P2-T01 is now task-complete: the L5
 task lifecycle entry point over the intent-chain kernel. `proposal` durably
 fixes raw intent before interpretation, `preview` emits a canonical
 digest-bound contract preview, `admit` rejects preview-digest mismatch before
@@ -34,8 +74,14 @@ supersedes to a new epoch fencing old bindings, and `query` exposes the
 read-only intent projection. Merged as `main@7f763c8` (PR #127). Linux-host
 evidence: P2-T01 service tests 4/4, management lib 3/3, store
 `m5_intent_chain` 6/6, clippy clean, required CI green. This is
-`experimental-local-only` implementation evidence; P2 acceptance (B02/B04/
-B05/B12) remains not-run.
+`tested-supported-ci` implementation evidence and satisfies the unchanged
+P2-T01 task acceptance. P2 product acceptance (B02/B04/B05/B12) remains
+not-run, so this task closure does not create a Gate, release or Profile claim.
+
+### Chronological implementation evidence detail
+
+The entries below retain implementation chronology. Their old "next slice" or
+"remaining work" wording cannot override the three current layers above.
 
 The previous P2 slice added the durable scheduler persistence layer (P2-T03):
 `scheduler_entries` (migration v2) with lease owner/epoch/expiry,

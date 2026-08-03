@@ -90,19 +90,28 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 6. findings-ledger 覆盖 F-001~F-030 与 IMP-01~18 全部条目。
 7. 项目身份机器镜像声明唯一活动项目 `cognitiveos-personal`，且正式计划、Current
    snapshot、lease ledger、canonical product design 和 Personal architecture 路径真实；
-8. Personal 正式计划无重复 task definition，phase/total 计数与 task row 一致；trace
-   不得复制 `current_snapshot`，其 task/Gate/source 引用必须存在；
+8. Personal 正式计划无重复 task definition，phase/total 计数与 task row 一致；Delivery
+   Slice definition 必须唯一、引用真实 parent task，并具备 outcome/dependency/required
+   validation；`PROGRESS.md` Current snapshot 必须为每个正式 slice 提供唯一且合法的当前
+   status，同一 task 最多一个 `in-progress` slice；trace 不得复制 `current_snapshot`，
+   其 task/Gate/source 引用必须存在；
 9. B01 当前 denominator 必须与正式 Gate 一致；denominator 未满或 independent verifier
    未肯定闭合时不得标 `pass`；
 10. `PROGRESS.md` 活动 lease 引用必须与 `PARALLEL-LANES.md` 唯一活动表一致；活动 lease
     ID 唯一、状态为 `active`、metadata/date 合法、可写路径不重叠，不得 broad-own
     protected tree 或 ledger 自身；
 11. 旧 prompt 公共入口必须保持 dated non-executable，不能恢复成 Personal 当前任务源。
+12. 代理入口、Operating Model、环境登记和 P0-T01 baseline 必须保留
+    `COMMAND-SHELL-PS51` 与 `RUST-LINK-DEV-WIN-GNU-01`：本地 PowerShell 5.1 禁止
+    `&&`/`||`，当前 Windows GNU linker exit 121 是禁止 feature Slice 重复探测的已知
+    unsupported boundary，Rust compiling/linking validation 必须预路由到 supported
+    CI/MSVC 或 exact-revision native Linux。
 
 破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ
 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。
 此后每次**修改检查器本身**的 PR 必须重跑注入演练并在 PR 描述附输出。Personal 治理
-检查使用只读 override fixture 注入 duplicate task、parallel current snapshot、missing
+检查使用只读 override fixture 注入 duplicate task/slice、Delivery Slice WIP overflow、
+trace status drift、command/environment guard removal、parallel current snapshot、missing
 design source、premature Gate pass、broad lease 和 executable legacy prompt；不得为演练
 直接改坏工作树。
 
@@ -113,4 +122,8 @@ design source、premature Gate pass、broad lease 和 executable legacy prompt�
 - [ ] §3 扫描结果贴入 PR 描述
 - [ ] `pnpm run check:consistency` 本地绿
 - [ ] PROGRESS 已更新；触碰 F/IMP/漂移时 findings-ledger 已更新
+- [ ] Delivery Slice 已登记真实垂直/durable 出口，required validation 已实际通过；若
+      `not-run` 则当前状态保持 `blocked` 而非 `done`
+- [ ] 本地命令遵守 `COMMAND-SHELL-PS51`，Rust 验证环境遵守
+      `RUST-LINK-DEV-WIN-GNU-01`，未重复执行已知无效语法或 linker 探测
 - [ ] 项目身份、Current snapshot 与 active lease 引用没有产生平行事实源

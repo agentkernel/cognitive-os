@@ -27,13 +27,21 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   切片，规范合同改动必须走 Lane-CTR。
 - 纯阅读、研究、计划草稿不会改变任务状态。第一个任务专属实现或测试 slice（包括
   failure-first 测试）开始时，将任务设为 `in-progress`。
-- 领取前确认没有路径重叠的活动 lease；领取后立即实施最小垂直切片。不要把 acceptance
-  或 promotion Gate 当成 implementation mutex。
+- 领取前确认没有路径重叠的活动 lease；领取后立即实施正式计划登记的最小 Delivery
+  Slice。Delivery Slice 使用 `<task-id>/DNN` ID；正式计划拥有出口定义，`PROGRESS.md`
+  Current snapshot 拥有当前状态。不要把 acceptance 或 promotion Gate 当成
+  implementation mutex。
+- 同一正式任务最多一个 `in-progress` Delivery Slice。已有足够基础能力时，下一切片
+  必须优先接入真实调用者或 durable authority outcome；不得连续堆叠 helper-only
+  切片来回避集成或验证阻塞。
 - 每次会话必须产出实现、失败优先测试、可验证文档修正，或带
   `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的阻塞记录。
   已确认依赖后不得继续无出口审计。
 - 结束会话前同步正式计划、`PROGRESS.md` current snapshot 和 handoff；未执行检查写
   `not-run`，不可推断为通过。
+- Delivery Slice 只有在 focused failure-first/negative test 和其定义的 supported
+  validation 实际通过后才能关闭。实现已存在但验证环境不可用时，记录为 `blocked`
+  并转移到预先声明的 Linux/CI 验证路径；不得把格式或 consistency 通过写成切片完成。
 
 ## 不可放松的不变量
 
@@ -50,19 +58,40 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 
 ## 命令速查
 
+### 本地命令与测试环境预路由
+
+- **`COMMAND-SHELL-PS51`：** Cursor 本地 Shell 当前按 **Windows PowerShell 5.1**
+  解析。禁止使用 `&&` 或 `||` 连接命令；解析器在命令启动前拒绝它们，该结果只能记为
+  `not-run`，不能记为测试失败。互不依赖的命令使用独立并行 Shell 调用；有依赖的命令
+  使用 `if ($LASTEXITCODE -eq 0) { <next-command> }`，或拆成后续调用。只有明确进入 bash
+  环境后才能使用 bash 连接符。
+- **`RUST-LINK-DEV-WIN-GNU-01`：** 当前本机是已登记且不受支持的
+  `x86_64-pc-windows-gnu` Rust link host。其 workspace build/test/Clippy/run/bench 已稳定
+  在 linker exit 121 失败；除显式领取的 P0-T01 工具链修复 Slice 外，禁止重复运行这些
+  linking/compiling 命令，也禁止再次尝试 LLVM-MinGW、shim、PATH、toolchain pin 或源码
+  workaround。
+- 本机 GNU allowlist 仅包括不触发 Rust 编译/链接的工作：`cargo fmt`、文档/静态
+  consistency、Node/TypeScript 检查和 diff 检查。需要 Rust build/test/Clippy 的 Slice
+  必须在开始前路由到 `CI-UBUNTU-01`、`CI-WINDOWS-MSVC-01`，或按 exact-revision 规则
+  使用 `DEV-LINUX-NATIVE-01`；环境不可用时按 Slice 规则记 `blocked`/`not-run`，不得先在
+  本机 GNU 重现已知 linker failure。
+- 权威环境能力和命令路由见
+  [PERSONAL-TEST-ENVIRONMENTS.md](docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)。每个 Slice 在
+  写 failure-first test 前先选择其 required validation environment。
+
 | 目的 | Windows PowerShell（本地） | CI（bash） |
 |---|---|---|
-| Rust 构建 | `cargo build --workspace` | 同左 |
-| Rust 测试 | `cargo test --workspace` | 同左 |
-| Rust lint | `cargo clippy --workspace --all-targets` | 同左 |
+| Rust 构建 | `DEV-WIN-GNU-01` 禁止；路由到 supported CI/Linux | `cargo build --workspace` |
+| Rust 测试 | `DEV-WIN-GNU-01` 禁止；路由到 supported CI/Linux | `cargo test --workspace` |
+| Rust lint | `DEV-WIN-GNU-01` 禁止；路由到 supported CI/Linux | `cargo clippy --workspace --all-targets` |
 | TS 安装 | `pnpm install` | `pnpm install --frozen-lockfile` |
 | TS 构建/测试 | `pnpm -r build ; pnpm -r test` | `pnpm -r build && pnpm -r test` |
 | 静态一致性检查 | `pnpm run check:consistency` | 同左 |
-| 符合性 runner | `cargo run -p cognitive-conformance --bin conformance-runner` | 同左 |
+| 符合性 runner | `DEV-WIN-GNU-01` 禁止；路由到 supported CI/Linux | `cargo run -p cognitive-conformance --bin conformance-runner` |
 
-本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。
-工具链钉在 `rust-toolchain.toml`（1.97.1）。PowerShell 5.1 不支持 `&&`；需要条件
-串联时使用 `if ($LASTEXITCODE -eq 0) { <next-command> }`。
+本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`。该命令
+只恢复已钉住工具的发现，不授权在本机 GNU 重跑 Rust linking 命令。工具链钉在
+`rust-toolchain.toml`（1.97.1）。
 
 ## Personal 实验环境边界
 
@@ -81,10 +110,13 @@ revision 同步到该主机的可清理 Git worktree，再在该 exact revision 
 不得复制未提交本地代码，也不得用旧的无 Git source snapshot 替代当前 revision。Windows
 只可运行格式、静态、文档或不依赖 Linux runtime 的检查，不能替代 native Linux 结果。
 
-`B01-Clean-Linux-001` 和 `B01-Desktop-Linux-002` 是专用 KVM campaign guests，不能作为
-普通开发/部署目标。只有对应的预注册 B01 lease 与 campaign procedure 可改变其状态、快照、
-产品安装或凭据。其他实验部署只可使用 SSH 宿主上任务声明的可清理目录；涉及 user-service
-修改、任何提权、远程 secret 或外部 Provider 前必须向用户确认。
+`B01-Desktop-Linux-002` 是唯一活动的专用 KVM B01 campaign guest，不能作为普通开发或
+部署目标。只有预注册 B01 lease 与 campaign procedure 可改变其状态、快照、产品安装或
+凭据。`B01-Clean-Linux-001` 已因不满足 headless Secret Service 前置条件而退役：仅保留
+历史资格失败记录，禁止把它恢复为 B01 或常规测试候选，也禁止普通开发恢复、启动、重置、
+部署或删除该 VM；任何基础设施处置须单独获得用户明确授权。其他实验部署只可使用 SSH
+宿主上任务声明的可清理目录；涉及 user-service 修改、任何提权、远程 secret 或外部 Provider
+前必须向用户确认。
 
 ## 目录和变更边界
 

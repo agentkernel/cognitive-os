@@ -1,7 +1,7 @@
 # CognitiveOS Personal Test and Development Environments
 
 - Status: active environment registry
-- Last reconciled: 2026-08-02
+- Last reconciled: 2026-08-03
 - Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
 
@@ -21,11 +21,34 @@ Gate ledger and does not turn an environment name into evidence.
 | Pi npm SRI | `sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==` |
 | Linux payload ABI target | `x86_64-unknown-linux-gnu.2.35` for the experimental builder |
 | Product service/endpoint | `cognitiveos-personal.service`, `127.0.0.1:48181` |
+| Local Cursor command shell | Windows PowerShell 5.1; `COMMAND-SHELL-PS51` applies |
 
 Every native/remote slice must re-record exact versions, artifact/adapter
 digests, secret preconditions, reset and cleanup. Secret material, raw Provider
 traffic and sensitive SQLite content are forbidden from command arguments,
 terminal captures and committed evidence.
+
+### 1.1 Fail-fast command and validation routing
+
+These are persistent environment facts. A normal implementation Slice must
+consume them before selecting commands; it must not rediscover them by running
+known-invalid syntax or a known-unsupported linker:
+
+| Need | Required route | Forbidden repeat |
+|---|---|---|
+| Multiple independent local commands | separate parallel Shell calls | joining them with `&&` or `||` under Windows PowerShell 5.1 |
+| Dependent local commands | separate calls, or `if ($LASTEXITCODE -eq 0) { <next-command> }` | bash command chaining unless the command explicitly starts in bash |
+| Local documentation, consistency, TypeScript or diff verification | `DEV-WIN-GNU-01` is eligible when the command does not trigger Rust compile/link | treating a PowerShell parser rejection as a test failure |
+| Rust formatting | `DEV-WIN-GNU-01` may run `cargo fmt --all -- --check` | using formatting as build/test evidence |
+| Rust build/test/Clippy/run/bench | `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or exact-revision `DEV-LINUX-NATIVE-01` according to the required evidence | invoking these first on `DEV-WIN-GNU-01`, whose registered result is linker exit 121 |
+| Windows GNU toolchain repair | a separately approved and leased P0-T01 Delivery Slice with explicit acceptance | ad hoc LLVM-MinGW, shim, PATH, Rust pin or source workaround inside a feature Slice |
+
+`COMMAND-SHELL-PS51` means a command rejected by the local PowerShell parser
+did not execute and is recorded as `not-run`. `RUST-LINK-DEV-WIN-GNU-01`
+means the current GNU host's known linker exit 121 is an environment capability
+boundary, not a regression to reproduce for each Rust change. If the required
+supported route is unavailable, the validation and affected Delivery Slice
+remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 
 ## 2. Environment summary
 
@@ -37,8 +60,7 @@ terminal captures and committed evidence.
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
 | `BUILD-LINUX-EXPERIMENTAL-01` | protected experimental campaign builder | reviewed CI build/sign | experimental artifact evidence |
-| `B01-CLEAN-SERVER-001` | Ubuntu Server KVM candidate | native clean-VM qualification | failed prerequisite evidence only |
-| `B01-DESKTOP-002` | Ubuntu Desktop KVM campaign host | formal B01 environment | individual B01 attempt evidence |
+| `B01-DESKTOP-002` | Ubuntu Desktop KVM campaign host | **sole active B01 environment** | individual B01 attempt evidence |
 | `FIXTURE-SYSTEMD-01` | fake-systemd/installer fixtures | deterministic fixture | lifecycle implementation evidence |
 | `FIXTURE-PROVIDER-HTTPS-01` | loopback HTTPS Provider fixture | deterministic fixture | Provider transport implementation evidence |
 | `CONTRACT-RUNNERS-01` | golden/conformance/consistency runners | contract/tooling | scoped contract and tooling evidence |
@@ -48,10 +70,21 @@ terminal captures and committed evidence.
 - **Recorded platform:** `x86_64-pc-windows-gnu`.
 - **Recorded tools:** Rust 1.97.1; local TypeScript baseline used Node 24.15.0
   and pnpm 10.33.2.
-- **Observed use:** frozen pnpm install, repeated workspace TS build/test and
-  Rust formatting.
-- **Known limitation:** workspace Rust build/link fails with linker exit 121,
-  including the recorded LLVM-MinGW/shim retry.
+- **Command shell:** local Cursor commands use Windows PowerShell 5.1. Never
+  use `&&` or `||`; use parallel calls, separate dependent calls, or
+  `if ($LASTEXITCODE -eq 0) { <next-command> }`.
+- **Observed allowlist:** frozen pnpm install, workspace TS build/test, Node
+  tooling, documentation/static consistency, diff checks and Rust formatting.
+- **Known limitation (`RUST-LINK-DEV-WIN-GNU-01`):** workspace Rust
+  build/test/Clippy/run/bench is unsupported and fails during linking with exit
+  121, including the already exhausted LLVM-MinGW/shim retry.
+- **No-repeat rule:** do not run Rust compiling/linking commands on this host
+  merely to reconfirm the known result. Only an explicitly approved P0-T01
+  toolchain-repair Slice may retest or change linker/PATH/toolchain settings.
+- **Required transfer:** route Rust validation to supported Ubuntu CI,
+  Windows/MSVC CI, or an exact-revision native Linux worktree before the Slice
+  starts; if unavailable, record `blocked`/`not-run` rather than substituting
+  this host.
 - **Maximum evidence:** local TS/development checks actually executed.
 - **Cannot claim:** supported Windows Rust, Windows product install, B01-W,
   sandbox/containment, release or Profile.
@@ -129,14 +162,8 @@ toolchain, exact revision or disposable root is unavailable, record the Linux
 check as `not-run` or blocked; do not silently fall back to Windows and label
 the result Linux-native.
 
-The host's `B01-Clean-Linux-001` and `B01-Desktop-Linux-002` libvirt guests are
-reserved formal-campaign environments. Ordinary development must not start,
-stop, snapshot, install on or deploy to them. Only the respective preregistered
-B01 procedure and active B01 lease may alter either guest. Ordinary
-experimental deployment uses a task-declared disposable host root, still has
-only `experimental-local-only` / `tested-local` evidence scope, and requires
-separate user approval before any user-service change, privilege use, secret
-handling or external Provider interaction.
+The host's `B01-Desktop-Linux-002` libvirt guest is the **sole active formal
+B01 campaign environment**. Ordinary development must not start, stop,
 
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 

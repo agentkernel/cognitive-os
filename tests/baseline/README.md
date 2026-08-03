@@ -44,6 +44,13 @@ plaintext fallback, modify the pinned Rust toolchain, or promote the local GNU
 host to a supported release-validation environment without a separately
 reviewed toolchain decision.
 
+This result is registered as `RUST-LINK-DEV-WIN-GNU-01`. It is a persistent
+command-routing fact, not a diagnostic that feature work should reproduce.
+Normal Delivery Slices must not rerun local GNU `cargo build`, `cargo test`,
+`cargo clippy`, `cargo run`, `cargo bench`, or exhausted LLVM-MinGW/shim/PATH
+workarounds. Only a separately approved and leased P0-T01 toolchain-repair
+Slice may reassess this baseline.
+
 ## TypeScript Local Measurement
 
 After `pnpm install --frozen-lockfile` passed, three consecutive executions of
@@ -52,22 +59,37 @@ times were 29.722, 29.669, and 28.408 seconds; the observed p50 is **29.669
 seconds**. These are local development measurements only, not a performance
 claim or release gate.
 
-## Reproduction Commands
+## Command Routing
 
-Run the following from a clean checkout at the recorded revision:
+The local Cursor shell is Windows PowerShell 5.1 (`COMMAND-SHELL-PS51`). Do not
+join local commands with `&&` or `||`. Run independent commands separately or
+in parallel; run dependent commands as separate calls or with
+`if ($LASTEXITCODE -eq 0) { <next-command> }`. A parser rejection is
+`not-run`, not a build/test failure.
+
+The following local commands are eligible on `DEV-WIN-GNU-01` because they do
+not require Rust linking:
 
 ```powershell
 pnpm install --frozen-lockfile
 pnpm -r build
 pnpm -r test
 cargo fmt --all -- --check
-cargo build --workspace --locked
-cargo test --workspace --locked
-cargo clippy --workspace --all-targets --locked -- -D warnings
 pnpm run check:consistency
 node tools/src/gen-matrix.mjs --check
 ```
 
-The authoritative cross-platform result is the CI workflow in
-`.github/workflows/ci.yml`. Local GNU failures must be recorded honestly and
-must not be converted into a release claim.
+Run Rust compiling/linking commands only on a selected supported route such as
+`CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an exact-revision
+`DEV-LINUX-NATIVE-01` worktree:
+
+```bash
+cargo build --workspace --locked
+cargo test --workspace --locked
+cargo clippy --workspace --all-targets --locked -- -D warnings
+```
+
+The authoritative cross-platform baseline is the CI workflow in
+`.github/workflows/ci.yml`. If the required supported route is unavailable,
+record the validation as `blocked`/`not-run`; do not substitute or first retry
+the known local GNU failure, and do not convert it into a release claim.

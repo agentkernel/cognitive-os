@@ -7,6 +7,8 @@ classification: product-plan-trace-only
 sources:
   project_identity: docs/governance/project-scope.yaml
   formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+  delivery_slice_definitions: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+  current_progress: docs/plan/PROGRESS.md
   research_plan: plan.md
   registry: specs/registry/requirements.yaml
   registry_matrix: docs/traceability/matrix.yaml
@@ -16,11 +18,15 @@ rules:
   product_only: no direct registry requirement is claimed
   evidence_status: legacy requirement-level field; represents formal gate evidence only and does not erase task or implementation progress
   task_status: pure research and uncommitted planning do not change status; first implementation or test slice changes not-started to in-progress
+  delivery_slice: stable task-internal P*-T*/DNN increment; formal plan owns definitions and exits, while PROGRESS.md Current snapshot alone owns current status
+  delivery_closure: requires a vertical or durable outcome plus actually passed focused and supported validation; implementation with required validation not-run remains blocked
+  work_in_progress: at most one in-progress delivery slice per formal task; an enabling slice must be followed by real caller or durable-outcome integration rather than another helper-only slice
   claim_boundary: local, fixture, WSL, and ordinary CI evidence cannot promote product Gate, release, or Profile status unless included in the Gate's predeclared campaign
   current_status: owned only by docs/plan/PROGRESS.md Current snapshot; this file must not copy it
 
 status_dimensions:
   task_status: [not-started, in-progress, blocked, done, cancelled]
+  delivery_slice_status: [ready, in-progress, blocked, done, cancelled]
   development_track: [production-path, experimental-local-only]
   implementation_evidence: [none, provided, tested-local, tested-supported-ci]
   gate_status: [not-run, running, pass, fail, blocked]

@@ -459,8 +459,17 @@ const knownTaskStatuses = new Set([
   "done",
   "cancelled",
 ]);
+const knownDeliverySliceStatuses = new Set([
+  "ready",
+  "in-progress",
+  "blocked",
+  "done",
+  "cancelled",
+]);
 const personalTaskIds = new Set();
+const personalDeliverySliceIds = new Set();
 let personalPlanText = "";
+let computedPersonalTaskTotals;
 
 if (!existsSync(personalPlanPath)) {
   fail("docs/plan/PERSONAL-DEVELOPMENT-PLAN.md", "formal Personal plan missing");
@@ -490,6 +499,47 @@ if (!existsSync(personalPlanPath)) {
       phase: Number(taskIdMatch[1]),
       status: taskStatus,
     });
+  }
+
+  for (const line of personalPlanText.split(/\r?\n/)) {
+    const columns = parseMarkdownTableRow(line);
+    if (columns.length !== 5) {
+      continue;
+    }
+    const deliverySliceId = normalizeMarkdownCell(columns[0]);
+    const deliverySliceIdMatch = deliverySliceId.match(/^(P\d+-T\d+)\/D\d{2}$/);
+    if (!deliverySliceIdMatch) {
+      continue;
+    }
+    if (personalDeliverySliceIds.has(deliverySliceId)) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `duplicate formal delivery slice definition: ${deliverySliceId}`,
+      );
+    }
+    personalDeliverySliceIds.add(deliverySliceId);
+
+    const parentTaskId = deliverySliceIdMatch[1];
+    const declaredTaskId = normalizeMarkdownCell(columns[1]);
+    if (!personalTaskIds.has(parentTaskId) || declaredTaskId !== parentTaskId) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `${deliverySliceId} must reference its existing parent task ${parentTaskId}`,
+      );
+    }
+    const requiredDefinitionCells = columns.slice(2).map(normalizeMarkdownCell);
+    if (requiredDefinitionCells.some((cell) => cell.length === 0 || cell === "—")) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        `${deliverySliceId} must declare outcome, implementation dependency, and required validation`,
+      );
+    }
+  }
+  if (personalDeliverySliceIds.size === 0) {
+    fail(
+      "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+      "formal plan has no registered delivery slices",
+    );
   }
 
   const summaryRows = new Map();
@@ -553,6 +603,7 @@ if (!existsSync(personalPlanPath)) {
       `summary totals ${declaredTotals.join("/")} do not match task rows ${computedTotals.join("/")}`,
     );
   }
+  computedPersonalTaskTotals = computedTotals;
 }
 
 if (!existsSync(personalTracePath)) {
@@ -572,6 +623,26 @@ if (!existsSync(personalTracePath)) {
         fail(
           "docs/plan/personal-trace.yaml",
           `sources.${sourceName} must reference an existing repository path`,
+        );
+      }
+    }
+
+    const tracedDeliverySliceStatuses = new Set(
+      personalTrace?.status_dimensions?.delivery_slice_status ?? [],
+    );
+    for (const knownDeliverySliceStatus of knownDeliverySliceStatuses) {
+      if (!tracedDeliverySliceStatuses.has(knownDeliverySliceStatus)) {
+        fail(
+          "docs/plan/personal-trace.yaml",
+          `status_dimensions.delivery_slice_status is missing ${knownDeliverySliceStatus}`,
+        );
+      }
+    }
+    for (const tracedDeliverySliceStatus of tracedDeliverySliceStatuses) {
+      if (!knownDeliverySliceStatuses.has(tracedDeliverySliceStatus)) {
+        fail(
+          "docs/plan/personal-trace.yaml",
+          `status_dimensions.delivery_slice_status contains unknown value ${tracedDeliverySliceStatus}`,
         );
       }
     }
@@ -678,7 +749,73 @@ if (!existsSync(projectIdentityPath)) {
   }
 }
 
-// ---------- 6c: dated prompt boundary and B01 Gate honesty
+// ---------- 6c: fail-fast local shell and validation-environment guards
+
+const commandEnvironmentGuardDocuments = [
+  {
+    path: "AGENTS.md",
+    requiredFragments: [
+      "COMMAND-SHELL-PS51",
+      "Windows PowerShell 5.1",
+      "RUST-LINK-DEV-WIN-GNU-01",
+      "linker exit 121",
+      "CI-WINDOWS-MSVC-01",
+    ],
+  },
+  {
+    path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
+    requiredFragments: [
+      "COMMAND-SHELL-PS51",
+      "Do not use `&&` or `||`",
+      "RUST-LINK-DEV-WIN-GNU-01",
+      "Do not repeat them",
+      "DEV-LINUX-NATIVE-01",
+    ],
+  },
+  {
+    path: "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md",
+    requiredFragments: [
+      "COMMAND-SHELL-PS51",
+      "RUST-LINK-DEV-WIN-GNU-01",
+      "No-repeat rule",
+      "CI-UBUNTU-01",
+      "CI-WINDOWS-MSVC-01",
+    ],
+  },
+  {
+    path: "tests/baseline/README.md",
+    requiredFragments: [
+      "COMMAND-SHELL-PS51",
+      "RUST-LINK-DEV-WIN-GNU-01",
+      "must not rerun",
+      "linker reported exit code `121`",
+    ],
+  },
+];
+
+for (const commandEnvironmentGuardDocument of commandEnvironmentGuardDocuments) {
+  const commandEnvironmentGuardPath = repoPath(
+    ...commandEnvironmentGuardDocument.path.split("/"),
+  );
+  if (!existsSync(commandEnvironmentGuardPath)) {
+    fail(
+      commandEnvironmentGuardDocument.path,
+      "command/environment guard document is missing",
+    );
+    continue;
+  }
+  const commandEnvironmentGuardText = readText(commandEnvironmentGuardPath);
+  for (const requiredFragment of commandEnvironmentGuardDocument.requiredFragments) {
+    if (!commandEnvironmentGuardText.includes(requiredFragment)) {
+      fail(
+        commandEnvironmentGuardDocument.path,
+        `command/environment guard is missing required fragment: ${requiredFragment}`,
+      );
+    }
+  }
+}
+
+// ---------- 6d: dated prompt boundary and B01 Gate honesty
 
 const legacyPromptPrefixPath = repoPath("docs", "prompts", "common-prefix.md");
 if (!existsSync(legacyPromptPrefixPath)) {
@@ -703,6 +840,102 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
   const currentSnapshot = progressText.split(/^## Historical evidence journal/m, 1)[0];
   if (!currentSnapshot.includes("`cognitiveos-personal`")) {
     fail("docs/plan/PROGRESS.md", "Current snapshot does not identify cognitiveos-personal");
+  }
+
+  const formalTaskProgressSectionMatch = currentSnapshot.match(
+    /^### Layer 1 .*Formal task progress\s*\n([\s\S]*?)(?=^### Layer 2 )/m,
+  );
+  if (!formalTaskProgressSectionMatch) {
+    fail("docs/plan/PROGRESS.md", "Current snapshot has no formal task progress layer");
+  } else {
+    const formalTaskProgressCounts = formalTaskProgressSectionMatch[1]
+      .split(/\r?\n/)
+      .map(parseMarkdownTableRow)
+      .map((columns) => columns.map((column) => Number(normalizeMarkdownCell(column))))
+      .find(
+        (counts) =>
+          counts.length === 6 && counts.every((count) => Number.isInteger(count)),
+      );
+    if (!formalTaskProgressCounts) {
+      fail("docs/plan/PROGRESS.md", "formal task progress layer has no numeric summary row");
+    } else if (computedPersonalTaskTotals) {
+      const expectedRemainingCount =
+        computedPersonalTaskTotals[0] - computedPersonalTaskTotals[1];
+      const expectedProgressCounts = [
+        ...computedPersonalTaskTotals,
+        expectedRemainingCount,
+      ];
+      if (
+        formalTaskProgressCounts.some(
+          (count, countIndex) => count !== expectedProgressCounts[countIndex],
+        )
+      ) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `formal task progress ${formalTaskProgressCounts.join("/")} does not match plan ${expectedProgressCounts.join("/")}`,
+        );
+      }
+    }
+  }
+
+  const deliveryQueueSectionMatch = currentSnapshot.match(
+    /^### Layer 2 .*Delivery Slice queue\s*\n([\s\S]*?)(?=^### Layer 3 )/m,
+  );
+  if (!deliveryQueueSectionMatch) {
+    fail("docs/plan/PROGRESS.md", "Current snapshot has no Delivery Slice queue");
+  } else {
+    const currentDeliverySliceIds = new Set();
+    const inProgressCountsByTask = new Map();
+    const deliveryQueueRows = deliveryQueueSectionMatch[1]
+      .split(/\r?\n/)
+      .map(parseMarkdownTableRow)
+      .filter((columns) => /^(P\d+-T\d+)\/D\d{2}$/.test(normalizeMarkdownCell(columns[0] ?? "")));
+
+    for (const columns of deliveryQueueRows) {
+      if (columns.length !== 4) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `Delivery Slice queue row must have 4 columns: ${columns.join(" | ")}`,
+        );
+        continue;
+      }
+      const deliverySliceId = normalizeMarkdownCell(columns[0]);
+      const deliverySliceStatus = normalizeMarkdownCell(columns[1]);
+      if (currentDeliverySliceIds.has(deliverySliceId)) {
+        fail("docs/plan/PROGRESS.md", `duplicate current delivery slice: ${deliverySliceId}`);
+      }
+      currentDeliverySliceIds.add(deliverySliceId);
+      if (!personalDeliverySliceIds.has(deliverySliceId)) {
+        fail("docs/plan/PROGRESS.md", `current queue references undefined slice: ${deliverySliceId}`);
+      }
+      if (!knownDeliverySliceStatuses.has(deliverySliceStatus)) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `${deliverySliceId} has unknown delivery status: ${deliverySliceStatus}`,
+        );
+      }
+      if (deliverySliceStatus === "in-progress") {
+        const parentTaskId = deliverySliceId.split("/")[0];
+        inProgressCountsByTask.set(
+          parentTaskId,
+          (inProgressCountsByTask.get(parentTaskId) ?? 0) + 1,
+        );
+      }
+    }
+
+    for (const deliverySliceId of personalDeliverySliceIds) {
+      if (!currentDeliverySliceIds.has(deliverySliceId)) {
+        fail("docs/plan/PROGRESS.md", `formal delivery slice is missing current status: ${deliverySliceId}`);
+      }
+    }
+    for (const [parentTaskId, inProgressCount] of inProgressCountsByTask) {
+      if (inProgressCount > 1) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `${parentTaskId} has ${inProgressCount} in-progress delivery slices; maximum is 1`,
+        );
+      }
+    }
   }
 
   const formalB01Row = personalPlanText
@@ -769,7 +1002,7 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
     }
   }
 
-  // ---------- 6d: active ownership leases
+  // ---------- 6e: active ownership leases
 
   const lanesText = readText(lanesPath);
   const activeLeaseSectionMatch = lanesText.match(
@@ -928,5 +1161,5 @@ if (failures.length > 0) {
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
     `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, Personal plan/Gates, ` +
-    `design sources, prompt boundary, and leases verified)`,
+    `design sources, command/environment routing, prompt boundary, and leases verified)`,
 );

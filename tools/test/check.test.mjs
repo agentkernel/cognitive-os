@@ -53,25 +53,41 @@ test("check-consistency passes on the current repository tree", () => {
 
 test("Personal governance drift is rejected by failure injection", () => {
   const result = runConsistencyFailureInjection({
+    "AGENTS.md": (source) =>
+      source.replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD"),
+    "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md": (source) =>
+      source.replaceAll("RUST-LINK-DEV-WIN-GNU-01", "REMOVED-RUST-LINK-GUARD"),
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
       const taskRow = source
         .split(/\r?\n/)
         .find((line) => line.startsWith("| P7-T08 |") && line.includes("| not-started |"));
       assert.ok(taskRow, "P7-T08 task row must exist for duplicate injection");
-      return source.replace(taskRow, `${taskRow}\n${taskRow}`);
+      const deliverySliceRow = source
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| `P2-T02/D01` |"));
+      assert.ok(deliverySliceRow, "P2-T02/D01 row must exist for duplicate injection");
+      return source
+        .replace(taskRow, `${taskRow}\n${taskRow}`)
+        .replace(deliverySliceRow, `${deliverySliceRow}\n${deliverySliceRow}`);
     },
     "docs/plan/personal-trace.yaml": (source) =>
-      `${source}\ncurrent_snapshot:\n  B01: pass\n`,
+      `${source.replace(
+        "delivery_slice_status: [ready, in-progress, blocked, done, cancelled]",
+        "delivery_slice_status: [ready, in-progress, blocked, done]",
+      )}\ncurrent_snapshot:\n  B01: pass\n`,
     "docs/plan/PARALLEL-LANES.md": (source) =>
       source.replace(
         "### 3.1 最近关闭的 leases",
         "| `lease/personal/P0-T01/broad-fixture` | fixture | Lane-DOC | `fixture` | `docs/plan/**` | test fixture | 2026-08-02 / 2026-08-02 | active |\n### 3.1 最近关闭的 leases",
       ),
     "docs/plan/PROGRESS.md": (source) =>
-      source.replace(
-        "| B01 first-install/first-conversation Gate | **running** |",
-        "| B01 first-install/first-conversation Gate | **pass** |",
-      ),
+      source
+        .replace(
+          "| B01 first-install/first-conversation Gate | **running** |",
+          "| B01 first-install/first-conversation Gate | **pass** |",
+        )
+        .replace("| `P2-T03/D03` | `blocked` |", "| `P2-T03/D03` | `in-progress` |")
+        .replace("| `P2-T03/D04` | `blocked` |", "| `P2-T03/D04` | `in-progress` |"),
     "docs/governance/project-scope.yaml": (source) =>
       source.replace(
         "product_design: docs/product/personal/README.md",
@@ -82,9 +98,20 @@ test("Personal governance drift is rejected by failure injection", () => {
   });
 
   assert.equal(result.status, 1, result.stdout);
+  assert.match(
+    result.stderr,
+    /AGENTS\.md[\s\S]*command\/environment guard is missing required fragment: COMMAND-SHELL-PS51/,
+  );
+  assert.match(
+    result.stderr,
+    /PERSONAL-TEST-ENVIRONMENTS\.md[\s\S]*command\/environment guard is missing required fragment: RUST-LINK-DEV-WIN-GNU-01/,
+  );
   assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
+  assert.match(result.stderr, /duplicate formal delivery slice definition: P2-T02\/D01/);
   assert.match(result.stderr, /summary counts .* do not match task rows/);
+  assert.match(result.stderr, /P2-T03 has 2 in-progress delivery slices; maximum is 1/);
   assert.match(result.stderr, /trace must not copy a parallel current_snapshot/);
+  assert.match(result.stderr, /delivery_slice_status is missing cancelled/);
   assert.match(result.stderr, /active_project\.product_design must reference an existing/);
   assert.match(result.stderr, /legacy prompts must be explicitly non-executable/);
   assert.match(result.stderr, /B01 cannot pass before the formal attempt denominator is complete/);

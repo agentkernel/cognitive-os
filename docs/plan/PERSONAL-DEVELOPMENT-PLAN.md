@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08 已完成；P1-T09 implementation in-progress，B01 running：1/至少20个 attempt 已通过；P2-T01/P2-T03 in-progress，P2/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01 已完成；P1-T09/P2-T03 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-03**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -83,6 +83,13 @@
    可验证治理修正，或带 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner /
    next action 的阻塞记录。任务、依赖和安全路径已经明确时，不得用继续研究或新建平行
    计划替代实现。
+8. 任务内开发出口必须登记为稳定 Delivery Slice，ID 为 `<task-id>/DNN`。本文件拥有
+   slice 的目标、依赖、出口和 required validation；当前状态只由 `PROGRESS.md` Current
+   snapshot 拥有。Slice `done` 不等于 task `done`，task `done` 也不等于 Gate pass。
+9. 同一正式任务最多一个 `in-progress` slice。一个 foundation/helper slice 后必须优先
+   接入真实 caller、durable authority outcome 或端到端负例；不得连续新增 helper-only
+   slice 回避集成。实现存在但 required supported validation 未运行时，slice 必须为
+   `blocked`，不能凭 fmt、diff 或 consistency 关闭。
 
 ### Typed dependency 规则
 
@@ -99,13 +106,13 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 0 | 2 | 0 | 6 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 1 | 1 | 0 | 6 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **15** | **3** | **0** | **35** | — |
+| **合计** | **53** | **16** | **2** | **0** | **35** | — |
 
 ## 2. 产品边界与不变量
 
@@ -189,6 +196,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Task/Gate | implementation_requires | acceptance_requires | promotion_requires |
 |---|---|---|---|
 | P1-T09 / B01 | P1-T08 与既有 Secret/Provider/daemon/Pi contracts | 至少 20 个 clean-Linux attempts、成功率 ≥90%、关键安全失败 0、完整统计和 independent verifier | B01 只在完整 campaign 后 pass |
+| P2-T01 | 既有 authority/store/Intent/TaskContract contracts；P1-T09 route implementation 已可集成，B01 不是 mutex | proposal/clarify/preview/admit/control/query；raw-intent durability、preview-digest binding、epoch/stale-lease fencing focused evidence | G2: B02/B04/B05/B12；task `done` 不要求这些 Gate 已运行 |
 | P2-T02 | P2-T01、P1-T07、task/management channel contracts | real Personal Task API/watch；Pi Shell 与 CLI 调同一 application service；channel isolation negatives | G2: B02/B04/B05/B12 |
 | P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
 | P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、revocation negatives | B03 |
@@ -202,6 +210,33 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P5-T05 | P5-T02 | B09 managed Pi + sidecar qualification；任务完成与 B10 解耦 | GMVP-LINUX requires B09 |
 | P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
 | P7-T08 | P1-T09、P2-T08、P3-T06、P4-T06、P5-T01/P5-T02/P5-T05 B09、P7-T01..T03 | Linux 1.0 六类资源 release manifest、native systemd、desktop/headless SecretStore、Pi sidecar、UCR-01 fixed-scenario correctness/utility、lifecycle/backup/doctor evidence | **B01+B02+B03+B04+B05+B08+B09+B12**；B06/B07/B10/B11 不阻塞 |
+
+### Delivery Slice register（任务内交付出口）
+
+Delivery Slice 是正式 `P*-T*` 任务内的可关闭交付单元，不新增任务、Gate、REQ 或
+产品声明。Slice 的定义、依赖和出口由本节拥有；当前 `ready`、`in-progress`、`blocked`、
+`done`、`cancelled` 状态及实际 evidence 只写入 [PROGRESS.md](PROGRESS.md) 的
+Current snapshot。一个 slice 必须有一个真实 caller、durable authority outcome、可验证
+端到端边界或闭合的负例出口；单独的 helper/parser/boundary 不能连续形成交付出口。每个
+slice 至少需要 focused failure-first/negative test 和其定义的 supported validation，
+除非明确是 non-executable documentation-only slice。实现存在但 required validation 未
+执行时只能是 `blocked`，不能标为 `done`。
+
+| Slice ID | Formal task | Delivery outcome and exit | Implementation dependency | Required validation / next dependency |
+|---|---|---|---|---|
+| `P2-T01/D01` | P2-T01 | TaskApplicationService 的 proposal/clarify/preview/admit/control/query 六操作面；raw intent 先持久化、preview digest 绑定、epoch fencing、stale lease 负例全部闭合 | 既有 Intent/TaskContract kernel 与 authority store | Linux focused tests、store regressions、Clippy、fmt、required CI；已闭合后 task 可按正式验收标 `done` |
+| `P2-T03/D01` | P2-T03 | scheduler persistence、CAS lease、owner/epoch fencing、next-eligible、cancel 与 monotonic clock eligibility | P1-T01、P2-T01 | scheduler/store focused tests、fmt、Clippy、required CI；完成后进入 authority ceiling slice |
+| `P2-T03/D02` | P2-T03 | 从 durable TaskContract/progress/budget authority facts 计算 ceiling，STOP 在 lease acquisition 前注册并保持 fail-closed | `P2-T03/D01` 与既有 TaskContract/transition contracts | exact-Linux authority tests、STOP-ordering regressions、fmt/consistency；完成后进入 Effect closure slice |
+| `P2-T03/D03` | P2-T03 | 通过 immutable TaskBinding→Intent reverse lookup 唯一解析 durable Effect，并对缺失、歧义、不一致、未知状态 fail-closed | `P2-T03/D02`、现有 Intent/Effect store ports | exact revision Linux storage/classifier tests；完成后接入 D04，验证阻塞时不得另开同任务 helper slice |
+| `P2-T03/D04` | P2-T03 | 真实 leased dispatch 读取 D03 closure disposition，仅 Closed 执行 owner+epoch-fenced scheduler release；Pending/STOP 保留 reconciliation | `P2-T03/D03` 与 daemon worker boundary | exact revision Linux runtime/kernel tests、required CI；完成后才进入 D05 |
+| `P2-T03/D05` | P2-T03 | scheduler→BoundedHarness worker dispatch、每轮 contract/lease reload、crash/restart/duplicate/clock/budget recovery 与 durable STOP 闭环 | `P2-T03/D04`、P2-T02 application/sidecar ports | failure injection + worker integration tests；完成后为 P2-T03 task acceptance 汇总入口 |
+| `P2-T02/D01` | P2-T02 | real Task API/watch vertical path：server-issued preview→admit、watch cursor resume/dedup，并让 CLI/Shell/sidecar 共享 application service | P2-T01/D01、P1-T07 channel contracts | Rust/TS focused integration、channel isolation negatives、required CI；完成后继续 projection/parity slices |
+
+**执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
+未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
+不包含 B01 或 P2-T03 acceptance，可作为不相关的并行 forward-progress 出口。所有 slice
+当前状态只查 `PROGRESS.md`。B01 attempt 统计、clean-reset checkpoint 和 Gate threshold
+不由本 register 改写。
 
 ### Lane-CTR public-contract prerequisites（仅登记，不在本批实施）
 
@@ -418,9 +453,9 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | in-progress | 2026-08-01；`crates/cognitive-management/src/task_application.rs`（proposal/clarify/preview/admit/control/query 六操作面，仅组合 kernel 意图链原语）；PR #127 `lane/personal-p2-t01-task-application-service`；Linux 宿主 `cargo test -p cognitive-runtime --test p2_t01_task_application_service` 4/4 pass；clippy clean；`cognitive-store` m5_intent_chain 6/6 pass |
+| P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | done | 2026-08-03 closure reconciliation：`P2-T01/D01` 已满足本任务全部验收摘要。`crates/cognitive-management/src/task_application.rs` 提供 proposal/clarify/preview/admit/control/query 六操作面且只组合 kernel intent-chain primitives；raw-intent durable restart、digest mismatch before mutation、epoch supersession/fencing、stale writer lease 均有 focused regression。PR #127 merged as `main@7f763c8`；Linux focused 4/4、management lib 3/3、store 6/6、Clippy/fmt 与 required Ubuntu/Windows CI 通过。P2 Gates B02/B04/B05/B12 仍为 `not-run`，task `done` 不产生 Gate/release/Profile claim。证据：[handoff](../checkpoints/20260801-personal-p2-t01-task-application-service-handoff.md)。 |
 | P2-T02 | 真实 Resource + Task API/watch、统一 projection 与 CLI/Shell parity | P2-T01, P1-T07 | 六类资源的 private versioned projection；真实 Task API/watch；deterministic CLI 与 Shell 经 sidecar 调同一 daemon application services；task/management bearer、cache、retry、cursor、projection 隔离（ADR-0026/0035/0037/0038） | not-started | — |
-| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-03；repository/service/ceiling/authority/contract slices merged through PR #129 `main@7ea1cde`. The daemon now reloads scheduler ceiling facts from an execution-bound TaskContract, commits a reached STOP before lease acquisition, fences owner/epoch release after durable Effect closure, and resolves an exact TaskBinding through immutable Intent records to a durable Effect. Missing/ambiguous/inconsistent bindings, absent Effects and unknown states fail closed; only reconciliation/verification terminal states classify closed. The SQLite reverse lookup requires no migration and orders by Intent identity. The concrete closure boundary verifies a leased task matches that binding, reads closure only from the durable Effect, and releases the matching owner/epoch lease through the repository only after closure; this marks scheduler completion, never Task acceptance. Pending reconciliation and terminal ceiling STOP retain the lease. The intended exact-Linux revision `a74ad74856b4cef6d05668acf42832ea18351b8a` validation did not begin: SSH host-key verification failed before clone, checkout or either focused test. Existing P2-T03 `tested-local` evidence is unchanged; this attempt adds no Gate, release or Profile claim. BoundedHarness integration and P2 Gates remain not-run. See [handoff](../checkpoints/20260803-personal-p2-t03-concrete-effect-closure-release-handoff.md). |
+| P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-03 Delivery Slice reconciliation：D01 scheduler persistence/lease/eligibility 与 D02 durable ceiling/STOP ordering 保留 prior Linux evidence；D03 durable Effect resolution 和 D04 concrete owner/epoch-fenced closure/release 的实现路径已存在，但 exact-revision Linux validation 因 SSH host-key verification 在 clone/test 前失败而未运行。D05 BoundedHarness worker/recovery 依赖 D03/D04 的 required validation；不得继续新增 helper-only slice。Slice 当前状态仅见 `PROGRESS.md`。Task acceptance、B02/B04/B05/B12、release 与 Profile 均未推进。证据：[closure handoff](../checkpoints/20260803-personal-p2-t03-concrete-effect-closure-release-handoff.md)、[validation handoff](../checkpoints/20260803-personal-p2-t03-linux-native-task-effect-validation-handoff.md)。 |
 | P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | not-started | — |
 | P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | not-started | — |
 | P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | not-started | — |
