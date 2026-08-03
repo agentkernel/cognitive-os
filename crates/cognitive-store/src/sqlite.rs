@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -764,6 +764,17 @@ impl ProtocolStore for SqliteAuthorityStore {
             }
             Err(err) => return Err(unavailable("insert intent")(err)),
         }
+        if let Some(task_binding) = intent.task_binding.as_ref() {
+            let eligible_at = scheduler_eligible_at(event)?;
+            tx.execute(
+                "INSERT INTO scheduler_entries \
+                 (task_ref, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
+                 VALUES (?1, 'runnable', NULL, 0, NULL, ?2, 0, 0) \
+                 ON CONFLICT(task_ref) DO NOTHING",
+                (task_binding.task_ref.as_str(), eligible_at.as_str()),
+            )
+            .map_err(unavailable("register scheduler work"))?;
+        }
         tx.execute(
             "INSERT INTO events
                (event_id, object_id, domain, object_version, event_type, canonical_json)
@@ -1026,6 +1037,29 @@ impl ProtocolStore for SqliteAuthorityStore {
             }
         }
     }
+}
+
+/// Derive scheduler eligibility from the immutable Intent event that is being
+/// committed in the same transaction. A binding with no canonical event time
+/// must fail closed instead of creating a work row with an invented clock.
+fn scheduler_eligible_at(
+    event: &cognitive_kernel::ports::EventDraft,
+) -> Result<WallTimestamp, StorePortError> {
+    let event_value: serde_json::Value =
+        serde_json::from_str(&event.canonical_json).map_err(|error| {
+            StorePortError::Unavailable {
+                detail: format!("scheduler registration event is not canonical JSON: {error}"),
+            }
+        })?;
+    let event_time = event_value
+        .get("event_time")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| StorePortError::Unavailable {
+            detail: "scheduler registration event has no event_time".to_owned(),
+        })?;
+    WallTimestamp::parse(event_time).map_err(|error| StorePortError::Unavailable {
+        detail: format!("scheduler registration event_time is invalid: {error}"),
+    })
 }
 
 fn row_to_user_intent(row: &rusqlite::Row<'_>) -> Result<UserIntentRecordRow, rusqlite::Error> {

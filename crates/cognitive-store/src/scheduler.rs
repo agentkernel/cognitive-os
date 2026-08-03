@@ -333,6 +333,45 @@ impl SchedulerRepository {
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("load: {e}")))
     }
 
+    /// List work that a daemon recovery loop must inspect from durable state.
+    ///
+    /// This deliberately returns every non-terminal row, including active
+    /// leases. The daemon must reload each row's expiry and authority facts
+    /// before attempting a claim; this method must never itself imply that a
+    /// row is eligible or that a worker may dispatch it.
+    pub fn list_recoverable(&mut self) -> Result<Vec<SchedulerRow>, SchedulerRepositoryError> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT task_ref, state, lease_owner, lease_epoch, lease_expires, \
+                 next_eligible, attempt_count, cancel_requested \
+                 FROM scheduler_entries \
+                 WHERE state IN ('pending', 'runnable', 'leased') \
+                 ORDER BY task_ref",
+            )
+            .map_err(|error| {
+                SchedulerRepositoryError::Unavailable(format!("list work: {error}"))
+            })?;
+        let rows = statement
+            .query_map([], |row| {
+                Ok(SchedulerRow {
+                    task_ref: row.get(0)?,
+                    state: row.get(1)?,
+                    lease_owner: row.get(2)?,
+                    lease_epoch: row.get(3)?,
+                    lease_expires: row.get(4)?,
+                    next_eligible: row.get(5)?,
+                    attempt_count: row.get(6)?,
+                    cancel_requested: row.get::<_, i64>(7)? != 0,
+                })
+            })
+            .map_err(|error| {
+                SchedulerRepositoryError::Unavailable(format!("query work: {error}"))
+            })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|error| SchedulerRepositoryError::Unavailable(format!("read work: {error}")))
+    }
+
     /// Mark a task cancelled (cancel request propagated durably).
     pub fn request_cancel(&mut self, task_ref: &str) -> Result<(), SchedulerRepositoryError> {
         self.conn

@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
-use cognitive_store::PersonalDataLayout;
+use cognitive_store::{PersonalDataLayout, prepare_personal_databases};
 use serde_json::json;
 
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
@@ -88,6 +88,9 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         .map_err(|error| PersonalDaemonError::Io {
             detail: error.to_string(),
         })?;
+    prepare_personal_databases(&config.layout).map_err(|error| PersonalDaemonError::Io {
+        detail: format!("prepare Personal authority databases: {error}"),
+    })?;
     let lock = DaemonSingleInstanceLock::acquire(config.layout.daemon_lock_path())
         .map_err(PersonalDaemonError::Lifecycle)?;
     eprintln!(

@@ -30,10 +30,13 @@ use cognitive_kernel::ports::{
 };
 use cognitive_store::SqliteAuthorityStore;
 use cognitive_store::faults::{ScriptedExecutor, ScriptedOutcome};
+use cognitive_store::scheduler::SchedulerRepository;
 use m4_common::*;
 
 fn fresh_store(dir: &tempfile::TempDir) -> SqliteAuthorityStore {
-    SqliteAuthorityStore::open(&dir.path().join("authority.db")).unwrap()
+    let authority_database_path = dir.path().join("authority.db");
+    let _scheduler_repository = SchedulerRepository::open(&authority_database_path).unwrap();
+    SqliteAuthorityStore::open(&authority_database_path).unwrap()
 }
 
 fn seed() -> GovernanceSeed {
@@ -629,6 +632,17 @@ fn user_correction_advances_epoch_and_fences_old_dispatch() {
     assert_eq!(epoch_one_intents.len(), 2);
     assert_eq!(epoch_one_intents[0].effect_object_id, pending_effect);
     assert_eq!(epoch_one_intents[1].effect_object_id, undispatched_effect);
+
+    // The first immutable task-bound Intent atomically registers daemon-only
+    // scheduler work. A second binding for the same task does not overwrite
+    // an existing scheduler row or its recovery fences.
+    let mut scheduler_repository =
+        SchedulerRepository::open(&dir.path().join("authority.db")).unwrap();
+    let scheduler_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+    assert_eq!(scheduler_row.state, "runnable");
+    assert_eq!(scheduler_row.lease_epoch, 0);
+    assert_eq!(scheduler_row.attempt_count, 0);
+    assert!(!scheduler_row.cancel_requested);
 
     // The user corrects: "no, roll out to staging EU only". The
     // correction is fixed as a NEW record; the original stays untouched.
