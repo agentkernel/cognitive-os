@@ -1,8 +1,8 @@
 //! Daemon-only durable scheduler authority reads (P2-T03).
 //!
-//! This module deliberately performs no lease acquisition or worker dispatch.
-//! It reloads the immutable TaskContract and the identities it binds, deriving
-//! ceiling inputs solely from authority-store facts.
+//! This module owns daemon-private scheduler authority reads and one bounded
+//! worker-attempt composition boundary. It reloads immutable TaskContract and
+//! Effect identities before every durable decision; it never accepts a Task.
 
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
