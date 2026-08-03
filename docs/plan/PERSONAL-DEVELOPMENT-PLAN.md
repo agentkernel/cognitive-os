@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01 已完成；P1-T09/P2-T03 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T02 已完成；P1-T09/P2-T03 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-03**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -106,13 +106,13 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 1 | 2 | 0 | 5 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 1 | 0 | 5 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **16** | **3** | **0** | **34** | — |
+| **合计** | **53** | **17** | **2** | **0** | **34** | — |
 
 ## 2. 产品边界与不变量
 
@@ -460,7 +460,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | done | 2026-08-03 closure reconciliation：`P2-T01/D01` 已满足本任务全部验收摘要。`crates/cognitive-management/src/task_application.rs` 提供 proposal/clarify/preview/admit/control/query 六操作面且只组合 kernel intent-chain primitives；raw-intent durable restart、digest mismatch before mutation、epoch supersession/fencing、stale writer lease 均有 focused regression。PR #127 merged as `main@7f763c8`；Linux focused 4/4、management lib 3/3、store 6/6、Clippy/fmt 与 required Ubuntu/Windows CI 通过。P2 Gates B02/B04/B05/B12 仍为 `not-run`，task `done` 不产生 Gate/release/Profile claim。证据：[handoff](../checkpoints/20260801-personal-p2-t01-task-application-service-handoff.md)。 |
-| P2-T02 | 真实 Resource + Task API/watch、统一 projection 与 CLI/Shell parity | P2-T01, P1-T07 | 六类资源的 private versioned projection；真实 Task API/watch；deterministic CLI 与 Shell 经 sidecar 调同一 daemon application services；task/management bearer、cache、retry、cursor、projection 隔离（ADR-0026/0035/0037/0038） | in-progress | 2026-08-03；`P2-T02/D01` 已完成 authenticated daemon Task API/watch vertical path：generated intent.record/interpret, preview/admit bindings、daemon-owned principal-bound governance root、server-side WriterLease、preview digest/accepted principal/epoch-CAS admission and process-lifetime snapshot-first cursor watch. Exact Linux immutable `734cbce` focused process test and required Ubuntu/Windows CI passed. Private projection/CLI/Shell/sidecar parity slices remain; B02/B04/B05/B12、release 和 Profile 仍未运行或未声明。证据：[handoff](../checkpoints/20260803-personal-p2-t02-daemon-task-api-watch-handoff.md)。 |
+| P2-T02 | 真实 Resource + Task API/watch、统一 projection 与 CLI/Shell parity | P2-T01, P1-T07 | 六类资源的 private versioned projection；真实 Task API/watch；deterministic CLI 与 Shell 经 sidecar 调同一 daemon application services；task/management bearer、cache、retry、cursor、projection 隔离（ADR-0026/0035/0037/0038） | done | 2026-08-03 closure assessment: D01-D04 satisfy the unchanged acceptance. D01 supplies generated authenticated intent record/interpret, server-issued preview/admit, daemon-owned governance root, server WriterLease, admission negatives and bounded snapshot-first Task watch (`734cbce`, PR #141). D02 supplies private versioned six-family projection/watch and resource family/cursor/channel negatives (`70f40a5`, PR #142). D03 supplies deterministic CLI parity (`af2f6c9`, PR #143), and D04 supplies Pi sidecar parity with isolated management/Task bearer caches and snapshot-first streams (`ed01c27`, PR #144). Every slice has exact Linux and required Ubuntu/Windows CI evidence. B02/B04/B05/B12, release and Profile remain not-run/incomplete. Evidence: [acceptance handoff](../checkpoints/20260803-personal-p2-t02-acceptance-assessment-handoff.md). |
 | P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-03 Delivery Slice reconciliation：D01 scheduler persistence/lease/eligibility 与 D02 durable ceiling/STOP ordering 保留 prior Linux evidence；D03 durable Effect resolution 和 D04 concrete owner/epoch-fenced closure/release 的实现路径已存在，但 exact-revision Linux validation 因 SSH host-key verification 在 clone/test 前失败而未运行。D05 BoundedHarness worker/recovery 依赖 D03/D04 的 required validation；不得继续新增 helper-only slice。Slice 当前状态仅见 `PROGRESS.md`。Task acceptance、B02/B04/B05/B12、release 与 Profile 均未推进。证据：[closure handoff](../checkpoints/20260803-personal-p2-t03-concrete-effect-closure-release-handoff.md)、[validation handoff](../checkpoints/20260803-personal-p2-t03-linux-native-task-effect-validation-handoff.md)。 |
 | P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | not-started | — |
 | P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | not-started | — |
