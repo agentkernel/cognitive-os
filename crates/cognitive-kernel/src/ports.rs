@@ -14,6 +14,7 @@
 //! MUST keep the event log append-only (REQ-EVT-004).
 
 use crate::budget::BudgetState;
+use crate::effects::OperationDescriptor;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
@@ -506,11 +507,36 @@ pub struct OperationCandidateProposalRow {
     pub canonical_json: String,
 }
 
+/// One daemon-owned immutable operation descriptor registry row. Descriptors
+/// describe what an executor can do; they never grant a caller permission.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaemonOperationDescriptorRow {
+    /// Stable descriptor reference carried by candidate proposals.
+    pub descriptor_id: ObjectId,
+    /// Descriptor capability and recovery-closure metadata.
+    pub descriptor: OperationDescriptor,
+    /// Canonical daemon-issued descriptor evidence retained for audit.
+    pub canonical_json: String,
+}
+
 /// Durable append-only candidate input boundary for daemon-only worker
 /// authorization. Persisting a candidate merely makes it auditable; a
 /// separate daemon admission path must validate it before creating Intent,
 /// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
 pub trait WorkerAuthorizationStore {
+    /// Append a daemon-owned immutable descriptor. Non-authority clients,
+    /// Pi, worker, and Provider components do not receive this write path.
+    fn append_daemon_operation_descriptor(
+        &self,
+        descriptor: &DaemonOperationDescriptorRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Resolve the exact immutable descriptor named by a candidate proposal.
+    fn load_daemon_operation_descriptor(
+        &self,
+        descriptor_id: &ObjectId,
+    ) -> Result<Option<DaemonOperationDescriptorRow>, StorePortError>;
+
     /// Append an immutable candidate proposal. A duplicate identity is a
     /// conflict and no replacement or mutable candidate status is allowed.
     fn append_operation_candidate_proposal(

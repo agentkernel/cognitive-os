@@ -57,7 +57,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
     let layout = hermetic_layout(&temporary_directory);
 
     let report = prepare_personal_databases(&layout).expect("prepare empty layout");
-    assert_eq!(report.authority().applied_versions(), &[1, 2, 3, 4]);
+    assert_eq!(report.authority().applied_versions(), &[1, 2, 3, 4, 5]);
     assert_eq!(report.installation().applied_versions(), &[1]);
     assert!(layout.authority_database_path().exists());
     assert!(layout.installation_database_path().exists());
@@ -76,7 +76,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
 
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
-        vec![1, 2, 3, 4]
+        vec![1, 2, 3, 4, 5]
     );
     assert_eq!(
         recorded_migration_versions(&layout.installation_database_path()),
@@ -119,7 +119,7 @@ fn reapply_prepare_is_replay_safe() {
     let layout = hermetic_layout(&temporary_directory);
 
     let first = prepare_personal_databases(&layout).expect("first prepare");
-    assert_eq!(first.authority().applied_versions(), &[1, 2, 3, 4]);
+    assert_eq!(first.authority().applied_versions(), &[1, 2, 3, 4, 5]);
     assert_eq!(first.installation().applied_versions(), &[1]);
 
     let second = prepare_personal_databases(&layout).expect("second prepare");
@@ -127,7 +127,7 @@ fn reapply_prepare_is_replay_safe() {
     assert!(second.installation().applied_versions().is_empty());
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
-        vec![1, 2, 3, 4]
+        vec![1, 2, 3, 4, 5]
     );
 }
 
@@ -166,7 +166,7 @@ fn scheduler_v2_work_migrates_to_epoch_one_without_losing_its_fence() {
         &migration_plan,
     )
     .expect("upgrade scheduler identity");
-    assert_eq!(report.applied_versions(), &[3, 4]);
+    assert_eq!(report.applied_versions(), &[3, 4, 5]);
     let connection = Connection::open(&database_path).expect("open v3 scheduler database");
     let migrated_row: (i64, String, i64, i64) = connection
         .query_row(

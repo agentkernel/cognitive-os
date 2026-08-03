@@ -21,19 +21,21 @@
 //! `transition_records` abort any rewrite attempt, from any connection.
 
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
-use crate::worker_authorization::WORKER_AUTHORIZATION_SCHEMA_V4;
+use crate::worker_authorization::{
+    DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5, WORKER_AUTHORIZATION_SCHEMA_V4,
+};
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
-use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, GovernanceObjectStore,
-    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission,
-    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore, StorePortError,
-    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, DaemonOperationDescriptorRow,
+    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
+    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
+    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
     UserIntentRecordRow, WorkerAuthorizationStore,
 };
+use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
@@ -260,6 +262,27 @@ fn corrupt(what: &str, err: impl std::fmt::Display) -> StorePortError {
     }
 }
 
+fn effect_class_name(effect_class: EffectClass) -> &'static str {
+    match effect_class {
+        EffectClass::Pure => "pure",
+        EffectClass::LocalEphemeral => "local_ephemeral",
+        EffectClass::GovernedExternal => "governed_external",
+        EffectClass::EmergencySafety => "emergency_safety",
+    }
+}
+
+fn parse_effect_class(value: &str) -> Result<EffectClass, StorePortError> {
+    match value {
+        "pure" => Ok(EffectClass::Pure),
+        "local_ephemeral" => Ok(EffectClass::LocalEphemeral),
+        "governed_external" => Ok(EffectClass::GovernedExternal),
+        "emergency_safety" => Ok(EffectClass::EmergencySafety),
+        _ => Err(StorePortError::Unavailable {
+            detail: format!("stored daemon descriptor has unknown effect class {value}"),
+        }),
+    }
+}
+
 impl SqliteAuthorityStore {
     /// Open (creating if needed) an authority database in WAL mode with
     /// `synchronous=FULL`, and install the schema.
@@ -278,7 +301,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -1486,6 +1509,103 @@ impl IntentChainStore for SqliteAuthorityStore {
 }
 
 impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn append_daemon_operation_descriptor(
+        &self,
+        descriptor: &DaemonOperationDescriptorRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin daemon descriptor"))?;
+        let descriptor_value = &descriptor.descriptor;
+        let inserted = tx.execute(
+            "INSERT INTO daemon_operation_descriptors
+               (descriptor_id, operation_id, action, effect_class, executor, queryable,
+                idempotent, descriptor_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            (
+                descriptor.descriptor_id.as_str(),
+                descriptor_value.operation_id.as_str(),
+                descriptor_value.action.as_str(),
+                effect_class_name(descriptor_value.effect_class),
+                descriptor_value.executor.as_str(),
+                descriptor_value.capabilities.queryable,
+                descriptor_value.capabilities.idempotent,
+                descriptor_value.descriptor_version,
+                descriptor.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "daemon operation descriptor {} already persisted",
+                        descriptor.descriptor_id
+                    ),
+                });
+            }
+            Err(error) => return Err(unavailable("insert daemon descriptor")(error)),
+        }
+        tx.commit().map_err(unavailable("commit daemon descriptor"))
+    }
+
+    fn load_daemon_operation_descriptor(
+        &self,
+        descriptor_id: &ObjectId,
+    ) -> Result<Option<DaemonOperationDescriptorRow>, StorePortError> {
+        let conn = self.lock()?;
+        let result = conn.query_row(
+            "SELECT descriptor_id, operation_id, action, effect_class, executor, queryable,
+                    idempotent, descriptor_version, canonical_json
+             FROM daemon_operation_descriptors WHERE descriptor_id = ?1",
+            (descriptor_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, bool>(5)?,
+                    row.get::<_, bool>(6)?,
+                    row.get::<_, i64>(7)?,
+                    row.get::<_, String>(8)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                stored_id,
+                operation_id,
+                action,
+                stored_effect_class,
+                executor,
+                queryable,
+                idempotent,
+                descriptor_version,
+                canonical_json,
+            )) => Ok(Some(DaemonOperationDescriptorRow {
+                descriptor_id: ObjectId::parse(&stored_id)
+                    .map_err(|error| corrupt("daemon descriptor id", error))?,
+                descriptor: OperationDescriptor {
+                    operation_id,
+                    action,
+                    effect_class: parse_effect_class(&stored_effect_class)?,
+                    executor,
+                    capabilities: ExecutorCapabilities {
+                        queryable,
+                        idempotent,
+                    },
+                    descriptor_version,
+                },
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query daemon descriptor")(error)),
+        }
+    }
+
     fn append_operation_candidate_proposal(
         &self,
         proposal: &OperationCandidateProposalRow,
