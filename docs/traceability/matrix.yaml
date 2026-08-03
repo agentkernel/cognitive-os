@@ -302,22 +302,6 @@ requirements:
       checkpoint-bound continuation, budget reload + same-transaction debit, max_iterations ceiling as registered
       RESOURCE_BUDGET_EXHAUSTED denial), fail closed. M5 RUN batch 2b: decide_stagnation Stop/Escalate policy on
       consecutive_without_progress ceiling (unit-tested; EffectError hard ceilings propagate)."
-  - id: REQ-RUN-010
-    owner: runtime
-    owner_spec: specs/schemas/worker-iteration-authorization.schema.json
-    status: specified
-    registry_tests:
-      - WORKER-AUTHORIZATION-001
-    vectors:
-      - conformance/vectors/worker-authorization-001.json
-    impl:
-      - apps/kernel-server/src/personal/scheduler_authority.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
-    impl_tests: []
-    evidence: []
-    docs:
-      - specs/core/README.md
-    notes: "P2-T03/D05 public contract foundation: daemon-only immutable iteration authorization binds pre-dispatch authority. Issuance/consumption implementation evidence is not yet claimed."
   - id: REQ-RUN-006
     owner: runtime
     owner_spec: specs/schemas/loop-checkpoint.schema.json
@@ -352,6 +336,23 @@ requirements:
     impl_tests: []
     evidence: []
     docs: []
+  - id: REQ-RUN-010
+    owner: runtime
+    owner_spec: specs/schemas/worker-iteration-authorization.schema.json
+    status: specified
+    registry_tests:
+      - WORKER-AUTHORIZATION-001
+    vectors:
+      - conformance/vectors/worker-authorization-001.json
+    impl:
+      - apps/kernel-server/src/personal/scheduler_authority.rs
+      - crates/cognitive-runtime/src/harness_loop.rs
+    impl_tests: []
+    evidence: []
+    docs:
+      - specs/core/README.md
+    notes: "P2-T03/D05 public contract foundation: daemon-only immutable iteration authorization binds pre-dispatch
+      authority. Issuance/consumption implementation evidence is not yet claimed."
   - id: REQ-RES-001
     owner: resource
     owner_spec: specs/core/README.md
