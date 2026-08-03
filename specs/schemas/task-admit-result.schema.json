@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-admit-result.schema.json",
+  "title": "CognitiveOS TaskAdmitResult",
+  "description": "Daemon-issued admitted TaskContract projection returned by task.admit. It identifies the immutable admitted authority object and epoch but does not report scheduler dispatch, Effect completion, verifier acceptance, or Task completion.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_ref",
+    "task_contract_ref",
+    "contract_epoch",
+    "contract_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "cognitiveos.task-admit-result/0.1"
+    },
+    "task_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "task_contract_ref": {
+      "$ref": "common-defs.schema.json#/$defs/uriRef"
+    },
+    "contract_epoch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "contract_digest": {
+      "$ref": "common-defs.schema.json#/$defs/digest"
+    }
+  },
+  "additionalProperties": false
+}

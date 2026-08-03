@@ -1314,6 +1314,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - TASK-PREVIEW-ADMIT-008
 - id: REQ-INTENT-RECORD-001
   owner: intent-record
   owner_spec: specs/core/README.md

@@ -238,14 +238,17 @@ slice 至少需要 focused failure-first/negative test 和其定义的 supported
 当前状态只查 `PROGRESS.md`。B01 attempt 统计、clean-reset checkpoint 和 Gate threshold
 不由本 register 改写。
 
-### Lane-CTR public-contract prerequisites（仅登记，不在本批实施）
+### Lane-CTR public-contract prerequisites
 
 后续实际需要 public machine contract 时，Lane-CTR 分别登记并评审
 `skill-manifest`、`operation-descriptor`、`agent-adapter-manifest`、TaskContract resource
-bindings、server-issued preview 与 Memory codegen；本批不修改 `specs/`、bindings 或
-实现。统一 Personal projection 先保持 private + versioned，出现第二个真实 adapter/client
-后再评估最小 public `ResourceSummary`。禁止为此新增 `Process` domain 或 giant
-`Resource` schema。
+bindings、server-issued preview/admit 与 Memory codegen。P2-T02/D01 当前仅冻结
+`task.preview` / `task.admit` 的窄 request/result schema 与 generated bindings：draft 不可
+携带 governed header、epoch、acceptance 或 preview digest；daemon 签发 preview 并在任何
+authority mutation 前重算 draft digest、核验显式 acceptance 和 epoch CAS。既有 watch
+cursor-resume/dedup contract 不在此批改变。统一 Personal projection 先保持 private +
+versioned，出现第二个真实 adapter/client 后再评估最小 public `ResourceSummary`。禁止为此
+新增 `Process` domain 或 giant `Resource` schema。
 
 ### Informative open-source references
 
