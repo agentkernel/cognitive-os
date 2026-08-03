@@ -53,4 +53,3 @@ The next P2-T02 slice is deterministic CLI parity: the CLI must call these
 same daemon Task/resource boundaries using separate channel-scoped tokens,
 caches, cursors, and mutation retry semantics. P2-T02 remains in progress;
 B02/B04/B05/B12, release, and Profile remain not-run or non-claimed.
-

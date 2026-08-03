@@ -46,6 +46,8 @@ P2-T03. Formal task completion remains independent from every product Gate.
 | `P2-T03/D05` | `blocked` | no BoundedHarness worker/recovery evidence; D03/D04 exits are unmet | start only after D03/D04 are done; no additional helper-only slice |
 | `P2-T02/D01` | `done` | exact immutable Linux `734cbce` focused daemon process test passed 1/1; required Ubuntu and Windows CI passed. The authenticated task channel uses generated bindings, server-owned governance/lease facts, preview digest and admission checks, and snapshot-first bounded process-lifetime watch delivery. | select a new non-overlapping P2-T02 slice for the remaining private projection and deterministic CLI/Shell sidecar parity exit |
 | `P2-T02/D02` | `done` | exact immutable Linux `70f40a5` resource projection process test passed 1/1; required Ubuntu and Windows CI passed. Private versioned projection/watch is management-bound, family/cursor-scoped, and makes unavailable authority sources explicit. | select D03 for deterministic CLI parity without creating public DTOs or fabricating domain authority |
+| `P2-T02/D03` | `not-started` | no deterministic CLI Task/resource application-service client or channel/cache/retry/cursor isolation evidence yet | claim the exact CLI client and process-test paths after D02 merges |
+| `P2-T02/D04` | `not-started` | no Pi Shell private sidecar parity implementation or non-authority integration evidence yet | start only after D03 provides the shared deterministic client semantics |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
