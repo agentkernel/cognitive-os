@@ -54,12 +54,13 @@ pub mod task_preview_request;
 pub mod task_preview_result;
 pub mod user_intent_record;
 pub mod watch_subscription;
+pub mod worker_iteration_authorization;
 pub mod world_state;
 
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 51] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -222,7 +223,7 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
     ),
     (
         "task-contract.schema.json",
-        "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+        "sha256:905102b72dfcf5b1efe75f1e98684c6888e0c4f37d66d369413e5b0cbfa9576d",
     ),
     (
         "task-intent-interpret-request.schema.json",
@@ -255,6 +256,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
     (
         "watch-subscription.schema.json",
         "sha256:1e2b2d6439b306cf558fdb22ad6c45bfcaee41b146940d97d377cd71fa321e3a",
+    ),
+    (
+        "worker-iteration-authorization.schema.json",
+        "sha256:0c5ce309424d7e088fd62cc17bfcf8fd8897aa98871b106664e4f779ee660aed",
     ),
     (
         "world-state.schema.json",
