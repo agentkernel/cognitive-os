@@ -48,6 +48,10 @@ export * as stateTransitionRequest from "./state-transition-request.js";
 export * as taskAdmitRequest from "./task-admit-request.js";
 export * as taskAdmitResult from "./task-admit-result.js";
 export * as taskContract from "./task-contract.js";
+export * as taskIntentInterpretRequest from "./task-intent-interpret-request.js";
+export * as taskIntentInterpretResult from "./task-intent-interpret-result.js";
+export * as taskIntentRecordRequest from "./task-intent-record-request.js";
+export * as taskIntentRecordResult from "./task-intent-record-result.js";
 export * as taskPreviewRequest from "./task-preview-request.js";
 export * as taskPreviewResult from "./task-preview-result.js";
 export * as userIntentRecord from "./user-intent-record.js";
@@ -102,6 +106,10 @@ export const SCHEMA_DIGESTS = {
   "task-admit-request.schema.json": "sha256:c7fa6c8fb1baa16fc0235a2456d64da0ee3b2984bb676b203e8233345ad52e27",
   "task-admit-result.schema.json": "sha256:4f1c320b4ced96360bb6df59b53fce6af91ab733db97c39a1f5a63765b6eb4bd",
   "task-contract.schema.json": "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+  "task-intent-interpret-request.schema.json": "sha256:3cfd26c33ea3ba577ced99e573311373b2a6b8356f3273c4e583bfb9647da1d4",
+  "task-intent-interpret-result.schema.json": "sha256:89be31e21afb18a93d07f628d69c8afd11aebc40520b10148454824574fe6af9",
+  "task-intent-record-request.schema.json": "sha256:34350eea18284c7841ff58ced264a9c890f593b45aa4e48c8ef3cfb60d222400",
+  "task-intent-record-result.schema.json": "sha256:6ebad22dd23e043c0ef01db2d5816841599a3bde0041c6a09064fdc1821455f4",
   "task-preview-request.schema.json": "sha256:683f0f6109630741619d9f8d071d6cdcc3ceea8043a2ab025be486cdc6560cd9",
   "task-preview-result.schema.json": "sha256:d036fcfd1815228b0cb6e850f14dbb1af3a18bb8daf75e70ed6dd4d18d968986",
   "user-intent-record.schema.json": "sha256:b3064740e47c0e67bd5646f20a87db33662858e913e90ff631fe182ef51383b5",
