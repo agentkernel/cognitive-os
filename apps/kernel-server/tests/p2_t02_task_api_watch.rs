@@ -108,7 +108,8 @@ fn task_record_requires_task_auth_persists_daemon_root_and_watch_is_snapshot_fir
     );
     assert!(recorded.contains("user_intent_record_id"), "{recorded}");
     assert!(
-        root.join("cognitiveos")
+        root.join("data")
+            .join("cognitiveos")
             .join("personal-governance-root.json")
             .is_file()
     );
