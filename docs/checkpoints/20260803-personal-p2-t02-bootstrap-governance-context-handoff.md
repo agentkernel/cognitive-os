@@ -4,6 +4,7 @@
   (`in-progress`)
 - Change class: `normative-semantic` Personal authority decision
 - Branch: `lane/ctr-p2-t02-bootstrap-governance-context`
+- Status: validated decision batch; PR #140 is ready for merge
 
 ## Decision
 
@@ -32,3 +33,9 @@ and resolve this context from the daemon, obtain server leases, and implement
 authenticated intent record/interpret → preview → admit plus process-lifetime
 watch. No Task completion, cross-restart watch replay, Gate, release, or
 Profile claim is implied.
+
+## Validation
+
+- Immutable checkpoint: `2c4a230`.
+- Local `pnpm run check:consistency` and `git diff --check` passed.
+- Required PR #140 CI passed on Ubuntu twice and Windows twice.
