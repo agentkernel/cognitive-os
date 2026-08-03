@@ -1321,6 +1321,7 @@ requirements:
   status: specified
   tests:
   - SPEC-CONTRACT-COVERAGE-001
+  - TASK-INTENT-API-009
 - id: REQ-INTENT-SUPERSEDE-001
   owner: intent-supersede
   owner_spec: specs/core/README.md

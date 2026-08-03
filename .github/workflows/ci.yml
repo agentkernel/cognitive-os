@@ -97,12 +97,14 @@ jobs:
       # evidence-backed pass (total 84 -> 85, pass 59 -> 60).
       # 2026-08-03 Task preview/admit digest-negative vector adds one
       # honestly not-run contract scenario (total 85 -> 86, not-run 25 -> 26).
+      # 2026-08-03 Task intent API boundary vector adds one honestly not-run
+      # scenario (total 86 -> 87, not-run 26 -> 27).
       - name: Assert report honesty (evidence-backed pass, reasoned not-run, pinned counts)
         run: |
           node -e "
             const r = require('./artifacts/evidence/conformance/conformance-report.json');
             const s = r.summary;
-            const pinned = { total_vectors: 86, pass: 60, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 26 };
+            const pinned = { total_vectors: 87, pass: 60, fail: 0, 'not-applicable': 0, 'documented-degradation': 0, 'not-run': 27 };
             for (const [key, want] of Object.entries(pinned)) {
               if (s[key] !== want) throw new Error('summary.' + key + ' = ' + s[key] + ', pinned ' + want);
             }

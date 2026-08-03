@@ -46,6 +46,10 @@ pub mod state_transition_request;
 pub mod task_admit_request;
 pub mod task_admit_result;
 pub mod task_contract;
+pub mod task_intent_interpret_request;
+pub mod task_intent_interpret_result;
+pub mod task_intent_record_request;
+pub mod task_intent_record_result;
 pub mod task_preview_request;
 pub mod task_preview_result;
 pub mod user_intent_record;
@@ -55,7 +59,7 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 46] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -219,6 +223,22 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 46] = [
     (
         "task-contract.schema.json",
         "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+    ),
+    (
+        "task-intent-interpret-request.schema.json",
+        "sha256:3cfd26c33ea3ba577ced99e573311373b2a6b8356f3273c4e583bfb9647da1d4",
+    ),
+    (
+        "task-intent-interpret-result.schema.json",
+        "sha256:89be31e21afb18a93d07f628d69c8afd11aebc40520b10148454824574fe6af9",
+    ),
+    (
+        "task-intent-record-request.schema.json",
+        "sha256:34350eea18284c7841ff58ced264a9c890f593b45aa4e48c8ef3cfb60d222400",
+    ),
+    (
+        "task-intent-record-result.schema.json",
+        "sha256:6ebad22dd23e043c0ef01db2d5816841599a3bde0041c6a09064fdc1821455f4",
     ),
     (
         "task-preview-request.schema.json",

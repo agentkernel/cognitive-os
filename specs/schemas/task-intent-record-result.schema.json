@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-intent-record-result.schema.json",
+  "title": "CognitiveOS TaskIntentRecordResult",
+  "description": "Daemon-issued durable UserIntentRecord projection returned by intent.record. It proves only that raw intent was recorded; it does not express interpretation, acceptance, TaskContract admission, dispatch, or completion.",
+  "type": "object",
+  "required": ["schema_version", "user_intent_record_id", "intent_digest", "recorded_at"],
+  "properties": {
+    "schema_version": {"const": "cognitiveos.task-intent-record-result/0.1"},
+    "user_intent_record_id": {"$ref": "object-reference.schema.json#/$defs/uuidV7"},
+    "intent_digest": {"$ref": "common-defs.schema.json#/$defs/digest"},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

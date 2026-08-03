@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-intent-record-request.schema.json",
+  "title": "CognitiveOS TaskIntentRecordRequest",
+  "description": "Authenticated client input for intent.record on the Task channel. The daemon derives record identity, actor-chain digest, intent authority, governance facts, correlation, and writer lease from authenticated authority state; callers cannot supply them.",
+  "type": "object",
+  "required": ["schema_version", "conversation_or_scope_ref", "raw_expression"],
+  "properties": {
+    "schema_version": {"const": "cognitiveos.task-intent-record-request/0.1"},
+    "conversation_or_scope_ref": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+    "input_refs": {
+      "type": "array",
+      "items": {"$ref": "common-defs.schema.json#/$defs/uriRef"},
+      "uniqueItems": true
+    },
+    "raw_expression": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}
