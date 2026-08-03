@@ -960,10 +960,12 @@ mod tests {
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
         let (layout, authority) = test_fixture("timeout");
+        let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let task_api = Arc::clone(&task_api);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -972,6 +974,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &task_api,
                     &active_connections,
                     &in_flight,
                 );
@@ -1010,10 +1013,12 @@ mod tests {
         bounds.read_header_timeout_secs = 1;
         bounds.request_body_read_timeout_secs = 1;
         let (layout, authority) = test_fixture("body-timeout");
+        let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let task_api = Arc::clone(&task_api);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1022,6 +1027,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &task_api,
                     &active_connections,
                     &in_flight,
                 );
