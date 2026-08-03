@@ -353,6 +353,18 @@ requirements:
       - specs/core/README.md
     notes: "P2-T03/D05 public contract foundation: daemon-only immutable iteration authorization binds pre-dispatch
       authority. Issuance/consumption implementation evidence is not yet claimed."
+  - id: REQ-RUN-011
+    owner: runtime
+    owner_spec: specs/schemas/operation-candidate-proposal.schema.json
+    status: specified
+    registry_tests:
+      - OPERATION-CANDIDATE-ADMISSION-001
+    vectors:
+      - conformance/vectors/operation-candidate-admission-001.json
+    impl: []
+    impl_tests: []
+    evidence: []
+    docs: []
   - id: REQ-RES-001
     owner: resource
     owner_spec: specs/core/README.md

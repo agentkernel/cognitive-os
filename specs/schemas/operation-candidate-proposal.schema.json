@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "operation-candidate-proposal.schema.json",
+  "title": "OperationCandidateProposal",
+  "description": "Immutable operation candidate observation. It is not an authorization, Intent, Effect, budget reservation, dispatch request, progress fact, receipt, or Task completion claim. Only the daemon may admit one candidate into a WorkerIterationAuthorization.",
+  "type": "object",
+  "required": [
+    "header",
+    "task_contract_ref",
+    "contract_epoch",
+    "candidate_source_ref",
+    "tool_ref",
+    "action",
+    "target",
+    "parameters_digest",
+    "expected_state_version",
+    "operation_descriptor_ref"
+  ],
+  "properties": {
+    "header": {
+      "allOf": [
+        { "$ref": "governed-object-header.schema.json" },
+        { "properties": { "type": { "const": "OperationCandidateProposal" } } }
+      ]
+    },
+    "task_contract_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" },
+    "contract_epoch": { "type": "integer", "minimum": 1 },
+    "candidate_source_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1,
+      "description": "Observation or proposal provenance only. It does not grant authority."
+    },
+    "tool_ref": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "action": { "type": "string", "minLength": 1 },
+    "target": {
+      "type": "string",
+      "format": "uri-reference",
+      "minLength": 1
+    },
+    "parameters_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "expected_state_version": { "type": "integer", "minimum": 1 },
+    "operation_descriptor_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
+  },
+  "additionalProperties": false
+}
