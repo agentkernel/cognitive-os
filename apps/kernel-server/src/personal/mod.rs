@@ -10,6 +10,7 @@ mod lifecycle;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
+mod resource_api;
 mod scheduler_authority;
 mod server;
 mod task_api;
