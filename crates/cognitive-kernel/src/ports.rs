@@ -547,6 +547,44 @@ pub struct DaemonAuthorizationSnapshotRow {
     pub canonical_json: String,
 }
 
+/// One immutable daemon-issued pre-dispatch worker authorization. The row
+/// binds a selected candidate to exact Intent, Effect, Loop, budget, and
+/// fencing facts. Its issuance must occur only inside an atomic admission
+/// bundle; worker consumption is recorded separately.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WorkerIterationAuthorizationRow {
+    /// Immutable authorization identity.
+    pub authorization_id: ObjectId,
+    /// Daemon-minted TaskContract identity defining this authorization namespace.
+    pub worker_authorization_root_id: ObjectId,
+    /// Task governed by this authorization.
+    pub task_ref: String,
+    /// Current immutable TaskContract epoch.
+    pub contract_epoch: i64,
+    /// Loop whose exact iteration is authorized.
+    pub loop_object_id: ObjectId,
+    /// Monotonic loop iteration authorized for one worker attempt.
+    pub iteration: i64,
+    /// Loop CAS version the worker authorization was issued against.
+    pub expected_loop_version: Version,
+    /// Immutable candidate selected by daemon admission.
+    pub selected_candidate_id: ObjectId,
+    /// Durable Intent created by the same admission transaction.
+    pub intent_id: ObjectId,
+    /// Durable Effect created at PROPOSED by the same transaction.
+    pub effect_object_id: ObjectId,
+    /// Hard budget charged by the authorized iteration.
+    pub budget_id: BudgetId,
+    /// Canonical BudgetCharge value.
+    pub budget_charge_canonical_json: String,
+    /// Stable action/retry identity.
+    pub action_fingerprint: String,
+    /// Writer fencing epoch at issuance.
+    pub issued_fencing_epoch: i64,
+    /// Generated schema-shaped WorkerIterationAuthorization evidence.
+    pub canonical_json: String,
+}
+
 /// Durable append-only candidate input boundary for daemon-only worker
 /// authorization. Persisting a candidate merely makes it auditable; a
 /// separate daemon admission path must validate it before creating Intent,

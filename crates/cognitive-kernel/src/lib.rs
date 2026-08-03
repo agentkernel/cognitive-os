@@ -73,7 +73,7 @@ pub use ports::{
     DaemonOperationDescriptorRow, GovernanceObjectStore, HarnessStore, IdGenerator,
     IntentChainStore, IntentRow, InterpretationRow, OperationCandidateProposalRow, PortFailure,
     ProgressFactRow, ProtocolStore, StorePortError, TaskBinding, TaskContractRow,
-    UserIntentRecordRow, WorkerAuthorizationStore,
+    UserIntentRecordRow, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
 };
 pub use recovery::{
     ContextRebinding, EffectDisposition, RECOVERY_ORDER, ReauthorizationObligation, RecoveryError,
