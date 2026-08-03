@@ -38,8 +38,8 @@ fn repo_root() -> PathBuf {
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
 const TOTAL: usize = 89;
-const PASS: usize = 60;
-const NOT_RUN: usize = 29;
+const PASS: usize = 62;
+const NOT_RUN: usize = 27;
 
 /// The M2 kernel-behavioral executions and their report modes.
 const BEHAVIORAL: [(&str, &str); 3] = [
