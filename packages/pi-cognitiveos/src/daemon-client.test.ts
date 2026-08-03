@@ -23,7 +23,10 @@ import {
   captureRejection,
   captureThrown,
   readinessProjectionBody,
+  resourceProjectionBody,
+  resourceWatchSnapshotBody,
   startFakeDaemon,
+  taskWatchSnapshotBody,
 } from "./test-support.js";
 
 const BOOTSTRAP_SECRET = "boot-0123456789abcdef-fedcba9876543210";
@@ -84,6 +87,56 @@ test("a session is minted and the readiness projection is returned verbatim", as
     assert.ok(status);
     assert.equal(status.method, "GET");
     assert.match(status.headers["authorization"] ?? "", /^Bearer sess-fake-/);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("private resource and Task observations use isolated daemon channels", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+    resourceProjectionBody: resourceProjectionBody(),
+    resourceWatchBody: resourceWatchSnapshotBody(),
+    taskWatchBody: taskWatchSnapshotBody(),
+  });
+  try {
+    const client = new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(daemon.endpoint),
+    });
+
+    const resource = await client.fetchResourceProjection("runtime");
+    const resourceWatch = await client.fetchResourceWatch("runtime", 4);
+    const taskWatch = await client.fetchTaskWatch(7);
+
+    assert.equal(resource.family, "runtime");
+    assert.equal(resource.availability, "not-backed");
+    assert.match(resourceWatch, /^event: snapshot\n/);
+    assert.match(taskWatch, /^event: snapshot\n/);
+
+    const sessionChannels = daemon.requests
+      .filter((request) => request.url === "/local/session")
+      .map((request) => JSON.parse(request.body)["channel"]);
+    assert.deepEqual(sessionChannels, ["management", "task"]);
+
+    const resourceRequest = daemon.requests.find(
+      (request) => request.url === "/resource/v1/projection?family=runtime&version=1",
+    );
+    const resourceWatchRequest = daemon.requests.find(
+      (request) => request.url === "/resource/v1/watch?family=runtime&version=1&resume_from=4",
+    );
+    const taskWatchRequest = daemon.requests.find(
+      (request) => request.url === "/task/watch?resume_from=7",
+    );
+    assert.ok(resourceRequest);
+    assert.ok(resourceWatchRequest);
+    assert.ok(taskWatchRequest);
+    assert.notEqual(
+      resourceWatchRequest.headers["authorization"],
+      taskWatchRequest.headers["authorization"],
+      "resource and Task channels must not share a bearer",
+    );
   } finally {
     await daemon.close();
   }
