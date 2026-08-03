@@ -31,6 +31,8 @@ pub enum CognitiveCommand {
     Doctor(StatusOptions),
     Daemon(DaemonCommand),
     Pi(PiCommand),
+    Resource(ResourceCommand),
+    Task(TaskCommand),
 }
 
 /// Options for `cognitive init`.
@@ -67,6 +69,32 @@ pub enum DaemonCommand {
 pub enum PiCommand {
     Configure(PiConfigureOptions),
     Launch(PiLaunchOptions),
+}
+
+/// Read-only private resource projection commands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ResourceCommand {
+    Get(ResourceOptions),
+    Watch(ResourceOptions),
+}
+
+/// Read-only Task observation commands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TaskCommand {
+    Watch(TaskWatchOptions),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResourceOptions {
+    pub status: StatusOptions,
+    pub family: String,
+    pub resume_from: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskWatchOptions {
+    pub status: StatusOptions,
+    pub resume_from: Option<u64>,
 }
 
 /// Options for `cognitive daemon start`.
@@ -137,8 +165,10 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
                 )),
             }
         }
+        "resource" => parse_resource_command(rest),
+        "task" => parse_task_command(rest),
         other => Err(format!(
-            "unknown verb `{other}` (expected init|status|doctor|daemon|pi)"
+            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|resource|task)"
         )),
     }
 }
@@ -185,6 +215,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
                 Err(error) => print_operational_error(&error),
             }
         }
+        CognitiveCommand::Resource(ResourceCommand::Get(options)) => {
+            fetch_resource_projection(&options, false)
+        }
+        CognitiveCommand::Resource(ResourceCommand::Watch(options)) => {
+            fetch_resource_projection(&options, true)
+        }
+        CognitiveCommand::Task(TaskCommand::Watch(options)) => fetch_task_watch(&options),
         CognitiveCommand::Daemon(DaemonCommand::Start(options)) => match daemon::start(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -209,6 +246,126 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             Err(error) => print_operational_error(&error),
         },
     }
+}
+
+fn parse_resource_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
+    let Some((subcommand, remaining_arguments)) = arguments.split_first() else {
+        return Err("resource requires subcommand get|watch".to_owned());
+    };
+    let flags = parse_flags(remaining_arguments)?;
+    reject_unexpected_flags(
+        &flags,
+        &["runtime-root", "endpoint", "family", "resume-from"],
+    )?;
+    let family = flags
+        .get("family")
+        .cloned()
+        .ok_or_else(|| "resource command requires --family <family>".to_owned())?;
+    if !["memory", "skill", "tool", "context", "task", "runtime"].contains(&family.as_str()) {
+        return Err("resource --family must be memory|skill|tool|context|task|runtime".to_owned());
+    }
+    let resume_from = parse_optional_cursor(&flags)?;
+    let status = parse_status_options(&flags)?;
+    let options = ResourceOptions {
+        status,
+        family,
+        resume_from,
+    };
+    match subcommand.as_str() {
+        "get" if options.resume_from.is_none() => {
+            Ok(CognitiveCommand::Resource(ResourceCommand::Get(options)))
+        }
+        "get" => Err("resource get does not accept --resume-from".to_owned()),
+        "watch" => Ok(CognitiveCommand::Resource(ResourceCommand::Watch(options))),
+        _ => Err("resource requires subcommand get|watch".to_owned()),
+    }
+}
+
+fn parse_task_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
+    let Some((subcommand, remaining_arguments)) = arguments.split_first() else {
+        return Err("task requires subcommand watch".to_owned());
+    };
+    if subcommand != "watch" {
+        return Err("task requires subcommand watch".to_owned());
+    }
+    let flags = parse_flags(remaining_arguments)?;
+    reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "resume-from"])?;
+    Ok(CognitiveCommand::Task(TaskCommand::Watch(
+        TaskWatchOptions {
+            status: parse_status_options(&flags)?,
+            resume_from: parse_optional_cursor(&flags)?,
+        },
+    )))
+}
+
+fn parse_optional_cursor(flags: &BTreeMap<String, String>) -> Result<Option<u64>, String> {
+    flags
+        .get("resume-from")
+        .map(|value| {
+            value
+                .parse::<u64>()
+                .map_err(|_| "--resume-from must be an unsigned integer".to_owned())
+        })
+        .transpose()
+}
+
+fn fetch_resource_projection(options: &ResourceOptions, watch: bool) -> i32 {
+    let layout = match layout::build_layout(&options.status.layout_roots) {
+        Ok(layout) => layout,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    let endpoint = match resolve_endpoint(&options.status, &layout) {
+        Ok(endpoint) => endpoint,
+        Err(error) => return print_operational_error(&error),
+    };
+    let client = match client::PersonalDaemonClient::connect(&endpoint, &layout) {
+        Ok(client) => client,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    let result = if watch {
+        client.watch_resource(&options.family, options.resume_from)
+    } else {
+        client.get_resource_projection(&options.family)
+    };
+    match result {
+        Ok(body) => {
+            println!("{body}");
+            EXIT_SUCCESS
+        }
+        Err(error) => print_operational_error(&error.to_string()),
+    }
+}
+
+fn fetch_task_watch(options: &TaskWatchOptions) -> i32 {
+    let layout = match layout::build_layout(&options.status.layout_roots) {
+        Ok(layout) => layout,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    let endpoint = match resolve_endpoint(&options.status, &layout) {
+        Ok(endpoint) => endpoint,
+        Err(error) => return print_operational_error(&error),
+    };
+    let client = match client::PersonalDaemonClient::connect(&endpoint, &layout) {
+        Ok(client) => client,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    match client.watch_task(options.resume_from) {
+        Ok(body) => {
+            println!("{body}");
+            EXIT_SUCCESS
+        }
+        Err(error) => print_operational_error(&error.to_string()),
+    }
+}
+
+fn resolve_endpoint(
+    options: &StatusOptions,
+    layout: &cognitive_store::PersonalDataLayout,
+) -> Result<String, String> {
+    options
+        .endpoint_override
+        .clone()
+        .map_or_else(|| daemon::load_endpoint(layout), Ok)
 }
 
 enum ProjectionKind {

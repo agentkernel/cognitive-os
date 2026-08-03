@@ -64,6 +64,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T02/deterministic-cli-parity` | P2-T02/D03 deterministic CLI Task/resource parity and channel/retry/cursor isolation | Lane-RUN | `lane/run-p2-t02-cli-parity` | `apps/admin-cli/src/personal_cli/client.rs`; `apps/admin-cli/src/personal_cli/mod.rs`; `apps/admin-cli/tests/p2_t02_cli_parity.rs`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260803-personal-p2-t02-deterministic-cli-parity-handoff.md` | Cursor autonomous session | 2026-08-03 / 2026-08-03 | active |
 
 ### 3.1 最近关闭的 leases
 
