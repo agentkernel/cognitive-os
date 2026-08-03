@@ -585,11 +585,52 @@ pub struct WorkerIterationAuthorizationRow {
     pub canonical_json: String,
 }
 
+/// All-or-nothing daemon admission of one selected non-authority candidate.
+/// The caller must derive every field from reloaded durable authority facts;
+/// the store rechecks fencing and CAS preconditions in one transaction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CandidateAdmissionCommit {
+    /// Candidate selected by daemon-only validation.
+    pub selected_candidate_id: ObjectId,
+    /// Durable Intent and its provenance event.
+    pub intent: IntentRow,
+    pub intent_event: EventDraft,
+    /// New Effect in its registered initial state (`PROPOSED`, version 1).
+    pub effect_admission: ObjectAdmission,
+    /// Immutable pre-dispatch worker authority issued by this bundle.
+    pub worker_authorization: WorkerIterationAuthorizationRow,
+    /// Loop admission transition and optional exact budget debit.
+    pub loop_transition: TransitionCommit,
+    /// Current writer epoch checked inside the same SQLite transaction.
+    pub fencing_epoch: i64,
+}
+
+/// Receipts from every event persisted by one candidate admission bundle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CandidateAdmissionReceipt {
+    /// Intent persistence event sequence.
+    pub intent_event_sequence: i64,
+    /// Effect admission event sequence.
+    pub effect_admission_event_sequence: i64,
+    /// Loop transition event sequence.
+    pub loop_transition_event_sequence: i64,
+    /// Immutable WIA identity issued by the transaction.
+    pub authorization_id: ObjectId,
+}
+
 /// Durable append-only candidate input boundary for daemon-only worker
 /// authorization. Persisting a candidate merely makes it auditable; a
 /// separate daemon admission path must validate it before creating Intent,
 /// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
 pub trait WorkerAuthorizationStore {
+    /// Commit Intent, Effect admission, immutable WIA, Loop CAS, exact budget
+    /// debit, events, records, and outbox rows as one authority transaction.
+    /// Any failure must roll back the entire bundle.
+    fn commit_candidate_admission(
+        &self,
+        commit: &CandidateAdmissionCommit,
+    ) -> Result<CandidateAdmissionReceipt, StorePortError>;
+
     /// Append an immutable daemon-only authorization snapshot.
     fn append_daemon_authorization_snapshot(
         &self,

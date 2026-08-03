@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -30,11 +30,12 @@ use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, DaemonAuthorizationSnapshotRow,
-    DaemonOperationDescriptorRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
-    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
-    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, WorkerAuthorizationStore,
+    AuthorityStore, CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow,
+    CommitReceipt, CommittedEvent, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
+    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
+    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
+    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, WorkerAuthorizationStore,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
@@ -1510,6 +1511,214 @@ impl IntentChainStore for SqliteAuthorityStore {
 }
 
 impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn commit_candidate_admission(
+        &self,
+        commit: &CandidateAdmissionCommit,
+    ) -> Result<CandidateAdmissionReceipt, StorePortError> {
+        let intent = &commit.intent;
+        let effect_admission = &commit.effect_admission;
+        let authorization = &commit.worker_authorization;
+        let loop_transition = &commit.loop_transition;
+
+        let consistent_bundle = commit.selected_candidate_id == authorization.selected_candidate_id
+            && intent.intent_id == authorization.intent_id
+            && intent.effect_object_id == authorization.effect_object_id
+            && effect_admission.object.object_id == authorization.effect_object_id
+            && effect_admission.object.domain == LifecycleDomain::Effect
+            && effect_admission.object.version == Version::INITIAL
+            && loop_transition.cas.domain == LifecycleDomain::Loop
+            && loop_transition.cas.object_id == authorization.loop_object_id
+            && loop_transition.cas.expected_version == authorization.expected_loop_version
+            && effect_admission.fencing_epoch == Some(commit.fencing_epoch)
+            && loop_transition.fencing_epoch == Some(commit.fencing_epoch)
+            && authorization.issued_fencing_epoch == commit.fencing_epoch;
+        if !consistent_bundle {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission bundle has inconsistent authority bindings".to_owned(),
+            });
+        }
+        if loop_transition
+            .budget
+            .as_ref()
+            .is_some_and(|budget| budget.budget_id != authorization.budget_id)
+        {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission budget does not match worker authorization".to_owned(),
+            });
+        }
+
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin candidate admission"))?;
+        verify_fencing_in_tx(&tx, Some(commit.fencing_epoch))?;
+
+        let insert_intent = tx.execute(
+            "INSERT INTO intents
+               (intent_id, idempotency_key, parameters_digest, action, target, effect_object_id,
+                expected_state_version, grant_epoch, capability_set_version, task_ref,
+                contract_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            (
+                intent.intent_id.as_str(),
+                intent.idempotency_key.as_str(),
+                intent.parameters_digest.as_str(),
+                intent.action.as_str(),
+                intent.target.as_str(),
+                intent.effect_object_id.as_str(),
+                intent.expected_state_version.get(),
+                intent.grant_epoch,
+                intent.capability_set_version,
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.task_ref.as_str()),
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.contract_epoch),
+                intent.canonical_json.as_str(),
+            ),
+        );
+        if let Err(error) = insert_intent {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission intent already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission intent")(error))
+            };
+        }
+        let intent_event_sequence = append_event_in_tx(&tx, &commit.intent_event)?;
+
+        let effect_body_json = serde_json::to_string(&effect_admission.object.body)
+            .map_err(|error| corrupt("candidate admission effect body", error))?;
+        let insert_effect = tx.execute(
+            "INSERT INTO governed_objects
+               (object_id, domain, state, version, body_json, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+            (
+                effect_admission.object.object_id.as_str(),
+                effect_admission.object.domain.as_str(),
+                effect_admission.object.state.as_str(),
+                effect_admission.object.version.get(),
+                effect_body_json,
+                effect_admission.admitted_at.as_str(),
+            ),
+        );
+        if let Err(error) = insert_effect {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission effect already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission effect")(error))
+            };
+        }
+        let effect_admission_event_sequence = append_event_in_tx(&tx, &effect_admission.event)?;
+        for outbox in &effect_admission.outbox {
+            tx.execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert candidate admission effect outbox"))?;
+        }
+
+        let insert_authorization = tx.execute(
+            "INSERT INTO worker_iteration_authorizations
+               (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                intent_id, effect_object_id, budget_id, budget_charge_json, action_fingerprint,
+                issued_fencing_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+            (
+                authorization.authorization_id.as_str(),
+                authorization.worker_authorization_root_id.as_str(),
+                authorization.task_ref.as_str(),
+                authorization.contract_epoch,
+                authorization.loop_object_id.as_str(),
+                authorization.iteration,
+                authorization.expected_loop_version.get(),
+                authorization.selected_candidate_id.as_str(),
+                authorization.intent_id.as_str(),
+                authorization.effect_object_id.as_str(),
+                authorization.budget_id.as_str(),
+                authorization.budget_charge_canonical_json.as_str(),
+                authorization.action_fingerprint.as_str(),
+                authorization.issued_fencing_epoch,
+                authorization.canonical_json.as_str(),
+            ),
+        );
+        if let Err(error) = insert_authorization {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission authorization already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission authorization")(
+                    error,
+                ))
+            };
+        }
+
+        let cas = &loop_transition.cas;
+        let changed = tx
+            .execute(
+                "UPDATE governed_objects SET state=?1, version=?2, updated_at=?3
+             WHERE object_id=?4 AND domain=?5 AND state=?6 AND version=?7",
+                (
+                    cas.to_state.as_str(),
+                    cas.next_version.get(),
+                    cas.committed_at.as_str(),
+                    cas.object_id.as_str(),
+                    cas.domain.as_str(),
+                    cas.from_state.as_str(),
+                    cas.expected_version.get(),
+                ),
+            )
+            .map_err(unavailable("candidate admission loop cas"))?;
+        if changed == 0 {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission loop cas raced".to_owned(),
+            });
+        }
+        if let Some(budget) = &loop_transition.budget {
+            let changed = tx.execute(
+                "UPDATE budgets SET state_json=?1, version=?2 WHERE budget_id=?3 AND version=?4",
+                (budget.next_state_canonical_json.as_str(), budget.next_version.get(),
+                 budget.budget_id.as_str(), budget.expected_version.get()),
+            ).map_err(unavailable("candidate admission budget cas"))?;
+            if changed == 0 {
+                return Err(StorePortError::Conflict {
+                    detail: "candidate admission budget cas raced".to_owned(),
+                });
+            }
+        }
+        let loop_transition_event_sequence = append_event_in_tx(&tx, &loop_transition.event)?;
+        tx.execute(
+            "INSERT INTO transition_records (record_id, object_id, domain, object_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (loop_transition.record.record_id.as_str(), loop_transition.record.object_id.as_str(),
+             loop_transition.record.domain.as_str(), loop_transition.record.object_version.get(),
+             loop_transition.record.canonical_json.as_str()),
+        ).map_err(unavailable("append candidate admission loop record"))?;
+        for outbox in &loop_transition.outbox {
+            tx.execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert candidate admission loop outbox"))?;
+        }
+        tx.commit()
+            .map_err(unavailable("commit candidate admission"))?;
+        Ok(CandidateAdmissionReceipt {
+            intent_event_sequence,
+            effect_admission_event_sequence,
+            loop_transition_event_sequence,
+            authorization_id: authorization.authorization_id.clone(),
+        })
+    }
+
     fn append_daemon_authorization_snapshot(
         &self,
         snapshot: &DaemonAuthorizationSnapshotRow,
