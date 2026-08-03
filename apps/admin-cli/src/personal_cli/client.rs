@@ -43,6 +43,7 @@ impl std::error::Error for PersonalDaemonClientError {}
 pub struct PersonalDaemonClient {
     endpoint: String,
     management_token: String,
+    task_token: String,
 }
 
 impl PersonalDaemonClient {
@@ -53,10 +54,12 @@ impl PersonalDaemonClient {
         layout: &PersonalDataLayout,
     ) -> Result<Self, PersonalDaemonClientError> {
         let bootstrap = read_bootstrap_secret(layout)?;
-        let token = issue_management_token(endpoint, &bootstrap)?;
+        let management_token = issue_channel_token(endpoint, &bootstrap, "management")?;
+        let task_token = issue_channel_token(endpoint, &bootstrap, "task")?;
         Ok(Self {
             endpoint: endpoint.to_owned(),
-            management_token: token,
+            management_token,
+            task_token,
         })
     }
 
@@ -70,11 +73,57 @@ impl PersonalDaemonClient {
         self.get_authorized("/personal/doctor")
     }
 
+    /// `GET /resource/v1/projection` through the management-only projection channel.
+    pub fn get_resource_projection(
+        &self,
+        family: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        self.get_authorized(&format!(
+            "/resource/v1/projection?family={family}&version=1"
+        ))
+    }
+
+    /// `GET /resource/v1/watch` through the management-only cursor namespace.
+    pub fn watch_resource(
+        &self,
+        family: &str,
+        resume_from: Option<u64>,
+    ) -> Result<String, PersonalDaemonClientError> {
+        let resume_query =
+            resume_from.map_or_else(String::new, |sequence| format!("&resume_from={sequence}"));
+        self.get_authorized(&format!(
+            "/resource/v1/watch?family={family}&version=1{resume_query}"
+        ))
+    }
+
+    /// `GET /task/watch` uses the isolated task credential and cursor namespace.
+    pub fn watch_task(
+        &self,
+        resume_from: Option<u64>,
+    ) -> Result<String, PersonalDaemonClientError> {
+        let resume_query =
+            resume_from.map_or_else(String::new, |sequence| format!("?resume_from={sequence}"));
+        self.get_task_authorized(&format!("/task/watch{resume_query}"))
+    }
+
     fn get_authorized(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
+        self.get_with_token(path, &self.management_token, "management")
+    }
+
+    fn get_task_authorized(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
+        self.get_with_token(path, &self.task_token, "task")
+    }
+
+    fn get_with_token(
+        &self,
+        path: &str,
+        token: &str,
+        channel: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
         let host = host_header_value(&self.endpoint);
         let wire = format!(
             "GET {path} HTTP/1.1\r\nHost: {host}\r\nAuthorization: Bearer {}\r\nConnection: close\r\n\r\n",
-            self.management_token
+            token
         );
         let response = http_exchange(&self.endpoint, &wire)?;
         let (status, body) = split_http_response(&response)?;
@@ -82,7 +131,9 @@ impl PersonalDaemonClient {
             return Ok(body);
         }
         if status == 401 || status == 403 {
-            return Err(PersonalDaemonClientError::Unauthorized { detail: body });
+            return Err(PersonalDaemonClientError::Unauthorized {
+                detail: format!("{channel} channel: {body}"),
+            });
         }
         Err(PersonalDaemonClientError::Http { status, body })
     }
@@ -100,12 +151,13 @@ fn read_bootstrap_secret(layout: &PersonalDataLayout) -> Result<String, Personal
         })
 }
 
-fn issue_management_token(
+fn issue_channel_token(
     endpoint: &str,
     bootstrap_secret: &str,
+    channel: &str,
 ) -> Result<String, PersonalDaemonClientError> {
     let body = serde_json::json!({
-        "channel": "management",
+        "channel": channel,
         "principal_id": "principal://local/owner",
         "bootstrap_secret": bootstrap_secret
     })
