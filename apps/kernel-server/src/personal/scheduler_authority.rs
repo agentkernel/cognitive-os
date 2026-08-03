@@ -8,15 +8,16 @@
 
 use cognitive_contracts::generated::task_contract::TaskContract;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
+use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::engine::CommittedTransition;
-use cognitive_kernel::harness::LoopDriver;
+use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, TaskBinding,
 };
 use cognitive_runtime::{
-    SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
-    SchedulerDispatch, SchedulerService, SchedulerServiceError,
+    BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
+    SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
 };
 use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState};
 use serde::Deserialize;
@@ -137,6 +138,8 @@ pub(crate) enum SchedulerAuthorityError {
     DispatchBindingMismatch(String),
     #[error("scheduler lease release time is invalid: {0}")]
     InvalidReleaseTime(String),
+    #[error(transparent)]
+    Harness(#[from] cognitive_kernel::effects::EffectError),
     #[error(transparent)]
     Repository(#[from] SchedulerRepositoryError),
     #[error(transparent)]
@@ -901,6 +904,79 @@ where
         Ok(resolve_scheduler_effect_for_task_binding(store, task_binding)?.closure)
     })?;
     complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
+}
+
+/// Run one daemon-owned bounded harness attempt after fresh scheduler admission.
+///
+/// Every invocation reloads the durable authority snapshot before both lease
+/// admission and harness work. A ceiling STOP bypasses the harness entirely.
+/// The harness result is only progress accounting: durable Effect closure still
+/// decides whether the exact owner-and-epoch scheduler lease may be released.
+#[allow(clippy::too_many_arguments)]
+fn run_bounded_scheduler_attempt<S, C, G>(
+    authority_store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    scheduler_service: &mut SchedulerService,
+    driver: &LoopDriver<'_, S, C, G>,
+    harness: &BoundedHarness<'_, S, C, G>,
+    binding: &SchedulerAuthorityBinding,
+    task_binding: &TaskBinding,
+    scheduler_lease_epoch: i64,
+    observed_wall_time: &str,
+    expected_loop_version: Version,
+    iteration: i64,
+    charge: &BudgetCharge,
+    progress: ProgressStatus,
+    evidence_refs: &[String],
+    writer_lease: &WriterLease,
+    released_at: &str,
+) -> Result<(SchedulerWorkerAttempt, Option<HarnessDecision>), SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let admission = admit_scheduler_dispatch(
+        authority_store,
+        scheduler_repository,
+        scheduler_service,
+        driver,
+        binding,
+        scheduler_lease_epoch,
+        observed_wall_time,
+        expected_loop_version,
+        writer_lease,
+    )?;
+    let SchedulerDispatchAdmission::Leased(dispatch) = admission else {
+        let SchedulerDispatchAdmission::Stopped(transition) = admission else {
+            unreachable!("scheduler admission has only stopped or leased outcomes");
+        };
+        return Ok((SchedulerWorkerAttempt::Stopped(transition), None));
+    };
+
+    // Reload after the lease CAS so the harness cannot use pre-admission facts.
+    let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
+    let (_, decision) = harness.drive_iteration(
+        &snapshot.loop_object_id,
+        expected_loop_version,
+        &binding.task_ref,
+        iteration,
+        &snapshot.budget_id,
+        charge,
+        progress,
+        &binding.action_fingerprint,
+        evidence_refs,
+        writer_lease,
+    )?;
+    let worker_attempt = complete_durable_scheduler_effect_closure(
+        SchedulerDispatchAdmission::Leased(dispatch),
+        authority_store,
+        task_binding,
+        scheduler_repository,
+        released_at,
+    )?;
+
+    Ok((worker_attempt, Some(decision)))
 }
 
 /// Release an already resolved closed Effect through the real scheduler
