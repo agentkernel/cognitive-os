@@ -13,9 +13,11 @@
 |---|---|
 | Branch | `lane/personal-p2-t02-daemon-task-api-watch` |
 | Base revision | `main@962ea96f568131809960eb75f4b4475c1be16846` |
-| Worktree | documentation-only blocker record pending checkpoint commit |
+| Immutable blocker checkpoint | `335b063b46553643b5a503c2fccf9e0fe01d9896` |
+| Upstream | `origin/lane/personal-p2-t02-daemon-task-api-watch` at the blocker checkpoint |
+| Worktree | handoff metadata update pending checkpoint commit |
 | Lease | closed in this delivery |
-| Pull request | not yet created |
+| Pull request | [#137](https://github.com/agentkernel/cognitive-os/pull/137), Draft |
 
 ## Verified blocker
 
