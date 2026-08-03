@@ -24,6 +24,7 @@ pub mod migration;
 pub mod personal_db;
 pub mod scheduler;
 pub mod sqlite;
+pub mod worker_authorization;
 
 pub use clock::SystemClock;
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};

@@ -21,6 +21,7 @@
 //! `transition_records` abort any rewrite attempt, from any connection.
 
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
+use crate::worker_authorization::WORKER_AUTHORIZATION_SCHEMA_V4;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
@@ -28,9 +29,10 @@ use cognitive_domain::{
 use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
     AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, GovernanceObjectStore,
-    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry,
-    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission,
+    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, WorkerAuthorizationStore,
 };
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
 use std::path::Path;
@@ -276,7 +278,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -1480,6 +1482,104 @@ impl IntentChainStore for SqliteAuthorityStore {
             intents.push(row_to_intent(row).map_err(|err| corrupt("intent row", err))?);
         }
         Ok(intents)
+    }
+}
+
+impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn append_operation_candidate_proposal(
+        &self,
+        proposal: &OperationCandidateProposalRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin candidate proposal"))?;
+        let inserted = tx.execute(
+            "INSERT INTO operation_candidate_proposals
+               (candidate_id, task_ref, contract_epoch, candidate_source_ref, tool_ref,
+                action, target, parameters_digest, expected_state_version,
+                operation_descriptor_ref, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            (
+                proposal.candidate_id.as_str(),
+                proposal.task_ref.as_str(),
+                proposal.contract_epoch,
+                proposal.candidate_source_ref.as_str(),
+                proposal.tool_ref.as_str(),
+                proposal.action.as_str(),
+                proposal.target.as_str(),
+                proposal.parameters_digest.as_str(),
+                proposal.expected_state_version,
+                proposal.operation_descriptor_ref.as_str(),
+                proposal.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "candidate proposal {} already persisted",
+                        proposal.candidate_id
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert candidate proposal")(err)),
+        }
+        tx.commit()
+            .map_err(unavailable("commit candidate proposal"))
+    }
+
+    fn load_operation_candidate_proposal(
+        &self,
+        candidate_id: &ObjectId,
+    ) -> Result<Option<OperationCandidateProposalRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT candidate_id, task_ref, contract_epoch, candidate_source_ref, tool_ref,
+                        action, target, parameters_digest, expected_state_version,
+                        operation_descriptor_ref, canonical_json
+                 FROM operation_candidate_proposals WHERE candidate_id = ?1",
+            )
+            .map_err(unavailable("prepare load candidate proposal"))?;
+        statement
+            .query_row((candidate_id.as_str(),), |row| {
+                let candidate_id: String = row.get(0)?;
+                let operation_descriptor_ref: String = row.get(9)?;
+                Ok(OperationCandidateProposalRow {
+                    candidate_id: ObjectId::parse(&candidate_id).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?,
+                    task_ref: row.get(1)?,
+                    contract_epoch: row.get(2)?,
+                    candidate_source_ref: row.get(3)?,
+                    tool_ref: row.get(4)?,
+                    action: row.get(5)?,
+                    target: row.get(6)?,
+                    parameters_digest: row.get(7)?,
+                    expected_state_version: row.get(8)?,
+                    operation_descriptor_ref: ObjectId::parse(&operation_descriptor_ref).map_err(
+                        |error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                9,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        },
+                    )?,
+                    canonical_json: row.get(10)?,
+                })
+            })
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load candidate proposal")(other)),
+            })
     }
 }
 

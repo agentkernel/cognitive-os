@@ -476,6 +476,55 @@ pub struct TaskContractRow {
     pub canonical_json: String,
 }
 
+/// One persisted immutable operation candidate proposal. This row preserves
+/// non-authority input for later daemon admission; it does not authorize an
+/// operation, reserve budget, or schedule work.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OperationCandidateProposalRow {
+    /// Immutable candidate proposal identity.
+    pub candidate_id: ObjectId,
+    /// TaskContract task reference the proposal names.
+    pub task_ref: String,
+    /// Immutable TaskContract epoch the proposal was observed against.
+    pub contract_epoch: i64,
+    /// Provenance-only source reference supplied by the candidate producer.
+    pub candidate_source_ref: String,
+    /// Proposed registered tool reference.
+    pub tool_ref: String,
+    /// Proposed operation action.
+    pub action: String,
+    /// Proposed operation target.
+    pub target: String,
+    /// Digest of the proposed parameters; parameters themselves remain in
+    /// their separately governed operation descriptor.
+    pub parameters_digest: String,
+    /// Target-state version observed by the non-authority producer.
+    pub expected_state_version: i64,
+    /// Immutable operation descriptor reference for daemon validation.
+    pub operation_descriptor_ref: ObjectId,
+    /// Canonical JSON of the schema-shaped proposal, retained for audit.
+    pub canonical_json: String,
+}
+
+/// Durable append-only candidate input boundary for daemon-only worker
+/// authorization. Persisting a candidate merely makes it auditable; a
+/// separate daemon admission path must validate it before creating Intent,
+/// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
+pub trait WorkerAuthorizationStore {
+    /// Append an immutable candidate proposal. A duplicate identity is a
+    /// conflict and no replacement or mutable candidate status is allowed.
+    fn append_operation_candidate_proposal(
+        &self,
+        proposal: &OperationCandidateProposalRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load one immutable candidate proposal by identity.
+    fn load_operation_candidate_proposal(
+        &self,
+        candidate_id: &ObjectId,
+    ) -> Result<Option<OperationCandidateProposalRow>, StorePortError>;
+}
+
 /// M5 intent-chain persistence port (UserIntentRecord →
 /// IntentInterpretation candidate → TaskContract; REQ-INTENT-RECORD-001,
 /// REQ-INTENT-ADMISSION-001, REQ-INTENT-SUPERSEDE-001). Implemented
