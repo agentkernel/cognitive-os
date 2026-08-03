@@ -3,7 +3,7 @@
 - Task / slice: `P2-T02/D01`, `lease/personal/P2-T02/task-intent-contracts` (`in-progress`)
 - Change class: `normative-semantic` public-contract prerequisite
 - Branch: `lane/ctr-p2-t02-task-intent-contracts`
-- Status: source checkpoint pending generated bindings and supported validation
+- Status: validated contract batch; PR #139 is ready for merge
 
 ## Implemented scope
 
@@ -27,11 +27,24 @@ SDK transport mapping, authenticated watch implementation, admission success,
 Gate, release, Profile, provider, secret, service-manager, B01, or remote
 state change is claimed in this checkpoint.
 
-## Validation and recovery
+## Validation
 
-- Local consistency: pending after source edits; Windows GNU Rust compilation
-  is unsupported by `RUST-LINK-DEV-WIN-GNU-01`.
-- Required generated-binding and Rust validation: run only on a disposable
-  Linux Git worktree from a pushed immutable checkpoint revision.
-- Recovery: generate bindings from the pushed source checkpoint, commit the
-  generated artifacts and count pins, then run the focused Linux and CI suite.
+- Immutable final checkpoint: `9e910bf` on
+  `lane/ctr-p2-t02-task-intent-contracts`.
+- Local checks passed: `pnpm run check:consistency`,
+  `node tools/src/gen-matrix.mjs --check`, `git diff --check`, and
+  `pnpm --filter @cognitiveos/contracts-ts build/test` (39/39).
+- Exact Linux Git worktree (source checkpoint `d28bc76246d3c845e8b54c821cc3d39cc431d053`):
+  generated 50 schemas, then passed `generated_types` (9/9) and
+  `runner_execution` (13/13). Windows GNU compilation was not run, per
+  `RUST-LINK-DEV-WIN-GNU-01`.
+- Required PR #139 CI passed: Ubuntu twice and Windows twice, including the
+  final pushed revision.
+
+## Next action
+
+Merge PR #139 and claim a distinct, narrow Lane-RUN lease. The implementation
+must compose durable daemon-owned governance context, authenticated principal
+binding, server writer lease, the intent-to-preview-to-admit route sequence,
+and authenticated process-lifetime watch without claiming cross-restart event
+durability.
