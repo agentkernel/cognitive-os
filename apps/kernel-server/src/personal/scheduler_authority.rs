@@ -1282,9 +1282,12 @@ mod tests {
             &mut scheduler_repository,
             "2026-08-04T12:01:00Z",
         );
-        let error = match result {
-            Ok(()) => panic!("a recovered handoff cannot release a successor lease epoch"),
-            Err(error) => error,
+        assert!(
+            result.is_err(),
+            "a recovered handoff cannot release a successor lease epoch"
+        );
+        let Err(error) = result else {
+            return;
         };
         assert!(matches!(error, SchedulerAuthorityError::Repository(_)));
         let row = scheduler_repository
