@@ -845,9 +845,16 @@ mod tests {
         },
     };
     use cognitive_domain::{
-        BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
+        BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, UriRef, Version,
+        WallTimestamp,
+        capability::{CapabilityConstraints, LeaseWindow},
+    };
+    use cognitive_kernel::authz::{
+        AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
+        PrincipalFacts, authorize,
     };
     use cognitive_kernel::budget::BudgetState;
+    use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
     use cognitive_kernel::engine::CommittedTransition;
     use cognitive_kernel::intent_chain::{
         GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
@@ -861,7 +868,7 @@ mod tests {
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
-        SqliteAuthorityStore,
+        ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
         scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
     };
     use serde_json::json;
@@ -1037,6 +1044,119 @@ mod tests {
 
     fn state(value: &str) -> StateName {
         StateName::parse(value).unwrap()
+    }
+
+    fn recovery_effect_grant() -> cognitive_kernel::authz::AuthorizationGrant {
+        let authorization_time = WallTimestamp::parse("2026-08-04T12:02:00Z").unwrap();
+        authorize(
+            &AuthzSnapshot {
+                tenant_id: "personal-test".to_owned(),
+                principal: PrincipalFacts {
+                    principal_ref: UriRef::parse("principal://personal/daemon").unwrap(),
+                    authenticated: true,
+                    active: true,
+                    tenant_id: Some("personal-test".to_owned()),
+                },
+                actor_chain: ActorChainFacts {
+                    chain_digest: format!("sha256:{}", "c".repeat(64)),
+                    resolved: true,
+                },
+                membership: Some(MembershipFacts {
+                    valid: true,
+                    roles: ["daemon".to_owned()].into(),
+                }),
+                capability_links: vec![CapabilityConstraints {
+                    subject: "principal://personal/daemon".to_owned(),
+                    audience: "authority://personal/effect-authority".to_owned(),
+                    resource: "scope://personal/restart-recovery".to_owned(),
+                    purpose: "task_execution".to_owned(),
+                    actions: ["filesystem.read".to_owned()].into(),
+                    parameter_bounds: BTreeMap::new(),
+                    lease: LeaseWindow {
+                        not_before: WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap(),
+                        expires: WallTimestamp::parse("2026-08-04T12:05:00Z").unwrap(),
+                    },
+                    depth_remaining: 1,
+                    issued_epoch: 1,
+                }],
+                capability_set_version: 1,
+                explicit_denies: Vec::new(),
+                revocation_epoch: 1,
+                decided_at: authorization_time,
+            },
+            &ObjectGovernance {
+                object_ref: "effect://personal/restart-recovery".to_owned(),
+                tenant_id: Some("personal-test".to_owned()),
+                owner_ref: "principal://personal/daemon".to_owned(),
+                resource_scope: "scope://personal/restart-recovery/effect".to_owned(),
+                conversation_ref: None,
+            },
+            &AccessRequest {
+                action: "filesystem.read".to_owned(),
+                purpose: "task_execution".to_owned(),
+            },
+        )
+        .unwrap()
+    }
+
+    fn reconcile_effect_for_restart_recovery(
+        store: &SqliteAuthorityStore,
+        effect_object_id: &ObjectId,
+    ) {
+        let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store,
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").unwrap(),
+            UriRef::parse("authority://personal/effect-authority").unwrap(),
+            UriRef::parse("correlation://personal/restart-recovery").unwrap(),
+        );
+        let grant = recovery_effect_grant();
+        let currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+        let executor = ScriptedExecutor::queryable(1);
+
+        let authorized = effect_protocol
+            .authorize_effect(
+                effect_object_id,
+                Version::INITIAL,
+                &grant,
+                &currency,
+                &writer_lease,
+            )
+            .unwrap();
+        let (dispatched, outcome) = effect_protocol
+            .dispatch_effect(
+                effect_object_id,
+                authorized.after_version,
+                &grant,
+                &currency,
+                &executor,
+                &writer_lease,
+            )
+            .unwrap();
+        let executed = effect_protocol
+            .record_outcome(
+                effect_object_id,
+                dispatched.after_version,
+                &outcome,
+                &writer_lease,
+            )
+            .unwrap();
+        effect_protocol
+            .reconcile(
+                effect_object_id,
+                "EXECUTED",
+                executed.after_version,
+                &executor,
+                &writer_lease,
+            )
+            .unwrap();
     }
 
     /// Persist the minimum complete D05 handoff evidence through the normal
@@ -1329,6 +1449,58 @@ mod tests {
             scheduler_row.lease_owner.as_deref(),
             Some("restart-recovery-worker")
         );
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+
+        drop(reopened_scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn restarted_recovery_releases_only_a_reconciled_effects_exact_bound_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let (effect_object_id, scheduler_work_key) = persist_pending_bound_handoff(&database_path);
+
+        let closing_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
+        let reconciled_effect = closing_store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(reconciled_effect.state.as_str(), "RECONCILED");
+        assert_eq!(reconciled_effect.version, Version::new(5).unwrap());
+        drop(closing_store);
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let recovered_attempts = super::reconcile_recovered_worker_attempts(
+            &reopened_store,
+            &mut reopened_scheduler_repository,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:03:00Z").unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(recovered_attempts.len(), 1);
+        assert_eq!(
+            recovered_attempts[0].effect_closure,
+            SchedulerEffectClosure::Closed
+        );
+        let recovered_lease = recovered_attempts[0]
+            .handoff
+            .scheduler_lease
+            .as_ref()
+            .unwrap();
+        assert_eq!(recovered_lease.lease_owner, "restart-recovery-worker");
+        assert_eq!(recovered_lease.lease_epoch, 41);
+
+        let scheduler_row = reopened_scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(scheduler_row.lease_owner, None);
+        assert_eq!(scheduler_row.lease_expires, None);
         assert_eq!(scheduler_row.lease_epoch, 41);
         assert_eq!(scheduler_row.attempt_count, 1);
 
