@@ -1277,12 +1277,15 @@ mod tests {
             )
             .unwrap();
 
-        let error = release_closed_recovered_attempt(
+        let result = release_closed_recovered_attempt(
             &recovered_closed_attempt(task_ref, 21),
             &mut scheduler_repository,
             "2026-08-04T12:01:00Z",
-        )
-        .expect_err("a recovered handoff cannot release a successor lease epoch");
+        );
+        let error = match result {
+            Ok(()) => panic!("a recovered handoff cannot release a successor lease epoch"),
+            Err(error) => error,
+        };
         assert!(matches!(error, SchedulerAuthorityError::Repository(_)));
         let row = scheduler_repository
             .load(&scheduler_work_key(task_ref))
