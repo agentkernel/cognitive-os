@@ -29,8 +29,8 @@ use cognitive_kernel::intent_chain::{
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
-    ObjectCas, OperationCandidateProposalRow, RecordDraft, StorePortError, StoredObject,
-    TaskBinding, TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
+    ObjectCas, OperationCandidateProposalRow, ProtocolStore, RecordDraft, StorePortError,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
     WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{
@@ -513,9 +513,9 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
     );
     assert_eq!(
         store
-            .load_intents_by_effect(&commit.effect_admission.object.object_id)
+            .load_intent_for_effect(&commit.effect_admission.object.object_id)
             .expect("Intent lookup succeeds"),
-        vec![commit.intent.clone()]
+        Some(commit.intent.clone())
     );
     assert_eq!(
         store
