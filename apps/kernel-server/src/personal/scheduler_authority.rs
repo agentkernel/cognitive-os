@@ -855,9 +855,9 @@ mod tests {
     };
     use cognitive_kernel::ports::{
         AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
-        IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProtocolStore,
-        RecordDraft, SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow,
-        TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+        IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, RecordDraft,
+        SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+        WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
