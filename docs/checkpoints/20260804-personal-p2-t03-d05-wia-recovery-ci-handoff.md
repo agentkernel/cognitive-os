@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `4060eba0a11629e745ab6df42937cd626e604444`
+- Code checkpoint: `e9026dc2eae94e0c152306f09ad3cc3377f4d8f4`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -38,6 +38,11 @@ contract epoch against a lease for the same task at the current epoch. The
 epoch mismatch conflicts before the consumption insert, so no handoff or lease
 binding is persisted.
 
+A matching WIA also cannot be consumed while the corresponding scheduler work
+is merely `runnable`: the work must be in the exact active `leased` state with
+the requested owner, epoch, and no cancellation. The runnable-state rejection
+leaves no consumption or scheduler lease binding.
+
 ## Validation
 
 Local eligible non-linking checks passed at the checkpoint:
@@ -60,13 +65,19 @@ P2-T02 bootstrap-secret timing test; the failure was retried without source
 changes and its full Ubuntu/Windows workflow passed. The current head has two
 passing Ubuntu and two passing Windows workflows.
 
+The initial `89bbfed` runnable-state test revision failed because its fixture
+violated the scheduler schema by inserting a null `lease_epoch` into a
+non-null column. `e9026dc` corrects the non-leased fence to `0`, and all
+required Ubuntu/Windows CI checks pass for that corrected revision. The failed
+fixture revision is not claimed as D05 validation evidence.
+
 The earlier `eb11d74` revision failed CI because the bounded scheduler generic
 bound omitted `WorkerAuthorizationStore`; `ecda78e` fixed that compiler error.
 The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `4060eba`.
+No exact-revision native Linux worker-recovery test was run for `e9026dc`.
 An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
 was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
 low-throughput timeout before checkout or Cargo execution. The cleanup path
