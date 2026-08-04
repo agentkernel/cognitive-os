@@ -416,6 +416,7 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
     );
     let mut loop_version = Version::INITIAL;
     for (from_state, to_state, reason_code) in [
+        ("START", "OBSERVE", "LOOP_STARTED"),
         ("OBSERVE", "RESOLVE", "EVIDENCE_OBSERVED"),
         ("RESOLVE", "ORIENT", "CONTEXT_COMPLETE"),
         ("ORIENT", "DECIDE", "ORIENTATION_COMPLETE"),
