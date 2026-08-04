@@ -844,20 +844,29 @@ mod tests {
             common_defs::Budget, worker_iteration_authorization::WorkerIterationAuthorization,
         },
     };
-    use cognitive_domain::{BudgetId, EventId, ObjectId, RecordId, Version, WallTimestamp};
+    use cognitive_domain::{
+        BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
+    };
+    use cognitive_kernel::budget::BudgetState;
     use cognitive_kernel::engine::CommittedTransition;
     use cognitive_kernel::intent_chain::{
         GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
         strong_reference_to,
     };
     use cognitive_kernel::ports::{
-        IntentRow, SchedulerLeaseBinding, TaskBinding, WorkerIterationAuthorizationRow,
+        AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
+        IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProtocolStore,
+        RecordDraft, SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow,
+        TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
-    use cognitive_store::scheduler::{
-        SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey,
+    use cognitive_store::{
+        SqliteAuthorityStore,
+        scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
     };
+    use serde_json::json;
     use std::cell::Cell;
+    use std::collections::BTreeMap;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn scheduler_row(task_ref: &str) -> SchedulerRow {
@@ -1026,6 +1035,216 @@ mod tests {
         ))
     }
 
+    fn state(value: &str) -> StateName {
+        StateName::parse(value).unwrap()
+    }
+
+    /// Persist the minimum complete D05 handoff evidence through the normal
+    /// store APIs. The Effect intentionally remains PROPOSED: this fixture
+    /// exercises restart recovery's retain path without executing a tool or
+    /// manufacturing a terminal Effect transition.
+    fn persist_pending_bound_handoff(
+        database_path: &std::path::Path,
+    ) -> (ObjectId, SchedulerWorkKey) {
+        let store = SqliteAuthorityStore::open(database_path).unwrap();
+        let authorization = sealed_worker_authorization_row();
+        let task_ref = authorization.task_ref.clone();
+        let scheduler_work_key = SchedulerWorkKey {
+            task_ref: task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+        };
+        let admitted_at = WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap();
+
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(830),
+                    task_ref: task_ref.clone(),
+                    contract_epoch: authorization.contract_epoch,
+                    user_intent_record_id: object_id(831),
+                    interpretation_id: object_id(832),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "a".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"recovery-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000830").unwrap(),
+                    object_id: object_id(830),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.minted".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                0,
+            )
+            .unwrap();
+        store
+            .append_operation_candidate_proposal(&OperationCandidateProposalRow {
+                candidate_id: authorization.selected_candidate_id.clone(),
+                task_ref: task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+                candidate_source_ref: "observation://personal/restart-recovery".to_owned(),
+                tool_ref: "operation://personal/filesystem/read".to_owned(),
+                action: "filesystem.read".to_owned(),
+                target: "file:///workspace/input.txt".to_owned(),
+                parameters_digest: format!("sha256:{}", "b".repeat(64)),
+                expected_state_version: Version::INITIAL.get(),
+                operation_descriptor_ref: object_id(833),
+                canonical_json: "{\"candidate\":\"recovery-fixture\"}".to_owned(),
+            })
+            .unwrap();
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    state: state("DECIDE"),
+                    version: authorization.expected_loop_version,
+                    body: json!({"fixture": "restart-recovery"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000821").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version,
+                    event_type: "loop.fixture-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            })
+            .unwrap();
+        let budget_state =
+            BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
+        let budget_state_json = serde_json::to_string(&budget_state).unwrap();
+        store
+            .create_budget(&authorization.budget_id, &budget_state_json, &admitted_at)
+            .unwrap();
+
+        let candidate_admission = CandidateAdmissionCommit {
+            selected_candidate_id: authorization.selected_candidate_id.clone(),
+            intent: IntentRow {
+                intent_id: authorization.intent_id.clone(),
+                idempotency_key: "restart-recovery-pending".to_owned(),
+                parameters_digest: format!("sha256:{}", "b".repeat(64)),
+                action: "filesystem.read".to_owned(),
+                target: "file:///workspace/input.txt".to_owned(),
+                effect_object_id: authorization.effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: Some(TaskBinding {
+                    task_ref: task_ref.clone(),
+                    contract_epoch: authorization.contract_epoch,
+                }),
+                canonical_json: "{\"intent\":\"restart-recovery\"}".to_owned(),
+            },
+            intent_event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000813").unwrap(),
+                object_id: authorization.intent_id.clone(),
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"event\":\"intent\"}".to_owned(),
+            },
+            effect_admission: ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    state: state("PROPOSED"),
+                    version: Version::INITIAL,
+                    body: json!({"effect": "restart-recovery"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000814").unwrap(),
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "effect.admitted".to_owned(),
+                    canonical_json: "{\"event\":\"effect\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            },
+            worker_authorization: authorization.clone(),
+            loop_transition: TransitionCommit {
+                cas: ObjectCas {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    from_state: state("DECIDE"),
+                    to_state: state("ACT"),
+                    expected_version: authorization.expected_loop_version,
+                    next_version: authorization.expected_loop_version.next().unwrap(),
+                    committed_at: admitted_at.clone(),
+                },
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000822").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version.next().unwrap(),
+                    event_type: "loop.operation-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                record: RecordDraft {
+                    record_id: RecordId::parse("00000000-0000-7000-8000-000000000821").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version.next().unwrap(),
+                    canonical_json: "{\"record\":\"loop\"}".to_owned(),
+                },
+                budget: Some(BudgetCas {
+                    budget_id: authorization.budget_id.clone(),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    next_state_canonical_json: serde_json::to_string(
+                        &BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
+                    )
+                    .unwrap(),
+                }),
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            },
+            fencing_epoch: authorization.issued_fencing_epoch,
+        };
+        store
+            .commit_candidate_admission(&candidate_admission)
+            .unwrap();
+
+        let mut scheduler_repository = SchedulerRepository::open(database_path).unwrap();
+        scheduler_repository
+            .upsert(&scheduler_row(&task_ref))
+            .unwrap();
+        let leased_row = scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key,
+                "restart-recovery-worker",
+                41,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+        let dispatch = SchedulerDispatch {
+            task_ref,
+            contract_epoch: authorization.contract_epoch,
+            lease_owner: leased_row.lease_owner.unwrap(),
+            lease_epoch: leased_row.lease_epoch,
+            lease_expires: leased_row.lease_expires.unwrap(),
+            attempt_count: leased_row.attempt_count,
+        };
+        super::consume_worker_authorization_for_attempt(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:01:00Z").unwrap(),
+            &authorization.authorization_id,
+            object_id(834),
+            &dispatch,
+        )
+        .unwrap();
+        drop(scheduler_repository);
+        drop(store);
+        (authorization.effect_object_id, scheduler_work_key)
+    }
+
     fn committed_ceiling_stop() -> CommittedTransition {
         CommittedTransition {
             record_id: RecordId::parse("00000000-0000-7000-8000-000000000001").unwrap(),
@@ -1061,6 +1280,61 @@ mod tests {
             task_binding: binding,
             canonical_json: "{}".to_owned(),
         }
+    }
+
+    #[test]
+    fn restarted_recovery_retains_a_pending_effects_exact_bound_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let (effect_object_id, scheduler_work_key) = persist_pending_bound_handoff(&database_path);
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let recovered_attempts = super::reconcile_recovered_worker_attempts(
+            &reopened_store,
+            &mut reopened_scheduler_repository,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(recovered_attempts.len(), 1);
+        assert_eq!(
+            recovered_attempts[0].effect_closure,
+            SchedulerEffectClosure::PendingReconciliation
+        );
+        assert_eq!(
+            recovered_attempts[0]
+                .handoff
+                .scheduler_lease
+                .as_ref()
+                .unwrap()
+                .lease_epoch,
+            41
+        );
+        assert_eq!(
+            reopened_store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .unwrap()
+                .unwrap()
+                .state
+                .as_str(),
+            "PROPOSED"
+        );
+
+        let scheduler_row = reopened_scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Leased.as_str());
+        assert_eq!(
+            scheduler_row.lease_owner.as_deref(),
+            Some("restart-recovery-worker")
+        );
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+
+        drop(reopened_scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
     }
 
     #[test]
