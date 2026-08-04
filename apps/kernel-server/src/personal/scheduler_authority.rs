@@ -868,12 +868,15 @@ mod tests {
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
-        ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
+        PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
         scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
     };
     use serde_json::json;
     use std::cell::Cell;
     use std::collections::BTreeMap;
+    use std::io::Write;
+    use std::net::TcpStream;
+    use std::sync::mpsc;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn scheduler_row(task_ref: &str) -> SchedulerRow {
@@ -1040,6 +1043,53 @@ mod tests {
             "cognitiveos-scheduler-authority-{}-{unique_suffix}.db",
             std::process::id()
         ))
+    }
+
+    fn temporary_personal_layout() -> PersonalDataLayout {
+        let unique_suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "cognitiveos-server-recovery-{}-{unique_suffix}",
+            std::process::id()
+        ));
+        PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        )
+    }
+
+    fn endpoint_document_path(layout: &PersonalDataLayout) -> std::path::PathBuf {
+        layout.state_dir().join("daemon-endpoint.json")
+    }
+
+    fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> String {
+        let endpoint_path = endpoint_document_path(layout);
+        for _ in 0..100 {
+            if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
+                let endpoint =
+                    serde_json::from_str::<serde_json::Value>(&document).unwrap()["endpoint"]
+                        .as_str()
+                        .unwrap()
+                        .to_owned();
+                return endpoint;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        panic!("server did not publish its endpoint document");
+    }
+
+    fn send_health_request_to_once_server(endpoint: &str) {
+        let mut stream = TcpStream::connect(endpoint).unwrap();
+        stream
+            .write_all(
+                b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
+            )
+            .unwrap();
     }
 
     fn state(value: &str) -> StateName {
@@ -1507,6 +1557,104 @@ mod tests {
         drop(reopened_scheduler_repository);
         drop(reopened_store);
         std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn server_startup_recovers_closed_effect_before_publishing_endpoint() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        let authority_database_path = layout.authority_database_path();
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&authority_database_path);
+        let closing_store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+        reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
+        drop(closing_store);
+
+        let (result_sender, result_receiver) = mpsc::channel();
+        let server_layout = layout.clone();
+        let server_thread = std::thread::spawn(move || {
+            let result = super::super::server::serve_personal_loopback(
+                super::super::server::PersonalDaemonConfig {
+                    bind_address: "127.0.0.1:0".to_owned(),
+                    layout: server_layout,
+                    bounds: super::super::bounds::PersonalResourceBounds::personal_v1_baseline(),
+                    once: true,
+                },
+            );
+            result_sender.send(result).unwrap();
+        });
+
+        let endpoint = wait_for_published_endpoint(&layout);
+        send_health_request_to_once_server(&endpoint);
+        assert!(result_receiver.recv().unwrap().is_ok());
+        server_thread.join().unwrap();
+
+        let mut scheduler_repository = SchedulerRepository::open(&authority_database_path).unwrap();
+        let scheduler_row = scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(scheduler_row.lease_owner, None);
+        assert_eq!(scheduler_row.lease_expires, None);
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+        assert!(!endpoint_document_path(&layout).exists());
+
+        drop(scheduler_repository);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn server_startup_recovery_stale_contract_does_not_publish_endpoint() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        let authority_database_path = layout.authority_database_path();
+        let (_, scheduler_work_key) = persist_pending_bound_handoff(&authority_database_path);
+        let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(840),
+                    task_ref: scheduler_work_key.task_ref,
+                    contract_epoch: 2,
+                    user_intent_record_id: object_id(841),
+                    interpretation_id: object_id(842),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "d".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"superseding-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000840").unwrap(),
+                    object_id: object_id(840),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.superseded".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                1,
+            )
+            .unwrap();
+        drop(store);
+
+        let result = super::super::server::serve_personal_loopback(
+            super::super::server::PersonalDaemonConfig {
+                bind_address: "127.0.0.1:0".to_owned(),
+                layout: layout.clone(),
+                bounds: super::super::bounds::PersonalResourceBounds::personal_v1_baseline(),
+                once: true,
+            },
+        );
+
+        assert!(matches!(
+            result,
+            Err(super::super::server::PersonalDaemonError::Io { detail })
+                if detail.contains("reconcile durable scheduler recovery before startup")
+        ));
+        assert!(!endpoint_document_path(&layout).exists());
+        assert!(!layout.daemon_lock_path().exists());
+
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
     }
 
     #[test]
