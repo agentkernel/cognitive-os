@@ -6,15 +6,26 @@
 
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
-use cognitive_contracts::{canonical, generated::task_contract::TaskContract};
-use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
+use cognitive_contracts::{
+    canonical, generated::task_contract::TaskContract,
+    generated::worker_iteration_authorization::WorkerIterationAuthorization,
+};
+use cognitive_domain::{
+    BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, UriRef, Version, WallTimestamp,
+};
 use cognitive_kernel::budget::BudgetCharge;
+use cognitive_kernel::candidate_admission::{
+    CandidateAdmissionFacts, CandidateAdmissionIdentities, CandidateAdmissionInputs,
+    compose_candidate_admission,
+};
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
+use cognitive_kernel::intent_chain::GovernanceSeed;
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, TaskBinding,
-    WorkerAuthorizationStore,
+    AuthorityStore, CandidateAdmissionReceipt, Clock, HarnessStore, IdGenerator, IntentChainStore,
+    ProtocolStore, TaskBinding, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
 };
 use cognitive_runtime::{
     BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
@@ -71,6 +82,31 @@ pub(crate) struct CandidateAdmissionPreflight {
     pub next_budget_state_canonical_json: String,
     pub expected_loop_version: Version,
     pub next_iteration: i64,
+}
+
+/// Daemon-owned identity and governance inputs required to create one atomic
+/// candidate-admission bundle. This is deliberately not an API request type:
+/// the daemon resolves all values from its own configuration and durable
+/// governance state before calling [`admit_candidate_atomically`].
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct DaemonCandidateAdmissionCommand {
+    pub candidate_id: ObjectId,
+    pub authorization_subject_ref: String,
+    pub authorization_purpose: String,
+    pub budget_charge: BudgetCharge,
+    pub governance: GovernanceSeed,
+    pub actor_ref: UriRef,
+    pub authority_ref: UriRef,
+    pub correlation_id: UriRef,
+}
+
+/// Durable facts made available to a worker after its daemon-recorded WIA
+/// handoff. This is not execution success, progress, evidence, verification,
+/// Task acceptance, or Task completion.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct WorkerAuthorizationHandoff {
+    pub authorization: WorkerIterationAuthorizationRow,
+    pub worker_attempt_id: ObjectId,
 }
 
 /// Immutable scheduler identity reconstructed from durable work during every
@@ -151,6 +187,8 @@ pub(crate) enum SchedulerAuthorityError {
     CandidateDescriptorUnavailable(String),
     #[error("scheduler candidate has no current daemon authorization: {0}")]
     CandidateAuthorizationUnavailable(String),
+    #[error("scheduler candidate admission composition failed: {0}")]
+    CandidateAdmissionComposition(String),
     #[error(
         "scheduler work binding is stale: {task_ref} requested epoch {requested_epoch}, current epoch {current_epoch}"
     )]
@@ -368,6 +406,254 @@ where
         expected_loop_version: loop_object.version,
         next_iteration: progress_facts.last().map_or(1, |fact| fact.iteration + 1),
     })
+}
+
+/// Reload daemon-owned admission inputs, compose a schema-shaped bundle, and
+/// persist it through the single atomic candidate-admission store sink.
+///
+/// This is intentionally daemon-private. It accepts neither worker output nor
+/// client-supplied authority fields, and it does not consume WIA, dispatch an
+/// executor, write a progress fact, release a scheduler lease, or accept a
+/// Task.
+pub(crate) fn admit_candidate_atomically<S, C, G>(
+    store: &S,
+    clock: &C,
+    ids: &G,
+    command: &DaemonCandidateAdmissionCommand,
+) -> Result<CandidateAdmissionReceipt, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let preflight = preflight_candidate_admission(
+        store,
+        &command.candidate_id,
+        &command.authorization_subject_ref,
+        &command.authorization_purpose,
+        &command.budget_charge,
+    )?;
+    let candidate = store
+        .load_operation_candidate_proposal(&command.candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(command.candidate_id.to_string())
+        })?;
+    let task_contract = store
+        .load_task_contract(&preflight.task_ref, preflight.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(preflight.task_ref.clone()))?;
+    let descriptor = store
+        .load_daemon_operation_descriptor(&candidate.operation_descriptor_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                candidate.operation_descriptor_ref.to_string(),
+            )
+        })?;
+    let authorization = store
+        .load_latest_daemon_authorization_snapshot(
+            &command.authorization_subject_ref,
+            &candidate.target,
+            &candidate.action,
+            &command.authorization_purpose,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateAuthorizationUnavailable(candidate.action.clone())
+        })?;
+    let writer_lease = WriterLease {
+        epoch: store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
+    let admitted_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let identities = CandidateAdmissionIdentities {
+        authorization_id: next_object_id(ids)?,
+        intent_id: next_object_id(ids)?,
+        effect_object_id: next_object_id(ids)?,
+        intent_event_id: next_event_id(ids)?,
+        effect_event_id: next_event_id(ids)?,
+        loop_event_id: next_event_id(ids)?,
+        loop_record_id: next_record_id(ids)?,
+    };
+    let commit = compose_candidate_admission(&CandidateAdmissionInputs {
+        candidate,
+        task_contract,
+        descriptor,
+        authorization,
+        authorization_subject_ref: command.authorization_subject_ref.clone(),
+        authorization_purpose: command.authorization_purpose.clone(),
+        facts: CandidateAdmissionFacts {
+            loop_object_id: preflight.loop_object_id,
+            budget_id: preflight.budget_id,
+            expected_budget_version: preflight.expected_budget_version,
+            next_budget_state_canonical_json: preflight.next_budget_state_canonical_json,
+            expected_loop_version: preflight.expected_loop_version,
+            iteration: preflight.next_iteration,
+        },
+        budget_charge: command.budget_charge.clone(),
+        governance: command.governance.clone(),
+        identities,
+        actor_ref: command.actor_ref.clone(),
+        authority_ref: command.authority_ref.clone(),
+        correlation_id: command.correlation_id.clone(),
+        admitted_at,
+        writer_lease,
+    })
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    store
+        .commit_candidate_admission(&commit)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))
+}
+
+/// Reload and consume one daemon-issued WIA before a worker can use its
+/// bounded input. The consumption record is an immutable handoff only.
+///
+/// A superseded TaskContract or missing authorization fails closed. This
+/// function deliberately does not dispatch an executor or convert any worker
+/// observation into progress, evidence, verification, lease release, Task
+/// acceptance, or Task completion.
+pub(crate) fn consume_worker_authorization_for_attempt<S, C>(
+    store: &S,
+    clock: &C,
+    authorization_id: &ObjectId,
+    worker_attempt_id: ObjectId,
+) -> Result<WorkerAuthorizationHandoff, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+{
+    let authorization = store
+        .load_worker_iteration_authorization(authorization_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(authorization_id.to_string())
+        })?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&authorization.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if current_contract_epoch != authorization.contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: authorization.task_ref.clone(),
+            requested_epoch: authorization.contract_epoch,
+            current_epoch: current_contract_epoch,
+        });
+    }
+    let consumed_fencing_epoch = store
+        .current_fencing_epoch()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let consumed_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let consumption_value = serde_json::json!({
+        "authorization_id": authorization.authorization_id.as_str(),
+        "consumed_at": consumed_at.as_str(),
+        "consumed_fencing_epoch": consumed_fencing_epoch,
+        "kind": "worker_iteration_authorization_consumed",
+        "worker_attempt_id": worker_attempt_id.as_str(),
+    });
+    let canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&consumption_value)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    store
+        .consume_worker_iteration_authorization(&WorkerIterationAuthorizationConsumptionRow {
+            authorization_id: authorization.authorization_id.clone(),
+            worker_attempt_id: worker_attempt_id.clone(),
+            consumed_fencing_epoch,
+            consumed_at,
+            canonical_json,
+        })
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    Ok(WorkerAuthorizationHandoff {
+        authorization,
+        worker_attempt_id,
+    })
+}
+
+/// Verify that a durable WIA row and its schema-shaped evidence describe the
+/// same immutable authority. A storage row must never become worker input
+/// merely because its columns parse; its sealed payload remains the binding
+/// evidence for every identity and version-sensitive field.
+fn validate_worker_authorization_evidence(
+    authorization: &WorkerIterationAuthorizationRow,
+) -> Result<(), SchedulerAuthorityError> {
+    let payload: WorkerIterationAuthorization = serde_json::from_str(&authorization.canonical_json)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?;
+    let payload_value = serde_json::to_value(&payload).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    cognitive_contracts::projection::verify_content_digest(
+        &payload_value,
+        &["/header/content_digest"],
+        "governed-object-content/0.1",
+        "/header/content_digest",
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    let rows_match_payload = payload.header.id.0.as_str()
+        == authorization.authorization_id.as_str()
+        && payload.worker_authorization_root_id.0.as_str()
+            == authorization.worker_authorization_root_id.as_str()
+        && payload.contract_epoch == authorization.contract_epoch
+        && payload.iteration == authorization.iteration
+        && payload.expected_loop_version == authorization.expected_loop_version.get()
+        && payload.selected_candidate_ref.id.0.as_str()
+            == authorization.selected_candidate_id.as_str()
+        && payload.intent_ref.id.0.as_str() == authorization.intent_id.as_str()
+        && payload.effect_ref.id.0.as_str() == authorization.effect_object_id.as_str()
+        && payload.budget_id.0.as_str() == authorization.budget_id.as_str()
+        && payload.action_fingerprint == authorization.action_fingerprint
+        && payload.issued_fencing_epoch == authorization.issued_fencing_epoch;
+    if !rows_match_payload {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "worker authorization row and sealed evidence disagree".to_owned(),
+        ));
+    }
+    let payload_budget_charge = serde_json::to_value(&payload.budget_charge).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    let canonical_budget_charge = String::from_utf8(
+        canonical::canonical_bytes_of_value(&payload_budget_charge).map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    if canonical_budget_charge != authorization.budget_charge_canonical_json {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "worker authorization budget charge evidence disagrees with its row".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn next_object_id<G: IdGenerator>(ids: &G) -> Result<ObjectId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    ObjectId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
+}
+
+fn next_event_id<G: IdGenerator>(ids: &G) -> Result<EventId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    EventId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
+}
+
+fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    RecordId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
 }
 
 #[cfg(test)]

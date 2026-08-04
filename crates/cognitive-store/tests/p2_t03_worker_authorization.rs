@@ -326,6 +326,27 @@ fn missing_candidate_rejects_atomic_admission_without_authority_residue() {
 }
 
 #[test]
+fn atomic_admission_rejects_any_loop_edge_except_decide_to_act() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&temporary_directory.path().join("authority.db"))
+        .expect("fresh authority database opens");
+    let mut commit = admission_commit(object_id(498));
+    commit.loop_transition.cas.to_state = state("VERIFY");
+
+    let error = store
+        .commit_candidate_admission(&commit)
+        .expect_err("candidate admission may only move a Loop from DECIDE to ACT");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
+    assert!(
+        store
+            .read_events(0, 10)
+            .expect("event lookup succeeds")
+            .is_empty(),
+        "an invalid Loop edge must fail before any authority record is written"
+    );
+}
+
+#[test]
 fn missing_wia_cannot_be_consumed_as_a_worker_handoff() {
     let temporary_directory = tempfile::tempdir().unwrap();
     let store = SqliteAuthorityStore::open(&temporary_directory.path().join("authority.db"))

@@ -1636,7 +1636,13 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             && effect_admission.object.version == Version::INITIAL
             && loop_transition.cas.domain == LifecycleDomain::Loop
             && loop_transition.cas.object_id == authorization.loop_object_id
+            && loop_transition.cas.from_state.as_str() == "DECIDE"
+            && loop_transition.cas.to_state.as_str() == "ACT"
             && loop_transition.cas.expected_version == authorization.expected_loop_version
+            && matches!(
+                authorization.expected_loop_version.next(),
+                Ok(expected_next_version) if loop_transition.cas.next_version == expected_next_version
+            )
             && effect_admission.fencing_epoch == Some(commit.fencing_epoch)
             && loop_transition.fencing_epoch == Some(commit.fencing_epoch)
             && authorization.issued_fencing_epoch == commit.fencing_epoch;

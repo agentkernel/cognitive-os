@@ -19,6 +19,7 @@
 
 pub mod authz;
 pub mod budget;
+pub mod candidate_admission;
 pub mod context;
 pub mod context_cache;
 pub mod effects;
@@ -37,6 +38,10 @@ pub use authz::{
     capability_and_revocation_current, protected_read, revalidate_grant,
 };
 pub use budget::{BudgetCharge, BudgetError, BudgetExhausted, BudgetState};
+pub use candidate_admission::{
+    CandidateAdmissionCompositionError, CandidateAdmissionFacts, CandidateAdmissionIdentities,
+    CandidateAdmissionInputs, compose_candidate_admission,
+};
 pub use context::{
     ArrivalOrderRanker, CandidateObject, ContextBudget, ProposalRanker, RankerCandidate,
     RenderSpec, RequiredItem, ResolutionFailure, ResolutionRequest, ResolutionSession,
@@ -49,8 +54,8 @@ pub use context_cache::{
 pub use effects::{
     CommitSink, EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
     MintedIntent, OperationDescriptor, ProtocolDenial, RecoveryClosure, VerificationRecord,
-    VerificationStatus, WriterLease, acquire_lease, admit_operation, parameters_digest,
-    verification_still_current,
+    VerificationStatus, WriterLease, acquire_lease, admit_operation, canonical_text,
+    parameters_digest, strong_reference_for_content, verification_still_current,
 };
 pub use engine::{
     AdmitCommand, AdmittedObject, BudgetChargeCommand, Causation, CommittedTransition, Reason,
@@ -65,8 +70,9 @@ pub use intent_chain::{
     AcceptanceCommand, AdmittedInterpretation, AmbiguityFact, GovernanceSeed,
     InterpretationCandidate, PendingWork, PendingWorkDisposition, SupersedeCommand,
     SupersedeReport, TaskContractCommand, UserIntentCommand, admit_interpretation,
-    derive_candidate_status, mint_task_contract, record_interpretation_candidate,
-    record_user_intent, supersede_task_contract, verify_task_binding_current,
+    compose_governed_header, derive_candidate_status, mint_task_contract,
+    record_interpretation_candidate, record_user_intent, seal_governed_object_content_digest,
+    strong_reference_to, supersede_task_contract, verify_task_binding_current,
 };
 pub use ports::{
     AuthorityStore, CheckpointRow, Clock, DaemonAuthorizationSnapshotRow,

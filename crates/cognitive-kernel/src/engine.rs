@@ -82,6 +82,72 @@ impl TablePin {
     }
 }
 
+/// Validate the registered edge, guard set, and required evidence for a
+/// transition that must join a larger custom atomic transaction.
+///
+/// Normal callers should use [`TransitionEngine::commit_transition`]. This
+/// pure gate exists only for protocol bundles, such as candidate admission,
+/// whose Intent, Effect, WIA, Loop CAS, and budget debit must be committed by
+/// one adapter transaction rather than by independently committing the Loop.
+/// It performs no store I/O and returns the table pin used in the generated
+/// transition event and record.
+pub fn validate_registered_transition(
+    domain: LifecycleDomain,
+    from: &StateName,
+    to: &StateName,
+    reason_code: &str,
+    established_guards: &BTreeSet<String>,
+    evidence_names: &BTreeSet<String>,
+) -> Result<TablePin, TransitionRejection> {
+    let loaded = load_table(domain)?;
+    let edge = match loaded.find_edge(from, to, reason_code) {
+        Ok(edge) => edge,
+        Err(error) => {
+            let (kind, description) = match error {
+                EdgeLookupError::UnknownFromState | EdgeLookupError::UnknownToState => {
+                    (RejectionKind::UnknownState, "state not in registered table")
+                }
+                EdgeLookupError::TerminalFrom => (
+                    RejectionKind::TerminalState,
+                    "no registered transition leaves a terminal state",
+                ),
+                EdgeLookupError::NoMatchingEdge => (
+                    RejectionKind::IllegalTransition,
+                    "no registered transition row matches the state pair",
+                ),
+                EdgeLookupError::ReasonNotAllowed => (
+                    RejectionKind::ReasonNotAllowed,
+                    "no matching row allows the requested reason",
+                ),
+            };
+            return Err(reject(
+                kind,
+                format!("{description}: {from} -> {to} reason {reason_code}"),
+            ));
+        }
+    };
+    for guard in &edge.guards {
+        if !established_guards.contains(guard) {
+            return Err(reject(
+                RejectionKind::GuardUnsatisfied,
+                format!("guard {guard} not deterministically established"),
+            ));
+        }
+    }
+    for evidence_name in &edge.required_evidence {
+        if !evidence_names.contains(evidence_name) {
+            return Err(reject(
+                RejectionKind::EvidenceMissing,
+                format!("required evidence {evidence_name} absent"),
+            ));
+        }
+    }
+    Ok(TablePin {
+        version: loaded.table.version.clone(),
+        digest: loaded.digest.clone(),
+    })
+}
+
 /// Optional hard-budget charge admitted and debited with the transition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BudgetChargeCommand {

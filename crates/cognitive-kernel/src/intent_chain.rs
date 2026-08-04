@@ -90,11 +90,15 @@ fn denial(detail: String) -> ProtocolDenial {
     }
 }
 
-/// Compose a schema-shaped governed-object header. `content_digest` is a
-/// placeholder; [`seal_content_digest`] computes the real one under the
-/// REQ-GOBJ-REF-004 default projection.
+/// Compose a schema-shaped governed-object header from daemon-resolved
+/// governance facts. The content digest is intentionally a placeholder until
+/// [`seal_governed_object_content_digest`] seals the complete object.
+///
+/// This is a construction primitive only: it neither persists an object nor
+/// grants authority. Callers must obtain the [`GovernanceSeed`] from durable
+/// daemon-owned governance state rather than from a worker or client.
 #[allow(clippy::too_many_arguments)]
-fn compose_header(
+pub fn compose_governed_header(
     id: &ObjectId,
     object_type: &str,
     schema_version: &str,
@@ -151,11 +155,16 @@ fn compose_header(
     })
 }
 
-/// REQ-GOBJ-REF-004 default digest projection: `content_digest` is the
-/// domain-separated digest of the canonical bytes of the schema-valid
-/// object with exactly `/header/content_digest` excluded. Returns the
-/// sealed value and the digest.
-fn seal_content_digest(mut value: Value) -> Result<(Value, String), ProtocolDenial> {
+/// Seal a schema-shaped governed object using the standard content-digest
+/// projection. Exactly `/header/content_digest` is excluded from the
+/// domain-separated digest; all other object content remains bound.
+///
+/// The returned value has the sealed digest restored and is ready for final
+/// canonical serialization. This helper performs no persistence or
+/// authorization decision.
+pub fn seal_governed_object_content_digest(
+    mut value: Value,
+) -> Result<(Value, String), ProtocolDenial> {
     let mut projected = value.clone();
     let removed = projected
         .get_mut("header")
@@ -183,7 +192,9 @@ fn digest_of(value: &Value) -> Result<String, ProtocolDenial> {
         .map_err(|err| denial(format!("digest failed: {err}")))
 }
 
-fn strong_ref_to(id: &ObjectId, content_digest: &str) -> StrongReference {
+/// Build a strong reference to an immutable object whose content digest was
+/// already established by a schema-valid canonical payload.
+pub fn strong_reference_to(id: &ObjectId, content_digest: &str) -> StrongReference {
     StrongReference {
         content_digest: Digest(content_digest.to_owned()),
         id: id.to_generated(),
@@ -288,7 +299,7 @@ where
     }))
     .map_err(EffectError::Denied)?;
 
-    let header = compose_header(
+    let header = compose_governed_header(
         &cmd.record_id,
         "UserIntentRecord",
         "cognitiveos.user-intent-record/0.1",
@@ -318,7 +329,8 @@ where
     let value = serde_json::to_value(&record)
         .map_err(|err| denial(format!("record serialization: {err}")))
         .map_err(EffectError::Denied)?;
-    let (sealed, _content_digest) = seal_content_digest(value).map_err(EffectError::Denied)?;
+    let (sealed, _content_digest) =
+        seal_governed_object_content_digest(value).map_err(EffectError::Denied)?;
     let canonical_json = canonical_text(&sealed).map_err(EffectError::Denied)?;
 
     let event_id = next_event_id(ids).map_err(EffectError::Rejected)?;
@@ -497,7 +509,7 @@ where
     }))
     .map_err(EffectError::Denied)?;
 
-    let header = compose_header(
+    let header = compose_governed_header(
         &candidate.interpretation_id,
         "IntentInterpretation",
         "cognitiveos.intent-interpretation/0.1",
@@ -531,7 +543,7 @@ where
         forbidden: candidate.forbidden.clone(),
         header,
         information_gaps: gaps_value.clone(),
-        intent_ref: strong_ref_to(&record.record_id, &record.intent_digest),
+        intent_ref: strong_reference_to(&record.record_id, &record.intent_digest),
         interpretation_digest: Digest(interpretation_digest.clone()),
         objectives: candidate.objectives.clone(),
         status: status_enum,
@@ -543,7 +555,8 @@ where
     let interpretation_value = serde_json::to_value(&typed)
         .map_err(|err| denial(format!("intent-interpretation serialization: {err}")))
         .map_err(EffectError::Denied)?;
-    let (sealed, _) = seal_content_digest(interpretation_value).map_err(EffectError::Denied)?;
+    let (sealed, _) =
+        seal_governed_object_content_digest(interpretation_value).map_err(EffectError::Denied)?;
     let canonical_json = canonical_text(&sealed).map_err(EffectError::Denied)?;
 
     let event_id = next_event_id(ids).map_err(EffectError::Rejected)?;
@@ -842,7 +855,7 @@ where
         .map_err(|err| port_rejection("clock", err))
         .map_err(EffectError::Rejected)?;
 
-    let header = compose_header(
+    let header = compose_governed_header(
         &cmd.contract_id,
         "TaskContract",
         "cognitiveos.task-contract/0.3",
@@ -888,7 +901,7 @@ where
         header,
         human_gates: None,
         intent_acceptance_ref: acceptance_ref,
-        intent_interpretation_ref: strong_ref_to(
+        intent_interpretation_ref: strong_reference_to(
             &admitted.interpretation().interpretation_id,
             &admitted.interpretation().interpretation_digest,
         ),
@@ -902,7 +915,7 @@ where
         },
         task_ref: cmd.task_ref.as_str().to_owned(),
         budget_id: Some(cmd.budget_id.to_generated()),
-        user_intent_ref: strong_ref_to(
+        user_intent_ref: strong_reference_to(
             &admitted.record().record_id,
             &admitted.record().intent_digest,
         ),
@@ -913,7 +926,7 @@ where
     let value = serde_json::to_value(&contract)
         .map_err(|err| denial(format!("contract serialization: {err}")))
         .map_err(EffectError::Denied)?;
-    let (sealed, _) = seal_content_digest(value).map_err(EffectError::Denied)?;
+    let (sealed, _) = seal_governed_object_content_digest(value).map_err(EffectError::Denied)?;
     let canonical_json = canonical_text(&sealed).map_err(EffectError::Denied)?;
     let contract_digest = digest_of(&sealed).map_err(EffectError::Denied)?;
 
@@ -1189,6 +1202,50 @@ where
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn governed_object_sealing_binds_every_field_except_its_digest() {
+        let original = json!({
+            "header": {
+                "content_digest": format!("sha256:{}", "0".repeat(64)),
+                "type": "WorkerIterationAuthorization"
+            },
+            "iteration": 1
+        });
+        let (sealed_original, original_digest) =
+            seal_governed_object_content_digest(original).unwrap();
+
+        let changed = json!({
+            "header": {
+                "content_digest": format!("sha256:{}", "f".repeat(64)),
+                "type": "WorkerIterationAuthorization"
+            },
+            "iteration": 2
+        });
+        let (sealed_changed, changed_digest) =
+            seal_governed_object_content_digest(changed).unwrap();
+
+        assert_eq!(
+            sealed_original["header"]["content_digest"],
+            json!(&original_digest)
+        );
+        assert_eq!(
+            sealed_changed["header"]["content_digest"],
+            json!(&changed_digest)
+        );
+        assert_ne!(original_digest, changed_digest);
+    }
+
+    #[test]
+    fn governed_object_sealing_requires_the_digest_projection_field() {
+        let error = seal_governed_object_content_digest(json!({
+            "header": { "type": "WorkerIterationAuthorization" },
+            "iteration": 1
+        }))
+        .expect_err("a governed object must expose header.content_digest for sealing");
+
+        assert!(error.detail.contains("content_digest absent"));
+    }
 
     fn candidate(material: bool) -> InterpretationCandidate {
         InterpretationCandidate {

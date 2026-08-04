@@ -1,4 +1,4 @@
-﻿//! The Intent → Effect protocol driver
+//! The Intent → Effect protocol driver
 //! (`docs/standards/intent-effect-idempotency.md`; REQ-EFF-001..006,
 //! REQ-EFF-STATE-001; `.cursor/rules/13-effect-recovery.mdc`).
 //!
@@ -57,7 +57,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 /// Digest domain for protocol evidence values (registered example domain
 /// for governed object content, `canonical-encoding-and-digest.md` §9).
-pub(crate) const EVIDENCE_DIGEST_DOMAIN: &str = "governed-object-content/0.1";
+/// Domain separator for immutable governed-object content and strong
+/// references. This is deliberately shared by schema-object sealing and
+/// protocol records that become strong-reference targets.
+pub const GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN: &str = "governed-object-content/0.1";
+
+pub(crate) const EVIDENCE_DIGEST_DOMAIN: &str = GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN;
 
 // ---------------------------------------------------------------------
 // F-023: OperationDescriptor and the admission matrix
@@ -304,7 +309,7 @@ pub fn parameters_digest(parameters: &Value) -> Result<String, ProtocolDenial> {
         registered: STATE_CONFLICT,
         detail: format!("parameters not canonicalizable: {err}"),
     })?;
-    canonical::digest(&bytes, EVIDENCE_DIGEST_DOMAIN).map_err(|err| ProtocolDenial {
+    canonical::digest(&bytes, GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN).map_err(|err| ProtocolDenial {
         registered: STATE_CONFLICT,
         detail: format!("parameter digest failed: {err}"),
     })
@@ -453,7 +458,8 @@ where
     Ok(MintedIntent::Persisted(row))
 }
 
-pub(crate) fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
+/// Canonically serialize a protocol value as UTF-8 text.
+pub fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
     let bytes = canonical::canonical_bytes_of_value(value).map_err(|err| ProtocolDenial {
         registered: STATE_CONFLICT,
         detail: format!("canonical encoding failed: {err}"),
@@ -464,23 +470,31 @@ pub(crate) fn canonical_text(value: &Value) -> Result<String, ProtocolDenial> {
     })
 }
 
-pub(crate) fn strong_ref(
+/// Build a strong reference to canonical immutable content.
+pub fn strong_reference_for_content(
     id: &ObjectId,
     version: i64,
     content: &str,
 ) -> Result<StrongReference, ProtocolDenial> {
-    let digest = canonical::digest(content.as_bytes(), EVIDENCE_DIGEST_DOMAIN).map_err(|err| {
-        ProtocolDenial {
+    let digest = canonical::digest(content.as_bytes(), GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN)
+        .map_err(|err| ProtocolDenial {
             registered: STATE_CONFLICT,
             detail: format!("evidence digest failed: {err}"),
-        }
-    })?;
+        })?;
     Ok(StrongReference {
         content_digest: cognitive_contracts::generated::common_defs::Digest(digest),
         id: id.to_generated(),
         kind: StrongReferenceKind::Strong,
         object_version: version,
     })
+}
+
+pub(crate) fn strong_ref(
+    id: &ObjectId,
+    version: i64,
+    content: &str,
+) -> Result<StrongReference, ProtocolDenial> {
+    strong_reference_for_content(id, version, content)
 }
 
 // ---------------------------------------------------------------------
