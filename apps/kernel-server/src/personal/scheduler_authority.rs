@@ -1067,7 +1067,7 @@ mod tests {
         layout.state_dir().join("daemon-endpoint.json")
     }
 
-    fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> String {
+    fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> Option<String> {
         let endpoint_path = endpoint_document_path(layout);
         for _ in 0..100 {
             if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
@@ -1076,11 +1076,11 @@ mod tests {
                         .as_str()
                         .unwrap()
                         .to_owned();
-                return endpoint;
+                return Some(endpoint);
             }
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
-        panic!("server did not publish its endpoint document");
+        None
     }
 
     fn send_health_request_to_once_server(endpoint: &str) {
@@ -1585,6 +1585,11 @@ mod tests {
         });
 
         let endpoint = wait_for_published_endpoint(&layout);
+        assert!(
+            endpoint.is_some(),
+            "server did not publish its endpoint document"
+        );
+        let endpoint = endpoint.unwrap();
         send_health_request_to_once_server(&endpoint);
         assert!(result_receiver.recv().unwrap().is_ok());
         server_thread.join().unwrap();
