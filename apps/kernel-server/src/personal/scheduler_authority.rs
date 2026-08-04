@@ -9,11 +9,12 @@
 use cognitive_contracts::generated::task_contract::TaskContract;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
 use cognitive_kernel::budget::BudgetCharge;
-use cognitive_kernel::effects::WriterLease;
+use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, TaskBinding,
+    WorkerAuthorizationStore,
 };
 use cognitive_runtime::{
     BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
@@ -55,6 +56,19 @@ pub(crate) struct SchedulerAuthoritySnapshot {
     pub ceiling_facts: SchedulerCeilingFacts,
     pub loop_object_id: ObjectId,
     pub budget_id: BudgetId,
+}
+
+/// Durable facts accepted by the daemon-only candidate-admission preflight.
+/// This result contains no worker output and grants no dispatch permission;
+/// it is only the deterministic input set for constructing an atomic bundle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CandidateAdmissionPreflight {
+    pub task_ref: String,
+    pub contract_epoch: i64,
+    pub loop_object_id: ObjectId,
+    pub budget_id: BudgetId,
+    pub expected_loop_version: Version,
+    pub next_iteration: i64,
 }
 
 /// Immutable scheduler identity reconstructed from durable work during every
@@ -127,6 +141,14 @@ pub(crate) enum SchedulerAuthorityError {
     BudgetUnavailable(String),
     #[error("scheduler task contract epoch must be positive: {0}")]
     InvalidContractEpoch(i64),
+    #[error("scheduler candidate is unavailable or inconsistent: {0}")]
+    CandidateUnavailable(String),
+    #[error("scheduler candidate tool is not allowed by its TaskContract: {0}")]
+    CandidateToolForbidden(String),
+    #[error("scheduler candidate descriptor is unavailable or unsafe: {0}")]
+    CandidateDescriptorUnavailable(String),
+    #[error("scheduler candidate has no current daemon authorization: {0}")]
+    CandidateAuthorizationUnavailable(String),
     #[error(
         "scheduler work binding is stale: {task_ref} requested epoch {requested_epoch}, current epoch {current_epoch}"
     )]
@@ -208,6 +230,137 @@ fn ensure_current_contract_epoch(
         task_ref: binding.task_ref.clone(),
         requested_epoch: binding.contract_epoch,
         current_epoch: current_contract_epoch,
+    })
+}
+
+/// Reload and validate all daemon-owned facts required before constructing an
+/// atomic candidate-admission bundle. This preflight does not mint an Intent,
+/// authorize an Effect, consume WIA, dispatch work, or record progress.
+pub(crate) fn preflight_candidate_admission<S>(
+    store: &S,
+    candidate_id: &ObjectId,
+    authorization_subject_ref: &str,
+    authorization_purpose: &str,
+) -> Result<CandidateAdmissionPreflight, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let candidate = store
+        .load_operation_candidate_proposal(candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::CandidateUnavailable(candidate_id.to_string()))?;
+    let current_epoch = store
+        .current_contract_epoch(&candidate.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if current_epoch != candidate.contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: candidate.task_ref,
+            requested_epoch: candidate.contract_epoch,
+            current_epoch,
+        });
+    }
+    let contract_row = store
+        .load_task_contract(&candidate.task_ref, current_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(candidate.task_ref.clone()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if contract.task_ref != candidate.task_ref || contract.contract_epoch != current_epoch {
+        return Err(SchedulerAuthorityError::CandidateUnavailable(
+            "candidate and TaskContract binding disagree".to_owned(),
+        ));
+    }
+    if !contract.allowed_tools.contains(&candidate.tool_ref) {
+        return Err(SchedulerAuthorityError::CandidateToolForbidden(
+            candidate.tool_ref,
+        ));
+    }
+    let descriptor = store
+        .load_daemon_operation_descriptor(&candidate.operation_descriptor_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                candidate.operation_descriptor_ref.to_string(),
+            )
+        })?;
+    if descriptor.descriptor.operation_id != candidate.tool_ref
+        || descriptor.descriptor.action != candidate.action
+        || admit_operation(&descriptor.descriptor).is_err()
+    {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            candidate.operation_descriptor_ref.to_string(),
+        ));
+    }
+    let authorization = store
+        .load_latest_daemon_authorization_snapshot(
+            authorization_subject_ref,
+            &candidate.target,
+            &candidate.action,
+            authorization_purpose,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateAuthorizationUnavailable(candidate.action.clone())
+        })?;
+    if authorization.grant_epoch < 1
+        || authorization.capability_set_version < 1
+        || authorization.revocation_epoch < 1
+    {
+        return Err(SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+            candidate.action.clone(),
+        ));
+    }
+    let loop_object_id = ObjectId::parse(
+        &contract
+            .loop_object_id
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no loop".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let budget_id = BudgetId::parse(
+        &contract
+            .budget_id
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no budget".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let loop_object = store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::LoopUnavailable(loop_object_id.to_string()))?;
+    if loop_object.state.as_str() != "DECIDE" {
+        return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+            "{} is {}",
+            loop_object_id, loop_object.state
+        )));
+    }
+    let stored_budget = store
+        .load_budget(&budget_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::BudgetUnavailable(budget_id.to_string()))?;
+    if stored_budget
+        .state
+        .remaining()
+        .values()
+        .any(|amount| *amount < 1)
+    {
+        return Err(SchedulerAuthorityError::BudgetUnavailable(
+            budget_id.to_string(),
+        ));
+    }
+    let progress_facts = store
+        .list_progress_facts(&loop_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    Ok(CandidateAdmissionPreflight {
+        task_ref: candidate.task_ref,
+        contract_epoch: current_epoch,
+        loop_object_id,
+        budget_id,
+        expected_loop_version: loop_object.version,
+        next_iteration: progress_facts.last().map_or(1, |fact| fact.iteration + 1),
     })
 }
 
