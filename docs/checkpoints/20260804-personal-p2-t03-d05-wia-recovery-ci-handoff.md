@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `28337abe1a36bc17f09f442d62617fc31fa89aa8`
+- Code checkpoint: `4060eba0a11629e745ab6df42937cd626e604444`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -32,6 +32,11 @@ work rather than releasing a matching-looking lease.
 The exact bound-handoff regression now also attempts a second consumption for
 the same WIA with a distinct worker attempt ID. The duplicate conflicts, while
 recovery still observes only the original consumption and exact lease binding.
+
+The bound-handoff match also has focused coverage for a WIA from a successor
+contract epoch against a lease for the same task at the current epoch. The
+epoch mismatch conflicts before the consumption insert, so no handoff or lease
+binding is persisted.
 
 ## Validation
 
@@ -61,7 +66,7 @@ The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `28337ab`.
+No exact-revision native Linux worker-recovery test was run for `4060eba`.
 An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
 was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
 low-throughput timeout before checkout or Cargo execution. The cleanup path
