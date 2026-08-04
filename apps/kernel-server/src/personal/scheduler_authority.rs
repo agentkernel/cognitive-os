@@ -546,6 +546,9 @@ where
         .ok_or_else(|| {
             SchedulerAuthorityError::CandidateUnavailable(authorization_id.to_string())
         })?;
+    // Consumption may be invoked independently of the bounded attempt
+    // composition, so revalidate the sealed evidence at this authority edge.
+    validate_worker_authorization_evidence(&authorization)?;
     let current_contract_epoch = store
         .current_contract_epoch(&authorization.task_ref)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
@@ -1793,7 +1796,7 @@ fn run_bounded_scheduler_attempt<S, C, G>(
     released_at: &str,
 ) -> Result<(SchedulerWorkerAttempt, Option<HarnessDecision>), SchedulerAuthorityError>
 where
-    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,
 {
