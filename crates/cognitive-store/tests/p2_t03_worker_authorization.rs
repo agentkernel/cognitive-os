@@ -518,6 +518,13 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
             .expect("Intent lookup succeeds"),
         Some(commit.intent.clone())
     );
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .expect("recovery discovery before handoff succeeds")
+            .is_empty(),
+        "issued-but-unconsumed WIA is authority, not evidence of an active worker"
+    );
     let consumption = WorkerIterationAuthorizationConsumptionRow {
         authorization_id: commit.worker_authorization.authorization_id.clone(),
         worker_attempt_id: object_id(527),
