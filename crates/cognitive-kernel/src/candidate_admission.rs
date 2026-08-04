@@ -10,7 +10,9 @@ use crate::effects::{
     GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN, OperationDescriptor, WriterLease, canonical_text,
     strong_reference_for_content,
 };
-use crate::engine::validate_registered_transition;
+use crate::engine::{
+    EVENT_TYPE_OBJECT_ADMITTED, EVENT_TYPE_TRANSITION_COMMITTED, validate_registered_transition,
+};
 use crate::intent_chain::{
     GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
     strong_reference_to,
@@ -402,7 +404,7 @@ pub fn compose_candidate_admission(
             object_id: inputs.identities.effect_object_id.clone(),
             domain: LifecycleDomain::Effect,
             object_version: Version::INITIAL,
-            event_type: crate::replay::EVENT_TYPE_OBJECT_ADMITTED.to_owned(),
+            event_type: EVENT_TYPE_OBJECT_ADMITTED.to_owned(),
             canonical_json: canonical_string(&json!({
                 "actor_ref": inputs.actor_ref.as_str(),
                 "authority_ref": inputs.authority_ref.as_str(),
@@ -410,7 +412,7 @@ pub fn compose_candidate_admission(
                 "domain": "effect",
                 "event_id": inputs.identities.effect_event_id.as_str(),
                 "event_time": inputs.admitted_at.as_str(),
-                "event_type": crate::replay::EVENT_TYPE_OBJECT_ADMITTED,
+                "event_type": EVENT_TYPE_OBJECT_ADMITTED,
                 "initial_state": "PROPOSED",
                 "object_id": inputs.identities.effect_object_id.as_str(),
             }))?,
@@ -544,7 +546,7 @@ pub fn compose_candidate_admission(
             object_id: inputs.facts.loop_object_id.clone(),
             domain: LifecycleDomain::Loop,
             object_version: next_loop_version,
-            event_type: crate::replay::EVENT_TYPE_TRANSITION_COMMITTED.to_owned(),
+            event_type: EVENT_TYPE_TRANSITION_COMMITTED.to_owned(),
             canonical_json: canonical_string(&json!({
                 "after_state": "ACT",
                 "after_version": next_loop_version.get(),
@@ -558,7 +560,7 @@ pub fn compose_candidate_admission(
                 "domain": "loop",
                 "event_id": inputs.identities.loop_event_id.as_str(),
                 "event_time": inputs.admitted_at.as_str(),
-                "event_type": crate::replay::EVENT_TYPE_TRANSITION_COMMITTED,
+                "event_type": EVENT_TYPE_TRANSITION_COMMITTED,
                 "object_id": inputs.facts.loop_object_id.to_string(),
                 "reason": record.reason.clone(),
                 "record_ref": inputs.identities.loop_record_id.to_string(),
