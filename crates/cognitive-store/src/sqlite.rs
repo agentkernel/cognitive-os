@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -1603,6 +1603,47 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             issued_fencing_epoch: row.13,
             canonical_json: row.14,
         }))
+    }
+
+    fn load_unconsumed_worker_iteration_authorization_for_task_binding(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT authorization.authorization_id
+                 FROM worker_iteration_authorizations AS authorization
+                 LEFT JOIN worker_iteration_authorization_consumptions AS consumption
+                   ON consumption.authorization_id = authorization.authorization_id
+                 WHERE authorization.task_ref = ?1
+                   AND authorization.contract_epoch = ?2
+                   AND consumption.authorization_id IS NULL
+                 ORDER BY authorization.iteration
+                 LIMIT 2",
+            )
+            .map_err(unavailable("prepare unconsumed worker authorization query"))?;
+        let authorization_ids = statement
+            .query_map((task_ref, contract_epoch), |row| row.get::<_, String>(0))
+            .map_err(unavailable("query unconsumed worker authorizations"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read unconsumed worker authorizations"))?;
+        drop(statement);
+        drop(conn);
+
+        let [authorization_id] = authorization_ids.as_slice() else {
+            return match authorization_ids.len() {
+                0 => Ok(None),
+                _ => Err(StorePortError::Conflict {
+                    detail: "multiple unconsumed worker authorizations match scheduler work"
+                        .to_owned(),
+                }),
+            };
+        };
+        let authorization_id = ObjectId::parse(authorization_id)
+            .map_err(|error| corrupt("unconsumed worker authorization id", error))?;
+        self.load_worker_iteration_authorization(&authorization_id)
     }
 
     fn list_consumed_worker_iteration_authorizations(

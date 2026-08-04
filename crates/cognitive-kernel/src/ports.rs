@@ -689,6 +689,15 @@ pub trait WorkerAuthorizationStore {
         authorization_id: &ObjectId,
     ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
 
+    /// Resolve the sole unconsumed daemon-issued WIA for one exact scheduler
+    /// binding. Multiple matching authorities are ambiguous and must fail
+    /// closed; consumed WIAs remain recovery-only evidence.
+    fn load_unconsumed_worker_iteration_authorization_for_task_binding(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
+
     /// Enumerate only WIA records that a daemon has durably handed to a
     /// worker. This is the recovery discovery surface: an unconsumed WIA is
     /// an issued authorization, not an in-flight worker attempt.
