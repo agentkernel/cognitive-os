@@ -29,8 +29,8 @@ use cognitive_kernel::intent_chain::{
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
-    ObjectCas, OperationCandidateProposalRow, ProtocolStore, RecordDraft, StorePortError,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
+    ObjectCas, OperationCandidateProposalRow, RecordDraft, StorePortError, StoredObject,
+    TaskBinding, TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
     WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{
@@ -471,31 +471,31 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
         .commit_candidate_admission(&commit)
         .expect("all candidate-admission authority persists together");
 
-    assert_eq!(receipt.intent_id, commit.intent.intent_id);
-    assert_eq!(
-        receipt.effect_object_id,
-        commit.effect_admission.object.object_id
-    );
     assert_eq!(
         receipt.authorization_id,
         commit.worker_authorization.authorization_id
     );
-    assert_eq!(
-        receipt.loop_after_version,
-        Version::new(loop_version.get() + 1).unwrap()
-    );
+    assert!(receipt.intent_event_sequence > 0);
+    assert!(receipt.effect_admission_event_sequence > receipt.intent_event_sequence);
+    assert!(receipt.loop_transition_event_sequence > receipt.effect_admission_event_sequence);
     let effect = store
-        .load_object(&commit.effect_admission.object.object_id)
+        .load_object(
+            LifecycleDomain::Effect,
+            &commit.effect_admission.object.object_id,
+        )
         .expect("effect lookup succeeds")
         .expect("candidate admission persists its Effect");
     assert_eq!(effect.state.as_str(), "PROPOSED");
     assert_eq!(effect.version, Version::INITIAL);
     let loop_object = store
-        .load_object(&loop_id)
+        .load_object(LifecycleDomain::Loop, &loop_id)
         .expect("Loop lookup succeeds")
         .expect("Loop remains durable");
     assert_eq!(loop_object.state.as_str(), "ACT");
-    assert_eq!(loop_object.version, receipt.loop_after_version);
+    assert_eq!(
+        loop_object.version,
+        Version::new(loop_version.get() + 1).unwrap()
+    );
     let persisted_budget = store
         .load_budget(&budget)
         .expect("budget lookup succeeds")
