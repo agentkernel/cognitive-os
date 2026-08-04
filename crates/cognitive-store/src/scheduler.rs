@@ -349,7 +349,8 @@ impl SchedulerRepository {
                 "UPDATE scheduler_entries \
              SET state=?3, lease_owner=NULL, lease_epoch=lease_epoch, \
                  lease_expires=NULL, next_eligible=?4 \
-             WHERE task_ref=?1 AND contract_epoch=?2 AND lease_owner=?5 AND lease_epoch=?6",
+             WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased' \
+               AND lease_owner=?5 AND lease_epoch=?6",
                 rusqlite::params![
                     work_key.task_ref,
                     work_key.contract_epoch,

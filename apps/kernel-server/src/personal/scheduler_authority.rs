@@ -716,6 +716,69 @@ where
     Ok(recovered_attempts)
 }
 
+/// Reconcile recovered handoffs whose authoritative Effects are closed.
+///
+/// A release is possible only when the durable handoff includes the exact
+/// lease owner and epoch captured at consumption. Legacy unbound handoffs and
+/// pending Effects deliberately retain their scheduler work. This does not
+/// interpret worker output or complete a Task.
+pub(crate) fn reconcile_recovered_worker_attempts<S, C>(
+    store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    clock: &C,
+) -> Result<Vec<RecoveredWorkerAttempt>, SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+{
+    let recovered_attempts = recover_consumed_worker_attempts(store)?;
+    let released_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::InvalidReleaseTime(error.detail))?;
+
+    for recovered_attempt in &recovered_attempts {
+        release_closed_recovered_attempt(
+            recovered_attempt,
+            scheduler_repository,
+            released_at.as_str(),
+        )?;
+    }
+
+    Ok(recovered_attempts)
+}
+
+fn release_closed_recovered_attempt(
+    recovered_attempt: &RecoveredWorkerAttempt,
+    scheduler_repository: &mut SchedulerRepository,
+    released_at: &str,
+) -> Result<(), SchedulerAuthorityError> {
+    if recovered_attempt.effect_closure != SchedulerEffectClosure::Closed {
+        return Ok(());
+    }
+    let Some(scheduler_lease) = &recovered_attempt.handoff.scheduler_lease else {
+        return Ok(());
+    };
+    if scheduler_lease.task_ref != recovered_attempt.handoff.authorization.task_ref
+        || scheduler_lease.contract_epoch != recovered_attempt.handoff.authorization.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "recovered scheduler lease binding does not match its WorkerIterationAuthorization"
+                .to_owned(),
+        ));
+    }
+    scheduler_repository.release_lease(
+        &SchedulerWorkKey {
+            task_ref: scheduler_lease.task_ref.clone(),
+            contract_epoch: scheduler_lease.contract_epoch,
+        },
+        &scheduler_lease.lease_owner,
+        scheduler_lease.lease_epoch,
+        SchedulerState::Succeeded,
+        released_at,
+    )?;
+    Ok(())
+}
+
 fn next_object_id<G: IdGenerator>(ids: &G) -> Result<ObjectId, SchedulerAuthorityError> {
     let raw_id = ids
         .next_uuid_v7()
@@ -744,16 +807,19 @@ fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorit
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
-        SchedulerAuthorityBinding, SchedulerAuthorityError, SchedulerDispatchAdmission,
-        SchedulerEffectClosure, SchedulerWorkerAttempt, classify_scheduler_effect_closure,
+        RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
+        SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
+        WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
         complete_resolved_effect_and_release, complete_scheduler_admission,
         complete_scheduler_worker_attempt, ensure_current_contract_epoch,
         parse_execution_bound_contract, release_closed_effect_dispatch,
-        select_single_effect_intent,
+        release_closed_recovered_attempt, select_single_effect_intent,
     };
-    use cognitive_domain::{EventId, ObjectId, RecordId, Version, WallTimestamp};
+    use cognitive_domain::{BudgetId, EventId, ObjectId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
-    use cognitive_kernel::ports::{IntentRow, TaskBinding};
+    use cognitive_kernel::ports::{
+        IntentRow, SchedulerLeaseBinding, TaskBinding, WorkerIterationAuthorizationRow,
+    };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::scheduler::{
         SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey,
@@ -779,6 +845,42 @@ mod tests {
         SchedulerWorkKey {
             task_ref: task_ref.to_owned(),
             contract_epoch: 1,
+        }
+    }
+
+    fn object_id(sequence: u64) -> ObjectId {
+        ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn recovered_closed_attempt(task_ref: &str, lease_epoch: i64) -> RecoveredWorkerAttempt {
+        RecoveredWorkerAttempt {
+            handoff: WorkerAuthorizationHandoff {
+                authorization: WorkerIterationAuthorizationRow {
+                    authorization_id: object_id(800),
+                    worker_authorization_root_id: object_id(801),
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    loop_object_id: object_id(802),
+                    iteration: 1,
+                    expected_loop_version: Version::INITIAL,
+                    selected_candidate_id: object_id(803),
+                    intent_id: object_id(804),
+                    effect_object_id: object_id(805),
+                    budget_id: BudgetId::parse("00000000-0000-7000-b000-000000000806").unwrap(),
+                    budget_charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                    action_fingerprint: "recovered-lease-release".to_owned(),
+                    issued_fencing_epoch: 1,
+                    canonical_json: "{\"worker_authorization\":1}".to_owned(),
+                },
+                worker_attempt_id: object_id(807),
+                scheduler_lease: Some(SchedulerLeaseBinding {
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    lease_owner: "scheduler-worker".to_owned(),
+                    lease_epoch,
+                }),
+            },
+            effect_closure: SchedulerEffectClosure::Closed,
         }
     }
 
@@ -1098,6 +1200,75 @@ mod tests {
             .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Succeeded.as_str());
         assert_eq!(durable_row.lease_owner, None);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn recovered_closed_effect_releases_only_its_persisted_owner_and_epoch_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-exact-lease";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                21,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        release_closed_recovered_attempt(
+            &recovered_closed_attempt(task_ref, 21),
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        )
+        .unwrap();
+
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(row.lease_owner, None);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn recovered_closed_effect_cannot_release_a_successor_lease_epoch() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-stale-lease";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                22,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        let error = release_closed_recovered_attempt(
+            &recovered_closed_attempt(task_ref, 21),
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        )
+        .expect_err("a recovered handoff cannot release a successor lease epoch");
+        assert!(matches!(error, SchedulerAuthorityError::Repository(_)));
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Leased.as_str());
+        assert_eq!(row.lease_epoch, 22);
+        assert_eq!(row.lease_owner.as_deref(), Some("scheduler-worker"));
         drop(scheduler_repository);
         std::fs::remove_file(database_path).unwrap();
     }
