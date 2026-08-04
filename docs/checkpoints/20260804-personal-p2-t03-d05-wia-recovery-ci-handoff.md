@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `a1d1cc79bd3d9a517ad0e7b5e6bbaa5e6d3b2bdf`
+- Code checkpoint: `28337abe1a36bc17f09f442d62617fc31fa89aa8`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -29,6 +29,10 @@ consumption or restart recovery can use the row. A closed legacy unbound
 handoff has no exact persisted lease identity and therefore retains scheduler
 work rather than releasing a matching-looking lease.
 
+The exact bound-handoff regression now also attempts a second consumption for
+the same WIA with a distinct worker attempt ID. The duplicate conflicts, while
+recovery still observes only the original consumption and exact lease binding.
+
 ## Validation
 
 Local eligible non-linking checks passed at the checkpoint:
@@ -46,13 +50,18 @@ verify (ubuntu-latest): pass
 verify (windows-latest): pass
 ```
 
+One Windows workflow initially failed outside this D05 change in the existing
+P2-T02 bootstrap-secret timing test; the failure was retried without source
+changes and its full Ubuntu/Windows workflow passed. The current head has two
+passing Ubuntu and two passing Windows workflows.
+
 The earlier `eb11d74` revision failed CI because the bounded scheduler generic
 bound omitted `WorkerAuthorizationStore`; `ecda78e` fixed that compiler error.
 The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `a1d1cc7`.
+No exact-revision native Linux worker-recovery test was run for `28337ab`.
 An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
 was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
 low-throughput timeout before checkout or Cargo execution. The cleanup path
