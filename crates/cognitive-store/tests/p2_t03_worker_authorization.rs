@@ -13,7 +13,8 @@ use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, EventDraft, IntentRow, ObjectAdmission, ObjectCas,
     OperationCandidateProposalRow, RecordDraft, StorePortError, StoredObject, TaskBinding,
-    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{EffectClass, ExecutorCapabilities, OperationDescriptor};
 use cognitive_store::SqliteAuthorityStore;
@@ -320,4 +321,23 @@ fn missing_candidate_rejects_atomic_admission_without_authority_residue() {
             .expect("event lookup succeeds")
             .is_empty()
     );
+}
+
+#[test]
+fn missing_wia_cannot_be_consumed_as_a_worker_handoff() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let store = SqliteAuthorityStore::open(&temporary_directory.path().join("authority.db"))
+        .expect("fresh authority database opens");
+    let consumption = WorkerIterationAuthorizationConsumptionRow {
+        authorization_id: object_id(600),
+        worker_attempt_id: object_id(601),
+        consumed_fencing_epoch: 1,
+        consumed_at: WallTimestamp::parse("2026-08-03T12:00:00Z").unwrap(),
+        canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+    };
+
+    let error = store
+        .consume_worker_iteration_authorization(&consumption)
+        .expect_err("a worker cannot consume authority that the daemon did not issue");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
 }
