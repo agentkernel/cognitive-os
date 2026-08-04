@@ -501,7 +501,10 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
         .expect("budget lookup succeeds")
         .expect("budget remains durable");
     assert_eq!(persisted_budget.version, Version::new(2).unwrap());
-    assert_eq!(persisted_budget.state.amounts().get("tool_calls"), Some(&1));
+    assert_eq!(
+        persisted_budget.state.remaining().get("tool_calls"),
+        Some(&1)
+    );
     assert_eq!(
         store
             .load_worker_iteration_authorization(&commit.worker_authorization.authorization_id)
