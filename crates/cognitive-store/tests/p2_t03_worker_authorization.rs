@@ -819,6 +819,12 @@ fn bound_wia_handoff_requires_and_recovers_the_exact_active_scheduler_lease() {
     store
         .consume_worker_iteration_authorization_bound_to_scheduler_lease(&request)
         .expect("handoff commits only for its exact active scheduler lease");
+    let mut duplicate_request = request.clone();
+    duplicate_request.consumption.worker_attempt_id = object_id(708);
+    let duplicate = store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(&duplicate_request)
+        .expect_err("a WIA cannot be bound to a second scheduler worker attempt");
+    assert!(matches!(duplicate, StorePortError::Conflict { .. }));
 
     let recovered = store
         .list_consumed_worker_iteration_authorizations()
