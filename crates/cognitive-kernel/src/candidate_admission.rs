@@ -604,7 +604,8 @@ pub fn compose_candidate_admission(
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use crate::effects::{EffectClass, ExecutorCapabilities};
+    use crate::effects::EffectClass;
+    use crate::executor::ExecutorCapabilities;
     use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
     use cognitive_contracts::generated::object_reference::UuidV7;
     use cognitive_contracts::generated::task_contract::{
