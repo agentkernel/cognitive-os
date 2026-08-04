@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -37,6 +37,7 @@ use cognitive_kernel::ports::{
     ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
     StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
     UserIntentRecordRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};

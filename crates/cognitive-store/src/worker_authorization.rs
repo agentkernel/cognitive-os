@@ -127,3 +127,25 @@ BEGIN SELECT RAISE(ABORT, 'append-only: worker iteration authorizations are immu
 pub fn worker_iteration_authorization_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(7, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7)
 }
+
+/// Migration v8: append-only one-time WIA consumption records.
+pub const WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8: &str = "
+CREATE TABLE IF NOT EXISTS worker_iteration_authorization_consumptions (
+  authorization_id       TEXT PRIMARY KEY REFERENCES worker_iteration_authorizations(authorization_id),
+  worker_attempt_id      TEXT NOT NULL UNIQUE,
+  consumed_fencing_epoch INTEGER NOT NULL CHECK (consumed_fencing_epoch >= 1),
+  consumed_at            TEXT NOT NULL,
+  canonical_json         TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS worker_iteration_authorization_consumptions_append_only_update
+BEFORE UPDATE ON worker_iteration_authorization_consumptions
+BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization consumption is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS worker_iteration_authorization_consumptions_append_only_delete
+BEFORE DELETE ON worker_iteration_authorization_consumptions
+BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization consumption is immutable'); END;
+";
+
+/// The version-8 WIA consumption migration entry.
+pub fn worker_iteration_authorization_consumption_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(8, WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8)
+}
