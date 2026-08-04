@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `e1df4cb2ab79d7d90ea51fdbf66b4e7d98a129ff`
+- Code checkpoint: `64015d2a23bdac0c0ab5298df5f473a8c8aebddb`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -47,6 +47,13 @@ A terminal `succeeded` scheduler row likewise cannot reauthorize a historical
 WIA, even if the row retains an earlier lease epoch. The terminal-state
 rejection creates neither a consumption nor a lease binding.
 
+Advancing the daemon fencing epoch after an exact WIA and scheduler lease are
+prepared rejects the stale handoff before persistence. A test-only SQLite
+trigger also injects failure at the lease-binding insert after consumption is
+attempted: the enclosing transaction rolls back, and a reopened authority
+database contains no modern unbound consumption or lease binding while the
+scheduler lease remains intact.
+
 ## Validation
 
 Local eligible non-linking checks passed at the checkpoint:
@@ -81,7 +88,7 @@ The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `e1df4cb`.
+No exact-revision native Linux worker-recovery test was run for `64015d2`.
 An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
 was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
 low-throughput timeout before checkout or Cargo execution. The cleanup path
