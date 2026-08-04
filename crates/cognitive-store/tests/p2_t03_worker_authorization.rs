@@ -523,8 +523,8 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
             .read_events(0, 100)
             .expect("event lookup succeeds")
             .len(),
-        10,
-        "three admission events join the pre-existing Loop, budget, and contract evidence"
+        9,
+        "three admission events join the Loop and TaskContract evidence; budget creation is ledger-only"
     );
 }
 
