@@ -602,6 +602,18 @@ pub struct WorkerIterationAuthorizationConsumptionRow {
     pub canonical_json: String,
 }
 
+/// Durable recovery input for a worker attempt that crossed the daemon's WIA
+/// handoff boundary. Recovery must use this record and the corresponding
+/// Effect state; it must not reconstruct a worker attempt from scheduler
+/// callbacks, receipts, or process-local memory.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConsumedWorkerIterationAuthorization {
+    /// Immutable daemon-issued authority that was handed to a worker.
+    pub authorization: WorkerIterationAuthorizationRow,
+    /// The one durable worker-attempt handoff for that authority.
+    pub consumption: WorkerIterationAuthorizationConsumptionRow,
+}
+
 /// All-or-nothing daemon admission of one selected non-authority candidate.
 /// The caller must derive every field from reloaded durable authority facts;
 /// the store rechecks fencing and CAS preconditions in one transaction.
@@ -647,6 +659,13 @@ pub trait WorkerAuthorizationStore {
         &self,
         authorization_id: &ObjectId,
     ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
+
+    /// Enumerate only WIA records that a daemon has durably handed to a
+    /// worker. This is the recovery discovery surface: an unconsumed WIA is
+    /// an issued authorization, not an in-flight worker attempt.
+    fn list_consumed_worker_iteration_authorizations(
+        &self,
+    ) -> Result<Vec<ConsumedWorkerIterationAuthorization>, StorePortError>;
 
     /// Consume one WIA at most once under the current fencing epoch. This
     /// records only a worker handoff, not execution, progress, or completion.

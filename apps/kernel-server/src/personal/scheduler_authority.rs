@@ -109,6 +109,15 @@ pub(crate) struct WorkerAuthorizationHandoff {
     pub worker_attempt_id: ObjectId,
 }
 
+/// A restart-safe worker attempt reconstructed solely from daemon-recorded
+/// handoff evidence and the authoritative Effect lifecycle state. It is not
+/// a worker result and grants neither progress nor Task completion.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct RecoveredWorkerAttempt {
+    pub handoff: WorkerAuthorizationHandoff,
+    pub effect_closure: SchedulerEffectClosure,
+}
+
 /// Immutable scheduler identity reconstructed from durable work during every
 /// daemon tick. The scheduler table intentionally stores only task lifecycle
 /// and fencing fields; binding identity remains anchored in Intent protocol
@@ -630,6 +639,56 @@ fn validate_worker_authorization_evidence(
         ));
     }
     Ok(())
+}
+
+/// Discover in-flight worker attempts after daemon restart.
+///
+/// Only consumed WIA records appear here: issued-but-unconsumed authority is
+/// not evidence that a worker started. Every discovered row is revalidated
+/// against the current TaskContract epoch and its sealed WIA evidence before
+/// reading the durable Effect state. No process-local callback, receipt, or
+/// scheduler queue value participates in recovery.
+pub(crate) fn recover_consumed_worker_attempts<S>(
+    store: &S,
+) -> Result<Vec<RecoveredWorkerAttempt>, SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let consumed_authorizations = store
+        .list_consumed_worker_iteration_authorizations()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut recovered_attempts = Vec::with_capacity(consumed_authorizations.len());
+    for consumed_authorization in consumed_authorizations {
+        let authorization = consumed_authorization.authorization;
+        validate_worker_authorization_evidence(&authorization)?;
+        let current_contract_epoch = store
+            .current_contract_epoch(&authorization.task_ref)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+        ensure_current_contract_epoch(
+            &SchedulerAuthorityBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+                action_fingerprint: authorization.action_fingerprint.clone(),
+            },
+            current_contract_epoch,
+        )?;
+        let effect = store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MissingEffect(
+                    authorization.effect_object_id.as_str().to_owned(),
+                )
+            })?;
+        recovered_attempts.push(RecoveredWorkerAttempt {
+            handoff: WorkerAuthorizationHandoff {
+                authorization,
+                worker_attempt_id: consumed_authorization.consumption.worker_attempt_id,
+            },
+            effect_closure: classify_scheduler_effect_closure(effect.state.as_str())?,
+        });
+    }
+    Ok(recovered_attempts)
 }
 
 fn next_object_id<G: IdGenerator>(ids: &G) -> Result<ObjectId, SchedulerAuthorityError> {

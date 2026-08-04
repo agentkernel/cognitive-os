@@ -528,6 +528,18 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
     store
         .consume_worker_iteration_authorization(&consumption)
         .expect("a real daemon-issued WIA is consumed exactly once");
+    assert_eq!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .expect("recovery discovery succeeds"),
+        vec![
+            cognitive_kernel::ports::ConsumedWorkerIterationAuthorization {
+                authorization: commit.worker_authorization.clone(),
+                consumption: consumption.clone(),
+            }
+        ],
+        "recovery discovers only a daemon-recorded worker handoff"
+    );
     let duplicate_consumption = store
         .consume_worker_iteration_authorization(&consumption)
         .expect_err("a WIA cannot be handed to a second worker attempt");

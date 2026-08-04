@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -32,10 +32,11 @@ use cognitive_domain::{
 };
 use cognitive_kernel::ports::{
     AuthorityStore, CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow,
-    CommitReceipt, CommittedEvent, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
-    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
-    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
-    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    CommitReceipt, CommittedEvent, ConsumedWorkerIterationAuthorization,
+    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, GovernanceObjectStore,
+    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission,
+    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
     UserIntentRecordRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
@@ -1575,6 +1576,124 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             issued_fencing_epoch: row.13,
             canonical_json: row.14,
         }))
+    }
+
+    fn list_consumed_worker_iteration_authorizations(
+        &self,
+    ) -> Result<Vec<ConsumedWorkerIterationAuthorization>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT authorization.authorization_id, authorization.worker_authorization_root_id,
+                        authorization.task_ref, authorization.contract_epoch,
+                        authorization.loop_object_id, authorization.iteration,
+                        authorization.expected_loop_version, authorization.selected_candidate_id,
+                        authorization.intent_id, authorization.effect_object_id,
+                        authorization.budget_id, authorization.budget_charge_json,
+                        authorization.action_fingerprint, authorization.issued_fencing_epoch,
+                        authorization.canonical_json, consumption.worker_attempt_id,
+                        consumption.consumed_fencing_epoch, consumption.consumed_at,
+                        consumption.canonical_json
+                 FROM worker_iteration_authorizations AS authorization
+                 INNER JOIN worker_iteration_authorization_consumptions AS consumption
+                   ON consumption.authorization_id = authorization.authorization_id
+                 ORDER BY consumption.consumed_at, authorization.authorization_id",
+            )
+            .map_err(unavailable(
+                "prepare consumed worker authorization recovery query",
+            ))?;
+        let mut rows = statement
+            .query(())
+            .map_err(unavailable("query consumed worker authorizations"))?;
+        let mut recoverable_attempts = Vec::new();
+        while let Some(row) = rows
+            .next()
+            .map_err(unavailable("read consumed worker authorization"))?
+        {
+            let values: (
+                String,
+                String,
+                String,
+                i64,
+                String,
+                i64,
+                i64,
+                String,
+                String,
+                String,
+                String,
+                String,
+                String,
+                i64,
+                String,
+                String,
+                i64,
+                String,
+                String,
+            ) = (|| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                    row.get(7)?,
+                    row.get(8)?,
+                    row.get(9)?,
+                    row.get(10)?,
+                    row.get(11)?,
+                    row.get(12)?,
+                    row.get(13)?,
+                    row.get(14)?,
+                    row.get(15)?,
+                    row.get(16)?,
+                    row.get(17)?,
+                    row.get(18)?,
+                ))
+            })()
+            .map_err(unavailable("decode consumed worker authorization"))?;
+            let authorization_id = ObjectId::parse(&values.0)
+                .map_err(|error| corrupt("worker authorization id", error))?;
+            let authorization = WorkerIterationAuthorizationRow {
+                authorization_id: authorization_id.clone(),
+                worker_authorization_root_id: ObjectId::parse(&values.1)
+                    .map_err(|error| corrupt("worker authorization root", error))?,
+                task_ref: values.2,
+                contract_epoch: values.3,
+                loop_object_id: ObjectId::parse(&values.4)
+                    .map_err(|error| corrupt("worker authorization loop", error))?,
+                iteration: values.5,
+                expected_loop_version: Version::new(values.6)
+                    .map_err(|error| corrupt("worker authorization loop version", error))?,
+                selected_candidate_id: ObjectId::parse(&values.7)
+                    .map_err(|error| corrupt("worker authorization candidate", error))?,
+                intent_id: ObjectId::parse(&values.8)
+                    .map_err(|error| corrupt("worker authorization intent", error))?,
+                effect_object_id: ObjectId::parse(&values.9)
+                    .map_err(|error| corrupt("worker authorization effect", error))?,
+                budget_id: BudgetId::parse(&values.10)
+                    .map_err(|error| corrupt("worker authorization budget", error))?,
+                budget_charge_canonical_json: values.11,
+                action_fingerprint: values.12,
+                issued_fencing_epoch: values.13,
+                canonical_json: values.14,
+            };
+            recoverable_attempts.push(ConsumedWorkerIterationAuthorization {
+                authorization,
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id,
+                    worker_attempt_id: ObjectId::parse(&values.15)
+                        .map_err(|error| corrupt("worker attempt id", error))?,
+                    consumed_fencing_epoch: values.16,
+                    consumed_at: WallTimestamp::parse(&values.17)
+                        .map_err(|error| corrupt("worker authorization consumption time", error))?,
+                    canonical_json: values.18,
+                },
+            });
+        }
+        Ok(recoverable_attempts)
     }
 
     fn consume_worker_iteration_authorization(
