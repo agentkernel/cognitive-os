@@ -6,7 +6,7 @@
 
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
-use cognitive_contracts::generated::task_contract::TaskContract;
+use cognitive_contracts::{canonical, generated::task_contract::TaskContract};
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
 use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::effects::{WriterLease, admit_operation};
@@ -67,6 +67,8 @@ pub(crate) struct CandidateAdmissionPreflight {
     pub contract_epoch: i64,
     pub loop_object_id: ObjectId,
     pub budget_id: BudgetId,
+    pub expected_budget_version: Version,
+    pub next_budget_state_canonical_json: String,
     pub expected_loop_version: Version,
     pub next_iteration: i64,
 }
@@ -241,6 +243,7 @@ pub(crate) fn preflight_candidate_admission<S>(
     candidate_id: &ObjectId,
     authorization_subject_ref: &str,
     authorization_purpose: &str,
+    budget_charge: &BudgetCharge,
 ) -> Result<CandidateAdmissionPreflight, SchedulerAuthorityError>
 where
     S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
@@ -341,16 +344,17 @@ where
         .load_budget(&budget_id)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
         .ok_or_else(|| SchedulerAuthorityError::BudgetUnavailable(budget_id.to_string()))?;
-    if stored_budget
+    let next_budget_state = stored_budget
         .state
-        .remaining()
-        .values()
-        .any(|amount| *amount < 1)
-    {
-        return Err(SchedulerAuthorityError::BudgetUnavailable(
-            budget_id.to_string(),
-        ));
-    }
+        .check_and_debit(budget_charge)
+        .map_err(|error| SchedulerAuthorityError::BudgetUnavailable(error.to_string()))?;
+    let next_budget_state_value = serde_json::to_value(&next_budget_state)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let next_budget_state_canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&next_budget_state_value)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let progress_facts = store
         .list_progress_facts(&loop_object_id)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
@@ -359,6 +363,8 @@ where
         contract_epoch: current_epoch,
         loop_object_id,
         budget_id,
+        expected_budget_version: stored_budget.version,
+        next_budget_state_canonical_json,
         expected_loop_version: loop_object.version,
         next_iteration: progress_facts.last().map_or(1, |fact| fact.iteration + 1),
     })
