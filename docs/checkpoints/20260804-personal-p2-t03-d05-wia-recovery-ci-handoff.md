@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `be2948f191d3d9ed6111a4636fe615bf1fa63d63`
+- Code checkpoint: `13fc15e4bf5973930cf1abb0a5d9d61b47fda64b`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -16,11 +16,12 @@ consumption and revalidates sealed WIA evidence at both consumption and
 recovery boundaries. The bounded scheduler composition has the explicit
 `WorkerAuthorizationStore` dependency required to load and consume its WIA.
 
-The focused SQLite regression proves that a cancelled `scheduler_entries` row
-cannot consume a WIA or persist a lease binding. Existing exact-match,
-replacement-owner/epoch, legacy-unbound, pending-effect and successor-release
-fences remain in force. Startup recovery runs before endpoint publication and
-only reconciles already consumed, exact-lease-bound handoffs.
+Focused SQLite regressions prove that cancelled scheduler work and a scheduler
+task binding different from the WIA task both cannot consume a WIA or persist a
+lease binding. Existing exact-match, replacement-owner/epoch, legacy-unbound,
+pending-effect and successor-release fences remain in force. Startup recovery
+runs before endpoint publication and only reconciles already consumed,
+exact-lease-bound handoffs.
 
 ## Validation
 
@@ -45,7 +46,7 @@ The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `be2948f`.
+No exact-revision native Linux worker-recovery test was run for `13fc15e`.
 Prior Linux candidate-persistence and conformance evidence remains scoped to
 the earlier immutable revisions documented in the D05 candidate checkpoint.
 
