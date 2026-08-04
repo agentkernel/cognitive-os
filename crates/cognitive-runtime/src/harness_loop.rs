@@ -70,6 +70,32 @@ where
             .start_loop(loop_id, expected_version, task_ref, budget_id, lease)
     }
 
+    /// Begin an iteration using already validated daemon authority. Unlike
+    /// [`Self::drive_iteration`], this intentionally records no progress or
+    /// evidence: worker observations require a separate durable validation
+    /// path before they may become Loop facts.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_authorized_iteration(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        iteration: i64,
+        budget_id: &BudgetId,
+        charge: &BudgetCharge,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        self.driver.begin_iteration(
+            loop_id,
+            expected_version,
+            task_ref,
+            iteration,
+            budget_id,
+            charge,
+            lease,
+        )
+    }
+
     /// One iteration: begin → record progress → fold stagnation → decide.
     /// Hard ceilings (`RESOURCE_BUDGET_EXHAUSTED`, etc.) propagate as
     /// [`EffectError`] — the caller must not retry unboundedly.

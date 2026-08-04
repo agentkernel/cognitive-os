@@ -20,7 +20,7 @@ use cognitive_kernel::candidate_admission::{
 };
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
-use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
+use cognitive_kernel::harness::LoopDriver;
 use cognitive_kernel::intent_chain::GovernanceSeed;
 use cognitive_kernel::ports::{
     AuthorityStore, BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
@@ -1755,12 +1755,9 @@ where
     complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
 }
 
-/// Run one daemon-owned bounded harness attempt after fresh scheduler admission.
-///
-/// Every invocation reloads the durable authority snapshot before both lease
-/// admission and harness work. A ceiling STOP bypasses the harness entirely.
-/// The harness result is only progress accounting: durable Effect closure still
-/// decides whether the exact owner-and-epoch scheduler lease may be released.
+/// Run one daemon-owned authorized iteration after fresh scheduler admission.
+/// Worker-controlled progress and evidence are intentionally absent: those
+/// observations need a later validation path before they can become facts.
 #[allow(clippy::too_many_arguments)]
 fn run_bounded_scheduler_attempt<S, C, G>(
     authority_store: &S,
@@ -1772,12 +1769,8 @@ fn run_bounded_scheduler_attempt<S, C, G>(
     task_binding: &TaskBinding,
     scheduler_lease_epoch: i64,
     observed_wall_time: &str,
-    expected_loop_version: Version,
-    iteration: i64,
-    charge: &BudgetCharge,
-    progress: ProgressStatus,
-    evidence_refs: &[String],
-    writer_lease: &WriterLease,
+    authorization_id: &ObjectId,
+    worker_attempt_id: ObjectId,
     released_at: &str,
 ) -> Result<(SchedulerWorkerAttempt, Option<HarnessDecision>), SchedulerAuthorityError>
 where
@@ -1785,6 +1778,13 @@ where
     C: Clock,
     G: IdGenerator,
 {
+    let authorization =
+        load_current_worker_authorization(authority_store, authorization_id, binding)?;
+    let writer_lease = WriterLease {
+        epoch: authority_store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
     let admission = admit_scheduler_dispatch(
         authority_store,
         scheduler_repository,
@@ -1793,8 +1793,8 @@ where
         binding,
         scheduler_lease_epoch,
         observed_wall_time,
-        expected_loop_version,
-        writer_lease,
+        authorization.expected_loop_version,
+        &writer_lease,
     )?;
     let SchedulerDispatchAdmission::Leased(dispatch) = admission else {
         let SchedulerDispatchAdmission::Stopped(transition) = admission else {
@@ -1803,19 +1803,26 @@ where
         return Ok((SchedulerWorkerAttempt::Stopped(transition), None));
     };
 
-    // Reload after the lease CAS so the harness cannot use pre-admission facts.
+    consume_worker_authorization_for_attempt(
+        authority_store,
+        // The LoopDriver clock is unavailable here; use the scheduler's
+        // trusted observation time only after parsing it as a wall timestamp.
+        &FixedSchedulerClock::parse(observed_wall_time)?,
+        authorization_id,
+        worker_attempt_id,
+        &dispatch,
+    )?;
+    // Reload authority after durable handoff; no caller-supplied values reach
+    // the loop transition.
     let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
-    let (_, decision) = harness.drive_iteration(
+    harness.begin_authorized_iteration(
         &snapshot.loop_object_id,
-        expected_loop_version,
+        authorization.expected_loop_version,
         &binding.task_ref,
-        iteration,
+        authorization.iteration,
         &snapshot.budget_id,
-        charge,
-        progress,
-        &binding.action_fingerprint,
-        evidence_refs,
-        writer_lease,
+        &parse_worker_authorization_charge(&authorization)?,
+        &writer_lease,
     )?;
     let worker_attempt = complete_durable_scheduler_effect_closure(
         SchedulerDispatchAdmission::Leased(dispatch),
@@ -1825,7 +1832,76 @@ where
         released_at,
     )?;
 
-    Ok((worker_attempt, Some(decision)))
+    Ok((worker_attempt, None))
+}
+
+struct FixedSchedulerClock(WallTimestamp);
+
+impl FixedSchedulerClock {
+    fn parse(value: &str) -> Result<Self, SchedulerAuthorityError> {
+        WallTimestamp::parse(value)
+            .map(Self)
+            .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(value.to_owned()))
+    }
+}
+
+impl Clock for FixedSchedulerClock {
+    fn now(&self) -> Result<WallTimestamp, cognitive_kernel::ports::PortFailure> {
+        Ok(self.0.clone())
+    }
+}
+
+fn load_current_worker_authorization<S>(
+    store: &S,
+    authorization_id: &ObjectId,
+    binding: &SchedulerAuthorityBinding,
+) -> Result<WorkerIterationAuthorizationRow, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let authorization = store
+        .load_worker_iteration_authorization(authorization_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(authorization_id.to_string())
+        })?;
+    validate_worker_authorization_evidence(&authorization)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&authorization.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    ensure_current_contract_epoch(binding, current_contract_epoch)?;
+    if authorization.task_ref != binding.task_ref
+        || authorization.contract_epoch != binding.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "WorkerIterationAuthorization does not match scheduler authority binding".to_owned(),
+        ));
+    }
+    Ok(authorization)
+}
+
+fn parse_worker_authorization_charge(
+    authorization: &WorkerIterationAuthorizationRow,
+) -> Result<BudgetCharge, SchedulerAuthorityError> {
+    let charge: BudgetCharge = serde_json::from_str(&authorization.budget_charge_canonical_json)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?;
+    let canonical_charge = String::from_utf8(
+        canonical::canonical_bytes_of_value(&serde_json::to_value(&charge).map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    if canonical_charge != authorization.budget_charge_canonical_json {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "worker authorization budget charge is not canonical".to_owned(),
+        ));
+    }
+    Ok(charge)
 }
 
 /// Release an already resolved closed Effect through the real scheduler
