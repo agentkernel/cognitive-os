@@ -1217,6 +1217,7 @@ mod tests {
     /// manufacturing a terminal Effect transition.
     fn persist_pending_bound_handoff(
         database_path: &std::path::Path,
+        consume_authorization: bool,
     ) -> (ObjectId, SchedulerWorkKey) {
         let store = SqliteAuthorityStore::open(database_path).unwrap();
         let authorization = sealed_worker_authorization_row();
@@ -1388,30 +1389,32 @@ mod tests {
         scheduler_repository
             .upsert(&scheduler_row(&task_ref))
             .unwrap();
-        let leased_row = scheduler_repository
-            .acquire_lease(
-                &scheduler_work_key,
-                "restart-recovery-worker",
-                41,
-                "2026-08-04T12:05:00Z",
+        if consume_authorization {
+            let leased_row = scheduler_repository
+                .acquire_lease(
+                    &scheduler_work_key,
+                    "restart-recovery-worker",
+                    41,
+                    "2026-08-04T12:05:00Z",
+                )
+                .unwrap();
+            let dispatch = SchedulerDispatch {
+                task_ref,
+                contract_epoch: authorization.contract_epoch,
+                lease_owner: leased_row.lease_owner.unwrap(),
+                lease_epoch: leased_row.lease_epoch,
+                lease_expires: leased_row.lease_expires.unwrap(),
+                attempt_count: leased_row.attempt_count,
+            };
+            super::consume_worker_authorization_for_attempt(
+                &store,
+                &super::FixedSchedulerClock::parse("2026-08-04T12:01:00Z").unwrap(),
+                &authorization.authorization_id,
+                object_id(834),
+                &dispatch,
             )
             .unwrap();
-        let dispatch = SchedulerDispatch {
-            task_ref,
-            contract_epoch: authorization.contract_epoch,
-            lease_owner: leased_row.lease_owner.unwrap(),
-            lease_epoch: leased_row.lease_epoch,
-            lease_expires: leased_row.lease_expires.unwrap(),
-            attempt_count: leased_row.attempt_count,
-        };
-        super::consume_worker_authorization_for_attempt(
-            &store,
-            &super::FixedSchedulerClock::parse("2026-08-04T12:01:00Z").unwrap(),
-            &authorization.authorization_id,
-            object_id(834),
-            &dispatch,
-        )
-        .unwrap();
+        }
         drop(scheduler_repository);
         drop(store);
         (authorization.effect_object_id, scheduler_work_key)
@@ -1457,7 +1460,8 @@ mod tests {
     #[test]
     fn restarted_recovery_retains_a_pending_effects_exact_bound_lease() {
         let database_path = temporary_scheduler_database_path();
-        let (effect_object_id, scheduler_work_key) = persist_pending_bound_handoff(&database_path);
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&database_path, true);
 
         let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
         let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
@@ -1512,7 +1516,8 @@ mod tests {
     #[test]
     fn restarted_recovery_releases_only_a_reconciled_effects_exact_bound_lease() {
         let database_path = temporary_scheduler_database_path();
-        let (effect_object_id, scheduler_work_key) = persist_pending_bound_handoff(&database_path);
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&database_path, true);
 
         let closing_store = SqliteAuthorityStore::open(&database_path).unwrap();
         reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
@@ -1567,7 +1572,7 @@ mod tests {
         layout.ensure_directories().unwrap();
         let authority_database_path = layout.authority_database_path();
         let (effect_object_id, scheduler_work_key) =
-            persist_pending_bound_handoff(&authority_database_path);
+            persist_pending_bound_handoff(&authority_database_path, true);
         let closing_store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
         reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
         drop(closing_store);
@@ -1617,7 +1622,7 @@ mod tests {
         let layout = temporary_personal_layout();
         layout.ensure_directories().unwrap();
         let authority_database_path = layout.authority_database_path();
-        let (_, scheduler_work_key) = persist_pending_bound_handoff(&authority_database_path);
+        let (_, scheduler_work_key) = persist_pending_bound_handoff(&authority_database_path, true);
         let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
         store
             .insert_task_contract(
@@ -1662,6 +1667,62 @@ mod tests {
         assert!(!layout.daemon_lock_path().exists());
 
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn private_scheduler_tick_rejects_superseded_work_before_wia_handoff() {
+        let database_path = temporary_scheduler_database_path();
+        let (_, scheduler_work_key) = persist_pending_bound_handoff(&database_path, false);
+        let store = SqliteAuthorityStore::open(&database_path).unwrap();
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(850),
+                    task_ref: scheduler_work_key.task_ref.clone(),
+                    contract_epoch: 2,
+                    user_intent_record_id: object_id(851),
+                    interpretation_id: object_id(852),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "e".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"superseding-tick-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000850").unwrap(),
+                    object_id: object_id(850),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.superseded".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                1,
+            )
+            .unwrap();
+        drop(store);
+
+        assert!(matches!(
+            super::run_private_scheduler_tick(&database_path),
+            Err(SchedulerAuthorityError::DispatchBindingMismatch(_))
+        ));
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        assert!(
+            reopened_store
+                .list_consumed_worker_iteration_authorizations()
+                .unwrap()
+                .is_empty()
+        );
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let scheduler_row = scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Runnable.as_str());
+        assert_eq!(scheduler_row.attempt_count, 0);
+        assert_eq!(scheduler_row.lease_owner, None);
+
+        drop(scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
     }
 
     #[test]
