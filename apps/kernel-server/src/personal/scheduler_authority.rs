@@ -836,9 +836,20 @@ mod tests {
         complete_scheduler_worker_attempt, ensure_current_contract_epoch,
         parse_execution_bound_contract, release_closed_effect_dispatch,
         release_closed_recovered_attempt, select_single_effect_intent,
+        validate_worker_authorization_evidence,
+    };
+    use cognitive_contracts::{
+        canonical,
+        generated::{
+            common_defs::Budget, worker_iteration_authorization::WorkerIterationAuthorization,
+        },
     };
     use cognitive_domain::{BudgetId, EventId, ObjectId, RecordId, Version, WallTimestamp};
     use cognitive_kernel::engine::CommittedTransition;
+    use cognitive_kernel::intent_chain::{
+        GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
+        strong_reference_to,
+    };
     use cognitive_kernel::ports::{
         IntentRow, SchedulerLeaseBinding, TaskBinding, WorkerIterationAuthorizationRow,
     };
@@ -872,6 +883,104 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {
+        let authorization_id = object_id(810);
+        let worker_authorization_root_id = object_id(811);
+        let selected_candidate_id = object_id(812);
+        let intent_id = object_id(813);
+        let effect_object_id = object_id(814);
+        let task_contract_id = object_id(815);
+        let budget_id = BudgetId::parse("00000000-0000-7000-b000-000000000816").unwrap();
+        let budget_charge = Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: None,
+            tool_calls: Some(1),
+            wall_time_ms: None,
+        };
+        let governance = GovernanceSeed {
+            owner: strong_reference_to(&object_id(817), &format!("sha256:{}", "a".repeat(64))),
+            authority: strong_reference_to(
+                &object_id(818),
+                &format!("sha256:{}", "b".repeat(64)),
+            ),
+            resource_scope: strong_reference_to(
+                &object_id(819),
+                &format!("sha256:{}", "c".repeat(64)),
+            ),
+            tenant_id: Some("00000000-0000-7000-9000-000000000820".to_owned()),
+            created_by: "principal://personal/daemon".to_owned(),
+            sensitivity: cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity::Internal,
+            purpose_constraints: vec!["task_execution".to_owned()],
+            retention_policy: "standard".to_owned(),
+        };
+        let issued_at = WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap();
+        let header = compose_governed_header(
+            &authorization_id,
+            "WorkerIterationAuthorization",
+            "cognitiveos.worker-iteration-authorization/0.1",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "scheduler-authority-evidence-test",
+            &issued_at,
+        )
+        .unwrap();
+        let payload = WorkerIterationAuthorization {
+            action_fingerprint: format!("sha256:{}", "d".repeat(64)),
+            budget_charge: budget_charge.clone(),
+            budget_id: budget_id.to_generated(),
+            contract_epoch: 1,
+            effect_ref: strong_reference_to(
+                &effect_object_id,
+                &format!("sha256:{}", "e".repeat(64)),
+            ),
+            expected_loop_version: 1,
+            header,
+            intent_ref: strong_reference_to(&intent_id, &format!("sha256:{}", "f".repeat(64))),
+            issued_fencing_epoch: 1,
+            iteration: 1,
+            selected_candidate_ref: strong_reference_to(
+                &selected_candidate_id,
+                &format!("sha256:{}", "1".repeat(64)),
+            ),
+            task_contract_ref: strong_reference_to(
+                &task_contract_id,
+                &format!("sha256:{}", "2".repeat(64)),
+            ),
+            worker_authorization_root_id: worker_authorization_root_id.to_generated(),
+        };
+        let payload_value = serde_json::to_value(&payload).unwrap();
+        let (sealed_payload, _) = seal_governed_object_content_digest(payload_value).unwrap();
+        let budget_charge_canonical_json = String::from_utf8(
+            canonical::canonical_bytes_of_value(&serde_json::to_value(budget_charge).unwrap())
+                .unwrap(),
+        )
+        .unwrap();
+
+        WorkerIterationAuthorizationRow {
+            authorization_id,
+            worker_authorization_root_id,
+            task_ref: "task://personal/sealed-worker-authorization".to_owned(),
+            contract_epoch: 1,
+            loop_object_id: object_id(821),
+            iteration: 1,
+            expected_loop_version: Version::INITIAL,
+            selected_candidate_id,
+            intent_id,
+            effect_object_id,
+            budget_id,
+            budget_charge_canonical_json,
+            action_fingerprint: payload.action_fingerprint,
+            issued_fencing_epoch: 1,
+            canonical_json: serde_json::to_string(&sealed_payload).unwrap(),
+        }
     }
 
     fn recovered_closed_attempt(task_ref: &str, lease_epoch: i64) -> RecoveredWorkerAttempt {
@@ -996,6 +1105,29 @@ mod tests {
                 requested_epoch: 4,
                 current_epoch: 5,
             }) if task_ref == binding.task_ref
+        ));
+    }
+
+    #[test]
+    fn sealed_wia_evidence_rejects_budget_charge_and_loop_version_row_mismatches() {
+        let matching_row = sealed_worker_authorization_row();
+        assert!(
+            validate_worker_authorization_evidence(&matching_row).is_ok(),
+            "a row derived from its sealed WIA payload must validate"
+        );
+
+        let mut charge_mismatch = matching_row.clone();
+        charge_mismatch.budget_charge_canonical_json = "{\"tool_calls\":2}".to_owned();
+        assert!(matches!(
+            validate_worker_authorization_evidence(&charge_mismatch),
+            Err(SchedulerAuthorityError::CandidateAdmissionComposition(_))
+        ));
+
+        let mut loop_version_mismatch = matching_row;
+        loop_version_mismatch.expected_loop_version = Version::new(2).unwrap();
+        assert!(matches!(
+            validate_worker_authorization_evidence(&loop_version_mismatch),
+            Err(SchedulerAuthorityError::CandidateAdmissionComposition(_))
         ));
     }
 
