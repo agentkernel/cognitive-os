@@ -1125,3 +1125,75 @@ fn bound_wia_handoff_rejects_contract_epoch_mismatch_without_consuming_authority
         "an epoch-mismatched handoff must not persist a partial consumption"
     );
 }
+
+#[test]
+fn bound_wia_handoff_rejects_runnable_work_without_consuming_authority() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path)
+        .expect("fresh authority database opens");
+    let authorization_id = object_id(760);
+    let task_ref = "task://personal/runnable-worker-handoff";
+    let connection = Connection::open(&authority_database_path).expect("open authority fixture");
+    connection
+        .execute(
+            "INSERT INTO worker_iteration_authorizations
+               (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                intent_id, effect_object_id, budget_id, budget_charge_json,
+                action_fingerprint, issued_fencing_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, 1, ?4, 1, 1, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11)",
+            rusqlite::params![
+                authorization_id.as_str(),
+                object_id(761).as_str(),
+                task_ref,
+                object_id(762).as_str(),
+                object_id(763).as_str(),
+                object_id(764).as_str(),
+                object_id(765).as_str(),
+                budget_id(766).as_str(),
+                "{\"tool_calls\":1}",
+                "runnable-worker-handoff",
+                "{\"worker_authorization\":1}",
+            ],
+        )
+        .expect("seed immutable WIA");
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries
+               (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires,
+                next_eligible, attempt_count, cancel_requested)
+             VALUES (?1, 1, 'runnable', NULL, NULL, NULL, ?2, 0, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:00:00Z"],
+        )
+        .expect("seed scheduler work before lease acquisition");
+    drop(connection);
+
+    let error = store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(
+            &BoundWorkerAuthorizationConsumption {
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id,
+                    worker_attempt_id: object_id(767),
+                    consumed_fencing_epoch: 1,
+                    consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+                    canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+                },
+                scheduler_lease: SchedulerLeaseBinding {
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    lease_owner: "daemon-worker-a".to_owned(),
+                    lease_epoch: 11,
+                },
+            },
+        )
+        .expect_err("runnable scheduler work cannot authorize a worker handoff");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .is_empty(),
+        "unleased scheduler work must not persist a partial handoff"
+    );
+}
