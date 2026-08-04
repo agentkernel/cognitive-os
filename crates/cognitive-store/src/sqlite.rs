@@ -1698,6 +1698,18 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                 detail: "candidate admission does not match persisted proposal".to_owned(),
             });
         }
+        let current_contract_epoch = tx
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref=?1",
+                (authorization.task_ref.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(unavailable("load candidate admission contract epoch"))?;
+        if current_contract_epoch != authorization.contract_epoch {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission TaskContract epoch was superseded".to_owned(),
+            });
+        }
 
         let insert_intent = tx.execute(
             "INSERT INTO intents
