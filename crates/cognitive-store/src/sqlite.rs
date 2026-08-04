@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -44,6 +44,28 @@ use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, Operation
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
+
+type ConsumedWorkerAuthorizationDatabaseRow = (
+    String,
+    String,
+    String,
+    i64,
+    String,
+    i64,
+    i64,
+    String,
+    String,
+    String,
+    String,
+    String,
+    String,
+    i64,
+    String,
+    String,
+    i64,
+    String,
+    String,
+);
 
 /// Schema of the authority database. Two structural guarantees matter to
 /// the contract: the event log and transition records are append-only
@@ -1610,27 +1632,7 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             .next()
             .map_err(unavailable("read consumed worker authorization"))?
         {
-            let values: (
-                String,
-                String,
-                String,
-                i64,
-                String,
-                i64,
-                i64,
-                String,
-                String,
-                String,
-                String,
-                String,
-                String,
-                i64,
-                String,
-                String,
-                i64,
-                String,
-                String,
-            ) = (|| {
+            let values: ConsumedWorkerAuthorizationDatabaseRow = (|| {
                 Ok((
                     row.get(0)?,
                     row.get(1)?,
