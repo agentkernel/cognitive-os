@@ -1163,7 +1163,7 @@ fn bound_wia_handoff_rejects_runnable_work_without_consuming_authority() {
             "INSERT INTO scheduler_entries
                (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires,
                 next_eligible, attempt_count, cancel_requested)
-             VALUES (?1, 1, 'runnable', NULL, NULL, NULL, ?2, 0, 0)",
+             VALUES (?1, 1, 'runnable', NULL, 0, NULL, ?2, 0, 0)",
             rusqlite::params![task_ref, "2026-08-04T12:00:00Z"],
         )
         .expect("seed scheduler work before lease acquisition");
