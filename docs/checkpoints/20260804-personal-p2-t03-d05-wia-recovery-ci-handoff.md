@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `e9026dc2eae94e0c152306f09ad3cc3377f4d8f4`
+- Code checkpoint: `e1df4cb2ab79d7d90ea51fdbf66b4e7d98a129ff`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -43,6 +43,10 @@ is merely `runnable`: the work must be in the exact active `leased` state with
 the requested owner, epoch, and no cancellation. The runnable-state rejection
 leaves no consumption or scheduler lease binding.
 
+A terminal `succeeded` scheduler row likewise cannot reauthorize a historical
+WIA, even if the row retains an earlier lease epoch. The terminal-state
+rejection creates neither a consumption nor a lease binding.
+
 ## Validation
 
 Local eligible non-linking checks passed at the checkpoint:
@@ -77,7 +81,7 @@ The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `e9026dc`.
+No exact-revision native Linux worker-recovery test was run for `e1df4cb`.
 An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
 was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
 low-throughput timeout before checkout or Cargo execution. The cleanup path
