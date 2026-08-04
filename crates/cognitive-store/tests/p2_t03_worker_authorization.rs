@@ -518,6 +518,47 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
             .expect("Intent lookup succeeds"),
         Some(commit.intent.clone())
     );
+    let consumption = WorkerIterationAuthorizationConsumptionRow {
+        authorization_id: commit.worker_authorization.authorization_id.clone(),
+        worker_attempt_id: object_id(527),
+        consumed_fencing_epoch: 1,
+        consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+        canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+    };
+    store
+        .consume_worker_iteration_authorization(&consumption)
+        .expect("a real daemon-issued WIA is consumed exactly once");
+    let duplicate_consumption = store
+        .consume_worker_iteration_authorization(&consumption)
+        .expect_err("a WIA cannot be handed to a second worker attempt");
+    assert!(matches!(
+        duplicate_consumption,
+        StorePortError::Conflict { .. }
+    ));
+    assert_eq!(
+        store
+            .load_object(
+                LifecycleDomain::Effect,
+                &commit.effect_admission.object.object_id,
+            )
+            .expect("effect lookup after handoff succeeds"),
+        Some(effect),
+        "WIA consumption records handoff only; it cannot change Effect state"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Loop, &loop_id)
+            .expect("Loop lookup after handoff succeeds"),
+        Some(loop_object),
+        "WIA consumption cannot claim Loop progress"
+    );
+    assert_eq!(
+        store
+            .load_budget(&budget)
+            .expect("budget lookup after handoff succeeds"),
+        Some(persisted_budget),
+        "WIA consumption cannot debit authority a second time"
+    );
     assert_eq!(
         store
             .read_events(0, 100)
