@@ -691,6 +691,61 @@ where
     Ok(recovered_attempts)
 }
 
+/// Reconcile recovered worker attempts with their durable scheduler lease.
+///
+/// A terminal Effect permits release only when the scheduler still has the
+/// matching task epoch in `leased` state and retains an owner plus positive
+/// lease epoch. Pending Effect reconciliation deliberately leaves the lease
+/// intact. This function never invokes a harness or executor.
+pub(crate) fn reconcile_recovered_worker_attempts<S>(
+    store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    released_at: &str,
+) -> Result<Vec<RecoveredWorkerAttempt>, SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    WallTimestamp::parse(released_at)
+        .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(released_at.to_owned()))?;
+    let recovered_attempts = recover_consumed_worker_attempts(store)?;
+    for recovered_attempt in &recovered_attempts {
+        if recovered_attempt.effect_closure != SchedulerEffectClosure::Closed {
+            continue;
+        }
+        let authorization = &recovered_attempt.handoff.authorization;
+        let work_key = SchedulerWorkKey {
+            task_ref: authorization.task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+        };
+        let scheduler_row = scheduler_repository.load(&work_key)?.ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffectBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+            }
+        })?;
+        let lease_owner = scheduler_row.lease_owner.ok_or_else(|| {
+            SchedulerAuthorityError::DispatchBindingMismatch(format!(
+                "recovered authorization {} has no durable lease owner",
+                authorization.authorization_id
+            ))
+        })?;
+        if scheduler_row.state != SchedulerState::Leased.as_str() || scheduler_row.lease_epoch < 1 {
+            return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
+                "recovered authorization {} does not match an active scheduler lease",
+                authorization.authorization_id
+            )));
+        }
+        scheduler_repository.release_lease(
+            &work_key,
+            &lease_owner,
+            scheduler_row.lease_epoch,
+            SchedulerState::Succeeded,
+            released_at,
+        )?;
+    }
+    Ok(recovered_attempts)
+}
+
 fn next_object_id<G: IdGenerator>(ids: &G) -> Result<ObjectId, SchedulerAuthorityError> {
     let raw_id = ids
         .next_uuid_v7()
