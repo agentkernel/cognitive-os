@@ -27,6 +27,7 @@ use super::readiness::{
     status_projection_json,
 };
 use super::resource_api::ResourceApi;
+use super::scheduler_authority::reconcile_scheduler_recovery_at_startup;
 use super::task_api::TaskApi;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
@@ -97,6 +98,11 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         "kernel-server personal: acquired single-instance lock at {}",
         lock.path().display()
     );
+    reconcile_scheduler_recovery_at_startup(&config.layout.authority_database_path()).map_err(
+        |error| PersonalDaemonError::Io {
+            detail: format!("reconcile durable scheduler recovery before startup: {error}"),
+        },
+    )?;
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)

@@ -36,6 +36,7 @@ use cognitive_store::scheduler::{
     SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey,
 };
 use serde::Deserialize;
+use std::path::Path;
 use thiserror::Error;
 
 const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.3";
@@ -745,6 +746,24 @@ where
     }
 
     Ok(recovered_attempts)
+}
+
+/// Run daemon startup recovery against the single Personal authority database
+/// before the HTTP endpoint is published. This intentionally reconciles only
+/// already-consumed, exact-lease-bound handoffs; it never claims runnable work
+/// or dispatches an executor during startup.
+pub(crate) fn reconcile_scheduler_recovery_at_startup(
+    authority_database_path: &Path,
+) -> Result<(), SchedulerAuthorityError> {
+    let authority_store = cognitive_store::SqliteAuthorityStore::open(authority_database_path)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    reconcile_recovered_worker_attempts(
+        &authority_store,
+        &mut scheduler_repository,
+        &cognitive_store::SystemClock,
+    )?;
+    Ok(())
 }
 
 fn release_closed_recovered_attempt(
