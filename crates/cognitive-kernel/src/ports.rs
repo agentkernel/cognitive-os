@@ -585,6 +585,23 @@ pub struct WorkerIterationAuthorizationRow {
     pub canonical_json: String,
 }
 
+/// One immutable daemon-recorded consumption of a WIA by a worker attempt.
+/// Consumption records only the authorization handoff; it does not prove an
+/// external effect, progress, verification, or Task completion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkerIterationAuthorizationConsumptionRow {
+    /// Authorization consumed exactly once.
+    pub authorization_id: ObjectId,
+    /// Daemon-assigned worker attempt identity.
+    pub worker_attempt_id: ObjectId,
+    /// Fencing epoch rechecked when consumption commits.
+    pub consumed_fencing_epoch: i64,
+    /// Canonical timestamp of the durable handoff.
+    pub consumed_at: WallTimestamp,
+    /// Canonical daemon-issued consumption evidence.
+    pub canonical_json: String,
+}
+
 /// All-or-nothing daemon admission of one selected non-authority candidate.
 /// The caller must derive every field from reloaded durable authority facts;
 /// the store rechecks fencing and CAS preconditions in one transaction.
@@ -623,6 +640,21 @@ pub struct CandidateAdmissionReceipt {
 /// separate daemon admission path must validate it before creating Intent,
 /// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
 pub trait WorkerAuthorizationStore {
+    /// Load one immutable daemon-issued WIA before a worker attempt. A
+    /// missing authorization must fail closed; callers must never rebuild it
+    /// from worker-provided fields.
+    fn load_worker_iteration_authorization(
+        &self,
+        authorization_id: &ObjectId,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
+
+    /// Consume one WIA at most once under the current fencing epoch. This
+    /// records only a worker handoff, not execution, progress, or completion.
+    fn consume_worker_iteration_authorization(
+        &self,
+        consumption: &WorkerIterationAuthorizationConsumptionRow,
+    ) -> Result<(), StorePortError>;
+
     /// Commit Intent, Effect admission, immutable WIA, Loop CAS, exact budget
     /// debit, events, records, and outbox rows as one authority transaction.
     /// Any failure must roll back the entire bundle.

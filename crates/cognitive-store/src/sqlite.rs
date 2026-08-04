@@ -23,7 +23,8 @@
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
-    WORKER_AUTHORIZATION_SCHEMA_V4, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+    WORKER_AUTHORIZATION_SCHEMA_V4, WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8,
+    WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
@@ -35,7 +36,7 @@ use cognitive_kernel::ports::{
     GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
     ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
     StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, WorkerAuthorizationStore,
+    UserIntentRecordRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
@@ -303,7 +304,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -1511,6 +1512,112 @@ impl IntentChainStore for SqliteAuthorityStore {
 }
 
 impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn load_worker_iteration_authorization(
+        &self,
+        authorization_id: &ObjectId,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let row = conn.query_row(
+            "SELECT authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                    loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                    intent_id, effect_object_id, budget_id, budget_charge_json,
+                    action_fingerprint, issued_fencing_epoch, canonical_json
+             FROM worker_iteration_authorizations WHERE authorization_id=?1",
+            (authorization_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, i64>(5)?,
+                    row.get::<_, i64>(6)?,
+                    row.get::<_, String>(7)?,
+                    row.get::<_, String>(8)?,
+                    row.get::<_, String>(9)?,
+                    row.get::<_, String>(10)?,
+                    row.get::<_, String>(11)?,
+                    row.get::<_, String>(12)?,
+                    row.get::<_, i64>(13)?,
+                    row.get::<_, String>(14)?,
+                ))
+            },
+        );
+        let row = match row {
+            Ok(row) => row,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(error) => return Err(unavailable("query worker authorization")(error)),
+        };
+        Ok(Some(WorkerIterationAuthorizationRow {
+            authorization_id: ObjectId::parse(&row.0)
+                .map_err(|error| corrupt("worker authorization id", error))?,
+            worker_authorization_root_id: ObjectId::parse(&row.1)
+                .map_err(|error| corrupt("worker authorization root", error))?,
+            task_ref: row.2,
+            contract_epoch: row.3,
+            loop_object_id: ObjectId::parse(&row.4)
+                .map_err(|error| corrupt("worker authorization loop", error))?,
+            iteration: row.5,
+            expected_loop_version: Version::new(row.6)
+                .map_err(|error| corrupt("worker authorization loop version", error))?,
+            selected_candidate_id: ObjectId::parse(&row.7)
+                .map_err(|error| corrupt("worker authorization candidate", error))?,
+            intent_id: ObjectId::parse(&row.8)
+                .map_err(|error| corrupt("worker authorization intent", error))?,
+            effect_object_id: ObjectId::parse(&row.9)
+                .map_err(|error| corrupt("worker authorization effect", error))?,
+            budget_id: BudgetId::parse(&row.10)
+                .map_err(|error| corrupt("worker authorization budget", error))?,
+            budget_charge_canonical_json: row.11,
+            action_fingerprint: row.12,
+            issued_fencing_epoch: row.13,
+            canonical_json: row.14,
+        }))
+    }
+
+    fn consume_worker_iteration_authorization(
+        &self,
+        consumption: &WorkerIterationAuthorizationConsumptionRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin worker authorization consumption"))?;
+        verify_fencing_in_tx(&tx, Some(consumption.consumed_fencing_epoch))?;
+        let authorization_exists: bool = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM worker_iteration_authorizations WHERE authorization_id=?1)",
+                (consumption.authorization_id.as_str(),),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify worker authorization"))?;
+        if !authorization_exists {
+            return Err(StorePortError::Conflict {
+                detail: "worker authorization is not persisted".to_owned(),
+            });
+        }
+        let inserted = tx.execute(
+            "INSERT INTO worker_iteration_authorization_consumptions
+               (authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (consumption.authorization_id.as_str(), consumption.worker_attempt_id.as_str(),
+             consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(),
+             consumption.canonical_json.as_str()),
+        );
+        match inserted {
+            Ok(_) => tx
+                .commit()
+                .map_err(unavailable("commit worker authorization consumption")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "worker authorization was already consumed".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert worker authorization consumption")(
+                error,
+            )),
+        }
+    }
+
     fn commit_candidate_admission(
         &self,
         commit: &CandidateAdmissionCommit,
