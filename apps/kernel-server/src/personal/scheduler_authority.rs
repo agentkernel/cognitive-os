@@ -31,9 +31,11 @@ use cognitive_kernel::ports::{
 use cognitive_runtime::{
     BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
     SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
+    StagnationPolicy,
 };
-use cognitive_store::scheduler::{
-    SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey,
+use cognitive_store::{
+    SqliteAuthorityStore, SystemClock, UuidV7Generator,
+    scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey},
 };
 use serde::Deserialize;
 use std::path::Path;
@@ -2629,6 +2631,92 @@ where
     )?;
 
     Ok((worker_attempt, None))
+}
+
+/// Run one daemon-private scheduler pass over durable runnable work.
+///
+/// This is the live caller for the bounded WIA handoff composition. It never
+/// accepts client input, dispatches an executor, records worker progress, or
+/// changes Task lifecycle state. Every attempt is reconstructed from current
+/// TaskContract/Intent authority and one unconsumed daemon-issued WIA.
+pub(crate) fn run_private_scheduler_tick(
+    authority_database_path: &Path,
+) -> Result<(), SchedulerAuthorityError> {
+    let authority_store = SqliteAuthorityStore::open(authority_database_path)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    let clock = SystemClock;
+    let identifiers = UuidV7Generator;
+    let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
+    let scheduler_rows = scheduler_repository.list_recoverable()?;
+
+    for scheduler_row in scheduler_rows {
+        if scheduler_row.state != SchedulerState::Runnable.as_str()
+            || scheduler_row.cancel_requested
+        {
+            continue;
+        }
+        let resolved_work =
+            resolve_scheduler_work_for_task(&authority_store, &scheduler_row.task_ref)?;
+        if resolved_work.task_binding.contract_epoch != scheduler_row.contract_epoch {
+            return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
+                "runnable scheduler work {} at epoch {} is not the current contract epoch {}",
+                scheduler_row.task_ref,
+                scheduler_row.contract_epoch,
+                resolved_work.task_binding.contract_epoch
+            )));
+        }
+        let authorization = authority_store
+            .load_unconsumed_worker_iteration_authorization_for_task_binding(
+                &resolved_work.task_binding.task_ref,
+                resolved_work.task_binding.contract_epoch,
+            )
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+            .ok_or_else(|| {
+                SchedulerAuthorityError::CandidateUnavailable(format!(
+                    "no unconsumed worker authorization for {} at epoch {}",
+                    resolved_work.task_binding.task_ref, resolved_work.task_binding.contract_epoch
+                ))
+            })?;
+        let observed_wall_time = clock
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
+            SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
+        })?;
+        let worker_attempt_id = next_object_id(&identifiers)?;
+        let driver = LoopDriver::new(
+            &authority_store,
+            &clock,
+            &identifiers,
+            UriRef::parse("principal://personal/daemon").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+            UriRef::parse("authority://personal/loop").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+            UriRef::parse("correlation://personal/private-scheduler-tick").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+        );
+        let harness = BoundedHarness::new(&driver, 1, StagnationPolicy::Stop);
+        run_bounded_scheduler_attempt(
+            &authority_store,
+            &mut scheduler_repository,
+            &mut scheduler_service,
+            &driver,
+            &harness,
+            &resolved_work.authority_binding,
+            &resolved_work.task_binding,
+            scheduler_lease_epoch,
+            observed_wall_time.as_str(),
+            &authorization.authorization_id,
+            worker_attempt_id,
+            observed_wall_time.as_str(),
+        )?;
+    }
+
+    Ok(())
 }
 
 struct FixedSchedulerClock(WallTimestamp);

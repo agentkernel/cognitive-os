@@ -27,7 +27,9 @@ use super::readiness::{
     status_projection_json,
 };
 use super::resource_api::ResourceApi;
-use super::scheduler_authority::reconcile_scheduler_recovery_at_startup;
+use super::scheduler_authority::{
+    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick,
+};
 use super::task_api::TaskApi;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
@@ -103,6 +105,11 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("reconcile durable scheduler recovery before startup: {error}"),
         },
     )?;
+    run_private_scheduler_tick(&config.layout.authority_database_path()).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("run private scheduler tick before startup: {error}"),
+        }
+    })?;
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
