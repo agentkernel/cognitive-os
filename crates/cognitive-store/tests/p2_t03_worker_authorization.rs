@@ -1053,3 +1053,75 @@ fn bound_wia_handoff_rejects_task_mismatch_without_consuming_authority() {
         "a task-mismatched handoff must not persist a partial consumption"
     );
 }
+
+#[test]
+fn bound_wia_handoff_rejects_contract_epoch_mismatch_without_consuming_authority() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path)
+        .expect("fresh authority database opens");
+    let authorization_id = object_id(750);
+    let task_ref = "task://personal/contract-epoch-mismatched-worker-handoff";
+    let connection = Connection::open(&authority_database_path).expect("open authority fixture");
+    connection
+        .execute(
+            "INSERT INTO worker_iteration_authorizations
+               (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                intent_id, effect_object_id, budget_id, budget_charge_json,
+                action_fingerprint, issued_fencing_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, 2, ?4, 1, 1, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11)",
+            rusqlite::params![
+                authorization_id.as_str(),
+                object_id(751).as_str(),
+                task_ref,
+                object_id(752).as_str(),
+                object_id(753).as_str(),
+                object_id(754).as_str(),
+                object_id(755).as_str(),
+                budget_id(756).as_str(),
+                "{\"tool_calls\":1}",
+                "contract-epoch-mismatched-worker-handoff",
+                "{\"worker_authorization\":1}",
+            ],
+        )
+        .expect("seed WIA from successor task contract epoch");
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries
+               (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires,
+                next_eligible, attempt_count, cancel_requested)
+             VALUES (?1, 1, 'leased', 'daemon-worker-a', 11, ?2, ?3, 1, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+        )
+        .expect("seed active scheduler lease from current task contract epoch");
+    drop(connection);
+
+    let error = store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(
+            &BoundWorkerAuthorizationConsumption {
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id,
+                    worker_attempt_id: object_id(757),
+                    consumed_fencing_epoch: 1,
+                    consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+                    canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+                },
+                scheduler_lease: SchedulerLeaseBinding {
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    lease_owner: "daemon-worker-a".to_owned(),
+                    lease_epoch: 11,
+                },
+            },
+        )
+        .expect_err("a WIA from another contract epoch cannot receive the active lease");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .is_empty(),
+        "an epoch-mismatched handoff must not persist a partial consumption"
+    );
+}
