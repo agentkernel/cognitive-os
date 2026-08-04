@@ -27,17 +27,19 @@ use cognitive_kernel::intent_chain::{
     strong_reference_to,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, BudgetCas, CandidateAdmissionCommit, DaemonAuthorizationSnapshotRow,
-    DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
-    ObjectCas, OperationCandidateProposalRow, ProtocolStore, RecordDraft, StorePortError,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    AuthorityStore, BoundWorkerAuthorizationConsumption, BudgetCas, CandidateAdmissionCommit,
+    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, EventDraft, IntentChainStore,
+    IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProtocolStore,
+    RecordDraft, SchedulerLeaseBinding, StorePortError, StoredObject, TaskBinding, TaskContractRow,
+    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{
     BudgetCharge, BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor,
     TransitionEngine, compose_candidate_admission,
 };
 use cognitive_store::SqliteAuthorityStore;
+use rusqlite::Connection;
 use serde_json::json;
 use std::collections::BTreeMap;
 
@@ -543,6 +545,7 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
             cognitive_kernel::ports::ConsumedWorkerIterationAuthorization {
                 authorization: commit.worker_authorization.clone(),
                 consumption: consumption.clone(),
+                scheduler_lease: None,
             }
         ],
         "recovery discovers only a daemon-recorded worker handoff"
@@ -751,4 +754,147 @@ fn missing_wia_cannot_be_consumed_as_a_worker_handoff() {
         .consume_worker_iteration_authorization(&consumption)
         .expect_err("a worker cannot consume authority that the daemon did not issue");
     assert!(matches!(error, StorePortError::Conflict { .. }));
+}
+
+#[test]
+fn bound_wia_handoff_requires_and_recovers_the_exact_active_scheduler_lease() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path)
+        .expect("fresh authority database opens");
+    let authorization_id = object_id(700);
+    let worker_attempt_id = object_id(701);
+    let task_ref = "task://personal/exact-worker-handoff";
+
+    let connection = Connection::open(&authority_database_path).expect("open authority fixture");
+    connection
+        .execute(
+            "INSERT INTO worker_iteration_authorizations
+               (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                intent_id, effect_object_id, budget_id, budget_charge_json,
+                action_fingerprint, issued_fencing_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, 1, ?4, 1, 1, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11)",
+            rusqlite::params![
+                authorization_id.as_str(),
+                object_id(702).as_str(),
+                task_ref,
+                object_id(703).as_str(),
+                object_id(704).as_str(),
+                object_id(705).as_str(),
+                object_id(706).as_str(),
+                budget_id(707).as_str(),
+                "{\"tool_calls\":1}",
+                "exact-worker-handoff",
+                "{\"worker_authorization\":1}",
+            ],
+        )
+        .expect("seed immutable WIA");
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries
+               (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires,
+                next_eligible, attempt_count, cancel_requested)
+             VALUES (?1, 1, 'leased', 'daemon-worker-a', 11, ?2, ?3, 1, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+        )
+        .expect("seed exact active scheduler lease");
+    drop(connection);
+
+    let request = BoundWorkerAuthorizationConsumption {
+        consumption: WorkerIterationAuthorizationConsumptionRow {
+            authorization_id: authorization_id.clone(),
+            worker_attempt_id: worker_attempt_id.clone(),
+            consumed_fencing_epoch: 1,
+            consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+            canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+        },
+        scheduler_lease: SchedulerLeaseBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+            lease_owner: "daemon-worker-a".to_owned(),
+            lease_epoch: 11,
+        },
+    };
+    store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(&request)
+        .expect("handoff commits only for its exact active scheduler lease");
+
+    let recovered = store
+        .list_consumed_worker_iteration_authorizations()
+        .expect("recovery reads bound handoff");
+    assert_eq!(recovered.len(), 1);
+    assert_eq!(recovered[0].consumption, request.consumption);
+    assert_eq!(recovered[0].scheduler_lease, Some(request.scheduler_lease));
+}
+
+#[test]
+fn bound_wia_handoff_rejects_a_replaced_lease_without_consuming_authority() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path)
+        .expect("fresh authority database opens");
+    let authorization_id = object_id(720);
+    let task_ref = "task://personal/replaced-worker-handoff";
+    let connection = Connection::open(&authority_database_path).expect("open authority fixture");
+    connection
+        .execute(
+            "INSERT INTO worker_iteration_authorizations
+           (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+            loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+            intent_id, effect_object_id, budget_id, budget_charge_json,
+            action_fingerprint, issued_fencing_epoch, canonical_json)
+         VALUES (?1, ?2, ?3, 1, ?4, 1, 1, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11)",
+            rusqlite::params![
+                authorization_id.as_str(),
+                object_id(721).as_str(),
+                task_ref,
+                object_id(722).as_str(),
+                object_id(723).as_str(),
+                object_id(724).as_str(),
+                object_id(725).as_str(),
+                budget_id(726).as_str(),
+                "{\"tool_calls\":1}",
+                "replaced-worker-handoff",
+                "{\"worker_authorization\":1}"
+            ],
+        )
+        .expect("seed immutable WIA");
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries
+           (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires,
+            next_eligible, attempt_count, cancel_requested)
+         VALUES (?1, 1, 'leased', 'replacement-worker', 12, ?2, ?3, 1, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+        )
+        .expect("seed replacement scheduler lease");
+    drop(connection);
+
+    let error = store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(
+            &BoundWorkerAuthorizationConsumption {
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id,
+                    worker_attempt_id: object_id(727),
+                    consumed_fencing_epoch: 1,
+                    consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+                    canonical_json: "{\"worker_authorization_consumption\":1}".to_owned(),
+                },
+                scheduler_lease: SchedulerLeaseBinding {
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    lease_owner: "original-worker".to_owned(),
+                    lease_epoch: 11,
+                },
+            },
+        )
+        .expect_err("a replacement owner and epoch cannot receive the original handoff");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .is_empty()
+    );
 }

@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -23,21 +23,22 @@
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
-    WORKER_AUTHORIZATION_SCHEMA_V4, WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8,
-    WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+    WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9, WORKER_AUTHORIZATION_SCHEMA_V4,
+    WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow,
-    CommitReceipt, CommittedEvent, ConsumedWorkerIterationAuthorization,
-    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, GovernanceObjectStore,
-    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission,
-    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore, StorePortError,
-    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    AuthorityStore, BoundWorkerAuthorizationConsumption, CandidateAdmissionCommit,
+    CandidateAdmissionReceipt, CheckpointRow, CommitReceipt, CommittedEvent,
+    ConsumedWorkerIterationAuthorization, DaemonAuthorizationSnapshotRow,
+    DaemonOperationDescriptorRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
+    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
@@ -65,6 +66,10 @@ type ConsumedWorkerAuthorizationDatabaseRow = (
     i64,
     String,
     String,
+    Option<String>,
+    Option<i64>,
+    Option<String>,
+    Option<i64>,
 );
 
 /// Schema of the authority database. Two structural guarantees matter to
@@ -328,7 +333,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -1615,10 +1620,14 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                         authorization.action_fingerprint, authorization.issued_fencing_epoch,
                         authorization.canonical_json, consumption.worker_attempt_id,
                         consumption.consumed_fencing_epoch, consumption.consumed_at,
-                        consumption.canonical_json
+                        consumption.canonical_json, lease_binding.task_ref,
+                        lease_binding.contract_epoch, lease_binding.lease_owner,
+                        lease_binding.lease_epoch
                  FROM worker_iteration_authorizations AS authorization
                  INNER JOIN worker_iteration_authorization_consumptions AS consumption
                    ON consumption.authorization_id = authorization.authorization_id
+                 LEFT JOIN worker_authorization_scheduler_lease_bindings AS lease_binding
+                   ON lease_binding.authorization_id = consumption.authorization_id
                  ORDER BY consumption.consumed_at, authorization.authorization_id",
             )
             .map_err(unavailable(
@@ -1653,6 +1662,10 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                     row.get(16)?,
                     row.get(17)?,
                     row.get(18)?,
+                    row.get(19)?,
+                    row.get(20)?,
+                    row.get(21)?,
+                    row.get(22)?,
                 ))
             })()
             .map_err(unavailable("decode consumed worker authorization"))?;
@@ -1682,6 +1695,23 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                 issued_fencing_epoch: values.13,
                 canonical_json: values.14,
             };
+            let scheduler_lease = match (values.19, values.20, values.21, values.22) {
+                (None, None, None, None) => None,
+                (Some(task_ref), Some(contract_epoch), Some(lease_owner), Some(lease_epoch)) => {
+                    Some(SchedulerLeaseBinding {
+                        task_ref,
+                        contract_epoch,
+                        lease_owner,
+                        lease_epoch,
+                    })
+                }
+                _ => {
+                    return Err(StorePortError::Unavailable {
+                        detail: "stored worker authorization lease binding is partially populated"
+                            .to_owned(),
+                    });
+                }
+            };
             recoverable_attempts.push(ConsumedWorkerIterationAuthorization {
                 authorization,
                 consumption: WorkerIterationAuthorizationConsumptionRow {
@@ -1693,6 +1723,7 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
                         .map_err(|error| corrupt("worker authorization consumption time", error))?,
                     canonical_json: values.18,
                 },
+                scheduler_lease,
             });
         }
         Ok(recoverable_attempts)
@@ -1737,6 +1768,109 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
             Err(error) => Err(unavailable("insert worker authorization consumption")(
                 error,
             )),
+        }
+    }
+
+    fn consume_worker_iteration_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundWorkerAuthorizationConsumption,
+    ) -> Result<(), StorePortError> {
+        let consumption = &request.consumption;
+        let scheduler_lease = &request.scheduler_lease;
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin bound worker authorization consumption"))?;
+        verify_fencing_in_tx(&tx, Some(consumption.consumed_fencing_epoch))?;
+
+        let authorization_matches_lease: bool = tx
+            .query_row(
+                "SELECT EXISTS(
+                   SELECT 1 FROM worker_iteration_authorizations
+                   WHERE authorization_id=?1 AND task_ref=?2 AND contract_epoch=?3
+                 )",
+                (
+                    consumption.authorization_id.as_str(),
+                    scheduler_lease.task_ref.as_str(),
+                    scheduler_lease.contract_epoch,
+                ),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify bound worker authorization"))?;
+        if !authorization_matches_lease {
+            return Err(StorePortError::Conflict {
+                detail: "worker authorization does not match scheduler work binding".to_owned(),
+            });
+        }
+
+        let exact_lease_is_active: bool = tx
+            .query_row(
+                "SELECT EXISTS(
+                   SELECT 1 FROM scheduler_entries
+                   WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased'
+                     AND lease_owner=?3 AND lease_epoch=?4 AND cancel_requested=0
+                 )",
+                (
+                    scheduler_lease.task_ref.as_str(),
+                    scheduler_lease.contract_epoch,
+                    scheduler_lease.lease_owner.as_str(),
+                    scheduler_lease.lease_epoch,
+                ),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify exact scheduler lease"))?;
+        if !exact_lease_is_active {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler lease is no longer the exact active handoff lease".to_owned(),
+            });
+        }
+
+        let inserted_consumption = tx.execute(
+            "INSERT INTO worker_iteration_authorization_consumptions
+               (authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                consumption.authorization_id.as_str(),
+                consumption.worker_attempt_id.as_str(),
+                consumption.consumed_fencing_epoch,
+                consumption.consumed_at.as_str(),
+                consumption.canonical_json.as_str(),
+            ),
+        );
+        match inserted_consumption {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "worker authorization was already consumed".to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert bound worker authorization consumption")(error));
+            }
+        }
+
+        let inserted_binding = tx.execute(
+            "INSERT INTO worker_authorization_scheduler_lease_bindings
+               (authorization_id, task_ref, contract_epoch, lease_owner, lease_epoch)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                consumption.authorization_id.as_str(),
+                scheduler_lease.task_ref.as_str(),
+                scheduler_lease.contract_epoch,
+                scheduler_lease.lease_owner.as_str(),
+                scheduler_lease.lease_epoch,
+            ),
+        );
+        match inserted_binding {
+            Ok(_) => tx
+                .commit()
+                .map_err(unavailable("commit bound worker authorization consumption")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "worker authorization scheduler lease binding already exists".to_owned(),
+            }),
+            Err(error) => Err(unavailable(
+                "insert worker authorization scheduler lease binding",
+            )(error)),
         }
     }
 

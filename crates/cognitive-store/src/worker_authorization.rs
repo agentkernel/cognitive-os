@@ -149,3 +149,27 @@ BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization consumption is immu
 pub fn worker_iteration_authorization_consumption_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(8, WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8)
 }
+
+/// Migration v9: daemon-private exact scheduler lease binding for a WIA
+/// handoff. A separate append-only table preserves older unbound consumption
+/// evidence without pretending it is safe to reconcile or release.
+pub const WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9: &str = "
+CREATE TABLE IF NOT EXISTS worker_authorization_scheduler_lease_bindings (
+  authorization_id       TEXT PRIMARY KEY REFERENCES worker_iteration_authorization_consumptions(authorization_id),
+  task_ref               TEXT NOT NULL,
+  contract_epoch         INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  lease_owner            TEXT NOT NULL CHECK (lease_owner <> ''),
+  lease_epoch            INTEGER NOT NULL CHECK (lease_epoch >= 1)
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS worker_authorization_scheduler_lease_bindings_append_only_update
+BEFORE UPDATE ON worker_authorization_scheduler_lease_bindings
+BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization lease binding is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS worker_authorization_scheduler_lease_bindings_append_only_delete
+BEFORE DELETE ON worker_authorization_scheduler_lease_bindings
+BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization lease binding is immutable'); END;
+";
+
+/// The version-9 WIA-to-scheduler lease binding migration entry.
+pub fn worker_authorization_lease_binding_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(9, WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9)
+}

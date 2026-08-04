@@ -602,6 +602,32 @@ pub struct WorkerIterationAuthorizationConsumptionRow {
     pub canonical_json: String,
 }
 
+/// Exact scheduler lease identity held when the daemon hands a WIA to one
+/// worker. This is private recovery evidence, not worker-provided input and
+/// not part of the public TaskContract or WIA schema.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchedulerLeaseBinding {
+    /// Immutable scheduler task identity.
+    pub task_ref: String,
+    /// TaskContract epoch fixed by the scheduler work key.
+    pub contract_epoch: i64,
+    /// Exact daemon scheduler lease owner.
+    pub lease_owner: String,
+    /// Exact owner fencing epoch of the durable scheduler lease.
+    pub lease_epoch: i64,
+}
+
+/// One daemon-only WIA handoff requested against an already acquired exact
+/// scheduler lease. The adapter validates both authorities in one durable
+/// transaction before recording either handoff evidence.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoundWorkerAuthorizationConsumption {
+    /// One-time WIA handoff record.
+    pub consumption: WorkerIterationAuthorizationConsumptionRow,
+    /// Exact scheduler lease that authorizes this handoff.
+    pub scheduler_lease: SchedulerLeaseBinding,
+}
+
 /// Durable recovery input for a worker attempt that crossed the daemon's WIA
 /// handoff boundary. Recovery must use this record and the corresponding
 /// Effect state; it must not reconstruct a worker attempt from scheduler
@@ -612,6 +638,9 @@ pub struct ConsumedWorkerIterationAuthorization {
     pub authorization: WorkerIterationAuthorizationRow,
     /// The one durable worker-attempt handoff for that authority.
     pub consumption: WorkerIterationAuthorizationConsumptionRow,
+    /// Exact lease captured with the handoff. `None` denotes pre-binding
+    /// evidence, which recovery must retain rather than use to release work.
+    pub scheduler_lease: Option<SchedulerLeaseBinding>,
 }
 
 /// All-or-nothing daemon admission of one selected non-authority candidate.
@@ -672,6 +701,14 @@ pub trait WorkerAuthorizationStore {
     fn consume_worker_iteration_authorization(
         &self,
         consumption: &WorkerIterationAuthorizationConsumptionRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Atomically consume one WIA and bind that handoff to an exact currently
+    /// leased scheduler row. D05 daemon worker dispatch must use this method;
+    /// an unbound handoff never proves authority to release scheduler work.
+    fn consume_worker_iteration_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundWorkerAuthorizationConsumption,
     ) -> Result<(), StorePortError>;
 
     /// Commit Intent, Effect admission, immutable WIA, Loop CAS, exact budget

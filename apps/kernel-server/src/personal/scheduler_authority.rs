@@ -23,9 +23,10 @@ use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
 use cognitive_kernel::intent_chain::GovernanceSeed;
 use cognitive_kernel::ports::{
-    AuthorityStore, CandidateAdmissionReceipt, Clock, HarnessStore, IdGenerator, IntentChainStore,
-    ProtocolStore, TaskBinding, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    AuthorityStore, BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
+    HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, SchedulerLeaseBinding, TaskBinding,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_runtime::{
     BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
@@ -107,6 +108,8 @@ pub(crate) struct DaemonCandidateAdmissionCommand {
 pub(crate) struct WorkerAuthorizationHandoff {
     pub authorization: WorkerIterationAuthorizationRow,
     pub worker_attempt_id: ObjectId,
+    /// `None` is legacy handoff evidence and cannot release scheduler work.
+    pub scheduler_lease: Option<SchedulerLeaseBinding>,
 }
 
 /// A restart-safe worker attempt reconstructed solely from daemon-recorded
@@ -530,6 +533,7 @@ pub(crate) fn consume_worker_authorization_for_attempt<S, C>(
     clock: &C,
     authorization_id: &ObjectId,
     worker_attempt_id: ObjectId,
+    scheduler_dispatch: &SchedulerDispatch,
 ) -> Result<WorkerAuthorizationHandoff, SchedulerAuthorityError>
 where
     S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
@@ -551,6 +555,14 @@ where
             current_epoch: current_contract_epoch,
         });
     }
+    if scheduler_dispatch.task_ref != authorization.task_ref
+        || scheduler_dispatch.contract_epoch != authorization.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "scheduler dispatch does not match the WorkerIterationAuthorization task binding"
+                .to_owned(),
+        ));
+    }
     let consumed_fencing_epoch = store
         .current_fencing_epoch()
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
@@ -569,18 +581,30 @@ where
             .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
     )
     .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let scheduler_lease = SchedulerLeaseBinding {
+        task_ref: scheduler_dispatch.task_ref.clone(),
+        contract_epoch: scheduler_dispatch.contract_epoch,
+        lease_owner: scheduler_dispatch.lease_owner.clone(),
+        lease_epoch: scheduler_dispatch.lease_epoch,
+    };
     store
-        .consume_worker_iteration_authorization(&WorkerIterationAuthorizationConsumptionRow {
-            authorization_id: authorization.authorization_id.clone(),
-            worker_attempt_id: worker_attempt_id.clone(),
-            consumed_fencing_epoch,
-            consumed_at,
-            canonical_json,
-        })
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(
+            &BoundWorkerAuthorizationConsumption {
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id: authorization.authorization_id.clone(),
+                    worker_attempt_id: worker_attempt_id.clone(),
+                    consumed_fencing_epoch,
+                    consumed_at,
+                    canonical_json,
+                },
+                scheduler_lease: scheduler_lease.clone(),
+            },
+        )
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     Ok(WorkerAuthorizationHandoff {
         authorization,
         worker_attempt_id,
+        scheduler_lease: Some(scheduler_lease),
     })
 }
 
@@ -684,6 +708,7 @@ where
             handoff: WorkerAuthorizationHandoff {
                 authorization,
                 worker_attempt_id: consumed_authorization.consumption.worker_attempt_id,
+                scheduler_lease: consumed_authorization.scheduler_lease,
             },
             effect_closure: classify_scheduler_effect_closure(effect.state.as_str())?,
         });

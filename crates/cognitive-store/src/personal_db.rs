@@ -15,7 +15,7 @@ use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_en
 use crate::sqlite::AUTHORITY_SCHEMA_V1;
 use crate::worker_authorization::{
     daemon_authorization_snapshot_migration_entry, daemon_operation_descriptor_migration_entry,
-    worker_authorization_migration_entry,
+    worker_authorization_lease_binding_migration_entry, worker_authorization_migration_entry,
     worker_iteration_authorization_consumption_migration_entry,
     worker_iteration_authorization_migration_entry,
 };
@@ -60,7 +60,8 @@ impl PersonalDatabasePrepareReport {
 /// = immutable operation candidate proposal persistence, v5 = daemon-only
 /// immutable operation descriptor registry, v6 = daemon authorization
 /// snapshots, v7 = immutable worker iteration authorization storage, v8 =
-/// immutable worker authorization consumption records.
+/// immutable worker authorization consumption records, and v9 = immutable
+/// WIA-to-scheduler lease binding records.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -71,6 +72,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         daemon_authorization_snapshot_migration_entry(),
         worker_iteration_authorization_migration_entry(),
         worker_iteration_authorization_consumption_migration_entry(),
+        worker_authorization_lease_binding_migration_entry(),
     ]
 }
 
