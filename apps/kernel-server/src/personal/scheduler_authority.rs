@@ -1393,6 +1393,43 @@ mod tests {
     }
 
     #[test]
+    fn recovered_legacy_unbound_handoff_retains_its_scheduler_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-legacy-unbound";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                23,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        let mut recovered_attempt = recovered_closed_attempt(task_ref, 23);
+        recovered_attempt.handoff.scheduler_lease = None;
+        release_closed_recovered_attempt(
+            &recovered_attempt,
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        )
+        .unwrap();
+
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Leased.as_str());
+        assert_eq!(row.lease_epoch, 23);
+        assert_eq!(row.lease_owner.as_deref(), Some("scheduler-worker"));
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
     fn recovered_closed_effect_cannot_release_a_successor_lease_epoch() {
         let database_path = temporary_scheduler_database_path();
         let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
