@@ -903,7 +903,7 @@ fn bound_wia_handoff_rolls_back_when_lease_binding_persistence_fails() {
             },
         )
         .expect_err("a failed lease-binding insert must abort the whole handoff");
-    assert!(matches!(error, StorePortError::Unavailable { .. }));
+    assert!(matches!(error, StorePortError::Conflict { .. }));
     assert!(
         store
             .list_consumed_worker_iteration_authorizations()
