@@ -118,7 +118,9 @@ fn admission_commit(candidate_id: ObjectId) -> CandidateAdmissionCommit {
         intent_event: EventDraft {
             event_id: event_id(410),
             object_id: intent_id.clone(),
-            domain: LifecycleDomain::Intent,
+            // Intent rows are immutable protocol records rather than a
+            // lifecycle domain; their provenance event is effect-scoped.
+            domain: LifecycleDomain::Effect,
             object_version: Version::INITIAL,
             event_type: "intent.minted".to_owned(),
             canonical_json: "{\"event\":\"intent\"}".to_owned(),
