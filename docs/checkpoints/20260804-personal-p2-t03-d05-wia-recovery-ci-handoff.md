@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `64015d2a23bdac0c0ab5298df5f473a8c8aebddb`
+- Code checkpoint: `64015d284af8750f3ec027f6ab6820ea31d1ed58`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
