@@ -4,7 +4,7 @@
 - Task / slice: `P2-T03/D05` daemon-only WIA handoff and startup recovery
 - Lease: `lease/personal/P2-T03/worker-input-contract` (active)
 - Branch: `lane/ctr-p2-t03-worker-input-contract`
-- Code checkpoint: `13fc15e4bf5973930cf1abb0a5d9d61b47fda64b`
+- Code checkpoint: `a1d1cc79bd3d9a517ad0e7b5e6bbaa5e6d3b2bdf`
 - PR: [#149](https://github.com/agentkernel/cognitive-os/pull/149) (Draft)
 - Change class: `implementation-only`
 - Normative surface: unchanged
@@ -22,6 +22,12 @@ lease binding. Existing exact-match, replacement-owner/epoch, legacy-unbound,
 pending-effect and successor-release fences remain in force. Startup recovery
 runs before endpoint publication and only reconciles already consumed,
 exact-lease-bound handoffs.
+
+The sealed-WIA boundary additionally rejects persistent-row disagreements in
+the canonical budget charge or expected Loop version before either live WIA
+consumption or restart recovery can use the row. A closed legacy unbound
+handoff has no exact persisted lease identity and therefore retains scheduler
+work rather than releasing a matching-looking lease.
 
 ## Validation
 
@@ -46,7 +52,12 @@ The intermediate `fc1562c` and `11b4e36` revisions failed Clippy on pre-existing
 test assertion style, and `be2948f` resolves those lint failures. Those failed
 revisions are not claimed as validation evidence.
 
-No exact-revision native Linux worker-recovery test was run for `13fc15e`.
+No exact-revision native Linux worker-recovery test was run for `a1d1cc7`.
+An attempt to run the focused `d329293` test from a clean `/tmp` Git worktree
+was `not-run`: the host could reach SSH, but the GitHub clone stopped at its
+low-throughput timeout before checkout or Cargo execution. The cleanup path
+removed the temporary worktree. This is a validation-environment network
+limitation, not a test or product failure.
 Prior Linux candidate-persistence and conformance evidence remains scoped to
 the earlier immutable revisions documented in the D05 candidate checkpoint.
 
