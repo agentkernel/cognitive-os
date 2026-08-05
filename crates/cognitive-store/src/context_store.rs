@@ -73,3 +73,48 @@ BEGIN SELECT RAISE(ABORT, 'append-only: workspace Context source is immutable');
 pub fn workspace_context_source_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(13, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13)
 }
+
+/// Migration v14: immutable Context authorization inputs and revocation
+/// currency. These tables preserve decision inputs; they are not grants.
+pub const CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14: &str = "
+CREATE TABLE IF NOT EXISTS context_authorization_fact_sets (
+  fact_sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  fact_set_id TEXT NOT NULL UNIQUE,
+  subject_ref TEXT NOT NULL,
+  tenant_id TEXT NOT NULL,
+  capability_set_version INTEGER NOT NULL CHECK (capability_set_version >= 1),
+  issued_revocation_epoch INTEGER NOT NULL CHECK (issued_revocation_epoch >= 1),
+  canonical_json TEXT NOT NULL
+) STRICT;
+CREATE INDEX IF NOT EXISTS context_authorization_fact_sets_current
+ON context_authorization_fact_sets (subject_ref, tenant_id, fact_sequence DESC);
+CREATE TRIGGER IF NOT EXISTS context_authorization_fact_sets_append_only_update
+BEFORE UPDATE ON context_authorization_fact_sets
+BEGIN SELECT RAISE(ABORT, 'append-only: Context authorization facts are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS context_authorization_fact_sets_append_only_delete
+BEFORE DELETE ON context_authorization_fact_sets
+BEGIN SELECT RAISE(ABORT, 'append-only: Context authorization facts are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS context_revocation_facts (
+  revocation_sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  revocation_fact_id TEXT NOT NULL UNIQUE,
+  tenant_id TEXT NOT NULL,
+  revocation_epoch INTEGER NOT NULL CHECK (revocation_epoch >= 1),
+  revoked_subject_ref TEXT,
+  revoked_capability_ref TEXT,
+  canonical_json TEXT NOT NULL,
+  UNIQUE (tenant_id, revocation_epoch)
+) STRICT;
+CREATE INDEX IF NOT EXISTS context_revocation_facts_current
+ON context_revocation_facts (tenant_id, revocation_epoch DESC);
+CREATE TRIGGER IF NOT EXISTS context_revocation_facts_append_only_update
+BEFORE UPDATE ON context_revocation_facts
+BEGIN SELECT RAISE(ABORT, 'append-only: Context revocation facts are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS context_revocation_facts_append_only_delete
+BEFORE DELETE ON context_revocation_facts
+BEGIN SELECT RAISE(ABORT, 'append-only: Context revocation facts are immutable'); END;
+";
+
+pub fn context_authorization_fact_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(14, CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14)
+}

@@ -13,13 +13,14 @@
 //! subset, MUST NOT buffer a failed commit in memory (REQ-REC-003), and
 //! MUST keep the event log append-only (REQ-EVT-004).
 
-use crate::authz::ObjectGovernance;
+use crate::authz::{ActorChainFacts, DenyRule, MembershipFacts, ObjectGovernance, PrincipalFacts};
 use crate::budget::BudgetState;
 use crate::effects::OperationDescriptor;
 use cognitive_contracts::generated::context_view::{
     LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
+use cognitive_domain::capability::CapabilityConstraints;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
 };
@@ -555,6 +556,69 @@ pub struct ContextCandidateQuery {
     pub limit: usize,
 }
 
+/// Immutable daemon-admin-issued authorization inputs for Context body reads.
+/// Possession of this record does not itself grant access: callers reconstruct
+/// it with current revocation currency and still call the six-step gate.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContextAuthorizationFactsRow {
+    pub fact_set_id: ObjectId,
+    pub subject_ref: String,
+    pub tenant_id: String,
+    pub principal: PrincipalFacts,
+    pub actor_chain: ActorChainFacts,
+    pub membership: Option<MembershipFacts>,
+    pub capability_links: Vec<CapabilityConstraints>,
+    pub explicit_denies: Vec<DenyRule>,
+    pub capability_set_version: i64,
+    pub issued_revocation_epoch: i64,
+    pub canonical_json: String,
+}
+
+impl ContextAuthorizationFactsRow {
+    /// Rebuild an authorization decision snapshot using revocation currency
+    /// read at the point of body authorization, never the historical epoch
+    /// carried when this fact set was admitted.
+    pub fn reconstruct_snapshot(
+        &self,
+        current_revocation_epoch: i64,
+        decided_at: WallTimestamp,
+    ) -> Result<crate::authz::AuthzSnapshot, StorePortError> {
+        if current_revocation_epoch < 1
+            || self.capability_set_version < 1
+            || self.issued_revocation_epoch < 1
+            || self.subject_ref != self.principal.principal_ref.as_str()
+            || self.principal.tenant_id.as_deref() != Some(self.tenant_id.as_str())
+        {
+            return Err(StorePortError::Unavailable {
+                detail: "Context authorization facts are incomplete or inconsistent".to_owned(),
+            });
+        }
+        Ok(crate::authz::AuthzSnapshot {
+            tenant_id: self.tenant_id.clone(),
+            principal: self.principal.clone(),
+            actor_chain: self.actor_chain.clone(),
+            membership: self.membership.clone(),
+            capability_links: self.capability_links.clone(),
+            capability_set_version: self.capability_set_version,
+            explicit_denies: self.explicit_denies.clone(),
+            revocation_epoch: current_revocation_epoch,
+            decided_at,
+        })
+    }
+}
+
+/// Immutable revocation observation. A higher tenant epoch invalidates older
+/// capability material during snapshot reconstruction.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContextRevocationFactRow {
+    pub revocation_fact_id: ObjectId,
+    pub tenant_id: String,
+    pub revocation_epoch: i64,
+    pub revoked_subject_ref: Option<String>,
+    pub revoked_capability_ref: Option<String>,
+    pub canonical_json: String,
+}
+
 /// One persisted immutable operation candidate proposal. This row preserves
 /// non-authority input for later daemon admission; it does not authorize an
 /// operation, reserve budget, or schedule work.
@@ -1088,6 +1152,31 @@ pub trait ContextStore {
         &self,
         source_id: &ObjectId,
     ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError>;
+}
+
+/// Durable source of the facts needed to reconstruct a current Context
+/// authorization snapshot. Only the daemon-admin authority may append facts.
+pub trait ContextAuthorizationFactStore {
+    fn append_context_authorization_facts(
+        &self,
+        facts: &ContextAuthorizationFactsRow,
+    ) -> Result<(), StorePortError>;
+
+    fn append_context_revocation_fact(
+        &self,
+        fact: &ContextRevocationFactRow,
+    ) -> Result<(), StorePortError>;
+
+    fn load_latest_context_authorization_facts(
+        &self,
+        subject_ref: &str,
+        tenant_id: &str,
+    ) -> Result<Option<ContextAuthorizationFactsRow>, StorePortError>;
+
+    fn load_current_context_revocation_epoch(
+        &self,
+        tenant_id: &str,
+    ) -> Result<Option<i64>, StorePortError>;
 }
 
 /// Durable resolution port for the governance header carried by M5 governed

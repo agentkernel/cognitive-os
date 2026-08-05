@@ -40,8 +40,9 @@ use cognitive_kernel::effects::GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN;
 use cognitive_kernel::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
     CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
-    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextCandidateMetadata,
-    ContextCandidateQuery, ContextRequestRow, ContextStore, ContextViewRow,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextAuthorizationFactStore,
+    ContextAuthorizationFactsRow, ContextCandidateMetadata, ContextCandidateQuery,
+    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow,
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
     IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OperationCandidateProposalRow,
@@ -53,6 +54,7 @@ use cognitive_kernel::ports::{
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
@@ -1254,6 +1256,84 @@ fn parse_and_verify_context_payload(
     Ok(payload)
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct ContextAuthorizationFactsPayload {
+    fact_set_id: String,
+    subject_ref: String,
+    tenant_id: String,
+    principal: cognitive_kernel::authz::PrincipalFacts,
+    actor_chain: cognitive_kernel::authz::ActorChainFacts,
+    membership: Option<cognitive_kernel::authz::MembershipFacts>,
+    capability_links: Vec<cognitive_domain::capability::CapabilityConstraints>,
+    explicit_denies: Vec<cognitive_kernel::authz::DenyRule>,
+    capability_set_version: i64,
+    issued_revocation_epoch: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct ContextRevocationFactPayload {
+    revocation_fact_id: String,
+    tenant_id: String,
+    revocation_epoch: i64,
+    revoked_subject_ref: Option<String>,
+    revoked_capability_ref: Option<String>,
+}
+
+fn parse_context_authorization_facts(
+    canonical_json: &str,
+) -> Result<ContextAuthorizationFactsPayload, StorePortError> {
+    serde_json::from_str(canonical_json)
+        .map_err(|error| invalid_context_payload("ContextAuthorizationFacts", error))
+}
+
+fn validate_context_authorization_facts_row(
+    facts: &ContextAuthorizationFactsRow,
+) -> Result<(), StorePortError> {
+    let payload = parse_context_authorization_facts(&facts.canonical_json)?;
+    if payload.fact_set_id != facts.fact_set_id.as_str()
+        || payload.subject_ref != facts.subject_ref
+        || payload.tenant_id != facts.tenant_id
+        || payload.principal != facts.principal
+        || payload.actor_chain != facts.actor_chain
+        || payload.membership != facts.membership
+        || payload.capability_links != facts.capability_links
+        || payload.explicit_denies != facts.explicit_denies
+        || payload.capability_set_version != facts.capability_set_version
+        || payload.issued_revocation_epoch != facts.issued_revocation_epoch
+    {
+        return Err(invalid_context_payload(
+            "ContextAuthorizationFacts",
+            "row metadata differs from canonical authorization facts",
+        ));
+    }
+    facts.reconstruct_snapshot(
+        facts.issued_revocation_epoch,
+        WallTimestamp::parse("2026-01-01T00:00:00Z")
+            .map_err(|error| invalid_context_payload("ContextAuthorizationFacts", error))?,
+    )?;
+    Ok(())
+}
+
+fn validate_context_revocation_fact_row(
+    fact: &ContextRevocationFactRow,
+) -> Result<(), StorePortError> {
+    let payload: ContextRevocationFactPayload = serde_json::from_str(&fact.canonical_json)
+        .map_err(|error| invalid_context_payload("ContextRevocationFact", error))?;
+    if payload.revocation_fact_id != fact.revocation_fact_id.as_str()
+        || payload.tenant_id != fact.tenant_id
+        || payload.revocation_epoch != fact.revocation_epoch
+        || payload.revoked_subject_ref != fact.revoked_subject_ref
+        || payload.revoked_capability_ref != fact.revoked_capability_ref
+        || fact.revocation_epoch < 1
+    {
+        return Err(invalid_context_payload(
+            "ContextRevocationFact",
+            "row metadata differs from canonical revocation fact",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_context_request_row(request: &ContextRequestRow) -> Result<(), StorePortError> {
     let payload = parse_and_verify_context_payload(&request.canonical_json, "ContextRequest")?;
     let context_request: ContextRequest = serde_json::from_value(payload)
@@ -1650,6 +1730,113 @@ impl ContextStore for SqliteAuthorityStore {
             content_tokens: row.get(11)?,
             canonical_json: row.get(12)?,
         })).optional().map_err(unavailable("load WorkspaceContextSource body"))
+    }
+}
+
+impl ContextAuthorizationFactStore for SqliteAuthorityStore {
+    fn append_context_authorization_facts(
+        &self,
+        facts: &ContextAuthorizationFactsRow,
+    ) -> Result<(), StorePortError> {
+        validate_context_authorization_facts_row(facts)?;
+        let connection = self.lock()?;
+        let result = connection.execute(
+            "INSERT INTO context_authorization_fact_sets (fact_set_id, subject_ref, tenant_id, capability_set_version, issued_revocation_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (
+                facts.fact_set_id.as_str(),
+                facts.subject_ref.as_str(),
+                facts.tenant_id.as_str(),
+                facts.capability_set_version,
+                facts.issued_revocation_epoch,
+                facts.canonical_json.as_str(),
+            ),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "Context authorization facts {} already persisted",
+                    facts.fact_set_id
+                ),
+            }),
+            Err(error) => Err(unavailable("insert Context authorization facts")(error)),
+        }
+    }
+
+    fn append_context_revocation_fact(
+        &self,
+        fact: &ContextRevocationFactRow,
+    ) -> Result<(), StorePortError> {
+        validate_context_revocation_fact_row(fact)?;
+        let connection = self.lock()?;
+        let result = connection.execute(
+            "INSERT INTO context_revocation_facts (revocation_fact_id, tenant_id, revocation_epoch, revoked_subject_ref, revoked_capability_ref, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (
+                fact.revocation_fact_id.as_str(),
+                fact.tenant_id.as_str(),
+                fact.revocation_epoch,
+                fact.revoked_subject_ref.as_deref(),
+                fact.revoked_capability_ref.as_deref(),
+                fact.canonical_json.as_str(),
+            ),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "Context revocation fact {} is duplicate or conflicts with tenant epoch",
+                    fact.revocation_fact_id
+                ),
+            }),
+            Err(error) => Err(unavailable("insert Context revocation fact")(error)),
+        }
+    }
+
+    fn load_latest_context_authorization_facts(
+        &self,
+        subject_ref: &str,
+        tenant_id: &str,
+    ) -> Result<Option<ContextAuthorizationFactsRow>, StorePortError> {
+        let connection = self.lock()?;
+        let canonical_json = connection.query_row(
+            "SELECT canonical_json FROM context_authorization_fact_sets WHERE subject_ref=?1 AND tenant_id=?2 ORDER BY fact_sequence DESC LIMIT 1",
+            (subject_ref, tenant_id),
+            |row| row.get::<_, String>(0),
+        ).optional().map_err(unavailable("load latest Context authorization facts"))?;
+        canonical_json
+            .map(|canonical_json| {
+                let payload = parse_context_authorization_facts(&canonical_json)?;
+                let fact_set_id = ObjectId::parse(&payload.fact_set_id)
+                    .map_err(|error| invalid_context_payload("ContextAuthorizationFacts", error))?;
+                let row = ContextAuthorizationFactsRow {
+                    fact_set_id,
+                    subject_ref: payload.subject_ref,
+                    tenant_id: payload.tenant_id,
+                    principal: payload.principal,
+                    actor_chain: payload.actor_chain,
+                    membership: payload.membership,
+                    capability_links: payload.capability_links,
+                    explicit_denies: payload.explicit_denies,
+                    capability_set_version: payload.capability_set_version,
+                    issued_revocation_epoch: payload.issued_revocation_epoch,
+                    canonical_json,
+                };
+                validate_context_authorization_facts_row(&row)?;
+                Ok(row)
+            })
+            .transpose()
+    }
+
+    fn load_current_context_revocation_epoch(
+        &self,
+        tenant_id: &str,
+    ) -> Result<Option<i64>, StorePortError> {
+        let connection = self.lock()?;
+        connection.query_row(
+            "SELECT revocation_epoch FROM context_revocation_facts WHERE tenant_id=?1 ORDER BY revocation_epoch DESC LIMIT 1",
+            [tenant_id],
+            |row| row.get(0),
+        ).optional().map_err(unavailable("load current Context revocation epoch"))
     }
 }
 
