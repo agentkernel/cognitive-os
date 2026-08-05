@@ -261,7 +261,8 @@ fn task_contract_schema_versions_preserve_auditable_v01_and_require_execution_bi
     );
 
     let mut mixed_v03_contract = worker_authorized_contract.clone();
-    mixed_v03_contract["context_request_ref"] = context_bound_contract["context_request_ref"].clone();
+    mixed_v03_contract["context_request_ref"] =
+        context_bound_contract["context_request_ref"].clone();
     assert!(
         !validator.is_valid(&mixed_v03_contract),
         "v0.3 contracts must not silently claim the later ContextRequest binding"
