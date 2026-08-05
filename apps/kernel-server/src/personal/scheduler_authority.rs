@@ -1273,12 +1273,12 @@ mod tests {
     use super::{
         RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
         SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
-        WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
+        UntrustedPiCandidate, WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
         complete_resolved_effect_and_release, complete_scheduler_admission,
         complete_scheduler_worker_attempt, ensure_current_contract_epoch,
         parse_execution_bound_contract, release_closed_effect_dispatch,
         release_closed_recovered_attempt, select_single_effect_intent,
-        validate_worker_authorization_evidence,
+        validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
     };
     use cognitive_contracts::{
         canonical,
@@ -2203,6 +2203,32 @@ mod tests {
         assert!(matches!(
             parse_execution_bound_contract(incomplete_context_bound_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn private_pi_candidate_rejects_invalid_non_authority_fields() {
+        let invalid_digest_candidate = UntrustedPiCandidate {
+            tool_ref: "operation://personal/filesystem/read".to_owned(),
+            action: "filesystem.read".to_owned(),
+            target: "file:///workspace/input.txt".to_owned(),
+            parameters_digest: "not-a-digest".to_owned(),
+            expected_state_version: 1,
+            operation_descriptor_id: object_id(990),
+        };
+        assert!(matches!(
+            validate_untrusted_pi_candidate(&invalid_digest_candidate),
+            Err(SchedulerAuthorityError::PrivatePiProposal(_))
+        ));
+
+        let invalid_version_candidate = UntrustedPiCandidate {
+            parameters_digest: format!("sha256:{}", "a".repeat(64)),
+            expected_state_version: 0,
+            ..invalid_digest_candidate
+        };
+        assert!(matches!(
+            validate_untrusted_pi_candidate(&invalid_version_candidate),
+            Err(SchedulerAuthorityError::PrivatePiProposal(_))
         ));
     }
 
