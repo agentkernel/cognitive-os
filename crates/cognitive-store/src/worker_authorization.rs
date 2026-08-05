@@ -173,3 +173,105 @@ BEGIN SELECT RAISE(ABORT, 'append-only: worker authorization lease binding is im
 pub fn worker_authorization_lease_binding_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(9, WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9)
 }
+
+/// Migration v10: daemon-private verified-continuation evidence and authority.
+/// These records intentionally do not alter the public WorkerIterationAuthorization
+/// schema: candidate WIA remains pre-dispatch `DECIDE -> ACT` authority.
+pub const CONTINUATION_AUTHORITY_SCHEMA_V10: &str = "
+CREATE TABLE IF NOT EXISTS fixed_post_states (
+  fixed_post_state_id    TEXT PRIMARY KEY,
+  task_ref               TEXT NOT NULL,
+  contract_epoch         INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  loop_object_id         TEXT NOT NULL,
+  subject_domain         TEXT NOT NULL,
+  subject_object_id      TEXT NOT NULL,
+  subject_version        INTEGER NOT NULL CHECK (subject_version >= 1),
+  recorded_fencing_epoch INTEGER NOT NULL CHECK (recorded_fencing_epoch >= 1),
+  canonical_json         TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS fixed_post_states_append_only_update
+BEFORE UPDATE ON fixed_post_states
+BEGIN SELECT RAISE(ABORT, 'append-only: fixed post-state is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS fixed_post_states_append_only_delete
+BEFORE DELETE ON fixed_post_states
+BEGIN SELECT RAISE(ABORT, 'append-only: fixed post-state is immutable'); END;
+
+CREATE TABLE IF NOT EXISTS verification_requests (
+  verification_request_id TEXT PRIMARY KEY,
+  fixed_post_state_id     TEXT NOT NULL REFERENCES fixed_post_states(fixed_post_state_id),
+  task_ref                TEXT NOT NULL,
+  contract_epoch          INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  loop_object_id          TEXT NOT NULL,
+  expected_loop_version   INTEGER NOT NULL CHECK (expected_loop_version >= 1),
+  verifier_ref            TEXT NOT NULL,
+  verifier_version        TEXT NOT NULL,
+  criteria_json           TEXT NOT NULL,
+  issued_fencing_epoch    INTEGER NOT NULL CHECK (issued_fencing_epoch >= 1),
+  canonical_json          TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS verification_requests_append_only_update
+BEFORE UPDATE ON verification_requests
+BEGIN SELECT RAISE(ABORT, 'append-only: verification request is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS verification_requests_append_only_delete
+BEFORE DELETE ON verification_requests
+BEGIN SELECT RAISE(ABORT, 'append-only: verification request is immutable'); END;
+
+CREATE TABLE IF NOT EXISTS verification_reports (
+  verification_report_id  TEXT PRIMARY KEY,
+  verification_request_id TEXT NOT NULL REFERENCES verification_requests(verification_request_id),
+  fixed_post_state_id     TEXT NOT NULL REFERENCES fixed_post_states(fixed_post_state_id),
+  verifier_ref            TEXT NOT NULL,
+  verifier_version        TEXT NOT NULL,
+  status                  TEXT NOT NULL CHECK (status IN ('passed', 'failed', 'indeterminate')),
+  evidence_refs_json      TEXT NOT NULL,
+  completed_at            TEXT NOT NULL,
+  recorded_fencing_epoch  INTEGER NOT NULL CHECK (recorded_fencing_epoch >= 1),
+  canonical_json          TEXT NOT NULL,
+  UNIQUE (verification_request_id, verifier_ref, verifier_version)
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS verification_reports_append_only_update
+BEFORE UPDATE ON verification_reports
+BEGIN SELECT RAISE(ABORT, 'append-only: verification report is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS verification_reports_append_only_delete
+BEFORE DELETE ON verification_reports
+BEGIN SELECT RAISE(ABORT, 'append-only: verification report is immutable'); END;
+
+CREATE TABLE IF NOT EXISTS continuation_authorizations (
+  continuation_authorization_id TEXT PRIMARY KEY,
+  task_ref                      TEXT NOT NULL,
+  contract_epoch                INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  loop_object_id                TEXT NOT NULL,
+  iteration                     INTEGER NOT NULL CHECK (iteration >= 1),
+  expected_loop_version         INTEGER NOT NULL CHECK (expected_loop_version >= 1),
+  checkpoint_id                 TEXT NOT NULL,
+  budget_id                     TEXT NOT NULL,
+  budget_charge_json            TEXT NOT NULL,
+  verification_report_id        TEXT NOT NULL REFERENCES verification_reports(verification_report_id),
+  issued_fencing_epoch          INTEGER NOT NULL CHECK (issued_fencing_epoch >= 1),
+  canonical_json                TEXT NOT NULL,
+  UNIQUE (loop_object_id, iteration)
+) STRICT;
+CREATE TABLE IF NOT EXISTS continuation_authorization_consumptions (
+  continuation_authorization_id TEXT PRIMARY KEY REFERENCES continuation_authorizations(continuation_authorization_id),
+  consumed_fencing_epoch        INTEGER NOT NULL CHECK (consumed_fencing_epoch >= 1),
+  consumed_at                   TEXT NOT NULL,
+  canonical_json                TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS continuation_authorizations_append_only_update
+BEFORE UPDATE ON continuation_authorizations
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation authorization is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS continuation_authorizations_append_only_delete
+BEFORE DELETE ON continuation_authorizations
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation authorization is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS continuation_authorization_consumptions_append_only_update
+BEFORE UPDATE ON continuation_authorization_consumptions
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation consumption is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS continuation_authorization_consumptions_append_only_delete
+BEFORE DELETE ON continuation_authorization_consumptions
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation consumption is immutable'); END;
+";
+
+/// The version-10 private verified-continuation persistence entry.
+pub fn continuation_authority_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(10, CONTINUATION_AUTHORITY_SCHEMA_V10)
+}

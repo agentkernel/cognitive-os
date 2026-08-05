@@ -14,7 +14,8 @@ use crate::migration::{
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::sqlite::AUTHORITY_SCHEMA_V1;
 use crate::worker_authorization::{
-    daemon_authorization_snapshot_migration_entry, daemon_operation_descriptor_migration_entry,
+    continuation_authority_migration_entry, daemon_authorization_snapshot_migration_entry,
+    daemon_operation_descriptor_migration_entry,
     worker_authorization_lease_binding_migration_entry, worker_authorization_migration_entry,
     worker_iteration_authorization_consumption_migration_entry,
     worker_iteration_authorization_migration_entry,
@@ -73,6 +74,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         worker_iteration_authorization_migration_entry(),
         worker_iteration_authorization_consumption_migration_entry(),
         worker_authorization_lease_binding_migration_entry(),
+        continuation_authority_migration_entry(),
     ]
 }
 

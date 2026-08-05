@@ -602,6 +602,109 @@ pub struct WorkerIterationAuthorizationConsumptionRow {
     pub canonical_json: String,
 }
 
+/// Immutable daemon-owned post-state pin created before loop verification.
+/// It is not worker output and cannot be rewritten after verification begins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FixedPostStateRow {
+    pub fixed_post_state_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub subject_domain: LifecycleDomain,
+    pub subject_object_id: ObjectId,
+    pub subject_version: Version,
+    pub recorded_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-owned verification request tied to one fixed post-state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerificationRequestRow {
+    pub verification_request_id: ObjectId,
+    pub fixed_post_state_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub expected_loop_version: Version,
+    pub verifier_ref: String,
+    pub verifier_version: String,
+    pub criteria_canonical_json: String,
+    pub issued_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Immutable verifier result that the daemon reloads before it may continue a
+/// loop. A stored `passed` status alone never accepts or completes a Task.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerificationReportRow {
+    pub verification_report_id: ObjectId,
+    pub verification_request_id: ObjectId,
+    pub fixed_post_state_id: ObjectId,
+    pub verifier_ref: String,
+    pub verifier_version: String,
+    pub status: String,
+    pub evidence_refs_canonical_json: String,
+    pub completed_at: WallTimestamp,
+    pub recorded_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Private one-time authority to begin the next iteration after a verified
+/// continuation. This is intentionally distinct from the public WIA, which
+/// remains immutable pre-dispatch authority for `DECIDE -> ACT`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContinuationAuthorizationRow {
+    pub continuation_authorization_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub iteration: i64,
+    pub expected_loop_version: Version,
+    pub checkpoint_id: ObjectId,
+    pub budget_id: BudgetId,
+    pub budget_charge_canonical_json: String,
+    pub verification_report_id: ObjectId,
+    pub issued_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Daemon-private persistence for the verified continuation boundary.
+/// Implementations must keep every row append-only and recheck declared
+/// fencing epochs inside the transaction that writes it.
+pub trait ContinuationAuthorityStore {
+    fn append_fixed_post_state(&self, row: &FixedPostStateRow) -> Result<(), StorePortError>;
+
+    fn load_fixed_post_state(
+        &self,
+        fixed_post_state_id: &ObjectId,
+    ) -> Result<Option<FixedPostStateRow>, StorePortError>;
+
+    fn append_verification_request(
+        &self,
+        row: &VerificationRequestRow,
+    ) -> Result<(), StorePortError>;
+
+    fn load_verification_request(
+        &self,
+        verification_request_id: &ObjectId,
+    ) -> Result<Option<VerificationRequestRow>, StorePortError>;
+
+    fn append_verification_report(&self, row: &VerificationReportRow)
+    -> Result<(), StorePortError>;
+
+    fn load_verification_report(
+        &self,
+        verification_report_id: &ObjectId,
+    ) -> Result<Option<VerificationReportRow>, StorePortError>;
+
+    fn append_continuation_authorization(
+        &self,
+        row: &ContinuationAuthorizationRow,
+    ) -> Result<(), StorePortError>;
+
+    fn load_unconsumed_continuation_authorization(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Option<ContinuationAuthorizationRow>, StorePortError>;
+}
+
 /// Exact scheduler lease identity held when the daemon hands a WIA to one
 /// worker. This is private recovery evidence, not worker-provided input and
 /// not part of the public TaskContract or WIA schema.
