@@ -239,6 +239,18 @@ pub struct CommittedTransition {
     pub committed_at: WallTimestamp,
 }
 
+/// A fully validated but not yet persisted transition. The only valid uses
+/// are the normal authority-store commit or a narrower compound authority
+/// transaction that preserves this exact commit unchanged.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreparedTransition {
+    pub commit: TransitionCommit,
+    pub record_id: RecordId,
+    pub event_id: EventId,
+    pub after_version: Version,
+    pub committed_at: WallTimestamp,
+}
+
 /// Receipt of one accepted object admission.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdmittedObject {
@@ -457,11 +469,11 @@ where
             .map_err(store_error)
     }
 
-    /// Apply one governed transition through the full deterministic gate.
+    /// Validate and compose one governed transition without persisting it.
     /// On rejection nothing is written and the authoritative state is
     /// unchanged; the rejection carries the registered error code, current
     /// state/version and safe available exits.
-    pub fn commit_transition(
+    pub fn prepare_transition(
         &self,
         cmd: &TransitionCommand,
     ) -> Result<CommittedTransition, TransitionRejection> {
@@ -763,22 +775,33 @@ where
                 .collect(),
             fencing_epoch: cmd.fencing_epoch,
         };
-        let receipt = self
-            .store
-            .commit_transition(&commit)
-            .map_err(|err| match err {
-                StorePortError::Conflict { detail } => {
-                    reject_at(RejectionKind::StoreConflict, detail, loaded, &current)
-                }
-                other => store_error(other),
-            })?;
-
-        Ok(CommittedTransition {
+        Ok(PreparedTransition {
+            commit,
             record_id,
             event_id,
-            event_sequence: receipt.event_sequence,
             after_version: next_version,
             committed_at,
+        })
+    }
+
+    /// Apply one governed transition through the full deterministic gate.
+    /// This is the normal authority path; compound authority protocols use
+    /// [`Self::prepare_transition`] and must preserve its exact commit.
+    pub fn commit_transition(
+        &self,
+        command: &TransitionCommand,
+    ) -> Result<CommittedTransition, TransitionRejection> {
+        let prepared = self.prepare_transition(command)?;
+        let receipt = self
+            .store
+            .commit_transition(&prepared.commit)
+            .map_err(store_error)?;
+        Ok(CommittedTransition {
+            record_id: prepared.record_id,
+            event_id: prepared.event_id,
+            event_sequence: receipt.event_sequence,
+            after_version: prepared.after_version,
+            committed_at: prepared.committed_at,
         })
     }
 }
