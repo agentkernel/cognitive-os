@@ -29,9 +29,8 @@ use cognitive_kernel::ports::{
     WorkerIterationAuthorizationRow,
 };
 use cognitive_runtime::{
-    BoundedHarness, HarnessDecision, SchedulerCeilingDispatch, SchedulerCeilingDispatchError,
-    SchedulerCeilingFacts, SchedulerDispatch, SchedulerService, SchedulerServiceError,
-    StagnationPolicy,
+    SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
+    SchedulerDispatch, SchedulerService, SchedulerServiceError,
 };
 use cognitive_store::{
     SqliteAuthorityStore, SystemClock, UuidV7Generator,
@@ -1670,7 +1669,7 @@ mod tests {
     }
 
     #[test]
-    fn private_scheduler_tick_rejects_superseded_work_before_wia_handoff() {
+    fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff() {
         let database_path = temporary_scheduler_database_path();
         let (_, scheduler_work_key) = persist_pending_bound_handoff(&database_path, false);
         let store = SqliteAuthorityStore::open(&database_path).unwrap();
@@ -1701,7 +1700,7 @@ mod tests {
 
         assert!(matches!(
             super::run_private_scheduler_tick(&database_path),
-            Err(SchedulerAuthorityError::DispatchBindingMismatch(_))
+            Err(SchedulerAuthorityError::MalformedContract(_))
         ));
 
         let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
@@ -2614,16 +2613,19 @@ where
     complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
 }
 
-/// Run one daemon-owned authorized iteration after fresh scheduler admission.
-/// Worker-controlled progress and evidence are intentionally absent: those
-/// observations need a later validation path before they can become facts.
+/// Consume one candidate-admission WIA after fresh scheduler admission.
+///
+/// A candidate WIA authorizes the prior atomic `DECIDE -> ACT` admission. It
+/// is not a continuation token for `CONTINUE -> OBSERVE`: that later
+/// transition needs a distinct authority, checkpoint, current loop version,
+/// and fresh budget admission. This boundary therefore records only the
+/// recoverable handoff and resolves its durable Effect state.
 #[allow(clippy::too_many_arguments)]
 fn run_bounded_scheduler_attempt<S, C, G>(
     authority_store: &S,
     scheduler_repository: &mut SchedulerRepository,
     scheduler_service: &mut SchedulerService,
     driver: &LoopDriver<'_, S, C, G>,
-    harness: &BoundedHarness<'_, S, C, G>,
     binding: &SchedulerAuthorityBinding,
     task_binding: &TaskBinding,
     scheduler_lease_epoch: i64,
@@ -2631,7 +2633,7 @@ fn run_bounded_scheduler_attempt<S, C, G>(
     authorization_id: &ObjectId,
     worker_attempt_id: ObjectId,
     released_at: &str,
-) -> Result<(SchedulerWorkerAttempt, Option<HarnessDecision>), SchedulerAuthorityError>
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
 where
     S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
     C: Clock,
@@ -2659,7 +2661,7 @@ where
         let SchedulerDispatchAdmission::Stopped(transition) = admission else {
             unreachable!("scheduler admission has only stopped or leased outcomes");
         };
-        return Ok((SchedulerWorkerAttempt::Stopped(transition), None));
+        return Ok(SchedulerWorkerAttempt::Stopped(transition));
     };
 
     consume_worker_authorization_for_attempt(
@@ -2671,18 +2673,6 @@ where
         worker_attempt_id,
         &dispatch,
     )?;
-    // Reload authority after durable handoff; no caller-supplied values reach
-    // the loop transition.
-    let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
-    harness.begin_authorized_iteration(
-        &snapshot.loop_object_id,
-        authorization.expected_loop_version,
-        &binding.task_ref,
-        authorization.iteration,
-        &snapshot.budget_id,
-        &parse_worker_authorization_charge(&authorization)?,
-        &writer_lease,
-    )?;
     let worker_attempt = complete_durable_scheduler_effect_closure(
         SchedulerDispatchAdmission::Leased(dispatch),
         authority_store,
@@ -2691,15 +2681,15 @@ where
         released_at,
     )?;
 
-    Ok((worker_attempt, None))
+    Ok(worker_attempt)
 }
 
 /// Run one daemon-private scheduler pass over durable runnable work.
 ///
-/// This is the live caller for the bounded WIA handoff composition. It never
+/// This is the live caller for candidate WIA handoff composition. It never
 /// accepts client input, dispatches an executor, records worker progress, or
-/// changes Task lifecycle state. Every attempt is reconstructed from current
-/// TaskContract/Intent authority and one unconsumed daemon-issued WIA.
+/// changes Task lifecycle state. A candidate WIA cannot enter the bounded
+/// harness; only a future distinct continuation authority may do so.
 pub(crate) fn run_private_scheduler_tick(
     authority_database_path: &Path,
 ) -> Result<(), SchedulerAuthorityError> {
@@ -2760,13 +2750,11 @@ pub(crate) fn run_private_scheduler_tick(
                 SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
             })?,
         );
-        let harness = BoundedHarness::new(&driver, 1, StagnationPolicy::Stop);
         run_bounded_scheduler_attempt(
             &authority_store,
             &mut scheduler_repository,
             &mut scheduler_service,
             &driver,
-            &harness,
             &resolved_work.authority_binding,
             &resolved_work.task_binding,
             scheduler_lease_epoch,
@@ -2823,30 +2811,6 @@ where
         ));
     }
     Ok(authorization)
-}
-
-fn parse_worker_authorization_charge(
-    authorization: &WorkerIterationAuthorizationRow,
-) -> Result<BudgetCharge, SchedulerAuthorityError> {
-    let charge: BudgetCharge = serde_json::from_str(&authorization.budget_charge_canonical_json)
-        .map_err(|error| {
-            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
-        })?;
-    let canonical_charge = String::from_utf8(
-        canonical::canonical_bytes_of_value(&serde_json::to_value(&charge).map_err(|error| {
-            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
-        })?)
-        .map_err(|error| {
-            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
-        })?,
-    )
-    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
-    if canonical_charge != authorization.budget_charge_canonical_json {
-        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
-            "worker authorization budget charge is not canonical".to_owned(),
-        ));
-    }
-    Ok(charge)
 }
 
 /// Release an already resolved closed Effect through the real scheduler
