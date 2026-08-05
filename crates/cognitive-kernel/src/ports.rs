@@ -135,6 +135,10 @@ pub struct BudgetCas {
     pub expected_version: Version,
     /// Version the row advances to.
     pub next_version: Version,
+    /// Canonical charge admitted by the deterministic transition gate.
+    /// Compound authority transactions use this immutable proof to bind a
+    /// private authorization to exactly the fresh debit it permits.
+    pub charge_canonical_json: String,
     /// Canonical JSON bytes of the debited [`BudgetState`].
     pub next_state_canonical_json: String,
 }
@@ -723,8 +727,9 @@ pub trait ContinuationAuthorityStore {
     ) -> Result<(), StorePortError>;
 
     /// Consume continuation authority at most once and bind it to an exact
-    /// active scheduler lease. This preserves a recovery record if the later
-    /// authorized harness entry fails.
+    /// active scheduler lease and atomically commit the supplied, already
+    /// gate-validated continuation entry. No partial consumption, lease
+    /// binding, state transition, or budget debit may persist.
     fn consume_continuation_authorization_bound_to_scheduler_lease(
         &self,
         request: &BoundContinuationAuthorizationConsumption,

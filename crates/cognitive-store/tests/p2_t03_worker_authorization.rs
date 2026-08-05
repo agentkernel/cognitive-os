@@ -216,6 +216,7 @@ fn admission_commit(candidate_id: ObjectId) -> CandidateAdmissionCommit {
                 budget_id: budget,
                 expected_version: Version::INITIAL,
                 next_version: Version::new(2).unwrap(),
+                charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
                 next_state_canonical_json: "{\"tool_calls\":0}".to_owned(),
             }),
             outbox: vec![],

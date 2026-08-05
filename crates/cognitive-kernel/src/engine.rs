@@ -650,10 +650,17 @@ where
                         format!("budget state serialization: {err}"),
                     )
                 })?;
+                let charge_value = serde_json::to_value(&budget_cmd.charge).map_err(|err| {
+                    reject(
+                        RejectionKind::InvalidCommand,
+                        format!("budget charge serialization: {err}"),
+                    )
+                })?;
                 Some(BudgetCas {
                     budget_id: budget_cmd.budget_id.clone(),
                     expected_version: stored.version,
                     next_version: next_budget_version,
+                    charge_canonical_json: canonical_text(&charge_value)?,
                     next_state_canonical_json: canonical_text(&state_value)?,
                 })
             }

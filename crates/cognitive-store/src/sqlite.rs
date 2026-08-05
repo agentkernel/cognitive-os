@@ -2769,8 +2769,8 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
 
         let transition_matches_authorization: bool = transaction
             .query_row(
-                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND loop_object_id=?2 AND expected_loop_version=?3 AND budget_id=?4)",
-                (consumption.continuation_authorization_id.as_str(), transition.cas.object_id.as_str(), transition.cas.expected_version.get(), transition.budget.as_ref().map(|budget| budget.budget_id.as_str()).unwrap_or("")),
+                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND loop_object_id=?2 AND expected_loop_version=?3 AND budget_id=?4 AND budget_charge_json=?5)",
+                (consumption.continuation_authorization_id.as_str(), transition.cas.object_id.as_str(), transition.cas.expected_version.get(), transition.budget.as_ref().map(|budget| budget.budget_id.as_str()).unwrap_or(""), transition.budget.as_ref().map(|budget| budget.charge_canonical_json.as_str()).unwrap_or("")),
                 |database_row| database_row.get(0),
             )
             .map_err(unavailable("verify continuation transition binding"))?;

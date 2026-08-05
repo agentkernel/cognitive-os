@@ -1370,6 +1370,7 @@ mod tests {
                     budget_id: authorization.budget_id.clone(),
                     expected_version: Version::INITIAL,
                     next_version: Version::INITIAL.next().unwrap(),
+                    charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
                     next_state_canonical_json: serde_json::to_string(
                         &BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
                     )

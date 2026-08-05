@@ -583,6 +583,7 @@ pub fn compose_candidate_admission(
             expected_version: inputs.facts.expected_budget_version,
             next_version: Version::new(inputs.facts.expected_budget_version.get() + 1)
                 .map_err(|error| malformed(error.to_string()))?,
+            charge_canonical_json: budget_charge_canonical_json.clone(),
             next_state_canonical_json: inputs.facts.next_budget_state_canonical_json.clone(),
         }),
         outbox: Vec::new(),
