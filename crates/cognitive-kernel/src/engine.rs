@@ -806,11 +806,11 @@ where
             .commit_transition(&prepared.commit)
             .map_err(store_error)?;
         Ok(CommittedTransition {
-            record_id: prepared.record_id,
-            event_id: prepared.event_id,
+            record_id: prepared.record_id.clone(),
+            event_id: prepared.event_id.clone(),
             event_sequence: receipt.event_sequence,
             after_version: prepared.after_version,
-            committed_at: prepared.committed_at,
+            committed_at: prepared.committed_at.clone(),
         })
     }
 }
