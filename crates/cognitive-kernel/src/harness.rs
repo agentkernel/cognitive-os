@@ -37,8 +37,8 @@ use crate::engine::{
 };
 use crate::error::{RESOURCE_BUDGET_EXHAUSTED, STATE_CONFLICT};
 use crate::ports::{
-    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow,
-    ProtocolStore,
+    AuthorityStore, Clock, ContinuationAuthorityStore, HarnessStore, IdGenerator, IntentChainStore,
+    ProgressFactRow, ProtocolStore,
 };
 use cognitive_contracts::generated::object_reference::StrongReference;
 use cognitive_contracts::generated::task_contract::TaskContract;
@@ -775,6 +775,101 @@ where
             lease,
         )?;
         Ok(self.engine().commit_transition(&cmd)?)
+    }
+
+    /// Close `VERIFY -> CONTINUE` from a durable verifier report only.
+    ///
+    /// The daemon reloads the report, its request, and its fixed post-state;
+    /// caller-provided report text never becomes evidence. A passed report
+    /// permits loop continuation only and does not invoke any Task acceptance
+    /// or completion transition.
+    pub fn end_iteration_from_persisted_report(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_object_id: &ObjectId,
+        verification_report_id: &ObjectId,
+        budget_id: &BudgetId,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError>
+    where
+        S: ContinuationAuthorityStore,
+    {
+        self.verify_lease(lease)?;
+        let report = self
+            .store
+            .load_verification_report(verification_report_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "verification report is unavailable".to_owned(),
+                )
+            })?;
+        if report.status != "passed" {
+            return Err(denial(
+                STATE_CONFLICT,
+                "only a persisted passed verification report may continue a loop".to_owned(),
+            )
+            .into());
+        }
+        let request = self
+            .store
+            .load_verification_request(&report.verification_request_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "verification request is unavailable".to_owned(),
+                )
+            })?;
+        if request.loop_object_id != *loop_id || request.expected_loop_version != expected_version {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification request does not bind this exact loop continuation".to_owned(),
+            )
+            .into());
+        }
+        let fixed_post_state = self
+            .store
+            .load_fixed_post_state(&report.fixed_post_state_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| denial(STATE_CONFLICT, "fixed post-state is unavailable".to_owned()))?;
+        if fixed_post_state.fixed_post_state_id != request.fixed_post_state_id
+            || report.verifier_ref != request.verifier_ref
+            || report.verifier_version != request.verifier_version
+        {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification report does not match its persisted request".to_owned(),
+            )
+            .into());
+        }
+        let current_subject = self
+            .store
+            .load_object(
+                fixed_post_state.subject_domain,
+                &fixed_post_state.subject_object_id,
+            )
+            .map_err(store_rejection)?;
+        if !current_subject
+            .is_some_and(|subject| subject.version == fixed_post_state.subject_version)
+        {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification fixed post-state is no longer current".to_owned(),
+            )
+            .into());
+        }
+        self.end_iteration(
+            loop_id,
+            expected_version,
+            task_object_id,
+            verification_report_id,
+            &report.canonical_json,
+            budget_id,
+            lease,
+        )
     }
 }
 
