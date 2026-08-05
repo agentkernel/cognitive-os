@@ -37,8 +37,8 @@ use crate::engine::{
 };
 use crate::error::{RESOURCE_BUDGET_EXHAUSTED, STATE_CONFLICT};
 use crate::ports::{
-    AuthorityStore, Clock, ContinuationAuthorityStore, HarnessStore, IdGenerator, IntentChainStore,
-    ProgressFactRow, ProtocolStore,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, Clock, ContinuationAuthorityStore,
+    HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow, ProtocolStore,
 };
 use cognitive_contracts::generated::object_reference::StrongReference;
 use cognitive_contracts::generated::task_contract::TaskContract;
@@ -490,6 +490,50 @@ where
             lease,
         )?;
         Ok(self.engine().commit_prepared_transition(&prepared)?)
+    }
+
+    /// Atomically consume daemon-private verified continuation authority,
+    /// bind the exact scheduler lease, and enter `CONTINUE -> OBSERVE` with
+    /// its fresh budget debit. Candidate WIA is deliberately not an input to
+    /// this path.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_verified_continuation_atomically(
+        &self,
+        consumption: &BoundContinuationAuthorizationConsumption,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        iteration: i64,
+        budget_id: &BudgetId,
+        charge: &BudgetCharge,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError>
+    where
+        S: ContinuationAuthorityStore,
+    {
+        let prepared = self.prepare_iteration(
+            loop_id,
+            expected_version,
+            task_ref,
+            iteration,
+            budget_id,
+            charge,
+            lease,
+        )?;
+        let receipt = self
+            .store
+            .consume_continuation_authorization_bound_to_scheduler_lease(
+                consumption,
+                &prepared.commit,
+            )
+            .map_err(store_rejection)?;
+        Ok(CommittedTransition {
+            record_id: prepared.record_id,
+            event_id: prepared.event_id,
+            event_sequence: receipt.event_sequence,
+            after_version: prepared.after_version,
+            committed_at: prepared.committed_at,
+        })
     }
 
     /// Persist a ceiling decision as a terminal, fenced loop transition.

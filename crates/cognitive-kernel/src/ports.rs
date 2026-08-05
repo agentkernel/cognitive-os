@@ -734,7 +734,7 @@ pub trait ContinuationAuthorityStore {
         &self,
         request: &BoundContinuationAuthorizationConsumption,
         transition: &TransitionCommit,
-    ) -> Result<(), StorePortError>;
+    ) -> Result<CommitReceipt, StorePortError>;
 
     fn load_unconsumed_continuation_authorization(
         &self,

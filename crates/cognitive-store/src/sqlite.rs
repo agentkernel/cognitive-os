@@ -2820,10 +2820,11 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             }
         }
 
-        commit_transition_in_transaction(&transaction, transition)?;
+        let receipt = commit_transition_in_transaction(&transaction, transition)?;
         transaction
             .commit()
-            .map_err(unavailable("commit bound continuation entry"))
+            .map_err(unavailable("commit bound continuation entry"))?;
+        Ok(receipt)
     }
 
     fn load_unconsumed_continuation_authorization(
