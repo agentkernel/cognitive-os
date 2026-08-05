@@ -1256,7 +1256,7 @@ fn parse_and_verify_context_payload(
     Ok(payload)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct ContextAuthorizationFactsPayload {
     header: GovernedObjectHeader,
     fact_set_id: String,
@@ -1271,7 +1271,7 @@ struct ContextAuthorizationFactsPayload {
     issued_revocation_epoch: i64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct ContextRevocationFactPayload {
     header: GovernedObjectHeader,
     revocation_fact_id: String,
