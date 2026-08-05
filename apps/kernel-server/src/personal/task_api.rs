@@ -39,9 +39,10 @@ use cognitive_domain::{BudgetId, ObjectId, UriRef, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
-    TaskContractCommand, UserIntentCommand,
+    TaskContractCommand, UserIntentCommand, compose_governed_header,
+    seal_governed_object_content_digest, strong_reference_to,
 };
-use cognitive_kernel::ports::ProtocolStore;
+use cognitive_kernel::ports::{ContextRequestRow, ContextStore, ProtocolStore};
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde::{Deserialize, Serialize};
@@ -348,11 +349,11 @@ impl TaskApi {
             Ok(governance) => governance,
             Err(response) => return response,
         };
-        let contract = match contract_from_draft(request.task_contract_draft, principal, governance)
-        {
-            Ok(contract) => contract,
-            Err(response) => return response,
-        };
+        let mut contract =
+            match contract_from_draft(request.task_contract_draft, principal, governance.clone()) {
+                Ok(contract) => contract,
+                Err(response) => return response,
+            };
         let interpretation_id = match ObjectId::try_from(&request.acceptance.interpretation_id) {
             Ok(value) => value,
             Err(_) => return error(400, "TASK_INVALID_REQUEST", "interpretation id is invalid"),
@@ -370,6 +371,12 @@ impl TaskApi {
             Ok(lease) => lease,
             Err(response) => return response,
         };
+        let context_request_ref =
+            match issue_context_request(service.store(), &contract, &governance, principal) {
+                Ok(reference) => reference,
+                Err(response) => return response,
+            };
+        contract.context_request_ref = Some(context_request_ref);
         match service.admit(
             &lease,
             &request.preview_digest.0,
@@ -574,6 +581,92 @@ fn principal_digest(principal: &str) -> String {
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("sha256:{hash:016x}{hash:016x}{hash:016x}{hash:016x}")
+}
+
+/// Persist the daemon's immutable ContextRequest before TaskContract minting.
+/// The client draft supplies no Context authority: purpose, perspective,
+/// freshness, sensitivity, and render target are daemon-selected policy.
+fn issue_context_request(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    governance: &GovernanceSeed,
+    principal: &str,
+) -> Result<StrongReference, TaskApiResponse> {
+    let request_id = new_object_id()?;
+    let created_at = cognitive_kernel::ports::Clock::now(&SystemClock).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_CLOCK_UNAVAILABLE",
+            "daemon could not timestamp the Context request",
+        )
+    })?;
+    let header = compose_governed_header(
+        &request_id,
+        "ContextRequest",
+        "cognitiveos.context-request/0.1",
+        governance,
+        vec![contract.task_ref.as_str().to_owned()],
+        Vec::new(),
+        "daemon-task-admission-context-request",
+        &created_at,
+    )
+    .map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_HEADER_REJECTED",
+            "daemon could not compose the Context request header",
+        )
+    })?;
+    let payload = json!({
+        "header": header,
+        "purpose": "task_execution",
+        "perspective": {
+            "principal": principal,
+            "task": contract.task_ref.as_str(),
+            "episode": format!("episode://personal/{}", request_id.as_str()),
+        },
+        "budget": contract.budget,
+        "priority": ["task", "evidence"],
+        "required": [],
+        "forbidden": [],
+        "freshness": {"world_max_age_ms": 0},
+        "sensitivity": {"max_input": "internal", "egress": "none"},
+        "target_profile": {
+            "kind": "structured",
+            "schema": "cognitiveos.context-view/0.1",
+        },
+        "allow_partial": false,
+    });
+    let (sealed_payload, request_digest) =
+        seal_governed_object_content_digest(payload).map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_SEALING_FAILED",
+                "daemon could not seal the Context request",
+            )
+        })?;
+    let canonical_json = serde_json::to_string(&sealed_payload).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_SERIALIZATION_FAILED",
+            "daemon could not serialize the Context request",
+        )
+    })?;
+    store
+        .append_context_request(&ContextRequestRow {
+            request_id: request_id.clone(),
+            task_ref: contract.task_ref.as_str().to_owned(),
+            request_digest: request_digest.clone(),
+            canonical_json,
+        })
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "daemon could not persist the Context request",
+            )
+        })?;
+    Ok(strong_reference_to(&request_id, &request_digest))
 }
 
 fn contract_from_draft(
