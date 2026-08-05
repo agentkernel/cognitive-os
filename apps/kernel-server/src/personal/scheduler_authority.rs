@@ -607,6 +607,25 @@ where
     G: IdGenerator,
     P: PrivatePiCandidateProposer,
 {
+    // Candidate identity is daemon-owned and stable across a scheduler retry.
+    // Never call Pi twice for that identity: a previously committed admission
+    // returns its original receipt; a proposal persisted before a failed
+    // admission resumes deterministic daemon-only admission.
+    if store
+        .load_operation_candidate_proposal(&admission_command.candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .is_some()
+    {
+        if let Some(receipt) = store
+            .load_candidate_admission_receipt_by_selected_candidate_id(
+                &admission_command.candidate_id,
+            )
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        {
+            return Ok(receipt);
+        }
+        return admit_candidate_atomically(store, clock, identifiers, admission_command);
+    }
     let resolved_context = resolve_authorized_task_context(store, context_command)?;
     let current_contract_epoch = store
         .current_contract_epoch(&context_command.task_ref)

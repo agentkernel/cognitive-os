@@ -2239,6 +2239,55 @@ impl WorkerAuthorizationStore for SqliteAuthorityStore {
         }))
     }
 
+    fn load_candidate_admission_receipt_by_selected_candidate_id(
+        &self,
+        selected_candidate_id: &ObjectId,
+    ) -> Result<Option<CandidateAdmissionReceipt>, StorePortError> {
+        let conn = self.lock()?;
+        let receipt = conn.query_row(
+            "SELECT authorization.authorization_id, intent_event.sequence,
+                    effect_event.sequence, loop_event.sequence
+             FROM worker_iteration_authorizations AS authorization
+             JOIN events AS intent_event
+               ON intent_event.object_id = authorization.intent_id
+              AND intent_event.object_version = 1
+              AND intent_event.domain = 'effect'
+              AND intent_event.event_type = 'cognitiveos.intent.persisted'
+             JOIN events AS effect_event
+               ON effect_event.object_id = authorization.effect_object_id
+              AND effect_event.object_version = 1
+              AND effect_event.domain = 'effect'
+              AND effect_event.event_type = 'cognitiveos.object.admitted'
+             JOIN events AS loop_event
+               ON loop_event.object_id = authorization.loop_object_id
+              AND loop_event.object_version = authorization.expected_loop_version + 1
+              AND loop_event.domain = 'loop'
+              AND loop_event.event_type = 'cognitiveos.state.transition.committed'
+             WHERE authorization.selected_candidate_id = ?1",
+            (selected_candidate_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, i64>(3)?,
+                ))
+            },
+        );
+        let receipt = match receipt {
+            Ok(receipt) => receipt,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(error) => return Err(unavailable("query candidate admission receipt")(error)),
+        };
+        Ok(Some(CandidateAdmissionReceipt {
+            authorization_id: ObjectId::parse(&receipt.0)
+                .map_err(|error| corrupt("candidate admission authorization", error))?,
+            intent_event_sequence: receipt.1,
+            effect_admission_event_sequence: receipt.2,
+            loop_transition_event_sequence: receipt.3,
+        }))
+    }
+
     fn load_unconsumed_worker_iteration_authorization_for_task_binding(
         &self,
         task_ref: &str,

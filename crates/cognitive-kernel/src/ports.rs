@@ -968,6 +968,15 @@ pub trait WorkerAuthorizationStore {
         authorization_id: &ObjectId,
     ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
 
+    /// Reconstruct the committed candidate-admission receipt from immutable
+    /// WIA and event evidence. This permits an idempotent caller to recover
+    /// a successful admission after losing its original response without
+    /// repeating budget debits, Loop transitions, or WIA issuance.
+    fn load_candidate_admission_receipt_by_selected_candidate_id(
+        &self,
+        selected_candidate_id: &ObjectId,
+    ) -> Result<Option<CandidateAdmissionReceipt>, StorePortError>;
+
     /// Resolve the sole unconsumed daemon-issued WIA for one exact scheduler
     /// binding. Multiple matching authorities are ambiguous and must fail
     /// closed; consumed WIAs remain recovery-only evidence.
