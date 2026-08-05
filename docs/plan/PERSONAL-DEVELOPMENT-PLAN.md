@@ -199,7 +199,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P2-T01 | 既有 authority/store/Intent/TaskContract contracts；P1-T09 route implementation 已可集成，B01 不是 mutex | proposal/clarify/preview/admit/control/query；raw-intent durability、preview-digest binding、epoch/stale-lease fencing focused evidence | G2: B02/B04/B05/B12；task `done` 不要求这些 Gate 已运行 |
 | P2-T02 | P2-T01、P1-T07、task/management channel contracts | real authenticated Personal intent record/interpret→server-issued preview→admit Task API/watch; daemon-owned governance-context binding (including the ADR-0022 durable local-root bootstrap rule), Pi Shell and CLI use one application service; channel-isolation negatives | G2: B02/B04/B05/B12 |
 | P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
-| P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、revocation negatives | B03 |
+| P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、owner-local management-session MVP authorization | B03 |
 | P3-T02 | P3-T01 stable Context source port | minimum Context Builder、required fail-closed、显式 loss 与预算 | B03 |
 | P3-T06 | P3-T05 | B03 Context correctness；同 campaign 可采集 B06/B07；UCR-01 固定场景 utility assertions 单独进入 P7-T08 acceptance | GMVP-LINUX Gate composition 只 requires B03；B06/B07 不阻塞 |
 | P4-T01 | P3-T01/P3-T02 stable ports | Memory store/admission/policy 与 provenance/scope/freshness | B08 |
@@ -210,6 +210,21 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P5-T05 | P5-T02 | B09 managed Pi + sidecar qualification；任务完成与 B10 解耦 | GMVP-LINUX requires B09 |
 | P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
 | P7-T08 | P1-T09、P2-T08、P3-T06、P4-T06、P5-T01/P5-T02/P5-T05 B09、P7-T01..T03 | Linux 1.0 六类资源 release manifest、native systemd、desktop/headless SecretStore、Pi sidecar、UCR-01 fixed-scenario correctness/utility、lifecycle/backup/doctor evidence | **B01+B02+B03+B04+B05+B08+B09+B12**；B06/B07/B10/B11 不阻塞 |
+
+#### Context MVP authorization scope
+
+The first runnable P3-T01/P2-T04 Context path uses one owner-local management
+session as its admission boundary. It preserves daemon-only writes, immutable
+source provenance, tenant/scope/conversation filtering, body-after-metadata
+ordering, and Pi's candidate-only boundary. It does **not** require complete
+multi-principal role evaluation, capability-chain attenuation, dynamic deny
+rules, or revocation-policy administration before the MVP path can run. The
+existing durable authorization/revocation ledger remains compatible hardening
+infrastructure and its regressions remain valid, but advanced policy rollout
+is a subsequent optimization rather than an MVP implementation mutex. This
+scope change does not relax Intent/Effect, secret handling, scheduler fencing,
+independent verification, Task acceptance, formal campaign, release, or
+Profile requirements.
 
 ### Delivery Slice register（任务内交付出口）
 
