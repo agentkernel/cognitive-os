@@ -600,6 +600,7 @@ fn contract_from_draft(
             .map_err(|_| error(400, "TASK_INVALID_REQUEST", "budget id is invalid"))?,
         allowed_state_domains: draft.allowed_state_domains,
         allowed_tools: draft.allowed_tools,
+        context_request_ref: None,
         governance,
         correlation_id: correlation(principal)?,
     })
