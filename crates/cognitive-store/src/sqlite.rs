@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -1333,20 +1333,26 @@ fn validate_workspace_context_source_row(
             "row identity, type, or digest differs from canonical payload",
         ));
     }
-    let expected_metadata = serde_json::json!({
-        "tenant_id": source.governance.tenant_id,
-        "owner_ref": source.governance.owner_ref,
-        "resource_scope": source.governance.resource_scope,
-        "conversation_ref": source.governance.conversation_ref,
-        "role": source.role,
-        "trust_level": source.trust_level,
-        "representation": source.representation,
-        "provenance_ref": source.provenance_ref,
-        "content_bytes": source.content_bytes,
-        "content_tokens": source.content_tokens,
-    });
-    for (field, expected_value) in expected_metadata.as_object().expect("object") {
-        if payload.get(field) != Some(expected_value) {
+    let expected_metadata = [
+        ("tenant_id", serde_json::json!(source.governance.tenant_id)),
+        ("owner_ref", serde_json::json!(source.governance.owner_ref)),
+        (
+            "resource_scope",
+            serde_json::json!(source.governance.resource_scope),
+        ),
+        (
+            "conversation_ref",
+            serde_json::json!(source.governance.conversation_ref),
+        ),
+        ("role", serde_json::json!(source.role)),
+        ("trust_level", serde_json::json!(source.trust_level)),
+        ("representation", serde_json::json!(source.representation)),
+        ("provenance_ref", serde_json::json!(source.provenance_ref)),
+        ("content_bytes", serde_json::json!(source.content_bytes)),
+        ("content_tokens", serde_json::json!(source.content_tokens)),
+    ];
+    for (field, expected_value) in expected_metadata {
+        if payload.get(field) != Some(&expected_value) {
             return Err(invalid_context_payload(
                 "WorkspaceContextSource",
                 format!("row {field} differs from canonical payload"),
@@ -1364,7 +1370,7 @@ fn validate_workspace_context_source_row(
     Ok(())
 }
 
-fn parse_workspace_context_source_row(
+struct WorkspaceContextSourceDatabaseRow {
     source_id: String,
     source_digest: String,
     tenant_id: String,
@@ -1378,35 +1384,42 @@ fn parse_workspace_context_source_row(
     content_bytes: i64,
     content_tokens: Option<i64>,
     canonical_json: String,
+}
+
+fn parse_workspace_context_source_row(
+    database_row: WorkspaceContextSourceDatabaseRow,
 ) -> Result<WorkspaceContextSourceRow, rusqlite::Error> {
     let parse_enum_error = |error| {
         rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error))
     };
     Ok(WorkspaceContextSourceRow {
-        source_id: ObjectId::parse(&source_id).map_err(|error| {
+        source_id: ObjectId::parse(&database_row.source_id).map_err(|error| {
             rusqlite::Error::FromSqlConversionFailure(
                 0,
                 rusqlite::types::Type::Text,
                 Box::new(error),
             )
         })?,
-        source_digest,
+        source_digest: database_row.source_digest,
         governance: ObjectGovernance {
-            object_ref: source_id,
-            tenant_id: Some(tenant_id),
-            owner_ref,
-            resource_scope,
-            conversation_ref,
+            object_ref: database_row.source_id,
+            tenant_id: Some(database_row.tenant_id),
+            owner_ref: database_row.owner_ref,
+            resource_scope: database_row.resource_scope,
+            conversation_ref: database_row.conversation_ref,
         },
-        role: serde_json::from_value(serde_json::Value::String(role)).map_err(parse_enum_error)?,
-        trust_level: serde_json::from_value(serde_json::Value::String(trust_level))
+        role: serde_json::from_value(serde_json::Value::String(database_row.role))
             .map_err(parse_enum_error)?,
-        representation: serde_json::from_value(serde_json::Value::String(representation))
+        trust_level: serde_json::from_value(serde_json::Value::String(database_row.trust_level))
             .map_err(parse_enum_error)?,
-        provenance_ref,
-        content_bytes,
-        content_tokens,
-        canonical_json,
+        representation: serde_json::from_value(serde_json::Value::String(
+            database_row.representation,
+        ))
+        .map_err(parse_enum_error)?,
+        provenance_ref: database_row.provenance_ref,
+        content_bytes: database_row.content_bytes,
+        content_tokens: database_row.content_tokens,
+        canonical_json: database_row.canonical_json,
     })
 }
 
@@ -1583,21 +1596,22 @@ impl ContextStore for SqliteAuthorityStore {
                     query.limit as i64,
                 ),
                 |row| {
-                    let source = parse_workspace_context_source_row(
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get(2)?,
-                        row.get(3)?,
-                        row.get(4)?,
-                        row.get(5)?,
-                        row.get(6)?,
-                        row.get(7)?,
-                        row.get(8)?,
-                        row.get(9)?,
-                        row.get(10)?,
-                        row.get(11)?,
-                        String::new(),
-                    )?;
+                    let source =
+                        parse_workspace_context_source_row(WorkspaceContextSourceDatabaseRow {
+                            source_id: row.get(0)?,
+                            source_digest: row.get(1)?,
+                            tenant_id: row.get(2)?,
+                            owner_ref: row.get(3)?,
+                            resource_scope: row.get(4)?,
+                            conversation_ref: row.get(5)?,
+                            role: row.get(6)?,
+                            trust_level: row.get(7)?,
+                            representation: row.get(8)?,
+                            provenance_ref: row.get(9)?,
+                            content_bytes: row.get(10)?,
+                            content_tokens: row.get(11)?,
+                            canonical_json: String::new(),
+                        })?;
                     Ok(ContextCandidateMetadata {
                         source_id: source.source_id,
                         source_digest: source.source_digest,
@@ -1621,7 +1635,21 @@ impl ContextStore for SqliteAuthorityStore {
         source_id: &ObjectId,
     ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError> {
         let connection = self.lock()?;
-        connection.query_row("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json FROM workspace_context_sources WHERE source_id=?1", [source_id.as_str()], |row| parse_workspace_context_source_row(row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?, row.get(12)?)).optional().map_err(unavailable("load WorkspaceContextSource body"))
+        connection.query_row("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json FROM workspace_context_sources WHERE source_id=?1", [source_id.as_str()], |row| parse_workspace_context_source_row(WorkspaceContextSourceDatabaseRow {
+            source_id: row.get(0)?,
+            source_digest: row.get(1)?,
+            tenant_id: row.get(2)?,
+            owner_ref: row.get(3)?,
+            resource_scope: row.get(4)?,
+            conversation_ref: row.get(5)?,
+            role: row.get(6)?,
+            trust_level: row.get(7)?,
+            representation: row.get(8)?,
+            provenance_ref: row.get(9)?,
+            content_bytes: row.get(10)?,
+            content_tokens: row.get(11)?,
+            canonical_json: row.get(12)?,
+        })).optional().map_err(unavailable("load WorkspaceContextSource body"))
     }
 }
 
