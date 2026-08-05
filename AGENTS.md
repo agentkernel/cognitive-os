@@ -37,6 +37,12 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 - 每次会话必须产出实现、失败优先测试、可验证文档修正，或带
   `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的阻塞记录。
   已确认依赖后不得继续无出口审计。
+- **`CONTINUOUS-AUTONOMOUS-DELIVERY-01`：** 用户要求持续推进时，代理必须在当前
+  已领取任务的可写 lease 内连续选择并实施下一个最小垂直交付切片，直到该任务完成、
+  出现不可自主消除的明确阻塞，或用户明确要求暂停/切换。不得把 checkpoint、CI 发起、
+  阶段性总结、单个验证结束或可恢复的临时环境故障当作停止工作的理由；这些只是在继续
+  下一个实现、修复或预注册验证动作时记录的中间事实。除非需要用户决定、发现未知外部
+  改动或完成用户请求，否则保持工具驱动的开发节奏，不发送临时进度汇报。
 - 结束会话前同步正式计划、`PROGRESS.md` current snapshot 和 handoff；未执行检查写
   `not-run`，不可推断为通过。
 - Delivery Slice 只有在 focused failure-first/negative test 和其定义的 supported

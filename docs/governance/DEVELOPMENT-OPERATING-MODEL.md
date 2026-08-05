@@ -119,6 +119,16 @@ The following anti-fragmentation rules apply:
   horizontal helper, parser, or boundary.
 - A completed slice is not a reason to open a parallel slice over the same
   path. The slice's exact lease and handoff are the coordination boundary.
+- **Continuous autonomous delivery:** when an owner requests continued
+  development, the agent must autonomously select and implement the next
+  smallest vertical slice within the active task and lease. It continues until
+  task completion, an explicit non-autonomous blocker, or an owner-requested
+  pause/scope change. Checkpoint commits, CI submission, intermediate
+  validation results, or recoverable environment failures are workflow events,
+  not stop conditions. The agent records them while proceeding to the next
+  implementation, repair, or registered validation action. It must not stop
+  merely to provide a progress summary unless a decision is needed, unknown
+  concurrent changes appear, or the owner asks for one.
 
 The progress view must report three independent layers: formal task status,
 delivery-slice status, and Gate/campaign status. A task can remain

@@ -11,7 +11,7 @@ use cognitive_contracts::{
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
     generated::{
         context_request::ContextRequest, object_reference::StrongReferenceKind,
-        task_contract::TaskContract,
+        operation_candidate_proposal::OperationCandidateProposal, task_contract::TaskContract,
     },
 };
 use cognitive_domain::{
@@ -29,7 +29,10 @@ use cognitive_kernel::context::{
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
-use cognitive_kernel::intent_chain::GovernanceSeed;
+use cognitive_kernel::intent_chain::{
+    GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
+    strong_reference_to,
+};
 use cognitive_kernel::{
     authz::{AccessRequest, authorize},
     ports::{
@@ -57,6 +60,9 @@ use thiserror::Error;
 
 const TASK_CONTRACT_EXECUTION_SCHEMA_V03: &str = "cognitiveos.task-contract/0.3";
 const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4";
+const OPERATION_CANDIDATE_SCHEMA_VERSION: &str = "cognitiveos.operation-candidate-proposal/0.1";
+const DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN: &str =
+    "cognitiveos.personal.daemon-descriptor-reference/0.1";
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -116,6 +122,32 @@ pub(crate) struct ContextResolutionCommand {
     pub conversation_ref: Option<String>,
     pub source_limit: usize,
     pub decided_at: WallTimestamp,
+}
+
+/// The only non-authority fields a private Pi producer may propose. The
+/// daemon validates them against current durable facts, supplies every
+/// governed reference/header, and seals the persisted candidate itself.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct UntrustedPiCandidate {
+    pub tool_ref: String,
+    pub action: String,
+    pub target: String,
+    pub parameters_digest: String,
+    pub expected_state_version: i64,
+    pub operation_descriptor_id: ObjectId,
+}
+
+/// Private Pi boundary used before candidate admission. Implementations may
+/// transport one bounded request to a pinned daemon-supervised Pi child, but
+/// they cannot return progress, evidence, receipts, WIA, Effect state, or
+/// Task lifecycle data.
+pub(crate) trait PrivatePiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        resolved_context: &ResolvedContextView,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String>;
 }
 
 /// Daemon-owned identity and governance inputs required to create one atomic
@@ -245,6 +277,8 @@ pub(crate) enum SchedulerAuthorityError {
     ContextBodyUnavailable(String),
     #[error("scheduler Context resolution failed: {0}")]
     ContextResolution(String),
+    #[error("scheduler private Pi candidate proposal failed: {0}")]
+    PrivatePiProposal(String),
     #[error("scheduler continuation authority is unavailable or inconsistent: {0}")]
     ContinuationUnavailable(String),
     #[error(
@@ -500,6 +534,181 @@ where
         &ArrivalOrderRanker,
     )
     .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+}
+
+/// Resolve Context, obtain exactly one untrusted Pi candidate, then have the
+/// daemon seal, persist, and atomically admit it. Pi-provided fields never
+/// become governed references, header facts, authority, or lifecycle state.
+/// The resulting WIA remains unconsumed: executor dispatch and Task outcomes
+/// belong to later scheduler and verifier paths.
+pub(crate) fn propose_persist_and_admit_candidate<S, C, G, P>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    context_command: &ContextResolutionCommand,
+    proposer: &P,
+    admission_command: &DaemonCandidateAdmissionCommand,
+) -> Result<CandidateAdmissionReceipt, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+    P: PrivatePiCandidateProposer,
+{
+    let resolved_context = resolve_authorized_task_context(store, context_command)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&context_command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let contract_row = store
+        .load_task_contract(&context_command.task_ref, current_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingContract(context_command.task_ref.clone())
+        })?;
+    let task_contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if task_contract
+        .context_request_ref
+        .as_ref()
+        .map(|reference| reference.id.0.as_str())
+        != Some(context_command.request_id.as_str())
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "current TaskContract ContextRequest binding changed before Pi proposal".to_owned(),
+        ));
+    }
+
+    let proposed_candidate = proposer
+        .propose_candidate(
+            &resolved_context,
+            &context_command.task_ref,
+            current_contract_epoch,
+        )
+        .map_err(SchedulerAuthorityError::PrivatePiProposal)?;
+    validate_untrusted_pi_candidate(&proposed_candidate)?;
+    let descriptor = store
+        .load_daemon_operation_descriptor(&proposed_candidate.operation_descriptor_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                proposed_candidate.operation_descriptor_id.to_string(),
+            )
+        })?;
+    if descriptor.descriptor.operation_id != proposed_candidate.tool_ref
+        || descriptor.descriptor.action != proposed_candidate.action
+        || admit_operation(&descriptor.descriptor).is_err()
+    {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            proposed_candidate.operation_descriptor_id.to_string(),
+        ));
+    }
+    let descriptor_reference_digest =
+        canonical_descriptor_reference_digest(&descriptor.canonical_json)?;
+    let proposed_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let candidate_header = compose_governed_header(
+        &admission_command.candidate_id,
+        "OperationCandidateProposal",
+        OPERATION_CANDIDATE_SCHEMA_VERSION,
+        &admission_command.governance,
+        vec!["observation://personal/private-pi-proposer".to_owned()],
+        vec![task_contract.header.id.0.to_owned()],
+        "daemon-sealed-private-pi-candidate",
+        &proposed_at,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    let daemon_sealed_candidate = OperationCandidateProposal {
+        action: proposed_candidate.action.clone(),
+        candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+        contract_epoch: current_contract_epoch,
+        expected_state_version: proposed_candidate.expected_state_version,
+        header: candidate_header,
+        operation_descriptor_ref: strong_reference_to(
+            &descriptor.descriptor_id,
+            &descriptor_reference_digest,
+        ),
+        parameters_digest: proposed_candidate.parameters_digest.clone(),
+        target: proposed_candidate.target.clone(),
+        task_contract_ref: strong_reference_to(
+            &contract_row.contract_id,
+            &task_contract.header.content_digest.0,
+        ),
+        tool_ref: proposed_candidate.tool_ref.clone(),
+    };
+    let candidate_value = serde_json::to_value(&daemon_sealed_candidate).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    let (sealed_candidate_value, _) = seal_governed_object_content_digest(candidate_value)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?;
+    let candidate_canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&sealed_candidate_value).map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    store
+        .append_operation_candidate_proposal(
+            &cognitive_kernel::ports::OperationCandidateProposalRow {
+                candidate_id: admission_command.candidate_id.clone(),
+                task_ref: context_command.task_ref.clone(),
+                contract_epoch: current_contract_epoch,
+                candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+                tool_ref: proposed_candidate.tool_ref,
+                action: proposed_candidate.action,
+                target: proposed_candidate.target,
+                parameters_digest: proposed_candidate.parameters_digest,
+                expected_state_version: proposed_candidate.expected_state_version,
+                operation_descriptor_ref: descriptor.descriptor_id,
+                canonical_json: candidate_canonical_json,
+            },
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    admit_candidate_atomically(store, clock, identifiers, admission_command)
+}
+
+fn validate_untrusted_pi_candidate(
+    candidate: &UntrustedPiCandidate,
+) -> Result<(), SchedulerAuthorityError> {
+    let fields_are_present = !candidate.tool_ref.is_empty()
+        && !candidate.action.is_empty()
+        && !candidate.target.is_empty()
+        && candidate.expected_state_version >= 1;
+    if !fields_are_present || !is_sha256_digest(&candidate.parameters_digest) {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate has missing fields or an invalid parameters digest".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn is_sha256_digest(value: &str) -> bool {
+    let Some(hexadecimal) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hexadecimal.len() == 64 && hexadecimal.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn canonical_descriptor_reference_digest(
+    descriptor_canonical_json: &str,
+) -> Result<String, SchedulerAuthorityError> {
+    let descriptor_value: Value =
+        serde_json::from_str(descriptor_canonical_json).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+        })?;
+    let descriptor_bytes =
+        canonical::canonical_bytes_of_value(&descriptor_value).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+        })?;
+    canonical::digest(&descriptor_bytes, DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN)
+        .map_err(|error| SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string()))
 }
 
 /// Reject scheduler work that was bound to a superseded TaskContract epoch.
