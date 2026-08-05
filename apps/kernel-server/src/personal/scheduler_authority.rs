@@ -58,6 +58,10 @@ use serde_json::{Value, json};
 use std::path::Path;
 use thiserror::Error;
 
+use super::pi_runtime::{
+    PrivatePiCandidateProcess, PrivatePiCandidateRequest, PrivatePiCandidateResponse,
+};
+
 const TASK_CONTRACT_EXECUTION_SCHEMA_V03: &str = "cognitiveos.task-contract/0.3";
 const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4";
 const OPERATION_CANDIDATE_SCHEMA_VERSION: &str = "cognitiveos.operation-candidate-proposal/0.1";
@@ -148,6 +152,48 @@ pub(crate) trait PrivatePiCandidateProposer {
         task_ref: &str,
         contract_epoch: i64,
     ) -> Result<UntrustedPiCandidate, String>;
+}
+
+/// Adapter from the configured daemon-supervised Pi process to the scheduler
+/// proposer port. Parsing remains transport-local; the scheduler receives no
+/// process output other than the bounded candidate fields.
+pub(crate) struct ConfiguredPrivatePiCandidateProposer {
+    process: PrivatePiCandidateProcess,
+}
+
+impl ConfiguredPrivatePiCandidateProposer {
+    pub(crate) fn new(process: PrivatePiCandidateProcess) -> Self {
+        Self { process }
+    }
+}
+
+impl PrivatePiCandidateProposer for ConfiguredPrivatePiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        resolved_context: &ResolvedContextView,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        let rendered_context = String::from_utf8(resolved_context.render.bytes.clone())
+            .map_err(|_| "resolved Context rendering is not UTF-8".to_owned())?;
+        let response: PrivatePiCandidateResponse =
+            self.process.propose(&PrivatePiCandidateRequest {
+                protocol: "cognitiveos.private-candidate/1",
+                task_ref: task_ref.to_owned(),
+                contract_epoch,
+                rendered_context,
+            })?;
+        let operation_descriptor_id = ObjectId::parse(&response.operation_descriptor_id)
+            .map_err(|_| "private Pi descriptor reference is malformed".to_owned())?;
+        Ok(UntrustedPiCandidate {
+            tool_ref: response.tool_ref,
+            action: response.action,
+            target: response.target,
+            parameters_digest: response.parameters_digest,
+            expected_state_version: response.expected_state_version,
+            operation_descriptor_id,
+        })
+    }
 }
 
 /// Daemon-owned identity and governance inputs required to create one atomic

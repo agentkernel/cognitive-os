@@ -23,12 +23,13 @@
 #[cfg(test)]
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Personal Pi configuration file name, alongside `provider.json`.
@@ -51,11 +52,174 @@ pub const PINNED_PI_VERSION: &str = "0.81.1";
 /// request, which has no response-side timeout of its own.
 pub const PI_VERSION_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// Maximum private candidate request/response size. This is a transport
+/// bound, not a Context budget; the resolver remains responsible for Context
+/// byte and token budgets.
+pub const PRIVATE_PI_CANDIDATE_FRAME_LIMIT: usize = 256 * 1024;
+
+/// Deadline for one private Pi candidate exchange.
+pub const PRIVATE_PI_CANDIDATE_TIMEOUT: Duration = Duration::from_secs(10);
+
 /// Non-secret Personal Pi configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiConfig {
     executable_path: PathBuf,
     extension_entry_path: PathBuf,
+}
+
+impl PiConfig {
+    /// Return the daemon-validated absolute Pi executable path.
+    pub(crate) fn executable_path(&self) -> &Path {
+        &self.executable_path
+    }
+
+    /// Return the daemon-validated absolute extension entry path.
+    pub(crate) fn extension_entry_path(&self) -> &Path {
+        &self.extension_entry_path
+    }
+}
+
+/// One bounded request sent over the daemon-supervised private Pi transport.
+/// The rendered Context is data-plane input only; it contains no bearer,
+/// bootstrap secret, capability, WIA, Effect, progress, or Task authority.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub(crate) struct PrivatePiCandidateRequest {
+    pub protocol: &'static str,
+    pub task_ref: String,
+    pub contract_epoch: i64,
+    pub rendered_context: String,
+}
+
+/// The only response shape accepted from the private Pi transport. The
+/// scheduler converts this into its own untrusted candidate type and performs
+/// all descriptor, contract, authorization, sealing, and admission checks.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct PrivatePiCandidateResponse {
+    pub tool_ref: String,
+    pub action: String,
+    pub target: String,
+    pub parameters_digest: String,
+    pub expected_state_version: i64,
+    pub operation_descriptor_id: String,
+}
+
+/// Daemon-supervised one-shot private Pi transport. It intentionally uses a
+/// child process with cleared environment and no public listener. The child
+/// is useful only for proposing one bounded candidate; all authority remains
+/// in the parent daemon.
+pub(crate) struct PrivatePiCandidateProcess {
+    executable_path: PathBuf,
+    extension_entry_path: PathBuf,
+}
+
+impl PrivatePiCandidateProcess {
+    pub(crate) fn from_config(config: &PiConfig) -> Self {
+        Self {
+            executable_path: config.executable_path.clone(),
+            extension_entry_path: config.extension_entry_path.clone(),
+        }
+    }
+
+    pub(crate) fn propose(
+        &self,
+        request: &PrivatePiCandidateRequest,
+    ) -> Result<PrivatePiCandidateResponse, String> {
+        let request_json = serde_json::to_vec(request).map_err(|error| error.to_string())?;
+        if request_json.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+            return Err("private Pi candidate request exceeds transport limit".to_owned());
+        }
+        let mut command = Command::new(&self.executable_path);
+        command
+            .env_clear()
+            .args([
+                "--extension",
+                self.extension_entry_path.to_string_lossy().as_ref(),
+            ])
+            .arg("--cognitiveos-private-candidate")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        for key in PRIVATE_PI_ENVIRONMENT_ALLOWLIST {
+            if let Some(value) = std::env::var_os(key) {
+                command.env(key, value);
+            }
+        }
+        let mut child = command
+            .spawn()
+            .map_err(|_| "private Pi spawn failed".to_owned())?;
+        let mut stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| "private Pi stdin unavailable".to_owned())?;
+        stdin
+            .write_all(&request_json)
+            .map_err(|_| "private Pi request write failed".to_owned())?;
+        drop(stdin);
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| "private Pi stdout unavailable".to_owned())?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| "private Pi stderr unavailable".to_owned())?;
+        let stdout_reader = thread::spawn(move || read_bounded_output(stdout));
+        let stderr_reader = thread::spawn(move || read_bounded_output(stderr));
+        let started = Instant::now();
+        let timed_out = loop {
+            match child.try_wait() {
+                Ok(Some(_)) => break false,
+                Ok(None) if started.elapsed() >= PRIVATE_PI_CANDIDATE_TIMEOUT => {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    break true;
+                }
+                Ok(None) => thread::sleep(Duration::from_millis(20)),
+                Err(_) => return Err("private Pi process wait failed".to_owned()),
+            }
+        };
+        let stdout_bytes = stdout_reader
+            .join()
+            .map_err(|_| "private Pi stdout reader failed".to_owned())?;
+        let _stderr_bytes = stderr_reader
+            .join()
+            .map_err(|_| "private Pi stderr reader failed".to_owned())?;
+        if timed_out {
+            return Err("private Pi candidate request timed out".to_owned());
+        }
+        if stdout_bytes.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+            return Err("private Pi candidate response exceeds transport limit".to_owned());
+        }
+        let stdout_text = String::from_utf8(stdout_bytes)
+            .map_err(|_| "private Pi candidate response is not UTF-8".to_owned())?;
+        serde_json::from_str(&stdout_text)
+            .map_err(|_| "private Pi candidate response is malformed".to_owned())
+    }
+}
+
+const PRIVATE_PI_ENVIRONMENT_ALLOWLIST: [&str; 8] = [
+    "PATH",
+    "HOME",
+    "TMPDIR",
+    "TEMP",
+    "TMP",
+    "SystemRoot",
+    "ComSpec",
+    "PATHEXT",
+];
+
+fn read_bounded_output<R: Read>(mut reader: R) -> Vec<u8> {
+    let mut output = Vec::new();
+    let mut buffer = [0_u8; 4096];
+    while output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+        let bytes_read = match reader.read(&mut buffer) {
+            Ok(bytes_read) => bytes_read,
+            Err(_) | 0 => break,
+        };
+        output.extend_from_slice(&buffer[..bytes_read]);
+    }
+    output
 }
 
 /// Why a `pi.json` could not be turned into a `PiConfig`.
@@ -378,6 +542,41 @@ mod tests {
         assert!(
             adapter_source.contains(&needle),
             "PINNED_PI_VERSION drifted from apps/pi-agent-adapter/src/lib.rs"
+        );
+    }
+
+    #[test]
+    fn private_candidate_response_rejects_authority_fields_and_unknown_data() {
+        let response = r#"{
+            "tool_ref": "operation://personal/filesystem/read",
+            "action": "filesystem.read",
+            "target": "file:///workspace/input.txt",
+            "parameters_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "expected_state_version": 1,
+            "operation_descriptor_id": "00000000-0000-7000-9000-000000000001",
+            "progress": "agent_end"
+        }"#;
+        assert!(serde_json::from_str::<PrivatePiCandidateResponse>(response).is_err());
+    }
+
+    #[test]
+    fn private_candidate_request_rejects_oversized_rendered_context_before_spawn() {
+        let request = PrivatePiCandidateRequest {
+            protocol: "cognitiveos.private-candidate/1",
+            task_ref: "task://personal/test".to_owned(),
+            contract_epoch: 1,
+            rendered_context: "x".repeat(PRIVATE_PI_CANDIDATE_FRAME_LIMIT),
+        };
+        let config = PiConfig {
+            executable_path: PathBuf::from("/does/not/exist"),
+            extension_entry_path: PathBuf::from("/does/not/exist.js"),
+        };
+        let error = PrivatePiCandidateProcess::from_config(&config)
+            .propose(&request)
+            .unwrap_err();
+        assert_eq!(
+            error,
+            "private Pi candidate request exceeds transport limit"
         );
     }
 
