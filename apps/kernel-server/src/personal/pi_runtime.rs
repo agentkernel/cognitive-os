@@ -120,6 +120,7 @@ impl PrivatePiCandidateProcess {
         if request_json.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
             return Err("private Pi candidate request exceeds transport limit".to_owned());
         }
+        verify_pinned_pi_candidate_executable(&self.executable_path)?;
         let mut command = Command::new(&self.executable_path);
         command
             .env_clear()
@@ -189,6 +190,27 @@ impl PrivatePiCandidateProcess {
             .map_err(|_| "private Pi candidate response is not UTF-8".to_owned())?;
         serde_json::from_str(&stdout_text)
             .map_err(|_| "private Pi candidate response is malformed".to_owned())
+    }
+}
+
+/// Re-check the executable immediately before a private request. Readiness is
+/// only an observation and may be stale by the time a scheduler calls Pi.
+fn verify_pinned_pi_candidate_executable(executable_path: &Path) -> Result<(), String> {
+    if !executable_path.is_file() {
+        return Err("private Pi executable is unavailable".to_owned());
+    }
+    match probe_reported_version(executable_path) {
+        Ok(Some(reported_version))
+            if matches!(
+                classify_reported_version(&reported_version),
+                PiRuntimeObservation::Ready
+            ) =>
+        {
+            Ok(())
+        }
+        Ok(Some(_)) => Err("private Pi executable does not match the pinned version".to_owned()),
+        Ok(None) => Err("private Pi version check timed out".to_owned()),
+        Err(()) => Err("private Pi version check failed".to_owned()),
     }
 }
 
