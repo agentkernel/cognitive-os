@@ -484,7 +484,13 @@ fn handle_channel_route(
     let mut guard = authority
         .lock()
         .map_err(|_| "session authority lock poisoned".to_owned())?;
-    match guard.authorize(&token, required_channel, Instant::now()) {
+    let authorization = match required_channel {
+        ChannelClass::Management => guard
+            .authorize_daemon_administrator(&token, Instant::now())
+            .map(|_| ()),
+        ChannelClass::Task => guard.authorize(&token, ChannelClass::Task, Instant::now()),
+    };
+    match authorization {
         Ok(()) => {
             let response = json!({
                 "status": "ok",
