@@ -43,7 +43,8 @@ use serde_json::json;
 use std::path::Path;
 use thiserror::Error;
 
-const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.3";
+const TASK_CONTRACT_EXECUTION_SCHEMA_V03: &str = "cognitiveos.task-contract/0.3";
+const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4";
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -262,7 +263,11 @@ fn parse_execution_bound_contract(
 ) -> Result<TaskContract, SchedulerAuthorityError> {
     let version_envelope: TaskContractVersionEnvelope = serde_json::from_str(canonical_json)
         .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
-    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_VERSION {
+    let supports_execution_bindings = matches!(
+        version_envelope.header.schema_version.as_str(),
+        TASK_CONTRACT_EXECUTION_SCHEMA_V03 | TASK_CONTRACT_EXECUTION_SCHEMA_V04
+    );
+    if !supports_execution_bindings {
         return Err(SchedulerAuthorityError::LegacyContract(
             version_envelope.header.schema_version,
         ));
@@ -272,7 +277,7 @@ fn parse_execution_bound_contract(
         .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
     if contract.worker_authorization_root_id.is_none() {
         return Err(SchedulerAuthorityError::MalformedContract(
-            "v0.3 contract has no worker authorization namespace".to_owned(),
+            "execution-bound contract has no worker authorization namespace".to_owned(),
         ));
     }
     Ok(contract)
@@ -1755,6 +1760,20 @@ mod tests {
 
         assert!(matches!(
             parse_execution_bound_contract(incomplete_execution_contract),
+            Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn context_bound_execution_schema_is_not_rejected_as_legacy() {
+        let incomplete_context_bound_contract = r#"{
+            "header": {
+                "schema_version": "cognitiveos.task-contract/0.4"
+            }
+        }"#;
+
+        assert!(matches!(
+            parse_execution_bound_contract(incomplete_context_bound_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
         ));
     }
