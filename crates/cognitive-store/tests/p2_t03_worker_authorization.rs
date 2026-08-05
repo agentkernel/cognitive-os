@@ -27,11 +27,13 @@ use cognitive_kernel::intent_chain::{
     strong_reference_to,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, BoundWorkerAuthorizationConsumption, BudgetCas, CandidateAdmissionCommit,
-    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, EventDraft, IntentChainStore,
-    IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProtocolStore,
-    RecordDraft, SchedulerLeaseBinding, StorePortError, StoredObject, TaskBinding, TaskContractRow,
-    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    BudgetCas, CandidateAdmissionCommit, ContinuationAuthorityStore,
+    ContinuationAuthorizationConsumptionRow, DaemonAuthorizationSnapshotRow,
+    DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
+    ObjectCas, OperationCandidateProposalRow, ProtocolStore, RecordDraft, SchedulerLeaseBinding,
+    StorePortError, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{
@@ -833,6 +835,79 @@ fn bound_wia_handoff_requires_and_recovers_the_exact_active_scheduler_lease() {
     assert_eq!(recovered.len(), 1);
     assert_eq!(recovered[0].consumption, request.consumption);
     assert_eq!(recovered[0].scheduler_lease, Some(request.scheduler_lease));
+}
+
+/// D05: an unconsumed continuation authority is not consumed merely because
+/// scheduler work exists. The daemon must present the exact active lease.
+#[test]
+fn continuation_handoff_rejects_replaced_lease_without_consumption() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+    let continuation_authorization_id = object_id(730);
+    let task_ref = "task://personal/exact-continuation-handoff";
+    let connection = Connection::open(&authority_database_path).unwrap();
+    connection
+        .execute(
+            "INSERT INTO continuation_authorizations (continuation_authorization_id, task_ref, contract_epoch, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, 1, ?3, 2, 7, ?4, ?5, ?6, ?7, 1, ?8)",
+            rusqlite::params![
+                continuation_authorization_id.as_str(),
+                task_ref,
+                object_id(731).as_str(),
+                object_id(732).as_str(),
+                budget_id(733).as_str(),
+                "{\"tool_calls\":1}",
+                object_id(734).as_str(),
+                "{\"continuation_authorization\":1}",
+            ],
+        )
+        .unwrap();
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) VALUES (?1, 1, 'leased', 'replacement-worker', 12, ?2, ?3, 1, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+        )
+        .unwrap();
+    drop(connection);
+
+    let request = BoundContinuationAuthorizationConsumption {
+        consumption: ContinuationAuthorizationConsumptionRow {
+            continuation_authorization_id: continuation_authorization_id.clone(),
+            worker_attempt_id: object_id(735),
+            consumed_fencing_epoch: 1,
+            consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+            canonical_json: "{\"continuation_consumption\":1}".to_owned(),
+        },
+        scheduler_lease: SchedulerLeaseBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+            lease_owner: "daemon-worker-a".to_owned(),
+            lease_epoch: 11,
+        },
+    };
+    let transition = admission_commit(object_id(736)).loop_transition;
+    let error = store
+        .consume_continuation_authorization_bound_to_scheduler_lease(&request, &transition)
+        .expect_err("a replaced scheduler lease cannot consume continuation authority");
+    assert!(matches!(error, StorePortError::Conflict { .. }));
+
+    let connection = Connection::open(&authority_database_path).unwrap();
+    let consumption_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_consumptions WHERE continuation_authorization_id=?1",
+            [continuation_authorization_id.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let binding_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_scheduler_lease_bindings WHERE continuation_authorization_id=?1",
+            [continuation_authorization_id.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(consumption_count, 0);
+    assert_eq!(binding_count, 0);
 }
 
 #[test]
