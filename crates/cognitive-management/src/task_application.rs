@@ -27,8 +27,8 @@ use cognitive_kernel::intent_chain::{
     record_interpretation_candidate, record_user_intent, supersede_task_contract,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, IdGenerator, IntentChainStore, InterpretationRow, ProtocolStore,
-    StorePortError, TaskContractRow, UserIntentRecordRow,
+    AuthorityStore, Clock, ContextStore, IdGenerator, IntentChainStore, InterpretationRow,
+    ProtocolStore, StorePortError, TaskContractRow, UserIntentRecordRow,
 };
 use serde::Serialize;
 
@@ -143,7 +143,7 @@ impl<S, C, G> KernelTaskApplicationService<S, C, G> {
 
 impl<S, C, G> TaskApplicationService for KernelTaskApplicationService<S, C, G>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
