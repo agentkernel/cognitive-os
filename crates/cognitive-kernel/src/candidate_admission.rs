@@ -469,7 +469,7 @@ pub fn compose_candidate_admission(
         intent_id: inputs.identities.intent_id.clone(),
         effect_object_id: inputs.identities.effect_object_id.clone(),
         budget_id: inputs.facts.budget_id.clone(),
-        budget_charge_canonical_json,
+        budget_charge_canonical_json: budget_charge_canonical_json.clone(),
         action_fingerprint,
         issued_fencing_epoch: inputs.writer_lease.epoch,
         canonical_json: canonical_string(&sealed_authorization)?,
