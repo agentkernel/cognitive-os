@@ -912,6 +912,16 @@ fn verified_continuation_enters_observe_with_one_durable_budget_debit() {
     let started = harness
         .start_loop(&loop_id, Version::INITIAL, task_ref, &budget, &lease(1))
         .unwrap();
+    harness
+        .record_progress(
+            &loop_id,
+            1,
+            ProgressStatus::Advanced,
+            "verified-continuation-iteration-1",
+            &["event://tenant-a/verified-continuation-1".to_owned()],
+            &lease(1),
+        )
+        .unwrap();
     let mut verify_version = started.after_version;
     for (from, to, reason) in [
         ("OBSERVE", "RESOLVE", "EVIDENCE_OBSERVED"),
@@ -1034,4 +1044,21 @@ fn verified_continuation_enters_observe_with_one_durable_budget_debit() {
             .unwrap()
             .is_none()
     );
+    let connection = Connection::open(&authority_database_path).unwrap();
+    let consumption_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_consumptions WHERE continuation_authorization_id=?1",
+            [authorization.continuation_authorization_id.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let lease_binding_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_scheduler_lease_bindings WHERE continuation_authorization_id=?1",
+            [authorization.continuation_authorization_id.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(consumption_count, 1);
+    assert_eq!(lease_binding_count, 1);
 }
