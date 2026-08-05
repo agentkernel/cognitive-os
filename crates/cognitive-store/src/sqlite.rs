@@ -27,7 +27,11 @@ use crate::worker_authorization::{
     WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9, WORKER_AUTHORIZATION_SCHEMA_V4,
     WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
 };
+use cognitive_contracts::generated::context_request::ContextRequest;
+use cognitive_contracts::generated::context_view::ContextView;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
+use cognitive_contracts::generated::object_reference::StrongReferenceKind;
+use cognitive_contracts::projection::verify_content_digest;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
@@ -44,8 +48,12 @@ use cognitive_kernel::ports::{
     VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
-use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
+use cognitive_kernel::{
+    BudgetState, EffectClass, ExecutorCapabilities, GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN,
+    OperationDescriptor,
+};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
+use serde_json::Value;
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 
@@ -1224,8 +1232,91 @@ fn row_to_task_contract(row: &rusqlite::Row<'_>) -> Result<TaskContractRow, rusq
 const TASK_CONTRACT_COLUMNS: &str = "contract_id, task_ref, contract_epoch, \
      user_intent_record_id, interpretation_id, accepted_by, contract_digest, canonical_json";
 
+fn invalid_context_payload(kind: &str, detail: impl std::fmt::Display) -> StorePortError {
+    StorePortError::Unavailable {
+        detail: format!("invalid {kind} append payload: {detail}"),
+    }
+}
+
+fn parse_and_verify_context_payload(
+    canonical_json: &str,
+    kind: &str,
+) -> Result<Value, StorePortError> {
+    let payload: Value = serde_json::from_str(canonical_json)
+        .map_err(|error| invalid_context_payload(kind, error))?;
+    verify_content_digest(
+        &payload,
+        &["/header/content_digest"],
+        GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN,
+        "/header/content_digest",
+    )
+    .map_err(|error| invalid_context_payload(kind, error))?;
+    Ok(payload)
+}
+
+fn validate_context_request_row(request: &ContextRequestRow) -> Result<(), StorePortError> {
+    let payload = parse_and_verify_context_payload(&request.canonical_json, "ContextRequest")?;
+    let context_request: ContextRequest = serde_json::from_value(payload)
+        .map_err(|error| invalid_context_payload("ContextRequest", error))?;
+    let header = &context_request.header;
+    if header.id.0 != request.request_id.as_str()
+        || header.r#type != "ContextRequest"
+        || header.content_digest.0 != request.request_digest
+        || context_request.perspective.task != request.task_ref
+    {
+        return Err(invalid_context_payload(
+            "ContextRequest",
+            "row identity, type, digest, or task reference differs from canonical payload",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_context_view_row(
+    connection: &Connection,
+    view: &ContextViewRow,
+) -> Result<(), StorePortError> {
+    let payload = parse_and_verify_context_payload(&view.canonical_json, "ContextView")?;
+    let context_view: ContextView = serde_json::from_value(payload)
+        .map_err(|error| invalid_context_payload("ContextView", error))?;
+    let header = &context_view.header;
+    let request_reference = &context_view.request_ref;
+    if header.id.0 != view.view_id.as_str()
+        || header.r#type != "ContextView"
+        || header.content_digest.0 != view.view_digest
+        || request_reference.id.0 != view.request_id.as_str()
+        || request_reference.kind != StrongReferenceKind::Strong
+        || request_reference.object_version != 1
+    {
+        return Err(invalid_context_payload(
+            "ContextView",
+            "row identity, type, digest, or request strong reference differs from canonical payload",
+        ));
+    }
+    let persisted_request_digest = connection
+        .query_row(
+            "SELECT request_digest FROM context_requests WHERE request_id=?1",
+            (view.request_id.as_str(),),
+            |row| row.get::<_, String>(0),
+        )
+        .optional()
+        .map_err(unavailable("load ContextRequest for ContextView binding"))?;
+    let persisted_request_digest =
+        persisted_request_digest.ok_or_else(|| StorePortError::Conflict {
+            detail: format!("ContextView {} names an unknown request", view.view_id),
+        })?;
+    if request_reference.content_digest.0 != persisted_request_digest {
+        return Err(invalid_context_payload(
+            "ContextView",
+            "request strong-reference digest differs from the persisted ContextRequest",
+        ));
+    }
+    Ok(())
+}
+
 impl ContextStore for SqliteAuthorityStore {
     fn append_context_request(&self, request: &ContextRequestRow) -> Result<(), StorePortError> {
+        validate_context_request_row(request)?;
         let connection = self.lock()?;
         let result = connection.execute(
             "INSERT INTO context_requests (request_id, task_ref, request_digest, canonical_json) \
@@ -1270,6 +1361,7 @@ impl ContextStore for SqliteAuthorityStore {
 
     fn append_context_view(&self, view: &ContextViewRow) -> Result<(), StorePortError> {
         let connection = self.lock()?;
+        validate_context_view_row(&connection, view)?;
         let result = connection.execute(
             "INSERT INTO context_views (view_id, request_id, view_digest, canonical_json) \
              VALUES (?1, ?2, ?3, ?4)",
