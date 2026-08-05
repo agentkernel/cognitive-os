@@ -278,6 +278,7 @@ fn schema_valid_admission_inputs(
             machine_expression: None,
             verifier_ref: Some("verifier://personal/test".to_owned()),
         }],
+        context_request_ref: None,
         contract_epoch: 1,
         deadline: None,
         header: compose_governed_header(
