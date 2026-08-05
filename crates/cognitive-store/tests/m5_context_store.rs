@@ -11,7 +11,9 @@ use cognitive_contracts::generated::context_view::{
 };
 use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
 use cognitive_domain::{ObjectId, UriRef, WallTimestamp};
-use cognitive_kernel::authz::{ActorChainFacts, MembershipFacts, ObjectGovernance, PrincipalFacts};
+use cognitive_kernel::authz::{
+    AccessRequest, ActorChainFacts, MembershipFacts, ObjectGovernance, PrincipalFacts, authorize,
+};
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextCandidateQuery,
@@ -282,6 +284,39 @@ fn context_authorization_facts_reconstruct_only_against_durable_current_epoch() 
             .unwrap(),
         Some(2)
     );
+}
+
+#[test]
+fn later_durable_revocation_epoch_denies_previously_allowed_context_body_access() {
+    let (_directory, store) = fresh_store();
+    let facts = context_authorization_facts_row(&object_id(43));
+    let source = workspace_source_row(&object_id(44), Some("conversation://tenant-a/one"));
+    store
+        .append_context_revocation_fact(&context_revocation_fact_row(&object_id(45), 1))
+        .unwrap();
+    store.append_context_authorization_facts(&facts).unwrap();
+    store.append_workspace_context_source(&source).unwrap();
+
+    let access_request = AccessRequest {
+        action: "read_body".to_owned(),
+        purpose: "task_execution".to_owned(),
+    };
+    let initial_snapshot = facts
+        .reconstruct_snapshot(1, timestamp("2026-08-05T12:00:00Z"))
+        .unwrap();
+    assert!(authorize(&initial_snapshot, &source.governance, &access_request).is_ok());
+
+    store
+        .append_context_revocation_fact(&context_revocation_fact_row(&object_id(46), 2))
+        .unwrap();
+    let current_epoch = store
+        .load_current_context_revocation_epoch("tenant-a")
+        .unwrap()
+        .unwrap();
+    let revoked_snapshot = facts
+        .reconstruct_snapshot(current_epoch, timestamp("2026-08-05T12:00:00Z"))
+        .unwrap();
+    assert!(authorize(&revoked_snapshot, &source.governance, &access_request).is_err());
 }
 
 #[test]
