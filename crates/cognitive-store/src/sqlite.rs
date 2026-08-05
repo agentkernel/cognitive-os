@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -44,7 +44,7 @@ use cognitive_kernel::ports::{
     WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
-use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
+use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 
@@ -2651,7 +2651,7 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
         }
     }
 
-    fn append_continuation_authorization(
+    fn issue_continuation_authorization(
         &self,
         row: &ContinuationAuthorizationRow,
     ) -> Result<(), StorePortError> {
@@ -2660,6 +2660,56 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(unavailable("begin continuation authorization"))?;
         verify_fencing_in_tx(&transaction, Some(row.issued_fencing_epoch))?;
+        let current_contract_epoch: i64 = transaction
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref=?1",
+                (row.task_binding.task_ref.as_str(),),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation contract epoch"))?;
+        if current_contract_epoch != row.task_binding.contract_epoch {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization contract epoch is stale".to_owned(),
+            });
+        }
+        let loop_state: Option<(String, i64)> = transaction
+            .query_row(
+                "SELECT state, version FROM governed_objects WHERE object_id=?1 AND domain='loop'",
+                (row.loop_object_id.as_str(),),
+                |database_row| Ok((database_row.get(0)?, database_row.get(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("read continuation loop"))?;
+        if loop_state != Some(("CONTINUE".to_owned(), row.expected_loop_version.get())) {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization loop is not current CONTINUE state".to_owned(),
+            });
+        }
+        let checkpoint_exists: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE checkpoint_id=?1 AND loop_object_id=?2 AND fencing_epoch=?3)",
+                (row.checkpoint_id.as_str(), row.loop_object_id.as_str(), row.issued_fencing_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation checkpoint"))?;
+        if !checkpoint_exists {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization checkpoint is unavailable or fenced".to_owned(),
+            });
+        }
+        let report_exists: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM verification_reports AS report JOIN verification_requests AS request ON request.verification_request_id=report.verification_request_id AND request.fixed_post_state_id=report.fixed_post_state_id JOIN fixed_post_states AS fixed_state ON fixed_state.fixed_post_state_id=report.fixed_post_state_id AND fixed_state.task_ref=request.task_ref AND fixed_state.contract_epoch=request.contract_epoch AND fixed_state.loop_object_id=request.loop_object_id JOIN governed_objects AS subject ON subject.object_id=fixed_state.subject_object_id AND subject.domain=fixed_state.subject_domain WHERE report.verification_report_id=?1 AND report.status='passed' AND report.recorded_fencing_epoch=?2 AND request.issued_fencing_epoch=?2 AND fixed_state.recorded_fencing_epoch=?2 AND request.task_ref=?3 AND request.contract_epoch=?4 AND request.loop_object_id=?5 AND subject.version=fixed_state.subject_version AND NOT (subject.domain='task' AND subject.state='COMPLETED'))",
+                (row.verification_report_id.as_str(), row.issued_fencing_epoch, row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str()),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation verification report"))?;
+        if !report_exists {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization requires a current passed verified post-state"
+                    .to_owned(),
+            });
+        }
         transaction.execute(
             "INSERT INTO continuation_authorizations (continuation_authorization_id, task_ref, contract_epoch, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
             (row.continuation_authorization_id.as_str(), row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str(), row.iteration, row.expected_loop_version.get(), row.checkpoint_id.as_str(), row.budget_id.as_str(), row.budget_charge_canonical_json.as_str(), row.verification_report_id.as_str(), row.issued_fencing_epoch, row.canonical_json.as_str()),

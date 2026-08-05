@@ -694,7 +694,10 @@ pub trait ContinuationAuthorityStore {
         verification_report_id: &ObjectId,
     ) -> Result<Option<VerificationReportRow>, StorePortError>;
 
-    fn append_continuation_authorization(
+    /// Issue one continuation authorization only after the adapter has
+    /// revalidated current contract, verified report, checkpoint, exact loop
+    /// version/state, and fencing in one transaction.
+    fn issue_continuation_authorization(
         &self,
         row: &ContinuationAuthorizationRow,
     ) -> Result<(), StorePortError>;
