@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -1535,7 +1535,21 @@ impl ContextStore for SqliteAuthorityStore {
         };
         let result = connection.execute(
             "INSERT INTO workspace_context_sources (source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-            (source.source_id.as_str(), source.source_digest.as_str(), source.governance.tenant_id.as_deref(), source.governance.owner_ref.as_str(), source.governance.resource_scope.as_str(), source.governance.conversation_ref.as_deref(), serde_json::to_string(&source.role).unwrap().trim_matches('"'), serde_json::to_string(&source.trust_level).unwrap().trim_matches('"'), serde_json::to_string(&source.representation).unwrap().trim_matches('"'), source.provenance_ref.as_str(), source.content_bytes, source.content_tokens, source.canonical_json.as_str()),
+            (
+                source.source_id.as_str(),
+                source.source_digest.as_str(),
+                source.governance.tenant_id.as_deref(),
+                source.governance.owner_ref.as_str(),
+                source.governance.resource_scope.as_str(),
+                source.governance.conversation_ref.as_deref(),
+                role,
+                trust_level,
+                representation,
+                source.provenance_ref.as_str(),
+                source.content_bytes,
+                source.content_tokens,
+                source.canonical_json.as_str(),
+            ),
         );
         match result {
             Ok(_) => Ok(()),
