@@ -22,12 +22,15 @@ use cognitive_kernel::intent_chain::{
     record_interpretation_candidate, record_user_intent,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, ContinuationAuthorityStore, FixedPostStateRow, ProtocolStore,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, CheckpointRow,
+    ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
+    ContinuationAuthorizationRow, FixedPostStateRow, ProtocolStore, SchedulerLeaseBinding,
     TaskBinding, VerificationReportRow, VerificationRequestRow,
 };
 use cognitive_kernel::{RejectionKind, TransitionEngine};
 use cognitive_store::SqliteAuthorityStore;
 use m4_common::*;
+use rusqlite::Connection;
 use std::collections::BTreeMap;
 
 fn fresh_store(dir: &tempfile::TempDir) -> SqliteAuthorityStore {
@@ -885,4 +888,150 @@ fn end_iteration_reloads_task_state_and_binds_verification() {
         }
         other => panic!("unexpected {other:?}"),
     }
+}
+
+/// D05: only a persisted verification-backed continuation may atomically
+/// consume its exact scheduler lease and enter the next OBSERVE iteration.
+#[test]
+fn verified_continuation_enters_observe_with_one_durable_budget_debit() {
+    let dir = tempfile::tempdir().unwrap();
+    let authority_database_path = dir.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+    let clock = FixedClock::new();
+    let ids = SeqIds::new();
+    let harness = driver(&store, &clock, &ids);
+    let task_ref = "task://tenant-a/verified-continuation";
+    let loop_id = oid(610);
+    let task_id = oid(611);
+    let budget = budget_id(614);
+    mint_contract(&store, &clock, &ids, 600, task_ref, 8, 3);
+    admit(&store, &clock, &ids, &loop_id, LifecycleDomain::Loop, None);
+    admit(&store, &clock, &ids, &task_id, LifecycleDomain::Task, None);
+    create_budget(&store, &clock, &ids, &budget, 10);
+
+    let started = harness
+        .start_loop(&loop_id, Version::INITIAL, task_ref, &budget, &lease(1))
+        .unwrap();
+    let mut verify_version = started.after_version;
+    for (from, to, reason) in [
+        ("OBSERVE", "RESOLVE", "EVIDENCE_OBSERVED"),
+        ("RESOLVE", "ORIENT", "CONTEXT_COMPLETE"),
+        ("ORIENT", "DECIDE", "ORIENTATION_COMPLETE"),
+        ("DECIDE", "ACT", "OPERATION_ADMITTED"),
+        ("ACT", "VERIFY", "PROGRESS_CLAIMED"),
+    ] {
+        verify_version = drive(
+            &store,
+            &clock,
+            &ids,
+            LifecycleDomain::Loop,
+            &loop_id,
+            from,
+            to,
+            reason,
+            verify_version,
+            None,
+        );
+    }
+    let report_id = persist_passed_verification_report(
+        &store,
+        task_ref,
+        &loop_id,
+        verify_version,
+        &task_id,
+        Version::INITIAL,
+        612,
+    );
+    let continued = harness
+        .end_iteration_from_persisted_report(
+            &loop_id,
+            verify_version,
+            &task_id,
+            &report_id,
+            &budget,
+            &lease(1),
+        )
+        .unwrap();
+    let checkpoint_id = oid(615);
+    store
+        .append_checkpoint(&checkpoint_row(615, &loop_id, 1, 1))
+        .unwrap();
+    let authorization = ContinuationAuthorizationRow {
+        continuation_authorization_id: oid(616),
+        task_binding: TaskBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        },
+        loop_object_id: loop_id.clone(),
+        iteration: 2,
+        expected_loop_version: continued.after_version,
+        checkpoint_id,
+        budget_id: budget.clone(),
+        budget_charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+        verification_report_id: report_id,
+        issued_fencing_epoch: 1,
+        canonical_json: "{\"continuation_authorization\":1}".to_owned(),
+    };
+    store
+        .issue_continuation_authorization(&authorization)
+        .unwrap();
+
+    let connection = Connection::open(&authority_database_path).unwrap();
+    connection
+        .execute(
+            "INSERT INTO scheduler_entries (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) VALUES (?1, 1, 'leased', 'daemon-worker-a', 11, ?2, ?3, 1, 0)",
+            rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+        )
+        .unwrap();
+    drop(connection);
+    let consumption = BoundContinuationAuthorizationConsumption {
+        consumption: ContinuationAuthorizationConsumptionRow {
+            continuation_authorization_id: authorization.continuation_authorization_id.clone(),
+            worker_attempt_id: oid(617),
+            consumed_fencing_epoch: 1,
+            consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+            canonical_json: "{\"continuation_consumption\":1}".to_owned(),
+        },
+        scheduler_lease: SchedulerLeaseBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+            lease_owner: "daemon-worker-a".to_owned(),
+            lease_epoch: 11,
+        },
+    };
+    let before_budget = store.load_budget(&budget).unwrap().unwrap();
+    let entered = harness
+        .begin_verified_continuation_atomically(
+            &consumption,
+            &loop_id,
+            continued.after_version,
+            task_ref,
+            2,
+            &budget,
+            &charge(1),
+            &lease(1),
+        )
+        .unwrap();
+    assert_eq!(
+        entered.after_version,
+        continued.after_version.next().unwrap()
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Loop, &loop_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "OBSERVE"
+    );
+    let after_budget = store.load_budget(&budget).unwrap().unwrap();
+    assert_eq!(after_budget.version, before_budget.version.next().unwrap());
+    assert_eq!(after_budget.state.remaining()["tool_calls"], 9);
+    assert!(
+        store
+            .load_unconsumed_continuation_authorization(&authorization.task_binding)
+            .unwrap()
+            .is_none()
+    );
 }
