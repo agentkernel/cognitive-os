@@ -847,6 +847,27 @@ fn continuation_handoff_rejects_replaced_lease_without_consumption() {
     let continuation_authorization_id = object_id(730);
     let task_ref = "task://personal/exact-continuation-handoff";
     let connection = Connection::open(&authority_database_path).unwrap();
+    let fixed_post_state_id = object_id(736);
+    let verification_request_id = object_id(737);
+    let verification_report_id = object_id(738);
+    connection
+        .execute(
+            "INSERT INTO fixed_post_states (fixed_post_state_id, task_ref, contract_epoch, loop_object_id, subject_domain, subject_object_id, subject_version, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, 1, ?3, 'task', ?4, 1, 1, ?5)",
+            rusqlite::params![fixed_post_state_id.as_str(), task_ref, object_id(731).as_str(), object_id(739).as_str(), "{\"fixed_post_state\":1}"],
+        )
+        .unwrap();
+    connection
+        .execute(
+            "INSERT INTO verification_requests (verification_request_id, fixed_post_state_id, task_ref, contract_epoch, loop_object_id, expected_loop_version, verifier_ref, verifier_version, criteria_json, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, 1, ?4, 7, 'verifier://personal/test', 'v1', '[]', 1, ?5)",
+            rusqlite::params![verification_request_id.as_str(), fixed_post_state_id.as_str(), task_ref, object_id(731).as_str(), "{\"verification_request\":1}"],
+        )
+        .unwrap();
+    connection
+        .execute(
+            "INSERT INTO verification_reports (verification_report_id, verification_request_id, fixed_post_state_id, verifier_ref, verifier_version, status, evidence_refs_json, completed_at, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, 'verifier://personal/test', 'v1', 'passed', '[]', '2026-08-04T12:00:00Z', 1, ?4)",
+            rusqlite::params![verification_report_id.as_str(), verification_request_id.as_str(), fixed_post_state_id.as_str(), "{\"verification_report\":1}"],
+        )
+        .unwrap();
     connection
         .execute(
             "INSERT INTO continuation_authorizations (continuation_authorization_id, task_ref, contract_epoch, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, 1, ?3, 2, 7, ?4, ?5, ?6, ?7, 1, ?8)",
@@ -857,7 +878,7 @@ fn continuation_handoff_rejects_replaced_lease_without_consumption() {
                 object_id(732).as_str(),
                 budget_id(733).as_str(),
                 "{\"tool_calls\":1}",
-                object_id(734).as_str(),
+                verification_report_id.as_str(),
                 "{\"continuation_authorization\":1}",
             ],
         )
@@ -885,7 +906,7 @@ fn continuation_handoff_rejects_replaced_lease_without_consumption() {
             lease_epoch: 11,
         },
     };
-    let transition = admission_commit(object_id(736)).loop_transition;
+    let transition = admission_commit(object_id(740)).loop_transition;
     let error = store
         .consume_continuation_authorization_bound_to_scheduler_lease(&request, &transition)
         .expect_err("a replaced scheduler lease cannot consume continuation authority");
