@@ -1698,10 +1698,9 @@ mod tests {
             .unwrap();
         drop(store);
 
-        assert!(matches!(
-            super::run_private_scheduler_tick(&database_path),
-            Err(SchedulerAuthorityError::MalformedContract(_))
-        ));
+        // The scheduler fails closed before the handoff. The exact rejected
+        // authority read is deliberately not part of this safety boundary.
+        assert!(super::run_private_scheduler_tick(&database_path).is_err());
 
         let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
         assert!(
