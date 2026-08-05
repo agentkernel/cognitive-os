@@ -2730,7 +2730,7 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
         &self,
         request: &BoundContinuationAuthorizationConsumption,
         transition: &TransitionCommit,
-    ) -> Result<(), StorePortError> {
+    ) -> Result<CommitReceipt, StorePortError> {
         let consumption = &request.consumption;
         let scheduler_lease = &request.scheduler_lease;
         let mut connection = self.lock()?;
