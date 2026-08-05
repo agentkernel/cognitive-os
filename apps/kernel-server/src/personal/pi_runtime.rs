@@ -67,18 +67,6 @@ pub struct PiConfig {
     extension_entry_path: PathBuf,
 }
 
-impl PiConfig {
-    /// Return the daemon-validated absolute Pi executable path.
-    pub(crate) fn executable_path(&self) -> &Path {
-        &self.executable_path
-    }
-
-    /// Return the daemon-validated absolute extension entry path.
-    pub(crate) fn extension_entry_path(&self) -> &Path {
-        &self.extension_entry_path
-    }
-}
-
 /// One bounded request sent over the daemon-supervised private Pi transport.
 /// The rendered Context is data-plane input only; it contains no bearer,
 /// bootstrap secret, capability, WIA, Effect, progress, or Task authority.
@@ -114,6 +102,9 @@ pub(crate) struct PrivatePiCandidateProcess {
 }
 
 impl PrivatePiCandidateProcess {
+    // The scheduler caller is added separately; retain this narrow
+    // construction boundary instead of exposing Pi paths outside this module.
+    #[allow(dead_code)]
     pub(crate) fn from_config(config: &PiConfig) -> Self {
         Self {
             executable_path: config.executable_path.clone(),
