@@ -5,7 +5,9 @@
 //! fail-closed adapter from P0-T04, and refuses concurrent migration via a
 //! runtime lock file. Cross-database atomicity is intentionally not claimed.
 
-use crate::context_store::context_store_migration_entry;
+use crate::context_store::{
+    context_store_migration_entry, workspace_context_source_migration_entry,
+};
 use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
 use crate::migration::{
@@ -65,7 +67,8 @@ impl PersonalDatabasePrepareReport {
 /// immutable worker authorization consumption records, and v9 = immutable
 /// WIA-to-scheduler lease binding records, v10 = private verified-continuation
 /// evidence, v11 = private continuation-to-scheduler handoff bindings, and
-/// v12 = durable immutable Context request/view records.
+/// v12 = durable immutable Context request/view records, and v13 =
+/// daemon-admitted append-only workspace Context sources.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -80,6 +83,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         continuation_authority_migration_entry(),
         continuation_authority_consumption_migration_entry(),
         context_store_migration_entry(),
+        workspace_context_source_migration_entry(),
     ]
 }
 

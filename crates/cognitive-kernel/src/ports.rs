@@ -13,8 +13,12 @@
 //! subset, MUST NOT buffer a failed commit in memory (REQ-REC-003), and
 //! MUST keep the event log append-only (REQ-EVT-004).
 
+use crate::authz::ObjectGovernance;
 use crate::budget::BudgetState;
 use crate::effects::OperationDescriptor;
+use cognitive_contracts::generated::context_view::{
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
+};
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
@@ -508,6 +512,47 @@ pub struct ContextViewRow {
     pub view_digest: String,
     /// Canonical schema-shaped ContextView payload.
     pub canonical_json: String,
+}
+
+/// Daemon-admitted immutable workspace Context source. The canonical payload
+/// remains private to the body-load path; discovery receives metadata only.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WorkspaceContextSourceRow {
+    pub source_id: ObjectId,
+    pub source_digest: String,
+    pub governance: ObjectGovernance,
+    pub role: LoadedContextItemRole,
+    pub trust_level: LoadedContextItemTrustLevel,
+    pub representation: LoadedContextItemRepresentation,
+    pub provenance_ref: String,
+    pub content_bytes: i64,
+    pub content_tokens: Option<i64>,
+    pub canonical_json: String,
+}
+
+/// Metadata-only Context discovery result. It deliberately excludes body
+/// content so callers must authorize before materializing a candidate.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextCandidateMetadata {
+    pub source_id: ObjectId,
+    pub source_digest: String,
+    pub governance: ObjectGovernance,
+    pub role: LoadedContextItemRole,
+    pub trust_level: LoadedContextItemTrustLevel,
+    pub representation: LoadedContextItemRepresentation,
+    pub provenance_ref: String,
+    pub content_bytes: i64,
+    pub content_tokens: Option<i64>,
+}
+
+/// Scope-only predicate applied before per-object authorization and body
+/// loading. It is not an authorization grant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContextCandidateQuery {
+    pub tenant_id: String,
+    pub resource_scope_prefix: String,
+    pub conversation_ref: Option<String>,
+    pub limit: usize,
 }
 
 /// One persisted immutable operation candidate proposal. This row preserves
@@ -1028,6 +1073,21 @@ pub trait ContextStore {
         &self,
         view_id: &ObjectId,
     ) -> Result<Option<ContextViewRow>, StorePortError>;
+
+    fn append_workspace_context_source(
+        &self,
+        source: &WorkspaceContextSourceRow,
+    ) -> Result<(), StorePortError>;
+
+    fn query_context_candidate_metadata(
+        &self,
+        query: &ContextCandidateQuery,
+    ) -> Result<Vec<ContextCandidateMetadata>, StorePortError>;
+
+    fn load_workspace_context_source_body(
+        &self,
+        source_id: &ObjectId,
+    ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError>;
 }
 
 /// Durable resolution port for the governance header carried by M5 governed

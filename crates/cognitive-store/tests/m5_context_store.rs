@@ -6,9 +6,16 @@
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
+use cognitive_contracts::generated::context_view::{
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
+};
 use cognitive_domain::ObjectId;
+use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
-use cognitive_kernel::ports::{ContextRequestRow, ContextStore, ContextViewRow, StorePortError};
+use cognitive_kernel::ports::{
+    ContextCandidateQuery, ContextRequestRow, ContextStore, ContextViewRow, StorePortError,
+    WorkspaceContextSourceRow,
+};
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::{Value, json};
 
@@ -114,6 +121,78 @@ fn fresh_store() -> (tempfile::TempDir, SqliteAuthorityStore) {
     prepare_personal_databases(&layout).unwrap();
     let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
     (directory, store)
+}
+
+fn workspace_source_row(
+    identifier: &ObjectId,
+    conversation_ref: Option<&str>,
+) -> WorkspaceContextSourceRow {
+    let canonical_payload = json!({
+        "header": governed_header(identifier, "WorkspaceContextSource"),
+        "tenant_id": "tenant-a",
+        "owner_ref": "principal://tenant-a/daemon",
+        "resource_scope": "workspace://tenant-a/project/alpha",
+        "conversation_ref": conversation_ref,
+        "role": "working",
+        "trust_level": "verified",
+        "representation": "text",
+        "provenance_ref": "admission://tenant-a/daemon/test",
+        "content_bytes": 12,
+        "content_tokens": 3,
+        "body": {"text": "trusted text"},
+    });
+    let (canonical_json, source_digest) = sealed_payload(canonical_payload);
+    WorkspaceContextSourceRow {
+        source_id: identifier.clone(),
+        source_digest,
+        governance: ObjectGovernance {
+            object_ref: identifier.as_str().to_owned(),
+            tenant_id: Some("tenant-a".to_owned()),
+            owner_ref: "principal://tenant-a/daemon".to_owned(),
+            resource_scope: "workspace://tenant-a/project/alpha".to_owned(),
+            conversation_ref: conversation_ref.map(str::to_owned),
+        },
+        role: LoadedContextItemRole::Working,
+        trust_level: LoadedContextItemTrustLevel::Verified,
+        representation: LoadedContextItemRepresentation::Text,
+        provenance_ref: "admission://tenant-a/daemon/test".to_owned(),
+        content_bytes: 12,
+        content_tokens: Some(3),
+        canonical_json,
+    }
+}
+
+#[test]
+fn workspace_context_source_discovery_returns_metadata_before_body_load() {
+    let (_directory, store) = fresh_store();
+    let matching_source = workspace_source_row(&object_id(30), Some("conversation://tenant-a/one"));
+    let other_conversation =
+        workspace_source_row(&object_id(31), Some("conversation://tenant-a/two"));
+    store
+        .append_workspace_context_source(&matching_source)
+        .unwrap();
+    store
+        .append_workspace_context_source(&other_conversation)
+        .unwrap();
+
+    let metadata = store
+        .query_context_candidate_metadata(&ContextCandidateQuery {
+            tenant_id: "tenant-a".to_owned(),
+            resource_scope_prefix: "workspace://tenant-a/project".to_owned(),
+            conversation_ref: Some("conversation://tenant-a/one".to_owned()),
+            limit: 10,
+        })
+        .unwrap();
+
+    assert_eq!(metadata.len(), 1);
+    assert_eq!(metadata[0].source_id, matching_source.source_id);
+    assert!(!format!("{:?}", metadata[0]).contains("trusted text"));
+    assert_eq!(
+        store
+            .load_workspace_context_source_body(&matching_source.source_id)
+            .unwrap(),
+        Some(matching_source)
+    );
 }
 
 #[test]

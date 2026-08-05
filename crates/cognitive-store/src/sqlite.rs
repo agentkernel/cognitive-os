@@ -35,19 +35,21 @@ use cognitive_contracts::projection::verify_content_digest;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
+use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::effects::GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN;
 use cognitive_kernel::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
     CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
-    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextRequestRow, ContextStore,
-    ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationRow,
-    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, FixedPostStateRow,
-    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
-    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
-    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
-    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextCandidateMetadata,
+    ContextCandidateQuery, ContextRequestRow, ContextStore, ContextViewRow,
+    ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
+    DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
+    IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OperationCandidateProposalRow,
+    OutboxEntry, ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -1312,6 +1314,106 @@ fn validate_context_view_row(
     Ok(())
 }
 
+fn validate_workspace_context_source_row(
+    source: &WorkspaceContextSourceRow,
+) -> Result<(), StorePortError> {
+    let payload =
+        parse_and_verify_context_payload(&source.canonical_json, "WorkspaceContextSource")?;
+    let header: GovernedObjectHeader =
+        serde_json::from_value(payload.get("header").cloned().ok_or_else(|| {
+            invalid_context_payload("WorkspaceContextSource", "missing governed header")
+        })?)
+        .map_err(|error| invalid_context_payload("WorkspaceContextSource", error))?;
+    if header.id.0 != source.source_id.as_str()
+        || header.r#type != "WorkspaceContextSource"
+        || header.content_digest.0 != source.source_digest
+    {
+        return Err(invalid_context_payload(
+            "WorkspaceContextSource",
+            "row identity, type, or digest differs from canonical payload",
+        ));
+    }
+    let expected_metadata = serde_json::json!({
+        "tenant_id": source.governance.tenant_id,
+        "owner_ref": source.governance.owner_ref,
+        "resource_scope": source.governance.resource_scope,
+        "conversation_ref": source.governance.conversation_ref,
+        "role": source.role,
+        "trust_level": source.trust_level,
+        "representation": source.representation,
+        "provenance_ref": source.provenance_ref,
+        "content_bytes": source.content_bytes,
+        "content_tokens": source.content_tokens,
+    });
+    for (field, expected_value) in expected_metadata.as_object().expect("object") {
+        if payload.get(field) != Some(expected_value) {
+            return Err(invalid_context_payload(
+                "WorkspaceContextSource",
+                format!("row {field} differs from canonical payload"),
+            ));
+        }
+    }
+    if source.governance.tenant_id.is_none()
+        || source.governance.object_ref != source.source_id.as_str()
+    {
+        return Err(invalid_context_payload(
+            "WorkspaceContextSource",
+            "workspace source requires tenant governance and matching object reference",
+        ));
+    }
+    Ok(())
+}
+
+fn parse_workspace_context_source_row(
+    source_id: String,
+    source_digest: String,
+    tenant_id: String,
+    owner_ref: String,
+    resource_scope: String,
+    conversation_ref: Option<String>,
+    role: String,
+    trust_level: String,
+    representation: String,
+    provenance_ref: String,
+    content_bytes: i64,
+    content_tokens: Option<i64>,
+    canonical_json: String,
+) -> Result<WorkspaceContextSourceRow, rusqlite::Error> {
+    let parse_enum = |value: String| {
+        serde_json::from_value(serde_json::Value::String(value)).map_err(|error| {
+            rusqlite::Error::FromSqlConversionFailure(
+                0,
+                rusqlite::types::Type::Text,
+                Box::new(error),
+            )
+        })
+    };
+    Ok(WorkspaceContextSourceRow {
+        source_id: ObjectId::parse(&source_id).map_err(|error| {
+            rusqlite::Error::FromSqlConversionFailure(
+                0,
+                rusqlite::types::Type::Text,
+                Box::new(error),
+            )
+        })?,
+        source_digest,
+        governance: ObjectGovernance {
+            object_ref: source_id,
+            tenant_id: Some(tenant_id),
+            owner_ref,
+            resource_scope,
+            conversation_ref,
+        },
+        role: parse_enum(role)?,
+        trust_level: parse_enum(trust_level)?,
+        representation: parse_enum(representation)?,
+        provenance_ref,
+        content_bytes,
+        content_tokens,
+        canonical_json,
+    })
+}
+
 impl ContextStore for SqliteAuthorityStore {
     fn append_context_request(&self, request: &ContextRequestRow) -> Result<(), StorePortError> {
         validate_context_request_row(request)?;
@@ -1409,6 +1511,107 @@ impl ContextStore for SqliteAuthorityStore {
             )
             .optional()
             .map_err(unavailable("load ContextView"))
+    }
+
+    fn append_workspace_context_source(
+        &self,
+        source: &WorkspaceContextSourceRow,
+    ) -> Result<(), StorePortError> {
+        validate_workspace_context_source_row(source)?;
+        let connection = self.lock()?;
+        let role = match source.role {
+            cognitive_contracts::generated::context_view::LoadedContextItemRole::Control => "control",
+            cognitive_contracts::generated::context_view::LoadedContextItemRole::AuthoritativeState => "authoritative_state",
+            cognitive_contracts::generated::context_view::LoadedContextItemRole::Evidence => "evidence",
+            cognitive_contracts::generated::context_view::LoadedContextItemRole::Working => "working",
+            cognitive_contracts::generated::context_view::LoadedContextItemRole::UntrustedInput => "untrusted_input",
+        };
+        let trust_level = match source.trust_level {
+            cognitive_contracts::generated::context_view::LoadedContextItemTrustLevel::Control => "control",
+            cognitive_contracts::generated::context_view::LoadedContextItemTrustLevel::Authoritative => "authoritative",
+            cognitive_contracts::generated::context_view::LoadedContextItemTrustLevel::Verified => "verified",
+            cognitive_contracts::generated::context_view::LoadedContextItemTrustLevel::Untrusted => "untrusted",
+        };
+        let representation = match source.representation {
+            cognitive_contracts::generated::context_view::LoadedContextItemRepresentation::Structured => "structured",
+            cognitive_contracts::generated::context_view::LoadedContextItemRepresentation::Text => "text",
+            cognitive_contracts::generated::context_view::LoadedContextItemRepresentation::BinaryRef => "binary_ref",
+        };
+        let result = connection.execute(
+            "INSERT INTO workspace_context_sources (source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            (source.source_id.as_str(), source.source_digest.as_str(), source.governance.tenant_id.as_deref(), source.governance.owner_ref.as_str(), source.governance.resource_scope.as_str(), source.governance.conversation_ref.as_deref(), serde_json::to_string(&source.role).unwrap().trim_matches('"'), serde_json::to_string(&source.trust_level).unwrap().trim_matches('"'), serde_json::to_string(&source.representation).unwrap().trim_matches('"'), source.provenance_ref.as_str(), source.content_bytes, source.content_tokens, source.canonical_json.as_str()),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "WorkspaceContextSource {} already persisted or violates metadata invariants",
+                    source.source_id
+                ),
+            }),
+            Err(error) => Err(unavailable("insert WorkspaceContextSource")(error)),
+        }
+    }
+
+    fn query_context_candidate_metadata(
+        &self,
+        query: &ContextCandidateQuery,
+    ) -> Result<Vec<ContextCandidateMetadata>, StorePortError> {
+        let connection = self.lock()?;
+        let escaped_prefix = query
+            .resource_scope_prefix
+            .replace('\\', "\\\\")
+            .replace('%', "\\%")
+            .replace('_', "\\_");
+        let mut statement = connection.prepare_cached("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens FROM workspace_context_sources WHERE tenant_id=?1 AND resource_scope LIKE ?2 ESCAPE '\\' AND ((?3 IS NULL AND conversation_ref IS NULL) OR conversation_ref=?3) ORDER BY source_id LIMIT ?4").map_err(unavailable("prepare Context metadata query"))?;
+        let rows = statement
+            .query_map(
+                (
+                    query.tenant_id.as_str(),
+                    format!("{escaped_prefix}%"),
+                    query.conversation_ref.as_deref(),
+                    query.limit as i64,
+                ),
+                |row| {
+                    let source = parse_workspace_context_source_row(
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
+                        row.get(7)?,
+                        row.get(8)?,
+                        row.get(9)?,
+                        row.get(10)?,
+                        row.get(11)?,
+                        String::new(),
+                    )?;
+                    Ok(ContextCandidateMetadata {
+                        source_id: source.source_id,
+                        source_digest: source.source_digest,
+                        governance: source.governance,
+                        role: source.role,
+                        trust_level: source.trust_level,
+                        representation: source.representation,
+                        provenance_ref: source.provenance_ref,
+                        content_bytes: source.content_bytes,
+                        content_tokens: source.content_tokens,
+                    })
+                },
+            )
+            .map_err(unavailable("query Context metadata"))?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read Context metadata"))
+    }
+
+    fn load_workspace_context_source_body(
+        &self,
+        source_id: &ObjectId,
+    ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection.query_row("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json FROM workspace_context_sources WHERE source_id=?1", [source_id.as_str()], |row| parse_workspace_context_source_row(row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?, row.get(12)?)).optional().map_err(unavailable("load WorkspaceContextSource body"))
     }
 }
 
