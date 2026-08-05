@@ -32,8 +32,8 @@ use crate::effects::{
     strong_ref,
 };
 use crate::engine::{
-    BudgetChargeCommand, Causation, CommittedTransition, Reason, TablePin, TransitionCommand,
-    TransitionEngine,
+    BudgetChargeCommand, Causation, CommittedTransition, PreparedTransition, Reason, TablePin,
+    TransitionCommand, TransitionEngine,
 };
 use crate::error::{RESOURCE_BUDGET_EXHAUSTED, STATE_CONFLICT};
 use crate::ports::{
@@ -393,7 +393,7 @@ where
     /// - a durable checkpoint must exist (`loop_checkpoint` evidence:
     ///   continuation binds recovery-stable facts, REQ-RUN-006).
     #[allow(clippy::too_many_arguments)]
-    pub fn begin_iteration(
+    pub fn prepare_iteration(
         &self,
         loop_id: &ObjectId,
         expected_version: Version,
@@ -402,7 +402,7 @@ where
         budget_id: &BudgetId,
         charge: &BudgetCharge,
         lease: &WriterLease,
-    ) -> Result<CommittedTransition, EffectError> {
+    ) -> Result<PreparedTransition, EffectError> {
         self.verify_lease(lease)?;
         let facts = self.contract_facts(task_ref)?;
         let last = self.last_recorded_iteration(loop_id)?;
@@ -463,7 +463,33 @@ where
             }),
             lease,
         )?;
-        Ok(self.engine().commit_transition(&cmd)?)
+        Ok(self.engine().prepare_transition(&cmd)?)
+    }
+
+    /// Commit the ordinary continuation entry after the full deterministic
+    /// gate has prepared it. Compound authority boundaries use
+    /// [`Self::prepare_iteration`] and retain its exact commit instead.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_iteration(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        iteration: i64,
+        budget_id: &BudgetId,
+        charge: &BudgetCharge,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        let prepared = self.prepare_iteration(
+            loop_id,
+            expected_version,
+            task_ref,
+            iteration,
+            budget_id,
+            charge,
+            lease,
+        )?;
+        Ok(self.engine().commit_prepared_transition(&prepared)?)
     }
 
     /// Persist a ceiling decision as a terminal, fenced loop transition.
