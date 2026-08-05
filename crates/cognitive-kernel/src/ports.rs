@@ -728,6 +728,7 @@ pub trait ContinuationAuthorityStore {
     fn consume_continuation_authorization_bound_to_scheduler_lease(
         &self,
         request: &BoundContinuationAuthorizationConsumption,
+        transition: &TransitionCommit,
     ) -> Result<(), StorePortError>;
 
     fn load_unconsumed_continuation_authorization(

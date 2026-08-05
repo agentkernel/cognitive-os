@@ -2729,6 +2729,7 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
     fn consume_continuation_authorization_bound_to_scheduler_lease(
         &self,
         request: &BoundContinuationAuthorizationConsumption,
+        transition: &TransitionCommit,
     ) -> Result<(), StorePortError> {
         let consumption = &request.consumption;
         let scheduler_lease = &request.scheduler_lease;
@@ -2766,6 +2767,24 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             });
         }
 
+        let transition_matches_authorization: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND loop_object_id=?2 AND expected_loop_version=?3 AND budget_id=?4)",
+                (consumption.continuation_authorization_id.as_str(), transition.cas.object_id.as_str(), transition.cas.expected_version.get(), transition.budget.as_ref().map(|budget| budget.budget_id.as_str()).unwrap_or("")),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify continuation transition binding"))?;
+        let is_legal_continuation_entry = transition.cas.domain == LifecycleDomain::Loop
+            && transition.cas.from_state.as_str() == "CONTINUE"
+            && transition.cas.to_state.as_str() == "OBSERVE"
+            && transition.fencing_epoch == Some(consumption.consumed_fencing_epoch)
+            && transition.budget.is_some();
+        if !transition_matches_authorization || !is_legal_continuation_entry {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authority does not match the prepared loop entry".to_owned(),
+            });
+        }
+
         let inserted_consumption = transaction.execute(
             "INSERT INTO continuation_authorization_consumptions (continuation_authorization_id, consumed_fencing_epoch, consumed_at, canonical_json) VALUES (?1, ?2, ?3, ?4)",
             (consumption.continuation_authorization_id.as_str(), consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(), consumption.canonical_json.as_str()),
@@ -2787,17 +2806,24 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             (consumption.continuation_authorization_id.as_str(), scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, scheduler_lease.lease_owner.as_str(), scheduler_lease.lease_epoch),
         );
         match inserted_binding {
-            Ok(_) => transaction
-                .commit()
-                .map_err(unavailable("commit bound continuation consumption")),
-            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
-                detail: "continuation authorization scheduler lease binding already exists"
-                    .to_owned(),
-            }),
-            Err(error) => Err(unavailable("insert continuation scheduler lease binding")(
-                error,
-            )),
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "continuation authorization scheduler lease binding already exists"
+                        .to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert continuation scheduler lease binding")(
+                    error,
+                ));
+            }
         }
+
+        commit_transition_in_transaction(&transaction, transition)?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit bound continuation entry"))
     }
 
     fn load_unconsumed_continuation_authorization(
