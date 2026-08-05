@@ -10,7 +10,7 @@
 //!
 //! - loop boundary transitions with sanctioned guard derivations
 //!   ([`LoopDriver::start_loop`], [`LoopDriver::begin_iteration`],
-//!   [`LoopDriver::end_iteration`]): contract pinning, hard budget
+//!   [`LoopDriver::end_iteration_from_persisted_report`]): contract pinning, hard budget
 //!   admission + same-transaction debit, checkpoint-bound continuation;
 //! - typed progress facts ([`LoopDriver::record_progress`]): progress is
 //!   a verifiable difference with evidence references, never a transcript
@@ -735,7 +735,7 @@ where
     /// object reloaded — a task already COMPLETED admits no further
     /// iterations). Evidence: `verification_report`.
     #[allow(clippy::too_many_arguments)]
-    pub fn end_iteration(
+    fn commit_verified_continuation(
         &self,
         loop_id: &ObjectId,
         expected_version: Version,
@@ -861,7 +861,7 @@ where
             )
             .into());
         }
-        self.end_iteration(
+        self.commit_verified_continuation(
             loop_id,
             expected_version,
             task_object_id,

@@ -12,7 +12,7 @@ mod m4_common;
 
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
-use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version};
+use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
 use cognitive_kernel::budget::{BudgetCharge, BudgetState};
 use cognitive_kernel::effects::EffectError;
 use cognitive_kernel::harness::{CeilingStopReason, LoopDriver, ProgressStatus};
@@ -21,7 +21,10 @@ use cognitive_kernel::intent_chain::{
     TaskContractCommand, UserIntentCommand, admit_interpretation, mint_task_contract,
     record_interpretation_candidate, record_user_intent,
 };
-use cognitive_kernel::ports::{AuthorityStore, CheckpointRow, ProtocolStore};
+use cognitive_kernel::ports::{
+    AuthorityStore, CheckpointRow, ContinuationAuthorityStore, FixedPostStateRow, ProtocolStore,
+    TaskBinding, VerificationReportRow, VerificationRequestRow,
+};
 use cognitive_kernel::{RejectionKind, TransitionEngine};
 use cognitive_store::SqliteAuthorityStore;
 use m4_common::*;
@@ -191,6 +194,65 @@ fn checkpoint_row(n: u64, loop_id: &ObjectId, watermark: i64, epoch: i64) -> Che
         fencing_epoch: epoch,
         canonical_json: format!("{{\"iteration_watermark\":{watermark}}}"),
     }
+}
+
+fn persist_passed_verification_report(
+    store: &SqliteAuthorityStore,
+    task_ref: &str,
+    loop_id: &ObjectId,
+    expected_loop_version: Version,
+    task_id: &ObjectId,
+    task_version: Version,
+    identity_base: u64,
+) -> ObjectId {
+    let fixed_post_state_id = oid(identity_base);
+    let verification_request_id = oid(identity_base + 1);
+    let verification_report_id = oid(identity_base + 2);
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+    };
+    store
+        .append_fixed_post_state(&FixedPostStateRow {
+            fixed_post_state_id: fixed_post_state_id.clone(),
+            task_binding: task_binding.clone(),
+            loop_object_id: loop_id.clone(),
+            subject_domain: LifecycleDomain::Task,
+            subject_object_id: task_id.clone(),
+            subject_version: task_version,
+            recorded_fencing_epoch: 1,
+            canonical_json: "{\"fixed_post_state\":\"fixture\"}".to_owned(),
+        })
+        .unwrap();
+    store
+        .append_verification_request(&VerificationRequestRow {
+            verification_request_id: verification_request_id.clone(),
+            fixed_post_state_id: fixed_post_state_id.clone(),
+            task_binding,
+            loop_object_id: loop_id.clone(),
+            expected_loop_version,
+            verifier_ref: "verifier://tenant-a/independent".to_owned(),
+            verifier_version: "fixture-v1".to_owned(),
+            criteria_canonical_json: "[\"health-check\"]".to_owned(),
+            issued_fencing_epoch: 1,
+            canonical_json: "{\"verification_request\":\"fixture\"}".to_owned(),
+        })
+        .unwrap();
+    store
+        .append_verification_report(&VerificationReportRow {
+            verification_report_id: verification_report_id.clone(),
+            verification_request_id,
+            fixed_post_state_id,
+            verifier_ref: "verifier://tenant-a/independent".to_owned(),
+            verifier_version: "fixture-v1".to_owned(),
+            status: "passed".to_owned(),
+            evidence_refs_canonical_json: "[\"evidence://tenant-a/health\"]".to_owned(),
+            completed_at: WallTimestamp::parse("2026-08-01T00:00:00Z").unwrap(),
+            recorded_fencing_epoch: 1,
+            canonical_json: "{\"verification_report\":\"fixture\"}".to_owned(),
+        })
+        .unwrap();
+    verification_report_id
 }
 
 fn denial_code(err: &EffectError) -> &'static str {
@@ -736,13 +798,21 @@ fn end_iteration_reloads_task_state_and_binds_verification() {
         );
     }
 
+    let verification_report_id = persist_passed_verification_report(
+        &store,
+        task_ref,
+        &loop_id,
+        v,
+        &task_id,
+        Version::INITIAL,
+        512,
+    );
     let ended = harness
-        .end_iteration(
+        .end_iteration_from_persisted_report(
             &loop_id,
             v,
             &task_id,
-            &oid(512),
-            "verification-report: staging healthy",
+            &verification_report_id,
             &budget,
             &lease(1),
         )
@@ -797,14 +867,14 @@ fn end_iteration_reloads_task_state_and_binds_verification() {
             None,
         );
     }
-    let _ = tv;
+    let completed_report_id =
+        persist_passed_verification_report(&store, task_ref, &loop_id, v2, &task_id, tv, 516);
     let refused = harness
-        .end_iteration(
+        .end_iteration_from_persisted_report(
             &loop_id,
             v2,
             &task_id,
-            &oid(513),
-            "verification-report: post-acceptance",
+            &completed_report_id,
             &budget,
             &lease(1),
         )
