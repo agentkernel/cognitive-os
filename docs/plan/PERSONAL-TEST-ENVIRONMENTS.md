@@ -131,7 +131,12 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 
 ## 7. `DEV-LINUX-NATIVE-01` — `personal-linux-native-01`
 
-- **Access identity:** `wuz@192.168.1.2`, non-interactive no-secret SSH only.
+- **Access identity:** `wuz@192.168.1.2`, non-interactive SSH. The standing
+  operator authorization permits required approved Secret Store access,
+  least-privilege elevation, and scoped service/system configuration changes
+  without per-operation confirmation; secret values remain prohibited from SSH
+  arguments/output, ordinary configuration, SQLite, logs, CI, tests, and
+  evidence.
 - **Recorded platform:** Linux x86_64, non-WSL, native user-systemd/user D-Bus,
   glibc 2.35.
 - **Recorded tools:** Rust 1.97.1, Node 22.19.0; exact Pi 0.81.1 must be
