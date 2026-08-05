@@ -24,6 +24,7 @@ use cognitive_domain::capability::CapabilityConstraints;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
 };
+use serde::Deserialize;
 use serde_json::Value;
 
 /// Failure classes an adapter may surface on the authority path.
@@ -559,7 +560,7 @@ pub struct ContextCandidateQuery {
 /// Immutable daemon-admin-issued authorization inputs for Context body reads.
 /// Possession of this record does not itself grant access: callers reconstruct
 /// it with current revocation currency and still call the six-step gate.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ContextAuthorizationFactsRow {
     pub fact_set_id: ObjectId,
     pub subject_ref: String,
@@ -609,7 +610,7 @@ impl ContextAuthorizationFactsRow {
 
 /// Immutable revocation observation. A higher tenant epoch invalidates older
 /// capability material during snapshot reconstruction.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ContextRevocationFactRow {
     pub revocation_fact_id: ObjectId,
     pub tenant_id: String,
