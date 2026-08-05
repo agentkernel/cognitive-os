@@ -476,7 +476,7 @@ where
     pub fn prepare_transition(
         &self,
         cmd: &TransitionCommand,
-    ) -> Result<CommittedTransition, TransitionRejection> {
+    ) -> Result<PreparedTransition, TransitionRejection> {
         // 1. Registered table, pinned by version + canonical digest.
         let loaded = load_table(cmd.domain)?;
         if cmd.table_pin.version != loaded.table.version || cmd.table_pin.digest != loaded.digest {
