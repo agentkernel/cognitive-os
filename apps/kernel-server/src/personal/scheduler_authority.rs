@@ -329,7 +329,7 @@ pub(crate) fn resolve_authorized_task_context<S>(
     command: &ContextResolutionCommand,
 ) -> Result<ResolvedContextView, SchedulerAuthorityError>
 where
-    S: ContextStore + ContextAuthorizationFactStore + ProtocolStore,
+    S: AuthorityStore + ContextStore + ContextAuthorizationFactStore + IntentChainStore,
 {
     let current_contract_epoch = store
         .current_contract_epoch(&command.task_ref)
