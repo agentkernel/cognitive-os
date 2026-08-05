@@ -9,7 +9,7 @@
 use cognitive_domain::ObjectId;
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{ContextRequestRow, ContextStore, ContextViewRow, StorePortError};
-use cognitive_store::SqliteAuthorityStore;
+use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::{Value, json};
 
 fn object_id(sequence: u64) -> ObjectId {
@@ -103,7 +103,16 @@ fn context_view_row(identifier: &ObjectId, request: &ContextRequestRow) -> Conte
 
 fn fresh_store() -> (tempfile::TempDir, SqliteAuthorityStore) {
     let directory = tempfile::tempdir().unwrap();
-    let store = SqliteAuthorityStore::open(&directory.path().join("authority.db")).unwrap();
+    let root = directory.path();
+    let layout = PersonalDataLayout::from_xdg_roots(
+        root.join("config"),
+        root.join("data"),
+        root.join("state"),
+        root.join("cache"),
+        root.join("runtime"),
+    );
+    prepare_personal_databases(&layout).unwrap();
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
     (directory, store)
 }
 
