@@ -931,6 +931,120 @@ fn continuation_handoff_rejects_replaced_lease_without_consumption() {
     assert_eq!(binding_count, 0);
 }
 
+/// D05: consumption and exact-lease binding are provisional until the Loop
+/// transition, fresh debit, event, record, and outbox all commit together.
+#[test]
+fn continuation_handoff_rolls_back_when_transition_event_insert_fails() {
+    let temporary_directory = tempfile::tempdir().unwrap();
+    let authority_database_path = temporary_directory.path().join("authority.db");
+    let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+    let continuation_authorization_id = object_id(750);
+    let loop_id = object_id(751);
+    let budget = budget_id(752);
+    let task_ref = "task://personal/continuation-rollback";
+    let connection = Connection::open(&authority_database_path).unwrap();
+    connection.execute(
+        "INSERT INTO governed_objects (object_id, domain, state, version, body_json, created_at, updated_at) VALUES (?1, 'loop', 'CONTINUE', 1, '{}', '2026-08-04T12:00:00Z', '2026-08-04T12:00:00Z')",
+        [loop_id.as_str()],
+    ).unwrap();
+    connection.execute(
+        "INSERT INTO budgets (budget_id, state_json, version, created_at) VALUES (?1, '{\"tool_calls\":1}', 1, '2026-08-04T12:00:00Z')",
+        [budget.as_str()],
+    ).unwrap();
+    let fixed_post_state_id = object_id(753);
+    let verification_request_id = object_id(754);
+    let verification_report_id = object_id(755);
+    connection.execute(
+        "INSERT INTO fixed_post_states (fixed_post_state_id, task_ref, contract_epoch, loop_object_id, subject_domain, subject_object_id, subject_version, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, 1, ?3, 'task', ?4, 1, 1, '{}')",
+        rusqlite::params![fixed_post_state_id.as_str(), task_ref, loop_id.as_str(), object_id(756).as_str()],
+    ).unwrap();
+    connection.execute(
+        "INSERT INTO verification_requests (verification_request_id, fixed_post_state_id, task_ref, contract_epoch, loop_object_id, expected_loop_version, verifier_ref, verifier_version, criteria_json, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, 1, ?4, 1, 'verifier://personal/test', 'v1', '[]', 1, '{}')",
+        rusqlite::params![verification_request_id.as_str(), fixed_post_state_id.as_str(), task_ref, loop_id.as_str()],
+    ).unwrap();
+    connection.execute(
+        "INSERT INTO verification_reports (verification_report_id, verification_request_id, fixed_post_state_id, verifier_ref, verifier_version, status, evidence_refs_json, completed_at, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, 'verifier://personal/test', 'v1', 'passed', '[]', '2026-08-04T12:00:00Z', 1, '{}')",
+        rusqlite::params![verification_report_id.as_str(), verification_request_id.as_str(), fixed_post_state_id.as_str()],
+    ).unwrap();
+    connection.execute(
+        "INSERT INTO continuation_authorizations (continuation_authorization_id, task_ref, contract_epoch, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, 1, ?3, 2, 1, ?4, ?5, '{\"tool_calls\":1}', ?6, 1, '{}')",
+        rusqlite::params![continuation_authorization_id.as_str(), task_ref, loop_id.as_str(), object_id(757).as_str(), budget.as_str(), verification_report_id.as_str()],
+    ).unwrap();
+    connection.execute(
+        "INSERT INTO scheduler_entries (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) VALUES (?1, 1, 'leased', 'daemon-worker-a', 11, ?2, ?3, 1, 0)",
+        rusqlite::params![task_ref, "2026-08-04T12:05:00Z", "2026-08-04T12:00:00Z"],
+    ).unwrap();
+    connection.execute_batch(
+        "CREATE TRIGGER fail_test_continuation_event BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT, 'test-only continuation event failure'); END;",
+    ).unwrap();
+    drop(connection);
+
+    let mut transition = admission_commit(object_id(758)).loop_transition;
+    transition.cas.object_id = loop_id.clone();
+    transition.cas.from_state = state("CONTINUE");
+    transition.cas.to_state = state("OBSERVE");
+    transition.cas.expected_version = Version::INITIAL;
+    transition.cas.next_version = Version::new(2).unwrap();
+    transition.event.object_id = loop_id.clone();
+    transition.event.object_version = Version::new(2).unwrap();
+    transition.record.object_id = loop_id.clone();
+    transition.record.object_version = Version::new(2).unwrap();
+    let transition_budget = transition.budget.as_mut().unwrap();
+    transition_budget.budget_id = budget.clone();
+    let request = BoundContinuationAuthorizationConsumption {
+        consumption: ContinuationAuthorizationConsumptionRow {
+            continuation_authorization_id: continuation_authorization_id.clone(),
+            worker_attempt_id: object_id(759),
+            consumed_fencing_epoch: 1,
+            consumed_at: WallTimestamp::parse("2026-08-04T12:01:00Z").unwrap(),
+            canonical_json: "{\"continuation_consumption\":1}".to_owned(),
+        },
+        scheduler_lease: SchedulerLeaseBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+            lease_owner: "daemon-worker-a".to_owned(),
+            lease_epoch: 11,
+        },
+    };
+    assert!(matches!(
+        store.consume_continuation_authorization_bound_to_scheduler_lease(&request, &transition),
+        Err(StorePortError::Unavailable { .. })
+    ));
+    let connection = Connection::open(&authority_database_path).unwrap();
+    let consumption_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_consumptions",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let binding_count: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM continuation_authorization_scheduler_lease_bindings",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let loop_state: String = connection
+        .query_row(
+            "SELECT state FROM governed_objects WHERE object_id=?1",
+            [loop_id.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let budget_state: String = connection
+        .query_row(
+            "SELECT state_json FROM budgets WHERE budget_id=?1",
+            [budget.as_str()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(consumption_count, 0);
+    assert_eq!(binding_count, 0);
+    assert_eq!(loop_state, "CONTINUE");
+    assert_eq!(budget_state, "{\"tool_calls\":1}");
+}
+
 #[test]
 fn bound_wia_handoff_rolls_back_when_lease_binding_persistence_fails() {
     let temporary_directory = tempfile::tempdir().unwrap();
