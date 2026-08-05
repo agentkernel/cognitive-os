@@ -11,8 +11,8 @@ use cognitive_kernel::intent_chain::{
     supersede_task_contract,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, IdGenerator, IntentChainStore, InterpretationRow, ProtocolStore,
-    TaskContractRow, UserIntentRecordRow,
+    AuthorityStore, Clock, ContextStore, IdGenerator, IntentChainStore, InterpretationRow,
+    ProtocolStore, TaskContractRow, UserIntentRecordRow,
 };
 
 /// Deterministic intent admission flow used after a shell submit receipt.
@@ -30,7 +30,7 @@ pub fn admit_and_mint_contract<S, C, G>(
     expected_current_epoch: i64,
 ) -> Result<(UserIntentRecordRow, InterpretationRow, TaskContractRow), EffectError>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -67,7 +67,7 @@ pub fn correct_and_supersede<S, C, G>(
     command: &SupersedeCommand,
 ) -> Result<SupersedeReport, EffectError>
 where
-    S: AuthorityStore + ProtocolStore + IntentChainStore,
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
