@@ -611,11 +611,20 @@ where
     // Never call Pi twice for that identity: a previously committed admission
     // returns its original receipt; a proposal persisted before a failed
     // admission resumes deterministic daemon-only admission.
-    if store
+    if let Some(existing_candidate) = store
         .load_operation_candidate_proposal(&admission_command.candidate_id)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-        .is_some()
     {
+        let current_contract_epoch = store
+            .current_contract_epoch(&context_command.task_ref)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+        if existing_candidate.task_ref != context_command.task_ref
+            || existing_candidate.contract_epoch != current_contract_epoch
+        {
+            return Err(SchedulerAuthorityError::CandidateUnavailable(
+                "candidate retry identity is bound to a different TaskContract epoch".to_owned(),
+            ));
+        }
         if let Some(receipt) = store
             .load_candidate_admission_receipt_by_selected_candidate_id(
                 &admission_command.candidate_id,
