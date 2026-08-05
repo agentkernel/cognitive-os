@@ -22,26 +22,26 @@
 
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
-    CONTINUATION_AUTHORITY_SCHEMA_V10, DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6,
-    DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5, WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9,
-    WORKER_AUTHORIZATION_SCHEMA_V4, WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8,
-    WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+    CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
+    DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
+    WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9, WORKER_AUTHORIZATION_SCHEMA_V4,
+    WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, BoundWorkerAuthorizationConsumption, CandidateAdmissionCommit,
-    CandidateAdmissionReceipt, CheckpointRow, CommitReceipt, CommittedEvent,
-    ConsumedWorkerIterationAuthorization, ContinuationAuthorityStore, ContinuationAuthorizationRow,
-    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, FixedPostStateRow,
-    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
-    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
-    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
-    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContinuationAuthorityStore,
+    ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
+    FixedPostStateRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
+    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -335,7 +335,7 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}\n{CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11}"
         ))
         .map_err(unavailable("install schema"))?;
         Ok(Self {
@@ -2717,6 +2717,80 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
         transaction
             .commit()
             .map_err(unavailable("commit continuation authorization"))
+    }
+
+    fn consume_continuation_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundContinuationAuthorizationConsumption,
+    ) -> Result<(), StorePortError> {
+        let consumption = &request.consumption;
+        let scheduler_lease = &request.scheduler_lease;
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin bound continuation consumption"))?;
+        verify_fencing_in_tx(&transaction, Some(consumption.consumed_fencing_epoch))?;
+
+        let authorization_matches_lease: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND task_ref=?2 AND contract_epoch=?3 AND issued_fencing_epoch=?4)",
+                (consumption.continuation_authorization_id.as_str(), scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, consumption.consumed_fencing_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify bound continuation authorization"))?;
+        if !authorization_matches_lease {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization does not match scheduler work binding"
+                    .to_owned(),
+            });
+        }
+
+        let exact_lease_is_active: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM scheduler_entries WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased' AND lease_owner=?3 AND lease_epoch=?4 AND cancel_requested=0)",
+                (scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, scheduler_lease.lease_owner.as_str(), scheduler_lease.lease_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify exact continuation scheduler lease"))?;
+        if !exact_lease_is_active {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler lease is no longer the exact active continuation lease"
+                    .to_owned(),
+            });
+        }
+
+        let inserted_consumption = transaction.execute(
+            "INSERT INTO continuation_authorization_consumptions (continuation_authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+            (consumption.continuation_authorization_id.as_str(), consumption.worker_attempt_id.as_str(), consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(), consumption.canonical_json.as_str()),
+        );
+        match inserted_consumption {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "continuation authorization was already consumed".to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert continuation consumption")(error));
+            }
+        }
+
+        let inserted_binding = transaction.execute(
+            "INSERT INTO continuation_authorization_scheduler_lease_bindings (continuation_authorization_id, task_ref, contract_epoch, lease_owner, lease_epoch) VALUES (?1, ?2, ?3, ?4, ?5)",
+            (consumption.continuation_authorization_id.as_str(), scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, scheduler_lease.lease_owner.as_str(), scheduler_lease.lease_epoch),
+        );
+        match inserted_binding {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit bound continuation consumption")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "continuation authorization scheduler lease binding already exists"
+                    .to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert continuation scheduler lease binding")(
+                error,
+            )),
+        }
     }
 
     fn load_unconsumed_continuation_authorization(

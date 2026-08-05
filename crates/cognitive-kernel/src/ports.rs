@@ -665,6 +665,26 @@ pub struct ContinuationAuthorizationRow {
     pub canonical_json: String,
 }
 
+/// One immutable daemon-recorded handoff of private continuation authority.
+/// It records a recoverable authorization boundary only; it does not prove
+/// execution, progress, verification, Task acceptance, or Task completion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContinuationAuthorizationConsumptionRow {
+    pub continuation_authorization_id: ObjectId,
+    pub worker_attempt_id: ObjectId,
+    pub consumed_fencing_epoch: i64,
+    pub consumed_at: WallTimestamp,
+    pub canonical_json: String,
+}
+
+/// Exact scheduler lease that must remain active while private continuation
+/// authority is handed to the bounded harness.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoundContinuationAuthorizationConsumption {
+    pub consumption: ContinuationAuthorizationConsumptionRow,
+    pub scheduler_lease: SchedulerLeaseBinding,
+}
+
 /// Daemon-private persistence for the verified continuation boundary.
 /// Implementations must keep every row append-only and recheck declared
 /// fencing epochs inside the transaction that writes it.
@@ -700,6 +720,14 @@ pub trait ContinuationAuthorityStore {
     fn issue_continuation_authorization(
         &self,
         row: &ContinuationAuthorizationRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Consume continuation authority at most once and bind it to an exact
+    /// active scheduler lease. This preserves a recovery record if the later
+    /// authorized harness entry fails.
+    fn consume_continuation_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundContinuationAuthorizationConsumption,
     ) -> Result<(), StorePortError>;
 
     fn load_unconsumed_continuation_authorization(

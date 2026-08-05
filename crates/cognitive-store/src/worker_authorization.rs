@@ -275,3 +275,28 @@ BEGIN SELECT RAISE(ABORT, 'append-only: continuation consumption is immutable');
 pub fn continuation_authority_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(10, CONTINUATION_AUTHORITY_SCHEMA_V10)
 }
+
+/// Private continuation handoff bindings; kept separate from the v10 issue
+/// records so a failed harness entry remains recoverable without mutating it.
+pub const CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11: &str = "
+ALTER TABLE continuation_authorization_consumptions
+  ADD COLUMN worker_attempt_id TEXT NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS continuation_authorization_scheduler_lease_bindings (
+  continuation_authorization_id TEXT PRIMARY KEY REFERENCES continuation_authorizations(continuation_authorization_id),
+  task_ref                      TEXT NOT NULL,
+  contract_epoch                INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  lease_owner                   TEXT NOT NULL,
+  lease_epoch                   INTEGER NOT NULL CHECK (lease_epoch >= 1)
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS continuation_authorization_scheduler_lease_bindings_append_only_update
+BEFORE UPDATE ON continuation_authorization_scheduler_lease_bindings
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation scheduler lease binding is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS continuation_authorization_scheduler_lease_bindings_append_only_delete
+BEFORE DELETE ON continuation_authorization_scheduler_lease_bindings
+BEGIN SELECT RAISE(ABORT, 'append-only: continuation scheduler lease binding is immutable'); END;
+";
+
+/// The version-11 private continuation handoff persistence entry.
+pub fn continuation_authority_consumption_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(11, CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11)
+}
