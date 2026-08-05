@@ -23,8 +23,10 @@ use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
 use cognitive_kernel::intent_chain::GovernanceSeed;
 use cognitive_kernel::ports::{
-    AuthorityStore, BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
-    HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, SchedulerLeaseBinding, TaskBinding,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    CandidateAdmissionReceipt, Clock, ContinuationAuthorityStore,
+    ContinuationAuthorizationConsumptionRow, ContinuationAuthorizationRow, HarnessStore,
+    IdGenerator, IntentChainStore, ProtocolStore, SchedulerLeaseBinding, TaskBinding,
     WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
@@ -37,6 +39,7 @@ use cognitive_store::{
     scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey},
 };
 use serde::Deserialize;
+use serde_json::json;
 use std::path::Path;
 use thiserror::Error;
 
@@ -168,6 +171,9 @@ pub(crate) struct SchedulerEffectResolution {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SchedulerWorkerAttempt {
     Stopped(CommittedTransition),
+    /// A distinct verified continuation authority atomically entered the
+    /// harness. This is neither Effect completion nor Task acceptance.
+    ContinuationStarted(CommittedTransition),
     EffectClosed(SchedulerDispatch),
     AwaitingReconciliation(SchedulerDispatch),
 }
@@ -203,6 +209,8 @@ pub(crate) enum SchedulerAuthorityError {
     CandidateAuthorizationUnavailable(String),
     #[error("scheduler candidate admission composition failed: {0}")]
     CandidateAdmissionComposition(String),
+    #[error("scheduler continuation authority is unavailable or inconsistent: {0}")]
+    ContinuationUnavailable(String),
     #[error(
         "scheduler work binding is stale: {task_ref} requested epoch {requested_epoch}, current epoch {current_epoch}"
     )]
@@ -2630,17 +2638,46 @@ fn run_bounded_scheduler_attempt<S, C, G>(
     task_binding: &TaskBinding,
     scheduler_lease_epoch: i64,
     observed_wall_time: &str,
-    authorization_id: &ObjectId,
+    candidate_authorization_id: Option<&ObjectId>,
+    continuation_authorization: Option<&ContinuationAuthorizationRow>,
     worker_attempt_id: ObjectId,
     released_at: &str,
 ) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
 where
-    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    S: AuthorityStore
+        + ContinuationAuthorityStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,
 {
-    let authorization =
-        load_current_worker_authorization(authority_store, authorization_id, binding)?;
+    let candidate_authorization = match (continuation_authorization, candidate_authorization_id) {
+        (Some(_), _) => None,
+        (None, Some(authorization_id)) => Some(load_current_worker_authorization(
+            authority_store,
+            authorization_id,
+            binding,
+        )?),
+        (None, None) => {
+            return Err(SchedulerAuthorityError::CandidateUnavailable(
+                "scheduler attempt has no candidate or continuation authority".to_owned(),
+            ));
+        }
+    };
+    let expected_loop_version = continuation_authorization
+        .map(|authorization| authorization.expected_loop_version)
+        .or_else(|| {
+            candidate_authorization
+                .as_ref()
+                .map(|authorization| authorization.expected_loop_version)
+        })
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(
+                "scheduler attempt has no candidate or continuation authority".to_owned(),
+            )
+        })?;
     let writer_lease = WriterLease {
         epoch: authority_store
             .current_fencing_epoch()
@@ -2654,7 +2691,7 @@ where
         binding,
         scheduler_lease_epoch,
         observed_wall_time,
-        authorization.expected_loop_version,
+        expected_loop_version,
         &writer_lease,
     )?;
     let SchedulerDispatchAdmission::Leased(dispatch) = admission else {
@@ -2664,12 +2701,65 @@ where
         return Ok(SchedulerWorkerAttempt::Stopped(transition));
     };
 
+    if let Some(authorization) = continuation_authorization {
+        let budget_charge: BudgetCharge =
+            serde_json::from_str(&authorization.budget_charge_canonical_json).map_err(|error| {
+                SchedulerAuthorityError::ContinuationUnavailable(format!(
+                    "continuation {} has an invalid budget charge: {error}",
+                    authorization.continuation_authorization_id
+                ))
+            })?;
+        let consumed_at = FixedSchedulerClock::parse(observed_wall_time)?
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        let canonical_json = String::from_utf8(
+            canonical::canonical_bytes_of_value(&json!({
+                "continuation_authorization_id": authorization.continuation_authorization_id,
+                "consumed_at": consumed_at.as_str(),
+                "consumed_fencing_epoch": writer_lease.epoch,
+                "worker_attempt_id": worker_attempt_id,
+            }))
+            .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?,
+        )
+        .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
+        let consumption = BoundContinuationAuthorizationConsumption {
+            consumption: ContinuationAuthorizationConsumptionRow {
+                continuation_authorization_id: authorization.continuation_authorization_id.clone(),
+                worker_attempt_id,
+                consumed_fencing_epoch: writer_lease.epoch,
+                consumed_at,
+                canonical_json,
+            },
+            scheduler_lease: SchedulerLeaseBinding {
+                task_ref: dispatch.task_ref.clone(),
+                contract_epoch: dispatch.contract_epoch,
+                lease_owner: dispatch.lease_owner.clone(),
+                lease_epoch: dispatch.lease_epoch,
+            },
+        };
+        let transition = driver.begin_verified_continuation_atomically(
+            &consumption,
+            &authorization.loop_object_id,
+            authorization.expected_loop_version,
+            &authorization.task_binding.task_ref,
+            authorization.iteration,
+            &authorization.budget_id,
+            &budget_charge,
+            &writer_lease,
+        )?;
+        return Ok(SchedulerWorkerAttempt::ContinuationStarted(transition));
+    }
+
     consume_worker_authorization_for_attempt(
         authority_store,
         // The LoopDriver clock is unavailable here; use the scheduler's
         // trusted observation time only after parsing it as a wall timestamp.
         &FixedSchedulerClock::parse(observed_wall_time)?,
-        authorization_id,
+        candidate_authorization_id.ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(
+                "candidate WIA was absent after continuation selection".to_owned(),
+            )
+        })?,
         worker_attempt_id,
         &dispatch,
     )?;
@@ -2686,10 +2776,10 @@ where
 
 /// Run one daemon-private scheduler pass over durable runnable work.
 ///
-/// This is the live caller for candidate WIA handoff composition. It never
-/// accepts client input, dispatches an executor, records worker progress, or
-/// changes Task lifecycle state. A candidate WIA cannot enter the bounded
-/// harness; only a future distinct continuation authority may do so.
+/// This private tick chooses either candidate-WIA reconciliation or a
+/// distinct persisted verified continuation entry. It never accepts client
+/// input, dispatches an executor, records worker progress, or changes Task
+/// lifecycle state. Candidate WIA cannot enter the bounded harness.
 pub(crate) fn run_private_scheduler_tick(
     authority_database_path: &Path,
 ) -> Result<(), SchedulerAuthorityError> {
@@ -2717,18 +2807,28 @@ pub(crate) fn run_private_scheduler_tick(
                 resolved_work.task_binding.contract_epoch
             )));
         }
-        let authorization = authority_store
-            .load_unconsumed_worker_iteration_authorization_for_task_binding(
-                &resolved_work.task_binding.task_ref,
-                resolved_work.task_binding.contract_epoch,
+        let continuation_authorization = authority_store
+            .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
+            .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
+        let candidate_authorization = if continuation_authorization.is_none() {
+            Some(
+                authority_store
+                    .load_unconsumed_worker_iteration_authorization_for_task_binding(
+                        &resolved_work.task_binding.task_ref,
+                        resolved_work.task_binding.contract_epoch,
+                    )
+                    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+                    .ok_or_else(|| {
+                        SchedulerAuthorityError::CandidateUnavailable(format!(
+                            "no unconsumed worker authorization or continuation authority for {} at epoch {}",
+                            resolved_work.task_binding.task_ref,
+                            resolved_work.task_binding.contract_epoch
+                        ))
+                    })?,
             )
-            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-            .ok_or_else(|| {
-                SchedulerAuthorityError::CandidateUnavailable(format!(
-                    "no unconsumed worker authorization for {} at epoch {}",
-                    resolved_work.task_binding.task_ref, resolved_work.task_binding.contract_epoch
-                ))
-            })?;
+        } else {
+            None
+        };
         let observed_wall_time = clock
             .now()
             .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
@@ -2759,7 +2859,10 @@ pub(crate) fn run_private_scheduler_tick(
             &resolved_work.task_binding,
             scheduler_lease_epoch,
             observed_wall_time.as_str(),
-            &authorization.authorization_id,
+            candidate_authorization
+                .as_ref()
+                .map(|authorization| &authorization.authorization_id),
+            continuation_authorization.as_ref(),
             worker_attempt_id,
             observed_wall_time.as_str(),
         )?;
