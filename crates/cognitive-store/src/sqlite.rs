@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -1258,6 +1258,7 @@ fn parse_and_verify_context_payload(
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct ContextAuthorizationFactsPayload {
+    header: GovernedObjectHeader,
     fact_set_id: String,
     subject_ref: String,
     tenant_id: String,
@@ -1272,6 +1273,7 @@ struct ContextAuthorizationFactsPayload {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct ContextRevocationFactPayload {
+    header: GovernedObjectHeader,
     revocation_fact_id: String,
     tenant_id: String,
     revocation_epoch: i64,
@@ -1282,7 +1284,8 @@ struct ContextRevocationFactPayload {
 fn parse_context_authorization_facts(
     canonical_json: &str,
 ) -> Result<ContextAuthorizationFactsPayload, StorePortError> {
-    serde_json::from_str(canonical_json)
+    let payload = parse_and_verify_context_payload(canonical_json, "ContextAuthorizationFacts")?;
+    serde_json::from_value(payload)
         .map_err(|error| invalid_context_payload("ContextAuthorizationFacts", error))
 }
 
@@ -1290,7 +1293,9 @@ fn validate_context_authorization_facts_row(
     facts: &ContextAuthorizationFactsRow,
 ) -> Result<(), StorePortError> {
     let payload = parse_context_authorization_facts(&facts.canonical_json)?;
-    if payload.fact_set_id != facts.fact_set_id.as_str()
+    if payload.header.id.0 != facts.fact_set_id.as_str()
+        || payload.header.r#type != "ContextAuthorizationFacts"
+        || payload.fact_set_id != facts.fact_set_id.as_str()
         || payload.subject_ref != facts.subject_ref
         || payload.tenant_id != facts.tenant_id
         || payload.principal != facts.principal
@@ -1317,9 +1322,12 @@ fn validate_context_authorization_facts_row(
 fn validate_context_revocation_fact_row(
     fact: &ContextRevocationFactRow,
 ) -> Result<(), StorePortError> {
-    let payload: ContextRevocationFactPayload = serde_json::from_str(&fact.canonical_json)
+    let payload = parse_and_verify_context_payload(&fact.canonical_json, "ContextRevocationFact")?;
+    let payload: ContextRevocationFactPayload = serde_json::from_value(payload)
         .map_err(|error| invalid_context_payload("ContextRevocationFact", error))?;
-    if payload.revocation_fact_id != fact.revocation_fact_id.as_str()
+    if payload.header.id.0 != fact.revocation_fact_id.as_str()
+        || payload.header.r#type != "ContextRevocationFact"
+        || payload.revocation_fact_id != fact.revocation_fact_id.as_str()
         || payload.tenant_id != fact.tenant_id
         || payload.revocation_epoch != fact.revocation_epoch
         || payload.revoked_subject_ref != fact.revoked_subject_ref

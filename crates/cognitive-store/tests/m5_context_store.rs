@@ -9,11 +9,13 @@
 use cognitive_contracts::generated::context_view::{
     LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
-use cognitive_domain::ObjectId;
-use cognitive_kernel::authz::ObjectGovernance;
+use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
+use cognitive_domain::{ObjectId, UriRef, WallTimestamp};
+use cognitive_kernel::authz::{ActorChainFacts, MembershipFacts, ObjectGovernance, PrincipalFacts};
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
-    ContextCandidateQuery, ContextRequestRow, ContextStore, ContextViewRow, StorePortError,
+    ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextCandidateQuery,
+    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow, StorePortError,
     WorkspaceContextSourceRow,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
@@ -160,6 +162,147 @@ fn workspace_source_row(
         content_tokens: Some(3),
         canonical_json,
     }
+}
+
+fn timestamp(value: &str) -> WallTimestamp {
+    WallTimestamp::parse(value).unwrap()
+}
+
+fn context_authorization_facts_row(identifier: &ObjectId) -> ContextAuthorizationFactsRow {
+    let principal = PrincipalFacts {
+        principal_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+        authenticated: true,
+        active: true,
+        tenant_id: Some("tenant-a".to_owned()),
+    };
+    let actor_chain = ActorChainFacts {
+        chain_digest: format!("sha256:{}", "d".repeat(64)),
+        resolved: true,
+    };
+    let membership = Some(MembershipFacts {
+        valid: true,
+        roles: ["owner".to_owned()].into(),
+    });
+    let capability_links = vec![CapabilityConstraints {
+        subject: principal.principal_ref.as_str().to_owned(),
+        audience: "daemon://tenant-a/context".to_owned(),
+        resource: "workspace://tenant-a/project".to_owned(),
+        purpose: "task_execution".to_owned(),
+        actions: ["read_body".to_owned()].into(),
+        parameter_bounds: Default::default(),
+        lease: LeaseWindow {
+            not_before: timestamp("2026-08-05T00:00:00Z"),
+            expires: timestamp("2026-08-06T00:00:00Z"),
+        },
+        depth_remaining: 1,
+        issued_epoch: 1,
+    }];
+    let payload = json!({
+        "header": governed_header(identifier, "ContextAuthorizationFacts"),
+        "fact_set_id": identifier.as_str(),
+        "subject_ref": principal.principal_ref.as_str(),
+        "tenant_id": "tenant-a",
+        "principal": principal,
+        "actor_chain": actor_chain,
+        "membership": membership,
+        "capability_links": capability_links,
+        "explicit_denies": [],
+        "capability_set_version": 1,
+        "issued_revocation_epoch": 1,
+    });
+    let (canonical_json, _) = sealed_payload(payload);
+    ContextAuthorizationFactsRow {
+        fact_set_id: identifier.clone(),
+        subject_ref: "principal://tenant-a/daemon".to_owned(),
+        tenant_id: "tenant-a".to_owned(),
+        principal,
+        actor_chain,
+        membership,
+        capability_links,
+        explicit_denies: vec![],
+        capability_set_version: 1,
+        issued_revocation_epoch: 1,
+        canonical_json,
+    }
+}
+
+fn context_revocation_fact_row(identifier: &ObjectId, epoch: i64) -> ContextRevocationFactRow {
+    let payload = json!({
+        "header": governed_header(identifier, "ContextRevocationFact"),
+        "revocation_fact_id": identifier.as_str(),
+        "tenant_id": "tenant-a",
+        "revocation_epoch": epoch,
+        "revoked_subject_ref": null,
+        "revoked_capability_ref": null,
+    });
+    let (canonical_json, _) = sealed_payload(payload);
+    ContextRevocationFactRow {
+        revocation_fact_id: identifier.clone(),
+        tenant_id: "tenant-a".to_owned(),
+        revocation_epoch: epoch,
+        revoked_subject_ref: None,
+        revoked_capability_ref: None,
+        canonical_json,
+    }
+}
+
+#[test]
+fn context_authorization_facts_reconstruct_only_against_durable_current_epoch() {
+    let (_directory, store) = fresh_store();
+    let facts = context_authorization_facts_row(&object_id(40));
+    let initial_epoch = context_revocation_fact_row(&object_id(41), 1);
+    store
+        .append_context_revocation_fact(&initial_epoch)
+        .unwrap();
+    store.append_context_authorization_facts(&facts).unwrap();
+
+    let loaded_facts = store
+        .load_latest_context_authorization_facts(&facts.subject_ref, &facts.tenant_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(loaded_facts, facts);
+    assert_eq!(
+        store
+            .load_current_context_revocation_epoch("tenant-a")
+            .unwrap(),
+        Some(1)
+    );
+    assert!(
+        loaded_facts
+            .reconstruct_snapshot(1, timestamp("2026-08-05T12:00:00Z"))
+            .is_ok()
+    );
+
+    store
+        .append_context_revocation_fact(&context_revocation_fact_row(&object_id(42), 2))
+        .unwrap();
+    assert_eq!(
+        store
+            .load_current_context_revocation_epoch("tenant-a")
+            .unwrap(),
+        Some(2)
+    );
+}
+
+#[test]
+fn context_authorization_fact_append_rejects_tampering_and_epoch_conflicts() {
+    let (_directory, store) = fresh_store();
+    let mut tampered_facts = context_authorization_facts_row(&object_id(50));
+    let mut payload: Value = serde_json::from_str(&tampered_facts.canonical_json).unwrap();
+    payload["subject_ref"] = json!("principal://tenant-a/other");
+    tampered_facts.canonical_json = serde_json::to_string(&payload).unwrap();
+    assert!(matches!(
+        store.append_context_authorization_facts(&tampered_facts),
+        Err(StorePortError::Unavailable { .. })
+    ));
+
+    let first_epoch = context_revocation_fact_row(&object_id(51), 1);
+    store.append_context_revocation_fact(&first_epoch).unwrap();
+    let conflicting_epoch = context_revocation_fact_row(&object_id(52), 1);
+    assert!(matches!(
+        store.append_context_revocation_fact(&conflicting_epoch),
+        Err(StorePortError::Conflict { .. })
+    ));
 }
 
 #[test]
