@@ -402,6 +402,109 @@ fn row_to_object(
     })
 }
 
+/// Apply the governed transition portion of an authority commit inside an
+/// already-open SQLite transaction. Callers retain ownership of the
+/// transaction so compound authority boundaries can commit or roll back all
+/// of their evidence together.
+fn commit_transition_in_transaction(
+    transaction: &Transaction<'_>,
+    commit: &TransitionCommit,
+) -> Result<CommitReceipt, StorePortError> {
+    let cas = &commit.cas;
+    let changed = transaction
+        .execute(
+            "UPDATE governed_objects
+             SET state = ?1, version = ?2, updated_at = ?3
+             WHERE object_id = ?4 AND domain = ?5 AND state = ?6 AND version = ?7",
+            (
+                cas.to_state.as_str(),
+                cas.next_version.get(),
+                cas.committed_at.as_str(),
+                cas.object_id.as_str(),
+                cas.domain.as_str(),
+                cas.from_state.as_str(),
+                cas.expected_version.get(),
+            ),
+        )
+        .map_err(unavailable("object cas"))?;
+    if changed == 0 {
+        return Err(StorePortError::Conflict {
+            detail: format!(
+                "object cas raced: {} not at {}/v{}",
+                cas.object_id, cas.from_state, cas.expected_version
+            ),
+        });
+    }
+
+    if let Some(budget) = &commit.budget {
+        let changed = transaction
+            .execute(
+                "UPDATE budgets SET state_json = ?1, version = ?2
+                 WHERE budget_id = ?3 AND version = ?4",
+                (
+                    budget.next_state_canonical_json.as_str(),
+                    budget.next_version.get(),
+                    budget.budget_id.as_str(),
+                    budget.expected_version.get(),
+                ),
+            )
+            .map_err(unavailable("budget cas"))?;
+        if changed == 0 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "budget cas raced: {} not at v{}",
+                    budget.budget_id, budget.expected_version
+                ),
+            });
+        }
+    }
+
+    let event = &commit.event;
+    transaction
+        .execute(
+            "INSERT INTO events
+             (event_id, object_id, domain, object_version, event_type, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (
+                event.event_id.as_str(),
+                event.object_id.as_str(),
+                event.domain.as_str(),
+                event.object_version.get(),
+                event.event_type.as_str(),
+                event.canonical_json.as_str(),
+            ),
+        )
+        .map_err(unavailable("append event"))?;
+    let event_sequence = transaction.last_insert_rowid();
+
+    let record = &commit.record;
+    transaction
+        .execute(
+            "INSERT INTO transition_records
+             (record_id, object_id, domain, object_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                record.record_id.as_str(),
+                record.object_id.as_str(),
+                record.domain.as_str(),
+                record.object_version.get(),
+                record.canonical_json.as_str(),
+            ),
+        )
+        .map_err(unavailable("append transition record"))?;
+
+    for outbox in &commit.outbox {
+        transaction
+            .execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert outbox row"))?;
+    }
+
+    Ok(CommitReceipt { event_sequence })
+}
+
 impl AuthorityStore for SqliteAuthorityStore {
     fn load_object(
         &self,
@@ -502,105 +605,9 @@ impl AuthorityStore for SqliteAuthorityStore {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(unavailable("begin transition"))?;
         verify_fencing_in_tx(&tx, commit.fencing_epoch)?;
-
-        // ADR-0002 rule 3: CAS via WHERE version = expected (plus identity,
-        // domain and source state); zero affected rows -> Conflict, and the
-        // dropped transaction rolls back with no side effects.
-        let cas = &commit.cas;
-        let changed = tx
-            .execute(
-                "UPDATE governed_objects
-                 SET state = ?1, version = ?2, updated_at = ?3
-                 WHERE object_id = ?4 AND domain = ?5 AND state = ?6 AND version = ?7",
-                (
-                    cas.to_state.as_str(),
-                    cas.next_version.get(),
-                    cas.committed_at.as_str(),
-                    cas.object_id.as_str(),
-                    cas.domain.as_str(),
-                    cas.from_state.as_str(),
-                    cas.expected_version.get(),
-                ),
-            )
-            .map_err(unavailable("object cas"))?;
-        if changed == 0 {
-            return Err(StorePortError::Conflict {
-                detail: format!(
-                    "object cas raced: {} not at {}/v{}",
-                    cas.object_id, cas.from_state, cas.expected_version
-                ),
-            });
-        }
-
-        // Hard-budget debit joins the same transaction, directly after the
-        // object CAS: a later statement failure rolls BOTH back together.
-        if let Some(budget) = &commit.budget {
-            let changed = tx
-                .execute(
-                    "UPDATE budgets SET state_json = ?1, version = ?2
-                     WHERE budget_id = ?3 AND version = ?4",
-                    (
-                        budget.next_state_canonical_json.as_str(),
-                        budget.next_version.get(),
-                        budget.budget_id.as_str(),
-                        budget.expected_version.get(),
-                    ),
-                )
-                .map_err(unavailable("budget cas"))?;
-            if changed == 0 {
-                return Err(StorePortError::Conflict {
-                    detail: format!(
-                        "budget cas raced: {} not at v{}",
-                        budget.budget_id, budget.expected_version
-                    ),
-                });
-            }
-        }
-
-        let event = &commit.event;
-        tx.execute(
-            "INSERT INTO events
-               (event_id, object_id, domain, object_version, event_type, canonical_json)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            (
-                event.event_id.as_str(),
-                event.object_id.as_str(),
-                event.domain.as_str(),
-                event.object_version.get(),
-                event.event_type.as_str(),
-                event.canonical_json.as_str(),
-            ),
-        )
-        .map_err(unavailable("append event"))?;
-        let sequence = tx.last_insert_rowid();
-
-        let record = &commit.record;
-        tx.execute(
-            "INSERT INTO transition_records
-               (record_id, object_id, domain, object_version, canonical_json)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            (
-                record.record_id.as_str(),
-                record.object_id.as_str(),
-                record.domain.as_str(),
-                record.object_version.get(),
-                record.canonical_json.as_str(),
-            ),
-        )
-        .map_err(unavailable("append transition record"))?;
-
-        for outbox in &commit.outbox {
-            tx.execute(
-                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
-                (outbox.event_id.as_str(), outbox.destination.as_str()),
-            )
-            .map_err(unavailable("insert outbox row"))?;
-        }
-
+        let receipt = commit_transition_in_transaction(&tx, commit)?;
         tx.commit().map_err(unavailable("commit transition"))?;
-        Ok(CommitReceipt {
-            event_sequence: sequence,
-        })
+        Ok(receipt)
     }
 
     fn load_budget(&self, budget_id: &BudgetId) -> Result<Option<StoredBudget>, StorePortError> {
