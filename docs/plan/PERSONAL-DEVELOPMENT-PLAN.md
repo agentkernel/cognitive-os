@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T02 已完成；P1-T09/P2-T03/P2-T07 in-progress；P2-T04 blocked；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T02 已完成；P1-T09/P2-T03/P2-T07/P3-T01 in-progress；P2-T04 blocked；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-05**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -107,12 +107,12 @@
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 2 | 1 | 3 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
+| Phase 3 - Context Resource Value | 6 | 0 | 1 | 0 | 5 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **17** | **3** | **1** | **32** | — |
+| **合计** | **53** | **17** | **4** | **1** | **31** | — |
 
 ## 2. 产品边界与不变量
 
@@ -236,6 +236,7 @@ slice 至少需要 focused failure-first/negative test 和其定义的 supported
 | `P2-T02/D02` | P2-T02 | private versioned six-family Resource projection/list/watch, family-scoped cursor and task/management channel isolation; unavailable authority sources must be explicit rather than fabricated | P2-T02/D01 and existing daemon authentication boundary | focused daemon process negatives, exact-Linux projection test, fmt, required CI; completion enables deterministic CLI parity |
 | `P2-T02/D03` | P2-T02 | deterministic CLI calls the same daemon Task/resource operations with distinct Task/management tokens, caches, cursors, and mutation retry policy | P2-T02/D01/D02 and admin CLI daemon client | daemon-plus-CLI process parity, channel/retry/cursor negatives, exact Linux, required CI; completion enables Shell sidecar parity |
 | `P2-T02/D04` | P2-T02 | Pi Shell private sidecar calls the same daemon Task/resource application surfaces and remains a non-authority client | P2-T02/D03 and P1-T07 Pi client boundary | TS parity/isolation negatives, daemon-side integration, exact Linux, required CI; completion is P2-T02 task-closure evidence entry |
+| `P3-T01/D01` | P3-T01 | daemon-issued TaskContract v0.4 strong ContextRequest binding plus append-only durable ContextRequest/ContextView persistence and daemon query/reload validation; request perspective must name the Task, views remain request-linked per-resolution artifacts, and no Pi output or Context record becomes Task/progress/evidence/acceptance authority | P2-T01/P2-T02 stable application contracts; existing Context schema and governed-object binding contract | focused schema/store/intent-binding positive and mismatch/replaced-reference/task-perspective negatives; exact-revision supported Linux validation and required CI. Until these run and the formal workspace/task/evidence source, scope-before-ranking, and revocation exits are satisfied, this slice remains in-progress and B03 remains not-run. |
 
 **执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
 未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
@@ -474,7 +475,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | not-started | — |
+| P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | in-progress | 2026-08-05; Lane-CTR `lane/ctr-p3-t01-context-request-binding`. `P3-T01/D01` is implementing the TaskContract v0.4 ContextRequest binding and durable request/view persistence/query prerequisite; remaining integrity negatives, required CI, full source/retrieval acceptance, and B03 remain incomplete/not-run. |
 | P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | not-started | — |
 | P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | not-started | — |
 | P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | not-started | — |
