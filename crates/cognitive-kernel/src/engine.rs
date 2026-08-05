@@ -792,6 +792,15 @@ where
         command: &TransitionCommand,
     ) -> Result<CommittedTransition, TransitionRejection> {
         let prepared = self.prepare_transition(command)?;
+        self.commit_prepared_transition(&prepared)
+    }
+
+    /// Persist one previously prepared transition without changing any of its
+    /// validated authority facts.
+    pub fn commit_prepared_transition(
+        &self,
+        prepared: &PreparedTransition,
+    ) -> Result<CommittedTransition, TransitionRejection> {
         let receipt = self
             .store
             .commit_transition(&prepared.commit)
