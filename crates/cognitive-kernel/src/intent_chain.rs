@@ -1197,7 +1197,7 @@ pub fn supersede_task_contract<S, C, G>(
     cmd: &SupersedeCommand,
 ) -> Result<SupersedeReport, EffectError>
 where
-    S: crate::ports::AuthorityStore + ProtocolStore + IntentChainStore,
+    S: crate::ports::AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
