@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -1379,14 +1379,8 @@ fn parse_workspace_context_source_row(
     content_tokens: Option<i64>,
     canonical_json: String,
 ) -> Result<WorkspaceContextSourceRow, rusqlite::Error> {
-    let parse_enum = |value: String| {
-        serde_json::from_value(serde_json::Value::String(value)).map_err(|error| {
-            rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(error),
-            )
-        })
+    let parse_enum_error = |error| {
+        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error))
     };
     Ok(WorkspaceContextSourceRow {
         source_id: ObjectId::parse(&source_id).map_err(|error| {
@@ -1404,9 +1398,11 @@ fn parse_workspace_context_source_row(
             resource_scope,
             conversation_ref,
         },
-        role: parse_enum(role)?,
-        trust_level: parse_enum(trust_level)?,
-        representation: parse_enum(representation)?,
+        role: serde_json::from_value(serde_json::Value::String(role)).map_err(parse_enum_error)?,
+        trust_level: serde_json::from_value(serde_json::Value::String(trust_level))
+            .map_err(parse_enum_error)?,
+        representation: serde_json::from_value(serde_json::Value::String(representation))
+            .map_err(parse_enum_error)?,
         provenance_ref,
         content_bytes,
         content_tokens,
