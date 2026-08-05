@@ -33,14 +33,14 @@ use crate::error::{
     CONTEXT_AUTH_DENIED, INTENT_CLARIFICATION_REQUIRED, INTENT_VERSION_SUPERSEDED, STATE_CONFLICT,
 };
 use crate::ports::{
-    Clock, ContextStore, EventDraft, IdGenerator, IntentChainStore, InterpretationRow,
-    PortFailure, ProtocolStore, TaskContractRow, UserIntentRecordRow,
+    Clock, ContextStore, EventDraft, IdGenerator, IntentChainStore, InterpretationRow, PortFailure,
+    ProtocolStore, TaskContractRow, UserIntentRecordRow,
 };
-use cognitive_contracts::generated::context_request::ContextRequest;
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::common_defs::{
     Budget, Digest, Lineage, Provenance, Retention, ValidTime,
 };
+use cognitive_contracts::generated::context_request::ContextRequest;
 use cognitive_contracts::generated::governed_object_header::{
     GovernedObjectHeader, GovernedObjectHeaderScopeDomain, GovernedObjectHeaderSensitivity,
 };
@@ -814,11 +814,9 @@ fn validate_context_request_binding<S>(
 where
     S: ContextStore,
 {
-    let request_id = ObjectId::try_from(&reference.id).map_err(|error| {
-        ProtocolDenial {
-            registered: CONTEXT_AUTH_DENIED,
-            detail: format!("ContextRequest reference identity is invalid: {error}"),
-        }
+    let request_id = ObjectId::try_from(&reference.id).map_err(|error| ProtocolDenial {
+        registered: CONTEXT_AUTH_DENIED,
+        detail: format!("ContextRequest reference identity is invalid: {error}"),
     })?;
     if reference.kind != StrongReferenceKind::Strong || reference.object_version != 1 {
         return Err(ProtocolDenial {
@@ -842,12 +840,11 @@ where
         }
         .into());
     }
-    let request_payload: ContextRequest = serde_json::from_str(&request.canonical_json).map_err(|error| {
-        ProtocolDenial {
+    let request_payload: ContextRequest =
+        serde_json::from_str(&request.canonical_json).map_err(|error| ProtocolDenial {
             registered: CONTEXT_AUTH_DENIED,
             detail: format!("durable ContextRequest is malformed: {error}"),
-        }
-    })?;
+        })?;
     if request_payload.header.id.0 != request_id.as_str()
         || request_payload.header.r#type != "ContextRequest"
         || request_payload.perspective.task != task_ref
@@ -855,8 +852,9 @@ where
     {
         return Err(ProtocolDenial {
             registered: CONTEXT_AUTH_DENIED,
-            detail: "durable ContextRequest identity, type, digest, or task perspective is inconsistent"
-                .to_owned(),
+            detail:
+                "durable ContextRequest identity, type, digest, or task perspective is inconsistent"
+                    .to_owned(),
         }
         .into());
     }

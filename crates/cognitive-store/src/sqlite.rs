@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -35,14 +35,14 @@ use cognitive_kernel::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
     CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
     CommittedEvent, ConsumedWorkerIterationAuthorization, ContextRequestRow, ContextStore,
-    ContextViewRow, ContinuationAuthorityStore,
-    ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
-    FixedPostStateRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
-    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
-    ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
-    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationRow,
+    DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow, FixedPostStateRow,
+    GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow, InterpretationRow,
+    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
+    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
+    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -1283,13 +1283,19 @@ impl ContextStore for SqliteAuthorityStore {
         match result {
             Ok(_) => Ok(()),
             Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
-                detail: format!("ContextView {} is duplicate or names an unknown request", view.view_id),
+                detail: format!(
+                    "ContextView {} is duplicate or names an unknown request",
+                    view.view_id
+                ),
             }),
             Err(error) => Err(unavailable("insert ContextView")(error)),
         }
     }
 
-    fn load_context_view(&self, view_id: &ObjectId) -> Result<Option<ContextViewRow>, StorePortError> {
+    fn load_context_view(
+        &self,
+        view_id: &ObjectId,
+    ) -> Result<Option<ContextViewRow>, StorePortError> {
         let connection = self.lock()?;
         connection
             .query_row(

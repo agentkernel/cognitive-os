@@ -5,8 +5,8 @@
 //! fail-closed adapter from P0-T04, and refuses concurrent migration via a
 //! runtime lock file. Cross-database atomicity is intentionally not claimed.
 
-use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::context_store::context_store_migration_entry;
+use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
 use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,

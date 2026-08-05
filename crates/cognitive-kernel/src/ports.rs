@@ -1024,7 +1024,10 @@ pub trait ContextStore {
     fn append_context_view(&self, view: &ContextViewRow) -> Result<(), StorePortError>;
 
     /// Load one immutable ContextView by identity.
-    fn load_context_view(&self, view_id: &ObjectId) -> Result<Option<ContextViewRow>, StorePortError>;
+    fn load_context_view(
+        &self,
+        view_id: &ObjectId,
+    ) -> Result<Option<ContextViewRow>, StorePortError>;
 }
 
 /// Durable resolution port for the governance header carried by M5 governed
