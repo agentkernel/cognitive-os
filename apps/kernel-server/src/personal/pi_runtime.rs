@@ -167,13 +167,13 @@ impl PrivatePiCandidateProcess {
         let stdout_reader = thread::spawn(move || read_bounded_output(stdout));
         let stderr_reader = thread::spawn(move || read_bounded_output(stderr));
         let started = Instant::now();
-        let timed_out = loop {
+        let exit_status = loop {
             match child.try_wait() {
-                Ok(Some(_)) => break false,
+                Ok(Some(status)) => break Some(status),
                 Ok(None) if started.elapsed() >= PRIVATE_PI_CANDIDATE_TIMEOUT => {
                     let _ = child.kill();
                     let _ = child.wait();
-                    break true;
+                    break None;
                 }
                 Ok(None) => thread::sleep(Duration::from_millis(20)),
                 Err(_) => return Err("private Pi process wait failed".to_owned()),
@@ -185,8 +185,11 @@ impl PrivatePiCandidateProcess {
         let _stderr_bytes = stderr_reader
             .join()
             .map_err(|_| "private Pi stderr reader failed".to_owned())?;
-        if timed_out {
+        let Some(exit_status) = exit_status else {
             return Err("private Pi candidate request timed out".to_owned());
+        };
+        if !exit_status.success() {
+            return Err("private Pi candidate process failed".to_owned());
         }
         if stdout_bytes.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
             return Err("private Pi candidate response exceeds transport limit".to_owned());
@@ -215,7 +218,7 @@ fn read_bounded_output<R: Read>(mut reader: R) -> Vec<u8> {
     while output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
         let bytes_read = match reader.read(&mut buffer) {
             Ok(bytes_read) => bytes_read,
-            Err(_) | 0 => break,
+            Err(_) | Ok(0) => break,
         };
         output.extend_from_slice(&buffer[..bytes_read]);
     }
