@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -2696,6 +2696,12 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             .map_err(unavailable("query continuation authorization"))?
             .collect::<Result<Vec<_>, _>>()
             .map_err(unavailable("read continuation authorization"))?;
+        if rows.len() > 1 {
+            return Err(StorePortError::Conflict {
+                detail: "multiple unconsumed continuation authorizations match scheduler work"
+                    .to_owned(),
+            });
+        }
         let Some((
             authorization_id,
             loop_object_id,
