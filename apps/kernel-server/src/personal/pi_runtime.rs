@@ -208,8 +208,8 @@ fn read_bounded_output<R: Read>(mut reader: R) -> Vec<u8> {
     let mut buffer = [0_u8; 4096];
     while output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
         let bytes_read = match reader.read(&mut buffer) {
+            Ok(0) | Err(_) => break,
             Ok(bytes_read) => bytes_read,
-            Err(_) | Ok(0) => break,
         };
         output.extend_from_slice(&buffer[..bytes_read]);
     }
