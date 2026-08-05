@@ -493,6 +493,18 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
             .expect("candidate admission receipt lookup succeeds"),
         Some(receipt.clone())
     );
+    assert!(matches!(
+        store.commit_candidate_admission(&commit),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .load_candidate_admission_receipt_by_selected_candidate_id(
+                &commit.selected_candidate_id,
+            )
+            .expect("duplicate admission leaves the original receipt available"),
+        Some(receipt.clone())
+    );
     assert!(
         store
             .load_candidate_admission_receipt_by_selected_candidate_id(&object_id(999))
