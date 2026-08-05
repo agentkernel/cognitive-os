@@ -2579,6 +2579,9 @@ fn release_closed_effect_dispatch(
         SchedulerWorkerAttempt::Stopped(transition) => {
             Ok(SchedulerWorkerAttempt::Stopped(transition))
         }
+        SchedulerWorkerAttempt::ContinuationStarted(transition) => {
+            Ok(SchedulerWorkerAttempt::ContinuationStarted(transition))
+        }
         SchedulerWorkerAttempt::AwaitingReconciliation(dispatch) => {
             Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
         }
