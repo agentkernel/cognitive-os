@@ -279,8 +279,6 @@ pub fn continuation_authority_migration_entry() -> MigrationPlanEntry {
 /// Private continuation handoff bindings; kept separate from the v10 issue
 /// records so a failed harness entry remains recoverable without mutating it.
 pub const CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11: &str = "
-ALTER TABLE continuation_authorization_consumptions
-  ADD COLUMN worker_attempt_id TEXT NOT NULL DEFAULT '';
 CREATE TABLE IF NOT EXISTS continuation_authorization_scheduler_lease_bindings (
   continuation_authorization_id TEXT PRIMARY KEY REFERENCES continuation_authorizations(continuation_authorization_id),
   task_ref                      TEXT NOT NULL,

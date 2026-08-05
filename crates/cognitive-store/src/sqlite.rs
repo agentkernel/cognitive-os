@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -335,20 +335,9 @@ impl SqliteAuthorityStore {
         )
         .map_err(unavailable("set pragmas"))?;
         conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}"
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}\n{CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11}"
         ))
         .map_err(unavailable("install schema"))?;
-        let continuation_consumption_has_worker_attempt: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('continuation_authorization_consumptions') WHERE name='worker_attempt_id')",
-                [],
-                |row| row.get(0),
-            )
-            .map_err(unavailable("inspect continuation consumption schema"))?;
-        if !continuation_consumption_has_worker_attempt {
-            conn.execute_batch(CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11)
-                .map_err(unavailable("install continuation consumption schema"))?;
-        }
         Ok(Self {
             conn: Mutex::new(conn),
         })
@@ -2771,8 +2760,8 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
         }
 
         let inserted_consumption = transaction.execute(
-            "INSERT INTO continuation_authorization_consumptions (continuation_authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-            (consumption.continuation_authorization_id.as_str(), consumption.worker_attempt_id.as_str(), consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(), consumption.canonical_json.as_str()),
+            "INSERT INTO continuation_authorization_consumptions (continuation_authorization_id, consumed_fencing_epoch, consumed_at, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+            (consumption.continuation_authorization_id.as_str(), consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(), consumption.canonical_json.as_str()),
         );
         match inserted_consumption {
             Ok(_) => {}
