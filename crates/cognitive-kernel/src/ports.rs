@@ -481,6 +481,35 @@ pub struct TaskContractRow {
     pub canonical_json: String,
 }
 
+/// One daemon-issued immutable ContextRequest. The request is the durable
+/// Context input that a TaskContract v0.4 pins with a strong reference;
+/// individual ContextViews remain request-linked resolution artifacts.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextRequestRow {
+    /// Immutable ContextRequest identity from its governed header.
+    pub request_id: ObjectId,
+    /// Task URI from `perspective.task`, retained for fail-closed lookup.
+    pub task_ref: String,
+    /// Canonical governed-object content digest.
+    pub request_digest: String,
+    /// Canonical schema-shaped ContextRequest payload.
+    pub canonical_json: String,
+}
+
+/// One daemon-issued immutable ContextView. A view binds one exact resolution
+/// to its ContextRequest and is not a replacement for the TaskContract input.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextViewRow {
+    /// Immutable ContextView identity from its governed header.
+    pub view_id: ObjectId,
+    /// Strongly referenced ContextRequest identity.
+    pub request_id: ObjectId,
+    /// Canonical governed-object content digest.
+    pub view_digest: String,
+    /// Canonical schema-shaped ContextView payload.
+    pub canonical_json: String,
+}
+
 /// One persisted immutable operation candidate proposal. This row preserves
 /// non-authority input for later daemon admission; it does not authorize an
 /// operation, reserve budget, or schedule work.
@@ -974,6 +1003,28 @@ pub trait IntentChainStore {
     /// Enumerate persisted intents bound to one task (supersede
     /// classification input), in insertion order.
     fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError>;
+}
+
+/// Append-only daemon persistence for the durable Context chain. This port
+/// intentionally exposes immutable request/view records only; it grants no
+/// authority to resolve, rank, admit operations, or change Task state.
+pub trait ContextStore {
+    /// Persist one daemon-issued immutable ContextRequest. Duplicate identity
+    /// is a conflict; callers must never replace a request in place.
+    fn append_context_request(&self, request: &ContextRequestRow) -> Result<(), StorePortError>;
+
+    /// Load one immutable ContextRequest by identity.
+    fn load_context_request(
+        &self,
+        request_id: &ObjectId,
+    ) -> Result<Option<ContextRequestRow>, StorePortError>;
+
+    /// Persist one daemon-issued immutable ContextView. Its request binding
+    /// must already exist; duplicate identity is a conflict.
+    fn append_context_view(&self, view: &ContextViewRow) -> Result<(), StorePortError>;
+
+    /// Load one immutable ContextView by identity.
+    fn load_context_view(&self, view_id: &ObjectId) -> Result<Option<ContextViewRow>, StorePortError>;
 }
 
 /// Durable resolution port for the governance header carried by M5 governed

@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -34,7 +34,8 @@ use cognitive_domain::{
 use cognitive_kernel::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
     CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
-    CommittedEvent, ConsumedWorkerIterationAuthorization, ContinuationAuthorityStore,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextRequestRow, ContextStore,
+    ContextViewRow, ContinuationAuthorityStore,
     ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
     FixedPostStateRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
     InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
@@ -1222,6 +1223,98 @@ fn row_to_task_contract(row: &rusqlite::Row<'_>) -> Result<TaskContractRow, rusq
 
 const TASK_CONTRACT_COLUMNS: &str = "contract_id, task_ref, contract_epoch, \
      user_intent_record_id, interpretation_id, accepted_by, contract_digest, canonical_json";
+
+impl ContextStore for SqliteAuthorityStore {
+    fn append_context_request(&self, request: &ContextRequestRow) -> Result<(), StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.execute(
+            "INSERT INTO context_requests (request_id, task_ref, request_digest, canonical_json) \
+             VALUES (?1, ?2, ?3, ?4)",
+            (
+                request.request_id.as_str(),
+                request.task_ref.as_str(),
+                request.request_digest.as_str(),
+                request.canonical_json.as_str(),
+            ),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!("ContextRequest {} already persisted", request.request_id),
+            }),
+            Err(error) => Err(unavailable("insert ContextRequest")(error)),
+        }
+    }
+
+    fn load_context_request(
+        &self,
+        request_id: &ObjectId,
+    ) -> Result<Option<ContextRequestRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT task_ref, request_digest, canonical_json FROM context_requests WHERE request_id=?1",
+                (request_id.as_str(),),
+                |row| {
+                    Ok(ContextRequestRow {
+                        request_id: request_id.clone(),
+                        task_ref: row.get(0)?,
+                        request_digest: row.get(1)?,
+                        canonical_json: row.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(unavailable("load ContextRequest"))
+    }
+
+    fn append_context_view(&self, view: &ContextViewRow) -> Result<(), StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.execute(
+            "INSERT INTO context_views (view_id, request_id, view_digest, canonical_json) \
+             VALUES (?1, ?2, ?3, ?4)",
+            (
+                view.view_id.as_str(),
+                view.request_id.as_str(),
+                view.view_digest.as_str(),
+                view.canonical_json.as_str(),
+            ),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!("ContextView {} is duplicate or names an unknown request", view.view_id),
+            }),
+            Err(error) => Err(unavailable("insert ContextView")(error)),
+        }
+    }
+
+    fn load_context_view(&self, view_id: &ObjectId) -> Result<Option<ContextViewRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT request_id, view_digest, canonical_json FROM context_views WHERE view_id=?1",
+                (view_id.as_str(),),
+                |row| {
+                    let request_id: String = row.get(0)?;
+                    Ok(ContextViewRow {
+                        view_id: view_id.clone(),
+                        request_id: ObjectId::parse(&request_id).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?,
+                        view_digest: row.get(1)?,
+                        canonical_json: row.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(unavailable("load ContextView"))
+    }
+}
 
 fn append_event_in_tx(
     tx: &Transaction<'_>,

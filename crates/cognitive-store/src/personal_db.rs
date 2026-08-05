@@ -6,6 +6,7 @@
 //! runtime lock file. Cross-database atomicity is intentionally not claimed.
 
 use crate::installation::INSTALLATION_SCHEMA_V1;
+use crate::context_store::context_store_migration_entry;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
 use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
@@ -63,7 +64,8 @@ impl PersonalDatabasePrepareReport {
 /// snapshots, v7 = immutable worker iteration authorization storage, v8 =
 /// immutable worker authorization consumption records, and v9 = immutable
 /// WIA-to-scheduler lease binding records, v10 = private verified-continuation
-/// evidence, and v11 = private continuation-to-scheduler handoff bindings.
+/// evidence, v11 = private continuation-to-scheduler handoff bindings, and
+/// v12 = durable immutable Context request/view records.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -77,6 +79,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         worker_authorization_lease_binding_migration_entry(),
         continuation_authority_migration_entry(),
         continuation_authority_consumption_migration_entry(),
+        context_store_migration_entry(),
     ]
 }
 
