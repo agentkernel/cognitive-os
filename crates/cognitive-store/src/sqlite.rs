@@ -1,4 +1,4 @@
-//! SQLite (WAL) authority store adapter — the reference implementation of
+﻿//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -35,6 +35,7 @@ use cognitive_contracts::projection::verify_content_digest;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
+use cognitive_kernel::effects::GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN;
 use cognitive_kernel::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
     CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
@@ -48,10 +49,7 @@ use cognitive_kernel::ports::{
     VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
     WorkerIterationAuthorizationRow,
 };
-use cognitive_kernel::{
-    BudgetState, EffectClass, ExecutorCapabilities, GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN,
-    OperationDescriptor,
-};
+use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
 use serde_json::Value;
 use std::path::Path;
