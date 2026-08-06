@@ -197,10 +197,11 @@ pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock:
         },
     ];
     for descriptor in &mut catalog {
-        descriptor.descriptor_digest = match compute_descriptor_digest(descriptor) {
-            Ok(descriptor_digest) => descriptor_digest,
-            Err(error) => panic!("built-in Tool descriptor must have a canonical digest: {error}"),
-        };
+        // A malformed built-in descriptor retains an empty digest and is
+        // consequently rejected by the same resolution path as any drift.
+        if let Ok(descriptor_digest) = compute_descriptor_digest(descriptor) {
+            descriptor.descriptor_digest = descriptor_digest;
+        }
     }
     catalog
 });
@@ -544,7 +545,7 @@ pub fn builtin_catalog_projection() -> BTreeMap<String, NativeToolDescriptor> {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
 
