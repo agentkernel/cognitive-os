@@ -19,8 +19,9 @@ use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::ffi::{OsStr, OsString};
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::process::{Command, Stdio};
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread::{self, JoinHandle, sleep};
 use std::time::{Duration, Instant};
 
@@ -116,7 +117,7 @@ fn daemon_candidate(flags: &ParsedFlags) -> Result<Value, String> {
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|error| format!("daemon candidate Pi launch failed: {error}"))?;
-    let stdout_reader = collect_child_stream(
+    let (stdout_reader, agent_end_receiver) = collect_candidate_event_stream(
         child
             .stdout
             .take()
@@ -135,10 +136,21 @@ fn daemon_candidate(flags: &ParsedFlags) -> Result<Value, String> {
         .take()
         .ok_or_else(|| "daemon candidate Pi stdin was not captured".to_owned())?;
     write_rpc_prompt(&mut stdin, "private-candidate", &candidate_prompt(&request))?;
-    drop(stdin);
+    let (close_stdin_sender, close_stdin_receiver) = mpsc::channel();
+    let stdin_holder = thread::spawn(move || {
+        let _stdin = stdin;
+        let _ = close_stdin_receiver.recv();
+    });
 
     let started = Instant::now();
-    let exit_status = wait_for_candidate_exit(&mut child, started)?;
+    let exit_status = wait_for_candidate_exit(
+        &mut child,
+        started,
+        &agent_end_receiver,
+        &close_stdin_sender,
+    )?;
+    let _ = close_stdin_sender.send(());
+    let _ = stdin_holder.join();
     let stdout = join_child_stream(stdout_reader, "stdout")?;
     let _stderr = join_child_stream(stderr_reader, "stderr")?;
     if stdout.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
@@ -174,14 +186,22 @@ fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
 fn wait_for_candidate_exit(
     child: &mut std::process::Child,
     started: Instant,
+    agent_end_receiver: &Receiver<()>,
+    close_stdin_sender: &Sender<()>,
 ) -> Result<std::process::ExitStatus, String> {
+    let mut agent_end_observed = false;
     loop {
         match child
             .try_wait()
             .map_err(|error| format!("daemon candidate Pi wait failed: {error}"))?
         {
             Some(status) => return Ok(status),
+            None if !agent_end_observed && agent_end_receiver.try_recv().is_ok() => {
+                agent_end_observed = true;
+                let _ = close_stdin_sender.send(());
+            }
             None if started.elapsed() >= DAEMON_CANDIDATE_TIMEOUT => {
+                let _ = close_stdin_sender.send(());
                 child
                     .kill()
                     .map_err(|error| format!("daemon candidate Pi timeout kill failed: {error}"))?;
@@ -192,6 +212,45 @@ fn wait_for_candidate_exit(
             None => sleep(Duration::from_millis(25)),
         }
     }
+}
+
+fn collect_candidate_event_stream<R>(
+    stream: R,
+) -> (JoinHandle<Result<Vec<u8>, std::io::Error>>, Receiver<()>)
+where
+    R: Read + Send + 'static,
+{
+    let (agent_end_sender, agent_end_receiver) = mpsc::channel();
+    let reader = thread::spawn(move || {
+        let mut output = Vec::new();
+        let mut buffered_stream = BufReader::new(stream);
+        loop {
+            let mut line = Vec::new();
+            let bytes_read = buffered_stream.read_until(b'\n', &mut line)?;
+            if bytes_read == 0 {
+                return Ok(output);
+            }
+            if output.len().saturating_add(line.len()) > DAEMON_CANDIDATE_FRAME_LIMIT {
+                output.extend_from_slice(&line);
+                return Ok(output);
+            }
+            if serde_json::from_slice::<Value>(&line)
+                .ok()
+                .and_then(|record| {
+                    record
+                        .get("type")
+                        .and_then(Value::as_str)
+                        .map(str::to_owned)
+                })
+                .as_deref()
+                == Some("agent_end")
+            {
+                let _ = agent_end_sender.send(());
+            }
+            output.extend_from_slice(&line);
+        }
+    });
+    (reader, agent_end_receiver)
 }
 
 /// Attempts one real pinned Pi Extension session without changing the
