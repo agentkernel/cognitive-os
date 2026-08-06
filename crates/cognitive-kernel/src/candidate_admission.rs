@@ -698,6 +698,7 @@ mod tests {
                 machine_expression: None,
                 verifier_ref: Some("verifier://personal/test".to_owned()),
             }],
+            context_request_ref: None,
             contract_epoch: 1,
             deadline: None,
             header: contract_header,

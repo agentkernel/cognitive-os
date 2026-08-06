@@ -69,7 +69,9 @@ fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
     let path = runtime_root
         .join("cognitiveos")
         .join("local-bootstrap.secret");
-    for _ in 0..100 {
+    // Windows CI can delay visibility of a just-created private file while
+    // concurrent workspace tests are starting daemon children.
+    for _ in 0..300 {
         if let Ok(contents) = std::fs::read_to_string(&path) {
             let trimmed = contents.trim().to_owned();
             if !trimmed.is_empty() {

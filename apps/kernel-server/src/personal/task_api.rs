@@ -39,9 +39,13 @@ use cognitive_domain::{BudgetId, ObjectId, UriRef, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
-    TaskContractCommand, UserIntentCommand,
+    TaskContractCommand, UserIntentCommand, compose_governed_header,
+    seal_governed_object_content_digest, strong_reference_to,
 };
-use cognitive_kernel::ports::ProtocolStore;
+use cognitive_kernel::ports::{
+    ContextRequestRow, ContextStore, ProtocolStore, SchedulerExecutionPolicyRow,
+    SchedulerExecutionPolicyStore,
+};
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde::{Deserialize, Serialize};
@@ -348,11 +352,11 @@ impl TaskApi {
             Ok(governance) => governance,
             Err(response) => return response,
         };
-        let contract = match contract_from_draft(request.task_contract_draft, principal, governance)
-        {
-            Ok(contract) => contract,
-            Err(response) => return response,
-        };
+        let mut contract =
+            match contract_from_draft(request.task_contract_draft, principal, governance.clone()) {
+                Ok(contract) => contract,
+                Err(response) => return response,
+            };
         let interpretation_id = match ObjectId::try_from(&request.acceptance.interpretation_id) {
             Ok(value) => value,
             Err(_) => return error(400, "TASK_INVALID_REQUEST", "interpretation id is invalid"),
@@ -370,6 +374,30 @@ impl TaskApi {
             Ok(lease) => lease,
             Err(response) => return response,
         };
+        let context_request_ref = match load_scheduler_policy_context_request(
+            service.store(),
+            &contract,
+            request.expected_current_epoch + 1,
+        ) {
+            Ok(Some(reference)) => reference,
+            Ok(None) => {
+                match issue_context_request(service.store(), &contract, &governance, principal) {
+                    Ok(reference) => reference,
+                    Err(response) => return response,
+                }
+            }
+            Err(response) => return response,
+        };
+        contract.context_request_ref = Some(context_request_ref);
+        if let Err(response) = persist_scheduler_execution_policy(
+            service.store(),
+            &contract,
+            principal,
+            &governance,
+            request.expected_current_epoch + 1,
+        ) {
+            return response;
+        }
         match service.admit(
             &lease,
             &request.preview_digest.0,
@@ -498,6 +526,170 @@ impl TaskApi {
     }
 }
 
+/// Persist the complete daemon-owned input set used by the first owner-local
+/// scheduler path. This is written before TaskContract admission so a task can
+/// never become runnable without its Context query and candidate-admission
+/// policy. The values are daemon policy, not client-controlled Task fields.
+fn persist_scheduler_execution_policy(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    principal: &str,
+    governance: &GovernanceSeed,
+    contract_epoch: i64,
+) -> Result<(), TaskApiResponse> {
+    let context_request_ref = contract.context_request_ref.as_ref().ok_or_else(|| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_MISSING_CONTEXT",
+            "daemon could not bind scheduler policy to the ContextRequest",
+        )
+    })?;
+    let context_request_id = ObjectId::parse(context_request_ref.id.0.as_str()).map_err(|_| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_INVALID_CONTEXT",
+            "daemon could not parse the ContextRequest identity",
+        )
+    })?;
+    if contract_epoch < 1 {
+        return Err(error(
+            503,
+            "TASK_SCHEDULER_POLICY_INVALID_EPOCH",
+            "daemon could not derive the next TaskContract epoch",
+        ));
+    }
+
+    // A previous attempt may have persisted the immutable policy and then
+    // lost the TaskContract epoch CAS. Reusing the exact row preserves the
+    // candidate identity and ContextRequest binding for a safe retry.
+    if let Some(existing_policy) = store
+        .load_scheduler_execution_policy(contract.task_ref.as_str(), contract_epoch)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not reload scheduler execution policy",
+            )
+        })?
+    {
+        if existing_policy.context_request_id == context_request_id {
+            return Ok(());
+        }
+        return Err(error(
+            409,
+            "TASK_SCHEDULER_POLICY_BINDING_CONFLICT",
+            "scheduler execution policy already binds a different ContextRequest",
+        ));
+    }
+
+    // Personal's first owner-local policy intentionally uses one fixed local
+    // tenant and workspace prefix. A future multi-tenant policy must replace
+    // these daemon-owned inputs with an explicit persisted configuration; the
+    // scheduler must never infer them from Pi or from a strong reference ID.
+    let policy = json!({
+        "schema_version": 1,
+        "task_ref": contract.task_ref.as_str(),
+        "contract_epoch": contract_epoch,
+        "context": {
+            "request_id": context_request_ref.id.0.as_str(),
+            "authorization_subject_ref": principal,
+            "tenant_id": "personal",
+            "resource_scope_prefix": "workspace://personal/",
+            "conversation_ref": null,
+            "source_limit": 32,
+        },
+        "admission": {
+            "candidate_id": new_object_id()?.as_str(),
+            "authorization_subject_ref": principal,
+            "authorization_purpose": "task_execution",
+            "budget_charge": {"semantic_calls": 1},
+            "governance": {
+                "owner": &governance.owner,
+                "authority": &governance.authority,
+                "resource_scope": &governance.resource_scope,
+                "tenant_id": null,
+                "created_by": "principal://personal/daemon",
+                "sensitivity": "internal",
+                "purpose_constraints": ["task_execution"],
+                "retention_policy": "standard",
+            },
+            "actor_ref": "principal://personal/daemon",
+            "authority_ref": "authority://personal/daemon",
+            "correlation_id": contract.correlation_id.as_str(),
+        },
+    });
+    let canonical_json = serde_json::to_string(&policy).map_err(|_| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_SERIALIZATION_FAILED",
+            "daemon could not serialize scheduler execution policy",
+        )
+    })?;
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: contract.task_ref.as_str().to_owned(),
+            contract_epoch,
+            context_request_id,
+            canonical_json,
+        })
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not persist scheduler execution policy",
+            )
+        })
+}
+
+/// Recover the immutable ContextRequest selected by a previously persisted
+/// scheduler policy. This is only a retry path for the exact next epoch; it
+/// never derives a new policy from the stored JSON or from client input.
+fn load_scheduler_policy_context_request(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    contract_epoch: i64,
+) -> Result<Option<StrongReference>, TaskApiResponse> {
+    let Some(policy) = store
+        .load_scheduler_execution_policy(contract.task_ref.as_str(), contract_epoch)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not reload scheduler execution policy",
+            )
+        })?
+    else {
+        return Ok(None);
+    };
+    let request = store
+        .load_context_request(&policy.context_request_id)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "daemon could not reload the scheduler ContextRequest",
+            )
+        })?
+        .ok_or_else(|| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "scheduler policy references a missing ContextRequest",
+            )
+        })?;
+    if request.task_ref != contract.task_ref.as_str() {
+        return Err(error(
+            409,
+            "TASK_SCHEDULER_POLICY_BINDING_CONFLICT",
+            "scheduler policy ContextRequest belongs to a different Task",
+        ));
+    }
+    Ok(Some(strong_reference_to(
+        &request.request_id,
+        &request.request_digest,
+    )))
+}
+
 fn decode<T: serde::de::DeserializeOwned>(body: &[u8]) -> Result<T, TaskApiResponse> {
     serde_json::from_slice(body).map_err(|_| {
         error(
@@ -576,6 +768,92 @@ fn principal_digest(principal: &str) -> String {
     format!("sha256:{hash:016x}{hash:016x}{hash:016x}{hash:016x}")
 }
 
+/// Persist the daemon's immutable ContextRequest before TaskContract minting.
+/// The client draft supplies no Context authority: purpose, perspective,
+/// freshness, sensitivity, and render target are daemon-selected policy.
+fn issue_context_request(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    governance: &GovernanceSeed,
+    principal: &str,
+) -> Result<StrongReference, TaskApiResponse> {
+    let request_id = new_object_id()?;
+    let created_at = cognitive_kernel::ports::Clock::now(&SystemClock).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_CLOCK_UNAVAILABLE",
+            "daemon could not timestamp the Context request",
+        )
+    })?;
+    let header = compose_governed_header(
+        &request_id,
+        "ContextRequest",
+        "cognitiveos.context-request/0.1",
+        governance,
+        vec![contract.task_ref.as_str().to_owned()],
+        Vec::new(),
+        "daemon-task-admission-context-request",
+        &created_at,
+    )
+    .map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_HEADER_REJECTED",
+            "daemon could not compose the Context request header",
+        )
+    })?;
+    let payload = json!({
+        "header": header,
+        "purpose": "task_execution",
+        "perspective": {
+            "principal": principal,
+            "task": contract.task_ref.as_str(),
+            "episode": format!("episode://personal/{}", request_id.as_str()),
+        },
+        "budget": contract.budget,
+        "priority": ["task", "evidence"],
+        "required": [],
+        "forbidden": [],
+        "freshness": {"world_max_age_ms": 0},
+        "sensitivity": {"max_input": "internal", "egress": "none"},
+        "target_profile": {
+            "kind": "structured",
+            "schema": "cognitiveos.context-view/0.1",
+        },
+        "allow_partial": false,
+    });
+    let (sealed_payload, request_digest) =
+        seal_governed_object_content_digest(payload).map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_SEALING_FAILED",
+                "daemon could not seal the Context request",
+            )
+        })?;
+    let canonical_json = serde_json::to_string(&sealed_payload).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_SERIALIZATION_FAILED",
+            "daemon could not serialize the Context request",
+        )
+    })?;
+    store
+        .append_context_request(&ContextRequestRow {
+            request_id: request_id.clone(),
+            task_ref: contract.task_ref.as_str().to_owned(),
+            request_digest: request_digest.clone(),
+            canonical_json,
+        })
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "daemon could not persist the Context request",
+            )
+        })?;
+    Ok(strong_reference_to(&request_id, &request_digest))
+}
+
 fn contract_from_draft(
     draft: TaskContractDraft,
     principal: &str,
@@ -600,6 +878,7 @@ fn contract_from_draft(
             .map_err(|_| error(400, "TASK_INVALID_REQUEST", "budget id is invalid"))?,
         allowed_state_domains: draft.allowed_state_domains,
         allowed_tools: draft.allowed_tools,
+        context_request_ref: None,
         governance,
         correlation_id: correlation(principal)?,
     })

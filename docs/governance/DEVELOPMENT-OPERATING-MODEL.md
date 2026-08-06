@@ -119,6 +119,16 @@ The following anti-fragmentation rules apply:
   horizontal helper, parser, or boundary.
 - A completed slice is not a reason to open a parallel slice over the same
   path. The slice's exact lease and handoff are the coordination boundary.
+- **Continuous autonomous delivery:** when an owner requests continued
+  development, the agent must autonomously select and implement the next
+  smallest vertical slice within the active task and lease. It continues until
+  task completion, an explicit non-autonomous blocker, or an owner-requested
+  pause/scope change. Checkpoint commits, CI submission, intermediate
+  validation results, or recoverable environment failures are workflow events,
+  not stop conditions. The agent records them while proceeding to the next
+  implementation, repair, or registered validation action. It must not stop
+  merely to provide a progress summary unless a decision is needed, unknown
+  concurrent changes appear, or the owner asks for one.
 
 The progress view must report three independent layers: formal task status,
 delivery-slice status, and Gate/campaign status. A task can remain
@@ -155,9 +165,28 @@ When focused negative tests, supported validation, required CI, evidence
 synchronization and review requirements all pass, standing authorization also
 allows the agent to mark the PR ready and merge it without another routine
 confirmation. The authorization never permits merging an incomplete Slice,
-bypassing a failed/pending check, resolving a product/normative decision,
-performing a secret/infrastructure operation or force pushing. Direct feature
-work on `main` and merging an explicitly incomplete checkpoint are prohibited.
+bypassing a failed/pending check, resolving a product/normative decision or
+force pushing. Direct feature work on `main` and merging an explicitly
+incomplete checkpoint are prohibited.
+
+### 2.3 Standing operator authorization
+
+The repository owner grants the agent standing authority to decide and execute
+operations needed by an active leased Personal slice without per-operation
+confirmation. This includes disposable remote validation, approved Secret Store
+access, least-privilege elevation, and scoped user-service or system
+configuration changes. The authority is operational, not evidentiary: every
+remote build still uses a pushed exact revision; every action remains within the
+active lease; and Gate, release, Profile, task-completion, and campaign claims
+remain governed by their separately registered evidence requirements.
+
+The authorization does not relax secret handling: secret material must never be
+placed in arguments, ordinary configuration, SQLite, logs, CI output, tests, or
+evidence. Operations must be narrowly scoped, auditable, and use an available
+rollback or cleanup path. It does not authorize force push, destructive or
+irreversible repository commands, modification of isolated formal campaign
+guests outside their preregistered procedure, or changes beyond the active
+slice's declared system boundary.
 
 A coherent checkpoint must satisfy all locally eligible safeguards: declared
 lease scope, reviewed staged paths, no secret material, no unexpected syntax or

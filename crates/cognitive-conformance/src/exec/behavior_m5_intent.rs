@@ -218,6 +218,7 @@ fn contract_cmd(contract_n: u64, task_ref: &str) -> Result<TaskContractCommand, 
             .map_err(|error| env_err(error.to_string()))?,
         allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
         allowed_tools: vec!["operation://tenant-a/payments/refund".to_owned()],
+        context_request_ref: None,
         governance: seed()?,
         correlation_id: uri("corr://tenant-a/cfr-m5-intent")?,
     })

@@ -79,7 +79,6 @@ export class FakePi implements ExtensionAPI {
   readonly commands = new Map<string, ExtensionCommandSpec>();
   readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
-
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
   private sessionStartHandler:

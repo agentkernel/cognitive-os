@@ -33,13 +33,14 @@ use crate::error::{
     CONTEXT_AUTH_DENIED, INTENT_CLARIFICATION_REQUIRED, INTENT_VERSION_SUPERSEDED, STATE_CONFLICT,
 };
 use crate::ports::{
-    Clock, EventDraft, IdGenerator, IntentChainStore, InterpretationRow, PortFailure,
+    Clock, ContextStore, EventDraft, IdGenerator, IntentChainStore, InterpretationRow, PortFailure,
     ProtocolStore, TaskContractRow, UserIntentRecordRow,
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::common_defs::{
     Budget, Digest, Lineage, Provenance, Retention, ValidTime,
 };
+use cognitive_contracts::generated::context_request::ContextRequest;
 use cognitive_contracts::generated::governed_object_header::{
     GovernedObjectHeader, GovernedObjectHeaderScopeDomain, GovernedObjectHeaderSensitivity,
 };
@@ -791,10 +792,73 @@ pub struct TaskContractCommand {
     pub allowed_state_domains: Vec<String>,
     /// Allowed tool URIs.
     pub allowed_tools: Vec<String>,
+    /// Optional daemon-issued immutable ContextRequest binding. `Some` mints
+    /// TaskContract v0.4 after durable strong-reference and task-perspective
+    /// validation; `None` preserves the v0.3 execution contract.
+    pub context_request_ref: Option<StrongReference>,
     /// Governance header facts.
     pub governance: GovernanceSeed,
     /// Correlation chain.
     pub correlation_id: UriRef,
+}
+
+/// Validate that a v0.4 contract binds the exact daemon-issued ContextRequest
+/// it names. This runs before contract composition and persistence, so an
+/// unknown, stale, malformed, or task-mismatched request creates no contract
+/// row or event.
+fn validate_context_request_binding<S>(
+    store: &S,
+    reference: &StrongReference,
+    task_ref: &str,
+) -> Result<(), EffectError>
+where
+    S: ContextStore,
+{
+    let request_id = ObjectId::try_from(&reference.id).map_err(|error| ProtocolDenial {
+        registered: CONTEXT_AUTH_DENIED,
+        detail: format!("ContextRequest reference identity is invalid: {error}"),
+    })?;
+    if reference.kind != StrongReferenceKind::Strong || reference.object_version != 1 {
+        return Err(ProtocolDenial {
+            registered: CONTEXT_AUTH_DENIED,
+            detail: "ContextRequest binding must be a version-one strong reference".to_owned(),
+        }
+        .into());
+    }
+    let request = store
+        .load_context_request(&request_id)
+        .map_err(store_rejection)?
+        .ok_or_else(|| ProtocolDenial {
+            registered: CONTEXT_AUTH_DENIED,
+            detail: format!("ContextRequest {request_id} is not durably available"),
+        })?;
+    if request.task_ref != task_ref || request.request_digest != reference.content_digest.0 {
+        return Err(ProtocolDenial {
+            registered: CONTEXT_AUTH_DENIED,
+            detail: "ContextRequest strong reference does not match its durable task binding"
+                .to_owned(),
+        }
+        .into());
+    }
+    let request_payload: ContextRequest =
+        serde_json::from_str(&request.canonical_json).map_err(|error| ProtocolDenial {
+            registered: CONTEXT_AUTH_DENIED,
+            detail: format!("durable ContextRequest is malformed: {error}"),
+        })?;
+    if request_payload.header.id.0 != request_id.as_str()
+        || request_payload.header.r#type != "ContextRequest"
+        || request_payload.perspective.task != task_ref
+        || request_payload.header.content_digest.0 != request.request_digest
+    {
+        return Err(ProtocolDenial {
+            registered: CONTEXT_AUTH_DENIED,
+            detail:
+                "durable ContextRequest identity, type, digest, or task perspective is inconsistent"
+                    .to_owned(),
+        }
+        .into());
+    }
+    Ok(())
 }
 
 /// Mint the TaskContract binding an ADMITTED interpretation, atomically
@@ -811,7 +875,7 @@ pub fn mint_task_contract<S, C, G>(
     expected_current_epoch: i64,
 ) -> Result<TaskContractRow, EffectError>
 where
-    S: ProtocolStore + IntentChainStore,
+    S: ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -855,10 +919,20 @@ where
         .map_err(|err| port_rejection("clock", err))
         .map_err(EffectError::Rejected)?;
 
+    let context_request_ref = cmd.context_request_ref.clone();
+    if let Some(context_request_ref) = context_request_ref.as_ref() {
+        validate_context_request_binding(store, context_request_ref, cmd.task_ref.as_str())?;
+    }
+
+    let schema_version = if context_request_ref.is_some() {
+        "cognitiveos.task-contract/0.4"
+    } else {
+        "cognitiveos.task-contract/0.3"
+    };
     let header = compose_governed_header(
         &cmd.contract_id,
         "TaskContract",
-        "cognitiveos.task-contract/0.3",
+        schema_version,
         &cmd.governance,
         vec![format!(
             "state://task/interpretation/{}",
@@ -885,6 +959,7 @@ where
         allowed_state_domains: cmd.allowed_state_domains.clone(),
         allowed_tools: cmd.allowed_tools.clone(),
         budget: cmd.budget.clone(),
+        context_request_ref,
         conditions: cmd
             .conditions
             .iter()
@@ -1120,7 +1195,7 @@ pub fn supersede_task_contract<S, C, G>(
     cmd: &SupersedeCommand,
 ) -> Result<SupersedeReport, EffectError>
 where
-    S: crate::ports::AuthorityStore + ProtocolStore + IntentChainStore,
+    S: crate::ports::AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {

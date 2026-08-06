@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T02 已完成；P1-T09/P2-T03/P2-T07 in-progress；P2-T04 blocked；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T02 已完成；P1-T09/P2-T03/P2-T04/P2-T05/P2-T07/P3-T01 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-05**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -106,13 +106,13 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 2 | 1 | 3 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 4 | 0 | 2 | G2 / B02、B04、B05、B12 |
+| Phase 3 - Context Resource Value | 6 | 0 | 1 | 0 | 5 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **17** | **3** | **1** | **32** | — |
+| **合计** | **53** | **17** | **6** | **0** | **30** | — |
 
 ## 2. 产品边界与不变量
 
@@ -199,7 +199,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P2-T01 | 既有 authority/store/Intent/TaskContract contracts；P1-T09 route implementation 已可集成，B01 不是 mutex | proposal/clarify/preview/admit/control/query；raw-intent durability、preview-digest binding、epoch/stale-lease fencing focused evidence | G2: B02/B04/B05/B12；task `done` 不要求这些 Gate 已运行 |
 | P2-T02 | P2-T01、P1-T07、task/management channel contracts | real authenticated Personal intent record/interpret→server-issued preview→admit Task API/watch; daemon-owned governance-context binding (including the ADR-0022 durable local-root bootstrap rule), Pi Shell and CLI use one application service; channel-isolation negatives | G2: B02/B04/B05/B12 |
 | P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
-| P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、revocation negatives | B03 |
+| P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、owner-local management-session MVP authorization | B03 |
 | P3-T02 | P3-T01 stable Context source port | minimum Context Builder、required fail-closed、显式 loss 与预算 | B03 |
 | P3-T06 | P3-T05 | B03 Context correctness；同 campaign 可采集 B06/B07；UCR-01 固定场景 utility assertions 单独进入 P7-T08 acceptance | GMVP-LINUX Gate composition 只 requires B03；B06/B07 不阻塞 |
 | P4-T01 | P3-T01/P3-T02 stable ports | Memory store/admission/policy 与 provenance/scope/freshness | B08 |
@@ -210,6 +210,21 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P5-T05 | P5-T02 | B09 managed Pi + sidecar qualification；任务完成与 B10 解耦 | GMVP-LINUX requires B09 |
 | P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
 | P7-T08 | P1-T09、P2-T08、P3-T06、P4-T06、P5-T01/P5-T02/P5-T05 B09、P7-T01..T03 | Linux 1.0 六类资源 release manifest、native systemd、desktop/headless SecretStore、Pi sidecar、UCR-01 fixed-scenario correctness/utility、lifecycle/backup/doctor evidence | **B01+B02+B03+B04+B05+B08+B09+B12**；B06/B07/B10/B11 不阻塞 |
+
+#### Context MVP authorization scope
+
+The first runnable P3-T01/P2-T04 Context path uses one owner-local management
+session as its admission boundary. It preserves daemon-only writes, immutable
+source provenance, tenant/scope/conversation filtering, body-after-metadata
+ordering, and Pi's candidate-only boundary. It does **not** require complete
+multi-principal role evaluation, capability-chain attenuation, dynamic deny
+rules, or revocation-policy administration before the MVP path can run. The
+existing durable authorization/revocation ledger remains compatible hardening
+infrastructure and its regressions remain valid, but advanced policy rollout
+is a subsequent optimization rather than an MVP implementation mutex. This
+scope change does not relax Intent/Effect, secret handling, scheduler fencing,
+independent verification, Task acceptance, formal campaign, release, or
+Profile requirements.
 
 ### Delivery Slice register（任务内交付出口）
 
@@ -236,6 +251,7 @@ slice 至少需要 focused failure-first/negative test 和其定义的 supported
 | `P2-T02/D02` | P2-T02 | private versioned six-family Resource projection/list/watch, family-scoped cursor and task/management channel isolation; unavailable authority sources must be explicit rather than fabricated | P2-T02/D01 and existing daemon authentication boundary | focused daemon process negatives, exact-Linux projection test, fmt, required CI; completion enables deterministic CLI parity |
 | `P2-T02/D03` | P2-T02 | deterministic CLI calls the same daemon Task/resource operations with distinct Task/management tokens, caches, cursors, and mutation retry policy | P2-T02/D01/D02 and admin CLI daemon client | daemon-plus-CLI process parity, channel/retry/cursor negatives, exact Linux, required CI; completion enables Shell sidecar parity |
 | `P2-T02/D04` | P2-T02 | Pi Shell private sidecar calls the same daemon Task/resource application surfaces and remains a non-authority client | P2-T02/D03 and P1-T07 Pi client boundary | TS parity/isolation negatives, daemon-side integration, exact Linux, required CI; completion is P2-T02 task-closure evidence entry |
+| `P3-T01/D01` | P3-T01 | daemon-issued TaskContract v0.4 strong ContextRequest binding plus append-only durable ContextRequest/ContextView persistence and daemon query/reload validation; request perspective must name the Task, views remain request-linked per-resolution artifacts, and no Pi output or Context record becomes Task/progress/evidence/acceptance authority | P2-T01/P2-T02 stable application contracts; existing Context schema and governed-object binding contract | focused schema/store/intent-binding positive and mismatch/replaced-reference/task-perspective negatives; exact-revision supported Linux validation and required CI. Until these run and the formal workspace/task/evidence source, scope-before-ranking, and revocation exits are satisfied, this slice remains in-progress and B03 remains not-run. |
 
 **执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
 未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
@@ -464,8 +480,8 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T01 | TaskApplicationService | P1-T09 | raw intent、preview digest、epoch fencing；admission preview 为唯一默认人工授权点（ADR-0026） | done | 2026-08-03 closure reconciliation：`P2-T01/D01` 已满足本任务全部验收摘要。`crates/cognitive-management/src/task_application.rs` 提供 proposal/clarify/preview/admit/control/query 六操作面且只组合 kernel intent-chain primitives；raw-intent durable restart、digest mismatch before mutation、epoch supersession/fencing、stale writer lease 均有 focused regression。PR #127 merged as `main@7f763c8`；Linux focused 4/4、management lib 3/3、store 6/6、Clippy/fmt 与 required Ubuntu/Windows CI 通过。P2 Gates B02/B04/B05/B12 仍为 `not-run`，task `done` 不产生 Gate/release/Profile claim。证据：[handoff](../checkpoints/20260801-personal-p2-t01-task-application-service-handoff.md)。 |
 | P2-T02 | 真实 Resource + Task API/watch、统一 projection 与 CLI/Shell parity | P2-T01, P1-T07 | 六类资源的 private versioned projection；真实 Task API/watch；deterministic CLI 与 Shell 经 sidecar 调同一 daemon application services；task/management bearer、cache、retry、cursor、projection 隔离（ADR-0026/0035/0037/0038） | done | 2026-08-03 closure assessment: D01-D04 satisfy the unchanged acceptance. D01 supplies generated authenticated intent record/interpret, server-issued preview/admit, daemon-owned governance root, server WriterLease, admission negatives and bounded snapshot-first Task watch (`734cbce`, PR #141). D02 supplies private versioned six-family projection/watch and resource family/cursor/channel negatives (`70f40a5`, PR #142). D03 supplies deterministic CLI parity (`af2f6c9`, PR #143), and D04 supplies Pi sidecar parity with isolated management/Task bearer caches and snapshot-first streams (`ed01c27`, PR #144). Every slice has exact Linux and required Ubuntu/Windows CI evidence. B02/B04/B05/B12, release and Profile remain not-run/incomplete. Evidence: [acceptance handoff](../checkpoints/20260803-personal-p2-t02-acceptance-assessment-handoff.md). |
 | P2-T03 | durable scheduler、lease 与 timer | P2-T01, P1-T01 | crash/duplicate lease/clock/budget、durable stop、Effect closure 与 worker fencing 测试 | in-progress | 2026-08-05: D01-D05 are done. Exact immutable Linux `08932f7868d46f494aaa76835f4818fd7a1f2962` passed D05 focused worker/recovery tests and workspace fmt/build/test/Clippy; required Ubuntu/Windows CI also passed. P2-T03 formal task acceptance, B02/B04/B05/B12, release, and Profile remain separate/incomplete. Evidence: [D05 closure handoff](../checkpoints/20260805-personal-p2-t03-d05-native-linux-closure-handoff.md). |
-| P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | blocked | 2026-08-05: D01 is blocked before implementation. The existing WIA is issued only after a candidate is durably selected, but P2-T04 requires Pi proposal before candidate admission; no durable TaskContract-to-Context source binding or Rust-to-Pi candidate bridge exists. A decision must select the pre-admission candidate-proposal and Context binding authority path without treating Pi output as authority. |
-| P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | not-started | — |
+| P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | in-progress | 2026-08-06: D01 is active on the Context branch. The scheduler accepts the Context-bound v0.4 TaskContract and resolves authorized Context through the durable metadata-first/body-after-authorization port, fenced to the current contract binding, principal, and revocation epoch. Checkpoint `331a584` adds immutable daemon-private scheduler execution policy persistence bound to `(task_ref, contract_epoch)`; `fe5eb33` reloads and fences that policy before WIA lookup. Policy creation at Task admission, a supported sessionless secret-free pinned-Pi entrypoint, and the real pre-admission bridge caller remain to be implemented; Pi output must remain non-authoritative. |
+| P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | in-progress | 2026-08-06: P2-T05 native registry/validator review is active under `lease/personal/P2-T05/native-tool-registry-validation`. The daemon-owned static six-family catalog, immutable descriptor digest binding, pre-admission native descriptor verification, private Tool projection, and bounded pre-executor validators are implemented. Native Linux focused validation at `1ced059` passes; P2-T06 execution/supervision, external I/O, actual workspace mutation, and unknown-outcome reconciliation remain explicitly out of scope. |
 | P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | not-started | — |
 | P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | in-progress | 2026-08-05: owner-approved `D01` is a narrow daemon-private prerequisite for D05 continuation only: fixed post-state, verification request/report, checkpoint, and continuation authority. It cannot enter Task acceptance/completion, execute a Provider/Tool, or close the remaining P2-T07 acceptance. |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | not-started | — |
@@ -474,7 +490,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | not-started | — |
+| P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | in-progress | 2026-08-05; Lane-CTR `lane/ctr-p3-t01-context-request-binding`. `P3-T01/D01` is implementing the TaskContract v0.4 ContextRequest binding and durable request/view persistence/query prerequisite; remaining integrity negatives, required CI, full source/retrieval acceptance, and B03 remain incomplete/not-run. |
 | P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | not-started | — |
 | P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | not-started | — |
 | P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | not-started | — |

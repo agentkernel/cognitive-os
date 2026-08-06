@@ -16,6 +16,7 @@
 //! the port DTOs.
 
 pub mod clock;
+pub mod context_store;
 pub mod faults;
 pub mod ids;
 pub mod installation;

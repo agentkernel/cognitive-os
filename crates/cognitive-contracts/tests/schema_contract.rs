@@ -174,7 +174,7 @@ fn task_contract_fixture(schema_version: &str) -> Value {
 }
 
 #[test]
-fn task_contract_schema_versions_preserve_auditable_v01_and_require_v02_bindings() {
+fn task_contract_schema_versions_preserve_auditable_v01_and_require_execution_bindings() {
     let schemas = load_schemas();
     let validator = validator_for(&schemas, "task-contract.schema.json");
     let legacy_contract = task_contract_fixture("cognitiveos.task-contract/0.1");
@@ -237,8 +237,39 @@ fn task_contract_schema_versions_preserve_auditable_v01_and_require_v02_bindings
         "v0.2 contracts must not silently claim the later worker authorization namespace"
     );
 
-    let mut unknown_version_contract = worker_authorized_contract;
-    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.4");
+    let mut context_bound_contract = worker_authorized_contract.clone();
+    context_bound_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.4");
+    context_bound_contract["context_request_ref"] = json!({
+        "kind": "strong",
+        "id": "01890a5d-ac96-774b-bcce-b302099a8060",
+        "object_version": 1,
+        "content_digest": format!("sha256:{}", "c".repeat(64))
+    });
+    assert!(
+        validator.is_valid(&context_bound_contract),
+        "v0.4 contracts require one immutable ContextRequest reference"
+    );
+
+    let mut missing_context_request = context_bound_contract.clone();
+    missing_context_request
+        .as_object_mut()
+        .expect("TaskContract fixture must be an object")
+        .remove("context_request_ref");
+    assert!(
+        !validator.is_valid(&missing_context_request),
+        "v0.4 contracts missing their ContextRequest reference must fail closed"
+    );
+
+    let mut mixed_v03_contract = worker_authorized_contract.clone();
+    mixed_v03_contract["context_request_ref"] =
+        context_bound_contract["context_request_ref"].clone();
+    assert!(
+        !validator.is_valid(&mixed_v03_contract),
+        "v0.3 contracts must not silently claim the later ContextRequest binding"
+    );
+
+    let mut unknown_version_contract = context_bound_contract;
+    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.5");
     assert!(
         !validator.is_valid(&unknown_version_contract),
         "unsupported TaskContract versions must not enter the compatibility window"
