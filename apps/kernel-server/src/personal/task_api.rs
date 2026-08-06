@@ -374,11 +374,20 @@ impl TaskApi {
             Ok(lease) => lease,
             Err(response) => return response,
         };
-        let context_request_ref =
-            match issue_context_request(service.store(), &contract, &governance, principal) {
-                Ok(reference) => reference,
-                Err(response) => return response,
-            };
+        let context_request_ref = match load_scheduler_policy_context_request(
+            service.store(),
+            &contract,
+            request.expected_current_epoch + 1,
+        ) {
+            Ok(Some(reference)) => reference,
+            Ok(None) => {
+                match issue_context_request(service.store(), &contract, &governance, principal) {
+                    Ok(reference) => reference,
+                    Err(response) => return response,
+                }
+            }
+            Err(response) => return response,
+        };
         contract.context_request_ref = Some(context_request_ref);
         if let Err(response) = persist_scheduler_execution_policy(
             service.store(),
@@ -550,6 +559,29 @@ fn persist_scheduler_execution_policy(
         ));
     }
 
+    // A previous attempt may have persisted the immutable policy and then
+    // lost the TaskContract epoch CAS. Reusing the exact row preserves the
+    // candidate identity and ContextRequest binding for a safe retry.
+    if let Some(existing_policy) = store
+        .load_scheduler_execution_policy(contract.task_ref.as_str(), contract_epoch)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not reload scheduler execution policy",
+            )
+        })?
+    {
+        if existing_policy.context_request_id == context_request_id {
+            return Ok(());
+        }
+        return Err(error(
+            409,
+            "TASK_SCHEDULER_POLICY_BINDING_CONFLICT",
+            "scheduler execution policy already binds a different ContextRequest",
+        ));
+    }
+
     // Personal's first owner-local policy intentionally uses one fixed local
     // tenant and workspace prefix. A future multi-tenant policy must replace
     // these daemon-owned inputs with an explicit persisted configuration; the
@@ -607,6 +639,55 @@ fn persist_scheduler_execution_policy(
                 "daemon could not persist scheduler execution policy",
             )
         })
+}
+
+/// Recover the immutable ContextRequest selected by a previously persisted
+/// scheduler policy. This is only a retry path for the exact next epoch; it
+/// never derives a new policy from the stored JSON or from client input.
+fn load_scheduler_policy_context_request(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    contract_epoch: i64,
+) -> Result<Option<StrongReference>, TaskApiResponse> {
+    let Some(policy) = store
+        .load_scheduler_execution_policy(contract.task_ref.as_str(), contract_epoch)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not reload scheduler execution policy",
+            )
+        })?
+    else {
+        return Ok(None);
+    };
+    let request = store
+        .load_context_request(&policy.context_request_id)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "daemon could not reload the scheduler ContextRequest",
+            )
+        })?
+        .ok_or_else(|| {
+            error(
+                503,
+                "TASK_CONTEXT_PERSISTENCE_FAILED",
+                "scheduler policy references a missing ContextRequest",
+            )
+        })?;
+    if request.task_ref != contract.task_ref.as_str() {
+        return Err(error(
+            409,
+            "TASK_SCHEDULER_POLICY_BINDING_CONFLICT",
+            "scheduler policy ContextRequest belongs to a different Task",
+        ));
+    }
+    Ok(Some(strong_reference_to(
+        &request.request_id,
+        &request.request_digest,
+    )))
 }
 
 fn decode<T: serde::de::DeserializeOwned>(body: &[u8]) -> Result<T, TaskApiResponse> {

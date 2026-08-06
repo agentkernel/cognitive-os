@@ -576,6 +576,25 @@ fn candidate_admission_command_from_policy(
             "scheduler execution policy is malformed: {error}"
         ))
     })?;
+    if document.schema_version != 1
+        || document.task_ref != policy.task_ref
+        || document.contract_epoch != policy.contract_epoch
+        || document.context.request_id != policy.context_request_id.as_str()
+        || document.context.authorization_subject_ref.trim().is_empty()
+        || document.context.tenant_id.trim().is_empty()
+        || document.context.resource_scope_prefix.trim().is_empty()
+        || document.context.source_limit == 0
+        || document
+            .admission
+            .authorization_subject_ref
+            .trim()
+            .is_empty()
+        || document.admission.authorization_purpose.trim().is_empty()
+    {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy fields do not match its durable binding".to_owned(),
+        ));
+    }
     let admission = document.admission;
     let candidate_id = ObjectId::parse(&admission.candidate_id).map_err(|_| {
         SchedulerAuthorityError::CandidateAdmissionComposition(
@@ -1582,12 +1601,13 @@ mod tests {
     use super::{
         RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
         SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
-        UntrustedPiCandidate, WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
-        complete_resolved_effect_and_release, complete_scheduler_admission,
-        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
-        parse_execution_bound_contract, release_closed_effect_dispatch,
-        release_closed_recovered_attempt, select_single_effect_intent,
-        validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
+        UntrustedPiCandidate, WorkerAuthorizationHandoff, candidate_admission_command_from_policy,
+        classify_scheduler_effect_closure, complete_resolved_effect_and_release,
+        complete_scheduler_admission, complete_scheduler_worker_attempt,
+        ensure_current_contract_epoch, parse_execution_bound_contract,
+        release_closed_effect_dispatch, release_closed_recovered_attempt,
+        select_single_effect_intent, validate_untrusted_pi_candidate,
+        validate_worker_authorization_evidence,
     };
     use cognitive_contracts::{
         canonical,
@@ -1614,8 +1634,9 @@ mod tests {
     use cognitive_kernel::ports::{
         AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
         IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, RecordDraft,
-        SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-        WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+        SchedulerExecutionPolicyRow, SchedulerLeaseBinding, StoredObject, TaskBinding,
+        TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationRow,
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
@@ -1653,6 +1674,57 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    #[test]
+    fn candidate_admission_rejects_policy_with_mismatched_durable_task_binding() {
+        let context_request_id = object_id(901);
+        let policy = SchedulerExecutionPolicyRow {
+            task_ref: "task://personal/expected".to_owned(),
+            contract_epoch: 1,
+            context_request_id: context_request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": "task://personal/substituted",
+                "contract_epoch": 1,
+                "context": {
+                    "request_id": context_request_id.as_str(),
+                    "authorization_subject_ref": "principal://personal/owner",
+                    "tenant_id": "personal",
+                    "resource_scope_prefix": "workspace://personal/",
+                    "conversation_ref": null,
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": object_id(902).as_str(),
+                    "authorization_subject_ref": "principal://personal/owner",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": strong_reference_to(&object_id(903), &format!("sha256:{}", "a".repeat(64))),
+                        "authority": strong_reference_to(&object_id(904), &format!("sha256:{}", "b".repeat(64))),
+                        "resource_scope": strong_reference_to(&object_id(905), &format!("sha256:{}", "c".repeat(64))),
+                        "tenant_id": null,
+                        "created_by": "principal://personal/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/scheduler",
+                },
+            })
+            .to_string(),
+        };
+
+        let error = candidate_admission_command_from_policy(&policy).unwrap_err();
+
+        assert!(matches!(
+            error,
+            SchedulerAuthorityError::CandidateAdmissionComposition(detail)
+                if detail.contains("durable binding")
+        ));
     }
 
     fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {

@@ -1794,12 +1794,38 @@ impl SchedulerExecutionPolicyStore for SqliteAuthorityStore {
         );
         match result {
             Ok(_) => Ok(()),
-            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
-                detail: format!(
-                    "scheduler execution policy already exists for {} at epoch {}",
-                    policy.task_ref, policy.contract_epoch
-                ),
-            }),
+            Err(error) if is_constraint_violation(&error) => {
+                let existing = connection
+                    .query_row(
+                        "SELECT context_request_id, canonical_json \
+                         FROM scheduler_execution_policies \
+                         WHERE task_ref=?1 AND contract_epoch=?2",
+                        (policy.task_ref.as_str(), policy.contract_epoch),
+                        |row| {
+                            let context_request_id: String = row.get(0)?;
+                            let canonical_json: String = row.get(1)?;
+                            Ok((context_request_id, canonical_json))
+                        },
+                    )
+                    .optional()
+                    .map_err(unavailable("load duplicate scheduler execution policy"))?;
+                if existing
+                    .as_ref()
+                    .is_some_and(|(context_request_id, canonical_json)| {
+                        context_request_id == policy.context_request_id.as_str()
+                            && canonical_json == policy.canonical_json.as_str()
+                    })
+                {
+                    Ok(())
+                } else {
+                    Err(StorePortError::Conflict {
+                        detail: format!(
+                            "scheduler execution policy already exists with different content for {} at epoch {}",
+                            policy.task_ref, policy.contract_epoch
+                        ),
+                    })
+                }
+            }
             Err(error) => Err(unavailable("insert scheduler execution policy")(error)),
         }
     }

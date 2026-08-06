@@ -41,13 +41,6 @@ import { decideToolCall } from "./tool-policy.js";
 /** Deny project trust unconditionally; governed mode authorizes nothing via Pi. */
 export const PROJECT_TRUST_DECISION = { trusted: "no" } as const;
 
-/**
- * Activates the daemon-supervised one-shot candidate surface. The flag is
- * registered by this extension, so it is part of the pinned Pi extension
- * contract rather than an assumed upstream CLI option.
- */
-export const COGNITIVEOS_PRIVATE_CANDIDATE_FLAG = "cognitiveos-private-candidate";
-
 export interface CognitiveOsExtensionOptions {
   /** Injected in tests; production constructs a default client. */
   readonly client?: PersonalDaemonClient;
@@ -62,21 +55,9 @@ export async function registerCognitiveOsExtension(
   pi: ExtensionAPI,
   options: CognitiveOsExtensionOptions = {},
 ): Promise<void> {
-  pi.registerFlag(COGNITIVEOS_PRIVATE_CANDIDATE_FLAG, {
-    description: "Run one secret-free CognitiveOS candidate proposal",
-    type: "boolean",
-    default: false,
-  });
-
   pi.on("project_trust", async () => PROJECT_TRUST_DECISION);
 
   pi.on("tool_call", async (event) => decideToolCall(event));
-
-  if (pi.getFlag(COGNITIVEOS_PRIVATE_CANDIDATE_FLAG) === true) {
-    // Candidate mode must not discover the daemon or mint a bootstrap session.
-    // Pi receives only the bounded stdin prompt and can return only its text.
-    return;
-  }
 
   const client = options.client ?? new PersonalDaemonClient();
   let daemonSelectedModel: PiModel | undefined;

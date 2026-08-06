@@ -17,7 +17,6 @@ import type {
   ExtensionAPI,
   ExtensionCommandSpec,
   ExtensionContext,
-  ExtensionFlagOptions,
   ExtensionUi,
   PiModel,
   ProviderConfig,
@@ -80,9 +79,6 @@ export class FakePi implements ExtensionAPI {
   readonly commands = new Map<string, ExtensionCommandSpec>();
   readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
-  readonly flags = new Map<string, ExtensionFlagOptions>();
-  readonly flagValues = new Map<string, boolean | string>();
-
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
   private sessionStartHandler:
@@ -116,14 +112,6 @@ export class FakePi implements ExtensionAPI {
 
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void {
     this.commands.set(commandName, spec);
-  }
-
-  registerFlag(flagName: string, options: ExtensionFlagOptions): void {
-    this.flags.set(flagName, options);
-  }
-
-  getFlag(flagName: string): boolean | string | undefined {
-    return this.flagValues.get(flagName) ?? this.flags.get(flagName)?.default;
   }
 
   registerProvider(providerName: string, config: ProviderConfig): void {

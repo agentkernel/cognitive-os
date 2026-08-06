@@ -57,9 +57,6 @@ pub const PI_VERSION_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 /// byte and token budgets.
 pub const PRIVATE_PI_CANDIDATE_FRAME_LIMIT: usize = 256 * 1024;
 
-/// Deadline for one private Pi candidate exchange.
-pub const PRIVATE_PI_CANDIDATE_TIMEOUT: Duration = Duration::from_secs(10);
-
 /// Non-secret Personal Pi configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiConfig {
@@ -92,13 +89,14 @@ pub(crate) struct PrivatePiCandidateResponse {
     pub operation_descriptor_id: String,
 }
 
-/// Daemon-supervised one-shot private Pi transport. It intentionally uses a
-/// child process with cleared environment and no public listener. The child
-/// is useful only for proposing one bounded candidate; all authority remains
-/// in the parent daemon.
+/// Placeholder for the daemon-private one-shot Pi candidate transport.
+///
+/// Its configuration shape is retained so a future pinned, evidenced protocol
+/// can be introduced without broadening scheduler authority. Until then, it
+/// must fail before it starts a child process or passes any input to Pi.
 pub(crate) struct PrivatePiCandidateProcess {
-    executable_path: PathBuf,
-    extension_entry_path: PathBuf,
+    _configured_executable_path: PathBuf,
+    _configured_extension_entry_path: PathBuf,
 }
 
 impl PrivatePiCandidateProcess {
@@ -107,8 +105,8 @@ impl PrivatePiCandidateProcess {
     #[allow(dead_code)]
     pub(crate) fn from_config(config: &PiConfig) -> Self {
         Self {
-            executable_path: config.executable_path.clone(),
-            extension_entry_path: config.extension_entry_path.clone(),
+            _configured_executable_path: config.executable_path.clone(),
+            _configured_extension_entry_path: config.extension_entry_path.clone(),
         }
     }
 
@@ -120,122 +118,12 @@ impl PrivatePiCandidateProcess {
         if request_json.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
             return Err("private Pi candidate request exceeds transport limit".to_owned());
         }
-        verify_pinned_pi_candidate_executable(&self.executable_path)?;
-        let mut command = Command::new(&self.executable_path);
-        command
-            .env_clear()
-            .args([
-                "--extension",
-                self.extension_entry_path.to_string_lossy().as_ref(),
-            ])
-            .arg("--cognitiveos-private-candidate")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        for key in PRIVATE_PI_ENVIRONMENT_ALLOWLIST {
-            if let Some(value) = std::env::var_os(key) {
-                command.env(key, value);
-            }
-        }
-        let mut child = command
-            .spawn()
-            .map_err(|_| "private Pi spawn failed".to_owned())?;
-        let mut stdin = child
-            .stdin
-            .take()
-            .ok_or_else(|| "private Pi stdin unavailable".to_owned())?;
-        stdin
-            .write_all(&request_json)
-            .map_err(|_| "private Pi request write failed".to_owned())?;
-        drop(stdin);
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or_else(|| "private Pi stdout unavailable".to_owned())?;
-        let stderr = child
-            .stderr
-            .take()
-            .ok_or_else(|| "private Pi stderr unavailable".to_owned())?;
-        let stdout_reader = thread::spawn(move || read_bounded_output(stdout));
-        let stderr_reader = thread::spawn(move || read_bounded_output(stderr));
-        let started = Instant::now();
-        let exit_status = loop {
-            match child.try_wait() {
-                Ok(Some(status)) => break Some(status),
-                Ok(None) if started.elapsed() >= PRIVATE_PI_CANDIDATE_TIMEOUT => {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    break None;
-                }
-                Ok(None) => thread::sleep(Duration::from_millis(20)),
-                Err(_) => return Err("private Pi process wait failed".to_owned()),
-            }
-        };
-        let stdout_bytes = stdout_reader
-            .join()
-            .map_err(|_| "private Pi stdout reader failed".to_owned())?;
-        let _stderr_bytes = stderr_reader
-            .join()
-            .map_err(|_| "private Pi stderr reader failed".to_owned())?;
-        let Some(exit_status) = exit_status else {
-            return Err("private Pi candidate request timed out".to_owned());
-        };
-        if !exit_status.success() {
-            return Err("private Pi candidate process failed".to_owned());
-        }
-        if stdout_bytes.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
-            return Err("private Pi candidate response exceeds transport limit".to_owned());
-        }
-        let stdout_text = String::from_utf8(stdout_bytes)
-            .map_err(|_| "private Pi candidate response is not UTF-8".to_owned())?;
-        serde_json::from_str(&stdout_text)
-            .map_err(|_| "private Pi candidate response is malformed".to_owned())
+        // Pi 0.81.1 has no evidenced extension API that owns stdin/stdout,
+        // and its documented --print path receives a positional prompt rather
+        // than this JSON request. Do not spawn a TUI or rely on an unproven
+        // extension-defined CLI flag on an authority-adjacent code path.
+        Err("private Pi candidate protocol is unsupported by the pinned runtime".to_owned())
     }
-}
-
-/// Re-check the executable immediately before a private request. Readiness is
-/// only an observation and may be stale by the time a scheduler calls Pi.
-fn verify_pinned_pi_candidate_executable(executable_path: &Path) -> Result<(), String> {
-    if !executable_path.is_file() {
-        return Err("private Pi executable is unavailable".to_owned());
-    }
-    match probe_reported_version(executable_path) {
-        Ok(Some(reported_version))
-            if matches!(
-                classify_reported_version(&reported_version),
-                PiRuntimeObservation::Ready
-            ) =>
-        {
-            Ok(())
-        }
-        Ok(Some(_)) => Err("private Pi executable does not match the pinned version".to_owned()),
-        Ok(None) => Err("private Pi version check timed out".to_owned()),
-        Err(()) => Err("private Pi version check failed".to_owned()),
-    }
-}
-
-const PRIVATE_PI_ENVIRONMENT_ALLOWLIST: [&str; 8] = [
-    "PATH",
-    "HOME",
-    "TMPDIR",
-    "TEMP",
-    "TMP",
-    "SystemRoot",
-    "ComSpec",
-    "PATHEXT",
-];
-
-fn read_bounded_output<R: Read>(mut reader: R) -> Vec<u8> {
-    let mut output = Vec::new();
-    let mut buffer = [0_u8; 4096];
-    while output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
-        let bytes_read = match reader.read(&mut buffer) {
-            Ok(0) | Err(_) => break,
-            Ok(bytes_read) => bytes_read,
-        };
-        output.extend_from_slice(&buffer[..bytes_read]);
-    }
-    output
 }
 
 /// Why a `pi.json` could not be turned into a `PiConfig`.

@@ -11,67 +11,60 @@
 
 ## Implemented checkpoint
 
-The daemon now has a bounded, private Pi candidate transport and scheduler
-adapter. The transport clears the child environment, rechecks the exact Pi
-pin per invocation, bounds request/response and captured stderr, applies a
-timeout, and accepts only a strict candidate response. It cannot carry WIA,
-Effect, progress, evidence, receipt, or Task-state fields.
-
-The daemon bridge resolves authorized Context before invoking the private
+The daemon bridge resolves authorized Context before invoking a private
 proposer, creates and seals the candidate itself, and performs the existing
 atomic candidate-admission operation. Candidate-admission recovery can reload
 the one durable receipt for a selected candidate instead of creating a second
 WIA or budget debit. A Windows-only recovery-test startup polling window was
 also extended after a transient endpoint-publication timeout in required CI.
 
+The pre-admission policy store now provides immutable, exact
+`(task_ref, contract_epoch)` bindings for the Context query and daemon-owned
+candidate-admission inputs. The scheduler reloads and validates that policy
+before WIA lookup. Both Context-command and candidate-admission composition
+independently reject malformed, empty, or row-mismatched policy facts.
+Exact policy-row replay is idempotent; if TaskContract admission loses its CAS
+after policy persistence, a retry for that same next epoch reloads the policy's
+sealed ContextRequest and stable candidate identity instead of minting a
+second immutable policy.
+
+There is deliberately **no callable private Pi transport** at this checkpoint.
+The former child-process implementation has been made fail-closed before spawn
+because the pinned Pi surface does not prove its assumed request/response
+protocol. It never passes Context to Pi, reads a provider configuration, or
+creates WIA, Intent, Effect, budget debit, progress, evidence, verification,
+acceptance, or Task completion.
+
 ## Pre-admission scheduler blocker
 
-The real scheduler tick cannot yet safely call the bridge. A review of the
-current durable TaskContract, ContextRequest, scheduler row, and authority
-stores establishes only task/request identity, the Context principal, the
-current contract epoch, loop/budget CAS inputs, and the candidate admission
-checks performed after persistence. It does not establish all inputs required
-to construct a Context resolution command and daemon admission command without
-inventing product semantics.
-
-`ContextResolutionCommand` lacks durable derivations for the resource-scope
-prefix and optional conversation reference. A governed ResourceScope strong
-reference is not the source-scope string used by Context discovery, and the
-current intent reference may be a conversation or scope rather than a known
-conversation binding. Tenant-scoped headers are also optional and require an
-explicit matching policy.
-
-`DaemonCandidateAdmissionCommand` lacks a durable policy source for the exact
-operation authorization subject/purpose, per-admission `BudgetCharge`,
-daemon-created governance provenance/identity, and a stable correlation URI.
-Using test literals, a Context request purpose, a TaskContract creator, a
-budget ceiling, or an arbitrary header purpose would silently invent those
-policies and make a daemon-created admission claim false provenance.
+The real scheduler tick cannot yet safely call the bridge because it has no
+supported private Pi candidate producer. It can now reconstruct the Context
+resolution and daemon admission commands from immutable daemon-owned policy;
+it must not substitute defaults. The remaining blocker is an evidenced,
+bounded candidate protocol that preserves this separation.
 
 ## Required next slice
 
-1. Define and persist the task-to-Context scope/conversation binding and its
-   tenant consistency rule.
-2. Define a daemon-owned candidate-admission policy that resolves operation
-   subject/purpose, charge schedule, governance identity/provenance, and
-   stable correlation identity from durable facts.
-3. Add the scheduler caller before WIA lookup, with a stable candidate identity
-   and no WIA consumption before candidate admission.
-4. Replace the currently unproven private Pi invocation mode with an
-   evidence-backed pinned Pi entrypoint. The exact `0.81.1` `--help` output
-   was inspected on 2026-08-06: it supports `--print`, `--mode`,
-   `--append-system-prompt`, and explicit `--extension` loading, but contains
-   no `--cognitiveos-private-candidate` mode. The existing extension's normal
-   daemon client also reads the local bootstrap-secret file to mint a session,
-   so it cannot be reused for the private worker transport. The new entrypoint
-   must instead be sessionless and receive neither a bootstrap secret nor a
-   daemon bearer. Then validate the whole path on an exact committed native
-   Linux revision.
+1. Establish an evidence-backed pinned, sessionless candidate entrypoint. The
+   exact `0.81.1` `--help` output supports `--print`, `--mode`,
+   `--append-system-prompt`, and explicit `--extension` loading, but does not
+   establish an extension-defined candidate flag or stdin JSON protocol.
+2. The entrypoint must receive exactly one bounded candidate request and emit
+   exactly one bounded candidate response, with diagnostics isolated from the
+   response. It must receive neither a bootstrap secret, daemon bearer, nor
+   ambient provider credential.
+3. Add the scheduler caller before WIA lookup only after that protocol exists,
+   preserving the persisted stable candidate ID and no WIA consumption before
+   candidate admission. Then validate the whole path on an exact committed
+   native Linux revision.
 
 ## Status and validation
 
-- Change class: `implementation-only` with corrective test stability.
-- Local checks: `cargo fmt` and `git diff --check` passed.
+- Change class: `implementation-only` with corrective fail-closed transport
+  removal and policy-binding regressions.
+- Local checks: `cargo fmt --all -- --check`, `git diff --check`, and the
+  Pi extension package build/test passed. Local Rust test execution remains
+  blocked by the documented Windows GNU linker exit 121.
 - Supported CI: Ubuntu and Windows passed the full required suite for
   `4db146247f10a2780fd438b419c2ab4e6140f04b`, which includes the Windows
   scheduler-recovery timeout correction. This handoff-only update remains
