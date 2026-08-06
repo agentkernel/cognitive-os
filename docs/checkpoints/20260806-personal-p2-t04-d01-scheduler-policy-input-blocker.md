@@ -7,7 +7,7 @@
   partially blocked)
 - Branch: `lane/ctr-p3-t01-context-request-binding`
 - Draft PR: [#152](https://github.com/agentkernel/cognitive-os/pull/152)
-- Checkpoint revision: pending this handoff commit
+- Checkpoint revision: `e485f81f7f5c82f245220d4724debf2d28113e87`
 
 ## Implemented checkpoint
 
@@ -64,13 +64,19 @@ bounded candidate protocol that preserves this separation.
   removal and policy-binding regressions.
 - Local checks: `cargo fmt --all -- --check`, `git diff --check`, and the
   Pi extension package build/test passed. Local Rust test execution remains
-  blocked by the documented Windows GNU linker exit 121.
+  unsupported on `DEV-WIN-GNU-01`; this is not a P2 blocker.
+- Exact native Linux focused validation on `wuz@192.168.1.2` at revision
+  `e485f81f7f5c82f245220d4724debf2d28113e87` passed:
+  `cargo test -p cognitive-store --test m5_context_store
+  scheduler_execution_policy_is_immutable_and_epoch_bound` (1/1) and
+  `cargo test -p kernel-server --bin kernel-server scheduler_authority` (26/26).
 - Supported CI: Ubuntu and Windows passed the full required suite for
   `4db146247f10a2780fd438b419c2ab4e6140f04b`, which includes the Windows
   scheduler-recovery timeout correction. This handoff-only update remains
   pending its own required CI runs.
-- Native Linux: not run. The remaining production invocation and policy inputs
-  are incomplete, so no native runtime or P2-T04 completion claim is valid.
+- Native Linux runtime/production invocation: not run. The focused authority
+  tests passed, but the remaining production invocation and policy inputs are
+  incomplete, so no P2-T04 completion claim is valid.
 
 ## Non-claims
 
