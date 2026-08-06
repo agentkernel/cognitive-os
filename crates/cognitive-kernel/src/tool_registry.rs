@@ -547,24 +547,32 @@ mod tests {
     use super::*;
 
     fn request_for(operation_id: &str) -> ToolResolutionRequest {
-        let descriptor = BUILTIN_TOOL_CATALOG
+        let Some(descriptor) = BUILTIN_TOOL_CATALOG
             .iter()
             .find(|descriptor| descriptor.operation_id == operation_id)
-            .expect("catalog descriptor");
+        else {
+            panic!("catalog descriptor must exist");
+        };
+        let descriptor_digest = match compute_descriptor_digest(descriptor) {
+            Ok(descriptor_digest) => descriptor_digest,
+            Err(_) => panic!("catalog descriptor must have a digest"),
+        };
         ToolResolutionRequest {
             operation_id: operation_id.to_owned(),
             action: descriptor.action.clone(),
             descriptor_version: descriptor.descriptor_version,
-            descriptor_digest: compute_descriptor_digest(descriptor).expect("digest"),
+            descriptor_digest,
             risk: descriptor.risk,
         }
     }
 
     fn persisted_descriptor_for(operation_id: &str) -> OperationDescriptor {
-        let descriptor = BUILTIN_TOOL_CATALOG
+        let Some(descriptor) = BUILTIN_TOOL_CATALOG
             .iter()
             .find(|descriptor| descriptor.operation_id == operation_id)
-            .expect("catalog descriptor");
+        else {
+            panic!("catalog descriptor must exist");
+        };
         OperationDescriptor {
             operation_id: descriptor.operation_id.clone(),
             action: descriptor.action.clone(),
