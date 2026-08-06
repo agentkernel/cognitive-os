@@ -11,7 +11,7 @@ use cognitive_kernel::harness::{CeilingStopReason, LoopDriver};
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
 };
-use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError};
+use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerWorkKey};
 use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime};
@@ -20,6 +20,7 @@ use time::{Duration, OffsetDateTime};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SchedulerDispatch {
     pub task_ref: String,
+    pub contract_epoch: i64,
     pub lease_owner: String,
     pub lease_epoch: i64,
     pub lease_expires: String,
@@ -150,14 +151,14 @@ impl SchedulerService {
     pub fn claim_eligible(
         &mut self,
         repository: &mut SchedulerRepository,
-        task_ref: &str,
+        work_key: &SchedulerWorkKey,
         lease_epoch: i64,
         observed_wall_time: &str,
     ) -> Result<SchedulerDispatch, SchedulerServiceError> {
         let trusted_wall_time = self.observe_wall_time(observed_wall_time)?;
         let lease_expires = add_lease_ttl(&trusted_wall_time, self.lease_ttl_seconds)?;
         let row = repository.acquire_eligible_lease(
-            task_ref,
+            work_key,
             &self.owner,
             lease_epoch,
             &trusted_wall_time,
@@ -165,6 +166,7 @@ impl SchedulerService {
         )?;
         Ok(SchedulerDispatch {
             task_ref: row.task_ref,
+            contract_epoch: row.contract_epoch,
             lease_owner: row.lease_owner.unwrap_or_default(),
             lease_epoch: row.lease_epoch,
             lease_expires: row.lease_expires.unwrap_or_default(),

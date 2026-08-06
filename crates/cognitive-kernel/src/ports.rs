@@ -14,6 +14,7 @@
 //! MUST keep the event log append-only (REQ-EVT-004).
 
 use crate::budget::BudgetState;
+use crate::effects::OperationDescriptor;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
@@ -134,6 +135,10 @@ pub struct BudgetCas {
     pub expected_version: Version,
     /// Version the row advances to.
     pub next_version: Version,
+    /// Canonical charge admitted by the deterministic transition gate.
+    /// Compound authority transactions use this immutable proof to bind a
+    /// private authorization to exactly the fresh debit it permits.
+    pub charge_canonical_json: String,
     /// Canonical JSON bytes of the debited [`BudgetState`].
     pub next_state_canonical_json: String,
 }
@@ -474,6 +479,436 @@ pub struct TaskContractRow {
     pub contract_digest: String,
     /// Canonical JSON of the schema-shaped contract (evidence).
     pub canonical_json: String,
+}
+
+/// One persisted immutable operation candidate proposal. This row preserves
+/// non-authority input for later daemon admission; it does not authorize an
+/// operation, reserve budget, or schedule work.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OperationCandidateProposalRow {
+    /// Immutable candidate proposal identity.
+    pub candidate_id: ObjectId,
+    /// TaskContract task reference the proposal names.
+    pub task_ref: String,
+    /// Immutable TaskContract epoch the proposal was observed against.
+    pub contract_epoch: i64,
+    /// Provenance-only source reference supplied by the candidate producer.
+    pub candidate_source_ref: String,
+    /// Proposed registered tool reference.
+    pub tool_ref: String,
+    /// Proposed operation action.
+    pub action: String,
+    /// Proposed operation target.
+    pub target: String,
+    /// Digest of the proposed parameters; parameters themselves remain in
+    /// their separately governed operation descriptor.
+    pub parameters_digest: String,
+    /// Target-state version observed by the non-authority producer.
+    pub expected_state_version: i64,
+    /// Immutable operation descriptor reference for daemon validation.
+    pub operation_descriptor_ref: ObjectId,
+    /// Canonical JSON of the schema-shaped proposal, retained for audit.
+    pub canonical_json: String,
+}
+
+/// One daemon-owned immutable operation descriptor registry row. Descriptors
+/// describe what an executor can do; they never grant a caller permission.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaemonOperationDescriptorRow {
+    /// Stable descriptor reference carried by candidate proposals.
+    pub descriptor_id: ObjectId,
+    /// Descriptor capability and recovery-closure metadata.
+    pub descriptor: OperationDescriptor,
+    /// Canonical daemon-issued descriptor evidence retained for audit.
+    pub canonical_json: String,
+}
+
+/// One immutable daemon-only authorization snapshot. It records the current
+/// authorization currency and a previously evaluated grant for one exact
+/// subject, target, action, and purpose binding. Candidate producers cannot
+/// supply or replace these authority facts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaemonAuthorizationSnapshotRow {
+    /// Immutable snapshot identity.
+    pub snapshot_id: ObjectId,
+    /// Authenticated subject the grant applies to.
+    pub subject_ref: String,
+    /// Exact governed target reference.
+    pub target_ref: String,
+    /// Exact authorized action.
+    pub action: String,
+    /// Exact authorized purpose.
+    pub purpose: String,
+    /// Revocation epoch under which the grant was evaluated.
+    pub grant_epoch: i64,
+    /// Capability set version under which the grant was evaluated.
+    pub capability_set_version: i64,
+    /// Current revocation epoch at snapshot issuance.
+    pub revocation_epoch: i64,
+    /// Canonical decision-time wall timestamp.
+    pub observed_at: WallTimestamp,
+    /// Canonical daemon-issued authorization evidence.
+    pub canonical_json: String,
+}
+
+/// One immutable daemon-issued pre-dispatch worker authorization. The row
+/// binds a selected candidate to exact Intent, Effect, Loop, budget, and
+/// fencing facts. Its issuance must occur only inside an atomic admission
+/// bundle; worker consumption is recorded separately.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WorkerIterationAuthorizationRow {
+    /// Immutable authorization identity.
+    pub authorization_id: ObjectId,
+    /// Daemon-minted TaskContract identity defining this authorization namespace.
+    pub worker_authorization_root_id: ObjectId,
+    /// Task governed by this authorization.
+    pub task_ref: String,
+    /// Current immutable TaskContract epoch.
+    pub contract_epoch: i64,
+    /// Loop whose exact iteration is authorized.
+    pub loop_object_id: ObjectId,
+    /// Monotonic loop iteration authorized for one worker attempt.
+    pub iteration: i64,
+    /// Loop CAS version the worker authorization was issued against.
+    pub expected_loop_version: Version,
+    /// Immutable candidate selected by daemon admission.
+    pub selected_candidate_id: ObjectId,
+    /// Durable Intent created by the same admission transaction.
+    pub intent_id: ObjectId,
+    /// Durable Effect created at PROPOSED by the same transaction.
+    pub effect_object_id: ObjectId,
+    /// Hard budget charged by the authorized iteration.
+    pub budget_id: BudgetId,
+    /// Canonical BudgetCharge value.
+    pub budget_charge_canonical_json: String,
+    /// Stable action/retry identity.
+    pub action_fingerprint: String,
+    /// Writer fencing epoch at issuance.
+    pub issued_fencing_epoch: i64,
+    /// Generated schema-shaped WorkerIterationAuthorization evidence.
+    pub canonical_json: String,
+}
+
+/// One immutable daemon-recorded consumption of a WIA by a worker attempt.
+/// Consumption records only the authorization handoff; it does not prove an
+/// external effect, progress, verification, or Task completion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkerIterationAuthorizationConsumptionRow {
+    /// Authorization consumed exactly once.
+    pub authorization_id: ObjectId,
+    /// Daemon-assigned worker attempt identity.
+    pub worker_attempt_id: ObjectId,
+    /// Fencing epoch rechecked when consumption commits.
+    pub consumed_fencing_epoch: i64,
+    /// Canonical timestamp of the durable handoff.
+    pub consumed_at: WallTimestamp,
+    /// Canonical daemon-issued consumption evidence.
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-owned post-state pin created before loop verification.
+/// It is not worker output and cannot be rewritten after verification begins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FixedPostStateRow {
+    pub fixed_post_state_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub subject_domain: LifecycleDomain,
+    pub subject_object_id: ObjectId,
+    pub subject_version: Version,
+    pub recorded_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-owned verification request tied to one fixed post-state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerificationRequestRow {
+    pub verification_request_id: ObjectId,
+    pub fixed_post_state_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub expected_loop_version: Version,
+    pub verifier_ref: String,
+    pub verifier_version: String,
+    pub criteria_canonical_json: String,
+    pub issued_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Immutable verifier result that the daemon reloads before it may continue a
+/// loop. A stored `passed` status alone never accepts or completes a Task.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerificationReportRow {
+    pub verification_report_id: ObjectId,
+    pub verification_request_id: ObjectId,
+    pub fixed_post_state_id: ObjectId,
+    pub verifier_ref: String,
+    pub verifier_version: String,
+    pub status: String,
+    pub evidence_refs_canonical_json: String,
+    pub completed_at: WallTimestamp,
+    pub recorded_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// Private one-time authority to begin the next iteration after a verified
+/// continuation. This is intentionally distinct from the public WIA, which
+/// remains immutable pre-dispatch authority for `DECIDE -> ACT`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContinuationAuthorizationRow {
+    pub continuation_authorization_id: ObjectId,
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub iteration: i64,
+    pub expected_loop_version: Version,
+    pub checkpoint_id: ObjectId,
+    pub budget_id: BudgetId,
+    pub budget_charge_canonical_json: String,
+    pub verification_report_id: ObjectId,
+    pub issued_fencing_epoch: i64,
+    pub canonical_json: String,
+}
+
+/// One immutable daemon-recorded handoff of private continuation authority.
+/// It records a recoverable authorization boundary only; it does not prove
+/// execution, progress, verification, Task acceptance, or Task completion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContinuationAuthorizationConsumptionRow {
+    pub continuation_authorization_id: ObjectId,
+    pub worker_attempt_id: ObjectId,
+    pub consumed_fencing_epoch: i64,
+    pub consumed_at: WallTimestamp,
+    pub canonical_json: String,
+}
+
+/// Exact scheduler lease that must remain active while private continuation
+/// authority is handed to the bounded harness.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoundContinuationAuthorizationConsumption {
+    pub consumption: ContinuationAuthorizationConsumptionRow,
+    pub scheduler_lease: SchedulerLeaseBinding,
+}
+
+/// Daemon-private persistence for the verified continuation boundary.
+/// Implementations must keep every row append-only and recheck declared
+/// fencing epochs inside the transaction that writes it.
+pub trait ContinuationAuthorityStore {
+    fn append_fixed_post_state(&self, row: &FixedPostStateRow) -> Result<(), StorePortError>;
+
+    fn load_fixed_post_state(
+        &self,
+        fixed_post_state_id: &ObjectId,
+    ) -> Result<Option<FixedPostStateRow>, StorePortError>;
+
+    fn append_verification_request(
+        &self,
+        row: &VerificationRequestRow,
+    ) -> Result<(), StorePortError>;
+
+    fn load_verification_request(
+        &self,
+        verification_request_id: &ObjectId,
+    ) -> Result<Option<VerificationRequestRow>, StorePortError>;
+
+    fn append_verification_report(&self, row: &VerificationReportRow)
+    -> Result<(), StorePortError>;
+
+    fn load_verification_report(
+        &self,
+        verification_report_id: &ObjectId,
+    ) -> Result<Option<VerificationReportRow>, StorePortError>;
+
+    /// Issue one continuation authorization only after the adapter has
+    /// revalidated current contract, verified report, checkpoint, exact loop
+    /// version/state, and fencing in one transaction.
+    fn issue_continuation_authorization(
+        &self,
+        row: &ContinuationAuthorizationRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Consume continuation authority at most once and bind it to an exact
+    /// active scheduler lease and atomically commit the supplied, already
+    /// gate-validated continuation entry. No partial consumption, lease
+    /// binding, state transition, or budget debit may persist.
+    fn consume_continuation_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundContinuationAuthorizationConsumption,
+        transition: &TransitionCommit,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    fn load_unconsumed_continuation_authorization(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Option<ContinuationAuthorizationRow>, StorePortError>;
+}
+
+/// Exact scheduler lease identity held when the daemon hands a WIA to one
+/// worker. This is private recovery evidence, not worker-provided input and
+/// not part of the public TaskContract or WIA schema.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchedulerLeaseBinding {
+    /// Immutable scheduler task identity.
+    pub task_ref: String,
+    /// TaskContract epoch fixed by the scheduler work key.
+    pub contract_epoch: i64,
+    /// Exact daemon scheduler lease owner.
+    pub lease_owner: String,
+    /// Exact owner fencing epoch of the durable scheduler lease.
+    pub lease_epoch: i64,
+}
+
+/// One daemon-only WIA handoff requested against an already acquired exact
+/// scheduler lease. The adapter validates both authorities in one durable
+/// transaction before recording either handoff evidence.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoundWorkerAuthorizationConsumption {
+    /// One-time WIA handoff record.
+    pub consumption: WorkerIterationAuthorizationConsumptionRow,
+    /// Exact scheduler lease that authorizes this handoff.
+    pub scheduler_lease: SchedulerLeaseBinding,
+}
+
+/// Durable recovery input for a worker attempt that crossed the daemon's WIA
+/// handoff boundary. Recovery must use this record and the corresponding
+/// Effect state; it must not reconstruct a worker attempt from scheduler
+/// callbacks, receipts, or process-local memory.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConsumedWorkerIterationAuthorization {
+    /// Immutable daemon-issued authority that was handed to a worker.
+    pub authorization: WorkerIterationAuthorizationRow,
+    /// The one durable worker-attempt handoff for that authority.
+    pub consumption: WorkerIterationAuthorizationConsumptionRow,
+    /// Exact lease captured with the handoff. `None` denotes pre-binding
+    /// evidence, which recovery must retain rather than use to release work.
+    pub scheduler_lease: Option<SchedulerLeaseBinding>,
+}
+
+/// All-or-nothing daemon admission of one selected non-authority candidate.
+/// The caller must derive every field from reloaded durable authority facts;
+/// the store rechecks fencing and CAS preconditions in one transaction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CandidateAdmissionCommit {
+    /// Candidate selected by daemon-only validation.
+    pub selected_candidate_id: ObjectId,
+    /// Durable Intent and its provenance event.
+    pub intent: IntentRow,
+    pub intent_event: EventDraft,
+    /// New Effect in its registered initial state (`PROPOSED`, version 1).
+    pub effect_admission: ObjectAdmission,
+    /// Immutable pre-dispatch worker authority issued by this bundle.
+    pub worker_authorization: WorkerIterationAuthorizationRow,
+    /// Loop admission transition and optional exact budget debit.
+    pub loop_transition: TransitionCommit,
+    /// Current writer epoch checked inside the same SQLite transaction.
+    pub fencing_epoch: i64,
+}
+
+/// Receipts from every event persisted by one candidate admission bundle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CandidateAdmissionReceipt {
+    /// Intent persistence event sequence.
+    pub intent_event_sequence: i64,
+    /// Effect admission event sequence.
+    pub effect_admission_event_sequence: i64,
+    /// Loop transition event sequence.
+    pub loop_transition_event_sequence: i64,
+    /// Immutable WIA identity issued by the transaction.
+    pub authorization_id: ObjectId,
+}
+
+/// Durable append-only candidate input boundary for daemon-only worker
+/// authorization. Persisting a candidate merely makes it auditable; a
+/// separate daemon admission path must validate it before creating Intent,
+/// Effect, WorkerIterationAuthorization, a budget debit, or scheduler work.
+pub trait WorkerAuthorizationStore {
+    /// Load one immutable daemon-issued WIA before a worker attempt. A
+    /// missing authorization must fail closed; callers must never rebuild it
+    /// from worker-provided fields.
+    fn load_worker_iteration_authorization(
+        &self,
+        authorization_id: &ObjectId,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
+
+    /// Resolve the sole unconsumed daemon-issued WIA for one exact scheduler
+    /// binding. Multiple matching authorities are ambiguous and must fail
+    /// closed; consumed WIAs remain recovery-only evidence.
+    fn load_unconsumed_worker_iteration_authorization_for_task_binding(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
+
+    /// Enumerate only WIA records that a daemon has durably handed to a
+    /// worker. This is the recovery discovery surface: an unconsumed WIA is
+    /// an issued authorization, not an in-flight worker attempt.
+    fn list_consumed_worker_iteration_authorizations(
+        &self,
+    ) -> Result<Vec<ConsumedWorkerIterationAuthorization>, StorePortError>;
+
+    /// Consume one WIA at most once under the current fencing epoch. This
+    /// records only a worker handoff, not execution, progress, or completion.
+    fn consume_worker_iteration_authorization(
+        &self,
+        consumption: &WorkerIterationAuthorizationConsumptionRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Atomically consume one WIA and bind that handoff to an exact currently
+    /// leased scheduler row. D05 daemon worker dispatch must use this method;
+    /// an unbound handoff never proves authority to release scheduler work.
+    fn consume_worker_iteration_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundWorkerAuthorizationConsumption,
+    ) -> Result<(), StorePortError>;
+
+    /// Commit Intent, Effect admission, immutable WIA, Loop CAS, exact budget
+    /// debit, events, records, and outbox rows as one authority transaction.
+    /// Any failure must roll back the entire bundle.
+    fn commit_candidate_admission(
+        &self,
+        commit: &CandidateAdmissionCommit,
+    ) -> Result<CandidateAdmissionReceipt, StorePortError>;
+
+    /// Append an immutable daemon-only authorization snapshot.
+    fn append_daemon_authorization_snapshot(
+        &self,
+        snapshot: &DaemonAuthorizationSnapshotRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load the newest daemon authorization snapshot for an exact binding.
+    /// A missing snapshot is not an authorization grant and must fail closed.
+    fn load_latest_daemon_authorization_snapshot(
+        &self,
+        subject_ref: &str,
+        target_ref: &str,
+        action: &str,
+        purpose: &str,
+    ) -> Result<Option<DaemonAuthorizationSnapshotRow>, StorePortError>;
+
+    /// Append a daemon-owned immutable descriptor. Non-authority clients,
+    /// Pi, worker, and Provider components do not receive this write path.
+    fn append_daemon_operation_descriptor(
+        &self,
+        descriptor: &DaemonOperationDescriptorRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Resolve the exact immutable descriptor named by a candidate proposal.
+    fn load_daemon_operation_descriptor(
+        &self,
+        descriptor_id: &ObjectId,
+    ) -> Result<Option<DaemonOperationDescriptorRow>, StorePortError>;
+
+    /// Append an immutable candidate proposal. A duplicate identity is a
+    /// conflict and no replacement or mutable candidate status is allowed.
+    fn append_operation_candidate_proposal(
+        &self,
+        proposal: &OperationCandidateProposalRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load one immutable candidate proposal by identity.
+    fn load_operation_candidate_proposal(
+        &self,
+        candidate_id: &ObjectId,
+    ) -> Result<Option<OperationCandidateProposalRow>, StorePortError>;
 }
 
 /// M5 intent-chain persistence port (UserIntentRecord →

@@ -448,6 +448,17 @@ Checkpoint 记录行动级事实和证据引用，不要求保存原始 prompt �
 
 [REQ-RUN-009] Task 仅在 verifier 对固定后态给出通过证据后才可 `COMPLETED`。
 
+[REQ-RUN-010] 每个实际 worker iteration **MUST** 先持有 daemon-only 签发的不可变
+`WorkerIterationAuthorization`。它必须绑定当前 TaskContract epoch、精确 candidate、
+Intent/Effect、预算 charge、Loop CAS version 与 fencing epoch；worker 观察、receipt、
+progress、evidence 或 process exit **MUST NOT** 自行构成 authorization、Effect closure、
+Task acceptance 或 completion。
+
+[REQ-RUN-011] `OperationCandidateProposal` 仅为不可变、可审计的候选观察。daemon
+**MUST** 在每次选择前重载当前 TaskContract epoch、允许工具、操作描述符、目标版本、
+capability/revocation、Loop 与预算；拒绝的候选 **MUST NOT** 创建 Intent、Effect、
+WorkerIterationAuthorization、预算 debit 或 scheduler dispatch。
+
 [REQ-RUN-001] workflow 决策 **MUST** 固定代码/策略版本；重放不得悄然采用不兼容新逻辑。
 
 [REQ-RUN-002] semantic activity **MUST** 记录 provider/model revision、请求/响应 digest、ContextView、预算、出域、采样和 verifier。

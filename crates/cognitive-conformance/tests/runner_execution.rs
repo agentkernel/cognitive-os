@@ -28,7 +28,7 @@ fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
 }
 
-/// Reference-run distribution over the committed 85-vector corpus. These
+/// Reference-run distribution over the committed vector corpus. These
 /// numbers are intentionally pinned: they may only change together with a
 /// reviewed vector or capability change (IMP-17 measured-count discipline).
 /// 2026-07-20 Lane-CFR M4 batch: seven effect/recovery vectors leave
@@ -37,8 +37,8 @@ fn repo_root() -> PathBuf {
 /// 2026-07-20 Lane-CTR F-011 batch: +3 behavioral management-approval
 /// negatives (MGMT-APPROVAL-R1-009/SELF-010/FATIGUE-011), honestly not-run
 /// until the CFR M5 behavioral batch.
-const TOTAL: usize = 87;
-const PASS: usize = 60;
+const TOTAL: usize = 89;
+const PASS: usize = 62;
 const NOT_RUN: usize = 27;
 
 /// The M2 kernel-behavioral executions and their report modes.

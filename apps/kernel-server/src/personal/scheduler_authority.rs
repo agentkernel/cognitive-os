@@ -1,28 +1,49 @@
 //! Daemon-only durable scheduler authority reads (P2-T03).
 //!
-//! This module deliberately performs no lease acquisition or worker dispatch.
-//! It reloads the immutable TaskContract and the identities it binds, deriving
-//! ceiling inputs solely from authority-store facts.
+//! This module owns daemon-private scheduler authority reads and one bounded
+//! worker-attempt composition boundary. It reloads immutable TaskContract and
+//! Effect identities before every durable decision; it never accepts a Task.
 
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
-use cognitive_contracts::generated::task_contract::TaskContract;
-use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, Version, WallTimestamp};
-use cognitive_kernel::effects::WriterLease;
+use cognitive_contracts::{
+    canonical, generated::task_contract::TaskContract,
+    generated::worker_iteration_authorization::WorkerIterationAuthorization,
+};
+use cognitive_domain::{
+    BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, UriRef, Version, WallTimestamp,
+};
+use cognitive_kernel::budget::BudgetCharge;
+use cognitive_kernel::candidate_admission::{
+    CandidateAdmissionFacts, CandidateAdmissionIdentities, CandidateAdmissionInputs,
+    compose_candidate_admission,
+};
+use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
+use cognitive_kernel::intent_chain::GovernanceSeed;
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore, TaskBinding,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    CandidateAdmissionReceipt, Clock, ContinuationAuthorityStore,
+    ContinuationAuthorizationConsumptionRow, ContinuationAuthorizationRow, HarnessStore,
+    IdGenerator, IntentChainStore, ProtocolStore, SchedulerLeaseBinding, TaskBinding,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow,
 };
 use cognitive_runtime::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
     SchedulerDispatch, SchedulerService, SchedulerServiceError,
 };
-use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState};
+use cognitive_store::{
+    SqliteAuthorityStore, SystemClock, UuidV7Generator,
+    scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey},
+};
 use serde::Deserialize;
+use serde_json::json;
+use std::path::Path;
 use thiserror::Error;
 
-const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.2";
+const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.3";
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -38,6 +59,7 @@ struct TaskContractVersionHeader {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SchedulerAuthorityBinding {
     pub task_ref: String,
+    pub contract_epoch: i64,
     pub action_fingerprint: String,
 }
 
@@ -51,6 +73,67 @@ pub(crate) struct SchedulerAuthoritySnapshot {
     pub ceiling_facts: SchedulerCeilingFacts,
     pub loop_object_id: ObjectId,
     pub budget_id: BudgetId,
+}
+
+/// Durable facts accepted by the daemon-only candidate-admission preflight.
+/// This result contains no worker output and grants no dispatch permission;
+/// it is only the deterministic input set for constructing an atomic bundle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CandidateAdmissionPreflight {
+    pub task_ref: String,
+    pub contract_epoch: i64,
+    pub loop_object_id: ObjectId,
+    pub budget_id: BudgetId,
+    pub expected_budget_version: Version,
+    pub next_budget_state_canonical_json: String,
+    pub expected_loop_version: Version,
+    pub next_iteration: i64,
+}
+
+/// Daemon-owned identity and governance inputs required to create one atomic
+/// candidate-admission bundle. This is deliberately not an API request type:
+/// the daemon resolves all values from its own configuration and durable
+/// governance state before calling [`admit_candidate_atomically`].
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct DaemonCandidateAdmissionCommand {
+    pub candidate_id: ObjectId,
+    pub authorization_subject_ref: String,
+    pub authorization_purpose: String,
+    pub budget_charge: BudgetCharge,
+    pub governance: GovernanceSeed,
+    pub actor_ref: UriRef,
+    pub authority_ref: UriRef,
+    pub correlation_id: UriRef,
+}
+
+/// Durable facts made available to a worker after its daemon-recorded WIA
+/// handoff. This is not execution success, progress, evidence, verification,
+/// Task acceptance, or Task completion.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct WorkerAuthorizationHandoff {
+    pub authorization: WorkerIterationAuthorizationRow,
+    pub worker_attempt_id: ObjectId,
+    /// `None` is legacy handoff evidence and cannot release scheduler work.
+    pub scheduler_lease: Option<SchedulerLeaseBinding>,
+}
+
+/// A restart-safe worker attempt reconstructed solely from daemon-recorded
+/// handoff evidence and the authoritative Effect lifecycle state. It is not
+/// a worker result and grants neither progress nor Task completion.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct RecoveredWorkerAttempt {
+    pub handoff: WorkerAuthorizationHandoff,
+    pub effect_closure: SchedulerEffectClosure,
+}
+
+/// Immutable scheduler identity reconstructed from durable work during every
+/// daemon tick. The scheduler table intentionally stores only task lifecycle
+/// and fencing fields; binding identity remains anchored in Intent protocol
+/// rows and is never copied from a worker-local queue.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ResolvedSchedulerWork {
+    pub authority_binding: SchedulerAuthorityBinding,
+    pub task_binding: TaskBinding,
 }
 
 /// One daemon-owned scheduler admission result.
@@ -88,6 +171,9 @@ pub(crate) struct SchedulerEffectResolution {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SchedulerWorkerAttempt {
     Stopped(CommittedTransition),
+    /// A distinct verified continuation authority atomically entered the
+    /// harness. This is neither Effect completion nor Task acceptance.
+    ContinuationStarted(CommittedTransition),
     EffectClosed(SchedulerDispatch),
     AwaitingReconciliation(SchedulerDispatch),
 }
@@ -113,6 +199,26 @@ pub(crate) enum SchedulerAuthorityError {
     BudgetUnavailable(String),
     #[error("scheduler task contract epoch must be positive: {0}")]
     InvalidContractEpoch(i64),
+    #[error("scheduler candidate is unavailable or inconsistent: {0}")]
+    CandidateUnavailable(String),
+    #[error("scheduler candidate tool is not allowed by its TaskContract: {0}")]
+    CandidateToolForbidden(String),
+    #[error("scheduler candidate descriptor is unavailable or unsafe: {0}")]
+    CandidateDescriptorUnavailable(String),
+    #[error("scheduler candidate has no current daemon authorization: {0}")]
+    CandidateAuthorizationUnavailable(String),
+    #[error("scheduler candidate admission composition failed: {0}")]
+    CandidateAdmissionComposition(String),
+    #[error("scheduler continuation authority is unavailable or inconsistent: {0}")]
+    ContinuationUnavailable(String),
+    #[error(
+        "scheduler work binding is stale: {task_ref} requested epoch {requested_epoch}, current epoch {current_epoch}"
+    )]
+    StaleContractEpoch {
+        task_ref: String,
+        requested_epoch: i64,
+        current_epoch: i64,
+    },
     #[error(
         "scheduler task contract epoch has no durable Effect binding: {task_ref} at {contract_epoch}"
     )]
@@ -138,6 +244,8 @@ pub(crate) enum SchedulerAuthorityError {
     #[error("scheduler lease release time is invalid: {0}")]
     InvalidReleaseTime(String),
     #[error(transparent)]
+    Harness(#[from] cognitive_kernel::effects::EffectError),
+    #[error(transparent)]
     Repository(#[from] SchedulerRepositoryError),
     #[error(transparent)]
     Scheduler(#[from] SchedulerServiceError),
@@ -160,31 +268,630 @@ fn parse_execution_bound_contract(
         ));
     }
 
-    serde_json::from_str(canonical_json)
-        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))
+    let contract: TaskContract = serde_json::from_str(canonical_json)
+        .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    if contract.worker_authorization_root_id.is_none() {
+        return Err(SchedulerAuthorityError::MalformedContract(
+            "v0.3 contract has no worker authorization namespace".to_owned(),
+        ));
+    }
+    Ok(contract)
+}
+
+/// Reject scheduler work that was bound to a superseded TaskContract epoch.
+/// This fence runs before any lease mutation or harness invocation.
+fn ensure_current_contract_epoch(
+    binding: &SchedulerAuthorityBinding,
+    current_contract_epoch: i64,
+) -> Result<(), SchedulerAuthorityError> {
+    if binding.contract_epoch == current_contract_epoch {
+        return Ok(());
+    }
+
+    Err(SchedulerAuthorityError::StaleContractEpoch {
+        task_ref: binding.task_ref.clone(),
+        requested_epoch: binding.contract_epoch,
+        current_epoch: current_contract_epoch,
+    })
+}
+
+/// Reload and validate all daemon-owned facts required before constructing an
+/// atomic candidate-admission bundle. This preflight does not mint an Intent,
+/// authorize an Effect, consume WIA, dispatch work, or record progress.
+pub(crate) fn preflight_candidate_admission<S>(
+    store: &S,
+    candidate_id: &ObjectId,
+    authorization_subject_ref: &str,
+    authorization_purpose: &str,
+    budget_charge: &BudgetCharge,
+) -> Result<CandidateAdmissionPreflight, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let candidate = store
+        .load_operation_candidate_proposal(candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::CandidateUnavailable(candidate_id.to_string()))?;
+    let current_epoch = store
+        .current_contract_epoch(&candidate.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if current_epoch != candidate.contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: candidate.task_ref,
+            requested_epoch: candidate.contract_epoch,
+            current_epoch,
+        });
+    }
+    let contract_row = store
+        .load_task_contract(&candidate.task_ref, current_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(candidate.task_ref.clone()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if contract.task_ref != candidate.task_ref || contract.contract_epoch != current_epoch {
+        return Err(SchedulerAuthorityError::CandidateUnavailable(
+            "candidate and TaskContract binding disagree".to_owned(),
+        ));
+    }
+    if !contract.allowed_tools.contains(&candidate.tool_ref) {
+        return Err(SchedulerAuthorityError::CandidateToolForbidden(
+            candidate.tool_ref,
+        ));
+    }
+    let descriptor = store
+        .load_daemon_operation_descriptor(&candidate.operation_descriptor_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                candidate.operation_descriptor_ref.to_string(),
+            )
+        })?;
+    if descriptor.descriptor.operation_id != candidate.tool_ref
+        || descriptor.descriptor.action != candidate.action
+        || admit_operation(&descriptor.descriptor).is_err()
+    {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            candidate.operation_descriptor_ref.to_string(),
+        ));
+    }
+    let authorization = store
+        .load_latest_daemon_authorization_snapshot(
+            authorization_subject_ref,
+            &candidate.target,
+            &candidate.action,
+            authorization_purpose,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateAuthorizationUnavailable(candidate.action.clone())
+        })?;
+    if authorization.grant_epoch < 1
+        || authorization.capability_set_version < 1
+        || authorization.revocation_epoch < 1
+    {
+        return Err(SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+            candidate.action.clone(),
+        ));
+    }
+    let loop_object_id = ObjectId::parse(
+        &contract
+            .loop_object_id
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no loop".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let budget_id = BudgetId::parse(
+        &contract
+            .budget_id
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no budget".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let loop_object = store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::LoopUnavailable(loop_object_id.to_string()))?;
+    if loop_object.state.as_str() != "DECIDE" {
+        return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+            "{} is {}",
+            loop_object_id, loop_object.state
+        )));
+    }
+    let stored_budget = store
+        .load_budget(&budget_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::BudgetUnavailable(budget_id.to_string()))?;
+    let next_budget_state = stored_budget
+        .state
+        .check_and_debit(budget_charge)
+        .map_err(|error| SchedulerAuthorityError::BudgetUnavailable(error.to_string()))?;
+    let next_budget_state_value = serde_json::to_value(&next_budget_state)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let next_budget_state_canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&next_budget_state_value)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let progress_facts = store
+        .list_progress_facts(&loop_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    Ok(CandidateAdmissionPreflight {
+        task_ref: candidate.task_ref,
+        contract_epoch: current_epoch,
+        loop_object_id,
+        budget_id,
+        expected_budget_version: stored_budget.version,
+        next_budget_state_canonical_json,
+        expected_loop_version: loop_object.version,
+        next_iteration: progress_facts.last().map_or(1, |fact| fact.iteration + 1),
+    })
+}
+
+/// Reload daemon-owned admission inputs, compose a schema-shaped bundle, and
+/// persist it through the single atomic candidate-admission store sink.
+///
+/// This is intentionally daemon-private. It accepts neither worker output nor
+/// client-supplied authority fields, and it does not consume WIA, dispatch an
+/// executor, write a progress fact, release a scheduler lease, or accept a
+/// Task.
+pub(crate) fn admit_candidate_atomically<S, C, G>(
+    store: &S,
+    clock: &C,
+    ids: &G,
+    command: &DaemonCandidateAdmissionCommand,
+) -> Result<CandidateAdmissionReceipt, SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let preflight = preflight_candidate_admission(
+        store,
+        &command.candidate_id,
+        &command.authorization_subject_ref,
+        &command.authorization_purpose,
+        &command.budget_charge,
+    )?;
+    let candidate = store
+        .load_operation_candidate_proposal(&command.candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(command.candidate_id.to_string())
+        })?;
+    let task_contract = store
+        .load_task_contract(&preflight.task_ref, preflight.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(preflight.task_ref.clone()))?;
+    let descriptor = store
+        .load_daemon_operation_descriptor(&candidate.operation_descriptor_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                candidate.operation_descriptor_ref.to_string(),
+            )
+        })?;
+    let authorization = store
+        .load_latest_daemon_authorization_snapshot(
+            &command.authorization_subject_ref,
+            &candidate.target,
+            &candidate.action,
+            &command.authorization_purpose,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateAuthorizationUnavailable(candidate.action.clone())
+        })?;
+    let writer_lease = WriterLease {
+        epoch: store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
+    let admitted_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let identities = CandidateAdmissionIdentities {
+        authorization_id: next_object_id(ids)?,
+        intent_id: next_object_id(ids)?,
+        effect_object_id: next_object_id(ids)?,
+        intent_event_id: next_event_id(ids)?,
+        effect_event_id: next_event_id(ids)?,
+        loop_event_id: next_event_id(ids)?,
+        loop_record_id: next_record_id(ids)?,
+    };
+    let commit = compose_candidate_admission(&CandidateAdmissionInputs {
+        candidate,
+        task_contract,
+        descriptor,
+        authorization,
+        authorization_subject_ref: command.authorization_subject_ref.clone(),
+        authorization_purpose: command.authorization_purpose.clone(),
+        facts: CandidateAdmissionFacts {
+            loop_object_id: preflight.loop_object_id,
+            budget_id: preflight.budget_id,
+            expected_budget_version: preflight.expected_budget_version,
+            next_budget_state_canonical_json: preflight.next_budget_state_canonical_json,
+            expected_loop_version: preflight.expected_loop_version,
+            iteration: preflight.next_iteration,
+        },
+        budget_charge: command.budget_charge.clone(),
+        governance: command.governance.clone(),
+        identities,
+        actor_ref: command.actor_ref.clone(),
+        authority_ref: command.authority_ref.clone(),
+        correlation_id: command.correlation_id.clone(),
+        admitted_at,
+        writer_lease,
+    })
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    store
+        .commit_candidate_admission(&commit)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))
+}
+
+/// Reload and consume one daemon-issued WIA before a worker can use its
+/// bounded input. The consumption record is an immutable handoff only.
+///
+/// A superseded TaskContract or missing authorization fails closed. This
+/// function deliberately does not dispatch an executor or convert any worker
+/// observation into progress, evidence, verification, lease release, Task
+/// acceptance, or Task completion.
+pub(crate) fn consume_worker_authorization_for_attempt<S, C>(
+    store: &S,
+    clock: &C,
+    authorization_id: &ObjectId,
+    worker_attempt_id: ObjectId,
+    scheduler_dispatch: &SchedulerDispatch,
+) -> Result<WorkerAuthorizationHandoff, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+{
+    let authorization = store
+        .load_worker_iteration_authorization(authorization_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(authorization_id.to_string())
+        })?;
+    // Consumption may be invoked independently of the bounded attempt
+    // composition, so revalidate the sealed evidence at this authority edge.
+    validate_worker_authorization_evidence(&authorization)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&authorization.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if current_contract_epoch != authorization.contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: authorization.task_ref.clone(),
+            requested_epoch: authorization.contract_epoch,
+            current_epoch: current_contract_epoch,
+        });
+    }
+    if scheduler_dispatch.task_ref != authorization.task_ref
+        || scheduler_dispatch.contract_epoch != authorization.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "scheduler dispatch does not match the WorkerIterationAuthorization task binding"
+                .to_owned(),
+        ));
+    }
+    let consumed_fencing_epoch = store
+        .current_fencing_epoch()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let consumed_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let consumption_value = serde_json::json!({
+        "authorization_id": authorization.authorization_id.as_str(),
+        "consumed_at": consumed_at.as_str(),
+        "consumed_fencing_epoch": consumed_fencing_epoch,
+        "kind": "worker_iteration_authorization_consumed",
+        "worker_attempt_id": worker_attempt_id.as_str(),
+    });
+    let canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&consumption_value)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let scheduler_lease = SchedulerLeaseBinding {
+        task_ref: scheduler_dispatch.task_ref.clone(),
+        contract_epoch: scheduler_dispatch.contract_epoch,
+        lease_owner: scheduler_dispatch.lease_owner.clone(),
+        lease_epoch: scheduler_dispatch.lease_epoch,
+    };
+    store
+        .consume_worker_iteration_authorization_bound_to_scheduler_lease(
+            &BoundWorkerAuthorizationConsumption {
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id: authorization.authorization_id.clone(),
+                    worker_attempt_id: worker_attempt_id.clone(),
+                    consumed_fencing_epoch,
+                    consumed_at,
+                    canonical_json,
+                },
+                scheduler_lease: scheduler_lease.clone(),
+            },
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    Ok(WorkerAuthorizationHandoff {
+        authorization,
+        worker_attempt_id,
+        scheduler_lease: Some(scheduler_lease),
+    })
+}
+
+/// Verify that a durable WIA row and its schema-shaped evidence describe the
+/// same immutable authority. A storage row must never become worker input
+/// merely because its columns parse; its sealed payload remains the binding
+/// evidence for every identity and version-sensitive field.
+fn validate_worker_authorization_evidence(
+    authorization: &WorkerIterationAuthorizationRow,
+) -> Result<(), SchedulerAuthorityError> {
+    let payload: WorkerIterationAuthorization = serde_json::from_str(&authorization.canonical_json)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?;
+    let payload_value = serde_json::to_value(&payload).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    cognitive_contracts::projection::verify_content_digest(
+        &payload_value,
+        &["/header/content_digest"],
+        "governed-object-content/0.1",
+        "/header/content_digest",
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    let rows_match_payload = payload.header.id.0.as_str()
+        == authorization.authorization_id.as_str()
+        && payload.worker_authorization_root_id.0.as_str()
+            == authorization.worker_authorization_root_id.as_str()
+        && payload.contract_epoch == authorization.contract_epoch
+        && payload.iteration == authorization.iteration
+        && payload.expected_loop_version == authorization.expected_loop_version.get()
+        && payload.selected_candidate_ref.id.0.as_str()
+            == authorization.selected_candidate_id.as_str()
+        && payload.intent_ref.id.0.as_str() == authorization.intent_id.as_str()
+        && payload.effect_ref.id.0.as_str() == authorization.effect_object_id.as_str()
+        && payload.budget_id.0.as_str() == authorization.budget_id.as_str()
+        && payload.action_fingerprint == authorization.action_fingerprint
+        && payload.issued_fencing_epoch == authorization.issued_fencing_epoch;
+    if !rows_match_payload {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "worker authorization row and sealed evidence disagree".to_owned(),
+        ));
+    }
+    let payload_budget_charge = serde_json::to_value(&payload.budget_charge).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    let canonical_budget_charge = String::from_utf8(
+        canonical::canonical_bytes_of_value(&payload_budget_charge).map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    if canonical_budget_charge != authorization.budget_charge_canonical_json {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "worker authorization budget charge evidence disagrees with its row".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+/// Discover in-flight worker attempts after daemon restart.
+///
+/// Only consumed WIA records appear here: issued-but-unconsumed authority is
+/// not evidence that a worker started. Every discovered row is revalidated
+/// against the current TaskContract epoch and its sealed WIA evidence before
+/// reading the durable Effect state. No process-local callback, receipt, or
+/// scheduler queue value participates in recovery.
+pub(crate) fn recover_consumed_worker_attempts<S>(
+    store: &S,
+) -> Result<Vec<RecoveredWorkerAttempt>, SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let consumed_authorizations = store
+        .list_consumed_worker_iteration_authorizations()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut recovered_attempts = Vec::with_capacity(consumed_authorizations.len());
+    for consumed_authorization in consumed_authorizations {
+        let authorization = consumed_authorization.authorization;
+        validate_worker_authorization_evidence(&authorization)?;
+        let current_contract_epoch = store
+            .current_contract_epoch(&authorization.task_ref)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+        ensure_current_contract_epoch(
+            &SchedulerAuthorityBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+                action_fingerprint: authorization.action_fingerprint.clone(),
+            },
+            current_contract_epoch,
+        )?;
+        let effect = store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MissingEffect(
+                    authorization.effect_object_id.as_str().to_owned(),
+                )
+            })?;
+        recovered_attempts.push(RecoveredWorkerAttempt {
+            handoff: WorkerAuthorizationHandoff {
+                authorization,
+                worker_attempt_id: consumed_authorization.consumption.worker_attempt_id,
+                scheduler_lease: consumed_authorization.scheduler_lease,
+            },
+            effect_closure: classify_scheduler_effect_closure(effect.state.as_str())?,
+        });
+    }
+    Ok(recovered_attempts)
+}
+
+/// Reconcile recovered handoffs whose authoritative Effects are closed.
+///
+/// A release is possible only when the durable handoff includes the exact
+/// lease owner and epoch captured at consumption. Legacy unbound handoffs and
+/// pending Effects deliberately retain their scheduler work. This does not
+/// interpret worker output or complete a Task.
+pub(crate) fn reconcile_recovered_worker_attempts<S, C>(
+    store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    clock: &C,
+) -> Result<Vec<RecoveredWorkerAttempt>, SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+    C: Clock,
+{
+    let recovered_attempts = recover_consumed_worker_attempts(store)?;
+    let released_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::InvalidReleaseTime(error.detail))?;
+
+    for recovered_attempt in &recovered_attempts {
+        release_closed_recovered_attempt(
+            recovered_attempt,
+            scheduler_repository,
+            released_at.as_str(),
+        )?;
+    }
+
+    Ok(recovered_attempts)
+}
+
+/// Run daemon startup recovery against the single Personal authority database
+/// before the HTTP endpoint is published. This intentionally reconciles only
+/// already-consumed, exact-lease-bound handoffs; it never claims runnable work
+/// or dispatches an executor during startup.
+pub(crate) fn reconcile_scheduler_recovery_at_startup(
+    authority_database_path: &Path,
+) -> Result<(), SchedulerAuthorityError> {
+    let authority_store = cognitive_store::SqliteAuthorityStore::open(authority_database_path)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    reconcile_recovered_worker_attempts(
+        &authority_store,
+        &mut scheduler_repository,
+        &cognitive_store::SystemClock,
+    )?;
+    Ok(())
+}
+
+fn release_closed_recovered_attempt(
+    recovered_attempt: &RecoveredWorkerAttempt,
+    scheduler_repository: &mut SchedulerRepository,
+    released_at: &str,
+) -> Result<(), SchedulerAuthorityError> {
+    if recovered_attempt.effect_closure != SchedulerEffectClosure::Closed {
+        return Ok(());
+    }
+    let Some(scheduler_lease) = &recovered_attempt.handoff.scheduler_lease else {
+        return Ok(());
+    };
+    if scheduler_lease.task_ref != recovered_attempt.handoff.authorization.task_ref
+        || scheduler_lease.contract_epoch != recovered_attempt.handoff.authorization.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "recovered scheduler lease binding does not match its WorkerIterationAuthorization"
+                .to_owned(),
+        ));
+    }
+    scheduler_repository.release_lease(
+        &SchedulerWorkKey {
+            task_ref: scheduler_lease.task_ref.clone(),
+            contract_epoch: scheduler_lease.contract_epoch,
+        },
+        &scheduler_lease.lease_owner,
+        scheduler_lease.lease_epoch,
+        SchedulerState::Succeeded,
+        released_at,
+    )?;
+    Ok(())
+}
+
+fn next_object_id<G: IdGenerator>(ids: &G) -> Result<ObjectId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    ObjectId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
+}
+
+fn next_event_id<G: IdGenerator>(ids: &G) -> Result<EventId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    EventId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
+}
+
+fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorityError> {
+    let raw_id = ids
+        .next_uuid_v7()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    RecordId::parse(&raw_id)
+        .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))
 }
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
-        SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
-        SchedulerWorkerAttempt, classify_scheduler_effect_closure,
+        RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
+        SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
+        WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
         complete_resolved_effect_and_release, complete_scheduler_admission,
-        complete_scheduler_worker_attempt, parse_execution_bound_contract,
-        release_closed_effect_dispatch, select_single_effect_intent,
+        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
+        parse_execution_bound_contract, release_closed_effect_dispatch,
+        release_closed_recovered_attempt, select_single_effect_intent,
+        validate_worker_authorization_evidence,
     };
-    use cognitive_domain::{EventId, ObjectId, RecordId, Version, WallTimestamp};
+    use cognitive_contracts::{
+        canonical,
+        generated::{
+            common_defs::Budget, worker_iteration_authorization::WorkerIterationAuthorization,
+        },
+    };
+    use cognitive_domain::{
+        BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, UriRef, Version,
+        WallTimestamp,
+        capability::{CapabilityConstraints, LeaseWindow},
+    };
+    use cognitive_kernel::authz::{
+        AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
+        PrincipalFacts, authorize,
+    };
+    use cognitive_kernel::budget::BudgetState;
+    use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
     use cognitive_kernel::engine::CommittedTransition;
-    use cognitive_kernel::ports::{IntentRow, TaskBinding};
+    use cognitive_kernel::intent_chain::{
+        GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
+        strong_reference_to,
+    };
+    use cognitive_kernel::ports::{
+        AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
+        IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, RecordDraft,
+        SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+        WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+    };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
-    use cognitive_store::scheduler::{SchedulerRepository, SchedulerRow, SchedulerState};
+    use cognitive_store::{
+        PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
+        scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
+    };
+    use serde_json::json;
     use std::cell::Cell;
+    use std::collections::BTreeMap;
+    use std::io::Write;
+    use std::net::TcpStream;
+    use std::sync::mpsc;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn scheduler_row(task_ref: &str) -> SchedulerRow {
         SchedulerRow {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             state: SchedulerState::Runnable.as_str().to_owned(),
             lease_owner: None,
             lease_epoch: 0,
@@ -192,6 +899,147 @@ mod tests {
             next_eligible: "2026-08-03T00:00:00Z".to_owned(),
             attempt_count: 0,
             cancel_requested: false,
+        }
+    }
+
+    fn scheduler_work_key(task_ref: &str) -> SchedulerWorkKey {
+        SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        }
+    }
+
+    fn object_id(sequence: u64) -> ObjectId {
+        ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {
+        let authorization_id = object_id(810);
+        let worker_authorization_root_id = object_id(811);
+        let selected_candidate_id = object_id(812);
+        let intent_id = object_id(813);
+        let effect_object_id = object_id(814);
+        let task_contract_id = object_id(815);
+        let budget_id = BudgetId::parse("00000000-0000-7000-b000-000000000816").unwrap();
+        let budget_charge = Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: None,
+            tool_calls: Some(1),
+            wall_time_ms: None,
+        };
+        let governance = GovernanceSeed {
+            owner: strong_reference_to(&object_id(817), &format!("sha256:{}", "a".repeat(64))),
+            authority: strong_reference_to(
+                &object_id(818),
+                &format!("sha256:{}", "b".repeat(64)),
+            ),
+            resource_scope: strong_reference_to(
+                &object_id(819),
+                &format!("sha256:{}", "c".repeat(64)),
+            ),
+            tenant_id: Some("00000000-0000-7000-9000-000000000820".to_owned()),
+            created_by: "principal://personal/daemon".to_owned(),
+            sensitivity: cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity::Internal,
+            purpose_constraints: vec!["task_execution".to_owned()],
+            retention_policy: "standard".to_owned(),
+        };
+        let issued_at = WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap();
+        let header = compose_governed_header(
+            &authorization_id,
+            "WorkerIterationAuthorization",
+            "cognitiveos.worker-iteration-authorization/0.1",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "scheduler-authority-evidence-test",
+            &issued_at,
+        )
+        .unwrap();
+        let payload = WorkerIterationAuthorization {
+            action_fingerprint: format!("sha256:{}", "d".repeat(64)),
+            budget_charge: budget_charge.clone(),
+            budget_id: budget_id.to_generated(),
+            contract_epoch: 1,
+            effect_ref: strong_reference_to(
+                &effect_object_id,
+                &format!("sha256:{}", "e".repeat(64)),
+            ),
+            expected_loop_version: 1,
+            header,
+            intent_ref: strong_reference_to(&intent_id, &format!("sha256:{}", "f".repeat(64))),
+            issued_fencing_epoch: 1,
+            iteration: 1,
+            selected_candidate_ref: strong_reference_to(
+                &selected_candidate_id,
+                &format!("sha256:{}", "1".repeat(64)),
+            ),
+            task_contract_ref: strong_reference_to(
+                &task_contract_id,
+                &format!("sha256:{}", "2".repeat(64)),
+            ),
+            worker_authorization_root_id: worker_authorization_root_id.to_generated(),
+        };
+        let payload_value = serde_json::to_value(&payload).unwrap();
+        let (sealed_payload, _) = seal_governed_object_content_digest(payload_value).unwrap();
+        let budget_charge_canonical_json = String::from_utf8(
+            canonical::canonical_bytes_of_value(&serde_json::to_value(budget_charge).unwrap())
+                .unwrap(),
+        )
+        .unwrap();
+
+        WorkerIterationAuthorizationRow {
+            authorization_id,
+            worker_authorization_root_id,
+            task_ref: "task://personal/sealed-worker-authorization".to_owned(),
+            contract_epoch: 1,
+            loop_object_id: object_id(821),
+            iteration: 1,
+            expected_loop_version: Version::INITIAL,
+            selected_candidate_id,
+            intent_id,
+            effect_object_id,
+            budget_id,
+            budget_charge_canonical_json,
+            action_fingerprint: payload.action_fingerprint,
+            issued_fencing_epoch: 1,
+            canonical_json: serde_json::to_string(&sealed_payload).unwrap(),
+        }
+    }
+
+    fn recovered_closed_attempt(task_ref: &str, lease_epoch: i64) -> RecoveredWorkerAttempt {
+        RecoveredWorkerAttempt {
+            handoff: WorkerAuthorizationHandoff {
+                authorization: WorkerIterationAuthorizationRow {
+                    authorization_id: object_id(800),
+                    worker_authorization_root_id: object_id(801),
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    loop_object_id: object_id(802),
+                    iteration: 1,
+                    expected_loop_version: Version::INITIAL,
+                    selected_candidate_id: object_id(803),
+                    intent_id: object_id(804),
+                    effect_object_id: object_id(805),
+                    budget_id: BudgetId::parse("00000000-0000-7000-b000-000000000806").unwrap(),
+                    budget_charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                    action_fingerprint: "recovered-lease-release".to_owned(),
+                    issued_fencing_epoch: 1,
+                    canonical_json: "{\"worker_authorization\":1}".to_owned(),
+                },
+                worker_attempt_id: object_id(807),
+                scheduler_lease: Some(SchedulerLeaseBinding {
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    lease_owner: "scheduler-worker".to_owned(),
+                    lease_epoch,
+                }),
+            },
+            effect_closure: SchedulerEffectClosure::Closed,
         }
     }
 
@@ -204,6 +1052,380 @@ mod tests {
             "cognitiveos-scheduler-authority-{}-{unique_suffix}.db",
             std::process::id()
         ))
+    }
+
+    fn temporary_personal_layout() -> PersonalDataLayout {
+        let unique_suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "cognitiveos-server-recovery-{}-{unique_suffix}",
+            std::process::id()
+        ));
+        PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        )
+    }
+
+    fn endpoint_document_path(layout: &PersonalDataLayout) -> std::path::PathBuf {
+        layout.state_dir().join("daemon-endpoint.json")
+    }
+
+    fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> Option<String> {
+        let endpoint_path = endpoint_document_path(layout);
+        for _ in 0..100 {
+            if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
+                let endpoint =
+                    serde_json::from_str::<serde_json::Value>(&document).unwrap()["endpoint"]
+                        .as_str()
+                        .unwrap()
+                        .to_owned();
+                return Some(endpoint);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        None
+    }
+
+    fn send_health_request_to_once_server(endpoint: &str) {
+        let mut stream = TcpStream::connect(endpoint).unwrap();
+        stream
+            .write_all(
+                b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
+            )
+            .unwrap();
+    }
+
+    fn state(value: &str) -> StateName {
+        StateName::parse(value).unwrap()
+    }
+
+    fn recovery_effect_grant() -> cognitive_kernel::authz::AuthorizationGrant {
+        let authorization_time = WallTimestamp::parse("2026-08-04T12:02:00Z").unwrap();
+        authorize(
+            &AuthzSnapshot {
+                tenant_id: "personal-test".to_owned(),
+                principal: PrincipalFacts {
+                    principal_ref: UriRef::parse("principal://personal/daemon").unwrap(),
+                    authenticated: true,
+                    active: true,
+                    tenant_id: Some("personal-test".to_owned()),
+                },
+                actor_chain: ActorChainFacts {
+                    chain_digest: format!("sha256:{}", "c".repeat(64)),
+                    resolved: true,
+                },
+                membership: Some(MembershipFacts {
+                    valid: true,
+                    roles: ["daemon".to_owned()].into(),
+                }),
+                capability_links: vec![CapabilityConstraints {
+                    subject: "principal://personal/daemon".to_owned(),
+                    audience: "authority://personal/effect-authority".to_owned(),
+                    resource: "scope://personal/restart-recovery".to_owned(),
+                    purpose: "task_execution".to_owned(),
+                    actions: ["filesystem.read".to_owned()].into(),
+                    parameter_bounds: BTreeMap::new(),
+                    lease: LeaseWindow {
+                        not_before: WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap(),
+                        expires: WallTimestamp::parse("2026-08-04T12:05:00Z").unwrap(),
+                    },
+                    depth_remaining: 1,
+                    issued_epoch: 1,
+                }],
+                capability_set_version: 1,
+                explicit_denies: Vec::new(),
+                revocation_epoch: 1,
+                decided_at: authorization_time,
+            },
+            &ObjectGovernance {
+                object_ref: "effect://personal/restart-recovery".to_owned(),
+                tenant_id: Some("personal-test".to_owned()),
+                owner_ref: "principal://personal/daemon".to_owned(),
+                resource_scope: "scope://personal/restart-recovery/effect".to_owned(),
+                conversation_ref: None,
+            },
+            &AccessRequest {
+                action: "filesystem.read".to_owned(),
+                purpose: "task_execution".to_owned(),
+            },
+        )
+        .unwrap()
+    }
+
+    fn reconcile_effect_for_restart_recovery(
+        store: &SqliteAuthorityStore,
+        effect_object_id: &ObjectId,
+    ) {
+        let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store,
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").unwrap(),
+            UriRef::parse("authority://personal/effect-authority").unwrap(),
+            UriRef::parse("correlation://personal/restart-recovery").unwrap(),
+        );
+        let grant = recovery_effect_grant();
+        let currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+        let executor = ScriptedExecutor::queryable(1);
+
+        let authorized = effect_protocol
+            .authorize_effect(
+                effect_object_id,
+                Version::INITIAL,
+                &grant,
+                &currency,
+                &writer_lease,
+            )
+            .unwrap();
+        let (dispatched, outcome) = effect_protocol
+            .dispatch_effect(
+                effect_object_id,
+                authorized.after_version,
+                &grant,
+                &currency,
+                &executor,
+                &writer_lease,
+            )
+            .unwrap();
+        let executed = effect_protocol
+            .record_outcome(
+                effect_object_id,
+                dispatched.after_version,
+                &outcome,
+                &writer_lease,
+            )
+            .unwrap();
+        effect_protocol
+            .reconcile(
+                effect_object_id,
+                "EXECUTED",
+                executed.after_version,
+                &executor,
+                &writer_lease,
+            )
+            .unwrap();
+    }
+
+    /// Persist the minimum complete D05 handoff evidence through the normal
+    /// store APIs. The Effect intentionally remains PROPOSED: this fixture
+    /// exercises restart recovery's retain path without executing a tool or
+    /// manufacturing a terminal Effect transition.
+    fn persist_pending_bound_handoff(
+        database_path: &std::path::Path,
+        consume_authorization: bool,
+    ) -> (ObjectId, SchedulerWorkKey) {
+        let store = SqliteAuthorityStore::open(database_path).unwrap();
+        let authorization = sealed_worker_authorization_row();
+        let task_ref = authorization.task_ref.clone();
+        let scheduler_work_key = SchedulerWorkKey {
+            task_ref: task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+        };
+        let admitted_at = WallTimestamp::parse("2026-08-04T12:00:00Z").unwrap();
+
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(830),
+                    task_ref: task_ref.clone(),
+                    contract_epoch: authorization.contract_epoch,
+                    user_intent_record_id: object_id(831),
+                    interpretation_id: object_id(832),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "a".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"recovery-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000830").unwrap(),
+                    object_id: object_id(830),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.minted".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                0,
+            )
+            .unwrap();
+        store
+            .append_operation_candidate_proposal(&OperationCandidateProposalRow {
+                candidate_id: authorization.selected_candidate_id.clone(),
+                task_ref: task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+                candidate_source_ref: "observation://personal/restart-recovery".to_owned(),
+                tool_ref: "operation://personal/filesystem/read".to_owned(),
+                action: "filesystem.read".to_owned(),
+                target: "file:///workspace/input.txt".to_owned(),
+                parameters_digest: format!("sha256:{}", "b".repeat(64)),
+                expected_state_version: Version::INITIAL.get(),
+                operation_descriptor_ref: object_id(833),
+                canonical_json: "{\"candidate\":\"recovery-fixture\"}".to_owned(),
+            })
+            .unwrap();
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    state: state("DECIDE"),
+                    version: authorization.expected_loop_version,
+                    body: json!({"fixture": "restart-recovery"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000821").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version,
+                    event_type: "loop.fixture-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            })
+            .unwrap();
+        let budget_state =
+            BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
+        let budget_state_json = serde_json::to_string(&budget_state).unwrap();
+        store
+            .create_budget(&authorization.budget_id, &budget_state_json, &admitted_at)
+            .unwrap();
+
+        let candidate_admission = CandidateAdmissionCommit {
+            selected_candidate_id: authorization.selected_candidate_id.clone(),
+            intent: IntentRow {
+                intent_id: authorization.intent_id.clone(),
+                idempotency_key: "restart-recovery-pending".to_owned(),
+                parameters_digest: format!("sha256:{}", "b".repeat(64)),
+                action: "filesystem.read".to_owned(),
+                target: "file:///workspace/input.txt".to_owned(),
+                effect_object_id: authorization.effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: Some(TaskBinding {
+                    task_ref: task_ref.clone(),
+                    contract_epoch: authorization.contract_epoch,
+                }),
+                canonical_json: "{\"intent\":\"restart-recovery\"}".to_owned(),
+            },
+            intent_event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000813").unwrap(),
+                object_id: authorization.intent_id.clone(),
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"event\":\"intent\"}".to_owned(),
+            },
+            effect_admission: ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    state: state("PROPOSED"),
+                    version: Version::INITIAL,
+                    body: json!({"effect": "restart-recovery"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000814").unwrap(),
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "effect.admitted".to_owned(),
+                    canonical_json: "{\"event\":\"effect\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            },
+            worker_authorization: authorization.clone(),
+            loop_transition: TransitionCommit {
+                cas: ObjectCas {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    from_state: state("DECIDE"),
+                    to_state: state("ACT"),
+                    expected_version: authorization.expected_loop_version,
+                    next_version: authorization.expected_loop_version.next().unwrap(),
+                    committed_at: admitted_at.clone(),
+                },
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000822").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version.next().unwrap(),
+                    event_type: "loop.operation-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                record: RecordDraft {
+                    record_id: RecordId::parse("00000000-0000-7000-8000-000000000821").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: authorization.expected_loop_version.next().unwrap(),
+                    canonical_json: "{\"record\":\"loop\"}".to_owned(),
+                },
+                budget: Some(BudgetCas {
+                    budget_id: authorization.budget_id.clone(),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                    next_state_canonical_json: serde_json::to_string(
+                        &BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
+                    )
+                    .unwrap(),
+                }),
+                outbox: Vec::new(),
+                fencing_epoch: Some(authorization.issued_fencing_epoch),
+            },
+            fencing_epoch: authorization.issued_fencing_epoch,
+        };
+        store
+            .commit_candidate_admission(&candidate_admission)
+            .unwrap();
+
+        let mut scheduler_repository = SchedulerRepository::open(database_path).unwrap();
+        scheduler_repository
+            .upsert(&scheduler_row(&task_ref))
+            .unwrap();
+        if consume_authorization {
+            let leased_row = scheduler_repository
+                .acquire_lease(
+                    &scheduler_work_key,
+                    "restart-recovery-worker",
+                    41,
+                    "2026-08-04T12:05:00Z",
+                )
+                .unwrap();
+            let dispatch = SchedulerDispatch {
+                task_ref,
+                contract_epoch: authorization.contract_epoch,
+                lease_owner: leased_row.lease_owner.unwrap(),
+                lease_epoch: leased_row.lease_epoch,
+                lease_expires: leased_row.lease_expires.unwrap(),
+                attempt_count: leased_row.attempt_count,
+            };
+            super::consume_worker_authorization_for_attempt(
+                &store,
+                &super::FixedSchedulerClock::parse("2026-08-04T12:01:00Z").unwrap(),
+                &authorization.authorization_id,
+                object_id(834),
+                &dispatch,
+            )
+            .unwrap();
+        }
+        drop(scheduler_repository);
+        drop(store);
+        (authorization.effect_object_id, scheduler_work_key)
     }
 
     fn committed_ceiling_stop() -> CommittedTransition {
@@ -244,6 +1466,273 @@ mod tests {
     }
 
     #[test]
+    fn restarted_recovery_retains_a_pending_effects_exact_bound_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&database_path, true);
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let recovered_attempts = super::reconcile_recovered_worker_attempts(
+            &reopened_store,
+            &mut reopened_scheduler_repository,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(recovered_attempts.len(), 1);
+        assert_eq!(
+            recovered_attempts[0].effect_closure,
+            SchedulerEffectClosure::PendingReconciliation
+        );
+        assert_eq!(
+            recovered_attempts[0]
+                .handoff
+                .scheduler_lease
+                .as_ref()
+                .unwrap()
+                .lease_epoch,
+            41
+        );
+        assert_eq!(
+            reopened_store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .unwrap()
+                .unwrap()
+                .state
+                .as_str(),
+            "PROPOSED"
+        );
+
+        let scheduler_row = reopened_scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Leased.as_str());
+        assert_eq!(
+            scheduler_row.lease_owner.as_deref(),
+            Some("restart-recovery-worker")
+        );
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+
+        drop(reopened_scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn restarted_recovery_releases_only_a_reconciled_effects_exact_bound_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&database_path, true);
+
+        let closing_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
+        let reconciled_effect = closing_store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(reconciled_effect.state.as_str(), "RECONCILED");
+        assert_eq!(reconciled_effect.version, Version::new(5).unwrap());
+        drop(closing_store);
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let recovered_attempts = super::reconcile_recovered_worker_attempts(
+            &reopened_store,
+            &mut reopened_scheduler_repository,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:03:00Z").unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(recovered_attempts.len(), 1);
+        assert_eq!(
+            recovered_attempts[0].effect_closure,
+            SchedulerEffectClosure::Closed
+        );
+        let recovered_lease = recovered_attempts[0]
+            .handoff
+            .scheduler_lease
+            .as_ref()
+            .unwrap();
+        assert_eq!(recovered_lease.lease_owner, "restart-recovery-worker");
+        assert_eq!(recovered_lease.lease_epoch, 41);
+
+        let scheduler_row = reopened_scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(scheduler_row.lease_owner, None);
+        assert_eq!(scheduler_row.lease_expires, None);
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+
+        drop(reopened_scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn server_startup_recovers_closed_effect_before_publishing_endpoint() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        let authority_database_path = layout.authority_database_path();
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&authority_database_path, true);
+        let closing_store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+        reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
+        drop(closing_store);
+
+        let (result_sender, result_receiver) = mpsc::channel();
+        let server_layout = layout.clone();
+        let server_thread = std::thread::spawn(move || {
+            let result = super::super::server::serve_personal_loopback(
+                super::super::server::PersonalDaemonConfig {
+                    bind_address: "127.0.0.1:0".to_owned(),
+                    layout: server_layout,
+                    bounds: super::super::bounds::PersonalResourceBounds::personal_v1_baseline(),
+                    once: true,
+                },
+            );
+            result_sender.send(result).unwrap();
+        });
+
+        let endpoint = wait_for_published_endpoint(&layout);
+        assert!(
+            endpoint.is_some(),
+            "server did not publish its endpoint document"
+        );
+        let endpoint = endpoint.unwrap();
+        send_health_request_to_once_server(&endpoint);
+        assert!(result_receiver.recv().unwrap().is_ok());
+        server_thread.join().unwrap();
+
+        let mut scheduler_repository = SchedulerRepository::open(&authority_database_path).unwrap();
+        let scheduler_row = scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(scheduler_row.lease_owner, None);
+        assert_eq!(scheduler_row.lease_expires, None);
+        assert_eq!(scheduler_row.lease_epoch, 41);
+        assert_eq!(scheduler_row.attempt_count, 1);
+        assert!(!endpoint_document_path(&layout).exists());
+
+        drop(scheduler_repository);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn server_startup_recovery_stale_contract_does_not_publish_endpoint() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        let authority_database_path = layout.authority_database_path();
+        let (_, scheduler_work_key) = persist_pending_bound_handoff(&authority_database_path, true);
+        let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(840),
+                    task_ref: scheduler_work_key.task_ref,
+                    contract_epoch: 2,
+                    user_intent_record_id: object_id(841),
+                    interpretation_id: object_id(842),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "d".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"superseding-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000840").unwrap(),
+                    object_id: object_id(840),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.superseded".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                1,
+            )
+            .unwrap();
+        drop(store);
+
+        let result = super::super::server::serve_personal_loopback(
+            super::super::server::PersonalDaemonConfig {
+                bind_address: "127.0.0.1:0".to_owned(),
+                layout: layout.clone(),
+                bounds: super::super::bounds::PersonalResourceBounds::personal_v1_baseline(),
+                once: true,
+            },
+        );
+
+        assert!(matches!(
+            result,
+            Err(super::super::server::PersonalDaemonError::Io { detail })
+                if detail.contains("reconcile durable scheduler recovery before startup")
+        ));
+        assert!(!endpoint_document_path(&layout).exists());
+        assert!(!layout.daemon_lock_path().exists());
+
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff() {
+        let database_path = temporary_scheduler_database_path();
+        let (_, scheduler_work_key) = persist_pending_bound_handoff(&database_path, false);
+        let store = SqliteAuthorityStore::open(&database_path).unwrap();
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(850),
+                    task_ref: scheduler_work_key.task_ref.clone(),
+                    contract_epoch: 2,
+                    user_intent_record_id: object_id(851),
+                    interpretation_id: object_id(852),
+                    accepted_by: "principal://personal/daemon".to_owned(),
+                    contract_digest: format!("sha256:{}", "e".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"superseding-tick-fixture\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000850").unwrap(),
+                    object_id: object_id(850),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.superseded".to_owned(),
+                    canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+                },
+                1,
+            )
+            .unwrap();
+        drop(store);
+
+        // The scheduler fails closed before the handoff. The exact rejected
+        // authority read is deliberately not part of this safety boundary.
+        assert!(super::run_private_scheduler_tick(&database_path).is_err());
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        assert!(
+            reopened_store
+                .list_consumed_worker_iteration_authorizations()
+                .unwrap()
+                .is_empty()
+        );
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let scheduler_row = scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Runnable.as_str());
+        assert_eq!(scheduler_row.attempt_count, 0);
+        assert_eq!(scheduler_row.lease_owner, None);
+
+        drop(scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
     fn legacy_contract_is_rejected_before_execution_binding_deserialization() {
         let legacy_contract = r#"{
             "header": {
@@ -260,13 +1749,54 @@ mod tests {
     fn execution_schema_without_required_bindings_is_rejected_as_malformed() {
         let incomplete_execution_contract = r#"{
             "header": {
-                "schema_version": "cognitiveos.task-contract/0.2"
+                "schema_version": "cognitiveos.task-contract/0.3"
             }
         }"#;
 
         assert!(matches!(
             parse_execution_bound_contract(incomplete_execution_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn stale_contract_epoch_is_rejected_before_scheduler_admission() {
+        let binding = SchedulerAuthorityBinding {
+            task_ref: "task://personal/superseded-contract".to_owned(),
+            contract_epoch: 4,
+            action_fingerprint: "scheduler.effect:sha256:test".to_owned(),
+        };
+
+        assert!(matches!(
+            ensure_current_contract_epoch(&binding, 5),
+            Err(SchedulerAuthorityError::StaleContractEpoch {
+                task_ref,
+                requested_epoch: 4,
+                current_epoch: 5,
+            }) if task_ref == binding.task_ref
+        ));
+    }
+
+    #[test]
+    fn sealed_wia_evidence_rejects_budget_charge_and_loop_version_row_mismatches() {
+        let matching_row = sealed_worker_authorization_row();
+        assert!(
+            validate_worker_authorization_evidence(&matching_row).is_ok(),
+            "a row derived from its sealed WIA payload must validate"
+        );
+
+        let mut charge_mismatch = matching_row.clone();
+        charge_mismatch.budget_charge_canonical_json = "{\"tool_calls\":2}".to_owned();
+        assert!(matches!(
+            validate_worker_authorization_evidence(&charge_mismatch),
+            Err(SchedulerAuthorityError::CandidateAdmissionComposition(_))
+        ));
+
+        let mut loop_version_mismatch = matching_row;
+        loop_version_mismatch.expected_loop_version = Version::new(2).unwrap();
+        assert!(matches!(
+            validate_worker_authorization_evidence(&loop_version_mismatch),
+            Err(SchedulerAuthorityError::CandidateAdmissionComposition(_))
         ));
     }
 
@@ -333,6 +1863,7 @@ mod tests {
             lease_acquisition_count.set(lease_acquisition_count.get() + 1);
             Ok(SchedulerDispatch {
                 task_ref: "task://personal/admission-order".to_owned(),
+                contract_epoch: 1,
                 lease_owner: "scheduler-worker".to_owned(),
                 lease_epoch: 3,
                 lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -369,6 +1900,7 @@ mod tests {
     fn unresolved_effect_keeps_the_fenced_dispatch_for_reconciliation() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/effect-reconciliation".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 7,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -395,6 +1927,7 @@ mod tests {
     fn only_a_closed_effect_can_release_the_exact_fenced_scheduler_dispatch() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/closed-effect".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 8,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -420,6 +1953,7 @@ mod tests {
     fn pending_effect_reconciliation_does_not_release_its_scheduler_lease() {
         let dispatch = SchedulerDispatch {
             task_ref: "task://personal/pending-effect".to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 9,
             lease_expires: "2026-08-02T00:01:00Z".to_owned(),
@@ -455,10 +1989,16 @@ mod tests {
             .upsert(&scheduler_row(task_ref))
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 10, "2026-08-03T00:00:00Z")
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                10,
+                "2026-08-03T00:00:00Z",
+            )
             .unwrap();
         let dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 10,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -477,9 +2017,124 @@ mod tests {
             SchedulerWorkerAttempt::EffectClosed(dispatch),
             "a closed Effect ends this scheduler attempt, not Task acceptance"
         );
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Succeeded.as_str());
         assert_eq!(durable_row.lease_owner, None);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn recovered_closed_effect_releases_only_its_persisted_owner_and_epoch_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-exact-lease";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                21,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        release_closed_recovered_attempt(
+            &recovered_closed_attempt(task_ref, 21),
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        )
+        .unwrap();
+
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(row.lease_owner, None);
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn recovered_legacy_unbound_handoff_retains_its_scheduler_lease() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-legacy-unbound";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                23,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        let mut recovered_attempt = recovered_closed_attempt(task_ref, 23);
+        recovered_attempt.handoff.scheduler_lease = None;
+        release_closed_recovered_attempt(
+            &recovered_attempt,
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        )
+        .unwrap();
+
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Leased.as_str());
+        assert_eq!(row.lease_epoch, 23);
+        assert_eq!(row.lease_owner.as_deref(), Some("scheduler-worker"));
+        drop(scheduler_repository);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
+    fn recovered_closed_effect_cannot_release_a_successor_lease_epoch() {
+        let database_path = temporary_scheduler_database_path();
+        let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let task_ref = "task://personal/recovered-stale-lease";
+        scheduler_repository
+            .upsert(&scheduler_row(task_ref))
+            .unwrap();
+        scheduler_repository
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                22,
+                "2026-08-04T12:05:00Z",
+            )
+            .unwrap();
+
+        let result = release_closed_recovered_attempt(
+            &recovered_closed_attempt(task_ref, 21),
+            &mut scheduler_repository,
+            "2026-08-04T12:01:00Z",
+        );
+        assert!(
+            result.is_err(),
+            "a recovered handoff cannot release a successor lease epoch"
+        );
+        let Err(error) = result else {
+            return;
+        };
+        assert!(matches!(error, SchedulerAuthorityError::Repository(_)));
+        let row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.state, SchedulerState::Leased.as_str());
+        assert_eq!(row.lease_epoch, 22);
+        assert_eq!(row.lease_owner.as_deref(), Some("scheduler-worker"));
         drop(scheduler_repository);
         std::fs::remove_file(database_path).unwrap();
     }
@@ -493,10 +2148,16 @@ mod tests {
             .upsert(&scheduler_row(task_ref))
             .unwrap();
         scheduler_repository
-            .acquire_lease(task_ref, "scheduler-worker", 11, "2026-08-03T00:00:00Z")
+            .acquire_lease(
+                &scheduler_work_key(task_ref),
+                "scheduler-worker",
+                11,
+                "2026-08-03T00:00:00Z",
+            )
             .unwrap();
         let dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 11,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -512,7 +2173,10 @@ mod tests {
             Err(SchedulerAuthorityError::InvalidReleaseTime(value)) if value == "not-a-timestamp"
         ));
 
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
         assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
         assert_eq!(durable_row.lease_epoch, 11);
@@ -530,7 +2194,7 @@ mod tests {
             .unwrap();
         scheduler_repository
             .acquire_eligible_lease(
-                task_ref,
+                &scheduler_work_key(task_ref),
                 "scheduler-worker",
                 12,
                 "2026-08-03T00:00:00Z",
@@ -539,7 +2203,7 @@ mod tests {
             .unwrap();
         scheduler_repository
             .acquire_eligible_lease(
-                task_ref,
+                &scheduler_work_key(task_ref),
                 "scheduler-worker",
                 13,
                 "2026-08-03T00:00:30Z",
@@ -548,6 +2212,7 @@ mod tests {
             .unwrap();
         let stale_dispatch = SchedulerDispatch {
             task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
             lease_owner: "scheduler-worker".to_owned(),
             lease_epoch: 12,
             lease_expires: "2026-08-03T00:01:00Z".to_owned(),
@@ -563,7 +2228,10 @@ mod tests {
             Err(SchedulerAuthorityError::Repository(_))
         ));
 
-        let durable_row = scheduler_repository.load(task_ref).unwrap().unwrap();
+        let durable_row = scheduler_repository
+            .load(&scheduler_work_key(task_ref))
+            .unwrap()
+            .unwrap();
         assert_eq!(durable_row.state, SchedulerState::Leased.as_str());
         assert_eq!(durable_row.lease_owner.as_deref(), Some("scheduler-worker"));
         assert_eq!(durable_row.lease_epoch, 13);
@@ -625,6 +2293,50 @@ where
     Ok(SchedulerEffectResolution {
         effect_object_id: intent_row.effect_object_id.clone(),
         closure,
+    })
+}
+
+/// Reconstruct the sole dispatchable TaskBinding from durable task work.
+///
+/// A scheduler row does not carry a mutable copy of contract or action
+/// identity. Each worker tick instead reads the current immutable contract
+/// epoch and requires exactly one matching persisted Intent. Missing,
+/// ambiguous, or internally inconsistent binding rows fail before lease
+/// acquisition, so recovery cannot guess which Effect a task should drive.
+pub(crate) fn resolve_scheduler_work_for_task<S>(
+    store: &S,
+    task_ref: &str,
+) -> Result<ResolvedSchedulerWork, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore,
+{
+    if task_ref.is_empty() {
+        return Err(SchedulerAuthorityError::EmptyTaskReference);
+    }
+    let contract_epoch = store
+        .current_contract_epoch(task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if contract_epoch <= 0 {
+        return Err(SchedulerAuthorityError::MissingContract(
+            task_ref.to_owned(),
+        ));
+    }
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    };
+    let intent_rows = store
+        .list_intents_for_task_binding(&task_binding)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
+    let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
+    Ok(ResolvedSchedulerWork {
+        authority_binding: SchedulerAuthorityBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch,
+            action_fingerprint,
+        },
+        task_binding,
     })
 }
 
@@ -711,6 +2423,7 @@ where
             binding.task_ref.clone(),
         ));
     }
+    ensure_current_contract_epoch(binding, contract_epoch)?;
     let contract_row = store
         .load_task_contract(&binding.task_ref, contract_epoch)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
@@ -866,6 +2579,9 @@ fn release_closed_effect_dispatch(
         SchedulerWorkerAttempt::Stopped(transition) => {
             Ok(SchedulerWorkerAttempt::Stopped(transition))
         }
+        SchedulerWorkerAttempt::ContinuationStarted(transition) => {
+            Ok(SchedulerWorkerAttempt::ContinuationStarted(transition))
+        }
         SchedulerWorkerAttempt::AwaitingReconciliation(dispatch) => {
             Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch))
         }
@@ -892,15 +2608,315 @@ where
     S: AuthorityStore + ProtocolStore,
 {
     let worker_attempt = complete_scheduler_worker_attempt(admission, |dispatch| {
-        if dispatch.task_ref != task_binding.task_ref {
+        if dispatch.task_ref != task_binding.task_ref
+            || dispatch.contract_epoch != task_binding.contract_epoch
+        {
             return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
-                "leased task {} does not match bound task {}",
-                dispatch.task_ref, task_binding.task_ref
+                "leased task {} at epoch {} does not match bound task {} at epoch {}",
+                dispatch.task_ref,
+                dispatch.contract_epoch,
+                task_binding.task_ref,
+                task_binding.contract_epoch,
             )));
         }
         Ok(resolve_scheduler_effect_for_task_binding(store, task_binding)?.closure)
     })?;
     complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
+}
+
+/// Consume one candidate-admission WIA after fresh scheduler admission.
+///
+/// A candidate WIA authorizes the prior atomic `DECIDE -> ACT` admission. It
+/// is not a continuation token for `CONTINUE -> OBSERVE`: that later
+/// transition needs a distinct authority, checkpoint, current loop version,
+/// and fresh budget admission. This boundary therefore records only the
+/// recoverable handoff and resolves its durable Effect state.
+#[allow(clippy::too_many_arguments)]
+fn run_bounded_scheduler_attempt<S, C, G>(
+    authority_store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+    scheduler_service: &mut SchedulerService,
+    driver: &LoopDriver<'_, S, C, G>,
+    binding: &SchedulerAuthorityBinding,
+    task_binding: &TaskBinding,
+    scheduler_lease_epoch: i64,
+    observed_wall_time: &str,
+    candidate_authorization_id: Option<&ObjectId>,
+    continuation_authorization: Option<&ContinuationAuthorizationRow>,
+    worker_attempt_id: ObjectId,
+    released_at: &str,
+) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContinuationAuthorityStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let candidate_authorization = match (continuation_authorization, candidate_authorization_id) {
+        (Some(_), _) => None,
+        (None, Some(authorization_id)) => Some(load_current_worker_authorization(
+            authority_store,
+            authorization_id,
+            binding,
+        )?),
+        (None, None) => {
+            return Err(SchedulerAuthorityError::CandidateUnavailable(
+                "scheduler attempt has no candidate or continuation authority".to_owned(),
+            ));
+        }
+    };
+    let expected_loop_version = continuation_authorization
+        .map(|authorization| authorization.expected_loop_version)
+        .or_else(|| {
+            candidate_authorization
+                .as_ref()
+                .map(|authorization| authorization.expected_loop_version)
+        })
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(
+                "scheduler attempt has no candidate or continuation authority".to_owned(),
+            )
+        })?;
+    let writer_lease = WriterLease {
+        epoch: authority_store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
+    let admission = admit_scheduler_dispatch(
+        authority_store,
+        scheduler_repository,
+        scheduler_service,
+        driver,
+        binding,
+        scheduler_lease_epoch,
+        observed_wall_time,
+        expected_loop_version,
+        &writer_lease,
+    )?;
+    let SchedulerDispatchAdmission::Leased(dispatch) = admission else {
+        let SchedulerDispatchAdmission::Stopped(transition) = admission else {
+            unreachable!("scheduler admission has only stopped or leased outcomes");
+        };
+        return Ok(SchedulerWorkerAttempt::Stopped(transition));
+    };
+
+    if let Some(authorization) = continuation_authorization {
+        let budget_charge: BudgetCharge =
+            serde_json::from_str(&authorization.budget_charge_canonical_json).map_err(|error| {
+                SchedulerAuthorityError::ContinuationUnavailable(format!(
+                    "continuation {} has an invalid budget charge: {error}",
+                    authorization.continuation_authorization_id
+                ))
+            })?;
+        let consumed_at = FixedSchedulerClock::parse(observed_wall_time)?
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        let canonical_json = String::from_utf8(
+            canonical::canonical_bytes_of_value(&json!({
+                "continuation_authorization_id": authorization.continuation_authorization_id,
+                "consumed_at": consumed_at.as_str(),
+                "consumed_fencing_epoch": writer_lease.epoch,
+                "worker_attempt_id": worker_attempt_id,
+            }))
+            .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?,
+        )
+        .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
+        let consumption = BoundContinuationAuthorizationConsumption {
+            consumption: ContinuationAuthorizationConsumptionRow {
+                continuation_authorization_id: authorization.continuation_authorization_id.clone(),
+                worker_attempt_id,
+                consumed_fencing_epoch: writer_lease.epoch,
+                consumed_at,
+                canonical_json,
+            },
+            scheduler_lease: SchedulerLeaseBinding {
+                task_ref: dispatch.task_ref.clone(),
+                contract_epoch: dispatch.contract_epoch,
+                lease_owner: dispatch.lease_owner.clone(),
+                lease_epoch: dispatch.lease_epoch,
+            },
+        };
+        let transition = driver.begin_verified_continuation_atomically(
+            &consumption,
+            &authorization.loop_object_id,
+            authorization.expected_loop_version,
+            &authorization.task_binding.task_ref,
+            authorization.iteration,
+            &authorization.budget_id,
+            &budget_charge,
+            &writer_lease,
+        )?;
+        return Ok(SchedulerWorkerAttempt::ContinuationStarted(transition));
+    }
+
+    consume_worker_authorization_for_attempt(
+        authority_store,
+        // The LoopDriver clock is unavailable here; use the scheduler's
+        // trusted observation time only after parsing it as a wall timestamp.
+        &FixedSchedulerClock::parse(observed_wall_time)?,
+        candidate_authorization_id.ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(
+                "candidate WIA was absent after continuation selection".to_owned(),
+            )
+        })?,
+        worker_attempt_id,
+        &dispatch,
+    )?;
+    let worker_attempt = complete_durable_scheduler_effect_closure(
+        SchedulerDispatchAdmission::Leased(dispatch),
+        authority_store,
+        task_binding,
+        scheduler_repository,
+        released_at,
+    )?;
+
+    Ok(worker_attempt)
+}
+
+/// Run one daemon-private scheduler pass over durable runnable work.
+///
+/// This private tick chooses either candidate-WIA reconciliation or a
+/// distinct persisted verified continuation entry. It never accepts client
+/// input, dispatches an executor, records worker progress, or changes Task
+/// lifecycle state. Candidate WIA cannot enter the bounded harness.
+pub(crate) fn run_private_scheduler_tick(
+    authority_database_path: &Path,
+) -> Result<(), SchedulerAuthorityError> {
+    let authority_store = SqliteAuthorityStore::open(authority_database_path)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    let clock = SystemClock;
+    let identifiers = UuidV7Generator;
+    let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
+    let scheduler_rows = scheduler_repository.list_recoverable()?;
+
+    for scheduler_row in scheduler_rows {
+        if scheduler_row.state != SchedulerState::Runnable.as_str()
+            || scheduler_row.cancel_requested
+        {
+            continue;
+        }
+        let resolved_work =
+            resolve_scheduler_work_for_task(&authority_store, &scheduler_row.task_ref)?;
+        if resolved_work.task_binding.contract_epoch != scheduler_row.contract_epoch {
+            return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
+                "runnable scheduler work {} at epoch {} is not the current contract epoch {}",
+                scheduler_row.task_ref,
+                scheduler_row.contract_epoch,
+                resolved_work.task_binding.contract_epoch
+            )));
+        }
+        let continuation_authorization = authority_store
+            .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
+            .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
+        let candidate_authorization = if continuation_authorization.is_none() {
+            Some(
+                authority_store
+                    .load_unconsumed_worker_iteration_authorization_for_task_binding(
+                        &resolved_work.task_binding.task_ref,
+                        resolved_work.task_binding.contract_epoch,
+                    )
+                    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+                    .ok_or_else(|| {
+                        SchedulerAuthorityError::CandidateUnavailable(format!(
+                            "no unconsumed worker authorization or continuation authority for {} at epoch {}",
+                            resolved_work.task_binding.task_ref,
+                            resolved_work.task_binding.contract_epoch
+                        ))
+                    })?,
+            )
+        } else {
+            None
+        };
+        let observed_wall_time = clock
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
+            SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
+        })?;
+        let worker_attempt_id = next_object_id(&identifiers)?;
+        let driver = LoopDriver::new(
+            &authority_store,
+            &clock,
+            &identifiers,
+            UriRef::parse("principal://personal/daemon").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+            UriRef::parse("authority://personal/loop").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+            UriRef::parse("correlation://personal/private-scheduler-tick").map_err(|error| {
+                SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+            })?,
+        );
+        run_bounded_scheduler_attempt(
+            &authority_store,
+            &mut scheduler_repository,
+            &mut scheduler_service,
+            &driver,
+            &resolved_work.authority_binding,
+            &resolved_work.task_binding,
+            scheduler_lease_epoch,
+            observed_wall_time.as_str(),
+            candidate_authorization
+                .as_ref()
+                .map(|authorization| &authorization.authorization_id),
+            continuation_authorization.as_ref(),
+            worker_attempt_id,
+            observed_wall_time.as_str(),
+        )?;
+    }
+
+    Ok(())
+}
+
+struct FixedSchedulerClock(WallTimestamp);
+
+impl FixedSchedulerClock {
+    fn parse(value: &str) -> Result<Self, SchedulerAuthorityError> {
+        WallTimestamp::parse(value)
+            .map(Self)
+            .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(value.to_owned()))
+    }
+}
+
+impl Clock for FixedSchedulerClock {
+    fn now(&self) -> Result<WallTimestamp, cognitive_kernel::ports::PortFailure> {
+        Ok(self.0.clone())
+    }
+}
+
+fn load_current_worker_authorization<S>(
+    store: &S,
+    authorization_id: &ObjectId,
+    binding: &SchedulerAuthorityBinding,
+) -> Result<WorkerIterationAuthorizationRow, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    let authorization = store
+        .load_worker_iteration_authorization(authorization_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(authorization_id.to_string())
+        })?;
+    validate_worker_authorization_evidence(&authorization)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&authorization.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    ensure_current_contract_epoch(binding, current_contract_epoch)?;
+    if authorization.task_ref != binding.task_ref
+        || authorization.contract_epoch != binding.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "WorkerIterationAuthorization does not match scheduler authority binding".to_owned(),
+        ));
+    }
+    Ok(authorization)
 }
 
 /// Release an already resolved closed Effect through the real scheduler
@@ -915,7 +2931,10 @@ fn complete_resolved_effect_and_release(
         .map_err(|_| SchedulerAuthorityError::InvalidReleaseTime(released_at.to_owned()))?;
     release_closed_effect_dispatch(worker_attempt, |dispatch| {
         scheduler_repository.release_lease(
-            &dispatch.task_ref,
+            &SchedulerWorkKey {
+                task_ref: dispatch.task_ref.clone(),
+                contract_epoch: dispatch.contract_epoch,
+            },
             &dispatch.lease_owner,
             dispatch.lease_epoch,
             SchedulerState::Succeeded,
@@ -962,7 +2981,10 @@ where
     complete_scheduler_admission(ceiling_dispatch, || {
         scheduler_service.claim_eligible(
             scheduler_repository,
-            &binding.task_ref,
+            &SchedulerWorkKey {
+                task_ref: binding.task_ref.clone(),
+                contract_epoch: binding.contract_epoch,
+            },
             lease_epoch,
             observed_wall_time,
         )

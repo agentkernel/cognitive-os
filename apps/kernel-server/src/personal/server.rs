@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
-use cognitive_store::PersonalDataLayout;
+use cognitive_store::{PersonalDataLayout, prepare_personal_databases};
 use serde_json::json;
 
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
@@ -27,6 +27,9 @@ use super::readiness::{
     status_projection_json,
 };
 use super::resource_api::ResourceApi;
+use super::scheduler_authority::{
+    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick,
+};
 use super::task_api::TaskApi;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
@@ -88,12 +91,25 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         .map_err(|error| PersonalDaemonError::Io {
             detail: error.to_string(),
         })?;
+    prepare_personal_databases(&config.layout).map_err(|error| PersonalDaemonError::Io {
+        detail: format!("prepare Personal authority databases: {error}"),
+    })?;
     let lock = DaemonSingleInstanceLock::acquire(config.layout.daemon_lock_path())
         .map_err(PersonalDaemonError::Lifecycle)?;
     eprintln!(
         "kernel-server personal: acquired single-instance lock at {}",
         lock.path().display()
     );
+    reconcile_scheduler_recovery_at_startup(&config.layout.authority_database_path()).map_err(
+        |error| PersonalDaemonError::Io {
+            detail: format!("reconcile durable scheduler recovery before startup: {error}"),
+        },
+    )?;
+    run_private_scheduler_tick(&config.layout.authority_database_path()).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("run private scheduler tick before startup: {error}"),
+        }
+    })?;
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)

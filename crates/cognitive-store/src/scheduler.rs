@@ -5,9 +5,10 @@
 //! operations run inside the real SQLite WAL transaction; lease takeover
 //! is a CAS so two workers can never hold the same lease.
 //!
-//! Data layout (migration v2, authority database):
-//! - `scheduler_entries`: one row per task_ref with state, lease owner/
-//!   epoch/expiry, next_eligible, attempt count, cancel flag.
+//! Data layout (migration v3, authority database):
+//! - `scheduler_entries`: one row per immutable `(task_ref, contract_epoch)`
+//!   work binding with state, lease owner/epoch/expiry, next eligibility,
+//!   attempt count, and cancel flag.
 //!
 //! No scheduler table existed before this slice; this is the first schema
 //! addition to the authority database after the P1-T01 v1 full schema.
@@ -32,9 +33,60 @@ CREATE TABLE IF NOT EXISTS scheduler_entries (
 ) STRICT;
 ";
 
+/// Current scheduler table shape for new authority databases.
+pub const SCHEDULER_SCHEMA_CURRENT: &str = "
+CREATE TABLE IF NOT EXISTS scheduler_entries (
+  task_ref          TEXT NOT NULL,
+  contract_epoch    INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  state             TEXT NOT NULL,
+  lease_owner       TEXT,
+  lease_epoch       INTEGER NOT NULL DEFAULT 0,
+  lease_expires     TEXT,
+  next_eligible     TEXT NOT NULL,
+  attempt_count     INTEGER NOT NULL DEFAULT 0,
+  cancel_requested  INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (task_ref, contract_epoch)
+) STRICT;
+";
+
+/// Migration v3: replace the task-only scheduler key with the immutable
+/// TaskBinding key. Existing v2 work is preserved at epoch 1.
+pub const SCHEDULER_SCHEMA_V3: &str = "
+CREATE TABLE scheduler_entries_v3 (
+  task_ref          TEXT NOT NULL,
+  contract_epoch    INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  state             TEXT NOT NULL,
+  lease_owner       TEXT,
+  lease_epoch       INTEGER NOT NULL DEFAULT 0,
+  lease_expires     TEXT,
+  next_eligible     TEXT NOT NULL,
+  attempt_count     INTEGER NOT NULL DEFAULT 0,
+  cancel_requested  INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (task_ref, contract_epoch)
+) STRICT;
+INSERT INTO scheduler_entries_v3
+  (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested)
+SELECT task_ref, 1, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested
+FROM scheduler_entries;
+DROP TABLE scheduler_entries;
+ALTER TABLE scheduler_entries_v3 RENAME TO scheduler_entries;
+";
+
 /// The version-2 migration entry (appended after authority v1).
 pub fn scheduler_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(2, SCHEDULER_SCHEMA_V2)
+}
+
+/// The version-3 binding identity migration entry.
+pub fn scheduler_binding_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(3, SCHEDULER_SCHEMA_V3)
+}
+
+/// Immutable key of one scheduler work item.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchedulerWorkKey {
+    pub task_ref: String,
+    pub contract_epoch: i64,
 }
 
 /// Scheduler row state machine (deterministic, product-owned).
@@ -66,6 +118,7 @@ impl SchedulerState {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SchedulerRow {
     pub task_ref: String,
+    pub contract_epoch: i64,
     pub state: String,
     pub lease_owner: Option<String>,
     pub lease_epoch: i64,
@@ -98,19 +151,19 @@ impl SchedulerRepository {
     pub fn open(path: &Path) -> Result<Self, SchedulerRepositoryError> {
         let conn = Connection::open(path)
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("open: {e}")))?;
-        conn.execute_batch(SCHEDULER_SCHEMA_V2)
+        conn.execute_batch(SCHEDULER_SCHEMA_CURRENT)
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("schema: {e}")))?;
         Ok(Self { conn })
     }
 
-    /// Insert or replace one scheduler row (upsert by task_ref).
+    /// Insert or replace one scheduler row by its immutable TaskBinding key.
     pub fn upsert(&mut self, row: &SchedulerRow) -> Result<(), SchedulerRepositoryError> {
         self.conn
             .execute(
                 "INSERT INTO scheduler_entries \
-                 (task_ref, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
-                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8) \
-                 ON CONFLICT(task_ref) DO UPDATE SET \
+                 (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9) \
+                 ON CONFLICT(task_ref, contract_epoch) DO UPDATE SET \
                    state=excluded.state, \
                    lease_owner=excluded.lease_owner, \
                    lease_epoch=excluded.lease_epoch, \
@@ -120,6 +173,7 @@ impl SchedulerRepository {
                    cancel_requested=excluded.cancel_requested",
                 rusqlite::params![
                     row.task_ref,
+                    row.contract_epoch,
                     row.state,
                     row.lease_owner,
                     row.lease_epoch,
@@ -138,7 +192,7 @@ impl SchedulerRepository {
     /// owner is refused. Returns the updated row.
     pub fn acquire_lease(
         &mut self,
-        task_ref: &str,
+        work_key: &SchedulerWorkKey,
         owner: &str,
         lease_epoch: i64,
         expires: &str,
@@ -149,20 +203,21 @@ impl SchedulerRepository {
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("tx: {e}")))?;
         let existing: Option<SchedulerRow> = tx
             .query_row(
-                "SELECT task_ref, state, lease_owner, lease_epoch, lease_expires, \
+                "SELECT task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, \
                  next_eligible, attempt_count, cancel_requested \
-                 FROM scheduler_entries WHERE task_ref = ?1",
-                [task_ref],
+                 FROM scheduler_entries WHERE task_ref = ?1 AND contract_epoch = ?2",
+                rusqlite::params![work_key.task_ref, work_key.contract_epoch],
                 |row| {
                     Ok(SchedulerRow {
                         task_ref: row.get(0)?,
-                        state: row.get(1)?,
-                        lease_owner: row.get(2)?,
-                        lease_epoch: row.get(3)?,
-                        lease_expires: row.get(4)?,
-                        next_eligible: row.get(5)?,
-                        attempt_count: row.get(6)?,
-                        cancel_requested: row.get::<_, i64>(7)? != 0,
+                        contract_epoch: row.get(1)?,
+                        state: row.get(2)?,
+                        lease_owner: row.get(3)?,
+                        lease_epoch: row.get(4)?,
+                        lease_expires: row.get(5)?,
+                        next_eligible: row.get(6)?,
+                        attempt_count: row.get(7)?,
+                        cancel_requested: row.get::<_, i64>(8)? != 0,
                     })
                 },
             )
@@ -170,30 +225,38 @@ impl SchedulerRepository {
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("read: {e}")))?;
 
         match existing {
-            None => Err(SchedulerRepositoryError::NotFound(task_ref.to_owned())),
+            None => Err(SchedulerRepositoryError::NotFound(
+                work_key.task_ref.clone(),
+            )),
             Some(row) if row.cancel_requested => Err(SchedulerRepositoryError::LeaseConflict(
                 "task is cancelled".to_owned(),
             )),
             Some(row) if row.lease_owner.is_some() && row.state == "leased" => {
                 Err(SchedulerRepositoryError::LeaseConflict(format!(
                     "task {} already leased by {}",
-                    task_ref,
+                    work_key.task_ref,
                     row.lease_owner.unwrap_or_default()
                 )))
             }
             Some(_) => {
                 tx.execute(
                     "UPDATE scheduler_entries \
-                     SET state='leased', lease_owner=?2, lease_epoch=?3, lease_expires=?4, \
+                     SET state='leased', lease_owner=?3, lease_epoch=?4, lease_expires=?5, \
                          attempt_count = attempt_count + 1 \
-                     WHERE task_ref=?1",
-                    rusqlite::params![task_ref, owner, lease_epoch, expires],
+                     WHERE task_ref=?1 AND contract_epoch=?2",
+                    rusqlite::params![
+                        work_key.task_ref,
+                        work_key.contract_epoch,
+                        owner,
+                        lease_epoch,
+                        expires
+                    ],
                 )
                 .map_err(|e| SchedulerRepositoryError::Unavailable(format!("lease: {e}")))?;
                 tx.commit()
                     .map_err(|e| SchedulerRepositoryError::Unavailable(format!("commit: {e}")))?;
-                self.load(task_ref)?
-                    .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
+                self.load(work_key)?
+                    .ok_or_else(|| SchedulerRepositoryError::NotFound(work_key.task_ref.clone()))
             }
         }
     }
@@ -203,7 +266,7 @@ impl SchedulerRepository {
     /// must use a strictly greater epoch to fence the former worker.
     pub fn acquire_eligible_lease(
         &mut self,
-        task_ref: &str,
+        work_key: &SchedulerWorkKey,
         owner: &str,
         lease_epoch: i64,
         now: &str,
@@ -218,8 +281,8 @@ impl SchedulerRepository {
         }
 
         let existing = self
-            .load(task_ref)?
-            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))?;
+            .load(work_key)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(work_key.task_ref.clone()))?;
         let next_eligible = parse_scheduler_timestamp(&existing.next_eligible)?;
         let lease_is_expired = existing
             .lease_expires
@@ -247,13 +310,13 @@ impl SchedulerRepository {
             .conn
             .execute(
                 "UPDATE scheduler_entries \
-                 SET state='leased', lease_owner=?2, lease_epoch=?3, lease_expires=?4, \
+                 SET state='leased', lease_owner=?3, lease_epoch=?4, lease_expires=?5, \
                      attempt_count=attempt_count + 1 \
-                 WHERE task_ref=?1 AND cancel_requested=0 AND lease_epoch < ?3 \
-                   AND ((state='runnable' AND julianday(next_eligible) <= julianday(?5)) \
+                 WHERE task_ref=?1 AND contract_epoch=?2 AND cancel_requested=0 AND lease_epoch < ?4 \
+                   AND ((state='runnable' AND julianday(next_eligible) <= julianday(?6)) \
                      OR (state='leased' AND lease_expires IS NOT NULL \
-                         AND julianday(lease_expires) <= julianday(?5)))",
-                rusqlite::params![task_ref, owner, lease_epoch, expires, now],
+                         AND julianday(lease_expires) <= julianday(?6)))",
+                rusqlite::params![work_key.task_ref, work_key.contract_epoch, owner, lease_epoch, expires, now],
             )
             .map_err(|error| {
                 SchedulerRepositoryError::Unavailable(format!("eligible lease: {error}"))
@@ -263,8 +326,8 @@ impl SchedulerRepository {
                 "concurrent scheduler update refused lease acquisition".to_owned(),
             ));
         }
-        self.load(task_ref)?
-            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
+        self.load(work_key)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(work_key.task_ref.clone()))
     }
 
     /// Release the exact fenced lease held by a worker.
@@ -274,7 +337,7 @@ impl SchedulerRepository {
     /// a restarted worker reuses the same logical owner identity.
     pub fn release_lease(
         &mut self,
-        task_ref: &str,
+        work_key: &SchedulerWorkKey,
         owner: &str,
         lease_epoch: i64,
         next_state: SchedulerState,
@@ -284,11 +347,13 @@ impl SchedulerRepository {
             .conn
             .execute(
                 "UPDATE scheduler_entries \
-             SET state=?2, lease_owner=NULL, lease_epoch=lease_epoch, \
-                 lease_expires=NULL, next_eligible=?3 \
-             WHERE task_ref=?1 AND lease_owner=?4 AND lease_epoch=?5",
+             SET state=?3, lease_owner=NULL, lease_epoch=lease_epoch, \
+                 lease_expires=NULL, next_eligible=?4 \
+             WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased' \
+               AND lease_owner=?5 AND lease_epoch=?6",
                 rusqlite::params![
-                    task_ref,
+                    work_key.task_ref,
+                    work_key.contract_epoch,
                     next_state.as_str(),
                     next_eligible,
                     owner,
@@ -301,31 +366,32 @@ impl SchedulerRepository {
                 "lease owner or epoch mismatch on release".to_owned(),
             ));
         }
-        self.load(task_ref)?
-            .ok_or_else(|| SchedulerRepositoryError::NotFound(task_ref.to_owned()))
+        self.load(work_key)?
+            .ok_or_else(|| SchedulerRepositoryError::NotFound(work_key.task_ref.clone()))
     }
 
     /// Load one row.
     pub fn load(
         &mut self,
-        task_ref: &str,
+        work_key: &SchedulerWorkKey,
     ) -> Result<Option<SchedulerRow>, SchedulerRepositoryError> {
         self.conn
             .query_row(
-                "SELECT task_ref, state, lease_owner, lease_epoch, lease_expires, \
+                "SELECT task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, \
                  next_eligible, attempt_count, cancel_requested \
-                 FROM scheduler_entries WHERE task_ref = ?1",
-                [task_ref],
+                 FROM scheduler_entries WHERE task_ref = ?1 AND contract_epoch = ?2",
+                rusqlite::params![work_key.task_ref, work_key.contract_epoch],
                 |row| {
                     Ok(SchedulerRow {
                         task_ref: row.get(0)?,
-                        state: row.get(1)?,
-                        lease_owner: row.get(2)?,
-                        lease_epoch: row.get(3)?,
-                        lease_expires: row.get(4)?,
-                        next_eligible: row.get(5)?,
-                        attempt_count: row.get(6)?,
-                        cancel_requested: row.get::<_, i64>(7)? != 0,
+                        contract_epoch: row.get(1)?,
+                        state: row.get(2)?,
+                        lease_owner: row.get(3)?,
+                        lease_epoch: row.get(4)?,
+                        lease_expires: row.get(5)?,
+                        next_eligible: row.get(6)?,
+                        attempt_count: row.get(7)?,
+                        cancel_requested: row.get::<_, i64>(8)? != 0,
                     })
                 },
             )
@@ -333,12 +399,56 @@ impl SchedulerRepository {
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("load: {e}")))
     }
 
+    /// List work that a daemon recovery loop must inspect from durable state.
+    ///
+    /// This deliberately returns every non-terminal row, including active
+    /// leases. The daemon must reload each row's expiry and authority facts
+    /// before attempting a claim; this method must never itself imply that a
+    /// row is eligible or that a worker may dispatch it.
+    pub fn list_recoverable(&mut self) -> Result<Vec<SchedulerRow>, SchedulerRepositoryError> {
+        let mut statement = self
+            .conn
+            .prepare(
+                "SELECT task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, \
+                 next_eligible, attempt_count, cancel_requested \
+                 FROM scheduler_entries \
+                 WHERE state IN ('pending', 'runnable', 'leased') \
+                 ORDER BY task_ref",
+            )
+            .map_err(|error| {
+                SchedulerRepositoryError::Unavailable(format!("list work: {error}"))
+            })?;
+        let rows = statement
+            .query_map([], |row| {
+                Ok(SchedulerRow {
+                    task_ref: row.get(0)?,
+                    contract_epoch: row.get(1)?,
+                    state: row.get(2)?,
+                    lease_owner: row.get(3)?,
+                    lease_epoch: row.get(4)?,
+                    lease_expires: row.get(5)?,
+                    next_eligible: row.get(6)?,
+                    attempt_count: row.get(7)?,
+                    cancel_requested: row.get::<_, i64>(8)? != 0,
+                })
+            })
+            .map_err(|error| {
+                SchedulerRepositoryError::Unavailable(format!("query work: {error}"))
+            })?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|error| SchedulerRepositoryError::Unavailable(format!("read work: {error}")))
+    }
+
     /// Mark a task cancelled (cancel request propagated durably).
-    pub fn request_cancel(&mut self, task_ref: &str) -> Result<(), SchedulerRepositoryError> {
+    pub fn request_cancel(
+        &mut self,
+        work_key: &SchedulerWorkKey,
+    ) -> Result<(), SchedulerRepositoryError> {
         self.conn
             .execute(
-                "UPDATE scheduler_entries SET cancel_requested=1 WHERE task_ref=?1",
-                [task_ref],
+                "UPDATE scheduler_entries SET cancel_requested=1 \
+                 WHERE task_ref=?1 AND contract_epoch=?2",
+                rusqlite::params![work_key.task_ref, work_key.contract_epoch],
             )
             .map_err(|e| SchedulerRepositoryError::Unavailable(format!("cancel: {e}")))?;
         Ok(())

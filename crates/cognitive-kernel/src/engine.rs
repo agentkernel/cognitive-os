@@ -82,6 +82,72 @@ impl TablePin {
     }
 }
 
+/// Validate the registered edge, guard set, and required evidence for a
+/// transition that must join a larger custom atomic transaction.
+///
+/// Normal callers should use [`TransitionEngine::commit_transition`]. This
+/// pure gate exists only for protocol bundles, such as candidate admission,
+/// whose Intent, Effect, WIA, Loop CAS, and budget debit must be committed by
+/// one adapter transaction rather than by independently committing the Loop.
+/// It performs no store I/O and returns the table pin used in the generated
+/// transition event and record.
+pub fn validate_registered_transition(
+    domain: LifecycleDomain,
+    from: &StateName,
+    to: &StateName,
+    reason_code: &str,
+    established_guards: &BTreeSet<String>,
+    evidence_names: &BTreeSet<String>,
+) -> Result<TablePin, TransitionRejection> {
+    let loaded = load_table(domain)?;
+    let edge = match loaded.find_edge(from, to, reason_code) {
+        Ok(edge) => edge,
+        Err(error) => {
+            let (kind, description) = match error {
+                EdgeLookupError::UnknownFromState | EdgeLookupError::UnknownToState => {
+                    (RejectionKind::UnknownState, "state not in registered table")
+                }
+                EdgeLookupError::TerminalFrom => (
+                    RejectionKind::TerminalState,
+                    "no registered transition leaves a terminal state",
+                ),
+                EdgeLookupError::NoMatchingEdge => (
+                    RejectionKind::IllegalTransition,
+                    "no registered transition row matches the state pair",
+                ),
+                EdgeLookupError::ReasonNotAllowed => (
+                    RejectionKind::ReasonNotAllowed,
+                    "no matching row allows the requested reason",
+                ),
+            };
+            return Err(reject(
+                kind,
+                format!("{description}: {from} -> {to} reason {reason_code}"),
+            ));
+        }
+    };
+    for guard in &edge.guards {
+        if !established_guards.contains(guard) {
+            return Err(reject(
+                RejectionKind::GuardUnsatisfied,
+                format!("guard {guard} not deterministically established"),
+            ));
+        }
+    }
+    for evidence_name in &edge.required_evidence {
+        if !evidence_names.contains(evidence_name) {
+            return Err(reject(
+                RejectionKind::EvidenceMissing,
+                format!("required evidence {evidence_name} absent"),
+            ));
+        }
+    }
+    Ok(TablePin {
+        version: loaded.table.version.clone(),
+        digest: loaded.digest.clone(),
+    })
+}
+
 /// Optional hard-budget charge admitted and debited with the transition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BudgetChargeCommand {
@@ -170,6 +236,18 @@ pub struct CommittedTransition {
     /// Authoritative version after the commit.
     pub after_version: Version,
     /// Commit wall time.
+    pub committed_at: WallTimestamp,
+}
+
+/// A fully validated but not yet persisted transition. The only valid uses
+/// are the normal authority-store commit or a narrower compound authority
+/// transaction that preserves this exact commit unchanged.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreparedTransition {
+    pub commit: TransitionCommit,
+    pub record_id: RecordId,
+    pub event_id: EventId,
+    pub after_version: Version,
     pub committed_at: WallTimestamp,
 }
 
@@ -391,14 +469,14 @@ where
             .map_err(store_error)
     }
 
-    /// Apply one governed transition through the full deterministic gate.
+    /// Validate and compose one governed transition without persisting it.
     /// On rejection nothing is written and the authoritative state is
     /// unchanged; the rejection carries the registered error code, current
     /// state/version and safe available exits.
-    pub fn commit_transition(
+    pub fn prepare_transition(
         &self,
         cmd: &TransitionCommand,
-    ) -> Result<CommittedTransition, TransitionRejection> {
+    ) -> Result<PreparedTransition, TransitionRejection> {
         // 1. Registered table, pinned by version + canonical digest.
         let loaded = load_table(cmd.domain)?;
         if cmd.table_pin.version != loaded.table.version || cmd.table_pin.digest != loaded.digest {
@@ -572,10 +650,17 @@ where
                         format!("budget state serialization: {err}"),
                     )
                 })?;
+                let charge_value = serde_json::to_value(&budget_cmd.charge).map_err(|err| {
+                    reject(
+                        RejectionKind::InvalidCommand,
+                        format!("budget charge serialization: {err}"),
+                    )
+                })?;
                 Some(BudgetCas {
                     budget_id: budget_cmd.budget_id.clone(),
                     expected_version: stored.version,
                     next_version: next_budget_version,
+                    charge_canonical_json: canonical_text(&charge_value)?,
                     next_state_canonical_json: canonical_text(&state_value)?,
                 })
             }
@@ -697,22 +782,42 @@ where
                 .collect(),
             fencing_epoch: cmd.fencing_epoch,
         };
-        let receipt = self
-            .store
-            .commit_transition(&commit)
-            .map_err(|err| match err {
-                StorePortError::Conflict { detail } => {
-                    reject_at(RejectionKind::StoreConflict, detail, loaded, &current)
-                }
-                other => store_error(other),
-            })?;
-
-        Ok(CommittedTransition {
+        Ok(PreparedTransition {
+            commit,
             record_id,
             event_id,
-            event_sequence: receipt.event_sequence,
             after_version: next_version,
             committed_at,
+        })
+    }
+
+    /// Apply one governed transition through the full deterministic gate.
+    /// This is the normal authority path; compound authority protocols use
+    /// [`Self::prepare_transition`] and must preserve its exact commit.
+    pub fn commit_transition(
+        &self,
+        command: &TransitionCommand,
+    ) -> Result<CommittedTransition, TransitionRejection> {
+        let prepared = self.prepare_transition(command)?;
+        self.commit_prepared_transition(&prepared)
+    }
+
+    /// Persist one previously prepared transition without changing any of its
+    /// validated authority facts.
+    pub fn commit_prepared_transition(
+        &self,
+        prepared: &PreparedTransition,
+    ) -> Result<CommittedTransition, TransitionRejection> {
+        let receipt = self
+            .store
+            .commit_transition(&prepared.commit)
+            .map_err(store_error)?;
+        Ok(CommittedTransition {
+            record_id: prepared.record_id.clone(),
+            event_id: prepared.event_id.clone(),
+            event_sequence: receipt.event_sequence,
+            after_version: prepared.after_version,
+            committed_at: prepared.committed_at.clone(),
         })
     }
 }

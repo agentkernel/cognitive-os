@@ -30,6 +30,7 @@ pub mod management_action_proposal;
 pub mod management_approval_decision;
 pub mod management_approval_request;
 pub mod object_reference;
+pub mod operation_candidate_proposal;
 pub mod operation_summary;
 pub mod performance_report;
 pub mod principal;
@@ -54,12 +55,13 @@ pub mod task_preview_request;
 pub mod task_preview_result;
 pub mod user_intent_record;
 pub mod watch_subscription;
+pub mod worker_iteration_authorization;
 pub mod world_state;
 
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 52] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
@@ -161,6 +163,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
         "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
     ),
     (
+        "operation-candidate-proposal.schema.json",
+        "sha256:45ca2c1c4b437e9c3f7458c5bb7ffced95e4ef60f94be7da4374f04e37c36699",
+    ),
+    (
         "operation-summary.schema.json",
         "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
     ),
@@ -222,7 +228,7 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
     ),
     (
         "task-contract.schema.json",
-        "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+        "sha256:905102b72dfcf5b1efe75f1e98684c6888e0c4f37d66d369413e5b0cbfa9576d",
     ),
     (
         "task-intent-interpret-request.schema.json",
@@ -255,6 +261,10 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 50] = [
     (
         "watch-subscription.schema.json",
         "sha256:1e2b2d6439b306cf558fdb22ad6c45bfcaee41b146940d97d377cd71fa321e3a",
+    ),
+    (
+        "worker-iteration-authorization.schema.json",
+        "sha256:0c5ce309424d7e088fd62cc17bfcf8fd8897aa98871b106664e4f779ee660aed",
     ),
     (
         "world-state.schema.json",

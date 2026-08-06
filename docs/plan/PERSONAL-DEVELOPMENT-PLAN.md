@@ -106,13 +106,13 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 1 | 0 | 5 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 2 | 2 | 0 | 4 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 0 | 0 | 0 | 6 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **17** | **2** | **0** | **34** | — |
+| **合计** | **53** | **17** | **3** | **0** | **33** | — |
 
 ## 2. 产品边界与不变量
 
@@ -229,7 +229,8 @@ slice 至少需要 focused failure-first/negative test 和其定义的 supported
 | `P2-T03/D02` | P2-T03 | 从 durable TaskContract/progress/budget authority facts 计算 ceiling，STOP 在 lease acquisition 前注册并保持 fail-closed | `P2-T03/D01` 与既有 TaskContract/transition contracts | exact-Linux authority tests、STOP-ordering regressions、fmt/consistency；完成后进入 Effect closure slice |
 | `P2-T03/D03` | P2-T03 | 通过 immutable TaskBinding→Intent reverse lookup 唯一解析 durable Effect，并对缺失、歧义、不一致、未知状态 fail-closed | `P2-T03/D02`、现有 Intent/Effect store ports | exact revision Linux storage/classifier tests；完成后接入 D04，验证阻塞时不得另开同任务 helper slice |
 | `P2-T03/D04` | P2-T03 | 真实 leased dispatch 读取 D03 closure disposition，仅 Closed 执行 owner+epoch-fenced scheduler release；Pending/STOP 保留 reconciliation | `P2-T03/D03` 与 daemon worker boundary | exact revision Linux runtime/kernel tests、required CI；完成后才进入 D05 |
-| `P2-T03/D05` | P2-T03 | scheduler→BoundedHarness worker dispatch、每轮 contract/lease reload、crash/restart/duplicate/clock/budget recovery 与 durable STOP 闭环 | `P2-T03/D04`、P2-T02 application/sidecar ports | failure injection + worker integration tests；完成后为 P2-T03 task acceptance 汇总入口 |
+| `P2-T03/D05` | P2-T03 | candidate WIA 的 exact lease-bound handoff、Effect recovery/closure 与 private scheduler tick；只有 P2-T07/D01 发行的 continuation authority 才能进入 BoundedHarness | `P2-T03/D04`、`P2-T07/D01` | failure injection + worker/recovery integration tests；完成后为 P2-T03 task acceptance 汇总入口 |
+| `P2-T07/D01` | P2-T07 | daemon-private fixed post-state、verification request/report、currentness revalidation、checkpoint 与 append-only continuation authority；只允许 `ACT -> VERIFY -> CONTINUE -> OBSERVE`，绝不触发 Task acceptance/completion | `P2-T03/D05` WIA/recovery boundary与既有 Loop/Effect contracts | durable positive/negative/restart tests、exact Linux validation、required CI；完成后由 D05 消费 continuation authority，P2-T07 的 Artifact、完整 criteria evidence 和 Task completion 仍不因此关闭 |
 | `P2-T02/D01` | P2-T02 | real Task API/watch vertical path：server-issued preview→admit、watch cursor resume/dedup，并让 CLI/Shell/sidecar 共享 application service | P2-T01/D01、P1-T07 channel contracts | Rust/TS focused integration、channel isolation negatives、required CI；完成后继续 projection/parity slices |
 | `P2-T02/D02` | P2-T02 | private versioned six-family Resource projection/list/watch, family-scoped cursor and task/management channel isolation; unavailable authority sources must be explicit rather than fabricated | P2-T02/D01 and existing daemon authentication boundary | focused daemon process negatives, exact-Linux projection test, fmt, required CI; completion enables deterministic CLI parity |
 | `P2-T02/D03` | P2-T02 | deterministic CLI calls the same daemon Task/resource operations with distinct Task/management tokens, caches, cursors, and mutation retry policy | P2-T02/D01/D02 and admin CLI daemon client | daemon-plus-CLI process parity, channel/retry/cursor negatives, exact Linux, required CI; completion enables Shell sidecar parity |
@@ -465,7 +466,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | not-started | — |
 | P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | not-started | — |
 | P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | not-started | — |
-| P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | not-started | — |
+| P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | in-progress | 2026-08-05: owner-approved `D01` is a narrow daemon-private prerequisite for D05 continuation only: fixed post-state, verification request/report, checkpoint, and continuation authority. It cannot enter Task acceptance/completion, execute a Provider/Tool, or close the remaining P2-T07 acceptance. |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | not-started | — |
 
 ### Phase 3 - Context、Token 与 Loop 效率

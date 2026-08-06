@@ -210,8 +210,35 @@ fn task_contract_schema_versions_preserve_auditable_v01_and_require_v02_bindings
         );
     }
 
-    let mut unknown_version_contract = execution_bound_contract;
-    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.3");
+    let mut worker_authorized_contract = execution_bound_contract.clone();
+    worker_authorized_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.3");
+    worker_authorized_contract["worker_authorization_root_id"] =
+        json!("01890a5d-ac96-774b-bcce-b302099a805f");
+    assert!(
+        validator.is_valid(&worker_authorized_contract),
+        "v0.3 contracts require the daemon-issued worker authorization namespace"
+    );
+
+    let mut missing_worker_root = worker_authorized_contract.clone();
+    missing_worker_root
+        .as_object_mut()
+        .expect("TaskContract fixture must be an object")
+        .remove("worker_authorization_root_id");
+    assert!(
+        !validator.is_valid(&missing_worker_root),
+        "v0.3 contracts missing their worker authorization namespace must fail closed"
+    );
+
+    let mut mixed_v02_contract = execution_bound_contract.clone();
+    mixed_v02_contract["worker_authorization_root_id"] =
+        json!("01890a5d-ac96-774b-bcce-b302099a805f");
+    assert!(
+        !validator.is_valid(&mixed_v02_contract),
+        "v0.2 contracts must not silently claim the later worker authorization namespace"
+    );
+
+    let mut unknown_version_contract = worker_authorized_contract;
+    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.4");
     assert!(
         !validator.is_valid(&unknown_version_contract),
         "unsupported TaskContract versions must not enter the compatibility window"

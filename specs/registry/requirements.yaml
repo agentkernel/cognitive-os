@@ -116,6 +116,18 @@ requirements:
   status: specified
   tests:
   - LOOP-VERIFY-003
+- id: REQ-RUN-010
+  owner: runtime
+  owner_spec: specs/schemas/worker-iteration-authorization.schema.json
+  status: specified
+  tests:
+  - WORKER-AUTHORIZATION-001
+- id: REQ-RUN-011
+  owner: runtime
+  owner_spec: specs/schemas/operation-candidate-proposal.schema.json
+  status: specified
+  tests:
+  - OPERATION-CANDIDATE-ADMISSION-001
 - id: REQ-RES-001
   owner: resource
   owner_spec: specs/core/README.md

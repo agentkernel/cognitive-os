@@ -91,7 +91,7 @@ const GENERATOR_VERSION: &str = "0.2.1";
 /// consumers. GENERATOR_VERSION bumped to 0.2.1 for `number` support.
 /// No installation transition table or readiness carrier is registered
 /// in this batch (see D-020/D-021).
-const CORE_SET: [&str; 48] = [
+const CORE_SET: [&str; 50] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -103,6 +103,7 @@ const CORE_SET: [&str; 48] = [
     "intent.schema.json",
     "loop-checkpoint.schema.json",
     "object-reference.schema.json",
+    "operation-candidate-proposal.schema.json",
     "operation-summary.schema.json",
     "principal.schema.json",
     "resource-scope.schema.json",
@@ -115,6 +116,7 @@ const CORE_SET: [&str; 48] = [
     "task-intent-record-result.schema.json",
     "task-intent-interpret-request.schema.json",
     "task-intent-interpret-result.schema.json",
+    "worker-iteration-authorization.schema.json",
     "world-state.schema.json",
     "agent-execution-binding.schema.json",
     "audit-commit-receipt.schema.json",

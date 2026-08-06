@@ -10,7 +10,7 @@
 //!
 //! - loop boundary transitions with sanctioned guard derivations
 //!   ([`LoopDriver::start_loop`], [`LoopDriver::begin_iteration`],
-//!   [`LoopDriver::end_iteration`]): contract pinning, hard budget
+//!   [`LoopDriver::end_iteration_from_persisted_report`]): contract pinning, hard budget
 //!   admission + same-transaction debit, checkpoint-bound continuation;
 //! - typed progress facts ([`LoopDriver::record_progress`]): progress is
 //!   a verifiable difference with evidence references, never a transcript
@@ -32,13 +32,13 @@ use crate::effects::{
     strong_ref,
 };
 use crate::engine::{
-    BudgetChargeCommand, Causation, CommittedTransition, Reason, TablePin, TransitionCommand,
-    TransitionEngine,
+    BudgetChargeCommand, Causation, CommittedTransition, PreparedTransition, Reason, TablePin,
+    TransitionCommand, TransitionEngine,
 };
 use crate::error::{RESOURCE_BUDGET_EXHAUSTED, STATE_CONFLICT};
 use crate::ports::{
-    AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow,
-    ProtocolStore,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, Clock, ContinuationAuthorityStore,
+    HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow, ProtocolStore,
 };
 use cognitive_contracts::generated::object_reference::StrongReference;
 use cognitive_contracts::generated::task_contract::TaskContract;
@@ -393,7 +393,7 @@ where
     /// - a durable checkpoint must exist (`loop_checkpoint` evidence:
     ///   continuation binds recovery-stable facts, REQ-RUN-006).
     #[allow(clippy::too_many_arguments)]
-    pub fn begin_iteration(
+    pub fn prepare_iteration(
         &self,
         loop_id: &ObjectId,
         expected_version: Version,
@@ -402,7 +402,7 @@ where
         budget_id: &BudgetId,
         charge: &BudgetCharge,
         lease: &WriterLease,
-    ) -> Result<CommittedTransition, EffectError> {
+    ) -> Result<PreparedTransition, EffectError> {
         self.verify_lease(lease)?;
         let facts = self.contract_facts(task_ref)?;
         let last = self.last_recorded_iteration(loop_id)?;
@@ -463,7 +463,77 @@ where
             }),
             lease,
         )?;
-        Ok(self.engine().commit_transition(&cmd)?)
+        Ok(self.engine().prepare_transition(&cmd)?)
+    }
+
+    /// Commit the ordinary continuation entry after the full deterministic
+    /// gate has prepared it. Compound authority boundaries use
+    /// [`Self::prepare_iteration`] and retain its exact commit instead.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_iteration(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        iteration: i64,
+        budget_id: &BudgetId,
+        charge: &BudgetCharge,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        let prepared = self.prepare_iteration(
+            loop_id,
+            expected_version,
+            task_ref,
+            iteration,
+            budget_id,
+            charge,
+            lease,
+        )?;
+        Ok(self.engine().commit_prepared_transition(&prepared)?)
+    }
+
+    /// Atomically consume daemon-private verified continuation authority,
+    /// bind the exact scheduler lease, and enter `CONTINUE -> OBSERVE` with
+    /// its fresh budget debit. Candidate WIA is deliberately not an input to
+    /// this path.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_verified_continuation_atomically(
+        &self,
+        consumption: &BoundContinuationAuthorizationConsumption,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        iteration: i64,
+        budget_id: &BudgetId,
+        charge: &BudgetCharge,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError>
+    where
+        S: ContinuationAuthorityStore,
+    {
+        let prepared = self.prepare_iteration(
+            loop_id,
+            expected_version,
+            task_ref,
+            iteration,
+            budget_id,
+            charge,
+            lease,
+        )?;
+        let receipt = self
+            .store
+            .consume_continuation_authorization_bound_to_scheduler_lease(
+                consumption,
+                &prepared.commit,
+            )
+            .map_err(store_rejection)?;
+        Ok(CommittedTransition {
+            record_id: prepared.record_id,
+            event_id: prepared.event_id,
+            event_sequence: receipt.event_sequence,
+            after_version: prepared.after_version,
+            committed_at: prepared.committed_at,
+        })
     }
 
     /// Persist a ceiling decision as a terminal, fenced loop transition.
@@ -735,7 +805,7 @@ where
     /// object reloaded — a task already COMPLETED admits no further
     /// iterations). Evidence: `verification_report`.
     #[allow(clippy::too_many_arguments)]
-    pub fn end_iteration(
+    fn commit_verified_continuation(
         &self,
         loop_id: &ObjectId,
         expected_version: Version,
@@ -775,6 +845,101 @@ where
             lease,
         )?;
         Ok(self.engine().commit_transition(&cmd)?)
+    }
+
+    /// Close `VERIFY -> CONTINUE` from a durable verifier report only.
+    ///
+    /// The daemon reloads the report, its request, and its fixed post-state;
+    /// caller-provided report text never becomes evidence. A passed report
+    /// permits loop continuation only and does not invoke any Task acceptance
+    /// or completion transition.
+    pub fn end_iteration_from_persisted_report(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_object_id: &ObjectId,
+        verification_report_id: &ObjectId,
+        budget_id: &BudgetId,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError>
+    where
+        S: ContinuationAuthorityStore,
+    {
+        self.verify_lease(lease)?;
+        let report = self
+            .store
+            .load_verification_report(verification_report_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "verification report is unavailable".to_owned(),
+                )
+            })?;
+        if report.status != "passed" {
+            return Err(denial(
+                STATE_CONFLICT,
+                "only a persisted passed verification report may continue a loop".to_owned(),
+            )
+            .into());
+        }
+        let request = self
+            .store
+            .load_verification_request(&report.verification_request_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    "verification request is unavailable".to_owned(),
+                )
+            })?;
+        if request.loop_object_id != *loop_id || request.expected_loop_version != expected_version {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification request does not bind this exact loop continuation".to_owned(),
+            )
+            .into());
+        }
+        let fixed_post_state = self
+            .store
+            .load_fixed_post_state(&report.fixed_post_state_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| denial(STATE_CONFLICT, "fixed post-state is unavailable".to_owned()))?;
+        if fixed_post_state.fixed_post_state_id != request.fixed_post_state_id
+            || report.verifier_ref != request.verifier_ref
+            || report.verifier_version != request.verifier_version
+        {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification report does not match its persisted request".to_owned(),
+            )
+            .into());
+        }
+        let current_subject = self
+            .store
+            .load_object(
+                fixed_post_state.subject_domain,
+                &fixed_post_state.subject_object_id,
+            )
+            .map_err(store_rejection)?;
+        if !current_subject
+            .is_some_and(|subject| subject.version == fixed_post_state.subject_version)
+        {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification fixed post-state is no longer current".to_owned(),
+            )
+            .into());
+        }
+        self.commit_verified_continuation(
+            loop_id,
+            expected_version,
+            task_object_id,
+            verification_report_id,
+            &report.canonical_json,
+            budget_id,
+            lease,
+        )
     }
 }
 

@@ -32,6 +32,7 @@ export * as managementActionProposal from "./management-action-proposal.js";
 export * as managementApprovalDecision from "./management-approval-decision.js";
 export * as managementApprovalRequest from "./management-approval-request.js";
 export * as objectReference from "./object-reference.js";
+export * as operationCandidateProposal from "./operation-candidate-proposal.js";
 export * as operationSummary from "./operation-summary.js";
 export * as performanceReport from "./performance-report.js";
 export * as principal from "./principal.js";
@@ -56,6 +57,7 @@ export * as taskPreviewRequest from "./task-preview-request.js";
 export * as taskPreviewResult from "./task-preview-result.js";
 export * as userIntentRecord from "./user-intent-record.js";
 export * as watchSubscription from "./watch-subscription.js";
+export * as workerIterationAuthorization from "./worker-iteration-authorization.js";
 export * as worldState from "./world-state.js";
 export * as errorRegistry from "./error-registry.js";
 
@@ -90,6 +92,7 @@ export const SCHEMA_DIGESTS = {
   "management-approval-decision.schema.json": "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
   "management-approval-request.schema.json": "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
   "object-reference.schema.json": "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
+  "operation-candidate-proposal.schema.json": "sha256:45ca2c1c4b437e9c3f7458c5bb7ffced95e4ef60f94be7da4374f04e37c36699",
   "operation-summary.schema.json": "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
   "performance-report.schema.json": "sha256:558e100166417da952cb320713cd90ace47e1e3b7378eb0f9ef795d087101268",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",
@@ -105,7 +108,7 @@ export const SCHEMA_DIGESTS = {
   "state-transition-request.schema.json": "sha256:d63cb89d20e15ad9cd0ee43d0e8b6df21dec463dede71613759f20e5fdf95f59",
   "task-admit-request.schema.json": "sha256:c7fa6c8fb1baa16fc0235a2456d64da0ee3b2984bb676b203e8233345ad52e27",
   "task-admit-result.schema.json": "sha256:4f1c320b4ced96360bb6df59b53fce6af91ab733db97c39a1f5a63765b6eb4bd",
-  "task-contract.schema.json": "sha256:29bc2bfe796a3808d7b84fe57575e31767b799cd6c51ae81911b4bd8d2f049c0",
+  "task-contract.schema.json": "sha256:905102b72dfcf5b1efe75f1e98684c6888e0c4f37d66d369413e5b0cbfa9576d",
   "task-intent-interpret-request.schema.json": "sha256:3cfd26c33ea3ba577ced99e573311373b2a6b8356f3273c4e583bfb9647da1d4",
   "task-intent-interpret-result.schema.json": "sha256:89be31e21afb18a93d07f628d69c8afd11aebc40520b10148454824574fe6af9",
   "task-intent-record-request.schema.json": "sha256:34350eea18284c7841ff58ced264a9c890f593b45aa4e48c8ef3cfb60d222400",
@@ -114,5 +117,6 @@ export const SCHEMA_DIGESTS = {
   "task-preview-result.schema.json": "sha256:d036fcfd1815228b0cb6e850f14dbb1af3a18bb8daf75e70ed6dd4d18d968986",
   "user-intent-record.schema.json": "sha256:b3064740e47c0e67bd5646f20a87db33662858e913e90ff631fe182ef51383b5",
   "watch-subscription.schema.json": "sha256:1e2b2d6439b306cf558fdb22ad6c45bfcaee41b146940d97d377cd71fa321e3a",
+  "worker-iteration-authorization.schema.json": "sha256:0c5ce309424d7e088fd62cc17bfcf8fd8897aa98871b106664e4f779ee660aed",
   "world-state.schema.json": "sha256:e5a82a6eabc95d11f1404e055c3e818fc30c4a46788d2c9a0c280109b74fb4d1",
 } as const;

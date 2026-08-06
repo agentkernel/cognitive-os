@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -20,20 +20,59 @@
 //! `BEFORE UPDATE` / `BEFORE DELETE` triggers on `events` and
 //! `transition_records` abort any rewrite attempt, from any connection.
 
+use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
+use crate::worker_authorization::{
+    CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
+    DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
+    WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9, WORKER_AUTHORIZATION_SCHEMA_V4,
+    WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+};
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
 };
-use cognitive_kernel::BudgetState;
 use cognitive_kernel::ports::{
-    AuthorityStore, CheckpointRow, CommitReceipt, CommittedEvent, GovernanceObjectStore,
-    HarnessStore, IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OutboxEntry,
-    ProgressFactRow, ProtocolStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContinuationAuthorityStore,
+    ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow, DaemonOperationDescriptorRow,
+    FixedPostStateRow, GovernanceObjectStore, HarnessStore, IntentChainStore, IntentRow,
+    InterpretationRow, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
 };
-use rusqlite::{Connection, OpenFlags, Transaction, TransactionBehavior};
+use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
+use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
+
+type ConsumedWorkerAuthorizationDatabaseRow = (
+    String,
+    String,
+    String,
+    i64,
+    String,
+    i64,
+    i64,
+    String,
+    String,
+    String,
+    String,
+    String,
+    String,
+    i64,
+    String,
+    String,
+    i64,
+    String,
+    String,
+    Option<String>,
+    Option<i64>,
+    Option<String>,
+    Option<i64>,
+);
 
 /// Schema of the authority database. Two structural guarantees matter to
 /// the contract: the event log and transition records are append-only
@@ -257,6 +296,27 @@ fn corrupt(what: &str, err: impl std::fmt::Display) -> StorePortError {
     }
 }
 
+fn effect_class_name(effect_class: EffectClass) -> &'static str {
+    match effect_class {
+        EffectClass::Pure => "pure",
+        EffectClass::LocalEphemeral => "local_ephemeral",
+        EffectClass::GovernedExternal => "governed_external",
+        EffectClass::EmergencySafety => "emergency_safety",
+    }
+}
+
+fn parse_effect_class(value: &str) -> Result<EffectClass, StorePortError> {
+    match value {
+        "pure" => Ok(EffectClass::Pure),
+        "local_ephemeral" => Ok(EffectClass::LocalEphemeral),
+        "governed_external" => Ok(EffectClass::GovernedExternal),
+        "emergency_safety" => Ok(EffectClass::EmergencySafety),
+        _ => Err(StorePortError::Unavailable {
+            detail: format!("stored daemon descriptor has unknown effect class {value}"),
+        }),
+    }
+}
+
 impl SqliteAuthorityStore {
     /// Open (creating if needed) an authority database in WAL mode with
     /// `synchronous=FULL`, and install the schema.
@@ -274,8 +334,10 @@ impl SqliteAuthorityStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(unavailable("set pragmas"))?;
-        conn.execute_batch(AUTHORITY_SCHEMA_V1)
-            .map_err(unavailable("install schema"))?;
+        conn.execute_batch(&format!(
+            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}\n{CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11}"
+        ))
+        .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
         })
@@ -338,6 +400,109 @@ fn row_to_object(
         version: Version::new(version).map_err(|err| corrupt("version", err))?,
         body: serde_json::from_str(&body_json).map_err(|err| corrupt("body_json", err))?,
     })
+}
+
+/// Apply the governed transition portion of an authority commit inside an
+/// already-open SQLite transaction. Callers retain ownership of the
+/// transaction so compound authority boundaries can commit or roll back all
+/// of their evidence together.
+fn commit_transition_in_transaction(
+    transaction: &Transaction<'_>,
+    commit: &TransitionCommit,
+) -> Result<CommitReceipt, StorePortError> {
+    let cas = &commit.cas;
+    let changed = transaction
+        .execute(
+            "UPDATE governed_objects
+             SET state = ?1, version = ?2, updated_at = ?3
+             WHERE object_id = ?4 AND domain = ?5 AND state = ?6 AND version = ?7",
+            (
+                cas.to_state.as_str(),
+                cas.next_version.get(),
+                cas.committed_at.as_str(),
+                cas.object_id.as_str(),
+                cas.domain.as_str(),
+                cas.from_state.as_str(),
+                cas.expected_version.get(),
+            ),
+        )
+        .map_err(unavailable("object cas"))?;
+    if changed == 0 {
+        return Err(StorePortError::Conflict {
+            detail: format!(
+                "object cas raced: {} not at {}/v{}",
+                cas.object_id, cas.from_state, cas.expected_version
+            ),
+        });
+    }
+
+    if let Some(budget) = &commit.budget {
+        let changed = transaction
+            .execute(
+                "UPDATE budgets SET state_json = ?1, version = ?2
+                 WHERE budget_id = ?3 AND version = ?4",
+                (
+                    budget.next_state_canonical_json.as_str(),
+                    budget.next_version.get(),
+                    budget.budget_id.as_str(),
+                    budget.expected_version.get(),
+                ),
+            )
+            .map_err(unavailable("budget cas"))?;
+        if changed == 0 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "budget cas raced: {} not at v{}",
+                    budget.budget_id, budget.expected_version
+                ),
+            });
+        }
+    }
+
+    let event = &commit.event;
+    transaction
+        .execute(
+            "INSERT INTO events
+             (event_id, object_id, domain, object_version, event_type, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (
+                event.event_id.as_str(),
+                event.object_id.as_str(),
+                event.domain.as_str(),
+                event.object_version.get(),
+                event.event_type.as_str(),
+                event.canonical_json.as_str(),
+            ),
+        )
+        .map_err(unavailable("append event"))?;
+    let event_sequence = transaction.last_insert_rowid();
+
+    let record = &commit.record;
+    transaction
+        .execute(
+            "INSERT INTO transition_records
+             (record_id, object_id, domain, object_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                record.record_id.as_str(),
+                record.object_id.as_str(),
+                record.domain.as_str(),
+                record.object_version.get(),
+                record.canonical_json.as_str(),
+            ),
+        )
+        .map_err(unavailable("append transition record"))?;
+
+    for outbox in &commit.outbox {
+        transaction
+            .execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert outbox row"))?;
+    }
+
+    Ok(CommitReceipt { event_sequence })
 }
 
 impl AuthorityStore for SqliteAuthorityStore {
@@ -440,105 +605,9 @@ impl AuthorityStore for SqliteAuthorityStore {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(unavailable("begin transition"))?;
         verify_fencing_in_tx(&tx, commit.fencing_epoch)?;
-
-        // ADR-0002 rule 3: CAS via WHERE version = expected (plus identity,
-        // domain and source state); zero affected rows -> Conflict, and the
-        // dropped transaction rolls back with no side effects.
-        let cas = &commit.cas;
-        let changed = tx
-            .execute(
-                "UPDATE governed_objects
-                 SET state = ?1, version = ?2, updated_at = ?3
-                 WHERE object_id = ?4 AND domain = ?5 AND state = ?6 AND version = ?7",
-                (
-                    cas.to_state.as_str(),
-                    cas.next_version.get(),
-                    cas.committed_at.as_str(),
-                    cas.object_id.as_str(),
-                    cas.domain.as_str(),
-                    cas.from_state.as_str(),
-                    cas.expected_version.get(),
-                ),
-            )
-            .map_err(unavailable("object cas"))?;
-        if changed == 0 {
-            return Err(StorePortError::Conflict {
-                detail: format!(
-                    "object cas raced: {} not at {}/v{}",
-                    cas.object_id, cas.from_state, cas.expected_version
-                ),
-            });
-        }
-
-        // Hard-budget debit joins the same transaction, directly after the
-        // object CAS: a later statement failure rolls BOTH back together.
-        if let Some(budget) = &commit.budget {
-            let changed = tx
-                .execute(
-                    "UPDATE budgets SET state_json = ?1, version = ?2
-                     WHERE budget_id = ?3 AND version = ?4",
-                    (
-                        budget.next_state_canonical_json.as_str(),
-                        budget.next_version.get(),
-                        budget.budget_id.as_str(),
-                        budget.expected_version.get(),
-                    ),
-                )
-                .map_err(unavailable("budget cas"))?;
-            if changed == 0 {
-                return Err(StorePortError::Conflict {
-                    detail: format!(
-                        "budget cas raced: {} not at v{}",
-                        budget.budget_id, budget.expected_version
-                    ),
-                });
-            }
-        }
-
-        let event = &commit.event;
-        tx.execute(
-            "INSERT INTO events
-               (event_id, object_id, domain, object_version, event_type, canonical_json)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            (
-                event.event_id.as_str(),
-                event.object_id.as_str(),
-                event.domain.as_str(),
-                event.object_version.get(),
-                event.event_type.as_str(),
-                event.canonical_json.as_str(),
-            ),
-        )
-        .map_err(unavailable("append event"))?;
-        let sequence = tx.last_insert_rowid();
-
-        let record = &commit.record;
-        tx.execute(
-            "INSERT INTO transition_records
-               (record_id, object_id, domain, object_version, canonical_json)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            (
-                record.record_id.as_str(),
-                record.object_id.as_str(),
-                record.domain.as_str(),
-                record.object_version.get(),
-                record.canonical_json.as_str(),
-            ),
-        )
-        .map_err(unavailable("append transition record"))?;
-
-        for outbox in &commit.outbox {
-            tx.execute(
-                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
-                (outbox.event_id.as_str(), outbox.destination.as_str()),
-            )
-            .map_err(unavailable("insert outbox row"))?;
-        }
-
+        let receipt = commit_transition_in_transaction(&tx, commit)?;
         tx.commit().map_err(unavailable("commit transition"))?;
-        Ok(CommitReceipt {
-            event_sequence: sequence,
-        })
+        Ok(receipt)
     }
 
     fn load_budget(&self, budget_id: &BudgetId) -> Result<Option<StoredBudget>, StorePortError> {
@@ -763,6 +832,21 @@ impl ProtocolStore for SqliteAuthorityStore {
                 });
             }
             Err(err) => return Err(unavailable("insert intent")(err)),
+        }
+        if let Some(task_binding) = intent.task_binding.as_ref() {
+            let eligible_at = scheduler_eligible_at(event)?;
+            tx.execute(
+                "INSERT INTO scheduler_entries \
+                 (task_ref, contract_epoch, state, lease_owner, lease_epoch, lease_expires, next_eligible, attempt_count, cancel_requested) \
+                 VALUES (?1, ?2, 'runnable', NULL, 0, NULL, ?3, 0, 0) \
+                 ON CONFLICT(task_ref, contract_epoch) DO NOTHING",
+                (
+                    task_binding.task_ref.as_str(),
+                    task_binding.contract_epoch,
+                    eligible_at.as_str(),
+                ),
+            )
+            .map_err(unavailable("register scheduler work"))?;
         }
         tx.execute(
             "INSERT INTO events
@@ -1026,6 +1110,29 @@ impl ProtocolStore for SqliteAuthorityStore {
             }
         }
     }
+}
+
+/// Derive scheduler eligibility from the immutable Intent event that is being
+/// committed in the same transaction. A binding with no canonical event time
+/// must fail closed instead of creating a work row with an invented clock.
+fn scheduler_eligible_at(
+    event: &cognitive_kernel::ports::EventDraft,
+) -> Result<WallTimestamp, StorePortError> {
+    let event_value: serde_json::Value =
+        serde_json::from_str(&event.canonical_json).map_err(|error| {
+            StorePortError::Unavailable {
+                detail: format!("scheduler registration event is not canonical JSON: {error}"),
+            }
+        })?;
+    let event_time = event_value
+        .get("event_time")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| StorePortError::Unavailable {
+            detail: "scheduler registration event has no event_time".to_owned(),
+        })?;
+    WallTimestamp::parse(event_time).map_err(|error| StorePortError::Unavailable {
+        detail: format!("scheduler registration event_time is invalid: {error}"),
+    })
 }
 
 fn row_to_user_intent(row: &rusqlite::Row<'_>) -> Result<UserIntentRecordRow, rusqlite::Error> {
@@ -1439,6 +1546,1354 @@ impl IntentChainStore for SqliteAuthorityStore {
             intents.push(row_to_intent(row).map_err(|err| corrupt("intent row", err))?);
         }
         Ok(intents)
+    }
+}
+
+impl WorkerAuthorizationStore for SqliteAuthorityStore {
+    fn load_worker_iteration_authorization(
+        &self,
+        authorization_id: &ObjectId,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let row = conn.query_row(
+            "SELECT authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                    loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                    intent_id, effect_object_id, budget_id, budget_charge_json,
+                    action_fingerprint, issued_fencing_epoch, canonical_json
+             FROM worker_iteration_authorizations WHERE authorization_id=?1",
+            (authorization_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, i64>(5)?,
+                    row.get::<_, i64>(6)?,
+                    row.get::<_, String>(7)?,
+                    row.get::<_, String>(8)?,
+                    row.get::<_, String>(9)?,
+                    row.get::<_, String>(10)?,
+                    row.get::<_, String>(11)?,
+                    row.get::<_, String>(12)?,
+                    row.get::<_, i64>(13)?,
+                    row.get::<_, String>(14)?,
+                ))
+            },
+        );
+        let row = match row {
+            Ok(row) => row,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(error) => return Err(unavailable("query worker authorization")(error)),
+        };
+        Ok(Some(WorkerIterationAuthorizationRow {
+            authorization_id: ObjectId::parse(&row.0)
+                .map_err(|error| corrupt("worker authorization id", error))?,
+            worker_authorization_root_id: ObjectId::parse(&row.1)
+                .map_err(|error| corrupt("worker authorization root", error))?,
+            task_ref: row.2,
+            contract_epoch: row.3,
+            loop_object_id: ObjectId::parse(&row.4)
+                .map_err(|error| corrupt("worker authorization loop", error))?,
+            iteration: row.5,
+            expected_loop_version: Version::new(row.6)
+                .map_err(|error| corrupt("worker authorization loop version", error))?,
+            selected_candidate_id: ObjectId::parse(&row.7)
+                .map_err(|error| corrupt("worker authorization candidate", error))?,
+            intent_id: ObjectId::parse(&row.8)
+                .map_err(|error| corrupt("worker authorization intent", error))?,
+            effect_object_id: ObjectId::parse(&row.9)
+                .map_err(|error| corrupt("worker authorization effect", error))?,
+            budget_id: BudgetId::parse(&row.10)
+                .map_err(|error| corrupt("worker authorization budget", error))?,
+            budget_charge_canonical_json: row.11,
+            action_fingerprint: row.12,
+            issued_fencing_epoch: row.13,
+            canonical_json: row.14,
+        }))
+    }
+
+    fn load_unconsumed_worker_iteration_authorization_for_task_binding(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT authorization.authorization_id
+                 FROM worker_iteration_authorizations AS authorization
+                 LEFT JOIN worker_iteration_authorization_consumptions AS consumption
+                   ON consumption.authorization_id = authorization.authorization_id
+                 WHERE authorization.task_ref = ?1
+                   AND authorization.contract_epoch = ?2
+                   AND consumption.authorization_id IS NULL
+                 ORDER BY authorization.iteration
+                 LIMIT 2",
+            )
+            .map_err(unavailable("prepare unconsumed worker authorization query"))?;
+        let authorization_ids = statement
+            .query_map((task_ref, contract_epoch), |row| row.get::<_, String>(0))
+            .map_err(unavailable("query unconsumed worker authorizations"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read unconsumed worker authorizations"))?;
+        drop(statement);
+        drop(conn);
+
+        let [authorization_id] = authorization_ids.as_slice() else {
+            return match authorization_ids.len() {
+                0 => Ok(None),
+                _ => Err(StorePortError::Conflict {
+                    detail: "multiple unconsumed worker authorizations match scheduler work"
+                        .to_owned(),
+                }),
+            };
+        };
+        let authorization_id = ObjectId::parse(authorization_id)
+            .map_err(|error| corrupt("unconsumed worker authorization id", error))?;
+        self.load_worker_iteration_authorization(&authorization_id)
+    }
+
+    fn list_consumed_worker_iteration_authorizations(
+        &self,
+    ) -> Result<Vec<ConsumedWorkerIterationAuthorization>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT authorization.authorization_id, authorization.worker_authorization_root_id,
+                        authorization.task_ref, authorization.contract_epoch,
+                        authorization.loop_object_id, authorization.iteration,
+                        authorization.expected_loop_version, authorization.selected_candidate_id,
+                        authorization.intent_id, authorization.effect_object_id,
+                        authorization.budget_id, authorization.budget_charge_json,
+                        authorization.action_fingerprint, authorization.issued_fencing_epoch,
+                        authorization.canonical_json, consumption.worker_attempt_id,
+                        consumption.consumed_fencing_epoch, consumption.consumed_at,
+                        consumption.canonical_json, lease_binding.task_ref,
+                        lease_binding.contract_epoch, lease_binding.lease_owner,
+                        lease_binding.lease_epoch
+                 FROM worker_iteration_authorizations AS authorization
+                 INNER JOIN worker_iteration_authorization_consumptions AS consumption
+                   ON consumption.authorization_id = authorization.authorization_id
+                 LEFT JOIN worker_authorization_scheduler_lease_bindings AS lease_binding
+                   ON lease_binding.authorization_id = consumption.authorization_id
+                 ORDER BY consumption.consumed_at, authorization.authorization_id",
+            )
+            .map_err(unavailable(
+                "prepare consumed worker authorization recovery query",
+            ))?;
+        let mut rows = statement
+            .query(())
+            .map_err(unavailable("query consumed worker authorizations"))?;
+        let mut recoverable_attempts = Vec::new();
+        while let Some(row) = rows
+            .next()
+            .map_err(unavailable("read consumed worker authorization"))?
+        {
+            let values: ConsumedWorkerAuthorizationDatabaseRow = (|| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                    row.get(7)?,
+                    row.get(8)?,
+                    row.get(9)?,
+                    row.get(10)?,
+                    row.get(11)?,
+                    row.get(12)?,
+                    row.get(13)?,
+                    row.get(14)?,
+                    row.get(15)?,
+                    row.get(16)?,
+                    row.get(17)?,
+                    row.get(18)?,
+                    row.get(19)?,
+                    row.get(20)?,
+                    row.get(21)?,
+                    row.get(22)?,
+                ))
+            })()
+            .map_err(unavailable("decode consumed worker authorization"))?;
+            let authorization_id = ObjectId::parse(&values.0)
+                .map_err(|error| corrupt("worker authorization id", error))?;
+            let authorization = WorkerIterationAuthorizationRow {
+                authorization_id: authorization_id.clone(),
+                worker_authorization_root_id: ObjectId::parse(&values.1)
+                    .map_err(|error| corrupt("worker authorization root", error))?,
+                task_ref: values.2,
+                contract_epoch: values.3,
+                loop_object_id: ObjectId::parse(&values.4)
+                    .map_err(|error| corrupt("worker authorization loop", error))?,
+                iteration: values.5,
+                expected_loop_version: Version::new(values.6)
+                    .map_err(|error| corrupt("worker authorization loop version", error))?,
+                selected_candidate_id: ObjectId::parse(&values.7)
+                    .map_err(|error| corrupt("worker authorization candidate", error))?,
+                intent_id: ObjectId::parse(&values.8)
+                    .map_err(|error| corrupt("worker authorization intent", error))?,
+                effect_object_id: ObjectId::parse(&values.9)
+                    .map_err(|error| corrupt("worker authorization effect", error))?,
+                budget_id: BudgetId::parse(&values.10)
+                    .map_err(|error| corrupt("worker authorization budget", error))?,
+                budget_charge_canonical_json: values.11,
+                action_fingerprint: values.12,
+                issued_fencing_epoch: values.13,
+                canonical_json: values.14,
+            };
+            let scheduler_lease = match (values.19, values.20, values.21, values.22) {
+                (None, None, None, None) => None,
+                (Some(task_ref), Some(contract_epoch), Some(lease_owner), Some(lease_epoch)) => {
+                    Some(SchedulerLeaseBinding {
+                        task_ref,
+                        contract_epoch,
+                        lease_owner,
+                        lease_epoch,
+                    })
+                }
+                _ => {
+                    return Err(StorePortError::Unavailable {
+                        detail: "stored worker authorization lease binding is partially populated"
+                            .to_owned(),
+                    });
+                }
+            };
+            recoverable_attempts.push(ConsumedWorkerIterationAuthorization {
+                authorization,
+                consumption: WorkerIterationAuthorizationConsumptionRow {
+                    authorization_id,
+                    worker_attempt_id: ObjectId::parse(&values.15)
+                        .map_err(|error| corrupt("worker attempt id", error))?,
+                    consumed_fencing_epoch: values.16,
+                    consumed_at: WallTimestamp::parse(&values.17)
+                        .map_err(|error| corrupt("worker authorization consumption time", error))?,
+                    canonical_json: values.18,
+                },
+                scheduler_lease,
+            });
+        }
+        Ok(recoverable_attempts)
+    }
+
+    fn consume_worker_iteration_authorization(
+        &self,
+        consumption: &WorkerIterationAuthorizationConsumptionRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin worker authorization consumption"))?;
+        verify_fencing_in_tx(&tx, Some(consumption.consumed_fencing_epoch))?;
+        let authorization_exists: bool = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM worker_iteration_authorizations WHERE authorization_id=?1)",
+                (consumption.authorization_id.as_str(),),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify worker authorization"))?;
+        if !authorization_exists {
+            return Err(StorePortError::Conflict {
+                detail: "worker authorization is not persisted".to_owned(),
+            });
+        }
+        let inserted = tx.execute(
+            "INSERT INTO worker_iteration_authorization_consumptions
+               (authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (consumption.authorization_id.as_str(), consumption.worker_attempt_id.as_str(),
+             consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(),
+             consumption.canonical_json.as_str()),
+        );
+        match inserted {
+            Ok(_) => tx
+                .commit()
+                .map_err(unavailable("commit worker authorization consumption")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "worker authorization was already consumed".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert worker authorization consumption")(
+                error,
+            )),
+        }
+    }
+
+    fn consume_worker_iteration_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundWorkerAuthorizationConsumption,
+    ) -> Result<(), StorePortError> {
+        let consumption = &request.consumption;
+        let scheduler_lease = &request.scheduler_lease;
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin bound worker authorization consumption"))?;
+        verify_fencing_in_tx(&tx, Some(consumption.consumed_fencing_epoch))?;
+
+        let authorization_matches_lease: bool = tx
+            .query_row(
+                "SELECT EXISTS(
+                   SELECT 1 FROM worker_iteration_authorizations
+                   WHERE authorization_id=?1 AND task_ref=?2 AND contract_epoch=?3
+                 )",
+                (
+                    consumption.authorization_id.as_str(),
+                    scheduler_lease.task_ref.as_str(),
+                    scheduler_lease.contract_epoch,
+                ),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify bound worker authorization"))?;
+        if !authorization_matches_lease {
+            return Err(StorePortError::Conflict {
+                detail: "worker authorization does not match scheduler work binding".to_owned(),
+            });
+        }
+
+        let exact_lease_is_active: bool = tx
+            .query_row(
+                "SELECT EXISTS(
+                   SELECT 1 FROM scheduler_entries
+                   WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased'
+                     AND lease_owner=?3 AND lease_epoch=?4 AND cancel_requested=0
+                 )",
+                (
+                    scheduler_lease.task_ref.as_str(),
+                    scheduler_lease.contract_epoch,
+                    scheduler_lease.lease_owner.as_str(),
+                    scheduler_lease.lease_epoch,
+                ),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("verify exact scheduler lease"))?;
+        if !exact_lease_is_active {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler lease is no longer the exact active handoff lease".to_owned(),
+            });
+        }
+
+        let inserted_consumption = tx.execute(
+            "INSERT INTO worker_iteration_authorization_consumptions
+               (authorization_id, worker_attempt_id, consumed_fencing_epoch, consumed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                consumption.authorization_id.as_str(),
+                consumption.worker_attempt_id.as_str(),
+                consumption.consumed_fencing_epoch,
+                consumption.consumed_at.as_str(),
+                consumption.canonical_json.as_str(),
+            ),
+        );
+        match inserted_consumption {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "worker authorization was already consumed".to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert bound worker authorization consumption")(error));
+            }
+        }
+
+        let inserted_binding = tx.execute(
+            "INSERT INTO worker_authorization_scheduler_lease_bindings
+               (authorization_id, task_ref, contract_epoch, lease_owner, lease_epoch)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                consumption.authorization_id.as_str(),
+                scheduler_lease.task_ref.as_str(),
+                scheduler_lease.contract_epoch,
+                scheduler_lease.lease_owner.as_str(),
+                scheduler_lease.lease_epoch,
+            ),
+        );
+        match inserted_binding {
+            Ok(_) => tx
+                .commit()
+                .map_err(unavailable("commit bound worker authorization consumption")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "worker authorization scheduler lease binding already exists".to_owned(),
+            }),
+            Err(error) => Err(unavailable(
+                "insert worker authorization scheduler lease binding",
+            )(error)),
+        }
+    }
+
+    fn commit_candidate_admission(
+        &self,
+        commit: &CandidateAdmissionCommit,
+    ) -> Result<CandidateAdmissionReceipt, StorePortError> {
+        let intent = &commit.intent;
+        let effect_admission = &commit.effect_admission;
+        let authorization = &commit.worker_authorization;
+        let loop_transition = &commit.loop_transition;
+
+        let consistent_bundle = commit.selected_candidate_id == authorization.selected_candidate_id
+            && intent.intent_id == authorization.intent_id
+            && intent.effect_object_id == authorization.effect_object_id
+            && effect_admission.object.object_id == authorization.effect_object_id
+            && effect_admission.object.domain == LifecycleDomain::Effect
+            && effect_admission.object.version == Version::INITIAL
+            && loop_transition.cas.domain == LifecycleDomain::Loop
+            && loop_transition.cas.object_id == authorization.loop_object_id
+            && loop_transition.cas.from_state.as_str() == "DECIDE"
+            && loop_transition.cas.to_state.as_str() == "ACT"
+            && loop_transition.cas.expected_version == authorization.expected_loop_version
+            && matches!(
+                authorization.expected_loop_version.next(),
+                Ok(expected_next_version) if loop_transition.cas.next_version == expected_next_version
+            )
+            && effect_admission.fencing_epoch == Some(commit.fencing_epoch)
+            && loop_transition.fencing_epoch == Some(commit.fencing_epoch)
+            && authorization.issued_fencing_epoch == commit.fencing_epoch;
+        if !consistent_bundle {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission bundle has inconsistent authority bindings".to_owned(),
+            });
+        }
+        let Some(budget) = loop_transition.budget.as_ref() else {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission requires an exact budget debit".to_owned(),
+            });
+        };
+        if budget.budget_id != authorization.budget_id {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission budget does not match worker authorization".to_owned(),
+            });
+        }
+
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin candidate admission"))?;
+        verify_fencing_in_tx(&tx, Some(commit.fencing_epoch))?;
+
+        let candidate_binding = tx.query_row(
+            "SELECT task_ref, contract_epoch, parameters_digest, action, target,
+                        expected_state_version
+                 FROM operation_candidate_proposals WHERE candidate_id=?1",
+            (commit.selected_candidate_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, i64>(5)?,
+                ))
+            },
+        );
+        let candidate_binding = match candidate_binding {
+            Ok(binding) => binding,
+            Err(rusqlite::Error::QueryReturnedNoRows) => {
+                return Err(StorePortError::Conflict {
+                    detail: "candidate admission proposal is not persisted".to_owned(),
+                });
+            }
+            Err(error) => return Err(unavailable("load candidate admission proposal")(error)),
+        };
+        let candidate_matches_authorization = candidate_binding.0 == authorization.task_ref
+            && candidate_binding.1 == authorization.contract_epoch
+            && candidate_binding.2 == intent.parameters_digest
+            && candidate_binding.3 == intent.action
+            && candidate_binding.4 == intent.target
+            && candidate_binding.5 == intent.expected_state_version.get();
+        if !candidate_matches_authorization {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission does not match persisted proposal".to_owned(),
+            });
+        }
+        let current_contract_epoch = tx
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref=?1",
+                (authorization.task_ref.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .map_err(unavailable("load candidate admission contract epoch"))?;
+        if current_contract_epoch != authorization.contract_epoch {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission TaskContract epoch was superseded".to_owned(),
+            });
+        }
+
+        let insert_intent = tx.execute(
+            "INSERT INTO intents
+               (intent_id, idempotency_key, parameters_digest, action, target, effect_object_id,
+                expected_state_version, grant_epoch, capability_set_version, task_ref,
+                contract_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            (
+                intent.intent_id.as_str(),
+                intent.idempotency_key.as_str(),
+                intent.parameters_digest.as_str(),
+                intent.action.as_str(),
+                intent.target.as_str(),
+                intent.effect_object_id.as_str(),
+                intent.expected_state_version.get(),
+                intent.grant_epoch,
+                intent.capability_set_version,
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.task_ref.as_str()),
+                intent
+                    .task_binding
+                    .as_ref()
+                    .map(|binding| binding.contract_epoch),
+                intent.canonical_json.as_str(),
+            ),
+        );
+        if let Err(error) = insert_intent {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission intent already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission intent")(error))
+            };
+        }
+        let intent_event_sequence = append_event_in_tx(&tx, &commit.intent_event)?;
+
+        let effect_body_json = serde_json::to_string(&effect_admission.object.body)
+            .map_err(|error| corrupt("candidate admission effect body", error))?;
+        let insert_effect = tx.execute(
+            "INSERT INTO governed_objects
+               (object_id, domain, state, version, body_json, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+            (
+                effect_admission.object.object_id.as_str(),
+                effect_admission.object.domain.as_str(),
+                effect_admission.object.state.as_str(),
+                effect_admission.object.version.get(),
+                effect_body_json,
+                effect_admission.admitted_at.as_str(),
+            ),
+        );
+        if let Err(error) = insert_effect {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission effect already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission effect")(error))
+            };
+        }
+        let effect_admission_event_sequence = append_event_in_tx(&tx, &effect_admission.event)?;
+        for outbox in &effect_admission.outbox {
+            tx.execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert candidate admission effect outbox"))?;
+        }
+
+        let insert_authorization = tx.execute(
+            "INSERT INTO worker_iteration_authorizations
+               (authorization_id, worker_authorization_root_id, task_ref, contract_epoch,
+                loop_object_id, iteration, expected_loop_version, selected_candidate_id,
+                intent_id, effect_object_id, budget_id, budget_charge_json, action_fingerprint,
+                issued_fencing_epoch, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+            (
+                authorization.authorization_id.as_str(),
+                authorization.worker_authorization_root_id.as_str(),
+                authorization.task_ref.as_str(),
+                authorization.contract_epoch,
+                authorization.loop_object_id.as_str(),
+                authorization.iteration,
+                authorization.expected_loop_version.get(),
+                authorization.selected_candidate_id.as_str(),
+                authorization.intent_id.as_str(),
+                authorization.effect_object_id.as_str(),
+                authorization.budget_id.as_str(),
+                authorization.budget_charge_canonical_json.as_str(),
+                authorization.action_fingerprint.as_str(),
+                authorization.issued_fencing_epoch,
+                authorization.canonical_json.as_str(),
+            ),
+        );
+        if let Err(error) = insert_authorization {
+            return if is_constraint_violation(&error) {
+                Err(StorePortError::Conflict {
+                    detail: "candidate admission authorization already exists".to_owned(),
+                })
+            } else {
+                Err(unavailable("insert candidate admission authorization")(
+                    error,
+                ))
+            };
+        }
+
+        let cas = &loop_transition.cas;
+        let changed = tx
+            .execute(
+                "UPDATE governed_objects SET state=?1, version=?2, updated_at=?3
+             WHERE object_id=?4 AND domain=?5 AND state=?6 AND version=?7",
+                (
+                    cas.to_state.as_str(),
+                    cas.next_version.get(),
+                    cas.committed_at.as_str(),
+                    cas.object_id.as_str(),
+                    cas.domain.as_str(),
+                    cas.from_state.as_str(),
+                    cas.expected_version.get(),
+                ),
+            )
+            .map_err(unavailable("candidate admission loop cas"))?;
+        if changed == 0 {
+            return Err(StorePortError::Conflict {
+                detail: "candidate admission loop cas raced".to_owned(),
+            });
+        }
+        if let Some(budget) = &loop_transition.budget {
+            let changed = tx.execute(
+                "UPDATE budgets SET state_json=?1, version=?2 WHERE budget_id=?3 AND version=?4",
+                (budget.next_state_canonical_json.as_str(), budget.next_version.get(),
+                 budget.budget_id.as_str(), budget.expected_version.get()),
+            ).map_err(unavailable("candidate admission budget cas"))?;
+            if changed == 0 {
+                return Err(StorePortError::Conflict {
+                    detail: "candidate admission budget cas raced".to_owned(),
+                });
+            }
+        }
+        let loop_transition_event_sequence = append_event_in_tx(&tx, &loop_transition.event)?;
+        tx.execute(
+            "INSERT INTO transition_records (record_id, object_id, domain, object_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            (loop_transition.record.record_id.as_str(), loop_transition.record.object_id.as_str(),
+             loop_transition.record.domain.as_str(), loop_transition.record.object_version.get(),
+             loop_transition.record.canonical_json.as_str()),
+        ).map_err(unavailable("append candidate admission loop record"))?;
+        for outbox in &loop_transition.outbox {
+            tx.execute(
+                "INSERT INTO outbox (event_id, destination) VALUES (?1, ?2)",
+                (outbox.event_id.as_str(), outbox.destination.as_str()),
+            )
+            .map_err(unavailable("insert candidate admission loop outbox"))?;
+        }
+        tx.commit()
+            .map_err(unavailable("commit candidate admission"))?;
+        Ok(CandidateAdmissionReceipt {
+            intent_event_sequence,
+            effect_admission_event_sequence,
+            loop_transition_event_sequence,
+            authorization_id: authorization.authorization_id.clone(),
+        })
+    }
+
+    fn append_daemon_authorization_snapshot(
+        &self,
+        snapshot: &DaemonAuthorizationSnapshotRow,
+    ) -> Result<(), StorePortError> {
+        let conn = self.lock()?;
+        let inserted = conn.execute(
+            "INSERT INTO daemon_authorization_snapshots
+               (snapshot_id, subject_ref, target_ref, action, purpose, grant_epoch,
+                capability_set_version, revocation_epoch, observed_at, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            (
+                snapshot.snapshot_id.as_str(),
+                snapshot.subject_ref.as_str(),
+                snapshot.target_ref.as_str(),
+                snapshot.action.as_str(),
+                snapshot.purpose.as_str(),
+                snapshot.grant_epoch,
+                snapshot.capability_set_version,
+                snapshot.revocation_epoch,
+                snapshot.observed_at.as_str(),
+                snapshot.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "daemon authorization snapshot {} already persisted",
+                    snapshot.snapshot_id
+                ),
+            }),
+            Err(error) => Err(unavailable("insert daemon authorization snapshot")(error)),
+        }
+    }
+
+    fn load_latest_daemon_authorization_snapshot(
+        &self,
+        subject_ref: &str,
+        target_ref: &str,
+        action: &str,
+        purpose: &str,
+    ) -> Result<Option<DaemonAuthorizationSnapshotRow>, StorePortError> {
+        let conn = self.lock()?;
+        let result = conn.query_row(
+            "SELECT snapshot_id, subject_ref, target_ref, action, purpose, grant_epoch,
+                    capability_set_version, revocation_epoch, observed_at, canonical_json
+             FROM daemon_authorization_snapshots
+             WHERE subject_ref=?1 AND target_ref=?2 AND action=?3 AND purpose=?4
+             ORDER BY snapshot_sequence DESC LIMIT 1",
+            (subject_ref, target_ref, action, purpose),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                    row.get(7)?,
+                    row.get::<_, String>(8)?,
+                    row.get(9)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                snapshot_id,
+                subject_ref,
+                target_ref,
+                action,
+                purpose,
+                grant_epoch,
+                capability_set_version,
+                revocation_epoch,
+                observed_at,
+                canonical_json,
+            )) => Ok(Some(DaemonAuthorizationSnapshotRow {
+                snapshot_id: ObjectId::parse(&snapshot_id)
+                    .map_err(|error| corrupt("daemon authorization snapshot id", error))?,
+                subject_ref,
+                target_ref,
+                action,
+                purpose,
+                grant_epoch,
+                capability_set_version,
+                revocation_epoch,
+                observed_at: WallTimestamp::parse(&observed_at)
+                    .map_err(|error| corrupt("daemon authorization snapshot time", error))?,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query daemon authorization snapshot")(error)),
+        }
+    }
+
+    fn append_daemon_operation_descriptor(
+        &self,
+        descriptor: &DaemonOperationDescriptorRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin daemon descriptor"))?;
+        let descriptor_value = &descriptor.descriptor;
+        let inserted = tx.execute(
+            "INSERT INTO daemon_operation_descriptors
+               (descriptor_id, operation_id, action, effect_class, executor, queryable,
+                idempotent, descriptor_version, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            (
+                descriptor.descriptor_id.as_str(),
+                descriptor_value.operation_id.as_str(),
+                descriptor_value.action.as_str(),
+                effect_class_name(descriptor_value.effect_class),
+                descriptor_value.executor.as_str(),
+                descriptor_value.capabilities.queryable,
+                descriptor_value.capabilities.idempotent,
+                descriptor_value.descriptor_version,
+                descriptor.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "daemon operation descriptor {} already persisted",
+                        descriptor.descriptor_id
+                    ),
+                });
+            }
+            Err(error) => return Err(unavailable("insert daemon descriptor")(error)),
+        }
+        tx.commit().map_err(unavailable("commit daemon descriptor"))
+    }
+
+    fn load_daemon_operation_descriptor(
+        &self,
+        descriptor_id: &ObjectId,
+    ) -> Result<Option<DaemonOperationDescriptorRow>, StorePortError> {
+        let conn = self.lock()?;
+        let result = conn.query_row(
+            "SELECT descriptor_id, operation_id, action, effect_class, executor, queryable,
+                    idempotent, descriptor_version, canonical_json
+             FROM daemon_operation_descriptors WHERE descriptor_id = ?1",
+            (descriptor_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, bool>(5)?,
+                    row.get::<_, bool>(6)?,
+                    row.get::<_, i64>(7)?,
+                    row.get::<_, String>(8)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                stored_id,
+                operation_id,
+                action,
+                stored_effect_class,
+                executor,
+                queryable,
+                idempotent,
+                descriptor_version,
+                canonical_json,
+            )) => Ok(Some(DaemonOperationDescriptorRow {
+                descriptor_id: ObjectId::parse(&stored_id)
+                    .map_err(|error| corrupt("daemon descriptor id", error))?,
+                descriptor: OperationDescriptor {
+                    operation_id,
+                    action,
+                    effect_class: parse_effect_class(&stored_effect_class)?,
+                    executor,
+                    capabilities: ExecutorCapabilities {
+                        queryable,
+                        idempotent,
+                    },
+                    descriptor_version,
+                },
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query daemon descriptor")(error)),
+        }
+    }
+
+    fn append_operation_candidate_proposal(
+        &self,
+        proposal: &OperationCandidateProposalRow,
+    ) -> Result<(), StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin candidate proposal"))?;
+        let inserted = tx.execute(
+            "INSERT INTO operation_candidate_proposals
+               (candidate_id, task_ref, contract_epoch, candidate_source_ref, tool_ref,
+                action, target, parameters_digest, expected_state_version,
+                operation_descriptor_ref, canonical_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            (
+                proposal.candidate_id.as_str(),
+                proposal.task_ref.as_str(),
+                proposal.contract_epoch,
+                proposal.candidate_source_ref.as_str(),
+                proposal.tool_ref.as_str(),
+                proposal.action.as_str(),
+                proposal.target.as_str(),
+                proposal.parameters_digest.as_str(),
+                proposal.expected_state_version,
+                proposal.operation_descriptor_ref.as_str(),
+                proposal.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "candidate proposal {} already persisted",
+                        proposal.candidate_id
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert candidate proposal")(err)),
+        }
+        tx.commit()
+            .map_err(unavailable("commit candidate proposal"))
+    }
+
+    fn load_operation_candidate_proposal(
+        &self,
+        candidate_id: &ObjectId,
+    ) -> Result<Option<OperationCandidateProposalRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT candidate_id, task_ref, contract_epoch, candidate_source_ref, tool_ref,
+                        action, target, parameters_digest, expected_state_version,
+                        operation_descriptor_ref, canonical_json
+                 FROM operation_candidate_proposals WHERE candidate_id = ?1",
+            )
+            .map_err(unavailable("prepare load candidate proposal"))?;
+        statement
+            .query_row((candidate_id.as_str(),), |row| {
+                let candidate_id: String = row.get(0)?;
+                let operation_descriptor_ref: String = row.get(9)?;
+                Ok(OperationCandidateProposalRow {
+                    candidate_id: ObjectId::parse(&candidate_id).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?,
+                    task_ref: row.get(1)?,
+                    contract_epoch: row.get(2)?,
+                    candidate_source_ref: row.get(3)?,
+                    tool_ref: row.get(4)?,
+                    action: row.get(5)?,
+                    target: row.get(6)?,
+                    parameters_digest: row.get(7)?,
+                    expected_state_version: row.get(8)?,
+                    operation_descriptor_ref: ObjectId::parse(&operation_descriptor_ref).map_err(
+                        |error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                9,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        },
+                    )?,
+                    canonical_json: row.get(10)?,
+                })
+            })
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load candidate proposal")(other)),
+            })
+    }
+}
+
+impl ContinuationAuthorityStore for SqliteAuthorityStore {
+    fn append_fixed_post_state(&self, row: &FixedPostStateRow) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin fixed post-state"))?;
+        verify_fencing_in_tx(&transaction, Some(row.recorded_fencing_epoch))?;
+        transaction.execute(
+            "INSERT INTO fixed_post_states (fixed_post_state_id, task_ref, contract_epoch, loop_object_id, subject_domain, subject_object_id, subject_version, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            (row.fixed_post_state_id.as_str(), row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str(), row.subject_domain.as_str(), row.subject_object_id.as_str(), row.subject_version.get(), row.recorded_fencing_epoch, row.canonical_json.as_str()),
+        ).map_err(unavailable("insert fixed post-state"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit fixed post-state"))
+    }
+
+    fn load_fixed_post_state(
+        &self,
+        fixed_post_state_id: &ObjectId,
+    ) -> Result<Option<FixedPostStateRow>, StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.query_row(
+            "SELECT task_ref, contract_epoch, loop_object_id, subject_domain, subject_object_id, subject_version, recorded_fencing_epoch, canonical_json FROM fixed_post_states WHERE fixed_post_state_id=?1",
+            (fixed_post_state_id.as_str(),),
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, i64>(5)?, row.get::<_, i64>(6)?, row.get::<_, String>(7)?)),
+        );
+        match result {
+            Ok((
+                task_ref,
+                contract_epoch,
+                loop_object_id,
+                subject_domain,
+                subject_object_id,
+                subject_version,
+                recorded_fencing_epoch,
+                canonical_json,
+            )) => Ok(Some(FixedPostStateRow {
+                fixed_post_state_id: fixed_post_state_id.clone(),
+                task_binding: TaskBinding {
+                    task_ref,
+                    contract_epoch,
+                },
+                loop_object_id: ObjectId::parse(&loop_object_id)
+                    .map_err(|error| corrupt("fixed post-state loop id", error))?,
+                subject_domain: LifecycleDomain::parse(&subject_domain)
+                    .map_err(|error| corrupt("fixed post-state subject domain", error))?,
+                subject_object_id: ObjectId::parse(&subject_object_id)
+                    .map_err(|error| corrupt("fixed post-state subject id", error))?,
+                subject_version: Version::new(subject_version)
+                    .map_err(|error| corrupt("fixed post-state subject version", error))?,
+                recorded_fencing_epoch,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query fixed post-state")(error)),
+        }
+    }
+
+    fn append_verification_request(
+        &self,
+        row: &VerificationRequestRow,
+    ) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin verification request"))?;
+        verify_fencing_in_tx(&transaction, Some(row.issued_fencing_epoch))?;
+        transaction.execute(
+            "INSERT INTO verification_requests (verification_request_id, fixed_post_state_id, task_ref, contract_epoch, loop_object_id, expected_loop_version, verifier_ref, verifier_version, criteria_json, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            (row.verification_request_id.as_str(), row.fixed_post_state_id.as_str(), row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str(), row.expected_loop_version.get(), row.verifier_ref.as_str(), row.verifier_version.as_str(), row.criteria_canonical_json.as_str(), row.issued_fencing_epoch, row.canonical_json.as_str()),
+        ).map_err(unavailable("insert verification request"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit verification request"))
+    }
+
+    fn load_verification_request(
+        &self,
+        verification_request_id: &ObjectId,
+    ) -> Result<Option<VerificationRequestRow>, StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.query_row(
+            "SELECT fixed_post_state_id, task_ref, contract_epoch, loop_object_id, expected_loop_version, verifier_ref, verifier_version, criteria_json, issued_fencing_epoch, canonical_json FROM verification_requests WHERE verification_request_id=?1",
+            (verification_request_id.as_str(),),
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, i64>(2)?, row.get::<_, String>(3)?, row.get::<_, i64>(4)?, row.get::<_, String>(5)?, row.get::<_, String>(6)?, row.get::<_, String>(7)?, row.get::<_, i64>(8)?, row.get::<_, String>(9)?)),
+        );
+        match result {
+            Ok((
+                fixed_post_state_id,
+                task_ref,
+                contract_epoch,
+                loop_object_id,
+                expected_loop_version,
+                verifier_ref,
+                verifier_version,
+                criteria_canonical_json,
+                issued_fencing_epoch,
+                canonical_json,
+            )) => Ok(Some(VerificationRequestRow {
+                verification_request_id: verification_request_id.clone(),
+                fixed_post_state_id: ObjectId::parse(&fixed_post_state_id)
+                    .map_err(|error| corrupt("verification request fixed post-state id", error))?,
+                task_binding: TaskBinding {
+                    task_ref,
+                    contract_epoch,
+                },
+                loop_object_id: ObjectId::parse(&loop_object_id)
+                    .map_err(|error| corrupt("verification request loop id", error))?,
+                expected_loop_version: Version::new(expected_loop_version)
+                    .map_err(|error| corrupt("verification request loop version", error))?,
+                verifier_ref,
+                verifier_version,
+                criteria_canonical_json,
+                issued_fencing_epoch,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query verification request")(error)),
+        }
+    }
+
+    fn append_verification_report(
+        &self,
+        row: &VerificationReportRow,
+    ) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin verification report"))?;
+        verify_fencing_in_tx(&transaction, Some(row.recorded_fencing_epoch))?;
+        transaction.execute(
+            "INSERT INTO verification_reports (verification_report_id, verification_request_id, fixed_post_state_id, verifier_ref, verifier_version, status, evidence_refs_json, completed_at, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            (row.verification_report_id.as_str(), row.verification_request_id.as_str(), row.fixed_post_state_id.as_str(), row.verifier_ref.as_str(), row.verifier_version.as_str(), row.status.as_str(), row.evidence_refs_canonical_json.as_str(), row.completed_at.as_str(), row.recorded_fencing_epoch, row.canonical_json.as_str()),
+        ).map_err(unavailable("insert verification report"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit verification report"))
+    }
+
+    fn load_verification_report(
+        &self,
+        verification_report_id: &ObjectId,
+    ) -> Result<Option<VerificationReportRow>, StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.query_row(
+            "SELECT verification_request_id, fixed_post_state_id, verifier_ref, verifier_version, status, evidence_refs_json, completed_at, recorded_fencing_epoch, canonical_json FROM verification_reports WHERE verification_report_id=?1",
+            (verification_report_id.as_str(),),
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?, row.get::<_, String>(6)?, row.get::<_, i64>(7)?, row.get::<_, String>(8)?)),
+        );
+        match result {
+            Ok((
+                verification_request_id,
+                fixed_post_state_id,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at,
+                recorded_fencing_epoch,
+                canonical_json,
+            )) => Ok(Some(VerificationReportRow {
+                verification_report_id: verification_report_id.clone(),
+                verification_request_id: ObjectId::parse(&verification_request_id)
+                    .map_err(|error| corrupt("verification report request id", error))?,
+                fixed_post_state_id: ObjectId::parse(&fixed_post_state_id)
+                    .map_err(|error| corrupt("verification report fixed post-state id", error))?,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at: WallTimestamp::parse(&completed_at)
+                    .map_err(|error| corrupt("verification report completion time", error))?,
+                recorded_fencing_epoch,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query verification report")(error)),
+        }
+    }
+
+    fn issue_continuation_authorization(
+        &self,
+        row: &ContinuationAuthorizationRow,
+    ) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin continuation authorization"))?;
+        verify_fencing_in_tx(&transaction, Some(row.issued_fencing_epoch))?;
+        let current_contract_epoch: i64 = transaction
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref=?1",
+                (row.task_binding.task_ref.as_str(),),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation contract epoch"))?;
+        if current_contract_epoch != row.task_binding.contract_epoch {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization contract epoch is stale".to_owned(),
+            });
+        }
+        let loop_state: Option<(String, i64)> = transaction
+            .query_row(
+                "SELECT state, version FROM governed_objects WHERE object_id=?1 AND domain='loop'",
+                (row.loop_object_id.as_str(),),
+                |database_row| Ok((database_row.get(0)?, database_row.get(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("read continuation loop"))?;
+        if loop_state != Some(("CONTINUE".to_owned(), row.expected_loop_version.get())) {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization loop is not current CONTINUE state".to_owned(),
+            });
+        }
+        let checkpoint_exists: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE checkpoint_id=?1 AND loop_object_id=?2 AND fencing_epoch=?3)",
+                (row.checkpoint_id.as_str(), row.loop_object_id.as_str(), row.issued_fencing_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation checkpoint"))?;
+        if !checkpoint_exists {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization checkpoint is unavailable or fenced".to_owned(),
+            });
+        }
+        let report_exists: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM verification_reports AS report JOIN verification_requests AS request ON request.verification_request_id=report.verification_request_id AND request.fixed_post_state_id=report.fixed_post_state_id JOIN fixed_post_states AS fixed_state ON fixed_state.fixed_post_state_id=report.fixed_post_state_id AND fixed_state.task_ref=request.task_ref AND fixed_state.contract_epoch=request.contract_epoch AND fixed_state.loop_object_id=request.loop_object_id JOIN governed_objects AS subject ON subject.object_id=fixed_state.subject_object_id AND subject.domain=fixed_state.subject_domain WHERE report.verification_report_id=?1 AND report.status='passed' AND report.recorded_fencing_epoch=?2 AND request.issued_fencing_epoch=?2 AND fixed_state.recorded_fencing_epoch=?2 AND request.task_ref=?3 AND request.contract_epoch=?4 AND request.loop_object_id=?5 AND subject.version=fixed_state.subject_version AND NOT (subject.domain='task' AND subject.state='COMPLETED'))",
+                (row.verification_report_id.as_str(), row.issued_fencing_epoch, row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str()),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("read continuation verification report"))?;
+        if !report_exists {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization requires a current passed verified post-state"
+                    .to_owned(),
+            });
+        }
+        transaction.execute(
+            "INSERT INTO continuation_authorizations (continuation_authorization_id, task_ref, contract_epoch, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            (row.continuation_authorization_id.as_str(), row.task_binding.task_ref.as_str(), row.task_binding.contract_epoch, row.loop_object_id.as_str(), row.iteration, row.expected_loop_version.get(), row.checkpoint_id.as_str(), row.budget_id.as_str(), row.budget_charge_canonical_json.as_str(), row.verification_report_id.as_str(), row.issued_fencing_epoch, row.canonical_json.as_str()),
+        ).map_err(unavailable("insert continuation authorization"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit continuation authorization"))
+    }
+
+    fn consume_continuation_authorization_bound_to_scheduler_lease(
+        &self,
+        request: &BoundContinuationAuthorizationConsumption,
+        transition: &TransitionCommit,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let consumption = &request.consumption;
+        let scheduler_lease = &request.scheduler_lease;
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin bound continuation consumption"))?;
+        verify_fencing_in_tx(&transaction, Some(consumption.consumed_fencing_epoch))?;
+
+        let authorization_matches_lease: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND task_ref=?2 AND contract_epoch=?3 AND issued_fencing_epoch=?4)",
+                (consumption.continuation_authorization_id.as_str(), scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, consumption.consumed_fencing_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify bound continuation authorization"))?;
+        if !authorization_matches_lease {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authorization does not match scheduler work binding"
+                    .to_owned(),
+            });
+        }
+
+        let exact_lease_is_active: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM scheduler_entries WHERE task_ref=?1 AND contract_epoch=?2 AND state='leased' AND lease_owner=?3 AND lease_epoch=?4 AND cancel_requested=0)",
+                (scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, scheduler_lease.lease_owner.as_str(), scheduler_lease.lease_epoch),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify exact continuation scheduler lease"))?;
+        if !exact_lease_is_active {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler lease is no longer the exact active continuation lease"
+                    .to_owned(),
+            });
+        }
+
+        let transition_matches_authorization: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM continuation_authorizations WHERE continuation_authorization_id=?1 AND loop_object_id=?2 AND expected_loop_version=?3 AND budget_id=?4 AND budget_charge_json=?5)",
+                (consumption.continuation_authorization_id.as_str(), transition.cas.object_id.as_str(), transition.cas.expected_version.get(), transition.budget.as_ref().map(|budget| budget.budget_id.as_str()).unwrap_or(""), transition.budget.as_ref().map(|budget| budget.charge_canonical_json.as_str()).unwrap_or("")),
+                |database_row| database_row.get(0),
+            )
+            .map_err(unavailable("verify continuation transition binding"))?;
+        let is_legal_continuation_entry = transition.cas.domain == LifecycleDomain::Loop
+            && transition.cas.from_state.as_str() == "CONTINUE"
+            && transition.cas.to_state.as_str() == "OBSERVE"
+            && transition.fencing_epoch == Some(consumption.consumed_fencing_epoch)
+            && transition.budget.is_some();
+        if !transition_matches_authorization || !is_legal_continuation_entry {
+            return Err(StorePortError::Conflict {
+                detail: "continuation authority does not match the prepared loop entry".to_owned(),
+            });
+        }
+
+        let inserted_consumption = transaction.execute(
+            "INSERT INTO continuation_authorization_consumptions (continuation_authorization_id, consumed_fencing_epoch, consumed_at, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+            (consumption.continuation_authorization_id.as_str(), consumption.consumed_fencing_epoch, consumption.consumed_at.as_str(), consumption.canonical_json.as_str()),
+        );
+        match inserted_consumption {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "continuation authorization was already consumed".to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert continuation consumption")(error));
+            }
+        }
+
+        let inserted_binding = transaction.execute(
+            "INSERT INTO continuation_authorization_scheduler_lease_bindings (continuation_authorization_id, task_ref, contract_epoch, lease_owner, lease_epoch) VALUES (?1, ?2, ?3, ?4, ?5)",
+            (consumption.continuation_authorization_id.as_str(), scheduler_lease.task_ref.as_str(), scheduler_lease.contract_epoch, scheduler_lease.lease_owner.as_str(), scheduler_lease.lease_epoch),
+        );
+        match inserted_binding {
+            Ok(_) => {}
+            Err(error) if is_constraint_violation(&error) => {
+                return Err(StorePortError::Conflict {
+                    detail: "continuation authorization scheduler lease binding already exists"
+                        .to_owned(),
+                });
+            }
+            Err(error) => {
+                return Err(unavailable("insert continuation scheduler lease binding")(
+                    error,
+                ));
+            }
+        }
+
+        let receipt = commit_transition_in_transaction(&transaction, transition)?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit bound continuation entry"))?;
+        Ok(receipt)
+    }
+
+    fn load_unconsumed_continuation_authorization(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Option<ContinuationAuthorizationRow>, StorePortError> {
+        let connection = self.lock()?;
+        let mut statement = connection.prepare_cached("SELECT continuation_authorization_id, loop_object_id, iteration, expected_loop_version, checkpoint_id, budget_id, budget_charge_json, verification_report_id, issued_fencing_epoch, canonical_json FROM continuation_authorizations WHERE task_ref=?1 AND contract_epoch=?2 AND continuation_authorization_id NOT IN (SELECT continuation_authorization_id FROM continuation_authorization_consumptions) ORDER BY iteration LIMIT 2").map_err(unavailable("prepare continuation authorization query"))?;
+        let rows = statement
+            .query_map(
+                (task_binding.task_ref.as_str(), task_binding.contract_epoch),
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, String>(4)?,
+                        row.get::<_, String>(5)?,
+                        row.get::<_, String>(6)?,
+                        row.get::<_, String>(7)?,
+                        row.get::<_, i64>(8)?,
+                        row.get::<_, String>(9)?,
+                    ))
+                },
+            )
+            .map_err(unavailable("query continuation authorization"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read continuation authorization"))?;
+        if rows.len() > 1 {
+            return Err(StorePortError::Conflict {
+                detail: "multiple unconsumed continuation authorizations match scheduler work"
+                    .to_owned(),
+            });
+        }
+        let Some((
+            authorization_id,
+            loop_object_id,
+            iteration,
+            expected_loop_version,
+            checkpoint_id,
+            budget_id,
+            budget_charge_canonical_json,
+            verification_report_id,
+            issued_fencing_epoch,
+            canonical_json,
+        )) = rows.into_iter().next()
+        else {
+            return Ok(None);
+        };
+        Ok(Some(ContinuationAuthorizationRow {
+            continuation_authorization_id: ObjectId::parse(&authorization_id)
+                .map_err(|error| corrupt("continuation authorization id", error))?,
+            task_binding: task_binding.clone(),
+            loop_object_id: ObjectId::parse(&loop_object_id)
+                .map_err(|error| corrupt("continuation authorization loop id", error))?,
+            iteration,
+            expected_loop_version: Version::new(expected_loop_version)
+                .map_err(|error| corrupt("continuation authorization loop version", error))?,
+            checkpoint_id: ObjectId::parse(&checkpoint_id)
+                .map_err(|error| corrupt("continuation authorization checkpoint id", error))?,
+            budget_id: BudgetId::parse(&budget_id)
+                .map_err(|error| corrupt("continuation authorization budget id", error))?,
+            budget_charge_canonical_json,
+            verification_report_id: ObjectId::parse(&verification_report_id)
+                .map_err(|error| corrupt("continuation authorization report id", error))?,
+            issued_fencing_epoch,
+            canonical_json,
+        }))
     }
 }
 
