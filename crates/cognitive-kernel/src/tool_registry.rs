@@ -544,6 +544,7 @@ pub fn builtin_catalog_projection() -> BTreeMap<String, NativeToolDescriptor> {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
