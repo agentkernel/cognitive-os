@@ -574,7 +574,7 @@ fn persist_scheduler_execution_policy(
                 "owner": &governance.owner,
                 "authority": &governance.authority,
                 "resource_scope": &governance.resource_scope,
-                "tenant_id": "personal",
+                "tenant_id": null,
                 "created_by": "principal://personal/daemon",
                 "sensitivity": "internal",
                 "purpose_constraints": ["task_execution"],

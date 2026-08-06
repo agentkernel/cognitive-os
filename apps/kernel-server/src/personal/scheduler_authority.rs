@@ -8,6 +8,7 @@
 
 use cognitive_contracts::{
     canonical,
+    generated::governed_object_header::GovernedObjectHeaderSensitivity,
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
     generated::{
         context_request::ContextRequest, object_reference::StrongReferenceKind,
@@ -56,6 +57,7 @@ use cognitive_store::{
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
 
@@ -86,6 +88,32 @@ struct SchedulerExecutionPolicyDocument {
     task_ref: String,
     contract_epoch: i64,
     context: SchedulerContextPolicy,
+    admission: SchedulerAdmissionPolicy,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerAdmissionPolicy {
+    authorization_subject_ref: String,
+    authorization_purpose: String,
+    budget_charge: BTreeMap<String, i64>,
+    governance: SchedulerGovernancePolicy,
+    actor_ref: String,
+    authority_ref: String,
+    correlation_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerGovernancePolicy {
+    owner: cognitive_contracts::generated::object_reference::StrongReference,
+    authority: cognitive_contracts::generated::object_reference::StrongReference,
+    resource_scope: cognitive_contracts::generated::object_reference::StrongReference,
+    tenant_id: Option<String>,
+    created_by: String,
+    sensitivity: GovernedObjectHeaderSensitivity,
+    purpose_constraints: Vec<String>,
+    retention_policy: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -531,6 +559,72 @@ fn context_resolution_command_from_policy(
         conversation_ref: document.context.conversation_ref,
         source_limit: document.context.source_limit,
         decided_at,
+    })
+}
+
+/// Assemble the daemon-only admission command from the same validated policy
+/// document. No candidate field is read from this document; the candidate ID
+/// is supplied by the daemon after the Pi proposal has passed its own strict
+/// candidate validation.
+fn candidate_admission_command_from_policy(
+    policy: &SchedulerExecutionPolicyRow,
+    candidate_id: ObjectId,
+) -> Result<DaemonCandidateAdmissionCommand, SchedulerAuthorityError> {
+    let document: SchedulerExecutionPolicyDocument = serde_json::from_str(&policy.canonical_json)
+        .map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy is malformed: {error}"
+        ))
+    })?;
+    let admission = document.admission;
+    let budget_charge = BudgetCharge::new(admission.budget_charge).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy budget charge is invalid: {error}"
+        ))
+    })?;
+    let actor_ref = UriRef::parse(&admission.actor_ref).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy actor reference is invalid: {error}"
+        ))
+    })?;
+    let authority_ref = UriRef::parse(&admission.authority_ref).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy authority reference is invalid: {error}"
+        ))
+    })?;
+    let correlation_id = UriRef::parse(&admission.correlation_id).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy correlation reference is invalid: {error}"
+        ))
+    })?;
+    if admission.authorization_subject_ref.trim().is_empty()
+        || admission.authorization_purpose.trim().is_empty()
+        || admission.governance.created_by.trim().is_empty()
+        || admission.governance.purpose_constraints.is_empty()
+        || admission.governance.retention_policy.trim().is_empty()
+    {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy admission fields are incomplete".to_owned(),
+        ));
+    }
+    Ok(DaemonCandidateAdmissionCommand {
+        candidate_id,
+        authorization_subject_ref: admission.authorization_subject_ref,
+        authorization_purpose: admission.authorization_purpose,
+        budget_charge,
+        governance: GovernanceSeed {
+            owner: admission.governance.owner,
+            authority: admission.governance.authority,
+            resource_scope: admission.governance.resource_scope,
+            tenant_id: admission.governance.tenant_id,
+            created_by: admission.governance.created_by,
+            sensitivity: admission.governance.sensitivity,
+            purpose_constraints: admission.governance.purpose_constraints,
+            retention_policy: admission.governance.retention_policy,
+        },
+        actor_ref,
+        authority_ref,
+        correlation_id,
     })
 }
 
