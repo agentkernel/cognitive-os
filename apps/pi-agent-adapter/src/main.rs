@@ -178,7 +178,7 @@ fn read_daemon_candidate_request() -> Result<DaemonCandidateRequest, String> {
 
 fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
     format!(
-        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters_digest (string), expected_state_version (integer >= 0), and operation_descriptor_id (string). Do not invoke tools. Context follows:\n{}",
+        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters_digest (string), expected_state_version (integer >= 1), and operation_descriptor_id (string). Do not invoke tools. Context follows:\n{}",
         request.rendered_context
     )
 }
