@@ -79,6 +79,26 @@ struct TaskContractVersionHeader {
     schema_version: String,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerExecutionPolicyDocument {
+    schema_version: i64,
+    task_ref: String,
+    contract_epoch: i64,
+    context: SchedulerContextPolicy,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerContextPolicy {
+    request_id: String,
+    authorization_subject_ref: String,
+    tenant_id: String,
+    resource_scope_prefix: String,
+    conversation_ref: Option<String>,
+    source_limit: usize,
+}
+
 /// Exact identities fixed by an immutable task contract epoch.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SchedulerAuthorityBinding {
@@ -446,6 +466,33 @@ where
         return Err(SchedulerAuthorityError::ContextRequestUnavailable(
             "scheduler execution policy ContextRequest differs from TaskContract binding"
                 .to_owned(),
+        ));
+    }
+    let policy_document: SchedulerExecutionPolicyDocument =
+        serde_json::from_str(&policy.canonical_json).map_err(|error| {
+            SchedulerAuthorityError::ContextRequestUnavailable(format!(
+                "scheduler execution policy is malformed: {error}"
+            ))
+        })?;
+    if policy_document.schema_version != 1
+        || policy_document.task_ref != task_binding.task_ref
+        || policy_document.contract_epoch != task_binding.contract_epoch
+        || policy_document.context.request_id != policy.context_request_id.as_str()
+        || policy_document
+            .context
+            .authorization_subject_ref
+            .trim()
+            .is_empty()
+        || policy_document.context.tenant_id.trim().is_empty()
+        || policy_document
+            .context
+            .resource_scope_prefix
+            .trim()
+            .is_empty()
+        || policy_document.context.source_limit == 0
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy fields do not match its durable binding".to_owned(),
         ));
     }
     Ok(Some(policy))
