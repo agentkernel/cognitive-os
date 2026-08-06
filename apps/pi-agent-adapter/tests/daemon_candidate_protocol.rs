@@ -1,6 +1,7 @@
 use pi_agent_adapter::{
     DAEMON_CANDIDATE_FRAME_LIMIT, DaemonCandidateRequest, DaemonCandidateResponse,
-    parse_daemon_candidate_request, parse_daemon_candidate_response,
+    extract_daemon_candidate_response_from_pi_events, parse_daemon_candidate_request,
+    parse_daemon_candidate_response,
 };
 
 fn valid_request_json() -> Vec<u8> {
@@ -88,4 +89,70 @@ fn daemon_candidate_response_rejects_negative_state_version() {
         error,
         "daemon candidate response expected_state_version is invalid"
     );
+}
+
+fn finalized_pi_event(candidate_response: &str) -> String {
+    serde_json::json!({
+        "type": "message_end",
+        "message": {
+            "role": "assistant",
+            "content": [{ "type": "text", "text": candidate_response }]
+        }
+    })
+    .to_string()
+}
+
+#[test]
+fn pi_print_events_accept_one_finalized_candidate_response() {
+    let response = String::from_utf8(valid_response_json()).expect("response is UTF-8");
+    let events = format!(
+        "{{\"type\":\"agent_start\"}}\n{}\n{{\"type\":\"agent_end\"}}\n",
+        finalized_pi_event(&response)
+    );
+
+    let candidate =
+        extract_daemon_candidate_response_from_pi_events(&events).expect("one candidate");
+
+    assert_eq!(candidate.tool_ref, "tool://personal/example");
+}
+
+#[test]
+fn pi_print_events_reject_tool_execution_before_candidate_extraction() {
+    let response = String::from_utf8(valid_response_json()).expect("response is UTF-8");
+    let events = format!(
+        "{{\"type\":\"tool_execution_start\",\"toolName\":\"bash\"}}\n{}\n",
+        finalized_pi_event(&response)
+    );
+
+    let error = extract_daemon_candidate_response_from_pi_events(&events).expect_err("reject tool");
+
+    assert_eq!(
+        error,
+        "Pi candidate event stream attempted a tool operation"
+    );
+}
+
+#[test]
+fn pi_print_events_reject_multiple_finalized_candidates() {
+    let response = String::from_utf8(valid_response_json()).expect("response is UTF-8");
+    let event = finalized_pi_event(&response);
+    let events = format!("{event}\n{event}\n");
+
+    let error =
+        extract_daemon_candidate_response_from_pi_events(&events).expect_err("reject ambiguity");
+
+    assert_eq!(
+        error,
+        "Pi candidate event stream has multiple final responses"
+    );
+}
+
+#[test]
+fn pi_print_events_reject_markdown_or_non_candidate_prose() {
+    let events = finalized_pi_event("```json\n{}\n```");
+
+    let error = extract_daemon_candidate_response_from_pi_events(&format!("{events}\n"))
+        .expect_err("reject prose");
+
+    assert!(error.contains("Pi candidate final response is invalid"));
 }

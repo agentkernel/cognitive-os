@@ -88,6 +88,60 @@ pub fn parse_daemon_candidate_response(frame: &[u8]) -> Result<DaemonCandidateRe
     Ok(response)
 }
 
+/// Extract one strict candidate response from Pi's documented JSON print-mode
+/// event stream. Pi may emit lifecycle and streaming events, but only one
+/// finalized assistant `message_end` payload is eligible to carry the opaque
+/// candidate JSON. Any tool event, non-text block, duplicate final message, or
+/// surrounding prose fails closed.
+pub fn extract_daemon_candidate_response_from_pi_events(
+    event_stream: &str,
+) -> Result<DaemonCandidateResponse, String> {
+    let events = parse_rpc_jsonl_records(event_stream)
+        .map_err(|error| format!("Pi candidate event stream is invalid: {error}"))?;
+    let mut candidate_payload: Option<&str> = None;
+
+    for event in events {
+        let event_type = event.get("type").and_then(Value::as_str);
+        if matches!(
+            event_type,
+            Some("tool_execution_start" | "tool_execution_update" | "tool_execution_end")
+        ) {
+            return Err("Pi candidate event stream attempted a tool operation".to_owned());
+        }
+        if event_type != Some("message_end") {
+            continue;
+        }
+
+        let message = event
+            .get("message")
+            .and_then(Value::as_object)
+            .ok_or_else(|| "Pi candidate final message is malformed".to_owned())?;
+        if message.get("role").and_then(Value::as_str) != Some("assistant") {
+            continue;
+        }
+        let content = message
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| "Pi candidate final message content is malformed".to_owned())?;
+        if content.len() != 1 {
+            return Err("Pi candidate final message must contain one text block".to_owned());
+        }
+        let payload = content[0]
+            .as_object()
+            .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
+            .and_then(|block| block.get("text").and_then(Value::as_str))
+            .ok_or_else(|| "Pi candidate final message must contain one text block".to_owned())?;
+        if candidate_payload.replace(payload).is_some() {
+            return Err("Pi candidate event stream has multiple final responses".to_owned());
+        }
+    }
+
+    let payload = candidate_payload
+        .ok_or_else(|| "Pi candidate event stream has no final assistant response".to_owned())?;
+    parse_daemon_candidate_response(payload.as_bytes())
+        .map_err(|error| format!("Pi candidate final response is invalid: {error}"))
+}
+
 /// Immutable metadata for the Pi release reviewed by P0-T06.
 ///
 /// The package integrity and source commit are recorded compatibility pins.
