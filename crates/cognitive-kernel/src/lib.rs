@@ -93,7 +93,7 @@ pub use tool_registry::{
     NativeToolDescriptor, ResolvedNativeTool, ToolAvailability, ToolResolutionError,
     ToolResolutionRequest, ToolRisk, compute_descriptor_digest, resolve_native_tool,
     resolve_persisted_native_descriptor, validate_process_check, validate_read_only_http_fetch,
-    validate_workspace_path,
+    validate_workspace_operation, validate_workspace_path,
 };
 
 /// Port capability surface defined by this crate and implemented by

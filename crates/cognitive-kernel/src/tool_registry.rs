@@ -384,6 +384,49 @@ pub fn validate_workspace_path(path: &str, allowed_roots: &[String]) -> Result<S
     Ok(normalized)
 }
 
+/// Validate one workspace operation's bounded input without touching the
+/// filesystem. The executor later resolves the returned relative path under
+/// the daemon's admitted Standard Workspace or Extended Home root.
+pub fn validate_workspace_operation(
+    family: NativeOperationFamily,
+    path: &str,
+    payload: &str,
+    allowed_roots: &[String],
+) -> Result<String, String> {
+    let normalized_path = validate_workspace_path(path, allowed_roots)?;
+    match family {
+        NativeOperationFamily::WorkspaceRead => {
+            if !payload.is_empty() {
+                return Err("workspace read does not accept a write payload".to_owned());
+            }
+        }
+        NativeOperationFamily::WorkspaceSearch => {
+            if payload.is_empty() || payload.len() > 4096 {
+                return Err("workspace search query exceeds the registered bounds".to_owned());
+            }
+        }
+        NativeOperationFamily::WorkspaceWrite => {
+            if payload.len() > 256 * 1024 {
+                return Err("workspace write payload exceeds the registered bounds".to_owned());
+            }
+        }
+        NativeOperationFamily::WorkspacePatch => {
+            if payload.is_empty() || payload.len() > 256 * 1024 {
+                return Err("workspace patch payload exceeds the registered bounds".to_owned());
+            }
+            if !payload.lines().any(|line| {
+                line.starts_with("@@") || line.starts_with("+") || line.starts_with("-")
+            }) {
+                return Err("workspace patch payload is not a bounded patch".to_owned());
+            }
+        }
+        NativeOperationFamily::ProcessCheck | NativeOperationFamily::HttpFetchReadOnly => {
+            return Err("workspace validator received a non-workspace family".to_owned());
+        }
+    }
+    Ok(normalized_path)
+}
+
 /// Validate a bounded process/check request without executing it.
 pub fn validate_process_check(
     executable_id: &str,
@@ -570,6 +613,33 @@ mod tests {
     fn workspace_process_and_http_validators_fail_closed() {
         assert!(validate_workspace_path("src/main.rs", &["workspace".to_owned()]).is_ok());
         assert!(validate_workspace_path("../secret", &["workspace".to_owned()]).is_err());
+        assert!(
+            validate_workspace_operation(
+                NativeOperationFamily::WorkspaceRead,
+                "src/main.rs",
+                "",
+                &["workspace".to_owned()]
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_workspace_operation(
+                NativeOperationFamily::WorkspacePatch,
+                "src/main.rs",
+                "@@ -1 +1 @@\n-old\n+new",
+                &["workspace".to_owned()]
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_workspace_operation(
+                NativeOperationFamily::WorkspaceRead,
+                "src/main.rs",
+                "unexpected payload",
+                &["workspace".to_owned()]
+            )
+            .is_err()
+        );
         assert!(validate_process_check("cargo", &[], "workspace", 1000).is_ok());
         assert!(validate_process_check("/bin/sh", &[], "workspace", 1000).is_err());
         assert!(
