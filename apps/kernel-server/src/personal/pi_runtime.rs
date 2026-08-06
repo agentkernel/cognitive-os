@@ -35,8 +35,7 @@ use std::time::{Duration, Instant};
 
 #[cfg(unix)]
 use cognitive_secret::{
-    ProductionSecretBackend, ProviderConfigRepository, SelectedModelRepository,
-    select_production_secret_store,
+    ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -909,7 +908,10 @@ mod tests {
             r#"{{"schema_version":1,"surface":"personal-pi-config","executable_path":"{executable}","extension_entry_path":"{extension}","candidate_adapter_path":"{adapter}","candidate_extension_entry_path":"{candidate_extension}"}}"#
         );
         let config = parse_pi_config(&document).expect("private candidate paths must parse");
-        assert_eq!(config.candidate_adapter_path, Some(PathBuf::from(adapter)));
+        assert_eq!(
+            config.candidate_adapter_path,
+            Some(PathBuf::from(adapter.clone()))
+        );
         assert_eq!(
             config.candidate_extension_entry_path,
             Some(PathBuf::from(candidate_extension))
