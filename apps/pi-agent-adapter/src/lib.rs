@@ -98,7 +98,7 @@ pub fn extract_daemon_candidate_response_from_pi_events(
 ) -> Result<DaemonCandidateResponse, String> {
     let events = parse_rpc_jsonl_records(event_stream)
         .map_err(|error| format!("Pi candidate event stream is invalid: {error}"))?;
-    let mut candidate_payload: Option<&str> = None;
+    let mut candidate_payload: Option<String> = None;
 
     for event in events {
         let event_type = event.get("type").and_then(Value::as_str);
@@ -131,7 +131,7 @@ pub fn extract_daemon_candidate_response_from_pi_events(
             .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
             .and_then(|block| block.get("text").and_then(Value::as_str))
             .ok_or_else(|| "Pi candidate final message must contain one text block".to_owned())?;
-        if candidate_payload.replace(payload).is_some() {
+        if candidate_payload.replace(payload.to_owned()).is_some() {
             return Err("Pi candidate event stream has multiple final responses".to_owned());
         }
     }
