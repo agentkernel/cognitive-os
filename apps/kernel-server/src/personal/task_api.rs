@@ -42,7 +42,10 @@ use cognitive_kernel::intent_chain::{
     TaskContractCommand, UserIntentCommand, compose_governed_header,
     seal_governed_object_content_digest, strong_reference_to,
 };
-use cognitive_kernel::ports::{ContextRequestRow, ContextStore, ProtocolStore};
+use cognitive_kernel::ports::{
+    ContextRequestRow, ContextStore, ProtocolStore, SchedulerExecutionPolicyRow,
+    SchedulerExecutionPolicyStore,
+};
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde::{Deserialize, Serialize};
@@ -377,6 +380,15 @@ impl TaskApi {
                 Err(response) => return response,
             };
         contract.context_request_ref = Some(context_request_ref);
+        if let Err(response) = persist_scheduler_execution_policy(
+            service.store(),
+            &contract,
+            principal,
+            &governance,
+            request.expected_current_epoch + 1,
+        ) {
+            return response;
+        }
         match service.admit(
             &lease,
             &request.preview_digest.0,
@@ -503,6 +515,97 @@ impl TaskApi {
             retention_policy: "standard".to_owned(),
         })
     }
+}
+
+/// Persist the complete daemon-owned input set used by the first owner-local
+/// scheduler path. This is written before TaskContract admission so a task can
+/// never become runnable without its Context query and candidate-admission
+/// policy. The values are daemon policy, not client-controlled Task fields.
+fn persist_scheduler_execution_policy(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractCommand,
+    principal: &str,
+    governance: &GovernanceSeed,
+    contract_epoch: i64,
+) -> Result<(), TaskApiResponse> {
+    let context_request_ref = contract.context_request_ref.as_ref().ok_or_else(|| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_MISSING_CONTEXT",
+            "daemon could not bind scheduler policy to the ContextRequest",
+        )
+    })?;
+    let context_request_id = ObjectId::parse(context_request_ref.id.0.as_str()).map_err(|_| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_INVALID_CONTEXT",
+            "daemon could not parse the ContextRequest identity",
+        )
+    })?;
+    if contract_epoch < 1 {
+        return Err(error(
+            503,
+            "TASK_SCHEDULER_POLICY_INVALID_EPOCH",
+            "daemon could not derive the next TaskContract epoch",
+        ));
+    }
+
+    // Personal's first owner-local policy intentionally uses one fixed local
+    // tenant and workspace prefix. A future multi-tenant policy must replace
+    // these daemon-owned inputs with an explicit persisted configuration; the
+    // scheduler must never infer them from Pi or from a strong reference ID.
+    let policy = json!({
+        "schema_version": 1,
+        "task_ref": contract.task_ref.as_str(),
+        "contract_epoch": contract_epoch,
+        "context": {
+            "request_id": context_request_ref.id.0.as_str(),
+            "authorization_subject_ref": principal,
+            "tenant_id": "personal",
+            "resource_scope_prefix": "workspace://personal/",
+            "conversation_ref": null,
+            "source_limit": 32,
+        },
+        "admission": {
+            "authorization_subject_ref": principal,
+            "authorization_purpose": "task_execution",
+            "budget_charge": {"semantic_calls": 1},
+            "governance": {
+                "owner": &governance.owner,
+                "authority": &governance.authority,
+                "resource_scope": &governance.resource_scope,
+                "tenant_id": "personal",
+                "created_by": "principal://personal/daemon",
+                "sensitivity": "internal",
+                "purpose_constraints": ["task_execution"],
+                "retention_policy": "standard",
+            },
+            "actor_ref": "principal://personal/daemon",
+            "authority_ref": "authority://personal/daemon",
+            "correlation_id": contract.correlation_id.as_str(),
+        },
+    });
+    let canonical_json = serde_json::to_string(&policy).map_err(|_| {
+        error(
+            503,
+            "TASK_SCHEDULER_POLICY_SERIALIZATION_FAILED",
+            "daemon could not serialize scheduler execution policy",
+        )
+    })?;
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: contract.task_ref.as_str().to_owned(),
+            contract_epoch,
+            context_request_id,
+            canonical_json,
+        })
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_SCHEDULER_POLICY_PERSISTENCE_FAILED",
+                "daemon could not persist scheduler execution policy",
+            )
+        })
 }
 
 fn decode<T: serde::de::DeserializeOwned>(body: &[u8]) -> Result<T, TaskApiResponse> {
