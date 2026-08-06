@@ -6,8 +6,87 @@
 //! files and session persistence. That reduction is useful for supervised
 //! model evaluation, but is not an OS sandbox and must not be called C0/C1.
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeSet;
+
+/// Maximum size of one daemon-to-adapter candidate frame.
+pub const DAEMON_CANDIDATE_FRAME_LIMIT: usize = 256 * 1024;
+
+/// Bounded request accepted by the daemon-private adapter protocol.
+///
+/// This request contains only candidate-generation data. It deliberately does
+/// not contain a session bearer, bootstrap material, Provider credential,
+/// worker authorization, Effect, or any other daemon authority fact.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DaemonCandidateRequest {
+    pub protocol: String,
+    pub task_ref: String,
+    pub contract_epoch: i64,
+    pub rendered_context: String,
+}
+
+/// The only response shape that the daemon-private adapter may emit.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DaemonCandidateResponse {
+    pub tool_ref: String,
+    pub action: String,
+    pub target: String,
+    pub parameters_digest: String,
+    pub expected_state_version: i64,
+    pub operation_descriptor_id: String,
+}
+
+/// Parse exactly one bounded JSON frame from the adapter boundary.
+pub fn parse_daemon_candidate_request(frame: &[u8]) -> Result<DaemonCandidateRequest, String> {
+    if frame.is_empty() {
+        return Err("daemon candidate request is empty".to_owned());
+    }
+    if frame.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
+        return Err("daemon candidate request exceeds transport limit".to_owned());
+    }
+    let request: DaemonCandidateRequest = serde_json::from_slice(frame)
+        .map_err(|error| format!("daemon candidate request is invalid: {error}"))?;
+    if request.protocol != "cognitiveos.private-candidate/1" {
+        return Err("daemon candidate request declares an unsupported protocol".to_owned());
+    }
+    if request.task_ref.trim().is_empty() {
+        return Err("daemon candidate request task_ref is empty".to_owned());
+    }
+    if request.contract_epoch < 1 {
+        return Err("daemon candidate request contract_epoch is invalid".to_owned());
+    }
+    if request.rendered_context.is_empty() {
+        return Err("daemon candidate request rendered_context is empty".to_owned());
+    }
+    Ok(request)
+}
+
+/// Parse exactly one bounded JSON response from the adapter boundary.
+pub fn parse_daemon_candidate_response(frame: &[u8]) -> Result<DaemonCandidateResponse, String> {
+    if frame.is_empty() {
+        return Err("daemon candidate response is empty".to_owned());
+    }
+    if frame.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
+        return Err("daemon candidate response exceeds transport limit".to_owned());
+    }
+    let response: DaemonCandidateResponse = serde_json::from_slice(frame)
+        .map_err(|error| format!("daemon candidate response is invalid: {error}"))?;
+    if response.tool_ref.trim().is_empty()
+        || response.action.trim().is_empty()
+        || response.target.trim().is_empty()
+        || response.parameters_digest.trim().is_empty()
+        || response.operation_descriptor_id.trim().is_empty()
+    {
+        return Err("daemon candidate response contains an empty field".to_owned());
+    }
+    if response.expected_state_version < 0 {
+        return Err("daemon candidate response expected_state_version is invalid".to_owned());
+    }
+    Ok(response)
+}
 
 /// Immutable metadata for the Pi release reviewed by P0-T06.
 ///
