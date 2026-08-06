@@ -1,4 +1,4 @@
-﻿//! SQLite (WAL) authority store adapter — the reference implementation of
+//! SQLite (WAL) authority store adapter — the reference implementation of
 //! the `cognitive-kernel` [`AuthorityStore`] port (ADR-0002).
 //!
 //! Binding rules implemented here (ADR-0002, all five):
@@ -20,11 +20,11 @@
 //! `BEFORE UPDATE` / `BEFORE DELETE` triggers on `events` and
 //! `transition_records` abort any rewrite attempt, from any connection.
 
-use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::context_store::{
     CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
     SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
 };
+use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
     DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
@@ -368,7 +368,7 @@ impl SqliteAuthorityStore {
         ]
         .join("\n");
         conn.execute_batch(&schema)
-        .map_err(unavailable("install schema"))?;
+            .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
         })
