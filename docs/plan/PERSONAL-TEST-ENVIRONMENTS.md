@@ -1,7 +1,7 @@
 # CognitiveOS Personal Test and Development Environments
 
 - Status: active environment registry
-- Last reconciled: 2026-08-03
+- Last reconciled: 2026-08-06
 - Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
 
@@ -141,6 +141,11 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
   glibc 2.35.
 - **Recorded tools:** Rust 1.97.1, Node 22.19.0; exact Pi 0.81.1 must be
   rechecked for every slice.
+- **Git remote:** GitHub HTTPS access is available. Before native validation,
+  fetch or clone the already pushed candidate revision directly from
+  `https://github.com/agentkernel/cognitive-os.git`; do not substitute a
+  no-Git source snapshot or a copied local tree. This was rechecked on
+  2026-08-06 with a non-interactive `git ls-remote` probe.
 - **Observed use:** real Extension invocation, native Secret Service/Provider
   prerequisite checks, independently verified experimental deployment and
   focused P2 tests.
