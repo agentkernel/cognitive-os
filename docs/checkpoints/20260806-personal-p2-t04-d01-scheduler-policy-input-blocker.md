@@ -7,7 +7,8 @@
   partially blocked)
 - Branch: `lane/ctr-p3-t01-context-request-binding`
 - Draft PR: [#152](https://github.com/agentkernel/cognitive-os/pull/152)
-- Checkpoint revision: `e485f81f7f5c82f245220d4724debf2d28113e87`
+- Implementation revision: `e205208f1beac77fb2a57960c15fffef6a230c9f`
+- Documentation revision: `afc6fcb` (this checkpoint fact synchronization)
 
 ## Implemented checkpoint
 
