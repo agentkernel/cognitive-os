@@ -7,7 +7,7 @@
   partially blocked)
 - Branch: `lane/ctr-p3-t01-context-request-binding`
 - Draft PR: [#152](https://github.com/agentkernel/cognitive-os/pull/152)
-- Checkpoint revision: `1690260ab76e57ad6c620d300ed82bbb5e0c43cc`
+- Checkpoint revision: pending this handoff commit
 
 ## Implemented checkpoint
 
@@ -58,18 +58,24 @@ policies and make a daemon-created admission claim false provenance.
 3. Add the scheduler caller before WIA lookup, with a stable candidate identity
    and no WIA consumption before candidate admission.
 4. Replace the currently unproven private Pi invocation mode with an
-   evidence-backed pinned Pi entrypoint, then validate the whole path on an
-   exact committed native-Linux revision.
+   evidence-backed pinned Pi entrypoint. The exact `0.81.1` `--help` output
+   was inspected on 2026-08-06: it supports `--print`, `--mode`,
+   `--append-system-prompt`, and explicit `--extension` loading, but contains
+   no `--cognitiveos-private-candidate` mode. The existing extension's normal
+   daemon client also reads the local bootstrap-secret file to mint a session,
+   so it cannot be reused for the private worker transport. The new entrypoint
+   must instead be sessionless and receive neither a bootstrap secret nor a
+   daemon bearer. Then validate the whole path on an exact committed native
+   Linux revision.
 
 ## Status and validation
 
 - Change class: `implementation-only` with corrective test stability.
 - Local checks: `cargo fmt` and `git diff --check` passed.
-- Supported CI: Ubuntu run `31059951647` passed for `fc45274`; Windows run
-  `31059955073` reached the full workspace test stage but failed only the
-  existing scheduler recovery endpoint-publication timeout. The timeout
-  correction is in `1690260`; its required Ubuntu/Windows runs are active at
-  this checkpoint.
+- Supported CI: Ubuntu and Windows passed the full required suite for
+  `4db146247f10a2780fd438b419c2ab4e6140f04b`, which includes the Windows
+  scheduler-recovery timeout correction. This handoff-only update remains
+  pending its own required CI runs.
 - Native Linux: not run. The remaining production invocation and policy inputs
   are incomplete, so no native runtime or P2-T04 completion claim is valid.
 
