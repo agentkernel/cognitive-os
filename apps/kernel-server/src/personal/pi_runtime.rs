@@ -116,9 +116,13 @@ pub(crate) struct PrivatePiCandidateResponse {
 
 /// Daemon-supervised one-shot Pi candidate transport.
 pub(crate) struct PrivatePiCandidateProcess {
+    #[cfg(unix)]
     configured_executable_path: PathBuf,
+    #[cfg(unix)]
     configured_candidate_adapter_path: Option<PathBuf>,
+    #[cfg(unix)]
     configured_candidate_extension_entry_path: Option<PathBuf>,
+    #[cfg(unix)]
     provider_config_dir: PathBuf,
 }
 
@@ -126,12 +130,18 @@ impl PrivatePiCandidateProcess {
     // The scheduler caller is added separately; retain this narrow
     // construction boundary instead of exposing Pi paths outside this module.
     pub(crate) fn from_config(config: &PiConfig, provider_config_dir: &Path) -> Self {
+        #[cfg(not(unix))]
+        let _ = (config, provider_config_dir);
         Self {
+            #[cfg(unix)]
             configured_executable_path: config.executable_path.clone(),
+            #[cfg(unix)]
             configured_candidate_adapter_path: config.candidate_adapter_path.clone(),
+            #[cfg(unix)]
             configured_candidate_extension_entry_path: config
                 .candidate_extension_entry_path
                 .clone(),
+            #[cfg(unix)]
             provider_config_dir: provider_config_dir.to_path_buf(),
         }
     }
