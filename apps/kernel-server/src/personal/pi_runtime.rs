@@ -896,6 +896,41 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn private_completion_socket_is_one_shot_and_cleans_its_runtime_directory() {
+        let temporary_directory = std::env::temp_dir().join(format!(
+            "cognitiveos-private-completion-test-{}-{}",
+            std::process::id(),
+            PRIVATE_SOCKET_SEQUENCE.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::create_dir(&temporary_directory).expect("create temporary config directory");
+
+        let socket = PrivateCompletionSocket::create(&temporary_directory)
+            .expect("create private completion socket");
+        let socket_path = socket.path().to_path_buf();
+        let runtime_directory = socket.runtime_dir().to_path_buf();
+        let client_socket_path = socket_path.clone();
+        let client = thread::spawn(move || {
+            let mut stream = UnixStream::connect(client_socket_path)
+                .expect("connect to private completion socket");
+            stream
+                .write_all(b"GET /chat/completions HTTP/1.1\r\nContent-Length: 0\r\n\r\n")
+                .expect("write rejected private completion request");
+        });
+
+        let error = socket
+            .finish()
+            .expect_err("one malformed client request must be rejected");
+        client.join().expect("private completion client panicked");
+        assert_eq!(error, "private completion route is refused");
+        assert!(!socket_path.exists());
+        assert!(!runtime_directory.exists());
+        assert!(UnixStream::connect(&socket_path).is_err());
+
+        fs::remove_dir_all(&temporary_directory).expect("remove temporary config directory");
+    }
+
     #[test]
     fn a_well_formed_configuration_parses() {
         let executable = absolute("bin/pi");
