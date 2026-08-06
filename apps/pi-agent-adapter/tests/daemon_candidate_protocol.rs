@@ -20,7 +20,7 @@ fn valid_response_json() -> Vec<u8> {
         action: "observe".to_owned(),
         target: "workspace://personal/example".to_owned(),
         parameters_digest: "sha256:parameters".to_owned(),
-        expected_state_version: 0,
+        expected_state_version: 1,
         operation_descriptor_id: "0190f5c0-0000-7000-8000-000000000001".to_owned(),
     })
     .expect("serialize response")
@@ -60,7 +60,7 @@ fn daemon_candidate_response_accepts_exact_candidate_shape() {
     let response = parse_daemon_candidate_response(&valid_response_json()).expect("valid response");
 
     assert_eq!(response.action, "observe");
-    assert_eq!(response.expected_state_version, 0);
+    assert_eq!(response.expected_state_version, 1);
 }
 
 #[test]
@@ -75,12 +75,12 @@ fn daemon_candidate_response_rejects_extra_authority_output() {
 }
 
 #[test]
-fn daemon_candidate_response_rejects_negative_state_version() {
+fn daemon_candidate_response_rejects_non_positive_state_version() {
     let response = String::from_utf8(valid_response_json())
         .expect("response is UTF-8")
         .replace(
+            "\"expected_state_version\":1",
             "\"expected_state_version\":0",
-            "\"expected_state_version\":-1",
         );
 
     let error = parse_daemon_candidate_response(response.as_bytes()).expect_err("reject version");

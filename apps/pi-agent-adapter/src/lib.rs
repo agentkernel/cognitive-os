@@ -82,7 +82,7 @@ pub fn parse_daemon_candidate_response(frame: &[u8]) -> Result<DaemonCandidateRe
     {
         return Err("daemon candidate response contains an empty field".to_owned());
     }
-    if response.expected_state_version < 0 {
+    if response.expected_state_version < 1 {
         return Err("daemon candidate response expected_state_version is invalid".to_owned());
     }
     Ok(response)

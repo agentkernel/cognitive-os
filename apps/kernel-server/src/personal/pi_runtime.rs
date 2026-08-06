@@ -232,18 +232,23 @@ impl PrivatePiCandidateProcess {
         // The adapter owns a shorter Pi deadline, while this outer deadline
         // ensures a broken adapter cannot strand the scheduler indefinitely.
         let started = Instant::now();
+        let mut termination_error = None;
         let exit_status = loop {
-            match child
-                .try_wait()
-                .map_err(|_| "private Pi adapter wait failed".to_owned())?
-            {
-                Some(status) => break status,
-                None if started.elapsed() >= PRIVATE_ADAPTER_TIMEOUT => {
+            match child.try_wait() {
+                Ok(Some(status)) => break Some(status),
+                Err(_) => {
+                    termination_error = Some("private Pi adapter wait failed".to_owned());
                     let _ = child.kill();
                     let _ = child.wait();
-                    return Err("private Pi candidate adapter timed out".to_owned());
+                    break None;
                 }
-                None => thread::sleep(Duration::from_millis(25)),
+                Ok(None) if started.elapsed() >= PRIVATE_ADAPTER_TIMEOUT => {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    termination_error = Some("private Pi candidate adapter timed out".to_owned());
+                    break None;
+                }
+                Ok(None) => thread::sleep(Duration::from_millis(25)),
             }
         };
         let output = stdout_reader
@@ -251,6 +256,12 @@ impl PrivatePiCandidateProcess {
             .map_err(|_| "private Pi adapter stdout reader panicked".to_owned())?
             .map_err(|_| "private Pi adapter stdout could not be read".to_owned())?;
         let socket_result = socket.finish();
+        if let Some(error) = termination_error {
+            return Err(error);
+        }
+        let exit_status = exit_status.ok_or_else(|| {
+            "private Pi candidate adapter exited without a final status".to_owned()
+        })?;
         if !exit_status.success() {
             return Err("private Pi candidate adapter rejected the request".to_owned());
         }
@@ -372,7 +383,7 @@ fn forward_one_private_completion(mut stream: UnixStream, config_dir: &Path) -> 
         &transport,
     );
     let response = service
-        .forward_chat_completion(body)
+        .forward_private_candidate_completion(body)
         .map_err(|_| "private completion provider request was refused".to_owned())?;
     if response.status != 200 || response.body.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
         return Err("private completion provider response exceeds transport limit".to_owned());

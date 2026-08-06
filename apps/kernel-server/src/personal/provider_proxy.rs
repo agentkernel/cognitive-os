@@ -80,7 +80,27 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
         let requested_model = validate_chat_request(request_body)?;
+        self.forward_selected_chat_completion(requested_model, request_body)
+    }
 
+    /// Forward one private Pi candidate completion and reject any upstream
+    /// response shape that could carry a tool call or multiple candidates.
+    /// The Provider credential remains confined to this daemon-owned service.
+    pub fn forward_private_candidate_completion(
+        &self,
+        request_body: &[u8],
+    ) -> Result<ProviderHttpResponse, ProviderProxyError> {
+        let requested_model = validate_chat_request(request_body)?;
+        let response = self.forward_selected_chat_completion(requested_model, request_body)?;
+        validate_private_candidate_response(&response)?;
+        Ok(response)
+    }
+
+    fn forward_selected_chat_completion(
+        &self,
+        requested_model: String,
+        request_body: &[u8],
+    ) -> Result<ProviderHttpResponse, ProviderProxyError> {
         let provider_key_service =
             ProviderKeyService::new(self.secret_store, self.config_repository.clone());
         let provider_config = provider_key_service
@@ -120,6 +140,39 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
             .exchange(&request)
             .map_err(map_transport_error)
     }
+}
+
+fn validate_private_candidate_response(
+    response: &ProviderHttpResponse,
+) -> Result<(), ProviderProxyError> {
+    if response.status != 200 {
+        return Err(ProviderProxyError::UpstreamRequestFailed);
+    }
+    let response_json: serde_json::Value = serde_json::from_slice(&response.body)
+        .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+    let Some(choices) = response_json
+        .get("choices")
+        .and_then(serde_json::Value::as_array)
+    else {
+        return Err(ProviderProxyError::UpstreamRequestFailed);
+    };
+    let Some(choice) = choices.first() else {
+        return Err(ProviderProxyError::UpstreamRequestFailed);
+    };
+    if choices.len() != 1
+        || choice
+            .get("message")
+            .and_then(serde_json::Value::as_object)
+            .is_none_or(|message| {
+                message.len() != 1
+                    || !message
+                        .get("content")
+                        .is_some_and(serde_json::Value::is_string)
+            })
+    {
+        return Err(ProviderProxyError::UpstreamRequestFailed);
+    }
+    Ok(())
 }
 
 fn validate_chat_request(request_body: &[u8]) -> Result<String, ProviderProxyError> {
@@ -171,7 +224,10 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{ProviderProxyError, ProviderProxyService, validate_chat_request};
+    use super::{
+        ProviderProxyError, ProviderProxyService, validate_chat_request,
+        validate_private_candidate_response,
+    };
     use cognitive_secret::{
         EphemeralSecretStore, ProviderConfigRepository, ProviderHttpRequest, ProviderHttpResponse,
         ProviderKeyService, ProviderTransport, ProviderTransportError, SecretMaterial,
@@ -226,6 +282,34 @@ mod tests {
         assert_eq!(
             validate_chat_request(b"not-json"),
             Err(ProviderProxyError::InvalidRequest)
+        );
+    }
+
+    #[test]
+    fn private_candidate_provider_response_requires_one_text_choice() {
+        let valid_response = ProviderHttpResponse {
+            status: 200,
+            body: br#"{"choices":[{"message":{"content":"candidate"}}]}"#.to_vec(),
+        };
+        assert_eq!(validate_private_candidate_response(&valid_response), Ok(()));
+
+        let tool_response = ProviderHttpResponse {
+            status: 200,
+            body: br#"{"choices":[{"message":{"content":"candidate","tool_calls":[]}}]}"#.to_vec(),
+        };
+        assert_eq!(
+            validate_private_candidate_response(&tool_response),
+            Err(ProviderProxyError::UpstreamRequestFailed)
+        );
+
+        let multiple_choice_response = ProviderHttpResponse {
+            status: 200,
+            body: br#"{"choices":[{"message":{"content":"one"}},{"message":{"content":"two"}}]}"#
+                .to_vec(),
+        };
+        assert_eq!(
+            validate_private_candidate_response(&multiple_choice_response),
+            Err(ProviderProxyError::UpstreamRequestFailed)
         );
     }
 

@@ -208,7 +208,17 @@ pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock:
 pub fn resolve_native_tool(
     request: &ToolResolutionRequest,
 ) -> Result<ResolvedNativeTool, ToolResolutionError> {
-    let Some(catalog_descriptor) = BUILTIN_TOOL_CATALOG
+    resolve_native_tool_from_catalog(&BUILTIN_TOOL_CATALOG, request)
+}
+
+/// Resolve against an explicit immutable catalog slice. Production always
+/// supplies [`BUILTIN_TOOL_CATALOG`]; keeping the lookup pure lets tests prove
+/// that disabled and quarantined descriptors cannot become dispatch-capable.
+fn resolve_native_tool_from_catalog(
+    catalog: &[NativeToolDescriptor],
+    request: &ToolResolutionRequest,
+) -> Result<ResolvedNativeTool, ToolResolutionError> {
+    let Some(catalog_descriptor) = catalog
         .iter()
         .find(|descriptor| descriptor.operation_id == request.operation_id)
     else {
@@ -358,6 +368,17 @@ pub fn validate_workspace_path(path: &str, allowed_roots: &[String]) -> Result<S
     if path.is_empty() || allowed_roots.is_empty() {
         return Err("workspace path or allowed roots are empty".to_owned());
     }
+    if allowed_roots
+        .iter()
+        .any(|root| !is_workspace_root_identifier(root))
+        || allowed_roots
+            .iter()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            != allowed_roots.len()
+    {
+        return Err("workspace roots are invalid or ambiguous".to_owned());
+    }
     let candidate = Path::new(path);
     if candidate.is_absolute()
         || candidate.components().any(|component| {
@@ -380,8 +401,25 @@ pub fn validate_workspace_path(path: &str, allowed_roots: &[String]) -> Result<S
     if normalized.is_empty() || normalized.contains('\0') {
         return Err("workspace path is invalid".to_owned());
     }
-    let _ = allowed_roots;
+    let root = normalized
+        .split('/')
+        .next()
+        .expect("non-empty path has a root");
+    if !allowed_roots
+        .iter()
+        .any(|allowed_root| allowed_root == root)
+    {
+        return Err("workspace path is outside an admitted root".to_owned());
+    }
     Ok(normalized)
+}
+
+fn is_workspace_root_identifier(root: &str) -> bool {
+    !root.is_empty()
+        && !root.contains('\0')
+        && !root.contains(['/', '\\'])
+        && root != "."
+        && root != ".."
 }
 
 /// Validate one workspace operation's bounded input without touching the
@@ -432,15 +470,23 @@ pub fn validate_process_check(
     executable_id: &str,
     arguments: &[String],
     working_directory: &str,
+    admitted_workspace_roots: &[String],
+    registered_executable_ids: &[String],
     timeout_ms: u64,
 ) -> Result<(), String> {
     if executable_id.is_empty() || executable_id.contains('/') || executable_id.contains('\\') {
         return Err("process executable must be a registered identifier".to_owned());
     }
+    if !registered_executable_ids
+        .iter()
+        .any(|registered_id| registered_id == executable_id)
+    {
+        return Err("process executable is not registered".to_owned());
+    }
     if arguments.len() > 32 || arguments.iter().any(|argument| argument.len() > 4096) {
         return Err("process arguments exceed the registered bounds".to_owned());
     }
-    validate_workspace_path(working_directory, &["workspace".to_owned()])?;
+    validate_workspace_path(working_directory, admitted_workspace_roots)?;
     if timeout_ms == 0 || timeout_ms > 120_000 {
         return Err("process timeout exceeds the registered bounds".to_owned());
     }
@@ -514,6 +560,24 @@ mod tests {
         }
     }
 
+    fn persisted_descriptor_for(operation_id: &str) -> OperationDescriptor {
+        let descriptor = BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|descriptor| descriptor.operation_id == operation_id)
+            .expect("catalog descriptor");
+        OperationDescriptor {
+            operation_id: descriptor.operation_id.clone(),
+            action: descriptor.action.clone(),
+            effect_class: EffectClass::Pure,
+            executor: descriptor.executor.clone(),
+            capabilities: crate::executor::ExecutorCapabilities {
+                queryable: true,
+                idempotent: true,
+            },
+            descriptor_version: descriptor.descriptor_version,
+        }
+    }
+
     #[test]
     fn catalog_contains_every_required_native_operation_family() {
         assert_eq!(BUILTIN_TOOL_CATALOG.len(), 6);
@@ -553,6 +617,12 @@ mod tests {
     fn exact_descriptor_resolution_is_required() {
         let request = request_for("native.workspace.read");
         assert!(resolve_native_tool(&request).is_ok());
+        let mut action_drifted = request.clone();
+        action_drifted.action = "write".to_owned();
+        assert!(matches!(
+            resolve_native_tool(&action_drifted),
+            Err(ToolResolutionError::InvalidDescriptor { .. })
+        ));
         let mut drifted = request.clone();
         drifted.descriptor_version += 1;
         assert!(matches!(
@@ -568,22 +638,72 @@ mod tests {
     }
 
     #[test]
+    fn descriptor_digest_binds_each_immutable_descriptor_fact() {
+        let descriptor = BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|descriptor| descriptor.operation_id == "native.workspace.read")
+            .expect("workspace read descriptor");
+        let digest = compute_descriptor_digest(descriptor).expect("baseline digest");
+
+        let mut action_drift = descriptor.clone();
+        action_drift.action = "other".to_owned();
+        let mut version_drift = descriptor.clone();
+        version_drift.descriptor_version += 1;
+        let mut risk_drift = descriptor.clone();
+        risk_drift.risk = ToolRisk::WorkspaceMutation;
+        let mut executor_drift = descriptor.clone();
+        executor_drift.executor = "daemon.other".to_owned();
+        let mut capability_drift = descriptor.clone();
+        capability_drift.required_capability = "tool.other".to_owned();
+        let mut family_drift = descriptor.clone();
+        family_drift.family = NativeOperationFamily::WorkspaceSearch;
+        let mut input_bound_drift = descriptor.clone();
+        input_bound_drift.input_limit_bytes += 1;
+        let mut output_bound_drift = descriptor.clone();
+        output_bound_drift.output_limit_bytes += 1;
+
+        for drifted_descriptor in [
+            action_drift,
+            version_drift,
+            risk_drift,
+            executor_drift,
+            capability_drift,
+            family_drift,
+            input_bound_drift,
+            output_bound_drift,
+        ] {
+            assert_ne!(
+                compute_descriptor_digest(&drifted_descriptor).expect("drift digest"),
+                digest
+            );
+        }
+    }
+
+    #[test]
+    fn disabled_and_quarantined_tools_fail_before_resolution() {
+        let request = request_for("native.workspace.read");
+        let mut disabled = BUILTIN_TOOL_CATALOG[0].clone();
+        disabled.availability = ToolAvailability::Disabled;
+        assert!(matches!(
+            resolve_native_tool_from_catalog(&[disabled], &request),
+            Err(ToolResolutionError::DisabledTool { .. })
+        ));
+
+        let mut quarantined = BUILTIN_TOOL_CATALOG[0].clone();
+        quarantined.availability = ToolAvailability::Quarantined;
+        assert!(matches!(
+            resolve_native_tool_from_catalog(&[quarantined], &request),
+            Err(ToolResolutionError::QuarantinedTool { .. })
+        ));
+    }
+
+    #[test]
     fn persisted_native_descriptor_must_match_effect_and_recovery_facts() {
         let descriptor = BUILTIN_TOOL_CATALOG
             .iter()
             .find(|descriptor| descriptor.operation_id == "native.workspace.read")
             .expect("workspace read descriptor");
-        let persisted = OperationDescriptor {
-            operation_id: descriptor.operation_id.clone(),
-            action: descriptor.action.clone(),
-            effect_class: EffectClass::Pure,
-            executor: descriptor.executor.clone(),
-            capabilities: crate::executor::ExecutorCapabilities {
-                queryable: true,
-                idempotent: true,
-            },
-            descriptor_version: descriptor.descriptor_version,
-        };
+        let persisted = persisted_descriptor_for(&descriptor.operation_id);
         assert!(resolve_persisted_native_descriptor(&persisted).is_ok());
 
         let mut drifted = persisted;
@@ -592,6 +712,12 @@ mod tests {
             resolve_persisted_native_descriptor(&drifted),
             Err(ToolResolutionError::InvalidDescriptor { .. })
         ));
+        let mut effect_drifted = persisted_descriptor_for("native.workspace.read");
+        effect_drifted.effect_class = EffectClass::GovernedExternal;
+        assert!(resolve_persisted_native_descriptor(&effect_drifted).is_err());
+        let mut recovery_drifted = persisted_descriptor_for("native.workspace.read");
+        recovery_drifted.capabilities.idempotent = false;
+        assert!(resolve_persisted_native_descriptor(&recovery_drifted).is_err());
     }
 
     #[test]
@@ -611,37 +737,76 @@ mod tests {
 
     #[test]
     fn workspace_process_and_http_validators_fail_closed() {
-        assert!(validate_workspace_path("src/main.rs", &["workspace".to_owned()]).is_ok());
+        let roots = ["workspace".to_owned(), "extended-home".to_owned()];
+        let registered_executables = ["cargo".to_owned()];
+        assert!(validate_workspace_path("workspace/src/main.rs", &roots).is_ok());
+        assert!(validate_workspace_path("extended-home/docs/readme.md", &roots).is_ok());
+        assert!(validate_workspace_path("other-root/src/main.rs", &roots).is_err());
+        assert!(validate_workspace_path("/workspace/src/main.rs", &roots).is_err());
+        assert!(validate_workspace_path("workspace/../secret", &roots).is_err());
+        assert!(validate_workspace_path("", &roots).is_err());
+        assert!(validate_workspace_path("workspace/\0secret", &roots).is_err());
         assert!(validate_workspace_path("../secret", &["workspace".to_owned()]).is_err());
         assert!(
             validate_workspace_operation(
                 NativeOperationFamily::WorkspaceRead,
-                "src/main.rs",
+                "workspace/src/main.rs",
                 "",
-                &["workspace".to_owned()]
+                &roots
             )
             .is_ok()
         );
         assert!(
             validate_workspace_operation(
                 NativeOperationFamily::WorkspacePatch,
-                "src/main.rs",
+                "workspace/src/main.rs",
                 "@@ -1 +1 @@\n-old\n+new",
-                &["workspace".to_owned()]
+                &roots
             )
             .is_ok()
         );
         assert!(
             validate_workspace_operation(
                 NativeOperationFamily::WorkspaceRead,
-                "src/main.rs",
+                "workspace/src/main.rs",
                 "unexpected payload",
-                &["workspace".to_owned()]
+                &roots
             )
             .is_err()
         );
-        assert!(validate_process_check("cargo", &[], "workspace", 1000).is_ok());
-        assert!(validate_process_check("/bin/sh", &[], "workspace", 1000).is_err());
+        assert!(
+            validate_process_check(
+                "cargo",
+                &[],
+                "workspace",
+                &roots,
+                &registered_executables,
+                1000
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_process_check(
+                "/bin/sh",
+                &[],
+                "workspace",
+                &roots,
+                &registered_executables,
+                1000
+            )
+            .is_err()
+        );
+        assert!(
+            validate_process_check(
+                "sh",
+                &[],
+                "workspace",
+                &roots,
+                &registered_executables,
+                1000
+            )
+            .is_err()
+        );
         assert!(
             validate_read_only_http_fetch(
                 "GET",
