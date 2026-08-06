@@ -94,6 +94,7 @@ struct SchedulerExecutionPolicyDocument {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SchedulerAdmissionPolicy {
+    candidate_id: String,
     authorization_subject_ref: String,
     authorization_purpose: String,
     budget_charge: BTreeMap<String, i64>,
@@ -568,7 +569,6 @@ fn context_resolution_command_from_policy(
 /// candidate validation.
 fn candidate_admission_command_from_policy(
     policy: &SchedulerExecutionPolicyRow,
-    candidate_id: ObjectId,
 ) -> Result<DaemonCandidateAdmissionCommand, SchedulerAuthorityError> {
     let document: SchedulerExecutionPolicyDocument = serde_json::from_str(&policy.canonical_json)
         .map_err(|error| {
@@ -577,6 +577,11 @@ fn candidate_admission_command_from_policy(
         ))
     })?;
     let admission = document.admission;
+    let candidate_id = ObjectId::parse(&admission.candidate_id).map_err(|_| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy candidate identity is malformed".to_owned(),
+        )
+    })?;
     let budget_charge = BudgetCharge::new(admission.budget_charge).map_err(|error| {
         SchedulerAuthorityError::CandidateAdmissionComposition(format!(
             "scheduler execution policy budget charge is invalid: {error}"

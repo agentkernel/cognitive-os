@@ -567,6 +567,7 @@ fn persist_scheduler_execution_policy(
             "source_limit": 32,
         },
         "admission": {
+            "candidate_id": new_object_id()?.as_str(),
             "authorization_subject_ref": principal,
             "authorization_purpose": "task_execution",
             "budget_charge": {"semantic_calls": 1},
