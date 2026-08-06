@@ -116,7 +116,7 @@ pub struct ToolResolutionRequest {
 
 /// Static native catalog. There is intentionally no registration API.
 pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock::new(|| {
-    vec![
+    let mut catalog = vec![
         NativeToolDescriptor {
             operation_id: "native.workspace.read".to_owned(),
             action: "read".to_owned(),
@@ -195,7 +195,12 @@ pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock:
             input_limit_bytes: 32 * 1024,
             output_limit_bytes: 512 * 1024,
         },
-    ]
+    ];
+    for descriptor in &mut catalog {
+        descriptor.descriptor_digest = compute_descriptor_digest(descriptor)
+            .expect("built-in Tool descriptor must have a canonical digest");
+    }
+    catalog
 });
 
 /// Resolve one candidate against the static catalog and all immutable binding
