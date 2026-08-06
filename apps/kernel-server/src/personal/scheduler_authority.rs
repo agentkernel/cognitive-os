@@ -41,8 +41,9 @@ use cognitive_kernel::{
         ContextAuthorizationFactStore, ContextCandidateQuery, ContextStore,
         ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
         ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
-        SchedulerLeaseBinding, TaskBinding, WorkerAuthorizationStore,
-        WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+        SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+        WorkerIterationAuthorizationRow,
     },
 };
 use cognitive_runtime::{
@@ -396,6 +397,58 @@ fn parse_execution_bound_contract(
         ));
     }
     Ok(contract)
+}
+
+/// Reload the private execution policy required by a Context-bound v0.4
+/// contract. This is deliberately before WIA lookup: policy absence or a
+/// request mismatch must stop the pre-admission path before Pi can be invoked
+/// or existing worker authority can be consumed.
+fn load_context_execution_policy<S>(
+    store: &S,
+    task_binding: &TaskBinding,
+) -> Result<Option<SchedulerExecutionPolicyRow>, SchedulerAuthorityError>
+where
+    S: IntentChainStore + SchedulerExecutionPolicyStore,
+{
+    let contract_row = store
+        .load_task_contract(&task_binding.task_ref, task_binding.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(task_binding.task_ref.clone()))?;
+    let version_envelope: TaskContractVersionEnvelope =
+        serde_json::from_str(&contract_row.canonical_json)
+            .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_V04 {
+        return Ok(None);
+    }
+    let context_request_reference = contract.context_request_ref.ok_or_else(|| {
+        SchedulerAuthorityError::ContextRequestUnavailable(
+            "v0.4 TaskContract has no ContextRequest binding".to_owned(),
+        )
+    })?;
+    if context_request_reference.kind != StrongReferenceKind::Strong
+        || context_request_reference.object_version != 1
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "v0.4 TaskContract ContextRequest reference is not strong and versioned".to_owned(),
+        ));
+    }
+    let policy = store
+        .load_scheduler_execution_policy(&task_binding.task_ref, task_binding.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(format!(
+                "no scheduler execution policy exists for {} at epoch {}",
+                task_binding.task_ref, task_binding.contract_epoch
+            ))
+        })?;
+    if context_request_reference.id.0.as_str() != policy.context_request_id.as_str() {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy ContextRequest differs from TaskContract binding"
+                .to_owned(),
+        ));
+    }
+    Ok(Some(policy))
 }
 
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
@@ -3360,6 +3413,8 @@ pub(crate) fn run_private_scheduler_tick(
                 resolved_work.task_binding.contract_epoch
             )));
         }
+        let _context_execution_policy =
+            load_context_execution_policy(&authority_store, &resolved_work.task_binding)?;
         let continuation_authorization = authority_store
             .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
             .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
