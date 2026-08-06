@@ -46,6 +46,7 @@ use cognitive_kernel::{
         TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
         WorkerIterationAuthorizationRow,
     },
+    resolve_persisted_native_descriptor,
 };
 use cognitive_runtime::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
@@ -928,6 +929,14 @@ where
                 proposed_candidate.operation_descriptor_id.to_string(),
             )
         })?;
+    if proposed_candidate.tool_ref.starts_with("native.") {
+        resolve_persisted_native_descriptor(&descriptor.descriptor).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(format!(
+                "native Tool registry rejected {}: {error:?}",
+                proposed_candidate.tool_ref
+            ))
+        })?;
+    }
     if descriptor.descriptor.operation_id != proposed_candidate.tool_ref
         || descriptor.descriptor.action != proposed_candidate.action
         || admit_operation(&descriptor.descriptor).is_err()

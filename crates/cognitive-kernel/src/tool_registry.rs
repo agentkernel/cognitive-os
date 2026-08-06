@@ -6,6 +6,7 @@
 //! [`BUILTIN_TOOL_CATALOG`], and every resolution result carries the exact
 //! descriptor version and canonical digest that the daemon admitted.
 
+use crate::effects::{EffectClass, OperationDescriptor};
 use cognitive_contracts::canonical;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -77,13 +78,30 @@ pub struct ResolvedNativeTool {
 /// Fail-closed registry resolution errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToolResolutionError {
-    UnknownTool { operation_id: String },
-    DescriptorVersionMismatch { operation_id: String, expected: i64, received: i64 },
-    DescriptorDigestMismatch { operation_id: String },
-    RiskMismatch { operation_id: String },
-    DisabledTool { operation_id: String },
-    QuarantinedTool { operation_id: String },
-    InvalidDescriptor { operation_id: String, detail: String },
+    UnknownTool {
+        operation_id: String,
+    },
+    DescriptorVersionMismatch {
+        operation_id: String,
+        expected: i64,
+        received: i64,
+    },
+    DescriptorDigestMismatch {
+        operation_id: String,
+    },
+    RiskMismatch {
+        operation_id: String,
+    },
+    DisabledTool {
+        operation_id: String,
+    },
+    QuarantinedTool {
+        operation_id: String,
+    },
+    InvalidDescriptor {
+        operation_id: String,
+        detail: String,
+    },
 }
 
 /// Exact request presented by the daemon when binding a candidate to a Tool.
@@ -97,86 +115,88 @@ pub struct ToolResolutionRequest {
 }
 
 /// Static native catalog. There is intentionally no registration API.
-pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock::new(|| vec![
-    NativeToolDescriptor {
-        operation_id: "native.workspace.read".to_owned(),
-        action: "read".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::ReadOnly,
-        executor: "daemon.workspace".to_owned(),
-        required_capability: "tool.workspace.read".to_owned(),
-        family: NativeOperationFamily::WorkspaceRead,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 64 * 1024,
-        output_limit_bytes: 256 * 1024,
-    },
-    NativeToolDescriptor {
-        operation_id: "native.workspace.search".to_owned(),
-        action: "search".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::ReadOnly,
-        executor: "daemon.workspace".to_owned(),
-        required_capability: "tool.workspace.read".to_owned(),
-        family: NativeOperationFamily::WorkspaceSearch,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 64 * 1024,
-        output_limit_bytes: 256 * 1024,
-    },
-    NativeToolDescriptor {
-        operation_id: "native.workspace.write".to_owned(),
-        action: "write".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::WorkspaceMutation,
-        executor: "daemon.workspace".to_owned(),
-        required_capability: "tool.workspace.write".to_owned(),
-        family: NativeOperationFamily::WorkspaceWrite,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 256 * 1024,
-        output_limit_bytes: 64 * 1024,
-    },
-    NativeToolDescriptor {
-        operation_id: "native.workspace.patch".to_owned(),
-        action: "patch".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::WorkspaceMutation,
-        executor: "daemon.workspace".to_owned(),
-        required_capability: "tool.workspace.write".to_owned(),
-        family: NativeOperationFamily::WorkspacePatch,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 256 * 1024,
-        output_limit_bytes: 64 * 1024,
-    },
-    NativeToolDescriptor {
-        operation_id: "native.process.check".to_owned(),
-        action: "check".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::ProcessExecution,
-        executor: "daemon.process".to_owned(),
-        required_capability: "tool.process.check".to_owned(),
-        family: NativeOperationFamily::ProcessCheck,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 32 * 1024,
-        output_limit_bytes: 128 * 1024,
-    },
-    NativeToolDescriptor {
-        operation_id: "native.http.fetch".to_owned(),
-        action: "fetch".to_owned(),
-        descriptor_version: 1,
-        descriptor_digest: "".to_owned(),
-        risk: ToolRisk::NetworkRead,
-        executor: "daemon.http".to_owned(),
-        required_capability: "tool.http.read".to_owned(),
-        family: NativeOperationFamily::HttpFetchReadOnly,
-        availability: ToolAvailability::Enabled,
-        input_limit_bytes: 32 * 1024,
-        output_limit_bytes: 512 * 1024,
-    },
-]);
+pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock::new(|| {
+    vec![
+        NativeToolDescriptor {
+            operation_id: "native.workspace.read".to_owned(),
+            action: "read".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::ReadOnly,
+            executor: "daemon.workspace".to_owned(),
+            required_capability: "tool.workspace.read".to_owned(),
+            family: NativeOperationFamily::WorkspaceRead,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 64 * 1024,
+            output_limit_bytes: 256 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.workspace.search".to_owned(),
+            action: "search".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::ReadOnly,
+            executor: "daemon.workspace".to_owned(),
+            required_capability: "tool.workspace.read".to_owned(),
+            family: NativeOperationFamily::WorkspaceSearch,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 64 * 1024,
+            output_limit_bytes: 256 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.workspace.write".to_owned(),
+            action: "write".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::WorkspaceMutation,
+            executor: "daemon.workspace".to_owned(),
+            required_capability: "tool.workspace.write".to_owned(),
+            family: NativeOperationFamily::WorkspaceWrite,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 256 * 1024,
+            output_limit_bytes: 64 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.workspace.patch".to_owned(),
+            action: "patch".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::WorkspaceMutation,
+            executor: "daemon.workspace".to_owned(),
+            required_capability: "tool.workspace.write".to_owned(),
+            family: NativeOperationFamily::WorkspacePatch,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 256 * 1024,
+            output_limit_bytes: 64 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.process.check".to_owned(),
+            action: "check".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::ProcessExecution,
+            executor: "daemon.process".to_owned(),
+            required_capability: "tool.process.check".to_owned(),
+            family: NativeOperationFamily::ProcessCheck,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 32 * 1024,
+            output_limit_bytes: 128 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.http.fetch".to_owned(),
+            action: "fetch".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::NetworkRead,
+            executor: "daemon.http".to_owned(),
+            required_capability: "tool.http.read".to_owned(),
+            family: NativeOperationFamily::HttpFetchReadOnly,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 32 * 1024,
+            output_limit_bytes: 512 * 1024,
+        },
+    ]
+});
 
 /// Resolve one candidate against the static catalog and all immutable binding
 /// facts. No rejection path creates a dispatch-capable value.
@@ -219,11 +239,12 @@ pub fn resolve_native_tool(
             operation_id: request.operation_id.clone(),
         });
     }
-    let expected_digest = compute_descriptor_digest(catalog_descriptor)
-        .map_err(|detail| ToolResolutionError::InvalidDescriptor {
+    let expected_digest = compute_descriptor_digest(catalog_descriptor).map_err(|detail| {
+        ToolResolutionError::InvalidDescriptor {
             operation_id: request.operation_id.clone(),
             detail,
-        })?;
+        }
+    })?;
     if request.descriptor_digest != expected_digest {
         return Err(ToolResolutionError::DescriptorDigestMismatch {
             operation_id: request.operation_id.clone(),
@@ -237,10 +258,78 @@ pub fn resolve_native_tool(
     })
 }
 
+/// Bind an already-persisted daemon descriptor to the static native catalog.
+/// This is the integration form used by admission: it prevents a native Tool
+/// from silently changing executor, effect class, or recovery capabilities
+/// while retaining the existing descriptor table as the durable source.
+pub fn resolve_persisted_native_descriptor(
+    descriptor: &OperationDescriptor,
+) -> Result<ResolvedNativeTool, ToolResolutionError> {
+    let Some(catalog_descriptor) = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|catalog| catalog.operation_id == descriptor.operation_id)
+    else {
+        return Err(ToolResolutionError::UnknownTool {
+            operation_id: descriptor.operation_id.clone(),
+        });
+    };
+    if catalog_descriptor.action != descriptor.action
+        || catalog_descriptor.descriptor_version != descriptor.descriptor_version
+        || catalog_descriptor.executor != descriptor.executor
+    {
+        return Err(ToolResolutionError::InvalidDescriptor {
+            operation_id: descriptor.operation_id.clone(),
+            detail: "persisted descriptor drifted from the native catalog".to_owned(),
+        });
+    }
+    let recovery_capabilities_match = match catalog_descriptor.risk {
+        ToolRisk::ReadOnly | ToolRisk::NetworkRead => {
+            descriptor.effect_class == EffectClass::Pure
+                && descriptor.capabilities.queryable
+                && descriptor.capabilities.idempotent
+        }
+        ToolRisk::WorkspaceMutation => {
+            descriptor.effect_class == EffectClass::GovernedExternal
+                && descriptor.capabilities.queryable
+        }
+        ToolRisk::ProcessExecution => {
+            descriptor.effect_class == EffectClass::LocalEphemeral
+                && descriptor.capabilities.queryable
+        }
+    };
+    if !recovery_capabilities_match {
+        return Err(ToolResolutionError::InvalidDescriptor {
+            operation_id: descriptor.operation_id.clone(),
+            detail: "persisted descriptor recovery or effect facts drifted".to_owned(),
+        });
+    }
+    if catalog_descriptor.availability != ToolAvailability::Enabled {
+        return match catalog_descriptor.availability {
+            ToolAvailability::Disabled => Err(ToolResolutionError::DisabledTool {
+                operation_id: descriptor.operation_id.clone(),
+            }),
+            ToolAvailability::Quarantined => Err(ToolResolutionError::QuarantinedTool {
+                operation_id: descriptor.operation_id.clone(),
+            }),
+            ToolAvailability::Enabled => unreachable!(),
+        };
+    }
+    let descriptor_digest = compute_descriptor_digest(catalog_descriptor).map_err(|detail| {
+        ToolResolutionError::InvalidDescriptor {
+            operation_id: descriptor.operation_id.clone(),
+            detail,
+        }
+    })?;
+    Ok(ResolvedNativeTool {
+        descriptor: NativeToolDescriptor {
+            descriptor_digest,
+            ..catalog_descriptor.clone()
+        },
+    })
+}
+
 /// Compute the digest over descriptor facts excluding the digest field itself.
-pub fn compute_descriptor_digest(
-    descriptor: &NativeToolDescriptor,
-) -> Result<String, String> {
+pub fn compute_descriptor_digest(descriptor: &NativeToolDescriptor) -> Result<String, String> {
     let value = json!({
         "action": descriptor.action,
         "availability": descriptor.availability,
@@ -267,7 +356,10 @@ pub fn validate_workspace_path(path: &str, allowed_roots: &[String]) -> Result<S
     let candidate = Path::new(path);
     if candidate.is_absolute()
         || candidate.components().any(|component| {
-            matches!(component, Component::ParentDir | Component::RootDir | Component::Prefix(_))
+            matches!(
+                component,
+                Component::ParentDir | Component::RootDir | Component::Prefix(_)
+            )
         })
     {
         return Err("workspace path must be relative and contained".to_owned());
@@ -332,7 +424,10 @@ pub fn validate_read_only_http_fetch(
     }
     let path_and_suffix = &remainder[authority_end..];
     let origin = format!("{scheme}://{authority}");
-    if !allowed_origins.iter().any(|allowed_origin| allowed_origin == &origin) {
+    if !allowed_origins
+        .iter()
+        .any(|allowed_origin| allowed_origin == &origin)
+    {
         return Err("HTTP origin is not registered".to_owned());
     }
     if path_and_suffix.contains('?') || path_and_suffix.contains('#') {
@@ -374,12 +469,36 @@ mod tests {
     #[test]
     fn catalog_contains_every_required_native_operation_family() {
         assert_eq!(BUILTIN_TOOL_CATALOG.len(), 6);
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceRead));
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceSearch));
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceWrite));
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::WorkspacePatch));
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::ProcessCheck));
-        assert!(BUILTIN_TOOL_CATALOG.iter().any(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly));
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceRead)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceSearch)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceWrite)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::WorkspacePatch)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::ProcessCheck)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        );
     }
 
     #[test]
@@ -388,10 +507,16 @@ mod tests {
         assert!(resolve_native_tool(&request).is_ok());
         let mut drifted = request.clone();
         drifted.descriptor_version += 1;
-        assert!(matches!(resolve_native_tool(&drifted), Err(ToolResolutionError::DescriptorVersionMismatch { .. })));
+        assert!(matches!(
+            resolve_native_tool(&drifted),
+            Err(ToolResolutionError::DescriptorVersionMismatch { .. })
+        ));
         let mut digest_drifted = request;
         digest_drifted.descriptor_digest = "sha256:drift".to_owned();
-        assert!(matches!(resolve_native_tool(&digest_drifted), Err(ToolResolutionError::DescriptorDigestMismatch { .. })));
+        assert!(matches!(
+            resolve_native_tool(&digest_drifted),
+            Err(ToolResolutionError::DescriptorDigestMismatch { .. })
+        ));
     }
 
     #[test]
@@ -403,7 +528,10 @@ mod tests {
             descriptor_digest: "sha256:unknown".to_owned(),
             risk: ToolRisk::ReadOnly,
         };
-        assert!(matches!(resolve_native_tool(&request), Err(ToolResolutionError::UnknownTool { .. })));
+        assert!(matches!(
+            resolve_native_tool(&request),
+            Err(ToolResolutionError::UnknownTool { .. })
+        ));
     }
 
     #[test]
@@ -412,7 +540,23 @@ mod tests {
         assert!(validate_workspace_path("../secret", &["workspace".to_owned()]).is_err());
         assert!(validate_process_check("cargo", &[], "workspace", 1000).is_ok());
         assert!(validate_process_check("/bin/sh", &[], "workspace", 1000).is_err());
-        assert!(validate_read_only_http_fetch("GET", "https://example.com/a", &["https://example.com".to_owned()], 1000).is_ok());
-        assert!(validate_read_only_http_fetch("POST", "https://example.com/a", &["https://example.com".to_owned()], 1000).is_err());
+        assert!(
+            validate_read_only_http_fetch(
+                "GET",
+                "https://example.com/a",
+                &["https://example.com".to_owned()],
+                1000
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_read_only_http_fetch(
+                "POST",
+                "https://example.com/a",
+                &["https://example.com".to_owned()],
+                1000
+            )
+            .is_err()
+        );
     }
 }
