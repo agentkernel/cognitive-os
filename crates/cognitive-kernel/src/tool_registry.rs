@@ -197,8 +197,10 @@ pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock:
         },
     ];
     for descriptor in &mut catalog {
-        descriptor.descriptor_digest = compute_descriptor_digest(descriptor)
-            .expect("built-in Tool descriptor must have a canonical digest");
+        descriptor.descriptor_digest = match compute_descriptor_digest(descriptor) {
+            Ok(descriptor_digest) => descriptor_digest,
+            Err(error) => panic!("built-in Tool descriptor must have a canonical digest: {error}"),
+        };
     }
     catalog
 });
@@ -401,10 +403,9 @@ pub fn validate_workspace_path(path: &str, allowed_roots: &[String]) -> Result<S
     if normalized.is_empty() || normalized.contains('\0') {
         return Err("workspace path is invalid".to_owned());
     }
-    let root = normalized
-        .split('/')
-        .next()
-        .expect("non-empty path has a root");
+    let Some(root) = normalized.split('/').next() else {
+        return Err("workspace path is invalid".to_owned());
+    };
     if !allowed_roots
         .iter()
         .any(|allowed_root| allowed_root == root)
