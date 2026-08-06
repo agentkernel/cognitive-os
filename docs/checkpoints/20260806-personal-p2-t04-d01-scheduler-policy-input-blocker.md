@@ -70,10 +70,11 @@ bounded candidate protocol that preserves this separation.
   `cargo test -p cognitive-store --test m5_context_store
   scheduler_execution_policy_is_immutable_and_epoch_bound` (1/1) and
   `cargo test -p kernel-server --bin kernel-server scheduler_authority` (26/26).
-- Supported CI: Ubuntu and Windows passed the full required suite for
-  `4db146247f10a2780fd438b419c2ab4e6140f04b`, which includes the Windows
-  scheduler-recovery timeout correction. This handoff-only update remains
-  pending its own required CI runs.
+- Supported CI: the full required Ubuntu and Windows/MSVC suite passed for
+  `e205208f1beac77fb2a57960c15fffef6a230c9f` (run `31074027353`). This
+  includes workspace build/test, Clippy, rustfmt, schema/codegen drift,
+  consistency, traceability, conformance, report honesty, runner self-check,
+  and cross-language golden digest validation.
 - Native Linux runtime/production invocation: not run. The focused authority
   tests passed, but the remaining production invocation and policy inputs are
   incomplete, so no P2-T04 completion claim is valid.
