@@ -24,13 +24,30 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Read;
+#[cfg(unix)]
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+#[cfg(unix)]
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
+#[cfg(unix)]
+use cognitive_secret::{
+    ProductionSecretBackend, ProviderConfigRepository, SelectedModelRepository,
+    select_production_secret_store,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[cfg(unix)]
+use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
+use std::os::unix::net::{UnixListener, UnixStream};
 
 /// Personal Pi configuration file name, alongside `provider.json`.
 pub const PI_CONFIG_FILE_NAME: &str = "pi.json";
@@ -57,11 +74,20 @@ pub const PI_VERSION_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 /// byte and token budgets.
 pub const PRIVATE_PI_CANDIDATE_FRAME_LIMIT: usize = 256 * 1024;
 
+#[cfg(unix)]
+const PRIVATE_COMPLETION_TIMEOUT: Duration = Duration::from_secs(65);
+#[cfg(unix)]
+const PRIVATE_ADAPTER_TIMEOUT: Duration = Duration::from_secs(70);
+#[cfg(unix)]
+static PRIVATE_SOCKET_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
 /// Non-secret Personal Pi configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiConfig {
     executable_path: PathBuf,
     extension_entry_path: PathBuf,
+    candidate_adapter_path: Option<PathBuf>,
+    candidate_extension_entry_path: Option<PathBuf>,
 }
 
 /// One bounded request sent over the daemon-supervised private Pi transport.
@@ -89,24 +115,25 @@ pub(crate) struct PrivatePiCandidateResponse {
     pub operation_descriptor_id: String,
 }
 
-/// Placeholder for the daemon-private one-shot Pi candidate transport.
-///
-/// Its configuration shape is retained so a future pinned, evidenced protocol
-/// can be introduced without broadening scheduler authority. Until then, it
-/// must fail before it starts a child process or passes any input to Pi.
+/// Daemon-supervised one-shot Pi candidate transport.
 pub(crate) struct PrivatePiCandidateProcess {
-    _configured_executable_path: PathBuf,
-    _configured_extension_entry_path: PathBuf,
+    configured_executable_path: PathBuf,
+    configured_candidate_adapter_path: Option<PathBuf>,
+    configured_candidate_extension_entry_path: Option<PathBuf>,
+    provider_config_dir: PathBuf,
 }
 
 impl PrivatePiCandidateProcess {
     // The scheduler caller is added separately; retain this narrow
     // construction boundary instead of exposing Pi paths outside this module.
-    #[allow(dead_code)]
-    pub(crate) fn from_config(config: &PiConfig) -> Self {
+    pub(crate) fn from_config(config: &PiConfig, provider_config_dir: &Path) -> Self {
         Self {
-            _configured_executable_path: config.executable_path.clone(),
-            _configured_extension_entry_path: config.extension_entry_path.clone(),
+            configured_executable_path: config.executable_path.clone(),
+            configured_candidate_adapter_path: config.candidate_adapter_path.clone(),
+            configured_candidate_extension_entry_path: config
+                .candidate_extension_entry_path
+                .clone(),
+            provider_config_dir: provider_config_dir.to_path_buf(),
         }
     }
 
@@ -118,12 +145,352 @@ impl PrivatePiCandidateProcess {
         if request_json.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
             return Err("private Pi candidate request exceeds transport limit".to_owned());
         }
-        // Pi 0.81.1 has no evidenced extension API that owns stdin/stdout,
-        // and its documented --print path receives a positional prompt rather
-        // than this JSON request. Do not spawn a TUI or rely on an unproven
-        // extension-defined CLI flag on an authority-adjacent code path.
-        Err("private Pi candidate protocol is unsupported by the pinned runtime".to_owned())
+        #[cfg(unix)]
+        {
+            self.propose_over_private_completion_socket(&request_json)
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = request_json;
+            Err("private Pi candidate transport requires a Unix-domain socket host".to_owned())
+        }
     }
+
+    #[cfg(unix)]
+    fn propose_over_private_completion_socket(
+        &self,
+        request_json: &[u8],
+    ) -> Result<PrivatePiCandidateResponse, String> {
+        let adapter_path = self
+            .configured_candidate_adapter_path
+            .as_deref()
+            .filter(|path| path.is_file())
+            .ok_or_else(|| "private Pi candidate adapter is not configured".to_owned())?;
+        let extension_path = self
+            .configured_candidate_extension_entry_path
+            .as_deref()
+            .filter(|path| path.is_file())
+            .ok_or_else(|| "private Pi candidate extension is not configured".to_owned())?;
+        let selected_model = SelectedModelRepository::under_config_dir(&self.provider_config_dir)
+            .load()
+            .map_err(|_| "private Pi selected model is unavailable".to_owned())?
+            .ok_or_else(|| "private Pi selected model is unavailable".to_owned())?;
+        let socket = PrivateCompletionSocket::create(&self.provider_config_dir)?;
+        let socket_path = socket
+            .path()
+            .to_str()
+            .ok_or_else(|| "private Pi completion socket path is not valid UTF-8".to_owned())?;
+        let executable_path = self
+            .configured_executable_path
+            .to_str()
+            .ok_or_else(|| "configured Pi executable path is not valid UTF-8".to_owned())?;
+        let extension_path = extension_path
+            .to_str()
+            .ok_or_else(|| "private Pi candidate extension path is not valid UTF-8".to_owned())?;
+        let mut command = Command::new(adapter_path);
+        command.env_clear();
+        for key in PROBE_ENVIRONMENT_ALLOWLIST {
+            if let Some(value) = std::env::var_os(key) {
+                command.env(key, value);
+            }
+        }
+        let mut child = command
+            .arg("daemon-candidate")
+            .arg("--pi")
+            .arg(executable_path)
+            .arg("--model")
+            .arg(selected_model.model_id())
+            .arg("--work-dir")
+            .arg(socket.runtime_dir())
+            .arg("--config-dir")
+            .arg(socket.runtime_dir())
+            .arg("--extension")
+            .arg(extension_path)
+            .env("COGNITIVEOS_PRIVATE_COMPLETION_SOCKET", socket_path)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|_| "private Pi candidate adapter invocation failed".to_owned())?;
+        child
+            .stdin
+            .as_mut()
+            .ok_or_else(|| "private Pi adapter stdin was not captured".to_owned())?
+            .write_all(request_json)
+            .map_err(|_| "private Pi candidate request could not be written".to_owned())?;
+        drop(child.stdin.take());
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| "private Pi adapter stdout was not captured".to_owned())?
+            .take((PRIVATE_PI_CANDIDATE_FRAME_LIMIT + 1) as u64);
+        let stdout_reader = thread::spawn(move || {
+            let mut output = Vec::new();
+            let mut stdout = stdout;
+            stdout.read_to_end(&mut output).map_err(|_| ())?;
+            Ok::<_, ()>(output)
+        });
+        // The adapter owns a shorter Pi deadline, while this outer deadline
+        // ensures a broken adapter cannot strand the scheduler indefinitely.
+        let started = Instant::now();
+        let exit_status = loop {
+            match child
+                .try_wait()
+                .map_err(|_| "private Pi adapter wait failed".to_owned())?
+            {
+                Some(status) => break status,
+                None if started.elapsed() >= PRIVATE_ADAPTER_TIMEOUT => {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err("private Pi candidate adapter timed out".to_owned());
+                }
+                None => thread::sleep(Duration::from_millis(25)),
+            }
+        };
+        let output = stdout_reader
+            .join()
+            .map_err(|_| "private Pi adapter stdout reader panicked".to_owned())?
+            .map_err(|_| "private Pi adapter stdout could not be read".to_owned())?;
+        let socket_result = socket.finish();
+        if !exit_status.success() {
+            return Err("private Pi candidate adapter rejected the request".to_owned());
+        }
+        socket_result?;
+        if output.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+            return Err("private Pi candidate response exceeds transport limit".to_owned());
+        }
+        serde_json::from_slice(&output)
+            .map_err(|_| "private Pi candidate response is malformed".to_owned())
+    }
+}
+
+#[cfg(unix)]
+struct PrivateCompletionSocket {
+    runtime_directory: PathBuf,
+    socket_path: PathBuf,
+    server: Option<thread::JoinHandle<Result<(), String>>>,
+}
+
+#[cfg(unix)]
+impl PrivateCompletionSocket {
+    fn create(config_dir: &Path) -> Result<Self, String> {
+        let socket_directory = config_dir.join("private-completions");
+        fs::create_dir_all(&socket_directory)
+            .map_err(|_| "private completion socket directory is unavailable".to_owned())?;
+        fs::set_permissions(&socket_directory, fs::Permissions::from_mode(0o700)).map_err(
+            |_| "private completion socket directory permissions are unavailable".to_owned(),
+        )?;
+        let runtime_directory = socket_directory.join(format!(
+            "candidate-{}-{}",
+            std::process::id(),
+            PRIVATE_SOCKET_SEQUENCE.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::create_dir(&runtime_directory)
+            .map_err(|_| "private completion runtime directory could not be created".to_owned())?;
+        fs::set_permissions(&runtime_directory, fs::Permissions::from_mode(0o700)).map_err(
+            |_| "private completion runtime directory permissions are unavailable".to_owned(),
+        )?;
+        let socket_path = runtime_directory.join("completion.sock");
+        let listener = UnixListener::bind(&socket_path)
+            .map_err(|_| "private completion socket could not be created".to_owned())?;
+        fs::set_permissions(&socket_path, fs::Permissions::from_mode(0o600))
+            .map_err(|_| "private completion socket permissions are unavailable".to_owned())?;
+        listener
+            .set_nonblocking(true)
+            .map_err(|_| "private completion socket could not be configured".to_owned())?;
+        let provider_config_dir = config_dir.to_path_buf();
+        let server =
+            thread::spawn(move || serve_one_private_completion(listener, provider_config_dir));
+        Ok(Self {
+            runtime_directory,
+            socket_path,
+            server: Some(server),
+        })
+    }
+
+    fn path(&self) -> &Path {
+        &self.socket_path
+    }
+
+    fn runtime_dir(&self) -> &Path {
+        &self.runtime_directory
+    }
+
+    fn finish(mut self) -> Result<(), String> {
+        let result = self
+            .server
+            .take()
+            .ok_or_else(|| "private completion server was unavailable".to_owned())?
+            .join()
+            .map_err(|_| "private completion server panicked".to_owned())?;
+        let _ = fs::remove_file(&self.socket_path);
+        let _ = fs::remove_dir_all(&self.runtime_directory);
+        result
+    }
+}
+
+#[cfg(unix)]
+impl Drop for PrivateCompletionSocket {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.socket_path);
+        let _ = fs::remove_dir_all(&self.runtime_directory);
+    }
+}
+
+#[cfg(unix)]
+fn serve_one_private_completion(listener: UnixListener, config_dir: PathBuf) -> Result<(), String> {
+    let started = Instant::now();
+    let stream = loop {
+        match listener.accept() {
+            Ok((stream, _)) => break stream,
+            Err(error)
+                if error.kind() == std::io::ErrorKind::WouldBlock
+                    && started.elapsed() < PRIVATE_COMPLETION_TIMEOUT =>
+            {
+                thread::sleep(Duration::from_millis(20))
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                return Err("private completion socket timed out".to_owned());
+            }
+            Err(_) => return Err("private completion socket refused a connection".to_owned()),
+        }
+    };
+    forward_one_private_completion(stream, &config_dir)
+}
+
+#[cfg(unix)]
+fn forward_one_private_completion(mut stream: UnixStream, config_dir: &Path) -> Result<(), String> {
+    stream
+        .set_read_timeout(Some(PRIVATE_COMPLETION_TIMEOUT))
+        .map_err(|_| "private completion socket read timeout is unavailable".to_owned())?;
+    let request = read_one_private_completion_request(&mut stream)?;
+    let body = parse_private_completion_request(&request)?;
+    let secret_backend = select_production_secret_store();
+    let transport = RustlsProviderTransport::default();
+    let service = ProviderProxyService::new(
+        secret_backend.as_secret_store(),
+        ProviderConfigRepository::under_config_dir(config_dir),
+        &transport,
+    );
+    let response = service
+        .forward_chat_completion(body)
+        .map_err(|_| "private completion provider request was refused".to_owned())?;
+    if response.status != 200 || response.body.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+        return Err("private completion provider response exceeds transport limit".to_owned());
+    }
+    let header = format!(
+        "HTTP/1.1 {} OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        response.status,
+        response.body.len()
+    );
+    stream
+        .write_all(header.as_bytes())
+        .and_then(|_| stream.write_all(&response.body))
+        .map_err(|_| "private completion response could not be written".to_owned())
+}
+
+#[cfg(unix)]
+fn read_one_private_completion_request(stream: &mut UnixStream) -> Result<Vec<u8>, String> {
+    let mut request = Vec::new();
+    let mut expected_request_length = None;
+    loop {
+        if request.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+            return Err("private completion request exceeds transport limit".to_owned());
+        }
+        if let Some(total_length) = expected_request_length {
+            if request.len() == total_length {
+                return Ok(request);
+            }
+            if request.len() > total_length {
+                return Err("private completion request has trailing data".to_owned());
+            }
+        } else if let Some(header_end) = request.windows(4).position(|window| window == b"\r\n\r\n")
+        {
+            let header_text = std::str::from_utf8(&request[..header_end + 4])
+                .map_err(|_| "private completion request headers are malformed".to_owned())?;
+            let content_length = header_text
+                .split("\r\n")
+                .filter_map(|line| line.split_once(':'))
+                .find_map(|(name, value)| {
+                    name.eq_ignore_ascii_case("content-length")
+                        .then(|| value.trim().parse::<usize>().ok())
+                        .flatten()
+                })
+                .ok_or_else(|| "private completion body length is invalid".to_owned())?;
+            expected_request_length = Some(header_end + 4 + content_length);
+        }
+        let mut buffer = [0_u8; 4096];
+        let bytes_read = stream
+            .read(&mut buffer)
+            .map_err(|_| "private completion request could not be read".to_owned())?;
+        if bytes_read == 0 {
+            return Err("private completion request ended early".to_owned());
+        }
+        request.extend_from_slice(&buffer[..bytes_read]);
+    }
+}
+
+#[cfg(unix)]
+fn parse_private_completion_request(request: &[u8]) -> Result<&[u8], String> {
+    if request.is_empty() || request.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
+        return Err("private completion request exceeds transport limit".to_owned());
+    }
+    let separator = request
+        .windows(4)
+        .position(|window| window == b"\r\n\r\n")
+        .ok_or_else(|| "private completion request is malformed".to_owned())?;
+    let (headers, body) = request.split_at(separator + 4);
+    let headers = std::str::from_utf8(headers)
+        .map_err(|_| "private completion request headers are malformed".to_owned())?;
+    let mut lines = headers.split("\r\n");
+    if lines.next() != Some("POST /chat/completions HTTP/1.1") {
+        return Err("private completion route is refused".to_owned());
+    }
+    let mut content_length = None;
+    for line in lines {
+        let Some((name, value)) = line.split_once(':') else {
+            continue;
+        };
+        if name.eq_ignore_ascii_case("authorization") {
+            return Err("private completion authorization is refused".to_owned());
+        }
+        if name.eq_ignore_ascii_case("content-length") {
+            if content_length.is_some() {
+                return Err("private completion body length is ambiguous".to_owned());
+            }
+            content_length = value.trim().parse::<usize>().ok();
+        }
+    }
+    if content_length != Some(body.len()) {
+        return Err("private completion body length is invalid".to_owned());
+    }
+    let body_json: Value = serde_json::from_slice(body)
+        .map_err(|_| "private completion body is invalid JSON".to_owned())?;
+    let body_object = body_json
+        .as_object()
+        .ok_or_else(|| "private completion body is not an object".to_owned())?;
+    if !body_object
+        .keys()
+        .all(|field| ["model", "stream", "messages"].contains(&field.as_str()))
+        || body_object.get("stream") != Some(&Value::Bool(false))
+        || !body_object.get("model").is_some_and(Value::is_string)
+        || !body_object.get("messages").is_some_and(Value::is_array)
+        || !body_object["messages"].as_array().is_some_and(|messages| {
+            messages.iter().all(|message| {
+                let Some(message) = message.as_object() else {
+                    return false;
+                };
+                matches!(
+                    message.get("role").and_then(Value::as_str),
+                    Some("system" | "user" | "assistant")
+                ) && message.get("content").is_some_and(Value::is_string)
+                    && message.len() == 2
+            })
+        })
+    {
+        return Err("private completion body is outside candidate protocol".to_owned());
+    }
+    Ok(body)
 }
 
 /// Why a `pi.json` could not be turned into a `PiConfig`.
@@ -239,13 +606,46 @@ pub fn parse_pi_config(document: &str) -> Result<PiConfig, PiConfigError> {
             detail: "pi config is not a personal-pi-config document",
         });
     }
+    let allowed_fields = [
+        "schema_version",
+        "surface",
+        "executable_path",
+        "extension_entry_path",
+        "candidate_adapter_path",
+        "candidate_extension_entry_path",
+    ];
+    if !value.as_object().is_some_and(|object| {
+        object
+            .keys()
+            .all(|field| allowed_fields.contains(&field.as_str()))
+    }) {
+        return Err(PiConfigError::Corrupt {
+            detail: "pi config has unsupported fields",
+        });
+    }
 
     let executable_path = required_path(&value, "executable_path")?;
     let extension_entry_path = required_path(&value, "extension_entry_path")?;
+    let candidate_adapter_path = optional_path(&value, "candidate_adapter_path")?;
+    let candidate_extension_entry_path = optional_path(&value, "candidate_extension_entry_path")?;
+    if candidate_adapter_path.is_some() != candidate_extension_entry_path.is_some() {
+        return Err(PiConfigError::Corrupt {
+            detail: "pi config requires both private candidate paths",
+        });
+    }
     Ok(PiConfig {
         executable_path,
         extension_entry_path,
+        candidate_adapter_path,
+        candidate_extension_entry_path,
     })
+}
+
+fn optional_path(value: &Value, field: &'static str) -> Result<Option<PathBuf>, PiConfigError> {
+    if value.get(field).is_none() {
+        return Ok(None);
+    }
+    required_path(value, field).map(Some)
 }
 
 fn required_path(value: &Value, field: &'static str) -> Result<PathBuf, PiConfigError> {
@@ -474,8 +874,10 @@ mod tests {
         let config = PiConfig {
             executable_path: PathBuf::from("/does/not/exist"),
             extension_entry_path: PathBuf::from("/does/not/exist.js"),
+            candidate_adapter_path: None,
+            candidate_extension_entry_path: None,
         };
-        let error = PrivatePiCandidateProcess::from_config(&config)
+        let error = PrivatePiCandidateProcess::from_config(&config, Path::new("/tmp"))
             .propose(&request)
             .expect_err("oversized Context must be rejected before spawning Pi");
         assert_eq!(
@@ -498,6 +900,56 @@ mod tests {
     }
 
     #[test]
+    fn optional_private_candidate_paths_must_be_absolute_when_present() {
+        let executable = absolute("bin/pi");
+        let extension = absolute("pi-cognitiveos/dist/index.js");
+        let adapter = absolute("bin/pi-agent-adapter");
+        let candidate_extension = absolute("pi-cognitiveos/private-candidate.mjs");
+        let document = format!(
+            r#"{{"schema_version":1,"surface":"personal-pi-config","executable_path":"{executable}","extension_entry_path":"{extension}","candidate_adapter_path":"{adapter}","candidate_extension_entry_path":"{candidate_extension}"}}"#
+        );
+        let config = parse_pi_config(&document).expect("private candidate paths must parse");
+        assert_eq!(config.candidate_adapter_path, Some(PathBuf::from(adapter)));
+        assert_eq!(
+            config.candidate_extension_entry_path,
+            Some(PathBuf::from(candidate_extension))
+        );
+        let relative_adapter = document.replace(&adapter, "relative/pi-agent-adapter");
+        assert!(matches!(
+            parse_pi_config(&relative_adapter),
+            Err(PiConfigError::Corrupt { .. })
+        ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn private_completion_parser_rejects_bearers_and_wrong_lengths() {
+        let body = r#"{"model":"selected","stream":false,"messages":[]}"#;
+        let valid = format!(
+            "POST /chat/completions HTTP/1.1\r\nHost: private\r\nContent-Length: {}\r\n\r\n{body}",
+            body.len()
+        );
+        assert_eq!(
+            parse_private_completion_request(valid.as_bytes()),
+            Ok(body.as_bytes())
+        );
+        let bearer = b"POST /chat/completions HTTP/1.1\r\nAuthorization: Bearer forbidden\r\nContent-Length: 2\r\n\r\n{}";
+        assert!(parse_private_completion_request(bearer).is_err());
+        let wrong_length = b"POST /chat/completions HTTP/1.1\r\nContent-Length: 3\r\n\r\n{}";
+        assert!(parse_private_completion_request(wrong_length).is_err());
+        let duplicate_length =
+            b"POST /chat/completions HTTP/1.1\r\nContent-Length: 2\r\nContent-Length: 2\r\n\r\n{}";
+        assert!(parse_private_completion_request(duplicate_length).is_err());
+        let arbitrary_proxy_body =
+            r#"{"model":"selected","stream":false,"messages":[],"tools":[]}"#;
+        let arbitrary_proxy_request = format!(
+            "POST /chat/completions HTTP/1.1\r\nContent-Length: {}\r\n\r\n{arbitrary_proxy_body}",
+            arbitrary_proxy_body.len()
+        );
+        assert!(parse_private_completion_request(arbitrary_proxy_request.as_bytes()).is_err());
+    }
+
+    #[test]
     fn malformed_configurations_are_corrupt_not_ready() {
         let executable = absolute("bin/pi");
         let extension = absolute("pi-cognitiveos/dist/index.js");
@@ -507,6 +959,7 @@ mod tests {
             r#"{"schema_version":2,"surface":"personal-pi-config","executable_path":"/a","extension_entry_path":"/b"}"#.to_owned(),
             r#"{"schema_version":1,"surface":"other","executable_path":"/a","extension_entry_path":"/b"}"#.to_owned(),
             r#"{"schema_version":1,"surface":"personal-pi-config","extension_entry_path":"/b"}"#.to_owned(),
+            r#"{"schema_version":1,"surface":"personal-pi-config","executable_path":"/a","extension_entry_path":"/b","api_key":"forbidden"}"#.to_owned(),
             r#"{"schema_version":1,"surface":"personal-pi-config","executable_path":"  ","extension_entry_path":"/b"}"#.to_owned(),
             format!(
                 r#"{{"schema_version":1,"surface":"personal-pi-config","executable_path":"relative/pi","extension_entry_path":"{extension}"}}"#

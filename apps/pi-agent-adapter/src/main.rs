@@ -11,7 +11,9 @@ use cognitive_secret::{
     select_production_secret_store,
 };
 use pi_agent_adapter::{
-    PiCompatibilityPin, PiLaunchPolicy, observed_response_models, redact_secret,
+    DAEMON_CANDIDATE_FRAME_LIMIT, DaemonCandidateRequest, PiCompatibilityPin, PiLaunchPolicy,
+    extract_daemon_candidate_response_from_pi_events, observed_response_models,
+    parse_daemon_candidate_request, redact_secret,
 };
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
@@ -27,7 +29,9 @@ const LOCAL_NATIVE_PROVIDER_SECRET_DEVELOPMENT_FLAG: &str =
 const EXTENSION_LOAD_TIMEOUT: Duration = Duration::from_secs(30);
 const P0_T06_EXTENSION_FIXTURE: &str = "apps/pi-agent-adapter/fixtures/p0_t06_extension.ts";
 const P0_T06_EXTENSION_STATUS_COMMAND: &str = "/cognitiveos-p0-t06-status";
-const USAGE: &str = "pi-agent-adapter <run|evaluate|extension-load> --pi <path> --model <deepseek-model> --prompt <text> --work-dir <dir> --config-dir <pi-dir> --provider-config-dir <personal-provider-config-dir> --allow-local-native-provider-secret-development [--runs <1..=20> --expected-text <text>]";
+const DAEMON_CANDIDATE_PROVIDER_ID: &str = "cognitiveos-private-candidate";
+const DAEMON_CANDIDATE_TIMEOUT: Duration = Duration::from_secs(60);
+const USAGE: &str = "pi-agent-adapter <run|evaluate|extension-load|daemon-candidate> --pi <path> --model <model> --work-dir <dir> --config-dir <pi-dir> [--extension <candidate-extension-path> --runs <1..=20> --expected-text <text>]";
 
 #[derive(Debug, Default, PartialEq, Eq)]
 struct ParsedFlags {
@@ -61,7 +65,132 @@ fn run(args: &[String]) -> Result<Value, String> {
         "run" => candidate_record(&flags),
         "evaluate" => evaluate_candidates(&flags),
         "extension-load" => extension_load_record(&flags),
+        "daemon-candidate" => daemon_candidate(&flags),
         _ => Err(format!("unsupported verb `{verb}`")),
+    }
+}
+
+/// Invoke the daemon-private Pi candidate protocol once. The request travels
+/// over stdin and the Pi prompt travels over Pi RPC stdin, never argv. This
+/// path deliberately does not resolve a Provider key or read provider config;
+/// the registered candidate extension must use the daemon-created private
+/// completion socket supplied by its environment.
+fn daemon_candidate(flags: &ParsedFlags) -> Result<Value, String> {
+    let pi = required(flags, "pi")?;
+    let model = required(flags, "model")?;
+    let work_dir = required(flags, "work-dir")?;
+    let config_dir = required(flags, "config-dir")?;
+    let extension = required(flags, "extension")?;
+    let request = read_daemon_candidate_request()?;
+
+    verify_pinned_pi_version(pi)?;
+    if !std::path::Path::new(extension).is_file() {
+        return Err("daemon candidate extension file is missing".to_owned());
+    }
+    let mut child = candidate_only_command(pi)
+        .arg("--provider")
+        .arg(DAEMON_CANDIDATE_PROVIDER_ID)
+        .arg("--model")
+        .arg(model)
+        // The pinned Pi CLI uses `-e` for an explicitly selected extension;
+        // discovery remains disabled separately by `--no-extensions`.
+        .arg("-e")
+        .arg(extension)
+        .arg("--no-tools")
+        .arg("--no-extensions")
+        .arg("--no-skills")
+        .arg("--no-context-files")
+        .arg("--no-session")
+        .arg("--no-approve")
+        .arg("--mode")
+        .arg("rpc")
+        .current_dir(work_dir)
+        // A disposable daemon-created directory prevents Pi from discovering
+        // a user's home configuration while its environment is allowlisted.
+        .env("HOME", config_dir)
+        .env("PI_CODING_AGENT_DIR", config_dir)
+        .env("COGNITIVEOS_PRIVATE_COMPLETION_MODEL", model)
+        .env("PI_TELEMETRY", "0")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|error| format!("daemon candidate Pi launch failed: {error}"))?;
+    let stdout_reader = collect_child_stream(
+        child
+            .stdout
+            .take()
+            .ok_or_else(|| "daemon candidate Pi stdout was not captured".to_owned())?
+            .take((DAEMON_CANDIDATE_FRAME_LIMIT + 1) as u64),
+    );
+    let stderr_reader = collect_child_stream(
+        child
+            .stderr
+            .take()
+            .ok_or_else(|| "daemon candidate Pi stderr was not captured".to_owned())?
+            .take((DAEMON_CANDIDATE_FRAME_LIMIT + 1) as u64),
+    );
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "daemon candidate Pi stdin was not captured".to_owned())?;
+    write_rpc_prompt(&mut stdin, "private-candidate", &candidate_prompt(&request))?;
+    drop(stdin);
+
+    let started = Instant::now();
+    let exit_status = wait_for_candidate_exit(&mut child, started)?;
+    let stdout = join_child_stream(stdout_reader, "stdout")?;
+    let _stderr = join_child_stream(stderr_reader, "stderr")?;
+    if stdout.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
+        return Err("daemon candidate Pi stdout exceeds transport limit".to_owned());
+    }
+    if !exit_status.success() {
+        return Err("daemon candidate Pi exited unsuccessfully".to_owned());
+    }
+    let response = extract_daemon_candidate_response_from_pi_events(
+        std::str::from_utf8(&stdout)
+            .map_err(|_| "daemon candidate Pi emitted non-UTF-8 output".to_owned())?,
+    )?;
+    serde_json::to_value(response)
+        .map_err(|error| format!("daemon candidate response serialization failed: {error}"))
+}
+
+fn read_daemon_candidate_request() -> Result<DaemonCandidateRequest, String> {
+    let mut frame = Vec::new();
+    std::io::stdin()
+        .take((DAEMON_CANDIDATE_FRAME_LIMIT + 1) as u64)
+        .read_to_end(&mut frame)
+        .map_err(|error| format!("daemon candidate request read failed: {error}"))?;
+    parse_daemon_candidate_request(&frame)
+}
+
+fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
+    format!(
+        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters_digest (string), expected_state_version (integer >= 0), and operation_descriptor_id (string). Do not invoke tools. Context follows:\n{}",
+        request.rendered_context
+    )
+}
+
+fn wait_for_candidate_exit(
+    child: &mut std::process::Child,
+    started: Instant,
+) -> Result<std::process::ExitStatus, String> {
+    loop {
+        match child
+            .try_wait()
+            .map_err(|error| format!("daemon candidate Pi wait failed: {error}"))?
+        {
+            Some(status) => return Ok(status),
+            None if started.elapsed() >= DAEMON_CANDIDATE_TIMEOUT => {
+                child
+                    .kill()
+                    .map_err(|error| format!("daemon candidate Pi timeout kill failed: {error}"))?;
+                return child
+                    .wait()
+                    .map_err(|error| format!("daemon candidate Pi timeout wait failed: {error}"));
+            }
+            None => sleep(Duration::from_millis(25)),
+        }
     }
 }
 
@@ -625,6 +754,36 @@ fn sanitized_command(program: &str, provider_material: &SecretMaterial) -> Resul
     Ok(command)
 }
 
+/// Build the daemon candidate child environment without forwarding ambient
+/// credentials. The private completion socket path is deliberately not set
+/// here: only the daemon composition may provide it after it has created a
+/// one-shot completion listener.
+fn candidate_only_command(program: &str) -> Command {
+    let mut command = Command::new(program);
+    command.env_clear();
+    for key in [
+        "ComSpec",
+        "PATHEXT",
+        "PATH",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "WINDIR",
+    ] {
+        if let Some(value) = env::var_os(key) {
+            command.env(key, value);
+        }
+    }
+    // This is a daemon-created, one-shot Unix-domain completion endpoint, not
+    // a session bearer or Provider credential. Its lifetime and single-use
+    // enforcement remain daemon-owned.
+    if let Some(socket_path) = env::var_os("COGNITIVEOS_PRIVATE_COMPLETION_SOCKET") {
+        command.env("COGNITIVEOS_PRIVATE_COMPLETION_SOCKET", socket_path);
+    }
+    command
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -723,6 +882,51 @@ mod tests {
         assert!(names.iter().any(|name| name == "DEEPSEEK_API_KEY"));
         assert!(!names.iter().any(|name| name == "OPENAI_API_KEY"));
         Ok(())
+    }
+
+    #[test]
+    fn daemon_candidate_child_does_not_receive_provider_or_authority_environment() {
+        let command = candidate_only_command("pi");
+        let names: Vec<String> = command
+            .get_envs()
+            .filter_map(|(name, value)| value.map(|_| name.to_string_lossy().into_owned()))
+            .collect();
+        for forbidden in [
+            "DEEPSEEK_API_KEY",
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "COGNITIVEOS_BOOTSTRAP",
+            "COGNITIVEOS_MANAGEMENT_BEARER",
+        ] {
+            assert!(
+                !names.iter().any(|name| name == forbidden),
+                "{forbidden} must not reach the daemon candidate child"
+            );
+        }
+    }
+
+    #[test]
+    fn private_candidate_prompt_describes_the_complete_untrusted_schema() {
+        let request = DaemonCandidateRequest {
+            protocol: "cognitiveos.private-candidate/1".to_owned(),
+            task_ref: "task://personal/test".to_owned(),
+            contract_epoch: 1,
+            rendered_context: "untrusted Context text".to_owned(),
+        };
+        let prompt = candidate_prompt(&request);
+        for field in [
+            "tool_ref",
+            "action",
+            "target",
+            "parameters_digest",
+            "expected_state_version",
+            "operation_descriptor_id",
+        ] {
+            assert!(prompt.contains(field), "prompt must name {field}");
+        }
+        assert!(prompt.contains("untrusted Context text"));
+        assert!(!prompt.contains("wia"));
+        assert!(!prompt.contains("effect"));
     }
 
     #[test]

@@ -1456,6 +1456,7 @@ version = "0.0.1"
 dependencies = [
  "cognitive-runtime",
  "cognitive-secret",
+ "serde",
  "serde_json",
 ]
 

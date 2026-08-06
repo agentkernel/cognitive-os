@@ -63,6 +63,7 @@ use thiserror::Error;
 
 use super::pi_runtime::{
     PrivatePiCandidateProcess, PrivatePiCandidateRequest, PrivatePiCandidateResponse,
+    load_pi_config,
 };
 
 const TASK_CONTRACT_EXECUTION_SCHEMA_V03: &str = "cognitiveos.task-contract/0.3";
@@ -3643,6 +3644,20 @@ where
 pub(crate) fn run_private_scheduler_tick(
     authority_database_path: &Path,
 ) -> Result<(), SchedulerAuthorityError> {
+    let provider_config_dir = authority_database_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    run_private_scheduler_tick_with_provider_config(authority_database_path, provider_config_dir)
+}
+
+/// Run one scheduler pass with the daemon-owned configuration directory used
+/// for the selected model, Pi configuration, and private completion socket.
+/// The separate parameter keeps scheduler fixtures hermetic while production
+/// startup supplies the layout's actual configuration directory.
+pub(crate) fn run_private_scheduler_tick_with_provider_config(
+    authority_database_path: &Path,
+    provider_config_dir: &Path,
+) -> Result<(), SchedulerAuthorityError> {
     let authority_store = SqliteAuthorityStore::open(authority_database_path)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
@@ -3672,34 +3687,50 @@ pub(crate) fn run_private_scheduler_tick(
         let observed_wall_time = clock
             .now()
             .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
-        let _context_resolution_command = context_execution_policy
-            .as_ref()
-            .map(|policy| {
-                context_resolution_command_from_policy(policy, observed_wall_time.clone())
-            })
-            .transpose()?;
         let continuation_authorization = authority_store
             .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
             .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
         let candidate_authorization = if continuation_authorization.is_none() {
-            Some(
-                authority_store
-                    .load_unconsumed_worker_iteration_authorization_for_task_binding(
-                        &resolved_work.task_binding.task_ref,
-                        resolved_work.task_binding.contract_epoch,
-                    )
-                    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-                    .ok_or_else(|| {
-                        SchedulerAuthorityError::CandidateUnavailable(format!(
-                            "no unconsumed worker authorization or continuation authority for {} at epoch {}",
-                            resolved_work.task_binding.task_ref,
-                            resolved_work.task_binding.contract_epoch
-                        ))
-                    })?,
-            )
+            authority_store
+                .load_unconsumed_worker_iteration_authorization_for_task_binding(
+                    &resolved_work.task_binding.task_ref,
+                    resolved_work.task_binding.contract_epoch,
+                )
+                .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
         } else {
             None
         };
+        if continuation_authorization.is_none() && candidate_authorization.is_none() {
+            let policy = context_execution_policy.as_ref().ok_or_else(|| {
+                SchedulerAuthorityError::CandidateUnavailable(
+                    "runnable work has no daemon-private execution policy".to_owned(),
+                )
+            })?;
+            let context_command =
+                context_resolution_command_from_policy(policy, observed_wall_time.clone())?;
+            let admission_command = candidate_admission_command_from_policy(policy)?;
+            let pi_config = load_pi_config(provider_config_dir).map_err(|_| {
+                SchedulerAuthorityError::CandidateUnavailable(
+                    "daemon-private Pi candidate transport is not configured".to_owned(),
+                )
+            })?;
+            let proposer = ConfiguredPrivatePiCandidateProposer::new(
+                PrivatePiCandidateProcess::from_config(&pi_config, provider_config_dir),
+            );
+            propose_persist_and_admit_candidate(
+                &authority_store,
+                &clock,
+                &identifiers,
+                &context_command,
+                &proposer,
+                &admission_command,
+            )?;
+            // Admission is the only outcome of the Pi proposal pass. Leave
+            // the newly issued WIA durable and unconsumed for a later normal
+            // scheduler recovery/dispatch pass; Pi invocation must never
+            // borrow or immediately consume worker authority.
+            continue;
+        }
         let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
             SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
         })?;

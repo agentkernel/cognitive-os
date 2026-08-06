@@ -422,13 +422,24 @@ fn parse_daemon_start_options(
 fn parse_pi_configure_options(
     flags: &BTreeMap<String, String>,
 ) -> Result<PiConfigureOptions, String> {
-    reject_unexpected_flags(flags, &["runtime-root", "executable", "extension-entry"])?;
+    reject_unexpected_flags(
+        flags,
+        &[
+            "runtime-root",
+            "executable",
+            "extension-entry",
+            "candidate-adapter",
+            "candidate-extension",
+        ],
+    )?;
     let executable_path = required_path_flag(flags, "executable")?;
     let extension_entry_path = required_path_flag(flags, "extension-entry")?;
     Ok(PiConfigureOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
         executable_path,
         extension_entry_path,
+        candidate_adapter_path: flags.get("candidate-adapter").map(PathBuf::from),
+        candidate_extension_entry_path: flags.get("candidate-extension").map(PathBuf::from),
     })
 }
 
@@ -581,6 +592,10 @@ mod tests {
             "/opt/pi/bin/pi".to_owned(),
             "--extension-entry".to_owned(),
             "/opt/cognitiveos/pi-cognitiveos/index.js".to_owned(),
+            "--candidate-adapter".to_owned(),
+            "/opt/cognitiveos/bin/pi-agent-adapter".to_owned(),
+            "--candidate-extension".to_owned(),
+            "/opt/cognitiveos/pi-cognitiveos/private-candidate.mjs".to_owned(),
         ];
 
         let command = parse_cognitive_args(&arguments).expect("parse Pi configuration");
@@ -593,6 +608,12 @@ mod tests {
                 },
                 executable_path: PathBuf::from("/opt/pi/bin/pi"),
                 extension_entry_path: PathBuf::from("/opt/cognitiveos/pi-cognitiveos/index.js"),
+                candidate_adapter_path: Some(PathBuf::from(
+                    "/opt/cognitiveos/bin/pi-agent-adapter"
+                )),
+                candidate_extension_entry_path: Some(PathBuf::from(
+                    "/opt/cognitiveos/pi-cognitiveos/private-candidate.mjs",
+                )),
             }))
         );
 
