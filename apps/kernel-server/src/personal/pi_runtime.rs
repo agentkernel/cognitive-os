@@ -589,7 +589,7 @@ mod tests {
         };
         let error = PrivatePiCandidateProcess::from_config(&config)
             .propose(&request)
-            .unwrap_err();
+            .expect_err("oversized Context must be rejected before spawning Pi");
         assert_eq!(
             error,
             "private Pi candidate request exceeds transport limit"
