@@ -104,6 +104,18 @@ fn resource_projection_is_private_versioned_and_management_channel_bound() {
     assert!(management_response.contains("\"family\":\"memory\""));
     assert!(management_response.contains("\"availability\":\"not-backed\""));
 
+    let tool_response = request(
+        port,
+        &format!(
+            "GET /resource/v1/projection?family=tool&version=1 HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nConnection: close\r\n\r\n"
+        ),
+    );
+    assert!(tool_response.contains("200 OK"), "{tool_response}");
+    assert!(tool_response.contains("daemon-native-tool-registry"));
+    assert!(tool_response.contains("native.workspace.read"));
+    assert!(tool_response.contains("native.http.fetch"));
+    assert!(tool_response.contains("descriptor_digest"));
+
     let task_response = request(
         port,
         &format!(

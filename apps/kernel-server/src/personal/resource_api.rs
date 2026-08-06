@@ -6,6 +6,7 @@
 
 use std::collections::VecDeque;
 
+use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";
@@ -144,6 +145,33 @@ fn snapshot(family: &str, latest_sequence: u64) -> Value {
 }
 
 fn family_projection(family: &str) -> Value {
+    if family == "tool" {
+        let resources = BUILTIN_TOOL_CATALOG
+            .iter()
+            .map(|descriptor| {
+                json!({
+                    "operation_id": descriptor.operation_id,
+                    "action": descriptor.action,
+                    "descriptor_version": descriptor.descriptor_version,
+                    "descriptor_digest": descriptor.descriptor_digest,
+                    "risk": descriptor.risk,
+                    "executor": descriptor.executor,
+                    "required_capability": descriptor.required_capability,
+                    "family": descriptor.family,
+                    "availability": descriptor.availability,
+                    "input_limit_bytes": descriptor.input_limit_bytes,
+                    "output_limit_bytes": descriptor.output_limit_bytes,
+                })
+            })
+            .collect::<Vec<_>>();
+        return json!({
+            "family": family,
+            "availability": "available",
+            "authority_source": "daemon-native-tool-registry",
+            "resources": resources,
+            "authority_side_effects": false,
+        });
+    }
     let (availability, authority_source) = match family {
         "task" => ("available", "daemon-task-application-service"),
         "runtime" => ("available", "personal-daemon-runtime"),
