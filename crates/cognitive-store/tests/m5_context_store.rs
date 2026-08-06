@@ -188,8 +188,14 @@ fn scheduler_execution_policy_is_immutable_and_epoch_bound() {
             .expect("load policy"),
         Some(policy.clone())
     );
+    store
+        .append_scheduler_execution_policy(&policy)
+        .expect("exact policy replay is idempotent");
+    let mut conflicting_policy = policy.clone();
+    conflicting_policy.canonical_json =
+        r#"{"context":{"source_limit":9},"admission":{"purpose":"task_execution"}}"#.to_owned();
     assert!(matches!(
-        store.append_scheduler_execution_policy(&policy),
+        store.append_scheduler_execution_policy(&conflicting_policy),
         Err(StorePortError::Conflict { .. })
     ));
     assert_eq!(
