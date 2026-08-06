@@ -1,3 +1,5 @@
+#![allow(clippy::expect_used)]
+
 use pi_agent_adapter::{
     DAEMON_CANDIDATE_FRAME_LIMIT, DaemonCandidateRequest, DaemonCandidateResponse,
     extract_daemon_candidate_response_from_pi_events, parse_daemon_candidate_request,
