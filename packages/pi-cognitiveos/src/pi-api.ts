@@ -55,6 +55,13 @@ export interface ExtensionCommandSpec {
   handler(commandArguments: unknown, context: ExtensionContext): Promise<void>;
 }
 
+/** Pinned Pi extension flag registration options. */
+export interface ExtensionFlagOptions {
+  readonly description?: string;
+  readonly type: "boolean" | "string";
+  readonly default?: boolean | string;
+}
+
 /**
  * The runtime model accepted by the pinned `setModel` surface. Pi composes
  * provider model definitions with their ProviderConfig base URL before use;
@@ -168,6 +175,8 @@ export interface ExtensionAPI {
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
   ): void;
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
+  registerFlag(flagName: string, options: ExtensionFlagOptions): void;
+  getFlag(flagName: string): boolean | string | undefined;
   registerProvider(providerName: string, config: ProviderConfig): void;
   setModel(model: PiModel): Promise<boolean>;
 }

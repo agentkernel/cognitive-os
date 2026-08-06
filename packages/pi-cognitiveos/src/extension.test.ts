@@ -14,7 +14,10 @@ import { test } from "node:test";
 import { PersonalDaemonClient } from "./daemon-client.js";
 import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
-import { registerCognitiveOsExtension } from "./extension.js";
+import {
+  COGNITIVEOS_PRIVATE_CANDIDATE_FLAG,
+  registerCognitiveOsExtension,
+} from "./extension.js";
 import { COGNITIVEOS_STATUS_COMMAND_NAME, COGNITIVEOS_STATUS_KEY } from "./pin.js";
 import { FakePi, readinessProjectionBody, startFakeDaemon } from "./test-support.js";
 
@@ -85,6 +88,22 @@ test("registration queues the daemon provider and activates its model at session
   } finally {
     await daemon.close();
   }
+});
+
+test("private candidate mode registers no daemon provider or bootstrap-facing surface", async () => {
+  const pi = new FakePi();
+  pi.flagValues.set(COGNITIVEOS_PRIVATE_CANDIDATE_FLAG, true);
+
+  await registerCognitiveOsExtension(pi, { client: clientFor(undefined) });
+
+  assert.deepEqual([...pi.registeredHooks].sort(), ["project_trust", "tool_call"]);
+  assert.equal(pi.providers.length, 0);
+  assert.equal(pi.commands.size, 0);
+  assert.equal(pi.flags.get(COGNITIVEOS_PRIVATE_CANDIDATE_FLAG)?.type, "boolean");
+  assert.equal(await pi.driveProjectTrust().then((decision) => decision.trusted), "no");
+  const decision = await pi.driveToolCall("bash");
+  assert.equal(decision?.block, true);
+  assert.match(decision?.reason ?? "", /governed Intent\/Effect/);
 });
 
 test("project trust is always denied", async () => {
