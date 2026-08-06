@@ -525,6 +525,33 @@ mod tests {
     }
 
     #[test]
+    fn persisted_native_descriptor_must_match_effect_and_recovery_facts() {
+        let descriptor = BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|descriptor| descriptor.operation_id == "native.workspace.read")
+            .expect("workspace read descriptor");
+        let persisted = OperationDescriptor {
+            operation_id: descriptor.operation_id.clone(),
+            action: descriptor.action.clone(),
+            effect_class: EffectClass::Pure,
+            executor: descriptor.executor.clone(),
+            capabilities: crate::executor::ExecutorCapabilities {
+                queryable: true,
+                idempotent: true,
+            },
+            descriptor_version: descriptor.descriptor_version,
+        };
+        assert!(resolve_persisted_native_descriptor(&persisted).is_ok());
+
+        let mut drifted = persisted;
+        drifted.executor = "daemon.unknown".to_owned();
+        assert!(matches!(
+            resolve_persisted_native_descriptor(&drifted),
+            Err(ToolResolutionError::InvalidDescriptor { .. })
+        ));
+    }
+
+    #[test]
     fn unknown_tools_fail_closed() {
         let request = ToolResolutionRequest {
             operation_id: "native.workspace.read.discovered".to_owned(),
