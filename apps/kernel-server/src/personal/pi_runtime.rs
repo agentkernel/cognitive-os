@@ -427,7 +427,14 @@ fn read_one_private_completion_request(stream: &mut UnixStream) -> Result<Vec<u8
                         .flatten()
                 })
                 .ok_or_else(|| "private completion body length is invalid".to_owned())?;
-            expected_request_length = Some(header_end + 4 + content_length);
+            let total_request_length = header_end + 4 + content_length;
+            expected_request_length = Some(total_request_length);
+            // A single Unix-domain socket read can contain both the complete
+            // header and body. Do not require a second read merely to notice
+            // that the exact framed request is already complete.
+            if request.len() == total_request_length {
+                return Ok(request);
+            }
         }
         let mut buffer = [0_u8; 4096];
         let bytes_read = stream
