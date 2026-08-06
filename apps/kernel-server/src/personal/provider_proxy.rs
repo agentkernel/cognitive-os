@@ -86,6 +86,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     /// Forward one private Pi candidate completion and reject any upstream
     /// response shape that could carry a tool call or multiple candidates.
     /// The Provider credential remains confined to this daemon-owned service.
+    #[cfg(unix)]
     pub fn forward_private_candidate_completion(
         &self,
         request_body: &[u8],
@@ -142,6 +143,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     }
 }
 
+#[cfg(unix)]
 fn validate_private_candidate_response(
     response: &ProviderHttpResponse,
 ) -> Result<(), ProviderProxyError> {
@@ -224,10 +226,9 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{
-        ProviderProxyError, ProviderProxyService, validate_chat_request,
-        validate_private_candidate_response,
-    };
+    #[cfg(unix)]
+    use super::validate_private_candidate_response;
+    use super::{ProviderProxyError, ProviderProxyService, validate_chat_request};
     use cognitive_secret::{
         EphemeralSecretStore, ProviderConfigRepository, ProviderHttpRequest, ProviderHttpResponse,
         ProviderKeyService, ProviderTransport, ProviderTransportError, SecretMaterial,
@@ -286,6 +287,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn private_candidate_provider_response_requires_one_text_choice() {
         let valid_response = ProviderHttpResponse {
             status: 200,
