@@ -498,6 +498,42 @@ where
     Ok(Some(policy))
 }
 
+/// Convert the validated daemon policy into the deterministic Context resolver
+/// command. This function only assembles authority inputs; it does not query
+/// Context bodies and cannot grant Pi or worker authority.
+fn context_resolution_command_from_policy(
+    policy: &SchedulerExecutionPolicyRow,
+    decided_at: WallTimestamp,
+) -> Result<ContextResolutionCommand, SchedulerAuthorityError> {
+    let document: SchedulerExecutionPolicyDocument = serde_json::from_str(&policy.canonical_json)
+        .map_err(|error| {
+        SchedulerAuthorityError::ContextRequestUnavailable(format!(
+            "scheduler execution policy is malformed: {error}"
+        ))
+    })?;
+    let request_id = ObjectId::parse(&document.context.request_id).map_err(|_| {
+        SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy ContextRequest identity is malformed".to_owned(),
+        )
+    })?;
+    if request_id != policy.context_request_id {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy command identity differs from durable policy row"
+                .to_owned(),
+        ));
+    }
+    Ok(ContextResolutionCommand {
+        task_ref: document.task_ref,
+        request_id,
+        authorization_subject_ref: document.context.authorization_subject_ref,
+        tenant_id: document.context.tenant_id,
+        resource_scope_prefix: document.context.resource_scope_prefix,
+        conversation_ref: document.context.conversation_ref,
+        source_limit: document.context.source_limit,
+        decided_at,
+    })
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -3460,8 +3496,17 @@ pub(crate) fn run_private_scheduler_tick(
                 resolved_work.task_binding.contract_epoch
             )));
         }
-        let _context_execution_policy =
+        let context_execution_policy =
             load_context_execution_policy(&authority_store, &resolved_work.task_binding)?;
+        let observed_wall_time = clock
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        let _context_resolution_command = context_execution_policy
+            .as_ref()
+            .map(|policy| {
+                context_resolution_command_from_policy(policy, observed_wall_time.clone())
+            })
+            .transpose()?;
         let continuation_authorization = authority_store
             .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
             .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
@@ -3484,9 +3529,6 @@ pub(crate) fn run_private_scheduler_tick(
         } else {
             None
         };
-        let observed_wall_time = clock
-            .now()
-            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
         let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
             SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
         })?;
