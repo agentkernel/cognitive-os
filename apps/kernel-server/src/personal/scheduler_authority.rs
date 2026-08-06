@@ -1585,7 +1585,10 @@ mod tests {
 
     fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> Option<String> {
         let endpoint_path = endpoint_document_path(layout);
-        for _ in 0..100 {
+        // Recovery tests perform SQLite replay before the server publishes the
+        // endpoint. Windows CI can take longer than the original two-second
+        // polling window under concurrent workspace test load.
+        for _ in 0..300 {
             if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
                 let endpoint =
                     serde_json::from_str::<serde_json::Value>(&document).unwrap()["endpoint"]
