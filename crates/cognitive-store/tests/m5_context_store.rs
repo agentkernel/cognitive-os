@@ -17,7 +17,8 @@ use cognitive_kernel::authz::{
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextCandidateQuery,
-    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow, StorePortError,
+    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow,
+    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, StorePortError,
     WorkspaceContextSourceRow,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
@@ -164,6 +165,39 @@ fn workspace_source_row(
         content_tokens: Some(3),
         canonical_json,
     }
+}
+
+#[test]
+fn scheduler_execution_policy_is_immutable_and_epoch_bound() {
+    let (_directory, store) = fresh_store();
+    let request_id = object_id(901);
+    let policy = SchedulerExecutionPolicyRow {
+        task_ref: "task://tenant-a/policy-test".to_owned(),
+        contract_epoch: 1,
+        context_request_id: request_id.clone(),
+        canonical_json:
+            r#"{"context":{"source_limit":8},"admission":{"purpose":"task_execution"}}"#.to_owned(),
+    };
+
+    store
+        .append_scheduler_execution_policy(&policy)
+        .expect("append policy");
+    assert_eq!(
+        store
+            .load_scheduler_execution_policy(&policy.task_ref, policy.contract_epoch)
+            .expect("load policy"),
+        Some(policy.clone())
+    );
+    assert!(matches!(
+        store.append_scheduler_execution_policy(&policy),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .load_scheduler_execution_policy(&policy.task_ref, 2)
+            .expect("load other epoch"),
+        None
+    );
 }
 
 fn timestamp(value: &str) -> WallTimestamp {

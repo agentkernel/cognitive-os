@@ -21,6 +21,10 @@
 //! `transition_records` abort any rewrite attempt, from any connection.
 
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
+use crate::context_store::{
+    CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
+    SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
+};
 use crate::worker_authorization::{
     CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
     DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
@@ -46,9 +50,10 @@ use cognitive_kernel::ports::{
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
     IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OperationCandidateProposalRow,
-    OutboxEntry, ProgressFactRow, ProtocolStore, SchedulerLeaseBinding, StorePortError,
-    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    OutboxEntry, ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow,
+    SchedulerExecutionPolicyStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
     WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     WorkspaceContextSourceRow,
 };
@@ -345,9 +350,24 @@ impl SqliteAuthorityStore {
             "PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;",
         )
         .map_err(unavailable("set pragmas"))?;
-        conn.execute_batch(&format!(
-            "{AUTHORITY_SCHEMA_V1}\n{SCHEDULER_SCHEMA_CURRENT}\n{WORKER_AUTHORIZATION_SCHEMA_V4}\n{DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5}\n{DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6}\n{WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7}\n{WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8}\n{WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9}\n{CONTINUATION_AUTHORITY_SCHEMA_V10}\n{CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11}"
-        ))
+        let schema = [
+            AUTHORITY_SCHEMA_V1,
+            SCHEDULER_SCHEMA_CURRENT,
+            WORKER_AUTHORIZATION_SCHEMA_V4,
+            DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
+            DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6,
+            WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+            WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8,
+            WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9,
+            CONTINUATION_AUTHORITY_SCHEMA_V10,
+            CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11,
+            CONTEXT_STORE_SCHEMA_V12,
+            WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
+            CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14,
+            SCHEDULER_EXECUTION_POLICY_SCHEMA_V15,
+        ]
+        .join("\n");
+        conn.execute_batch(&schema)
         .map_err(unavailable("install schema"))?;
         Ok(Self {
             conn: Mutex::new(conn),
@@ -1738,6 +1758,84 @@ impl ContextStore for SqliteAuthorityStore {
             content_tokens: row.get(11)?,
             canonical_json: row.get(12)?,
         })).optional().map_err(unavailable("load WorkspaceContextSource body"))
+    }
+}
+
+impl SchedulerExecutionPolicyStore for SqliteAuthorityStore {
+    fn append_scheduler_execution_policy(
+        &self,
+        policy: &SchedulerExecutionPolicyRow,
+    ) -> Result<(), StorePortError> {
+        if policy.task_ref.trim().is_empty() || policy.contract_epoch < 1 {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler execution policy binding is invalid".to_owned(),
+            });
+        }
+        let canonical_value: Value =
+            serde_json::from_str(&policy.canonical_json).map_err(|_| StorePortError::Conflict {
+                detail: "scheduler execution policy is not valid JSON".to_owned(),
+            })?;
+        if !canonical_value.is_object() {
+            return Err(StorePortError::Conflict {
+                detail: "scheduler execution policy must be a JSON object".to_owned(),
+            });
+        }
+        let connection = self.lock()?;
+        let result = connection.execute(
+            "INSERT INTO scheduler_execution_policies \
+             (task_ref, contract_epoch, context_request_id, canonical_json) \
+             VALUES (?1, ?2, ?3, ?4)",
+            (
+                policy.task_ref.as_str(),
+                policy.contract_epoch,
+                policy.context_request_id.as_str(),
+                policy.canonical_json.as_str(),
+            ),
+        );
+        match result {
+            Ok(_) => Ok(()),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "scheduler execution policy already exists for {} at epoch {}",
+                    policy.task_ref, policy.contract_epoch
+                ),
+            }),
+            Err(error) => Err(unavailable("insert scheduler execution policy")(error)),
+        }
+    }
+
+    fn load_scheduler_execution_policy(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<SchedulerExecutionPolicyRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT context_request_id, canonical_json \
+                 FROM scheduler_execution_policies \
+                 WHERE task_ref=?1 AND contract_epoch=?2",
+                (task_ref, contract_epoch),
+                |row| {
+                    let context_request_id_text: String = row.get(0)?;
+                    let context_request_id =
+                        ObjectId::parse(&context_request_id_text).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?;
+                    Ok(SchedulerExecutionPolicyRow {
+                        task_ref: task_ref.to_owned(),
+                        contract_epoch,
+                        context_request_id,
+                        canonical_json: row.get(1)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(unavailable("load scheduler execution policy"))
     }
 }
 

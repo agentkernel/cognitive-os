@@ -1164,6 +1164,44 @@ pub trait ContextStore {
     ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError>;
 }
 
+/// Daemon-private, immutable execution inputs for one scheduler task binding.
+///
+/// This row closes the gap between a Context-bound TaskContract and candidate
+/// admission: the scheduler must reload its Context query and daemon-created
+/// admission facts from durable state rather than infer defaults from a worker
+/// request or a display-oriented task projection. The canonical payload is a
+/// private implementation record, not a public TaskContract extension.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchedulerExecutionPolicyRow {
+    /// Exact task binding this policy may serve.
+    pub task_ref: String,
+    /// Exact immutable TaskContract epoch this policy may serve.
+    pub contract_epoch: i64,
+    /// Strong ContextRequest identity fixed by that contract.
+    pub context_request_id: ObjectId,
+    /// Daemon-issued canonical private policy document.
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-private policy persistence for pre-admission scheduling.
+/// A missing, malformed, or mismatched policy is never an authorization
+/// fallback: the scheduler must fail closed before it invokes Pi.
+pub trait SchedulerExecutionPolicyStore {
+    /// Append the policy created by daemon task admission. Duplicate task and
+    /// epoch bindings are conflicts because policy cannot be replaced.
+    fn append_scheduler_execution_policy(
+        &self,
+        policy: &SchedulerExecutionPolicyRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load the sole immutable policy for an exact scheduler task binding.
+    fn load_scheduler_execution_policy(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<SchedulerExecutionPolicyRow>, StorePortError>;
+}
+
 /// Durable source of the facts needed to reconstruct a current Context
 /// authorization snapshot. Only the daemon-admin authority may append facts.
 pub trait ContextAuthorizationFactStore {

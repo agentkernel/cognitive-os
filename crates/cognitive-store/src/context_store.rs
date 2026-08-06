@@ -118,3 +118,30 @@ BEGIN SELECT RAISE(ABORT, 'append-only: Context revocation facts are immutable')
 pub fn context_authorization_fact_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(14, CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14)
 }
+
+/// Migration v15: immutable daemon-private scheduler execution policy.
+///
+/// The policy deliberately remains outside the public TaskContract. It stores
+/// daemon-derived query and admission inputs bound to one immutable contract
+/// epoch, so the scheduler has no reason to invent Context scope, principal,
+/// budget charge, or governed-object provenance from a Pi proposal.
+pub const SCHEDULER_EXECUTION_POLICY_SCHEMA_V15: &str = "
+CREATE TABLE IF NOT EXISTS scheduler_execution_policies (
+  task_ref TEXT NOT NULL,
+  contract_epoch INTEGER NOT NULL CHECK (contract_epoch >= 1),
+  context_request_id TEXT NOT NULL,
+  canonical_json TEXT NOT NULL,
+  PRIMARY KEY (task_ref, contract_epoch)
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS scheduler_execution_policies_append_only_update
+BEFORE UPDATE ON scheduler_execution_policies
+BEGIN SELECT RAISE(ABORT, 'append-only: scheduler execution policy is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS scheduler_execution_policies_append_only_delete
+BEFORE DELETE ON scheduler_execution_policies
+BEGIN SELECT RAISE(ABORT, 'append-only: scheduler execution policy is immutable'); END;
+";
+
+/// The version-15 private scheduler execution policy migration entry.
+pub fn scheduler_execution_policy_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(15, SCHEDULER_EXECUTION_POLICY_SCHEMA_V15)
+}

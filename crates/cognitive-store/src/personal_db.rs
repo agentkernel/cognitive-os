@@ -7,7 +7,7 @@
 
 use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
-    workspace_context_source_migration_entry,
+    scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
 };
 use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
@@ -86,6 +86,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         context_store_migration_entry(),
         workspace_context_source_migration_entry(),
         context_authorization_fact_migration_entry(),
+        scheduler_execution_policy_migration_entry(),
     ]
 }
 
