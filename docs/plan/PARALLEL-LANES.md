@@ -37,17 +37,28 @@ flowchart LR
 
 ## 2. 并行规则（违反 = PR 拒收）
 
-1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。每个 lease 使用稳定 `lease_id`，格式为 `lease/personal/<task>/<slice>`。
+1. **一个任务 = 一个 primary lane + 一个 task branch/Draft PR + 一份活动 task lease**。一个
+   cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；Slice
+   只是该任务内的执行检查点，不得另建 branch、PR、lease 或普通 handoff。每个 lease 使用
+   稳定 `lease_id`，格式为 `lease/personal/<task>/<purpose>`，并持续到完整 task acceptance
+   与 merge/branch closure 完成。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
 3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。禁止用 `docs/plan/**`、`docs/standards/**`、`docs/adr/**`、`specs/**` 等 broad protected-tree glob 取得排他所有权；应列精确文件或窄 feature directory。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
 5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
-6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
+6. Handoff 只在完整任务收口、真正外部阻塞、未知并发改动、ownership transfer 或 owner
+   明确暂停时写一次；不得因 Slice、checkpoint、push、CI 轮次或普通会话边界产生逐段
+   handoff。
 7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`。
 8. Lease ledger 使用窄幅协调更新：会话只能新增、heartbeat、关闭自己的行并保留其他行。
    `docs/plan/PARALLEL-LANES.md` 不得列入任何 lease 的 writable paths；更新自己的 ledger
    row 是不授予其他路径的协调操作。父目录 lease 不能独占本文件。PR 合并时必须在同一
    closure delivery 关闭 lease；已合并但遗留 active 的行由下一治理 session 诚实关闭。
+9. 一个 branch/PR 不得承载多个正式任务。当前已存在的 legacy shared branch 不重写历史，
+   但每个活动任务必须在下一安全 continuation boundary 分离到自己的 task branch/PR；不得
+   在 shared branch 上再领取新任务。完整任务合并后关闭 lease、确认 PR merged、清理安全
+   可删的远端 task branch，并在本地切回/fast-forward `main` 后核对 clean worktree 与
+   HEAD/upstream。
 
 ### 2.1 Lane-CON 激活前文档例外
 
@@ -73,6 +84,7 @@ flowchart LR
 |---|---|---|---|---|
 | `lease/personal/P3-T01/d01-push-blocker` | P3-T01/D01 pushed-checkpoint delivery blocker record | `lane/ctr-p3-t01-context-request-binding` | 2026-08-07 | Local documentation checkpoint records that GitHub HTTPS could not connect through the configured local proxy while pushing `fcb1708`; it remains unpushed. See `20260807-personal-p3-t01-d01-push-blocker-handoff.md`. |
 | `lease/personal/P3-T01/context-request-binding` | P3-T01/D01 durable TaskContract ContextRequest binding, workspace source, and daemon-admin authorization/revocation prerequisite | `lane/ctr-p3-t01-context-request-binding` | 2026-08-07 | Prerequisite implementation and focused Context-store evidence are complete, and the daemon-only Context-before-private-Pi candidate composition is merged in PR #153 at `d3d9d295970964f9fe4055fdf4f6a29ab85a5e0b`. The next required durable ContextView emission and revoked-source integration negative remain blocked on the non-overlapping P2-T04 scheduler/Pi lease; no B03, Task completion, Gate, release, or Profile claim changed. See `20260807-personal-p3-t01-d01-context-integration-blocker-handoff.md`. |
+| `lease/personal/GOV/task-atomic-delivery-rules` | repository governance refactor for whole-task continuous delivery, MVP-first authorization and deterministic closure | `lane/governance-task-atomic-delivery-rules` | 2026-08-07 | Merged as PR #157 at `ddaeb69`; all required checks passed. See `20260807-task-atomic-delivery-rules-handoff.md`. The parallel window's legacy branch `lane/ctr-p3-t01-context-request-binding` and its worktree changes were untouched throughout. |
 | `lease/personal/P2-T07/d05-continuation-prerequisite` | P2-T07/D01 private verification, checkpoint, and continuation authority prerequisite consumed by P2-T03/D05 | `lane/ctr-p2-t03-worker-input-contract` | 2026-08-05 | P2-T07/D01 and P2-T03/D05 are done: exact immutable Linux `08932f7868d46f494aaa76835f4818fd7a1f2962` passed focused worker/recovery tests, full workspace fmt/build/test/Clippy, and required Ubuntu/Windows CI. The private authority only enables `ACT -> VERIFY -> CONTINUE -> OBSERVE`; Artifact, Task acceptance/completion, Gate, release, and Profile remain separate. See `20260805-personal-p2-t03-d05-native-linux-closure-handoff.md`. |
 | `lease/personal/P2-T03/worker-input-contract` | P2-T03/D05 public worker-input authority contract and scheduler consumption | `lane/ctr-p2-t03-worker-input-contract` | 2026-08-05 | Superseded by owner-approved `P2-T07/D01` continuation prerequisite. Candidate WIA handoff/recovery remains durable and is consumed by D05, but its prior BoundedHarness use was corrected: WIA authorizes atomic `DECIDE -> ACT`, not `CONTINUE -> OBSERVE`. The new active lease owns the narrow durable verification/checkpoint/continuation authority prerequisite; no Task completion, Gate, release, or Profile claim changed. |
 | `lease/personal/P2-T03/scheduler-bounded-harness-worker-recovery` | P2-T03/D05 scheduler-to-BoundedHarness worker and restart-safe recovery | `lane/run-p2-t03-d05-worker-recovery` | 2026-08-03 | Blocked after checkpoint `cc006c1`: durable scheduler registration, recovery discovery, TaskBinding fencing, and stale-epoch negative are implemented, but no canonical persisted authority source exists for the worker's candidate, charge, progress/evidence and expected-loop-version inputs. See `20260803-personal-p2-t03-d05-authority-input-blocker-handoff.md`; a new exact D05 lease is required after the owner decision. |

@@ -106,12 +106,21 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
     `&&`/`||`，当前 Windows GNU linker exit 121 是禁止 feature Slice 重复探测的已知
     unsupported boundary，Rust compiling/linking validation 必须预路由到 supported
     CI/MSVC 或 exact-revision native Linux。
-13. 代理入口、Operating Model 与本契约必须保留 `CHECKPOINT-DELIVERY-01`：仓库 owner 的
-    standing delivery authorization 要求 coherent 改动通过 eligible checks 后自动
-    commit/push/创建或更新 Draft PR，不在新窗口重复等待；未完成 Slice 的 PR 必须保持 Draft
-    且禁止 merge；只有完整出口、supported validation、required CI、review 与 evidence
-    closure 满足后才能自动 ready/merge。Handoff 必须携带 branch/full HEAD/upstream/PR/
-    worktree/remaining/validation/next action；coherent dirty handoff 不得成为默认会话出口。
+13. 代理入口、Operating Model 与本契约必须保留 `CHECKPOINT-DELIVERY-01`：checkpoint 只在
+    remote CI、exact-revision Linux validation 或异常恢复需要 immutable revision 时创建，
+    并且只是后台持久化事件，不得成为会话停点、用户汇报点、Slice 关闭或 merge 理由。
+    coherent 改动可自动 commit/push 到同一个 task Draft PR；完整 task acceptance 未满足前
+    必须保持 Draft 且禁止 merge。
+14. 代理入口、Operating Model、Personal 正式计划与本契约必须保留
+    `TASK-ATOMIC-DELIVERY-01`：一个正式任务使用一个 task branch、一个 Draft PR 和一个
+    task-scoped lease；Slice 只是内部检查点，完成后立即继续下一 acceptance 项。只有任务
+    完整验收、supported validation、required CI、最终文档/证据和分支/lease 收口全部满足
+    后才能 ready/merge。普通 Slice、commit、push、CI 轮次或可恢复故障不得创建独立 handoff
+    或中断工作；不得遗留独立 `acceptance-assessment` 分支。
+15. 整任务最终 handoff 必须携带 branch/full HEAD/upstream/PR/worktree/acceptance mapping/
+    validation/non-claims；合并后必须关闭 lease、确认 PR merged、清理安全可删的远端 task
+    branch、本地切回并 fast-forward `main`，验证 clean worktree 与 HEAD/upstream。coherent
+    dirty handoff、“实现完成但待验收”或 merged PR + active lease 不得成为正常出口。
 
 破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ
 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。
@@ -132,8 +141,12 @@ executable legacy prompt；不得为演练直接改坏工作树。
       `not-run` 则当前状态保持 `blocked` 而非 `done`
 - [ ] 本地命令遵守 `COMMAND-SHELL-PS51`，Rust 验证环境遵守
       `RUST-LINK-DEV-WIN-GNU-01`，未重复执行已知无效语法或 linker 探测
-- [ ] `CHECKPOINT-DELIVERY-01` 已遵守：coherent checkpoint 已自动 commit/push 到 Slice
-      branch 并使用 Draft PR；完整出口与 required checks 通过后已自动 ready/merge；未完成
-      Slice 未 merge；handoff 记录完整恢复 tuple，或 dirty handoff 明确列出受影响路径和
+- [ ] `CHECKPOINT-DELIVERY-01` 已遵守：只有远程验证或异常恢复所需 checkpoint 才自动
+      commit/push 到同一个 task Draft PR；没有因 checkpoint、CI 或阶段结果停工/汇报
+- [ ] `TASK-ATOMIC-DELIVERY-01` 已遵守：整任务使用一个 branch/PR/lease，全部 acceptance、
+      supported validation、required CI 与最终收口后才 ready/merge；没有独立
+      acceptance-assessment 分支或逐 Slice handoff
+- [ ] 合并后 task lease 已关闭，PR/远端分支/本地 `main`/worktree/HEAD/upstream 均已按
+      deterministic task closure 核对；若未完成则保持 `in-progress`/`blocked` 并记录唯一
       recovery action
 - [ ] 项目身份、Current snapshot 与 active lease 引用没有产生平行事实源
