@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-05)
+## Current snapshot (2026-08-07)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -26,7 +26,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P2-T05/native-tool-registry-validation`; `lease/personal/P3-T01/context-request-binding` | P2-T04/D01 is closed at `a8ef5c0`; its lease is moved to the closed-lease register. The whole-task delivery/MVP-first/closure governance refactor is merged and its GOV lease closed. P2-T05 owns the native catalog/validator review boundary. P3-T01/D01 owns the ContextRequest binding/persistence prerequisite. Pi remains candidate-only and scheduler/verified-continuation authority remains daemon-owned. B02/B03/B04/B05/B12, release, Profile, and Task completion remain separate/incomplete. | continue each active formal task atomically on its own branch/PR through acceptance and deterministic closure; no new formal task may join the legacy shared branch |
+| Active task lease | `lease/personal/P2-T05/native-tool-registry-validation` | P2-T04/D01 is closed at `a8ef5c0`; its lease is moved to the closed-lease register. P3-T01/D01's prerequisite and push-blocker documentation leases are closed after recording the merged PR #153 integration. The whole-task delivery/MVP-first/closure governance refactor is merged and its GOV lease closed. P2-T05 owns the native catalog/validator review boundary. Pi remains candidate-only and scheduler/verified-continuation authority remains daemon-owned. B02/B03/B04/B05/B12, release, Profile, and Task completion remain separate/incomplete. | continue each active formal task atomically on its own branch/PR through acceptance and deterministic closure; no new formal task may join the legacy shared branch |
 
 ### Layer 1 — Formal task progress
 
