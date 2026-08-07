@@ -5,7 +5,7 @@
 //! it converts an already daemon-bound Tool descriptor into a request that a
 //! later persist-before-dispatch caller can safely execute.
 
-#![allow(dead_code)] // The next task slice wires this boundary to Effect dispatch.
+#![allow(unused)] // The next task slice wires this boundary to Effect dispatch.
 
 use cognitive_kernel::tool_registry::{NativeOperationFamily, NativeToolDescriptor, ToolRisk};
 use std::path::{Component, Path, PathBuf};
@@ -164,6 +164,7 @@ fn validate_network_target(target: &str) -> Result<(), NativeToolExecutionError>
 }
 
 #[cfg(test)]
+#[allow(clippy::panic)]
 mod tests {
     use super::*;
     use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, ToolAvailability};
@@ -173,7 +174,7 @@ mod tests {
             .iter()
             .find(|descriptor| descriptor.family == family)
             .cloned()
-            .expect("catalog family");
+            .unwrap_or_else(|| panic!("catalog family missing: {family:?}"));
         NativeToolExecutionRequest {
             descriptor,
             target: "workspace://notes/today.txt".to_owned(),
