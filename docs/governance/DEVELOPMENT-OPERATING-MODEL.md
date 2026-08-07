@@ -82,11 +82,23 @@ intact.
 ## 2.1 Delivery slices and continuous forward progress
 
 A formal `P*-T*` task is the acceptance boundary; a delivery slice is the
-smallest independently closable increment inside that task. Slice IDs use the
+smallest internally checkable increment inside that task. The default delivery,
+branch, PR, lease, reporting and completion boundary is the **whole formal
+task**, not a slice. Slice IDs use the
 form `<task-id>/DNN` (for example, `P2-T03/D04`). The formal plan owns each
 slice's purpose, dependencies, exit criteria and required validation. The
 `PROGRESS.md` Current snapshot owns its current status. A slice status is not a
 shadow task status and cannot promote a Gate, release or Profile claim.
+
+**`TASK-ATOMIC-DELIVERY-01`:** after claiming a formal task such as `P2-T04`,
+the owner continues through every required slice, real integration, focused
+negative, supported validation, acceptance assessment and documentation closure
+in one task branch, one Draft PR and one task-scoped lease. A slice completion,
+checkpoint commit, push, CI submission, intermediate validation result or
+recoverable environment failure is not a stopping or reporting boundary. Work
+stops only when the task is honestly `done`, the owner explicitly pauses or
+changes scope, unexpected concurrent changes appear, or a concrete external
+blocker cannot be removed autonomously.
 
 Allowed slice statuses are `ready`, `in-progress`, `blocked`, `done`, and
 `cancelled`. A slice may be `done` only when all of the following are true:
@@ -110,6 +122,10 @@ to the predeclared supported Linux/CI environment before it is closed.
 The following anti-fragmentation rules apply:
 
 - One formal task has at most one `in-progress` delivery slice at a time.
+- A task uses one branch, one evolving Draft PR and one active task lease.
+  Slices do not receive separate branches, PRs or routine handoffs. Existing
+  legacy multi-branch work migrates at its next safe continuation boundary and
+  must not create another fragmented branch.
 - After one enabling/foundation slice, the next slice must connect it to a
   real caller or durable outcome. A second consecutive helper-only slice
   requires a bounded blocker record naming the missing implementation
@@ -118,7 +134,12 @@ The following anti-fragmentation rules apply:
   vertical-closure-first: wire the real call chain before adding another
   horizontal helper, parser, or boundary.
 - A completed slice is not a reason to open a parallel slice over the same
-  path. The slice's exact lease and handoff are the coordination boundary.
+  path. The task's single lease, branch and Draft PR remain the coordination
+  boundary through complete acceptance.
+- When a slice exit passes, immediately proceed to the next unmet task
+  acceptance item. Do not defer a separate `acceptance-assessment` branch or
+  leave task closure as an unowned follow-up. The final slice owns the complete
+  acceptance mapping and task-status reconciliation.
 - **Continuous autonomous delivery:** when an owner requests continued
   development, the agent must autonomously select and implement the next
   smallest vertical slice within the active task and lease. It continues until
@@ -130,6 +151,26 @@ The following anti-fragmentation rules apply:
   merely to provide a progress summary unless a decision is needed, unknown
   concurrent changes appear, or the owner asks for one.
 
+### 2.1.1 MVP-first implementation and authorization
+
+The first runnable product path uses the least complex authorization model that
+can satisfy the current task acceptance and the repository's immutable safety
+boundaries. The default MVP is owner-local, single-principal, task-scoped and
+daemon-issued. Requests outside that bounded path fail closed. Full RBAC,
+approval chains, generic capability administration, multi-tenant policy
+languages and speculative extension frameworks are deferred unless the formal
+task explicitly requires them or the minimal path cannot preserve a registered
+threat boundary.
+
+MVP-first does not weaken authority separation. The daemon remains the only
+writer; secrets remain in an approved Secret Store; external mutation remains
+persist-before-dispatch Intent/Effect work; budget, fencing, idempotency,
+reconciliation, audit and independent verification remain mandatory where the
+operation uses them. Prefer the existing management session, task bearer and
+private application services. A new public contract or generic policy subsystem
+requires evidence that the narrow private composition cannot safely satisfy the
+real caller and current acceptance.
+
 The progress view must report three independent layers: formal task status,
 delivery-slice status, and Gate/campaign status. A task can remain
 `in-progress` while several slices are done; conversely, a slice can be
@@ -138,46 +179,51 @@ satisfied.
 
 ## 2.2 Git delivery states and recoverable checkpoints
 
-**`CHECKPOINT-DELIVERY-01`: Checkpoint persistence is not Slice closure.** Git
+**`CHECKPOINT-DELIVERY-01`: Checkpoint persistence is not task closure.** Git
 delivery state is a fourth operational dimension and does not replace task,
 Slice, evidence or Gate status:
 
 | Git delivery state | Purpose | What it does not mean |
 |---|---|---|
-| coherent worktree | locally reviewable change owned by one lease | durable or remotely recoverable |
-| checkpoint commit | immutable, scoped and secret-free recovery point | Slice `done` or CI pass |
+| coherent worktree | locally reviewable change owned by one task lease | durable or remotely recoverable |
+| checkpoint commit | immutable, scoped and secret-free recovery point needed by remote validation or recovery | Slice/task `done`, a report boundary or CI pass |
 | pushed checkpoint | exact revision available to CI/Linux and another window | ready to merge |
-| Draft PR | review/CI container for one active Slice | approval to merge or close the lease |
-| ready PR | complete Slice exit submitted for final review | automatic Gate/release/Profile promotion |
-| merged closure | accepted repository delivery with lease closed | product Gate pass unless separately proven |
+| Draft PR | review/CI container for one active formal task | approval to merge or close the lease |
+| ready PR | complete task acceptance submitted for final review | automatic Gate/release/Profile promotion |
+| merged closure | accepted task delivery with lease closed and branch reconciled | product Gate pass unless separately proven |
 
-An incomplete Slice normally accumulates coherent checkpoint commits on its
-dedicated branch. The repository owner grants standing delivery authorization:
-after locally eligible safeguards pass, the agent automatically commits, pushes
-and creates or updates a Draft PR without asking again in each window, unless
-the user explicitly pauses delivery. Required remote CI is a precondition for
-ready/merge and Slice closure, not for persisting a checkpoint. A Draft PR must
-remain Draft even if its currently applicable checks are green; green checks do
-not prove that missing Slice exit items exist.
+An active task may accumulate coherent checkpoint commits on its dedicated task
+branch only when remote CI, exact-revision Linux validation or abnormal recovery
+needs an immutable revision. Checkpoints are background persistence events, not
+reasons to pause, report, create a handoff or split the task. The repository
+owner grants standing delivery authorization: after locally eligible safeguards
+pass, the agent automatically commits, pushes and creates or updates the same
+Draft PR without asking again in each window, unless the user explicitly pauses
+delivery. Required remote CI is a precondition for ready/merge and task closure,
+not for persisting a checkpoint. A Draft PR remains Draft until the complete
+task acceptance is satisfied.
 
-One PR may graduate from Draft to ready after all formal exit items are present.
-When focused negative tests, supported validation, required CI, evidence
-synchronization and review requirements all pass, standing authorization also
-allows the agent to mark the PR ready and merge it without another routine
-confirmation. The authorization never permits merging an incomplete Slice,
+One task PR may graduate from Draft to ready only after all task acceptance and
+all required slice exits are present. When focused negative tests, supported
+validation, required CI, final acceptance mapping, evidence synchronization and
+review requirements all pass, standing authorization also allows the agent to
+mark the PR ready and merge it without another routine confirmation. The
+authorization never permits merging an incomplete task,
 bypassing a failed/pending check, resolving a product/normative decision or
 force pushing. Direct feature work on `main` and merging an explicitly
-incomplete checkpoint are prohibited.
+incomplete checkpoint are prohibited. Multiple formal tasks must not share one
+branch or PR; if legacy work already does, split future continuation at the next
+safe boundary without rewriting or discarding existing history.
 
 ### 2.3 Standing operator authorization
 
 The repository owner grants the agent standing authority to decide and execute
-operations needed by an active leased Personal slice without per-operation
+operations needed by an active leased Personal task without per-operation
 confirmation. This includes disposable remote validation, approved Secret Store
 access, least-privilege elevation, and scoped user-service or system
 configuration changes. The authority is operational, not evidentiary: every
 remote build still uses a pushed exact revision; every action remains within the
-active lease; and Gate, release, Profile, task-completion, and campaign claims
+task lease; and Gate, release, Profile, task-completion, and campaign claims
 remain governed by their separately registered evidence requirements.
 
 The authorization does not relax secret handling: secret material must never be
@@ -186,21 +232,22 @@ evidence. Operations must be narrowly scoped, auditable, and use an available
 rollback or cleanup path. It does not authorize force push, destructive or
 irreversible repository commands, modification of isolated formal campaign
 guests outside their preregistered procedure, or changes beyond the active
-slice's declared system boundary.
+task's declared system boundary.
 
 A coherent checkpoint must satisfy all locally eligible safeguards: declared
 lease scope, reviewed staged paths, no secret material, no unexpected syntax or
 behavior failure, and explicit `not-run`/blocker records for validation that
 requires another environment. An intentionally failing failure-first checkpoint
-is allowed only when its failure is isolated, expected and named in the Draft
-PR/handoff; it cannot be ready or merged.
+is allowed only when its failure is isolated, expected and named in the task's
+Draft PR; it cannot be ready or merged.
 
 Native Linux and remote CI consume pushed immutable revisions. Copying an
 uncommitted tree, testing a stale remote snapshot or reporting a local diff as
-the tested revision is invalid. If a checkpoint PR is accidentally merged while
-the Slice is incomplete, preserve the honest Slice status, close the merged
-branch lease, record the premature merge, and require a new continuation branch
-and lease. Do not rewrite history or retroactively claim closure.
+the tested revision is invalid. If a task PR is accidentally merged before task
+acceptance is complete, preserve the honest task and Slice statuses, close the
+merged branch lease, record the premature merge, and require one task-scoped
+continuation branch and lease. Do not rewrite history or retroactively claim
+closure.
 
 ## 3. Validation stages
 
@@ -226,10 +273,12 @@ to repeat inside every delivery:
    Rust build/test/Clippy validation must be routed before implementation to
    `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an exact-revision disposable
    worktree on `DEV-LINUX-NATIVE-01`, according to the Slice's evidence need.
-4. If the selected supported environment is unavailable, record the affected
-   validation as `blocked` or `not-run` and choose an unrelated ready Slice.
-   Do not first reproduce the known GNU linker failure and do not close a
-   Slice from formatting/consistency alone.
+4. If the selected supported environment is unavailable, try the other
+   predeclared supported route and continue the same task. If no supported
+   route can run, record the affected validation as `blocked` or `not-run` and
+   stop only with a bounded external blocker. Do not switch tasks merely to
+   avoid closure, reproduce the known GNU linker failure, or close a Slice from
+   formatting/consistency alone.
 
 The canonical capability registry is
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../plan/PERSONAL-TEST-ENVIRONMENTS.md).
@@ -254,22 +303,29 @@ rules.
 - inspect staged paths and the complete branch push surface.
 - record the full commit hash and confirm that remote validation will consume
   that exact revision;
-- keep the PR Draft while any formal Slice exit item remains incomplete.
+- keep the PR Draft while any task acceptance or formal Slice exit item remains
+  incomplete.
 
 ### Before ready, merge or task completion
 
 - all required protected-branch CI checks are green;
 - no required failure is unresolved;
-- every formal Slice exit item and supported validation is satisfied;
-- canonical task status, current progress snapshot, and handoff are reconciled.
+- every formal task acceptance item, Slice exit and supported validation is
+  satisfied and mapped to exact evidence;
+- canonical task status, current progress snapshot and final task handoff are
+  reconciled;
+- the branch contains only the task's owned changes and no unresolved or
+  unowned worktree state;
 - the PR is explicitly changed from Draft to ready only after these facts are
   true; auto-merge must not bypass this transition.
 
 Before delivery-slice closure, the author must also reconcile the slice ID,
 its exact exit checklist, the strongest actual evidence level, and the next
 executable slice. If a required environment is unavailable, close the
-implementation lease only with a `blocked` slice record; do not label the
-slice `done` merely because formatting or consistency checks passed.
+task lease only when the task itself is complete; otherwise retain it or close
+it with a bounded `blocked` task record and a single recovery action. Do not
+label the slice or task `done` merely because formatting or consistency checks
+passed.
 
 A checkpoint commit and Draft PR may exist while remote CI is pending.
 Unsupported local environments are recorded as `not-run`; they are neither pass
@@ -278,14 +334,18 @@ check must never be merged or used for a completion claim.
 
 ## 4. Documentation closure
 
-Implementation and closure documentation belong to the same atomic delivery or
-PR, not necessarily the same Git commit. One implementation commit may be
-followed by one closure documentation commit that records its immutable hash,
-test evidence, non-claims, and remote visibility.
+Implementation and closure documentation belong to the same whole-task
+delivery and PR, not necessarily the same Git commit. Intermediate checkpoints
+do not each require closure documentation. One final closure documentation
+commit records the accepted immutable hash, complete test evidence, non-claims
+and remote visibility.
 
-Update a handoff when transferring or ending a task/session, not after every
-mechanical commit. Handoffs carry operational continuity but never override the
-formal task plan or Gate ledger. A normal handoff records:
+Create or update a handoff only when the complete task closes, the owner
+explicitly pauses, ownership transfers, unknown changes appear, or a concrete
+external blocker prevents further autonomous work. Do not create handoffs for
+ordinary Slice exits, commits, pushes, CI rounds or recoverable failures.
+Handoffs carry operational continuity but never override the formal task plan
+or Gate ledger. A normal handoff records:
 
 - Slice ID and honest status;
 - branch, full HEAD hash and upstream branch;
@@ -303,6 +363,30 @@ checkpointed, checks already run, owner and one recovery action. Absent a user
 pause, the standing delivery authorization requires automatic checkpoint
 commit, push and Draft PR update instead of forcing the next window to
 rediscover the worktree.
+
+### Deterministic task closure
+
+The final step of a task is part of implementation, not a later administrative
+task. The owner must complete this sequence without opening a separate
+acceptance-assessment branch:
+
+1. map every formal acceptance item to implementation, focused negatives and
+   evidence at the exact candidate HEAD;
+2. fix and rerun every missing task-owned item, then complete supported
+   validation and required CI;
+3. reconcile the formal plan, `PROGRESS.md` Current snapshot, affected trace and
+   one final handoff while preserving independent Gate/non-claim status;
+4. verify the task branch and PR contain only declared task paths, change Draft
+   to ready and merge normally without force push or history rewriting;
+5. close the task lease, verify the PR is merged, delete the remote task branch
+   when safe, switch the local worktree to `main`, fast-forward to the merge and
+   verify clean status, expected HEAD/upstream and no active lease for the
+   completed task.
+
+If any step cannot complete, the task remains `in-progress` or `blocked` with
+one explicit recovery action. “Implementation complete but acceptance pending”,
+an unmerged ready branch, a merged PR with an active lease, or a local worktree
+left on the completed task branch are not valid closure states.
 
 ### Fast resume protocol
 
@@ -343,6 +427,13 @@ ownership by a historical branch name. Each active lease records task, branch,
 primary lane, owned paths, owner/session, claim time, and last heartbeat.
 
 - Active leases must not overlap writable paths.
+- One formal task has one active task-scoped lease, one branch and one Draft PR.
+  A lease may list all narrow runtime, client, test and documentation paths
+  needed for full task acceptance; Slice-specific leases are not created during
+  ordinary continuation.
+- One branch or PR must not carry multiple formal tasks. Existing legacy shared
+  branches are preserved but must split future task continuation at the next
+  safe boundary.
 - Leases must name exact files or narrow feature directories. Broad
   `docs/plan/**`, `docs/standards/**`, `docs/adr/**`, `specs/**` or equivalent
   protected-tree ownership is invalid.
@@ -362,31 +453,32 @@ for claim and heartbeat. `PROGRESS.md` may only reference an active `lease_id`
 or `none`; it must not maintain a second lease status table. Closed leases move
 out of the active table and cannot block future work.
 
-A Draft PR does not close its lease. A ready PR that merges must close its lease
+A Draft PR does not close its lease. A ready task PR that merges must close its lease
 in the same closure delivery. If any merged branch is later found still active,
 the first non-overlapping governance session may move that row to closed while
-preserving the merged work and all unrelated lease rows. If the underlying Slice
-is incomplete, it remains `in-progress` or `blocked` and needs a new continuation
-branch/lease; the old merged lease must not be reused.
+preserving the merged work and all unrelated lease rows. If the underlying task
+is incomplete, it remains `in-progress` or `blocked` and needs one task-scoped
+continuation branch/lease; the old merged lease must not be reused.
 
 ## 7. Forward-progress protocol
 
-After onboarding, a session must select one smallest deliverable slice with a
-clear exit. The session should produce one of:
+After onboarding, a session claims one formal task with complete acceptance and
+a clear vertical path. It continuously executes the smallest internal slices
+until it produces one of:
 
-1. a vertical implementation slice with focused verification;
-2. a failure-first regression or negative test followed by the fix;
-3. a verifiable governance/documentation correction; or
-4. a bounded blocker record with `blocked_paths`, `blocked_task_ids`,
+1. a fully accepted, validated and closed formal task;
+2. a fully accepted corrective governance/documentation delivery; or
+3. a bounded blocker record with `blocked_paths`, `blocked_task_ids`,
    `blocked_gate_ids`, owner, evidence, and the next executable action.
 
-The selected slice must be registered before implementation begins, must have
-one primary lease, and must name its vertical consumer or durable exit. If the
-selected slice is blocked by validation infrastructure, the session must do
-one of two things: perform the predeclared validation on the supported
-environment, or record the bounded blocker and select an unrelated ready slice
-whose implementation dependencies are satisfied. It must not create another
-same-task helper slice to avoid the blocker.
+The selected task must be registered before implementation begins, must have
+one task lease/branch/Draft PR, and its internal slices must name their vertical
+consumer or durable exit. If one slice is blocked by validation infrastructure,
+the session tries the other predeclared supported route and continues the same
+task. Only when all supported routes or an external dependency are unavailable
+may it stop with a bounded blocker. It must not create another same-task helper
+slice, switch tasks to avoid closure, or treat an intermediate report as a
+deliverable.
 
 Re-reading plans, broad auditing, or creating another plan is not a deliverable
 when the task, dependency, and safe path are already known. Acceptance and
