@@ -822,10 +822,10 @@ const checkpointDeliveryGuardDocuments = [
     path: "AGENTS.md",
     requiredFragments: [
       "CHECKPOINT-DELIVERY-01",
-      "checkpoint commit",
+      "后台持久化事件",
       "Draft PR",
-      "持续 Git 交付权限",
-      "自动转为 ready 并合并",
+      "完整 task acceptance",
+      "转为 ready 并合并",
       "禁止 merge",
       "dirty handoff",
     ],
@@ -834,7 +834,7 @@ const checkpointDeliveryGuardDocuments = [
     path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
     requiredFragments: [
       "CHECKPOINT-DELIVERY-01",
-      "Checkpoint persistence is not Slice closure",
+      "Checkpoint persistence is not task closure",
       "standing delivery authorization",
       "mark the PR ready and merge it",
       "Draft PR",
@@ -848,10 +848,10 @@ const checkpointDeliveryGuardDocuments = [
     requiredFragments: [
       "CHECKPOINT-DELIVERY-01",
       "checkpoint-delivery guard removal",
-      "standing delivery authorization",
-      "自动 ready/merge",
-      "未完成 Slice 的 PR 必须保持 Draft",
-      "coherent dirty handoff",
+      "后台持久化事件",
+      "同一个 task Draft PR",
+      "完整 task acceptance 未满足前",
+      "dirty handoff",
     ],
   },
 ];
@@ -873,6 +873,91 @@ for (const checkpointDeliveryGuardDocument of checkpointDeliveryGuardDocuments) 
       fail(
         checkpointDeliveryGuardDocument.path,
         `checkpoint-delivery guard is missing required fragment: ${requiredFragment}`,
+      );
+    }
+  }
+}
+
+// ---------- 6c.2: whole-task atomic delivery and deterministic closure guards
+
+const taskAtomicDeliveryGuardDocuments = [
+  {
+    path: "AGENTS.md",
+    requiredFragments: [
+      "TASK-ATOMIC-DELIVERY-01",
+      "task branch、一个 Draft PR 和一个 task lease",
+      "acceptance-assessment 分支",
+      "MVP-first 授权与实现深度",
+      "完整任务收口协议",
+      "本地安全切回",
+    ],
+  },
+  {
+    path: "docs/governance/PROJECT-IDENTITY.md",
+    requiredFragments: [
+      "一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease",
+      "阶段总结和可恢复故障都不是",
+      "首个 MVP 优先使用",
+      "fast-forward `main`",
+    ],
+  },
+  {
+    path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
+    requiredFragments: [
+      "TASK-ATOMIC-DELIVERY-01",
+      "one task branch, one Draft PR and one task-scoped lease",
+      "MVP-first implementation and authorization",
+      "Deterministic task closure",
+      "Multiple formal tasks must not share one",
+      "branch or PR",
+    ],
+  },
+  {
+    path: "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+    requiredFragments: [
+      "TASK-ATOMIC-DELIVERY-01",
+      "Slice 是内部检查点",
+      "MVP-first",
+      "不得留下“代码完成但验收、分支或状态待收口”",
+    ],
+  },
+  {
+    path: "docs/plan/PARALLEL-LANES.md",
+    requiredFragments: [
+      "一个 task branch/Draft PR + 一份活动 task lease",
+      "不得因 Slice、checkpoint、push、CI 轮次",
+      "一个 branch/PR 不得承载多个正式任务",
+      "fast-forward `main`",
+    ],
+  },
+  {
+    path: "docs/standards/docs-sync-contract.md",
+    requiredFragments: [
+      "TASK-ATOMIC-DELIVERY-01",
+      "一个正式任务使用一个 task branch、一个 Draft PR 和一个",
+      "不得遗留独立 `acceptance-assessment` 分支",
+      "deterministic task closure",
+    ],
+  },
+];
+
+for (const taskAtomicDeliveryGuardDocument of taskAtomicDeliveryGuardDocuments) {
+  const taskAtomicDeliveryGuardPath = repoPath(
+    ...taskAtomicDeliveryGuardDocument.path.split("/"),
+  );
+  if (!existsSync(taskAtomicDeliveryGuardPath)) {
+    fail(
+      taskAtomicDeliveryGuardDocument.path,
+      "task-atomic delivery guard document is missing",
+    );
+    continue;
+  }
+  const taskAtomicDeliveryGuardText = readText(taskAtomicDeliveryGuardPath);
+  for (const requiredFragment of taskAtomicDeliveryGuardDocument.requiredFragments) {
+    if (!taskAtomicDeliveryGuardText.includes(requiredFragment)) {
+      fail(
+        taskAtomicDeliveryGuardDocument.path,
+        `task-atomic delivery guard is missing required fragment: ${requiredFragment}`,
       );
     }
   }
@@ -1224,5 +1309,6 @@ if (failures.length > 0) {
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
     `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, Personal plan/Gates, ` +
-    `design sources, command/environment routing, checkpoint delivery, prompt boundary, and leases verified)`,
+    `design sources, command/environment routing, checkpoint delivery, task-atomic delivery, ` +
+    `prompt boundary, and leases verified)`,
 );
