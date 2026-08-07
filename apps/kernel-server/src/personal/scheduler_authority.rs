@@ -660,6 +660,47 @@ fn candidate_admission_command_from_policy(
     })
 }
 
+/// Reconstruct a Context authorization snapshot immediately before a body
+/// access. Re-reading both fact material and revocation currency prevents an
+/// earlier metadata discovery from authorizing a later body read with stale
+/// policy or capability facts.
+fn load_current_context_authorization_snapshot<S>(
+    store: &S,
+    command: &ContextResolutionCommand,
+) -> Result<cognitive_kernel::authz::AuthzSnapshot, SchedulerAuthorityError>
+where
+    S: ContextAuthorizationFactStore,
+{
+    let authorization_facts = store
+        .load_latest_context_authorization_facts(
+            &command.authorization_subject_ref,
+            &command.tenant_id,
+        )
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable authorization facts for Context body read".to_owned(),
+            )
+        })?;
+    let current_revocation_epoch = store
+        .load_current_context_revocation_epoch(&command.tenant_id)
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable Context revocation epoch".to_owned(),
+            )
+        })?;
+    authorization_facts
+        .reconstruct_snapshot(current_revocation_epoch, command.decided_at.clone())
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -722,34 +763,7 @@ where
             "ContextRequest principal differs from scheduler authorization subject".to_owned(),
         ));
     }
-    let authorization_facts = store
-        .load_latest_context_authorization_facts(
-            &command.authorization_subject_ref,
-            &command.tenant_id,
-        )
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?
-        .ok_or_else(|| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(
-                "no durable authorization facts for Context body read".to_owned(),
-            )
-        })?;
-    let current_revocation_epoch = store
-        .load_current_context_revocation_epoch(&command.tenant_id)
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?
-        .ok_or_else(|| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(
-                "no durable Context revocation epoch".to_owned(),
-            )
-        })?;
-    let authorization_snapshot = authorization_facts
-        .reconstruct_snapshot(current_revocation_epoch, command.decided_at.clone())
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?;
+    let authorization_snapshot = load_current_context_authorization_snapshot(store, command)?;
     let metadata = store
         .query_context_candidate_metadata(&ContextCandidateQuery {
             tenant_id: command.tenant_id.clone(),
@@ -761,9 +775,13 @@ where
 
     let mut authorized_candidates = Vec::with_capacity(metadata.len());
     for source_metadata in metadata {
-        // Body materialization must remain after the current authorization decision.
+        // Discovery is metadata-only. Re-read durable authorization state for
+        // every body, so a revocation that lands after discovery cannot reach
+        // body materialization, ranking, rendering, or the Pi boundary.
+        let current_authorization_snapshot =
+            load_current_context_authorization_snapshot(store, command)?;
         if authorize(
-            &authorization_snapshot,
+            &current_authorization_snapshot,
             &source_metadata.governance,
             &AccessRequest {
                 action: "read_body".to_owned(),
@@ -808,6 +826,7 @@ where
             governance: source_governance,
             role: source.role,
             trust_level: source.trust_level,
+            representation: source.representation,
             body,
             cost_bytes: source.content_bytes,
             cost_tokens: source.content_tokens.unwrap_or(0),
@@ -888,23 +907,10 @@ where
                     "resolved Context item identity is not a governed object identifier".to_owned(),
                 )
             })?;
-            let source = store
-                .load_workspace_context_source_body(&source_id)
-                .map_err(|error| {
-                    SchedulerAuthorityError::ContextBodyUnavailable(error.to_string())
-                })?
-                .ok_or_else(|| {
-                    SchedulerAuthorityError::ContextBodyUnavailable(source_id.to_string())
-                })?;
-            if source.source_digest != item.content_digest {
-                return Err(SchedulerAuthorityError::ContextBodyUnavailable(
-                    "resolved Context item digest no longer matches durable source".to_owned(),
-                ));
-            }
             Ok(LoadedContextItem {
                 item_id: item.object_ref.clone(),
                 object_ref: strong_reference_to(&source_id, &item.content_digest),
-                representation: source.representation,
+                representation: item.representation,
                 trust_level: item.trust_level,
                 role: item.role,
                 cost: ItemCost {
