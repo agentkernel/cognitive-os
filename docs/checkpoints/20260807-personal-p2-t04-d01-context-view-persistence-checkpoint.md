@@ -48,8 +48,10 @@ or Pi transport.
   `8f2d6e53e37cacdc3572305718df6bb29be22bb3`, transferred as an incremental
   Git bundle only after the commit was pushed and checked out detached in the
   same disposable clone: `cargo test -p kernel-server` completed with exit 0.
-- Required CI: both Ubuntu jobs passed for `8f2d6e5`; the Windows jobs remain
-  pending at this checkpoint. No pending check is claimed as passing.
+- Required CI: both Ubuntu and both Windows jobs passed for current immutable
+  `3a6d19f433049ebca5474f04a918645a6e3e1c28`. Windows verified the workspace
+  build/test/Clippy/fmt, code-generation drift, consistency, and conformance
+  gates; this evidence does not replace the required race regression below.
 
 ## Remaining negative path
 
