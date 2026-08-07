@@ -8,7 +8,17 @@
 #![allow(unused)] // The next task slice wires this boundary to Effect dispatch.
 
 use cognitive_kernel::tool_registry::{NativeOperationFamily, NativeToolDescriptor, ToolRisk};
-use std::path::{Component, Path, PathBuf};
+use cognitive_kernel::{
+    executor::{
+        DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
+    },
+    ports::PortFailure,
+};
+use std::{
+    collections::BTreeMap,
+    path::{Component, Path, PathBuf},
+    sync::Mutex,
+};
 use thiserror::Error;
 
 /// Bounded daemon-private input for one native Tool operation.
@@ -27,6 +37,7 @@ pub(crate) struct ValidatedNativeToolRequest {
     pub descriptor: NativeToolDescriptor,
     pub target: String,
     pub input: Vec<u8>,
+    pub approved_workspace_root: Option<PathBuf>,
     pub resolved_workspace_path: Option<PathBuf>,
 }
 
@@ -37,6 +48,196 @@ pub(crate) struct ValidatedNativeToolRequest {
 pub(crate) struct BoundedOutputCursor {
     output_limit_bytes: usize,
     next_offset: usize,
+}
+
+/// Daemon-private workspace-read sink for a request already sealed by the
+/// scheduler admission path. Staging a request does not authorize execution:
+/// the Effect protocol records `EXECUTING` before it calls this adapter.
+///
+/// The adapter retains only redacted, bounded bytes under the original
+/// idempotency key. This provides a queryable, idempotent sink for recovery
+/// without treating Tool output as evidence, verification, or Task progress.
+#[derive(Debug)]
+pub(crate) struct NativeWorkspaceReadExecutor {
+    trusted_fencing_epoch: i64,
+    staged_requests: Mutex<BTreeMap<String, StagedWorkspaceReadRequest>>,
+    completed_reads: Mutex<BTreeMap<String, CompletedWorkspaceRead>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct StagedWorkspaceReadRequest {
+    parameters_digest: String,
+    target: String,
+    approved_workspace_root: PathBuf,
+    resolved_workspace_path: PathBuf,
+    output_limit_bytes: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CompletedWorkspaceRead {
+    receipt_ref: String,
+    redacted_output: Vec<u8>,
+}
+
+impl NativeWorkspaceReadExecutor {
+    pub(crate) fn new(trusted_fencing_epoch: i64) -> Self {
+        Self {
+            trusted_fencing_epoch,
+            staged_requests: Mutex::new(BTreeMap::new()),
+            completed_reads: Mutex::new(BTreeMap::new()),
+        }
+    }
+
+    /// Bind one validated workspace-read request to its durable Intent
+    /// identity. The caller supplies the digest from the sealed Intent; a
+    /// later dispatch must match every bound field before filesystem access.
+    pub(crate) fn stage_request(
+        &self,
+        idempotency_key: String,
+        parameters_digest: String,
+        request: &ValidatedNativeToolRequest,
+    ) -> Result<(), NativeToolExecutionError> {
+        if request.descriptor.family != NativeOperationFamily::WorkspaceRead {
+            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
+        }
+        let resolved_workspace_path = request
+            .resolved_workspace_path
+            .as_ref()
+            .ok_or(NativeToolExecutionError::WorkspaceTargetRequired)?;
+        let approved_workspace_root = request
+            .approved_workspace_root
+            .as_ref()
+            .ok_or(NativeToolExecutionError::WorkspaceTargetRequired)?;
+        if idempotency_key.is_empty() || parameters_digest.is_empty() {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "idempotency key and parameters digest are required".to_owned(),
+            ));
+        }
+        let staged_request = StagedWorkspaceReadRequest {
+            parameters_digest,
+            target: request.target.clone(),
+            approved_workspace_root: approved_workspace_root.clone(),
+            resolved_workspace_path: resolved_workspace_path.clone(),
+            output_limit_bytes: request.descriptor.output_limit_bytes,
+        };
+        let mut staged_requests = self.staged_requests.lock().map_err(|_| {
+            NativeToolExecutionError::ExecutorUnavailable(
+                "staged request store is poisoned".to_owned(),
+            )
+        })?;
+        if let Some(existing_request) = staged_requests.get(&idempotency_key) {
+            if existing_request != &staged_request {
+                return Err(NativeToolExecutionError::IdempotencyBindingConflict);
+            }
+            return Ok(());
+        }
+        staged_requests.insert(idempotency_key, staged_request);
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
+        self.completed_reads
+            .lock()
+            .ok()
+            .and_then(|completed_reads| completed_reads.get(idempotency_key).cloned())
+            .map(|completed_read| completed_read.redacted_output)
+    }
+
+    fn read_staged_workspace_file(
+        &self,
+        call: &ExecutorCall,
+        staged_request: &StagedWorkspaceReadRequest,
+    ) -> Result<DispatchOutcome, PortFailure> {
+        if call.action != "read"
+            || call.target != staged_request.target
+            || call.parameters_digest != staged_request.parameters_digest
+        {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "dispatch does not match the daemon-staged workspace read".to_owned(),
+            });
+        }
+        let canonical_workspace_root =
+            std::fs::canonicalize(&staged_request.approved_workspace_root).map_err(|error| {
+                PortFailure {
+                    detail: format!("workspace root resolution failed: {error}"),
+                }
+            })?;
+        let canonical_target_path = std::fs::canonicalize(&staged_request.resolved_workspace_path)
+            .map_err(|error| PortFailure {
+                detail: format!("workspace target resolution failed: {error}"),
+            })?;
+        if !canonical_target_path.starts_with(&canonical_workspace_root) {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "workspace target escaped the approved root after resolution".to_owned(),
+            });
+        }
+        let raw_output = std::fs::read(&canonical_target_path).map_err(|error| PortFailure {
+            detail: format!("workspace read failed: {error}"),
+        })?;
+        let redacted_output = redact_sensitive_output(&String::from_utf8_lossy(&raw_output))
+            .into_bytes()
+            .into_iter()
+            .take(staged_request.output_limit_bytes)
+            .collect::<Vec<_>>();
+        let receipt_ref = format!("tool-receipt://workspace-read/{}", call.idempotency_key);
+        let completed_read = CompletedWorkspaceRead {
+            receipt_ref: receipt_ref.clone(),
+            redacted_output,
+        };
+        let mut completed_reads = self.completed_reads.lock().map_err(|_| PortFailure {
+            detail: "completed read store is poisoned".to_owned(),
+        })?;
+        if let Some(existing_read) = completed_reads.get(&call.idempotency_key) {
+            return Ok(DispatchOutcome::Executed {
+                receipt_ref: existing_read.receipt_ref.clone(),
+            });
+        }
+        completed_reads.insert(call.idempotency_key.clone(), completed_read);
+        Ok(DispatchOutcome::Executed { receipt_ref })
+    }
+}
+
+impl EffectExecutor for NativeWorkspaceReadExecutor {
+    fn capabilities(&self) -> ExecutorCapabilities {
+        ExecutorCapabilities {
+            queryable: true,
+            idempotent: true,
+        }
+    }
+
+    fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+        if call.fencing_epoch != self.trusted_fencing_epoch {
+            return Ok(DispatchOutcome::FencedStaleEpoch {
+                sink_epoch: self.trusted_fencing_epoch,
+            });
+        }
+        let staged_request = self
+            .staged_requests
+            .lock()
+            .map_err(|_| PortFailure {
+                detail: "staged request store is poisoned".to_owned(),
+            })?
+            .get(&call.idempotency_key)
+            .cloned();
+        let Some(staged_request) = staged_request else {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "no daemon-staged request for idempotency key".to_owned(),
+            });
+        };
+        self.read_staged_workspace_file(call, &staged_request)
+    }
+
+    fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+        let completed_reads = self.completed_reads.lock().map_err(|_| PortFailure {
+            detail: "completed read store is poisoned".to_owned(),
+        })?;
+        Ok(if completed_reads.contains_key(idempotency_key) {
+            ExecutorQueryResult::ExecutedWithOriginalKey
+        } else {
+            ExecutorQueryResult::NotExecuted
+        })
+    }
 }
 
 impl BoundedOutputCursor {
@@ -105,6 +306,12 @@ pub(crate) enum NativeToolExecutionError {
     NetworkTargetContainsCredentials,
     #[error("process target is not a bounded process identifier")]
     InvalidProcessTarget,
+    #[error("this executor only accepts validated workspace-read requests")]
+    UnsupportedExecutionFamily,
+    #[error("idempotency key is already bound to a different workspace read")]
+    IdempotencyBindingConflict,
+    #[error("native Tool executor is unavailable: {0}")]
+    ExecutorUnavailable(String),
 }
 
 pub(crate) fn validate_native_tool_request(
@@ -142,6 +349,7 @@ pub(crate) fn validate_native_tool_request(
         descriptor: request.descriptor.clone(),
         target: request.target.clone(),
         input: request.input.clone(),
+        approved_workspace_root: request.workspace_root.clone(),
         resolved_workspace_path,
     })
 }
@@ -315,5 +523,103 @@ mod tests {
             redact_sensitive_output("ok api_key=secret token=hidden done"),
             "ok api_key=[REDACTED] token=[REDACTED] done"
         );
+    }
+
+    fn workspace_read_call(
+        idempotency_key: &str,
+        parameters_digest: &str,
+        target: &str,
+        fencing_epoch: i64,
+    ) -> ExecutorCall {
+        ExecutorCall {
+            action: "read".to_owned(),
+            target: target.to_owned(),
+            idempotency_key: idempotency_key.to_owned(),
+            parameters_digest: parameters_digest.to_owned(),
+            authorization_digest: "authorization-digest".to_owned(),
+            fencing_epoch,
+        }
+    }
+
+    #[test]
+    fn workspace_read_requires_a_staged_digest_bound_request_before_io() {
+        let temporary_directory = tempfile::tempdir().expect("temporary workspace");
+        let workspace_file = temporary_directory.path().join("notes.txt");
+        std::fs::write(&workspace_file, "safe output").expect("write workspace fixture");
+        let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+        request.target = "workspace://notes.txt".to_owned();
+        request.workspace_root = Some(temporary_directory.path().to_path_buf());
+        let validated_request = validate_native_tool_request(&request).expect("valid request");
+        let executor = NativeWorkspaceReadExecutor::new(7);
+        executor
+            .stage_request(
+                "read-key-1".to_owned(),
+                "digest-1".to_owned(),
+                &validated_request,
+            )
+            .expect("stage daemon-bound request");
+
+        let mismatched_call =
+            workspace_read_call("read-key-1", "different-digest", "workspace://notes.txt", 7);
+        assert!(matches!(
+            executor.dispatch(&mismatched_call),
+            Ok(DispatchOutcome::NotExecuted { .. })
+        ));
+        assert_eq!(executor.completed_output("read-key-1"), None);
+
+        let matched_call =
+            workspace_read_call("read-key-1", "digest-1", "workspace://notes.txt", 7);
+        assert!(matches!(
+            executor.dispatch(&matched_call),
+            Ok(DispatchOutcome::Executed { .. })
+        ));
+        assert_eq!(
+            executor.completed_output("read-key-1"),
+            Some(b"safe output".to_vec())
+        );
+    }
+
+    #[test]
+    fn workspace_read_bounds_redacts_and_idempotently_queries_output() {
+        let temporary_directory = tempfile::tempdir().expect("temporary workspace");
+        let workspace_file = temporary_directory.path().join("notes.txt");
+        std::fs::write(&workspace_file, "token=secret 123456789").expect("write workspace fixture");
+        let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+        request.target = "workspace://notes.txt".to_owned();
+        request.workspace_root = Some(temporary_directory.path().to_path_buf());
+        request.descriptor.output_limit_bytes = 16;
+        let validated_request = validate_native_tool_request(&request).expect("valid request");
+        let executor = NativeWorkspaceReadExecutor::new(7);
+        executor
+            .stage_request(
+                "read-key-2".to_owned(),
+                "digest-2".to_owned(),
+                &validated_request,
+            )
+            .expect("stage daemon-bound request");
+        let call = workspace_read_call("read-key-2", "digest-2", "workspace://notes.txt", 7);
+
+        let first_outcome = executor.dispatch(&call).expect("execute workspace read");
+        let second_outcome = executor.dispatch(&call).expect("absorb duplicate dispatch");
+        assert_eq!(first_outcome, second_outcome);
+        assert_eq!(
+            executor.completed_output("read-key-2"),
+            Some(b"token=[REDACTED]".to_vec())
+        );
+        assert_eq!(
+            executor.query_outcome("read-key-2"),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+    }
+
+    #[test]
+    fn workspace_read_sink_rejects_stale_fencing_before_io() {
+        let executor = NativeWorkspaceReadExecutor::new(7);
+        let call = workspace_read_call("read-key-3", "digest-3", "workspace://notes.txt", 6);
+        assert_eq!(
+            executor.dispatch(&call),
+            Ok(DispatchOutcome::FencedStaleEpoch { sink_epoch: 7 })
+        );
+        assert_eq!(executor.completed_output("read-key-3"), None);
     }
 }
