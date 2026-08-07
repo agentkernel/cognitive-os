@@ -5,6 +5,8 @@
 //! it converts an already daemon-bound Tool descriptor into a request that a
 //! later persist-before-dispatch caller can safely execute.
 
+#![allow(dead_code)] // The next task slice wires this boundary to Effect dispatch.
+
 use cognitive_kernel::tool_registry::{NativeOperationFamily, NativeToolDescriptor, ToolRisk};
 use std::path::{Component, Path, PathBuf};
 use thiserror::Error;
