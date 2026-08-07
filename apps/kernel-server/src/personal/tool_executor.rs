@@ -1,14 +1,17 @@
 //! Daemon-private native Tool execution admission and bounded request shape.
 //!
-//! This module is intentionally the first execution slice for P2-T06. It
-//! does not grant authority and does not replace Intent/Effect persistence;
-//! it converts an already daemon-bound Tool descriptor into a request that a
-//! later persist-before-dispatch caller can safely execute.
+//! This module does not grant authority and does not replace Intent/Effect
+//! persistence; it converts an already daemon-bound Tool descriptor into a
+//! request the persistent protocol can safely execute.
 
-#![allow(unused)] // The next task slice wires this boundary to Effect dispatch.
+#![allow(unused)] // Some daemon-private executor families remain deferred.
 
+use cognitive_domain::{ObjectId, Version};
 use cognitive_kernel::tool_registry::{NativeOperationFamily, NativeToolDescriptor, ToolRisk};
 use cognitive_kernel::{
+    authz::AuthorizationGrant,
+    effects::{EffectError, EffectProtocol, GovernanceCurrency, WriterLease},
+    engine::CommittedTransition,
     executor::{
         DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
     },
@@ -240,6 +243,51 @@ impl EffectExecutor for NativeWorkspaceReadExecutor {
             ExecutorQueryResult::NotExecuted
         })
     }
+}
+
+/// Drive an already staged workspace read through the durable Effect protocol.
+///
+/// Staging binds the native request to the Intent's idempotency key and
+/// parameter digest; this function is the only adapter path that can invoke
+/// it. The protocol records `EXECUTING` before filesystem access and records
+/// the executor outcome afterwards. It deliberately has no Task, Loop,
+/// progress, evidence, or completion inputs, so a read cannot be mistaken for
+/// a Task outcome.
+pub(crate) fn dispatch_staged_workspace_read_effect<S, C, G>(
+    effect_protocol: &EffectProtocol<'_, S, C, G>,
+    effect_object_id: &ObjectId,
+    expected_effect_version: Version,
+    grant: &AuthorizationGrant,
+    governance_currency: &GovernanceCurrency,
+    executor: &NativeWorkspaceReadExecutor,
+    writer_lease: &WriterLease,
+) -> Result<CommittedTransition, EffectError>
+where
+    S: cognitive_kernel::ports::AuthorityStore + cognitive_kernel::ports::ProtocolStore,
+    C: cognitive_kernel::ports::Clock,
+    G: cognitive_kernel::ports::IdGenerator,
+{
+    let authorized = effect_protocol.authorize_effect(
+        effect_object_id,
+        expected_effect_version,
+        grant,
+        governance_currency,
+        writer_lease,
+    )?;
+    let (dispatched, outcome) = effect_protocol.dispatch_effect(
+        effect_object_id,
+        authorized.after_version,
+        grant,
+        governance_currency,
+        executor,
+        writer_lease,
+    )?;
+    effect_protocol.record_outcome(
+        effect_object_id,
+        dispatched.after_version,
+        &outcome,
+        writer_lease,
+    )
 }
 
 impl BoundedOutputCursor {
@@ -612,6 +660,33 @@ mod tests {
             executor.completed_output("read-key-1"),
             Some(b"safe output".to_vec())
         );
+    }
+
+    #[test]
+    fn non_read_descriptor_cannot_be_staged_for_effect_protocol_dispatch() {
+        let mut request = request_for(NativeOperationFamily::WorkspaceWrite);
+        request.input = b"required mutation input".to_vec();
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid write request");
+        let executor = NativeWorkspaceReadExecutor::new(7);
+
+        assert_eq!(
+            executor.stage_request(
+                "write-key-1".to_owned(),
+                "digest-1".to_owned(),
+                &validated_request,
+            ),
+            Err(NativeToolExecutionError::UnsupportedExecutionFamily)
+        );
+        assert!(matches!(
+            executor.dispatch(&workspace_read_call(
+                "write-key-1",
+                "digest-1",
+                "workspace://notes/today.txt",
+                7,
+            )),
+            Ok(DispatchOutcome::NotExecuted { .. })
+        ));
     }
 
     #[test]
