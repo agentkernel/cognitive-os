@@ -30,6 +30,63 @@ pub(crate) struct ValidatedNativeToolRequest {
     pub resolved_workspace_path: Option<PathBuf>,
 }
 
+/// Monotonic cursor over bounded output chunks. A cursor never exposes more
+/// than the descriptor ceiling and cannot replay an already acknowledged
+/// chunk.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct BoundedOutputCursor {
+    output_limit_bytes: usize,
+    next_offset: usize,
+}
+
+impl BoundedOutputCursor {
+    pub(crate) fn new(output_limit_bytes: usize) -> Self {
+        Self {
+            output_limit_bytes,
+            next_offset: 0,
+        }
+    }
+
+    pub(crate) fn next_chunk(
+        &mut self,
+        output: &[u8],
+        requested_offset: usize,
+        maximum_chunk_bytes: usize,
+    ) -> Result<Option<(usize, Vec<u8>)>, NativeToolExecutionError> {
+        if requested_offset != self.next_offset {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "output cursor is stale or out of order".to_owned(),
+            ));
+        }
+        let bounded_output = &output[..output.len().min(self.output_limit_bytes)];
+        if self.next_offset >= bounded_output.len() {
+            return Ok(None);
+        }
+        let chunk_end = (self.next_offset + maximum_chunk_bytes.max(1)).min(bounded_output.len());
+        let chunk = bounded_output[self.next_offset..chunk_end].to_vec();
+        let chunk_offset = self.next_offset;
+        self.next_offset = chunk_end;
+        Ok(Some((chunk_offset, chunk)))
+    }
+}
+
+/// Redact values that must never enter ordinary Tool output or evidence.
+pub(crate) fn redact_sensitive_output(output: &str) -> String {
+    let mut redacted_output = output.to_owned();
+    for sensitive_marker in ["api_key=", "API_KEY=", "token=", "TOKEN="] {
+        while let Some(marker_start) = redacted_output.find(sensitive_marker) {
+            let value_start = marker_start + sensitive_marker.len();
+            let value_end = redacted_output[value_start..]
+                .find([' ', '\n', '\r', '&'])
+                .map_or(redacted_output.len(), |relative_end| {
+                    value_start + relative_end
+                });
+            redacted_output.replace_range(value_start..value_end, "[REDACTED]");
+        }
+    }
+    redacted_output
+}
+
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub(crate) enum NativeToolExecutionError {
     #[error("descriptor binding is invalid: {0}")]
@@ -225,6 +282,38 @@ mod tests {
         assert_eq!(
             validate_native_tool_request(&request),
             Err(NativeToolExecutionError::NetworkTargetContainsCredentials)
+        );
+    }
+
+    #[test]
+    fn output_cursor_requires_monotonic_resume_and_enforces_limit() {
+        let mut cursor = BoundedOutputCursor::new(5);
+        assert_eq!(
+            cursor.next_chunk(b"123456789", 0, 2),
+            Ok(Some((0, b"12".to_vec())))
+        );
+        assert_eq!(
+            cursor.next_chunk(b"123456789", 2, 2),
+            Ok(Some((2, b"34".to_vec())))
+        );
+        assert_eq!(
+            cursor.next_chunk(b"123456789", 1, 2),
+            Err(NativeToolExecutionError::InvalidDescriptor(
+                "output cursor is stale or out of order".to_owned()
+            ))
+        );
+        assert_eq!(
+            cursor.next_chunk(b"123456789", 4, 2),
+            Ok(Some((4, b"5".to_vec())))
+        );
+        assert_eq!(cursor.next_chunk(b"123456789", 5, 2), Ok(None));
+    }
+
+    #[test]
+    fn sensitive_output_is_redacted_before_projection() {
+        assert_eq!(
+            redact_sensitive_output("ok api_key=secret token=hidden done"),
+            "ok api_key=[REDACTED] token=[REDACTED] done"
         );
     }
 }
