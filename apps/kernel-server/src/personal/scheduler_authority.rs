@@ -2332,6 +2332,7 @@ mod tests {
             "a rejected Context must not persist a candidate"
         );
 
+        drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
     }
 
