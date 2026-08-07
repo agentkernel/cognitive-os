@@ -26,7 +26,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P3-T01/context-source-closure` | P3-T01 complete acceptance is recorded; the branch remains leased only for final PR merge and branch closure. Pi remains candidate-only and scheduler/verified-continuation authority remains daemon-owned. B03, release, Profile, and Task completion remain separate/incomplete. | merge PR #161 after the closure-document CI passes, close the lease, and reconcile local `main` |
+| Active task lease | `none` | P3-T01 is complete in merged PR #161 at `main@d829eaffedada262033528ac397d6810fc3030ee`; its lease and task branch are closed. Pi remains candidate-only and scheduler/verified-continuation authority remains daemon-owned. B03, release, Profile, and Task completion remain separate/incomplete. | select the next non-overlapping ready formal task and create its dedicated branch, Draft PR, and lease before writing implementation |
 
 ### Layer 1 — Formal task progress
 
@@ -36,7 +36,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, and `P3-T01` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P1-T09, P2-T07, and P3-T01 remain in progress.
+weakening any criterion. P1-T09 and P2-T07 remain in progress.
 P2-T07/D01 is done with exact-revision native Linux evidence while its
 parent-task acceptance remains separate. Formal task completion remains
 independent from every product Gate.
