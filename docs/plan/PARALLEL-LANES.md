@@ -75,8 +75,9 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T03/scheduler-runtime-closure` | P2-T03 final acceptance mapping, task closure, and delivery reconciliation | Lane-RUN | `personal/P2-T03-scheduler-runtime-closure` | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260807-personal-p2-t03-scheduler-runtime-closure.md` | Cursor autonomous session | 2026-08-07 / 2026-08-07 | active |
 
-No active lease currently grants a writable implementation path.
+The active lease above grants only the exact P2-T03 closure and evidence paths listed in its row.
 
 ### 3.1 最近关闭的 leases
 
