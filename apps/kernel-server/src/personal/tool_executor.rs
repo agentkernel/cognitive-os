@@ -152,10 +152,11 @@ impl NativeWorkspaceReadExecutor {
 
     #[cfg(test)]
     fn install_before_read_hook(&self, hook: impl Fn() + Send + 'static) {
-        *self
-            .before_read_hook
-            .lock()
-            .expect("before-read hook store is not poisoned") = Some(Box::new(hook));
+        let mut before_read_hook = match self.before_read_hook.lock() {
+            Ok(before_read_hook) => before_read_hook,
+            Err(poisoned_before_read_hook) => poisoned_before_read_hook.into_inner(),
+        };
+        *before_read_hook = Some(Box::new(hook));
     }
 
     fn read_staged_workspace_file(
