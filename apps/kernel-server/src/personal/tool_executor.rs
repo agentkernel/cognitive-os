@@ -277,7 +277,11 @@ impl BoundedOutputCursor {
 pub(crate) fn redact_sensitive_output(output: &str) -> String {
     let mut redacted_output = output.to_owned();
     for sensitive_marker in ["api_key=", "API_KEY=", "token=", "TOKEN="] {
-        while let Some(marker_start) = redacted_output.find(sensitive_marker) {
+        let mut search_start = 0;
+        while let Some(relative_marker_start) =
+            redacted_output[search_start..].find(sensitive_marker)
+        {
+            let marker_start = search_start + relative_marker_start;
             let value_start = marker_start + sensitive_marker.len();
             let value_end = redacted_output[value_start..]
                 .find([' ', '\n', '\r', '&'])
@@ -285,6 +289,9 @@ pub(crate) fn redact_sensitive_output(output: &str) -> String {
                     value_start + relative_end
                 });
             redacted_output.replace_range(value_start..value_end, "[REDACTED]");
+            // Continue after the replacement. Searching from the beginning
+            // would rediscover the marker we intentionally retain for context.
+            search_start = value_start + "[REDACTED]".len();
         }
     }
     redacted_output
