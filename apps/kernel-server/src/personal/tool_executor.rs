@@ -187,14 +187,15 @@ impl NativeWorkspaceReadExecutor {
             });
         }
         #[cfg(test)]
-        if let Some(before_read_hook) = self
+        let before_read_hook = self
             .before_read_hook
             .lock()
             .map_err(|_| PortFailure {
                 detail: "before-read hook store is poisoned".to_owned(),
             })?
-            .as_ref()
-        {
+            .take();
+        #[cfg(test)]
+        if let Some(before_read_hook) = before_read_hook {
             before_read_hook();
         }
         // Hold the completed-result ledger lock through the filesystem read so
@@ -524,7 +525,10 @@ mod tests {
     use serde_json::json;
     use std::{
         collections::BTreeMap,
-        sync::Arc,
+        sync::{
+            Arc,
+            atomic::{AtomicUsize, Ordering},
+        },
         time::{SystemTime, UNIX_EPOCH},
     };
 
@@ -665,6 +669,29 @@ mod tests {
     impl Clock for FixedEffectClock {
         fn now(&self) -> Result<WallTimestamp, PortFailure> {
             Ok(self.0.clone())
+        }
+    }
+
+    /// Simulates a lost response only after the native sink has completed its
+    /// idempotent filesystem read. Queries still reach that real sink.
+    struct UnknownAfterNativeDispatchExecutor<'executor> {
+        native_executor: &'executor NativeWorkspaceReadExecutor,
+    }
+
+    impl EffectExecutor for UnknownAfterNativeDispatchExecutor<'_> {
+        fn capabilities(&self) -> ExecutorCapabilities {
+            self.native_executor.capabilities()
+        }
+
+        fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+            self.native_executor.dispatch(call)?;
+            Ok(DispatchOutcome::Unknown {
+                detail: "simulated lost post-I/O response".to_owned(),
+            })
+        }
+
+        fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+            self.native_executor.query_outcome(idempotency_key)
         }
     }
 
@@ -1029,6 +1056,215 @@ mod tests {
 
         drop(effect_protocol);
         drop(executor);
+        drop(store);
+        std::fs::remove_file(database_path).expect("remove authority database");
+    }
+
+    #[test]
+    fn unknown_native_workspace_read_reconciles_original_key_without_second_read() {
+        let temporary_workspace = TestWorkspace::new("unknown-outcome-reconciliation");
+        let workspace_file = temporary_workspace.path.join("notes.txt");
+        std::fs::write(&workspace_file, "token=secret durable workspace output")
+            .expect("write workspace fixture");
+        let database_path = temporary_authority_database_path();
+        let store =
+            Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+        let task_object_id = object_id(511);
+        let effect_object_id = object_id(512);
+        let intent_object_id = object_id(513);
+        let admitted_at =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+        for (object_id, domain, lifecycle_state, event_id) in [
+            (
+                task_object_id.clone(),
+                LifecycleDomain::Task,
+                "RUNNING",
+                511,
+            ),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "PROPOSED",
+                512,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: state(lifecycle_state),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t06-d02-unknown-outcome"}),
+                    },
+                    admitted_at: admitted_at.clone(),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_id:012x}"
+                        ))
+                        .expect("valid event identifier"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{\"fixture\":true}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit durable fixture object");
+        }
+        let idempotency_key = "p2-t06-d02-unknown-native-workspace-read";
+        let parameters_digest = "sha256:p2-t06-d02-unknown-native-workspace-read";
+        store
+            .insert_intent(
+                &IntentRow {
+                    intent_id: intent_object_id.clone(),
+                    idempotency_key: idempotency_key.to_owned(),
+                    parameters_digest: parameters_digest.to_owned(),
+                    action: "read".to_owned(),
+                    target: "workspace://notes.txt".to_owned(),
+                    effect_object_id: effect_object_id.clone(),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    task_binding: None,
+                    canonical_json: "{\"intent\":\"p2-t06-d02\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000513")
+                        .expect("valid intent event identifier"),
+                    object_id: intent_object_id,
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "intent.minted".to_owned(),
+                    canonical_json: "{\"intent\":\"p2-t06-d02\"}".to_owned(),
+                },
+            )
+            .expect("persist durable intent");
+
+        let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+        request.target = "workspace://notes.txt".to_owned();
+        request.workspace_root = Some(temporary_workspace.path.clone());
+        request.descriptor.output_limit_bytes = 16;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid workspace read");
+        let native_executor = NativeWorkspaceReadExecutor::new(1);
+        native_executor
+            .stage_request(
+                idempotency_key.to_owned(),
+                parameters_digest.to_owned(),
+                &validated_request,
+            )
+            .expect("stage original durable intent identity");
+        let read_count = Arc::new(AtomicUsize::new(0));
+        let read_count_for_hook = Arc::clone(&read_count);
+        native_executor.install_before_read_hook(move || {
+            read_count_for_hook.fetch_add(1, Ordering::SeqCst);
+        });
+        let unknown_executor = UnknownAfterNativeDispatchExecutor {
+            native_executor: &native_executor,
+        };
+
+        let clock = FixedEffectClock(admitted_at);
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store.as_ref(),
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+            UriRef::parse("authority://personal/effect-authority")
+                .expect("valid authority reference"),
+            UriRef::parse("correlation://personal/p2-t06-d02-unknown")
+                .expect("valid correlation reference"),
+        );
+        let grant = effect_grant();
+        let governance_currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+
+        let authorized = effect_protocol
+            .authorize_effect(
+                &effect_object_id,
+                Version::INITIAL,
+                &grant,
+                &governance_currency,
+                &writer_lease,
+            )
+            .expect("authorize staged effect");
+        let (dispatched, outcome) = effect_protocol
+            .dispatch_effect(
+                &effect_object_id,
+                authorized.after_version,
+                &grant,
+                &governance_currency,
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("dispatch native read through lost-response wrapper");
+        assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+        let unknown = effect_protocol
+            .record_outcome(
+                &effect_object_id,
+                dispatched.after_version,
+                &outcome,
+                &writer_lease,
+            )
+            .expect("record unknown post-I/O outcome");
+
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .expect("load unknown effect")
+                .expect("durable effect exists")
+                .state
+                .as_str(),
+            "OUTCOME_UNKNOWN"
+        );
+        assert_eq!(read_count.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            native_executor.completed_output(idempotency_key),
+            Some(b"token=[REDACTED]".to_vec())
+        );
+
+        let (_, reconciliation_result) = effect_protocol
+            .reconcile(
+                &effect_object_id,
+                "OUTCOME_UNKNOWN",
+                unknown.after_version,
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("reconcile the original idempotency key");
+        assert_eq!(
+            reconciliation_result,
+            ExecutorQueryResult::ExecutedWithOriginalKey
+        );
+        assert_eq!(read_count.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .expect("load reconciled effect")
+                .expect("durable effect exists")
+                .state
+                .as_str(),
+            "RECONCILED"
+        );
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Task, &task_object_id)
+                .expect("load unchanged task")
+                .expect("durable task exists")
+                .version,
+            Version::INITIAL
+        );
+
+        drop(effect_protocol);
+        drop(unknown_executor);
+        drop(native_executor);
         drop(store);
         std::fs::remove_file(database_path).expect("remove authority database");
     }
