@@ -75,14 +75,14 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T03/scheduler-runtime-closure` | P2-T03 final acceptance mapping, task closure, and delivery reconciliation | Lane-RUN | `personal/P2-T03-scheduler-runtime-closure` | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260807-personal-p2-t03-scheduler-runtime-closure.md` | Cursor autonomous session | 2026-08-07 / 2026-08-07 | active |
 
-The active lease above grants only the exact P2-T03 closure and evidence paths listed in its row.
+No active lease currently grants a writable implementation path.
 
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P2-T03/scheduler-runtime-closure` | P2-T03 final acceptance mapping, task closure, and delivery reconciliation | `personal/P2-T03-scheduler-runtime-closure` | 2026-08-07 | P2-T03 closes in PR #160 at `main@678b653c588c45ea02bf393ad7038ef760c0971b`. D01-D05 meet the unchanged durable scheduler/stop/Effect/worker-fencing acceptance with exact native Linux and Ubuntu/Windows CI evidence. The task branch was deleted after merge; B05/B12, release, and Profile remain `not-run`/incomplete. See `20260807-personal-p2-t03-scheduler-runtime-closure.md`. |
 | `lease/personal/P2-T05/native-tool-registry-validation` | P2-T05 native daemon Tool registry and pre-executor validator review/fix | `personal/P2-T05-native-tool-registry` | 2026-08-07 | P2-T05 closes at `456bb94`: static six-family catalog, immutable descriptor binding, persisted-descriptor verification, private projection, and pre-executor validators satisfy the unchanged acceptance. Exact native Linux Tool tests 7/7 plus fmt passed at `72a7e55`; final required Ubuntu/Windows CI passed in PR #159 (run `31160707414`). Tool execution, external I/O, mutation, reconciliation, Task completion, Gates, release, and Profile remain out of scope. See `20260807-personal-p2-t05-native-tool-registry-closure.md`. |
 | `lease/personal/P3-T01/d01-push-blocker` | P3-T01/D01 pushed-checkpoint delivery blocker record | `lane/ctr-p3-t01-context-request-binding` | 2026-08-07 | Local documentation checkpoint records that GitHub HTTPS could not connect through the configured local proxy while pushing `fcb1708`; it remains unpushed. See `20260807-personal-p3-t01-d01-push-blocker-handoff.md`. |
 | `lease/personal/P3-T01/context-request-binding` | P3-T01/D01 durable TaskContract ContextRequest binding, workspace source, and daemon-admin authorization/revocation prerequisite | `lane/ctr-p3-t01-context-request-binding` | 2026-08-07 | Prerequisite implementation and focused Context-store evidence are complete, and the daemon-only Context-before-private-Pi candidate composition is merged in PR #153 at `d3d9d295970964f9fe4055fdf4f6a29ab85a5e0b`. The next required durable ContextView emission and revoked-source integration negative remain blocked on the non-overlapping P2-T04 scheduler/Pi lease; no B03, Task completion, Gate, release, or Profile claim changed. See `20260807-personal-p3-t01-d01-context-integration-blocker-handoff.md`. |

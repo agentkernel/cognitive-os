@@ -3,10 +3,11 @@
  - Date: 2026-08-07
  - Classification: `implementation-only`
  - Task: `P2-T03`
- - Branch: `personal/P2-T03-scheduler-runtime-closure`
- - Lease: `lease/personal/P2-T03/scheduler-runtime-closure`
- - Draft PR: [#160](https://github.com/agentkernel/cognitive-os/pull/160)
+ - Branch: `personal/P2-T03-scheduler-runtime-closure` (deleted after merge)
+ - Lease: `lease/personal/P2-T03/scheduler-runtime-closure` (closed)
+ - PR: [#160](https://github.com/agentkernel/cognitive-os/pull/160) (merged)
  - Acceptance checkpoint: `08932f7868d46f494aaa76835f4818fd7a1f2962`
+ - Merge commit: `678b653c588c45ea02bf393ad7038ef760c0971b`
 
 ## Acceptance mapping
 
@@ -48,8 +49,8 @@
  - Required ordinary supported CI: Ubuntu and Windows/MSVC passed for the same
   acceptance checkpoint.
  - This closure delivery: `pnpm run check:consistency` and `git diff --check`
-  passed locally. Required PR CI remains the merge control for this
-  documentation-only task-closure branch.
+  passed locally. PR #160 required CI passed: Ubuntu in 2m01s and Windows/MSVC
+  in 8m21s.
 
 ## Non-claims and next action
 
@@ -57,5 +58,5 @@
  a Provider or Tool, reconcile external I/O, create a Task completion, pass
  B05/B12, establish a release, or establish a Profile claim. P2-T07 remains
  in progress for Artifact/evidence/full-verifier acceptance; P2-T06 owns Tool
- execution and reconciliation. When PR #160 required checks pass, mark it
- ready, merge it, close this lease, and reconcile the local `main` branch.
+ execution and reconciliation. PR #160 merged cleanly, its task branch was
+ deleted, the lease is closed, and local `main` is at the merge commit.
