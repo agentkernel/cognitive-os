@@ -433,6 +433,32 @@ fn validate_network_target(target: &str) -> Result<(), NativeToolExecutionError>
 mod tests {
     use super::*;
     use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, ToolAvailability};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    struct TestWorkspace {
+        path: PathBuf,
+    }
+
+    impl TestWorkspace {
+        fn new(test_name: &str) -> Self {
+            let timestamp_nanos = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system time after Unix epoch")
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!(
+                "cognitiveos-tool-executor-{test_name}-{}-{timestamp_nanos}",
+                std::process::id()
+            ));
+            std::fs::create_dir_all(&path).expect("create temporary workspace");
+            Self { path }
+        }
+    }
+
+    impl Drop for TestWorkspace {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.path);
+        }
+    }
 
     fn request_for(family: NativeOperationFamily) -> NativeToolExecutionRequest {
         let descriptor = BUILTIN_TOOL_CATALOG
@@ -543,12 +569,12 @@ mod tests {
 
     #[test]
     fn workspace_read_requires_a_staged_digest_bound_request_before_io() {
-        let temporary_directory = tempfile::tempdir().expect("temporary workspace");
-        let workspace_file = temporary_directory.path().join("notes.txt");
+        let temporary_workspace = TestWorkspace::new("digest-binding");
+        let workspace_file = temporary_workspace.path.join("notes.txt");
         std::fs::write(&workspace_file, "safe output").expect("write workspace fixture");
         let mut request = request_for(NativeOperationFamily::WorkspaceRead);
         request.target = "workspace://notes.txt".to_owned();
-        request.workspace_root = Some(temporary_directory.path().to_path_buf());
+        request.workspace_root = Some(temporary_workspace.path.clone());
         let validated_request = validate_native_tool_request(&request).expect("valid request");
         let executor = NativeWorkspaceReadExecutor::new(7);
         executor
