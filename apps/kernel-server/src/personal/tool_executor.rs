@@ -438,7 +438,7 @@ fn validate_network_target(target: &str) -> Result<(), NativeToolExecutionError>
 }
 
 #[cfg(test)]
-#[allow(clippy::panic)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
     use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, ToolAvailability};
