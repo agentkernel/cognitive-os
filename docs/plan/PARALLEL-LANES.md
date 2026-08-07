@@ -75,8 +75,9 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P3-T01/context-source-closure` | P3-T01/D01 real Context source and private candidate integration closure | Lane-RUN | `personal/P3-T01-context-source-closure` | `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/task_api.rs`; `crates/cognitive-store/src/context_store.rs`; `crates/cognitive-store/tests/`; `apps/kernel-server/tests/`; `docs/plan/PROGRESS.md`; `docs/checkpoints/` | owner session / Cursor | 2026-08-07 / 2026-08-07 | active |
 
-No active lease currently grants a writable implementation path.
+The active lease above grants the only current writable implementation path.
 
 ### 3.1 最近关闭的 leases
 
