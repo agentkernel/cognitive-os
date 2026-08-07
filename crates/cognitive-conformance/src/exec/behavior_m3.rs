@@ -31,7 +31,7 @@
 use super::{AssetContext, ExecError, GateOutput, ImplementationKind};
 use crate::LoadedVector;
 use cognitive_contracts::generated::context_view::{
-    LoadedContextItemRole, LoadedContextItemTrustLevel,
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow, ParameterBound};
 use cognitive_domain::{UriRef, WallTimestamp, capability::attenuation_violations};
@@ -165,6 +165,7 @@ fn candidate(
         },
         role,
         trust_level: trust,
+        representation: LoadedContextItemRepresentation::Text,
         body,
         cost_bytes: bytes,
         cost_tokens: tokens,

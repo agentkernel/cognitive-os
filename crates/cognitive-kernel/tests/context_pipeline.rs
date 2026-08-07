@@ -6,7 +6,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use cognitive_contracts::generated::context_view::{
-    LoadedContextItemRole, LoadedContextItemTrustLevel,
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
 use cognitive_domain::{UriRef, WallTimestamp};
@@ -95,6 +95,7 @@ fn candidate(
         },
         role,
         trust_level: trust,
+        representation: LoadedContextItemRepresentation::Text,
         body: json!({"ref": object_ref, "text": "body content"}),
         cost_bytes: bytes,
         cost_tokens: tokens,

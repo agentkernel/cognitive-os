@@ -11,8 +11,14 @@ use cognitive_contracts::{
     generated::governed_object_header::GovernedObjectHeaderSensitivity,
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
     generated::{
-        context_request::ContextRequest, object_reference::StrongReferenceKind,
-        operation_candidate_proposal::OperationCandidateProposal, task_contract::TaskContract,
+        context_request::ContextRequest,
+        context_view::{
+            ContextView, ContextViewPinnedVersionsValue, ItemCost, LoadedContextItem,
+            LossDeclaration, RejectedCandidate as PersistedRejectedCandidate, ResolutionCost,
+        },
+        object_reference::StrongReferenceKind,
+        operation_candidate_proposal::OperationCandidateProposal,
+        task_contract::TaskContract,
     },
 };
 use cognitive_domain::{
@@ -39,8 +45,8 @@ use cognitive_kernel::{
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
         BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
-        ContextAuthorizationFactStore, ContextCandidateQuery, ContextStore,
-        ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
+        ContextAuthorizationFactStore, ContextCandidateQuery, ContextRequestRow, ContextStore,
+        ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
         ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
         SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
         TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
@@ -654,6 +660,47 @@ fn candidate_admission_command_from_policy(
     })
 }
 
+/// Reconstruct a Context authorization snapshot immediately before a body
+/// access. Re-reading both fact material and revocation currency prevents an
+/// earlier metadata discovery from authorizing a later body read with stale
+/// policy or capability facts.
+fn load_current_context_authorization_snapshot<S>(
+    store: &S,
+    command: &ContextResolutionCommand,
+) -> Result<cognitive_kernel::authz::AuthzSnapshot, SchedulerAuthorityError>
+where
+    S: ContextAuthorizationFactStore,
+{
+    let authorization_facts = store
+        .load_latest_context_authorization_facts(
+            &command.authorization_subject_ref,
+            &command.tenant_id,
+        )
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable authorization facts for Context body read".to_owned(),
+            )
+        })?;
+    let current_revocation_epoch = store
+        .load_current_context_revocation_epoch(&command.tenant_id)
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable Context revocation epoch".to_owned(),
+            )
+        })?;
+    authorization_facts
+        .reconstruct_snapshot(current_revocation_epoch, command.decided_at.clone())
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -670,6 +717,26 @@ where
         + ContextAuthorizationFactStore
         + IntentChainStore
         + ProtocolStore,
+{
+    resolve_authorized_task_context_after_metadata(store, command, || Ok(()))
+}
+
+/// Resolve Context after the metadata-only discovery stage. Production calls
+/// this through [`resolve_authorized_task_context`] with a no-op observer; the
+/// private observer makes the discovery-to-body authorization boundary
+/// deterministically testable without exposing a runtime control surface.
+fn resolve_authorized_task_context_after_metadata<S, F>(
+    store: &S,
+    command: &ContextResolutionCommand,
+    after_metadata: F,
+) -> Result<ResolvedContextView, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + IntentChainStore
+        + ProtocolStore,
+    F: FnOnce() -> Result<(), SchedulerAuthorityError>,
 {
     let current_contract_epoch = store
         .current_contract_epoch(&command.task_ref)
@@ -716,34 +783,7 @@ where
             "ContextRequest principal differs from scheduler authorization subject".to_owned(),
         ));
     }
-    let authorization_facts = store
-        .load_latest_context_authorization_facts(
-            &command.authorization_subject_ref,
-            &command.tenant_id,
-        )
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?
-        .ok_or_else(|| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(
-                "no durable authorization facts for Context body read".to_owned(),
-            )
-        })?;
-    let current_revocation_epoch = store
-        .load_current_context_revocation_epoch(&command.tenant_id)
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?
-        .ok_or_else(|| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(
-                "no durable Context revocation epoch".to_owned(),
-            )
-        })?;
-    let authorization_snapshot = authorization_facts
-        .reconstruct_snapshot(current_revocation_epoch, command.decided_at.clone())
-        .map_err(|error| {
-            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
-        })?;
+    let authorization_snapshot = load_current_context_authorization_snapshot(store, command)?;
     let metadata = store
         .query_context_candidate_metadata(&ContextCandidateQuery {
             tenant_id: command.tenant_id.clone(),
@@ -752,12 +792,18 @@ where
             limit: command.source_limit,
         })
         .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    after_metadata()?;
 
     let mut authorized_candidates = Vec::with_capacity(metadata.len());
+    let mut authorization_denied_after_discovery = false;
     for source_metadata in metadata {
-        // Body materialization must remain after the current authorization decision.
+        // Discovery is metadata-only. Re-read durable authorization state for
+        // every body, so a revocation that lands after discovery cannot reach
+        // body materialization, ranking, rendering, or the Pi boundary.
+        let current_authorization_snapshot =
+            load_current_context_authorization_snapshot(store, command)?;
         if authorize(
-            &authorization_snapshot,
+            &current_authorization_snapshot,
             &source_metadata.governance,
             &AccessRequest {
                 action: "read_body".to_owned(),
@@ -766,6 +812,7 @@ where
         )
         .is_err()
         {
+            authorization_denied_after_discovery = true;
             continue;
         }
         let source = store
@@ -802,10 +849,17 @@ where
             governance: source_governance,
             role: source.role,
             trust_level: source.trust_level,
+            representation: source.representation,
             body,
             cost_bytes: source.content_bytes,
             cost_tokens: source.content_tokens.unwrap_or(0),
         });
+    }
+
+    if authorization_denied_after_discovery && authorized_candidates.is_empty() {
+        return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
+            "all discovered Context sources were denied before body materialization".to_owned(),
+        ));
     }
 
     let resolution_request = ResolutionRequest {
@@ -838,6 +892,137 @@ where
     .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
 }
 
+/// Persist the exact immutable ContextView that is about to become input to a
+/// private candidate producer. The durable view intentionally contains only
+/// source metadata and strong references; source bodies remain confined to the
+/// already-authorized resolver and the bounded rendered transport.
+fn persist_resolved_context_view<S, C, G>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    request_row: &ContextRequestRow,
+    resolved_view: &ResolvedContextView,
+    governance: &GovernanceSeed,
+) -> Result<ContextViewRow, SchedulerAuthorityError>
+where
+    S: ContextStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let view_id = next_object_id(identifiers)?;
+    let resolved_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.detail))?;
+    let header = compose_governed_header(
+        &view_id,
+        "ContextView",
+        "cognitiveos.context-view/0.1",
+        governance,
+        vec![format!(
+            "activity://personal/context/{}",
+            request_row.request_id
+        )],
+        vec![request_row.request_id.to_string()],
+        "daemon-persisted-context-resolution",
+        &resolved_at,
+    )
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let loaded = resolved_view
+        .loaded
+        .iter()
+        .map(|item| {
+            let source_id = ObjectId::parse(&item.object_ref).map_err(|_| {
+                SchedulerAuthorityError::ContextResolution(
+                    "resolved Context item identity is not a governed object identifier".to_owned(),
+                )
+            })?;
+            Ok(LoadedContextItem {
+                item_id: item.object_ref.clone(),
+                object_ref: strong_reference_to(&source_id, &item.content_digest),
+                representation: item.representation,
+                trust_level: item.trust_level,
+                role: item.role,
+                cost: ItemCost {
+                    bytes: item.cost_bytes,
+                    tokens: Some(item.cost_tokens),
+                },
+            })
+        })
+        .collect::<Result<Vec<_>, SchedulerAuthorityError>>()?;
+    let pinned_versions = resolved_view
+        .pinned_versions
+        .iter()
+        .map(|(object_ref, version)| {
+            (
+                object_ref.clone(),
+                ContextViewPinnedVersionsValue::Integer(*version),
+            )
+        })
+        .collect();
+    let payload = ContextView {
+        activity_bound: format!("activity://personal/context/{}", request_row.request_id),
+        complete: resolved_view.complete,
+        cost: ResolutionCost {
+            bytes: resolved_view
+                .loaded
+                .iter()
+                .map(|item| item.cost_bytes)
+                .sum(),
+            money_microunits: None,
+            resolve_ms: 0,
+            tokens: Some(
+                resolved_view
+                    .loaded
+                    .iter()
+                    .map(|item| item.cost_tokens)
+                    .sum(),
+            ),
+        },
+        header,
+        loaded,
+        loss_declaration: resolved_view
+            .loss_declaration
+            .iter()
+            .map(|loss| LossDeclaration {
+                omitted_classes: loss.omitted_classes.clone(),
+                source: loss.source.clone(),
+                transform: loss.transform.clone(),
+                verification: resolved_view.render.digest.clone(),
+            })
+            .collect(),
+        missing: (!resolved_view.missing.is_empty()).then(|| resolved_view.missing.clone()),
+        pinned_versions,
+        rejected: resolved_view
+            .rejected
+            .iter()
+            .map(|rejected| PersistedRejectedCandidate {
+                candidate_ref: rejected.candidate_ref.clone(),
+                reason: rejected.reason.clone(),
+            })
+            .collect(),
+        request_ref: strong_reference_to(&request_row.request_id, &request_row.request_digest),
+    };
+    let payload_value = serde_json::to_value(payload)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let (sealed_payload, view_digest) = seal_governed_object_content_digest(payload_value)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&sealed_payload)
+            .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let view_row = ContextViewRow {
+        view_id,
+        request_id: request_row.request_id.clone(),
+        view_digest,
+        canonical_json,
+    };
+    store
+        .append_context_view(&view_row)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    Ok(view_row)
+}
+
 /// Resolve Context, obtain exactly one untrusted Pi candidate, then have the
 /// daemon seal, persist, and atomically admit it. Pi-provided fields never
 /// become governed references, header facts, authority, or lifecycle state.
@@ -862,6 +1047,41 @@ where
     C: Clock,
     G: IdGenerator,
     P: PrivatePiCandidateProposer,
+{
+    propose_persist_and_admit_candidate_after_metadata(
+        store,
+        clock,
+        identifiers,
+        context_command,
+        proposer,
+        admission_command,
+        || Ok(()),
+    )
+}
+
+/// Candidate composition with the same private metadata observer used by the
+/// resolver test seam. The production wrapper above always supplies a no-op.
+fn propose_persist_and_admit_candidate_after_metadata<S, C, G, P, F>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    context_command: &ContextResolutionCommand,
+    proposer: &P,
+    admission_command: &DaemonCandidateAdmissionCommand,
+    after_metadata: F,
+) -> Result<CandidateAdmissionReceipt, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+    P: PrivatePiCandidateProposer,
+    F: FnOnce() -> Result<(), SchedulerAuthorityError>,
 {
     // Candidate identity is daemon-owned and stable across a scheduler retry.
     // Never call Pi twice for that identity: a previously committed admission
@@ -891,7 +1111,24 @@ where
         }
         return admit_candidate_atomically(store, clock, identifiers, admission_command);
     }
-    let resolved_context = resolve_authorized_task_context(store, context_command)?;
+    let resolved_context =
+        resolve_authorized_task_context_after_metadata(store, context_command, after_metadata)?;
+    let request_row = store
+        .load_context_request(&context_command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(
+                context_command.request_id.to_string(),
+            )
+        })?;
+    persist_resolved_context_view(
+        store,
+        clock,
+        identifiers,
+        &request_row,
+        &resolved_context,
+        &admission_command.governance,
+    )?;
     let current_contract_epoch = store
         .current_contract_epoch(&context_command.task_ref)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
@@ -1609,20 +1846,27 @@ fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorit
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
-        RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
-        SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
-        UntrustedPiCandidate, WorkerAuthorizationHandoff, candidate_admission_command_from_policy,
-        classify_scheduler_effect_closure, complete_resolved_effect_and_release,
-        complete_scheduler_admission, complete_scheduler_worker_attempt,
-        ensure_current_contract_epoch, parse_execution_bound_contract,
+        ContextResolutionCommand, RecoveredWorkerAttempt, SchedulerAuthorityBinding,
+        SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
+        SchedulerWorkerAttempt, UntrustedPiCandidate, WorkerAuthorizationHandoff,
+        candidate_admission_command_from_policy, classify_scheduler_effect_closure,
+        complete_resolved_effect_and_release, complete_scheduler_admission,
+        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
+        parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
         release_closed_effect_dispatch, release_closed_recovered_attempt,
         select_single_effect_intent, validate_untrusted_pi_candidate,
         validate_worker_authorization_evidence,
     };
     use cognitive_contracts::{
         canonical,
+        generated::governed_object_header::GovernedObjectHeaderSensitivity,
         generated::{
-            common_defs::Budget, worker_iteration_authorization::WorkerIterationAuthorization,
+            common_defs::Budget,
+            context_view::{
+                LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
+            },
+            task_contract::{ContractCondition, ContractConditionKind, TaskContract, TaskScope},
+            worker_iteration_authorization::WorkerIterationAuthorization,
         },
     };
     use cognitive_domain::{
@@ -1634,6 +1878,7 @@ mod tests {
         AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
         PrincipalFacts, authorize,
     };
+    use cognitive_kernel::budget::BudgetCharge;
     use cognitive_kernel::budget::BudgetState;
     use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
     use cognitive_kernel::engine::CommittedTransition;
@@ -1642,15 +1887,17 @@ mod tests {
         strong_reference_to,
     };
     use cognitive_kernel::ports::{
-        AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
-        IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, RecordDraft,
-        SchedulerExecutionPolicyRow, SchedulerLeaseBinding, StoredObject, TaskBinding,
-        TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
-        WorkerIterationAuthorizationRow,
+        AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
+        ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
+        EventDraft, IntentChainStore, IntentRow, ObjectAdmission, ObjectCas,
+        OperationCandidateProposalRow, RecordDraft, SchedulerExecutionPolicyRow,
+        SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+        WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
         PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
+        prepare_personal_databases,
         scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
     };
     use serde_json::json;
@@ -1684,6 +1931,535 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn context_governance() -> GovernanceSeed {
+        GovernanceSeed {
+            owner: strong_reference_to(&object_id(910), &format!("sha256:{}", "a".repeat(64))),
+            authority: strong_reference_to(&object_id(911), &format!("sha256:{}", "b".repeat(64))),
+            resource_scope: strong_reference_to(
+                &object_id(912),
+                &format!("sha256:{}", "c".repeat(64)),
+            ),
+            tenant_id: Some("tenant-a".to_owned()),
+            created_by: "principal://tenant-a/daemon".to_owned(),
+            sensitivity: GovernedObjectHeaderSensitivity::Internal,
+            purpose_constraints: vec!["task_execution".to_owned()],
+            retention_policy: "standard".to_owned(),
+        }
+    }
+
+    fn seal_payload(payload: serde_json::Value) -> (String, String) {
+        let (sealed_payload, digest) = seal_governed_object_content_digest(payload).unwrap();
+        (serde_json::to_string(&sealed_payload).unwrap(), digest)
+    }
+
+    fn append_context_race_fixture(
+        store: &SqliteAuthorityStore,
+        task_ref: &str,
+        required_context_ref: Option<&str>,
+    ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
+        let governance = context_governance();
+        let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
+        let request_id = object_id(920);
+        let request_header = compose_governed_header(
+            &request_id,
+            "ContextRequest",
+            "cognitiveos.context-request/0.1",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "p2-t04-race-test-request",
+            &issued_at,
+        )
+        .unwrap();
+        let (request_json, request_digest) = seal_payload(json!({
+            "header": request_header,
+            "purpose": "task_execution",
+            "perspective": {
+                "principal": "principal://tenant-a/daemon",
+                "task": task_ref,
+                "episode": "episode://tenant-a/p2-t04-race",
+            },
+            "budget": {},
+            "priority": ["task"],
+            "required": required_context_ref.map(|object_ref| vec![json!({"ref": object_ref})]).unwrap_or_default(),
+            "forbidden": [],
+            "freshness": {"world_max_age_ms": 0},
+            "sensitivity": {"max_input": "internal", "egress": "none"},
+            "target_profile": {"kind": "structured", "schema": "p2-t04-race/v1"},
+            "allow_partial": false,
+        }));
+        let request = ContextRequestRow {
+            request_id: request_id.clone(),
+            task_ref: task_ref.to_owned(),
+            request_digest: request_digest.clone(),
+            canonical_json: request_json,
+        };
+        store.append_context_request(&request).unwrap();
+
+        let source_id = object_id(921);
+        let source_header = compose_governed_header(
+            &source_id,
+            "WorkspaceContextSource",
+            "cognitiveos.workspace-context-source/0.1",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "p2-t04-race-test-source",
+            &issued_at,
+        )
+        .unwrap();
+        let (source_json, source_digest) = seal_payload(json!({
+            "header": source_header,
+            "tenant_id": "tenant-a",
+            "owner_ref": "principal://tenant-a/daemon",
+            "resource_scope": "workspace://tenant-a/project/alpha",
+            "conversation_ref": "conversation://tenant-a/one",
+            "role": "working",
+            "trust_level": "verified",
+            "representation": "text",
+            "provenance_ref": "admission://tenant-a/daemon/race-test",
+            "content_bytes": 20,
+            "content_tokens": 5,
+            "body": {"text": "must-not-reach-pi"},
+        }));
+        store
+            .append_workspace_context_source(&WorkspaceContextSourceRow {
+                source_id: source_id.clone(),
+                source_digest,
+                governance: ObjectGovernance {
+                    object_ref: source_id.to_string(),
+                    tenant_id: Some("tenant-a".to_owned()),
+                    owner_ref: "principal://tenant-a/daemon".to_owned(),
+                    resource_scope: "workspace://tenant-a/project/alpha".to_owned(),
+                    conversation_ref: Some("conversation://tenant-a/one".to_owned()),
+                },
+                role: LoadedContextItemRole::Working,
+                trust_level: LoadedContextItemTrustLevel::Verified,
+                representation: LoadedContextItemRepresentation::Text,
+                provenance_ref: "admission://tenant-a/daemon/race-test".to_owned(),
+                content_bytes: 20,
+                content_tokens: Some(5),
+                canonical_json: source_json,
+            })
+            .unwrap();
+
+        let principal = PrincipalFacts {
+            principal_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authenticated: true,
+            active: true,
+            tenant_id: Some("tenant-a".to_owned()),
+        };
+        let facts_id = object_id(922);
+        let capability = CapabilityConstraints {
+            subject: principal.principal_ref.to_string(),
+            audience: "daemon://tenant-a/context".to_owned(),
+            resource: "workspace://tenant-a/project".to_owned(),
+            purpose: "task_execution".to_owned(),
+            actions: ["read_body".to_owned()].into(),
+            parameter_bounds: BTreeMap::new(),
+            lease: LeaseWindow {
+                not_before: WallTimestamp::parse("2026-08-06T00:00:00Z").unwrap(),
+                expires: WallTimestamp::parse("2026-08-08T00:00:00Z").unwrap(),
+            },
+            depth_remaining: 1,
+            issued_epoch: 1,
+        };
+        let actor_chain = ActorChainFacts {
+            chain_digest: format!("sha256:{}", "d".repeat(64)),
+            resolved: true,
+        };
+        let membership = Some(MembershipFacts {
+            valid: true,
+            roles: ["owner".to_owned()].into(),
+        });
+        let facts_header = compose_governed_header(
+            &facts_id,
+            "ContextAuthorizationFacts",
+            "cognitiveos.context-authorization-facts/0.1",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "p2-t04-race-test-facts",
+            &issued_at,
+        )
+        .unwrap();
+        let (facts_json, _) = seal_payload(json!({
+            "header": facts_header,
+            "fact_set_id": facts_id,
+            "subject_ref": principal.principal_ref,
+            "tenant_id": "tenant-a",
+            "principal": principal,
+            "actor_chain": actor_chain,
+            "membership": membership,
+            "capability_links": [capability],
+            "explicit_denies": [],
+            "capability_set_version": 1,
+            "issued_revocation_epoch": 1,
+        }));
+        store
+            .append_context_authorization_facts(&ContextAuthorizationFactsRow {
+                fact_set_id: facts_id,
+                subject_ref: "principal://tenant-a/daemon".to_owned(),
+                tenant_id: "tenant-a".to_owned(),
+                principal,
+                actor_chain,
+                membership,
+                capability_links: vec![capability],
+                explicit_denies: Vec::new(),
+                capability_set_version: 1,
+                issued_revocation_epoch: 1,
+                canonical_json: facts_json,
+            })
+            .unwrap();
+
+        let initial_revocation =
+            context_revocation_fact(&governance, object_id(923), 1, &issued_at);
+        store
+            .append_context_revocation_fact(&initial_revocation)
+            .unwrap();
+        let later_revocation = context_revocation_fact(&governance, object_id(924), 2, &issued_at);
+
+        let contract_id = object_id(925);
+        let contract_header = compose_governed_header(
+            &contract_id,
+            "TaskContract",
+            "cognitiveos.task-contract/0.4",
+            &governance,
+            Vec::new(),
+            Vec::new(),
+            "p2-t04-race-test-contract",
+            &issued_at,
+        )
+        .unwrap();
+        let contract = TaskContract {
+            allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
+            allowed_tools: Vec::new(),
+            budget: Budget {
+                attention_slots: None,
+                context_bytes: None,
+                egress_bytes: None,
+                input_tokens: None,
+                money_microunits: None,
+                output_tokens: None,
+                semantic_calls: None,
+                tool_calls: Some(1),
+                wall_time_ms: None,
+            },
+            budget_id: Some(
+                BudgetId::parse("00000000-0000-7000-b000-000000000926")
+                    .unwrap()
+                    .to_generated(),
+            ),
+            conditions: vec![ContractCondition {
+                description: "test acceptance".to_owned(),
+                id: "accept".to_owned(),
+                kind: ContractConditionKind::Acceptance,
+                machine_expression: None,
+                verifier_ref: None,
+            }],
+            context_request_ref: Some(strong_reference_to(&request_id, &request_digest)),
+            contract_epoch: 1,
+            deadline: None,
+            header: contract_header,
+            human_gates: None,
+            intent_acceptance_ref: strong_reference_to(
+                &object_id(927),
+                &format!("sha256:{}", "e".repeat(64)),
+            ),
+            intent_interpretation_ref: strong_reference_to(
+                &object_id(928),
+                &format!("sha256:{}", "f".repeat(64)),
+            ),
+            loop_object_id: Some(object_id(929).to_generated()),
+            max_iterations: 1,
+            max_retries: 0,
+            objective: "race regression".to_owned(),
+            scope: TaskScope {
+                in_scope: vec!["test".to_owned()],
+                out_of_scope: Vec::new(),
+            },
+            task_ref: task_ref.to_owned(),
+            user_intent_ref: strong_reference_to(
+                &object_id(930),
+                &format!("sha256:{}", "1".repeat(64)),
+            ),
+            worker_authorization_root_id: Some(contract_id.to_generated()),
+        };
+        let (contract_json, contract_digest) =
+            seal_payload(serde_json::to_value(contract).unwrap());
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: contract_id.clone(),
+                    task_ref: task_ref.to_owned(),
+                    contract_epoch: 1,
+                    user_intent_record_id: object_id(930),
+                    interpretation_id: object_id(928),
+                    accepted_by: "principal://tenant-a/daemon".to_owned(),
+                    contract_digest,
+                    canonical_json: contract_json,
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000925").unwrap(),
+                    object_id: contract_id,
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.minted".to_owned(),
+                    canonical_json: "{\"event\":\"p2-t04-race\"}".to_owned(),
+                },
+                0,
+            )
+            .unwrap();
+
+        (
+            ContextResolutionCommand {
+                task_ref: task_ref.to_owned(),
+                request_id,
+                authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+                tenant_id: "tenant-a".to_owned(),
+                resource_scope_prefix: "workspace://tenant-a/project".to_owned(),
+                conversation_ref: Some("conversation://tenant-a/one".to_owned()),
+                source_limit: 1,
+                decided_at: issued_at,
+            },
+            later_revocation,
+        )
+    }
+
+    fn context_revocation_fact(
+        governance: &GovernanceSeed,
+        fact_id: ObjectId,
+        epoch: i64,
+        issued_at: &WallTimestamp,
+    ) -> ContextRevocationFactRow {
+        let header = compose_governed_header(
+            &fact_id,
+            "ContextRevocationFact",
+            "cognitiveos.context-revocation-fact/0.1",
+            governance,
+            Vec::new(),
+            Vec::new(),
+            "p2-t04-race-test-revocation",
+            issued_at,
+        )
+        .unwrap();
+        let (canonical_json, _) = seal_payload(
+            json!({"header": header, "revocation_fact_id": fact_id, "tenant_id": "tenant-a", "revocation_epoch": epoch, "revoked_subject_ref": null, "revoked_capability_ref": null}),
+        );
+        ContextRevocationFactRow {
+            revocation_fact_id: fact_id,
+            tenant_id: "tenant-a".to_owned(),
+            revocation_epoch: epoch,
+            revoked_subject_ref: None,
+            revoked_capability_ref: None,
+            canonical_json,
+        }
+    }
+
+    #[derive(Default)]
+    struct CountingPiProposer {
+        calls: Cell<usize>,
+    }
+
+    impl super::PrivatePiCandidateProposer for CountingPiProposer {
+        fn propose_candidate(
+            &self,
+            _resolved_context: &super::ResolvedContextView,
+            _task_ref: &str,
+            _contract_epoch: i64,
+        ) -> Result<UntrustedPiCandidate, String> {
+            self.calls.set(self.calls.get() + 1);
+            Err("Pi must not receive revoked Context".to_owned())
+        }
+    }
+
+    #[test]
+    fn revocation_after_metadata_discovery_blocks_body_ranking_and_private_pi() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p2-t04-revocation-race";
+        let (context_command, later_revocation) =
+            append_context_race_fixture(&store, task_ref, None);
+        let proposer = CountingPiProposer::default();
+        let candidate_id = object_id(931);
+        let admission_command = super::DaemonCandidateAdmissionCommand {
+            candidate_id: candidate_id.clone(),
+            authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+            authorization_purpose: "task_execution".to_owned(),
+            budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
+                .unwrap(),
+            governance: context_governance(),
+            actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
+            correlation_id: UriRef::parse("correlation://tenant-a/p2-t04-race").unwrap(),
+        };
+
+        let result = propose_persist_and_admit_candidate_after_metadata(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-07T00:00:00Z").unwrap(),
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+            || {
+                store
+                    .append_context_revocation_fact(&later_revocation)
+                    .map_err(|error| {
+                        SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+                    })
+            },
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+                if detail.contains("denied before body materialization")
+        ));
+        assert_eq!(proposer.calls.get(), 0, "revoked Context must not reach Pi");
+        assert_eq!(
+            store
+                .load_current_context_revocation_epoch("tenant-a")
+                .unwrap(),
+            Some(2)
+        );
+        assert!(
+            store
+                .load_operation_candidate_proposal(&candidate_id)
+                .unwrap()
+                .is_none(),
+            "a rejected Context must not persist a candidate"
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn missing_required_context_blocks_private_pi_and_candidate_admission() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p2-t04-required-context";
+        let (context_command, _) = append_context_race_fixture(
+            &store,
+            task_ref,
+            Some("workspace://tenant-a/project/required-but-missing"),
+        );
+        let proposer = CountingPiProposer::default();
+        let candidate_id = object_id(932);
+        let admission_command = super::DaemonCandidateAdmissionCommand {
+            candidate_id: candidate_id.clone(),
+            authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+            authorization_purpose: "task_execution".to_owned(),
+            budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
+                .unwrap(),
+            governance: context_governance(),
+            actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
+            correlation_id: UriRef::parse("correlation://tenant-a/p2-t04-required").unwrap(),
+        };
+
+        let result = super::propose_persist_and_admit_candidate(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-07T00:00:00Z").unwrap(),
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::ContextResolution(detail))
+                if detail.contains("CONTEXT_INCOMPLETE")
+        ));
+        assert_eq!(
+            proposer.calls.get(),
+            0,
+            "incomplete Context must not reach Pi"
+        );
+        assert!(
+            store
+                .load_operation_candidate_proposal(&candidate_id)
+                .unwrap()
+                .is_none()
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn duplicate_candidate_retry_does_not_reinvoke_private_pi() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p2-t04-duplicate-candidate";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        let candidate_id = object_id(933);
+        store
+            .append_operation_candidate_proposal(&OperationCandidateProposalRow {
+                candidate_id: candidate_id.clone(),
+                task_ref: task_ref.to_owned(),
+                contract_epoch: 1,
+                candidate_source_ref: "observation://tenant-a/pi/previous-attempt".to_owned(),
+                tool_ref: "operation://tenant-a/observe".to_owned(),
+                action: "observe".to_owned(),
+                target: "workspace://tenant-a/project/alpha".to_owned(),
+                parameters_digest: format!("sha256:{}", "2".repeat(64)),
+                expected_state_version: 1,
+                operation_descriptor_ref: object_id(934),
+                canonical_json: "{\"candidate\":\"previous-attempt\"}".to_owned(),
+            })
+            .unwrap();
+        let proposer = CountingPiProposer::default();
+        let admission_command = super::DaemonCandidateAdmissionCommand {
+            candidate_id: candidate_id.clone(),
+            authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+            authorization_purpose: "task_execution".to_owned(),
+            budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
+                .unwrap(),
+            governance: context_governance(),
+            actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
+            correlation_id: UriRef::parse("correlation://tenant-a/p2-t04-duplicate").unwrap(),
+        };
+
+        let result = super::propose_persist_and_admit_candidate(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-07T00:00:00Z").unwrap(),
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+        );
+
+        assert!(
+            result.is_err(),
+            "the deliberately incomplete daemon-only admission fixture must not succeed"
+        );
+        assert_eq!(
+            proposer.calls.get(),
+            0,
+            "a duplicate candidate identity must resume daemon admission without another Pi proposal"
+        );
+        assert_eq!(
+            store
+                .load_operation_candidate_proposal(&candidate_id)
+                .unwrap()
+                .unwrap()
+                .canonical_json,
+            "{\"candidate\":\"previous-attempt\"}"
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
     }
 
     #[test]
