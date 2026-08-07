@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T05/native-tool-registry-validation` | P2-T05 native daemon Tool registry and pre-executor validator review/fix | Lane-KRN | `lane/ctr-p3-t01-context-request-binding` | `crates/cognitive-kernel/src/{tool_registry.rs,lib.rs}`; `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/tests/p2_t02_resource_projection.rs`; focused P2-T05 tests; `docs/checkpoints/20260806-personal-p2-t05-*.md` | Cursor session | 2026-08-06 / 2026-08-06 | active |
+| `lease/personal/P2-T05/native-tool-registry-validation` | P2-T05 native daemon Tool registry and pre-executor validator review/fix | Lane-KRN | `personal/P2-T05-native-tool-registry` | `crates/cognitive-kernel/src/{tool_registry.rs,lib.rs}`; `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/tests/p2_t02_resource_projection.rs`; focused P2-T05 tests; `docs/checkpoints/20260806-personal-p2-t05-*.md` | Cursor session | 2026-08-06 / 2026-08-07 | active |
 
 ### 3.1 最近关闭的 leases
 
