@@ -607,12 +607,12 @@ mod tests {
 
     #[test]
     fn workspace_read_bounds_redacts_and_idempotently_queries_output() {
-        let temporary_directory = tempfile::tempdir().expect("temporary workspace");
-        let workspace_file = temporary_directory.path().join("notes.txt");
+        let temporary_workspace = TestWorkspace::new("redaction-bounds");
+        let workspace_file = temporary_workspace.path.join("notes.txt");
         std::fs::write(&workspace_file, "token=secret 123456789").expect("write workspace fixture");
         let mut request = request_for(NativeOperationFamily::WorkspaceRead);
         request.target = "workspace://notes.txt".to_owned();
-        request.workspace_root = Some(temporary_directory.path().to_path_buf());
+        request.workspace_root = Some(temporary_workspace.path.clone());
         request.descriptor.output_limit_bytes = 16;
         let validated_request = validate_native_tool_request(&request).expect("valid request");
         let executor = NativeWorkspaceReadExecutor::new(7);
