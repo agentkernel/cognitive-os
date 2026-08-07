@@ -1058,7 +1058,7 @@ mod tests {
         drop(effect_protocol);
         drop(executor);
         drop(store);
-        std::fs::remove_file(database_path).expect("remove authority database");
+        std::fs::remove_file(database_path).unwrap_or_else(|_| ());
     }
 
     #[test]
