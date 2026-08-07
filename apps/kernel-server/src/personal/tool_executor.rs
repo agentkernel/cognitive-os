@@ -60,11 +60,12 @@ pub(crate) struct BoundedOutputCursor {
 /// The adapter retains only redacted, bounded bytes under the original
 /// idempotency key. This provides a queryable, idempotent sink for recovery
 /// without treating Tool output as evidence, verification, or Task progress.
-#[derive(Debug)]
 pub(crate) struct NativeWorkspaceReadExecutor {
     trusted_fencing_epoch: i64,
     staged_requests: Mutex<BTreeMap<String, StagedWorkspaceReadRequest>>,
     completed_reads: Mutex<BTreeMap<String, CompletedWorkspaceRead>>,
+    #[cfg(test)]
+    before_read_hook: Mutex<Option<Box<dyn Fn() + Send>>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -88,6 +89,8 @@ impl NativeWorkspaceReadExecutor {
             trusted_fencing_epoch,
             staged_requests: Mutex::new(BTreeMap::new()),
             completed_reads: Mutex::new(BTreeMap::new()),
+            #[cfg(test)]
+            before_read_hook: Mutex::new(None),
         }
     }
 
@@ -147,6 +150,14 @@ impl NativeWorkspaceReadExecutor {
             .map(|completed_read| completed_read.redacted_output)
     }
 
+    #[cfg(test)]
+    fn install_before_read_hook(&self, hook: impl Fn() + Send + 'static) {
+        *self
+            .before_read_hook
+            .lock()
+            .expect("before-read hook store is not poisoned") = Some(Box::new(hook));
+    }
+
     fn read_staged_workspace_file(
         &self,
         call: &ExecutorCall,
@@ -174,6 +185,17 @@ impl NativeWorkspaceReadExecutor {
             return Ok(DispatchOutcome::NotExecuted {
                 reason: "workspace target escaped the approved root after resolution".to_owned(),
             });
+        }
+        #[cfg(test)]
+        if let Some(before_read_hook) = self
+            .before_read_hook
+            .lock()
+            .map_err(|_| PortFailure {
+                detail: "before-read hook store is poisoned".to_owned(),
+            })?
+            .as_ref()
+        {
+            before_read_hook();
         }
         // Hold the completed-result ledger lock through the filesystem read so
         // concurrent calls for one idempotency key cannot both execute it.
@@ -489,8 +511,22 @@ fn validate_network_target(target: &str) -> Result<(), NativeToolExecutionError>
 #[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
+    use cognitive_domain::{EventId, LifecycleDomain, StateName, UriRef, WallTimestamp};
+    use cognitive_kernel::authz::{
+        AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
+        PrincipalFacts, authorize,
+    };
+    use cognitive_kernel::ports::{
+        AuthorityStore, Clock, EventDraft, IntentRow, ObjectAdmission, ProtocolStore, StoredObject,
+    };
     use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, ToolAvailability};
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use cognitive_store::{SqliteAuthorityStore, UuidV7Generator};
+    use serde_json::json;
+    use std::{
+        collections::BTreeMap,
+        sync::Arc,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     struct TestWorkspace {
         path: PathBuf,
@@ -624,6 +660,91 @@ mod tests {
         }
     }
 
+    struct FixedEffectClock(WallTimestamp);
+
+    impl Clock for FixedEffectClock {
+        fn now(&self) -> Result<WallTimestamp, PortFailure> {
+            Ok(self.0.clone())
+        }
+    }
+
+    fn state(value: &str) -> StateName {
+        StateName::parse(value).expect("valid lifecycle state")
+    }
+
+    fn object_id(value: u64) -> ObjectId {
+        ObjectId::parse(&format!("00000000-0000-7000-9000-{value:012x}"))
+            .expect("valid object identifier")
+    }
+
+    fn effect_grant() -> AuthorizationGrant {
+        let authorization_time =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid authorization time");
+        authorize(
+            &AuthzSnapshot {
+                tenant_id: "personal-test".to_owned(),
+                principal: PrincipalFacts {
+                    principal_ref: UriRef::parse("principal://personal/daemon")
+                        .expect("valid principal reference"),
+                    authenticated: true,
+                    active: true,
+                    tenant_id: Some("personal-test".to_owned()),
+                },
+                actor_chain: ActorChainFacts {
+                    chain_digest: format!("sha256:{}", "c".repeat(64)),
+                    resolved: true,
+                },
+                membership: Some(MembershipFacts {
+                    valid: true,
+                    roles: ["daemon".to_owned()].into(),
+                }),
+                capability_links: vec![cognitive_domain::capability::CapabilityConstraints {
+                    subject: "principal://personal/daemon".to_owned(),
+                    audience: "authority://personal/effect-authority".to_owned(),
+                    resource: "scope://personal/workspace-read".to_owned(),
+                    purpose: "task_execution".to_owned(),
+                    actions: ["filesystem.read".to_owned()].into(),
+                    parameter_bounds: BTreeMap::new(),
+                    lease: cognitive_domain::capability::LeaseWindow {
+                        not_before: WallTimestamp::parse("2026-08-04T12:00:00Z")
+                            .expect("valid lease start"),
+                        expires: WallTimestamp::parse("2026-08-04T12:05:00Z")
+                            .expect("valid lease end"),
+                    },
+                    depth_remaining: 1,
+                    issued_epoch: 1,
+                }],
+                capability_set_version: 1,
+                explicit_denies: Vec::new(),
+                revocation_epoch: 1,
+                decided_at: authorization_time,
+            },
+            &ObjectGovernance {
+                object_ref: "effect://personal/workspace-read".to_owned(),
+                tenant_id: Some("personal-test".to_owned()),
+                owner_ref: "principal://personal/daemon".to_owned(),
+                resource_scope: "scope://personal/workspace-read/effect".to_owned(),
+                conversation_ref: None,
+            },
+            &AccessRequest {
+                action: "filesystem.read".to_owned(),
+                purpose: "task_execution".to_owned(),
+            },
+        )
+        .expect("grant workspace-read authority")
+    }
+
+    fn temporary_authority_database_path() -> PathBuf {
+        let timestamp_nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time after Unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "cognitiveos-tool-executor-{}-{timestamp_nanos}.db",
+            std::process::id()
+        ))
+    }
+
     #[test]
     fn workspace_read_requires_a_staged_digest_bound_request_before_io() {
         let temporary_workspace = TestWorkspace::new("digest-binding");
@@ -720,6 +841,196 @@ mod tests {
             executor.query_outcome("read-key-2"),
             Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
         );
+    }
+
+    #[test]
+    fn durable_workspace_read_dispatch_records_executing_before_io_without_advancing_task() {
+        let temporary_workspace = TestWorkspace::new("durable-effect-dispatch");
+        let workspace_file = temporary_workspace.path.join("notes.txt");
+        std::fs::write(&workspace_file, "token=secret 123456789").expect("write workspace fixture");
+        let database_path = temporary_authority_database_path();
+        let store =
+            Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+        let task_object_id = object_id(501);
+        let effect_object_id = object_id(502);
+        let intent_object_id = object_id(503);
+        let admitted_at =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+        for (object_id, domain, lifecycle_state, event_id) in [
+            (
+                task_object_id.clone(),
+                LifecycleDomain::Task,
+                "RUNNING",
+                501,
+            ),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "PROPOSED",
+                502,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: state(lifecycle_state),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t06-d02"}),
+                    },
+                    admitted_at: admitted_at.clone(),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_id:012x}"
+                        ))
+                        .expect("valid event identifier"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{\"fixture\":true}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit durable fixture object");
+        }
+        let idempotency_key = "p2-t06-d02-workspace-read";
+        let parameters_digest = "sha256:p2-t06-d02-workspace-read";
+        store
+            .insert_intent(
+                &IntentRow {
+                    intent_id: intent_object_id.clone(),
+                    idempotency_key: idempotency_key.to_owned(),
+                    parameters_digest: parameters_digest.to_owned(),
+                    action: "read".to_owned(),
+                    target: "workspace://notes.txt".to_owned(),
+                    effect_object_id: effect_object_id.clone(),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    task_binding: None,
+                    canonical_json: "{\"intent\":\"p2-t06-d02\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000503")
+                        .expect("valid intent event identifier"),
+                    object_id: intent_object_id,
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "intent.minted".to_owned(),
+                    canonical_json: "{\"intent\":\"p2-t06-d02\"}".to_owned(),
+                },
+            )
+            .expect("persist durable intent");
+
+        let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+        request.target = "workspace://notes.txt".to_owned();
+        request.workspace_root = Some(temporary_workspace.path.clone());
+        request.descriptor.output_limit_bytes = 16;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid workspace read");
+        let executor = NativeWorkspaceReadExecutor::new(1);
+        executor
+            .stage_request(
+                idempotency_key.to_owned(),
+                parameters_digest.to_owned(),
+                &validated_request,
+            )
+            .expect("stage durable intent identity");
+        let hook_store = Arc::clone(&store);
+        let hook_effect_object_id = effect_object_id.clone();
+        let hook_task_object_id = task_object_id.clone();
+        executor.install_before_read_hook(move || {
+            let effect = hook_store
+                .load_object(LifecycleDomain::Effect, &hook_effect_object_id)
+                .expect("load effect before read")
+                .expect("durable effect exists");
+            let task = hook_store
+                .load_object(LifecycleDomain::Task, &hook_task_object_id)
+                .expect("load task before read")
+                .expect("durable task exists");
+            assert_eq!(effect.state.as_str(), "EXECUTING");
+            assert_eq!(
+                effect.version,
+                Version::new(3).expect("valid executing version")
+            );
+            assert_eq!(task.state.as_str(), "RUNNING");
+            assert_eq!(task.version, Version::INITIAL);
+        });
+
+        let clock = FixedEffectClock(admitted_at);
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store.as_ref(),
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+            UriRef::parse("authority://personal/effect-authority")
+                .expect("valid authority reference"),
+            UriRef::parse("correlation://personal/p2-t06-d02")
+                .expect("valid correlation reference"),
+        );
+        let grant = effect_grant();
+        let governance_currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+
+        dispatch_staged_workspace_read_effect(
+            &effect_protocol,
+            &effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &executor,
+            &writer_lease,
+        )
+        .expect("dispatch durable workspace read");
+
+        let completed_output = executor
+            .completed_output(idempotency_key)
+            .expect("workspace read retains output under original key");
+        assert_eq!(completed_output, b"token=[REDACTED]".to_vec());
+        assert_eq!(completed_output.len(), 16);
+        assert_eq!(
+            executor.query_outcome(idempotency_key),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+        assert!(matches!(
+            executor.dispatch(&workspace_read_call(
+                idempotency_key,
+                parameters_digest,
+                "workspace://notes.txt",
+                1,
+            )),
+            Ok(DispatchOutcome::Executed { .. })
+        ));
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .expect("load effect after read")
+                .expect("durable effect exists")
+                .state
+                .as_str(),
+            "EXECUTED"
+        );
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Task, &task_object_id)
+                .expect("load task after read")
+                .expect("durable task exists")
+                .version,
+            Version::INITIAL
+        );
+
+        drop(effect_protocol);
+        drop(executor);
+        drop(store);
+        std::fs::remove_file(database_path).expect("remove authority database");
     }
 
     #[test]
