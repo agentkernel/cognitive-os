@@ -28,7 +28,7 @@ use crate::error::{
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::context_view::{
-    LoadedContextItemRole, LoadedContextItemTrustLevel,
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -50,6 +50,8 @@ pub struct CandidateObject {
     pub role: LoadedContextItemRole,
     /// Authority-declared trust level.
     pub trust_level: LoadedContextItemTrustLevel,
+    /// Authority-declared body representation.
+    pub representation: LoadedContextItemRepresentation,
     /// Body content (opaque to the pipeline).
     pub body: Value,
     /// Declared byte cost (budget dimension `context_bytes`).
@@ -202,6 +204,8 @@ pub struct LoadedItem {
     pub role: LoadedContextItemRole,
     /// Authority-declared trust level (preserved).
     pub trust_level: LoadedContextItemTrustLevel,
+    /// Authority-declared body representation (preserved without reloading).
+    pub representation: LoadedContextItemRepresentation,
     /// Byte cost charged against the budget.
     pub cost_bytes: i64,
     /// Token cost charged against the budget.
@@ -572,6 +576,7 @@ pub fn resolve(
             content_digest: candidate.content_digest.clone(),
             role: candidate.role,
             trust_level: candidate.trust_level,
+            representation: candidate.representation,
             cost_bytes: candidate.cost_bytes,
             cost_tokens: candidate.cost_tokens,
             body: candidate.body.clone(),
