@@ -172,6 +172,16 @@ impl NativeWorkspaceReadExecutor {
                 reason: "workspace target escaped the approved root after resolution".to_owned(),
             });
         }
+        // Hold the completed-result ledger lock through the filesystem read so
+        // concurrent calls for one idempotency key cannot both execute it.
+        let mut completed_reads = self.completed_reads.lock().map_err(|_| PortFailure {
+            detail: "completed read store is poisoned".to_owned(),
+        })?;
+        if let Some(existing_read) = completed_reads.get(&call.idempotency_key) {
+            return Ok(DispatchOutcome::Executed {
+                receipt_ref: existing_read.receipt_ref.clone(),
+            });
+        }
         let raw_output = std::fs::read(&canonical_target_path).map_err(|error| PortFailure {
             detail: format!("workspace read failed: {error}"),
         })?;
@@ -185,14 +195,6 @@ impl NativeWorkspaceReadExecutor {
             receipt_ref: receipt_ref.clone(),
             redacted_output,
         };
-        let mut completed_reads = self.completed_reads.lock().map_err(|_| PortFailure {
-            detail: "completed read store is poisoned".to_owned(),
-        })?;
-        if let Some(existing_read) = completed_reads.get(&call.idempotency_key) {
-            return Ok(DispatchOutcome::Executed {
-                receipt_ref: existing_read.receipt_ref.clone(),
-            });
-        }
         completed_reads.insert(call.idempotency_key.clone(), completed_read);
         Ok(DispatchOutcome::Executed { receipt_ref })
     }
