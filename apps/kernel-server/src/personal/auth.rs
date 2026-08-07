@@ -295,6 +295,21 @@ impl LocalSessionAuthority {
         Ok(record.principal_id.clone())
     }
 
+    /// Authorize the owner-only local daemon-administration boundary.
+    ///
+    /// A session reaches this boundary only after the runtime bootstrap secret
+    /// minted a management-channel bearer. Task, Pi, CLI, and worker bearers
+    /// remain unable to use it even when they carry the same principal text.
+    /// Callers use this before admitting immutable daemon-owned authorization
+    /// or revocation facts; it grants no read/write capability by itself.
+    pub fn authorize_daemon_administrator(
+        &mut self,
+        bearer_token: &str,
+        now: Instant,
+    ) -> Result<String, LocalAuthError> {
+        self.authorize_principal(bearer_token, ChannelClass::Management, now)
+    }
+
     /// Invalidate all outstanding tokens (restart / explicit revoke).
     pub fn revoke_all(&mut self) {
         self.sessions.clear();
@@ -398,6 +413,50 @@ mod tests {
         );
         assert!(matches!(
             authority.authorize(&view.token, ChannelClass::Task, now),
+            Err(LocalAuthError::ChannelBindingMismatch)
+        ));
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn only_management_session_can_enter_daemon_administration_boundary() {
+        let temp = std::env::temp_dir().join(format!("cos-auth-admin-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        fs::create_dir_all(&temp).unwrap();
+        let secret_path = temp.join("local-bootstrap.secret");
+        let bounds = PersonalResourceBounds::personal_v1_baseline();
+        let mut authority = LocalSessionAuthority::initialize(&secret_path, bounds).unwrap();
+        let now = Instant::now();
+        let secret = authority.bootstrap_secret_for_tests().to_owned();
+        let management_session = authority
+            .issue_session(
+                SessionIssueRequest {
+                    channel: ChannelClass::Management,
+                    principal_id: "principal://local/owner".to_owned(),
+                    bootstrap_secret: secret.clone(),
+                },
+                now,
+            )
+            .unwrap();
+        let task_session = authority
+            .issue_session(
+                SessionIssueRequest {
+                    channel: ChannelClass::Task,
+                    principal_id: "principal://local/owner".to_owned(),
+                    bootstrap_secret: secret,
+                },
+                now,
+            )
+            .unwrap();
+
+        assert_eq!(
+            authority
+                .authorize_daemon_administrator(&management_session.token, now)
+                .unwrap(),
+            "principal://local/owner"
+        );
+        assert!(matches!(
+            authority.authorize_daemon_administrator(&task_session.token, now),
             Err(LocalAuthError::ChannelBindingMismatch)
         ));
         let _ = fs::remove_dir_all(&temp);

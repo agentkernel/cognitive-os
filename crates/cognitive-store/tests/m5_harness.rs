@@ -146,6 +146,7 @@ fn mint_contract(
             budget_id: budget_id(base_n + 4),
             allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
             allowed_tools: vec![],
+            context_request_ref: None,
             governance: seed(),
             correlation_id: uri("corr://tenant-a/m5-loop"),
         },

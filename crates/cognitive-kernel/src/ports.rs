@@ -13,12 +13,18 @@
 //! subset, MUST NOT buffer a failed commit in memory (REQ-REC-003), and
 //! MUST keep the event log append-only (REQ-EVT-004).
 
+use crate::authz::{ActorChainFacts, DenyRule, MembershipFacts, ObjectGovernance, PrincipalFacts};
 use crate::budget::BudgetState;
 use crate::effects::OperationDescriptor;
+use cognitive_contracts::generated::context_view::{
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
+};
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
+use cognitive_domain::capability::CapabilityConstraints;
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, StateName, Version, WallTimestamp,
 };
+use serde::Deserialize;
 use serde_json::Value;
 
 /// Failure classes an adapter may surface on the authority path.
@@ -481,6 +487,139 @@ pub struct TaskContractRow {
     pub canonical_json: String,
 }
 
+/// One daemon-issued immutable ContextRequest. The request is the durable
+/// Context input that a TaskContract v0.4 pins with a strong reference;
+/// individual ContextViews remain request-linked resolution artifacts.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextRequestRow {
+    /// Immutable ContextRequest identity from its governed header.
+    pub request_id: ObjectId,
+    /// Task URI from `perspective.task`, retained for fail-closed lookup.
+    pub task_ref: String,
+    /// Canonical governed-object content digest.
+    pub request_digest: String,
+    /// Canonical schema-shaped ContextRequest payload.
+    pub canonical_json: String,
+}
+
+/// One daemon-issued immutable ContextView. A view binds one exact resolution
+/// to its ContextRequest and is not a replacement for the TaskContract input.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextViewRow {
+    /// Immutable ContextView identity from its governed header.
+    pub view_id: ObjectId,
+    /// Strongly referenced ContextRequest identity.
+    pub request_id: ObjectId,
+    /// Canonical governed-object content digest.
+    pub view_digest: String,
+    /// Canonical schema-shaped ContextView payload.
+    pub canonical_json: String,
+}
+
+/// Daemon-admitted immutable workspace Context source. The canonical payload
+/// remains private to the body-load path; discovery receives metadata only.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WorkspaceContextSourceRow {
+    pub source_id: ObjectId,
+    pub source_digest: String,
+    pub governance: ObjectGovernance,
+    pub role: LoadedContextItemRole,
+    pub trust_level: LoadedContextItemTrustLevel,
+    pub representation: LoadedContextItemRepresentation,
+    pub provenance_ref: String,
+    pub content_bytes: i64,
+    pub content_tokens: Option<i64>,
+    pub canonical_json: String,
+}
+
+/// Metadata-only Context discovery result. It deliberately excludes body
+/// content so callers must authorize before materializing a candidate.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextCandidateMetadata {
+    pub source_id: ObjectId,
+    pub source_digest: String,
+    pub governance: ObjectGovernance,
+    pub role: LoadedContextItemRole,
+    pub trust_level: LoadedContextItemTrustLevel,
+    pub representation: LoadedContextItemRepresentation,
+    pub provenance_ref: String,
+    pub content_bytes: i64,
+    pub content_tokens: Option<i64>,
+}
+
+/// Scope-only predicate applied before per-object authorization and body
+/// loading. It is not an authorization grant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContextCandidateQuery {
+    pub tenant_id: String,
+    pub resource_scope_prefix: String,
+    pub conversation_ref: Option<String>,
+    pub limit: usize,
+}
+
+/// Immutable daemon-admin-issued authorization inputs for Context body reads.
+/// Possession of this record does not itself grant access: callers reconstruct
+/// it with current revocation currency and still call the six-step gate.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ContextAuthorizationFactsRow {
+    pub fact_set_id: ObjectId,
+    pub subject_ref: String,
+    pub tenant_id: String,
+    pub principal: PrincipalFacts,
+    pub actor_chain: ActorChainFacts,
+    pub membership: Option<MembershipFacts>,
+    pub capability_links: Vec<CapabilityConstraints>,
+    pub explicit_denies: Vec<DenyRule>,
+    pub capability_set_version: i64,
+    pub issued_revocation_epoch: i64,
+    pub canonical_json: String,
+}
+
+impl ContextAuthorizationFactsRow {
+    /// Rebuild an authorization decision snapshot using revocation currency
+    /// read at the point of body authorization, never the historical epoch
+    /// carried when this fact set was admitted.
+    pub fn reconstruct_snapshot(
+        &self,
+        current_revocation_epoch: i64,
+        decided_at: WallTimestamp,
+    ) -> Result<crate::authz::AuthzSnapshot, StorePortError> {
+        if current_revocation_epoch < 1
+            || self.capability_set_version < 1
+            || self.issued_revocation_epoch < 1
+            || self.subject_ref != self.principal.principal_ref.as_str()
+            || self.principal.tenant_id.as_deref() != Some(self.tenant_id.as_str())
+        {
+            return Err(StorePortError::Unavailable {
+                detail: "Context authorization facts are incomplete or inconsistent".to_owned(),
+            });
+        }
+        Ok(crate::authz::AuthzSnapshot {
+            tenant_id: self.tenant_id.clone(),
+            principal: self.principal.clone(),
+            actor_chain: self.actor_chain.clone(),
+            membership: self.membership.clone(),
+            capability_links: self.capability_links.clone(),
+            capability_set_version: self.capability_set_version,
+            explicit_denies: self.explicit_denies.clone(),
+            revocation_epoch: current_revocation_epoch,
+            decided_at,
+        })
+    }
+}
+
+/// Immutable revocation observation. A higher tenant epoch invalidates older
+/// capability material during snapshot reconstruction.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ContextRevocationFactRow {
+    pub revocation_fact_id: ObjectId,
+    pub tenant_id: String,
+    pub revocation_epoch: i64,
+    pub revoked_subject_ref: Option<String>,
+    pub revoked_capability_ref: Option<String>,
+    pub canonical_json: String,
+}
+
 /// One persisted immutable operation candidate proposal. This row preserves
 /// non-authority input for later daemon admission; it does not authorize an
 /// operation, reserve budget, or schedule work.
@@ -829,6 +968,15 @@ pub trait WorkerAuthorizationStore {
         authorization_id: &ObjectId,
     ) -> Result<Option<WorkerIterationAuthorizationRow>, StorePortError>;
 
+    /// Reconstruct the committed candidate-admission receipt from immutable
+    /// WIA and event evidence. This permits an idempotent caller to recover
+    /// a successful admission after losing its original response without
+    /// repeating budget debits, Loop transitions, or WIA issuance.
+    fn load_candidate_admission_receipt_by_selected_candidate_id(
+        &self,
+        selected_candidate_id: &ObjectId,
+    ) -> Result<Option<CandidateAdmissionReceipt>, StorePortError>;
+
     /// Resolve the sole unconsumed daemon-issued WIA for one exact scheduler
     /// binding. Multiple matching authorities are ambiguous and must fail
     /// closed; consumed WIAs remain recovery-only evidence.
@@ -974,6 +1122,109 @@ pub trait IntentChainStore {
     /// Enumerate persisted intents bound to one task (supersede
     /// classification input), in insertion order.
     fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError>;
+}
+
+/// Append-only daemon persistence for the durable Context chain. This port
+/// intentionally exposes immutable request/view records only; it grants no
+/// authority to resolve, rank, admit operations, or change Task state.
+pub trait ContextStore {
+    /// Persist one daemon-issued immutable ContextRequest. Duplicate identity
+    /// is a conflict; callers must never replace a request in place.
+    fn append_context_request(&self, request: &ContextRequestRow) -> Result<(), StorePortError>;
+
+    /// Load one immutable ContextRequest by identity.
+    fn load_context_request(
+        &self,
+        request_id: &ObjectId,
+    ) -> Result<Option<ContextRequestRow>, StorePortError>;
+
+    /// Persist one daemon-issued immutable ContextView. Its request binding
+    /// must already exist; duplicate identity is a conflict.
+    fn append_context_view(&self, view: &ContextViewRow) -> Result<(), StorePortError>;
+
+    /// Load one immutable ContextView by identity.
+    fn load_context_view(
+        &self,
+        view_id: &ObjectId,
+    ) -> Result<Option<ContextViewRow>, StorePortError>;
+
+    fn append_workspace_context_source(
+        &self,
+        source: &WorkspaceContextSourceRow,
+    ) -> Result<(), StorePortError>;
+
+    fn query_context_candidate_metadata(
+        &self,
+        query: &ContextCandidateQuery,
+    ) -> Result<Vec<ContextCandidateMetadata>, StorePortError>;
+
+    fn load_workspace_context_source_body(
+        &self,
+        source_id: &ObjectId,
+    ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError>;
+}
+
+/// Daemon-private, immutable execution inputs for one scheduler task binding.
+///
+/// This row closes the gap between a Context-bound TaskContract and candidate
+/// admission: the scheduler must reload its Context query and daemon-created
+/// admission facts from durable state rather than infer defaults from a worker
+/// request or a display-oriented task projection. The canonical payload is a
+/// private implementation record, not a public TaskContract extension.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchedulerExecutionPolicyRow {
+    /// Exact task binding this policy may serve.
+    pub task_ref: String,
+    /// Exact immutable TaskContract epoch this policy may serve.
+    pub contract_epoch: i64,
+    /// Strong ContextRequest identity fixed by that contract.
+    pub context_request_id: ObjectId,
+    /// Daemon-issued canonical private policy document.
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-private policy persistence for pre-admission scheduling.
+/// A missing, malformed, or mismatched policy is never an authorization
+/// fallback: the scheduler must fail closed before it invokes Pi.
+pub trait SchedulerExecutionPolicyStore {
+    /// Append the policy created by daemon task admission. Duplicate task and
+    /// epoch bindings are conflicts because policy cannot be replaced.
+    fn append_scheduler_execution_policy(
+        &self,
+        policy: &SchedulerExecutionPolicyRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Load the sole immutable policy for an exact scheduler task binding.
+    fn load_scheduler_execution_policy(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<SchedulerExecutionPolicyRow>, StorePortError>;
+}
+
+/// Durable source of the facts needed to reconstruct a current Context
+/// authorization snapshot. Only the daemon-admin authority may append facts.
+pub trait ContextAuthorizationFactStore {
+    fn append_context_authorization_facts(
+        &self,
+        facts: &ContextAuthorizationFactsRow,
+    ) -> Result<(), StorePortError>;
+
+    fn append_context_revocation_fact(
+        &self,
+        fact: &ContextRevocationFactRow,
+    ) -> Result<(), StorePortError>;
+
+    fn load_latest_context_authorization_facts(
+        &self,
+        subject_ref: &str,
+        tenant_id: &str,
+    ) -> Result<Option<ContextAuthorizationFactsRow>, StorePortError>;
+
+    fn load_current_context_revocation_epoch(
+        &self,
+        tenant_id: &str,
+    ) -> Result<Option<i64>, StorePortError>;
 }
 
 /// Durable resolution port for the governance header carried by M5 governed

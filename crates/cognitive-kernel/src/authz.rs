@@ -28,11 +28,11 @@
 use crate::error::{AUTH_CAPABILITY_EXPIRED, CONTEXT_AUTH_DENIED, RegisteredError};
 use cognitive_domain::capability::{CapabilityConstraints, EffectiveRights, intersect_chain};
 use cognitive_domain::{UriRef, WallTimestamp, capability::resource_within};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// Authenticated principal facts at decision time.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrincipalFacts {
     /// Principal reference.
     pub principal_ref: UriRef,
@@ -46,7 +46,7 @@ pub struct PrincipalFacts {
 }
 
 /// Resolved actor-chain facts (immutable ordered chain, REQ-GOBJ-BIND-002).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ActorChainFacts {
     /// Canonical chain digest (cache-key component).
     pub chain_digest: String,
@@ -55,7 +55,7 @@ pub struct ActorChainFacts {
 }
 
 /// Membership facts of the principal within the request tenant.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MembershipFacts {
     /// Membership is currently valid.
     pub valid: bool,
@@ -64,7 +64,7 @@ pub struct MembershipFacts {
 }
 
 /// One explicit deny rule (step 4). Explicit deny beats any allow.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DenyRule {
     /// Resource scope URI prefix the deny covers.
     pub resource_prefix: String,

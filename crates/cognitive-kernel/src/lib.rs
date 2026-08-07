@@ -31,6 +31,7 @@ pub mod intent_chain;
 pub mod ports;
 pub mod recovery;
 pub mod replay;
+pub mod tool_registry;
 
 pub use authz::{
     AccessDenial, AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, DeniedAccess,
@@ -87,6 +88,13 @@ pub use recovery::{
     validate_checkpoint,
 };
 pub use replay::{ReplayError, ReplayedProjection, replay_projection};
+pub use tool_registry::{
+    BUILTIN_TOOL_CATALOG, BUILTIN_TOOL_CATALOG_VERSION, NativeOperationFamily,
+    NativeToolDescriptor, ResolvedNativeTool, ToolAvailability, ToolResolutionError,
+    ToolResolutionRequest, ToolRisk, compute_descriptor_digest, resolve_native_tool,
+    resolve_persisted_native_descriptor, validate_process_check, validate_read_only_http_fetch,
+    validate_workspace_operation, validate_workspace_path,
+};
 
 /// Port capability surface defined by this crate and implemented by
 /// adapters. `event-log` and `outbox` are capabilities of the

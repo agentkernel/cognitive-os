@@ -15,10 +15,11 @@
 //!   intersection of its links, never the union (decision order step 3).
 
 use crate::ids::WallTimestamp;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Lease validity window (`authorization-capability.schema.json` `lease`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LeaseWindow {
     /// Not valid before this instant.
     pub not_before: WallTimestamp,
@@ -57,7 +58,7 @@ impl LeaseWindow {
 }
 
 /// One declared parameter bound of a capability's `parameter_binding`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ParameterBound {
     /// Numeric upper bound (for example `max_amount_minor`).
     NumericMax(i64),
@@ -102,7 +103,7 @@ impl ParameterBound {
 /// Deterministic constraint content of one AuthorizationCapability link
 /// (the governance header, signature and issuer verification live with the
 /// contracts/schema layer; this is the decision arithmetic surface).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CapabilityConstraints {
     /// Subject the capability was granted to.
     pub subject: String,

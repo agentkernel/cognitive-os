@@ -37,6 +37,12 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 - 每次会话必须产出实现、失败优先测试、可验证文档修正，或带
   `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的阻塞记录。
   已确认依赖后不得继续无出口审计。
+- **`CONTINUOUS-AUTONOMOUS-DELIVERY-01`：** 用户要求持续推进时，代理必须在当前
+  已领取任务的可写 lease 内连续选择并实施下一个最小垂直交付切片，直到该任务完成、
+  出现不可自主消除的明确阻塞，或用户明确要求暂停/切换。不得把 checkpoint、CI 发起、
+  阶段性总结、单个验证结束或可恢复的临时环境故障当作停止工作的理由；这些只是在继续
+  下一个实现、修复或预注册验证动作时记录的中间事实。除非需要用户决定、发现未知外部
+  改动或完成用户请求，否则保持工具驱动的开发节奏，不发送临时进度汇报。
 - 结束会话前同步正式计划、`PROGRESS.md` current snapshot 和 handoff；未执行检查写
   `not-run`，不可推断为通过。
 - Delivery Slice 只有在 focused failure-first/negative test 和其定义的 supported
@@ -56,8 +62,9 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   非完整检查而把 Slice 标为 `done`；用户明确要求暂停交付时除外。
 - 同一 PR 可随实现推进自动追加 checkpoint；只有正式 Slice 出口、focused negatives、
   supported validation、required CI、文档/证据同步和 review 要求全部满足后，代理才默认
-  自动转为 ready 并合并。未完成 checkpoint、失败/待运行检查、产品/规范语义待决或需要
-  用户批准的 secret/基础设施操作存在时禁止合并；force push 永不包含在持续授权中。
+  自动转为 ready 并合并。未完成 checkpoint、失败/待运行检查或产品/规范语义待决存在时
+  禁止合并；force push 永不包含在持续授权中。远程 secret/基础设施操作的自主授权边界见
+  “Standing operator authorization”。
 - 新窗口优先做快速恢复：确认 branch、clean/dirty、HEAD 与 upstream、Draft PR/checks、最新
   handoff 和 active lease；若它们一致，不重复全仓 Git 审计。Linux/native validation 只消费
   已 push 的 immutable checkpoint revision。
@@ -128,6 +135,17 @@ user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PA
 SSH 仅使用非交互、无 secret 探针，例如：
 `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
+### Standing operator authorization
+
+仓库 owner 已授予代理持续的自主操作授权。对于推进已领取 Personal slice 所必需的
+远程验证、approved Secret Store 使用、最小权限提权，以及 user-service/system
+configuration 修改，代理可以自行决定和执行，无需逐次询问。此授权不改变安全或证据
+边界：secret 不得进入 argv、普通配置、SQLite、日志、CI、测试输出或 evidence；操作必须
+最小范围、可审计并在可行时提供 cleanup/rollback；远程验证仍只消费已推送的精确 Git
+revision。正式 Gate guest、release/production promotion、force push、破坏性不可逆操作和
+任何超出已领取 slice 的系统变更仍须遵守其各自的预注册/隔离规则，不得借此授权虚假扩大
+声明。
+
 Linux daemon、Pi/sidecar、installer、user-service、native integration 和实验部署切片必须
 优先在 `personal-linux-native-01`（`wuz@192.168.1.2`）上执行。先将**已提交并可追溯的**
 revision 同步到该主机的可清理 Git worktree，再在该 exact revision 上构建、测试和记录证据；
@@ -138,9 +156,9 @@ revision 同步到该主机的可清理 Git worktree，再在该 exact revision 
 部署目标。只有预注册 B01 lease 与 campaign procedure 可改变其状态、快照、产品安装或
 凭据。`B01-Clean-Linux-001` 已因不满足 headless Secret Service 前置条件而退役：仅保留
 历史资格失败记录，禁止把它恢复为 B01 或常规测试候选，也禁止普通开发恢复、启动、重置、
-部署或删除该 VM；任何基础设施处置须单独获得用户明确授权。其他实验部署只可使用 SSH
-宿主上任务声明的可清理目录；涉及 user-service 修改、任何提权、远程 secret 或外部 Provider
-前必须向用户确认。
+部署或删除该 VM；其隔离状态不受 standing authorization 影响。其他实验部署只可使用 SSH
+宿主上任务声明的可清理目录；user-service 修改、最小权限提权、approved Secret Store 使用
+或外部 Provider 操作按 Standing operator authorization 自主执行。
 
 ## 目录和变更边界
 

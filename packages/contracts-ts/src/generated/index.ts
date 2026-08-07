@@ -108,7 +108,7 @@ export const SCHEMA_DIGESTS = {
   "state-transition-request.schema.json": "sha256:d63cb89d20e15ad9cd0ee43d0e8b6df21dec463dede71613759f20e5fdf95f59",
   "task-admit-request.schema.json": "sha256:c7fa6c8fb1baa16fc0235a2456d64da0ee3b2984bb676b203e8233345ad52e27",
   "task-admit-result.schema.json": "sha256:4f1c320b4ced96360bb6df59b53fce6af91ab733db97c39a1f5a63765b6eb4bd",
-  "task-contract.schema.json": "sha256:905102b72dfcf5b1efe75f1e98684c6888e0c4f37d66d369413e5b0cbfa9576d",
+  "task-contract.schema.json": "sha256:4591ebc3461c19ca62eb9fdbb998c1146c4db79d65010a986540673682daad97",
   "task-intent-interpret-request.schema.json": "sha256:3cfd26c33ea3ba577ced99e573311373b2a6b8356f3273c4e583bfb9647da1d4",
   "task-intent-interpret-result.schema.json": "sha256:89be31e21afb18a93d07f628d69c8afd11aebc40520b10148454824574fe6af9",
   "task-intent-record-request.schema.json": "sha256:34350eea18284c7841ff58ced264a9c890f593b45aa4e48c8ef3cfb60d222400",

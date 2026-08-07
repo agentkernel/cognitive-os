@@ -7,8 +7,13 @@
 #![allow(dead_code, clippy::items_after_test_module)] // Activated only after the fenced quiescence protocol exists.
 
 use cognitive_contracts::{
-    canonical, generated::task_contract::TaskContract,
+    canonical,
+    generated::governed_object_header::GovernedObjectHeaderSensitivity,
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
+    generated::{
+        context_request::ContextRequest, object_reference::StrongReferenceKind,
+        operation_candidate_proposal::OperationCandidateProposal, task_contract::TaskContract,
+    },
 };
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, UriRef, Version, WallTimestamp,
@@ -18,17 +23,30 @@ use cognitive_kernel::candidate_admission::{
     CandidateAdmissionFacts, CandidateAdmissionIdentities, CandidateAdmissionInputs,
     compose_candidate_admission,
 };
+use cognitive_kernel::context::{
+    ArrivalOrderRanker, CandidateObject, ContextBudget, RenderSpec, RequiredItem,
+    ResolutionRequest, ResolvedContextView, resolve,
+};
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
-use cognitive_kernel::intent_chain::GovernanceSeed;
-use cognitive_kernel::ports::{
-    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
-    CandidateAdmissionReceipt, Clock, ContinuationAuthorityStore,
-    ContinuationAuthorizationConsumptionRow, ContinuationAuthorizationRow, HarnessStore,
-    IdGenerator, IntentChainStore, ProtocolStore, SchedulerLeaseBinding, TaskBinding,
-    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow,
+use cognitive_kernel::intent_chain::{
+    GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
+    strong_reference_to,
+};
+use cognitive_kernel::{
+    authz::{AccessRequest, authorize},
+    ports::{
+        AuthorityStore, BoundContinuationAuthorizationConsumption,
+        BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
+        ContextAuthorizationFactStore, ContextCandidateQuery, ContextStore,
+        ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
+        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
+        SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+        WorkerIterationAuthorizationRow,
+    },
+    resolve_persisted_native_descriptor,
 };
 use cognitive_runtime::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
@@ -39,11 +57,21 @@ use cognitive_store::{
     scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerState, SchedulerWorkKey},
 };
 use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
+use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
 
-const TASK_CONTRACT_EXECUTION_SCHEMA_VERSION: &str = "cognitiveos.task-contract/0.3";
+use super::pi_runtime::{
+    PrivatePiCandidateProcess, PrivatePiCandidateRequest, PrivatePiCandidateResponse,
+    load_pi_config,
+};
+
+const TASK_CONTRACT_EXECUTION_SCHEMA_V03: &str = "cognitiveos.task-contract/0.3";
+const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4";
+const OPERATION_CANDIDATE_SCHEMA_VERSION: &str = "cognitiveos.operation-candidate-proposal/0.1";
+const DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN: &str =
+    "cognitiveos.personal.daemon-descriptor-reference/0.1";
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -53,6 +81,53 @@ struct TaskContractVersionEnvelope {
 #[derive(Deserialize)]
 struct TaskContractVersionHeader {
     schema_version: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerExecutionPolicyDocument {
+    schema_version: i64,
+    task_ref: String,
+    contract_epoch: i64,
+    context: SchedulerContextPolicy,
+    admission: SchedulerAdmissionPolicy,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerAdmissionPolicy {
+    candidate_id: String,
+    authorization_subject_ref: String,
+    authorization_purpose: String,
+    budget_charge: BTreeMap<String, i64>,
+    governance: SchedulerGovernancePolicy,
+    actor_ref: String,
+    authority_ref: String,
+    correlation_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerGovernancePolicy {
+    owner: cognitive_contracts::generated::object_reference::StrongReference,
+    authority: cognitive_contracts::generated::object_reference::StrongReference,
+    resource_scope: cognitive_contracts::generated::object_reference::StrongReference,
+    tenant_id: Option<String>,
+    created_by: String,
+    sensitivity: GovernedObjectHeaderSensitivity,
+    purpose_constraints: Vec<String>,
+    retention_policy: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SchedulerContextPolicy {
+    request_id: String,
+    authorization_subject_ref: String,
+    tenant_id: String,
+    resource_scope_prefix: String,
+    conversation_ref: Option<String>,
+    source_limit: usize,
 }
 
 /// Exact identities fixed by an immutable task contract epoch.
@@ -88,6 +163,89 @@ pub(crate) struct CandidateAdmissionPreflight {
     pub next_budget_state_canonical_json: String,
     pub expected_loop_version: Version,
     pub next_iteration: i64,
+}
+
+/// Daemon-owned bindings for one Context resolution before any candidate is
+/// requested from Pi. The scheduler obtains these values from the immutable
+/// TaskContract and its local owner session; they are never producer input.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ContextResolutionCommand {
+    pub task_ref: String,
+    pub request_id: ObjectId,
+    pub authorization_subject_ref: String,
+    pub tenant_id: String,
+    pub resource_scope_prefix: String,
+    pub conversation_ref: Option<String>,
+    pub source_limit: usize,
+    pub decided_at: WallTimestamp,
+}
+
+/// The only non-authority fields a private Pi producer may propose. The
+/// daemon validates them against current durable facts, supplies every
+/// governed reference/header, and seals the persisted candidate itself.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct UntrustedPiCandidate {
+    pub tool_ref: String,
+    pub action: String,
+    pub target: String,
+    pub parameters_digest: String,
+    pub expected_state_version: i64,
+    pub operation_descriptor_id: ObjectId,
+}
+
+/// Private Pi boundary used before candidate admission. Implementations may
+/// transport one bounded request to a pinned daemon-supervised Pi child, but
+/// they cannot return progress, evidence, receipts, WIA, Effect state, or
+/// Task lifecycle data.
+pub(crate) trait PrivatePiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        resolved_context: &ResolvedContextView,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String>;
+}
+
+/// Adapter from the configured daemon-supervised Pi process to the scheduler
+/// proposer port. Parsing remains transport-local; the scheduler receives no
+/// process output other than the bounded candidate fields.
+pub(crate) struct ConfiguredPrivatePiCandidateProposer {
+    process: PrivatePiCandidateProcess,
+}
+
+impl ConfiguredPrivatePiCandidateProposer {
+    pub(crate) fn new(process: PrivatePiCandidateProcess) -> Self {
+        Self { process }
+    }
+}
+
+impl PrivatePiCandidateProposer for ConfiguredPrivatePiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        resolved_context: &ResolvedContextView,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        let rendered_context = String::from_utf8(resolved_context.render.bytes.clone())
+            .map_err(|_| "resolved Context rendering is not UTF-8".to_owned())?;
+        let response: PrivatePiCandidateResponse =
+            self.process.propose(&PrivatePiCandidateRequest {
+                protocol: "cognitiveos.private-candidate/1",
+                task_ref: task_ref.to_owned(),
+                contract_epoch,
+                rendered_context,
+            })?;
+        let operation_descriptor_id = ObjectId::parse(&response.operation_descriptor_id)
+            .map_err(|_| "private Pi descriptor reference is malformed".to_owned())?;
+        Ok(UntrustedPiCandidate {
+            tool_ref: response.tool_ref,
+            action: response.action,
+            target: response.target,
+            parameters_digest: response.parameters_digest,
+            expected_state_version: response.expected_state_version,
+            operation_descriptor_id,
+        })
+    }
 }
 
 /// Daemon-owned identity and governance inputs required to create one atomic
@@ -209,6 +367,16 @@ pub(crate) enum SchedulerAuthorityError {
     CandidateAuthorizationUnavailable(String),
     #[error("scheduler candidate admission composition failed: {0}")]
     CandidateAdmissionComposition(String),
+    #[error("scheduler Context request is unavailable or inconsistent: {0}")]
+    ContextRequestUnavailable(String),
+    #[error("scheduler Context authorization facts are unavailable: {0}")]
+    ContextAuthorizationUnavailable(String),
+    #[error("scheduler Context body is unavailable or inconsistent: {0}")]
+    ContextBodyUnavailable(String),
+    #[error("scheduler Context resolution failed: {0}")]
+    ContextResolution(String),
+    #[error("scheduler private Pi candidate proposal failed: {0}")]
+    PrivatePiProposal(String),
     #[error("scheduler continuation authority is unavailable or inconsistent: {0}")]
     ContinuationUnavailable(String),
     #[error(
@@ -262,7 +430,11 @@ fn parse_execution_bound_contract(
 ) -> Result<TaskContract, SchedulerAuthorityError> {
     let version_envelope: TaskContractVersionEnvelope = serde_json::from_str(canonical_json)
         .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
-    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_VERSION {
+    let supports_execution_bindings = matches!(
+        version_envelope.header.schema_version.as_str(),
+        TASK_CONTRACT_EXECUTION_SCHEMA_V03 | TASK_CONTRACT_EXECUTION_SCHEMA_V04
+    );
+    if !supports_execution_bindings {
         return Err(SchedulerAuthorityError::LegacyContract(
             version_envelope.header.schema_version,
         ));
@@ -272,10 +444,609 @@ fn parse_execution_bound_contract(
         .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
     if contract.worker_authorization_root_id.is_none() {
         return Err(SchedulerAuthorityError::MalformedContract(
-            "v0.3 contract has no worker authorization namespace".to_owned(),
+            "execution-bound contract has no worker authorization namespace".to_owned(),
         ));
     }
     Ok(contract)
+}
+
+/// Reload the private execution policy required by a Context-bound v0.4
+/// contract. This is deliberately before WIA lookup: policy absence or a
+/// request mismatch must stop the pre-admission path before Pi can be invoked
+/// or existing worker authority can be consumed.
+fn load_context_execution_policy<S>(
+    store: &S,
+    task_binding: &TaskBinding,
+) -> Result<Option<SchedulerExecutionPolicyRow>, SchedulerAuthorityError>
+where
+    S: IntentChainStore + SchedulerExecutionPolicyStore,
+{
+    let contract_row = store
+        .load_task_contract(&task_binding.task_ref, task_binding.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(task_binding.task_ref.clone()))?;
+    let version_envelope: TaskContractVersionEnvelope =
+        serde_json::from_str(&contract_row.canonical_json)
+            .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if version_envelope.header.schema_version != TASK_CONTRACT_EXECUTION_SCHEMA_V04 {
+        return Ok(None);
+    }
+    let context_request_reference = contract.context_request_ref.ok_or_else(|| {
+        SchedulerAuthorityError::ContextRequestUnavailable(
+            "v0.4 TaskContract has no ContextRequest binding".to_owned(),
+        )
+    })?;
+    if context_request_reference.kind != StrongReferenceKind::Strong
+        || context_request_reference.object_version != 1
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "v0.4 TaskContract ContextRequest reference is not strong and versioned".to_owned(),
+        ));
+    }
+    let policy = store
+        .load_scheduler_execution_policy(&task_binding.task_ref, task_binding.contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(format!(
+                "no scheduler execution policy exists for {} at epoch {}",
+                task_binding.task_ref, task_binding.contract_epoch
+            ))
+        })?;
+    if context_request_reference.id.0.as_str() != policy.context_request_id.as_str() {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy ContextRequest differs from TaskContract binding"
+                .to_owned(),
+        ));
+    }
+    let policy_document: SchedulerExecutionPolicyDocument =
+        serde_json::from_str(&policy.canonical_json).map_err(|error| {
+            SchedulerAuthorityError::ContextRequestUnavailable(format!(
+                "scheduler execution policy is malformed: {error}"
+            ))
+        })?;
+    if policy_document.schema_version != 1
+        || policy_document.task_ref != task_binding.task_ref
+        || policy_document.contract_epoch != task_binding.contract_epoch
+        || policy_document.context.request_id != policy.context_request_id.as_str()
+        || policy_document
+            .context
+            .authorization_subject_ref
+            .trim()
+            .is_empty()
+        || policy_document.context.tenant_id.trim().is_empty()
+        || policy_document
+            .context
+            .resource_scope_prefix
+            .trim()
+            .is_empty()
+        || policy_document.context.source_limit == 0
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy fields do not match its durable binding".to_owned(),
+        ));
+    }
+    Ok(Some(policy))
+}
+
+/// Convert the validated daemon policy into the deterministic Context resolver
+/// command. This function only assembles authority inputs; it does not query
+/// Context bodies and cannot grant Pi or worker authority.
+fn context_resolution_command_from_policy(
+    policy: &SchedulerExecutionPolicyRow,
+    decided_at: WallTimestamp,
+) -> Result<ContextResolutionCommand, SchedulerAuthorityError> {
+    let document: SchedulerExecutionPolicyDocument = serde_json::from_str(&policy.canonical_json)
+        .map_err(|error| {
+        SchedulerAuthorityError::ContextRequestUnavailable(format!(
+            "scheduler execution policy is malformed: {error}"
+        ))
+    })?;
+    let request_id = ObjectId::parse(&document.context.request_id).map_err(|_| {
+        SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy ContextRequest identity is malformed".to_owned(),
+        )
+    })?;
+    if request_id != policy.context_request_id {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "scheduler execution policy command identity differs from durable policy row"
+                .to_owned(),
+        ));
+    }
+    Ok(ContextResolutionCommand {
+        task_ref: document.task_ref,
+        request_id,
+        authorization_subject_ref: document.context.authorization_subject_ref,
+        tenant_id: document.context.tenant_id,
+        resource_scope_prefix: document.context.resource_scope_prefix,
+        conversation_ref: document.context.conversation_ref,
+        source_limit: document.context.source_limit,
+        decided_at,
+    })
+}
+
+/// Assemble the daemon-only admission command from the same validated policy
+/// document. No candidate field is read from this document; the candidate ID
+/// is supplied by the daemon after the Pi proposal has passed its own strict
+/// candidate validation.
+fn candidate_admission_command_from_policy(
+    policy: &SchedulerExecutionPolicyRow,
+) -> Result<DaemonCandidateAdmissionCommand, SchedulerAuthorityError> {
+    let document: SchedulerExecutionPolicyDocument = serde_json::from_str(&policy.canonical_json)
+        .map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy is malformed: {error}"
+        ))
+    })?;
+    if document.schema_version != 1
+        || document.task_ref != policy.task_ref
+        || document.contract_epoch != policy.contract_epoch
+        || document.context.request_id != policy.context_request_id.as_str()
+        || document.context.authorization_subject_ref.trim().is_empty()
+        || document.context.tenant_id.trim().is_empty()
+        || document.context.resource_scope_prefix.trim().is_empty()
+        || document.context.source_limit == 0
+        || document
+            .admission
+            .authorization_subject_ref
+            .trim()
+            .is_empty()
+        || document.admission.authorization_purpose.trim().is_empty()
+    {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy fields do not match its durable binding".to_owned(),
+        ));
+    }
+    let admission = document.admission;
+    let candidate_id = ObjectId::parse(&admission.candidate_id).map_err(|_| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy candidate identity is malformed".to_owned(),
+        )
+    })?;
+    let budget_charge = BudgetCharge::new(admission.budget_charge).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy budget charge is invalid: {error}"
+        ))
+    })?;
+    let actor_ref = UriRef::parse(&admission.actor_ref).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy actor reference is invalid: {error}"
+        ))
+    })?;
+    let authority_ref = UriRef::parse(&admission.authority_ref).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy authority reference is invalid: {error}"
+        ))
+    })?;
+    let correlation_id = UriRef::parse(&admission.correlation_id).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(format!(
+            "scheduler execution policy correlation reference is invalid: {error}"
+        ))
+    })?;
+    if admission.authorization_subject_ref.trim().is_empty()
+        || admission.authorization_purpose.trim().is_empty()
+        || admission.governance.created_by.trim().is_empty()
+        || admission.governance.purpose_constraints.is_empty()
+        || admission.governance.retention_policy.trim().is_empty()
+    {
+        return Err(SchedulerAuthorityError::CandidateAdmissionComposition(
+            "scheduler execution policy admission fields are incomplete".to_owned(),
+        ));
+    }
+    Ok(DaemonCandidateAdmissionCommand {
+        candidate_id,
+        authorization_subject_ref: admission.authorization_subject_ref,
+        authorization_purpose: admission.authorization_purpose,
+        budget_charge,
+        governance: GovernanceSeed {
+            owner: admission.governance.owner,
+            authority: admission.governance.authority,
+            resource_scope: admission.governance.resource_scope,
+            tenant_id: admission.governance.tenant_id,
+            created_by: admission.governance.created_by,
+            sensitivity: admission.governance.sensitivity,
+            purpose_constraints: admission.governance.purpose_constraints,
+            retention_policy: admission.governance.retention_policy,
+        },
+        actor_ref,
+        authority_ref,
+        correlation_id,
+    })
+}
+
+/// Resolve daemon-admitted Context for a TaskContract before Pi can make a
+/// non-authoritative candidate proposal. Metadata is queried first, each
+/// source is authorized with current revocation currency, and only authorized
+/// sources have their durable body materialized. This function neither calls
+/// Pi nor persists a candidate, Intent, Effect, WIA, budget debit, progress,
+/// evidence, verification, acceptance, or Task completion.
+pub(crate) fn resolve_authorized_task_context<S>(
+    store: &S,
+    command: &ContextResolutionCommand,
+) -> Result<ResolvedContextView, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + IntentChainStore
+        + ProtocolStore,
+{
+    let current_contract_epoch = store
+        .current_contract_epoch(&command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    let contract_row = store
+        .load_task_contract(&command.task_ref, current_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    let contract_request_reference = contract.context_request_ref.ok_or_else(|| {
+        SchedulerAuthorityError::ContextRequestUnavailable(
+            "current TaskContract has no ContextRequest binding".to_owned(),
+        )
+    })?;
+    let request_row = store
+        .load_context_request(&command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(command.request_id.to_string())
+        })?;
+    if contract_request_reference.id.0.as_str() != command.request_id.as_str()
+        || contract_request_reference.kind != StrongReferenceKind::Strong
+        || contract_request_reference.object_version != 1
+        || contract_request_reference.content_digest.0 != request_row.request_digest
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "current TaskContract ContextRequest reference differs from durable request".to_owned(),
+        ));
+    }
+    if request_row.task_ref != command.task_ref {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "ContextRequest task binding differs from scheduler task".to_owned(),
+        ));
+    }
+    let context_request: ContextRequest = serde_json::from_str(&request_row.canonical_json)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    if context_request.perspective.task != command.task_ref {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "ContextRequest payload task differs from durable task binding".to_owned(),
+        ));
+    }
+    if context_request.perspective.principal != command.authorization_subject_ref {
+        return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
+            "ContextRequest principal differs from scheduler authorization subject".to_owned(),
+        ));
+    }
+    let authorization_facts = store
+        .load_latest_context_authorization_facts(
+            &command.authorization_subject_ref,
+            &command.tenant_id,
+        )
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable authorization facts for Context body read".to_owned(),
+            )
+        })?;
+    let current_revocation_epoch = store
+        .load_current_context_revocation_epoch(&command.tenant_id)
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "no durable Context revocation epoch".to_owned(),
+            )
+        })?;
+    let authorization_snapshot = authorization_facts
+        .reconstruct_snapshot(current_revocation_epoch, command.decided_at.clone())
+        .map_err(|error| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(error.to_string())
+        })?;
+    let metadata = store
+        .query_context_candidate_metadata(&ContextCandidateQuery {
+            tenant_id: command.tenant_id.clone(),
+            resource_scope_prefix: command.resource_scope_prefix.clone(),
+            conversation_ref: command.conversation_ref.clone(),
+            limit: command.source_limit,
+        })
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+
+    let mut authorized_candidates = Vec::with_capacity(metadata.len());
+    for source_metadata in metadata {
+        // Body materialization must remain after the current authorization decision.
+        if authorize(
+            &authorization_snapshot,
+            &source_metadata.governance,
+            &AccessRequest {
+                action: "read_body".to_owned(),
+                purpose: context_request.purpose.clone(),
+            },
+        )
+        .is_err()
+        {
+            continue;
+        }
+        let source = store
+            .load_workspace_context_source_body(&source_metadata.source_id)
+            .map_err(|error| SchedulerAuthorityError::ContextBodyUnavailable(error.to_string()))?
+            .ok_or_else(|| {
+                SchedulerAuthorityError::ContextBodyUnavailable(
+                    source_metadata.source_id.to_string(),
+                )
+            })?;
+        if source.source_digest != source_metadata.source_digest
+            || source.governance != source_metadata.governance
+            || source.role != source_metadata.role
+            || source.trust_level != source_metadata.trust_level
+            || source.content_bytes != source_metadata.content_bytes
+            || source.content_tokens != source_metadata.content_tokens
+        {
+            return Err(SchedulerAuthorityError::ContextBodyUnavailable(
+                "Context body metadata no longer matches its discovery record".to_owned(),
+            ));
+        }
+        let source_payload: Value = serde_json::from_str(&source.canonical_json)
+            .map_err(|error| SchedulerAuthorityError::ContextBodyUnavailable(error.to_string()))?;
+        let body = source_payload.get("body").cloned().ok_or_else(|| {
+            SchedulerAuthorityError::ContextBodyUnavailable(
+                "WorkspaceContextSource payload has no body".to_owned(),
+            )
+        })?;
+        let source_governance = source.governance;
+        authorized_candidates.push(CandidateObject {
+            object_ref: source_governance.object_ref.clone(),
+            object_version: 1,
+            content_digest: source.source_digest,
+            governance: source_governance,
+            role: source.role,
+            trust_level: source.trust_level,
+            body,
+            cost_bytes: source.content_bytes,
+            cost_tokens: source.content_tokens.unwrap_or(0),
+        });
+    }
+
+    let resolution_request = ResolutionRequest {
+        snapshot: authorization_snapshot,
+        purpose: context_request.purpose,
+        conversation_ref: command.conversation_ref.clone(),
+        required: context_request
+            .required
+            .into_iter()
+            .map(|required| RequiredItem {
+                object_ref: required.r#ref,
+            })
+            .collect(),
+        allow_partial: context_request.allow_partial,
+        budget: ContextBudget {
+            context_bytes: context_request.budget.context_bytes,
+            input_tokens: context_request.budget.input_tokens,
+        },
+        render: RenderSpec {
+            renderer_version: "personal-context-render/1".to_owned(),
+            target_profile: context_request.target_profile.schema,
+        },
+        schema_digest: cognitive_contracts::generated::context_request::SCHEMA_DIGEST.to_owned(),
+    };
+    resolve(
+        &resolution_request,
+        &authorized_candidates,
+        &ArrivalOrderRanker,
+    )
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+}
+
+/// Resolve Context, obtain exactly one untrusted Pi candidate, then have the
+/// daemon seal, persist, and atomically admit it. Pi-provided fields never
+/// become governed references, header facts, authority, or lifecycle state.
+/// The resulting WIA remains unconsumed: executor dispatch and Task outcomes
+/// belong to later scheduler and verifier paths.
+pub(crate) fn propose_persist_and_admit_candidate<S, C, G, P>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    context_command: &ContextResolutionCommand,
+    proposer: &P,
+    admission_command: &DaemonCandidateAdmissionCommand,
+) -> Result<CandidateAdmissionReceipt, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore,
+    C: Clock,
+    G: IdGenerator,
+    P: PrivatePiCandidateProposer,
+{
+    // Candidate identity is daemon-owned and stable across a scheduler retry.
+    // Never call Pi twice for that identity: a previously committed admission
+    // returns its original receipt; a proposal persisted before a failed
+    // admission resumes deterministic daemon-only admission.
+    if let Some(existing_candidate) = store
+        .load_operation_candidate_proposal(&admission_command.candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+    {
+        let current_contract_epoch = store
+            .current_contract_epoch(&context_command.task_ref)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+        if existing_candidate.task_ref != context_command.task_ref
+            || existing_candidate.contract_epoch != current_contract_epoch
+        {
+            return Err(SchedulerAuthorityError::CandidateUnavailable(
+                "candidate retry identity is bound to a different TaskContract epoch".to_owned(),
+            ));
+        }
+        if let Some(receipt) = store
+            .load_candidate_admission_receipt_by_selected_candidate_id(
+                &admission_command.candidate_id,
+            )
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        {
+            return Ok(receipt);
+        }
+        return admit_candidate_atomically(store, clock, identifiers, admission_command);
+    }
+    let resolved_context = resolve_authorized_task_context(store, context_command)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&context_command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let contract_row = store
+        .load_task_contract(&context_command.task_ref, current_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingContract(context_command.task_ref.clone())
+        })?;
+    let task_contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    if task_contract
+        .context_request_ref
+        .as_ref()
+        .map(|reference| reference.id.0.as_str())
+        != Some(context_command.request_id.as_str())
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "current TaskContract ContextRequest binding changed before Pi proposal".to_owned(),
+        ));
+    }
+
+    let proposed_candidate = proposer
+        .propose_candidate(
+            &resolved_context,
+            &context_command.task_ref,
+            current_contract_epoch,
+        )
+        .map_err(SchedulerAuthorityError::PrivatePiProposal)?;
+    validate_untrusted_pi_candidate(&proposed_candidate)?;
+    let descriptor = store
+        .load_daemon_operation_descriptor(&proposed_candidate.operation_descriptor_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                proposed_candidate.operation_descriptor_id.to_string(),
+            )
+        })?;
+    if proposed_candidate.tool_ref.starts_with("native.") {
+        resolve_persisted_native_descriptor(&descriptor.descriptor).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(format!(
+                "native Tool registry rejected {}: {error:?}",
+                proposed_candidate.tool_ref
+            ))
+        })?;
+    }
+    if descriptor.descriptor.operation_id != proposed_candidate.tool_ref
+        || descriptor.descriptor.action != proposed_candidate.action
+        || admit_operation(&descriptor.descriptor).is_err()
+    {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            proposed_candidate.operation_descriptor_id.to_string(),
+        ));
+    }
+    let descriptor_reference_digest =
+        canonical_descriptor_reference_digest(&descriptor.canonical_json)?;
+    let proposed_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let candidate_header = compose_governed_header(
+        &admission_command.candidate_id,
+        "OperationCandidateProposal",
+        OPERATION_CANDIDATE_SCHEMA_VERSION,
+        &admission_command.governance,
+        vec!["observation://personal/private-pi-proposer".to_owned()],
+        vec![task_contract.header.id.0.to_owned()],
+        "daemon-sealed-private-pi-candidate",
+        &proposed_at,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    let daemon_sealed_candidate = OperationCandidateProposal {
+        action: proposed_candidate.action.clone(),
+        candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+        contract_epoch: current_contract_epoch,
+        expected_state_version: proposed_candidate.expected_state_version,
+        header: candidate_header,
+        operation_descriptor_ref: strong_reference_to(
+            &descriptor.descriptor_id,
+            &descriptor_reference_digest,
+        ),
+        parameters_digest: proposed_candidate.parameters_digest.clone(),
+        target: proposed_candidate.target.clone(),
+        task_contract_ref: strong_reference_to(
+            &contract_row.contract_id,
+            &task_contract.header.content_digest.0,
+        ),
+        tool_ref: proposed_candidate.tool_ref.clone(),
+    };
+    let candidate_value = serde_json::to_value(&daemon_sealed_candidate).map_err(|error| {
+        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+    })?;
+    let (sealed_candidate_value, _) = seal_governed_object_content_digest(candidate_value)
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?;
+    let candidate_canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&sealed_candidate_value).map_err(|error| {
+            SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+        })?,
+    )
+    .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
+    store
+        .append_operation_candidate_proposal(
+            &cognitive_kernel::ports::OperationCandidateProposalRow {
+                candidate_id: admission_command.candidate_id.clone(),
+                task_ref: context_command.task_ref.clone(),
+                contract_epoch: current_contract_epoch,
+                candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+                tool_ref: proposed_candidate.tool_ref,
+                action: proposed_candidate.action,
+                target: proposed_candidate.target,
+                parameters_digest: proposed_candidate.parameters_digest,
+                expected_state_version: proposed_candidate.expected_state_version,
+                operation_descriptor_ref: descriptor.descriptor_id,
+                canonical_json: candidate_canonical_json,
+            },
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    admit_candidate_atomically(store, clock, identifiers, admission_command)
+}
+
+fn validate_untrusted_pi_candidate(
+    candidate: &UntrustedPiCandidate,
+) -> Result<(), SchedulerAuthorityError> {
+    let fields_are_present = !candidate.tool_ref.is_empty()
+        && !candidate.action.is_empty()
+        && !candidate.target.is_empty()
+        && candidate.expected_state_version >= 1;
+    if !fields_are_present || !is_sha256_digest(&candidate.parameters_digest) {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate has missing fields or an invalid parameters digest".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn is_sha256_digest(value: &str) -> bool {
+    let Some(hexadecimal) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hexadecimal.len() == 64 && hexadecimal.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn canonical_descriptor_reference_digest(
+    descriptor_canonical_json: &str,
+) -> Result<String, SchedulerAuthorityError> {
+    let descriptor_value: Value =
+        serde_json::from_str(descriptor_canonical_json).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+        })?;
+    let descriptor_bytes =
+        canonical::canonical_bytes_of_value(&descriptor_value).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+        })?;
+    canonical::digest(&descriptor_bytes, DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN)
+        .map_err(|error| SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string()))
 }
 
 /// Reject scheduler work that was bound to a superseded TaskContract epoch.
@@ -840,11 +1611,12 @@ mod tests {
     use super::{
         RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
         SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
-        WorkerAuthorizationHandoff, classify_scheduler_effect_closure,
-        complete_resolved_effect_and_release, complete_scheduler_admission,
-        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
-        parse_execution_bound_contract, release_closed_effect_dispatch,
-        release_closed_recovered_attempt, select_single_effect_intent,
+        UntrustedPiCandidate, WorkerAuthorizationHandoff, candidate_admission_command_from_policy,
+        classify_scheduler_effect_closure, complete_resolved_effect_and_release,
+        complete_scheduler_admission, complete_scheduler_worker_attempt,
+        ensure_current_contract_epoch, parse_execution_bound_contract,
+        release_closed_effect_dispatch, release_closed_recovered_attempt,
+        select_single_effect_intent, validate_untrusted_pi_candidate,
         validate_worker_authorization_evidence,
     };
     use cognitive_contracts::{
@@ -872,8 +1644,9 @@ mod tests {
     use cognitive_kernel::ports::{
         AuthorityStore, BudgetCas, CandidateAdmissionCommit, EventDraft, IntentChainStore,
         IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, RecordDraft,
-        SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-        WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+        SchedulerExecutionPolicyRow, SchedulerLeaseBinding, StoredObject, TaskBinding,
+        TaskContractRow, TransitionCommit, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationRow,
     };
     use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
     use cognitive_store::{
@@ -911,6 +1684,57 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    #[test]
+    fn candidate_admission_rejects_policy_with_mismatched_durable_task_binding() {
+        let context_request_id = object_id(901);
+        let policy = SchedulerExecutionPolicyRow {
+            task_ref: "task://personal/expected".to_owned(),
+            contract_epoch: 1,
+            context_request_id: context_request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": "task://personal/substituted",
+                "contract_epoch": 1,
+                "context": {
+                    "request_id": context_request_id.as_str(),
+                    "authorization_subject_ref": "principal://personal/owner",
+                    "tenant_id": "personal",
+                    "resource_scope_prefix": "workspace://personal/",
+                    "conversation_ref": null,
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": object_id(902).as_str(),
+                    "authorization_subject_ref": "principal://personal/owner",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": strong_reference_to(&object_id(903), &format!("sha256:{}", "a".repeat(64))),
+                        "authority": strong_reference_to(&object_id(904), &format!("sha256:{}", "b".repeat(64))),
+                        "resource_scope": strong_reference_to(&object_id(905), &format!("sha256:{}", "c".repeat(64))),
+                        "tenant_id": null,
+                        "created_by": "principal://personal/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/scheduler",
+                },
+            })
+            .to_string(),
+        };
+
+        let error = candidate_admission_command_from_policy(&policy).unwrap_err();
+
+        assert!(matches!(
+            error,
+            SchedulerAuthorityError::CandidateAdmissionComposition(detail)
+                if detail.contains("durable binding")
+        ));
     }
 
     fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {
@@ -1078,7 +1902,10 @@ mod tests {
 
     fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> Option<String> {
         let endpoint_path = endpoint_document_path(layout);
-        for _ in 0..100 {
+        // Recovery tests perform SQLite replay before the server publishes the
+        // endpoint. Windows CI can take longer than the original two-second
+        // polling window under concurrent workspace test load.
+        for _ in 0..300 {
             if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
                 let endpoint =
                     serde_json::from_str::<serde_json::Value>(&document).unwrap()["endpoint"]
@@ -1756,6 +2583,46 @@ mod tests {
         assert!(matches!(
             parse_execution_bound_contract(incomplete_execution_contract),
             Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn context_bound_execution_schema_is_not_rejected_as_legacy() {
+        let incomplete_context_bound_contract = r#"{
+            "header": {
+                "schema_version": "cognitiveos.task-contract/0.4"
+            }
+        }"#;
+
+        assert!(matches!(
+            parse_execution_bound_contract(incomplete_context_bound_contract),
+            Err(SchedulerAuthorityError::MalformedContract(_))
+        ));
+    }
+
+    #[test]
+    fn private_pi_candidate_rejects_invalid_non_authority_fields() {
+        let invalid_digest_candidate = UntrustedPiCandidate {
+            tool_ref: "operation://personal/filesystem/read".to_owned(),
+            action: "filesystem.read".to_owned(),
+            target: "file:///workspace/input.txt".to_owned(),
+            parameters_digest: "not-a-digest".to_owned(),
+            expected_state_version: 1,
+            operation_descriptor_id: object_id(990),
+        };
+        assert!(matches!(
+            validate_untrusted_pi_candidate(&invalid_digest_candidate),
+            Err(SchedulerAuthorityError::PrivatePiProposal(_))
+        ));
+
+        let invalid_version_candidate = UntrustedPiCandidate {
+            parameters_digest: format!("sha256:{}", "a".repeat(64)),
+            expected_state_version: 0,
+            ..invalid_digest_candidate
+        };
+        assert!(matches!(
+            validate_untrusted_pi_candidate(&invalid_version_candidate),
+            Err(SchedulerAuthorityError::PrivatePiProposal(_))
         ));
     }
 
@@ -2786,6 +3653,20 @@ where
 pub(crate) fn run_private_scheduler_tick(
     authority_database_path: &Path,
 ) -> Result<(), SchedulerAuthorityError> {
+    let provider_config_dir = authority_database_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."));
+    run_private_scheduler_tick_with_provider_config(authority_database_path, provider_config_dir)
+}
+
+/// Run one scheduler pass with the daemon-owned configuration directory used
+/// for the selected model, Pi configuration, and private completion socket.
+/// The separate parameter keeps scheduler fixtures hermetic while production
+/// startup supplies the layout's actual configuration directory.
+pub(crate) fn run_private_scheduler_tick_with_provider_config(
+    authority_database_path: &Path,
+    provider_config_dir: &Path,
+) -> Result<(), SchedulerAuthorityError> {
     let authority_store = SqliteAuthorityStore::open(authority_database_path)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
@@ -2810,31 +3691,55 @@ pub(crate) fn run_private_scheduler_tick(
                 resolved_work.task_binding.contract_epoch
             )));
         }
+        let context_execution_policy =
+            load_context_execution_policy(&authority_store, &resolved_work.task_binding)?;
+        let observed_wall_time = clock
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
         let continuation_authorization = authority_store
             .load_unconsumed_continuation_authorization(&resolved_work.task_binding)
             .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?;
         let candidate_authorization = if continuation_authorization.is_none() {
-            Some(
-                authority_store
-                    .load_unconsumed_worker_iteration_authorization_for_task_binding(
-                        &resolved_work.task_binding.task_ref,
-                        resolved_work.task_binding.contract_epoch,
-                    )
-                    .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
-                    .ok_or_else(|| {
-                        SchedulerAuthorityError::CandidateUnavailable(format!(
-                            "no unconsumed worker authorization or continuation authority for {} at epoch {}",
-                            resolved_work.task_binding.task_ref,
-                            resolved_work.task_binding.contract_epoch
-                        ))
-                    })?,
-            )
+            authority_store
+                .load_unconsumed_worker_iteration_authorization_for_task_binding(
+                    &resolved_work.task_binding.task_ref,
+                    resolved_work.task_binding.contract_epoch,
+                )
+                .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
         } else {
             None
         };
-        let observed_wall_time = clock
-            .now()
-            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        if continuation_authorization.is_none() && candidate_authorization.is_none() {
+            let policy = context_execution_policy.as_ref().ok_or_else(|| {
+                SchedulerAuthorityError::CandidateUnavailable(
+                    "runnable work has no daemon-private execution policy".to_owned(),
+                )
+            })?;
+            let context_command =
+                context_resolution_command_from_policy(policy, observed_wall_time.clone())?;
+            let admission_command = candidate_admission_command_from_policy(policy)?;
+            let pi_config = load_pi_config(provider_config_dir).map_err(|_| {
+                SchedulerAuthorityError::CandidateUnavailable(
+                    "daemon-private Pi candidate transport is not configured".to_owned(),
+                )
+            })?;
+            let proposer = ConfiguredPrivatePiCandidateProposer::new(
+                PrivatePiCandidateProcess::from_config(&pi_config, provider_config_dir),
+            );
+            propose_persist_and_admit_candidate(
+                &authority_store,
+                &clock,
+                &identifiers,
+                &context_command,
+                &proposer,
+                &admission_command,
+            )?;
+            // Admission is the only outcome of the Pi proposal pass. Leave
+            // the newly issued WIA durable and unconsumed for a later normal
+            // scheduler recovery/dispatch pass; Pi invocation must never
+            // borrow or immediately consume worker authority.
+            continue;
+        }
         let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
             SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
         })?;

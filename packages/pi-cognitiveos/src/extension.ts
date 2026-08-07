@@ -55,12 +55,12 @@ export async function registerCognitiveOsExtension(
   pi: ExtensionAPI,
   options: CognitiveOsExtensionOptions = {},
 ): Promise<void> {
-  const client = options.client ?? new PersonalDaemonClient();
-  let daemonSelectedModel: PiModel | undefined;
-
   pi.on("project_trust", async () => PROJECT_TRUST_DECISION);
 
   pi.on("tool_call", async (event) => decideToolCall(event));
+
+  const client = options.client ?? new PersonalDaemonClient();
+  let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
     if (daemonSelectedModel === undefined) {

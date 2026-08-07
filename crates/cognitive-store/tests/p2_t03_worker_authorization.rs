@@ -278,6 +278,7 @@ fn schema_valid_admission_inputs(
             machine_expression: None,
             verifier_ref: Some("verifier://personal/test".to_owned()),
         }],
+        context_request_ref: None,
         contract_epoch: 1,
         deadline: None,
         header: compose_governed_header(
@@ -484,6 +485,32 @@ fn composer_bundle_commits_all_candidate_admission_authority_atomically() {
     assert!(receipt.intent_event_sequence > 0);
     assert!(receipt.effect_admission_event_sequence > receipt.intent_event_sequence);
     assert!(receipt.loop_transition_event_sequence > receipt.effect_admission_event_sequence);
+    assert_eq!(
+        store
+            .load_candidate_admission_receipt_by_selected_candidate_id(
+                &commit.selected_candidate_id,
+            )
+            .expect("candidate admission receipt lookup succeeds"),
+        Some(receipt.clone())
+    );
+    assert!(matches!(
+        store.commit_candidate_admission(&commit),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .load_candidate_admission_receipt_by_selected_candidate_id(
+                &commit.selected_candidate_id,
+            )
+            .expect("duplicate admission leaves the original receipt available"),
+        Some(receipt.clone())
+    );
+    assert!(
+        store
+            .load_candidate_admission_receipt_by_selected_candidate_id(&object_id(999))
+            .expect("missing candidate receipt lookup succeeds")
+            .is_none()
+    );
     let effect = store
         .load_object(
             LifecycleDomain::Effect,

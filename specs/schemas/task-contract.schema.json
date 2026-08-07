@@ -141,6 +141,10 @@
       "$ref": "object-reference.schema.json#/$defs/uuidV7",
       "description": "Daemon-issued immutable namespace for WorkerIterationAuthorization records bound to this TaskContract epoch. It equals the daemon-minted TaskContract identity and is not client-supplied."
     },
+    "context_request_ref": {
+      "$ref": "object-reference.schema.json#/$defs/strongReference",
+      "description": "Daemon-issued immutable ContextRequest bound to this TaskContract epoch. The request perspective must name this task; each resolved ContextView remains a request-linked per-resolution artifact."
+    },
     "allowed_state_domains": {
       "type": "array",
       "description": "Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.",
@@ -214,7 +218,8 @@
               "enum": [
                 "cognitiveos.task-contract/0.1",
                 "cognitiveos.task-contract/0.2",
-                "cognitiveos.task-contract/0.3"
+                "cognitiveos.task-contract/0.3",
+                "cognitiveos.task-contract/0.4"
               ]
             }
           },
@@ -265,6 +270,11 @@
               "required": [
                 "worker_authorization_root_id"
               ]
+            },
+            {
+              "required": [
+                "context_request_ref"
+              ]
             }
           ]
         }
@@ -301,7 +311,76 @@
                 "worker_authorization_root_id"
               ]
             }
+          },
+          {
+            "not": {
+              "required": [
+                "context_request_ref"
+              ]
+            }
           }
+        ]
+      }
+    },
+    {
+      "description": "Execution-bound v0.3 contracts retain their worker authorization namespace but cannot claim the later durable ContextRequest binding.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.3"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "allOf": [
+          {
+            "required": [
+              "deadline",
+              "loop_object_id",
+              "budget_id",
+              "worker_authorization_root_id"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "context_request_ref"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Execution-bound v0.4 contracts pin one daemon-issued immutable ContextRequest. ContextViews are resolved from that request and bound per iteration rather than being permanent TaskContract state.",
+      "if": {
+        "properties": {
+          "header": {
+            "properties": {
+              "schema_version": {
+                "const": "cognitiveos.task-contract/0.4"
+              }
+            },
+            "required": [
+              "schema_version"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "deadline",
+          "loop_object_id",
+          "budget_id",
+          "worker_authorization_root_id",
+          "context_request_ref"
         ]
       }
     },

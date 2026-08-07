@@ -37,6 +37,8 @@ pub struct PiConfigureOptions {
     pub layout_roots: LayoutRoots,
     pub executable_path: PathBuf,
     pub extension_entry_path: PathBuf,
+    pub candidate_adapter_path: Option<PathBuf>,
+    pub candidate_extension_entry_path: Option<PathBuf>,
 }
 
 /// Write the Personal Pi configuration without consulting Provider state.
@@ -47,6 +49,18 @@ pub struct PiConfigureOptions {
 pub fn configure(options: &PiConfigureOptions) -> Result<Value, String> {
     validate_absolute_path(&options.executable_path, "Pi executable")?;
     validate_absolute_path(&options.extension_entry_path, "CognitiveOS Extension entry")?;
+    if let Some(path) = &options.candidate_adapter_path {
+        validate_absolute_path(path, "private candidate adapter")?;
+    }
+    if let Some(path) = &options.candidate_extension_entry_path {
+        validate_absolute_path(path, "private candidate extension")?;
+    }
+    if options.candidate_adapter_path.is_some() != options.candidate_extension_entry_path.is_some()
+    {
+        return Err(
+            "private candidate configuration requires both adapter and extension paths".to_owned(),
+        );
+    }
 
     let layout = build_layout(&options.layout_roots).map_err(|error| error.to_string())?;
     layout
@@ -54,12 +68,21 @@ pub fn configure(options: &PiConfigureOptions) -> Result<Value, String> {
         .map_err(|error| format!("unable to create Personal configuration directory: {error}"))?;
 
     let configuration_path = layout.config_dir().join(PI_CONFIG_FILE_NAME);
-    let document = json!({
+    let mut document = json!({
         "schema_version": PI_CONFIG_SCHEMA_VERSION,
         "surface": PI_CONFIG_SURFACE,
         "executable_path": options.executable_path,
         "extension_entry_path": options.extension_entry_path,
     });
+    let document_object = document
+        .as_object_mut()
+        .ok_or_else(|| "unable to construct non-secret Pi configuration".to_owned())?;
+    if let Some(path) = &options.candidate_adapter_path {
+        document_object.insert("candidate_adapter_path".to_owned(), json!(path));
+    }
+    if let Some(path) = &options.candidate_extension_entry_path {
+        document_object.insert("candidate_extension_entry_path".to_owned(), json!(path));
+    }
     let serialized = serde_json::to_vec_pretty(&document)
         .map_err(|error| format!("unable to serialize non-secret Pi configuration: {error}"))?;
     atomic_write_configuration(&configuration_path, &serialized)?;
@@ -226,15 +249,21 @@ fn parse_pi_configuration(document: &str) -> Result<(PathBuf, PathBuf), String> 
     let object = configuration
         .as_object()
         .ok_or_else(|| "Pi configuration must be an object".to_owned())?;
-    let expected_fields: BTreeSet<&str> = [
+    let supported_fields: BTreeSet<&str> = [
         "schema_version",
         "surface",
         "executable_path",
         "extension_entry_path",
+        "candidate_adapter_path",
+        "candidate_extension_entry_path",
     ]
     .into_iter()
     .collect();
-    if object.keys().map(String::as_str).collect::<BTreeSet<_>>() != expected_fields
+    if !object
+        .keys()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>()
+        .is_subset(&supported_fields)
         || object.get("schema_version").and_then(Value::as_u64) != Some(PI_CONFIG_SCHEMA_VERSION)
         || object.get("surface").and_then(Value::as_str) != Some(PI_CONFIG_SURFACE)
     {
@@ -247,6 +276,25 @@ fn parse_pi_configuration(document: &str) -> Result<(PathBuf, PathBuf), String> 
         "extension_entry_path",
         "CognitiveOS Extension entry",
     )?;
+    for (field, label) in [
+        ("candidate_adapter_path", "private candidate adapter"),
+        (
+            "candidate_extension_entry_path",
+            "private candidate extension",
+        ),
+    ] {
+        if object.contains_key(field) {
+            required_absolute_config_path(object, field, label)?;
+        }
+    }
+    if object.contains_key("candidate_adapter_path")
+        != object.contains_key("candidate_extension_entry_path")
+    {
+        return Err(
+            "Pi configuration requires both private candidate adapter and extension paths"
+                .to_owned(),
+        );
+    }
     Ok((executable_path, extension_entry_path))
 }
 
@@ -440,6 +488,8 @@ mod tests {
             layout_roots: LayoutRoots { runtime_root: None },
             executable_path: PathBuf::from("pi"),
             extension_entry_path: PathBuf::from("extension.js"),
+            candidate_adapter_path: None,
+            candidate_extension_entry_path: None,
         };
 
         let error = configure(&options).expect_err("relative paths must be rejected");
@@ -458,6 +508,8 @@ mod tests {
             },
             executable_path: executable_path.clone(),
             extension_entry_path: extension_entry_path.clone(),
+            candidate_adapter_path: None,
+            candidate_extension_entry_path: None,
         };
 
         let report = configure(&options).expect("write non-secret Pi configuration");
@@ -482,6 +534,44 @@ mod tests {
         assert!(!document.to_string().contains("sqlite"));
         assert_eq!(report["authority_side_effects"], false);
         assert_eq!(report["gate_claim"], "not-claimed");
+    }
+
+    #[test]
+    fn configuration_persists_complete_private_candidate_paths() {
+        let temporary_root = tempfile::tempdir().expect("temporary root");
+        let options = PiConfigureOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            executable_path: temporary_root.path().join("bin/pi"),
+            extension_entry_path: temporary_root.path().join("extension/index.js"),
+            candidate_adapter_path: Some(temporary_root.path().join("bin/pi-agent-adapter")),
+            candidate_extension_entry_path: Some(
+                temporary_root
+                    .path()
+                    .join("extension/private-candidate.mjs"),
+            ),
+        };
+        configure(&options).expect("candidate configuration must persist");
+        let document: Value = serde_json::from_slice(
+            &fs::read(temporary_root.path().join("config/cognitiveos/pi.json"))
+                .expect("written configuration"),
+        )
+        .expect("valid configuration JSON");
+        assert_eq!(
+            document["candidate_adapter_path"],
+            json!(options.candidate_adapter_path.clone())
+        );
+        assert_eq!(
+            document["candidate_extension_entry_path"],
+            json!(options.candidate_extension_entry_path.clone())
+        );
+
+        let incomplete = PiConfigureOptions {
+            candidate_extension_entry_path: None,
+            ..options
+        };
+        assert!(configure(&incomplete).is_err());
     }
 
     #[test]

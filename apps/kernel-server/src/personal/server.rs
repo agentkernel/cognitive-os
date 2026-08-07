@@ -10,10 +10,13 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use cognitive_kernel::ports::{
+    ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
+};
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
-use cognitive_store::{PersonalDataLayout, prepare_personal_databases};
+use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::json;
 
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
@@ -28,7 +31,7 @@ use super::readiness::{
 };
 use super::resource_api::ResourceApi;
 use super::scheduler_authority::{
-    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick,
+    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick_with_provider_config,
 };
 use super::task_api::TaskApi;
 
@@ -105,10 +108,12 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("reconcile durable scheduler recovery before startup: {error}"),
         },
     )?;
-    run_private_scheduler_tick(&config.layout.authority_database_path()).map_err(|error| {
-        PersonalDaemonError::Io {
-            detail: format!("run private scheduler tick before startup: {error}"),
-        }
+    run_private_scheduler_tick_with_provider_config(
+        &config.layout.authority_database_path(),
+        config.layout.config_dir(),
+    )
+    .map_err(|error| PersonalDaemonError::Io {
+        detail: format!("run private scheduler tick before startup: {error}"),
     })?;
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
@@ -379,6 +384,24 @@ fn process_http_request(
     if method_path.starts_with("GET /provider/v1/selected-model ") {
         return handle_selected_model_route(stream, &headers, layout, authority);
     }
+    if method_path.starts_with("POST /management/context-authorization/facts ") {
+        return handle_context_authorization_fact_admission(
+            stream,
+            &headers,
+            body.as_slice(),
+            layout,
+            authority,
+        );
+    }
+    if method_path.starts_with("POST /management/context-authorization/revocations ") {
+        return handle_context_revocation_fact_admission(
+            stream,
+            &headers,
+            body.as_slice(),
+            layout,
+            authority,
+        );
+    }
     if method_path.starts_with("POST /management/") {
         return handle_channel_route(
             stream,
@@ -422,6 +445,75 @@ fn process_http_request(
         "no personal route matched",
     )?;
     Ok(())
+}
+
+fn authorize_daemon_administrator_request(
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), (u16, LocalAuthError)> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return Err((401, LocalAuthError::Unauthorized));
+    };
+    let mut authority_guard = authority.lock().map_err(|_| {
+        (
+            500,
+            LocalAuthError::Io {
+                detail: "session authority lock poisoned",
+            },
+        )
+    })?;
+    authority_guard
+        .authorize_daemon_administrator(&token, Instant::now())
+        .map(|_| ())
+        .map_err(|error| {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            (status, error)
+        })
+}
+
+fn handle_context_authorization_fact_admission(
+    stream: &mut TcpStream,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let facts: ContextAuthorizationFactsRow = serde_json::from_slice(body).map_err(|_| {
+        "Context authorization facts must be a valid daemon-admin payload".to_owned()
+    })?;
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
+        .map_err(|error| format!("open Context authority store: {error}"))?;
+    store
+        .append_context_authorization_facts(&facts)
+        .map_err(|error| format!("admit Context authorization facts: {error}"))?;
+    write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
+}
+
+fn handle_context_revocation_fact_admission(
+    stream: &mut TcpStream,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let fact: ContextRevocationFactRow = serde_json::from_slice(body)
+        .map_err(|_| "Context revocation fact must be a valid daemon-admin payload".to_owned())?;
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
+        .map_err(|error| format!("open Context authority store: {error}"))?;
+    store
+        .append_context_revocation_fact(&fact)
+        .map_err(|error| format!("admit Context revocation fact: {error}"))?;
+    write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
 }
 
 fn handle_session_issue(
@@ -484,7 +576,13 @@ fn handle_channel_route(
     let mut guard = authority
         .lock()
         .map_err(|_| "session authority lock poisoned".to_owned())?;
-    match guard.authorize(&token, required_channel, Instant::now()) {
+    let authorization = match required_channel {
+        ChannelClass::Management => guard
+            .authorize_daemon_administrator(&token, Instant::now())
+            .map(|_| ()),
+        ChannelClass::Task => guard.authorize(&token, ChannelClass::Task, Instant::now()),
+    };
+    match authorization {
         Ok(()) => {
             let response = json!({
                 "status": "ok",
