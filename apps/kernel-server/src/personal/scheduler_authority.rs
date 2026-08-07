@@ -1846,18 +1846,20 @@ fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorit
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::{
-        RecoveredWorkerAttempt, SchedulerAuthorityBinding, SchedulerAuthorityError,
-        SchedulerDispatchAdmission, SchedulerEffectClosure, SchedulerWorkerAttempt,
-        UntrustedPiCandidate, WorkerAuthorizationHandoff, candidate_admission_command_from_policy,
-        classify_scheduler_effect_closure, complete_resolved_effect_and_release,
-        complete_scheduler_admission, complete_scheduler_worker_attempt,
-        ensure_current_contract_epoch, parse_execution_bound_contract,
-        propose_persist_and_admit_candidate_after_metadata, release_closed_effect_dispatch,
-        release_closed_recovered_attempt, select_single_effect_intent,
-        validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
+        ContextResolutionCommand, RecoveredWorkerAttempt, SchedulerAuthorityBinding,
+        SchedulerAuthorityError, SchedulerDispatchAdmission, SchedulerEffectClosure,
+        SchedulerWorkerAttempt, UntrustedPiCandidate, WorkerAuthorizationHandoff,
+        candidate_admission_command_from_policy, classify_scheduler_effect_closure,
+        complete_resolved_effect_and_release, complete_scheduler_admission,
+        complete_scheduler_worker_attempt, ensure_current_contract_epoch,
+        parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
+        release_closed_effect_dispatch, release_closed_recovered_attempt,
+        select_single_effect_intent, validate_untrusted_pi_candidate,
+        validate_worker_authorization_evidence,
     };
     use cognitive_contracts::{
         canonical,
+        generated::governed_object_header::GovernedObjectHeaderSensitivity,
         generated::{
             common_defs::Budget,
             context_view::{
@@ -1876,6 +1878,7 @@ mod tests {
         AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
         PrincipalFacts, authorize,
     };
+    use cognitive_kernel::budget::BudgetCharge;
     use cognitive_kernel::budget::BudgetState;
     use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
     use cognitive_kernel::engine::CommittedTransition;
