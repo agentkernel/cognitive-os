@@ -2395,6 +2395,74 @@ mod tests {
     }
 
     #[test]
+    fn duplicate_candidate_retry_does_not_reinvoke_private_pi() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p2-t04-duplicate-candidate";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        let candidate_id = object_id(933);
+        store
+            .append_operation_candidate_proposal(&OperationCandidateProposalRow {
+                candidate_id: candidate_id.clone(),
+                task_ref: task_ref.to_owned(),
+                contract_epoch: 1,
+                candidate_source_ref: "observation://tenant-a/pi/previous-attempt".to_owned(),
+                tool_ref: "operation://tenant-a/observe".to_owned(),
+                action: "observe".to_owned(),
+                target: "workspace://tenant-a/project/alpha".to_owned(),
+                parameters_digest: format!("sha256:{}", "2".repeat(64)),
+                expected_state_version: 1,
+                operation_descriptor_ref: object_id(934),
+                canonical_json: "{\"candidate\":\"previous-attempt\"}".to_owned(),
+            })
+            .unwrap();
+        let proposer = CountingPiProposer::default();
+        let admission_command = super::DaemonCandidateAdmissionCommand {
+            candidate_id: candidate_id.clone(),
+            authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+            authorization_purpose: "task_execution".to_owned(),
+            budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
+                .unwrap(),
+            governance: context_governance(),
+            actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
+            correlation_id: UriRef::parse("correlation://tenant-a/p2-t04-duplicate").unwrap(),
+        };
+
+        let result = super::propose_persist_and_admit_candidate(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-07T00:00:00Z").unwrap(),
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(_))
+        ));
+        assert_eq!(
+            proposer.calls.get(),
+            0,
+            "a duplicate candidate identity must resume daemon admission without another Pi proposal"
+        );
+        assert_eq!(
+            store
+                .load_operation_candidate_proposal(&candidate_id)
+                .unwrap()
+                .unwrap()
+                .canonical_json,
+            "{\"candidate\":\"previous-attempt\"}"
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
     fn candidate_admission_rejects_policy_with_mismatched_durable_task_binding() {
         let context_request_id = object_id(901);
         let policy = SchedulerExecutionPolicyRow {
