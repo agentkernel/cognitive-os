@@ -11,8 +11,14 @@ use cognitive_contracts::{
     generated::governed_object_header::GovernedObjectHeaderSensitivity,
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
     generated::{
-        context_request::ContextRequest, object_reference::StrongReferenceKind,
-        operation_candidate_proposal::OperationCandidateProposal, task_contract::TaskContract,
+        context_request::ContextRequest,
+        context_view::{
+            ContextView, ContextViewPinnedVersionsValue, ItemCost, LoadedContextItem,
+            LossDeclaration, RejectedCandidate as PersistedRejectedCandidate, ResolutionCost,
+        },
+        object_reference::StrongReferenceKind,
+        operation_candidate_proposal::OperationCandidateProposal,
+        task_contract::TaskContract,
     },
 };
 use cognitive_domain::{
@@ -39,8 +45,8 @@ use cognitive_kernel::{
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
         BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
-        ContextAuthorizationFactStore, ContextCandidateQuery, ContextStore,
-        ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
+        ContextAuthorizationFactStore, ContextCandidateQuery, ContextRequestRow, ContextStore,
+        ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
         ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
         SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
         TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
@@ -838,6 +844,150 @@ where
     .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
 }
 
+/// Persist the exact immutable ContextView that is about to become input to a
+/// private candidate producer. The durable view intentionally contains only
+/// source metadata and strong references; source bodies remain confined to the
+/// already-authorized resolver and the bounded rendered transport.
+fn persist_resolved_context_view<S, C, G>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    request_row: &ContextRequestRow,
+    resolved_view: &ResolvedContextView,
+    governance: &GovernanceSeed,
+) -> Result<ContextViewRow, SchedulerAuthorityError>
+where
+    S: ContextStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let view_id = next_object_id(identifiers)?;
+    let resolved_at = clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.detail))?;
+    let header = compose_governed_header(
+        &view_id,
+        "ContextView",
+        "cognitiveos.context-view/0.1",
+        governance,
+        vec![format!(
+            "activity://personal/context/{}",
+            request_row.request_id
+        )],
+        vec![request_row.request_id.to_string()],
+        "daemon-persisted-context-resolution",
+        &resolved_at,
+    )
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let loaded = resolved_view
+        .loaded
+        .iter()
+        .map(|item| {
+            let source_id = ObjectId::parse(&item.object_ref).map_err(|_| {
+                SchedulerAuthorityError::ContextResolution(
+                    "resolved Context item identity is not a governed object identifier".to_owned(),
+                )
+            })?;
+            let source = store
+                .load_workspace_context_source_body(&source_id)
+                .map_err(|error| {
+                    SchedulerAuthorityError::ContextBodyUnavailable(error.to_string())
+                })?
+                .ok_or_else(|| {
+                    SchedulerAuthorityError::ContextBodyUnavailable(source_id.to_string())
+                })?;
+            if source.source_digest != item.content_digest {
+                return Err(SchedulerAuthorityError::ContextBodyUnavailable(
+                    "resolved Context item digest no longer matches durable source".to_owned(),
+                ));
+            }
+            Ok(LoadedContextItem {
+                item_id: item.object_ref.clone(),
+                object_ref: strong_reference_to(&source_id, &item.content_digest),
+                representation: source.representation,
+                trust_level: item.trust_level,
+                role: item.role,
+                cost: ItemCost {
+                    bytes: item.cost_bytes,
+                    tokens: Some(item.cost_tokens),
+                },
+            })
+        })
+        .collect::<Result<Vec<_>, SchedulerAuthorityError>>()?;
+    let pinned_versions = resolved_view
+        .pinned_versions
+        .iter()
+        .map(|(object_ref, version)| {
+            (
+                object_ref.clone(),
+                ContextViewPinnedVersionsValue::Integer(*version),
+            )
+        })
+        .collect();
+    let payload = ContextView {
+        activity_bound: format!("activity://personal/context/{}", request_row.request_id),
+        complete: resolved_view.complete,
+        cost: ResolutionCost {
+            bytes: resolved_view
+                .loaded
+                .iter()
+                .map(|item| item.cost_bytes)
+                .sum(),
+            money_microunits: None,
+            resolve_ms: 0,
+            tokens: Some(
+                resolved_view
+                    .loaded
+                    .iter()
+                    .map(|item| item.cost_tokens)
+                    .sum(),
+            ),
+        },
+        header,
+        loaded,
+        loss_declaration: resolved_view
+            .loss_declaration
+            .iter()
+            .map(|loss| LossDeclaration {
+                omitted_classes: loss.omitted_classes.clone(),
+                source: loss.source.clone(),
+                transform: loss.transform.clone(),
+                verification: resolved_view.render.digest.clone(),
+            })
+            .collect(),
+        missing: (!resolved_view.missing.is_empty()).then(|| resolved_view.missing.clone()),
+        pinned_versions,
+        rejected: resolved_view
+            .rejected
+            .iter()
+            .map(|rejected| PersistedRejectedCandidate {
+                candidate_ref: rejected.candidate_ref.clone(),
+                reason: rejected.reason.clone(),
+            })
+            .collect(),
+        request_ref: strong_reference_to(&request_row.request_id, &request_row.request_digest),
+    };
+    let payload_value = serde_json::to_value(payload)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let (sealed_payload, view_digest) = seal_governed_object_content_digest(payload_value)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let canonical_json = String::from_utf8(
+        canonical::canonical_bytes_of_value(&sealed_payload)
+            .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?,
+    )
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    let view_row = ContextViewRow {
+        view_id,
+        request_id: request_row.request_id.clone(),
+        view_digest,
+        canonical_json,
+    };
+    store
+        .append_context_view(&view_row)
+        .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    Ok(view_row)
+}
+
 /// Resolve Context, obtain exactly one untrusted Pi candidate, then have the
 /// daemon seal, persist, and atomically admit it. Pi-provided fields never
 /// become governed references, header facts, authority, or lifecycle state.
@@ -892,6 +1042,22 @@ where
         return admit_candidate_atomically(store, clock, identifiers, admission_command);
     }
     let resolved_context = resolve_authorized_task_context(store, context_command)?;
+    let request_row = store
+        .load_context_request(&context_command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(
+                context_command.request_id.to_string(),
+            )
+        })?;
+    persist_resolved_context_view(
+        store,
+        clock,
+        identifiers,
+        &request_row,
+        &resolved_context,
+        &admission_command.governance,
+    )?;
     let current_contract_epoch = store
         .current_contract_epoch(&context_command.task_ref)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
