@@ -75,8 +75,9 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T06/tool-process-executor` | P2-T06 complete Tool/process executor, supervisor, cursor, and reconcile delivery | Lane-RUN | `personal/P2-T06-tool-process-executor` | `apps/kernel-server/src/personal/`; `crates/cognitive-store/src/`; `crates/cognitive-store/tests/`; `apps/kernel-server/tests/`; `docs/plan/PROGRESS.md`; `docs/checkpoints/` | owner session / Cursor | 2026-08-07 / 2026-08-07 | active |
 
-No active lease currently grants a writable implementation path.
+The active lease above grants the only current writable implementation path.
 
 ### 3.1 最近关闭的 leases
 
