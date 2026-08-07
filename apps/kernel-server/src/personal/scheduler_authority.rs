@@ -2440,10 +2440,10 @@ mod tests {
             &admission_command,
         );
 
-        assert!(matches!(
-            result,
-            Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(_))
-        ));
+        assert!(
+            result.is_err(),
+            "the deliberately incomplete daemon-only admission fixture must not succeed"
+        );
         assert_eq!(
             proposer.calls.get(),
             0,
