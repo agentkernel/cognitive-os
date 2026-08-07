@@ -37,17 +37,28 @@ flowchart LR
 
 ## 2. 并行规则（违反 = PR 拒收）
 
-1. **一个任务 = 一个 primary lane + 一个分支/PR + 一份活动 ownership lease**。一个 cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；不再用历史 lane 名阻止跨目录的完整原子批。每个 lease 使用稳定 `lease_id`，格式为 `lease/personal/<task>/<slice>`。
+1. **一个任务 = 一个 primary lane + 一个 task branch/Draft PR + 一份活动 task lease**。一个
+   cohesive task 可在 lease 中声明 runtime、CLI、tests 和 docs 等 secondary paths；Slice
+   只是该任务内的执行检查点，不得另建 branch、PR、lease 或普通 handoff。每个 lease 使用
+   稳定 `lease_id`，格式为 `lease/personal/<task>/<purpose>`，并持续到完整 task acceptance
+   与 merge/branch closure 完成。
 2. **跨车道接口变更只能经 Lane-CTR** 走契约变更流程（schema/trait/生成物一体变更），并在 `PROGRESS.md` 车道表通告；其他车道等待新契约合并后 rebase。
 3. **两个活动 lease 禁止覆盖同一 writable path**；ownership 以 `lease_id`、任务、branch、owned paths、owner/session、claimed_at、last_heartbeat 记录。状态仅允许 `active`、`closed`、`abandoned`、`stale`。只有 `active` 条目授予写权限；其他状态必须移到历史表，不再阻断新任务。共享文件由后合并者负责整合当前快照。禁止用 `docs/plan/**`、`docs/standards/**`、`docs/adr/**`、`specs/**` 等 broad protected-tree glob 取得排他所有权；应列精确文件或窄 feature directory。
 4. **合并顺序**：CTR → {KRN, CFR, TSC} → RUN；Lane-DOC 随时但不得夹带代码语义变更。
 5. 代码和 protected governance 变更经 PR + required CI 门禁合并；ADR-0008 允许的低风险 docs-only 批可直推 main，分支保护拒绝时改走 PR。
-6. 车道会话结束按 B4 协议写 handoff（`docs/checkpoints/YYYYMMDD-lane-<名>-handoff.md`）。
+6. Handoff 只在完整任务收口、真正外部阻塞、未知并发改动、ownership transfer 或 owner
+   明确暂停时写一次；不得因 Slice、checkpoint、push、CI 轮次或普通会话边界产生逐段
+   handoff。
 7. **`personal-blog/` 不是本表车道**：嵌套独立仓 [`agentkernel/blog`](https://github.com/agentkernel/blog)；不得用 Cos lane worktree / `D:\blog-*` 平行克隆替代唯一副本 `personal-blog/`。
 8. Lease ledger 使用窄幅协调更新：会话只能新增、heartbeat、关闭自己的行并保留其他行。
    `docs/plan/PARALLEL-LANES.md` 不得列入任何 lease 的 writable paths；更新自己的 ledger
    row 是不授予其他路径的协调操作。父目录 lease 不能独占本文件。PR 合并时必须在同一
    closure delivery 关闭 lease；已合并但遗留 active 的行由下一治理 session 诚实关闭。
+9. 一个 branch/PR 不得承载多个正式任务。当前已存在的 legacy shared branch 不重写历史，
+   但每个活动任务必须在下一安全 continuation boundary 分离到自己的 task branch/PR；不得
+   在 shared branch 上再领取新任务。完整任务合并后关闭 lease、确认 PR merged、清理安全
+   可删的远端 task branch，并在本地切回/fast-forward `main` 后核对 clean worktree 与
+   HEAD/upstream。
 
 ### 2.1 Lane-CON 激活前文档例外
 
@@ -64,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/GOV/task-atomic-delivery-rules` | repository governance refactor for whole-task continuous delivery, MVP-first authorization and deterministic closure | Lane-DOC | `lane/governance-task-atomic-delivery-rules` | `docs/governance/{PROJECT-IDENTITY.md,DEVELOPMENT-OPERATING-MODEL.md}`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/standards/docs-sync-contract.md`; `tools/src/check-consistency.mjs`; `docs/checkpoints/20260807-task-atomic-delivery-rules-handoff.md` | Cursor session | 2026-08-07 / 2026-08-07 | active |
 | `lease/personal/P2-T04/private-worker-composition` | P2-T04/D01 private scheduler-to-Context-to-pinned-Pi candidate worker composition | Lane-RUN | `lane/ctr-p3-t01-context-request-binding` | `apps/kernel-server/src/personal/{provider_proxy.rs,scheduler_authority.rs,server.rs,pi_runtime.rs}`; `apps/pi-agent-adapter/{Cargo.toml,src/{lib.rs,main.rs},fixtures/private_candidate_provider.mjs,tests/daemon_candidate_protocol.rs}`; `apps/admin-cli/src/personal_cli/{mod.rs,pi.rs}`; `crates/cognitive-runtime/src/{harness_loop.rs,lib.rs}`; `crates/cognitive-kernel/src/context.rs`; `packages/pi-cognitiveos/src/daemon-client.ts`; focused P2-T04 tests; `docs/checkpoints/20260805-personal-p2-t04-*.md` | Cursor session | 2026-08-05 / 2026-08-06 | active |
 | `lease/personal/P2-T05/native-tool-registry-validation` | P2-T05 native daemon Tool registry and pre-executor validator review/fix | Lane-KRN | `lane/ctr-p3-t01-context-request-binding` | `crates/cognitive-kernel/src/{tool_registry.rs,lib.rs}`; `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/tests/p2_t02_resource_projection.rs`; focused P2-T05 tests; `docs/checkpoints/20260806-personal-p2-t05-*.md` | Cursor session | 2026-08-06 / 2026-08-06 | active |
 | `lease/personal/P3-T01/context-request-binding` | P3-T01/D01 durable TaskContract ContextRequest binding, workspace source, and daemon-admin authorization/revocation prerequisite | Lane-CTR | `lane/ctr-p3-t01-context-request-binding` | `specs/schemas/task-contract.schema.json`; `crates/cognitive-contracts/src/generated/{mod.rs,task_contract.rs}`; `crates/cognitive-contracts/tests/schema_contract.rs`; `crates/cognitive-domain/src/capability.rs`; `crates/cognitive-kernel/src/{authz.rs,intent_chain.rs,ports.rs}`; `crates/cognitive-management/src/task_application.rs`; `crates/cognitive-runtime/src/intent_flow.rs`; `crates/cognitive-store/src/{context_store.rs,lib.rs,personal_db.rs,sqlite.rs}`; `crates/cognitive-store/tests/{m5_context_store.rs,p1_t01_layout_migrations.rs,m5_harness.rs,m5_intent_chain.rs}`; `apps/kernel-server/src/personal/{auth.rs,task_api.rs}`; `crates/cognitive-conformance/src/exec/behavior_m5_intent.rs`; `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`; `tools/test/check.test.mjs`; `AGENTS.md`; `docs/governance/DEVELOPMENT-OPERATING-MODEL.md`; `docs/plan/{PERSONAL-TEST-ENVIRONMENTS.md,PROGRESS.md,PERSONAL-DEVELOPMENT-PLAN.md}`; `docs/checkpoints/20260805-personal-p3-t01-*.md` | Cursor session | 2026-08-05 / 2026-08-05 | active |

@@ -56,17 +56,27 @@ test("Personal governance drift is rejected by failure injection", () => {
     "AGENTS.md": (source) =>
       source
         .replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD")
-        .replace("CHECKPOINT-DELIVERY-01", "REMOVED-CHECKPOINT-DELIVERY-GUARD"),
+        .replace("CHECKPOINT-DELIVERY-01", "REMOVED-CHECKPOINT-DELIVERY-GUARD")
+        .replace("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
     "docs/governance/DEVELOPMENT-OPERATING-MODEL.md": (source) =>
+      source
+        .replace(
+          "CHECKPOINT-DELIVERY-01",
+          "REMOVED-CHECKPOINT-DELIVERY-GUARD",
+        )
+        .replace("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
+    "docs/governance/PROJECT-IDENTITY.md": (source) =>
       source.replace(
-        "CHECKPOINT-DELIVERY-01",
-        "REMOVED-CHECKPOINT-DELIVERY-GUARD",
+        "一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease",
+        "REMOVED-TASK-ATOMIC-DELIVERY-GUARD",
       ),
     "docs/standards/docs-sync-contract.md": (source) =>
-      source.replaceAll(
-        "CHECKPOINT-DELIVERY-01",
-        "REMOVED-CHECKPOINT-DELIVERY-GUARD",
-      ),
+      source
+        .replaceAll(
+          "CHECKPOINT-DELIVERY-01",
+          "REMOVED-CHECKPOINT-DELIVERY-GUARD",
+        )
+        .replaceAll("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
     "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md": (source) =>
       source.replaceAll("RUST-LINK-DEV-WIN-GNU-01", "REMOVED-RUST-LINK-GUARD"),
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
@@ -79,6 +89,7 @@ test("Personal governance drift is rejected by failure injection", () => {
         .find((line) => line.startsWith("| `P2-T02/D01` |"));
       assert.ok(deliverySliceRow, "P2-T02/D01 row must exist for duplicate injection");
       return source
+        .replaceAll("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD")
         .replace(taskRow, `${taskRow}\n${taskRow}`)
         .replace(deliverySliceRow, `${deliverySliceRow}\n${deliverySliceRow}`);
     },
@@ -88,10 +99,15 @@ test("Personal governance drift is rejected by failure injection", () => {
         "delivery_slice_status: [ready, in-progress, blocked, done]",
       )}\ncurrent_snapshot:\n  B01: pass\n`,
     "docs/plan/PARALLEL-LANES.md": (source) =>
-      source.replace(
-        "### 3.1 最近关闭的 leases",
-        "| `lease/personal/P0-T01/broad-fixture` | fixture | Lane-DOC | `fixture` | `docs/plan/**` | test fixture | 2026-08-02 / 2026-08-02 | active |\n### 3.1 最近关闭的 leases",
-      ),
+      source
+        .replace(
+          "一个 task branch/Draft PR + 一份活动 task lease",
+          "REMOVED-TASK-ATOMIC-DELIVERY-GUARD",
+        )
+        .replace(
+          "### 3.1 最近关闭的 leases",
+          "| `lease/personal/P0-T01/broad-fixture` | fixture | Lane-DOC | `fixture` | `docs/plan/**` | test fixture | 2026-08-02 / 2026-08-02 | active |\n### 3.1 最近关闭的 leases",
+        ),
     "docs/plan/PROGRESS.md": (source) =>
       source
         .replace(
@@ -129,6 +145,30 @@ test("Personal governance drift is rejected by failure injection", () => {
   assert.match(
     result.stderr,
     /docs-sync-contract\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /AGENTS\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /PROJECT-IDENTITY\.md[\s\S]*task-atomic delivery guard is missing required fragment/,
+  );
+  assert.match(
+    result.stderr,
+    /DEVELOPMENT-OPERATING-MODEL\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /PERSONAL-DEVELOPMENT-PLAN\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
+  );
+  assert.match(
+    result.stderr,
+    /PARALLEL-LANES\.md[\s\S]*task-atomic delivery guard is missing required fragment/,
+  );
+  assert.match(
+    result.stderr,
+    /docs-sync-contract\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
   );
   assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
   assert.match(result.stderr, /duplicate formal delivery slice definition: P2-T02\/D01/);

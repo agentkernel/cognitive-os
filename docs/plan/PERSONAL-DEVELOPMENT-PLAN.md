@@ -75,21 +75,42 @@
    额外填写 `development_track: experimental-local-only`，不得把 acceptance/promotion
    Gate 写成实现阻断。
 2. 一个任务只有在其验收条件满足、相关测试真实执行并留有证据后，才可标为 `done`；未执行的测试必须明确标 `not-run`，不得推断为通过。
-3. 每个 atomic delivery/PR 必须更新该任务的状态、证据链接或命令结果及阻塞项；实现 commit 后可跟一个 closure docs commit 记录其 immutable hash。PROGRESS 与 handoff 必须在 merge 或会话移交前完成，不要求与实现位于同一 commit。
+3. **`TASK-ATOMIC-DELIVERY-01`：** 默认 atomic delivery 是一个完整 `P*-T*` 正式任务。
+   一个任务使用一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease，并连续
+   完成全部必要 Slice、真实集成、负例、supported validation、完整 acceptance assessment
+   与文档/分支收口。Slice 完成、checkpoint、push、CI 发起或阶段结果均不是停点或汇报点。
+   只有任务 `done`、不可自主消除的外部阻塞、未知并发改动、安全冲突或 owner 明确暂停/改
+   范围时才可中断。
 4. 发生范围、依赖、验收或安全边界变化时，先将任务标为 `blocked`，记录原因和决策，再更新详细任务卡与依赖图；不得静默改写完成标准。
 5. 允许的任务状态为：`not-started`、`in-progress`、`blocked`、`done`、`cancelled`；实现证据为 `none` / `provided` / `tested-local` / `tested-supported-ci`；Gate 为 `not-run` / `running` / `pass` / `fail` / `blocked`。`done` 不等于 Gate pass 或 Profile `implemented`。
 6. 如本表与 `plan.md` 的任务卡或依赖图不一致，应先按本表执行并在同一文档修正批中对齐 `plan.md`；不得仅凭详细卡片重新解释或复用既有 `P*-T*` ID。
-7. 每次领取任务后必须选择一个最小可交付出口：垂直实现切片、failure-first 回归修复、
-   可验证治理修正，或带 `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner /
-   next action 的阻塞记录。任务、依赖和安全路径已经明确时，不得用继续研究或新建平行
-   计划替代实现。
-8. 任务内开发出口必须登记为稳定 Delivery Slice，ID 为 `<task-id>/DNN`。本文件拥有
-   slice 的目标、依赖、出口和 required validation；当前状态只由 `PROGRESS.md` Current
-   snapshot 拥有。Slice `done` 不等于 task `done`，task `done` 也不等于 Gate pass。
+7. 领取任务前必须一次性核对其完整验收、implementation dependencies、所需路径和验证
+   环境，然后连续实现到任务收口。任务、依赖和安全路径已经明确时，不得用继续研究、
+   新建平行计划、切换无关任务或阶段性汇报替代实现。本地可修复的代码、测试、格式、CI
+   配置或集成问题必须直接修复；只有外部阻塞才能形成带 `blocked_paths` /
+   `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的中断记录。
+8. 任务内执行步骤登记为稳定 Delivery Slice，ID 为 `<task-id>/DNN`。本文件拥有 slice 的
+   目标、依赖、出口和 required validation；当前状态只由 `PROGRESS.md` Current snapshot
+   拥有。Slice 是内部检查点，不是独立 branch、PR、lease、handoff 或默认用户汇报单位。
+   Slice `done` 后立即进入下一未满足 acceptance 项；最终 Slice 必须汇总完整 acceptance，
+   不得另开 `acceptance-assessment` 分支。Slice `done` 不等于 task `done`，task `done` 也不
+   等于 Gate pass。
 9. 同一正式任务最多一个 `in-progress` slice。一个 foundation/helper slice 后必须优先
    接入真实 caller、durable authority outcome 或端到端负例；不得连续新增 helper-only
    slice 回避集成。实现存在但 required supported validation 未运行时，slice 必须为
    `blocked`，不能凭 fmt、diff 或 consistency 关闭。
+10. **MVP-first：** 首个真实路径优先使用 owner-local、single-principal、task-scoped、
+    daemon-issued 的最小授权组合，对范围外请求 fail closed。完整 RBAC、审批链、通用
+    capability administration、多租户策略语言和未来扩展框架，除非当前任务验收或已登记
+    threat boundary 明确要求，否则不得成为 MVP implementation mutex。此规则不放松
+    daemon-only authority、SecretStore、Intent/Effect、budget/fencing、audit 或 independent
+    verifier 不变量。
+11. 完整任务收口是实现的最后一步，不是后续管理任务：逐条映射 acceptance 与 exact
+    evidence，完成 supported validation/required CI，同步正式计划、Current snapshot 与
+    唯一最终 handoff；确认 task PR 只含已声明路径后 ready/merge；随后关闭 lease、删除安全
+    可删的远端 task branch、本地切回并 fast-forward `main`，确认 worktree clean、HEAD/
+    upstream 一致且无已完成任务的 active lease。任一步缺失时任务保持 `in-progress` 或
+    `blocked`，不得留下“代码完成但验收、分支或状态待收口”。
 
 ### Typed dependency 规则
 
@@ -228,14 +249,16 @@ Profile requirements.
 
 ### Delivery Slice register（任务内交付出口）
 
-Delivery Slice 是正式 `P*-T*` 任务内的可关闭交付单元，不新增任务、Gate、REQ 或
-产品声明。Slice 的定义、依赖和出口由本节拥有；当前 `ready`、`in-progress`、`blocked`、
+Delivery Slice 是正式 `P*-T*` 任务内的可检查执行单元，不新增任务、Gate、REQ 或
+产品声明，也不替代完整任务交付边界。Slice 的定义、依赖和出口由本节拥有；当前 `ready`、`in-progress`、`blocked`、
 `done`、`cancelled` 状态及实际 evidence 只写入 [PROGRESS.md](PROGRESS.md) 的
 Current snapshot。一个 slice 必须有一个真实 caller、durable authority outcome、可验证
 端到端边界或闭合的负例出口；单独的 helper/parser/boundary 不能连续形成交付出口。每个
 slice 至少需要 focused failure-first/negative test 和其定义的 supported validation，
 除非明确是 non-executable documentation-only slice。实现存在但 required validation 未
-执行时只能是 `blocked`，不能标为 `done`。
+执行时只能是 `blocked`，不能标为 `done`。一个任务只使用一个 task branch、Draft PR 和
+task lease；一个 slice 完成后在同一工作流中立即继续下一 slice，直到最终 slice 同时完成
+formal task acceptance assessment 和收口。
 
 | Slice ID | Formal task | Delivery outcome and exit | Implementation dependency | Required validation / next dependency |
 |---|---|---|---|---|

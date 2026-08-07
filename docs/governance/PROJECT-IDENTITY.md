@@ -50,14 +50,14 @@ Personal 的稳定产品愿景、用户资源模型和 release-scope 设计位�
 没有额外决策时，代理只能：
 
 1. 推进 `PERSONAL-DEVELOPMENT-PLAN.md` 中尚未完成的 Personal 任务；
-2. 为当前 Personal 切片修改必要的 `crates/`、`apps/`、`packages/`、`tests/`、`tools/`
+2. 为当前 Personal 任务修改必要的 `crates/`、`apps/`、`packages/`、`tests/`、`tools/`
    和对应文档；
 3. 修复影响 Personal 推进的架构合同漂移，并按 Lane-CTR 完成合同联动；
 4. 更新 Personal 当前快照、证据、non-claims 和移交记录。
 
 Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等仍可在计划中
 保持设计或 deferred 状态，但除非 Personal 正式计划、Gate 或新的决策明确激活，
-不得作为独立产品车道启动实现，也不得因其未完成阻塞不相关的 Personal 切片。
+不得作为独立产品车道启动实现，也不得因其未完成阻塞不相关的 Personal 任务。
 
 `personal-blog/` 是独立研究仓库，不属于 `cognitiveos-personal` 的实现范围；它的
 内容不能改变本仓库的任务、Gate、规范或发布声明。
@@ -77,16 +77,24 @@ Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等
 
 任何历史记录、旧提示词、旧分支名称或聊天上下文都不能覆盖上述来源。
 
-## 5. 反原地打转规则
+## 5. 整任务交付与反原地打转规则
 
-每个开发会话必须选择一个可交付出口，并在结束前完成以下四者之一：
+默认开发出口是一个完整正式 `P*-T*` 任务，而不是单个 Slice 或会话。领取任务后必须使用
+一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease，连续完成全部必要
+Slice、真实集成、focused negatives、supported validation、完整 acceptance assessment 和
+最终文档/分支/lease 收口。Slice、checkpoint、push、CI 轮次、阶段总结和可恢复故障都不是
+停点或用户汇报点。
 
-- 一个最小垂直实现切片及其 focused test；
-- 一个先失败后修复的回归/负例切片；
-- 一个可验证的治理/文档修正，并完成一致性检查；
-- 一个有明确 `blocked_paths`、`blocked_task_ids`、`blocked_gate_ids`、责任方和下一
-  个可执行动作的阻塞记录。
+开发工作只能以下列两种方式结束：
 
-纯研究或重新阅读文档不能连续成为下一轮工作的替代品。若已经确认当前任务、依赖和
-边界，必须领取不重叠 lease 并实施最小切片；若不能实施，必须记录具体阻塞，而不是
-继续扩大审计范围。
+- 任务全部验收满足，PR 正常合并，lease 关闭，远端 task branch 安全清理，本地切回并
+  fast-forward `main`，worktree/HEAD/upstream 均已核对；
+- 出现不可自主消除的外部阻塞、未知并发改动、安全边界冲突或 owner 明确暂停，并留下
+  `blocked_paths`、`blocked_task_ids`、`blocked_gate_ids`、责任方和唯一下一动作。
+
+纯研究、重新阅读文档、阶段性汇报或另建计划不能替代实现。本地可修复的代码、测试、
+格式、CI 配置和集成问题必须在同一任务内直接修复。首个 MVP 优先使用 owner-local、
+single-principal、task-scoped、daemon-issued 的最小授权组合；完整 RBAC、审批链、通用
+capability administration 或未来扩展框架不得在真实垂直路径前成为 implementation mutex，
+但 daemon-only authority、SecretStore、Intent/Effect、budget/fencing 和 independent verifier
+边界不得放松。
