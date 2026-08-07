@@ -1957,6 +1957,7 @@ mod tests {
     fn append_context_race_fixture(
         store: &SqliteAuthorityStore,
         task_ref: &str,
+        required_context_ref: Option<&str>,
     ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
         let governance = context_governance();
         let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
@@ -1982,7 +1983,7 @@ mod tests {
             },
             "budget": {},
             "priority": ["task"],
-            "required": [],
+            "required": required_context_ref.map(|object_ref| vec![json!({"ref": object_ref})]).unwrap_or_default(),
             "forbidden": [],
             "freshness": {"world_max_age_ms": 0},
             "sensitivity": {"max_input": "internal", "egress": "none"},
@@ -2281,7 +2282,8 @@ mod tests {
         prepare_personal_databases(&layout).unwrap();
         let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
         let task_ref = "task://tenant-a/p2-t04-revocation-race";
-        let (context_command, later_revocation) = append_context_race_fixture(&store, task_ref);
+        let (context_command, later_revocation) =
+            append_context_race_fixture(&store, task_ref, None);
         let proposer = CountingPiProposer::default();
         let candidate_id = object_id(931);
         let admission_command = super::DaemonCandidateAdmissionCommand {
@@ -2330,6 +2332,62 @@ mod tests {
                 .unwrap()
                 .is_none(),
             "a rejected Context must not persist a candidate"
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn missing_required_context_blocks_private_pi_and_candidate_admission() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p2-t04-required-context";
+        let (context_command, _) = append_context_race_fixture(
+            &store,
+            task_ref,
+            Some("workspace://tenant-a/project/required-but-missing"),
+        );
+        let proposer = CountingPiProposer::default();
+        let candidate_id = object_id(932);
+        let admission_command = super::DaemonCandidateAdmissionCommand {
+            candidate_id: candidate_id.clone(),
+            authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
+            authorization_purpose: "task_execution".to_owned(),
+            budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
+                .unwrap(),
+            governance: context_governance(),
+            actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+            authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
+            correlation_id: UriRef::parse("correlation://tenant-a/p2-t04-required").unwrap(),
+        };
+
+        let result = super::propose_persist_and_admit_candidate(
+            &store,
+            &super::FixedSchedulerClock::parse("2026-08-07T00:00:00Z").unwrap(),
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::ContextResolution(detail))
+                if detail.contains("CONTEXT_INCOMPLETE")
+        ));
+        assert_eq!(
+            proposer.calls.get(),
+            0,
+            "incomplete Context must not reach Pi"
+        );
+        assert!(
+            store
+                .load_operation_candidate_proposal(&candidate_id)
+                .unwrap()
+                .is_none()
         );
 
         drop(store);
