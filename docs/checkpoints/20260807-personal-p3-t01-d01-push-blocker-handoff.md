@@ -5,7 +5,9 @@
 - **Classification:** `implementation-only` delivery-status correction
 - **Branch:** `lane/ctr-p3-t01-context-request-binding`
 - **Local checkpoint:** `fcb17088b35deab69882b4484d5dfcf10de01e74`
-- **Remote/PR status:** push blocked; no PR exists for this closure checkpoint
+- **Remote/PR status:** historical push blocker resolved; clean main-based
+  closure is pushed at `94b289bf81de6361b6c02059b9671e0127039b9b` in Draft PR
+  #155. Conflict-prone PR #154 was closed.
 
 ## Blocker
 
@@ -25,9 +27,7 @@ did not reach GitHub. Git reported that it could not connect to
   emission.
 - **blocked_gate_ids:** B03; it remains `not-run`.
 - **owner:** local development environment network/proxy availability.
-- **next action:** restore ordinary GitHub HTTPS connectivity, push the exact
-  local checkpoint sequence beginning at `fcb17088b35deab69882b4484d5dfcf10de01e74`,
-  create a Draft PR for the unmerged documentation closure, and then resume the
+- **next action:** monitor Draft PR #155 required checks, then resume the
   non-overlapping P2-T04 integration continuation.
 
 No credentials were requested, displayed, or changed. No force push, remote
