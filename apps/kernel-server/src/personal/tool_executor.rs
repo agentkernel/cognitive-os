@@ -1263,10 +1263,6 @@ mod tests {
             Version::INITIAL
         );
 
-        drop(effect_protocol);
-        drop(unknown_executor);
-        drop(native_executor);
-        drop(store);
         std::fs::remove_file(database_path).expect("remove authority database");
     }
 
