@@ -5,7 +5,8 @@
 - **Slice:** `P2-T04/D01`
 - **Branch:** `lane/personal-p2-t04-context-view`
 - **Lease:** `lease/personal/P2-T04/private-worker-composition`
-- **Status:** `in-progress`; supported validation is required before closure
+- **Status:** `in-progress`; the persistence checkpoint is validated, while
+  the revoked-source integration negative remains required before slice closure
 
 ## Delivered
 
@@ -27,12 +28,19 @@ durable ContextView -> bounded Pi candidate proposal -> daemon admission
 The ContextView persistence step has no worker authority, Effect, budget debit,
 progress, evidence, verification, acceptance, or Task-completion semantics.
 
-## Remaining validation and negative path
+## Validation evidence
 
-- Focused Rust validation: `not-run` locally; the Windows GNU host cannot
+- Local focused Rust validation: `not-run`; the Windows GNU host cannot
   compile/link Rust feature work.
-- Required Ubuntu/Windows CI: `not-run` for this exact revision.
-- Exact native Linux validation: `not-run` for this exact revision.
+- Exact native Linux `DEV-LINUX-NATIVE-01`: **passed** on immutable
+  `d3c6181d6e5bc892871aad0896006443b233ce61` in the disposable Git clone
+  `/home/wuz/cognitiveos-validation-p2-t04-d3c6181`:
+  `cargo test -p kernel-server` completed with exit 0.
+- Required CI: the two Ubuntu jobs passed for `d3c6181`; the two Windows jobs
+  remain pending at this checkpoint. No pending check is claimed as passing.
+
+## Remaining negative path
+
 - Required next negative: revoke the source between the durable authorization
   observation and candidate proposal, then prove the revoked source cannot
   reach body loading, ranking, or Pi. This must be added within the active
