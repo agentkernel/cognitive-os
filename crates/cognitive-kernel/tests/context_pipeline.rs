@@ -360,6 +360,7 @@ fn context_builder_deduplicates_authorized_content_with_explicit_loss() {
     first_candidate.content_digest = shared_digest.clone();
     let mut duplicate_candidate = evidence(duplicate, 120, 12);
     duplicate_candidate.content_digest = shared_digest;
+    duplicate_candidate.body = first_candidate.body.clone();
 
     let view = resolve(
         &request("answer_customer_question", &[]),
