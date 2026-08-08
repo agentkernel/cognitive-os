@@ -20,7 +20,8 @@ use cognitive_kernel::{
 use std::{
     collections::BTreeMap,
     path::{Component, Path, PathBuf},
-    sync::Mutex,
+    sync::{Arc, Mutex},
+    time::Duration,
 };
 use thiserror::Error;
 
@@ -269,6 +270,311 @@ impl EffectExecutor for NativeWorkspaceReadExecutor {
     }
 }
 
+/// A daemon-private process observation port. The supervisor owns process
+/// lifetime and timeout decisions; this executor never discovers or launches
+/// operating-system processes itself.
+pub(crate) trait ProcessCheckSupervisor: Send + Sync {
+    fn check_process(
+        &self,
+        process_id: u32,
+        timeout: Duration,
+    ) -> Result<Vec<u8>, ProcessCheckSupervisorError>;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum ProcessCheckSupervisorError {
+    NotRegistered,
+    Orphaned,
+    TimedOut,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct StagedProcessCheckRequest {
+    parameters_digest: String,
+    target: String,
+    process_id: u32,
+    output_limit_bytes: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CompletedProcessCheck {
+    receipt_ref: String,
+    redacted_output: Vec<u8>,
+}
+
+/// Testable in-process supervisor registry. Production wiring can replace it
+/// with the existing daemon supervisor without changing the Effect boundary.
+pub(crate) struct BoundedProcessCheckSupervisor {
+    maximum_timeout: Duration,
+    registered_processes: Mutex<BTreeMap<u32, RegisteredProcess>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RegisteredProcess {
+    output: Vec<u8>,
+    required_runtime: Duration,
+    alive: bool,
+}
+
+impl BoundedProcessCheckSupervisor {
+    pub(crate) fn new(maximum_timeout: Duration) -> Self {
+        Self {
+            maximum_timeout,
+            registered_processes: Mutex::new(BTreeMap::new()),
+        }
+    }
+
+    #[cfg(test)]
+    fn register(&self, process_id: u32, output: &[u8], required_runtime: Duration) {
+        self.registered_processes
+            .lock()
+            .expect("registry lock")
+            .insert(
+                process_id,
+                RegisteredProcess {
+                    output: output.to_vec(),
+                    required_runtime,
+                    alive: true,
+                },
+            );
+    }
+
+    #[cfg(test)]
+    fn orphan(&self, process_id: u32) {
+        if let Some(process) = self
+            .registered_processes
+            .lock()
+            .expect("registry lock")
+            .get_mut(&process_id)
+        {
+            process.alive = false;
+        }
+    }
+}
+
+impl ProcessCheckSupervisor for BoundedProcessCheckSupervisor {
+    fn check_process(
+        &self,
+        process_id: u32,
+        timeout: Duration,
+    ) -> Result<Vec<u8>, ProcessCheckSupervisorError> {
+        if timeout.is_zero() || timeout > self.maximum_timeout {
+            return Err(ProcessCheckSupervisorError::TimedOut);
+        }
+        let registered_processes = self
+            .registered_processes
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        let Some(process) = registered_processes.get(&process_id) else {
+            return Err(ProcessCheckSupervisorError::NotRegistered);
+        };
+        if !process.alive {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        if process.required_runtime > timeout {
+            return Err(ProcessCheckSupervisorError::TimedOut);
+        }
+        Ok(process.output.clone())
+    }
+}
+
+/// Daemon-private, read-only process/check Effect sink. It has no Task
+/// lifecycle input and therefore cannot report Task progress or completion.
+pub(crate) struct NativeProcessCheckExecutor<S> {
+    trusted_fencing_epoch: i64,
+    supervisor: Arc<S>,
+    timeout: Duration,
+    staged_requests: Mutex<BTreeMap<String, StagedProcessCheckRequest>>,
+    completed_checks: Mutex<BTreeMap<String, CompletedProcessCheck>>,
+}
+
+impl<S> NativeProcessCheckExecutor<S>
+where
+    S: ProcessCheckSupervisor,
+{
+    pub(crate) fn new(trusted_fencing_epoch: i64, supervisor: Arc<S>, timeout: Duration) -> Self {
+        Self {
+            trusted_fencing_epoch,
+            supervisor,
+            timeout,
+            staged_requests: Mutex::new(BTreeMap::new()),
+            completed_checks: Mutex::new(BTreeMap::new()),
+        }
+    }
+
+    pub(crate) fn stage_request(
+        &self,
+        idempotency_key: String,
+        parameters_digest: String,
+        request: &ValidatedNativeToolRequest,
+    ) -> Result<(), NativeToolExecutionError> {
+        if request.descriptor.family != NativeOperationFamily::ProcessCheck {
+            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
+        }
+        let process_id = parse_process_id(&request.target)?;
+        if idempotency_key.is_empty() || parameters_digest.is_empty() {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "idempotency key and parameters digest are required".to_owned(),
+            ));
+        }
+        let staged_request = StagedProcessCheckRequest {
+            parameters_digest,
+            target: request.target.clone(),
+            process_id,
+            output_limit_bytes: request.descriptor.output_limit_bytes,
+        };
+        let mut staged_requests = self.staged_requests.lock().map_err(|_| {
+            NativeToolExecutionError::ExecutorUnavailable(
+                "staged process store is poisoned".to_owned(),
+            )
+        })?;
+        if let Some(existing_request) = staged_requests.get(&idempotency_key) {
+            if existing_request != &staged_request {
+                return Err(NativeToolExecutionError::IdempotencyBindingConflict);
+            }
+            return Ok(());
+        }
+        staged_requests.insert(idempotency_key, staged_request);
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
+        self.completed_checks
+            .lock()
+            .ok()
+            .and_then(|checks| checks.get(idempotency_key).cloned())
+            .map(|check| check.redacted_output)
+    }
+}
+
+impl<S> EffectExecutor for NativeProcessCheckExecutor<S>
+where
+    S: ProcessCheckSupervisor,
+{
+    fn capabilities(&self) -> ExecutorCapabilities {
+        ExecutorCapabilities {
+            queryable: true,
+            idempotent: true,
+        }
+    }
+
+    fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+        if call.fencing_epoch != self.trusted_fencing_epoch {
+            return Ok(DispatchOutcome::FencedStaleEpoch {
+                sink_epoch: self.trusted_fencing_epoch,
+            });
+        }
+        let staged_request = self
+            .staged_requests
+            .lock()
+            .map_err(|_| PortFailure {
+                detail: "staged process store is poisoned".to_owned(),
+            })?
+            .get(&call.idempotency_key)
+            .cloned();
+        let Some(staged_request) = staged_request else {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "no daemon-staged process check for idempotency key".to_owned(),
+            });
+        };
+        if call.action != "check"
+            || call.target != staged_request.target
+            || call.parameters_digest != staged_request.parameters_digest
+        {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "dispatch does not match the daemon-staged process check".to_owned(),
+            });
+        }
+        let mut completed_checks = self.completed_checks.lock().map_err(|_| PortFailure {
+            detail: "completed process store is poisoned".to_owned(),
+        })?;
+        if let Some(existing_check) = completed_checks.get(&call.idempotency_key) {
+            return Ok(DispatchOutcome::Executed {
+                receipt_ref: existing_check.receipt_ref.clone(),
+            });
+        }
+        let raw_output = self
+            .supervisor
+            .check_process(staged_request.process_id, self.timeout)
+            .map_err(|error| PortFailure {
+                detail: format!("bounded process check failed: {error:?}"),
+            })?;
+        let redacted_output = redact_sensitive_output(&String::from_utf8_lossy(&raw_output))
+            .into_bytes()
+            .into_iter()
+            .take(staged_request.output_limit_bytes)
+            .collect();
+        let receipt_ref = format!("tool-receipt://process-check/{}", call.idempotency_key);
+        completed_checks.insert(
+            call.idempotency_key.clone(),
+            CompletedProcessCheck {
+                receipt_ref: receipt_ref.clone(),
+                redacted_output,
+            },
+        );
+        Ok(DispatchOutcome::Executed { receipt_ref })
+    }
+
+    fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+        let completed_checks = self.completed_checks.lock().map_err(|_| PortFailure {
+            detail: "completed process store is poisoned".to_owned(),
+        })?;
+        Ok(if completed_checks.contains_key(idempotency_key) {
+            ExecutorQueryResult::ExecutedWithOriginalKey
+        } else {
+            ExecutorQueryResult::NotExecuted
+        })
+    }
+}
+
+fn parse_process_id(target: &str) -> Result<u32, NativeToolExecutionError> {
+    target
+        .strip_prefix("process://")
+        .ok_or(NativeToolExecutionError::InvalidProcessTarget)?
+        .parse::<u32>()
+        .map_err(|_| NativeToolExecutionError::InvalidProcessTarget)
+}
+
+/// Drive a staged process observation through the durable Effect protocol.
+pub(crate) fn dispatch_staged_process_check_effect<S, C, G, P>(
+    effect_protocol: &EffectProtocol<'_, S, C, G>,
+    effect_object_id: &ObjectId,
+    expected_effect_version: Version,
+    grant: &AuthorizationGrant,
+    governance_currency: &GovernanceCurrency,
+    executor: &NativeProcessCheckExecutor<P>,
+    writer_lease: &WriterLease,
+) -> Result<CommittedTransition, EffectError>
+where
+    S: cognitive_kernel::ports::AuthorityStore + cognitive_kernel::ports::ProtocolStore,
+    C: cognitive_kernel::ports::Clock,
+    G: cognitive_kernel::ports::IdGenerator,
+    P: ProcessCheckSupervisor,
+{
+    let authorized = effect_protocol.authorize_effect(
+        effect_object_id,
+        expected_effect_version,
+        grant,
+        governance_currency,
+        writer_lease,
+    )?;
+    let (dispatched, outcome) = effect_protocol.dispatch_effect(
+        effect_object_id,
+        authorized.after_version,
+        grant,
+        governance_currency,
+        executor,
+        writer_lease,
+    )?;
+    effect_protocol.record_outcome(
+        effect_object_id,
+        dispatched.after_version,
+        &outcome,
+        writer_lease,
+    )
+}
+
 /// Drive an already staged workspace read through the durable Effect protocol.
 ///
 /// Staging binds the native request to the Intent's idempotency key and
@@ -387,9 +693,9 @@ pub(crate) enum NativeToolExecutionError {
     NetworkTargetContainsCredentials,
     #[error("process target is not a bounded process identifier")]
     InvalidProcessTarget,
-    #[error("this executor only accepts validated workspace-read requests")]
+    #[error("this executor only accepts its validated native operation family")]
     UnsupportedExecutionFamily,
-    #[error("idempotency key is already bound to a different workspace read")]
+    #[error("idempotency key is already bound to a different native operation")]
     IdempotencyBindingConflict,
     #[error("native Tool executor is unavailable: {0}")]
     ExecutorUnavailable(String),
@@ -570,6 +876,220 @@ mod tests {
             input: b"bounded input".to_vec(),
             workspace_root: Some(PathBuf::from("/tmp/cognitiveos-workspace")),
         }
+    }
+
+    fn process_check_request() -> NativeToolExecutionRequest {
+        let mut request = request_for(NativeOperationFamily::ProcessCheck);
+        request.target = "process://4242".to_owned();
+        request.input.clear();
+        request.workspace_root = None;
+        request
+    }
+
+    fn process_check_call(
+        idempotency_key: &str,
+        parameters_digest: &str,
+        target: &str,
+        fencing_epoch: i64,
+    ) -> ExecutorCall {
+        ExecutorCall {
+            action: "check".to_owned(),
+            target: target.to_owned(),
+            idempotency_key: idempotency_key.to_owned(),
+            parameters_digest: parameters_digest.to_owned(),
+            authorization_digest: "authorization-digest".to_owned(),
+            fencing_epoch,
+        }
+    }
+
+    fn staged_process_executor(
+        output_limit_bytes: usize,
+    ) -> (
+        Arc<BoundedProcessCheckSupervisor>,
+        NativeProcessCheckExecutor<BoundedProcessCheckSupervisor>,
+    ) {
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(
+            4242,
+            b"state=ready token=secret output-that-is-too-long",
+            Duration::from_millis(1),
+        );
+        let mut request = process_check_request();
+        request.descriptor.output_limit_bytes = output_limit_bytes;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check");
+        let executor =
+            NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
+        executor
+            .stage_request(
+                "process-key".to_owned(),
+                "digest-1".to_owned(),
+                &validated_request,
+            )
+            .expect("stage process check");
+        (supervisor, executor)
+    }
+
+    #[test]
+    fn process_check_validates_bounded_target_and_executes_registered_observation() {
+        let request = process_check_request();
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check");
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(4242, b"state=ready", Duration::from_millis(1));
+        let executor = NativeProcessCheckExecutor::new(7, supervisor, Duration::from_secs(1));
+        executor
+            .stage_request(
+                "process-key".to_owned(),
+                "digest-1".to_owned(),
+                &validated_request,
+            )
+            .expect("stage process check");
+
+        assert!(matches!(
+            executor.dispatch(&process_check_call(
+                "process-key",
+                "digest-1",
+                "process://4242",
+                7
+            )),
+            Ok(DispatchOutcome::Executed { .. })
+        ));
+        assert_eq!(
+            executor.completed_output("process-key"),
+            Some(b"state=ready".to_vec())
+        );
+    }
+
+    #[test]
+    fn process_check_rejects_invalid_and_unregistered_processes() {
+        let mut request = process_check_request();
+        request.target = "process://4242/child".to_owned();
+        assert_eq!(
+            validate_native_tool_request(&request),
+            Err(NativeToolExecutionError::InvalidProcessTarget)
+        );
+
+        let validated_request =
+            validate_native_tool_request(&process_check_request()).expect("valid process check");
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        let executor = NativeProcessCheckExecutor::new(7, supervisor, Duration::from_secs(1));
+        executor
+            .stage_request(
+                "missing-process".to_owned(),
+                "digest-missing".to_owned(),
+                &validated_request,
+            )
+            .expect("stage process check");
+        let dispatch_result = executor.dispatch(&process_check_call(
+            "missing-process",
+            "digest-missing",
+            "process://4242",
+            7,
+        ));
+        assert!(dispatch_result.is_err());
+        assert_eq!(
+            executor.query_outcome("missing-process"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
+    }
+
+    #[test]
+    fn process_check_redacts_and_bounds_output_before_queryable_storage() {
+        let (_supervisor, executor) = staged_process_executor(20);
+        let call = process_check_call("process-key", "digest-1", "process://4242", 7);
+        let first_outcome = executor.dispatch(&call).expect("execute process check");
+        let second_outcome = executor
+            .dispatch(&call)
+            .expect("absorb duplicate process check");
+        assert_eq!(first_outcome, second_outcome);
+        let output = executor
+            .completed_output("process-key")
+            .expect("stored output");
+        assert!(output.len() <= 20);
+        assert!(!String::from_utf8_lossy(&output).contains("secret"));
+        assert_eq!(
+            executor.query_outcome("process-key"),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+    }
+
+    #[test]
+    fn process_check_fails_closed_for_timeout_and_orphaned_processes() {
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(4242, b"late", Duration::from_secs(3));
+        let mut request = process_check_request();
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check");
+        let timeout_executor =
+            NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
+        timeout_executor
+            .stage_request(
+                "timeout".to_owned(),
+                "digest-timeout".to_owned(),
+                &validated_request,
+            )
+            .expect("stage timeout check");
+        assert!(
+            timeout_executor
+                .dispatch(&process_check_call(
+                    "timeout",
+                    "digest-timeout",
+                    "process://4242",
+                    7
+                ))
+                .is_err()
+        );
+        assert_eq!(
+            timeout_executor.query_outcome("timeout"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
+
+        supervisor.register(4242, b"orphan", Duration::from_millis(1));
+        supervisor.orphan(4242);
+        request.target = "process://4242".to_owned();
+        let orphan_request = validate_native_tool_request(&request).expect("valid process check");
+        let orphan_executor =
+            NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
+        orphan_executor
+            .stage_request(
+                "orphan".to_owned(),
+                "digest-orphan".to_owned(),
+                &orphan_request,
+            )
+            .expect("stage orphan check");
+        assert!(
+            orphan_executor
+                .dispatch(&process_check_call(
+                    "orphan",
+                    "digest-orphan",
+                    "process://4242",
+                    7
+                ))
+                .is_err()
+        );
+        assert_eq!(
+            orphan_executor.query_outcome("orphan"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
+    }
+
+    #[test]
+    fn process_check_fences_stale_dispatch_before_supervisor_access() {
+        let (_supervisor, executor) = staged_process_executor(64);
+        assert_eq!(
+            executor.dispatch(&process_check_call(
+                "process-key",
+                "digest-1",
+                "process://4242",
+                6
+            )),
+            Ok(DispatchOutcome::FencedStaleEpoch { sink_epoch: 7 })
+        );
+        assert_eq!(
+            executor.query_outcome("process-key"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
     }
 
     #[test]
@@ -1055,9 +1575,6 @@ mod tests {
             Version::INITIAL
         );
 
-        drop(effect_protocol);
-        drop(executor);
-        drop(store);
         std::fs::remove_file(database_path).unwrap_or(());
     }
 
