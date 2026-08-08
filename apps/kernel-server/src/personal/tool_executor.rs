@@ -326,27 +326,27 @@ impl BoundedProcessCheckSupervisor {
 
     #[cfg(test)]
     fn register(&self, process_id: u32, output: &[u8], required_runtime: Duration) {
-        self.registered_processes
-            .lock()
-            .expect("registry lock")
-            .insert(
-                process_id,
-                RegisteredProcess {
-                    output: output.to_vec(),
-                    required_runtime,
-                    alive: true,
-                },
-            );
+        let mut registered_processes = match self.registered_processes.lock() {
+            Ok(registered_processes) => registered_processes,
+            Err(poisoned_registered_processes) => poisoned_registered_processes.into_inner(),
+        };
+        registered_processes.insert(
+            process_id,
+            RegisteredProcess {
+                output: output.to_vec(),
+                required_runtime,
+                alive: true,
+            },
+        );
     }
 
     #[cfg(test)]
     fn orphan(&self, process_id: u32) {
-        if let Some(process) = self
-            .registered_processes
-            .lock()
-            .expect("registry lock")
-            .get_mut(&process_id)
-        {
+        let mut registered_processes = match self.registered_processes.lock() {
+            Ok(registered_processes) => registered_processes,
+            Err(poisoned_registered_processes) => poisoned_registered_processes.into_inner(),
+        };
+        if let Some(process) = registered_processes.get_mut(&process_id) {
             process.alive = false;
         }
     }
