@@ -70,6 +70,10 @@
 | 4 | guest SSH readiness | pass | bounded non-interactive local-key ProxyJump probe reached `hal9001@192.168.123.160` successfully |
 | 4 | immutable artifact availability | **fail** | the preregistered artifact `0.0.0-campaign.20260801.1` is expired from workflow run `30687541828`; the only host-local candidate was an older, non-registered campaign and was not used |
 | 4 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no artifact, Pi, product service, Provider, credential, prompt, route runner, request, response, or authority state was created |
+| 5 | clean-reset checkpoint | pass | exact repaired `b01-platform-qualified-baseline` restored and guest started through authorized system-libvirt control |
+| 5 | guest SSH readiness | pass | bounded non-interactive local-key ProxyJump probe reached `hal9001@192.168.123.160` successfully |
+| 5 | staged bundle digest check | **fail** | an automation-shell quoting defect made the preregistered digest-check command invalid before installer activation; no artifact was installed or executed |
+| 5 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no Pi, product service, Provider, credential, prompt, route runner, request, response, or authority state was created |
 
 ## Attempt 5 preregistration
 
@@ -82,6 +86,19 @@
 | Independent verification | exact `main@bde3e3c` locked Linux verifier accepted the staged bundle, signature, `p1-t09-experimental` key, `p1-t09-experimental-20260730` keyring, and Pi `0.81.1` pin |
 | Provider configuration | `deepseek`; `https://api.deepseek.com`; model ID `deepseek-v4-flash`; all values are non-secret and must be supplied only through product configuration |
 | Operator action | Operator A enters the DeepSeek API key only in the Desktop product hidden-input prompt; no key is entered in chat, command arguments, ordinary files, logs, or evidence |
+
+## Attempt 5 result
+
+`B01-clean-linux-first-install-first-conversation-001` attempt 5 reached the
+clean-reset checkpoint and passed bounded SSH readiness. Before installer
+activation, the runner's staged-bundle digest command failed due to shell
+quoting. The independently verified artifact was not executed or installed.
+No Pi state, product service, Provider credential, Provider request, prompt,
+expected marker, response, authority side effect, Task, Effect, or Verification
+was created. Cleanup restored the exact baseline and left the domain shut off.
+This is a recorded fixed-N setup failure, not a retry or critical-safety
+failure. The next attempt must use the already verified artifact and a
+prevalidated non-shell-interpolated digest procedure.
 
 ## Attempt 1 result
 
