@@ -32,8 +32,8 @@ use cognitive_kernel::candidate_admission::{
     compose_candidate_admission,
 };
 use cognitive_kernel::context::{
-    ArrivalOrderRanker, CandidateObject, ContextBudget, RenderSpec, RequiredItem,
-    ResolutionRequest, ResolvedContextView, resolve,
+    ArrivalOrderRanker, CandidateObject, ContextBudget, LossEntry, RejectedCandidate, RenderSpec,
+    RequiredItem, ResolutionRequest, ResolvedContextView, resolve,
 };
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
@@ -786,6 +786,81 @@ fn build_required_task_fragments(
     ])
 }
 
+/// Return the daemon-supported source family for an externally admitted
+/// source role. Control and authoritative state are daemon-built fragments,
+/// never workspace source families.
+fn source_family_for_role(role: LoadedContextItemRole) -> Option<&'static str> {
+    match role {
+        LoadedContextItemRole::Working => Some("working"),
+        LoadedContextItemRole::Evidence => Some("evidence"),
+        LoadedContextItemRole::UntrustedInput => Some("shell"),
+        LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState => None,
+    }
+}
+
+/// Calculate a millisecond wall-clock instant from the repository's canonical
+/// UTC timestamp form without treating a UUIDv7 identity as a time source.
+fn timestamp_milliseconds(timestamp: &WallTimestamp) -> Option<i64> {
+    let value = timestamp.as_str();
+    let year = value.get(0..4)?.parse::<i64>().ok()?;
+    let month = value.get(5..7)?.parse::<usize>().ok()?;
+    let day = value.get(8..10)?.parse::<i64>().ok()?;
+    let hour = value.get(11..13)?.parse::<i64>().ok()?;
+    let minute = value.get(14..16)?.parse::<i64>().ok()?;
+    let second = value.get(17..19)?.parse::<i64>().ok()?;
+    let fraction = value
+        .get(19..value.len().checked_sub(1)?)
+        .unwrap_or_default()
+        .strip_prefix('.')
+        .unwrap_or_default();
+    let milliseconds = format!("{fraction:0<3}").get(0..3)?.parse::<i64>().ok()?;
+    let is_leap_year = |candidate_year: i64| {
+        candidate_year % 4 == 0 && (candidate_year % 100 != 0 || candidate_year % 400 == 0)
+    };
+    let days_before_month = [0i64, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    if !(1..=12).contains(&month) || day < 1 || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+    let leap_days = ((year - 1) / 4) - ((year - 1) / 100) + ((year - 1) / 400);
+    let leap_day_after_february = if month > 2 && is_leap_year(year) {
+        1
+    } else {
+        0
+    };
+    let days_since_epoch = 365 * (year - 1970)
+        + (leap_days - 477)
+        + days_before_month[month - 1]
+        + leap_day_after_february
+        + day
+        - 1;
+    Some((((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second) * 1_000 + milliseconds)
+}
+
+/// Determine whether immutable source metadata meets the request's
+/// role-specific freshness rule before its body becomes eligible to load.
+fn source_freshness_reason(
+    role: LoadedContextItemRole,
+    created_at: &WallTimestamp,
+    decided_at: &WallTimestamp,
+    context_request: &ContextRequest,
+) -> Option<&'static str> {
+    let maximum_age_milliseconds = match role {
+        LoadedContextItemRole::Working | LoadedContextItemRole::UntrustedInput => {
+            context_request.freshness.world_max_age_ms
+        }
+        LoadedContextItemRole::Evidence => context_request
+            .freshness
+            .knowledge_max_age_s
+            .and_then(|seconds| seconds.checked_mul(1_000)),
+        LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState => None,
+    }?;
+    let created_milliseconds = timestamp_milliseconds(created_at)?;
+    let decided_milliseconds = timestamp_milliseconds(decided_at)?;
+    let age_milliseconds = decided_milliseconds.checked_sub(created_milliseconds)?;
+    (age_milliseconds < 0 || age_milliseconds > maximum_age_milliseconds)
+        .then_some("CONTEXT_SOURCE_STALE")
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -894,8 +969,60 @@ where
     let mut authorized_candidates =
         Vec::with_capacity(metadata.len() + required_fragment_candidates.len());
     authorized_candidates.append(&mut required_fragment_candidates);
+    let mut excluded_source_records = Vec::new();
     let mut authorization_denied_after_discovery = false;
     for source_metadata in metadata {
+        let Some(source_family) = source_family_for_role(source_metadata.role) else {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: "SOURCE_FAMILY_EXCLUDED".to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_source_family".to_owned(),
+                    omitted_classes: vec!["unsupported_source_role".to_owned()],
+                },
+            ));
+            continue;
+        };
+        if !context_request
+            .priority
+            .iter()
+            .any(|priority| priority == source_family)
+        {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: "SOURCE_FAMILY_EXCLUDED".to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_source_family".to_owned(),
+                    omitted_classes: vec![source_family.to_owned()],
+                },
+            ));
+            continue;
+        }
+        if let Some(reason) = source_freshness_reason(
+            source_metadata.role,
+            &source_metadata.created_at,
+            &command.decided_at,
+            &context_request,
+        ) {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: reason.to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_stale_source".to_owned(),
+                    omitted_classes: vec![source_family.to_owned()],
+                },
+            ));
+            continue;
+        }
         // Discovery is metadata-only. Re-read durable authorization state for
         // every body, so a revocation that lands after discovery cannot reach
         // body materialization, ranking, rendering, or the Pi boundary.
@@ -989,12 +1116,17 @@ where
         },
         schema_digest: cognitive_contracts::generated::context_request::SCHEMA_DIGEST.to_owned(),
     };
-    resolve(
+    let mut resolved_view = resolve(
         &resolution_request,
         &authorized_candidates,
         &ArrivalOrderRanker,
     )
-    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    for (rejected, loss) in excluded_source_records {
+        resolved_view.rejected.push(rejected);
+        resolved_view.loss_declaration.push(loss);
+    }
+    Ok(resolved_view)
 }
 
 /// Persist the exact immutable ContextView that is about to become input to a
@@ -2096,7 +2228,7 @@ mod tests {
                 "episode": "episode://tenant-a/p2-t04-race",
             },
             "budget": context_budget,
-            "priority": ["task"],
+            "priority": ["task", "working"],
             "required": required_context_ref.map(|object_ref| vec![json!({"ref": object_ref})]).unwrap_or_default(),
             "forbidden": [],
             "freshness": {"world_max_age_ms": 0},
@@ -2447,6 +2579,40 @@ mod tests {
             SchedulerAuthorityError::ContextResolution(detail)
                 if detail.contains("CONTEXT_BUDGET_EXCEEDED")
         ));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn stale_workspace_source_is_excluded_before_body_loading_with_explicit_loss() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-stale-source";
+        let (mut context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        context_command.decided_at = WallTimestamp::parse("2026-08-08T00:00:00Z").unwrap();
+
+        let resolved_context =
+            super::resolve_authorized_task_context(&store, &context_command).unwrap();
+        let stale_source_ref = object_id(921).to_string();
+
+        assert!(
+            !resolved_context
+                .loaded
+                .iter()
+                .any(|item| item.object_ref == stale_source_ref),
+            "a source older than world_max_age_ms must not reach rendering"
+        );
+        assert!(resolved_context.rejected.iter().any(|rejected| {
+            rejected.candidate_ref == stale_source_ref && rejected.reason == "CONTEXT_SOURCE_STALE"
+        }));
+        assert!(resolved_context.loss_declaration.iter().any(|loss| {
+            loss.source == stale_source_ref
+                && loss.transform == "omitted_stale_source"
+                && loss.omitted_classes == ["working"]
+        }));
 
         drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();

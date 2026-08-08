@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P3-T02/context-builder` | P3-T02 real minimal Context Builder and budgets | Lane-RUN | `personal/P3-T02-context-builder` | `crates/cognitive-kernel/src/context.rs`; `crates/cognitive-kernel/tests/context_pipeline.rs`; `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/task_api.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260808-personal-p3-t02-context-builder-handoff.md` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
+| `lease/personal/P3-T02/context-builder` | P3-T02 real minimal Context Builder and budgets | Lane-RUN | `personal/P3-T02-context-builder` | `crates/cognitive-kernel/src/context.rs`; `crates/cognitive-kernel/tests/context_pipeline.rs`; `crates/cognitive-kernel/src/ports.rs`; `crates/cognitive-store/src/sqlite.rs`; `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/task_api.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260808-personal-p3-t02-context-builder-handoff.md` | owner session / Cursor | 2026-08-09 / 2026-08-09 | active |
 
 The active lease above grants the only current writable implementation path.
 

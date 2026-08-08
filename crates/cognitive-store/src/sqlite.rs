@@ -1694,7 +1694,7 @@ impl ContextStore for SqliteAuthorityStore {
             .replace('\\', "\\\\")
             .replace('%', "\\%")
             .replace('_', "\\_");
-        let mut statement = connection.prepare_cached("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens FROM workspace_context_sources WHERE tenant_id=?1 AND resource_scope LIKE ?2 ESCAPE '\\' AND ((?3 IS NULL AND conversation_ref IS NULL) OR conversation_ref=?3) ORDER BY source_id LIMIT ?4").map_err(unavailable("prepare Context metadata query"))?;
+        let mut statement = connection.prepare_cached("SELECT source_id, source_digest, tenant_id, owner_ref, resource_scope, conversation_ref, role, trust_level, representation, provenance_ref, content_bytes, content_tokens, canonical_json FROM workspace_context_sources WHERE tenant_id=?1 AND resource_scope LIKE ?2 ESCAPE '\\' AND ((?3 IS NULL AND conversation_ref IS NULL) OR conversation_ref=?3) ORDER BY source_id LIMIT ?4").map_err(unavailable("prepare Context metadata query"))?;
         let rows = statement
             .query_map(
                 (
@@ -1718,11 +1718,43 @@ impl ContextStore for SqliteAuthorityStore {
                             provenance_ref: row.get(9)?,
                             content_bytes: row.get(10)?,
                             content_tokens: row.get(11)?,
-                            canonical_json: String::new(),
+                            canonical_json: row.get(12)?,
                         })?;
+                    let payload: Value =
+                        serde_json::from_str(&source.canonical_json).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                12,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?;
+                    let header: GovernedObjectHeader = serde_json::from_value(
+                        payload.get("header").cloned().ok_or_else(|| {
+                            rusqlite::Error::InvalidColumnType(
+                                12,
+                                "canonical_json".to_owned(),
+                                rusqlite::types::Type::Null,
+                            )
+                        })?,
+                    )
+                    .map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            12,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?;
+                    let created_at = WallTimestamp::parse(&header.created_at).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            12,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?;
                     Ok(ContextCandidateMetadata {
                         source_id: source.source_id,
                         source_digest: source.source_digest,
+                        created_at,
                         governance: source.governance,
                         role: source.role,
                         trust_level: source.trust_level,
