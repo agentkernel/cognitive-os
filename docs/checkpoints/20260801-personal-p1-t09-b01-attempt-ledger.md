@@ -79,6 +79,10 @@
 | 6 | immutable installation and activation | pass | `0.0.0-campaign.20260808.1` installer accepted the staged signature/bundle/Pi pin and activated `cognitiveos-personal.service` on port 48181 |
 | 6 | user-service readiness | **fail** | the guest had no persistent Desktop login session; the SSH-created user manager exited after the remote session ended and the user service became inactive before Provider configuration |
 | 6 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no Provider credential, prompt, route runner, request, response, or authority state was created |
+| 7 | clean-reset checkpoint | pass | exact repaired `b01-platform-qualified-baseline` restored, normal `hal9001` Desktop session established, and guest started through authorized system-libvirt control |
+| 7 | immutable installation and user-service readiness | pass | `0.0.0-campaign.20260808.1` installer activated successfully; `cognitiveos-personal.service` remained active after a bounded post-install interval |
+| 7 | exact Pi prerequisite | **fail** | the clean baseline had neither `node` nor `npm`, so the preregistered exact Pi installation could not begin; no Pi package was downloaded or installed |
+| 7 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no Provider credential, prompt, route runner, request, response, or authority state was created |
 
 ## Attempt 5 preregistration
 
@@ -118,6 +122,19 @@ Verification was created. Cleanup restored the exact baseline and left the
 domain shut off. This is a recorded fixed-N readiness failure, not a retry or
 critical-safety failure. A fresh attempt must establish the normal Desktop
 login session before installation and hidden-input credential opt-in.
+
+## Attempt 7 result
+
+`B01-clean-linux-first-install-first-conversation-001` attempt 7 reached the
+clean-reset checkpoint, established the normal Desktop session, and retained
+the installed user service through bounded readiness. The clean baseline had no
+Node.js or npm runtime, so the preregistered exact Pi installation could not
+begin. No Pi package, Provider credential, Provider request, prompt, expected
+marker, response, authority side effect, Task, Effect, or Verification was
+created. Cleanup restored the exact baseline and left the domain shut off. This
+is a recorded fixed-N prerequisite failure, not a retry or critical-safety
+failure. Owner-authorized baseline maintenance may install only Node.js/npm
+before a fresh attempt is requested.
 
 ## Attempt 1 result
 
