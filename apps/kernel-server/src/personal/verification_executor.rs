@@ -298,6 +298,6 @@ mod tests {
             artifact_evidence_refs: vec![artifact_reference('b')],
         };
 
-        assert_eq!(validate_artifact_evidence_refs(&result), Ok(()));
+        assert!(validate_artifact_evidence_refs(&result).is_ok());
     }
 }
