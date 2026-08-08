@@ -307,6 +307,8 @@ struct CompletedProcessCheck {
 pub(crate) struct BoundedProcessCheckSupervisor {
     maximum_timeout: Duration,
     registered_processes: Mutex<BTreeMap<u32, RegisteredProcess>>,
+    #[cfg(test)]
+    access_count: std::sync::atomic::AtomicUsize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -321,6 +323,8 @@ impl BoundedProcessCheckSupervisor {
         Self {
             maximum_timeout,
             registered_processes: Mutex::new(BTreeMap::new()),
+            #[cfg(test)]
+            access_count: std::sync::atomic::AtomicUsize::new(0),
         }
     }
 
@@ -350,6 +354,11 @@ impl BoundedProcessCheckSupervisor {
             process.alive = false;
         }
     }
+
+    #[cfg(test)]
+    fn access_count(&self) -> usize {
+        self.access_count.load(std::sync::atomic::Ordering::SeqCst)
+    }
 }
 
 impl ProcessCheckSupervisor for BoundedProcessCheckSupervisor {
@@ -358,6 +367,9 @@ impl ProcessCheckSupervisor for BoundedProcessCheckSupervisor {
         process_id: u32,
         timeout: Duration,
     ) -> Result<Vec<u8>, ProcessCheckSupervisorError> {
+        #[cfg(test)]
+        self.access_count
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         if timeout.is_zero() || timeout > self.maximum_timeout {
             return Err(ProcessCheckSupervisorError::TimedOut);
         }
@@ -1020,6 +1032,75 @@ mod tests {
     }
 
     #[test]
+    fn process_check_missing_stage_fails_before_supervisor_access() {
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        let executor =
+            NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
+
+        assert_eq!(
+            executor.dispatch(&process_check_call(
+                "unstaged-process",
+                "digest-missing",
+                "process://4242",
+                7,
+            )),
+            Ok(DispatchOutcome::NotExecuted {
+                reason: "no daemon-staged process check for idempotency key".to_owned(),
+            })
+        );
+        assert_eq!(supervisor.access_count(), 0);
+        assert_eq!(
+            executor.query_outcome("unstaged-process"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
+    }
+
+    #[test]
+    fn process_check_timeout_and_orphan_fail_without_completed_outcome() {
+        for (process_id, required_runtime, orphan_process) in [
+            (4242, Duration::from_secs(2), false),
+            (4243, Duration::from_millis(1), true),
+        ] {
+            let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+            supervisor.register(process_id, b"state=ready", required_runtime);
+            if orphan_process {
+                supervisor.orphan(process_id);
+            }
+            let mut request = process_check_request();
+            request.target = format!("process://{process_id}");
+            let validated_request =
+                validate_native_tool_request(&request).expect("valid process check");
+            let idempotency_key = format!("process-fault-{process_id}");
+            let executor =
+                NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
+            executor
+                .stage_request(
+                    idempotency_key.clone(),
+                    "digest-fault".to_owned(),
+                    &validated_request,
+                )
+                .expect("stage process check");
+
+            assert!(
+                executor
+                    .dispatch(&process_check_call(
+                        &idempotency_key,
+                        "digest-fault",
+                        &request.target,
+                        7,
+                    ))
+                    .is_err()
+            );
+            assert_eq!(supervisor.access_count(), 1);
+            assert_eq!(executor.completed_output(&idempotency_key), None);
+            assert_eq!(
+                executor.query_outcome(&idempotency_key),
+                Ok(ExecutorQueryResult::NotExecuted)
+            );
+        }
+    }
+
+    #[test]
     fn process_check_redacts_and_bounds_output_before_queryable_storage() {
         let (_supervisor, executor) = staged_process_executor(20);
         let call = process_check_call("process-key", "digest-1", "process://4242", 7);
@@ -1101,7 +1182,7 @@ mod tests {
 
     #[test]
     fn process_check_fences_stale_dispatch_before_supervisor_access() {
-        let (_supervisor, executor) = staged_process_executor(64);
+        let (supervisor, executor) = staged_process_executor(64);
         assert_eq!(
             executor.dispatch(&process_check_call(
                 "process-key",
@@ -1115,6 +1196,7 @@ mod tests {
             executor.query_outcome("process-key"),
             Ok(ExecutorQueryResult::NotExecuted)
         );
+        assert_eq!(supervisor.access_count(), 0);
     }
 
     #[test]
