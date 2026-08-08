@@ -1314,6 +1314,224 @@ mod tests {
     }
 
     #[test]
+    fn unknown_process_check_dispatch_reconciles_original_key_without_advancing_task() {
+        let database_path = temporary_authority_database_path();
+        let store =
+            Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+        let task_object_id = object_id(531);
+        let effect_object_id = object_id(532);
+        let intent_object_id = object_id(533);
+        let admitted_at =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+        for (object_id, domain, lifecycle_state, event_id) in [
+            (
+                task_object_id.clone(),
+                LifecycleDomain::Task,
+                "RUNNING",
+                531,
+            ),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "PROPOSED",
+                532,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: state(lifecycle_state),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t06-d03-unknown"}),
+                    },
+                    admitted_at: admitted_at.clone(),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_id:012x}"
+                        ))
+                        .expect("valid event identifier"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{\"fixture\":true}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit durable fixture object");
+        }
+
+        let idempotency_key = "p2-t06-d03-unknown-process-check";
+        let parameters_digest = "sha256:p2-t06-d03-unknown-process-check";
+        store
+            .insert_intent(
+                &IntentRow {
+                    intent_id: intent_object_id.clone(),
+                    idempotency_key: idempotency_key.to_owned(),
+                    parameters_digest: parameters_digest.to_owned(),
+                    action: "check".to_owned(),
+                    target: "process://4242".to_owned(),
+                    effect_object_id: effect_object_id.clone(),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    task_binding: None,
+                    canonical_json: "{\"intent\":\"p2-t06-d03-unknown\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000533")
+                        .expect("valid intent event identifier"),
+                    object_id: intent_object_id,
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "intent.minted".to_owned(),
+                    canonical_json: "{\"intent\":\"p2-t06-d03-unknown\"}".to_owned(),
+                },
+            )
+            .expect("persist durable intent");
+
+        let mut request = process_check_request();
+        request.descriptor.output_limit_bytes = 32;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check request");
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(
+            4242,
+            b"state=ready token=secret process output that is too long",
+            Duration::from_millis(1),
+        );
+        let executor =
+            NativeProcessCheckExecutor::new(1, Arc::clone(&supervisor), Duration::from_secs(1));
+        executor
+            .stage_request(
+                idempotency_key.to_owned(),
+                parameters_digest.to_owned(),
+                &validated_request,
+            )
+            .expect("stage durable intent identity");
+        let hook_store = Arc::clone(&store);
+        let hook_effect_object_id = effect_object_id.clone();
+        let hook_task_object_id = task_object_id.clone();
+        let supervisor_accesses = Arc::new(AtomicUsize::new(0));
+        let hook_supervisor_accesses = Arc::clone(&supervisor_accesses);
+        executor.install_before_check_hook(move || {
+            let effect = hook_store
+                .load_object(LifecycleDomain::Effect, &hook_effect_object_id)
+                .expect("load effect before supervisor access")
+                .expect("durable effect exists");
+            let task = hook_store
+                .load_object(LifecycleDomain::Task, &hook_task_object_id)
+                .expect("load task before supervisor access")
+                .expect("durable task exists");
+            assert_eq!(effect.state.as_str(), "EXECUTING");
+            assert_eq!(
+                effect.version,
+                Version::new(3).expect("valid executing version")
+            );
+            assert_eq!(task.state.as_str(), "RUNNING");
+            assert_eq!(task.version, Version::INITIAL);
+            hook_supervisor_accesses.fetch_add(1, Ordering::SeqCst);
+        });
+
+        let clock = FixedEffectClock(admitted_at);
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store.as_ref(),
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+            UriRef::parse("authority://personal/effect-authority")
+                .expect("valid authority reference"),
+            UriRef::parse("correlation://personal/p2-t06-d03-unknown")
+                .expect("valid correlation reference"),
+        );
+        let grant = effect_grant();
+        let governance_currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+        let authorized = effect_protocol
+            .authorize_effect(
+                &effect_object_id,
+                Version::INITIAL,
+                &grant,
+                &governance_currency,
+                &writer_lease,
+            )
+            .expect("authorize durable process check");
+        let unknown_executor = UnknownAfterNativeProcessCheckDispatchExecutor {
+            native_executor: &executor,
+        };
+        let (dispatched, outcome) = effect_protocol
+            .dispatch_effect(
+                &effect_object_id,
+                authorized.after_version,
+                &grant,
+                &governance_currency,
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("dispatch unknown process check");
+        assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+        effect_protocol
+            .record_outcome(
+                &effect_object_id,
+                dispatched.after_version,
+                &outcome,
+                &writer_lease,
+            )
+            .expect("record unknown process check outcome");
+
+        let (reconciled, query) = effect_protocol
+            .reconcile(
+                &effect_object_id,
+                "OUTCOME_UNKNOWN",
+                Version::new(4).expect("valid unknown outcome version"),
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("reconcile unknown process check");
+        assert_eq!(query, ExecutorQueryResult::ExecutedWithOriginalKey);
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            reconciled.after_version,
+            Version::new(5).expect("valid reconciled version")
+        );
+
+        let completed_output = executor
+            .completed_output(idempotency_key)
+            .expect("process check retains output under original key");
+        assert_eq!(
+            completed_output,
+            b"state=ready token=[REDACTED] pro".to_vec()
+        );
+        assert_eq!(completed_output.len(), 32);
+        assert!(!String::from_utf8_lossy(&completed_output).contains("secret"));
+        assert_eq!(
+            executor.query_outcome(idempotency_key),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+        let effect = store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load reconciled effect")
+            .expect("durable effect exists");
+        assert_eq!(effect.state.as_str(), "RECONCILED");
+        let task = store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load unchanged task")
+            .expect("durable task exists");
+        assert_eq!(task.state.as_str(), "RUNNING");
+        assert_eq!(task.version, Version::INITIAL);
+
+        std::fs::remove_file(database_path).unwrap_or(());
+    }
+
+    #[test]
     fn workspace_target_cannot_escape_approved_root() {
         let mut request = request_for(NativeOperationFamily::WorkspaceRead);
         request.target = "workspace://../secrets.txt".to_owned();
@@ -1429,6 +1647,33 @@ mod tests {
             self.native_executor.dispatch(call)?;
             Ok(DispatchOutcome::Unknown {
                 detail: "simulated lost post-I/O response".to_owned(),
+            })
+        }
+
+        fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+            self.native_executor.query_outcome(idempotency_key)
+        }
+    }
+
+    /// Simulates a lost response after the native process check completes.
+    /// Queries still reach the real process-check executor and its original
+    /// idempotency key.
+    struct UnknownAfterNativeProcessCheckDispatchExecutor<'executor, S> {
+        native_executor: &'executor NativeProcessCheckExecutor<S>,
+    }
+
+    impl<S> EffectExecutor for UnknownAfterNativeProcessCheckDispatchExecutor<'_, S>
+    where
+        S: ProcessCheckSupervisor,
+    {
+        fn capabilities(&self) -> ExecutorCapabilities {
+            self.native_executor.capabilities()
+        }
+
+        fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+            self.native_executor.dispatch(call)?;
+            Ok(DispatchOutcome::Unknown {
+                detail: "simulated lost post-process-check response".to_owned(),
             })
         }
 
