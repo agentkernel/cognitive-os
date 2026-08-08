@@ -2592,7 +2592,7 @@ mod tests {
         let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
         let task_ref = "task://tenant-a/p3-t02-stale-source";
         let (mut context_command, _) = append_context_race_fixture(&store, task_ref, None);
-        context_command.decided_at = WallTimestamp::parse("2026-08-08T00:00:00Z").unwrap();
+        context_command.decided_at = WallTimestamp::parse("2026-08-07T00:00:00.001Z").unwrap();
 
         let resolved_context =
             super::resolve_authorized_task_context(&store, &context_command).unwrap();
