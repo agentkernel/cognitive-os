@@ -243,9 +243,10 @@ Draft PR; it cannot be ready or merged.
 
 Every completed formal task must also be fully closed out in one continuous
 sequence: commit and push the final changes, merge the task PR, close the
-lease, delete any safely deletable remote task branch, switch back to `main`,
-and verify the local worktree is clean with HEAD/upstream aligned. Do not
-leave any of those steps as a later follow-up once implementation is finished.
+lease, delete any safely deletable local and remote task branch, switch back
+to `main`, and verify the local worktree is clean with HEAD/upstream aligned.
+Do not leave any of those steps as a later follow-up once implementation is
+finished.
 
 Native Linux and remote CI consume pushed immutable revisions. Copying an
 uncommitted tree, testing a stale remote snapshot or reporting a local diff as

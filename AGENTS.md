@@ -95,8 +95,8 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   中间态、未知改动、ownership/safety 冲突或用户明确暂停交付；必须列出 affected paths、
   原因、已执行检查、owner 和单一 recovery action，而不是无说明退出。
 - 每个正式任务完成后，必须把收口做完整：提交并推送最终改动、将 task PR 合并、关闭 task
-  lease、删除可安全删除的远端 task branch、本地切回并 fast-forward 到 `main`，最后确认
-  `git status` clean 且 HEAD/upstream 一致。未完成这些动作前，任务不得视为真正收口。
+  lease、删除可安全删除的本地与远端 task branch、本地切回并 fast-forward 到 `main`，最后
+  确认 `git status` clean 且 HEAD/upstream 一致。未完成这些动作前，任务不得视为真正收口。
 - Handoff 至少记录：Slice/status、branch、完整 HEAD、upstream、PR URL/状态、worktree 状态、
   implemented、remaining、validation 的 pass/fail/not-run、non-claims 和 next action。
 
