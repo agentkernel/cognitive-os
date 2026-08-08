@@ -53,6 +53,11 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   阶段性总结、单个验证结束或可恢复的临时环境故障当作停止工作的理由；这些只是在继续
   下一个实现、修复或预注册验证动作时记录的中间事实。除非需要用户决定、发现未知外部
   改动或完成用户请求，否则保持工具驱动的开发节奏，不发送临时进度汇报。
+- **`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`：** 对可由当前任务自行恢复的临时依赖、
+  artifact 可用性、CI 或环境故障，先在当前 lease 内修复或走已登记的恢复路径；不得在
+  `PROGRESS.md` 把它登记为 task `blocked`。B01 等 Gate 的不可逆 attempt ledger 仍须
+  立即、如实记录每个已开始 attempt。只有恢复路径已耗尽且必须由 owner 作出不可替代的
+  决策或执行操作时，才可将任务标为 `blocked` 并请求交互协助。
 - 不为每个 Slice、commit、CI 轮次或普通可恢复故障创建 handoff/checkpoint 报告。Handoff
   只在完整任务收口、真正外部阻塞、未知改动或用户明确暂停时创建一次。
 - Delivery Slice 只有在 focused failure-first/negative test 和其定义的 supported

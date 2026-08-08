@@ -811,7 +811,7 @@ fn issue_context_request(
             "episode": format!("episode://personal/{}", request_id.as_str()),
         },
         "budget": contract.budget,
-        "priority": ["task", "evidence"],
+        "priority": ["task", "working", "evidence"],
         "required": [],
         "forbidden": [],
         "freshness": {"world_max_age_ms": 0},

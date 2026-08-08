@@ -5,8 +5,9 @@
 - Task: `P2-T07`
 - Slice: `P2-T07/D01` and `P2-T07/D02`
 - Branch: `personal/P2-T07-checkpoint-artifact-verifier-d02`
-- Lease: `lease/personal/P2-T07/checkpoint-artifact-verifier` (active until PR merge/closure)
-- PR: [#164](https://github.com/agentkernel/cognitive-os/pull/164) (Draft)
+- Lease: `lease/personal/P2-T07/checkpoint-artifact-verifier` (closed after PR merge)
+- PR: [#164](https://github.com/agentkernel/cognitive-os/pull/164) (merged)
+- Merge commit: `7e75e6642d289e1127928c79fed116e00b61c987`
 - Acceptance checkpoint: `df7d483282f3ef0a6bbb17bae3d29bb24f13e0f7`
 - Upstream: `origin/personal/P2-T07-checkpoint-artifact-verifier-d02`
 

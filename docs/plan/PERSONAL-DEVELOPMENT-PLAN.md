@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T06、P2-T07、P3-T01 已完成；P1-T09 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
-> **最后更新：2026-08-07**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 in-progress，B01 fixed-N 已记账 4 次，1 成功/3 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **最后更新：2026-08-09**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -130,12 +130,12 @@
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context Resource Value | 6 | 1 | 0 | 0 | 5 | G3 / B03、B06、B07 |
+| Phase 3 - Context Resource Value | 6 | 2 | 0 | 0 | 4 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **23** | **1** | **0** | **29** | — |
+| **合计** | **53** | **24** | **1** | **0** | **28** | — |
 
 ## 2. 产品边界与不变量
 
@@ -272,6 +272,12 @@ formal task acceptance assessment 和收口。
 | `P2-T03/D05` | P2-T03 | candidate WIA 的 exact lease-bound handoff、Effect recovery/closure 与 private scheduler tick；只有 P2-T07/D01 发行的 continuation authority 才能进入 BoundedHarness | `P2-T03/D04`、`P2-T07/D01` | failure injection + worker/recovery integration tests；完成后为 P2-T03 task acceptance 汇总入口 |
 | `P2-T07/D01` | P2-T07 | daemon-private fixed post-state、verification request/report、currentness revalidation、checkpoint 与 append-only continuation authority；只允许 `ACT -> VERIFY -> CONTINUE -> OBSERVE`，绝不触发 Task acceptance/completion | `P2-T03/D05` WIA/recovery boundary与既有 Loop/Effect contracts | durable positive/negative/restart tests、exact Linux validation、required CI；完成后由 D05 消费 continuation authority，P2-T07 的 Artifact、完整 criteria evidence 和 Task completion 仍不因此关闭 |
 | `P2-T07/D02` | P2-T07 | daemon-private independent verifier seam that reloads the immutable verification request and fixed post-state, validates currentness and verifier identity, and persists only content-addressed artifact evidence references in an append-only report | `P2-T07/D01` fixed post-state/request/report persistence | verifier identity mismatch, stale post-state, malformed/duplicate artifact reference, fenced writer, and passed-without-evidence negatives; exact Linux validation and required CI; no Task acceptance/completion |
+
+## 6. 收口记录
+
+- `P2-T07` 已完成并在 PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`。
+- `lease/personal/P2-T07/checkpoint-artifact-verifier` 已关闭。
+- 后续只从本计划中选择下一个正式任务，不再将该 lease 视为 active。
 | `P2-T04/D01` | P2-T04 | private scheduler-to-deterministic-Context-to-pinned-Pi candidate worker composition；Pi output is an opaque candidate only, while scheduler lease, fencing, budget, WIA/continuation, Effect, progress, evidence, and Task state remain daemon-owned | `P2-T02`、`P2-T03/D05`、`P2-T07/D01` | real-store stale lease/fence, required Context failure, duplicate tick, exhausted budget, and self-report rejection coverage; exact Linux validation and required CI; no Tool execution or Task completion |
 | `P2-T06/D01` | P2-T06 | validated daemon-private `WorkspaceRead` executor accepts only a descriptor-bound, Intent-keyed staged request; it fences stale writers before I/O, serializes duplicate key dispatch, retains only bounded/redacted output, and answers recovery queries using the original key | P2-T05 static native Tool catalog and validators | failure-first executor negatives plus exact-revision native Linux focused test and required CI; completion enables durable Effect dispatch wiring, without claiming progress, evidence, verification, Task completion, Gate, release, or Profile |
 | `P2-T06/D02` | P2-T06 | wire one read-only `WorkspaceRead` through the existing durable Intent/Effect protocol: stage only after the persisted Intent reload, commit `EXECUTING` before filesystem dispatch, record an explicit outcome, and reconcile an unknown outcome by the original idempotency key | `P2-T06/D01` and the existing P2-T03 durable Effect/WIA boundary | real SQLite persist-before-dispatch, unknown-outcome/restart, stale-fence, duplicate-key, bounded-redacted output regressions; exact-revision native Linux and required CI; completion enables the remaining process supervision and mutation family work |
@@ -282,6 +288,8 @@ formal task acceptance assessment 和收口。
 | `P2-T02/D03` | P2-T02 | deterministic CLI calls the same daemon Task/resource operations with distinct Task/management tokens, caches, cursors, and mutation retry policy | P2-T02/D01/D02 and admin CLI daemon client | daemon-plus-CLI process parity, channel/retry/cursor negatives, exact Linux, required CI; completion enables Shell sidecar parity |
 | `P2-T02/D04` | P2-T02 | Pi Shell private sidecar calls the same daemon Task/resource application surfaces and remains a non-authority client | P2-T02/D03 and P1-T07 Pi client boundary | TS parity/isolation negatives, daemon-side integration, exact Linux, required CI; completion is P2-T02 task-closure evidence entry |
 | `P3-T01/D01` | P3-T01 | daemon-issued TaskContract v0.4 strong ContextRequest binding plus append-only durable ContextRequest/ContextView persistence and daemon query/reload validation; request perspective must name the Task, views remain request-linked per-resolution artifacts, and no Pi output or Context record becomes Task/progress/evidence/acceptance authority | P2-T01/P2-T02 stable application contracts; existing Context schema and governed-object binding contract | focused schema/store/intent-binding positive and mismatch/replaced-reference/task-perspective negatives; exact-revision supported Linux validation and required CI. Until these run and the formal workspace/task/evidence source, scope-before-ranking, and revocation exits are satisfied, this slice remains in-progress and B03 remains not-run. |
+| `P3-T02/D01` | P3-T02 | daemon-owned required System/Task fragments built from immutable ContextRequest/TaskContract inputs before ContextView persistence and private Pi transport; required hard-budget failure and semantic duplicate-content loss are explicit | P3-T01 stable source port and P2-T04 sealed ContextView-before-Pi path | focused kernel/scheduler negative tests, exact native Linux validation and Clippy; completion enables source-family/freshness trace work without making a B03/UCR-01/release/Profile claim |
+| `P3-T02/D02` | P3-T02 | complete source-family policy, freshness, source digest/included-excluded trace, and loss/usage acceptance over the real scheduler builder path | `P3-T02/D01` and existing immutable ContextRequest/ContextView contracts | focused stale/source-role/trace negatives, exact native Linux validation, required Ubuntu/Windows CI, and final P3-T02 acceptance assessment; no benefit or Gate claim without separate formal campaign evidence |
 
 **执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
 未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
@@ -501,7 +509,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-02；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md). The campaign still lacks the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-08；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Attempt 2 timed out during readiness. Attempt 3 reached guest SSH but failed the then-available public-key authentication path; baseline maintenance subsequently repaired that path. Counted Attempt 4 passed SSH readiness but failed immutable artifact availability because the preregistered workflow artifact had expired; no artifact, Pi, service, Provider, credential, prompt, or route was used, and cleanup restored the baseline shut off. The task remains in progress while the runner produces a newly available, independently verified reviewed-main artifact, preregisters its immutable identity, and confirms non-secret Provider/model configuration support before requesting a fresh Attempt 5. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md), [baseline provisioning](../checkpoints/20260808-personal-p1-t09-b01-baseline-ssh-provisioning-handoff.md), and [Attempt 4 handoff](../checkpoints/20260808-personal-p1-t09-b01-attempt-4-execution-handoff.md). The campaign now has 4 of 20 attempts, still lacking the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -521,7 +529,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | done | 2026-08-07; `P3-T01/D01` closes at `0ad1ddb95f4e347d0c205597e69ad8818819948e`: immutable TaskContract v0.4 ContextRequest binding and workspace Context sources provide task-bound source provenance; source roles preserve working, authoritative-state and evidence inputs without weakening per-source authority. The daemon performs tenant/scope metadata filtering before body access/ranking, reloads durable authorization/revocation facts before every body load, persists the sealed request-bound ContextView before candidate-only Pi transport, and fails closed for revoked or required-missing Context. Exact native Linux passed `cargo test -p kernel-server` and `cargo test -p cognitive-store --test m5_context_store` (9/9); required Ubuntu/Windows CI passed in PR #161. B03 remains `not-run`; task completion creates no Gate, release or Profile claim. |
-| P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | not-started | — |
+| P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | done | 2026-08-09 closure: D01-D02 satisfy the unchanged acceptance. The daemon derives required System/Task fragments from immutable request/contract inputs, rejects required budget overflow and semantic duplicates explicitly, and applies source-family plus role-specific freshness policy before any workspace body load. Loaded sources retain strong digest-bound ContextView references; excluded source losses retain source-digest verification. Exact native Linux focused test and Clippy passed at `0d8f5628a897aea32ee4cb7929bac1320ccb2a96`; required Ubuntu/Windows CI passed in PR #166. B03, UCR-01, release, and Profile remain `not-run`/non-claim. Evidence: [task closure handoff](../checkpoints/20260809-personal-p3-t02-context-builder-closure.md). |
 | P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | not-started | — |
 | P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | not-started | — |
 | P3-T05 | UCR-01 benefit runner 与稳定基线 | P3-T04 | 跨 Gate workload runner、raw run/CI/non-claim；B06/B07 收益只采集，不作为 1.0 pass 前提 | not-started | — |
@@ -628,4 +636,3 @@ RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daem
 - [ ] 写入 `docs/checkpoints/` handoff，记录完成项、未完成项、测试、证据、风险与下一步。
 - [ ] 在 PR/提交中关联 `PERS-*` 计划 ID，并在适用时关联真实 REQ-ID。
 - [ ] 如发生计划结构变化（新增/取消任务、验收或依赖变化），在同一修订批中同步 `plan.md` 任务卡与依赖图、`personal-trace.yaml` 映射，保持无孤儿任务。
-

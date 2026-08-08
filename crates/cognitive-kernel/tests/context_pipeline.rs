@@ -351,6 +351,37 @@ fn criterion_6_required_over_hard_budget_fails_closed() {
     );
 }
 
+#[test]
+fn context_builder_deduplicates_authorized_content_with_explicit_loss() {
+    let first = "knowledge://tenant-a/policy/refund?version=8";
+    let duplicate = "workspace://tenant-a/project/refund-copy?version=3";
+    let shared_digest = format!("sha256:{}", "ab".repeat(32));
+    let mut first_candidate = evidence(first, 120, 12);
+    first_candidate.content_digest = shared_digest.clone();
+    let mut duplicate_candidate = evidence(duplicate, 120, 12);
+    duplicate_candidate.content_digest = shared_digest;
+    duplicate_candidate.body = first_candidate.body.clone();
+
+    let view = resolve(
+        &request("answer_customer_question", &[]),
+        &[first_candidate, duplicate_candidate],
+        &ArrivalOrderRanker,
+    )
+    .unwrap();
+
+    assert_eq!(view.loaded.len(), 1);
+    assert_eq!(view.loaded[0].object_ref, first);
+    assert_eq!(view.ranker_input_refs, vec![first.to_owned()]);
+    assert!(view.rejected.iter().any(|rejected| {
+        rejected.candidate_ref == duplicate && rejected.reason == "DUPLICATE_CONTENT_DIGEST"
+    }));
+    assert!(view.loss_declaration.iter().any(|loss| {
+        loss.source == duplicate
+            && loss.transform == "omitted_duplicate_content"
+            && loss.omitted_classes == vec!["duplicate_content".to_owned()]
+    }));
+}
+
 // ---------------------------------------------------------------------
 // Criterion 8: determinism and prefix stability
 // ---------------------------------------------------------------------

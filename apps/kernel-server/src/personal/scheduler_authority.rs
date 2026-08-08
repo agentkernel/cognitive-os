@@ -14,6 +14,7 @@ use cognitive_contracts::{
         context_request::ContextRequest,
         context_view::{
             ContextView, ContextViewPinnedVersionsValue, ItemCost, LoadedContextItem,
+            LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
             LossDeclaration, RejectedCandidate as PersistedRejectedCandidate, ResolutionCost,
         },
         object_reference::StrongReferenceKind,
@@ -24,14 +25,15 @@ use cognitive_contracts::{
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, UriRef, Version, WallTimestamp,
 };
+use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::candidate_admission::{
     CandidateAdmissionFacts, CandidateAdmissionIdentities, CandidateAdmissionInputs,
     compose_candidate_admission,
 };
 use cognitive_kernel::context::{
-    ArrivalOrderRanker, CandidateObject, ContextBudget, RenderSpec, RequiredItem,
-    ResolutionRequest, ResolvedContextView, resolve,
+    ArrivalOrderRanker, CandidateObject, ContextBudget, LossEntry, RejectedCandidate, RenderSpec,
+    RequiredItem, ResolutionRequest, ResolvedContextView, resolve,
 };
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
@@ -701,6 +703,164 @@ where
         })
 }
 
+/// Build the daemon-owned System and Task fragments that every task-bound
+/// resolution needs. These fragments are derived solely from the immutable
+/// ContextRequest and TaskContract; Pi and workspace sources cannot supply or
+/// modify them. They deliberately use the current capability scope so the
+/// normal resolver revalidates their access alongside every other body.
+fn build_required_task_fragments(
+    authorization_snapshot: &cognitive_kernel::authz::AuthzSnapshot,
+    command: &ContextResolutionCommand,
+    request_row: &ContextRequestRow,
+    context_request: &ContextRequest,
+    contract_row: &cognitive_kernel::ports::TaskContractRow,
+    contract: &TaskContract,
+) -> Result<Vec<CandidateObject>, SchedulerAuthorityError> {
+    let resource_scope = authorization_snapshot
+        .capability_links
+        .first()
+        .map(|capability| capability.resource.clone())
+        .filter(|scope| !scope.trim().is_empty())
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "Context Builder requires a current capability resource scope".to_owned(),
+            )
+        })?;
+    let fragment_governance = ObjectGovernance {
+        object_ref: request_row.request_id.to_string(),
+        tenant_id: Some(command.tenant_id.clone()),
+        owner_ref: command.authorization_subject_ref.clone(),
+        resource_scope,
+        conversation_ref: command.conversation_ref.clone(),
+    };
+    let system_body = json!({
+        "fragment": "system",
+        "task_ref": command.task_ref,
+        "purpose": context_request.purpose,
+        "context_budget": context_request.budget,
+        "authority": "daemon_observational_only",
+    });
+    let task_body = json!({
+        "fragment": "task",
+        "task_ref": contract.task_ref,
+        "contract_epoch": contract.contract_epoch,
+        "objective": contract.objective,
+        "max_iterations": contract.max_iterations,
+        "max_retries": contract.max_retries,
+    });
+    let candidate_cost = |body: &Value| {
+        canonical::canonical_bytes_of_value(body)
+            .map(|bytes| (bytes.len() as i64, (bytes.len() as i64 + 3) / 4))
+            .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+    };
+    let (system_bytes, system_tokens) = candidate_cost(&system_body)?;
+    let (task_bytes, task_tokens) = candidate_cost(&task_body)?;
+    Ok(vec![
+        CandidateObject {
+            object_ref: request_row.request_id.to_string(),
+            object_version: 1,
+            content_digest: context_request.header.content_digest.0.clone(),
+            governance: fragment_governance.clone(),
+            role: LoadedContextItemRole::Control,
+            trust_level: LoadedContextItemTrustLevel::Verified,
+            representation: LoadedContextItemRepresentation::Structured,
+            body: system_body,
+            cost_bytes: system_bytes,
+            cost_tokens: system_tokens,
+        },
+        CandidateObject {
+            object_ref: contract_row.contract_id.to_string(),
+            object_version: contract.header.object_version,
+            content_digest: contract.header.content_digest.0.clone(),
+            governance: ObjectGovernance {
+                object_ref: contract_row.contract_id.to_string(),
+                ..fragment_governance
+            },
+            role: LoadedContextItemRole::AuthoritativeState,
+            trust_level: LoadedContextItemTrustLevel::Verified,
+            representation: LoadedContextItemRepresentation::Structured,
+            body: task_body,
+            cost_bytes: task_bytes,
+            cost_tokens: task_tokens,
+        },
+    ])
+}
+
+/// Return the daemon-supported source family for an externally admitted
+/// source role. Control and authoritative state are daemon-built fragments,
+/// never workspace source families.
+fn source_family_for_role(role: LoadedContextItemRole) -> Option<&'static str> {
+    match role {
+        LoadedContextItemRole::Working => Some("working"),
+        LoadedContextItemRole::Evidence => Some("evidence"),
+        LoadedContextItemRole::UntrustedInput => Some("shell"),
+        LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState => None,
+    }
+}
+
+/// Calculate a millisecond wall-clock instant from the repository's canonical
+/// UTC timestamp form without treating a UUIDv7 identity as a time source.
+fn timestamp_milliseconds(timestamp: &WallTimestamp) -> Option<i64> {
+    let value = timestamp.as_str();
+    let year = value.get(0..4)?.parse::<i64>().ok()?;
+    let month = value.get(5..7)?.parse::<usize>().ok()?;
+    let day = value.get(8..10)?.parse::<i64>().ok()?;
+    let hour = value.get(11..13)?.parse::<i64>().ok()?;
+    let minute = value.get(14..16)?.parse::<i64>().ok()?;
+    let second = value.get(17..19)?.parse::<i64>().ok()?;
+    let fraction = value
+        .get(19..value.len().checked_sub(1)?)
+        .unwrap_or_default()
+        .strip_prefix('.')
+        .unwrap_or_default();
+    let milliseconds = format!("{fraction:0<3}").get(0..3)?.parse::<i64>().ok()?;
+    let is_leap_year = |candidate_year: i64| {
+        candidate_year % 4 == 0 && (candidate_year % 100 != 0 || candidate_year % 400 == 0)
+    };
+    let days_before_month = [0i64, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    if !(1..=12).contains(&month) || day < 1 || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+    let leap_days = ((year - 1) / 4) - ((year - 1) / 100) + ((year - 1) / 400);
+    let leap_day_after_february = if month > 2 && is_leap_year(year) {
+        1
+    } else {
+        0
+    };
+    let days_since_epoch = 365 * (year - 1970)
+        + (leap_days - 477)
+        + days_before_month[month - 1]
+        + leap_day_after_february
+        + day
+        - 1;
+    Some((((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second) * 1_000 + milliseconds)
+}
+
+/// Determine whether immutable source metadata meets the request's
+/// role-specific freshness rule before its body becomes eligible to load.
+fn source_freshness_reason(
+    role: LoadedContextItemRole,
+    created_at: &WallTimestamp,
+    decided_at: &WallTimestamp,
+    context_request: &ContextRequest,
+) -> Option<&'static str> {
+    let maximum_age_milliseconds = match role {
+        LoadedContextItemRole::Working | LoadedContextItemRole::UntrustedInput => {
+            context_request.freshness.world_max_age_ms
+        }
+        LoadedContextItemRole::Evidence => context_request
+            .freshness
+            .knowledge_max_age_s
+            .and_then(|seconds| seconds.checked_mul(1_000)),
+        LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState => None,
+    }?;
+    let created_milliseconds = timestamp_milliseconds(created_at)?;
+    let decided_milliseconds = timestamp_milliseconds(decided_at)?;
+    let age_milliseconds = decided_milliseconds.checked_sub(created_milliseconds)?;
+    (age_milliseconds < 0 || age_milliseconds > maximum_age_milliseconds)
+        .then_some("CONTEXT_SOURCE_STALE")
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -746,7 +906,7 @@ where
         .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
         .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
     let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
-    let contract_request_reference = contract.context_request_ref.ok_or_else(|| {
+    let contract_request_reference = contract.context_request_ref.as_ref().ok_or_else(|| {
         SchedulerAuthorityError::ContextRequestUnavailable(
             "current TaskContract has no ContextRequest binding".to_owned(),
         )
@@ -784,6 +944,18 @@ where
         ));
     }
     let authorization_snapshot = load_current_context_authorization_snapshot(store, command)?;
+    let mut required_fragment_candidates = build_required_task_fragments(
+        &authorization_snapshot,
+        command,
+        &request_row,
+        &context_request,
+        &contract_row,
+        &contract,
+    )?;
+    let required_fragment_refs = required_fragment_candidates
+        .iter()
+        .map(|candidate| candidate.object_ref.clone())
+        .collect::<Vec<_>>();
     let metadata = store
         .query_context_candidate_metadata(&ContextCandidateQuery {
             tenant_id: command.tenant_id.clone(),
@@ -794,9 +966,66 @@ where
         .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
     after_metadata()?;
 
-    let mut authorized_candidates = Vec::with_capacity(metadata.len());
+    let mut authorized_candidates =
+        Vec::with_capacity(metadata.len() + required_fragment_candidates.len());
+    authorized_candidates.append(&mut required_fragment_candidates);
+    let mut excluded_source_records = Vec::new();
     let mut authorization_denied_after_discovery = false;
     for source_metadata in metadata {
+        let Some(source_family) = source_family_for_role(source_metadata.role) else {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: "SOURCE_FAMILY_EXCLUDED".to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_source_family".to_owned(),
+                    omitted_classes: vec!["unsupported_source_role".to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
+                },
+            ));
+            continue;
+        };
+        if !context_request
+            .priority
+            .iter()
+            .any(|priority| priority == source_family)
+        {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: "SOURCE_FAMILY_EXCLUDED".to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_source_family".to_owned(),
+                    omitted_classes: vec![source_family.to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
+                },
+            ));
+            continue;
+        }
+        if let Some(reason) = source_freshness_reason(
+            source_metadata.role,
+            &source_metadata.created_at,
+            &command.decided_at,
+            &context_request,
+        ) {
+            excluded_source_records.push((
+                RejectedCandidate {
+                    candidate_ref: source_metadata.source_id.to_string(),
+                    reason: reason.to_owned(),
+                },
+                LossEntry {
+                    source: source_metadata.source_id.to_string(),
+                    transform: "omitted_stale_source".to_owned(),
+                    omitted_classes: vec![source_family.to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
+                },
+            ));
+            continue;
+        }
         // Discovery is metadata-only. Re-read durable authorization state for
         // every body, so a revocation that lands after discovery cannot reach
         // body materialization, ranking, rendering, or the Pi boundary.
@@ -856,9 +1085,12 @@ where
         });
     }
 
-    if authorization_denied_after_discovery && authorized_candidates.is_empty() {
+    // A post-discovery denial invalidates the source set selected for this
+    // resolution. Required daemon fragments must not allow that stale source
+    // authorization boundary to be bypassed before Pi receives a view.
+    if authorization_denied_after_discovery {
         return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
-            "all discovered Context sources were denied before body materialization".to_owned(),
+            "Context source was denied before body materialization".to_owned(),
         ));
     }
 
@@ -866,12 +1098,15 @@ where
         snapshot: authorization_snapshot,
         purpose: context_request.purpose,
         conversation_ref: command.conversation_ref.clone(),
-        required: context_request
-            .required
+        required: required_fragment_refs
             .into_iter()
-            .map(|required| RequiredItem {
-                object_ref: required.r#ref,
-            })
+            .chain(
+                context_request
+                    .required
+                    .into_iter()
+                    .map(|required| required.r#ref),
+            )
+            .map(|object_ref| RequiredItem { object_ref })
             .collect(),
         allow_partial: context_request.allow_partial,
         budget: ContextBudget {
@@ -884,12 +1119,17 @@ where
         },
         schema_digest: cognitive_contracts::generated::context_request::SCHEMA_DIGEST.to_owned(),
     };
-    resolve(
+    let mut resolved_view = resolve(
         &resolution_request,
         &authorized_candidates,
         &ArrivalOrderRanker,
     )
-    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+    .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))?;
+    for (rejected, loss) in excluded_source_records {
+        resolved_view.rejected.push(rejected);
+        resolved_view.loss_declaration.push(loss);
+    }
+    Ok(resolved_view)
 }
 
 /// Persist the exact immutable ContextView that is about to become input to a
@@ -987,7 +1227,10 @@ where
                 omitted_classes: loss.omitted_classes.clone(),
                 source: loss.source.clone(),
                 transform: loss.transform.clone(),
-                verification: resolved_view.render.digest.clone(),
+                verification: loss
+                    .verification
+                    .clone()
+                    .unwrap_or_else(|| resolved_view.render.digest.clone()),
             })
             .collect(),
         missing: (!resolved_view.missing.is_empty()).then(|| resolved_view.missing.clone()),
@@ -1959,6 +2202,15 @@ mod tests {
         task_ref: &str,
         required_context_ref: Option<&str>,
     ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
+        append_context_race_fixture_with_budget(store, task_ref, required_context_ref, json!({}))
+    }
+
+    fn append_context_race_fixture_with_budget(
+        store: &SqliteAuthorityStore,
+        task_ref: &str,
+        required_context_ref: Option<&str>,
+        context_budget: serde_json::Value,
+    ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
         let governance = context_governance();
         let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
         let request_id = object_id(920);
@@ -1981,8 +2233,8 @@ mod tests {
                 "task": task_ref,
                 "episode": "episode://tenant-a/p2-t04-race",
             },
-            "budget": {},
-            "priority": ["task"],
+            "budget": context_budget,
+            "priority": ["task", "working"],
             "required": required_context_ref.map(|object_ref| vec![json!({"ref": object_ref})]).unwrap_or_default(),
             "forbidden": [],
             "freshness": {"world_max_age_ms": 0},
@@ -2273,6 +2525,106 @@ mod tests {
             self.calls.set(self.calls.get() + 1);
             Err("Pi must not receive revoked Context".to_owned())
         }
+    }
+
+    #[test]
+    fn task_context_builder_requires_daemon_system_and_task_fragments() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-required-fragments";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+
+        let resolved_context =
+            super::resolve_authorized_task_context(&store, &context_command).unwrap();
+
+        let system_fragment_ref = object_id(920).to_string();
+        let task_fragment_ref = object_id(925).to_string();
+        let working_fragment_ref = object_id(921).to_string();
+        assert!(resolved_context.complete);
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == system_fragment_ref
+                && item.role == LoadedContextItemRole::Control
+                && item.body["fragment"] == "system"
+                && item.body["authority"] == "daemon_observational_only"
+        }));
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == task_fragment_ref
+                && item.role == LoadedContextItemRole::AuthoritativeState
+                && item.body["fragment"] == "task"
+                && item.body["task_ref"] == task_ref
+        }));
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
+        }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn required_task_context_fragments_fail_closed_when_the_request_budget_cannot_fit() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-required-fragment-budget";
+        let (context_command, _) = append_context_race_fixture_with_budget(
+            &store,
+            task_ref,
+            None,
+            json!({"context_bytes": 1, "input_tokens": 1}),
+        );
+
+        let error = super::resolve_authorized_task_context(&store, &context_command).err();
+
+        assert!(matches!(
+            error,
+            Some(SchedulerAuthorityError::ContextResolution(detail))
+                if detail.contains("CONTEXT_BUDGET_EXCEEDED")
+        ));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn stale_workspace_source_is_excluded_before_body_loading_with_explicit_loss() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-stale-source";
+        let (mut context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        context_command.decided_at = WallTimestamp::parse("2026-08-07T00:00:00.001Z").unwrap();
+
+        let resolved_context =
+            super::resolve_authorized_task_context(&store, &context_command).unwrap();
+        let stale_source_ref = object_id(921).to_string();
+
+        assert!(
+            !resolved_context
+                .loaded
+                .iter()
+                .any(|item| item.object_ref == stale_source_ref),
+            "a source older than world_max_age_ms must not reach rendering"
+        );
+        assert!(resolved_context.rejected.iter().any(|rejected| {
+            rejected.candidate_ref == stale_source_ref && rejected.reason == "CONTEXT_SOURCE_STALE"
+        }));
+        assert!(resolved_context.loss_declaration.iter().any(|loss| {
+            loss.source == stale_source_ref
+                && loss.transform == "omitted_stale_source"
+                && loss.omitted_classes == ["working"]
+                && loss
+                    .verification
+                    .as_deref()
+                    .is_some_and(|digest| digest.starts_with("sha256:"))
+        }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
     }
 
     #[test]

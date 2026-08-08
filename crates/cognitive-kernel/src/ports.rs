@@ -538,6 +538,10 @@ pub struct WorkspaceContextSourceRow {
 pub struct ContextCandidateMetadata {
     pub source_id: ObjectId,
     pub source_digest: String,
+    /// Immutable source creation time extracted by the store from its
+    /// governed header. The scheduler can apply freshness policy before it
+    /// asks the body-load port for source content.
+    pub created_at: WallTimestamp,
     pub governance: ObjectGovernance,
     pub role: LoadedContextItemRole,
     pub trust_level: LoadedContextItemTrustLevel,
