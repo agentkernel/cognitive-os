@@ -130,12 +130,12 @@
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context Resource Value | 6 | 1 | 0 | 0 | 5 | G3 / B03、B06、B07 |
+| Phase 3 - Context Resource Value | 6 | 1 | 1 | 0 | 4 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **23** | **1** | **0** | **29** | — |
+| **合计** | **53** | **23** | **2** | **0** | **28** | — |
 
 ## 2. 产品边界与不变量
 
@@ -527,7 +527,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P3-T01 | 真实 Context source/retrieval port | P2-T01, P2-T02 | P2 application contracts 稳定即可开始，不等待 P2-T08 acceptance；workspace/task/evidence source；scope-filter 先于 ranking；revocation 测试 | done | 2026-08-07; `P3-T01/D01` closes at `0ad1ddb95f4e347d0c205597e69ad8818819948e`: immutable TaskContract v0.4 ContextRequest binding and workspace Context sources provide task-bound source provenance; source roles preserve working, authoritative-state and evidence inputs without weakening per-source authority. The daemon performs tenant/scope metadata filtering before body access/ranking, reloads durable authorization/revocation facts before every body load, persists the sealed request-bound ContextView before candidate-only Pi transport, and fails closed for revoked or required-missing Context. Exact native Linux passed `cargo test -p kernel-server` and `cargo test -p cognitive-store --test m5_context_store` (9/9); required Ubuntu/Windows CI passed in PR #161. B03 remains `not-run`; task completion creates no Gate, release or Profile claim. |
-| P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | not-started | — |
+| P3-T02 | 真实最小 Context Builder 与预算 | P3-T01 | System/Shell/Task/Working/Evidence fragments；required fail-closed；loss 显式；同一 Task trace | in-progress | 2026-08-08; `development_track: experimental-local-only`; implementation starts from the stable P3-T01 source port and P2-T04 sealed ContextView path. B03, release and Profile remain not-run/non-claim. |
 | P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | not-started | — |
 | P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | not-started | — |
 | P3-T05 | UCR-01 benefit runner 与稳定基线 | P3-T04 | 跨 Gate workload runner、raw run/CI/non-claim；B06/B07 收益只采集，不作为 1.0 pass 前提 | not-started | — |

@@ -14,6 +14,7 @@ use cognitive_contracts::{
         context_request::ContextRequest,
         context_view::{
             ContextView, ContextViewPinnedVersionsValue, ItemCost, LoadedContextItem,
+            LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
             LossDeclaration, RejectedCandidate as PersistedRejectedCandidate, ResolutionCost,
         },
         object_reference::StrongReferenceKind,
@@ -24,6 +25,7 @@ use cognitive_contracts::{
 use cognitive_domain::{
     BudgetId, EventId, LifecycleDomain, ObjectId, RecordId, UriRef, Version, WallTimestamp,
 };
+use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::candidate_admission::{
     CandidateAdmissionFacts, CandidateAdmissionIdentities, CandidateAdmissionInputs,
@@ -701,6 +703,89 @@ where
         })
 }
 
+/// Build the daemon-owned System and Task fragments that every task-bound
+/// resolution needs. These fragments are derived solely from the immutable
+/// ContextRequest and TaskContract; Pi and workspace sources cannot supply or
+/// modify them. They deliberately use the current capability scope so the
+/// normal resolver revalidates their access alongside every other body.
+fn build_required_task_fragments(
+    authorization_snapshot: &cognitive_kernel::authz::AuthzSnapshot,
+    command: &ContextResolutionCommand,
+    request_row: &ContextRequestRow,
+    context_request: &ContextRequest,
+    contract_row: &cognitive_kernel::ports::TaskContractRow,
+    contract: &TaskContract,
+) -> Result<Vec<CandidateObject>, SchedulerAuthorityError> {
+    let resource_scope = authorization_snapshot
+        .capability_links
+        .first()
+        .map(|capability| capability.resource.clone())
+        .filter(|scope| !scope.trim().is_empty())
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "Context Builder requires a current capability resource scope".to_owned(),
+            )
+        })?;
+    let fragment_governance = ObjectGovernance {
+        object_ref: request_row.request_id.to_string(),
+        tenant_id: Some(command.tenant_id.clone()),
+        owner_ref: command.authorization_subject_ref.clone(),
+        resource_scope,
+        conversation_ref: command.conversation_ref.clone(),
+    };
+    let system_body = json!({
+        "fragment": "system",
+        "task_ref": command.task_ref,
+        "purpose": context_request.purpose,
+        "context_budget": context_request.budget,
+        "authority": "daemon_observational_only",
+    });
+    let task_body = json!({
+        "fragment": "task",
+        "task_ref": contract.task_ref,
+        "contract_epoch": contract.contract_epoch,
+        "objective": contract.objective,
+        "max_iterations": contract.max_iterations,
+        "max_retries": contract.max_retries,
+    });
+    let candidate_cost = |body: &Value| {
+        canonical::canonical_bytes_of_value(body)
+            .map(|bytes| (bytes.len() as i64, (bytes.len() as i64 + 3) / 4))
+            .map_err(|error| SchedulerAuthorityError::ContextResolution(error.to_string()))
+    };
+    let (system_bytes, system_tokens) = candidate_cost(&system_body)?;
+    let (task_bytes, task_tokens) = candidate_cost(&task_body)?;
+    Ok(vec![
+        CandidateObject {
+            object_ref: request_row.request_id.to_string(),
+            object_version: 1,
+            content_digest: context_request.header.content_digest.0.clone(),
+            governance: fragment_governance.clone(),
+            role: LoadedContextItemRole::Control,
+            trust_level: LoadedContextItemTrustLevel::Verified,
+            representation: LoadedContextItemRepresentation::Structured,
+            body: system_body,
+            cost_bytes: system_bytes,
+            cost_tokens: system_tokens,
+        },
+        CandidateObject {
+            object_ref: contract_row.contract_id.to_string(),
+            object_version: contract.header.object_version,
+            content_digest: contract.header.content_digest.0.clone(),
+            governance: ObjectGovernance {
+                object_ref: contract_row.contract_id.to_string(),
+                ..fragment_governance
+            },
+            role: LoadedContextItemRole::AuthoritativeState,
+            trust_level: LoadedContextItemTrustLevel::Verified,
+            representation: LoadedContextItemRepresentation::Structured,
+            body: task_body,
+            cost_bytes: task_bytes,
+            cost_tokens: task_tokens,
+        },
+    ])
+}
+
 /// Resolve daemon-admitted Context for a TaskContract before Pi can make a
 /// non-authoritative candidate proposal. Metadata is queried first, each
 /// source is authorized with current revocation currency, and only authorized
@@ -784,6 +869,18 @@ where
         ));
     }
     let authorization_snapshot = load_current_context_authorization_snapshot(store, command)?;
+    let mut required_fragment_candidates = build_required_task_fragments(
+        &authorization_snapshot,
+        command,
+        &request_row,
+        &context_request,
+        &contract_row,
+        &contract,
+    )?;
+    let required_fragment_refs = required_fragment_candidates
+        .iter()
+        .map(|candidate| candidate.object_ref.clone())
+        .collect::<Vec<_>>();
     let metadata = store
         .query_context_candidate_metadata(&ContextCandidateQuery {
             tenant_id: command.tenant_id.clone(),
@@ -794,7 +891,9 @@ where
         .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
     after_metadata()?;
 
-    let mut authorized_candidates = Vec::with_capacity(metadata.len());
+    let mut authorized_candidates =
+        Vec::with_capacity(metadata.len() + required_fragment_candidates.len());
+    authorized_candidates.append(&mut required_fragment_candidates);
     let mut authorization_denied_after_discovery = false;
     for source_metadata in metadata {
         // Discovery is metadata-only. Re-read durable authorization state for
@@ -866,12 +965,15 @@ where
         snapshot: authorization_snapshot,
         purpose: context_request.purpose,
         conversation_ref: command.conversation_ref.clone(),
-        required: context_request
-            .required
+        required: required_fragment_refs
             .into_iter()
-            .map(|required| RequiredItem {
-                object_ref: required.r#ref,
-            })
+            .chain(
+                context_request
+                    .required
+                    .into_iter()
+                    .map(|required| required.r#ref),
+            )
+            .map(|object_ref| RequiredItem { object_ref })
             .collect(),
         allow_partial: context_request.allow_partial,
         budget: ContextBudget {
