@@ -246,6 +246,149 @@ fn canonical_report_json(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cognitive_domain::{EventId, LifecycleDomain, StateName, Version};
+    use cognitive_kernel::ports::{
+        EventDraft, ObjectAdmission, ProtocolStore, StoredObject, TaskBinding,
+    };
+    use cognitive_store::SqliteAuthorityStore;
+    use std::{
+        sync::atomic::{AtomicU64, Ordering},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    struct FixedClock;
+
+    impl Clock for FixedClock {
+        fn now(&self) -> Result<WallTimestamp, cognitive_kernel::ports::PortFailure> {
+            WallTimestamp::parse("2026-08-08T04:00:00Z").map_err(|error| {
+                cognitive_kernel::ports::PortFailure {
+                    detail: error.to_string(),
+                }
+            })
+        }
+    }
+
+    struct SequentialIdentifiers(AtomicU64);
+
+    impl SequentialIdentifiers {
+        fn new(start: u64) -> Self {
+            Self(AtomicU64::new(start))
+        }
+    }
+
+    impl IdGenerator for SequentialIdentifiers {
+        fn next_uuid_v7(&self) -> Result<String, cognitive_kernel::ports::PortFailure> {
+            let sequence = self.0.fetch_add(1, Ordering::SeqCst);
+            Ok(format!("00000000-0000-7000-8000-{sequence:012x}"))
+        }
+    }
+
+    struct PassingVerifier;
+
+    impl IndependentVerifier for PassingVerifier {
+        fn verifier_ref(&self) -> &str {
+            "verifier://tenant-a/independent"
+        }
+
+        fn verifier_version(&self) -> &str {
+            "test-v1"
+        }
+
+        fn evaluate(
+            &self,
+            _request: &VerificationRequestRow,
+            _fixed_post_state: &FixedPostStateRow,
+        ) -> Result<IndependentVerificationResult, VerificationExecutorError> {
+            Ok(IndependentVerificationResult {
+                disposition: VerificationDisposition::Passed,
+                artifact_evidence_refs: vec![artifact_reference('c')],
+            })
+        }
+    }
+
+    fn object_id(sequence: u64) -> ObjectId {
+        ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}"))
+            .expect("valid fixture object id")
+    }
+
+    fn temporary_database_path() -> std::path::PathBuf {
+        let timestamp_nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time after Unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "cognitiveos-verification-executor-{}-{timestamp_nanos}.db",
+            std::process::id()
+        ))
+    }
+
+    fn admit_task_fixture(store: &SqliteAuthorityStore, task_object_id: &ObjectId) {
+        let event_id =
+            EventId::parse("00000000-0000-7000-a000-000000000001").expect("valid fixture event id");
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: task_object_id.clone(),
+                    domain: LifecycleDomain::Task,
+                    state: StateName::parse("DRAFT").expect("valid task initial state"),
+                    version: Version::INITIAL,
+                    body: json!({"fixture": "verification-subject"}),
+                },
+                admitted_at: WallTimestamp::parse("2026-08-08T04:00:00Z")
+                    .expect("valid fixture timestamp"),
+                event: EventDraft {
+                    event_id,
+                    object_id: task_object_id.clone(),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task.admitted".to_owned(),
+                    canonical_json: "{}".to_owned(),
+                },
+                outbox: vec![],
+                fencing_epoch: Some(1),
+            })
+            .expect("admit durable task fixture");
+    }
+
+    fn persist_verification_fixture(
+        store: &SqliteAuthorityStore,
+        task_object_id: &ObjectId,
+    ) -> ObjectId {
+        let loop_object_id = object_id(2);
+        let fixed_post_state_id = object_id(3);
+        let verification_request_id = object_id(4);
+        let task_binding = TaskBinding {
+            task_ref: "task://tenant-a/verification-fixture".to_owned(),
+            contract_epoch: 1,
+        };
+        store
+            .append_fixed_post_state(&FixedPostStateRow {
+                fixed_post_state_id: fixed_post_state_id.clone(),
+                task_binding: task_binding.clone(),
+                loop_object_id: loop_object_id.clone(),
+                subject_domain: LifecycleDomain::Task,
+                subject_object_id: task_object_id.clone(),
+                subject_version: Version::INITIAL,
+                recorded_fencing_epoch: 1,
+                canonical_json: "{\"fixed_post_state\":\"fixture\"}".to_owned(),
+            })
+            .expect("persist fixed post-state");
+        store
+            .append_verification_request(&VerificationRequestRow {
+                verification_request_id: verification_request_id.clone(),
+                fixed_post_state_id,
+                task_binding,
+                loop_object_id,
+                expected_loop_version: Version::INITIAL,
+                verifier_ref: "verifier://tenant-a/independent".to_owned(),
+                verifier_version: "test-v1".to_owned(),
+                criteria_canonical_json: "[\"fixture-criterion\"]".to_owned(),
+                issued_fencing_epoch: 1,
+                canonical_json: "{\"verification_request\":\"fixture\"}".to_owned(),
+            })
+            .expect("persist verification request");
+        verification_request_id
+    }
 
     fn artifact_reference(character: char) -> String {
         format!("artifact://sha256/{}", character.to_string().repeat(64))
@@ -299,5 +442,40 @@ mod tests {
         };
 
         assert!(validate_artifact_evidence_refs(&result).is_ok());
+    }
+
+    #[test]
+    fn durable_sqlite_report_binds_a_current_post_state_without_task_completion() {
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let task_object_id = object_id(1);
+        admit_task_fixture(&store, &task_object_id);
+        let verification_request_id = persist_verification_fixture(&store, &task_object_id);
+
+        let report = record_independent_verification(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(10),
+            &PassingVerifier,
+            &verification_request_id,
+            &WriterLease { epoch: 1 },
+        )
+        .expect("record durable independent verification");
+
+        assert_eq!(report.status, "passed");
+        assert_eq!(
+            store
+                .load_verification_report(&report.verification_report_id)
+                .expect("load durable verification report"),
+            Some(report)
+        );
+        let task = store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load task after verification")
+            .expect("durable task remains available");
+        assert_eq!(task.state.as_str(), "DRAFT");
+        assert_eq!(task.version, Version::INITIAL);
+
+        let _ = std::fs::remove_file(database_path);
     }
 }
