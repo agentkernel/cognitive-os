@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T06、P3-T01 已完成；P1-T09/P2-T07 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T06、P2-T07、P3-T01 已完成；P1-T09 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-07**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -127,13 +127,13 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 6 | 1 | 0 | 1 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 1 | 0 | 0 | 5 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **22** | **2** | **0** | **29** | — |
+| **合计** | **53** | **23** | **1** | **0** | **29** | — |
 
 ## 2. 产品边界与不变量
 
@@ -511,7 +511,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T04 | scheduler→Context→Pi sidecar→BoundedHarness worker | P2-T02, P2-T03 | TaskContract/lease 每轮重载；Context 经真实 port；Pi sidecar candidate-only；no-progress/budget/stale-lease fail-closed | done | 2026-08-07 closure: `P2-T04/D01` is complete at `a8ef5c00654e1c05a4c30beb193b9c026654c2f1`. The daemon resolves a durable ContextRequest, revalidates authorization/revocation immediately before every body load, seals a request-bound ContextView before Pi, and admits only a daemon-sealed opaque candidate. Real SQLite negatives cover revocation after metadata discovery, missing required Context, duplicate Pi retry suppression, atomic candidate/WIA handoff, and stale/replaced lease rejection; the Pi protocol rejects authority-shaped output. Exact native Linux and required Ubuntu/Windows CI passed. No Tool execution, Task completion, Gate, release, or Profile claim is created. Evidence: [P2-T04 closure](../checkpoints/20260807-personal-p2-t04-d01-context-view-persistence-checkpoint.md). |
 | P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | done | 2026-08-07 closure: the daemon-owned static six-family catalog, immutable descriptor digest binding, pre-admission persisted-descriptor verification, private Tool projection, and bounded workspace/process/HTTP pre-executor validators satisfy the unchanged acceptance. Exact native Linux `72a7e55e5a780827438bfb0fb42172cfd1e5bec1` passed focused Tool registry tests 7/7 and `cargo fmt --all -- --check`; required Ubuntu and Windows CI passed in PR #159. P2-T06 execution/supervision, external I/O, actual workspace mutation, and unknown-outcome reconciliation remain explicitly out of scope. Evidence: [closure handoff](../checkpoints/20260807-personal-p2-t05-native-tool-registry-closure.md). |
 | P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | done | 2026-08-08 closure: D01-D04 satisfy the unchanged acceptance at `bfcc684db6685e1077050a4b3c82fcf84c524711`. Exact native Linux passed 26 focused tests, Clippy, and fmt; required Ubuntu/Windows CI passed in Draft PR #162. The daemon-private supervisor uses registered attempt identity, PID ownership, epoch fencing, orphan/recovery/shutdown lifecycle, bounded injected observation, and a fail-closed default source. The Effect path proves persist-before-dispatch and original-key unknown-outcome reconciliation without Task advancement. No public Process resource, arbitrary PID attach, Task completion, release, Gate, or Profile claim is made; platform observation is deferred to managed-Pi/process-supervision work. Evidence: task-scoped Draft PR #162 and `docs/plan/PROGRESS.md` D01-D04 records. |
-| P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | in-progress | 2026-08-05: owner-approved `D01` is a narrow daemon-private prerequisite for D05 continuation only: fixed post-state, verification request/report, checkpoint, and continuation authority. It cannot enter Task acceptance/completion, execute a Provider/Tool, or close the remaining P2-T07 acceptance. |
+| P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | done | 2026-08-08 closure: D01-D02 satisfy the unchanged acceptance. The daemon-private fixed-post-state and verification-request/report boundary stays append-only; verifier identity, currentness, fenced-writer, malformed/duplicate artifact reference, and passed-without-evidence regressions fail closed before report persistence. Exact remote Linux `51183ae49111c9774e6a08f146b30cae6fb346bf` passed the focused verifier test module 7/7; local `cargo fmt --all`, `git diff --check`, and lints passed. No Provider/Tool execution, Artifact closure, Task completion, Gate, release, or Profile claim is made. Evidence: [P2-T07 closure](../checkpoints/20260808-personal-p2-t07-d02-verifier-persistence-closure.md). |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | not-started | — |
 
 ### Phase 3 - Context、Token 与 Loop 效率
