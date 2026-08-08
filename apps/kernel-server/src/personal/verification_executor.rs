@@ -244,6 +244,7 @@ fn canonical_report_json(
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
     use cognitive_domain::{EventId, LifecycleDomain, StateName, Version};
@@ -450,27 +451,30 @@ mod tests {
         admit_task_fixture(&store, &task_object_id);
         let verification_request_id = persist_verification_fixture(&store, &task_object_id);
 
-        let report = record_independent_verification(
+        let report_result = record_independent_verification(
             &store,
             &FixedClock,
             &SequentialIdentifiers::new(10),
             &PassingVerifier,
             &verification_request_id,
             &WriterLease { epoch: 1 },
-        )
-        .expect("record durable independent verification");
+        );
+
+        assert!(report_result.is_ok());
+        let report = report_result.expect("verification report should already be asserted ok");
 
         assert_eq!(report.status, "passed");
-        assert_eq!(
-            store
-                .load_verification_report(&report.verification_report_id)
-                .expect("load durable verification report"),
-            Some(report)
-        );
-        let task = store
+        let loaded_report = store
+            .load_verification_report(&report.verification_report_id)
+            .ok()
+            .flatten();
+        assert_eq!(loaded_report, Some(report));
+        let loaded_task = store
             .load_object(LifecycleDomain::Task, &task_object_id)
-            .expect("load task after verification")
-            .expect("durable task remains available");
+            .ok()
+            .flatten();
+        assert!(loaded_task.is_some());
+        let task = loaded_task.expect("task existence already asserted");
         assert_eq!(task.state.as_str(), "DRAFT");
         assert_eq!(task.version, Version::INITIAL);
 
