@@ -75,14 +75,15 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P3-T02/context-builder` | P3-T02 real minimal Context Builder and budgets | Lane-RUN | `personal/P3-T02-context-builder` | `crates/cognitive-kernel/src/context.rs`; `crates/cognitive-kernel/tests/context_pipeline.rs`; `crates/cognitive-kernel/src/ports.rs`; `crates/cognitive-store/src/sqlite.rs`; `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/task_api.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260808-personal-p3-t02-context-builder-handoff.md` | owner session / Cursor | 2026-08-09 / 2026-08-09 | active |
+| — | none | — | — | — | — | — | — |
 
-The active lease above grants the only current writable implementation path.
+There is no active task lease at this time.
 
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P3-T02/context-builder` | P3-T02 complete Context Builder and budgets | `personal/P3-T02-context-builder` | 2026-08-09 | PR #166 merged at `main@c78c58c096765caffb638e32dc8d74fd412765a9`; D01-D02 covered required daemon fragments, hard budget/duplicate loss, source-family policy, freshness-before-body loading, and digest-bound excluded-source trace. Exact native Linux focused test/Clippy and required Ubuntu/Windows CI passed. |
 | `lease/personal/P1-T09/b01-attempt-10-execution` | P1-T09 B01 fresh Attempt 10 execution with user-local Pi prefix | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Attempt 10 completed the full route: verified artifact activation, stable service, exact Pi `0.81.1` in a user-local prefix, hidden-input DeepSeek configuration, doctor readiness, and a bounded expected-marker response in 5272 ms with no authority side effects. Cleanup stopped the service, removed temporary route files, shut off the guest, and reverted the exact baseline. |
 | `lease/personal/P1-T09/b01-attempt-9-execution` | P1-T09 B01 fresh Attempt 9 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Attempt 9 activated the verified artifact and passed stable user-service readiness, but a global npm installation targeted the root-owned `/opt` prefix and was denied write access. No Pi executable, Provider credential, or authority state was created; the guest was shut down and reverted to `b01-platform-qualified-baseline`. Attempt 10 uses a user-local Pi prefix. |
 | `lease/personal/P1-T09/b01-node-runtime-maintenance` | P1-T09 B01 exact supported Node.js runtime maintenance | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Owner-authorized interactive SSH maintenance installed SHA-256-verified Node.js `v22.23.2` and npm `10.9.8`. Exact Pi `0.81.1` metadata returned its recorded engine and SRI values; no Pi or CognitiveOS state was present. The guest was shut off and the registered `b01-platform-qualified-baseline` snapshot was replaced successfully. This was baseline maintenance, not a B01 attempt. See `20260808-personal-p1-t09-b01-node-runtime-maintenance-handoff.md`. |
