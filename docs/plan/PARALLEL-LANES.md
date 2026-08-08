@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| none | No active task lease | — | — | — | — | — | — |
+| `lease/personal/P1-T09/b01-attempt-7-execution` | P1-T09 B01 fresh Attempt 7 execution with Desktop session | Lane-RUN | `personal/P1-T09-b01-network-recovery` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
 
 The active lease above grants the only current writable implementation path.
 
