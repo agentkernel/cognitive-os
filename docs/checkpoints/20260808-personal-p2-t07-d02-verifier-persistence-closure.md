@@ -7,7 +7,7 @@
 - Branch: `personal/P2-T07-checkpoint-artifact-verifier-d02`
 - Lease: `lease/personal/P2-T07/checkpoint-artifact-verifier` (active until PR merge/closure)
 - PR: [#164](https://github.com/agentkernel/cognitive-os/pull/164) (Draft)
-- Acceptance checkpoint: `51183ae49111c9774e6a08f146b30cae6fb346bf`
+- Acceptance checkpoint: `4e6a977f51c8fe6d6b9a6f791e21a3e16badb16a`
 - Upstream: `origin/personal/P2-T07-checkpoint-artifact-verifier-d02`
 
 ## Acceptance mapping
@@ -27,7 +27,7 @@ append-only and does not imply Task completion.
 - Local formatting: `cargo fmt --all` — pass
 - Local diff hygiene: `git diff --check` — pass
 - Local lints: `ReadLints` for `apps/kernel-server/src/personal/verification_executor.rs` — pass
-- Remote exact-revision Linux: `cargo test -p kernel-server verification_executor::tests -- --nocapture` — pass at `51183ae49111c9774e6a08f146b30cae6fb346bf` (7/7 targeted tests)
+- Remote exact-revision Linux: `cargo test -p kernel-server verification_executor::tests -- --nocapture` — pass at `4e6a977f51c8fe6d6b9a6f791e21a3e16badb16a` (7/7 targeted tests)
 - Local workspace Rust build/test/Clippy: `not-run`
 
 ## Non-claims and next action
