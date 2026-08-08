@@ -2064,6 +2064,15 @@ mod tests {
         task_ref: &str,
         required_context_ref: Option<&str>,
     ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
+        append_context_race_fixture_with_budget(store, task_ref, required_context_ref, json!({}))
+    }
+
+    fn append_context_race_fixture_with_budget(
+        store: &SqliteAuthorityStore,
+        task_ref: &str,
+        required_context_ref: Option<&str>,
+        context_budget: Value,
+    ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
         let governance = context_governance();
         let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
         let request_id = object_id(920);
@@ -2086,7 +2095,7 @@ mod tests {
                 "task": task_ref,
                 "episode": "episode://tenant-a/p2-t04-race",
             },
-            "budget": {},
+            "budget": context_budget,
             "priority": ["task"],
             "required": required_context_ref.map(|object_ref| vec![json!({"ref": object_ref})]).unwrap_or_default(),
             "forbidden": [],
@@ -2411,6 +2420,33 @@ mod tests {
         assert!(resolved_context.loaded.iter().any(|item| {
             item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
         }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn required_task_context_fragments_fail_closed_when_the_request_budget_cannot_fit() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-required-fragment-budget";
+        let (context_command, _) = append_context_race_fixture_with_budget(
+            &store,
+            task_ref,
+            None,
+            json!({"context_bytes": 1, "input_tokens": 1}),
+        );
+
+        let error = super::resolve_authorized_task_context(&store, &context_command)
+            .expect_err("required daemon fragments must not exceed a hard Context budget");
+
+        assert!(matches!(
+            error,
+            SchedulerAuthorityError::ContextResolution(detail)
+                if detail.contains("CONTEXT_BUDGET_EXCEEDED")
+        ));
 
         drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
