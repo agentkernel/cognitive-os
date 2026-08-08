@@ -305,6 +305,28 @@ mod tests {
         }
     }
 
+    struct MismatchedVerifier;
+
+    impl IndependentVerifier for MismatchedVerifier {
+        fn verifier_ref(&self) -> &str {
+            "verifier://tenant-a/unregistered"
+        }
+
+        fn verifier_version(&self) -> &str {
+            "test-v1"
+        }
+
+        fn evaluate(
+            &self,
+            _request: &VerificationRequestRow,
+            _fixed_post_state: &FixedPostStateRow,
+        ) -> Result<IndependentVerificationResult, VerificationExecutorError> {
+            Err(VerificationExecutorError::Infrastructure(
+                "mismatched verifier must not evaluate".to_owned(),
+            ))
+        }
+    }
+
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}"))
             .expect("valid fixture object id")
@@ -477,6 +499,68 @@ mod tests {
         let task = loaded_task.expect("task existence already asserted");
         assert_eq!(task.state.as_str(), "DRAFT");
         assert_eq!(task.version, Version::INITIAL);
+
+        let _ = std::fs::remove_file(database_path);
+    }
+
+    #[test]
+    fn durable_sqlite_report_rejects_a_fenced_writer_before_persistence() {
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let task_object_id = object_id(11);
+        admit_task_fixture(&store, &task_object_id);
+        let verification_request_id = persist_verification_fixture(&store, &task_object_id);
+
+        let report_result = record_independent_verification(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(20),
+            &PassingVerifier,
+            &verification_request_id,
+            &WriterLease { epoch: 2 },
+        );
+
+        assert!(matches!(
+            report_result,
+            Err(VerificationExecutorError::WriterFenced)
+        ));
+        assert_eq!(
+            store
+                .load_verification_report(&object_id(20))
+                .expect("read absent fenced verification report"),
+            None
+        );
+
+        let _ = std::fs::remove_file(database_path);
+    }
+
+    #[test]
+    fn durable_sqlite_report_rejects_an_unregistered_verifier_before_evaluation() {
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let task_object_id = object_id(21);
+        admit_task_fixture(&store, &task_object_id);
+        let verification_request_id = persist_verification_fixture(&store, &task_object_id);
+
+        let report_result = record_independent_verification(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(30),
+            &MismatchedVerifier,
+            &verification_request_id,
+            &WriterLease { epoch: 1 },
+        );
+
+        assert!(matches!(
+            report_result,
+            Err(VerificationExecutorError::VerifierIdentityMismatch)
+        ));
+        assert_eq!(
+            store
+                .load_verification_report(&object_id(30))
+                .expect("read absent identity-mismatched verification report"),
+            None
+        );
 
         let _ = std::fs::remove_file(database_path);
     }
