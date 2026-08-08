@@ -247,9 +247,7 @@ fn canonical_report_json(
 mod tests {
     use super::*;
     use cognitive_domain::{EventId, LifecycleDomain, StateName, Version};
-    use cognitive_kernel::ports::{
-        EventDraft, ObjectAdmission, ProtocolStore, StoredObject, TaskBinding,
-    };
+    use cognitive_kernel::ports::{EventDraft, ObjectAdmission, StoredObject, TaskBinding};
     use cognitive_store::SqliteAuthorityStore;
     use std::{
         sync::atomic::{AtomicU64, Ordering},
