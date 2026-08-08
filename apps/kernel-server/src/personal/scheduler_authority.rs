@@ -955,9 +955,12 @@ where
         });
     }
 
-    if authorization_denied_after_discovery && authorized_candidates.is_empty() {
+    // A post-discovery denial invalidates the source set selected for this
+    // resolution. Required daemon fragments must not allow that stale source
+    // authorization boundary to be bypassed before Pi receives a view.
+    if authorization_denied_after_discovery {
         return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
-            "all discovered Context sources were denied before body materialization".to_owned(),
+            "Context source was denied before body materialization".to_owned(),
         ));
     }
 
