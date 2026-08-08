@@ -6,9 +6,10 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Run evidence artifacts are never committed; the README explaining the layout is.
-/artifacts/evidence/*
-!/artifacts/evidence/README.md
+# Downloaded campaign packages, installers, runtime archives, and execution
+# evidence are local staging material. Commit only their verified digest,
+# attestation reference, and sanitized facts in the task evidence records.
+/artifacts/
 
 # OS / editor noise
 .DS_Store
@@ -21,4 +22,3 @@ docs/_local/
 
 # Nested CognitiveOS Research blog (independent git; never push to Cos origin/main)
 /personal-blog/
-

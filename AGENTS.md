@@ -89,6 +89,10 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   push 并更新同一个 Draft PR，无需逐次等待授权。不得为每个 checkpoint 单独创建 handoff、
   closure docs 或新 PR；验证结果累计到任务最终收口记录。Draft PR 在完整 task acceptance
   未满足前必须保持 Draft，禁止 merge。
+- 下载的 campaign package、installer、runtime archive 和执行 evidence payload 必须放在
+  已忽略的 `/artifacts/` 或系统临时目录；Git 只记录可复验的 digest、attestation reference、
+  脱敏事实和 checkpoint。不得暂存这些 payload，也不得以 untracked artifact 作为后续任务的
+  隐式输入；后续任务必须按已记录的来源和 digest 重新取得所需 artifact。
 - 只有完整任务 acceptance、全部必要 Slice、focused negatives、supported validation、
   required CI、最终 acceptance assessment、文档/证据同步和 review 要求全部满足后，代理
   才可将该 task PR 转为 ready 并合并。失败/待运行检查或产品/规范语义待决存在时禁止合并；
