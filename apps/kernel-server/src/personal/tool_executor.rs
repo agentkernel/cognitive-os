@@ -1174,7 +1174,7 @@ mod tests {
         store
             .insert_intent(
                 &IntentRow {
-                    intent_id: intent_object_id,
+                    intent_id: intent_object_id.clone(),
                     idempotency_key: idempotency_key.to_owned(),
                     parameters_digest: parameters_digest.to_owned(),
                     action: "check".to_owned(),
