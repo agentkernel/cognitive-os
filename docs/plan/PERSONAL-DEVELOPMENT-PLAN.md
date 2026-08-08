@@ -1,4 +1,4 @@
-# CognitiveOS Personal 产品化开发计划与进度表
+﻿# CognitiveOS Personal 产品化开发计划与进度表
 
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
@@ -109,8 +109,10 @@
     evidence，完成 supported validation/required CI，同步正式计划、Current snapshot 与
     唯一最终 handoff；确认 task PR 只含已声明路径后 ready/merge；随后关闭 lease、删除安全
     可删的远端 task branch、本地切回并 fast-forward `main`，确认 worktree clean、HEAD/
-    upstream 一致且无已完成任务的 active lease。任一步缺失时任务保持 `in-progress` 或
-    `blocked`，不得留下“代码完成但验收、分支或状态待收口”。
+    upstream 一致且无已完成任务的 active lease。每次正式任务完成后，提交、推送、合并、关
+    闭 lease、删除可安全删除的远端分支、切回主分支和本地收尾都应作为同一条收口链路一
+    次完成，不得拆成后续“顺便处理”的独立步骤。任一步缺失时任务保持 `in-progress` 或
+    `blocked`，不得留下“代码完成但验收、分支或状态待收口”的半完成状态。
 
 ### Typed dependency 规则
 
@@ -626,3 +628,5 @@ RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daem
 - [ ] 写入 `docs/checkpoints/` handoff，记录完成项、未完成项、测试、证据、风险与下一步。
 - [ ] 在 PR/提交中关联 `PERS-*` 计划 ID，并在适用时关联真实 REQ-ID。
 - [ ] 如发生计划结构变化（新增/取消任务、验收或依赖变化），在同一修订批中同步 `plan.md` 任务卡与依赖图、`personal-trace.yaml` 映射，保持无孤儿任务。
+
+
