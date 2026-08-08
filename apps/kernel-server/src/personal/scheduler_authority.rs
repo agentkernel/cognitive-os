@@ -2389,7 +2389,8 @@ mod tests {
         let task_ref = "task://tenant-a/p3-t02-required-fragments";
         let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
 
-        let resolved_context = resolve_authorized_task_context(&store, &context_command).unwrap();
+        let resolved_context =
+            super::resolve_authorized_task_context(&store, &context_command).unwrap();
 
         let system_fragment_ref = object_id(920).to_string();
         let task_fragment_ref = object_id(925).to_string();
