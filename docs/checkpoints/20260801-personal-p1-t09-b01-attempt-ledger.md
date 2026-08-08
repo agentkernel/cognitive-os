@@ -63,6 +63,9 @@
 | 2 | clean-reset checkpoint | pass | exact `b01-platform-qualified-baseline` restored through authorized system-libvirt control; guest started only for readiness verification |
 | 2 | guest network readiness | **fail** | bounded SSH readiness probes to the preregistered guest address timed out; no artifact, Pi, product service, Provider, credential, prompt, or route runner was used |
 | 2 | cleanup | **pass** | exact baseline restored again; domain confirmed `shut off`; no post-baseline state retained |
+| 3 | clean-reset checkpoint | pass | exact `b01-platform-qualified-baseline` restored and guest started through authorized system-libvirt control |
+| 3 | guest network readiness | **fail** | four bounded non-interactive SSH probes reached the guest SSH service but could not authenticate with the available public-key path; no artifact, Pi, product service, Provider, credential, prompt, or route runner was used |
+| 3 | cleanup | **pass** | exact baseline restored again; domain confirmed `shut off`; no post-baseline state retained |
 
 ## Attempt 1 result
 
@@ -82,6 +85,19 @@ request, prompt, expected marker, response, authority side effect, Task,
 Effect, or Verification was created. Cleanup restored the exact baseline and
 left the domain shut off. This is a recorded failed attempt in the fixed
 N=20 denominator, not a retry or a critical-safety failure.
+
+## Attempt 3 result
+
+`B01-clean-linux-first-install-first-conversation-001` attempt 3 reached the
+clean-reset checkpoint when the authorized system-libvirt host restored the
+exact Desktop baseline and started the guest. Four bounded non-interactive SSH
+probes reached the guest SSH service but failed public-key authentication. The
+available automation identity cannot complete the preregistered SSH readiness
+path, so this is a recorded fixed-N readiness failure rather than a retry.
+No artifact, Pi state, product service, Provider credential, Provider request,
+prompt, expected marker, response, authority side effect, Task, Effect, or
+Verification was created. Cleanup restored the exact baseline and left the
+domain shut off. This is not a critical-safety failure.
 
 ## Checks for this slice
 
