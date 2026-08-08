@@ -2381,6 +2381,41 @@ mod tests {
     }
 
     #[test]
+    fn task_context_builder_requires_daemon_system_and_task_fragments() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t02-required-fragments";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+
+        let resolved_context = resolve_authorized_task_context(&store, &context_command).unwrap();
+
+        let system_fragment_ref = object_id(920).to_string();
+        let task_fragment_ref = object_id(925).to_string();
+        let working_fragment_ref = object_id(921).to_string();
+        assert!(resolved_context.complete);
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == system_fragment_ref
+                && item.role == LoadedContextItemRole::Control
+                && item.body["fragment"] == "system"
+                && item.body["authority"] == "daemon_observational_only"
+        }));
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == task_fragment_ref
+                && item.role == LoadedContextItemRole::AuthoritativeState
+                && item.body["fragment"] == "task"
+                && item.body["task_ref"] == task_ref
+        }));
+        assert!(resolved_context.loaded.iter().any(|item| {
+            item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
+        }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
     fn revocation_after_metadata_discovery_blocks_body_ranking_and_private_pi() {
         let layout = temporary_personal_layout();
         layout.ensure_directories().unwrap();
