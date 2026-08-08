@@ -13,8 +13,8 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `blocked` | `experimental-local-only` / `tested-supported-ci`; the ledger records two complete route successes (Attempts 1 and 10) and eight failed attempts (2-9). The original fixed N=20 campaign can now reach at most 12 successes (60%), below the unchanged >=90% threshold. | product owner and independent verifier must decide whether to retain the failed campaign and authorize a separately preregistered successor campaign |
-| B01 first-install/first-conversation Gate | **fail** | `B01-Desktop-Linux-002` remains the sole active B01 guest. Attempt 10 of formal minimum 20: the immutable ordered ledger records 2 successes / 8 failures, with no observed critical safety failure. The threshold is mathematically unreachable even if every remaining attempt succeeds. | do not start Attempt 11 under the failed campaign; require a successor campaign decision and preregistration |
+| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-supported-ci`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Owner authorization starts separate successor campaign `002`; its artifact, manifest/digest/attestation, clean reset, and operator/verifier gates are independent from `001`. | build and independently verify `002` artifact from reviewed `origin/main@60701d56e79560ab557083418a84bb6158236f4a` before its Attempt 1 clean-reset checkpoint |
+| B01 first-install/first-conversation Gate | **running** | `B01-Desktop-Linux-002` remains the sole active B01 guest. Retained campaign `001` is `fail` (2 successes / 8 failures after 10 attempts); successor `B01-clean-linux-first-install-first-conversation-002` is at Attempt 0 of formal minimum 20. | build and independently verify the successor artifact, complete the start gate, then execute successor Attempt 1 |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
 | P2-T02 Personal application service | **done** | D01-D04 now satisfy the unchanged acceptance: authenticated daemon-owned intent record/interpret, server-issued preview/admit and bounded Task watch; private six-family projection/watch; deterministic CLI and Pi sidecar parity with isolated Task/management channels and read-only client boundaries. Each slice has exact Linux evidence and required Ubuntu/Windows CI. | P2 Gates B02/B04/B05/B12 remain `not-run`; select an unrelated ready formal task |
 | P2-T03 scheduler/runtime | **done** | D01-D05 satisfy the unchanged acceptance at exact immutable `08932f7868d46f494aaa76835f4818fd7a1f2962`: durable scheduler persistence/CAS fencing, STOP-before-lease budget authority, fail-closed durable Effect resolution, exact owner+epoch Effect closure, and restart-safe one-time WIA/verified-continuation worker handoff. Native Linux focused validation plus workspace fmt/build/test/Clippy and required Ubuntu/Windows CI passed at that checkpoint. Candidate WIA remains limited to atomic `DECIDE -> ACT`; only independently verified continuation authority can enter `CONTINUE -> OBSERVE`. PR #160 passed both required jobs and merged at `main@678b653c588c45ea02bf393ad7038ef760c0971b`. | P2-T06/P2-T07 may consume the scheduler boundary; B05/B12 remain `not-run` |
@@ -28,19 +28,20 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 has a narrow Lane-RUN reconciliation lease on `personal/P1-T09-b01-campaign-continuation`; it protects the ignored local `/artifacts/` directory from modification, deletion, commitment, or implicit use. | record the blocked campaign disposition and await the owner/verifier successor-campaign decision |
+| Active task lease | `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 has a narrow Lane-RUN successor preregistration and artifact-verification lease on `personal/P1-T09-b01-campaign-continuation`; it protects the ignored local `/artifacts/` directory from modification, deletion, commitment, or implicit use. | trigger and independently verify the reviewed-main successor artifact before attempting guest execution |
 
 ### Layer 1 — Formal task progress
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 24 | 0 | 1 | 28 | 29 |
+| 53 | 24 | 1 | 0 | 28 | 29 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P1-T09 is blocked because its recorded fixed-N B01
-campaign has 2 successes and 8 failures after 10 attempts; even 10 additional
-successes would produce only 12/20, below the formal >=90% requirement.
+weakening any criterion. P1-T09 is in progress on separately preregistered B01
+successor campaign `002`. Retained campaign `001` remains failed at 2 successes
+and 8 failures after 10 attempts; none of its attempts or artifacts transfers
+to the successor.
 P2-T07/D01 and P2-T07/D02 are done with exact-revision native Linux evidence and supported negative coverage. Formal task completion remains
 independent from every product Gate.
 
@@ -77,19 +78,19 @@ not override this table.
 
 | Gate/campaign | Status | Accounted progress | Missing exit |
 |---|---|---|---|
-| B01 | `fail` | fixed N=20: 10 outcomes, 2 successes / 8 failures, zero observed critical-safety failures; maximum possible final result is 12/20 (60%) | the current campaign cannot meet its exit; any further B01 work requires a separately preregistered successor campaign and owner/verifier decision |
+| B01 | `running` | retained `001`: fail, fixed N=20 with 10 outcomes, 2 successes / 8 failures; successor `002`: fixed N=20 with 0 started attempts | independently verify successor artifact and complete its start gate; campaign pass still requires 20 successor outcomes, >=90% success, zero critical failures, aggregate report, and independent verifier |
 | B02/B04/B05/B12 | `not-run` | implementation evidence only | preregistered P2 acceptance campaigns |
 | B03/B08/B09 | `not-run` | no Gate evidence | corresponding Resource Value and managed-Pi task exits |
 | GMVP-LINUX | `not-run` | no release evidence | all typed promotion dependencies |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
-The P1-T09 implementation evidence and successful B01 Attempts 1 and 10 are
-retained. The campaign-level B01 status is `fail`, not `pass`: the formal plan
-requires at least 20 attempts with a success rate of at least 90%, and its
-recorded 2 successes / 8 failures after 10 attempts make that threshold
-unreachable. No started attempt is deleted, renumbered, or retried. A successor
-campaign is not implied and requires a new owner/verifier decision and complete
-preregistration.
+The P1-T09 implementation evidence and successful B01 `001` Attempts 1 and 10
+are retained. The owner authorized separately preregistered successor `002`, so
+the B01 Gate is `running` only for that successor. Campaign `001` remains
+`fail`: its attempts are immutable and do not transfer to `002`. No started
+attempt is deleted, renumbered, or retried; `002` requires its own complete
+artifact verification, start gate, fixed denominator, aggregate analysis, and
+affirmative independent verifier disposition.
 
 P2-T01 is now task-complete: the L5
 task lifecycle entry point over the intent-chain kernel. `proposal` durably

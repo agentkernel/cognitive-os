@@ -75,12 +75,12 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 B01 fixed-N campaign reconciliation and successor decision boundary | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
+| `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 B01 successor campaign preregistration and artifact verification | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
 
-The active lease reconciles the already-recorded Attempts 1-10. It must not
-modify, delete, commit, or rely on the ignored local `/artifacts/` directory;
-any later campaign must independently re-confirm its manifest, digest, and
-attestation.
+The owner retained the failed `001` campaign and authorized a separately
+preregistered successor. The active lease must not modify, delete, commit, or
+rely on the ignored local `/artifacts/` directory; the successor must
+independently re-confirm its manifest, digest, and attestation.
 
 ### 3.1 最近关闭的 leases
 
