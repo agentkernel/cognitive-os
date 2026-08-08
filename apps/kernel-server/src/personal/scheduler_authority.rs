@@ -2571,12 +2571,11 @@ mod tests {
             json!({"context_bytes": 1, "input_tokens": 1}),
         );
 
-        let error = super::resolve_authorized_task_context(&store, &context_command)
-            .expect_err("required daemon fragments must not exceed a hard Context budget");
+        let error = super::resolve_authorized_task_context(&store, &context_command).err();
 
         assert!(matches!(
             error,
-            SchedulerAuthorityError::ContextResolution(detail)
+            Some(SchedulerAuthorityError::ContextResolution(detail))
                 if detail.contains("CONTEXT_BUDGET_EXCEEDED")
         ));
 
