@@ -386,6 +386,8 @@ pub(crate) struct NativeProcessCheckExecutor<S> {
     timeout: Duration,
     staged_requests: Mutex<BTreeMap<String, StagedProcessCheckRequest>>,
     completed_checks: Mutex<BTreeMap<String, CompletedProcessCheck>>,
+    #[cfg(test)]
+    before_check_hook: Mutex<Option<Box<dyn Fn() + Send>>>,
 }
 
 impl<S> NativeProcessCheckExecutor<S>
@@ -399,6 +401,8 @@ where
             timeout,
             staged_requests: Mutex::new(BTreeMap::new()),
             completed_checks: Mutex::new(BTreeMap::new()),
+            #[cfg(test)]
+            before_check_hook: Mutex::new(None),
         }
     }
 
@@ -445,6 +449,15 @@ where
             .ok()
             .and_then(|checks| checks.get(idempotency_key).cloned())
             .map(|check| check.redacted_output)
+    }
+
+    #[cfg(test)]
+    fn install_before_check_hook(&self, hook: impl Fn() + Send + 'static) {
+        let mut before_check_hook = match self.before_check_hook.lock() {
+            Ok(before_check_hook) => before_check_hook,
+            Err(poisoned_before_check_hook) => poisoned_before_check_hook.into_inner(),
+        };
+        *before_check_hook = Some(Box::new(hook));
     }
 }
 
@@ -493,6 +506,18 @@ where
             return Ok(DispatchOutcome::Executed {
                 receipt_ref: existing_check.receipt_ref.clone(),
             });
+        }
+        #[cfg(test)]
+        let before_check_hook = self
+            .before_check_hook
+            .lock()
+            .map_err(|_| PortFailure {
+                detail: "before-check hook store is poisoned".to_owned(),
+            })?
+            .take();
+        #[cfg(test)]
+        if let Some(before_check_hook) = before_check_hook {
+            before_check_hook();
         }
         let raw_output = self
             .supervisor
@@ -1090,6 +1115,202 @@ mod tests {
             executor.query_outcome("process-key"),
             Ok(ExecutorQueryResult::NotExecuted)
         );
+    }
+
+    #[test]
+    fn durable_process_check_dispatch_records_executing_before_supervisor_access_without_advancing_task()
+     {
+        let database_path = temporary_authority_database_path();
+        let store =
+            Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+        let task_object_id = object_id(521);
+        let effect_object_id = object_id(522);
+        let intent_object_id = object_id(523);
+        let admitted_at =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+        for (object_id, domain, lifecycle_state, event_id) in [
+            (
+                task_object_id.clone(),
+                LifecycleDomain::Task,
+                "RUNNING",
+                521,
+            ),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "PROPOSED",
+                522,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: state(lifecycle_state),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t06-d03"}),
+                    },
+                    admitted_at: admitted_at.clone(),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_id:012x}"
+                        ))
+                        .expect("valid event identifier"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{\"fixture\":true}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit durable fixture object");
+        }
+        let idempotency_key = "p2-t06-d03-process-check";
+        let parameters_digest = "sha256:p2-t06-d03-process-check";
+        store
+            .insert_intent(
+                &IntentRow {
+                    intent_id: intent_object_id,
+                    idempotency_key: idempotency_key.to_owned(),
+                    parameters_digest: parameters_digest.to_owned(),
+                    action: "check".to_owned(),
+                    target: "process://4242".to_owned(),
+                    effect_object_id: effect_object_id.clone(),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    task_binding: None,
+                    canonical_json: "{\"intent\":\"p2-t06-d03\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000523")
+                        .expect("valid intent event identifier"),
+                    object_id: intent_object_id,
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "intent.minted".to_owned(),
+                    canonical_json: "{\"intent\":\"p2-t06-d03\"}".to_owned(),
+                },
+            )
+            .expect("persist durable intent");
+
+        let mut request = process_check_request();
+        request.descriptor.output_limit_bytes = 32;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check request");
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(
+            4242,
+            b"state=ready token=secret process output that is too long",
+            Duration::from_millis(1),
+        );
+        let executor = NativeProcessCheckExecutor::new(1, supervisor, Duration::from_secs(1));
+        executor
+            .stage_request(
+                idempotency_key.to_owned(),
+                parameters_digest.to_owned(),
+                &validated_request,
+            )
+            .expect("stage durable intent identity");
+        let hook_store = Arc::clone(&store);
+        let hook_effect_object_id = effect_object_id.clone();
+        let hook_task_object_id = task_object_id.clone();
+        let supervisor_accesses = Arc::new(AtomicUsize::new(0));
+        let hook_supervisor_accesses = Arc::clone(&supervisor_accesses);
+        executor.install_before_check_hook(move || {
+            let effect = hook_store
+                .load_object(LifecycleDomain::Effect, &hook_effect_object_id)
+                .expect("load effect before supervisor access")
+                .expect("durable effect exists");
+            let task = hook_store
+                .load_object(LifecycleDomain::Task, &hook_task_object_id)
+                .expect("load task before supervisor access")
+                .expect("durable task exists");
+            assert_eq!(effect.state.as_str(), "EXECUTING");
+            assert_eq!(
+                effect.version,
+                Version::new(3).expect("valid executing version")
+            );
+            assert_eq!(task.state.as_str(), "RUNNING");
+            assert_eq!(task.version, Version::INITIAL);
+            hook_supervisor_accesses.fetch_add(1, Ordering::SeqCst);
+        });
+
+        let clock = FixedEffectClock(admitted_at);
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store.as_ref(),
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+            UriRef::parse("authority://personal/effect-authority")
+                .expect("valid authority reference"),
+            UriRef::parse("correlation://personal/p2-t06-d03")
+                .expect("valid correlation reference"),
+        );
+        let grant = effect_grant();
+        let governance_currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+
+        dispatch_staged_process_check_effect(
+            &effect_protocol,
+            &effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &executor,
+            &writer_lease,
+        )
+        .expect("dispatch durable process check");
+
+        let completed_output = executor
+            .completed_output(idempotency_key)
+            .expect("process check retains output under original key");
+        assert_eq!(
+            completed_output,
+            b"state=ready token=[REDACTED] pro".to_vec()
+        );
+        assert_eq!(completed_output.len(), 32);
+        assert!(!String::from_utf8_lossy(&completed_output).contains("secret"));
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            executor.query_outcome(idempotency_key),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+        assert!(matches!(
+            executor.dispatch(&process_check_call(
+                idempotency_key,
+                parameters_digest,
+                "process://4242",
+                1,
+            )),
+            Ok(DispatchOutcome::Executed { .. })
+        ));
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+        let effect = store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load effect after process check")
+            .expect("durable effect exists");
+        assert_eq!(effect.state.as_str(), "EXECUTED");
+        assert_eq!(
+            effect.version,
+            Version::new(4).expect("valid executed version")
+        );
+        let task = store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load task after process check")
+            .expect("durable task exists");
+        assert_eq!(task.state.as_str(), "RUNNING");
+        assert_eq!(task.version, Version::INITIAL);
+
+        std::fs::remove_file(database_path).unwrap_or(());
     }
 
     #[test]
