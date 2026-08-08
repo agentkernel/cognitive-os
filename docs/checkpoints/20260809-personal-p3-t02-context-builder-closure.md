@@ -6,7 +6,7 @@
 - Slices: `P3-T02/D01`, `P3-T02/D02`
 - Branch: `personal/P3-T02-context-builder`
 - Lease: `lease/personal/P3-T02/context-builder`
-- PR: [#166](https://github.com/agentkernel/cognitive-os/pull/166) (Draft at recording time)
+- PR: [#166](https://github.com/agentkernel/cognitive-os/pull/166) (all required CI passed)
 - Acceptance checkpoint: `0d8f5628a897aea32ee4cb7929bac1320ccb2a96`
 - Upstream: `origin/personal/P3-T02-context-builder`
 
@@ -40,5 +40,5 @@ authorized body load.
 This delivery does not pass B03, make a UCR-01 benefit claim, or create a
 release or Profile claim. It does not authorize Pi, promote Context to Task
 authority, or treat source retrieval as Task completion. The remaining closure
-steps are to validate this documentation revision in PR #166, merge it, close
-the lease, and clean the task branch.
+steps are to mark PR #166 ready, merge it, close the lease, and clean the task
+branch.
