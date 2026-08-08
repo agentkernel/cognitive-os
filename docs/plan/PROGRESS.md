@@ -13,7 +13,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select work only from the Personal formal plan |
-| P1-T09 route implementation | `in-progress` | `experimental-local-only` / `tested-supported-ci`; route, fixture and native observations exist, and formal B01 attempt 1 passed all executed phases | execute and retain the remaining preregistered clean-Linux attempts; do not promote one attempt to campaign acceptance |
+| P1-T09 route implementation | `blocked` | `experimental-local-only` / `tested-supported-ci`; route, fixture and native observations exist, and formal B01 attempt 1 passed all executed phases. Read-only libvirt inspection confirms the registered baseline and active `192.168.123.0/24` network, but cannot prove guest readiness without starting a counted new attempt. | a designated desktop operator and independent verifier must staff fresh attempt 3, including the approved hidden-input Provider opt-in; do not run a readiness-only probe or treat it as a retry |
 | B01 first-install/first-conversation Gate | **running** | `B01-Desktop-Linux-002` is the sole active B01 guest. Attempt 1 of the formal minimum 20 attempts passed. Attempt 2 crossed the clean-reset checkpoint but failed bounded guest-network readiness before any artifact, Pi, service, Provider, credential, prompt, or route was used; cleanup restored the exact baseline and left the domain shut off. The ordered ledger has 2 of 20 attempts: 1 success / 1 failure, with no critical safety failure observed. `B01-Clean-Linux-001` is retired historical failed-qualification evidence and cannot substitute for an attempt. The campaign still lacks 18 attempts, a >=90% final success rate, aggregate statistics, and final independent verifier disposition | diagnose the reset guest's SSH/network readiness without altering the Desktop baseline or treating attempt 2 as retryable; only a fresh Desktop reset can begin attempt 3 |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
 | P2-T02 Personal application service | **done** | D01-D04 now satisfy the unchanged acceptance: authenticated daemon-owned intent record/interpret, server-issued preview/admit and bounded Task watch; private six-family projection/watch; deterministic CLI and Pi sidecar parity with isolated Task/management channels and read-only client boundaries. Each slice has exact Linux evidence and required Ubuntu/Windows CI. | P2 Gates B02/B04/B05/B12 remain `not-run`; select an unrelated ready formal task |
@@ -27,17 +27,17 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P1-T09/b01-network-recovery` | P1-T09 remains `in-progress`; B01 remains `running` with 2 of its fixed 20 attempts recorded (1 success, 1 readiness failure). The lease scopes read-only diagnosis of the clean-reset guest's SSH/network readiness while preserving the registered Desktop baseline. | inspect the shut-off guest through the authorized system-libvirt host without changing the guest or its baseline; only a fresh reset may start attempt 3 |
+| Active task lease | `none` | P1-T09 is `blocked` on a staffed fresh attempt 3. The read-only diagnosis confirmed the domain, baseline, guest interface, and active network while preserving the guest shut off; its recovery lease is closed pending the external operator action. B01 remains `running` with 2 of its fixed 20 attempts recorded (1 success, 1 readiness failure). | designated desktop operator and independent verifier schedule one fresh, complete attempt 3; claim a new P1-T09 execution lease before changing the guest |
 
 ### Layer 1 — Formal task progress
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 23 | 1 | 0 | 29 | 30 |
+| 53 | 23 | 0 | 1 | 29 | 30 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, and `P3-T01` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P1-T09 remains in progress.
+weakening any criterion. P1-T09 is blocked on its next staffed B01 attempt.
 P2-T07/D01 and P2-T07/D02 are done with exact-revision native Linux evidence and supported negative coverage. Formal task completion remains
 independent from every product Gate.
 

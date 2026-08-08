@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/b01-network-recovery` | P1-T09 B01 clean-reset guest network recovery and campaign continuation | Lane-RUN | `personal/P1-T09-b01-network-recovery` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260808-personal-p1-t09-b01-network-recovery-handoff.md`; `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
+| none | No active task lease | — | — | — | — | — | — |
 
 The active lease above grants the only current writable implementation path.
 
@@ -83,6 +83,7 @@ The active lease above grants the only current writable implementation path.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P1-T09/b01-network-recovery` | P1-T09 B01 clean-reset guest network recovery and campaign continuation | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Read-only system-libvirt diagnosis preserved the shut-off baseline and confirmed the domain/interface/default `192.168.123.0/24` network, but cannot establish guest readiness without starting counted attempt 3. P1-T09 is blocked until the designated desktop operator and independent verifier can run a complete fresh attempt. See `20260808-personal-p1-t09-b01-network-recovery-handoff.md`. |
 | `lease/personal/P2-T07/checkpoint-artifact-verifier` | P2-T07 Checkpoint, Artifact, Evidence, and independent Verifier delivery | `personal/P2-T07-checkpoint-artifact-verifier-d02` | 2026-08-08 | P2-T07 closed in PR #164 at `main@7e75e6642d289e1127928c79fed116e00b61c987`; its former active row was reconciled after the merge record landed in `main@30649d9e027c6d5157370314e8035faf6836cb00`. D01/D02 provide fixed-post-state verifier persistence and focused identity/fencing negatives. |
 | `lease/personal/P2-T06/tool-process-executor` | P2-T06 complete Tool/process executor, supervisor, cursor, and reconcile delivery | `personal/P2-T06-tool-process-executor` | 2026-08-08 | P2-T06 closes in PR #162 at `main@c919ab720416aeaab81ad7a381849bad40dabf0b`. D01-D04 satisfy the bounded executor, durable Effect, ProcessCheck, cursor, fault, orphan, redaction, idempotency, and unknown-outcome reconciliation acceptance. The daemon-private observation source fails closed and does not attach arbitrary PIDs; public Process, Task completion, Gates, release, and Profile claims remain separate. Exact native Linux focused tests 26/26, Clippy/fmt, consistency, and required Ubuntu/Windows CI passed. |
 | `lease/personal/P2-T03/scheduler-runtime-closure` | P2-T03 final acceptance mapping, task closure, and delivery reconciliation | `personal/P2-T03-scheduler-runtime-closure` | 2026-08-07 | P2-T03 closes in PR #160 at `main@678b653c588c45ea02bf393ad7038ef760c0971b`. D01-D05 meet the unchanged durable scheduler/stop/Effect/worker-fencing acceptance with exact native Linux and Ubuntu/Windows CI evidence. The task branch was deleted after merge; B05/B12, release, and Profile remain `not-run`/incomplete. See `20260807-personal-p2-t03-scheduler-runtime-closure.md`. |

@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T06、P2-T07、P3-T01 已完成；P1-T09 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：blocked（P0-T01..T07、P1-T01..T08、P2-T01..T06、P2-T07、P3-T01 已完成；P1-T09 blocked，等待具名 desktop operator 的 fresh attempt 3；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-08**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -128,14 +128,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 0 | 1 | 0 | G1 / B01 `running` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 1 | 0 | 0 | 5 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **23** | **1** | **0** | **29** | — |
+| **合计** | **53** | **23** | **0** | **1** | **29** | — |
 
 ## 2. 产品边界与不变量
 
@@ -507,7 +507,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-02；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md). The campaign still lacks the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | blocked | 2026-08-08；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Attempt 2 is the recorded readiness failure. Read-only system-libvirt diagnosis confirms the baseline, interface, and `192.168.123.0/24` NAT network are registered and active, but cannot establish guest readiness while preserving the shut-off baseline. A fresh reset/start is attempt 3 and requires the designated desktop operator's hidden-input Provider opt-in plus independent verification; this is the external blocker. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md) and [network-recovery blocker](../checkpoints/20260808-personal-p1-t09-b01-network-recovery-handoff.md). The campaign still lacks the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -634,4 +634,3 @@ RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daem
 - [ ] 写入 `docs/checkpoints/` handoff，记录完成项、未完成项、测试、证据、风险与下一步。
 - [ ] 在 PR/提交中关联 `PERS-*` 计划 ID，并在适用时关联真实 REQ-ID。
 - [ ] 如发生计划结构变化（新增/取消任务、验收或依赖变化），在同一修订批中同步 `plan.md` 任务卡与依赖图、`personal-trace.yaml` 映射，保持无孤儿任务。
-
