@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| none | No active task lease | — | — | — | — | — | — |
+| `lease/personal/P1-T09/b01-artifact-recovery` | P1-T09 B01 replacement campaign artifact recovery | Lane-RUN | `personal/P1-T09-b01-network-recovery` | `AGENTS.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260808-personal-p1-t09-b01-attempt-4-execution-handoff.md`; `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
 
 The active lease above grants the only current writable implementation path.
 
@@ -83,6 +83,8 @@ The active lease above grants the only current writable implementation path.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P1-T09/b01-attempt-4-execution` | P1-T09 B01 fresh attempt 4 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Counted Attempt 4 passed repaired SSH readiness but failed before installation because the preregistered workflow artifact had expired. Cleanup restored the exact baseline and shut the guest off. See `20260808-personal-p1-t09-b01-attempt-4-execution-handoff.md`. |
+| `lease/personal/P1-T09/b01-baseline-ssh-provisioning` | P1-T09 B01 baseline public-key SSH provisioning and procedure reconciliation | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Owner-authorized offline provisioning added a dedicated non-secret Ed25519 public key for `hal9001`, a bounded SSH check succeeded, and the repaired shutoff state replaced `b01-platform-qualified-baseline`. This was baseline maintenance, not attempt 4. See `20260808-personal-p1-t09-b01-baseline-ssh-provisioning-handoff.md`. |
 | `lease/personal/P1-T09/b01-attempt-3-execution` | P1-T09 B01 fresh attempt 3 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Attempt 3 reached guest SSH but failed the available public-key authentication path. Cleanup restored the exact baseline and shut the guest off. P1-T09 remains blocked pending non-secret SSH provisioning or an approved procedure revision. See `20260808-personal-p1-t09-b01-attempt-3-execution-handoff.md`. |
 | `lease/personal/P1-T09/b01-network-recovery` | P1-T09 B01 clean-reset guest network recovery and campaign continuation | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Read-only system-libvirt diagnosis preserved the shut-off baseline and confirmed the domain/interface/default `192.168.123.0/24` network, but cannot establish guest readiness without starting counted attempt 3. P1-T09 is blocked until the designated desktop operator and independent verifier can run a complete fresh attempt. See `20260808-personal-p1-t09-b01-network-recovery-handoff.md`. |
 | `lease/personal/P2-T07/checkpoint-artifact-verifier` | P2-T07 Checkpoint, Artifact, Evidence, and independent Verifier delivery | `personal/P2-T07-checkpoint-artifact-verifier-d02` | 2026-08-08 | P2-T07 closed in PR #164 at `main@7e75e6642d289e1127928c79fed116e00b61c987`; its former active row was reconciled after the merge record landed in `main@30649d9e027c6d5157370314e8035faf6836cb00`. D01/D02 provide fixed-post-state verifier persistence and focused identity/fencing negatives. |

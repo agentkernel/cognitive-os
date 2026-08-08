@@ -66,6 +66,10 @@
 | 3 | clean-reset checkpoint | pass | exact `b01-platform-qualified-baseline` restored and guest started through authorized system-libvirt control |
 | 3 | guest network readiness | **fail** | four bounded non-interactive SSH probes reached the guest SSH service but could not authenticate with the available public-key path; no artifact, Pi, product service, Provider, credential, prompt, or route runner was used |
 | 3 | cleanup | **pass** | exact baseline restored again; domain confirmed `shut off`; no post-baseline state retained |
+| 4 | clean-reset checkpoint | pass | exact repaired `b01-platform-qualified-baseline` restored and guest started through authorized system-libvirt control |
+| 4 | guest SSH readiness | pass | bounded non-interactive local-key ProxyJump probe reached `hal9001@192.168.123.160` successfully |
+| 4 | immutable artifact availability | **fail** | the preregistered artifact `0.0.0-campaign.20260801.1` is expired from workflow run `30687541828`; the only host-local candidate was an older, non-registered campaign and was not used |
+| 4 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no artifact, Pi, product service, Provider, credential, prompt, route runner, request, response, or authority state was created |
 
 ## Attempt 1 result
 
