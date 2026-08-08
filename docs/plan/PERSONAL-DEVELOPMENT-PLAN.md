@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 in-progress，B01 fixed-N 已记账 4 次，1 成功/3 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：blocked（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 blocked：B01 fixed-N 已记账 10 次，2 成功/8 失败，原 N=20 campaign 已无法达到 >=90% 成功率；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-09**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -128,14 +128,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 0 | 1 | 0 | G1 / B01 `fail` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 2 | 0 | 0 | 4 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **24** | **1** | **0** | **28** | — |
+| **合计** | **53** | **24** | **0** | **1** | **28** | — |
 
 ## 2. 产品边界与不变量
 
@@ -509,7 +509,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-08；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: running`。Attempt 1 on `B01-Desktop-Linux-002` passed all executed phases with immutable `0.0.0-campaign.20260801.1` from `main@0a5524b`, exact Pi `0.81.1`, response in 6295 ms, `authority_side_effects:false` and post-clear secret deletion. Attempt 2 timed out during readiness. Attempt 3 reached guest SSH but failed the then-available public-key authentication path; baseline maintenance subsequently repaired that path. Counted Attempt 4 passed SSH readiness but failed immutable artifact availability because the preregistered workflow artifact had expired; no artifact, Pi, service, Provider, credential, prompt, or route was used, and cleanup restored the baseline shut off. The task remains in progress while the runner produces a newly available, independently verified reviewed-main artifact, preregisters its immutable identity, and confirms non-secret Provider/model configuration support before requesting a fresh Attempt 5. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md), [baseline provisioning](../checkpoints/20260808-personal-p1-t09-b01-baseline-ssh-provisioning-handoff.md), and [Attempt 4 handoff](../checkpoints/20260808-personal-p1-t09-b01-attempt-4-execution-handoff.md). The campaign now has 4 of 20 attempts, still lacking the remaining denominator, aggregate median/p95 and confidence interval, ≥90% calculation, zero-critical-failure closure and final independent verifier disposition. Attempt 1 remains valid evidence and must not be deleted or rerun. |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | blocked | 2026-08-09 reconciliation；`development_track: experimental-local-only`，`implementation_evidence: tested-supported-ci`，`B01 gate_status: fail`。The immutable ledger records 10 started attempts: Attempts 1 and 10 passed the complete route; Attempts 2-9 failed and each cleanup restored the registered baseline. There are no observed critical safety failures, but the fixed N=20 campaign can now produce at most 12 successes, or 60%, which cannot satisfy the unchanged >=90% threshold. The current campaign therefore fails and P1-T09 cannot meet its acceptance through additional attempts. Attempt 1 and Attempt 10 remain valid individual evidence and must not be deleted, renumbered, or rerun. `blocked_paths`: the completed B01 fixed-N campaign and any successor campaign preregistration; `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `G1`, `GMVP-LINUX`; owner: product owner and independent verifier; next action: decide whether to formally retain the failed campaign and authorize a separately preregistered successor B01 campaign, including its own fixed denominator, artifact manifest/digest/attestation, operator/verifier, and clean-reset procedure. The ignored `/artifacts/` directory is owned local staging only and is neither modified nor an implicit successor input. Evidence: [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md) and [reconciliation handoff](../checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md). |
 
 ### Phase 2 - 单 Agent 任务闭环
 
