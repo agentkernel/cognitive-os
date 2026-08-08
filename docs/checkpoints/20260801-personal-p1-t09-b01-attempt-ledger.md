@@ -74,6 +74,11 @@
 | 5 | guest SSH readiness | pass | bounded non-interactive local-key ProxyJump probe reached `hal9001@192.168.123.160` successfully |
 | 5 | staged bundle digest check | **fail** | an automation-shell quoting defect made the preregistered digest-check command invalid before installer activation; no artifact was installed or executed |
 | 5 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no Pi, product service, Provider, credential, prompt, route runner, request, response, or authority state was created |
+| 6 | clean-reset checkpoint | pass | exact repaired `b01-platform-qualified-baseline` restored and guest started through authorized system-libvirt control |
+| 6 | guest SSH readiness | pass | bounded non-interactive local-key ProxyJump probe reached `hal9001@192.168.123.160` successfully |
+| 6 | immutable installation and activation | pass | `0.0.0-campaign.20260808.1` installer accepted the staged signature/bundle/Pi pin and activated `cognitiveos-personal.service` on port 48181 |
+| 6 | user-service readiness | **fail** | the guest had no persistent Desktop login session; the SSH-created user manager exited after the remote session ended and the user service became inactive before Provider configuration |
+| 6 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no Provider credential, prompt, route runner, request, response, or authority state was created |
 
 ## Attempt 5 preregistration
 
@@ -99,6 +104,20 @@ was created. Cleanup restored the exact baseline and left the domain shut off.
 This is a recorded fixed-N setup failure, not a retry or critical-safety
 failure. The next attempt must use the already verified artifact and a
 prevalidated non-shell-interpolated digest procedure.
+
+## Attempt 6 result
+
+`B01-clean-linux-first-install-first-conversation-001` attempt 6 reached the
+clean-reset checkpoint, passed bounded SSH readiness, and completed immutable
+installer activation for `0.0.0-campaign.20260808.1`. The user service became
+inactive after the SSH-created user manager exited because the Desktop user had
+not logged in graphically. The service therefore could not satisfy readiness
+before Provider configuration. No Provider credential, Provider request,
+prompt, expected marker, response, authority side effect, Task, Effect, or
+Verification was created. Cleanup restored the exact baseline and left the
+domain shut off. This is a recorded fixed-N readiness failure, not a retry or
+critical-safety failure. A fresh attempt must establish the normal Desktop
+login session before installation and hidden-input credential opt-in.
 
 ## Attempt 1 result
 

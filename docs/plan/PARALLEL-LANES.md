@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/b01-attempt-6-execution` | P1-T09 B01 fresh Attempt 6 execution | Lane-RUN | `personal/P1-T09-b01-network-recovery` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
+| none | No active task lease | — | — | — | — | — | — |
 
 The active lease above grants the only current writable implementation path.
 
@@ -83,6 +83,7 @@ The active lease above grants the only current writable implementation path.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P1-T09/b01-attempt-6-execution` | P1-T09 B01 fresh Attempt 6 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Counted Attempt 6 installed and activated the verified artifact, but its SSH-created user manager exited without a persistent Desktop login session. Cleanup restored the exact baseline and shut the guest off. A fresh attempt must first establish the normal Desktop session. |
 | `lease/personal/P1-T09/b01-attempt-5-execution` | P1-T09 B01 fresh Attempt 5 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Counted Attempt 5 reached clean reset and SSH readiness but failed before installer activation due to a runner shell-quoting defect. Cleanup restored the exact baseline and shut the guest off. Attempt 6 uses the same independently verified artifact but removes the extraneous shell digest step. |
 | `lease/personal/P1-T09/b01-artifact-recovery` | P1-T09 B01 replacement campaign artifact recovery | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Protected workflow run `31253008076` produced the available `0.0.0-campaign.20260808.1` artifact. The downloaded bundle digest matched its manifest, and the exact `main@bde3e3c` locked verifier accepted its signature, trusted key, and Pi pin. Owner authorization then advanced the task to fresh Attempt 5 execution. |
 | `lease/personal/P1-T09/b01-attempt-4-execution` | P1-T09 B01 fresh attempt 4 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Counted Attempt 4 passed repaired SSH readiness but failed before installation because the preregistered workflow artifact had expired. Cleanup restored the exact baseline and shut the guest off. See `20260808-personal-p1-t09-b01-attempt-4-execution-handoff.md`. |
