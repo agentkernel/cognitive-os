@@ -4,7 +4,7 @@
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
 > **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T06、P2-T07、P3-T01 已完成；P1-T09 in-progress；B01 running：固定 N=20 已记账 2 次，1 成功/1 失败；P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
-> **最后更新：2026-08-07**
+> **最后更新：2026-08-08**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -272,6 +272,12 @@ formal task acceptance assessment 和收口。
 | `P2-T03/D05` | P2-T03 | candidate WIA 的 exact lease-bound handoff、Effect recovery/closure 与 private scheduler tick；只有 P2-T07/D01 发行的 continuation authority 才能进入 BoundedHarness | `P2-T03/D04`、`P2-T07/D01` | failure injection + worker/recovery integration tests；完成后为 P2-T03 task acceptance 汇总入口 |
 | `P2-T07/D01` | P2-T07 | daemon-private fixed post-state、verification request/report、currentness revalidation、checkpoint 与 append-only continuation authority；只允许 `ACT -> VERIFY -> CONTINUE -> OBSERVE`，绝不触发 Task acceptance/completion | `P2-T03/D05` WIA/recovery boundary与既有 Loop/Effect contracts | durable positive/negative/restart tests、exact Linux validation、required CI；完成后由 D05 消费 continuation authority，P2-T07 的 Artifact、完整 criteria evidence 和 Task completion 仍不因此关闭 |
 | `P2-T07/D02` | P2-T07 | daemon-private independent verifier seam that reloads the immutable verification request and fixed post-state, validates currentness and verifier identity, and persists only content-addressed artifact evidence references in an append-only report | `P2-T07/D01` fixed post-state/request/report persistence | verifier identity mismatch, stale post-state, malformed/duplicate artifact reference, fenced writer, and passed-without-evidence negatives; exact Linux validation and required CI; no Task acceptance/completion |
+
+## 6. 收口记录
+
+- `P2-T07` 已完成并在 PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`。
+- `lease/personal/P2-T07/checkpoint-artifact-verifier` 已关闭。
+- 后续只从本计划中选择下一个正式任务，不再将该 lease 视为 active。
 | `P2-T04/D01` | P2-T04 | private scheduler-to-deterministic-Context-to-pinned-Pi candidate worker composition；Pi output is an opaque candidate only, while scheduler lease, fencing, budget, WIA/continuation, Effect, progress, evidence, and Task state remain daemon-owned | `P2-T02`、`P2-T03/D05`、`P2-T07/D01` | real-store stale lease/fence, required Context failure, duplicate tick, exhausted budget, and self-report rejection coverage; exact Linux validation and required CI; no Tool execution or Task completion |
 | `P2-T06/D01` | P2-T06 | validated daemon-private `WorkspaceRead` executor accepts only a descriptor-bound, Intent-keyed staged request; it fences stale writers before I/O, serializes duplicate key dispatch, retains only bounded/redacted output, and answers recovery queries using the original key | P2-T05 static native Tool catalog and validators | failure-first executor negatives plus exact-revision native Linux focused test and required CI; completion enables durable Effect dispatch wiring, without claiming progress, evidence, verification, Task completion, Gate, release, or Profile |
 | `P2-T06/D02` | P2-T06 | wire one read-only `WorkspaceRead` through the existing durable Intent/Effect protocol: stage only after the persisted Intent reload, commit `EXECUTING` before filesystem dispatch, record an explicit outcome, and reconcile an unknown outcome by the original idempotency key | `P2-T06/D01` and the existing P2-T03 durable Effect/WIA boundary | real SQLite persist-before-dispatch, unknown-outcome/restart, stale-fence, duplicate-key, bounded-redacted output regressions; exact-revision native Linux and required CI; completion enables the remaining process supervision and mutation family work |
