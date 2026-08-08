@@ -1263,7 +1263,7 @@ mod tests {
             Version::INITIAL
         );
 
-        std::fs::remove_file(database_path).expect("remove authority database");
+        std::fs::remove_file(database_path).unwrap_or(());
     }
 
     #[test]
