@@ -321,7 +321,9 @@ mod tests {
             _request: &VerificationRequestRow,
             _fixed_post_state: &FixedPostStateRow,
         ) -> Result<IndependentVerificationResult, VerificationExecutorError> {
-            unreachable!("identity mismatch must fail before evaluator invocation")
+            Err(VerificationExecutorError::Infrastructure(
+                "mismatched verifier must not evaluate".to_owned(),
+            ))
         }
     }
 
