@@ -2071,7 +2071,7 @@ mod tests {
         store: &SqliteAuthorityStore,
         task_ref: &str,
         required_context_ref: Option<&str>,
-        context_budget: Value,
+        context_budget: serde_json::Value,
     ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
         let governance = context_governance();
         let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
