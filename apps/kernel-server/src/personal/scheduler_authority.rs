@@ -831,7 +831,7 @@ where
         .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
         .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
     let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
-    let contract_request_reference = contract.context_request_ref.ok_or_else(|| {
+    let contract_request_reference = contract.context_request_ref.as_ref().ok_or_else(|| {
         SchedulerAuthorityError::ContextRequestUnavailable(
             "current TaskContract has no ContextRequest binding".to_owned(),
         )
