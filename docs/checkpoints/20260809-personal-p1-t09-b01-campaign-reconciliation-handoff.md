@@ -55,6 +55,9 @@ directory as an implicit dependency.
 - `git diff --check`: pass
 - `pnpm run check:consistency`: pass (275 requirements, 55 error codes, 73
   schemas, 89 vectors; Personal plan/Gates and lease checks included)
+- `pnpm --filter @cognitiveos/repo-tools test`: pass (5/5); the failure
+  injection now explicitly promotes the current `B01` `fail` row to `pass`
+  before asserting the incomplete-denominator rejection.
 
 ## Non-claims
 
