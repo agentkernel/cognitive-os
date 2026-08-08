@@ -7,7 +7,7 @@
 - Branch: `personal/P1-T09-b01-campaign-continuation`
 - Base revision: `main@4ea42c0`
 - Lease: `lease/personal/P1-T09/b01-campaign-continuation`
-- Draft PR: pending creation
+- Draft PR: [#167](https://github.com/agentkernel/cognitive-os/pull/167)
 
 ## Reconciled campaign result
 
