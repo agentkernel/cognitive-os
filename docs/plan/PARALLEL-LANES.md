@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T07/checkpoint-artifact-verifier` | P2-T07 Checkpoint, Artifact, Evidence, and independent Verifier delivery | Lane-RUN | `personal/P2-T07-checkpoint-artifact-verifier` | `apps/kernel-server/src/personal/`; `crates/cognitive-kernel/src/`; `crates/cognitive-store/src/`; `crates/cognitive-store/tests/`; `apps/kernel-server/tests/`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/` | owner session / Cursor | 2026-08-08 / 2026-08-08 | active |
 
 The active lease above grants the only current writable implementation path.
 
