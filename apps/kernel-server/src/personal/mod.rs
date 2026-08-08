@@ -14,6 +14,7 @@ mod resource_api;
 mod scheduler_authority;
 mod server;
 mod task_api;
+mod tool_executor;
 
 pub use bounds::PersonalResourceBounds;
 pub use server::{PersonalDaemonConfig, serve_personal_loopback};
