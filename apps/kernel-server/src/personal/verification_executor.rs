@@ -13,7 +13,7 @@ use cognitive_kernel::{
     effects::WriterLease,
     ports::{
         AuthorityStore, Clock, ContinuationAuthorityStore, FixedPostStateRow, IdGenerator,
-        VerificationReportRow, VerificationRequestRow,
+        ProtocolStore, VerificationReportRow, VerificationRequestRow,
     },
 };
 use serde_json::json;
@@ -103,7 +103,7 @@ pub(crate) fn record_independent_verification<S, C, G, V>(
     writer_lease: &WriterLease,
 ) -> Result<VerificationReportRow, VerificationExecutorError>
 where
-    S: AuthorityStore + ContinuationAuthorityStore,
+    S: AuthorityStore + ContinuationAuthorityStore + ProtocolStore,
     C: Clock,
     G: IdGenerator,
     V: IndependentVerifier,
