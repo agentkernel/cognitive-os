@@ -71,6 +71,18 @@
 | 4 | immutable artifact availability | **fail** | the preregistered artifact `0.0.0-campaign.20260801.1` is expired from workflow run `30687541828`; the only host-local candidate was an older, non-registered campaign and was not used |
 | 4 | cleanup | **pass** | exact baseline restored; domain confirmed `shut off`; no artifact, Pi, product service, Provider, credential, prompt, route runner, request, response, or authority state was created |
 
+## Attempt 5 preregistration
+
+| Field | Registered value |
+|---|---|
+| Owner authorization | complete fresh counted Attempt 5 approved after replacement-artifact verification |
+| Artifact | `0.0.0-campaign.20260808.1` from `main@bde3e3cab94063705e46d4a9e72db15feb631cbc`; workflow run `31253008076` |
+| GitHub artifact digest | `sha256:698a8e2baa8e5833134177d3396776a3dc7bbcf068c81e98cf36c439a2a3b659` |
+| Bundle digest | `sha256:c0795081860311cf537fb92af388ee94519933ef28149faf1abc90449223cf22` |
+| Independent verification | exact `main@bde3e3c` locked Linux verifier accepted the staged bundle, signature, `p1-t09-experimental` key, `p1-t09-experimental-20260730` keyring, and Pi `0.81.1` pin |
+| Provider configuration | `deepseek`; `https://api.deepseek.com`; model ID `deepseek-v4-flash`; all values are non-secret and must be supplied only through product configuration |
+| Operator action | Operator A enters the DeepSeek API key only in the Desktop product hidden-input prompt; no key is entered in chat, command arguments, ordinary files, logs, or evidence |
+
 ## Attempt 1 result
 
 `B01-clean-linux-first-install-first-conversation-001` attempt 1 satisfies the
