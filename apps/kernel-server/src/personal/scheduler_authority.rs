@@ -982,6 +982,7 @@ where
                     source: source_metadata.source_id.to_string(),
                     transform: "omitted_source_family".to_owned(),
                     omitted_classes: vec!["unsupported_source_role".to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
                 },
             ));
             continue;
@@ -1000,6 +1001,7 @@ where
                     source: source_metadata.source_id.to_string(),
                     transform: "omitted_source_family".to_owned(),
                     omitted_classes: vec![source_family.to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
                 },
             ));
             continue;
@@ -1019,6 +1021,7 @@ where
                     source: source_metadata.source_id.to_string(),
                     transform: "omitted_stale_source".to_owned(),
                     omitted_classes: vec![source_family.to_owned()],
+                    verification: Some(source_metadata.source_digest.clone()),
                 },
             ));
             continue;
@@ -1224,7 +1227,10 @@ where
                 omitted_classes: loss.omitted_classes.clone(),
                 source: loss.source.clone(),
                 transform: loss.transform.clone(),
-                verification: resolved_view.render.digest.clone(),
+                verification: loss
+                    .verification
+                    .clone()
+                    .unwrap_or_else(|| resolved_view.render.digest.clone()),
             })
             .collect(),
         missing: (!resolved_view.missing.is_empty()).then(|| resolved_view.missing.clone()),
@@ -2611,6 +2617,10 @@ mod tests {
             loss.source == stale_source_ref
                 && loss.transform == "omitted_stale_source"
                 && loss.omitted_classes == ["working"]
+                && loss
+                    .verification
+                    .as_deref()
+                    .is_some_and(|digest| digest.starts_with("sha256:"))
         }));
 
         drop(store);

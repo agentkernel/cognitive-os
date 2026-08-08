@@ -189,6 +189,9 @@ pub struct LossEntry {
     pub transform: String,
     /// Classes omitted.
     pub omitted_classes: Vec<String>,
+    /// Optional immutable source-specific verification digest. When absent,
+    /// the persisted view binds the loss to its deterministic render digest.
+    pub verification: Option<String>,
 }
 
 /// One loaded item of the resolved view.
@@ -413,6 +416,7 @@ pub fn resolve(
                     source: candidate.object_ref.clone(),
                     transform: "omitted_duplicate_content".to_owned(),
                     omitted_classes: vec!["duplicate_content".to_owned()],
+                    verification: None,
                 });
             }
             Err(denied) => rejected.push(RejectedCandidate {
@@ -553,6 +557,7 @@ pub fn resolve(
                 source: candidate.object_ref.clone(),
                 transform: "omitted_over_budget".to_owned(),
                 omitted_classes: vec!["optional_candidate".to_owned()],
+                verification: None,
             });
         }
     }
@@ -566,6 +571,7 @@ pub fn resolve(
             source: item.clone(),
             transform: "required_missing_partial_allowed".to_owned(),
             omitted_classes: vec!["required_item".to_owned()],
+            verification: None,
         });
     }
     records.push(StageRecord {
