@@ -525,7 +525,9 @@ mod tests {
             Err(VerificationExecutorError::WriterFenced)
         ));
         assert_eq!(
-            store.load_verification_report(&object_id(20)).unwrap(),
+            store
+                .load_verification_report(&object_id(20))
+                .expect("read absent fenced verification report"),
             None
         );
 
@@ -554,7 +556,9 @@ mod tests {
             Err(VerificationExecutorError::VerifierIdentityMismatch)
         ));
         assert_eq!(
-            store.load_verification_report(&object_id(30)).unwrap(),
+            store
+                .load_verification_report(&object_id(30))
+                .expect("read absent identity-mismatched verification report"),
             None
         );
 
