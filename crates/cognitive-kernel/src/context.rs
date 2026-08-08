@@ -385,13 +385,36 @@ pub fn resolve(
     // Stage 4: per-object authorization re-validation, BEFORE ranker or
     // renderer see any body (REQ-CTX-002/006).
     let mut authorized: Vec<&CandidateObject> = Vec::new();
+    let mut authorized_content: Vec<(&str, &Value)> = Vec::new();
+    let mut duplicate_content_losses: Vec<LossEntry> = Vec::new();
     for candidate in prefiltered {
         let access = AccessRequest {
             action: "read_body".to_owned(),
             purpose: request.purpose.clone(),
         };
         match authorize(&request.snapshot, &candidate.governance, &access) {
-            Ok(_) => authorized.push(candidate),
+            Ok(_)
+                if !authorized_content.iter().any(|(content_digest, body)| {
+                    *content_digest == candidate.content_digest && *body == &candidate.body
+                }) =>
+            {
+                authorized_content.push((candidate.content_digest.as_str(), &candidate.body));
+                authorized.push(candidate);
+            }
+            Ok(_) => {
+                // Identical immutable content should occupy the Context budget
+                // once. Record the omitted source explicitly rather than
+                // allowing a duplicate body to reach ranking or rendering.
+                rejected.push(RejectedCandidate {
+                    candidate_ref: candidate.object_ref.clone(),
+                    reason: "DUPLICATE_CONTENT_DIGEST".to_owned(),
+                });
+                duplicate_content_losses.push(LossEntry {
+                    source: candidate.object_ref.clone(),
+                    transform: "omitted_duplicate_content".to_owned(),
+                    omitted_classes: vec!["duplicate_content".to_owned()],
+                });
+            }
             Err(denied) => rejected.push(RejectedCandidate {
                 candidate_ref: candidate.object_ref.clone(),
                 reason: denied.denial.code.to_owned(),
@@ -513,7 +536,7 @@ pub fn resolve(
         .iter()
         .map(|item| item.object_ref.as_str())
         .collect();
-    let mut losses: Vec<LossEntry> = Vec::new();
+    let mut losses = duplicate_content_losses;
     for candidate in &ranked {
         if required_refs.contains(candidate.object_ref.as_str()) {
             continue;
