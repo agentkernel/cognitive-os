@@ -286,6 +286,243 @@ pub(crate) enum ProcessCheckSupervisorError {
     NotRegistered,
     Orphaned,
     TimedOut,
+    ObservationUnavailable,
+}
+
+/// A daemon-owned source of observations for an already registered process.
+///
+/// The source does not grant authority and must not discover arbitrary PIDs.
+/// Runtime wiring can provide a platform-specific implementation after it has
+/// established process ownership and fencing. The default source below fails
+/// closed rather than attempting an unsafe cross-platform PID attach.
+pub(crate) trait ProcessObservationSource: Send + Sync {
+    fn observe(
+        &self,
+        process_id: u32,
+        timeout: Duration,
+    ) -> Result<Vec<u8>, ProcessCheckSupervisorError>;
+}
+
+/// Production-safe default observation source. It deliberately has no OS
+/// process access and therefore cannot accidentally trust an arbitrary PID.
+pub(crate) struct FailClosedProcessObservationSource;
+
+impl ProcessObservationSource for FailClosedProcessObservationSource {
+    fn observe(
+        &self,
+        _process_id: u32,
+        _timeout: Duration,
+    ) -> Result<Vec<u8>, ProcessCheckSupervisorError> {
+        Err(ProcessCheckSupervisorError::ObservationUnavailable)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ProcessLifecycleState {
+    Registered,
+    Orphaned,
+    Shutdown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct DaemonProcessRegistration {
+    attempt_id: String,
+    process_id: u32,
+    fencing_epoch: i64,
+    lifecycle: ProcessLifecycleState,
+}
+
+/// Daemon-private process supervisor with explicit ownership and fencing.
+///
+/// Registration is the only way a PID enters this supervisor. Every check
+/// validates the registration, current fencing epoch, lifecycle, and timeout
+/// before invoking the injected observation source. Output is bounded here,
+/// before it crosses into the Effect executor.
+pub(crate) struct DaemonProcessSupervisor<S> {
+    maximum_timeout: Duration,
+    maximum_output_bytes: usize,
+    source: Arc<S>,
+    registrations: Mutex<BTreeMap<u32, DaemonProcessRegistration>>,
+    current_fencing_epoch: Mutex<i64>,
+    is_shutdown: Mutex<bool>,
+}
+
+impl<S> DaemonProcessSupervisor<S>
+where
+    S: ProcessObservationSource,
+{
+    pub(crate) fn new(
+        initial_fencing_epoch: i64,
+        maximum_timeout: Duration,
+        maximum_output_bytes: usize,
+        source: Arc<S>,
+    ) -> Self {
+        Self {
+            maximum_timeout,
+            maximum_output_bytes,
+            source,
+            registrations: Mutex::new(BTreeMap::new()),
+            current_fencing_epoch: Mutex::new(initial_fencing_epoch),
+            is_shutdown: Mutex::new(false),
+        }
+    }
+
+    pub(crate) fn register(
+        &self,
+        attempt_id: String,
+        process_id: u32,
+        fencing_epoch: i64,
+    ) -> Result<(), ProcessCheckSupervisorError> {
+        if attempt_id.is_empty() || process_id == 0 {
+            return Err(ProcessCheckSupervisorError::NotRegistered);
+        }
+        if *self
+            .is_shutdown
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?
+        {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        let current_fencing_epoch = *self
+            .current_fencing_epoch
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        if fencing_epoch != current_fencing_epoch {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        let mut registrations = self
+            .registrations
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        if registrations.values().any(|registration| {
+            registration.attempt_id == attempt_id
+                && registration.process_id != process_id
+                && registration.lifecycle != ProcessLifecycleState::Shutdown
+        }) {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        registrations.insert(
+            process_id,
+            DaemonProcessRegistration {
+                attempt_id,
+                process_id,
+                fencing_epoch,
+                lifecycle: ProcessLifecycleState::Registered,
+            },
+        );
+        Ok(())
+    }
+
+    pub(crate) fn unregister(&self, process_id: u32) -> Result<(), ProcessCheckSupervisorError> {
+        let mut registrations = self
+            .registrations
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        registrations.remove(&process_id);
+        Ok(())
+    }
+
+    pub(crate) fn fence(&self, fencing_epoch: i64) -> Result<(), ProcessCheckSupervisorError> {
+        if *self
+            .is_shutdown
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?
+        {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        let mut current_fencing_epoch = self
+            .current_fencing_epoch
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        if fencing_epoch <= *current_fencing_epoch {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        *current_fencing_epoch = fencing_epoch;
+        let mut registrations = self
+            .registrations
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        for registration in registrations.values_mut() {
+            registration.lifecycle = ProcessLifecycleState::Orphaned;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn recover(
+        &self,
+        attempt_id: &str,
+        process_id: u32,
+        fencing_epoch: i64,
+    ) -> Result<(), ProcessCheckSupervisorError> {
+        self.register(attempt_id.to_owned(), process_id, fencing_epoch)
+    }
+
+    pub(crate) fn shutdown(&self) -> Result<(), ProcessCheckSupervisorError> {
+        let mut is_shutdown = self
+            .is_shutdown
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        *is_shutdown = true;
+        let mut registrations = self
+            .registrations
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        for registration in registrations.values_mut() {
+            registration.lifecycle = ProcessLifecycleState::Shutdown;
+        }
+        Ok(())
+    }
+}
+
+impl DaemonProcessSupervisor<FailClosedProcessObservationSource> {
+    pub(crate) fn fail_closed(
+        initial_fencing_epoch: i64,
+        maximum_timeout: Duration,
+        maximum_output_bytes: usize,
+    ) -> Self {
+        Self::new(
+            initial_fencing_epoch,
+            maximum_timeout,
+            maximum_output_bytes,
+            Arc::new(FailClosedProcessObservationSource),
+        )
+    }
+}
+
+impl<S> ProcessCheckSupervisor for DaemonProcessSupervisor<S>
+where
+    S: ProcessObservationSource,
+{
+    fn check_process(
+        &self,
+        process_id: u32,
+        timeout: Duration,
+    ) -> Result<Vec<u8>, ProcessCheckSupervisorError> {
+        if timeout.is_zero() || timeout > self.maximum_timeout {
+            return Err(ProcessCheckSupervisorError::TimedOut);
+        }
+        let current_fencing_epoch = *self
+            .current_fencing_epoch
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?;
+        let registration = self
+            .registrations
+            .lock()
+            .map_err(|_| ProcessCheckSupervisorError::Orphaned)?
+            .get(&process_id)
+            .cloned()
+            .ok_or(ProcessCheckSupervisorError::NotRegistered)?;
+        if registration.process_id != process_id
+            || registration.fencing_epoch != current_fencing_epoch
+        {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        if registration.lifecycle != ProcessLifecycleState::Registered {
+            return Err(ProcessCheckSupervisorError::Orphaned);
+        }
+        let output = self.source.observe(process_id, timeout)?;
+        Ok(output.into_iter().take(self.maximum_output_bytes).collect())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -965,6 +1202,118 @@ mod tests {
             )
             .expect("stage process check");
         (supervisor, executor)
+    }
+
+    struct TestProcessObservationSource {
+        output: Vec<u8>,
+    }
+
+    impl ProcessObservationSource for TestProcessObservationSource {
+        fn observe(
+            &self,
+            _process_id: u32,
+            _timeout: Duration,
+        ) -> Result<Vec<u8>, ProcessCheckSupervisorError> {
+            Ok(self.output.clone())
+        }
+    }
+
+    fn daemon_supervisor() -> DaemonProcessSupervisor<TestProcessObservationSource> {
+        DaemonProcessSupervisor::new(
+            7,
+            Duration::from_secs(2),
+            8,
+            Arc::new(TestProcessObservationSource {
+                output: b"1234567890".to_vec(),
+            }),
+        )
+    }
+
+    #[test]
+    fn daemon_supervisor_registers_stable_attempt_identity() {
+        let supervisor = daemon_supervisor();
+        assert_eq!(supervisor.register("attempt-1".to_owned(), 4242, 7), Ok(()));
+        assert_eq!(
+            supervisor.register("attempt-1".to_owned(), 4243, 7),
+            Err(ProcessCheckSupervisorError::Orphaned)
+        );
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_millis(1)),
+            Ok(b"12345678".to_vec())
+        );
+    }
+
+    #[test]
+    fn daemon_supervisor_rejects_stale_epoch_and_orphan_until_recovered() {
+        let supervisor = daemon_supervisor();
+        supervisor
+            .register("attempt-1".to_owned(), 4242, 7)
+            .expect("register process");
+        supervisor.fence(8).expect("advance fencing epoch");
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_millis(1)),
+            Err(ProcessCheckSupervisorError::Orphaned)
+        );
+        supervisor
+            .recover("attempt-1", 4242, 8)
+            .expect("recover process at current epoch");
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_millis(1)),
+            Ok(b"12345678".to_vec())
+        );
+    }
+
+    #[test]
+    fn daemon_supervisor_rejects_orphans_and_shutdowns_fail_closed() {
+        let supervisor = daemon_supervisor();
+        supervisor
+            .register("attempt-1".to_owned(), 4242, 7)
+            .expect("register process");
+        supervisor.unregister(4242).expect("unregister process");
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_millis(1)),
+            Err(ProcessCheckSupervisorError::NotRegistered)
+        );
+        supervisor
+            .register("attempt-2".to_owned(), 4243, 7)
+            .expect("register second process");
+        supervisor.shutdown().expect("shutdown supervisor");
+        assert_eq!(
+            supervisor.check_process(4243, Duration::from_millis(1)),
+            Err(ProcessCheckSupervisorError::Orphaned)
+        );
+        assert_eq!(
+            supervisor.register("attempt-3".to_owned(), 4244, 7),
+            Err(ProcessCheckSupervisorError::Orphaned)
+        );
+    }
+
+    #[test]
+    fn daemon_supervisor_bounds_timeout_before_observation() {
+        let supervisor = daemon_supervisor();
+        supervisor
+            .register("attempt-1".to_owned(), 4242, 7)
+            .expect("register process");
+        assert_eq!(
+            supervisor.check_process(4242, Duration::ZERO),
+            Err(ProcessCheckSupervisorError::TimedOut)
+        );
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_secs(3)),
+            Err(ProcessCheckSupervisorError::TimedOut)
+        );
+    }
+
+    #[test]
+    fn daemon_supervisor_default_source_fails_closed() {
+        let supervisor = DaemonProcessSupervisor::fail_closed(7, Duration::from_secs(1), 32);
+        supervisor
+            .register("attempt-1".to_owned(), 4242, 7)
+            .expect("register process");
+        assert_eq!(
+            supervisor.check_process(4242, Duration::from_millis(1)),
+            Err(ProcessCheckSupervisorError::ObservationUnavailable)
+        );
     }
 
     #[test]
