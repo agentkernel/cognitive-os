@@ -167,6 +167,10 @@ mod tests {
             Err(unsupported_test_operation("append Memory tombstone"))
         }
 
+        fn append_memory_expiration(&self, _: &MemoryTombstoneRow) -> Result<(), StorePortError> {
+            Err(unsupported_test_operation("append Memory expiration"))
+        }
+
         fn search_memory_candidates(
             &self,
             _: &MemorySearchQuery,
