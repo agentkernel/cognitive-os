@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | none | — | — | — | — | — | none |
+| `lease/personal/P4-T05/resource-api` | P4-T05/D01 daemon-private Memory/Skill resource projection and task-bound application boundary | Lane-RUN | `personal/P4-T05-resource-api` | `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/tests/p4_t05_resource_api.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-10 | 2026-08-10 / 2026-08-10 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
