@@ -118,6 +118,12 @@ fn unsafe_import_and_incompatible_or_revoked_bindings_fail_closed() {
 
     let (compatible_package, compatible_revision) =
         package_and_revision("workspace://tenant-a/other");
+    let mut compatible_package = compatible_package;
+    let mut compatible_revision = compatible_revision;
+    compatible_package.package_id = object_id(6);
+    compatible_revision.revision_id = object_id(7);
+    compatible_revision.package_id = compatible_package.package_id.clone();
+    compatible_revision.content_digest = "sha256:compatible-other".to_owned();
     store
         .append_skill_import(&compatible_package, &compatible_revision)
         .unwrap();
