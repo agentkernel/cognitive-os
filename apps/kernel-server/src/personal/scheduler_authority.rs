@@ -2795,10 +2795,10 @@ mod tests {
             &context_command,
             &mut context_cache,
         )
-        .expect("initial authorized Context resolution");
+        .unwrap();
         store
             .append_context_revocation_fact(&later_revocation)
-            .expect("advance durable revocation epoch");
+            .unwrap();
 
         let result = super::resolve_authorized_task_context_with_cache(
             &store,
