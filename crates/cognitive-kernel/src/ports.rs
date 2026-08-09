@@ -1265,6 +1265,13 @@ pub trait MemoryStore {
     fn append_memory_tombstone(&self, tombstone: &MemoryTombstoneRow)
     -> Result<(), StorePortError>;
 
+    /// Append a retention-expiry fact after the daemon confirms the immutable
+    /// candidate retention deadline has been reached.
+    fn append_memory_expiration(
+        &self,
+        expiration: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError>;
+
     /// Discover metadata-only candidates from the derived FTS index after
     /// filtering authoritative Memory metadata and current source bindings.
     /// The FTS index is disposable derived data; its rows never grant access

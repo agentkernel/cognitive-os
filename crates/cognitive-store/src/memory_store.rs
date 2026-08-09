@@ -100,3 +100,32 @@ BEGIN SELECT RAISE(ABORT, 'append-only: Memory tombstone is immutable'); END;
 pub fn memory_lifecycle_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(18, MEMORY_LIFECYCLE_SCHEMA_V18)
 }
+
+/// Migration v19: extend the immutable lifecycle fact projection with the
+/// daemon-owned retention-expiry action without rewriting migration v18.
+pub const MEMORY_EXPIRY_SCHEMA_V19: &str = "
+DROP TRIGGER IF EXISTS memory_tombstones_append_only_update;
+DROP TRIGGER IF EXISTS memory_tombstones_append_only_delete;
+ALTER TABLE memory_tombstones RENAME TO memory_tombstones_v18;
+CREATE TABLE memory_tombstones (
+  lifecycle_id TEXT PRIMARY KEY,
+  memory_id TEXT NOT NULL UNIQUE REFERENCES memory_objects(memory_id),
+  action TEXT NOT NULL CHECK (action IN ('forget', 'expire')),
+  occurred_at_unix_seconds INTEGER NOT NULL,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+  canonical_json TEXT NOT NULL
+) STRICT;
+INSERT INTO memory_tombstones SELECT * FROM memory_tombstones_v18;
+DROP TABLE memory_tombstones_v18;
+CREATE TRIGGER memory_tombstones_append_only_update
+BEFORE UPDATE ON memory_tombstones
+BEGIN SELECT RAISE(ABORT, 'append-only: Memory lifecycle fact is immutable'); END;
+CREATE TRIGGER memory_tombstones_append_only_delete
+BEFORE DELETE ON memory_tombstones
+BEGIN SELECT RAISE(ABORT, 'append-only: Memory lifecycle fact is immutable'); END;
+";
+
+/// Version-19 Memory expiry lifecycle migration entry.
+pub fn memory_expiry_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(19, MEMORY_EXPIRY_SCHEMA_V19)
+}

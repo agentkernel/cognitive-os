@@ -258,6 +258,22 @@ fn forget_tombstone(memory_id: ObjectId, lifecycle_identifier: u64) -> MemoryTom
     }
 }
 
+fn expiration_tombstone(
+    memory_id: ObjectId,
+    lifecycle_identifier: u64,
+    occurred_at: i64,
+) -> MemoryTombstoneRow {
+    MemoryTombstoneRow {
+        lifecycle_id: object_id(lifecycle_identifier),
+        memory_id,
+        action: "expire".to_owned(),
+        occurred_at_unix_seconds: occurred_at,
+        reason: "retention deadline reached".to_owned(),
+        canonical_json: "{\"action\":\"expire\",\"reason\":\"retention deadline reached\"}"
+            .to_owned(),
+    }
+}
+
 #[test]
 fn forget_appends_a_tombstone_and_prevents_fts_resurrection() {
     let (_directory, store, authority_database_path) = fresh_store();
@@ -337,6 +353,53 @@ fn duplicate_or_unknown_forget_has_no_derived_index_side_effect() {
         .unwrap();
     assert!(matches!(
         store.append_memory_tombstone(&forget_tombstone(memory_id, 807)),
+        Err(StorePortError::Conflict { .. })
+    ));
+}
+
+#[test]
+fn expiry_requires_reached_retention_boundary_and_invalidates_fts() {
+    let (_directory, store, _authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(80),
+        "workspace://tenant-a/project",
+        "expiring orchard memory",
+    );
+    let memory_id = admit_memory(&store, 900, &source, "task fact", 200);
+
+    assert!(matches!(
+        store.append_memory_expiration(&expiration_tombstone(memory_id.clone(), 904, 199)),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "orchard",
+            ))
+            .unwrap()[0]
+            .memory_id,
+        memory_id
+    );
+
+    store
+        .append_memory_expiration(&expiration_tombstone(memory_id.clone(), 905, 200))
+        .unwrap();
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "orchard",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+    assert!(matches!(
+        store.append_memory_expiration(&expiration_tombstone(memory_id, 906, 201)),
         Err(StorePortError::Conflict { .. })
     ));
 }

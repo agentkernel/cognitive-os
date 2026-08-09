@@ -1725,12 +1725,12 @@ impl MemoryStore for SqliteAuthorityStore {
         &self,
         tombstone: &MemoryTombstoneRow,
     ) -> Result<(), StorePortError> {
-        if tombstone.action != "forget"
+        if !matches!(tombstone.action.as_str(), "forget" | "expire")
             || tombstone.reason.trim().is_empty()
             || serde_json::from_str::<serde_json::Value>(&tombstone.canonical_json).is_err()
         {
             return Err(invalid_context_payload(
-                "MemoryTombstone",
+                "MemoryLifecycle",
                 "action, reason, or canonical audit payload is invalid",
             ));
         }
@@ -1777,10 +1777,49 @@ impl MemoryStore for SqliteAuthorityStore {
                 .commit()
                 .map_err(unavailable("commit Memory forget transaction")),
             Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
-                detail: format!("Memory object {} is already forgotten", tombstone.memory_id),
+                detail: format!(
+                    "Memory object {} already has a lifecycle record",
+                    tombstone.memory_id
+                ),
             }),
             Err(error) => Err(unavailable("append Memory tombstone")(error)),
         }
+    }
+
+    fn append_memory_expiration(
+        &self,
+        expiration: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError> {
+        if expiration.action != "expire" {
+            return Err(invalid_context_payload(
+                "MemoryExpiration",
+                "expiration lifecycle action must be expire",
+            ));
+        }
+        let connection = self.lock()?;
+        let retention_deadline = connection
+            .query_row(
+                "SELECT memory_candidates.retention_expires_at_unix_seconds FROM memory_objects JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id WHERE memory_objects.memory_id=?1",
+                (expiration.memory_id.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory retention deadline"))?;
+        let Some(retention_deadline) = retention_deadline else {
+            return Err(StorePortError::Conflict {
+                detail: format!("Memory object {} does not exist", expiration.memory_id),
+            });
+        };
+        if expiration.occurred_at_unix_seconds < retention_deadline {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "Memory object {} retention has not expired",
+                    expiration.memory_id
+                ),
+            });
+        }
+        drop(connection);
+        self.append_memory_tombstone(expiration)
     }
 
     fn search_memory_candidates(
