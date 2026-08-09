@@ -110,7 +110,7 @@ test("Personal governance drift is rejected by failure injection", () => {
         ),
     "docs/plan/PROGRESS.md": (source) =>
       source
-        .replace(/(\| B01 first-install\/first-conversation Gate \| \*\*)(?:running|fail)(\*\* \|)/, "$1pass$2")
+        .replace(/(\| B01 first-install\/first-conversation Gate \| \*\*)(?:running|fail|blocked)(\*\* \|)/, "$1pass$2")
         .replace("| `P2-T03/D03` | `done` |", "| `P2-T03/D03` | `in-progress` |")
         .replace("| `P2-T03/D05` | `done` |", "| `P2-T03/D05` | `in-progress` |"),
     "docs/governance/project-scope.yaml": (source) =>

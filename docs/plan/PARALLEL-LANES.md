@@ -75,17 +75,17 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 B01 successor campaign preregistration and artifact verification | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
-
-The owner retained the failed `001` campaign and authorized a separately
-preregistered successor. The active lease must not modify, delete, commit, or
-rely on the ignored local `/artifacts/` directory; the successor must
-independently re-confirm its manifest, digest, and attestation.
+No active task lease. The retained `001` campaign and authorized `002`
+successor remain recorded below. The ignored local `/artifacts/` directory
+must not be modified, deleted, committed, or used as an implicit successor
+input; a future continuation must independently re-confirm its manifest,
+digest, and attestation.
 
 ### 3.1 最近关闭的 leases
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 B01 successor campaign preregistration and artifact verification | `personal/P1-T09-b01-campaign-continuation` | 2026-08-09 | Owner retained failed `001` and authorized separately preregistered `002`; protected artifact workflow `31284948257` passed at GitHub `main@4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. No successor attempt started. The lease closed on a bounded blocker: `personal-linux-native-01` timed out acquiring GitHub HTTPS source for the exact-revision standalone verifier. See `20260809-personal-p1-t09-b01-successor-verification-blocker.md`; recovery is to restore access, claim a fresh verification lease, and verify before touching the B01 guest. |
 | `lease/personal/P3-T02/context-builder` | P3-T02 complete Context Builder and budgets | `personal/P3-T02-context-builder` | 2026-08-09 | PR #166 merged at `main@c78c58c096765caffb638e32dc8d74fd412765a9`; D01-D02 covered required daemon fragments, hard budget/duplicate loss, source-family policy, freshness-before-body loading, and digest-bound excluded-source trace. Exact native Linux focused test/Clippy and required Ubuntu/Windows CI passed. |
 | `lease/personal/P1-T09/b01-attempt-10-execution` | P1-T09 B01 fresh Attempt 10 execution with user-local Pi prefix | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Attempt 10 completed the full route: verified artifact activation, stable service, exact Pi `0.81.1` in a user-local prefix, hidden-input DeepSeek configuration, doctor readiness, and a bounded expected-marker response in 5272 ms with no authority side effects. Cleanup stopped the service, removed temporary route files, shut off the guest, and reverted the exact baseline. |
 | `lease/personal/P1-T09/b01-attempt-9-execution` | P1-T09 B01 fresh Attempt 9 execution | `personal/P1-T09-b01-network-recovery` | 2026-08-08 | Attempt 9 activated the verified artifact and passed stable user-service readiness, but a global npm installation targeted the root-owned `/opt` prefix and was denied write access. No Pi executable, Provider credential, or authority state was created; the guest was shut down and reverted to `b01-platform-qualified-baseline`. Attempt 10 uses a user-local Pi prefix. |

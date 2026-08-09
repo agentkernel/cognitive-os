@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 in-progress：retained B01 `001` fixed-N campaign failed at 2 成功/8 失败 after 10 attempts; owner authorized separate B01 `002` successor campaign with fixed N=20; P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：blocked（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 blocked：retained B01 `001` fixed-N campaign failed at 2 成功/8 失败 after 10 attempts; authorized B01 `002` successor awaits native independent artifact verification; P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-09**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -128,14 +128,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `running` |
+| Phase 1 - 安装到首次对话 | 9 | 8 | 0 | 1 | 0 | G1 / B01 `blocked` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 2 | 0 | 0 | 4 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **24** | **1** | **0** | **28** | — |
+| **合计** | **53** | **24** | **0** | **1** | **28** | — |
 
 ## 2. 产品边界与不变量
 
@@ -509,7 +509,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | 2026-08-09 owner decision：retained `B01-clean-linux-first-install-first-conversation-001` as failed at 2 successes / 8 failures after 10 started attempts; its arithmetic maximum of 12/20 remains below the unchanged >=90% threshold. Attempts 1 and 10 remain valid individual evidence and will not be deleted, renumbered, or rerun. The owner authorized separately preregistered successor `B01-clean-linux-first-install-first-conversation-002`, fixed N=20, on the sole `B01-Desktop-Linux-002` guest. Its artifact is being freshly built from reviewed GitHub `main@4ea42c0c8f856aa22e2a360bd42005c8dbec400f` and must be independently verified and bound by manifest/digest/attestation before its own Attempt 1 starts. The successor inherits no attempt, artifact, credential, or Gate result from `001`; `/artifacts/` remains ignored local staging and is not an implicit campaign input. Evidence: [failed-campaign reconciliation](../checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md) and [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md). |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | blocked | 2026-08-09 owner decision retained `B01-clean-linux-first-install-first-conversation-001` as failed at 2 successes / 8 failures after 10 started attempts; its arithmetic maximum of 12/20 remains below the unchanged >=90% threshold. Attempts 1 and 10 remain valid individual evidence and will not be deleted, renumbered, or rerun. The owner authorized separately preregistered successor `B01-clean-linux-first-install-first-conversation-002`, fixed N=20, on the sole `B01-Desktop-Linux-002` guest. Protected artifact workflow `31284948257` passed at reviewed GitHub `main@4ea42c0c8f856aa22e2a360bd42005c8dbec400f`; artifact and bundle digests are recorded but standalone offline signature verification is blocked because `personal-linux-native-01` times out connecting to GitHub HTTPS. `blocked_paths`: native host GitHub HTTPS access and the successor's exact-revision verifier worktree; `blocked_task_ids`: `P1-T09`; `blocked_gate_ids`: `B01`, `G1`, `GMVP-LINUX`; owner: native-host network operator and independent verifier; next action: restore the host's GitHub HTTPS access, provision a disposable exact-revision worktree, independently verify the retained workflow artifact, and only then complete the successor start gate. The successor inherits no attempt, artifact, credential, or Gate result from `001`; `/artifacts/` remains ignored local staging and is not an implicit campaign input. Evidence: [failed-campaign reconciliation](../checkpoints/20260809-personal-p1-t09-b01-campaign-reconciliation-handoff.md), [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md), and [verification blocker handoff](../checkpoints/20260809-personal-p1-t09-b01-successor-verification-blocker.md). |
 
 ### Phase 2 - 单 Agent 任务闭环
 
