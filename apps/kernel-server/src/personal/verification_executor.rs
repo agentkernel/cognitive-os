@@ -16,6 +16,7 @@ use cognitive_kernel::{
         ProtocolStore, VerificationReportRow, VerificationRequestRow,
     },
 };
+use cognitive_store::ArtifactStore;
 use serde_json::json;
 use thiserror::Error;
 
@@ -83,6 +84,8 @@ pub(crate) enum VerificationExecutorError {
     MalformedArtifactEvidenceReference(String),
     #[error("artifact evidence reference is duplicated: {0}")]
     DuplicateArtifactEvidenceReference(String),
+    #[error("artifact evidence is unavailable or invalid in the daemon CAS: {0}")]
+    ArtifactEvidenceUnavailable(String),
     #[error("verification infrastructure is unavailable: {0}")]
     Infrastructure(String),
 }
@@ -96,6 +99,7 @@ pub(crate) enum VerificationExecutorError {
 /// promotion, Task acceptance, and Task completion remain separate authorities.
 pub(crate) fn record_independent_verification<S, C, G, V>(
     store: &S,
+    artifact_store: &ArtifactStore,
     clock: &C,
     identifiers: &G,
     verifier: &V,
@@ -148,6 +152,7 @@ where
 
     let result = verifier.evaluate(&request, &fixed_post_state)?;
     validate_artifact_evidence_refs(&result)?;
+    validate_artifact_evidence_availability(&result, artifact_store)?;
     let completed_at = clock
         .now()
         .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
@@ -221,6 +226,27 @@ fn is_artifact_digest_reference(reference: &str) -> bool {
     digest.len() == 64 && digest.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
+fn validate_artifact_evidence_availability(
+    result: &IndependentVerificationResult,
+    artifact_store: &ArtifactStore,
+) -> Result<(), VerificationExecutorError> {
+    for artifact_evidence_ref in &result.artifact_evidence_refs {
+        let artifact_is_available = artifact_store
+            .contains_artifact_uri(artifact_evidence_ref)
+            .map_err(|_| {
+                VerificationExecutorError::ArtifactEvidenceUnavailable(
+                    artifact_evidence_ref.clone(),
+                )
+            })?;
+        if !artifact_is_available {
+            return Err(VerificationExecutorError::ArtifactEvidenceUnavailable(
+                artifact_evidence_ref.clone(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn canonical_report_json(
     verification_report_id: &ObjectId,
     request: &VerificationRequestRow,
@@ -282,7 +308,9 @@ mod tests {
         }
     }
 
-    struct PassingVerifier;
+    struct PassingVerifier {
+        artifact_evidence_ref: String,
+    }
 
     impl IndependentVerifier for PassingVerifier {
         fn verifier_ref(&self) -> &str {
@@ -300,7 +328,7 @@ mod tests {
         ) -> Result<IndependentVerificationResult, VerificationExecutorError> {
             Ok(IndependentVerificationResult {
                 disposition: VerificationDisposition::Passed,
-                artifact_evidence_refs: vec![artifact_reference('c')],
+                artifact_evidence_refs: vec![self.artifact_evidence_ref.clone()],
             })
         }
     }
@@ -341,6 +369,30 @@ mod tests {
             "cognitiveos-verification-executor-{}-{timestamp_nanos}.db",
             std::process::id()
         ))
+    }
+
+    fn artifact_store_with_evidence() -> (std::path::PathBuf, ArtifactStore, String) {
+        let timestamp_nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time after Unix epoch")
+            .as_nanos();
+        let artifact_directory = std::env::temp_dir().join(format!(
+            "cognitiveos-verification-artifacts-{}-{timestamp_nanos}",
+            std::process::id()
+        ));
+        let artifact_store =
+            ArtifactStore::open(&artifact_directory, 1024).expect("open artifact store");
+        let storage_reference = artifact_store
+            .put(b"verification evidence")
+            .expect("store evidence");
+        let digest = storage_reference
+            .strip_prefix("sha256:")
+            .expect("artifact storage reference format");
+        (
+            artifact_directory,
+            artifact_store,
+            format!("artifact://sha256/{digest}"),
+        )
     }
 
     fn admit_task_fixture(store: &SqliteAuthorityStore, task_object_id: &ObjectId) {
@@ -466,18 +518,59 @@ mod tests {
     }
 
     #[test]
+    fn rejects_missing_artifact_evidence_before_report_persistence() {
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let (artifact_directory, artifact_store, _) = artifact_store_with_evidence();
+        let task_object_id = object_id(31);
+        admit_task_fixture(&store, &task_object_id);
+        let verification_request_id = persist_verification_fixture(&store, &task_object_id);
+
+        let report_result = record_independent_verification(
+            &store,
+            &artifact_store,
+            &FixedClock,
+            &SequentialIdentifiers::new(40),
+            &PassingVerifier {
+                artifact_evidence_ref: artifact_reference('e'),
+            },
+            &verification_request_id,
+            &WriterLease { epoch: 1 },
+        );
+
+        assert!(matches!(
+            report_result,
+            Err(VerificationExecutorError::ArtifactEvidenceUnavailable(_))
+        ));
+        assert_eq!(
+            store
+                .load_verification_report(&object_id(40))
+                .expect("read absent artifact-missing verification report"),
+            None
+        );
+
+        let _ = std::fs::remove_file(database_path);
+        let _ = std::fs::remove_dir_all(artifact_directory);
+    }
+
+    #[test]
     fn durable_sqlite_report_binds_a_current_post_state_without_task_completion() {
         let database_path = temporary_database_path();
         let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let (artifact_directory, artifact_store, artifact_evidence_ref) =
+            artifact_store_with_evidence();
         let task_object_id = object_id(1);
         admit_task_fixture(&store, &task_object_id);
         let verification_request_id = persist_verification_fixture(&store, &task_object_id);
 
         let report_result = record_independent_verification(
             &store,
+            &artifact_store,
             &FixedClock,
             &SequentialIdentifiers::new(10),
-            &PassingVerifier,
+            &PassingVerifier {
+                artifact_evidence_ref,
+            },
             &verification_request_id,
             &WriterLease { epoch: 1 },
         );
@@ -501,21 +594,27 @@ mod tests {
         assert_eq!(task.version, Version::INITIAL);
 
         let _ = std::fs::remove_file(database_path);
+        let _ = std::fs::remove_dir_all(artifact_directory);
     }
 
     #[test]
     fn durable_sqlite_report_rejects_a_fenced_writer_before_persistence() {
         let database_path = temporary_database_path();
         let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let (artifact_directory, artifact_store, artifact_evidence_ref) =
+            artifact_store_with_evidence();
         let task_object_id = object_id(11);
         admit_task_fixture(&store, &task_object_id);
         let verification_request_id = persist_verification_fixture(&store, &task_object_id);
 
         let report_result = record_independent_verification(
             &store,
+            &artifact_store,
             &FixedClock,
             &SequentialIdentifiers::new(20),
-            &PassingVerifier,
+            &PassingVerifier {
+                artifact_evidence_ref,
+            },
             &verification_request_id,
             &WriterLease { epoch: 2 },
         );
@@ -532,18 +631,21 @@ mod tests {
         );
 
         let _ = std::fs::remove_file(database_path);
+        let _ = std::fs::remove_dir_all(artifact_directory);
     }
 
     #[test]
     fn durable_sqlite_report_rejects_an_unregistered_verifier_before_evaluation() {
         let database_path = temporary_database_path();
         let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let (artifact_directory, artifact_store, _) = artifact_store_with_evidence();
         let task_object_id = object_id(21);
         admit_task_fixture(&store, &task_object_id);
         let verification_request_id = persist_verification_fixture(&store, &task_object_id);
 
         let report_result = record_independent_verification(
             &store,
+            &artifact_store,
             &FixedClock,
             &SequentialIdentifiers::new(30),
             &MismatchedVerifier,
@@ -563,5 +665,6 @@ mod tests {
         );
 
         let _ = std::fs::remove_file(database_path);
+        let _ = std::fs::remove_dir_all(artifact_directory);
     }
 }

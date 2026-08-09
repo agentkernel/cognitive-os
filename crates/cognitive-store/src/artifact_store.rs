@@ -13,6 +13,7 @@ use std::{
 use thiserror::Error;
 
 const SHA256_REFERENCE_PREFIX: &str = "sha256:";
+const ARTIFACT_URI_REFERENCE_PREFIX: &str = "artifact://sha256/";
 
 #[derive(Debug, Error)]
 pub enum ArtifactStoreError {
@@ -168,6 +169,17 @@ impl ArtifactStore {
             Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
             Err(error) => Err(error.into()),
         }
+    }
+
+    /// Resolves the durable Artifact URI form used by verification records.
+    /// A reference is usable only when its published bytes remain present and
+    /// still hash to the digest embedded in that URI.
+    pub fn contains_artifact_uri(&self, artifact_uri: &str) -> Result<bool, ArtifactStoreError> {
+        let digest = artifact_uri
+            .strip_prefix(ARTIFACT_URI_REFERENCE_PREFIX)
+            .ok_or_else(|| ArtifactStoreError::MalformedReference(artifact_uri.to_owned()))?;
+        let storage_reference = format!("{SHA256_REFERENCE_PREFIX}{digest}");
+        Ok(self.get(&storage_reference)?.is_some())
     }
 
     fn metadata_path(&self, digest: &str) -> PathBuf {
