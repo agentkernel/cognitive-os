@@ -26,7 +26,10 @@ where
     let source = store
         .load_workspace_context_source_body(&candidate.source_id)?
         .ok_or_else(|| StorePortError::Conflict {
-            detail: format!("Memory candidate {} names an unknown Context source", candidate.candidate_id),
+            detail: format!(
+                "Memory candidate {} names an unknown Context source",
+                candidate.candidate_id
+            ),
         })?;
     let proposal = MemoryProposal {
         candidate_id: candidate.candidate_id.as_str().to_owned(),
@@ -113,7 +116,10 @@ mod tests {
             Err(unsupported_test_operation("append ContextView"))
         }
 
-        fn load_context_view(&self, _: &ObjectId) -> Result<Option<ContextViewRow>, StorePortError> {
+        fn load_context_view(
+            &self,
+            _: &ObjectId,
+        ) -> Result<Option<ContextViewRow>, StorePortError> {
             Err(unsupported_test_operation("load ContextView"))
         }
 
@@ -157,10 +163,7 @@ mod tests {
             Err(unsupported_test_operation("load MemoryObject"))
         }
 
-        fn append_memory_tombstone(
-            &self,
-            _: &MemoryTombstoneRow,
-        ) -> Result<(), StorePortError> {
+        fn append_memory_tombstone(&self, _: &MemoryTombstoneRow) -> Result<(), StorePortError> {
             Err(unsupported_test_operation("append Memory tombstone"))
         }
 
@@ -239,4 +242,3 @@ mod tests {
         assert!(!store.persist_called.get());
     }
 }
-mod memory_admission;
