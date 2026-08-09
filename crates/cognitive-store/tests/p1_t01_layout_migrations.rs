@@ -60,7 +60,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
     assert_eq!(
         report.authority().applied_versions(),
         &[
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
         ]
     );
     assert_eq!(report.installation().applied_versions(), &[1]);
@@ -82,7 +82,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         ]
     );
     assert_eq!(
@@ -173,7 +173,7 @@ fn reapply_prepare_is_replay_safe() {
     assert_eq!(
         first.authority().applied_versions(),
         &[
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
         ]
     );
     assert_eq!(first.installation().applied_versions(), &[1]);
@@ -184,7 +184,7 @@ fn reapply_prepare_is_replay_safe() {
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         ]
     );
 }
@@ -226,7 +226,7 @@ fn scheduler_v2_work_migrates_to_epoch_one_without_losing_its_fence() {
     .expect("upgrade scheduler identity");
     assert_eq!(
         report.applied_versions(),
-        &[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        &[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     );
     let connection = Connection::open(&database_path).expect("open v3 scheduler database");
     let migrated_row: (i64, String, i64, i64) = connection
