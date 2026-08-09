@@ -24,7 +24,7 @@ use crate::context_store::{
     CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
     SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
 };
-use crate::memory_store::MEMORY_ADMISSION_SCHEMA_V16;
+use crate::memory_store::{MEMORY_ADMISSION_SCHEMA_V16, MEMORY_SEARCH_SCHEMA_V17};
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
@@ -51,12 +51,13 @@ use cognitive_kernel::ports::{
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
     IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
-    MemoryObjectRow, MemoryStore, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
-    ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
-    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, ObjectAdmission,
+    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
+    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -367,6 +368,7 @@ impl SqliteAuthorityStore {
             CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14,
             SCHEDULER_EXECUTION_POLICY_SCHEMA_V15,
             MEMORY_ADMISSION_SCHEMA_V16,
+            MEMORY_SEARCH_SCHEMA_V17,
         ]
         .join("\n");
         conn.execute_batch(&schema)
@@ -1561,6 +1563,36 @@ fn validate_memory_candidate(candidate: &MemoryCandidateRow) -> Result<(), Store
     Ok(())
 }
 
+fn extract_memory_source_text(canonical_source_json: &str) -> Result<String, StorePortError> {
+    let source_payload: Value = serde_json::from_str(canonical_source_json).map_err(|error| {
+        StorePortError::Unavailable {
+            detail: format!("Memory source body cannot be indexed: {error}"),
+        }
+    })?;
+    source_payload
+        .pointer("/body/text")
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| StorePortError::Unavailable {
+            detail: "Memory source body is missing indexable text".to_owned(),
+        })
+}
+
+fn validate_memory_search_query(query: &MemorySearchQuery) -> Result<(), StorePortError> {
+    if query.governance_scope.trim().is_empty()
+        || query.purpose.trim().is_empty()
+        || query.query_text.trim().is_empty()
+        || query.maximum_results == 0
+    {
+        return Err(StorePortError::Unavailable {
+            detail: "Memory search requires non-empty metadata, query text, and result limit"
+                .to_owned(),
+        });
+    }
+    Ok(())
+}
+
 impl MemoryStore for SqliteAuthorityStore {
     fn append_memory_admission(
         &self,
@@ -1605,24 +1637,35 @@ impl MemoryStore for SqliteAuthorityStore {
             .map_err(unavailable("begin Memory admission transaction"))?;
         let persisted_source = transaction
             .query_row(
-                "SELECT source_digest, provenance_ref, resource_scope FROM workspace_context_sources WHERE source_id=?1",
+                "SELECT source_digest, provenance_ref, resource_scope, canonical_json FROM workspace_context_sources WHERE source_id=?1",
                 (candidate.source_id.as_str(),),
-                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?)),
             )
             .optional()
             .map_err(unavailable("load Memory source binding"))?;
-        if persisted_source
-            != Some((
+        let Some((source_digest, source_provenance_ref, governance_scope, source_canonical_json)) =
+            persisted_source
+        else {
+            return Err(StorePortError::Conflict {
+                detail: "Memory proposal source digest, provenance, or scope is no longer current"
+                    .to_owned(),
+            });
+        };
+        if (source_digest, source_provenance_ref, governance_scope)
+            != (
                 candidate.source_digest.clone(),
                 candidate.source_provenance_ref.clone(),
                 candidate.governance_scope.clone(),
-            ))
+            )
         {
             return Err(StorePortError::Conflict {
                 detail: "Memory proposal source digest, provenance, or scope is no longer current"
                     .to_owned(),
             });
         }
+        let source_text = admitted_object
+            .map(|_| extract_memory_source_text(&source_canonical_json))
+            .transpose()?;
         let insert_result = (|| -> Result<(), rusqlite::Error> {
             transaction.execute(
                 "INSERT INTO memory_candidates (candidate_id, source_id, source_digest, source_provenance_ref, governance_scope, target_scope, purpose, retention_expires_at_unix_seconds, observed_at_unix_seconds, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
@@ -1636,6 +1679,13 @@ impl MemoryStore for SqliteAuthorityStore {
                 transaction.execute(
                     "INSERT INTO memory_objects (memory_id, candidate_id, decision_id, canonical_json) VALUES (?1, ?2, ?3, ?4)",
                     (memory_object.memory_id.as_str(), memory_object.candidate_id.as_str(), memory_object.decision_id.as_str(), memory_object.canonical_json.as_str()),
+                )?;
+                transaction.execute(
+                    "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+                    (
+                        memory_object.memory_id.as_str(),
+                        source_text.as_deref().unwrap_or_default(),
+                    ),
                 )?;
             }
             Ok(())
@@ -1669,6 +1719,101 @@ impl MemoryStore for SqliteAuthorityStore {
             )
             .optional()
             .map_err(unavailable("load MemoryObject"))
+    }
+
+    fn search_memory_candidates(
+        &self,
+        query: &MemorySearchQuery,
+    ) -> Result<Vec<MemorySearchCandidateRow>, StorePortError> {
+        validate_memory_search_query(query)?;
+        let connection = self.lock()?;
+        let mut statement = connection
+            .prepare(
+                "WITH authority_filtered_memory AS (
+                    SELECT memory_objects.memory_id, memory_candidates.source_id, memory_candidates.source_digest
+                    FROM memory_objects
+                    JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id
+                    JOIN memory_admission_decisions ON memory_admission_decisions.decision_id = memory_objects.decision_id
+                    JOIN workspace_context_sources ON workspace_context_sources.source_id = memory_candidates.source_id
+                        AND workspace_context_sources.source_digest = memory_candidates.source_digest
+                        AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
+                        AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
+                    WHERE memory_admission_decisions.decision = 'admit'
+                        AND memory_candidates.governance_scope = ?1
+                        AND memory_candidates.purpose = ?2
+                        AND memory_candidates.retention_expires_at_unix_seconds > ?3
+                )
+                SELECT authority_filtered_memory.memory_id, authority_filtered_memory.source_id, authority_filtered_memory.source_digest
+                FROM authority_filtered_memory
+                JOIN memory_search_fts ON memory_search_fts.memory_id = authority_filtered_memory.memory_id
+                WHERE memory_search_fts MATCH ?4
+                ORDER BY bm25(memory_search_fts), authority_filtered_memory.memory_id
+                LIMIT ?5",
+            )
+            .map_err(unavailable("prepare Memory FTS search"))?;
+        let results = statement
+            .query_map(
+                rusqlite::params![
+                    query.governance_scope,
+                    query.purpose,
+                    query.observed_at_unix_seconds,
+                    query.query_text,
+                    i64::try_from(query.maximum_results).unwrap_or(i64::MAX),
+                ],
+                |row| {
+                    Ok(MemorySearchCandidateRow {
+                        memory_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?,
+                        source_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                1,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?,
+                        source_digest: row.get(2)?,
+                    })
+                },
+            )
+            .map_err(unavailable("query Memory FTS search"))?;
+        results
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read Memory FTS search"))
+    }
+
+    fn rebuild_memory_search_index(&self) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory FTS rebuild"))?;
+        transaction
+            .execute("DELETE FROM memory_search_fts", [])
+            .map_err(unavailable("clear Memory FTS rebuild"))?;
+        transaction
+            .execute(
+                "INSERT INTO memory_search_fts (memory_id, source_text)
+                 SELECT memory_objects.memory_id, json_extract(workspace_context_sources.canonical_json, '$.body.text')
+                 FROM memory_objects
+                 JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id
+                 JOIN memory_admission_decisions ON memory_admission_decisions.decision_id = memory_objects.decision_id
+                 JOIN workspace_context_sources ON workspace_context_sources.source_id = memory_candidates.source_id
+                    AND workspace_context_sources.source_digest = memory_candidates.source_digest
+                    AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
+                    AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
+                 WHERE memory_admission_decisions.decision = 'admit'
+                    AND json_type(workspace_context_sources.canonical_json, '$.body.text') = 'text'
+                    AND length(trim(json_extract(workspace_context_sources.canonical_json, '$.body.text'))) > 0",
+                [],
+            )
+            .map_err(unavailable("populate Memory FTS rebuild"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit Memory FTS rebuild"))
     }
 }
 

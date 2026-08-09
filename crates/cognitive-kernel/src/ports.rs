@@ -571,6 +571,26 @@ pub struct MemoryObjectRow {
     pub canonical_json: String,
 }
 
+/// Authority-filtered FTS query for admitted Memory objects. This is a
+/// daemon-private discovery request, not a client authorization grant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemorySearchQuery {
+    pub governance_scope: String,
+    pub purpose: String,
+    pub observed_at_unix_seconds: i64,
+    pub query_text: String,
+    pub maximum_results: usize,
+}
+
+/// Metadata-only Memory retrieval candidate. Callers must still authorize and
+/// revalidate the source before loading any source body or using its content.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemorySearchCandidateRow {
+    pub memory_id: ObjectId,
+    pub source_id: ObjectId,
+    pub source_digest: String,
+}
+
 /// Metadata-only Context discovery result. It deliberately excludes body
 /// content so callers must authorize before materializing a candidate.
 #[derive(Debug, Clone, PartialEq)]
@@ -1226,6 +1246,19 @@ pub trait MemoryStore {
         &self,
         memory_id: &ObjectId,
     ) -> Result<Option<MemoryObjectRow>, StorePortError>;
+
+    /// Discover metadata-only candidates from the derived FTS index after
+    /// filtering authoritative Memory metadata and current source bindings.
+    /// The FTS index is disposable derived data; its rows never grant access
+    /// to source bodies or supersede authoritative SQLite records.
+    fn search_memory_candidates(
+        &self,
+        query: &MemorySearchQuery,
+    ) -> Result<Vec<MemorySearchCandidateRow>, StorePortError>;
+
+    /// Rebuild the disposable FTS index from current authoritative Memory
+    /// objects and their bound Context-source bodies.
+    fn rebuild_memory_search_index(&self) -> Result<(), StorePortError>;
 }
 
 /// Daemon-private, immutable execution inputs for one scheduler task binding.

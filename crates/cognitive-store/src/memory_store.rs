@@ -59,3 +59,19 @@ BEGIN SELECT RAISE(ABORT, 'append-only: memory object is immutable'); END;
 pub fn memory_admission_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(16, MEMORY_ADMISSION_SCHEMA_V16)
 }
+
+/// Migration v17: a disposable SQLite FTS5 index for daemon-private Memory
+/// discovery. Authoritative Memory, admission, and source rows remain the
+/// query filter and rebuild source of truth.
+pub const MEMORY_SEARCH_SCHEMA_V17: &str = "
+CREATE VIRTUAL TABLE IF NOT EXISTS memory_search_fts USING fts5(
+  memory_id UNINDEXED,
+  source_text,
+  tokenize='unicode61'
+);
+";
+
+/// Version-17 Memory FTS retrieval migration entry.
+pub fn memory_search_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(17, MEMORY_SEARCH_SCHEMA_V17)
+}
