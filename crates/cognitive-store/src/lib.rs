@@ -26,6 +26,7 @@ pub mod memory_store;
 pub mod migration;
 pub mod personal_db;
 pub mod scheduler;
+pub mod skill_store;
 pub mod sqlite;
 pub mod worker_authorization;
 

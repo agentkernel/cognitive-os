@@ -54,10 +54,12 @@ use cognitive_kernel::ports::{
     MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
     MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
     ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
-    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
+    SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -306,6 +308,21 @@ fn is_constraint_violation(err: &rusqlite::Error) -> bool {
         rusqlite::Error::SqliteFailure(failure, _)
             if failure.code == rusqlite::ErrorCode::ConstraintViolation
     )
+}
+
+/// Every persisted Skill digest must also occur in its immutable canonical
+/// payload. This prevents callers from recording an authority digest that is
+/// detached from the reviewed package or revision representation.
+fn canonical_json_digest_matches(
+    canonical_json: &str,
+    digest_field: &str,
+    expected_digest: &str,
+) -> bool {
+    serde_json::from_str::<Value>(canonical_json)
+        .ok()
+        .and_then(|value| value.get(digest_field)?.as_str().map(str::to_owned))
+        .as_deref()
+        == Some(expected_digest)
 }
 
 fn corrupt(what: &str, err: impl std::fmt::Display) -> StorePortError {
@@ -4294,6 +4311,313 @@ impl HarnessStore for SqliteAuthorityStore {
             });
         }
         Ok(facts)
+    }
+}
+
+impl SkillStore for SqliteAuthorityStore {
+    fn append_skill_import(
+        &self,
+        package: &SkillPackageRow,
+        revision: &SkillRevisionRow,
+    ) -> Result<(), StorePortError> {
+        let unsafe_local_path = package.local_source_path.starts_with('/')
+            || package.local_source_path.contains("\\\\")
+            || package
+                .local_source_path
+                .split('/')
+                .any(|segment| segment == "..");
+        let manifest_digest_matches_payload = canonical_json_digest_matches(
+            &package.canonical_json,
+            "manifest_digest",
+            &package.manifest_digest,
+        );
+        let content_digest_matches_payload = canonical_json_digest_matches(
+            &revision.canonical_json,
+            "content_digest",
+            &revision.content_digest,
+        );
+        let invalid_import = package.workspace_scope.trim().is_empty()
+            || package.local_source_path.trim().is_empty()
+            || package.provenance_ref.trim().is_empty()
+            || package.manifest_digest.trim().is_empty()
+            || revision.package_id != package.package_id
+            || revision.content_digest.trim().is_empty()
+            || !matches!(
+                revision.compatibility.as_str(),
+                "compatible" | "incompatible"
+            )
+            || !manifest_digest_matches_payload
+            || !content_digest_matches_payload;
+        if unsafe_local_path || invalid_import {
+            return Err(StorePortError::Conflict {
+                detail: "Skill import has unsafe local provenance or invalid immutable bindings"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill import transaction"))?;
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO skill_packages (package_id, workspace_scope, local_source_path, provenance_ref, manifest_digest, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                (package.package_id.as_str(), package.workspace_scope.as_str(), package.local_source_path.as_str(), package.provenance_ref.as_str(), package.manifest_digest.as_str(), package.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO skill_revisions (revision_id, package_id, content_digest, compatibility, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (revision.revision_id.as_str(), revision.package_id.as_str(), revision.content_digest.as_str(), revision.compatibility.as_str(), revision.canonical_json.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill import transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill import conflicts with an immutable package or revision".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill import")(error)),
+        }
+    }
+
+    fn append_skill_revision_supersede(
+        &self,
+        supersede: &SkillRevisionSupersedeRequest,
+    ) -> Result<(), StorePortError> {
+        let replacement = &supersede.replacement;
+        let invalid_supersede = replacement.revision_id == supersede.previous_revision_id
+            || replacement.content_digest.trim().is_empty()
+            || !matches!(
+                replacement.compatibility.as_str(),
+                "compatible" | "incompatible"
+            )
+            || !canonical_json_digest_matches(
+                &replacement.canonical_json,
+                "content_digest",
+                &replacement.content_digest,
+            )
+            || serde_json::from_str::<Value>(&supersede.canonical_json).is_err();
+        if invalid_supersede {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede has invalid immutable replacement bindings"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill revision supersede transaction"))?;
+        let prior_package_id = transaction
+            .query_row(
+                "SELECT package_id FROM skill_revisions WHERE revision_id=?1",
+                (supersede.previous_revision_id.as_str(),),
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(unavailable("load prior Skill revision"))?;
+        let Some(prior_package_id) = prior_package_id else {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede names an unknown prior revision".to_owned(),
+            });
+        };
+        if prior_package_id != replacement.package_id.as_str() {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede must remain in the same package".to_owned(),
+            });
+        }
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO skill_revisions (revision_id, package_id, content_digest, compatibility, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (replacement.revision_id.as_str(), replacement.package_id.as_str(), replacement.content_digest.as_str(), replacement.compatibility.as_str(), replacement.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO skill_revision_lineage (revision_id, supersedes_revision_id, canonical_json) VALUES (?1, ?2, ?3)",
+                (replacement.revision_id.as_str(), supersede.previous_revision_id.as_str(), supersede.canonical_json.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill revision supersede transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill revision supersede conflicts with immutable revision lineage"
+                    .to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill revision supersede")(error)),
+        }
+    }
+
+    fn append_skill_binding(&self, binding: &SkillBindingRow) -> Result<(), StorePortError> {
+        let invalid_binding = binding.workspace_scope.trim().is_empty()
+            || binding.target_ref.trim().is_empty()
+            || !matches!(binding.target_kind.as_str(), "agent" | "task" | "workspace")
+            || !matches!(binding.status.as_str(), "active" | "revoked")
+            || serde_json::from_str::<Value>(&binding.canonical_json).is_err();
+        if invalid_binding {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding has invalid target, lifecycle, or canonical payload"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill binding transaction"))?;
+        let revision_scope = transaction
+            .query_row(
+                "SELECT skill_packages.workspace_scope, skill_revisions.compatibility FROM skill_revisions JOIN skill_packages ON skill_packages.package_id = skill_revisions.package_id WHERE skill_revisions.revision_id=?1",
+                (binding.revision_id.as_str(),),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("load Skill revision for binding"))?;
+        let Some((workspace_scope, compatibility)) = revision_scope else {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding names an unknown revision".to_owned(),
+            });
+        };
+        if workspace_scope != binding.workspace_scope || compatibility != "compatible" {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding crosses workspace scope or names an incompatible revision"
+                    .to_owned(),
+            });
+        }
+        match transaction.execute(
+            "INSERT INTO skill_bindings (binding_id, revision_id, workspace_scope, target_kind, target_ref, status, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            (binding.binding_id.as_str(), binding.revision_id.as_str(), binding.workspace_scope.as_str(), binding.target_kind.as_str(), binding.target_ref.as_str(), binding.status.as_str(), binding.canonical_json.as_str()),
+        ) {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill binding transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill binding conflicts with an immutable binding".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill binding")(error)),
+        }
+    }
+
+    fn load_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT revision_id, workspace_scope, target_kind, target_ref, status, canonical_json FROM skill_bindings WHERE binding_id=?1",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingRow {
+                    binding_id: binding_id.clone(),
+                    revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    workspace_scope: row.get(1)?,
+                    target_kind: row.get(2)?,
+                    target_ref: row.get(3)?,
+                    status: row.get(4)?,
+                    canonical_json: row.get(5)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load Skill binding"))
+    }
+
+    fn append_skill_binding_revocation(
+        &self,
+        revocation: &SkillBindingRevocationRow,
+    ) -> Result<(), StorePortError> {
+        if revocation.reason.trim().is_empty()
+            || serde_json::from_str::<Value>(&revocation.canonical_json).is_err()
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation has an invalid reason or canonical payload"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill binding revocation transaction"))?;
+        let binding_exists = transaction
+            .query_row(
+                "SELECT 1 FROM skill_bindings WHERE binding_id=?1",
+                (revocation.binding_id.as_str(),),
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(unavailable("load Skill binding for revocation"))?
+            .is_some();
+        if !binding_exists {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation names an unknown binding".to_owned(),
+            });
+        }
+        match transaction.execute(
+            "INSERT INTO skill_binding_revocations (revocation_id, binding_id, reason, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+            (revocation.revocation_id.as_str(), revocation.binding_id.as_str(), revocation.reason.as_str(), revocation.canonical_json.as_str()),
+        ) {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill binding revocation transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill binding already has an immutable revocation".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill binding revocation")(error)),
+        }
+    }
+
+    fn load_active_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT revision_id, workspace_scope, target_kind, target_ref, status, canonical_json FROM skill_bindings WHERE binding_id=?1 AND status='active' AND NOT EXISTS (SELECT 1 FROM skill_binding_revocations WHERE skill_binding_revocations.binding_id=skill_bindings.binding_id)",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingRow {
+                    binding_id: binding_id.clone(),
+                    revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    workspace_scope: row.get(1)?,
+                    target_kind: row.get(2)?,
+                    target_ref: row.get(3)?,
+                    status: row.get(4)?,
+                    canonical_json: row.get(5)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load active Skill binding"))
+    }
+
+    fn explain_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingExplanationRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT skill_bindings.revision_id, skill_bindings.workspace_scope, skill_bindings.target_kind, skill_bindings.target_ref, skill_bindings.status, skill_bindings.canonical_json, skill_packages.package_id, skill_packages.manifest_digest, skill_revisions.content_digest, skill_binding_revocations.reason FROM skill_bindings JOIN skill_revisions ON skill_revisions.revision_id=skill_bindings.revision_id JOIN skill_packages ON skill_packages.package_id=skill_revisions.package_id LEFT JOIN skill_binding_revocations ON skill_binding_revocations.binding_id=skill_bindings.binding_id WHERE skill_bindings.binding_id=?1",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingExplanationRow {
+                    binding: SkillBindingRow {
+                        binding_id: binding_id.clone(),
+                        revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                        workspace_scope: row.get(1)?,
+                        target_kind: row.get(2)?,
+                        target_ref: row.get(3)?,
+                        status: row.get(4)?,
+                        canonical_json: row.get(5)?,
+                    },
+                    package_id: ObjectId::parse(&row.get::<_, String>(6)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(6, rusqlite::types::Type::Text, Box::new(error)))?,
+                    manifest_digest: row.get(7)?,
+                    content_digest: row.get(8)?,
+                    revocation_reason: row.get(9)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("explain Skill binding"))
     }
 }
 
