@@ -40,12 +40,16 @@ does not make a Gate, release, or Profile claim.
 | 5 | artifact, installation, Pi, and Provider readiness | pass | Independently verified signed artifact activated; user-local Pi `0.81.1` and extension configured; graphical hidden-input Provider opt-in completed; redacted `doctor` reported `overall=ready` and `first_conversation_ready=true`. |
 | 5 | bounded first response | **pass** | `{"status":"ok","phase":"first_response","duration_ms":5409,"expected_reply_observed":true,"response_received":true,"authority_side_effects":false}` |
 | 5 | cleanup | **pass** | Provider secret cleared and residual absent; service stopped/disabled; Pi, bundle, config, and temporary files removed; baseline restored and guest confirmed `shut off`. |
+| 6 | clean-reset and Desktop readiness | pass | Baseline restored; Operator A logged into `hal9001` through the VM graphical console; `graphical-session.target=active`, Node `v22.23.2`, npm `10.9.8`, and clean-state probes passed. |
+| 6 | artifact, installation, Pi, and Provider readiness | pass | Independently verified signed artifact activated; user-local Pi `0.81.1` and extension configured; graphical hidden-input Provider opt-in completed; redacted `doctor` reported `overall=ready` and `first_conversation_ready=true`. |
+| 6 | bounded first response | **pass** | `{"status":"ok","phase":"first_response","duration_ms":5473,"expected_reply_observed":true,"response_received":true,"authority_side_effects":false}` |
+| 6 | cleanup | **pass** | Provider secret cleared and residual absent; service stopped/disabled; Pi, bundle, config, and temporary files removed; baseline restored and guest confirmed `shut off`. |
 
 ## Aggregate
 
 | Started | Successes | Failures | Critical safety failures | Remaining |
 |---:|---:|---:|---:|---:|
-| 5 | 4 | 1 | 0 | 15 |
+| 6 | 5 | 1 | 0 | 14 |
 
 ## Non-claims
 
