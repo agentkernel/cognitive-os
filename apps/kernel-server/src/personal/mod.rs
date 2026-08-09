@@ -7,12 +7,14 @@
 mod auth;
 mod bounds;
 mod lifecycle;
+mod memory_admission;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
 mod resource_api;
 mod scheduler_authority;
 mod server;
+mod skill_package;
 mod task_api;
 mod tool_executor;
 mod verification_executor;

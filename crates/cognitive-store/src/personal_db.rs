@@ -11,11 +11,20 @@ use crate::context_store::{
 };
 use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
+use crate::memory_store::{
+    memory_admission_migration_entry, memory_expiry_migration_entry,
+    memory_lifecycle_migration_entry, memory_search_migration_entry,
+    memory_version_migration_entry,
+};
 use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
 };
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
+use crate::skill_store::{
+    skill_binding_revocation_migration_entry, skill_package_migration_entry,
+    skill_revision_lineage_migration_entry,
+};
 use crate::sqlite::AUTHORITY_SCHEMA_V1;
 use crate::worker_authorization::{
     continuation_authority_consumption_migration_entry, continuation_authority_migration_entry,
@@ -87,6 +96,14 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         workspace_context_source_migration_entry(),
         context_authorization_fact_migration_entry(),
         scheduler_execution_policy_migration_entry(),
+        memory_admission_migration_entry(),
+        memory_search_migration_entry(),
+        memory_lifecycle_migration_entry(),
+        memory_expiry_migration_entry(),
+        memory_version_migration_entry(),
+        skill_package_migration_entry(),
+        skill_binding_revocation_migration_entry(),
+        skill_revision_lineage_migration_entry(),
     ]
 }
 

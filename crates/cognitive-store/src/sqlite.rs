@@ -24,6 +24,7 @@ use crate::context_store::{
     CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
     SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
 };
+use crate::memory_store::{MEMORY_ADMISSION_SCHEMA_V16, MEMORY_SEARCH_SCHEMA_V17};
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
@@ -49,11 +50,14 @@ use cognitive_kernel::ports::{
     ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow,
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
-    IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OperationCandidateProposalRow,
-    OutboxEntry, ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow,
-    SchedulerExecutionPolicyStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
-    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
+    MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
+    SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
     WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     WorkspaceContextSourceRow,
 };
@@ -306,6 +310,21 @@ fn is_constraint_violation(err: &rusqlite::Error) -> bool {
     )
 }
 
+/// Every persisted Skill digest must also occur in its immutable canonical
+/// payload. This prevents callers from recording an authority digest that is
+/// detached from the reviewed package or revision representation.
+fn canonical_json_digest_matches(
+    canonical_json: &str,
+    digest_field: &str,
+    expected_digest: &str,
+) -> bool {
+    serde_json::from_str::<Value>(canonical_json)
+        .ok()
+        .and_then(|value| value.get(digest_field)?.as_str().map(str::to_owned))
+        .as_deref()
+        == Some(expected_digest)
+}
+
 fn corrupt(what: &str, err: impl std::fmt::Display) -> StorePortError {
     StorePortError::Unavailable {
         detail: format!("stored value unusable ({what}): {err}"),
@@ -365,6 +384,8 @@ impl SqliteAuthorityStore {
             WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
             CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14,
             SCHEDULER_EXECUTION_POLICY_SCHEMA_V15,
+            MEMORY_ADMISSION_SCHEMA_V16,
+            MEMORY_SEARCH_SCHEMA_V17,
         ]
         .join("\n");
         conn.execute_batch(&schema)
@@ -1529,6 +1550,493 @@ fn parse_workspace_context_source_row(
         content_tokens: database_row.content_tokens,
         canonical_json: database_row.canonical_json,
     })
+}
+
+fn validate_memory_candidate(candidate: &MemoryCandidateRow) -> Result<(), StorePortError> {
+    let payload: Value = serde_json::from_str(&candidate.canonical_json)
+        .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    verify_content_digest(
+        &payload,
+        &["/header/content_digest"],
+        GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN,
+        "/header/content_digest",
+    )
+    .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    let header: GovernedObjectHeader =
+        serde_json::from_value(payload.get("header").cloned().ok_or_else(|| {
+            invalid_context_payload("MemoryCandidate", "missing governed header")
+        })?)
+        .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    if header.id.0 != candidate.candidate_id.as_str()
+        || header.r#type != "MemoryCandidate"
+        || header.content_digest.0 != candidate.candidate_digest
+        || candidate.purpose.trim().is_empty()
+    {
+        return Err(invalid_context_payload(
+            "MemoryCandidate",
+            "row identity, digest, type, or purpose differs from canonical payload",
+        ));
+    }
+    Ok(())
+}
+
+fn extract_memory_source_text(canonical_source_json: &str) -> Result<String, StorePortError> {
+    let source_payload: Value = serde_json::from_str(canonical_source_json).map_err(|error| {
+        StorePortError::Unavailable {
+            detail: format!("Memory source body cannot be indexed: {error}"),
+        }
+    })?;
+    source_payload
+        .pointer("/body/text")
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| StorePortError::Unavailable {
+            detail: "Memory source body is missing indexable text".to_owned(),
+        })
+}
+
+fn validate_memory_search_query(query: &MemorySearchQuery) -> Result<(), StorePortError> {
+    if query.governance_scope.trim().is_empty()
+        || query.purpose.trim().is_empty()
+        || query.query_text.trim().is_empty()
+        || query.maximum_results == 0
+    {
+        return Err(StorePortError::Unavailable {
+            detail: "Memory search requires non-empty metadata, query text, and result limit"
+                .to_owned(),
+        });
+    }
+    Ok(())
+}
+
+impl MemoryStore for SqliteAuthorityStore {
+    fn append_memory_admission(
+        &self,
+        candidate: &MemoryCandidateRow,
+        decision: &MemoryAdmissionDecisionRow,
+        admitted_object: Option<&MemoryObjectRow>,
+    ) -> Result<(), StorePortError> {
+        validate_memory_candidate(candidate)?;
+        if decision.candidate_id != candidate.candidate_id
+            || decision.candidate_digest != candidate.candidate_digest
+            || decision.policy_version < 1
+            || !matches!(
+                decision.decision.as_str(),
+                "admit" | "reject" | "review" | "quarantine"
+            )
+            || serde_json::from_str::<Vec<String>>(&decision.reason_codes_json).is_err()
+        {
+            return Err(invalid_context_payload(
+                "MemoryAdmissionDecision",
+                "candidate binding, decision, policy, or reason codes are invalid",
+            ));
+        }
+        if (decision.decision == "admit") != admitted_object.is_some() {
+            return Err(invalid_context_payload(
+                "MemoryAdmissionDecision",
+                "only an admit decision may create a MemoryObject",
+            ));
+        }
+        if let Some(memory_object) = admitted_object
+            && (memory_object.candidate_id != candidate.candidate_id
+                || memory_object.decision_id != decision.decision_id)
+        {
+            return Err(invalid_context_payload(
+                "MemoryObject",
+                "object must bind the exact candidate and decision",
+            ));
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory admission transaction"))?;
+        let persisted_source = transaction
+            .query_row(
+                "SELECT source_digest, provenance_ref, resource_scope, canonical_json FROM workspace_context_sources WHERE source_id=?1",
+                (candidate.source_id.as_str(),),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?)),
+            )
+            .optional()
+            .map_err(unavailable("load Memory source binding"))?;
+        let Some((source_digest, source_provenance_ref, governance_scope, source_canonical_json)) =
+            persisted_source
+        else {
+            return Err(StorePortError::Conflict {
+                detail: "Memory proposal source digest, provenance, or scope is no longer current"
+                    .to_owned(),
+            });
+        };
+        if (source_digest, source_provenance_ref, governance_scope)
+            != (
+                candidate.source_digest.clone(),
+                candidate.source_provenance_ref.clone(),
+                candidate.governance_scope.clone(),
+            )
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Memory proposal source digest, provenance, or scope is no longer current"
+                    .to_owned(),
+            });
+        }
+        let source_text = admitted_object
+            .map(|_| extract_memory_source_text(&source_canonical_json))
+            .transpose()?;
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_candidates (candidate_id, source_id, source_digest, source_provenance_ref, governance_scope, target_scope, purpose, retention_expires_at_unix_seconds, observed_at_unix_seconds, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                (candidate.candidate_id.as_str(), candidate.source_id.as_str(), candidate.source_digest.as_str(), candidate.source_provenance_ref.as_str(), candidate.governance_scope.as_str(), candidate.target_scope.as_str(), candidate.purpose.as_str(), candidate.retention_expires_at_unix_seconds, candidate.observed_at_unix_seconds, candidate.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_admission_decisions (decision_id, candidate_id, candidate_digest, decision, policy_version, reason_codes_json, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                (decision.decision_id.as_str(), decision.candidate_id.as_str(), decision.candidate_digest.as_str(), decision.decision.as_str(), decision.policy_version, decision.reason_codes_json.as_str(), decision.canonical_json.as_str()),
+            )?;
+            if let Some(memory_object) = admitted_object {
+                transaction.execute(
+                    "INSERT INTO memory_objects (memory_id, candidate_id, decision_id, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+                    (memory_object.memory_id.as_str(), memory_object.candidate_id.as_str(), memory_object.decision_id.as_str(), memory_object.canonical_json.as_str()),
+                )?;
+                transaction.execute(
+                    "INSERT INTO memory_object_versions (memory_id, version) VALUES (?1, 1)",
+                    (memory_object.memory_id.as_str(),),
+                )?;
+                transaction.execute(
+                    "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+                    (
+                        memory_object.memory_id.as_str(),
+                        source_text.as_deref().unwrap_or_default(),
+                    ),
+                )?;
+            }
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory admission transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Memory admission conflicts with an existing immutable record".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Memory admission")(error)),
+        }
+    }
+
+    fn load_memory_object(
+        &self,
+        memory_id: &ObjectId,
+    ) -> Result<Option<MemoryObjectRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT candidate_id, decision_id, canonical_json FROM memory_objects WHERE memory_id=?1",
+                (memory_id.as_str(),),
+                |row| Ok(MemoryObjectRow {
+                    memory_id: memory_id.clone(),
+                    candidate_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    decision_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(1, rusqlite::types::Type::Text, Box::new(error)))?,
+                    canonical_json: row.get(2)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load MemoryObject"))
+    }
+
+    fn append_memory_tombstone(
+        &self,
+        tombstone: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError> {
+        if !matches!(tombstone.action.as_str(), "forget" | "expire")
+            || tombstone.reason.trim().is_empty()
+            || serde_json::from_str::<serde_json::Value>(&tombstone.canonical_json).is_err()
+        {
+            return Err(invalid_context_payload(
+                "MemoryLifecycle",
+                "action, reason, or canonical audit payload is invalid",
+            ));
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory forget transaction"))?;
+        let exists = transaction
+            .query_row(
+                "SELECT 1 FROM memory_objects WHERE memory_id=?1",
+                (tombstone.memory_id.as_str(),),
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(unavailable("load Memory object for forget"))?
+            .is_some();
+        if !exists {
+            return Err(StorePortError::Conflict {
+                detail: format!("Memory object {} does not exist", tombstone.memory_id),
+            });
+        }
+
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_tombstones (lifecycle_id, memory_id, action, occurred_at_unix_seconds, reason, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                (
+                    tombstone.lifecycle_id.as_str(),
+                    tombstone.memory_id.as_str(),
+                    tombstone.action.as_str(),
+                    tombstone.occurred_at_unix_seconds,
+                    tombstone.reason.as_str(),
+                    tombstone.canonical_json.as_str(),
+                ),
+            )?;
+            transaction.execute(
+                "DELETE FROM memory_search_fts WHERE memory_id=?1",
+                (tombstone.memory_id.as_str(),),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory forget transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!(
+                    "Memory object {} already has a lifecycle record",
+                    tombstone.memory_id
+                ),
+            }),
+            Err(error) => Err(unavailable("append Memory tombstone")(error)),
+        }
+    }
+
+    fn append_memory_expiration(
+        &self,
+        expiration: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError> {
+        if expiration.action != "expire" {
+            return Err(invalid_context_payload(
+                "MemoryExpiration",
+                "expiration lifecycle action must be expire",
+            ));
+        }
+        let connection = self.lock()?;
+        let retention_deadline = connection
+            .query_row(
+                "SELECT memory_candidates.retention_expires_at_unix_seconds FROM memory_objects JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id WHERE memory_objects.memory_id=?1",
+                (expiration.memory_id.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory retention deadline"))?;
+        let Some(retention_deadline) = retention_deadline else {
+            return Err(StorePortError::Conflict {
+                detail: format!("Memory object {} does not exist", expiration.memory_id),
+            });
+        };
+        if expiration.occurred_at_unix_seconds < retention_deadline {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "Memory object {} retention has not expired",
+                    expiration.memory_id
+                ),
+            });
+        }
+        drop(connection);
+        self.append_memory_tombstone(expiration)
+    }
+
+    fn append_memory_update(&self, update: &MemoryUpdateRequest) -> Result<(), StorePortError> {
+        if update.decision.decision != "admit"
+            || update.candidate.candidate_id != update.decision.candidate_id
+            || update.replacement.candidate_id != update.candidate.candidate_id
+            || update.replacement.decision_id != update.decision.decision_id
+            || update.supersede_tombstone.action != "supersede"
+            || update.supersede_tombstone.memory_id != update.previous_memory_id
+        {
+            return Err(invalid_context_payload(
+                "MemoryUpdate",
+                "replacement bindings or supersede lifecycle fact are invalid",
+            ));
+        }
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory version update transaction"))?;
+        let current_version = transaction
+            .query_row(
+                "SELECT version FROM memory_object_versions WHERE memory_id=?1",
+                (update.previous_memory_id.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory version for update"))?;
+        let Some(current_version) = current_version else {
+            return Err(StorePortError::Conflict {
+                detail: "Memory update target does not exist".to_owned(),
+            });
+        };
+        if current_version != update.expected_version {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "Memory update expected version {}, found {}",
+                    update.expected_version, current_version
+                ),
+            });
+        }
+        let source_canonical_json = transaction
+            .query_row(
+                "SELECT canonical_json FROM workspace_context_sources WHERE source_id=?1 AND source_digest=?2 AND provenance_ref=?3 AND resource_scope=?4",
+                rusqlite::params![update.candidate.source_id.as_str(), update.candidate.source_digest.as_str(), update.candidate.source_provenance_ref.as_str(), update.candidate.governance_scope.as_str()],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory update source"))?
+            .ok_or_else(|| StorePortError::Conflict {
+                detail: "Memory update source binding is no longer current".to_owned(),
+            })?;
+        let source_text = extract_memory_source_text(&source_canonical_json)?;
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_candidates (candidate_id, source_id, source_digest, source_provenance_ref, governance_scope, target_scope, purpose, retention_expires_at_unix_seconds, observed_at_unix_seconds, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                rusqlite::params![update.candidate.candidate_id.as_str(), update.candidate.source_id.as_str(), update.candidate.source_digest.as_str(), update.candidate.source_provenance_ref.as_str(), update.candidate.governance_scope.as_str(), update.candidate.target_scope.as_str(), update.candidate.purpose.as_str(), update.candidate.retention_expires_at_unix_seconds, update.candidate.observed_at_unix_seconds, update.candidate.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_admission_decisions (decision_id, candidate_id, candidate_digest, decision, policy_version, reason_codes_json, canonical_json) VALUES (?1, ?2, ?3, 'admit', ?4, ?5, ?6)",
+                rusqlite::params![update.decision.decision_id.as_str(), update.decision.candidate_id.as_str(), update.decision.candidate_digest.as_str(), update.decision.policy_version, update.decision.reason_codes_json.as_str(), update.decision.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_objects (memory_id, candidate_id, decision_id, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![update.replacement.memory_id.as_str(), update.replacement.candidate_id.as_str(), update.replacement.decision_id.as_str(), update.replacement.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_object_versions (memory_id, version, supersedes_memory_id) VALUES (?1, ?2, ?3)",
+                rusqlite::params![update.replacement.memory_id.as_str(), update.expected_version + 1, update.previous_memory_id.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_tombstones (lifecycle_id, memory_id, action, occurred_at_unix_seconds, reason, canonical_json) VALUES (?1, ?2, 'supersede', ?3, ?4, ?5)",
+                rusqlite::params![update.supersede_tombstone.lifecycle_id.as_str(), update.previous_memory_id.as_str(), update.supersede_tombstone.occurred_at_unix_seconds, update.supersede_tombstone.reason.as_str(), update.supersede_tombstone.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "DELETE FROM memory_search_fts WHERE memory_id=?1",
+                (update.previous_memory_id.as_str(),),
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+                (update.replacement.memory_id.as_str(), source_text.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory version update transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Memory update conflicts with an existing immutable version".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Memory version update")(error)),
+        }
+    }
+
+    fn search_memory_candidates(
+        &self,
+        query: &MemorySearchQuery,
+    ) -> Result<Vec<MemorySearchCandidateRow>, StorePortError> {
+        validate_memory_search_query(query)?;
+        let connection = self.lock()?;
+        let mut statement = connection
+            .prepare(
+                "WITH authority_filtered_memory AS (
+                    SELECT memory_objects.memory_id, memory_candidates.source_id, memory_candidates.source_digest
+                    FROM memory_objects
+                    JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id
+                    JOIN memory_admission_decisions ON memory_admission_decisions.decision_id = memory_objects.decision_id
+                    JOIN workspace_context_sources ON workspace_context_sources.source_id = memory_candidates.source_id
+                        AND workspace_context_sources.source_digest = memory_candidates.source_digest
+                        AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
+                        AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
+                    WHERE memory_admission_decisions.decision = 'admit'
+                        AND NOT EXISTS (
+                            SELECT 1 FROM memory_tombstones
+                            WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                        )
+                        AND memory_candidates.governance_scope = ?1
+                        AND memory_candidates.purpose = ?2
+                        AND memory_candidates.retention_expires_at_unix_seconds > ?3
+                )
+                SELECT DISTINCT authority_filtered_memory.memory_id, authority_filtered_memory.source_id, authority_filtered_memory.source_digest
+                FROM authority_filtered_memory
+                JOIN memory_search_fts ON memory_search_fts.memory_id = authority_filtered_memory.memory_id
+                WHERE memory_search_fts MATCH ?4
+                ORDER BY bm25(memory_search_fts), authority_filtered_memory.memory_id
+                LIMIT ?5",
+            )
+            .map_err(unavailable("prepare Memory FTS search"))?;
+        let results = statement
+            .query_map(
+                rusqlite::params![
+                    query.governance_scope,
+                    query.purpose,
+                    query.observed_at_unix_seconds,
+                    query.query_text,
+                    i64::try_from(query.maximum_results).unwrap_or(i64::MAX),
+                ],
+                |row| {
+                    Ok(MemorySearchCandidateRow {
+                        memory_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?,
+                        source_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|error| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                1,
+                                rusqlite::types::Type::Text,
+                                Box::new(error),
+                            )
+                        })?,
+                        source_digest: row.get(2)?,
+                    })
+                },
+            )
+            .map_err(unavailable("query Memory FTS search"))?;
+        results
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read Memory FTS search"))
+    }
+
+    fn rebuild_memory_search_index(&self) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory FTS rebuild"))?;
+        transaction
+            .execute("DELETE FROM memory_search_fts", [])
+            .map_err(unavailable("clear Memory FTS rebuild"))?;
+        transaction
+            .execute(
+                "INSERT INTO memory_search_fts (memory_id, source_text)
+                 SELECT memory_objects.memory_id, json_extract(workspace_context_sources.canonical_json, '$.body.text')
+                 FROM memory_objects
+                 JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id
+                 JOIN memory_admission_decisions ON memory_admission_decisions.decision_id = memory_objects.decision_id
+                 JOIN workspace_context_sources ON workspace_context_sources.source_id = memory_candidates.source_id
+                    AND workspace_context_sources.source_digest = memory_candidates.source_digest
+                    AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
+                    AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
+                 WHERE memory_admission_decisions.decision = 'admit'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM memory_tombstones
+                        WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                    )
+                    AND json_type(workspace_context_sources.canonical_json, '$.body.text') = 'text'
+                    AND length(trim(json_extract(workspace_context_sources.canonical_json, '$.body.text'))) > 0",
+                [],
+            )
+            .map_err(unavailable("populate Memory FTS rebuild"))?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit Memory FTS rebuild"))
+    }
 }
 
 impl ContextStore for SqliteAuthorityStore {
@@ -3803,6 +4311,313 @@ impl HarnessStore for SqliteAuthorityStore {
             });
         }
         Ok(facts)
+    }
+}
+
+impl SkillStore for SqliteAuthorityStore {
+    fn append_skill_import(
+        &self,
+        package: &SkillPackageRow,
+        revision: &SkillRevisionRow,
+    ) -> Result<(), StorePortError> {
+        let unsafe_local_path = package.local_source_path.starts_with('/')
+            || package.local_source_path.contains("\\\\")
+            || package
+                .local_source_path
+                .split('/')
+                .any(|segment| segment == "..");
+        let manifest_digest_matches_payload = canonical_json_digest_matches(
+            &package.canonical_json,
+            "manifest_digest",
+            &package.manifest_digest,
+        );
+        let content_digest_matches_payload = canonical_json_digest_matches(
+            &revision.canonical_json,
+            "content_digest",
+            &revision.content_digest,
+        );
+        let invalid_import = package.workspace_scope.trim().is_empty()
+            || package.local_source_path.trim().is_empty()
+            || package.provenance_ref.trim().is_empty()
+            || package.manifest_digest.trim().is_empty()
+            || revision.package_id != package.package_id
+            || revision.content_digest.trim().is_empty()
+            || !matches!(
+                revision.compatibility.as_str(),
+                "compatible" | "incompatible"
+            )
+            || !manifest_digest_matches_payload
+            || !content_digest_matches_payload;
+        if unsafe_local_path || invalid_import {
+            return Err(StorePortError::Conflict {
+                detail: "Skill import has unsafe local provenance or invalid immutable bindings"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill import transaction"))?;
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO skill_packages (package_id, workspace_scope, local_source_path, provenance_ref, manifest_digest, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                (package.package_id.as_str(), package.workspace_scope.as_str(), package.local_source_path.as_str(), package.provenance_ref.as_str(), package.manifest_digest.as_str(), package.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO skill_revisions (revision_id, package_id, content_digest, compatibility, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (revision.revision_id.as_str(), revision.package_id.as_str(), revision.content_digest.as_str(), revision.compatibility.as_str(), revision.canonical_json.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill import transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill import conflicts with an immutable package or revision".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill import")(error)),
+        }
+    }
+
+    fn append_skill_revision_supersede(
+        &self,
+        supersede: &SkillRevisionSupersedeRequest,
+    ) -> Result<(), StorePortError> {
+        let replacement = &supersede.replacement;
+        let invalid_supersede = replacement.revision_id == supersede.previous_revision_id
+            || replacement.content_digest.trim().is_empty()
+            || !matches!(
+                replacement.compatibility.as_str(),
+                "compatible" | "incompatible"
+            )
+            || !canonical_json_digest_matches(
+                &replacement.canonical_json,
+                "content_digest",
+                &replacement.content_digest,
+            )
+            || serde_json::from_str::<Value>(&supersede.canonical_json).is_err();
+        if invalid_supersede {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede has invalid immutable replacement bindings"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill revision supersede transaction"))?;
+        let prior_package_id = transaction
+            .query_row(
+                "SELECT package_id FROM skill_revisions WHERE revision_id=?1",
+                (supersede.previous_revision_id.as_str(),),
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(unavailable("load prior Skill revision"))?;
+        let Some(prior_package_id) = prior_package_id else {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede names an unknown prior revision".to_owned(),
+            });
+        };
+        if prior_package_id != replacement.package_id.as_str() {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede must remain in the same package".to_owned(),
+            });
+        }
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO skill_revisions (revision_id, package_id, content_digest, compatibility, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (replacement.revision_id.as_str(), replacement.package_id.as_str(), replacement.content_digest.as_str(), replacement.compatibility.as_str(), replacement.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO skill_revision_lineage (revision_id, supersedes_revision_id, canonical_json) VALUES (?1, ?2, ?3)",
+                (replacement.revision_id.as_str(), supersede.previous_revision_id.as_str(), supersede.canonical_json.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill revision supersede transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill revision supersede conflicts with immutable revision lineage"
+                    .to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill revision supersede")(error)),
+        }
+    }
+
+    fn append_skill_binding(&self, binding: &SkillBindingRow) -> Result<(), StorePortError> {
+        let invalid_binding = binding.workspace_scope.trim().is_empty()
+            || binding.target_ref.trim().is_empty()
+            || !matches!(binding.target_kind.as_str(), "agent" | "task" | "workspace")
+            || !matches!(binding.status.as_str(), "active" | "revoked")
+            || serde_json::from_str::<Value>(&binding.canonical_json).is_err();
+        if invalid_binding {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding has invalid target, lifecycle, or canonical payload"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill binding transaction"))?;
+        let revision_scope = transaction
+            .query_row(
+                "SELECT skill_packages.workspace_scope, skill_revisions.compatibility FROM skill_revisions JOIN skill_packages ON skill_packages.package_id = skill_revisions.package_id WHERE skill_revisions.revision_id=?1",
+                (binding.revision_id.as_str(),),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("load Skill revision for binding"))?;
+        let Some((workspace_scope, compatibility)) = revision_scope else {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding names an unknown revision".to_owned(),
+            });
+        };
+        if workspace_scope != binding.workspace_scope || compatibility != "compatible" {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding crosses workspace scope or names an incompatible revision"
+                    .to_owned(),
+            });
+        }
+        match transaction.execute(
+            "INSERT INTO skill_bindings (binding_id, revision_id, workspace_scope, target_kind, target_ref, status, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            (binding.binding_id.as_str(), binding.revision_id.as_str(), binding.workspace_scope.as_str(), binding.target_kind.as_str(), binding.target_ref.as_str(), binding.status.as_str(), binding.canonical_json.as_str()),
+        ) {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill binding transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill binding conflicts with an immutable binding".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill binding")(error)),
+        }
+    }
+
+    fn load_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT revision_id, workspace_scope, target_kind, target_ref, status, canonical_json FROM skill_bindings WHERE binding_id=?1",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingRow {
+                    binding_id: binding_id.clone(),
+                    revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    workspace_scope: row.get(1)?,
+                    target_kind: row.get(2)?,
+                    target_ref: row.get(3)?,
+                    status: row.get(4)?,
+                    canonical_json: row.get(5)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load Skill binding"))
+    }
+
+    fn append_skill_binding_revocation(
+        &self,
+        revocation: &SkillBindingRevocationRow,
+    ) -> Result<(), StorePortError> {
+        if revocation.reason.trim().is_empty()
+            || serde_json::from_str::<Value>(&revocation.canonical_json).is_err()
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation has an invalid reason or canonical payload"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill binding revocation transaction"))?;
+        let binding_exists = transaction
+            .query_row(
+                "SELECT 1 FROM skill_bindings WHERE binding_id=?1",
+                (revocation.binding_id.as_str(),),
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(unavailable("load Skill binding for revocation"))?
+            .is_some();
+        if !binding_exists {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation names an unknown binding".to_owned(),
+            });
+        }
+        match transaction.execute(
+            "INSERT INTO skill_binding_revocations (revocation_id, binding_id, reason, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+            (revocation.revocation_id.as_str(), revocation.binding_id.as_str(), revocation.reason.as_str(), revocation.canonical_json.as_str()),
+        ) {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill binding revocation transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill binding already has an immutable revocation".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill binding revocation")(error)),
+        }
+    }
+
+    fn load_active_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT revision_id, workspace_scope, target_kind, target_ref, status, canonical_json FROM skill_bindings WHERE binding_id=?1 AND status='active' AND NOT EXISTS (SELECT 1 FROM skill_binding_revocations WHERE skill_binding_revocations.binding_id=skill_bindings.binding_id)",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingRow {
+                    binding_id: binding_id.clone(),
+                    revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    workspace_scope: row.get(1)?,
+                    target_kind: row.get(2)?,
+                    target_ref: row.get(3)?,
+                    status: row.get(4)?,
+                    canonical_json: row.get(5)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load active Skill binding"))
+    }
+
+    fn explain_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingExplanationRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT skill_bindings.revision_id, skill_bindings.workspace_scope, skill_bindings.target_kind, skill_bindings.target_ref, skill_bindings.status, skill_bindings.canonical_json, skill_packages.package_id, skill_packages.manifest_digest, skill_revisions.content_digest, skill_binding_revocations.reason FROM skill_bindings JOIN skill_revisions ON skill_revisions.revision_id=skill_bindings.revision_id JOIN skill_packages ON skill_packages.package_id=skill_revisions.package_id LEFT JOIN skill_binding_revocations ON skill_binding_revocations.binding_id=skill_bindings.binding_id WHERE skill_bindings.binding_id=?1",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingExplanationRow {
+                    binding: SkillBindingRow {
+                        binding_id: binding_id.clone(),
+                        revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                        workspace_scope: row.get(1)?,
+                        target_kind: row.get(2)?,
+                        target_ref: row.get(3)?,
+                        status: row.get(4)?,
+                        canonical_json: row.get(5)?,
+                    },
+                    package_id: ObjectId::parse(&row.get::<_, String>(6)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(6, rusqlite::types::Type::Text, Box::new(error)))?,
+                    manifest_digest: row.get(7)?,
+                    content_digest: row.get(8)?,
+                    revocation_reason: row.get(9)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("explain Skill binding"))
     }
 }
 
