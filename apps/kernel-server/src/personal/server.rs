@@ -411,6 +411,9 @@ fn process_http_request(
             "management",
         );
     }
+    if method_path.starts_with("GET /task/resource/") {
+        return handle_task_resource_route(stream, &method_path, &headers, authority, resource_api);
+    }
     if method_path.starts_with("POST /task/") || method_path.starts_with("GET /task/") {
         return handle_task_route(stream, &method_path, &headers, &body, authority, task_api);
     }
@@ -679,6 +682,45 @@ fn handle_resource_route(
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
         .handle(method_path);
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_resource_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    resource_api: &Arc<Mutex<ResourceApi>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = resource_api
+        .lock()
+        .map_err(|_| "resource projection lock poisoned".to_owned())?
+        .handle_task(&method_path.replacen("/task/resource/", "/resource/", 1));
     write_response(
         stream,
         response.status,

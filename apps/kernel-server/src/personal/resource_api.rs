@@ -39,6 +39,28 @@ impl ResourceApi {
     }
 
     pub(crate) fn handle(&self, method_path: &str) -> ResourceApiResponse {
+        self.handle_projection(method_path, None)
+    }
+
+    pub(crate) fn handle_task(&self, method_path: &str) -> ResourceApiResponse {
+        let task_reference = method_path
+            .split_once('?')
+            .and_then(|(_, query)| query_parameter(query, "task_ref"));
+        let Some(task_reference) = task_reference.filter(|value| !value.is_empty()) else {
+            return error(
+                400,
+                "RESOURCE_TASK_REFERENCE_REQUIRED",
+                "task-bound resource projection requires task_ref",
+            );
+        };
+        self.handle_projection(method_path, Some(task_reference))
+    }
+
+    fn handle_projection(
+        &self,
+        method_path: &str,
+        task_reference: Option<&str>,
+    ) -> ResourceApiResponse {
         let (path, query) = method_path
             .split_once('?')
             .map_or((method_path, ""), |(path, query)| (path, query));
@@ -65,11 +87,15 @@ impl ResourceApi {
         if path == "GET /resource/v1/projection" {
             return json_response(
                 200,
-                snapshot(family, self.next_watch_sequence.saturating_sub(1)),
+                snapshot(
+                    family,
+                    self.next_watch_sequence.saturating_sub(1),
+                    task_reference,
+                ),
             );
         }
         if path == "GET /resource/v1/watch" {
-            return self.watch(family, query);
+            return self.watch(family, query, task_reference);
         }
         error(
             404,
@@ -78,7 +104,12 @@ impl ResourceApi {
         )
     }
 
-    fn watch(&self, family: &str, query: &str) -> ResourceApiResponse {
+    fn watch(
+        &self,
+        family: &str,
+        query: &str,
+        task_reference: Option<&str>,
+    ) -> ResourceApiResponse {
         let requested_sequence = query_parameter(query, "resume_from")
             .map(str::parse::<u64>)
             .transpose()
@@ -99,7 +130,11 @@ impl ResourceApi {
         }
         let mut frames = vec![format!(
             "event: snapshot\ndata: {}\n\n",
-            snapshot(family, self.next_watch_sequence.saturating_sub(1))
+            snapshot(
+                family,
+                self.next_watch_sequence.saturating_sub(1),
+                task_reference,
+            )
         )];
         for (sequence, event_family, event) in
             self.watch_events
@@ -134,12 +169,13 @@ impl ResourceApi {
     }
 }
 
-fn snapshot(family: &str, latest_sequence: u64) -> Value {
+fn snapshot(family: &str, latest_sequence: u64, task_reference: Option<&str>) -> Value {
     json!({
         "kind": "snapshot",
         "projection_version": PROJECTION_VERSION,
         "family": family,
         "latest_sequence": latest_sequence,
+        "task_ref": task_reference,
         "projection": family_projection(family),
     })
 }
