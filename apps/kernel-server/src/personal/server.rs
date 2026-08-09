@@ -782,7 +782,7 @@ fn handle_task_consumption_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     drop(authority_guard);
-    let store = SqliteAuthorityStore::open(layout)
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
         .map_err(|error| format!("open authority store: {error}"))?;
     let response = resource_api
         .lock()
