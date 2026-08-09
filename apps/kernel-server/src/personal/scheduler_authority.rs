@@ -43,6 +43,10 @@ use cognitive_kernel::intent_chain::{
     strong_reference_to,
 };
 use cognitive_kernel::{
+    ContextCacheEntry, ContextCacheKey, ContextCacheLookup, ContextSourceDigest, DerivedCacheKind,
+    GovernedContextCache,
+};
+use cognitive_kernel::{
     authz::{AccessRequest, authorize},
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
@@ -80,6 +84,7 @@ const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4"
 const OPERATION_CANDIDATE_SCHEMA_VERSION: &str = "cognitiveos.operation-candidate-proposal/0.1";
 const DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN: &str =
     "cognitiveos.personal.daemon-descriptor-reference/0.1";
+const DEFAULT_LOOP_STAGNATION_CEILING: usize = 3;
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -156,6 +161,7 @@ pub(crate) struct SchedulerAuthoritySnapshot {
     pub ceiling_facts: SchedulerCeilingFacts,
     pub loop_object_id: ObjectId,
     pub budget_id: BudgetId,
+    pub loop_control_decision: LoopControlDecision,
 }
 
 /// Durable facts accepted by the daemon-only candidate-admission preflight.
@@ -186,6 +192,147 @@ pub(crate) struct ContextResolutionCommand {
     pub conversation_ref: Option<String>,
     pub source_limit: usize,
     pub decided_at: WallTimestamp,
+}
+
+/// Bounded, body-free observation from one governed Context cache consultation.
+/// It records only cache outcome and digest counts; it is not Task progress,
+/// evidence, verification, or a continuation decision.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ContextCacheTelemetry {
+    pub cache_hit: bool,
+    pub stable_prefix_segment_count: usize,
+    pub delta_segment_count: usize,
+}
+
+/// A freshly authorized Context resolution accompanied by a digest-only cache
+/// observation. The resolved view is always built through the same authority
+/// checks as an uncached request.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct GovernedContextResolution {
+    pub resolved_view: ResolvedContextView,
+    pub cache_telemetry: ContextCacheTelemetry,
+}
+
+/// A daemon-only loop-control observation. These outcomes control whether a
+/// later scheduler attempt may be considered; none of them accepts a Task or
+/// advances verification, Effect, or Gate state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum LoopControlDecision {
+    Continue,
+    Wait { reason_code: &'static str },
+    Switch { prior_signature_digest: String },
+    Block { reason_code: &'static str },
+}
+
+/// Fold append-only progress facts into a bounded repeat/no-progress decision.
+/// The daemon-issued action fingerprint already binds action, target, tool,
+/// descriptor, and parameters; the durable status is the bounded error class.
+/// Evidence references are canonicalized and hashed without retaining bodies.
+pub(crate) fn derive_loop_control_from_facts(
+    progress_facts: &[cognitive_kernel::ports::ProgressFactRow],
+    action_fingerprint: &str,
+    maximum_retries: i64,
+    stagnation_ceiling: usize,
+) -> Result<LoopControlDecision, SchedulerAuthorityError> {
+    if action_fingerprint.is_empty() || maximum_retries < 0 || stagnation_ceiling == 0 {
+        return Err(SchedulerAuthorityError::LoopControlUnavailable(
+            "loop-control bounds or action identity are invalid".to_owned(),
+        ));
+    }
+
+    let mut trailing_non_progress_count = 0usize;
+    let mut latest_signature = None;
+    let mut repeated_signature_count = 0usize;
+    for progress_fact in progress_facts.iter().rev() {
+        if !matches!(
+            progress_fact.status.as_str(),
+            "advanced" | "none" | "uncertain" | "blocked"
+        ) {
+            return Err(SchedulerAuthorityError::LoopControlUnavailable(
+                "progress fact status is outside the registered progress set".to_owned(),
+            ));
+        }
+        let evidence_digest = digest_evidence_references(&progress_fact.evidence_refs_json)?;
+        let signature_digest = canonical::digest(
+            &canonical::canonical_bytes_of_value(&json!({
+                "action_fingerprint": progress_fact.action_fingerprint,
+                "error_class": progress_fact.status,
+                "evidence_digest": evidence_digest,
+            }))
+            .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?,
+            "cognitiveos.personal.loop-signature/0.1",
+        )
+        .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?;
+
+        if progress_fact.status != "advanced" {
+            trailing_non_progress_count += 1;
+        } else {
+            break;
+        }
+        if latest_signature.is_none() {
+            latest_signature = Some(signature_digest.clone());
+        }
+        if latest_signature.as_deref() == Some(signature_digest.as_str()) {
+            repeated_signature_count += 1;
+        } else {
+            break;
+        }
+    }
+
+    if trailing_non_progress_count >= stagnation_ceiling {
+        return Ok(LoopControlDecision::Block {
+            reason_code: "no_progress_ceiling_reached",
+        });
+    }
+    if repeated_signature_count > maximum_retries as usize {
+        return Ok(LoopControlDecision::Block {
+            reason_code: "repeat_retry_ceiling_reached",
+        });
+    }
+    if repeated_signature_count > 1 {
+        return Ok(LoopControlDecision::Switch {
+            prior_signature_digest: latest_signature.unwrap_or_default(),
+        });
+    }
+    if progress_facts
+        .last()
+        .is_some_and(|fact| fact.status == "blocked" || fact.status == "uncertain")
+    {
+        return Ok(LoopControlDecision::Wait {
+            reason_code: "durable_progress_uncertain_or_blocked",
+        });
+    }
+    Ok(LoopControlDecision::Continue)
+}
+
+fn digest_evidence_references(evidence_refs_json: &str) -> Result<String, SchedulerAuthorityError> {
+    let parsed_value: Value = serde_json::from_str(evidence_refs_json).map_err(|error| {
+        SchedulerAuthorityError::LoopControlUnavailable(format!(
+            "evidence references are not valid JSON: {error}"
+        ))
+    })?;
+    let Value::Array(evidence_values) = parsed_value else {
+        return Err(SchedulerAuthorityError::LoopControlUnavailable(
+            "evidence references must be a JSON array".to_owned(),
+        ));
+    };
+    let mut evidence_references = evidence_values
+        .into_iter()
+        .map(|value| match value {
+            Value::String(reference) if !reference.is_empty() => Ok(reference),
+            _ => Err(SchedulerAuthorityError::LoopControlUnavailable(
+                "evidence references must contain non-empty strings".to_owned(),
+            )),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    evidence_references.sort();
+    let canonical_evidence = canonical::canonical_bytes_of_value(&json!(evidence_references))
+        .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?;
+    canonical::digest(
+        &canonical_evidence,
+        "cognitiveos.personal.loop-evidence/0.1",
+    )
+    .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))
 }
 
 /// The only non-authority fields a private Pi producer may propose. The
@@ -361,6 +508,8 @@ pub(crate) enum SchedulerAuthorityError {
     MalformedContract(String),
     #[error("scheduler bound loop is unavailable or not dispatchable: {0}")]
     LoopUnavailable(String),
+    #[error("scheduler loop-control facts are malformed or unavailable: {0}")]
+    LoopControlUnavailable(String),
     #[error("scheduler bound budget is unavailable or inconsistent: {0}")]
     BudgetUnavailable(String),
     #[error("scheduler task contract epoch must be positive: {0}")]
@@ -879,6 +1028,156 @@ where
         + ProtocolStore,
 {
     resolve_authorized_task_context_after_metadata(store, command, || Ok(()))
+}
+
+/// Resolve Context with a daemon-owned digest-only cache coordinator.
+///
+/// This intentionally does not permit the cache to return render bytes or
+/// source bodies. The resolver re-runs metadata discovery, freshness checks,
+/// current authorization, and body/digest matching first. Only then can an
+/// exact key confirm that stable-prefix/delta metadata is reusable.
+pub(crate) fn resolve_authorized_task_context_with_cache<S>(
+    store: &S,
+    command: &ContextResolutionCommand,
+    context_cache: &mut GovernedContextCache,
+) -> Result<GovernedContextResolution, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + IntentChainStore
+        + ProtocolStore,
+{
+    let initial_contract_epoch = store
+        .current_contract_epoch(&command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    let initial_contract = store
+        .load_task_contract(&command.task_ref, initial_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
+    let initial_request = store
+        .load_context_request(&command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(command.request_id.to_string())
+        })?;
+    let resolved_view = resolve_authorized_task_context(store, command)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    let current_contract = store
+        .load_task_contract(&command.task_ref, current_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
+    let current_request = store
+        .load_context_request(&command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(command.request_id.to_string())
+        })?;
+    if initial_contract.contract_epoch != current_contract.contract_epoch
+        || initial_contract.contract_digest != current_contract.contract_digest
+        || initial_request.request_digest != current_request.request_digest
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "TaskContract or ContextRequest changed during Context cache resolution".to_owned(),
+        ));
+    }
+
+    let cache_key = context_cache_key(&resolved_view, command, &current_request, &current_contract);
+    let cache_entry = context_cache_entry(&resolved_view);
+    let cache_telemetry = match context_cache.lookup_current(&cache_key) {
+        ContextCacheLookup::Hit(cached_entry) => {
+            if cached_entry != cache_entry {
+                return Err(SchedulerAuthorityError::ContextResolution(
+                    "governed Context cache metadata differs from the freshly authorized view"
+                        .to_owned(),
+                ));
+            }
+            ContextCacheTelemetry {
+                cache_hit: true,
+                stable_prefix_segment_count: cached_entry.stable_prefix_segment_digests.len(),
+                delta_segment_count: cached_entry.delta_segment_digests.len(),
+            }
+        }
+        ContextCacheLookup::MissResolveFresh => {
+            context_cache.insert(cache_key, cache_entry.clone());
+            ContextCacheTelemetry {
+                cache_hit: false,
+                stable_prefix_segment_count: cache_entry.stable_prefix_segment_digests.len(),
+                delta_segment_count: cache_entry.delta_segment_digests.len(),
+            }
+        }
+    };
+
+    Ok(GovernedContextResolution {
+        resolved_view,
+        cache_telemetry,
+    })
+}
+
+fn context_cache_key(
+    resolved_view: &ResolvedContextView,
+    command: &ContextResolutionCommand,
+    request_row: &ContextRequestRow,
+    contract_row: &cognitive_kernel::ports::TaskContractRow,
+) -> ContextCacheKey {
+    let mut ordered_source_digests = resolved_view
+        .loaded
+        .iter()
+        .map(|item| ContextSourceDigest {
+            source_ref: item.object_ref.clone(),
+            content_digest: item.content_digest.clone(),
+        })
+        .collect::<Vec<_>>();
+    ordered_source_digests.sort();
+
+    ContextCacheKey {
+        governance: resolved_view.binding.clone(),
+        context_request_id: request_row.request_id.to_string(),
+        context_request_digest: request_row.request_digest.clone(),
+        task_ref: command.task_ref.clone(),
+        task_contract_epoch: contract_row.contract_epoch,
+        task_contract_digest: contract_row.contract_digest.clone(),
+        ordered_source_digests,
+        renderer_version: "personal-context-render/1".to_owned(),
+        // Context is built before an untrusted Pi candidate exists. Tool-bound
+        // delta caching may only be added at a later daemon-validated boundary.
+        validated_tool_descriptor_digest: None,
+    }
+}
+
+fn context_cache_entry(resolved_view: &ResolvedContextView) -> ContextCacheEntry {
+    let stable_prefix_segment_count = resolved_view
+        .loaded
+        .iter()
+        .take_while(|item| {
+            matches!(
+                item.role,
+                LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState
+            )
+        })
+        .count()
+        + 1; // The renderer header depends only on stable bindings.
+    let segment_digests = resolved_view
+        .render
+        .segments
+        .iter()
+        .map(|segment| segment.digest.clone())
+        .collect::<Vec<_>>();
+    ContextCacheEntry {
+        render_digest: resolved_view.render.digest.clone(),
+        stable_prefix_segment_digests: segment_digests
+            .iter()
+            .take(stable_prefix_segment_count)
+            .cloned()
+            .collect(),
+        delta_segment_digests: segment_digests
+            .into_iter()
+            .skip(stable_prefix_segment_count)
+            .collect(),
+        derived: vec![DerivedCacheKind::KvCache, DerivedCacheKind::PromptCache],
+    }
 }
 
 /// Resolve Context after the metadata-only discovery stage. Production calls
@@ -2117,6 +2416,7 @@ mod tests {
         WallTimestamp,
         capability::{CapabilityConstraints, LeaseWindow},
     };
+    use cognitive_kernel::GovernedContextCache;
     use cognitive_kernel::authz::{
         AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
         PrincipalFacts, authorize,
@@ -2133,7 +2433,7 @@ mod tests {
         AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
         ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
         EventDraft, IntentChainStore, IntentRow, ObjectAdmission, ObjectCas,
-        OperationCandidateProposalRow, RecordDraft, SchedulerExecutionPolicyRow,
+        OperationCandidateProposalRow, ProgressFactRow, RecordDraft, SchedulerExecutionPolicyRow,
         SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
         WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
     };
@@ -2174,6 +2474,89 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn progress_fact(
+        iteration: i64,
+        status: &str,
+        action_fingerprint: &str,
+        evidence_refs_json: &str,
+    ) -> ProgressFactRow {
+        ProgressFactRow {
+            loop_object_id: object_id(950),
+            iteration,
+            status: status.to_owned(),
+            action_fingerprint: action_fingerprint.to_owned(),
+            evidence_refs_json: evidence_refs_json.to_owned(),
+            recorded_at: WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap(),
+            fencing_epoch: 1,
+        }
+    }
+
+    #[test]
+    fn loop_control_switches_after_a_repeated_daemon_signature() {
+        let facts = vec![
+            progress_fact(1, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+            progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+        ];
+
+        let decision =
+            super::derive_loop_control_from_facts(&facts, "sha256:action", 3, 5).unwrap();
+        assert!(matches!(
+            decision,
+            super::LoopControlDecision::Switch { .. }
+        ));
+    }
+
+    #[test]
+    fn loop_control_blocks_at_the_retry_or_stagnation_ceiling() {
+        let repeated_facts = vec![
+            progress_fact(1, "none", "sha256:action", "[]"),
+            progress_fact(2, "none", "sha256:action", "[]"),
+            progress_fact(3, "none", "sha256:action", "[]"),
+        ];
+        let retry_decision =
+            super::derive_loop_control_from_facts(&repeated_facts, "sha256:action", 2, 5).unwrap();
+        assert!(matches!(
+            retry_decision,
+            super::LoopControlDecision::Block {
+                reason_code: "repeat_retry_ceiling_reached"
+            }
+        ));
+
+        let stagnation_decision =
+            super::derive_loop_control_from_facts(&repeated_facts, "sha256:action", 5, 3).unwrap();
+        assert!(matches!(
+            stagnation_decision,
+            super::LoopControlDecision::Block {
+                reason_code: "no_progress_ceiling_reached"
+            }
+        ));
+    }
+
+    #[test]
+    fn loop_control_rejects_malformed_durable_facts_and_resets_on_new_evidence() {
+        let malformed_evidence = vec![progress_fact(1, "none", "sha256:action", "{}")];
+        assert!(matches!(
+            super::derive_loop_control_from_facts(&malformed_evidence, "sha256:action", 1, 3),
+            Err(super::SchedulerAuthorityError::LoopControlUnavailable(_))
+        ));
+
+        let malformed_status = vec![progress_fact(1, "model_says_done", "sha256:action", "[]")];
+        assert!(matches!(
+            super::derive_loop_control_from_facts(&malformed_status, "sha256:action", 1, 3),
+            Err(super::SchedulerAuthorityError::LoopControlUnavailable(_))
+        ));
+
+        let changed_evidence = vec![
+            progress_fact(1, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+            progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/b\"]"),
+        ];
+        assert_eq!(
+            super::derive_loop_control_from_facts(&changed_evidence, "sha256:action", 3, 5)
+                .unwrap(),
+            super::LoopControlDecision::Continue
+        );
     }
 
     fn context_governance() -> GovernanceSeed {
@@ -2558,6 +2941,90 @@ mod tests {
         assert!(resolved_context.loaded.iter().any(|item| {
             item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
         }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn governed_context_cache_revalidates_before_reporting_a_reusable_prefix() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t04-governed-cache";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        let mut context_cache = GovernedContextCache::default();
+
+        let first_resolution = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .unwrap();
+        let second_resolution = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .unwrap();
+
+        assert!(!first_resolution.cache_telemetry.cache_hit);
+        assert!(second_resolution.cache_telemetry.cache_hit);
+        assert_eq!(
+            first_resolution.resolved_view.render.digest,
+            second_resolution.resolved_view.render.digest
+        );
+        assert!(
+            second_resolution
+                .cache_telemetry
+                .stable_prefix_segment_count
+                > 0,
+            "the renderer header is always an authority-bound stable prefix"
+        );
+        assert_eq!(context_cache.len(), 1);
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn governed_context_cache_rejects_revoked_sources_instead_of_reusing_metadata() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t04-cache-revocation";
+        let (context_command, later_revocation) =
+            append_context_race_fixture(&store, task_ref, None);
+        let mut context_cache = GovernedContextCache::default();
+
+        super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .unwrap();
+        store
+            .append_context_revocation_fact(&later_revocation)
+            .unwrap();
+
+        let result = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+                if detail.contains("denied before body materialization")
+        ));
+        assert_eq!(
+            context_cache.len(),
+            1,
+            "a rejected request cannot add a cache entry"
+        );
 
         drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
@@ -4473,6 +4940,12 @@ where
             fact.action_fingerprint == binding.action_fingerprint && fact.status != "advanced"
         })
         .count() as i64;
+    let loop_control_decision = derive_loop_control_from_facts(
+        &progress_facts,
+        &binding.action_fingerprint,
+        contract.max_retries,
+        DEFAULT_LOOP_STAGNATION_CEILING,
+    )?;
     let completed_steps = progress_facts.len() as i64;
     let stored_budget = store
         .load_budget(&budget_id)
@@ -4511,6 +4984,7 @@ where
         },
         loop_object_id,
         budget_id,
+        loop_control_decision,
     })
 }
 
@@ -5001,6 +5475,26 @@ where
     G: IdGenerator,
 {
     let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
+    match snapshot.loop_control_decision {
+        LoopControlDecision::Continue => {}
+        LoopControlDecision::Wait { reason_code } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control requires a bounded wait: {reason_code}"
+            )));
+        }
+        LoopControlDecision::Switch {
+            prior_signature_digest,
+        } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control requires a daemon-owned alternate strategy after {prior_signature_digest}"
+            )));
+        }
+        LoopControlDecision::Block { reason_code } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control blocked dispatch: {reason_code}"
+            )));
+        }
+    }
     let ceiling_dispatch = scheduler_service.stop_before_dispatch_when_ceiling_reached(
         &snapshot.ceiling_facts,
         observed_wall_time,
