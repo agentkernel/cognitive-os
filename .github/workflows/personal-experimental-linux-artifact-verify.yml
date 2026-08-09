@@ -1,0 +1,112 @@
+name: Verify Personal experimental Linux artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: "Exact reviewed source revision used to build the verifier"
+        required: true
+        type: string
+      artifact_run_id:
+        description: "Workflow run that produced the campaign artifact"
+        required: true
+        type: string
+      artifact_id:
+        description: "GitHub Actions artifact identifier"
+        required: true
+        type: string
+      artifact_name:
+        description: "GitHub Actions artifact name"
+        required: true
+        type: string
+      artifact_sha256:
+        description: "Expected GitHub Actions artifact SHA-256 with sha256: prefix"
+        required: true
+        type: string
+      bundle_sha256:
+        description: "Expected bundle SHA-256 with sha256: prefix"
+        required: true
+        type: string
+      expected_pi_version:
+        description: "Expected Pi package version"
+        required: true
+        type: string
+      expected_pi_integrity:
+        description: "Expected Pi package SRI"
+        required: true
+        type: string
+      keyring_version:
+        description: "Trusted keyring version"
+        required: true
+        type: string
+      key_id:
+        description: "Trusted key identifier"
+        required: true
+        type: string
+      public_key_base64url:
+        description: "Trusted Ed25519 public key"
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify-artifact:
+    name: Verify signed campaign artifact
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out exact reviewed verifier source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_revision }}
+
+      - name: Confirm checked-out source revision
+        env:
+          EXPECTED_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE_REVISION"
+
+      - name: Verify GitHub artifact metadata digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+          EXPECTED_ARTIFACT_SHA256: ${{ inputs.artifact_sha256 }}
+        run: |
+          set -euo pipefail
+          actual_digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq .digest)"
+          test "$actual_digest" = "$EXPECTED_ARTIFACT_SHA256"
+
+      - name: Download exact campaign artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.artifact_run_id }}
+          name: ${{ inputs.artifact_name }}
+          path: artifact
+
+      - name: Verify signed bundle without installation
+        env:
+          EXPECTED_BUNDLE_SHA256: ${{ inputs.bundle_sha256 }}
+          EXPECTED_PI_VERSION: ${{ inputs.expected_pi_version }}
+          EXPECTED_PI_INTEGRITY: ${{ inputs.expected_pi_integrity }}
+          KEYRING_VERSION: ${{ inputs.keyring_version }}
+          KEY_ID: ${{ inputs.key_id }}
+          PUBLIC_KEY_BASE64URL: ${{ inputs.public_key_base64url }}
+        run: |
+          set -euo pipefail
+          actual_bundle_sha256="sha256:$(sha256sum artifact/cognitiveos-linux-x86_64.tar.gz | awk '{print $1}')"
+          test "$actual_bundle_sha256" = "$EXPECTED_BUNDLE_SHA256"
+          cargo run --locked -p cognitive-runtime --bin linux_bundle_verifier -- \
+            --bundle-directory "$(pwd)/artifact" \
+            --expected-pi-version "$EXPECTED_PI_VERSION" \
+            --expected-pi-integrity "$EXPECTED_PI_INTEGRITY" \
+            --keyring-version "$KEYRING_VERSION" \
+            --key-id "$KEY_ID" \
+            --public-key-base64url "$PUBLIC_KEY_BASE64URL"
