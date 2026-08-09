@@ -64,8 +64,11 @@ mod tests {
 
     #[test]
     fn task_bearer_cannot_import_local_skill_package() {
-        let temporary_directory = tempfile::tempdir().unwrap();
-        let root = temporary_directory.path();
+        let root = std::env::temp_dir().join(format!(
+            "cognitiveos-skill-import-test-{}",
+            std::process::id()
+        ));
+        std::fs::remove_dir_all(&root).ok();
         let layout = PersonalDataLayout::from_xdg_roots(
             root.join("config"),
             root.join("data"),
@@ -78,7 +81,7 @@ mod tests {
         let now = Instant::now();
         let mut authority = LocalSessionAuthority::initialize(
             layout.runtime_dir().join("skill-import-bootstrap"),
-            PersonalResourceBounds::default(),
+            PersonalResourceBounds::personal_v1_baseline(),
         )
         .unwrap();
         let task_session = authority
@@ -104,6 +107,6 @@ mod tests {
             Err(StorePortError::Conflict { .. })
         ));
         store.append_skill_import(&package, &revision).unwrap();
+        std::fs::remove_dir_all(root).ok();
     }
 }
-mod skill_package;
