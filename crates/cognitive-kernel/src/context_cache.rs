@@ -143,6 +143,10 @@ impl GovernedContextCache {
         self.entries.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
     /// Removes entries whose governance epoch is provably obsolete. Correct
     /// behavior does not depend on this housekeeping because full-key lookup
     /// can never hit an entry from a prior epoch.
