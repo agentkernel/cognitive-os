@@ -139,14 +139,14 @@
 | 阶段 | 任务数 | done | in-progress | blocked | not-started | 阶段 Gate |
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
-| Phase 1 - 安装到首次对话 | 9 | 8 | 1 | 0 | 0 | G1 / B01 `pass` |
+| Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 2 | 0 | 0 | 4 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **24** | **1** | **0** | **28** | — |
+| **合计** | **53** | **25** | **0** | **0** | **28** | — |
 
 ## 2. 产品边界与不变量
 
@@ -520,7 +520,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；successor B01 固定 6 次独立 clean Linux VM outcome，全部计入，至少 5 次成功，关键安全失败为 0，并须完整统计与 affirmative independent-verifier closure（ADR-0026/0034/0039） | in-progress | Retained `B01-clean-linux-first-install-first-conversation-001` remains failed at 2 successes / 8 failures after 10 started attempts under its historical N=20 rule. Separately preregistered successor `002`, fixed N=6 on sole `B01-Desktop-Linux-002`, independently verified artifact `0.0.0-campaign.20260809.1` at exact revision `4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. Attempts 1, 3, 4, 5, and 6 passed the clean signed-installation, exact Pi, graphical hidden-input Provider, doctor-ready, bounded-marker, SecretStore-delete, and baseline-revert route; Attempt 2 failed at bounded graphical Desktop readiness before product activation. The completed denominator is 5 successes / 1 failure / 6, with zero recorded critical safety failures. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. Campaign remains running until its aggregate and affirmative independent-verifier closure; no B01, G1, GMVP-LINUX, release, or Profile claim. The successor inherits no attempt, artifact, credential, or Gate result from `001`; `/artifacts/` remains ignored local staging and is not an implicit campaign input. Evidence: [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md), [native verification](../checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md), and [successor attempt ledger](../checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md). |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；successor B01 固定 6 次独立 clean Linux VM outcome，全部计入，至少 5 次成功，关键安全失败为 0，并须完整统计与 affirmative independent-verifier closure（ADR-0026/0034/0039） | done | Retained `B01-clean-linux-first-install-first-conversation-001` remains failed at 2 successes / 8 failures after 10 started attempts under its historical N=20 rule. Separately preregistered successor `002`, fixed N=6 on sole `B01-Desktop-Linux-002`, independently verified artifact `0.0.0-campaign.20260809.1` at exact revision `4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. Attempts 1, 3, 4, 5, and 6 passed the clean signed-installation, exact Pi, graphical hidden-input Provider, doctor-ready, bounded-marker, SecretStore-delete, and baseline-revert route; Attempt 2 failed at bounded graphical Desktop readiness before product activation. The completed denominator is 5 successes / 1 failure / 6, with zero recorded critical safety failures. Aggregate, affirmative independent-verifier, required CI, branch and lease closure are complete. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. B01 is `pass`; G1, GMVP-LINUX, release, and Profile remain unclaimed. Evidence: [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md), [native verification](../checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md), and [successor attempt ledger](../checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md). |
 
 ### Phase 2 - 单 Agent 任务闭环
 
