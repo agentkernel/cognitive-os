@@ -43,11 +43,13 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 32 | 1 | 0 | 20 | 21 |
+| 53 | 33 | 0 | 0 | 20 | 20 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P1-T09 is in progress: successor campaign `002` has
+weakening any criterion. P4-T05 is done at the task level with its daemon-private
+projection and Memory/Skill authority callers complete. P1-T09 remains in progress:
+successor campaign `002` has
 an independently verified artifact, five successful started attempts, and one
 bounded graphical-Desktop readiness failure. Retained
 campaign `001` remains failed at 2 successes and 8 failures after 10 attempts;
