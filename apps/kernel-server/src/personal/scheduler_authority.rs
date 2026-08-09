@@ -211,6 +211,128 @@ pub(crate) struct GovernedContextResolution {
     pub cache_telemetry: ContextCacheTelemetry,
 }
 
+/// A daemon-only loop-control observation. These outcomes control whether a
+/// later scheduler attempt may be considered; none of them accepts a Task or
+/// advances verification, Effect, or Gate state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum LoopControlDecision {
+    Continue,
+    Wait { reason_code: &'static str },
+    Switch { prior_signature_digest: String },
+    Block { reason_code: &'static str },
+}
+
+/// Fold append-only progress facts into a bounded repeat/no-progress decision.
+/// The daemon-issued action fingerprint already binds action, target, tool,
+/// descriptor, and parameters; the durable status is the bounded error class.
+/// Evidence references are canonicalized and hashed without retaining bodies.
+pub(crate) fn derive_loop_control_from_facts(
+    progress_facts: &[cognitive_kernel::ports::ProgressFactRow],
+    action_fingerprint: &str,
+    maximum_retries: i64,
+    stagnation_ceiling: usize,
+) -> Result<LoopControlDecision, SchedulerAuthorityError> {
+    if action_fingerprint.is_empty() || maximum_retries < 0 || stagnation_ceiling == 0 {
+        return Err(SchedulerAuthorityError::LoopControlUnavailable(
+            "loop-control bounds or action identity are invalid".to_owned(),
+        ));
+    }
+
+    let mut trailing_non_progress_count = 0usize;
+    let mut latest_signature = None;
+    let mut repeated_signature_count = 0usize;
+    for progress_fact in progress_facts.iter().rev() {
+        if !matches!(
+            progress_fact.status.as_str(),
+            "advanced" | "none" | "uncertain" | "blocked"
+        ) {
+            return Err(SchedulerAuthorityError::LoopControlUnavailable(
+                "progress fact status is outside the registered progress set".to_owned(),
+            ));
+        }
+        let evidence_digest = digest_evidence_references(&progress_fact.evidence_refs_json)?;
+        let signature_digest = canonical::digest(
+            &canonical::canonical_bytes_of_value(&json!({
+                "action_fingerprint": progress_fact.action_fingerprint,
+                "error_class": progress_fact.status,
+                "evidence_digest": evidence_digest,
+            }))
+            .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?,
+            "cognitiveos.personal.loop-signature/0.1",
+        )
+        .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?;
+
+        if progress_fact.status != "advanced" {
+            trailing_non_progress_count += 1;
+        } else {
+            break;
+        }
+        if latest_signature.is_none() {
+            latest_signature = Some(signature_digest.clone());
+        }
+        if latest_signature.as_deref() == Some(signature_digest.as_str()) {
+            repeated_signature_count += 1;
+        } else {
+            break;
+        }
+    }
+
+    if trailing_non_progress_count >= stagnation_ceiling {
+        return Ok(LoopControlDecision::Block {
+            reason_code: "no_progress_ceiling_reached",
+        });
+    }
+    if repeated_signature_count > maximum_retries as usize {
+        return Ok(LoopControlDecision::Block {
+            reason_code: "repeat_retry_ceiling_reached",
+        });
+    }
+    if repeated_signature_count > 1 {
+        return Ok(LoopControlDecision::Switch {
+            prior_signature_digest: latest_signature.unwrap_or_default(),
+        });
+    }
+    if progress_facts
+        .last()
+        .is_some_and(|fact| fact.status == "blocked" || fact.status == "uncertain")
+    {
+        return Ok(LoopControlDecision::Wait {
+            reason_code: "durable_progress_uncertain_or_blocked",
+        });
+    }
+    Ok(LoopControlDecision::Continue)
+}
+
+fn digest_evidence_references(evidence_refs_json: &str) -> Result<String, SchedulerAuthorityError> {
+    let parsed_value: Value = serde_json::from_str(evidence_refs_json).map_err(|error| {
+        SchedulerAuthorityError::LoopControlUnavailable(format!(
+            "evidence references are not valid JSON: {error}"
+        ))
+    })?;
+    let Value::Array(evidence_values) = parsed_value else {
+        return Err(SchedulerAuthorityError::LoopControlUnavailable(
+            "evidence references must be a JSON array".to_owned(),
+        ));
+    };
+    let mut evidence_references = evidence_values
+        .into_iter()
+        .map(|value| match value {
+            Value::String(reference) if !reference.is_empty() => Ok(reference),
+            _ => Err(SchedulerAuthorityError::LoopControlUnavailable(
+                "evidence references must contain non-empty strings".to_owned(),
+            )),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    evidence_references.sort();
+    let canonical_evidence = canonical::canonical_bytes_of_value(&json!(evidence_references))
+        .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))?;
+    canonical::digest(
+        &canonical_evidence,
+        "cognitiveos.personal.loop-evidence/0.1",
+    )
+    .map_err(|error| SchedulerAuthorityError::LoopControlUnavailable(error.to_string()))
+}
+
 /// The only non-authority fields a private Pi producer may propose. The
 /// daemon validates them against current durable facts, supplies every
 /// governed reference/header, and seals the persisted candidate itself.
@@ -384,6 +506,8 @@ pub(crate) enum SchedulerAuthorityError {
     MalformedContract(String),
     #[error("scheduler bound loop is unavailable or not dispatchable: {0}")]
     LoopUnavailable(String),
+    #[error("scheduler loop-control facts are malformed or unavailable: {0}")]
+    LoopControlUnavailable(String),
     #[error("scheduler bound budget is unavailable or inconsistent: {0}")]
     BudgetUnavailable(String),
     #[error("scheduler task contract epoch must be positive: {0}")]
@@ -2307,7 +2431,7 @@ mod tests {
         AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
         ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
         EventDraft, IntentChainStore, IntentRow, ObjectAdmission, ObjectCas,
-        OperationCandidateProposalRow, RecordDraft, SchedulerExecutionPolicyRow,
+        OperationCandidateProposalRow, ProgressFactRow, RecordDraft, SchedulerExecutionPolicyRow,
         SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
         WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
     };
@@ -2348,6 +2472,89 @@ mod tests {
 
     fn object_id(sequence: u64) -> ObjectId {
         ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
+    }
+
+    fn progress_fact(
+        iteration: i64,
+        status: &str,
+        action_fingerprint: &str,
+        evidence_refs_json: &str,
+    ) -> ProgressFactRow {
+        ProgressFactRow {
+            loop_object_id: object_id(950),
+            iteration,
+            status: status.to_owned(),
+            action_fingerprint: action_fingerprint.to_owned(),
+            evidence_refs_json: evidence_refs_json.to_owned(),
+            recorded_at: WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap(),
+            fencing_epoch: 1,
+        }
+    }
+
+    #[test]
+    fn loop_control_switches_after_a_repeated_daemon_signature() {
+        let facts = vec![
+            progress_fact(1, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+            progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+        ];
+
+        let decision =
+            super::derive_loop_control_from_facts(&facts, "sha256:action", 3, 5).unwrap();
+        assert!(matches!(
+            decision,
+            super::LoopControlDecision::Switch { .. }
+        ));
+    }
+
+    #[test]
+    fn loop_control_blocks_at_the_retry_or_stagnation_ceiling() {
+        let repeated_facts = vec![
+            progress_fact(1, "none", "sha256:action", "[]"),
+            progress_fact(2, "none", "sha256:action", "[]"),
+            progress_fact(3, "none", "sha256:action", "[]"),
+        ];
+        let retry_decision =
+            super::derive_loop_control_from_facts(&repeated_facts, "sha256:action", 2, 5).unwrap();
+        assert!(matches!(
+            retry_decision,
+            super::LoopControlDecision::Block {
+                reason_code: "repeat_retry_ceiling_reached"
+            }
+        ));
+
+        let stagnation_decision =
+            super::derive_loop_control_from_facts(&repeated_facts, "sha256:action", 5, 3).unwrap();
+        assert!(matches!(
+            stagnation_decision,
+            super::LoopControlDecision::Block {
+                reason_code: "no_progress_ceiling_reached"
+            }
+        ));
+    }
+
+    #[test]
+    fn loop_control_rejects_malformed_durable_facts_and_resets_on_new_evidence() {
+        let malformed_evidence = vec![progress_fact(1, "none", "sha256:action", "{}")];
+        assert!(matches!(
+            super::derive_loop_control_from_facts(&malformed_evidence, "sha256:action", 1, 3),
+            Err(super::SchedulerAuthorityError::LoopControlUnavailable(_))
+        ));
+
+        let malformed_status = vec![progress_fact(1, "model_says_done", "sha256:action", "[]")];
+        assert!(matches!(
+            super::derive_loop_control_from_facts(&malformed_status, "sha256:action", 1, 3),
+            Err(super::SchedulerAuthorityError::LoopControlUnavailable(_))
+        ));
+
+        let changed_evidence = vec![
+            progress_fact(1, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
+            progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/b\"]"),
+        ];
+        assert_eq!(
+            super::derive_loop_control_from_facts(&changed_evidence, "sha256:action", 3, 5)
+                .unwrap(),
+            super::LoopControlDecision::Continue
+        );
     }
 
     fn context_governance() -> GovernanceSeed {
