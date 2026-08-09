@@ -26,6 +26,8 @@ pub enum ArtifactStoreError {
     Io(#[from] io::Error),
     #[error("artifact metadata is invalid: {0}")]
     Metadata(String),
+    #[error("artifact access is not authorized")]
+    AccessDenied,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -114,6 +116,20 @@ impl ArtifactStore {
     }
 
     pub fn get(&self, reference: &str) -> Result<Option<Vec<u8>>, ArtifactStoreError> {
+        self.get_authorized(reference, true)
+    }
+
+    /// Reads bytes only after the daemon's caller-specific policy check has
+    /// admitted the request. The store never infers authorization from a
+    /// digest or from filesystem reachability.
+    pub fn get_authorized(
+        &self,
+        reference: &str,
+        access_allowed: bool,
+    ) -> Result<Option<Vec<u8>>, ArtifactStoreError> {
+        if !access_allowed {
+            return Err(ArtifactStoreError::AccessDenied);
+        }
         let digest = parse_reference(reference)?;
         let artifact_path = self.root_directory.join(digest);
         match fs::read(artifact_path) {
@@ -156,6 +172,25 @@ impl ArtifactStore {
 
     fn metadata_path(&self, digest: &str) -> PathBuf {
         self.root_directory.join(format!("{digest}.metadata.json"))
+    }
+
+    /// Removes only abandoned staging files from interrupted writes. Published
+    /// CAS bytes and their metadata are never garbage-collected by this method.
+    pub fn remove_incomplete_writes(&self) -> Result<usize, ArtifactStoreError> {
+        let mut removed_file_count = 0;
+        for directory_entry in fs::read_dir(&self.root_directory)? {
+            let directory_entry = directory_entry?;
+            let file_name = directory_entry.file_name();
+            let Some(file_name) = file_name.to_str() else {
+                continue;
+            };
+            let is_staging_file = file_name.starts_with('.') && file_name.ends_with(".partial");
+            if is_staging_file && directory_entry.file_type()?.is_file() {
+                fs::remove_file(directory_entry.path())?;
+                removed_file_count += 1;
+            }
+        }
+        Ok(removed_file_count)
     }
 }
 
