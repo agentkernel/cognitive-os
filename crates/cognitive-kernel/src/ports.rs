@@ -653,6 +653,17 @@ pub struct SkillBindingRow {
     pub canonical_json: String,
 }
 
+/// Immutable daemon-owned lifecycle fact that revokes a prior Skill binding.
+/// The original binding remains available for explain and audit, but no later
+/// daemon consumer may treat it as eligible.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillBindingRevocationRow {
+    pub revocation_id: ObjectId,
+    pub binding_id: ObjectId,
+    pub reason: String,
+    pub canonical_json: String,
+}
+
 /// Metadata-only Context discovery result. It deliberately excludes body
 /// content so callers must authorize before materializing a candidate.
 #[derive(Debug, Clone, PartialEq)]
@@ -1364,6 +1375,20 @@ pub trait SkillStore {
     /// Loads a binding for daemon-only lifecycle consumers. It grants no
     /// authority and callers must reject non-active bindings.
     fn load_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError>;
+
+    /// Appends a lifecycle fact that revokes an existing binding. A duplicate
+    /// revocation conflicts and must not modify immutable binding history.
+    fn append_skill_binding_revocation(
+        &self,
+        revocation: &SkillBindingRevocationRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Loads an active binding for future daemon-only Context/Task consumers.
+    /// Revoked bindings are deliberately invisible on this eligibility path.
+    fn load_active_skill_binding(
         &self,
         binding_id: &ObjectId,
     ) -> Result<Option<SkillBindingRow>, StorePortError>;

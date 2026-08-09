@@ -57,3 +57,25 @@ BEGIN SELECT RAISE(ABORT, 'append-only: Skill binding is immutable'); END;
 pub fn skill_package_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(21, SKILL_PACKAGE_SCHEMA_V21)
 }
+
+/// Migration v22: binding revocations are separate immutable lifecycle facts
+/// so the original scope, target, and revision evidence remain explainable.
+pub const SKILL_BINDING_REVOCATION_SCHEMA_V22: &str = "
+CREATE TABLE skill_binding_revocations (
+  revocation_id TEXT PRIMARY KEY,
+  binding_id TEXT NOT NULL UNIQUE REFERENCES skill_bindings(binding_id),
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+  canonical_json TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER skill_binding_revocations_append_only_update
+BEFORE UPDATE ON skill_binding_revocations
+BEGIN SELECT RAISE(ABORT, 'append-only: Skill binding revocation is immutable'); END;
+CREATE TRIGGER skill_binding_revocations_append_only_delete
+BEFORE DELETE ON skill_binding_revocations
+BEGIN SELECT RAISE(ABORT, 'append-only: Skill binding revocation is immutable'); END;
+";
+
+/// Version-22 Skill binding revocation migration entry.
+pub fn skill_binding_revocation_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(22, SKILL_BINDING_REVOCATION_SCHEMA_V22)
+}

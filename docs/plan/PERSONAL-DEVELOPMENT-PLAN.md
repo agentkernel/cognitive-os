@@ -569,6 +569,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | Slice | Parent | Delivery | Prerequisites | Verification boundary |
 |---|---|---|---|---|
 | `P4-T04/D01` | P4-T04 | daemon-private immutable local Skill package/revision import, compatibility result, and Agent/Task/workspace eligibility binding records | P3-T02 stable Context boundary; existing SQLite authority migration model | failure-first unsafe-path, revision compatibility, duplicate immutable identity, revoked binding, and cross-workspace binding negatives; exact native Linux focused store tests and Clippy; required Ubuntu/Windows CI; no public API/projection, Context/Task consumption, B08, Gate, release, or Profile claim |
+| `P4-T04/D02` | P4-T04 | append-only binding revocation facts preserve explain/audit history while preventing revoked bindings from reappearing on daemon eligibility reads | `P4-T04/D01` immutable package/revision/binding facts | failure-first duplicate/unknown revocation and revoked-binding non-resurrection tests; exact native Linux focused store tests and Clippy; required Ubuntu/Windows CI; no public API/projection, Context/Task consumption, B08, Gate, release, or Profile claim |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
 

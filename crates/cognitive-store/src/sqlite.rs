@@ -54,11 +54,11 @@ use cognitive_kernel::ports::{
     MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
     MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
     ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
-    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
-    WorkspaceContextSourceRow,
+    SchedulerLeaseBinding, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
+    SkillRevisionRow, SkillStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
+    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -4426,6 +4426,74 @@ impl SkillStore for SqliteAuthorityStore {
             )
             .optional()
             .map_err(unavailable("load Skill binding"))
+    }
+
+    fn append_skill_binding_revocation(
+        &self,
+        revocation: &SkillBindingRevocationRow,
+    ) -> Result<(), StorePortError> {
+        if revocation.reason.trim().is_empty()
+            || serde_json::from_str::<Value>(&revocation.canonical_json).is_err()
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation has an invalid reason or canonical payload"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill binding revocation transaction"))?;
+        let binding_exists = transaction
+            .query_row(
+                "SELECT 1 FROM skill_bindings WHERE binding_id=?1",
+                (revocation.binding_id.as_str(),),
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(unavailable("load Skill binding for revocation"))?
+            .is_some();
+        if !binding_exists {
+            return Err(StorePortError::Conflict {
+                detail: "Skill binding revocation names an unknown binding".to_owned(),
+            });
+        }
+        match transaction.execute(
+            "INSERT INTO skill_binding_revocations (revocation_id, binding_id, reason, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+            (revocation.revocation_id.as_str(), revocation.binding_id.as_str(), revocation.reason.as_str(), revocation.canonical_json.as_str()),
+        ) {
+            Ok(_) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill binding revocation transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill binding already has an immutable revocation".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill binding revocation")(error)),
+        }
+    }
+
+    fn load_active_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT revision_id, workspace_scope, target_kind, target_ref, status, canonical_json FROM skill_bindings WHERE binding_id=?1 AND status='active' AND NOT EXISTS (SELECT 1 FROM skill_binding_revocations WHERE skill_binding_revocations.binding_id=skill_bindings.binding_id)",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingRow {
+                    binding_id: binding_id.clone(),
+                    revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    workspace_scope: row.get(1)?,
+                    target_kind: row.get(2)?,
+                    target_ref: row.get(3)?,
+                    status: row.get(4)?,
+                    canonical_json: row.get(5)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load active Skill binding"))
     }
 }
 

@@ -4,7 +4,8 @@
 
 use cognitive_domain::ObjectId;
 use cognitive_kernel::ports::{
-    SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore, StorePortError,
+    SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
+    StorePortError,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 
@@ -77,6 +78,35 @@ fn compatible_local_revision_binds_only_inside_its_workspace() {
             .unwrap(),
         Some(active_binding)
     );
+
+    let active_binding = binding(
+        revision.revision_id.clone(),
+        &package.workspace_scope,
+        "active",
+    );
+    let revocation = SkillBindingRevocationRow {
+        revocation_id: object_id(8),
+        binding_id: active_binding.binding_id.clone(),
+        reason: "workspace owner revoked task eligibility".to_owned(),
+        canonical_json: "{}".to_owned(),
+    };
+    store.append_skill_binding_revocation(&revocation).unwrap();
+    assert_eq!(
+        store
+            .load_active_skill_binding(&active_binding.binding_id)
+            .unwrap(),
+        None
+    );
+    assert_eq!(
+        store
+            .load_skill_binding(&active_binding.binding_id)
+            .unwrap(),
+        Some(active_binding)
+    );
+    assert!(matches!(
+        store.append_skill_binding_revocation(&revocation),
+        Err(StorePortError::Conflict { .. })
+    ));
 
     let cross_workspace_binding = binding(
         revision.revision_id,
