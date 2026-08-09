@@ -142,11 +142,11 @@
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 5 | 0 | 0 | 1 | G3 / B03、B06、B07 |
-| Phase 4 - Memory 与 Skill | 6 | 5 | 0 | 0 | 1 | G4 / B08 |
+| Phase 4 - Memory 与 Skill | 6 | 5 | 1 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **33** | **0** | **0** | **20** | — |
+| **合计** | **53** | **33** | **1** | **0** | **19** | — |
 
 ## 2. 产品边界与不变量
 
@@ -564,7 +564,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P4-T03 | Memory lifecycle、retention 与 forget | P4-T01 | version/update/conflict/expire/forget/tombstone/audit 可验证；派生索引可完整失效 | done | `P4-T03/D01-D03` complete under `lease/personal/P4-T03/memory-lifecycle`; immutable forget/expiry/supersede facts, version CAS lineage, and atomic FTS invalidation passed exact native Linux focused tests and required Ubuntu/Windows CI at `8f9250dcd4cbcd8f15867e7a0f45165032e26c9d`. No public API, B08, Gate, release, or Profile claim. |
 | P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | done | `P4-T04/D01-D03` complete daemon-private immutable package/revision/digest/import, scope-bound binding, append-only revoke, same-package supersede, exact-pin explanation, digest-drift rejection, and management-session import authorization. Exact native Linux focused tests/Clippy and required Ubuntu/Windows CI passed at `883cd5fca9b14182cc5b5632948476b31b8744a3`. Public API/projection, Context/Task consumption, B08, Gate, release, and Profile remain separate. Evidence: [closure](../checkpoints/20260810-personal-p4-t04-skill-package-closure.md). |
 | P4-T05 | Memory/Skill API 与统一 projection | P4-T01, P4-T02, P4-T03, P4-T04 | CLI/Shell/sidecar 同 application services；Memory/Skill 可解释、可撤销、可实际进入 Context/Task；不依赖 embedding | done | Closure checkpoint `20260810-personal-p4-t05-memory-skill-api-closure.md`; D01-D05 deliver daemon-private task-bound projection, authority-backed explain reads, Memory forget/remember, Skill revoke/import/bind callers, and failure-first channel/payload/authority negatives. Required Ubuntu/Windows CI run `31335218082` passed. Public contract generation, B08, Gate, release, Profile, and actual Context/Task consumption remain separate. |
-| P4-T06 | B08 Memory+Skill correctness 与 UCR-01 consumption | P4-T05 | lifecycle/privacy/forget/binding/actual consumption 证据；UCR-01 同一 Task trace 消费 Memory 与 Skill | not-started | — |
+| P4-T06 | B08 Memory+Skill correctness 与 UCR-01 consumption | P4-T05 | lifecycle/privacy/forget/binding/actual consumption 证据；UCR-01 同一 Task trace 消费 Memory 与 Skill | in-progress | P4-T06/D01-D03: daemon-private Memory/Skill consumption boundary, same-task trace evidence, and failure-first privacy/lifecycle/eligibility negatives; B08 remains unclaimed until its independent Gate campaign. |
 
 | Slice | Parent | Delivery | Prerequisites | Verification boundary |
 |---|---|---|---|---|
@@ -576,6 +576,9 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P4-T05/D03` | P4-T05 | daemon-private lifecycle command seam for remember/forget and Skill import/bind/revoke, preserving management/task channel separation | `P4-T05/D02` authority-backed explain/list boundary | failure-first malformed payload, unauthorized channel, duplicate immutable operation, revoked/forgotten non-resurrection, and no-partial-write negatives; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no B08, Gate, release, or Profile claim |
 | `P4-T05/D04` | P4-T05 | daemon-private remember admission and local Skill import/bind command callers use existing policy/store authority seams without direct client writes | `P4-T05/D03` lifecycle command channel boundary | failure-first source mismatch, digest drift, unsafe import, incompatible binding, duplicate identity, and no-partial-write negatives; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no B08, Gate, release, or Profile claim |
 | `P4-T05/D05` | P4-T05 | final daemon-private Memory/Skill application and projection acceptance mapping over the delivered authority callers | `P4-T05/D04` remember/import/bind authority callers | exact acceptance mapping, focused native Linux tests and Clippy, required Ubuntu/Windows CI, consistency/evidence synchronization, and explicit no-public-API/B08/Gate/release/Profile claims |
+| `P4-T06/D01` | P4-T06 | daemon-private Memory/Skill consumption boundary records one Task trace with authority-backed eligibility and provenance | `P4-T05` complete private application boundary | failure-first forgotten/expired Memory, revoked/incompatible Skill, workspace/task mismatch, and missing authority facts; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no B08 pass claim |
+| `P4-T06/D02` | P4-T06 | same-task Context/Task trace consumes eligible Memory and Skill facts without granting client write authority | `P4-T06/D01` eligibility/provenance boundary | failure-first privacy leakage, stale source, duplicate consumption, and cross-task trace negatives; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no public API or Gate claim |
+| `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
 

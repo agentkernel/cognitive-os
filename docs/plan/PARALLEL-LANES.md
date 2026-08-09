@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| none | no active Personal task lease | — | — | — | — | — | none |
+| `lease/personal/P4-T06/memory-skill-correctness` | P4-T06/D01 owns daemon-private Memory/Skill correctness and same-task consumption evidence | Lane-RUN | `personal/P4-T06-memory-skill-correctness` | `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/tests/p4_t06_memory_skill_correctness.rs`; `docs/checkpoints/`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-10 | 2026-08-10 / 2026-08-10 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
