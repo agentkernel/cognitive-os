@@ -84,6 +84,7 @@ const TASK_CONTRACT_EXECUTION_SCHEMA_V04: &str = "cognitiveos.task-contract/0.4"
 const OPERATION_CANDIDATE_SCHEMA_VERSION: &str = "cognitiveos.operation-candidate-proposal/0.1";
 const DAEMON_DESCRIPTOR_REFERENCE_DIGEST_DOMAIN: &str =
     "cognitiveos.personal.daemon-descriptor-reference/0.1";
+const DEFAULT_LOOP_STAGNATION_CEILING: usize = 3;
 
 #[derive(Deserialize)]
 struct TaskContractVersionEnvelope {
@@ -160,6 +161,7 @@ pub(crate) struct SchedulerAuthoritySnapshot {
     pub ceiling_facts: SchedulerCeilingFacts,
     pub loop_object_id: ObjectId,
     pub budget_id: BudgetId,
+    pub loop_control_decision: LoopControlDecision,
 }
 
 /// Durable facts accepted by the daemon-only candidate-admission preflight.
@@ -4938,6 +4940,12 @@ where
             fact.action_fingerprint == binding.action_fingerprint && fact.status != "advanced"
         })
         .count() as i64;
+    let loop_control_decision = derive_loop_control_from_facts(
+        &progress_facts,
+        &binding.action_fingerprint,
+        contract.max_retries,
+        DEFAULT_LOOP_STAGNATION_CEILING,
+    )?;
     let completed_steps = progress_facts.len() as i64;
     let stored_budget = store
         .load_budget(&budget_id)
@@ -4976,6 +4984,7 @@ where
         },
         loop_object_id,
         budget_id,
+        loop_control_decision,
     })
 }
 
@@ -5466,6 +5475,26 @@ where
     G: IdGenerator,
 {
     let snapshot = load_scheduler_authority_snapshot(authority_store, binding)?;
+    match snapshot.loop_control_decision {
+        LoopControlDecision::Continue => {}
+        LoopControlDecision::Wait { reason_code } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control requires a bounded wait: {reason_code}"
+            )));
+        }
+        LoopControlDecision::Switch {
+            prior_signature_digest,
+        } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control requires a daemon-owned alternate strategy after {prior_signature_digest}"
+            )));
+        }
+        LoopControlDecision::Block { reason_code } => {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "loop control blocked dispatch: {reason_code}"
+            )));
+        }
+    }
     let ceiling_dispatch = scheduler_service.stop_before_dispatch_when_ceiling_reached(
         &snapshot.ceiling_facts,
         observed_wall_time,
