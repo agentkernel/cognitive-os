@@ -2779,6 +2779,48 @@ mod tests {
     }
 
     #[test]
+    fn governed_context_cache_rejects_revoked_sources_instead_of_reusing_metadata() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t04-cache-revocation";
+        let (context_command, later_revocation) =
+            append_context_race_fixture(&store, task_ref, None);
+        let mut context_cache = GovernedContextCache::default();
+
+        super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .expect("initial authorized Context resolution");
+        store
+            .append_context_revocation_fact(&later_revocation)
+            .expect("advance durable revocation epoch");
+
+        let result = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        );
+
+        assert!(matches!(
+            result,
+            Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+                if detail.contains("denied before body materialization")
+        ));
+        assert_eq!(
+            context_cache.len(),
+            1,
+            "a rejected request cannot add a cache entry"
+        );
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
     fn required_task_context_fragments_fail_closed_when_the_request_budget_cannot_fit() {
         let layout = temporary_personal_layout();
         layout.ensure_directories().unwrap();
