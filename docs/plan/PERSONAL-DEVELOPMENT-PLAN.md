@@ -142,11 +142,11 @@
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 5 | 0 | 0 | 1 | G3 / B03、B06、B07 |
-| Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
+| Phase 4 - Memory 与 Skill | 6 | 0 | 1 | 0 | 5 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **28** | **0** | **0** | **25** | — |
+| **合计** | **53** | **28** | **1** | **0** | **24** | — |
 
 ## 2. 产品边界与不变量
 
@@ -306,6 +306,7 @@ formal task acceptance assessment 和收口。
 | `P3-T04/D01` | P3-T04 | daemon-private Context cache boundary for stable-prefix and delta reuse, with a cache key bound to source versions, governance facts, Task epoch, and Tool identity; stale or revoked material must never be reused and telemetry must remain bounded/redacted | completed P3-T02 Context Builder and P3-T03 Artifact CAS | failure-first stale/revoked/missing-source cache negatives and stable-prefix/delta reuse tests; exact native Linux validation and required Ubuntu/Windows CI; completion enables governed builder integration without a B03/Gate/release/Profile claim |
 | `P3-T04/D02` | P3-T04 | daemon-private loop-control observation that derives repeat/no-progress decisions from durable action, error-classification, and evidence-digest facts; switch/wait/block remains bounded and cannot create a Task completion claim | `P3-T04/D01` plus existing fenced append-only progress/retry/stagnation primitives | repeat-signature, changed-evidence, malformed-fact, retry/stagnation ceiling, and no-completion-authority negatives; exact native Linux validation and required Ubuntu/Windows CI; completion closes P3-T04 acceptance without a B03/Gate/release/Profile claim |
 | `P3-T05/D01` | P3-T05 | daemon-private UCR-01 workload runner and stable-baseline artifact boundary; one task trace must exercise the six resource families without converting raw measurements into Gate or release claims | `P3-T04` Context/cache/loop boundary | fixed-scenario runner contract, raw-run capture, pinned baseline comparison, bounded/redacted measurement negatives, and non-claim report tests; exact native Linux validation and required Ubuntu/Windows CI; no B03/B06/B07/Gate/release/Profile pass claim |
+| `P4-T01/D01` | P4-T01 | daemon-private append-only Memory proposal-to-deterministic-admission vertical slice; persist a source-bound proposal and reason-coded decision, creating an immutable Memory object only after daemon policy admission | completed P3-T01/P3-T02 Context source and builder ports plus existing authority-store conventions | failure-first direct-admit, source/version/provenance mismatch, invalid freshness/retention, cross-scope promotion, conflict/replay, and no-partial-object tests; exact native Linux validation and required Ubuntu/Windows CI; no FTS/retrieval, lifecycle/forget, public API, Gate, release, or Profile claim |
 
 **执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
 未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
@@ -555,7 +556,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | not-started | — |
+| P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | in-progress | 2026-08-09: claimed on `personal/P4-T01-memory-admission` under `lease/personal/P4-T01/memory-admission`; D01 begins the daemon-private append-only proposal-to-deterministic-admission path. FTS/retrieval, lifecycle/forget, public API/projection, and B08 remain out of scope and unclaimed. |
 | P4-T02 | SQLite FTS5 + metadata filter baseline | P4-T01 | authority metadata pre-filter 后检索；unauthorized/stale/conflict/delete/rebuild 负例 | not-started | — |
 | P4-T03 | Memory lifecycle、retention 与 forget | P4-T01 | version/update/conflict/expire/forget/tombstone/audit 可验证；派生索引可完整失效 | not-started | — |
 | P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | not-started | — |
