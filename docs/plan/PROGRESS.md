@@ -43,7 +43,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 33 | 0 | 0 | 20 | 20 |
+| 53 | 33 | 1 | 0 | 19 | 20 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
@@ -95,6 +95,8 @@ independent from every product Gate.
 | `P4-T05/D04` | `done` | Daemon-private remember delegates to the existing Context-revalidating Memory admission service; Skill import and binding callers delegate to immutable SkillStore authority facts. The Memory admission test double now implements the complete MemoryStore port. Exact Ubuntu/Windows CI run `31335218082` passed; local fmt, diff, and consistency passed. | consumed by D05; public contract generation, B08, Gate, release, and Profile remain separate |
 | `P4-T05/D05` | `done` | Closure checkpoint `20260810-personal-p4-t05-memory-skill-api-closure.md`; D01-D05 acceptance mapping and non-claim evidence are complete. Required Ubuntu/Windows CI run `31335218082` passed; local fmt, diff, and consistency passed. | consumed by P4-T06; B08, Gate, release, and Profile remain separate |
 | `P4-T06/D01` | `in-progress` | — | implement daemon-private same-task Memory/Skill consumption boundary with authority-backed eligibility and provenance |
+| `P4-T06/D02` | `pending` | — | connect eligible Memory and Skill facts to a same-task Context/Task trace without client authority |
+| `P4-T06/D03` | `pending` | — | complete final acceptance mapping and non-claim evidence |
 | `P2-T02/D01` | `done` | exact immutable Linux `734cbce` focused daemon process test passed 1/1; required Ubuntu and Windows CI passed. The authenticated task channel uses generated bindings, server-owned governance/lease facts, preview digest and admission checks, and snapshot-first bounded process-lifetime watch delivery. | select a new non-overlapping P2-T02 slice for the remaining private projection and deterministic CLI/Shell sidecar parity exit |
 | `P2-T02/D02` | `done` | exact immutable Linux `70f40a5` resource projection process test passed 1/1; required Ubuntu and Windows CI passed. Private versioned projection/watch is management-bound, family/cursor-scoped, and makes unavailable authority sources explicit. | select D03 for deterministic CLI parity without creating public DTOs or fabricating domain authority |
 | `P2-T02/D03` | `done` | exact immutable Linux `af2f6c9` daemon-plus-CLI process test passed 1/1; required Ubuntu and Windows CI passed. Resource projection/watch uses management credentials and Task watch uses task credentials; commands are read-only and do not replay mutations. | claim D04 Shell sidecar parity using the same isolated daemon client semantics |
