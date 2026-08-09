@@ -79,3 +79,25 @@ BEGIN SELECT RAISE(ABORT, 'append-only: Skill binding revocation is immutable');
 pub fn skill_binding_revocation_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(22, SKILL_BINDING_REVOCATION_SCHEMA_V22)
 }
+
+/// Migration v23: one immutable replacement lineage per prior Skill revision.
+/// Existing bindings remain exact pins to their recorded revision instead of
+/// silently drifting to a newer package revision.
+pub const SKILL_REVISION_LINEAGE_SCHEMA_V23: &str = "
+CREATE TABLE skill_revision_lineage (
+  revision_id TEXT PRIMARY KEY REFERENCES skill_revisions(revision_id),
+  supersedes_revision_id TEXT NOT NULL UNIQUE REFERENCES skill_revisions(revision_id),
+  canonical_json TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER skill_revision_lineage_append_only_update
+BEFORE UPDATE ON skill_revision_lineage
+BEGIN SELECT RAISE(ABORT, 'append-only: Skill revision lineage is immutable'); END;
+CREATE TRIGGER skill_revision_lineage_append_only_delete
+BEFORE DELETE ON skill_revision_lineage
+BEGIN SELECT RAISE(ABORT, 'append-only: Skill revision lineage is immutable'); END;
+";
+
+/// Version-23 Skill revision lineage migration entry.
+pub fn skill_revision_lineage_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(23, SKILL_REVISION_LINEAGE_SCHEMA_V23)
+}

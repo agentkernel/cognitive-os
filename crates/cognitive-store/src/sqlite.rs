@@ -55,10 +55,11 @@ use cognitive_kernel::ports::{
     MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
     ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
     SchedulerLeaseBinding, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillStore, StorePortError, StoredBudget, StoredObject, TaskBinding,
-    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
-    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError, StoredBudget,
+    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
+    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -4352,6 +4353,71 @@ impl SkillStore for SqliteAuthorityStore {
                 detail: "Skill import conflicts with an immutable package or revision".to_owned(),
             }),
             Err(error) => Err(unavailable("insert Skill import")(error)),
+        }
+    }
+
+    fn append_skill_revision_supersede(
+        &self,
+        supersede: &SkillRevisionSupersedeRequest,
+    ) -> Result<(), StorePortError> {
+        let replacement = &supersede.replacement;
+        let invalid_supersede = replacement.revision_id == supersede.previous_revision_id
+            || replacement.content_digest.trim().is_empty()
+            || !matches!(
+                replacement.compatibility.as_str(),
+                "compatible" | "incompatible"
+            )
+            || serde_json::from_str::<Value>(&replacement.canonical_json).is_err()
+            || serde_json::from_str::<Value>(&supersede.canonical_json).is_err();
+        if invalid_supersede {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede has invalid immutable replacement bindings"
+                    .to_owned(),
+            });
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Skill revision supersede transaction"))?;
+        let prior_package_id = transaction
+            .query_row(
+                "SELECT package_id FROM skill_revisions WHERE revision_id=?1",
+                (supersede.previous_revision_id.as_str(),),
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(unavailable("load prior Skill revision"))?;
+        let Some(prior_package_id) = prior_package_id else {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede names an unknown prior revision".to_owned(),
+            });
+        };
+        if prior_package_id != replacement.package_id.as_str() {
+            return Err(StorePortError::Conflict {
+                detail: "Skill revision supersede must remain in the same package".to_owned(),
+            });
+        }
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO skill_revisions (revision_id, package_id, content_digest, compatibility, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                (replacement.revision_id.as_str(), replacement.package_id.as_str(), replacement.content_digest.as_str(), replacement.compatibility.as_str(), replacement.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO skill_revision_lineage (revision_id, supersedes_revision_id, canonical_json) VALUES (?1, ?2, ?3)",
+                (replacement.revision_id.as_str(), supersede.previous_revision_id.as_str(), supersede.canonical_json.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Skill revision supersede transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Skill revision supersede conflicts with immutable revision lineage"
+                    .to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Skill revision supersede")(error)),
         }
     }
 

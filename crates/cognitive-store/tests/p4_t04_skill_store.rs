@@ -4,8 +4,8 @@
 
 use cognitive_domain::ObjectId;
 use cognitive_kernel::ports::{
-    SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
-    StorePortError,
+    SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow,
+    SkillRevisionSupersedeRequest, SkillStore, StorePortError,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 
@@ -170,4 +170,41 @@ fn unsafe_import_and_incompatible_or_revoked_bindings_fail_closed() {
             .unwrap(),
         Some(revoked_binding)
     );
+}
+
+#[test]
+fn revision_supersede_preserves_exact_pins_and_rejects_competing_lineage() {
+    let (_directory, store) = fresh_store();
+    let (package, revision) = package_and_revision("workspace://tenant-a/project");
+    store.append_skill_import(&package, &revision).unwrap();
+    let pinned_binding = binding(
+        revision.revision_id.clone(),
+        &package.workspace_scope,
+        "active",
+    );
+    store.append_skill_binding(&pinned_binding).unwrap();
+
+    let replacement = SkillRevisionRow {
+        revision_id: object_id(9),
+        package_id: package.package_id.clone(),
+        content_digest: "sha256:replacement".to_owned(),
+        compatibility: "compatible".to_owned(),
+        canonical_json: "{}".to_owned(),
+    };
+    let supersede = SkillRevisionSupersedeRequest {
+        previous_revision_id: revision.revision_id,
+        replacement,
+        canonical_json: "{}".to_owned(),
+    };
+    store.append_skill_revision_supersede(&supersede).unwrap();
+    assert_eq!(
+        store
+            .load_active_skill_binding(&pinned_binding.binding_id)
+            .unwrap(),
+        Some(pinned_binding)
+    );
+    assert!(matches!(
+        store.append_skill_revision_supersede(&supersede),
+        Err(StorePortError::Conflict { .. })
+    ));
 }

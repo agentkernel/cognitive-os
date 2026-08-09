@@ -639,6 +639,16 @@ pub struct SkillRevisionRow {
     pub canonical_json: String,
 }
 
+/// Daemon-private request to import a replacement revision for an existing
+/// local Skill package. The predecessor remains immutable and auditable; the
+/// lineage record prevents competing replacements for the same revision.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillRevisionSupersedeRequest {
+    pub previous_revision_id: ObjectId,
+    pub replacement: SkillRevisionRow,
+    pub canonical_json: String,
+}
+
 /// Immutable daemon-owned binding of one exact compatible Skill revision.
 /// A binding describes eligibility only: it grants no Tool, filesystem,
 /// process, network, model, secret, or budget capability.
@@ -1371,6 +1381,13 @@ pub trait SkillStore {
     /// Appends an immutable eligibility binding. The bound revision must be
     /// compatible and belong to the same workspace scope.
     fn append_skill_binding(&self, binding: &SkillBindingRow) -> Result<(), StorePortError>;
+
+    /// Atomically appends a replacement revision and its immutable lineage
+    /// record. Existing pins remain exact references to their prior revision.
+    fn append_skill_revision_supersede(
+        &self,
+        supersede: &SkillRevisionSupersedeRequest,
+    ) -> Result<(), StorePortError>;
 
     /// Loads a binding for daemon-only lifecycle consumers. It grants no
     /// authority and callers must reject non-active bindings.
