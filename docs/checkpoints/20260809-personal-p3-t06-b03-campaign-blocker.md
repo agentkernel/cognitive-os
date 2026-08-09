@@ -8,8 +8,9 @@ Status: blocked
 
 ## Task state
 
-`P3-T06` is blocked while `P3-T06/D01` awaits required native Linux
-validation on branch `personal/P3-T06-context-correctness`.
+`P3-T06/D01` is complete on branch `personal/P3-T06-context-correctness`.
+The parent task remains blocked because the formal B03 campaign has not been
+preregistered or executed.
 
 The implementation commit is
 `afffb24072c78dc2f93958bc14e164f2681aea95`. It adds a deterministic,
@@ -33,20 +34,19 @@ not set B03, a Gate, release, Profile, or Task-completion state.
 - `git diff --check`: passed before the implementation commit.
 - Required Ubuntu CI: passed.
 - Required Windows CI: passed.
-- Exact-revision native Linux validation: not-run. Two disposable worktree
-  acquisition attempts failed before checkout: first with an unexpected Git
-  transfer EOF and then with a GitHub HTTPS connection timeout. No uncommitted
-  source was copied to the host, and both disposable roots were cleaned up.
-- Recovery attempt on 2026-08-10: the disposable native host again failed to
-  acquire the exact reviewed source from GitHub after the registered 60-second
-  low-throughput timeout. No source checkout or test execution occurred on the
-  host; the disposable validation root contains no usable worktree.
+- Exact-revision native Linux validation passed at
+  `96f616fb3d337b6321cc818961bc48d69f94fda8` after routing GitHub access
+  through the existing enabled user-level Mihomo service. The tools test suite
+  passed 11/11, the tools syntax build passed, and consistency passed.
+- Earlier direct acquisition attempts failed before checkout due to GitHub
+  transfer/throughput errors. No uncommitted source was copied to the host;
+  the successful validation used a clean disposable clone.
 
 ## Blocker
 
-`blocked_paths`: exact-revision native Linux validation for D01, followed by
-supported B03 campaign preregistration and execution evidence. Local tooling
-validation is complete but cannot substitute for the native requirement.
+`blocked_paths`: supported B03 campaign preregistration and execution evidence.
+D01 native validation is complete; local tooling and the non-claim evaluator
+still cannot substitute for a formal B03 campaign.
 
 `blocked_task_ids`: `P3-T06`.
 
@@ -62,7 +62,6 @@ tooling report can be a B03 Gate decision.
 
 ## Recovery action
 
-Complete exact-revision native Linux validation for D01 first. Then preregister
-and execute a supported B03 Context-correctness campaign. Bind the result to
-the required campaign evidence and obtain independent-verifier disposition;
-retain `B03` as `not-run` until then.
+Preregister and execute a supported B03 Context-correctness campaign. Bind the
+result to the required campaign evidence and obtain independent-verifier
+disposition; retain `B03` as `not-run` until then.
