@@ -35,7 +35,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 25 | 1 | 0 | 27 | 27 |
+| 53 | 25 | 1 | 0 | 27 | 28 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
