@@ -75,7 +75,6 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P3-T03/artifact-cas` | P3-T03/D02 verifier Artifact CAS integration | Lane-KRN | `personal/P3-T03-artifact-cas` | `crates/cognitive-store/src/artifact_store.rs`; `crates/cognitive-store/src/lib.rs`; `crates/cognitive-store/src/personal_db.rs`; `crates/cognitive-store/tests/p3_t03_artifact_store.rs`; `apps/kernel-server/src/personal/verification_executor.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
@@ -87,6 +86,7 @@ verification before every B01 guest action.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P3-T03/artifact-cas` | P3-T03 complete Artifact CAS acceptance | `personal/P3-T03-artifact-cas` | 2026-08-09 | PR #168 merged at `main@2044170ef270bc7cd5be6fb82c833975fd0c8fc3`. D01-D02 delivered the single bounded daemon-owned filesystem CAS, atomic digest publication and metadata, fail-closed recovery/access behavior, and verifier evidence resolution before report persistence. Exact native Linux and required Ubuntu/Windows CI passed; no Gate, release, or Profile claim was made. |
 | `lease/personal/P1-T09/b01-successor-native-verification` | P1-T09 B01 successor verification, semantic policy change, and campaign closure | `personal/P1-T09-b01-campaign-continuation` | 2026-08-09 | B01 successor `002` passed fixed N=6 at 5/6 with zero critical safety failures, complete redacted aggregate, affirmative independent verifier disposition, and required Ubuntu/Windows CI. Attempt 7 remained retained audit evidence under owner waiver. PR #167 is the task closure PR. |
 | `lease/personal/P1-T09/b01-campaign-continuation` | P1-T09 B01 successor campaign preregistration and artifact verification | `personal/P1-T09-b01-campaign-continuation` | 2026-08-09 | Owner retained failed `001` and authorized separately preregistered `002`; protected artifact workflow `31284948257` passed at GitHub `main@4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. No successor attempt started. The lease closed on a bounded blocker: `personal-linux-native-01` timed out acquiring GitHub HTTPS source for the exact-revision standalone verifier. See `20260809-personal-p1-t09-b01-successor-verification-blocker.md`; recovery is to restore access, claim a fresh verification lease, and verify before touching the B01 guest. |
 | `lease/personal/P3-T02/context-builder` | P3-T02 complete Context Builder and budgets | `personal/P3-T02-context-builder` | 2026-08-09 | PR #166 merged at `main@c78c58c096765caffb638e32dc8d74fd412765a9`; D01-D02 covered required daemon fragments, hard budget/duplicate loss, source-family policy, freshness-before-body loading, and digest-bound excluded-source trace. Exact native Linux focused test/Clippy and required Ubuntu/Windows CI passed. |

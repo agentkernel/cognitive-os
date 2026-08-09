@@ -29,7 +29,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `lease/personal/P3-T03/artifact-cas` | P3-T03 acceptance is complete and PR #168 is ready for normal merge; the ignored local `/artifacts/` directory remains protected from modification, deletion, commitment, or implicit use. | merge the task PR, close the lease, and reconcile the local branch to `main` |
+| Active task lease | `none` | P3-T03 merged through PR #168 at `main@2044170ef270bc7cd5be6fb82c833975fd0c8fc3`; its task lease is closed and the ignored local `/artifacts/` directory remained protected throughout. | select the next ready formal task and claim a new narrow lease before writing |
 
 ### Layer 1 — Formal task progress
 
