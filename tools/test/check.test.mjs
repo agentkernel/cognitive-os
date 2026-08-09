@@ -186,7 +186,7 @@ test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
       source
         .replace(/(\| B01 first-install\/first-conversation Gate \| \*\*)running(\*\* \|)/, "$1pass$2")
         .replace("5 successes, 1 failure", "4 successes, 1 failure")
-        .replace("zero recorded critical safety failures", "one recorded critical safety failure")
+        .replace("zero critical safety failures", "one recorded critical safety failure")
         .replace("and an independently verified artifact/signature", "with aggregate statistics and affirmative independent verifier closure"),
   });
 

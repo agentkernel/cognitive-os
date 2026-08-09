@@ -1133,7 +1133,7 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
     const currentAttemptCount = currentAttemptMatch ? Number(currentAttemptMatch[1]) : undefined;
     const currentMinimum = currentMinimumMatch ? Number(currentMinimumMatch[1]) : undefined;
     const currentSuccessMatch = currentB01Evidence.match(/(\d+)\s+successes/i);
-    const currentFailureMatch = currentB01Evidence.match(/(\d+)\s+failures/i);
+    const currentFailureMatch = currentB01Evidence.match(/(\d+)\s+failure(?:s)?/i);
     const currentSuccessCount = currentSuccessMatch ? Number(currentSuccessMatch[1]) : undefined;
     const currentFailureCount = currentFailureMatch ? Number(currentFailureMatch[1]) : undefined;
 
