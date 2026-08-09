@@ -25,12 +25,15 @@ does not make a Gate, release, or Profile claim.
 | 1 | Pi and Provider readiness | pass | User-local exact Pi `0.81.1` with explicit extension; Operator A entered Provider credential only in graphical hidden input; `doctor` reported `overall=ready`, `first_conversation_ready=true`, native secret backend, and redacted secret reference. |
 | 1 | bounded first response | **pass** | `{"status":"ok","phase":"first_response","duration_ms":5855,"expected_reply_observed":true,"response_received":true,"authority_side_effects":false}` |
 | 1 | cleanup | **pass** | Provider secret cleared using product non-secret attributes; post-clear residual absent; user service disabled/stopped; Pi, bundle, config, and temporary scripts removed; baseline restored and guest confirmed `shut off`. |
+| 2 | clean-reset checkpoint | pass | `B01-Desktop-Linux-002` restored from `b01-platform-qualified-baseline` and started through authorized libvirt control. |
+| 2 | graphical Desktop readiness | **fail** | Registered ProxyJump SSH, Node `v22.23.2`, and npm `10.9.8` were available, but the user graphical session remained `inactive` after bounded readiness probes. No artifact, Pi, Provider credential, product service, route runner, request, response, or authority state was created. |
+| 2 | cleanup | **pass** | Guest was stopped and baseline restored; domain confirmed `shut off`. |
 
 ## Aggregate
 
 | Started | Successes | Failures | Critical safety failures | Remaining |
 |---:|---:|---:|---:|---:|
-| 1 | 1 | 0 | 0 | 19 |
+| 2 | 1 | 1 | 0 | 18 |
 
 ## Non-claims
 
