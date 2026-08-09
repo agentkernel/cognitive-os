@@ -10,7 +10,7 @@ use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
     ContextStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
-    MemorySearchQuery, MemoryStore, WorkspaceContextSourceRow,
+    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, StorePortError, WorkspaceContextSourceRow,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::json;
@@ -245,4 +245,98 @@ fn immutable_metadata_rejects_conflicting_updates_before_search() {
             .memory_id,
         memory_id
     );
+}
+
+fn forget_tombstone(memory_id: ObjectId, lifecycle_identifier: u64) -> MemoryTombstoneRow {
+    MemoryTombstoneRow {
+        lifecycle_id: object_id(lifecycle_identifier),
+        memory_id,
+        action: "forget".to_owned(),
+        occurred_at_unix_seconds: 175,
+        reason: "owner requested forget".to_owned(),
+        canonical_json: "{\"action\":\"forget\",\"reason\":\"owner requested forget\"}".to_owned(),
+    }
+}
+
+#[test]
+fn forget_appends_a_tombstone_and_prevents_fts_resurrection() {
+    let (_directory, store, authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(60),
+        "workspace://tenant-a/project",
+        "forgettable compass memory",
+    );
+    let memory_id = admit_memory(&store, 700, &source, "task fact", 200);
+
+    store
+        .append_memory_tombstone(&forget_tombstone(memory_id.clone(), 704))
+        .unwrap();
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "compass",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+
+    let database = rusqlite::Connection::open(authority_database_path).unwrap();
+    database
+        .execute(
+            "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+            (memory_id.as_str(), "stale compass memory"),
+        )
+        .unwrap();
+    store.rebuild_memory_search_index().unwrap();
+
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "compass",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn duplicate_or_unknown_forget_has_no_derived_index_side_effect() {
+    let (_directory, store, _authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(70),
+        "workspace://tenant-a/project",
+        "durable lantern memory",
+    );
+    let memory_id = admit_memory(&store, 800, &source, "task fact", 200);
+
+    assert!(matches!(
+        store.append_memory_tombstone(&forget_tombstone(object_id(999), 805)),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "lantern",
+            ))
+            .unwrap()[0]
+            .memory_id,
+        memory_id
+    );
+
+    store
+        .append_memory_tombstone(&forget_tombstone(memory_id.clone(), 806))
+        .unwrap();
+    assert!(matches!(
+        store.append_memory_tombstone(&forget_tombstone(memory_id, 807)),
+        Err(StorePortError::Conflict { .. })
+    ));
 }

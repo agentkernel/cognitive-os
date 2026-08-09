@@ -11,7 +11,10 @@ use crate::context_store::{
 };
 use crate::installation::INSTALLATION_SCHEMA_V1;
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
-use crate::memory_store::{memory_admission_migration_entry, memory_search_migration_entry};
+use crate::memory_store::{
+    memory_admission_migration_entry, memory_lifecycle_migration_entry,
+    memory_search_migration_entry,
+};
 use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
@@ -90,6 +93,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         scheduler_execution_policy_migration_entry(),
         memory_admission_migration_entry(),
         memory_search_migration_entry(),
+        memory_lifecycle_migration_entry(),
     ]
 }
 

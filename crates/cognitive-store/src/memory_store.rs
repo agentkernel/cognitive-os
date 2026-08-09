@@ -75,3 +75,28 @@ CREATE VIRTUAL TABLE IF NOT EXISTS memory_search_fts USING fts5(
 pub fn memory_search_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(17, MEMORY_SEARCH_SCHEMA_V17)
 }
+
+/// Migration v18: append-only lifecycle audit facts for daemon-owned Memory
+/// forget operations. The unique Memory identity makes forget idempotency
+/// explicit while retaining the original admission rows for audit.
+pub const MEMORY_LIFECYCLE_SCHEMA_V18: &str = "
+CREATE TABLE IF NOT EXISTS memory_tombstones (
+  lifecycle_id TEXT PRIMARY KEY,
+  memory_id TEXT NOT NULL UNIQUE REFERENCES memory_objects(memory_id),
+  action TEXT NOT NULL CHECK (action = 'forget'),
+  occurred_at_unix_seconds INTEGER NOT NULL,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+  canonical_json TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS memory_tombstones_append_only_update
+BEFORE UPDATE ON memory_tombstones
+BEGIN SELECT RAISE(ABORT, 'append-only: Memory tombstone is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS memory_tombstones_append_only_delete
+BEFORE DELETE ON memory_tombstones
+BEGIN SELECT RAISE(ABORT, 'append-only: Memory tombstone is immutable'); END;
+";
+
+/// Version-18 Memory lifecycle migration entry.
+pub fn memory_lifecycle_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(18, MEMORY_LIFECYCLE_SCHEMA_V18)
+}

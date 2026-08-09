@@ -83,7 +83,7 @@ mod tests {
     use cognitive_kernel::authz::ObjectGovernance;
     use cognitive_kernel::ports::{
         ContextCandidateMetadata, ContextCandidateQuery, ContextRequestRow, ContextViewRow,
-        MemorySearchCandidateRow, MemorySearchQuery, WorkspaceContextSourceRow,
+        MemorySearchCandidateRow, MemorySearchQuery, MemoryTombstoneRow, WorkspaceContextSourceRow,
     };
 
     struct MemoryAdmissionTestStore {
@@ -155,6 +155,13 @@ mod tests {
             _: &ObjectId,
         ) -> Result<Option<MemoryObjectRow>, StorePortError> {
             Err(unsupported_test_operation("load MemoryObject"))
+        }
+
+        fn append_memory_tombstone(
+            &self,
+            _: &MemoryTombstoneRow,
+        ) -> Result<(), StorePortError> {
+            Err(unsupported_test_operation("append Memory tombstone"))
         }
 
         fn search_memory_candidates(

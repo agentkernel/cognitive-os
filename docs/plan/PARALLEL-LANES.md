@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P4-T03/memory-lifecycle` | P4-T03/D01 private forget/tombstone and FTS invalidation | Lane-KRN | `personal/P4-T03-memory-lifecycle` | `crates/cognitive-kernel/src/ports.rs`; `crates/cognitive-store/src/memory_store.rs`; `crates/cognitive-store/src/personal_db.rs`; `crates/cognitive-store/src/sqlite.rs`; `crates/cognitive-store/tests/p1_t01_layout_migrations.rs`; `crates/cognitive-store/tests/p4_t02_memory_search.rs`; `crates/cognitive-store/tests/p4_t03_memory_lifecycle.rs`; `apps/kernel-server/src/personal/memory_admission.rs`; `apps/kernel-server/src/personal/memory_lifecycle.rs`; `apps/kernel-server/src/personal/mod.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-09 | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not

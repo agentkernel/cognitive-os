@@ -51,8 +51,8 @@ use cognitive_kernel::ports::{
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
     IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
-    MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, ObjectAdmission,
-    OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
+    MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
+    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
     SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
     StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
     UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
@@ -1721,6 +1721,68 @@ impl MemoryStore for SqliteAuthorityStore {
             .map_err(unavailable("load MemoryObject"))
     }
 
+    fn append_memory_tombstone(
+        &self,
+        tombstone: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError> {
+        if tombstone.action != "forget"
+            || tombstone.reason.trim().is_empty()
+            || serde_json::from_str::<serde_json::Value>(&tombstone.canonical_json).is_err()
+        {
+            return Err(invalid_context_payload(
+                "MemoryTombstone",
+                "action, reason, or canonical audit payload is invalid",
+            ));
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory forget transaction"))?;
+        let exists = transaction
+            .query_row(
+                "SELECT 1 FROM memory_objects WHERE memory_id=?1",
+                (tombstone.memory_id.as_str(),),
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(unavailable("load Memory object for forget"))?
+            .is_some();
+        if !exists {
+            return Err(StorePortError::Conflict {
+                detail: format!("Memory object {} does not exist", tombstone.memory_id),
+            });
+        }
+
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_tombstones (lifecycle_id, memory_id, action, occurred_at_unix_seconds, reason, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                (
+                    tombstone.lifecycle_id.as_str(),
+                    tombstone.memory_id.as_str(),
+                    tombstone.action.as_str(),
+                    tombstone.occurred_at_unix_seconds,
+                    tombstone.reason.as_str(),
+                    tombstone.canonical_json.as_str(),
+                ),
+            )?;
+            transaction.execute(
+                "DELETE FROM memory_search_fts WHERE memory_id=?1",
+                (tombstone.memory_id.as_str(),),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory forget transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: format!("Memory object {} is already forgotten", tombstone.memory_id),
+            }),
+            Err(error) => Err(unavailable("append Memory tombstone")(error)),
+        }
+    }
+
     fn search_memory_candidates(
         &self,
         query: &MemorySearchQuery,
@@ -1739,6 +1801,10 @@ impl MemoryStore for SqliteAuthorityStore {
                         AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
                         AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
                     WHERE memory_admission_decisions.decision = 'admit'
+                        AND NOT EXISTS (
+                            SELECT 1 FROM memory_tombstones
+                            WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                        )
                         AND memory_candidates.governance_scope = ?1
                         AND memory_candidates.purpose = ?2
                         AND memory_candidates.retention_expires_at_unix_seconds > ?3
@@ -1806,6 +1872,10 @@ impl MemoryStore for SqliteAuthorityStore {
                     AND workspace_context_sources.provenance_ref = memory_candidates.source_provenance_ref
                     AND workspace_context_sources.resource_scope = memory_candidates.governance_scope
                  WHERE memory_admission_decisions.decision = 'admit'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM memory_tombstones
+                        WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                    )
                     AND json_type(workspace_context_sources.canonical_json, '$.body.text') = 'text'
                     AND length(trim(json_extract(workspace_context_sources.canonical_json, '$.body.text'))) > 0",
                 [],
