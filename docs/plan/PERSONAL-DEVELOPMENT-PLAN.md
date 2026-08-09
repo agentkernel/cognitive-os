@@ -142,11 +142,11 @@
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 5 | 0 | 0 | 1 | G3 / B03、B06、B07 |
-| Phase 4 - Memory 与 Skill | 6 | 0 | 1 | 0 | 5 | G4 / B08 |
+| Phase 4 - Memory 与 Skill | 6 | 1 | 0 | 0 | 5 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **28** | **1** | **0** | **24** | — |
+| **合计** | **53** | **29** | **0** | **0** | **24** | — |
 
 ## 2. 产品边界与不变量
 
@@ -556,7 +556,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | in-progress | 2026-08-09: claimed on `personal/P4-T01-memory-admission` under `lease/personal/P4-T01/memory-admission`; D01 begins the daemon-private append-only proposal-to-deterministic-admission path. FTS/retrieval, lifecycle/forget, public API/projection, and B08 remain out of scope and unclaimed. |
+| P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | done | 2026-08-09 closure: D01 at `e4eb38ad9aaba13f04fb51657dfdc884af66cdc5` adds deterministic proposal policy, append-only SQLite v16 candidate/decision/object records, atomic source revalidation, daemon-private admission service, and failure-first direct-admit/source-mismatch/retention/scope/no-partial-object coverage. Exact native Linux focused tests and Clippy passed; required Ubuntu/Windows CI passed. FTS/retrieval, lifecycle/forget, public API/projection, B08, Gate, release, and Profile remain separate/unclaimed. |
 | P4-T02 | SQLite FTS5 + metadata filter baseline | P4-T01 | authority metadata pre-filter 后检索；unauthorized/stale/conflict/delete/rebuild 负例 | not-started | — |
 | P4-T03 | Memory lifecycle、retention 与 forget | P4-T01 | version/update/conflict/expire/forget/tombstone/audit 可验证；派生索引可完整失效 | not-started | — |
 | P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | not-started | — |
