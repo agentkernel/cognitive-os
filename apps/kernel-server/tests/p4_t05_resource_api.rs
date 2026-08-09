@@ -188,6 +188,20 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     );
     assert!(malformed_consumption.contains("RESOURCE_CONSUMPTION_PAYLOAD_INVALID"));
 
+    let unknown_task_body = "{\"task_ref\":\"task://local/missing\",\"query_text\":\"fact\",\"skill_binding_id\":\"00000000-0000-7000-9000-000000000001\"}";
+    let unknown_task_consumption = request(
+        port,
+        &format!(
+            "POST /task/resource/v1/consumption HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {task_token}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{unknown_task_body}",
+            unknown_task_body.len()
+        ),
+    );
+    assert!(
+        unknown_task_consumption.contains("404 Not Found"),
+        "{unknown_task_consumption}"
+    );
+    assert!(unknown_task_consumption.contains("RESOURCE_TASK_NOT_FOUND"));
+
     daemon.kill().unwrap();
     daemon.wait().unwrap();
     let _ = std::fs::remove_dir_all(runtime_root);
