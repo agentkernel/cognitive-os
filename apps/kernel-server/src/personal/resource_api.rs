@@ -5,11 +5,16 @@
 //! and makes missing authority backends explicit rather than fabricating rows.
 
 use std::collections::VecDeque;
+use std::time::{SystemTime, UNIX_EPOCH};
 
+use super::memory_admission::admit_memory_candidate;
 use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
+use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    MemoryStore, MemoryTombstoneRow, SkillBindingRevocationRow, SkillStore, StorePortError,
+    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemoryStore,
+    MemoryTombstoneRow, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
+    SkillRevisionRow, SkillStore, StorePortError,
 };
 use cognitive_store::SqliteAuthorityStore;
 use serde_json::{Value, json};
@@ -158,10 +163,220 @@ impl ResourceApi {
         if method_path.starts_with("POST /management/resource/v1/memory/forget") {
             return self.forget_memory(body, store);
         }
+        if method_path.starts_with("POST /management/resource/v1/memory/remember") {
+            return self.remember_memory(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/skill/import") {
+            return self.import_skill(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/skill/bind") {
+            return self.bind_skill(body, store);
+        }
         if method_path.starts_with("POST /management/resource/v1/skill/binding/revoke") {
             return self.revoke_skill_binding(body, store);
         }
         self.handle_authority(method_path, store)
+    }
+
+    fn remember_memory(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory remember payload is invalid",
+            );
+        };
+        let required_identifier = |name: &str| object_id_field(&document, name);
+        let (Some(candidate_id), Some(source_id), Some(decision_id), Some(memory_id)) = (
+            required_identifier("candidate_id"),
+            required_identifier("source_id"),
+            required_identifier("decision_id"),
+            required_identifier("memory_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_ID_INVALID",
+                "candidate_id, source_id, decision_id, and memory_id are required",
+            );
+        };
+        let Some(candidate_digest) = string_field(&document, "candidate_digest") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_DIGEST_REQUIRED",
+                "candidate_digest is required",
+            );
+        };
+        let Some(governance_scope) = string_field(&document, "governance_scope") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_SCOPE_REQUIRED",
+                "governance_scope is required",
+            );
+        };
+        let Some(purpose) = string_field(&document, "purpose") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PURPOSE_REQUIRED",
+                "purpose is required",
+            );
+        };
+        let candidate = MemoryCandidateRow {
+            candidate_id: candidate_id.clone(),
+            candidate_digest: candidate_digest.clone(),
+            source_id,
+            source_digest: string_field(&document, "source_digest").unwrap_or_default(),
+            source_provenance_ref: string_field(&document, "source_provenance_ref")
+                .unwrap_or_default(),
+            governance_scope,
+            target_scope: string_field(&document, "target_scope").unwrap_or_default(),
+            purpose,
+            retention_expires_at_unix_seconds: integer_field(
+                &document,
+                "retention_expires_at_unix_seconds",
+            )
+            .unwrap_or_default(),
+            observed_at_unix_seconds: integer_field(&document, "observed_at_unix_seconds")
+                .unwrap_or_default(),
+            canonical_json: document.to_string(),
+        };
+        let decision = MemoryAdmissionDecisionRow {
+            decision_id,
+            candidate_id: candidate.candidate_id.clone(),
+            candidate_digest,
+            decision: string_field(&document, "decision").unwrap_or_else(|| "admit".to_owned()),
+            policy_version: integer_field(&document, "policy_version").unwrap_or(1),
+            reason_codes_json: string_field(&document, "reason_codes_json")
+                .unwrap_or_else(|| "[]".to_owned()),
+            canonical_json: document.to_string(),
+        };
+        let object = MemoryObjectRow {
+            memory_id,
+            candidate_id: candidate.candidate_id.clone(),
+            decision_id: decision.decision_id.clone(),
+            canonical_json: document.to_string(),
+        };
+        let now_unix_seconds = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_secs() as i64)
+            .unwrap_or_default();
+        let policy = MemoryAdmissionPolicy {
+            policy_version: decision.policy_version,
+            now_unix_seconds,
+            maximum_retention_seconds: 31_536_000,
+        };
+        match admit_memory_candidate(store, &candidate, &decision, Some(&object), &policy) {
+            Ok(outcome) => json_response(
+                201,
+                json!({"status":"remembered", "outcome": format!("{outcome:?}").to_lowercase(), "memory_id": object.memory_id.to_string()}),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_MEMORY_CONFLICT",
+                "Memory admission conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_MEMORY_UNAVAILABLE",
+                "Memory authority store is unavailable",
+            ),
+        }
+    }
+
+    fn import_skill(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_PAYLOAD_INVALID",
+                "Skill import payload is invalid",
+            );
+        };
+        let (Some(package_id), Some(revision_id)) = (
+            object_id_field(&document, "package_id"),
+            object_id_field(&document, "revision_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_ID_INVALID",
+                "package_id and revision_id are required",
+            );
+        };
+        let package = SkillPackageRow {
+            package_id: package_id.clone(),
+            workspace_scope: string_field(&document, "workspace_scope").unwrap_or_default(),
+            local_source_path: string_field(&document, "local_source_path").unwrap_or_default(),
+            provenance_ref: string_field(&document, "provenance_ref").unwrap_or_default(),
+            manifest_digest: string_field(&document, "manifest_digest").unwrap_or_default(),
+            canonical_json: document.to_string(),
+        };
+        let revision = SkillRevisionRow {
+            revision_id,
+            package_id,
+            content_digest: string_field(&document, "content_digest").unwrap_or_default(),
+            compatibility: string_field(&document, "compatibility")
+                .unwrap_or_else(|| "compatible".to_owned()),
+            canonical_json: document.to_string(),
+        };
+        match store.append_skill_import(&package, &revision) {
+            Ok(()) => json_response(
+                201,
+                json!({"status":"imported", "package_id": package.package_id.to_string(), "revision_id": revision.revision_id.to_string()}),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_SKILL_CONFLICT",
+                "Skill import conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_SKILL_UNAVAILABLE",
+                "Skill authority store is unavailable",
+            ),
+        }
+    }
+
+    fn bind_skill(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_PAYLOAD_INVALID",
+                "Skill binding payload is invalid",
+            );
+        };
+        let (Some(binding_id), Some(revision_id)) = (
+            object_id_field(&document, "binding_id"),
+            object_id_field(&document, "revision_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_ID_INVALID",
+                "binding_id and revision_id are required",
+            );
+        };
+        let binding = SkillBindingRow {
+            binding_id,
+            revision_id,
+            workspace_scope: string_field(&document, "workspace_scope").unwrap_or_default(),
+            target_kind: string_field(&document, "target_kind").unwrap_or_default(),
+            target_ref: string_field(&document, "target_ref").unwrap_or_default(),
+            status: "active".to_owned(),
+            canonical_json: document.to_string(),
+        };
+        match store.append_skill_binding(&binding) {
+            Ok(()) => json_response(
+                201,
+                json!({"status":"bound", "binding_id": binding.binding_id.to_string()}),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_SKILL_CONFLICT",
+                "Skill binding conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_SKILL_UNAVAILABLE",
+                "Skill authority store is unavailable",
+            ),
+        }
     }
 
     pub(crate) fn forget_memory(
@@ -478,6 +693,18 @@ fn object_id_field(document: &Value, field_name: &str) -> Option<ObjectId> {
         .get(field_name)
         .and_then(Value::as_str)
         .and_then(|value| ObjectId::parse(value).ok())
+}
+
+fn string_field(document: &Value, field_name: &str) -> Option<String> {
+    document
+        .get(field_name)
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
+}
+
+fn integer_field(document: &Value, field_name: &str) -> Option<i64> {
+    document.get(field_name).and_then(Value::as_i64)
 }
 
 fn json_response(status: u16, body: Value) -> ResourceApiResponse {
