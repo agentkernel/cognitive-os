@@ -571,6 +571,18 @@ pub struct MemoryObjectRow {
     pub canonical_json: String,
 }
 
+/// Daemon-private versioned Memory replacement request. The expected version
+/// is a CAS guard; a stale writer must not create a competing current version.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryUpdateRequest {
+    pub previous_memory_id: ObjectId,
+    pub expected_version: i64,
+    pub candidate: MemoryCandidateRow,
+    pub decision: MemoryAdmissionDecisionRow,
+    pub replacement: MemoryObjectRow,
+    pub supersede_tombstone: MemoryTombstoneRow,
+}
+
 /// Append-only daemon lifecycle fact for an admitted Memory object. The
 /// canonical payload is the audit record; it must not contain source text.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1271,6 +1283,14 @@ pub trait MemoryStore {
         &self,
         expiration: &MemoryTombstoneRow,
     ) -> Result<(), StorePortError>;
+
+    /// Atomically appends a replacement version and tombstones the prior
+    /// version. The immutable admission records for both versions remain.
+    fn append_memory_update(&self, _update: &MemoryUpdateRequest) -> Result<(), StorePortError> {
+        Err(StorePortError::Unavailable {
+            detail: "Memory version updates are not supported by this adapter".to_owned(),
+        })
+    }
 
     /// Discover metadata-only candidates from the derived FTS index after
     /// filtering authoritative Memory metadata and current source bindings.

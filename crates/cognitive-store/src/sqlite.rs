@@ -52,12 +52,12 @@ use cognitive_kernel::ports::{
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
     IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
     MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
-    ObjectAdmission, OperationCandidateProposalRow, OutboxEntry, ProgressFactRow, ProtocolStore,
-    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-    StorePortError, StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
-    WorkspaceContextSourceRow,
+    MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
+    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -1681,6 +1681,10 @@ impl MemoryStore for SqliteAuthorityStore {
                     (memory_object.memory_id.as_str(), memory_object.candidate_id.as_str(), memory_object.decision_id.as_str(), memory_object.canonical_json.as_str()),
                 )?;
                 transaction.execute(
+                    "INSERT INTO memory_object_versions (memory_id, version) VALUES (?1, 1)",
+                    (memory_object.memory_id.as_str(),),
+                )?;
+                transaction.execute(
                     "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
                     (
                         memory_object.memory_id.as_str(),
@@ -1820,6 +1824,98 @@ impl MemoryStore for SqliteAuthorityStore {
         }
         drop(connection);
         self.append_memory_tombstone(expiration)
+    }
+
+    fn append_memory_update(&self, update: &MemoryUpdateRequest) -> Result<(), StorePortError> {
+        if update.decision.decision != "admit"
+            || update.candidate.candidate_id != update.decision.candidate_id
+            || update.replacement.candidate_id != update.candidate.candidate_id
+            || update.replacement.decision_id != update.decision.decision_id
+            || update.supersede_tombstone.action != "supersede"
+            || update.supersede_tombstone.memory_id != update.previous_memory_id
+        {
+            return Err(invalid_context_payload(
+                "MemoryUpdate",
+                "replacement bindings or supersede lifecycle fact are invalid",
+            ));
+        }
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory version update transaction"))?;
+        let current_version = transaction
+            .query_row(
+                "SELECT version FROM memory_object_versions WHERE memory_id=?1",
+                (update.previous_memory_id.as_str(),),
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory version for update"))?;
+        let Some(current_version) = current_version else {
+            return Err(StorePortError::Conflict {
+                detail: "Memory update target does not exist".to_owned(),
+            });
+        };
+        if current_version != update.expected_version {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "Memory update expected version {}, found {}",
+                    update.expected_version, current_version
+                ),
+            });
+        }
+        let source_canonical_json = transaction
+            .query_row(
+                "SELECT canonical_json FROM workspace_context_sources WHERE source_id=?1 AND source_digest=?2 AND provenance_ref=?3 AND resource_scope=?4",
+                rusqlite::params![update.candidate.source_id.as_str(), update.candidate.source_digest.as_str(), update.candidate.source_provenance_ref.as_str(), update.candidate.governance_scope.as_str()],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(unavailable("load Memory update source"))?
+            .ok_or_else(|| StorePortError::Conflict {
+                detail: "Memory update source binding is no longer current".to_owned(),
+            })?;
+        let source_text = extract_memory_source_text(&source_canonical_json)?;
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_candidates (candidate_id, source_id, source_digest, source_provenance_ref, governance_scope, target_scope, purpose, retention_expires_at_unix_seconds, observed_at_unix_seconds, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                rusqlite::params![update.candidate.candidate_id.as_str(), update.candidate.source_id.as_str(), update.candidate.source_digest.as_str(), update.candidate.source_provenance_ref.as_str(), update.candidate.governance_scope.as_str(), update.candidate.target_scope.as_str(), update.candidate.purpose.as_str(), update.candidate.retention_expires_at_unix_seconds, update.candidate.observed_at_unix_seconds, update.candidate.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_admission_decisions (decision_id, candidate_id, candidate_digest, decision, policy_version, reason_codes_json, canonical_json) VALUES (?1, ?2, ?3, 'admit', ?4, ?5, ?6)",
+                rusqlite::params![update.decision.decision_id.as_str(), update.decision.candidate_id.as_str(), update.decision.candidate_digest.as_str(), update.decision.policy_version, update.decision.reason_codes_json.as_str(), update.decision.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_objects (memory_id, candidate_id, decision_id, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![update.replacement.memory_id.as_str(), update.replacement.candidate_id.as_str(), update.replacement.decision_id.as_str(), update.replacement.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_object_versions (memory_id, version, supersedes_memory_id) VALUES (?1, ?2, ?3)",
+                rusqlite::params![update.replacement.memory_id.as_str(), update.expected_version + 1, update.previous_memory_id.as_str()],
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_tombstones (lifecycle_id, memory_id, action, occurred_at_unix_seconds, reason, canonical_json) VALUES (?1, ?2, 'supersede', ?3, ?4, ?5)",
+                rusqlite::params![update.supersede_tombstone.lifecycle_id.as_str(), update.previous_memory_id.as_str(), update.supersede_tombstone.occurred_at_unix_seconds, update.supersede_tombstone.reason.as_str(), update.supersede_tombstone.canonical_json.as_str()],
+            )?;
+            transaction.execute(
+                "DELETE FROM memory_search_fts WHERE memory_id=?1",
+                (update.previous_memory_id.as_str(),),
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+                (update.replacement.memory_id.as_str(), source_text.as_str()),
+            )?;
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory version update transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Memory update conflicts with an existing immutable version".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Memory version update")(error)),
+        }
     }
 
     fn search_memory_candidates(
