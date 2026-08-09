@@ -1090,14 +1090,32 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
     .split(/\r?\n/)
     .map(parseMarkdownTableRow)
     .find((columns) => normalizeMarkdownCell(columns[0] ?? "") === "B01");
-  const formalB01MinimumMatch = formalB01Row?.join(" ").match(/至少\s*(\d+)/);
+  const formalB01MinimumMatch = formalB01Row
+    ?.join(" ")
+    .match(/(?:固定\s*N?\s*=\s*|fixed\s+N\s*=\s*|至少\s*)(\d+)/i);
   const formalB01Minimum = formalB01MinimumMatch
     ? Number(formalB01MinimumMatch[1])
+    : undefined;
+  const formalB01SuccessThresholdMatch = formalB01Row
+    ?.join(" ")
+    .match(/至少\s*(\d+)\s*次成功/);
+  const formalB01SuccessThreshold = formalB01SuccessThresholdMatch
+    ? Number(formalB01SuccessThresholdMatch[1])
     : undefined;
   if (!formalB01Minimum || formalB01Minimum < 2) {
     fail(
       "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
       "B01 formal Gate must declare a multi-attempt minimum denominator",
+    );
+  }
+  if (
+    !formalB01SuccessThreshold ||
+    !formalB01Minimum ||
+    formalB01SuccessThreshold > formalB01Minimum
+  ) {
+    fail(
+      "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+      "B01 formal Gate must declare a valid success-count threshold",
     );
   }
 
@@ -1114,6 +1132,10 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
     const currentMinimumMatch = currentB01Evidence.match(/minimum\s+(\d+)/i);
     const currentAttemptCount = currentAttemptMatch ? Number(currentAttemptMatch[1]) : undefined;
     const currentMinimum = currentMinimumMatch ? Number(currentMinimumMatch[1]) : undefined;
+    const currentSuccessMatch = currentB01Evidence.match(/(\d+)\s+successes/i);
+    const currentFailureMatch = currentB01Evidence.match(/(\d+)\s+failure(?:s)?/i);
+    const currentSuccessCount = currentSuccessMatch ? Number(currentSuccessMatch[1]) : undefined;
+    const currentFailureCount = currentFailureMatch ? Number(currentFailureMatch[1]) : undefined;
 
     if (formalB01Minimum && currentMinimum !== formalB01Minimum) {
       fail(
@@ -1126,6 +1148,25 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
         fail(
           "docs/plan/PROGRESS.md",
           "B01 cannot pass before the formal attempt denominator is complete",
+        );
+      }
+      if (
+        !currentSuccessCount ||
+        !currentFailureCount ||
+        currentSuccessCount + currentFailureCount !== formalB01Minimum
+      ) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          "B01 pass must record success and failure counts that equal the formal denominator",
+        );
+      }
+      if (
+        formalB01SuccessThreshold &&
+        (!currentSuccessCount || currentSuccessCount < formalB01SuccessThreshold)
+      ) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          "B01 cannot pass below the formal success-count threshold",
         );
       }
       const verifierClosureIsMissing =

@@ -275,7 +275,9 @@ official Pi package with a qualified Pi sidecar. The reusable sidecar framework
 does not qualify other Agents.
 
 The target release composition is
-`B01 + B02 + B03 + B04 + B05 + B08 + B09 + B12 + P7 operability`.
+`B01 + B02 + B03 + B04 + B05 + B08 + B09 + B12 + P7 operability`. B01 uses
+the successor campaign policy in ADR-0039; that policy does not itself claim
+that B01 or the release gate has passed.
 `B06`, `B07`, `B10` and `B11` do not block Linux 1.0. This statement changes no
 current Gate status and claims no implementation or evidence.
 

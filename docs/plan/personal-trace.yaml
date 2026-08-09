@@ -45,6 +45,10 @@ gate_catalog:
     phase: P7
     classification: product-only
     tasks: [P7-T07]
+  B01:
+    phase: P1
+    classification: product-only
+    campaign_policy: docs/adr/0039-personal-b01-six-attempt-campaign-policy.md
   GMVP-LINUX:
     phase: P7
     classification: product-only
