@@ -12,10 +12,10 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemorySearchQuery,
-    MemoryStore, MemoryTombstoneRow, ProtocolStore, SchedulerExecutionPolicyStore,
-    SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
-    StorePortError,
+    IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
+    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
+    SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
+    SkillRevisionRow, SkillStore, StorePortError,
 };
 use cognitive_store::SqliteAuthorityStore;
 use serde_json::{Value, json};
