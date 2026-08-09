@@ -83,7 +83,7 @@ mod tests {
     use cognitive_kernel::authz::ObjectGovernance;
     use cognitive_kernel::ports::{
         ContextCandidateMetadata, ContextCandidateQuery, ContextRequestRow, ContextViewRow,
-        WorkspaceContextSourceRow,
+        MemorySearchCandidateRow, MemorySearchQuery, WorkspaceContextSourceRow,
     };
 
     struct MemoryAdmissionTestStore {
@@ -155,6 +155,17 @@ mod tests {
             _: &ObjectId,
         ) -> Result<Option<MemoryObjectRow>, StorePortError> {
             Err(unsupported_test_operation("load MemoryObject"))
+        }
+
+        fn search_memory_candidates(
+            &self,
+            _: &MemorySearchQuery,
+        ) -> Result<Vec<MemorySearchCandidateRow>, StorePortError> {
+            Err(unsupported_test_operation("search Memory candidates"))
+        }
+
+        fn rebuild_memory_search_index(&self) -> Result<(), StorePortError> {
+            Err(unsupported_test_operation("rebuild Memory search index"))
         }
     }
 
