@@ -12,8 +12,8 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemoryStore,
-    MemoryTombstoneRow, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
+    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemorySearchQuery,
+    MemoryStore, MemoryTombstoneRow, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
     SkillRevisionRow, SkillStore, StorePortError,
 };
 use cognitive_store::SqliteAuthorityStore;
@@ -64,6 +64,170 @@ impl ResourceApi {
             );
         };
         self.handle_projection(method_path, Some(task_reference))
+    }
+
+    pub(crate) fn handle_task_consumption(
+        &self,
+        body: &[u8],
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_CONSUMPTION_PAYLOAD_INVALID",
+                "consumption payload is invalid",
+            );
+        };
+        let Some(task_reference) =
+            string_field(&document, "task_ref").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_TASK_REFERENCE_REQUIRED",
+                "task_ref is required",
+            );
+        };
+        let Some(governance_scope) =
+            string_field(&document, "governance_scope").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_CONSUMPTION_SCOPE_REQUIRED",
+                "governance_scope is required",
+            );
+        };
+        let Some(purpose) = string_field(&document, "purpose").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_CONSUMPTION_PURPOSE_REQUIRED",
+                "purpose is required",
+            );
+        };
+        let Some(query_text) =
+            string_field(&document, "query_text").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_CONSUMPTION_QUERY_REQUIRED",
+                "query_text is required",
+            );
+        };
+        let Some(binding_id) = object_id_field(&document, "skill_binding_id") else {
+            return error(
+                400,
+                "RESOURCE_SKILL_BINDING_ID_INVALID",
+                "skill_binding_id is required",
+            );
+        };
+        let now_unix_seconds = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_secs() as i64)
+            .unwrap_or_default();
+        let memory_candidates = match store.search_memory_candidates(&MemorySearchQuery {
+            governance_scope: governance_scope.clone(),
+            purpose,
+            observed_at_unix_seconds: now_unix_seconds,
+            query_text,
+            maximum_results: 8,
+        }) {
+            Ok(candidates) => candidates,
+            Err(StorePortError::Conflict { .. }) => {
+                return error(
+                    409,
+                    "RESOURCE_CONSUMPTION_CONFLICT",
+                    "Memory eligibility conflicts with authority facts",
+                );
+            }
+            Err(StorePortError::Unavailable { .. }) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Memory authority store is unavailable",
+                );
+            }
+        };
+        let Some(binding) = (match store.load_active_skill_binding(&binding_id) {
+            Ok(binding) => binding,
+            Err(StorePortError::Conflict { .. }) => {
+                return error(
+                    409,
+                    "RESOURCE_CONSUMPTION_CONFLICT",
+                    "Skill eligibility conflicts with authority facts",
+                );
+            }
+            Err(StorePortError::Unavailable { .. }) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Skill authority store is unavailable",
+                );
+            }
+        }) else {
+            return error(
+                404,
+                "RESOURCE_SKILL_NOT_ELIGIBLE",
+                "Skill binding is not active or has been revoked",
+            );
+        };
+        let task_binding_matches = (binding.target_kind == "task"
+            && binding.target_ref == task_reference)
+            || (binding.target_kind == "workspace" && binding.target_ref == governance_scope);
+        if binding.workspace_scope != governance_scope || !task_binding_matches {
+            return error(
+                403,
+                "RESOURCE_SKILL_SCOPE_MISMATCH",
+                "Skill binding is outside the task workspace scope",
+            );
+        }
+        let memory_rows: Vec<Value> = memory_candidates
+            .iter()
+            .map(|candidate| {
+                json!({
+                    "memory_id": candidate.memory_id.to_string(),
+                    "source_id": candidate.source_id.to_string(),
+                    "source_digest": candidate.source_digest,
+                })
+            })
+            .collect();
+        let explanation = match store.explain_skill_binding(&binding_id) {
+            Ok(Some(explanation)) => explanation,
+            Ok(None) => {
+                return error(
+                    404,
+                    "RESOURCE_SKILL_NOT_ELIGIBLE",
+                    "Skill binding explanation is unavailable",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Skill authority store is unavailable",
+                );
+            }
+        };
+        json_response(
+            200,
+            json!({
+                "kind": "task.resource.consumption",
+                "authority_source": "daemon-memory-skill-stores",
+                "task_ref": task_reference,
+                "memory": memory_rows,
+                "skill": {
+                    "binding_id": binding.binding_id.to_string(),
+                    "revision_id": binding.revision_id.to_string(),
+                    "package_id": explanation.package_id.to_string(),
+                    "content_digest": explanation.content_digest,
+                },
+                "consumption_trace": {
+                    "task_ref": task_reference,
+                    "memory_count": memory_candidates.len(),
+                    "skill_binding_id": binding.binding_id.to_string(),
+                },
+                "authority_side_effects": false,
+            }),
+        )
     }
 
     pub(crate) fn handle_authority(
