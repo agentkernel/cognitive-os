@@ -24,6 +24,7 @@ use crate::context_store::{
     CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
     SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
 };
+use crate::memory_store::MEMORY_ADMISSION_SCHEMA_V16;
 use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
 use crate::worker_authorization::{
     CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
@@ -49,13 +50,13 @@ use cognitive_kernel::ports::{
     ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow,
     ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
     DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
-    IntentChainStore, IntentRow, InterpretationRow, ObjectAdmission, OperationCandidateProposalRow,
-    OutboxEntry, ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow,
-    SchedulerExecutionPolicyStore, SchedulerLeaseBinding, StorePortError, StoredBudget,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
-    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
-    WorkspaceContextSourceRow,
+    IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    MemoryObjectRow, MemoryStore, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    SchedulerLeaseBinding, StorePortError, StoredBudget, StoredObject, TaskBinding,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
+    VerificationRequestRow, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -365,6 +366,7 @@ impl SqliteAuthorityStore {
             WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
             CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14,
             SCHEDULER_EXECUTION_POLICY_SCHEMA_V15,
+            MEMORY_ADMISSION_SCHEMA_V16,
         ]
         .join("\n");
         conn.execute_batch(&schema)
@@ -1529,6 +1531,145 @@ fn parse_workspace_context_source_row(
         content_tokens: database_row.content_tokens,
         canonical_json: database_row.canonical_json,
     })
+}
+
+fn validate_memory_candidate(candidate: &MemoryCandidateRow) -> Result<(), StorePortError> {
+    let payload: Value = serde_json::from_str(&candidate.canonical_json)
+        .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    verify_content_digest(
+        &payload,
+        &["/header/content_digest"],
+        GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN,
+        "/header/content_digest",
+    )
+    .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    let header: GovernedObjectHeader =
+        serde_json::from_value(payload.get("header").cloned().ok_or_else(|| {
+            invalid_context_payload("MemoryCandidate", "missing governed header")
+        })?)
+        .map_err(|error| invalid_context_payload("MemoryCandidate", error))?;
+    if header.id.0 != candidate.candidate_id.as_str()
+        || header.r#type != "MemoryCandidate"
+        || header.content_digest.0 != candidate.candidate_digest
+        || candidate.purpose.trim().is_empty()
+    {
+        return Err(invalid_context_payload(
+            "MemoryCandidate",
+            "row identity, digest, type, or purpose differs from canonical payload",
+        ));
+    }
+    Ok(())
+}
+
+impl MemoryStore for SqliteAuthorityStore {
+    fn append_memory_admission(
+        &self,
+        candidate: &MemoryCandidateRow,
+        decision: &MemoryAdmissionDecisionRow,
+        admitted_object: Option<&MemoryObjectRow>,
+    ) -> Result<(), StorePortError> {
+        validate_memory_candidate(candidate)?;
+        if decision.candidate_id != candidate.candidate_id
+            || decision.candidate_digest != candidate.candidate_digest
+            || decision.policy_version < 1
+            || !matches!(
+                decision.decision.as_str(),
+                "admit" | "reject" | "review" | "quarantine"
+            )
+            || serde_json::from_str::<Vec<String>>(&decision.reason_codes_json).is_err()
+        {
+            return Err(invalid_context_payload(
+                "MemoryAdmissionDecision",
+                "candidate binding, decision, policy, or reason codes are invalid",
+            ));
+        }
+        if (decision.decision == "admit") != admitted_object.is_some() {
+            return Err(invalid_context_payload(
+                "MemoryAdmissionDecision",
+                "only an admit decision may create a MemoryObject",
+            ));
+        }
+        if let Some(memory_object) = admitted_object
+            && (memory_object.candidate_id != candidate.candidate_id
+                || memory_object.decision_id != decision.decision_id)
+        {
+            return Err(invalid_context_payload(
+                "MemoryObject",
+                "object must bind the exact candidate and decision",
+            ));
+        }
+
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Memory admission transaction"))?;
+        let persisted_source = transaction
+            .query_row(
+                "SELECT source_digest, provenance_ref, resource_scope FROM workspace_context_sources WHERE source_id=?1",
+                (candidate.source_id.as_str(),),
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
+            )
+            .optional()
+            .map_err(unavailable("load Memory source binding"))?;
+        if persisted_source
+            != Some((
+                candidate.source_digest.clone(),
+                candidate.source_provenance_ref.clone(),
+                candidate.governance_scope.clone(),
+            ))
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Memory proposal source digest, provenance, or scope is no longer current"
+                    .to_owned(),
+            });
+        }
+        let insert_result = (|| -> Result<(), rusqlite::Error> {
+            transaction.execute(
+                "INSERT INTO memory_candidates (candidate_id, source_id, source_digest, source_provenance_ref, governance_scope, target_scope, purpose, retention_expires_at_unix_seconds, observed_at_unix_seconds, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                (candidate.candidate_id.as_str(), candidate.source_id.as_str(), candidate.source_digest.as_str(), candidate.source_provenance_ref.as_str(), candidate.governance_scope.as_str(), candidate.target_scope.as_str(), candidate.purpose.as_str(), candidate.retention_expires_at_unix_seconds, candidate.observed_at_unix_seconds, candidate.canonical_json.as_str()),
+            )?;
+            transaction.execute(
+                "INSERT INTO memory_admission_decisions (decision_id, candidate_id, candidate_digest, decision, policy_version, reason_codes_json, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                (decision.decision_id.as_str(), decision.candidate_id.as_str(), decision.candidate_digest.as_str(), decision.decision.as_str(), decision.policy_version, decision.reason_codes_json.as_str(), decision.canonical_json.as_str()),
+            )?;
+            if let Some(memory_object) = admitted_object {
+                transaction.execute(
+                    "INSERT INTO memory_objects (memory_id, candidate_id, decision_id, canonical_json) VALUES (?1, ?2, ?3, ?4)",
+                    (memory_object.memory_id.as_str(), memory_object.candidate_id.as_str(), memory_object.decision_id.as_str(), memory_object.canonical_json.as_str()),
+                )?;
+            }
+            Ok(())
+        })();
+        match insert_result {
+            Ok(()) => transaction
+                .commit()
+                .map_err(unavailable("commit Memory admission transaction")),
+            Err(error) if is_constraint_violation(&error) => Err(StorePortError::Conflict {
+                detail: "Memory admission conflicts with an existing immutable record".to_owned(),
+            }),
+            Err(error) => Err(unavailable("insert Memory admission")(error)),
+        }
+    }
+
+    fn load_memory_object(
+        &self,
+        memory_id: &ObjectId,
+    ) -> Result<Option<MemoryObjectRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT candidate_id, decision_id, canonical_json FROM memory_objects WHERE memory_id=?1",
+                (memory_id.as_str(),),
+                |row| Ok(MemoryObjectRow {
+                    memory_id: memory_id.clone(),
+                    candidate_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                    decision_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(1, rusqlite::types::Type::Text, Box::new(error)))?,
+                    canonical_json: row.get(2)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("load MemoryObject"))
+    }
 }
 
 impl ContextStore for SqliteAuthorityStore {

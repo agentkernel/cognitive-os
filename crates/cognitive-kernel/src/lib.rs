@@ -28,6 +28,7 @@ pub mod error;
 pub mod executor;
 pub mod harness;
 pub mod intent_chain;
+pub mod memory_admission;
 pub mod ports;
 pub mod recovery;
 pub mod replay;
@@ -75,6 +76,10 @@ pub use intent_chain::{
     compose_governed_header, derive_candidate_status, mint_task_contract,
     record_interpretation_candidate, record_user_intent, seal_governed_object_content_digest,
     strong_reference_to, supersede_task_contract, verify_task_binding_current,
+};
+pub use memory_admission::{
+    CurrentMemorySourceFacts, MemoryAdmissionDecision, MemoryAdmissionOutcome,
+    MemoryAdmissionPolicy, MemoryProposal, decide_memory_admission,
 };
 pub use ports::{
     AuthorityStore, CheckpointRow, Clock, DaemonAuthorizationSnapshotRow,
