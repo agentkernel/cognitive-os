@@ -615,6 +615,44 @@ pub struct MemorySearchCandidateRow {
     pub source_digest: String,
 }
 
+/// Immutable daemon-private local Skill package import. The package content is
+/// identified by its digest; its local source path is provenance only and
+/// never becomes an authority or capability grant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillPackageRow {
+    pub package_id: ObjectId,
+    pub workspace_scope: String,
+    pub local_source_path: String,
+    pub provenance_ref: String,
+    pub manifest_digest: String,
+    pub canonical_json: String,
+}
+
+/// Immutable imported Skill revision. Editing package content requires a new
+/// revision row; an existing revision is never replaced in place.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillRevisionRow {
+    pub revision_id: ObjectId,
+    pub package_id: ObjectId,
+    pub content_digest: String,
+    pub compatibility: String,
+    pub canonical_json: String,
+}
+
+/// Immutable daemon-owned binding of one exact compatible Skill revision.
+/// A binding describes eligibility only: it grants no Tool, filesystem,
+/// process, network, model, secret, or budget capability.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillBindingRow {
+    pub binding_id: ObjectId,
+    pub revision_id: ObjectId,
+    pub workspace_scope: String,
+    pub target_kind: String,
+    pub target_ref: String,
+    pub status: String,
+    pub canonical_json: String,
+}
+
 /// Metadata-only Context discovery result. It deliberately excludes body
 /// content so callers must authorize before materializing a candidate.
 #[derive(Debug, Clone, PartialEq)]
@@ -1304,6 +1342,31 @@ pub trait MemoryStore {
     /// Rebuild the disposable FTS index from current authoritative Memory
     /// objects and their bound Context-source bodies.
     fn rebuild_memory_search_index(&self) -> Result<(), StorePortError>;
+}
+
+/// Daemon-private persistence for imported local Skill packages and their
+/// eligibility bindings. This port deliberately exposes no public API,
+/// projection, Context materialization, or execution operation.
+pub trait SkillStore {
+    /// Atomically imports one immutable package and one exact revision. The
+    /// adapter verifies that the local provenance and package scope are safe
+    /// before persisting either record.
+    fn append_skill_import(
+        &self,
+        package: &SkillPackageRow,
+        revision: &SkillRevisionRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Appends an immutable eligibility binding. The bound revision must be
+    /// compatible and belong to the same workspace scope.
+    fn append_skill_binding(&self, binding: &SkillBindingRow) -> Result<(), StorePortError>;
+
+    /// Loads a binding for daemon-only lifecycle consumers. It grants no
+    /// authority and callers must reject non-active bindings.
+    fn load_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingRow>, StorePortError>;
 }
 
 /// Daemon-private, immutable execution inputs for one scheduler task binding.
