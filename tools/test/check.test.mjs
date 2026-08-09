@@ -111,6 +111,7 @@ test("Personal governance drift is rejected by failure injection", () => {
     "docs/plan/PROGRESS.md": (source) =>
       source
         .replace(/(\| B01 first-install\/first-conversation Gate \| \*\*)(?:running|fail|blocked)(\*\* \|)/, "$1pass$2")
+        .replace("Attempt 6 of formal minimum 6", "Attempt 5 of formal minimum 6")
         .replace("| `P2-T03/D03` | `done` |", "| `P2-T03/D03` | `in-progress` |")
         .replace("| `P2-T03/D05` | `done` |", "| `P2-T03/D05` | `in-progress` |"),
     "docs/governance/project-scope.yaml": (source) =>
@@ -177,6 +178,22 @@ test("Personal governance drift is rejected by failure injection", () => {
   assert.match(result.stderr, /legacy prompts must be explicitly non-executable/);
   assert.match(result.stderr, /B01 cannot pass before the formal attempt denominator is complete/);
   assert.match(result.stderr, /claims forbidden broad protected tree: docs\/plan\/\*\*/);
+});
+
+test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
+  const result = runConsistencyFailureInjection({
+    "docs/plan/PROGRESS.md": (source) =>
+      source
+        .replace(/(\| B01 first-install\/first-conversation Gate \| \*\*)running(\*\* \|)/, "$1pass$2")
+        .replace("5 successes, 1 failure", "4 successes, 1 failure")
+        .replace("zero recorded critical safety failures", "one recorded critical safety failure")
+        .replace("and an independently verified artifact/signature", "with aggregate statistics and affirmative independent verifier closure"),
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /B01 pass must record success and failure counts that equal the formal denominator/);
+  assert.match(result.stderr, /B01 cannot pass below the formal success-count threshold/);
+  assert.match(result.stderr, /B01 pass must record success rate, zero critical failures, and aggregate statistics/);
 });
 
 test("gen-matrix --check confirms the committed matrix is fresh", () => {

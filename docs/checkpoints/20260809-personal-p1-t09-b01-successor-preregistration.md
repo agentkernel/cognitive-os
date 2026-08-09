@@ -83,12 +83,24 @@ Failure of step 3 or 4 is an immutable attempt failure after the clean-reset
 checkpoint; it is not retried under the same attempt number and does not permit
 an alternate credential or non-graphical route.
 
+## 2026-08-09 owner-approved campaign amendment
+
+[ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md) supersedes
+the N=20 and >=90% policy above only for successor `002`. Its revised fixed
+denominator is exactly six immutable outcomes, with at least five successes,
+zero critical safety failures, complete aggregate statistics, and affirmative
+independent-verifier disposition required for B01 pass. Attempts 1--6 remain
+immutable; none is deleted, renumbered, or reclassified.
+
+Attempt 7 crossed a reset checkpoint during the semantic-decision window but
+created no artifact, Pi, Provider, service, route, request, response, or
+authority state. The owner explicitly waived it from the revised denominator;
+the waiver record remains auditable. No alternate credential route is allowed.
+
 ## Next action
 
-Continue the preregistered protected campaign from the fixed reviewed-main
-revision using the repeatable Desktop-session procedure above. Attempt 1 and
-Attempt 3 passed; Attempt 2 failed at graphical Desktop readiness and remains
-immutable. Do not reuse an attempt number or bypass the graphical login step.
+Do not execute another attempt. Produce the revised aggregate and obtain
+affirmative independent-verifier closure before changing B01 status.
 
 ## Non-claims
 

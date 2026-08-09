@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 in progress：retained B01 `001` fixed-N campaign failed at 2 成功/8 失败 after 10 attempts; successor B01 `002` is at 5 successes / 1 failure of fixed N=20; P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T02 已完成；P1-T09 in progress：retained B01 `001` fixed-N campaign failed at 2 成功/8 失败 after 10 attempts; successor B01 `002` completed its owner-approved fixed N=6 at 5 successes / 1 failure and awaits aggregate plus independent-verifier closure; P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-09**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -57,6 +57,17 @@
 > current status：P1-T09 仍为 `in-progress`，B01 仍为 `running`（1/至少 20），P2-T01/
 > P2-T03 仍为 `in-progress`，`GMVP-LINUX` 仍为 `not-run`，Profile `implemented: 0`。
 > 本批不修改规范或实现，不产生 implementation、Gate、release 或 Profile evidence。
+
+> **B01 successor campaign policy amendment（2026-08-09，ADR-0039）：** owner
+> approved a product-semantic campaign policy for separately preregistered
+> successor `B01-clean-linux-first-install-first-conversation-002`: exactly six
+> immutable outcomes, at least five successes, zero critical safety failures,
+> complete aggregate statistics, and affirmative independent-verifier closure.
+> Retained failed campaign `001` remains its historical N=20 record. Attempts
+> 1--6 of `002` remain immutable; owner-waived transition Attempt 7 is retained
+> as audit evidence but excluded because no artifact, Pi, Provider, service, or
+> route operation occurred. This amendment creates no B01/G1/GMVP-LINUX,
+> release, or Profile pass claim.
 
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -184,7 +195,7 @@
 | 能力组 | 目标 | Implementation start | Acceptance exit | 禁止扩大声明 |
 |---|---|---|---|---|
 | P0 | 平台、架构和安全决策 | 本计划批准 | 工具链、ADR、Secret/Pi PoC、benchmark 规格完成 | 产品功能、Memory、Multi-Agent、UI |
-| P1 | 安装到首次对话 | 对应 P0/P1 implementation requirements | 至少 20 次正式 B01 campaign 达标 | 用 dev smoke 或单次 attempt 宣称 B01 |
+| P1 | 安装到首次对话 | 对应 P0/P1 implementation requirements | successor B01 固定 6 次正式 campaign 达标 | 用 dev smoke 或单次 attempt 宣称 B01 |
 | P2 | Runtime Spine、统一 projection 与 native Tool | P1 contracts + 对应 P2 implementation requirements；B01 不是实现 mutex | B02/B04/B05/B12 | 未资格化 sidecar/adapter |
 | P3 | 真实 Context、Artifact CAS 与 UCR-01 | P2-T01/P2-T02 稳定 application contracts；不等待 P2-T08 acceptance | B03 correctness；采集 B06/B07 | 未执行的 Context 收益 |
 | P4 | Memory + Skill 资源价值 | P3-T01/P3-T02 stable ports | B08 correctness/actual consumption | embedding/vector/graph claims |
@@ -218,7 +229,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 
 | Task/Gate | implementation_requires | acceptance_requires | promotion_requires |
 |---|---|---|---|
-| P1-T09 / B01 | P1-T08 与既有 Secret/Provider/daemon/Pi contracts | 至少 20 个 clean-Linux attempts、成功率 ≥90%、关键安全失败 0、完整统计和 independent verifier | B01 只在完整 campaign 后 pass |
+| P1-T09 / B01 | P1-T08 与既有 Secret/Provider/daemon/Pi contracts | 固定 6 个 clean-Linux outcomes、至少 5 次成功、关键安全失败 0、完整统计和 affirmative independent verifier | B01 只在完整 campaign 后 pass |
 | P2-T01 | 既有 authority/store/Intent/TaskContract contracts；P1-T09 route implementation 已可集成，B01 不是 mutex | proposal/clarify/preview/admit/control/query；raw-intent durability、preview-digest binding、epoch/stale-lease fencing focused evidence | G2: B02/B04/B05/B12；task `done` 不要求这些 Gate 已运行 |
 | P2-T02 | P2-T01、P1-T07、task/management channel contracts | real authenticated Personal intent record/interpret→server-issued preview→admit Task API/watch; daemon-owned governance-context binding (including the ADR-0022 durable local-root bootstrap rule), Pi Shell and CLI use one application service; channel-isolation negatives | G2: B02/B04/B05/B12 |
 | P2-T03 | P2-T01、P1-T01、现有 scheduler/contract slices | durable stop、worker/Effect closure、crash/duplicate/clock/budget evidence | G2: B05/B12 |
@@ -509,7 +520,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 > Linux-native user-systemd, production release/signing, uninstall, B01,
 > product Gate, Profile and first-conversation evidence remain outstanding.
 
-| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；B01 至少 20 次独立 clean Linux VM attempt，全部 attempt 计入，成功率 ≥90%，关键安全失败为 0；除 API Key 与模型选择外无必选交互（ADR-0026/0034） | in-progress | Retained `B01-clean-linux-first-install-first-conversation-001` remains failed at 2 successes / 8 failures after 10 started attempts and cannot meet the unchanged threshold. Separately preregistered successor `002`, fixed N=20 on sole `B01-Desktop-Linux-002`, independently verified artifact `0.0.0-campaign.20260809.1` at exact revision `4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. Attempts 1, 3, 4, 5, and 6 passed the clean signed-installation, exact Pi, graphical hidden-input Provider, doctor-ready, bounded-marker, SecretStore-delete, and baseline-revert route; Attempt 2 failed at bounded graphical Desktop readiness before product activation. Campaign remains running at 5 successes / 1 failure / 20; no B01, G1, GMVP-LINUX, release, or Profile claim. The successor inherits no attempt, artifact, credential, or Gate result from `001`; `/artifacts/` remains ignored local staging and is not an implicit campaign input. Evidence: [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md), [native verification](../checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md), and [successor attempt ledger](../checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md). |
+| P1-T09 | 安装到首次对话 route 与 B01 campaign | P1-T08 | route implementation、deterministic fixture、dev smoke、usability 与 formal B01 分阶段；successor B01 固定 6 次独立 clean Linux VM outcome，全部计入，至少 5 次成功，关键安全失败为 0，并须完整统计与 affirmative independent-verifier closure（ADR-0026/0034/0039） | in-progress | Retained `B01-clean-linux-first-install-first-conversation-001` remains failed at 2 successes / 8 failures after 10 started attempts under its historical N=20 rule. Separately preregistered successor `002`, fixed N=6 on sole `B01-Desktop-Linux-002`, independently verified artifact `0.0.0-campaign.20260809.1` at exact revision `4ea42c0c8f856aa22e2a360bd42005c8dbec400f`. Attempts 1, 3, 4, 5, and 6 passed the clean signed-installation, exact Pi, graphical hidden-input Provider, doctor-ready, bounded-marker, SecretStore-delete, and baseline-revert route; Attempt 2 failed at bounded graphical Desktop readiness before product activation. The completed denominator is 5 successes / 1 failure / 6, with zero recorded critical safety failures. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. Campaign remains running until its aggregate and affirmative independent-verifier closure; no B01, G1, GMVP-LINUX, release, or Profile claim. The successor inherits no attempt, artifact, credential, or Gate result from `001`; `/artifacts/` remains ignored local staging and is not an implicit campaign input. Evidence: [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), [successor preregistration](../checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md), [native verification](../checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md), and [successor attempt ledger](../checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md). |
 
 ### Phase 2 - 单 Agent 任务闭环
 
@@ -583,7 +594,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | Gate | 必需结果 | 最低证据 |
 |---|---|---|
 | G0 | 基线、决策和 PoC 已完成或明确 NO-GO | ADR、PoC report、支持矩阵、handoff |
-| B01 | 安装、初始化、Provider、daemon、Pi 首次响应 | 至少 20 次 clean Linux VM attempts（当前 campaign fixed N=20）；全部 started attempts 入 denominator；成功率 ≥90%；zero critical；aggregate median/p95/CI；independent verifier |
+| B01 | 安装、初始化、Provider、daemon、Pi 首次响应 | successor `002` 固定 N=6 clean Linux VM outcomes；全部六个 counted outcomes 入 denominator；至少 5 次成功；zero critical；aggregate median/p95/CI；affirmative independent verifier |
 | B02/B04/B05/B12 | 管理、Task/Tool、恢复、unknown outcome 闭环 | 真实六资源 projection、Effect/verification evidence、负例、默认路径人工确认次数记录（ADR-0026） |
 | B03 | Context correctness | scope-before-ranking、required fail-closed、explicit loss、revocation/cache/Artifact access negatives；收益不是 pass 前提 |
 | B06/B07 | Context/Loop benefit observations | delta/stable-prefix/cache/telemetry raw evidence；采集但不阻塞 Linux 1.0 |

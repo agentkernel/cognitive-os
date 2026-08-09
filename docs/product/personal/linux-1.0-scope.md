@@ -209,7 +209,8 @@ The release campaign must identify exact:
 - headless vault locked start, TTY unlock and optional unattended unlock without
   Provider/user secret in service or credential material;
 - Standard Workspace and Extended Home negative boundaries;
-- B01 attempt denominator and statistics;
+- B01 fixed six-outcome denominator, at-least-five-success threshold,
+  statistics, and independent-verifier closure as defined by ADR-0039;
 - Memory candidate/admission/object, retrieval and forget/tombstone cases;
 - Skill import/revision/action/permission and script-through-Tool cases;
 - Tool registry/availability/journal/Intent-Effect failure cases;

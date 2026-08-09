@@ -216,9 +216,10 @@ B01 campaign environment**. Ordinary development must not start, stop,
   response in 6295 ms with `authority_side_effects:false`, and completed secret
   cleanup.
 - **Maximum evidence:** one successful formal B01 attempt.
-- **Cannot claim:** campaign-level B01 pass until at least 20 attempts, at least
-  90% success, zero critical failures, complete statistics and independent
-  verifier closure; the experimental signer cannot satisfy P7 production trust.
+- **Cannot claim:** campaign-level B01 pass until successor `002` completes its
+  ADR-0039 fixed six outcomes with at least five successes, zero critical
+  failures, complete statistics, and independent verifier closure; the
+  experimental signer cannot satisfy P7 production trust.
 - **Evidence:** [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md).
 
 ## 11. `FIXTURE-SYSTEMD-01` — installer/fake-systemd fixtures

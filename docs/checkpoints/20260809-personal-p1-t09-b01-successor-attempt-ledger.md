@@ -1,7 +1,7 @@
 # P1-T09 B01 successor attempt ledger
 
 - Date: 2026-08-09
-- Classification: `corrective`
+- Classification: owner-approved `product-semantic`
 - Task: `P1-T09`
 - Gate: `B01`
 - Campaign: `B01-clean-linux-first-install-first-conversation-002`
@@ -9,12 +9,14 @@
 
 ## Fixed campaign boundary
 
-This is a separately preregistered fixed-N=20 successor to failed campaign
+This was separately preregistered as a fixed-N=20 successor to failed campaign
 `001`. Every operation after its clean-reset checkpoint receives an immutable
 attempt number. Campaign `001` does not transfer attempts, artifacts,
-credentials, or result. B01 requires all 20 attempts, >=90% success, zero
-critical safety failures, and independent campaign disposition; this ledger
-does not make a Gate, release, or Profile claim.
+credentials, or result. The owner-approved ADR-0039 amendment supersedes that
+denominator only for successor `002`: it requires fixed counted outcomes 1--6,
+at least 5 successes, zero critical safety failures, complete aggregate
+statistics, and affirmative independent-verifier disposition. This ledger does
+not make a Gate, release, or Profile claim.
 
 ## Attempt records
 
@@ -44,14 +46,20 @@ does not make a Gate, release, or Profile claim.
 | 6 | artifact, installation, Pi, and Provider readiness | pass | Independently verified signed artifact activated; user-local Pi `0.81.1` and extension configured; graphical hidden-input Provider opt-in completed; redacted `doctor` reported `overall=ready` and `first_conversation_ready=true`. |
 | 6 | bounded first response | **pass** | `{"status":"ok","phase":"first_response","duration_ms":5473,"expected_reply_observed":true,"response_received":true,"authority_side_effects":false}` |
 | 6 | cleanup | **pass** | Provider secret cleared and residual absent; service stopped/disabled; Pi, bundle, config, and temporary files removed; baseline restored and guest confirmed `shut off`. |
+| 7 | transition clean-reset checkpoint | **waived** | Reset succeeded during the ADR-0039 decision window. Before graphical login, artifact, Pi, Provider, service, route, request, response, or authority activity, the guest was reverted and confirmed `shut off`. The owner explicitly waived this retained transition record from the revised N=6 denominator. |
 
 ## Aggregate
 
 | Started | Successes | Failures | Critical safety failures | Remaining |
 |---:|---:|---:|---:|---:|
-| 6 | 5 | 1 | 0 | 14 |
+| 6 | 5 | 1 | 0 | 0 |
+
+Attempt 7 is not an unrecorded outcome: it is retained above as an owner-waived
+transition event. It is excluded from this aggregate because it did not begin a
+product execution under the revised policy.
 
 ## Non-claims
 
-This successful individual attempt is experimental local evidence only. B01,
+The revised numerical criterion is `5/6 = 83.33%`. B01 remains `running`
+pending the aggregate report and affirmative independent-verifier disposition;
 G1, GMVP-LINUX, release, and Profile remain unclaimed.
