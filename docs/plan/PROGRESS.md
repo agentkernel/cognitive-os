@@ -33,7 +33,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
-| Active task lease | `none` | P4-T01 closure completed and its task lease was closed; the ignored local `/artifacts/` directory remains protected from modification, deletion, commitment, or implicit use. | stop after P4-T01 closure as requested |
+| Active task lease | `lease/personal/P4-T02/memory-fts` | P4-T02 is active on `personal/P4-T02-memory-fts`; the ignored local `/artifacts/` directory remains protected from modification, deletion, commitment, or implicit use. | complete focused negatives and required CI before task closure |
 
 ### Layer 1 — Formal task progress
 
