@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P1-T09/b01-successor-native-verification` | P1-T09 B01 successor verification and campaign execution | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
+| `lease/personal/P1-T09/b01-successor-native-verification` | P1-T09 B01 successor verification and campaign execution | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-preregistration.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
 
 The active lease uses an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It must not

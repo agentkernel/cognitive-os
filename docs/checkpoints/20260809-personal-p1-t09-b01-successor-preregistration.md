@@ -58,11 +58,37 @@ failure after that point receives the next immutable attempt number. Before the
 checkpoint, artifact retrieval and independent verification are start-gate work
 and do not contribute to the denominator.
 
+## Repeatable Desktop-session procedure
+
+The sole formal guest restores from `b01-platform-qualified-baseline` and
+starts shut off. The baseline does not persist an active graphical user session
+across a libvirt snapshot restore. Therefore every attempt must use this fixed
+operator procedure:
+
+1. Restore the baseline and start the guest through the authorized system
+   libvirt path.
+2. The verifier confirms bounded SSH readiness and the registered Node/npm
+   versions, but does not install the artifact or start product state.
+3. Operator A logs into `hal9001` through the VM graphical console. The
+   Provider credential is never supplied through SSH, argv, environment, files,
+   chat, or logs.
+4. The verifier waits only for `graphical-session.target=active`, confirms the
+   clean-state probes, and then runs the fixed installation/Pi/doctor/route
+   sequence.
+5. On every outcome, fixed cleanup removes product/Pi/config/temp state,
+   clears the Provider secret through the approved SecretStore flow, and
+   restores the baseline with the guest shut off.
+
+Failure of step 3 or 4 is an immutable attempt failure after the clean-reset
+checkpoint; it is not retried under the same attempt number and does not permit
+an alternate credential or non-graphical route.
+
 ## Next action
 
-Dispatch the preregistered protected workflow from the fixed reviewed-main
-revision, then independently verify its output. Do not start the B01 guest or
-Attempt 1 until every bound start-gate field is recorded as passing.
+Continue the preregistered protected campaign from the fixed reviewed-main
+revision using the repeatable Desktop-session procedure above. Attempt 1 and
+Attempt 3 passed; Attempt 2 failed at graphical Desktop readiness and remains
+immutable. Do not reuse an attempt number or bypass the graphical login step.
 
 ## Non-claims
 
