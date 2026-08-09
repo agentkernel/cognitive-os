@@ -674,6 +674,17 @@ pub struct SkillBindingRevocationRow {
     pub canonical_json: String,
 }
 
+/// Daemon-private explanation of one Skill binding's exact package/revision
+/// identity and lifecycle eligibility. This read model grants no capability.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillBindingExplanationRow {
+    pub binding: SkillBindingRow,
+    pub package_id: ObjectId,
+    pub manifest_digest: String,
+    pub content_digest: String,
+    pub revocation_reason: Option<String>,
+}
+
 /// Metadata-only Context discovery result. It deliberately excludes body
 /// content so callers must authorize before materializing a candidate.
 #[derive(Debug, Clone, PartialEq)]
@@ -1409,6 +1420,13 @@ pub trait SkillStore {
         &self,
         binding_id: &ObjectId,
     ) -> Result<Option<SkillBindingRow>, StorePortError>;
+
+    /// Explains a binding from durable authority facts, including whether an
+    /// append-only revocation makes it ineligible.
+    fn explain_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingExplanationRow>, StorePortError>;
 }
 
 /// Daemon-private, immutable execution inputs for one scheduler task binding.

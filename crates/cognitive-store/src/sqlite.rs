@@ -54,10 +54,10 @@ use cognitive_kernel::ports::{
     MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
     MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
     ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError, StoredBudget,
-    StoredObject, TaskBinding, TaskContractRow, TransitionCommit, UserIntentRecordRow,
-    VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
+    SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
     WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     WorkspaceContextSourceRow,
 };
@@ -4589,6 +4589,35 @@ impl SkillStore for SqliteAuthorityStore {
             )
             .optional()
             .map_err(unavailable("load active Skill binding"))
+    }
+
+    fn explain_skill_binding(
+        &self,
+        binding_id: &ObjectId,
+    ) -> Result<Option<SkillBindingExplanationRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT skill_bindings.revision_id, skill_bindings.workspace_scope, skill_bindings.target_kind, skill_bindings.target_ref, skill_bindings.status, skill_bindings.canonical_json, skill_packages.package_id, skill_packages.manifest_digest, skill_revisions.content_digest, skill_binding_revocations.reason FROM skill_bindings JOIN skill_revisions ON skill_revisions.revision_id=skill_bindings.revision_id JOIN skill_packages ON skill_packages.package_id=skill_revisions.package_id LEFT JOIN skill_binding_revocations ON skill_binding_revocations.binding_id=skill_bindings.binding_id WHERE skill_bindings.binding_id=?1",
+                (binding_id.as_str(),),
+                |row| Ok(SkillBindingExplanationRow {
+                    binding: SkillBindingRow {
+                        binding_id: binding_id.clone(),
+                        revision_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error)))?,
+                        workspace_scope: row.get(1)?,
+                        target_kind: row.get(2)?,
+                        target_ref: row.get(3)?,
+                        status: row.get(4)?,
+                        canonical_json: row.get(5)?,
+                    },
+                    package_id: ObjectId::parse(&row.get::<_, String>(6)?).map_err(|error| rusqlite::Error::FromSqlConversionFailure(6, rusqlite::types::Type::Text, Box::new(error)))?,
+                    manifest_digest: row.get(7)?,
+                    content_digest: row.get(8)?,
+                    revocation_reason: row.get(9)?,
+                }),
+            )
+            .optional()
+            .map_err(unavailable("explain Skill binding"))
     }
 }
 

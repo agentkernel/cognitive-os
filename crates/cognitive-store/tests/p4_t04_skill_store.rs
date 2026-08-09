@@ -97,6 +97,18 @@ fn compatible_local_revision_binds_only_inside_its_workspace() {
             .unwrap(),
         None
     );
+    let explanation = store
+        .explain_skill_binding(&active_binding.binding_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(explanation.binding, active_binding);
+    assert_eq!(explanation.package_id, package.package_id);
+    assert_eq!(explanation.manifest_digest, package.manifest_digest);
+    assert_eq!(explanation.content_digest, "sha256:revision");
+    assert_eq!(
+        explanation.revocation_reason.as_deref(),
+        Some("workspace owner revoked task eligibility")
+    );
     assert_eq!(
         store
             .load_skill_binding(&active_binding.binding_id)
