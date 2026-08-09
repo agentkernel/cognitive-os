@@ -11,6 +11,10 @@ use std::time::Instant;
 
 /// Admit one local Skill package import after owner-local management
 /// authentication. A task, Pi, or worker bearer fails closed before storage.
+///
+/// This is intentionally daemon-private until P4-T05 owns the application
+/// projection and client API that can call it.
+#[allow(dead_code)]
 pub(crate) fn import_local_skill_package<S>(
     store: &S,
     session_authority: &mut LocalSessionAuthority,
