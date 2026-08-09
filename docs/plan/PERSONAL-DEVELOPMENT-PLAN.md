@@ -141,12 +141,12 @@
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
-| Phase 3 - Context Resource Value | 6 | 5 | 1 | 0 | 0 | G3 / B03、B06、B07 |
+| Phase 3 - Context Resource Value | 6 | 5 | 0 | 1 | 0 | G3 / B03、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 0 | 0 | 0 | 6 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **28** | **1** | **0** | **24** | — |
+| **合计** | **53** | **28** | **0** | **1** | **24** | — |
 
 ## 2. 产品边界与不变量
 
@@ -550,7 +550,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P3-T03 | 唯一 Artifact CAS | P3-T02 | filesystem CAS + authority metadata；digest/partial-write/GC/access 测试；不得建立第二 artifact store | done | 2026-08-09 closure: D01-D02 deliver the single daemon-owned bounded filesystem CAS with SHA-256 content references, immutable metadata, atomic publication, caller-policy admission, staging-file cleanup, and real verifier consumption. Missing or tampered evidence bytes fail closed before append-only verification-report persistence. Exact native Linux at `87e436e22dae3722fb0ced6c8ceeb8f0f4deddc8` passed focused verifier/CAS tests, Clippy, and fmt; required Ubuntu/Windows CI passed in PR #168. No Task completion, B03, Gate, release, or Profile claim is created. |
 | P3-T04 | Context delta、stable prefix、cache 与 telemetry | P3-T02, P3-T03 | delta/stable-prefix 构建、治理绑定 cache key、loss/usage/loop telemetry；stale/revoked cache fail-closed | done | 2026-08-09: D01 added a daemon-private digest-only Context cache whose strict key binds governance, request, contract, source, renderer, and daemon-known Tool facts; fresh discovery, authorization, and body/digest validation always precede reuse. D02 derives repeat/no-progress decisions from daemon-issued action identities plus append-only evidence digests, and fails closed when wait/switch/block lacks a daemon-owned continuation path. Exact native Linux validation passed at `128915e15d4f4b4b98f195f0b6a49a6de76f34f2`; required Ubuntu/Windows CI passed in PR #169. No B03, Gate, release, or Profile claim is made. |
 | P3-T05 | UCR-01 benefit runner 与稳定基线 | P3-T04 | 跨 Gate workload runner、raw run/CI/non-claim；B06/B07 收益只采集，不作为 1.0 pass 前提 | done | 2026-08-09: D01 adds a fixed UCR-01 raw-run report boundary that requires all six families, fixture/trace/baseline digests, finite bounded measurements, and a matching pinned baseline. It rejects Gate/release/Profile/completion/pass claims and emits deterministic non-claim report digest metadata. Exact native Linux passed at `72690e028c7f3fb3896782c1874f575f35ebe165`; required Ubuntu/Windows CI passed in PR #170. B03/B06/B07, all Gates, release, and Profile remain unclaimed. |
-| P3-T06 | B03 Context correctness 与收益采集 | P3-T05 | B03 correctness 通过；采集 B06/B07，收益未达或未运行不阻塞 1.0；一次 UCR-01 run 不自动通过多个 Gate | in-progress | 2026-08-09: claimed on `personal/P3-T06-context-correctness` under `lease/personal/P3-T06/context-correctness`; implementation begins with a preregistered B03 observation manifest and a non-claim evaluator. B03 remains `not-run` unless a supported execution supplies complete campaign evidence. |
+| P3-T06 | B03 Context correctness 与收益采集 | P3-T05 | B03 correctness 通过；采集 B06/B07，收益未达或未运行不阻塞 1.0；一次 UCR-01 run 不自动通过多个 Gate | blocked | 2026-08-09: D01 at `afffb24072c78dc2f93958bc14e164f2681aea95` supplies a deterministic non-claim evaluator that requires explicit authorized/current/required-source/no-false-completion facts and rejects authority-shaped fields; required Ubuntu/Windows CI passed. `blocked_paths`: supported B03 campaign preregistration and execution evidence. `blocked_task_ids`: `P3-T06`; `blocked_gate_ids`: `B03`; owner: campaign operator and independent verifier. B03 remains `not-run`: the formal preregistration minimum (qualified environment, reset, artifact/source pins, operator opt-in, denominator/threshold/failure accounting, evidence collection, cleanup, verifier, claims) has not been registered, so the evaluator cannot create a Gate decision. Next action: preregister and execute a supported B03 campaign, then independently verify its evidence. |
 
 ### Phase 4 - Memory 与 Skill
 

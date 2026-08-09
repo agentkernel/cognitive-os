@@ -75,7 +75,6 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P3-T06/context-correctness` | P3-T06/D01 B03 observation manifest | Lane-CFR | `personal/P3-T06-context-correctness` | `tools/src/ucr-runner.mjs`; `tools/test/ucr-runner.test.mjs`; `tools/package.json`; `docs/evaluation/personal-unified-cognitive-resource-workload.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
@@ -87,6 +86,7 @@ verification before every B01 guest action.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P3-T06/context-correctness` | P3-T06/D01 B03 observation manifest | `personal/P3-T06-context-correctness` | 2026-08-09 | D01 at `afffb24072c78dc2f93958bc14e164f2681aea95` adds a deterministic non-claim observation evaluator that requires authorized/current/required-source/no-false-completion facts and rejects authority-shaped fields. Required Ubuntu/Windows CI passed. P3-T06 is blocked: B03 remains `not-run` until a separately preregistered supported campaign supplies qualified execution and independent-verifier evidence. See `20260809-personal-p3-t06-b03-campaign-blocker.md`. |
 | `lease/personal/P3-T05/ucr-runner` | P3-T05 complete UCR-01 runner and stable baseline acceptance | `personal/P3-T05-ucr-runner` | 2026-08-09 | PR #170 delivers a fixed UCR-01 non-claim report boundary, requiring six-family fixture coverage plus fixture/trace/baseline digests and bounded measurements. Missing family coverage, baseline drift, invalid measurements, and Gate/release/Profile/completion/pass claims are rejected. Exact native Linux at `72690e028c7f3fb3896782c1874f575f35ebe165` and required Ubuntu/Windows CI passed; no B03/B06/B07, Gate, release, or Profile claim was made. |
 | `lease/personal/P3-T04/context-cache` | P3-T04 complete Context cache and telemetry acceptance | `personal/P3-T04-context-cache` | 2026-08-09 | PR #169 closes D01-D02: digest-only stable-prefix/delta metadata cache reuse repeats discovery, authorization, freshness, and body/digest validation; durable action/error/evidence-digest loop signatures fail closed for repeat/no-progress when no daemon-owned continuation exists. Exact native Linux at `128915e15d4f4b4b98f195f0b6a49a6de76f34f2` and required Ubuntu/Windows CI passed; no B03, Gate, release, or Profile claim was made. |
 | `lease/personal/P3-T03/artifact-cas` | P3-T03 complete Artifact CAS acceptance | `personal/P3-T03-artifact-cas` | 2026-08-09 | PR #168 merged at `main@2044170ef270bc7cd5be6fb82c833975fd0c8fc3`. D01-D02 delivered the single bounded daemon-owned filesystem CAS, atomic digest publication and metadata, fail-closed recovery/access behavior, and verifier evidence resolution before report persistence. Exact native Linux and required Ubuntu/Windows CI passed; no Gate, release, or Profile claim was made. |
