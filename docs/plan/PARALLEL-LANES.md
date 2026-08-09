@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P4-T02/memory-fts` | P4-T02 complete SQLite FTS5 retrieval baseline | Lane-KRN | `personal/P4-T02-memory-fts` | `crates/cognitive-kernel/src/ports.rs`; `crates/cognitive-store/src/memory_store.rs`; `crates/cognitive-store/src/sqlite.rs`; `crates/cognitive-store/tests/p4_t02_memory_search.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260809-personal-p4-t02-memory-fts-closure.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
