@@ -402,6 +402,16 @@ fn process_http_request(
             authority,
         );
     }
+    if method_path.starts_with("GET /management/resource/") {
+        return handle_authority_resource_route(
+            stream,
+            &method_path,
+            &headers,
+            layout,
+            authority,
+            resource_api,
+        );
+    }
     if method_path.starts_with("POST /management/") {
         return handle_channel_route(
             stream,
@@ -721,6 +731,31 @@ fn handle_task_resource_route(
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
         .handle_task(&method_path.replacen("/task/resource/", "/resource/", 1));
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_authority_resource_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    resource_api: &Arc<Mutex<ResourceApi>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
+        .map_err(|error| format!("open resource authority store: {error}"))?;
+    let response = resource_api
+        .lock()
+        .map_err(|_| "resource projection lock poisoned".to_owned())?
+        .handle_authority(method_path, &store);
     write_response(
         stream,
         response.status,

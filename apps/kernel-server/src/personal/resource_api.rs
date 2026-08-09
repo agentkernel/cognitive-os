@@ -6,7 +6,9 @@
 
 use std::collections::VecDeque;
 
-use cognitive_kernel::BUILTIN_TOOL_CATALOG;
+use cognitive_kernel::ports::{MemoryStore, SkillStore};
+use cognitive_kernel::{BUILTIN_TOOL_CATALOG, ObjectId};
+use cognitive_store::SqliteAuthorityStore;
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";
@@ -54,6 +56,94 @@ impl ResourceApi {
             );
         };
         self.handle_projection(method_path, Some(task_reference))
+    }
+
+    pub(crate) fn handle_authority(
+        &self,
+        method_path: &str,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let (_, query) = method_path
+            .split_once('?')
+            .map_or((method_path, ""), |(path, query)| (path, query));
+        let Some(identifier) = query_parameter(query, "id") else {
+            return error(
+                400,
+                "RESOURCE_OBJECT_ID_REQUIRED",
+                "an authority object id is required",
+            );
+        };
+        let Ok(object_id) = ObjectId::parse(identifier) else {
+            return error(
+                400,
+                "RESOURCE_OBJECT_ID_INVALID",
+                "authority object id is invalid",
+            );
+        };
+        if method_path.starts_with("GET /management/resource/v1/memory/object") {
+            return match store.load_memory_object(&object_id) {
+                Ok(Some(object)) => json_response(
+                    200,
+                    json!({
+                        "kind": "memory.explain",
+                        "authority_source": "daemon-memory-store",
+                        "memory": {
+                            "memory_id": object.memory_id.to_string(),
+                            "candidate_id": object.candidate_id.to_string(),
+                            "decision_id": object.decision_id.to_string(),
+                            "canonical_json": object.canonical_json,
+                        },
+                        "authority_side_effects": false,
+                    }),
+                ),
+                Ok(None) => error(404, "RESOURCE_MEMORY_NOT_FOUND", "Memory object not found"),
+                Err(_) => error(
+                    503,
+                    "RESOURCE_MEMORY_UNAVAILABLE",
+                    "Memory authority store is unavailable",
+                ),
+            };
+        }
+        if method_path.starts_with("GET /management/resource/v1/skill/binding/explain") {
+            return match store.explain_skill_binding(&object_id) {
+                Ok(Some(explanation)) => json_response(
+                    200,
+                    json!({
+                        "kind": "skill.binding.explain",
+                        "authority_source": "daemon-skill-store",
+                        "binding": {
+                            "binding_id": explanation.binding.binding_id.to_string(),
+                            "revision_id": explanation.binding.revision_id.to_string(),
+                            "workspace_scope": explanation.binding.workspace_scope,
+                            "target_kind": explanation.binding.target_kind,
+                            "target_ref": explanation.binding.target_ref,
+                            "status": explanation.binding.status,
+                            "canonical_json": explanation.binding.canonical_json,
+                            "package_id": explanation.package_id.to_string(),
+                            "manifest_digest": explanation.manifest_digest,
+                            "content_digest": explanation.content_digest,
+                            "revocation_reason": explanation.revocation_reason,
+                        },
+                        "authority_side_effects": false,
+                    }),
+                ),
+                Ok(None) => error(
+                    404,
+                    "RESOURCE_SKILL_BINDING_NOT_FOUND",
+                    "Skill binding not found",
+                ),
+                Err(_) => error(
+                    503,
+                    "RESOURCE_SKILL_UNAVAILABLE",
+                    "Skill authority store is unavailable",
+                ),
+            };
+        }
+        error(
+            404,
+            "RESOURCE_AUTHORITY_ROUTE_NOT_FOUND",
+            "no authority-backed resource route matched",
+        )
     }
 
     fn handle_projection(

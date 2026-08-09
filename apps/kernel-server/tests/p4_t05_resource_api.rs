@@ -119,6 +119,30 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     );
     assert!(management_crossing.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
 
+    let missing_memory_id = request(
+        port,
+        &format!(
+            "GET /management/resource/v1/memory/object HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nConnection: close\r\n\r\n"
+        ),
+    );
+    assert!(
+        missing_memory_id.contains("400 Bad Request"),
+        "{missing_memory_id}"
+    );
+    assert!(missing_memory_id.contains("RESOURCE_OBJECT_ID_REQUIRED"));
+
+    let task_memory_explain = request(
+        port,
+        &format!(
+            "GET /management/resource/v1/memory/object?id=00000000-0000-7000-9000-000000000001 HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {task_token}\r\nConnection: close\r\n\r\n"
+        ),
+    );
+    assert!(
+        task_memory_explain.contains("403 Forbidden"),
+        "{task_memory_explain}"
+    );
+    assert!(task_memory_explain.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
+
     daemon.kill().unwrap();
     daemon.wait().unwrap();
     let _ = std::fs::remove_dir_all(runtime_root);
