@@ -2290,6 +2290,7 @@ mod tests {
         WallTimestamp,
         capability::{CapabilityConstraints, LeaseWindow},
     };
+    use cognitive_kernel::GovernedContextCache;
     use cognitive_kernel::authz::{
         AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
         PrincipalFacts, authorize,
