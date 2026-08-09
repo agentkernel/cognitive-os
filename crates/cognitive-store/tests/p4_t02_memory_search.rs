@@ -14,12 +14,13 @@ use cognitive_kernel::ports::{
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::json;
+use std::path::PathBuf;
 
 fn object_id(sequence: u64) -> ObjectId {
     ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}")).unwrap()
 }
 
-fn fresh_store() -> (tempfile::TempDir, SqliteAuthorityStore) {
+fn fresh_store() -> (tempfile::TempDir, SqliteAuthorityStore, PathBuf) {
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();
     let layout = PersonalDataLayout::from_xdg_roots(
@@ -30,8 +31,9 @@ fn fresh_store() -> (tempfile::TempDir, SqliteAuthorityStore) {
         root.join("runtime"),
     );
     prepare_personal_databases(&layout).unwrap();
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
-    (directory, store)
+    let authority_database_path = layout.authority_database_path();
+    let store = SqliteAuthorityStore::open(&authority_database_path).unwrap();
+    (directory, store, authority_database_path)
 }
 
 fn source_row(identifier: &ObjectId, scope: &str, text: &str) -> WorkspaceContextSourceRow {
@@ -126,7 +128,7 @@ fn search(scope: &str, purpose: &str, observed_at: i64, text: &str) -> MemorySea
 
 #[test]
 fn search_filters_authoritative_scope_purpose_and_retention_before_fts_ranking() {
-    let (_directory, store) = fresh_store();
+    let (_directory, store, _authority_database_path) = fresh_store();
     let matching_source = source_row(
         &object_id(1),
         "workspace://tenant-a/project",
@@ -163,7 +165,7 @@ fn search_filters_authoritative_scope_purpose_and_retention_before_fts_ranking()
 
 #[test]
 fn rebuild_restores_derived_fts_rows_without_changing_authoritative_memory() {
-    let (_directory, store) = fresh_store();
+    let (_directory, store, _authority_database_path) = fresh_store();
     let source = source_row(
         &object_id(30),
         "workspace://tenant-a/project",
@@ -186,4 +188,61 @@ fn rebuild_restores_derived_fts_rows_without_changing_authoritative_memory() {
         memory_id
     );
     assert!(store.load_memory_object(&memory_id).unwrap().is_some());
+}
+
+#[test]
+fn stale_orphaned_fts_rows_cannot_bypass_authoritative_metadata() {
+    let (_directory, store, authority_database_path) = fresh_store();
+    let database = rusqlite::Connection::open(authority_database_path).unwrap();
+    database
+        .execute(
+            "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+            (object_id(999).as_str(), "orphaned private garden note"),
+        )
+        .unwrap();
+
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "garden",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn immutable_metadata_rejects_conflicting_updates_before_search() {
+    let (_directory, store, authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(40),
+        "workspace://tenant-a/project",
+        "conflict-proof compass note",
+    );
+    let memory_id = admit_memory(&store, 500, &source, "task fact", 200);
+    let database = rusqlite::Connection::open(authority_database_path).unwrap();
+
+    assert!(
+        database
+            .execute(
+                "UPDATE memory_candidates SET purpose = 'other purpose' WHERE candidate_id = ?1",
+                (object_id(501).as_str(),),
+            )
+            .is_err()
+    );
+    assert_eq!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "compass",
+            ))
+            .unwrap()[0]
+            .memory_id,
+        memory_id
+    );
 }

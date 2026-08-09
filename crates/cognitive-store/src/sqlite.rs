@@ -1743,7 +1743,7 @@ impl MemoryStore for SqliteAuthorityStore {
                         AND memory_candidates.purpose = ?2
                         AND memory_candidates.retention_expires_at_unix_seconds > ?3
                 )
-                SELECT authority_filtered_memory.memory_id, authority_filtered_memory.source_id, authority_filtered_memory.source_digest
+                SELECT DISTINCT authority_filtered_memory.memory_id, authority_filtered_memory.source_id, authority_filtered_memory.source_digest
                 FROM authority_filtered_memory
                 JOIN memory_search_fts ON memory_search_fts.memory_id = authority_filtered_memory.memory_id
                 WHERE memory_search_fts MATCH ?4
