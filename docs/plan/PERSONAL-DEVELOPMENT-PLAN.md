@@ -142,11 +142,11 @@
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 5 | 0 | 0 | 1 | G3 / B03、B06、B07 |
-| Phase 4 - Memory 与 Skill | 6 | 3 | 0 | 0 | 3 | G4 / B08 |
+| Phase 4 - Memory 与 Skill | 6 | 3 | 1 | 0 | 2 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 0 | 0 | 5 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **31** | **0** | **0** | **22** | — |
+| **合计** | **53** | **31** | **1** | **0** | **21** | — |
 
 ## 2. 产品边界与不变量
 
@@ -562,9 +562,13 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P4-T01 | Memory store、admission 与 policy | P3-T01, P3-T02 | 基于 stable Context ports 的 source/version/provenance/scope/freshness/retention；写入只接受 proposal 并由 deterministic policy admission | done | 2026-08-09 closure: D01 at `e4eb38ad9aaba13f04fb51657dfdc884af66cdc5` adds deterministic proposal policy, append-only SQLite v16 candidate/decision/object records, atomic source revalidation, daemon-private admission service, and failure-first direct-admit/source-mismatch/retention/scope/no-partial-object coverage. Exact native Linux focused tests and Clippy passed; required Ubuntu/Windows CI passed. FTS/retrieval, lifecycle/forget, public API/projection, B08, Gate, release, and Profile remain separate/unclaimed. |
 | P4-T02 | SQLite FTS5 + metadata filter baseline | P4-T01 | authority metadata pre-filter 后检索；unauthorized/stale/conflict/delete/rebuild 负例 | done | 2026-08-09 closure：v17 daemon-private SQLite FTS5 derived index filters admitted decision/scope/purpose/retention/current source binding before ranking and returns metadata-only candidates. Exact Linux focused migration + FTS regressions and required Ubuntu/Windows CI passed; Memory lifecycle/forget, public API, B08, Gate, release, and Profile remain unclaimed. Evidence: [closure](../checkpoints/20260809-personal-p4-t02-memory-fts-closure.md). |
 | P4-T03 | Memory lifecycle、retention 与 forget | P4-T01 | version/update/conflict/expire/forget/tombstone/audit 可验证；派生索引可完整失效 | done | `P4-T03/D01-D03` complete under `lease/personal/P4-T03/memory-lifecycle`; immutable forget/expiry/supersede facts, version CAS lineage, and atomic FTS invalidation passed exact native Linux focused tests and required Ubuntu/Windows CI at `8f9250dcd4cbcd8f15867e7a0f45165032e26c9d`. No public API, B08, Gate, release, or Profile claim. |
-| P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | not-started | — |
+| P4-T04 | Skill package、revision、local import 与 binding | P3-T02 | local package/revision/digest/import；Agent/Task/workspace binding；Skill 不自授权或直接成为 authority | in-progress | `P4-T04/D01` owns the daemon-private immutable local package/revision import and scope-bound eligibility baseline; public API/projection and Context/Task consumption remain separate. |
 | P4-T05 | Memory/Skill API 与统一 projection | P4-T01, P4-T02, P4-T03, P4-T04 | CLI/Shell/sidecar 同 application services；Memory/Skill 可解释、可撤销、可实际进入 Context/Task；不依赖 embedding | not-started | — |
 | P4-T06 | B08 Memory+Skill correctness 与 UCR-01 consumption | P4-T05 | lifecycle/privacy/forget/binding/actual consumption 证据；UCR-01 同一 Task trace 消费 Memory 与 Skill | not-started | — |
+
+| Slice | Parent | Delivery | Prerequisites | Verification boundary |
+|---|---|---|---|---|
+| `P4-T04/D01` | P4-T04 | daemon-private immutable local Skill package/revision import, compatibility result, and Agent/Task/workspace eligibility binding records | P3-T02 stable Context boundary; existing SQLite authority migration model | failure-first unsafe-path, revision compatibility, duplicate immutable identity, revoked binding, and cross-workspace binding negatives; exact native Linux focused store tests and Clippy; required Ubuntu/Windows CI; no public API/projection, Context/Task consumption, B08, Gate, release, or Profile claim |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
 
