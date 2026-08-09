@@ -12,8 +12,8 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
-    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
+    ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
     SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
     SkillRevisionRow, SkillStore, StorePortError,
 };
@@ -190,6 +190,30 @@ impl ResourceApi {
                 "task Context execution policy does not match its authority binding",
             );
         }
+        let context_request = match store.load_context_request(&policy.context_request_id) {
+            Ok(Some(request)) => request,
+            Ok(None) => {
+                return error(
+                    409,
+                    "RESOURCE_TASK_CONTEXT_MISSING",
+                    "task ContextRequest is unavailable",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Context authority store is unavailable",
+                );
+            }
+        };
+        if context_request.task_ref != task_reference {
+            return error(
+                409,
+                "RESOURCE_TASK_CONTEXT_MISMATCH",
+                "task ContextRequest does not match the current task contract",
+            );
+        }
         let now_unix_seconds = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|duration| duration.as_secs() as i64)
@@ -288,6 +312,7 @@ impl ResourceApi {
                 "contract_epoch": contract_epoch,
                 "contract_digest": contract.contract_digest,
                 "context_request_id": policy.context_request_id.to_string(),
+                "context_request_digest": context_request.request_digest,
                 "memory": memory_rows,
                 "skill": {
                     "binding_id": binding.binding_id.to_string(),
@@ -299,6 +324,7 @@ impl ResourceApi {
                     "task_ref": task_reference,
                     "contract_epoch": contract_epoch,
                     "context_request_id": policy.context_request_id.to_string(),
+                    "context_request_digest": context_request.request_digest,
                     "memory_count": memory_candidates.len(),
                     "skill_binding_id": binding.binding_id.to_string(),
                 },
