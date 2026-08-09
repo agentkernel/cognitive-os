@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | none | — | — | — | — | — | none |
+| none | no active Personal task lease | — | — | — | — | — | none |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
@@ -87,6 +87,7 @@ verification before every B01 guest action.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P4-T05/resource-api` | P4-T05 complete Memory/Skill API and unified projection | `personal/P4-T05-resource-api` | 2026-08-10 | Closure checkpoint `20260810-personal-p4-t05-memory-skill-api-closure.md`; D01-D05 deliver daemon-private task-bound projection, authority-backed explain reads, Memory forget/remember, Skill revoke/import/bind callers, and failure-first channel/payload/authority negatives. Required Ubuntu/Windows CI run `31335218082` passed. PR #176 remains the formal merge/branch closure step. Public contract generation, B08, Gate, release, and Profile remain unclaimed. |
 | `lease/personal/P4-T04/skill-package` | P4-T04 complete Skill package, revision, local import, and binding | `personal/P4-T04-skill-package` | 2026-08-10 | PR #175 merged at `main@03952799ada3e3ee1ff752bf500065c144cbf085`; D01-D03 deliver immutable package/revision/digest/import and scope-bound binding facts, append-only revocation/explain history, same-package supersession with exact pin stability, and daemon-private management-session import authorization. Exact native Linux focused tests and Clippy passed; required Ubuntu/Windows CI run `31329859099` passed. Public API/projection, Context/Task consumption, B08, Gate, release, and Profile remain unclaimed. |
 | `lease/personal/P4-T03/memory-lifecycle` | P4-T03 complete Memory lifecycle, retention, and forget | `personal/P4-T03-memory-lifecycle` | 2026-08-10 | PR #174 merged at `main@e1454f3775eab5c72d9cb2b8e0a5c1e98b895f0f`; D01-D03 provide immutable forget/expiry/supersede facts, expected-version CAS lineage, and atomic FTS invalidation/movement. Exact native Linux focused tests 16/16 and Clippy, plus required Ubuntu/Windows CI, passed. Public Memory API, B08, Gate, release, and Profile remain unclaimed. |
 | `lease/personal/P4-T02/memory-fts` | P4-T02 complete SQLite FTS5 retrieval baseline | `personal/P4-T02-memory-fts` | 2026-08-09 | Migration v17 provides a daemon-private, rebuildable Memory FTS5 index. Authority metadata filtering precedes FTS ranking, and candidates remain metadata-only. Exact native Linux focused migrations 8/8 and FTS regressions 4/4, plus required Ubuntu/Windows CI, passed. No lifecycle/forget, public API, B08, Gate, release, or Profile claim was made. |
