@@ -27,8 +27,8 @@ optional stopping is permitted.
 | Field | Preregistered successor value | Status before Attempt 1 |
 |---|---|---|
 | Environment | Sole formal guest `B01-Desktop-Linux-002`; restore `b01-platform-qualified-baseline`; native Ubuntu Desktop x86_64, user systemd, native Secret Service, and no retained Pi/CognitiveOS state | not run |
-| Source revision | reviewed `origin/main@60701d56e79560ab557083418a84bb6158236f4a` | fixed |
-| Artifact workflow | `Personal experimental Linux campaign` at the source revision, version `0.0.0-campaign.20260809.1` | not run |
+| Source revision | reviewed GitHub `main@4ea42c0c8f856aa22e2a360bd42005c8dbec400f` | fixed |
+| Artifact workflow | `Personal experimental Linux campaign` run `31284948257` at the source revision, version `0.0.0-campaign.20260809.1` | running |
 | Artifact binding | fresh workflow run, artifact manifest, GitHub-artifact SHA-256, bundle SHA-256, signature, trusted key/keyring, and release attestation must be independently verified before guest activation | not run |
 | Pi | `@earendil-works/pi-coding-agent@0.81.1`; exact observed version and SRI `sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==` | not run |
 | Runtime prerequisite | baseline Node.js `v22.23.2` and npm `10.9.8`; install Pi only through a user-local prefix | not run |
