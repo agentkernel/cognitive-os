@@ -43,6 +43,10 @@ use cognitive_kernel::intent_chain::{
     strong_reference_to,
 };
 use cognitive_kernel::{
+    ContextCacheEntry, ContextCacheKey, ContextCacheLookup, ContextSourceDigest, DerivedCacheKind,
+    GovernedContextCache,
+};
+use cognitive_kernel::{
     authz::{AccessRequest, authorize},
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
@@ -186,6 +190,25 @@ pub(crate) struct ContextResolutionCommand {
     pub conversation_ref: Option<String>,
     pub source_limit: usize,
     pub decided_at: WallTimestamp,
+}
+
+/// Bounded, body-free observation from one governed Context cache consultation.
+/// It records only cache outcome and digest counts; it is not Task progress,
+/// evidence, verification, or a continuation decision.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ContextCacheTelemetry {
+    pub cache_hit: bool,
+    pub stable_prefix_segment_count: usize,
+    pub delta_segment_count: usize,
+}
+
+/// A freshly authorized Context resolution accompanied by a digest-only cache
+/// observation. The resolved view is always built through the same authority
+/// checks as an uncached request.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct GovernedContextResolution {
+    pub resolved_view: ResolvedContextView,
+    pub cache_telemetry: ContextCacheTelemetry,
 }
 
 /// The only non-authority fields a private Pi producer may propose. The
@@ -879,6 +902,156 @@ where
         + ProtocolStore,
 {
     resolve_authorized_task_context_after_metadata(store, command, || Ok(()))
+}
+
+/// Resolve Context with a daemon-owned digest-only cache coordinator.
+///
+/// This intentionally does not permit the cache to return render bytes or
+/// source bodies. The resolver re-runs metadata discovery, freshness checks,
+/// current authorization, and body/digest matching first. Only then can an
+/// exact key confirm that stable-prefix/delta metadata is reusable.
+pub(crate) fn resolve_authorized_task_context_with_cache<S>(
+    store: &S,
+    command: &ContextResolutionCommand,
+    context_cache: &mut GovernedContextCache,
+) -> Result<GovernedContextResolution, SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + ContextStore
+        + ContextAuthorizationFactStore
+        + IntentChainStore
+        + ProtocolStore,
+{
+    let initial_contract_epoch = store
+        .current_contract_epoch(&command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    let initial_contract = store
+        .load_task_contract(&command.task_ref, initial_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
+    let initial_request = store
+        .load_context_request(&command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(command.request_id.to_string())
+        })?;
+    let resolved_view = resolve_authorized_task_context(store, command)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&command.task_ref)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?;
+    let current_contract = store
+        .load_task_contract(&command.task_ref, current_contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(command.task_ref.clone()))?;
+    let current_request = store
+        .load_context_request(&command.request_id)
+        .map_err(|error| SchedulerAuthorityError::ContextRequestUnavailable(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::ContextRequestUnavailable(command.request_id.to_string())
+        })?;
+    if initial_contract.contract_epoch != current_contract.contract_epoch
+        || initial_contract.contract_digest != current_contract.contract_digest
+        || initial_request.request_digest != current_request.request_digest
+    {
+        return Err(SchedulerAuthorityError::ContextRequestUnavailable(
+            "TaskContract or ContextRequest changed during Context cache resolution".to_owned(),
+        ));
+    }
+
+    let cache_key = context_cache_key(&resolved_view, command, &current_request, &current_contract);
+    let cache_entry = context_cache_entry(&resolved_view);
+    let cache_telemetry = match context_cache.lookup_current(&cache_key) {
+        ContextCacheLookup::Hit(cached_entry) => {
+            if cached_entry != cache_entry {
+                return Err(SchedulerAuthorityError::ContextResolution(
+                    "governed Context cache metadata differs from the freshly authorized view"
+                        .to_owned(),
+                ));
+            }
+            ContextCacheTelemetry {
+                cache_hit: true,
+                stable_prefix_segment_count: cached_entry.stable_prefix_segment_digests.len(),
+                delta_segment_count: cached_entry.delta_segment_digests.len(),
+            }
+        }
+        ContextCacheLookup::MissResolveFresh => {
+            context_cache.insert(cache_key, cache_entry.clone());
+            ContextCacheTelemetry {
+                cache_hit: false,
+                stable_prefix_segment_count: cache_entry.stable_prefix_segment_digests.len(),
+                delta_segment_count: cache_entry.delta_segment_digests.len(),
+            }
+        }
+    };
+
+    Ok(GovernedContextResolution {
+        resolved_view,
+        cache_telemetry,
+    })
+}
+
+fn context_cache_key(
+    resolved_view: &ResolvedContextView,
+    command: &ContextResolutionCommand,
+    request_row: &ContextRequestRow,
+    contract_row: &cognitive_kernel::ports::TaskContractRow,
+) -> ContextCacheKey {
+    let mut ordered_source_digests = resolved_view
+        .loaded
+        .iter()
+        .map(|item| ContextSourceDigest {
+            source_ref: item.object_ref.clone(),
+            content_digest: item.content_digest.clone(),
+        })
+        .collect::<Vec<_>>();
+    ordered_source_digests.sort();
+
+    ContextCacheKey {
+        governance: resolved_view.binding.clone(),
+        context_request_id: request_row.request_id.to_string(),
+        context_request_digest: request_row.request_digest.clone(),
+        task_ref: command.task_ref.clone(),
+        task_contract_epoch: contract_row.contract_epoch,
+        task_contract_digest: contract_row.contract_digest.clone(),
+        ordered_source_digests,
+        renderer_version: "personal-context-render/1".to_owned(),
+        // Context is built before an untrusted Pi candidate exists. Tool-bound
+        // delta caching may only be added at a later daemon-validated boundary.
+        validated_tool_descriptor_digest: None,
+    }
+}
+
+fn context_cache_entry(resolved_view: &ResolvedContextView) -> ContextCacheEntry {
+    let stable_prefix_segment_count = resolved_view
+        .loaded
+        .iter()
+        .take_while(|item| {
+            matches!(
+                item.role,
+                LoadedContextItemRole::Control | LoadedContextItemRole::AuthoritativeState
+            )
+        })
+        .count()
+        + 1; // The renderer header depends only on stable bindings.
+    let segment_digests = resolved_view
+        .render
+        .segments
+        .iter()
+        .map(|segment| segment.digest.clone())
+        .collect::<Vec<_>>();
+    ContextCacheEntry {
+        render_digest: resolved_view.render.digest.clone(),
+        stable_prefix_segment_digests: segment_digests
+            .iter()
+            .take(stable_prefix_segment_count)
+            .cloned()
+            .collect(),
+        delta_segment_digests: segment_digests
+            .into_iter()
+            .skip(stable_prefix_segment_count)
+            .collect(),
+        derived: vec![DerivedCacheKind::KvCache, DerivedCacheKind::PromptCache],
+    }
 }
 
 /// Resolve Context after the metadata-only discovery stage. Production calls
@@ -2558,6 +2731,48 @@ mod tests {
         assert!(resolved_context.loaded.iter().any(|item| {
             item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
         }));
+
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn governed_context_cache_revalidates_before_reporting_a_reusable_prefix() {
+        let layout = temporary_personal_layout();
+        layout.ensure_directories().unwrap();
+        prepare_personal_databases(&layout).unwrap();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+        let task_ref = "task://tenant-a/p3-t04-governed-cache";
+        let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+        let mut context_cache = GovernedContextCache::default();
+
+        let first_resolution = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .unwrap();
+        let second_resolution = super::resolve_authorized_task_context_with_cache(
+            &store,
+            &context_command,
+            &mut context_cache,
+        )
+        .unwrap();
+
+        assert!(!first_resolution.cache_telemetry.cache_hit);
+        assert!(second_resolution.cache_telemetry.cache_hit);
+        assert_eq!(
+            first_resolution.resolved_view.render.digest,
+            second_resolution.resolved_view.render.digest
+        );
+        assert!(
+            second_resolution
+                .cache_telemetry
+                .stable_prefix_segment_count
+                > 0,
+            "the renderer header is always an authority-bound stable prefix"
+        );
+        assert_eq!(context_cache.len(), 1);
 
         drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
