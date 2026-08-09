@@ -532,6 +532,45 @@ pub struct WorkspaceContextSourceRow {
     pub canonical_json: String,
 }
 
+/// Immutable Memory proposal. It remains a proposal until a daemon-owned
+/// deterministic decision admits it; producer-selected admission is absent.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryCandidateRow {
+    pub candidate_id: ObjectId,
+    pub candidate_digest: String,
+    pub source_id: ObjectId,
+    pub source_digest: String,
+    pub source_provenance_ref: String,
+    pub governance_scope: String,
+    pub target_scope: String,
+    pub purpose: String,
+    pub retention_expires_at_unix_seconds: i64,
+    pub observed_at_unix_seconds: i64,
+    pub canonical_json: String,
+}
+
+/// Immutable daemon decision bound to one exact candidate digest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryAdmissionDecisionRow {
+    pub decision_id: ObjectId,
+    pub candidate_id: ObjectId,
+    pub candidate_digest: String,
+    pub decision: String,
+    pub policy_version: i64,
+    pub reason_codes_json: String,
+    pub canonical_json: String,
+}
+
+/// Immutable admitted Memory object. This row may only accompany an `admit`
+/// decision in the same daemon-owned SQLite transaction.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryObjectRow {
+    pub memory_id: ObjectId,
+    pub candidate_id: ObjectId,
+    pub decision_id: ObjectId,
+    pub canonical_json: String,
+}
+
 /// Metadata-only Context discovery result. It deliberately excludes body
 /// content so callers must authorize before materializing a candidate.
 #[derive(Debug, Clone, PartialEq)]
@@ -1166,6 +1205,27 @@ pub trait ContextStore {
         &self,
         source_id: &ObjectId,
     ) -> Result<Option<WorkspaceContextSourceRow>, StorePortError>;
+}
+
+/// Daemon-private append-only persistence for Memory admission. This port has
+/// no mutable update, retrieval, or client-authority operation.
+pub trait MemoryStore {
+    /// Atomically records a proposal and its daemon decision. An admitted
+    /// object is permitted only with an exact `admit` decision; all other
+    /// decisions leave no Memory object behind.
+    fn append_memory_admission(
+        &self,
+        candidate: &MemoryCandidateRow,
+        decision: &MemoryAdmissionDecisionRow,
+        admitted_object: Option<&MemoryObjectRow>,
+    ) -> Result<(), StorePortError>;
+
+    /// Load an immutable admitted object by identity for later daemon-only
+    /// consumers. It does not constitute search or public projection.
+    fn load_memory_object(
+        &self,
+        memory_id: &ObjectId,
+    ) -> Result<Option<MemoryObjectRow>, StorePortError>;
 }
 
 /// Daemon-private, immutable execution inputs for one scheduler task binding.
