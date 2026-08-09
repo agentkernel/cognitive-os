@@ -4,9 +4,8 @@
 - Change class: `implementation-only`; normative and public contract surfaces unchanged
 - Branch: `personal/P4-T03-memory-lifecycle`
 - Exact implementation revision: `8f9250dcd4cbcd8f15867e7a0f45165032e26c9d`
-- Remote branch revision: `origin/personal/P4-T03-memory-lifecycle@8f9250dcd4cbcd8f15867e7a0f45165032e26c9d`
-- PR: #174, Draft at this record; https://github.com/agentkernel/cognitive-os/pull/174
-- Lease: `lease/personal/P4-T03/memory-lifecycle` remains active until the PR merge and branch closure.
+- PR: #174 merged at `main@e1454f3775eab5c72d9cb2b8e0a5c1e98b895f0f`; https://github.com/agentkernel/cognitive-os/pull/174
+- Lease: `lease/personal/P4-T03/memory-lifecycle` closed. The remote task branch was deleted.
 
 ## Acceptance mapping
 
@@ -28,7 +27,8 @@
 
 ## Closure state
 
-The complete P4-T03 task acceptance is satisfied. The sole remaining action is
-to commit this closure record, push its exact revision, re-confirm required CI,
-mark PR #174 ready, merge normally, close the lease, delete the task branch,
-and fast-forward local `main` to the merge result.
+The complete P4-T03 task acceptance is satisfied. Required CI passed at the
+closure documentation revision `7473f4254535f53b8331960960f83c7b97f0c5d8`;
+PR #174 is merged, the lease is closed, the remote branch is deleted, and local
+`main` is at the merge result. This task creates no public Memory API, B08,
+product Gate, release, or Profile claim.
