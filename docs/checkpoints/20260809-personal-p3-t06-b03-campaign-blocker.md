@@ -8,8 +8,8 @@ Status: blocked
 
 ## Task state
 
-`P3-T06` is blocked after completing `P3-T06/D01` on branch
-`personal/P3-T06-context-correctness`.
+`P3-T06` is blocked while `P3-T06/D01` awaits required native Linux
+validation on branch `personal/P3-T06-context-correctness`.
 
 The implementation commit is
 `afffb24072c78dc2f93958bc14e164f2681aea95`. It adds a deterministic,
@@ -37,10 +37,16 @@ not set B03, a Gate, release, Profile, or Task-completion state.
   acquisition attempts failed before checkout: first with an unexpected Git
   transfer EOF and then with a GitHub HTTPS connection timeout. No uncommitted
   source was copied to the host, and both disposable roots were cleaned up.
+- Recovery attempt on 2026-08-10: the disposable native host again failed to
+  acquire the exact reviewed source from GitHub after the registered 60-second
+  low-throughput timeout. No source checkout or test execution occurred on the
+  host; the disposable validation root contains no usable worktree.
 
 ## Blocker
 
-`blocked_paths`: supported B03 campaign preregistration and execution evidence.
+`blocked_paths`: exact-revision native Linux validation for D01, followed by
+supported B03 campaign preregistration and execution evidence. Local tooling
+validation is complete but cannot substitute for the native requirement.
 
 `blocked_task_ids`: `P3-T06`.
 
@@ -56,8 +62,7 @@ tooling report can be a B03 Gate decision.
 
 ## Recovery action
 
-Preregister and execute a supported B03 Context-correctness campaign. Bind the
-result to the required campaign evidence and obtain independent-verifier
-disposition. Claim a new, exact-path lease for that execution slice; retain
-`B03` as `not-run` until then.
-
+Complete exact-revision native Linux validation for D01 first. Then preregister
+and execute a supported B03 Context-correctness campaign. Bind the result to
+the required campaign evidence and obtain independent-verifier disposition;
+retain `B03` as `not-run` until then.
