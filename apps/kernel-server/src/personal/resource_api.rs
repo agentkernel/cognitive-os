@@ -12,9 +12,10 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemorySearchQuery,
-    MemoryStore, MemoryTombstoneRow, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillStore, StorePortError,
+    IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
+    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, SchedulerExecutionPolicyStore,
+    SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
+    StorePortError,
 };
 use cognitive_store::SqliteAuthorityStore;
 use serde_json::{Value, json};
@@ -87,23 +88,6 @@ impl ResourceApi {
                 "task_ref is required",
             );
         };
-        let Some(governance_scope) =
-            string_field(&document, "governance_scope").filter(|value| !value.is_empty())
-        else {
-            return error(
-                400,
-                "RESOURCE_CONSUMPTION_SCOPE_REQUIRED",
-                "governance_scope is required",
-            );
-        };
-        let Some(purpose) = string_field(&document, "purpose").filter(|value| !value.is_empty())
-        else {
-            return error(
-                400,
-                "RESOURCE_CONSUMPTION_PURPOSE_REQUIRED",
-                "purpose is required",
-            );
-        };
         let Some(query_text) =
             string_field(&document, "query_text").filter(|value| !value.is_empty())
         else {
@@ -120,13 +104,101 @@ impl ResourceApi {
                 "skill_binding_id is required",
             );
         };
+        let contract_epoch = match store.current_contract_epoch(&task_reference) {
+            Ok(epoch) if epoch > 0 => epoch,
+            Ok(_) => {
+                return error(
+                    404,
+                    "RESOURCE_TASK_NOT_FOUND",
+                    "task has no current contract",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Task authority store is unavailable",
+                );
+            }
+        };
+        let contract = match store.load_task_contract(&task_reference, contract_epoch) {
+            Ok(Some(contract)) => contract,
+            Ok(None) => {
+                return error(
+                    404,
+                    "RESOURCE_TASK_NOT_FOUND",
+                    "task contract is unavailable",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Task authority store is unavailable",
+                );
+            }
+        };
+        let policy = match store.load_scheduler_execution_policy(&task_reference, contract_epoch) {
+            Ok(Some(policy)) => policy,
+            Ok(None) => {
+                return error(
+                    409,
+                    "RESOURCE_TASK_POLICY_MISSING",
+                    "task has no Context execution policy",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Task authority store is unavailable",
+                );
+            }
+        };
+        let Ok(policy_document) = serde_json::from_str::<Value>(&policy.canonical_json) else {
+            return error(
+                409,
+                "RESOURCE_TASK_POLICY_INVALID",
+                "task Context execution policy is malformed",
+            );
+        };
+        let policy_task_reference = string_value_at(&policy_document, &["task_ref"]);
+        let policy_contract_epoch = policy_document
+            .get("contract_epoch")
+            .and_then(Value::as_i64);
+        let policy_context_request_id =
+            string_value_at(&policy_document, &["context", "request_id"]);
+        let Some(governance_scope) =
+            string_value_at(&policy_document, &["context", "resource_scope_prefix"])
+                .filter(|value| !value.is_empty())
+        else {
+            return error(
+                409,
+                "RESOURCE_TASK_POLICY_INVALID",
+                "task Context scope is missing",
+            );
+        };
+        if policy.task_ref != task_reference
+            || policy.contract_epoch != contract_epoch
+            || policy_task_reference != Some(task_reference.as_str())
+            || policy_contract_epoch != Some(contract_epoch)
+            || policy_context_request_id != Some(policy.context_request_id.as_str())
+        {
+            return error(
+                409,
+                "RESOURCE_TASK_POLICY_INVALID",
+                "task Context execution policy does not match its authority binding",
+            );
+        }
         let now_unix_seconds = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|duration| duration.as_secs() as i64)
             .unwrap_or_default();
         let memory_candidates = match store.search_memory_candidates(&MemorySearchQuery {
             governance_scope: governance_scope.clone(),
-            purpose,
+            // Purpose is daemon-owned for this task consumption slice rather
+            // than a client-selected retrieval filter.
+            purpose: "task fact".to_owned(),
             observed_at_unix_seconds: now_unix_seconds,
             query_text,
             maximum_results: 8,
@@ -213,6 +285,9 @@ impl ResourceApi {
                 "kind": "task.resource.consumption",
                 "authority_source": "daemon-memory-skill-stores",
                 "task_ref": task_reference,
+                "contract_epoch": contract_epoch,
+                "contract_digest": contract.contract_digest,
+                "context_request_id": policy.context_request_id.to_string(),
                 "memory": memory_rows,
                 "skill": {
                     "binding_id": binding.binding_id.to_string(),
@@ -222,6 +297,8 @@ impl ResourceApi {
                 },
                 "consumption_trace": {
                     "task_ref": task_reference,
+                    "contract_epoch": contract_epoch,
+                    "context_request_id": policy.context_request_id.to_string(),
                     "memory_count": memory_candidates.len(),
                     "skill_binding_id": binding.binding_id.to_string(),
                 },
@@ -865,6 +942,12 @@ fn string_field(document: &Value, field_name: &str) -> Option<String> {
         .and_then(Value::as_str)
         .filter(|value| !value.is_empty())
         .map(str::to_owned)
+}
+
+fn string_value_at<'value>(document: &'value Value, path: &[&str]) -> Option<&'value str> {
+    path.iter()
+        .try_fold(document, |current, field_name| current.get(*field_name))
+        .and_then(Value::as_str)
 }
 
 fn integer_field(document: &Value, field_name: &str) -> Option<i64> {
