@@ -12,8 +12,8 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::ports::{
-    IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
-    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, SchedulerExecutionPolicyStore,
+    MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemorySearchQuery,
+    MemoryStore, MemoryTombstoneRow, ProtocolStore, SchedulerExecutionPolicyStore,
     SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore,
     StorePortError,
 };
@@ -195,7 +195,7 @@ impl ResourceApi {
             .map(|duration| duration.as_secs() as i64)
             .unwrap_or_default();
         let memory_candidates = match store.search_memory_candidates(&MemorySearchQuery {
-            governance_scope: governance_scope.clone(),
+            governance_scope: governance_scope.to_owned(),
             // Purpose is daemon-owned for this task consumption slice rather
             // than a client-selected retrieval filter.
             purpose: "task fact".to_owned(),
