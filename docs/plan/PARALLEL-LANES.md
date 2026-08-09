@@ -75,11 +75,13 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-No active task lease. The retained `001` campaign and authorized `002`
-successor remain recorded below. The ignored local `/artifacts/` directory
-must not be modified, deleted, committed, or used as an implicit successor
-input; a future continuation must independently re-confirm its manifest,
-digest, and attestation.
+| `lease/personal/P1-T09/b01-successor-native-verification` | P1-T09 B01 successor verification and campaign execution | Lane-RUN | `personal/P1-T09-b01-campaign-continuation` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-native-verification.md`; `docs/checkpoints/20260809-personal-p1-t09-b01-successor-attempt-ledger.md` | GPT-5.6-TERRA / current session | 2026-08-09 / 2026-08-09 | active |
+
+The active lease uses an isolated user-level Mihomo route solely to acquire the
+exact reviewed source and artifact on `personal-linux-native-01`. It must not
+modify, delete, commit, or rely on the ignored local `/artifacts/` directory;
+the successor still requires independent manifest, digest, and attestation
+verification before any B01 guest action.
 
 ### 3.1 最近关闭的 leases
 
