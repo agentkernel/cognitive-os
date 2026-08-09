@@ -10,7 +10,8 @@ use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
     ContextStore, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
-    MemorySearchQuery, MemoryStore, WorkspaceContextSourceRow,
+    MemorySearchQuery, MemoryStore, MemoryTombstoneRow, MemoryUpdateRequest, StorePortError,
+    WorkspaceContextSourceRow,
 };
 use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
 use serde_json::json;
@@ -245,4 +246,234 @@ fn immutable_metadata_rejects_conflicting_updates_before_search() {
             .memory_id,
         memory_id
     );
+}
+
+fn forget_tombstone(memory_id: ObjectId, lifecycle_identifier: u64) -> MemoryTombstoneRow {
+    MemoryTombstoneRow {
+        lifecycle_id: object_id(lifecycle_identifier),
+        memory_id,
+        action: "forget".to_owned(),
+        occurred_at_unix_seconds: 175,
+        reason: "owner requested forget".to_owned(),
+        canonical_json: "{\"action\":\"forget\",\"reason\":\"owner requested forget\"}".to_owned(),
+    }
+}
+
+fn expiration_tombstone(
+    memory_id: ObjectId,
+    lifecycle_identifier: u64,
+    occurred_at: i64,
+) -> MemoryTombstoneRow {
+    MemoryTombstoneRow {
+        lifecycle_id: object_id(lifecycle_identifier),
+        memory_id,
+        action: "expire".to_owned(),
+        occurred_at_unix_seconds: occurred_at,
+        reason: "retention deadline reached".to_owned(),
+        canonical_json: "{\"action\":\"expire\",\"reason\":\"retention deadline reached\"}"
+            .to_owned(),
+    }
+}
+
+#[test]
+fn forget_appends_a_tombstone_and_prevents_fts_resurrection() {
+    let (_directory, store, authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(60),
+        "workspace://tenant-a/project",
+        "forgettable compass memory",
+    );
+    let memory_id = admit_memory(&store, 700, &source, "task fact", 200);
+
+    store
+        .append_memory_tombstone(&forget_tombstone(memory_id.clone(), 704))
+        .unwrap();
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "compass",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+
+    let database = rusqlite::Connection::open(authority_database_path).unwrap();
+    database
+        .execute(
+            "INSERT INTO memory_search_fts (memory_id, source_text) VALUES (?1, ?2)",
+            (memory_id.as_str(), "stale compass memory"),
+        )
+        .unwrap();
+    store.rebuild_memory_search_index().unwrap();
+
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "compass",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn duplicate_or_unknown_forget_has_no_derived_index_side_effect() {
+    let (_directory, store, _authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(70),
+        "workspace://tenant-a/project",
+        "durable lantern memory",
+    );
+    let memory_id = admit_memory(&store, 800, &source, "task fact", 200);
+
+    assert!(matches!(
+        store.append_memory_tombstone(&forget_tombstone(object_id(999), 805)),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "lantern",
+            ))
+            .unwrap()[0]
+            .memory_id,
+        memory_id
+    );
+
+    store
+        .append_memory_tombstone(&forget_tombstone(memory_id.clone(), 806))
+        .unwrap();
+    assert!(matches!(
+        store.append_memory_tombstone(&forget_tombstone(memory_id, 807)),
+        Err(StorePortError::Conflict { .. })
+    ));
+}
+
+#[test]
+fn expiry_requires_reached_retention_boundary_and_invalidates_fts() {
+    let (_directory, store, _authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(80),
+        "workspace://tenant-a/project",
+        "expiring orchard memory",
+    );
+    let memory_id = admit_memory(&store, 900, &source, "task fact", 200);
+
+    assert!(matches!(
+        store.append_memory_expiration(&expiration_tombstone(memory_id.clone(), 904, 199)),
+        Err(StorePortError::Conflict { .. })
+    ));
+    assert_eq!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "orchard",
+            ))
+            .unwrap()[0]
+            .memory_id,
+        memory_id
+    );
+
+    store
+        .append_memory_expiration(&expiration_tombstone(memory_id.clone(), 905, 200))
+        .unwrap();
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "orchard",
+            ))
+            .unwrap()
+            .is_empty()
+    );
+    assert!(matches!(
+        store.append_memory_expiration(&expiration_tombstone(memory_id, 906, 201)),
+        Err(StorePortError::Conflict { .. })
+    ));
+}
+
+#[test]
+fn versioned_update_uses_durable_cas_and_supersedes_the_previous_search_row() {
+    let (_directory, store, _authority_database_path) = fresh_store();
+    let source = source_row(
+        &object_id(90),
+        "workspace://tenant-a/project",
+        "versioned orchard memory",
+    );
+    let previous_memory_id = admit_memory(&store, 1000, &source, "task fact", 300);
+    let candidate_id = object_id(1005);
+    let decision_id = object_id(1006);
+    let replacement_memory_id = object_id(1007);
+    let update = MemoryUpdateRequest {
+        previous_memory_id: previous_memory_id.clone(),
+        expected_version: 1,
+        candidate: MemoryCandidateRow {
+            candidate_id: candidate_id.clone(),
+            candidate_digest: "sha256:replacement".to_owned(),
+            source_id: source.source_id.clone(),
+            source_digest: source.source_digest.clone(),
+            source_provenance_ref: source.provenance_ref.clone(),
+            governance_scope: source.governance.resource_scope.clone(),
+            target_scope: source.governance.resource_scope.clone(),
+            purpose: "task fact".to_owned(),
+            retention_expires_at_unix_seconds: 300,
+            observed_at_unix_seconds: 200,
+            canonical_json: "{}".to_owned(),
+        },
+        decision: MemoryAdmissionDecisionRow {
+            decision_id: decision_id.clone(),
+            candidate_id: candidate_id.clone(),
+            candidate_digest: "sha256:replacement".to_owned(),
+            decision: "admit".to_owned(),
+            policy_version: 1,
+            reason_codes_json: "[\"MEMORY_UPDATE_ACCEPTED\"]".to_owned(),
+            canonical_json: "{}".to_owned(),
+        },
+        replacement: MemoryObjectRow {
+            memory_id: replacement_memory_id.clone(),
+            candidate_id,
+            decision_id,
+            canonical_json: "{}".to_owned(),
+        },
+        supersede_tombstone: MemoryTombstoneRow {
+            lifecycle_id: object_id(1008),
+            memory_id: previous_memory_id.clone(),
+            action: "supersede".to_owned(),
+            occurred_at_unix_seconds: 200,
+            reason: "owner updated Memory".to_owned(),
+            canonical_json: "{\"action\":\"supersede\"}".to_owned(),
+        },
+    };
+
+    store.append_memory_update(&update).unwrap();
+    assert!(
+        store
+            .search_memory_candidates(&search(
+                "workspace://tenant-a/project",
+                "task fact",
+                150,
+                "orchard",
+            ))
+            .unwrap()
+            .iter()
+            .all(|candidate| candidate.memory_id == replacement_memory_id)
+    );
+
+    assert!(matches!(
+        store.append_memory_update(&update),
+        Err(StorePortError::Conflict { .. })
+    ));
 }

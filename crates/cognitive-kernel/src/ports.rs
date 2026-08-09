@@ -571,6 +571,30 @@ pub struct MemoryObjectRow {
     pub canonical_json: String,
 }
 
+/// Daemon-private versioned Memory replacement request. The expected version
+/// is a CAS guard; a stale writer must not create a competing current version.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryUpdateRequest {
+    pub previous_memory_id: ObjectId,
+    pub expected_version: i64,
+    pub candidate: MemoryCandidateRow,
+    pub decision: MemoryAdmissionDecisionRow,
+    pub replacement: MemoryObjectRow,
+    pub supersede_tombstone: MemoryTombstoneRow,
+}
+
+/// Append-only daemon lifecycle fact for an admitted Memory object. The
+/// canonical payload is the audit record; it must not contain source text.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemoryTombstoneRow {
+    pub lifecycle_id: ObjectId,
+    pub memory_id: ObjectId,
+    pub action: String,
+    pub occurred_at_unix_seconds: i64,
+    pub reason: String,
+    pub canonical_json: String,
+}
+
 /// Authority-filtered FTS query for admitted Memory objects. This is a
 /// daemon-private discovery request, not a client authorization grant.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1246,6 +1270,27 @@ pub trait MemoryStore {
         &self,
         memory_id: &ObjectId,
     ) -> Result<Option<MemoryObjectRow>, StorePortError>;
+
+    /// Append a daemon-owned forget tombstone and invalidate all current
+    /// derived search rows in the same transaction. Immutable admission facts
+    /// remain available for audit and never become searchable again.
+    fn append_memory_tombstone(&self, tombstone: &MemoryTombstoneRow)
+    -> Result<(), StorePortError>;
+
+    /// Append a retention-expiry fact after the daemon confirms the immutable
+    /// candidate retention deadline has been reached.
+    fn append_memory_expiration(
+        &self,
+        expiration: &MemoryTombstoneRow,
+    ) -> Result<(), StorePortError>;
+
+    /// Atomically appends a replacement version and tombstones the prior
+    /// version. The immutable admission records for both versions remain.
+    fn append_memory_update(&self, _update: &MemoryUpdateRequest) -> Result<(), StorePortError> {
+        Err(StorePortError::Unavailable {
+            detail: "Memory version updates are not supported by this adapter".to_owned(),
+        })
+    }
 
     /// Discover metadata-only candidates from the derived FTS index after
     /// filtering authoritative Memory metadata and current source bindings.

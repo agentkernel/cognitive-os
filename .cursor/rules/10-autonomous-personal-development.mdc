@@ -7,8 +7,49 @@ alwaysApply: true
 
 Treat a user message of `继续任务`, `继续`, `continue task`, or an equivalent
 request as authorization to autonomously continue the next safe CognitiveOS
-Personal development slice. Do not require the user to repeat project context,
+Personal development slice. A new window, a compressed context, or a missing
+chat history is also a continuation event: recover from the repository's
+canonical documents instead of asking the user to restate project context,
 task IDs, prior prompts, or handoff details.
+
+# Cross-window continuity protocol
+
+The repository, not the chat transcript, is the durable memory. At the start
+of every window and after any detected context compression, rebuild state from
+`AGENTS.md`, the governance sources, the Personal plan, the `Current snapshot`,
+the active lease table, and the latest matching handoff. Then verify Git branch,
+worktree, HEAD, upstream, and Draft PR/check status before editing. Do not
+repeat completed work merely because it is absent from the current context.
+
+Maintain a compact recovery record in the canonical documentation while
+working: current task and slice, exact owned paths, completed acceptance items,
+checks run/not-run, immutable revision when relevant, blockers, and one next
+action. Update it before context is likely to be compressed, before switching
+windows, and immediately before stopping. Never leave the only copy of the
+next action in chat.
+
+Use this loop until the whole formal task is closed:
+
+1. Recover facts and ownership from the canonical sources.
+2. Select the next unmet acceptance item and smallest vertical implementation
+   action; prefer real integration over another helper-only slice.
+3. Implement, test, validate, and repair failures in the same task lease.
+4. Persist coherent progress when remote validation or recovery needs an exact
+   revision, then continue rather than treating the checkpoint as a stop.
+5. Reconcile plan, progress, evidence, lease, PR, and handoff state, then loop.
+
+After a formal task is fully merged and its lease is closed, restart recovery
+and select the next unblocked, implementation-ready Personal task from the
+formal plan. Continue task-by-task until no eligible Personal task remains or
+a real blocker/confirmation boundary applies. Never overlap task leases or use
+one task branch/PR to deliver another task.
+
+If context is low, do not start a large new change. Finish or safely pause the
+current atomic action, persist the recovery record, and continue in the next
+window. Context compression is not task completion, a blocker, or permission
+to downgrade evidence. Only stop for a real external blocker, unknown/unowned
+concurrent changes, a required decision/confirmation, a safety boundary, or
+complete formal task closure. Recoverable failures must be repaired and retried.
 
 Before selecting or changing work, establish the current repository truth in
 this order:
@@ -75,37 +116,45 @@ that can override the documents above.
   active B01 lease. Use only a task-declared disposable root on the SSH host
   for ordinary experimental deployment.
 
-# Required user-confirmation boundaries
+# Standing autonomy and required confirmation boundaries
 
 Continue autonomously without asking for approval for ordinary local editing,
 focused tests, non-secret diagnostics, documentation closure, commits, pushes,
 PR creation, and PR merge when the conditions below are met.
 
+The repository owner's standing operator authorization also covers operations
+required by an active leased Personal task: disposable remote validation,
+approved Secret Store access without exposing secret material, least-privilege
+elevation, and narrowly scoped user-service/system configuration changes. Use
+that authority proactively when the task and environment documents authorize
+the operation. Keep every action task-scoped, auditable, minimally privileged,
+and cleanable. Never ask for routine confirmation merely because the action is
+remote or operationally inconvenient.
+
 Stop and obtain explicit, interactive user confirmation before any action that
 would:
 
-1. request, display, paste, persist, transmit, log, or otherwise handle a
-   Provider/user secret, token, password, recovery material, private key, or
-   credential; instruct the user to enter secrets only through an approved
-   Secret Store or secure interactive prompt, never chat, command arguments,
-   ordinary configuration, logs, SQLite, CI output, or evidence;
-2. use privilege elevation, `sudo`, administrator/root access, service-manager
-   changes, package installation/removal, firewall/network policy changes,
-   kernel/device changes, or any action outside the repository's ordinary
-   developer permissions;
-3. access a non-local machine, SSH target, cloud account, paid API, external
-   Provider, or a user filesystem outside the approved task boundary;
-4. delete, reset, overwrite, migrate, or irreversibly mutate user data,
-   credentials, production state, remote branches, releases, tags, or shared
-   infrastructure;
-5. make a product-semantic, normative-semantic, structural, release, support,
+1. expose secret material, or move it outside an approved Secret Store and
+   secure non-logging input path. Approved Secret Store access itself is
+   pre-authorized; never place secrets in chat, command arguments, ordinary
+   configuration, logs, SQLite, CI output, tests, or evidence;
+2. perform destructive or irreversible repository/data actions, force-push,
+   alter isolated campaign guests outside their preregistered procedure, or
+   mutate production/shared infrastructure;
+3. make a product-semantic, normative-semantic, structural, release, support,
    security-policy, Gate-threshold, benchmark, or default-Agent decision not
-   already explicitly decided in the canonical documentation;
-6. expand filesystem, network, process, model, secret, budget, or capability
-   scope beyond the documented Standard Workspace/Extended Home and Tool
-   boundaries; or
-7. bypass a failing test, required CI check, branch protection, signature,
+   already explicitly decided in canonical documentation;
+4. expand filesystem, network, process, model, secret, budget, or capability
+   scope beyond the documented task boundary;
+5. bypass a failing test, required CI check, branch protection, signature,
    review requirement, or other governance control.
+
+When a confirmation boundary is encountered, first look for a documented,
+reversible, lower-scope route that stays within the active lease. If such a
+route exists, use it and continue. If the current task has a genuine external
+blocker, record it truthfully and continue with independent, unblocked Personal
+work only when the formal dependency graph and lease ledger permit it; never
+pretend the blocked acceptance passed and never create overlapping ownership.
 
 When confirmation is required, explain the exact action, scope, risk, whether
 it is reversible, alternatives, and the smallest confirmation needed. Keep the
@@ -171,10 +220,12 @@ display a concise **Development progress** section derived from the current
 `PROGRESS.md` `Current snapshot`. Include the active/completed task slice,
 current task and Gate statuses, completed deliverables, remaining milestones or
 blockers, and the next safe action. Do not create a parallel status table or
-infer progress that the canonical snapshot does not support.
+infer progress that the canonical snapshot does not support. If the task is
+not closed and no blocker exists, continue working in the same response rather
+than ending with “awaiting the next message”.
 
 The complete delivery report must still state: selected task and slice,
 implementation result, checks run and not run, documentation/handoff updates,
 commit and remote/PR/merge status, remaining blockers, and the next safe
-action. Then await the next user message; another `继续任务` restarts this
-workflow from the canonical documents.
+action. A new window can resume from that durable state without relying on the
+report itself.
