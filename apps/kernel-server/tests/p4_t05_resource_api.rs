@@ -143,6 +143,27 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     );
     assert!(task_memory_explain.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
 
+    let malformed_forget = request(
+        port,
+        &format!(
+            "POST /management/resource/v1/memory/forget HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nContent-Length: 1\r\nConnection: close\r\n\r\n{{"
+        ),
+    );
+    assert!(
+        malformed_forget.contains("400 Bad Request"),
+        "{malformed_forget}"
+    );
+    assert!(malformed_forget.contains("RESOURCE_MEMORY_PAYLOAD_INVALID"));
+
+    let task_revoke = request(
+        port,
+        &format!(
+            "POST /management/resource/v1/skill/binding/revoke HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {task_token}\r\nContent-Length: 1\r\nConnection: close\r\n\r\n{{"
+        ),
+    );
+    assert!(task_revoke.contains("403 Forbidden"), "{task_revoke}");
+    assert!(task_revoke.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
+
     daemon.kill().unwrap();
     daemon.wait().unwrap();
     let _ = std::fs::remove_dir_all(runtime_root);

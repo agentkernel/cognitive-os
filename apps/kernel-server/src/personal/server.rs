@@ -402,7 +402,9 @@ fn process_http_request(
             authority,
         );
     }
-    if method_path.starts_with("GET /management/resource/") {
+    if method_path.starts_with("GET /management/resource/")
+        || method_path.starts_with("POST /management/resource/")
+    {
         return handle_authority_resource_route(
             stream,
             &method_path,
@@ -410,6 +412,7 @@ fn process_http_request(
             layout,
             authority,
             resource_api,
+            &body,
         );
     }
     if method_path.starts_with("POST /management/") {
@@ -746,6 +749,7 @@ fn handle_authority_resource_route(
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
+    body: &[u8],
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
@@ -755,7 +759,7 @@ fn handle_authority_resource_route(
     let response = resource_api
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
-        .handle_authority(method_path, &store);
+        .handle_authority_or_mutation(method_path, body, &store);
     write_response(
         stream,
         response.status,

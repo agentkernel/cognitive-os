@@ -8,7 +8,9 @@ use std::collections::VecDeque;
 
 use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
-use cognitive_kernel::ports::{MemoryStore, SkillStore};
+use cognitive_kernel::ports::{
+    MemoryStore, MemoryTombstoneRow, SkillBindingRevocationRow, SkillStore, StorePortError,
+};
 use cognitive_store::SqliteAuthorityStore;
 use serde_json::{Value, json};
 
@@ -145,6 +147,157 @@ impl ResourceApi {
             "RESOURCE_AUTHORITY_ROUTE_NOT_FOUND",
             "no authority-backed resource route matched",
         )
+    }
+
+    pub(crate) fn handle_authority_or_mutation(
+        &self,
+        method_path: &str,
+        body: &[u8],
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        if method_path.starts_with("POST /management/resource/v1/memory/forget") {
+            return self.forget_memory(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/skill/binding/revoke") {
+            return self.revoke_skill_binding(body, store);
+        }
+        self.handle_authority(method_path, store)
+    }
+
+    pub(crate) fn forget_memory(
+        &self,
+        body: &[u8],
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory forget payload is invalid",
+            );
+        };
+        let Some(memory_id) = object_id_field(&document, "memory_id") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_ID_INVALID",
+                "memory_id is required and invalid",
+            );
+        };
+        let Some(lifecycle_id) = object_id_field(&document, "lifecycle_id") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_LIFECYCLE_ID_INVALID",
+                "lifecycle_id is required and invalid",
+            );
+        };
+        let Some(reason) = document
+            .get("reason")
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_REASON_REQUIRED",
+                "forget reason is required",
+            );
+        };
+        let occurred_at = document
+            .get("occurred_at_unix_seconds")
+            .and_then(Value::as_i64)
+            .unwrap_or(0);
+        let canonical_json = document
+            .get("canonical_json")
+            .and_then(Value::as_str)
+            .unwrap_or("{}");
+        let tombstone = MemoryTombstoneRow {
+            lifecycle_id,
+            memory_id,
+            action: "forget".to_owned(),
+            occurred_at_unix_seconds: occurred_at,
+            reason: reason.to_owned(),
+            canonical_json: canonical_json.to_owned(),
+        };
+        match store.append_memory_tombstone(&tombstone) {
+            Ok(()) => json_response(
+                201,
+                json!({"status":"forgotten", "memory_id": tombstone.memory_id.to_string()}),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_MEMORY_CONFLICT",
+                "Memory forget conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_MEMORY_UNAVAILABLE",
+                "Memory authority store is unavailable",
+            ),
+        }
+    }
+
+    pub(crate) fn revoke_skill_binding(
+        &self,
+        body: &[u8],
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_PAYLOAD_INVALID",
+                "Skill revoke payload is invalid",
+            );
+        };
+        let Some(binding_id) = object_id_field(&document, "binding_id") else {
+            return error(
+                400,
+                "RESOURCE_SKILL_BINDING_ID_INVALID",
+                "binding_id is required and invalid",
+            );
+        };
+        let Some(revocation_id) = object_id_field(&document, "revocation_id") else {
+            return error(
+                400,
+                "RESOURCE_SKILL_REVOCATION_ID_INVALID",
+                "revocation_id is required and invalid",
+            );
+        };
+        let Some(reason) = document
+            .get("reason")
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_SKILL_REASON_REQUIRED",
+                "revocation reason is required",
+            );
+        };
+        let canonical_json = document
+            .get("canonical_json")
+            .and_then(Value::as_str)
+            .unwrap_or("{}");
+        let revocation = SkillBindingRevocationRow {
+            revocation_id,
+            binding_id,
+            reason: reason.to_owned(),
+            canonical_json: canonical_json.to_owned(),
+        };
+        match store.append_skill_binding_revocation(&revocation) {
+            Ok(()) => json_response(
+                201,
+                json!({"status":"revoked", "binding_id": revocation.binding_id.to_string()}),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_SKILL_CONFLICT",
+                "Skill revocation conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_SKILL_UNAVAILABLE",
+                "Skill authority store is unavailable",
+            ),
+        }
     }
 
     fn handle_projection(
@@ -318,6 +471,13 @@ fn query_parameter<'query>(query: &'query str, name: &str) -> Option<&'query str
         .split('&')
         .find_map(|pair| pair.strip_prefix(&format!("{name}=")))
         .and_then(|value| value.split_whitespace().next())
+}
+
+fn object_id_field(document: &Value, field_name: &str) -> Option<ObjectId> {
+    document
+        .get(field_name)
+        .and_then(Value::as_str)
+        .and_then(|value| ObjectId::parse(value).ok())
 }
 
 fn json_response(status: u16, body: Value) -> ResourceApiResponse {
