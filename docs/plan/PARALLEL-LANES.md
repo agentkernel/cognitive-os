@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P3-T04/context-cache` | P3-T04/D01 Context cache boundary | Lane-KRN | `personal/P3-T04-context-cache` | `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/context_cache.rs`; `apps/kernel-server/src/personal/verification_executor.rs`; `crates/cognitive-kernel/src/context.rs`; `crates/cognitive-store/src/context_cache.rs`; `crates/cognitive-store/src/lib.rs`; `crates/cognitive-store/tests/p3_t04_context_cache.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
