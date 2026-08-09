@@ -15,6 +15,7 @@
 //! SQLite types stay inside this crate; kernel and domain only ever see
 //! the port DTOs.
 
+pub mod artifact_store;
 pub mod clock;
 pub mod context_store;
 pub mod faults;
@@ -27,6 +28,7 @@ pub mod scheduler;
 pub mod sqlite;
 pub mod worker_authorization;
 
+pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use clock::SystemClock;
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use ids::UuidV7Generator;

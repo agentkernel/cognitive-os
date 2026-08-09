@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P3-T03/artifact-cas` | P3-T03/D01 Artifact CAS authority port | Lane-KRN | `personal/P3-T03-artifact-cas` | `crates/cognitive-store/src/artifact_store.rs`; `crates/cognitive-store/src/lib.rs`; `crates/cognitive-store/src/personal_db.rs`; `crates/cognitive-store/tests/p3_t03_artifact_store.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
