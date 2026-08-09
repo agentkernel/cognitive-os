@@ -49,8 +49,9 @@ pub use context::{
     ResolvedContextView, admit_control_mutation, effective_control_plane, resolve,
 };
 pub use context_cache::{
-    CacheDecision, CachedView, ContextViewCache, DerivedCacheKind, GovernanceBinding,
-    InvalidationReport,
+    CacheDecision, CachedView, ContextCacheEntry, ContextCacheKey, ContextCacheLookup,
+    ContextSourceDigest, ContextViewCache, DerivedCacheKind, GovernanceBinding,
+    GovernedContextCache, InvalidationReport,
 };
 pub use effects::{
     CommitSink, EffectClass, EffectError, EffectProtocol, GovernanceCurrency, IntentCommand,
