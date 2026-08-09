@@ -310,6 +310,21 @@ fn is_constraint_violation(err: &rusqlite::Error) -> bool {
     )
 }
 
+/// Every persisted Skill digest must also occur in its immutable canonical
+/// payload. This prevents callers from recording an authority digest that is
+/// detached from the reviewed package or revision representation.
+fn canonical_json_digest_matches(
+    canonical_json: &str,
+    digest_field: &str,
+    expected_digest: &str,
+) -> bool {
+    serde_json::from_str::<Value>(canonical_json)
+        .ok()
+        .and_then(|value| value.get(digest_field)?.as_str().map(str::to_owned))
+        .as_deref()
+        == Some(expected_digest)
+}
+
 fn corrupt(what: &str, err: impl std::fmt::Display) -> StorePortError {
     StorePortError::Unavailable {
         detail: format!("stored value unusable ({what}): {err}"),
@@ -4311,6 +4326,16 @@ impl SkillStore for SqliteAuthorityStore {
                 .local_source_path
                 .split('/')
                 .any(|segment| segment == "..");
+        let manifest_digest_matches_payload = canonical_json_digest_matches(
+            &package.canonical_json,
+            "manifest_digest",
+            &package.manifest_digest,
+        );
+        let content_digest_matches_payload = canonical_json_digest_matches(
+            &revision.canonical_json,
+            "content_digest",
+            &revision.content_digest,
+        );
         let invalid_import = package.workspace_scope.trim().is_empty()
             || package.local_source_path.trim().is_empty()
             || package.provenance_ref.trim().is_empty()
@@ -4321,8 +4346,8 @@ impl SkillStore for SqliteAuthorityStore {
                 revision.compatibility.as_str(),
                 "compatible" | "incompatible"
             )
-            || serde_json::from_str::<Value>(&package.canonical_json).is_err()
-            || serde_json::from_str::<Value>(&revision.canonical_json).is_err();
+            || !manifest_digest_matches_payload
+            || !content_digest_matches_payload;
         if unsafe_local_path || invalid_import {
             return Err(StorePortError::Conflict {
                 detail: "Skill import has unsafe local provenance or invalid immutable bindings"
@@ -4367,7 +4392,11 @@ impl SkillStore for SqliteAuthorityStore {
                 replacement.compatibility.as_str(),
                 "compatible" | "incompatible"
             )
-            || serde_json::from_str::<Value>(&replacement.canonical_json).is_err()
+            || !canonical_json_digest_matches(
+                &replacement.canonical_json,
+                "content_digest",
+                &replacement.content_digest,
+            )
             || serde_json::from_str::<Value>(&supersede.canonical_json).is_err();
         if invalid_supersede {
             return Err(StorePortError::Conflict {

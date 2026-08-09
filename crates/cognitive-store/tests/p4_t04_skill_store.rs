@@ -37,14 +37,14 @@ fn package_and_revision(scope: &str) -> (SkillPackageRow, SkillRevisionRow) {
         local_source_path: "skills/release-notes".to_owned(),
         provenance_ref: "file://workspace/skills/release-notes".to_owned(),
         manifest_digest: "sha256:manifest".to_owned(),
-        canonical_json: "{}".to_owned(),
+        canonical_json: r#"{"manifest_digest":"sha256:manifest"}"#.to_owned(),
     };
     let revision = SkillRevisionRow {
         revision_id: object_id(2),
         package_id: package.package_id.clone(),
         content_digest: "sha256:revision".to_owned(),
         compatibility: "compatible".to_owned(),
-        canonical_json: "{}".to_owned(),
+        canonical_json: r#"{"content_digest":"sha256:revision"}"#.to_owned(),
     };
     (package, revision)
 }
@@ -130,10 +130,21 @@ fn unsafe_import_and_incompatible_or_revoked_bindings_fail_closed() {
         Err(StorePortError::Conflict { .. })
     ));
 
+    let (mut drifted_package, mut drifted_revision) =
+        package_and_revision("workspace://tenant-a/project");
+    drifted_package.package_id = object_id(10);
+    drifted_package.manifest_digest = "sha256:drifted-manifest".to_owned();
+    drifted_revision.package_id = drifted_package.package_id.clone();
+    assert!(matches!(
+        store.append_skill_import(&drifted_package, &drifted_revision),
+        Err(StorePortError::Conflict { .. })
+    ));
+
     let (package, mut incompatible_revision) = package_and_revision("workspace://tenant-a/project");
     incompatible_revision.revision_id = object_id(4);
     incompatible_revision.content_digest = "sha256:incompatible".to_owned();
     incompatible_revision.compatibility = "incompatible".to_owned();
+    incompatible_revision.canonical_json = r#"{"content_digest":"sha256:incompatible"}"#.to_owned();
     store
         .append_skill_import(&package, &incompatible_revision)
         .unwrap();
@@ -154,6 +165,8 @@ fn unsafe_import_and_incompatible_or_revoked_bindings_fail_closed() {
     compatible_revision.revision_id = object_id(7);
     compatible_revision.package_id = compatible_package.package_id.clone();
     compatible_revision.content_digest = "sha256:compatible-other".to_owned();
+    compatible_revision.canonical_json =
+        r#"{"content_digest":"sha256:compatible-other"}"#.to_owned();
     store
         .append_skill_import(&compatible_package, &compatible_revision)
         .unwrap();
@@ -189,7 +202,7 @@ fn revision_supersede_preserves_exact_pins_and_rejects_competing_lineage() {
         package_id: package.package_id.clone(),
         content_digest: "sha256:replacement".to_owned(),
         compatibility: "compatible".to_owned(),
-        canonical_json: "{}".to_owned(),
+        canonical_json: r#"{"content_digest":"sha256:replacement"}"#.to_owned(),
     };
     let supersede = SkillRevisionSupersedeRequest {
         previous_revision_id: revision.revision_id,

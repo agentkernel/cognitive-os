@@ -54,14 +54,14 @@ mod tests {
             local_source_path: "skills/release-notes".to_owned(),
             provenance_ref: "file://workspace/skills/release-notes".to_owned(),
             manifest_digest: "sha256:manifest".to_owned(),
-            canonical_json: "{}".to_owned(),
+            canonical_json: r#"{"manifest_digest":"sha256:manifest"}"#.to_owned(),
         };
         let revision = SkillRevisionRow {
             revision_id: object_id(2),
             package_id: package.package_id.clone(),
             content_digest: "sha256:revision".to_owned(),
             compatibility: "compatible".to_owned(),
-            canonical_json: "{}".to_owned(),
+            canonical_json: r#"{"content_digest":"sha256:revision"}"#.to_owned(),
         };
         (package, revision)
     }
