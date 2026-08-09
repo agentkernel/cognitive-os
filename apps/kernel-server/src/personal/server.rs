@@ -427,7 +427,6 @@ fn process_http_request(
     if method_path.starts_with("POST /task/resource/v1/consumption") {
         return handle_task_consumption_route(
             stream,
-            &method_path,
             &headers,
             &body,
             layout,
@@ -755,7 +754,6 @@ fn handle_task_resource_route(
 
 fn handle_task_consumption_route(
     stream: &mut TcpStream,
-    method_path: &str,
     headers: &str,
     body: &[u8],
     layout: &PersonalDataLayout,
