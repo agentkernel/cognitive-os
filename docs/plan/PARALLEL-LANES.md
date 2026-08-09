@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P3-T06/context-correctness` | P3-T06/D01 B03 observation manifest | Lane-CFR | `personal/P3-T06-context-correctness` | `tools/src/ucr-runner.mjs`; `tools/test/ucr-runner.test.mjs`; `tools/package.json`; `docs/evaluation/personal-unified-cognitive-resource-workload.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor autonomous session | 2026-08-09 / 2026-08-09 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
