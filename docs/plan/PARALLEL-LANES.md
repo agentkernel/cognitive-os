@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P4-T04/skill-package` | P4-T04/D01 private local Skill package/revision import and durable binding baseline | Lane-KRN | `personal/P4-T04-skill-package` | `crates/cognitive-kernel/src/ports.rs`; `crates/cognitive-kernel/src/skill_package.rs`; `crates/cognitive-kernel/src/lib.rs`; `crates/cognitive-store/src/skill_store.rs`; `crates/cognitive-store/src/personal_db.rs`; `crates/cognitive-store/src/sqlite.rs`; `crates/cognitive-store/tests/p4_t04_skill_store.rs`; `apps/kernel-server/src/personal/skill_package.rs`; `apps/kernel-server/src/personal/mod.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-10 | 2026-08-10 / 2026-08-10 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not
