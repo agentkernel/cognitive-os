@@ -180,3 +180,41 @@ fn committed_installation_cannot_be_overwritten_by_a_later_stage()
     assert_eq!(store.committed(original.package_ref())?, Some(original));
     Ok(())
 }
+
+#[test]
+fn root_activation_is_versioned_durable_and_compare_and_swap_fenced()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("installation-authority.db");
+    let store = SqliteInstallationStore::open(&path)?;
+    let first = store.activate_installation_root(
+        "installation-root://personal/pi",
+        None,
+        "pkg://@earendil-works/pi-coding-agent@0.81.1",
+        "official-lock-01",
+    )?;
+    assert_eq!(first.activation_version(), 1);
+
+    let conflict = store.activate_installation_root(
+        first.installation_root(),
+        Some(0),
+        first.package_ref(),
+        first.acquisition_lock(),
+    );
+    assert!(matches!(
+        conflict,
+        Err(InstallationStoreError::Conflict { .. })
+    ));
+    assert_eq!(
+        store.active_installation_root(first.installation_root())?,
+        Some(first.clone())
+    );
+    drop(store);
+
+    let reopened = SqliteInstallationStore::open(&path)?;
+    assert_eq!(
+        reopened.active_installation_root(first.installation_root())?,
+        Some(first)
+    );
+    Ok(())
+}

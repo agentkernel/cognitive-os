@@ -13,7 +13,8 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_store::{
-    InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
+    InstallationCommit, InstallationEvidence, InstallationRootBinding, InstallationStoreError,
+    SqliteInstallationStore,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256, Sha512};
@@ -265,6 +266,18 @@ pub struct OfficialPiAcquisitionRequest {
     pub declared_dependency_lock_digest: String,
     pub node_version: String,
     pub signed_acquisition_lock_ref: String,
+}
+
+/// Daemon-private request to publish an already acquired Pi package at an
+/// installation root. Both verification outcomes must be affirmative before
+/// the durable pointer transaction can begin.
+#[derive(Debug, Clone)]
+pub struct PiInstallationRootActivationRequest {
+    pub installation_root: String,
+    pub package_ref: String,
+    pub expected_activation_version: Option<u64>,
+    pub compatibility_accepted: bool,
+    pub health_accepted: bool,
 }
 
 /// Verifies the detached official acquisition-lock signature or attestation.
@@ -528,6 +541,17 @@ impl DurableInstallationManager<'_> {
             .committed(package_id)
             .map_err(map_store_error)
     }
+
+    /// Read the daemon-private active pointer for an installation root.
+    pub fn active_installation_root(
+        &self,
+        installation_root: &str,
+    ) -> Result<Option<InstallationRootBinding>, InstallerError> {
+        self.authority
+            .store
+            .active_installation_root(installation_root)
+            .map_err(map_store_error)
+    }
 }
 
 fn map_store_error(error: InstallationStoreError) -> InstallerError {
@@ -691,6 +715,88 @@ pub fn acquire_official_pi_durable(
         sandbox_digest: install.sandbox_digest.clone(),
         phase: InstallPhase::Committed,
     })
+}
+
+/// Publish a versioned private Pi installation-root pointer.
+///
+/// This consumes only a committed D01 official acquisition lock. It has no
+/// AgentInstance, SidecarSession, process, Effect, or Task-completion role.
+pub fn activate_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &PiInstallationRootActivationRequest,
+) -> Result<InstallationRootBinding, InstallerError> {
+    if !request.compatibility_accepted || !request.health_accepted {
+        return Err(verification_failure(
+            "compatibility and health must both pass before publishing an installation root",
+        ));
+    }
+    let committed = manager
+        .committed_installation(&request.package_ref)?
+        .ok_or_else(|| verification_failure("official Pi acquisition lock is not committed"))?;
+    let evidence = committed.evidence().ok_or_else(|| {
+        verification_failure("committed package does not have official Pi acquisition evidence")
+    })?;
+    let acquisition_lock = evidence.acquisition_lock().ok_or_else(|| {
+        verification_failure("committed official Pi evidence has no acquisition lock")
+    })?;
+    if evidence.source_mode() != "official_pi"
+        || evidence.verification_result() != "official_acquisition_lock_verified"
+    {
+        return Err(verification_failure(
+            "committed package is not an official Pi acquisition lock",
+        ));
+    }
+    manager
+        .authority
+        .store
+        .activate_installation_root(
+            &request.installation_root,
+            request.expected_activation_version,
+            &request.package_ref,
+            acquisition_lock,
+        )
+        .map_err(map_store_error)
+}
+
+/// Roll back an installation root by re-publishing a complete prior binding.
+///
+/// A missing or no-longer-complete target produces no receipt and leaves the
+/// active pointer unchanged.
+pub fn rollback_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    installation_root: &str,
+    expected_activation_version: u64,
+    target_activation_version: u64,
+) -> Result<InstallationRootBinding, InstallerError> {
+    let target = manager
+        .authority
+        .store
+        .installation_root_binding(installation_root, target_activation_version)
+        .map_err(map_store_error)?
+        .ok_or_else(|| verification_failure("rollback target binding is incomplete"))?;
+    let committed = manager
+        .committed_installation(target.package_ref())?
+        .ok_or_else(|| verification_failure("rollback target acquisition is incomplete"))?;
+    let evidence = committed
+        .evidence()
+        .filter(|evidence| evidence.source_mode() == "official_pi")
+        .and_then(InstallationEvidence::acquisition_lock)
+        .ok_or_else(|| verification_failure("rollback target has no official acquisition lock"))?;
+    if evidence != target.acquisition_lock() {
+        return Err(verification_failure(
+            "rollback target acquisition lock no longer matches its binding",
+        ));
+    }
+    manager
+        .authority
+        .store
+        .activate_installation_root(
+            installation_root,
+            Some(expected_activation_version),
+            target.package_ref(),
+            target.acquisition_lock(),
+        )
+        .map_err(map_store_error)
 }
 
 fn verification_failure(detail: impl Into<String>) -> InstallerError {

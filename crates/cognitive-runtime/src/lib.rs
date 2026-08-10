@@ -45,9 +45,10 @@ pub use installer::{
     InstallCrashPoint, InstallPhase, InstallationLedger, InstallationTrustMode, InstallerError,
     OFFICIAL_NPM_ORIGIN, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
     OfficialPiAcquisitionLockVerifier, OfficialPiAcquisitionRequest, PackageInstallRequest,
-    RejectingSignaturePort, SignatureProvenancePort, acquire_official_pi_durable, install_package,
+    PiInstallationRootActivationRequest, RejectingSignaturePort, SignatureProvenancePort,
+    acquire_official_pi_durable, activate_official_pi_root_durable, install_package,
     install_package_durable, package_artifact_digest, package_sha256_digest, package_sri_sha512,
-    reject_package, verify_package,
+    reject_package, rollback_official_pi_root_durable, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use linux_bundle::{
