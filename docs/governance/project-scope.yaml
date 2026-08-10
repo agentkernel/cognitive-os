@@ -47,6 +47,7 @@ workflow_policy_owner:
     - TASK-ATOMIC-DELIVERY-01
     - CHECKPOINT-DELIVERY-01
     - CONTINUOUS-AUTONOMOUS-DELIVERY-01
+    - CAMPAIGN-BACKLOG-CONTINUATION-01
     - RESOLVE-BEFORE-BLOCKED-PROGRESS-01
 work_policy:
   default_scope: active-project-only

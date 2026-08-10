@@ -9,7 +9,9 @@ use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
 };
-use crate::installation::{INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3};
+use crate::installation::{
+    INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
+};
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
 use crate::memory_store::{
     memory_admission_migration_entry, memory_expiry_migration_entry,
@@ -108,12 +110,14 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
 }
 
 /// Production installation migration plan: v1 = package/root/quarantine schema,
-/// v2 = Agent registration/instance identity, v3 = SidecarSession identity.
+/// v2 = Agent registration/instance identity, v3 = SidecarSession identity,
+/// v4 = fenced SidecarSession process-attempt binding.
 pub fn installation_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, INSTALLATION_SCHEMA_V1),
         MigrationPlanEntry::new(2, INSTALLATION_SCHEMA_V2),
         MigrationPlanEntry::new(3, INSTALLATION_SCHEMA_V3),
+        MigrationPlanEntry::new(4, INSTALLATION_SCHEMA_V4),
     ]
 }
 

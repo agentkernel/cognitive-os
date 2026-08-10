@@ -72,6 +72,14 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   阶段性总结、单个验证结束或可恢复的临时环境故障当作停止工作的理由；这些只是在继续
   下一个实现、修复或预注册验证动作时记录的中间事实。除非需要用户决定、发现未知外部
   改动或完成用户请求，否则保持工具驱动的开发节奏，不发送临时进度汇报。
+- Operating Model **`CAMPAIGN-BACKLOG-CONTINUATION-01`**：持续交付授权激活时，单个任务
+  收口不是战役结束。同一会话内完成 ready/merge/lease/branch/main 后，立即领取下一个
+  `implementation_requires` 已满足的就绪 Personal 任务，并开始其首个垂直实现切片；不得
+  以 claim-only / docs-only / “下一动作已记录”作为回合结束。战役循环直到
+  `PROGRESS.md` Layer 1 Remaining = 0、用户暂停/改范围，或只剩 owner 确认边界 / 真正
+  外部阻塞。Gate disposition 若属 Operating Model §2.3 ADR-0040 类可自行判定则直接
+  记账收口；仅真 owner-only 边界才正式 `blocked` 记账后改领不重叠的
+  就绪任务继续追进度，不得空等聊天。
 - Operating Model **`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`**：对可由当前任务自行恢复的临时依赖、
   artifact 可用性、CI 或环境故障，先在当前 lease 内修复或走已登记的恢复路径；不得在
   `PROGRESS.md` 把它登记为 task `blocked`。B01 等 Gate 的不可逆 attempt ledger 仍须

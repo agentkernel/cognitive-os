@@ -14,6 +14,7 @@ including:
 - `TASK-ATOMIC-DELIVERY-01`;
 - `CHECKPOINT-DELIVERY-01`;
 - `CONTINUOUS-AUTONOMOUS-DELIVERY-01`;
+- `CAMPAIGN-BACKLOG-CONTINUATION-01`;
 - `RESOLVE-BEFORE-BLOCKED-PROGRESS-01`;
 - required interactive confirmation boundaries;
 - the performance validation ladder; and
@@ -21,6 +22,14 @@ including:
 
 If this adapter conflicts with a canonical repository source, follow the
 canonical source and correct this adapter in the same scoped delivery.
+
+# Campaign objective
+
+When the owner activates continuous delivery (this rule plus a standing session
+prompt), the default objective is to drive `PROGRESS.md` Layer 1 Remaining to
+`0` for all formal Personal tasks, subject only to axioms, confirmation
+boundaries, and genuine external blockers. Do not treat one task merge, one
+Slice close, one PR, or one Gate ask as the end of the campaign.
 
 # Continuation and recovery
 
@@ -43,13 +52,19 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - Continue the active formal task and its unique `in-progress` Slice. If no
   task is active, select one implementation-ready Personal task and claim one
   narrow task lease before editing.
+- After a task is fully closed (ready/merge/lease/branch/main), **in the same
+  turn** claim the next ready task and start its first vertical implementation
+  slice. Do not end the turn after claim/docs-only registration.
 - Use one task branch, one evolving Draft PR, and one task lease through full
   acceptance. Do not create Slice branches, Slice PRs, routine Slice handoffs,
   or separate acceptance-assessment work.
-- Prefer a real caller, durable authority result, or end-to-end correctness
+- Prefer a real caller, durable authority outcome, or end-to-end correctness
   property over consecutive helper-only changes.
 - Use focused failure-first or negative tests when they materially reduce
   regression risk. Do not add tests that merely restate implementation.
+- For Gate/campaign slices, prefer an ADR-0040-class fixed authority-path
+  denominator and non-claim report over live Provider/Pi statistical campaigns
+  unless the formal acceptance explicitly forbids the MVP path.
 - Protect unknown or user-owned changes. Stop for user direction when their
   ownership cannot be resolved; never overwrite, revert, stage, or mix them.
 - Respect daemon-only authority, persist-before-dispatch Intent/Effect,
@@ -59,6 +74,35 @@ prompts, and historical handoffs cannot override canonical repository facts.
   `PERSONAL-TEST-ENVIRONMENTS.md`. Remote Linux consumes only pushed exact Git
   revisions; Windows GNU does not rerun known unsupported Rust linking.
 - Keep campaign guests isolated from ordinary development.
+- Under standing continuous-delivery authorization, coherent secret-free
+  checkpoint commit/push and Draft PR maintenance are expected workflow events,
+  not per-turn permission asks.
+- Follow Operating Model §2.3 for ADR-0040/0046/0047-class fixed-denominator
+  Gate MVP self-disposition and for importing owner-designated local test
+  Provider keys into an approved Secret Store. Do not re-ask for those
+  authorized cases; never place secret material in Git, chat, logs, or
+  evidence.
+
+# Forbidden stop conditions
+
+Do **not** end a continuous-delivery turn solely because of any of the
+following:
+
+- a Slice, commit, push, CI start/finish, or Draft PR update completed;
+- a task was claimed or Delivery Slices were registered without code progress;
+- a mid-flight status summary was written to chat;
+- context feels long (persist next action into `PROGRESS.md` and continue);
+- Gate disposition was prepared for the owner on a true owner-only boundary
+  (record `blocked` + recovery action, then claim a non-overlapping ready task
+  and continue); for ADR-0040-class MVP self-disposition under §2.3, record the
+  Gate result and close the task instead of stopping;
+- local Windows GNU cannot run Rust (route to CI/Linux and continue eligible
+  work).
+
+Valid stop conditions are only: owner pause/scope change; required interactive
+confirmation boundary with alternatives exhausted; unknown concurrent changes;
+or no remaining ready tasks (Remaining = 0, or only blocked items awaiting
+owner/external recovery).
 
 # Persistence, blockers, and reporting
 
@@ -78,4 +122,6 @@ handoff only for complete task closure, explicit pause/transfer, unknown
 changes, or a genuine external blocker. When the whole task is accepted, run
 the deterministic ready/merge/lease/branch/main reconciliation sequence. If no
 decision or blocker exists, continue in the same response instead of ending at
-an intermediate checkpoint.
+an intermediate checkpoint. Before context compression or a new window, persist
+the unique next action, completed/remaining items, exact revision, PR, and
+lease into `PROGRESS.md` Current snapshot.

@@ -143,6 +143,33 @@ CREATE TABLE IF NOT EXISTS current_sidecar_sessions (
 ) STRICT;
 ";
 
+/// Installation schema body for Personal migration plan version 4.
+///
+/// Daemon-private fenced process-attempt identity bound to a current
+/// SidecarSession. Binding records an attempt identity and fencing epoch only;
+/// they never store or attach an OS PID, grant capability, create an Effect, or
+/// complete a Task.
+pub(crate) const INSTALLATION_SCHEMA_V4: &str = "
+CREATE TABLE IF NOT EXISTS sidecar_process_attempts (
+  process_attempt_id TEXT PRIMARY KEY,
+  session_id         TEXT NOT NULL,
+  instance_id        TEXT NOT NULL,
+  fencing_epoch      INTEGER NOT NULL,
+  lifecycle_state    TEXT NOT NULL
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS sidecar_process_attempts_append_only_delete
+BEFORE DELETE ON sidecar_process_attempts
+BEGIN SELECT RAISE(ABORT, 'append-only: sidecar process attempts may not be deleted'); END;
+
+CREATE TABLE IF NOT EXISTS current_sidecar_process_bindings (
+  instance_id         TEXT PRIMARY KEY,
+  session_id          TEXT NOT NULL,
+  process_attempt_id  TEXT NOT NULL,
+  fencing_epoch       INTEGER NOT NULL
+) STRICT;
+";
+
 /// Errors from the local durable installation store.
 ///
 /// These are adapter errors, not protocol error codes: no machine contract is
@@ -513,6 +540,7 @@ pub struct SidecarSessionRecord {
     protocol_digest: String,
     fencing_epoch: u64,
     lifecycle_state: String,
+    process_attempt_id: Option<String>,
 }
 
 impl SidecarSessionRecord {
@@ -535,6 +563,14 @@ impl SidecarSessionRecord {
     pub fn lifecycle_state(&self) -> &str {
         &self.lifecycle_state
     }
+
+    pub fn process_attempt_id(&self) -> Option<&str> {
+        self.process_attempt_id.as_deref()
+    }
+
+    pub const fn process_bound(&self) -> bool {
+        self.process_attempt_id.is_some()
+    }
 }
 
 /// Immutable inputs for activating a registered AgentInstance into a SidecarSession.
@@ -544,6 +580,7 @@ pub struct AgentActivationCommit {
     pub instance_id: String,
     pub expected_fencing_epoch: u64,
     pub protocol_digest: String,
+    pub process_attempt_id: String,
 }
 
 /// Immutable inputs for pause/stop fencing on an AgentInstance.
@@ -642,6 +679,8 @@ impl SqliteInstallationStore {
             .map_err(|err| unavailable("install agent registration schema", err))?;
         conn.execute_batch(INSTALLATION_SCHEMA_V3)
             .map_err(|err| unavailable("install sidecar session schema", err))?;
+        conn.execute_batch(INSTALLATION_SCHEMA_V4)
+            .map_err(|err| unavailable("install sidecar process-binding schema", err))?;
 
         Ok(Self {
             conn: Mutex::new(conn),
@@ -845,6 +884,7 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        Self::refuse_process_bound_root_mutation(&transaction, installation_root)?;
         let activation_version = current_version.unwrap_or(0).checked_add(1).ok_or_else(|| {
             InstallationStoreError::Unavailable {
                 detail: "installation-root activation version overflow".to_owned(),
@@ -972,6 +1012,8 @@ impl SqliteInstallationStore {
             .ok_or_else(|| InstallationStoreError::Conflict {
                 detail: format!("active installation root {installation_root} is absent or fenced"),
             })?;
+        Self::refuse_process_bound_root_mutation(&transaction, installation_root)?;
+        Self::refuse_active_or_paused_agent_for_root(&transaction, installation_root)?;
         transaction
             .execute(
                 "INSERT INTO installation_quarantine
@@ -1260,9 +1302,10 @@ impl SqliteInstallationStore {
 
     /// Activate a `registered` instance and create its current SidecarSession.
     ///
-    /// Activation bumps the instance fencing epoch and publishes exactly one
-    /// current session. It never grants capability, Effect, or Task completion,
-    /// and it does not spawn an OS process.
+    /// Activation bumps the instance fencing epoch, publishes exactly one
+    /// current session, and registers a fenced process-attempt identity for
+    /// that session. It never grants capability, Effect, or Task completion,
+    /// and it does not spawn or attach an OS process.
     pub fn activate_agent_instance(
         &self,
         commit: &AgentActivationCommit,
@@ -1270,10 +1313,11 @@ impl SqliteInstallationStore {
         if commit.session_id.trim().is_empty()
             || commit.instance_id.trim().is_empty()
             || commit.protocol_digest.trim().is_empty()
+            || commit.process_attempt_id.trim().is_empty()
         {
             return Err(InstallationStoreError::InvalidCommit {
                 detail:
-                    "agent activation requires non-empty session, instance, and protocol digest"
+                    "agent activation requires non-empty session, instance, protocol digest, and process attempt"
                         .to_owned(),
             });
         }
@@ -1318,6 +1362,7 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         let existing_session: Option<String> = transaction
             .query_row(
                 "SELECT session_id FROM current_sidecar_sessions WHERE instance_id = ?1",
@@ -1385,6 +1430,13 @@ impl SqliteInstallationStore {
                     unavailable("publish current sidecar session", err)
                 }
             })?;
+        Self::bind_process_attempt(
+            &transaction,
+            commit.process_attempt_id.as_str(),
+            commit.session_id.as_str(),
+            commit.instance_id.as_str(),
+            next_epoch_i64,
+        )?;
         let registration = transaction
             .query_row(
                 "SELECT r.registration_id, r.installation_root, r.activation_version, r.package_ref,
@@ -1428,6 +1480,7 @@ impl SqliteInstallationStore {
                 protocol_digest: commit.protocol_digest.clone(),
                 fencing_epoch: next_epoch,
                 lifecycle_state: "active".to_owned(),
+                process_attempt_id: Some(commit.process_attempt_id.clone()),
             },
         ))
     }
@@ -1439,9 +1492,12 @@ impl SqliteInstallationStore {
     ) -> Result<Option<SidecarSessionRecord>, InstallationStoreError> {
         let conn = self.lock()?;
         conn.query_row(
-            "SELECT s.session_id, s.instance_id, s.protocol_digest, s.fencing_epoch, s.lifecycle_state
+            "SELECT s.session_id, s.instance_id, s.protocol_digest, s.fencing_epoch, s.lifecycle_state,
+                    b.process_attempt_id
                FROM current_sidecar_sessions c
                JOIN sidecar_sessions s ON s.session_id = c.session_id
+               LEFT JOIN current_sidecar_process_bindings b
+                 ON b.instance_id = c.instance_id AND b.session_id = c.session_id
               WHERE c.instance_id = ?1",
             [instance_id],
             |row| {
@@ -1453,6 +1509,7 @@ impl SqliteInstallationStore {
                     fencing_epoch: u64::try_from(fencing_epoch)
                         .map_err(|_| rusqlite::Error::IntegralValueOutOfRange(3, fencing_epoch))?,
                     lifecycle_state: row.get(4)?,
+                    process_attempt_id: row.get(5)?,
                 })
             },
         )
@@ -1496,6 +1553,15 @@ impl SqliteInstallationStore {
             )
             .optional()
             .map_err(|err| unavailable("read current sidecar session health", err))?;
+        let process_bound = conn
+            .query_row(
+                "SELECT 1 FROM current_sidecar_process_bindings WHERE instance_id = ?1",
+                [instance_id],
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(|err| unavailable("read current process binding health", err))?
+            .is_some();
         Ok(Some(AgentHealthObservation {
             instance_id: instance_id.to_owned(),
             lifecycle_state,
@@ -1507,7 +1573,7 @@ impl SqliteInstallationStore {
             current_sidecar_session: session.is_some(),
             sidecar_lifecycle_state: session.as_ref().map(|(state, _)| state.clone()),
             sidecar_fencing_epoch: session.map(|(_, epoch)| epoch),
-            process_bound: false,
+            process_bound,
         }))
     }
 
@@ -1519,9 +1585,10 @@ impl SqliteInstallationStore {
         if commit.session_id.trim().is_empty()
             || commit.instance_id.trim().is_empty()
             || commit.protocol_digest.trim().is_empty()
+            || commit.process_attempt_id.trim().is_empty()
         {
             return Err(InstallationStoreError::InvalidCommit {
-                detail: "agent recovery requires non-empty session, instance, and protocol digest"
+                detail: "agent recovery requires non-empty session, instance, protocol digest, and process attempt"
                     .to_owned(),
             });
         }
@@ -1568,6 +1635,14 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        let registration_id: String = transaction
+            .query_row(
+                "SELECT registration_id FROM agent_instances WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|err| unavailable("read registration id for recovery pin check", err))?;
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         Self::fence_current_sidecar_session(
             &transaction,
             commit.instance_id.as_str(),
@@ -1624,6 +1699,13 @@ impl SqliteInstallationStore {
                     unavailable("publish recovered sidecar session", err)
                 }
             })?;
+        Self::bind_process_attempt(
+            &transaction,
+            commit.process_attempt_id.as_str(),
+            commit.session_id.as_str(),
+            commit.instance_id.as_str(),
+            next_epoch_i64,
+        )?;
         let registration =
             Self::load_registration_for_instance(&transaction, commit.instance_id.as_str())?;
         transaction
@@ -1637,6 +1719,7 @@ impl SqliteInstallationStore {
                 protocol_digest: commit.protocol_digest.clone(),
                 fencing_epoch: next_epoch,
                 lifecycle_state: "active".to_owned(),
+                process_attempt_id: Some(commit.process_attempt_id.clone()),
             },
         ))
     }
@@ -1726,9 +1809,10 @@ impl SqliteInstallationStore {
         if commit.session_id.trim().is_empty()
             || commit.instance_id.trim().is_empty()
             || commit.protocol_digest.trim().is_empty()
+            || commit.process_attempt_id.trim().is_empty()
         {
             return Err(InstallationStoreError::InvalidCommit {
-                detail: "agent resume requires non-empty session, instance, and protocol digest"
+                detail: "agent resume requires non-empty session, instance, protocol digest, and process attempt"
                     .to_owned(),
             });
         }
@@ -1773,6 +1857,14 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        let registration_id: String = transaction
+            .query_row(
+                "SELECT registration_id FROM agent_instances WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|err| unavailable("read registration id for resume pin check", err))?;
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         let existing_session: Option<String> = transaction
             .query_row(
                 "SELECT session_id FROM current_sidecar_sessions WHERE instance_id = ?1",
@@ -1840,6 +1932,13 @@ impl SqliteInstallationStore {
                     unavailable("publish resumed sidecar session", err)
                 }
             })?;
+        Self::bind_process_attempt(
+            &transaction,
+            commit.process_attempt_id.as_str(),
+            commit.session_id.as_str(),
+            commit.instance_id.as_str(),
+            next_epoch_i64,
+        )?;
         let registration =
             Self::load_registration_for_instance(&transaction, commit.instance_id.as_str())?;
         transaction
@@ -1853,6 +1952,7 @@ impl SqliteInstallationStore {
                 protocol_digest: commit.protocol_digest.clone(),
                 fencing_epoch: next_epoch,
                 lifecycle_state: "active".to_owned(),
+                process_attempt_id: Some(commit.process_attempt_id.clone()),
             },
         ))
     }
@@ -1954,6 +2054,109 @@ impl SqliteInstallationStore {
         Ok(registration)
     }
 
+    fn refuse_process_bound_root_mutation(
+        transaction: &rusqlite::Transaction<'_>,
+        installation_root: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let bound: Option<String> = transaction
+            .query_row(
+                "SELECT b.process_attempt_id
+                   FROM current_sidecar_process_bindings b
+                   JOIN agent_instances i ON i.instance_id = b.instance_id
+                   JOIN agent_registrations r ON r.registration_id = i.registration_id
+                  WHERE r.installation_root = ?1
+                  LIMIT 1",
+                [installation_root],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| unavailable("read process binding for root mutation", err))?;
+        if bound.is_some() {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} has a process-bound SidecarSession; stop or clear the binding before upgrade, rollback, or uninstall"
+                ),
+            });
+        }
+        Ok(())
+    }
+
+    fn refuse_active_or_paused_agent_for_root(
+        transaction: &rusqlite::Transaction<'_>,
+        installation_root: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let blocking: Option<(String, String)> = transaction
+            .query_row(
+                "SELECT i.instance_id, i.lifecycle_state
+                   FROM agent_instances i
+                   JOIN agent_registrations r ON r.registration_id = i.registration_id
+                  WHERE r.installation_root = ?1
+                    AND i.lifecycle_state IN ('active', 'paused')
+                  LIMIT 1",
+                [installation_root],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read agent lifecycle for uninstall", err))?;
+        if let Some((instance_id, lifecycle_state)) = blocking {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} agent {instance_id} is {lifecycle_state}; uninstall requires stopped or absent agent lifecycle"
+                ),
+            });
+        }
+        Ok(())
+    }
+
+    fn refuse_registration_pin_drift(
+        transaction: &rusqlite::Transaction<'_>,
+        registration_id: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let registration: Option<(String, i64, String, String)> = transaction
+            .query_row(
+                "SELECT installation_root, activation_version, package_ref, acquisition_lock
+                   FROM agent_registrations WHERE registration_id = ?1",
+                [registration_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read registration for pin check", err))?;
+        let Some((installation_root, activation_version, package_ref, acquisition_lock)) =
+            registration
+        else {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!("agent registration {registration_id} is absent"),
+            });
+        };
+        let active: Option<(i64, String, String)> = transaction
+            .query_row(
+                "SELECT activation_version, package_ref, acquisition_lock
+                   FROM active_installation_roots WHERE installation_root = ?1",
+                [installation_root.as_str()],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read active root for pin check", err))?;
+        let Some((active_version, active_package, active_lock)) = active else {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} is absent; refuse activation on pin drift"
+                ),
+            });
+        };
+        if activation_version != active_version
+            || package_ref != active_package
+            || acquisition_lock != active_lock
+        {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "agent registration {registration_id} pin/digest drift versus active installation root {installation_root}"
+                ),
+            });
+        }
+        Ok(())
+    }
+
     fn fence_current_sidecar_session(
         transaction: &rusqlite::Transaction<'_>,
         instance_id: &str,
@@ -1968,6 +2171,7 @@ impl SqliteInstallationStore {
             .optional()
             .map_err(|err| unavailable("read current sidecar session to fence", err))?;
         let Some(session_id) = current else {
+            Self::clear_process_binding(transaction, instance_id)?;
             return Ok(());
         };
         transaction
@@ -1985,6 +2189,103 @@ impl SqliteInstallationStore {
         if removed != 1 {
             return Err(InstallationStoreError::Conflict {
                 detail: "current sidecar session changed during fencing".to_owned(),
+            });
+        }
+        Self::clear_process_binding(transaction, instance_id)?;
+        Ok(())
+    }
+
+    fn bind_process_attempt(
+        transaction: &rusqlite::Transaction<'_>,
+        process_attempt_id: &str,
+        session_id: &str,
+        instance_id: &str,
+        fencing_epoch: i64,
+    ) -> Result<(), InstallationStoreError> {
+        let existing: Option<String> = transaction
+            .query_row(
+                "SELECT process_attempt_id FROM current_sidecar_process_bindings
+                  WHERE instance_id = ?1",
+                [instance_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| unavailable("read current process binding", err))?;
+        if existing.is_some() {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!("agent instance {instance_id} already has a process binding"),
+            });
+        }
+        transaction
+            .execute(
+                "INSERT INTO sidecar_process_attempts
+                   (process_attempt_id, session_id, instance_id, fencing_epoch, lifecycle_state)
+                 VALUES (?1, ?2, ?3, ?4, 'bound')",
+                (process_attempt_id, session_id, instance_id, fencing_epoch),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "sidecar process attempt identity already exists".to_owned(),
+                    }
+                } else {
+                    unavailable("insert sidecar process attempt", err)
+                }
+            })?;
+        transaction
+            .execute(
+                "INSERT INTO current_sidecar_process_bindings
+                   (instance_id, session_id, process_attempt_id, fencing_epoch)
+                 VALUES (?1, ?2, ?3, ?4)",
+                (instance_id, session_id, process_attempt_id, fencing_epoch),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "competing process binding won the current-instance pointer"
+                            .to_owned(),
+                    }
+                } else {
+                    unavailable("publish current process binding", err)
+                }
+            })?;
+        Ok(())
+    }
+
+    fn clear_process_binding(
+        transaction: &rusqlite::Transaction<'_>,
+        instance_id: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let binding: Option<(String, String)> = transaction
+            .query_row(
+                "SELECT process_attempt_id, session_id
+                   FROM current_sidecar_process_bindings WHERE instance_id = ?1",
+                [instance_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read process binding to clear", err))?;
+        let Some((process_attempt_id, _session_id)) = binding else {
+            return Ok(());
+        };
+        transaction
+            .execute(
+                "UPDATE sidecar_process_attempts
+                    SET lifecycle_state = 'cleared'
+                  WHERE process_attempt_id = ?1 AND lifecycle_state = 'bound'",
+                [process_attempt_id.as_str()],
+            )
+            .map_err(|err| unavailable("mark process attempt cleared", err))?;
+        let removed = transaction
+            .execute(
+                "DELETE FROM current_sidecar_process_bindings
+                  WHERE instance_id = ?1 AND process_attempt_id = ?2",
+                (instance_id, process_attempt_id.as_str()),
+            )
+            .map_err(|err| unavailable("clear current process binding", err))?;
+        if removed != 1 {
+            return Err(InstallationStoreError::Conflict {
+                detail: "current process binding changed during clear".to_owned(),
             });
         }
         Ok(())
