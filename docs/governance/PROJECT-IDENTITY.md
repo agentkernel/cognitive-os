@@ -12,6 +12,10 @@
 Personal 实现所依赖的架构、合同、研究和验证基础。当前开发目标只有
 `cognitiveos-personal`，不得把“CognitiveOS 参考实现”误解为第二个待交付产品。
 
+不可放松的公理（A1–A8）与工程原则（P1–P3）只由
+[AXIOMS.md](AXIOMS.md) 拥有；工作流政策由
+[DEVELOPMENT-OPERATING-MODEL.md](DEVELOPMENT-OPERATING-MODEL.md) 拥有。
+
 ## 2. 两层边界
 
 ### 2.1 CognitiveOS Architecture（架构层）

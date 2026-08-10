@@ -174,6 +174,11 @@ the result Linux-native.
 
 The host's `B01-Desktop-Linux-002` libvirt guest is the **sole active formal
 B01 campaign environment**. Ordinary development must not start, stop,
+reset, deploy to, or delete that guest outside a preregistered B01 campaign
+procedure and active campaign lease. Standing operator authorization does not
+expand this isolation boundary. The retired `B01-Clean-Linux-001` guest remains
+historical qualification evidence only and must not be restored as a B01 or
+ordinary development target.
 
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 
@@ -215,12 +220,15 @@ B01 campaign environment**. Ordinary development must not start, stop,
 - **Result:** attempt 1 passed executed phases, produced the expected bounded
   response in 6295 ms with `authority_side_effects:false`, and completed secret
   cleanup.
-- **Maximum evidence:** one successful formal B01 attempt.
-- **Cannot claim:** campaign-level B01 pass until successor `002` completes its
-  ADR-0039 fixed six outcomes with at least five successes, zero critical
-  failures, complete statistics, and independent verifier closure; the
-  experimental signer cannot satisfy P7 production trust.
-- **Evidence:** [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md).
+- **Maximum evidence:** the completed ADR-0039 successor campaign `002` on this
+  guest (fixed N=6, 5 successes / 1 failure, zero critical safety failures,
+  complete aggregate statistics, and affirmative independent verifier
+  disposition). Retained campaign `001` remains a historical fail record.
+- **Cannot claim:** G1, GMVP-LINUX, release, Profile, or P7 production trust from
+  the experimental signer; B01 pass does not transfer those claims.
+- **Evidence:** [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md),
+  [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), and the
+  PROGRESS.md Current snapshot B01 row.
 
 ## 11. `FIXTURE-SYSTEMD-01` — installer/fake-systemd fixtures
 

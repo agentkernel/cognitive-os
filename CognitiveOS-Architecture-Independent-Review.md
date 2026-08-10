@@ -1,6 +1,7 @@
 # CognitiveOS 架构独立审查与优化建议
 
 - **审查日期**：2026-07-20
+- **时效标注（2026-08-10）**：historical dated review snapshot；findings 已被后续 ADR/实现吸收或关闭处，以现行 `PROGRESS.md`、正式计划与 specs 为准。本文不创建当前任务、lease 或 Gate 状态。
 - **审查性质**：独立、反方优先、证据驱动、只读审查
 - **审查快照**：Git commit `f2f826adae6d0f61e31cf41d31c2b4d5905d0ca8`
 - **主文档摘要**：`CognitiveOS-Architecture.md` SHA-256 `f6853fa6eb55ed873d3f2b020a339f044d2756b94aea5c7d3492c9acb9d3052f`

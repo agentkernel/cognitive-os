@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P7-T04 已完成；P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P7-T04 已完成；B06/B07 仍为 non-claim observation，B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P7-T04 已完成；P8-T01 文档体系重构 in-progress；B06/B07 仍为 non-claim observation，B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-10**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -69,6 +69,17 @@
 > route operation occurred. This amendment creates no B01/G1/GMVP-LINUX,
 > release, or Profile pass claim.
 
+> **2.0 设计基线与计划扩展修订（2026-08-10，P8-T01 批）：** owner 指令将
+> cognitiveos-personal 的产品陈述扩展为"主流 agent 的认知资源统一管理底座"，
+> 新增 Phase 8（通用 Agent 适配与设计基线，6 任务）与 Phase 9（性能与结构演进
+> 候选池，3 任务），并授权公理体系重述（详见 ADR-0041+ 与
+> `docs/governance/AXIOMS.md`）。本批同时完成 corrective 结构修复：移除打断
+> Delivery Slice register 的过早"收口记录"标题（内容保留为注记）、对齐 Phase 3
+> 任务表标题、澄清 B01 历史 addendum 的适用范围、按 slice 拆分澄清 P7-T04 依赖
+> 表述。该 `product-semantic + corrective` 修订不改变任何既有任务状态、attempt、
+> evidence、Gate 结论或 `GMVP-LINUX` 组合，不修改 registry/schema/transition/vector，
+> 也不产生实现、Gate、release 或 Profile 证据。
+>
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
 > 落地 Personal 低摩擦授权模型（DEC-P-20）：交互分层 Tier 0/1/2、任务准入预览为
@@ -146,7 +157,9 @@
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 1 | 0 | 0 | 4 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 1 | 0 | 0 | 7 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **37** | **0** | **0** | **16** | — |
+| Phase 8 - 通用 Agent 适配与设计基线 | 6 | 0 | 1 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
+| Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
+| **合计** | **62** | **37** | **1** | **0** | **24** | — |
 
 ## 2. 产品边界与不变量
 
@@ -284,11 +297,6 @@ formal task acceptance assessment 和收口。
 | `P2-T07/D01` | P2-T07 | daemon-private fixed post-state、verification request/report、currentness revalidation、checkpoint 与 append-only continuation authority；只允许 `ACT -> VERIFY -> CONTINUE -> OBSERVE`，绝不触发 Task acceptance/completion | `P2-T03/D05` WIA/recovery boundary与既有 Loop/Effect contracts | durable positive/negative/restart tests、exact Linux validation、required CI；完成后由 D05 消费 continuation authority，P2-T07 的 Artifact、完整 criteria evidence 和 Task completion 仍不因此关闭 |
 | `P2-T07/D02` | P2-T07 | daemon-private independent verifier seam that reloads the immutable verification request and fixed post-state, validates currentness and verifier identity, and persists only content-addressed artifact evidence references in an append-only report | `P2-T07/D01` fixed post-state/request/report persistence | verifier identity mismatch, stale post-state, malformed/duplicate artifact reference, fenced writer, and passed-without-evidence negatives; exact Linux validation and required CI; no Task acceptance/completion |
 
-## 6. 收口记录
-
-- `P2-T07` 已完成并在 PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`。
-- `lease/personal/P2-T07/checkpoint-artifact-verifier` 已关闭。
-- 后续只从本计划中选择下一个正式任务，不再将该 lease 视为 active。
 | `P2-T04/D01` | P2-T04 | private scheduler-to-deterministic-Context-to-pinned-Pi candidate worker composition；Pi output is an opaque candidate only, while scheduler lease, fencing, budget, WIA/continuation, Effect, progress, evidence, and Task state remain daemon-owned | `P2-T02`、`P2-T03/D05`、`P2-T07/D01` | real-store stale lease/fence, required Context failure, duplicate tick, exhausted budget, and self-report rejection coverage; exact Linux validation and required CI; no Tool execution or Task completion |
 | `P2-T06/D01` | P2-T06 | validated daemon-private `WorkspaceRead` executor accepts only a descriptor-bound, Intent-keyed staged request; it fences stale writers before I/O, serializes duplicate key dispatch, retains only bounded/redacted output, and answers recovery queries using the original key | P2-T05 static native Tool catalog and validators | failure-first executor negatives plus exact-revision native Linux focused test and required CI; completion enables durable Effect dispatch wiring, without claiming progress, evidence, verification, Task completion, Gate, release, or Profile |
 | `P2-T06/D02` | P2-T06 | wire one read-only `WorkspaceRead` through the existing durable Intent/Effect protocol: stage only after the persisted Intent reload, commit `EXECUTING` before filesystem dispatch, record an explicit outcome, and reconcile an unknown outcome by the original idempotency key | `P2-T06/D01` and the existing P2-T03 durable Effect/WIA boundary | real SQLite persist-before-dispatch, unknown-outcome/restart, stale-fence, duplicate-key, bounded-redacted output regressions; exact-revision native Linux and required CI; completion enables the remaining process supervision and mutation family work |
@@ -312,6 +320,14 @@ formal task acceptance assessment 和收口。
 | `P4-T03/D01` | P4-T03 | daemon-private forget/tombstone transition appends an auditable lifecycle fact, atomically invalidates the current FTS row, and prevents a stale or rebuilt derived index from resurrecting forgotten Memory | P4-T01 admission/object store and P4-T02 rebuildable FTS5 index | failure-first unknown/duplicate forget and stale-index non-resurrection tests; exact native Linux focused store validation, Clippy, and required Ubuntu/Windows CI; implementation-only with version/update/conflict/expiry and public Memory API still remaining |
 | `P4-T03/D02` | P4-T03 | daemon-owned expiry sweep appends a reason-coded lifecycle fact for each retention-expired admitted Memory object and atomically invalidates its derived FTS row without deleting immutable admission history | `P4-T03/D01` lifecycle audit and existing retention metadata | failure-first expiry-boundary, duplicate-sweep, and stale-index non-resurrection tests; exact native Linux focused store validation, Clippy, and required Ubuntu/Windows CI; versioned update/conflict and public Memory API still remain |
 | `P4-T03/D03` | P4-T03 | daemon-owned versioned Memory replacement uses an expected-version CAS, preserves immutable version lineage, appends a supersede audit fact, and atomically moves the derived FTS row | `P4-T03/D01` lifecycle audit and existing immutable Memory admission rows | failure-first stale-version/conflict and superseded-index non-resurrection tests; exact native Linux focused store validation, Clippy, and required Ubuntu/Windows CI; public Memory API and B08 remain separate |
+| `P8-T01/D01` | P8-T01 | 公理体系与治理规则收敛：单一公理文档（AXIOMS）落地并由 Operating Model §8 指向；AGENTS/.cursor 规则薄入口化并消除清单漂移；PARALLEL-LANES closed 历史外置；ADR-0008 标注 superseded；milestone prompts 标注 non-executable；docs/standards 状态标签校正；PROGRESS Layer 3 过期 Gate 行、GMVP 行、PERSONAL-TEST-ENVIRONMENTS 截断/过期文案与本计划结构错乱修复。documentation-only 出口 | 已合并 `main`（P7-T04 收口后）与既有治理文档 | 本地 `pnpm run check:consistency`、`git diff --check`、守卫片段与相对链接核验；task Draft PR 上的 required Ubuntu/Windows CI；无 Gate/release/Profile claim |
+| `P8-T01/D02` | P8-T01 | 现行白皮书（OS 定位正名/对标差距/三支柱工程原则/生态定位）、产品与架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）、`personal-2.0-scope` 与 ADR-0041+ 系列决策文档 | `P8-T01/D01` 公理与规则基线 | 本地 consistency/链接核验与 required Ubuntu/Windows CI；documentation-only，设计文档不改 specs 机器合同，不产生实现/Gate/release/Profile claim |
+| `P8-T01/D03` | P8-T01 | 任务文档扩展收口：P8/P9 任务卡细化与 typed dependency 对齐、根 `plan.md` 研究层同步、traceability 联动、全栈交叉校验、完整 acceptance mapping 与任务收口 checkpoint | `P8-T01/D02` 设计文档基线 | 本地 consistency/diff/链接核验、required Ubuntu/Windows CI、closure checkpoint 与 lease/branch/main 收口；documentation-only |
+
+> **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
+> PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
+> `lease/personal/P2-T07/checkpoint-artifact-verifier` 已关闭；后续只从本计划中选择
+> 下一个正式任务，不再将该 lease 视为 active。
 
 **执行顺序约束：** `P2-T03/D03 -> D04 -> D05` 是同任务闭合顺序；required validation
 未满足时不得越过该 slice 新增横向 helper。`P2-T02/D01` 的 implementation dependencies
@@ -546,7 +562,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | done | 2026-08-08 closure: D01-D02 satisfy the unchanged acceptance. The daemon-private fixed-post-state and verification-request/report boundary stays append-only; verifier identity, currentness, fenced-writer, malformed/duplicate artifact reference, and passed-without-evidence regressions fail closed before report persistence. Exact remote Linux `df7d483282f3ef0a6bbb17bae3d29bb24f13e0f7` passed the focused verifier test module 7/7 and targeted Clippy; local `cargo fmt --all`, `git diff --check`, and lints passed. No Provider/Tool execution, Artifact closure, Task completion, Gate, release, or Profile claim is made. Evidence: [P2-T07 closure](../checkpoints/20260808-personal-p2-t07-d02-verifier-persistence-closure.md). |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | not-started | — |
 
-### Phase 3 - Context、Token 与 Loop 效率
+### Phase 3 - Context Resource Value（Context、Token 与 Loop 效率）
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
@@ -619,11 +635,38 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T01 | Release pipeline、六资源 manifest、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | release manifest 固定六类 schema/version/digest，以及 sidecar/adapter/skill/tool pins；可验证 Linux artifact；production trust、SBOM/attestation、immutable actions/toolchain/environment | not-started | — |
 | P7-T02 | Transactional lifecycle、Memory/Skill backup/restore | P1-T01, P1-T08, P2-T08, P7-T01 | update/rollback/uninstall；`cognitive backup`/`restore` 覆盖 Memory、Skill 与 bindings，排除 secret；migration preflight 与恢复证据 | not-started | — |
 | P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | not-started | — |
-| P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
+| P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05（原列 P5-T05 依赖仅约束 D03 之后的 sidecar 阶段计时；D01-D05 实际依赖已按 slice register 拆分，D05 经 owner 预注册批准执行） | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
 | P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | not-started | — |
+
+### Phase 8 - 通用 Agent 适配与设计基线（post-1.0 能力列车）
+
+Phase 8 承载"主流 agent 认知资源统一管理底座"的设计基线与通用适配实现。它不改变
+Linux 1.0 的 `GMVP-LINUX` 组合与非阻塞边界；除 P8-T01 的文档基线外，各实现任务在
+1.0 收敛路径（P2-T08、P5-T02..T05、P7）之后按依赖领取。每个新 agent 沿用 B09 模式
+独立资格化，不继承 Pi 证据。
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P8-T01 | 文档体系重构与 2.0 设计基线 | — | 单一公理文档与治理规则收敛；现行白皮书（OS 定位正名、对标差距、context/harness/loop 三支柱、生态定位）；产品/架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）；ADR-0041+；P8/P9 任务卡与权威台账修复。documentation-only，不改 specs/conformance 机器合同 | in-progress | 2026-08-10 领取；branch `personal/P8-T01-doc-restructure`；lease `lease/personal/P8-T01/doc-restructure`；slices D01-D03 |
+| P8-T02 | 通用 Agent Adapter Contract 与 adapter framework 实现 | P8-T01, P5-T02 | AKP 为唯一适配协议的 adapter 能力声明/注册/生命周期实现；candidate-only 与通道隔离负例；对齐 A2A Agent Card 发现语义而不引入公网 listener；Lane-CTR 登记 `agent-adapter-manifest` 合同 | not-started | — |
+| P8-T03 | 首个非 Pi Agent 适配与独立资格化 | P8-T02, P5-T05 | 选定一个主流 CLI agent 走完整 acquisition/install/activation/rollback/uninstall 生命周期与 sidecar 资格化；证据独立于 Pi；B09 模式泛化 campaign | not-started | — |
+| P8-T04 | Harness 扩展原语：确定性 hooks 与分级加载 | P8-T01, P2-T08 | daemon-owned 生命周期拦截点（admission/pre-dispatch/post-effect/verification 事件）与 owner 可编程确定性 hooks；Skill/规则按 context 成本分级加载；hooks 不得放松任何公理边界 | not-started | — |
+| P8-T05 | Context compaction 与自适应预算 | P8-T01, P3-T04 | daemon-owned 会话/Context 压缩与汇总策略；预算自适应；压缩产物走 digest 绑定与显式损失记录；UCR-01 可复验收益观察 | not-started | — |
+| P8-T06 | 跨 episode 学习闭环 | P8-T01, P4-T05 | agent 自产 Skill/Memory 候选经既有 candidate→deterministic admission 进入 Skill revision/Memory 生命周期；失败经验（Reflexion 谱系）沉淀为可解释、可撤销的治理事实；不引入自授权 | not-started | — |
+
+### Phase 9 - 性能与结构演进（工程健康候选池）
+
+Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 P7-T04 已建立的模块
+回归地板与治理路径 stage 计时为前后对照证据。
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P9-T01 | 异步事件底座演进 | P8-T01 | 以 P7-T04/D02 治理路径 stage 计时区分"治理税/实现税"为决策门：若连接/open/锁竞争主导 p95，分阶段将 HTTP/watch/sidecar 流层迁移到异步 runtime，权威 SQLite 写路径保持单写者语义；否则记录保守优化结论 | not-started | — |
+| P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | not-started | — |
+| P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | not-started | — |
 
 ## 5. Gate 与证据要求
 
@@ -665,10 +708,12 @@ evidence collector/redaction/cleanup、operator 与 independent verifier、允�
 non-claims。Handoff/attempt ledger 不得覆盖本表 threshold；不一致必须 fail closed 并走
 `product-semantic` 修订。环境明细见 [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)。
 
-B01 的统计解释见
-[2026-08-02 addendum](../checkpoints/20260802-personal-p1-t09-b01-statistical-interpretation-addendum.md)：
-它不改原 preregistration、attempt 1、fixed minimum `N=20`、成功率 ≥90% 或 zero-critical
-threshold，也不把当前 `running` 状态提升为 `pass`。
+B01 的历史统计解释见
+[2026-08-02 addendum](../checkpoints/20260802-personal-p1-t09-b01-statistical-interpretation-addendum.md)。
+该 addendum 只约束已保留的失败 campaign `001`（其历史 N=20、成功率 ≥90% 与
+zero-critical 口径）。现行 B01 结论由 ADR-0039 的 successor `002` 政策（固定六个
+counted outcomes、至少 5 次成功、zero critical、完整统计与 affirmative independent
+verifier）决定，并已按上方 Gate 表记为 `pass`；`001` 的口径不再适用于任何新 claim。
 
 Windows install parity 声明需要 P7-T07 的专门 B01-W Gate 与已执行证据；在此之前，
 RC 与支持矩阵中的安装声明仅覆盖 Linux bundle（Windows 仅为 daemon/CLI 产品路径，

@@ -559,17 +559,18 @@ affected paths and claims, not freeze unrelated Personal work.
 
 ## 8. Invariants that this model does not relax
 
-1. Provider and user secrets remain in approved Secret Stores and never enter
-   argv, ordinary config, SQLite, logs, CI, or evidence.
-2. Pi, CLI, SDK, and UI remain clients; deterministic server code owns
-   authorization, CAS, state transitions, budgets, idempotency, fencing,
-   Effect commit/reconciliation, and final acceptance.
-3. External mutations remain persist-before-dispatch Intent/Effect operations.
-4. Task completion requires independent verification; process exit, Pi
-   `agent_end`, Provider response, or external receipt alone is insufficient.
-5. Contract changes use Lane-CTR and negative vectors cannot be weakened to fit
-   an implementation.
-6. WSL, fixture, fake-systemd, local smoke, and ordinary CI evidence cannot be
-   promoted to native campaign, Gate, release, containment, or Profile claims.
-7. Unknown worktree changes are never overwritten, reverted, staged, or mixed
-   into another delivery.
+The immutable axiom list and the engineering-principle layer beneath it are
+owned solely by [AXIOMS.md](AXIOMS.md) (A1–A8 and P1–P3). This Operating Model
+does not maintain a parallel numbered list.
+
+Operational restatement for daily delivery (non-normative relative to
+AXIOMS.md; if wording drifts, AXIOMS.md wins):
+
+1. Secrets stay in approved Secret Stores (A5).
+2. Clients never write authority; only the Rust daemon does (A1, A2).
+3. External mutations use persist-before-dispatch Intent/Effect (A3).
+4. Task completion requires independent verification (A4).
+5. Contracts and negatives are not implementation-shaped (A6).
+6. Local/fixture/WSL/ordinary CI evidence cannot promote Gate/release/Profile
+   claims (A7).
+7. Unknown worktree changes are protected (A8).
