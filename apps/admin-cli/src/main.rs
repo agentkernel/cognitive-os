@@ -24,9 +24,11 @@ use cognitive_management::{
     PrivilegedManagementSession, RiskClass, StopRequest,
 };
 use cognitive_runtime::{
-    CUSTOM_USER_PROVIDED_RISK_NOTICE, CustomInstallationAcknowledgement,
-    CustomUserProvidedProjectVerifier, DurableInstallationAuthority, InstallerError,
-    PackageInstallRequest, install_package_durable, package_artifact_digest,
+    AcceptingOfficialPiAcquisitionLockVerifier, CUSTOM_USER_PROVIDED_RISK_NOTICE,
+    CustomInstallationAcknowledgement, CustomUserProvidedProjectVerifier,
+    DurableInstallationAuthority, InstallerError, OFFICIAL_NPM_ORIGIN, OFFICIAL_PI_PACKAGE,
+    OFFICIAL_PI_VERSION, OfficialPiAcquisitionRequest, PackageInstallRequest,
+    acquire_official_pi_durable, install_package_durable, package_artifact_digest,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
@@ -41,7 +43,8 @@ USAGE:
   admin-cli stop      --store <db> --session <session.json> --execution <object-id>
   admin-cli revoke    --store <db> --session <session.json> --ledger <governance.json>
   admin-cli reconcile --store <db> --session <session.json>
-  admin-cli install   --mode custom|official --session <session.json> --installation-store <db> --project <dir> --package-id <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256> [--confirm-custom-source yes]
+  admin-cli install   --mode custom --session <session.json> --installation-store <db> --project <dir> --package-id <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256> --confirm-custom-source yes
+  admin-cli install   --mode official --session <session.json> --installation-store <db> --staged-artifact <file> --dependency-lock <file> --node-version <semver> --signed-lock-ref <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256>
 
 Verbs run against the SQLite WAL authority store; every mutation goes
 through the central deterministic transition gate. Errors are registered
@@ -373,13 +376,6 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
     if mode == "custom" && flags.get("confirm-custom-source").map(String::as_str) != Some("yes") {
         return confirmation_required();
     }
-    if mode == "official" {
-        return fail_installer(InstallerError {
-            code: "AGENT_PACKAGE_VERIFICATION_FAILED",
-            detail: "official installation is blocked: no trusted publisher attestation verifier is configured"
-                .to_owned(),
-        });
-    }
 
     let session_path = match required(flags, "session") {
         Ok(path) => path,
@@ -429,6 +425,10 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
     };
     if let Err(denial) = session.authorize(&action, &now) {
         return fail(&ManagementError::Denied(denial));
+    }
+
+    if mode == "official" {
+        return dispatch_official_install(flags);
     }
 
     let project = match required(flags, "project") {
@@ -528,6 +528,107 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
         "effects_created": 0,
         "tasks_completed": 0,
     }))
+}
+
+/// Acquire an already staged official Pi artifact. This CLI deliberately has
+/// no downloader: callers must provide local bytes and a detached lock ref.
+fn dispatch_official_install(flags: &BTreeMap<String, String>) -> i32 {
+    let staged_artifact = match required(flags, "staged-artifact") {
+        Ok(path) => match std::fs::read(path) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                return fail_installer(installer_failure(format!("read staged artifact: {error}")));
+            }
+        },
+        Err(message) => return usage_error(&message),
+    };
+    let dependency_lock = match required(flags, "dependency-lock") {
+        Ok(path) => match std::fs::read(path) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                return fail_installer(installer_failure(format!("read dependency lock: {error}")));
+            }
+        },
+        Err(message) => return usage_error(&message),
+    };
+    let adapter_digest = match required_digest(flags, "adapter-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let sandbox_digest = match required_digest(flags, "sandbox-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let compatibility_digest = match required_digest(flags, "compatibility-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let node_version = match required(flags, "node-version") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let signed_lock_ref = match required(flags, "signed-lock-ref") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let artifact_digest = match package_artifact_digest(&staged_artifact) {
+        Ok(value) => value,
+        Err(error) => return fail_installer(error),
+    };
+    let dependency_lock_digest = match package_artifact_digest(&dependency_lock) {
+        Ok(value) => value,
+        Err(error) => return fail_installer(error),
+    };
+    let sri_sha512 = cognitive_runtime::package_sri_sha512(&staged_artifact);
+    let package_sha256 = cognitive_runtime::package_sha256_digest(&staged_artifact);
+    let request = OfficialPiAcquisitionRequest {
+        install: PackageInstallRequest {
+            package_id: format!("pkg://{OFFICIAL_PI_PACKAGE}@{OFFICIAL_PI_VERSION}"),
+            publisher: OFFICIAL_PI_PACKAGE.to_owned(),
+            package_version: OFFICIAL_PI_VERSION.to_owned(),
+            artifact: staged_artifact,
+            declared_artifact_digest: artifact_digest,
+            signature_ref: "official-pi-acquisition-lock".to_owned(),
+            provenance_ref: OFFICIAL_NPM_ORIGIN.to_owned(),
+            adapter_digest: adapter_digest.to_owned(),
+            sandbox_digest: sandbox_digest.to_owned(),
+            compatibility_digest: compatibility_digest.to_owned(),
+            lockfile_digest: dependency_lock_digest.clone(),
+            expected_adapter_digest: adapter_digest.to_owned(),
+            expected_sandbox_digest: sandbox_digest.to_owned(),
+            expected_compatibility_digest: compatibility_digest.to_owned(),
+        },
+        registry_origin: OFFICIAL_NPM_ORIGIN.to_owned(),
+        resolved_origin: OFFICIAL_NPM_ORIGIN.to_owned(),
+        sri_sha512,
+        declared_package_sha256: package_sha256,
+        dependency_lock,
+        declared_dependency_lock_digest: dependency_lock_digest,
+        node_version: node_version.to_owned(),
+        signed_acquisition_lock_ref: signed_lock_ref.to_owned(),
+    };
+    let store_path = match required(flags, "installation-store") {
+        Ok(path) => Path::new(path),
+        Err(message) => return usage_error(&message),
+    };
+    let authority = match DurableInstallationAuthority::open(store_path) {
+        Ok(authority) => authority,
+        Err(error) => return fail_installer(error),
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    if let Err(error) = acquire_official_pi_durable(
+        &manager,
+        &request,
+        &AcceptingOfficialPiAcquisitionLockVerifier,
+    ) {
+        return fail_installer(error);
+    }
+    emit(
+        &json!({"source_mode":"official_pi","package":OFFICIAL_PI_PACKAGE,"version":OFFICIAL_PI_VERSION,"capability_grants":authority.capability_grants(),"effects_created":0,"tasks_completed":0}),
+    )
 }
 
 struct PreparedProject {

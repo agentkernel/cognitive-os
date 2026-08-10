@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | none | — | — | — | — | — | none |
+| `lease/personal/P5-T01/pi-acquisition` | P5-T01/D01 official Pi acquisition lock | Lane-RUN | `personal/P5-T01-pi-acquisition` | `crates/cognitive-runtime/src/installer.rs`; `crates/cognitive-runtime/src/lib.rs`; `crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs`; `crates/cognitive-store/src/installation.rs`; `crates/cognitive-store/tests/installation_store.rs`; `apps/admin-cli/src/main.rs`; `apps/admin-cli/tests/agent_installation.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260810-personal-p5-t01-pi-acquisition-closure.md` | Cursor continuous-development session | 2026-08-10 / 2026-08-10 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not

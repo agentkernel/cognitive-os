@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS installation_staging (
   operator_ref         TEXT,
   project_ref          TEXT,
   lockfile_digest      TEXT,
-  verification_result  TEXT
+  verification_result  TEXT,
+  acquisition_lock     TEXT
 ) STRICT;
 
 CREATE TABLE IF NOT EXISTS installations (
@@ -39,7 +40,8 @@ CREATE TABLE IF NOT EXISTS installations (
   operator_ref         TEXT,
   project_ref          TEXT,
   lockfile_digest      TEXT,
-  verification_result  TEXT
+  verification_result  TEXT,
+  acquisition_lock     TEXT
 ) STRICT;
 
 CREATE TRIGGER IF NOT EXISTS installations_append_only_update
@@ -80,6 +82,7 @@ pub struct InstallationEvidence {
     project_ref: String,
     lockfile_digest: String,
     verification_result: String,
+    acquisition_lock: Option<String>,
 }
 
 impl InstallationEvidence {
@@ -96,6 +99,7 @@ impl InstallationEvidence {
             project_ref: project_ref.into(),
             lockfile_digest: lockfile_digest.into(),
             verification_result: verification_result.into(),
+            acquisition_lock: None,
         };
         if !evidence.operator_ref.starts_with("principal://")
             || !evidence.project_ref.starts_with("file://")
@@ -104,6 +108,33 @@ impl InstallationEvidence {
         {
             return Err(InstallationStoreError::InvalidCommit {
                 detail: "Custom evidence requires principal:// operator, file:// bundle, lockfile digest, and verification result".to_owned(),
+            });
+        }
+        Ok(evidence)
+    }
+
+    /// Official acquisition evidence, including the signed lock payload.
+    pub fn official_pi(
+        acquisition_lock: impl Into<String>,
+        lockfile_digest: impl Into<String>,
+    ) -> Result<Self, InstallationStoreError> {
+        let evidence = Self {
+            source_mode: "official_pi".to_owned(),
+            operator_ref: "official-registry".to_owned(),
+            project_ref: "https://registry.npmjs.org/".to_owned(),
+            lockfile_digest: lockfile_digest.into(),
+            verification_result: "official_acquisition_lock_verified".to_owned(),
+            acquisition_lock: Some(acquisition_lock.into()),
+        };
+        if evidence.lockfile_digest.trim().is_empty()
+            || evidence
+                .acquisition_lock
+                .as_deref()
+                .is_none_or(|lock| lock.trim().is_empty())
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "Official evidence requires a dependency lock digest and signed acquisition lock"
+                    .to_owned(),
             });
         }
         Ok(evidence)
@@ -127,6 +158,11 @@ impl InstallationEvidence {
 
     pub fn verification_result(&self) -> &str {
         &self.verification_result
+    }
+
+    /// Canonical official acquisition lock, when this was an official install.
+    pub fn acquisition_lock(&self) -> Option<&str> {
+        self.acquisition_lock.as_deref()
     }
 }
 
@@ -291,8 +327,8 @@ impl SqliteInstallationStore {
         let inserted = tx.execute(
             "INSERT INTO installation_staging
                (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             (
                 &commit.package_ref,
                 &commit.package_digest,
@@ -307,6 +343,10 @@ impl SqliteInstallationStore {
                     .evidence
                     .as_ref()
                     .map(|e| e.verification_result.as_str()),
+                commit
+                    .evidence
+                    .as_ref()
+                    .and_then(|e| e.acquisition_lock.as_deref()),
             ),
         );
         match inserted {
@@ -329,9 +369,9 @@ impl SqliteInstallationStore {
         let promoted = tx.execute(
                 "INSERT INTO installations
                    (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock)
                  SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                        source_mode, operator_ref, project_ref, lockfile_digest, verification_result
+                        source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock
                    FROM installation_staging WHERE package_ref = ?1",
                 [package_ref],
             );
@@ -366,7 +406,7 @@ impl SqliteInstallationStore {
         let conn = self.lock()?;
         conn.query_row(
             "SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock
                FROM installations WHERE package_ref = ?1",
             [package_ref],
             |row| {
@@ -375,20 +415,23 @@ impl SqliteInstallationStore {
                 let project_ref: Option<String> = row.get(7)?;
                 let lockfile_digest: Option<String> = row.get(8)?;
                 let verification_result: Option<String> = row.get(9)?;
+                let acquisition_lock: Option<String> = row.get(10)?;
                 let evidence = match (
                     source_mode,
                     operator_ref,
                     project_ref,
                     lockfile_digest,
                     verification_result,
+                    acquisition_lock,
                 ) {
-                    (None, None, None, None, None) => None,
-                    (Some(source_mode), Some(operator_ref), Some(project_ref), Some(lockfile_digest), Some(verification_result)) => Some(InstallationEvidence {
+                    (None, None, None, None, None, None) => None,
+                    (Some(source_mode), Some(operator_ref), Some(project_ref), Some(lockfile_digest), Some(verification_result), acquisition_lock) => Some(InstallationEvidence {
                         source_mode,
                         operator_ref,
                         project_ref,
                         lockfile_digest,
                         verification_result,
+                        acquisition_lock,
                     }),
                     _ => return Err(rusqlite::Error::InvalidQuery),
                 };
@@ -436,6 +479,8 @@ fn ensure_evidence_columns(conn: &Connection) -> Result<(), InstallationStoreErr
             "project_ref TEXT",
             "lockfile_digest TEXT",
             "verification_result TEXT",
+            "acquisition_lock TEXT",
+            "acquisition_lock TEXT",
         ] {
             let statement = format!("ALTER TABLE {table} ADD COLUMN {column}");
             match conn.execute(&statement, []) {

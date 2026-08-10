@@ -66,6 +66,40 @@ fn custom_acknowledgement_evidence_is_atomically_committed_and_survives_reopen()
 }
 
 #[test]
+fn official_acquisition_lock_evidence_is_immutable_and_survives_reopen()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("installation-authority.db");
+    let store = SqliteInstallationStore::open(&path)?;
+    let acquisition_lock = r#"{"package":"@earendil-works/pi-coding-agent","version":"0.81.1","signed_lock_ref":"attestation://pi/lock-01"}"#;
+    let commit = InstallationCommit::new_with_evidence(
+        "pkg://@earendil-works/pi-coding-agent@0.81.1",
+        "sha256:package-bytes",
+        "sha256:adapter-policy",
+        "sha256:sandbox-policy",
+        "sha256:compatibility-report",
+        InstallationEvidence::official_pi(acquisition_lock, "sha256:dependency-lock")?,
+    )?;
+
+    store.stage(&commit)?;
+    store.commit(commit.package_ref())?;
+    drop(store);
+
+    let reopened = SqliteInstallationStore::open(&path)?;
+    let recovered = reopened
+        .committed(commit.package_ref())?
+        .ok_or("missing official commit")?;
+    assert_eq!(recovered, commit);
+    assert_eq!(
+        recovered
+            .evidence()
+            .and_then(InstallationEvidence::acquisition_lock),
+        Some(acquisition_lock)
+    );
+    Ok(())
+}
+
+#[test]
 fn commit_is_atomically_visible_to_a_second_store_handle() -> Result<(), Box<dyn std::error::Error>>
 {
     let directory = tempfile::tempdir()?;
