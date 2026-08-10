@@ -9,6 +9,7 @@
 //! directly.
 
 pub mod adapters;
+pub mod agent_registration;
 pub mod channel_binding;
 pub mod event_envelope;
 pub mod harness_loop;
@@ -31,6 +32,14 @@ pub mod target_resolution;
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
+};
+pub use agent_registration::{
+    OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentActivationRequest,
+    OfficialPiAgentLifecycleRequest, OfficialPiAgentRegistrationRequest,
+    activate_official_pi_agent_durable, observe_official_pi_agent_health_durable,
+    pause_official_pi_agent_durable, recover_official_pi_agent_durable,
+    register_official_pi_agent_durable, resume_official_pi_agent_durable,
+    stop_official_pi_agent_durable,
 };
 pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,

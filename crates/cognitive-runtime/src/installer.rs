@@ -599,9 +599,104 @@ impl DurableInstallationManager<'_> {
             .installation_quarantine(installation_root, activation_version)
             .map_err(map_store_error)
     }
+
+    /// Read the current Agent registration for an installation root.
+    pub fn current_agent_registration(
+        &self,
+        installation_root: &str,
+    ) -> Result<Option<cognitive_store::AgentRegistrationRecord>, InstallerError> {
+        self.authority
+            .store
+            .current_agent_registration(installation_root)
+            .map_err(map_store_error)
+    }
+
+    /// Persist a daemon-private registration and inactive instance identity.
+    pub(crate) fn register_agent_from_active_root(
+        &self,
+        commit: &cognitive_store::AgentRegistrationCommit,
+    ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
+        self.authority.store.register_agent_from_active_root(commit)
+    }
+
+    /// Activate a registered instance and create its SidecarSession.
+    pub(crate) fn activate_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentActivationCommit,
+    ) -> Result<
+        (
+            cognitive_store::AgentRegistrationRecord,
+            cognitive_store::SidecarSessionRecord,
+        ),
+        InstallationStoreError,
+    > {
+        self.authority.store.activate_agent_instance(commit)
+    }
+
+    pub(crate) fn pause_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentLifecycleFenceCommit,
+    ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
+        self.authority.store.pause_agent_instance(commit)
+    }
+
+    pub(crate) fn resume_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentActivationCommit,
+    ) -> Result<
+        (
+            cognitive_store::AgentRegistrationRecord,
+            cognitive_store::SidecarSessionRecord,
+        ),
+        InstallationStoreError,
+    > {
+        self.authority.store.resume_agent_instance(commit)
+    }
+
+    pub(crate) fn stop_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentLifecycleFenceCommit,
+    ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
+        self.authority.store.stop_agent_instance(commit)
+    }
+
+    pub(crate) fn recover_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentActivationCommit,
+    ) -> Result<
+        (
+            cognitive_store::AgentRegistrationRecord,
+            cognitive_store::SidecarSessionRecord,
+        ),
+        InstallationStoreError,
+    > {
+        self.authority.store.recover_agent_instance(commit)
+    }
+
+    /// Read the current SidecarSession for an AgentInstance.
+    pub fn current_sidecar_session(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<cognitive_store::SidecarSessionRecord>, InstallerError> {
+        self.authority
+            .store
+            .current_sidecar_session(instance_id)
+            .map_err(map_store_error)
+    }
+
+    /// Observe redacted AgentInstance health without mutation.
+    pub fn observe_agent_health(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<cognitive_store::AgentHealthObservation>, InstallerError> {
+        self.authority
+            .store
+            .observe_agent_health(instance_id)
+            .map_err(map_store_error)
+    }
 }
 
-fn map_store_error(error: InstallationStoreError) -> InstallerError {
+pub(crate) fn map_store_error(error: InstallationStoreError) -> InstallerError {
     let code = match error {
         InstallationStoreError::InvalidCommit { .. } => {
             RegisteredErrorCode::AgentPackageVerificationFailed
@@ -914,7 +1009,7 @@ fn uninstall_receipt(quarantine: InstallationQuarantine) -> PiInstallationUninst
     }
 }
 
-fn verification_failure(detail: impl Into<String>) -> InstallerError {
+pub(crate) fn verification_failure(detail: impl Into<String>) -> InstallerError {
     InstallerError::new(RegisteredErrorCode::AgentPackageVerificationFailed, detail)
 }
 

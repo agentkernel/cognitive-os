@@ -63,7 +63,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
         ]
     );
-    assert_eq!(report.installation().applied_versions(), &[1]);
+    assert_eq!(report.installation().applied_versions(), &[1, 2, 3]);
     assert!(layout.authority_database_path().exists());
     assert!(layout.installation_database_path().exists());
     assert!(
@@ -87,7 +87,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
     );
     assert_eq!(
         recorded_migration_versions(&layout.installation_database_path()),
-        vec![1]
+        vec![1, 2, 3]
     );
     assert!(table_exists(
         &layout.authority_database_path(),
@@ -157,6 +157,14 @@ fn empty_layout_migrates_both_databases_to_latest() {
         &layout.installation_database_path(),
         "installations"
     ));
+    assert!(table_exists(
+        &layout.installation_database_path(),
+        "agent_registrations"
+    ));
+    assert!(table_exists(
+        &layout.installation_database_path(),
+        "sidecar_sessions"
+    ));
 
     // Production open paths remain compatible after versioned prepare.
     SqliteAuthorityStore::open(&layout.authority_database_path()).expect("open authority");
@@ -192,7 +200,7 @@ fn reapply_prepare_is_replay_safe() {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
         ]
     );
-    assert_eq!(first.installation().applied_versions(), &[1]);
+    assert_eq!(first.installation().applied_versions(), &[1, 2, 3]);
 
     let second = prepare_personal_databases(&layout).expect("second prepare");
     assert!(second.authority().applied_versions().is_empty());
