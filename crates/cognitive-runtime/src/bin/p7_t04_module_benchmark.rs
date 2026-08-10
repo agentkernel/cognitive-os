@@ -10,7 +10,7 @@ use cognitive_contracts::generated::context_view::{
     LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
-use cognitive_domain::{UriRef, WallTimestamp};
+use cognitive_domain::{LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
 use cognitive_kernel::authz::{
     ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance, PrincipalFacts,
 };
@@ -21,10 +21,22 @@ use cognitive_kernel::context_cache::{
     ContextCacheEntry, ContextCacheKey, ContextCacheLookup, ContextSourceDigest, DerivedCacheKind,
     GovernanceBinding, GovernedContextCache,
 };
+use cognitive_kernel::effects::{
+    EffectClass, IntentCommand, MintedIntent, OperationDescriptor, WriterLease, mint_intent,
+};
+use cognitive_kernel::executor::ExecutorCapabilities;
+use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
+use cognitive_kernel::ports::{
+    Clock, ContextStore, IdGenerator, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    MemoryObjectRow, MemorySearchQuery, MemoryStore, PortFailure, WorkspaceContextSourceRow,
+};
+use cognitive_kernel::{AdmitCommand, TransitionEngine};
 use cognitive_runtime::GovernanceOverheadSample;
-use cognitive_store::ArtifactStore;
 use cognitive_store::scheduler::{
     SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey,
+};
+use cognitive_store::{
+    ArtifactStore, PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
 };
 use serde::Serialize;
 use serde_json::json;
@@ -34,10 +46,40 @@ use std::error::Error;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
 const DEFAULT_SAMPLE_COUNT: usize = 25;
 const WARMUP_ITERATIONS: usize = 3;
+
+struct BenchmarkClock(WallTimestamp);
+
+impl BenchmarkClock {
+    fn new() -> Result<Self, Box<dyn Error>> {
+        Ok(Self(WallTimestamp::parse("2026-08-10T00:00:00Z")?))
+    }
+}
+
+impl Clock for BenchmarkClock {
+    fn now(&self) -> Result<WallTimestamp, PortFailure> {
+        Ok(self.0.clone())
+    }
+}
+
+struct BenchmarkIdentifiers(AtomicU64);
+
+impl BenchmarkIdentifiers {
+    fn new() -> Self {
+        Self(AtomicU64::new(30_000))
+    }
+}
+
+impl IdGenerator for BenchmarkIdentifiers {
+    fn next_uuid_v7(&self) -> Result<String, PortFailure> {
+        let sequence = self.0.fetch_add(1, Ordering::SeqCst);
+        Ok(format!("00000000-0000-7000-8000-{sequence:012x}"))
+    }
+}
 
 #[derive(Serialize)]
 struct BenchmarkReport {
@@ -103,6 +145,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         measure_context_cache_hit(sample_count)?,
         measure_artifact_cas_publish(sample_count)?,
         measure_scheduler_eligible_cas(sample_count)?,
+        measure_memory_fts5_retrieval(sample_count)?,
+        measure_intent_effect_persistence(sample_count)?,
         measure_canonical_report_serialization(sample_count)?,
     ];
 
@@ -174,6 +218,8 @@ fn calculate_fixture_digest() -> Result<String, serde_json::Error> {
         "cache_key": "complete-governance-binding",
         "artifact_payload_prefix": "p7-t04-artifact",
         "scheduler_state": "runnable",
+        "memory_query": "p7t04 benchmark memory token",
+        "intent_effect": "persist-before-dispatch",
         "report": "governance-overhead-schema-shape"
     });
     let encoded_fixture = serde_json::to_vec(&fixture)?;
@@ -312,6 +358,219 @@ fn measure_scheduler_eligible_cas(
     )
 }
 
+fn measure_memory_fts5_retrieval(
+    sample_count: usize,
+) -> Result<BenchmarkObservation, Box<dyn Error>> {
+    let directory = TemporaryDirectory::create("memory-fts5")?;
+    let layout = PersonalDataLayout::from_xdg_roots(
+        directory.path().join("config"),
+        directory.path().join("data"),
+        directory.path().join("state"),
+        directory.path().join("cache"),
+        directory.path().join("runtime"),
+    );
+    prepare_personal_databases(&layout)?;
+    let store = SqliteAuthorityStore::open(layout.authority_database_path())?;
+    let source = benchmark_memory_source(&benchmark_object_id(10))?;
+    let memory_id = admit_benchmark_memory(&store, &source)?;
+    let query = MemorySearchQuery {
+        governance_scope: "workspace://tenant-a/p7-t04".to_owned(),
+        purpose: "task_execution".to_owned(),
+        observed_at_unix_seconds: 150,
+        query_text: "p7t04".to_owned(),
+        maximum_results: 1,
+    };
+
+    measure("memory-fts5-metadata-first-retrieval", sample_count, |_| {
+        let results = store.search_memory_candidates(&query)?;
+        if results.len() != 1 || results[0].memory_id != memory_id {
+            return Err(Box::new(io::Error::other(
+                "Memory FTS5 fixture did not return its authorized memory",
+            )));
+        }
+        Ok(())
+    })
+}
+
+fn measure_intent_effect_persistence(
+    sample_count: usize,
+) -> Result<BenchmarkObservation, Box<dyn Error>> {
+    let directory = TemporaryDirectory::create("intent-effect")?;
+    let store = SqliteAuthorityStore::open(&directory.path().join("authority.sqlite"))?;
+    let clock = BenchmarkClock::new()?;
+    let identifiers = BenchmarkIdentifiers::new();
+
+    measure(
+        "intent-effect-durable-persist-before-dispatch",
+        sample_count,
+        |sample_index| {
+            let effect_id = benchmark_object_id(10_000 + sample_index as u64);
+            let engine = TransitionEngine::new(&store, &clock, &identifiers);
+            engine.admit_object(&AdmitCommand {
+                object_id: effect_id.clone(),
+                domain: LifecycleDomain::Effect,
+                subject_ref: uri(&format!("effect://tenant-a/{sample_index}"))?,
+                body: json!({"benchmark": "p7-t04"}),
+                actor_ref: uri("actor://tenant-a/benchmark")?,
+                authority_ref: uri("authority://tenant-a/benchmark")?,
+                correlation_id: uri("correlation://tenant-a/p7-t04")?,
+                outbox_destinations: Vec::new(),
+                fencing_epoch: None,
+            })?;
+            let minted = mint_intent(
+                &store,
+                &clock,
+                &identifiers,
+                &WriterLease { epoch: 1 },
+                &IntentCommand {
+                    intent_id: benchmark_object_id(20_000 + sample_index as u64),
+                    effect_object_id: effect_id.clone(),
+                    descriptor: benchmark_operation_descriptor(),
+                    target: "https://benchmark.invalid/persist-only".to_owned(),
+                    parameters: json!({"benchmark_sample": sample_index}),
+                    idempotency_key: format!("p7-t04-persist-{sample_index}"),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    actor_ref: uri("actor://tenant-a/benchmark")?,
+                    authority_ref: uri("authority://tenant-a/benchmark")?,
+                    correlation_id: uri("correlation://tenant-a/p7-t04")?,
+                    task_binding: None,
+                },
+            )?;
+            let MintedIntent::Persisted(intent) = minted else {
+                return Err(Box::new(io::Error::other(
+                    "benchmark fixture unexpectedly replayed an Intent",
+                )));
+            };
+            let restored = store.load_intent_for_effect(&effect_id)?;
+            if restored.as_ref().map(|row| &row.intent_id) != Some(&intent.intent_id) {
+                return Err(Box::new(io::Error::other(
+                    "persisted Intent could not be reloaded by Effect identity",
+                )));
+            }
+            Ok(())
+        },
+    )
+}
+
+fn benchmark_memory_source(
+    identifier: &ObjectId,
+) -> Result<WorkspaceContextSourceRow, Box<dyn Error>> {
+    let payload = json!({
+        "header": {"id": identifier.as_str(), "type": "WorkspaceContextSource", "schema_version": "cognitiveos.context/0.1", "object_version": 1, "scope_domain": "tenant", "tenant_id": "00000000-0000-7000-9000-0000000000f1", "resource_scope_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000101","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))}, "owner_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000102","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))}, "authority_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000103","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))}, "policy_refs": [], "purpose_constraints": ["task_execution"], "sensitivity": "internal", "compartments": [], "retention": {"policy":"standard","expires_at":null,"legal_hold":false}, "provenance": {"created_by":"principal://tenant-a/daemon","source_refs":[]}, "lineage": {"parents":[],"transform":"p7-t04-benchmark"}, "content_digest":format!("sha256:{}", "0".repeat(64)), "created_at":"2026-08-10T00:00:00Z", "valid_time":{"from":"2026-08-10T00:00:00Z","until":null}},
+        "tenant_id":"tenant-a", "owner_ref":"principal://tenant-a/daemon", "resource_scope":"workspace://tenant-a/p7-t04", "conversation_ref":null, "role":"working", "trust_level":"verified", "representation":"text", "provenance_ref":"source://p7-t04/memory", "content_bytes":29, "content_tokens":4, "body":{"text":"p7t04 benchmark memory token"}
+    });
+    let (sealed, source_digest) = seal_governed_object_content_digest(payload)?;
+    Ok(WorkspaceContextSourceRow {
+        source_id: identifier.clone(),
+        source_digest,
+        governance: ObjectGovernance {
+            object_ref: identifier.as_str().to_owned(),
+            tenant_id: Some("tenant-a".to_owned()),
+            owner_ref: "principal://tenant-a/daemon".to_owned(),
+            resource_scope: "workspace://tenant-a/p7-t04".to_owned(),
+            conversation_ref: None,
+        },
+        role: LoadedContextItemRole::Working,
+        trust_level: LoadedContextItemTrustLevel::Verified,
+        representation: LoadedContextItemRepresentation::Text,
+        provenance_ref: "source://p7-t04/memory".to_owned(),
+        content_bytes: 29,
+        content_tokens: Some(4),
+        canonical_json: serde_json::to_string(&sealed)?,
+    })
+}
+
+fn admit_benchmark_memory(
+    store: &SqliteAuthorityStore,
+    source: &WorkspaceContextSourceRow,
+) -> Result<ObjectId, Box<dyn Error>> {
+    let candidate_id = benchmark_object_id(11);
+    let decision_id = benchmark_object_id(12);
+    let memory_id = benchmark_object_id(13);
+    store.append_workspace_context_source(source)?;
+    let candidate_payload = json!({
+        "header": {
+            "id": candidate_id.as_str(),
+            "type": "MemoryCandidate",
+            "schema_version": "cognitiveos.memory/0.1",
+            "object_version": 1,
+            "scope_domain": "tenant",
+            "tenant_id": "00000000-0000-7000-9000-0000000000f1",
+            "resource_scope_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000101","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))},
+            "owner_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000102","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))},
+            "authority_ref": {"kind":"strong","id":"00000000-0000-7000-9000-000000000103","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))},
+            "policy_refs": [],
+            "purpose_constraints": ["task_execution"],
+            "sensitivity": "internal",
+            "compartments": [],
+            "retention": {"policy":"standard","expires_at":null,"legal_hold":false},
+            "provenance": {"created_by":"principal://tenant-a/daemon","source_refs":[]},
+            "lineage": {"parents":[],"transform":"p7-t04-benchmark"},
+            "content_digest": format!("sha256:{}", "0".repeat(64)),
+            "created_at": "2026-08-10T00:00:00Z",
+            "valid_time": {"from":"2026-08-10T00:00:00Z","until":null}
+        },
+        "memory_kind": "working",
+        "governance_scope": source.governance.resource_scope,
+        "purpose": "task_execution",
+        "retention": {"policy":"standard","expires_at":null,"legal_hold":false},
+        "source_evidence_refs": [],
+        "conflict_refs": [],
+        "admission_status": "proposed",
+        "content_ref": "artifact://p7-t04/memory-content",
+        "target_scope": source.governance.resource_scope
+    });
+    let (sealed_candidate, candidate_digest) =
+        seal_governed_object_content_digest(candidate_payload)?;
+    store.append_memory_admission(
+        &MemoryCandidateRow {
+            candidate_id: candidate_id.clone(),
+            candidate_digest: candidate_digest.clone(),
+            source_id: source.source_id.clone(),
+            source_digest: source.source_digest.clone(),
+            source_provenance_ref: source.provenance_ref.clone(),
+            governance_scope: source.governance.resource_scope.clone(),
+            target_scope: source.governance.resource_scope.clone(),
+            purpose: "task_execution".to_owned(),
+            retention_expires_at_unix_seconds: 200,
+            observed_at_unix_seconds: 100,
+            canonical_json: serde_json::to_string(&sealed_candidate)?,
+        },
+        &MemoryAdmissionDecisionRow {
+            decision_id: decision_id.clone(),
+            candidate_id: candidate_id.clone(),
+            candidate_digest,
+            decision: "admit".to_owned(),
+            policy_version: 1,
+            reason_codes_json: "[\"MEMORY_ADMISSION_ACCEPTED\"]".to_owned(),
+            canonical_json: "{}".to_owned(),
+        },
+        Some(&MemoryObjectRow {
+            memory_id: memory_id.clone(),
+            candidate_id,
+            decision_id,
+            canonical_json: "{}".to_owned(),
+        }),
+    )?;
+    Ok(memory_id)
+}
+
+fn benchmark_operation_descriptor() -> OperationDescriptor {
+    OperationDescriptor {
+        operation_id: "operation://tenant-a/p7-t04/persist-only".to_owned(),
+        action: "benchmark.persist".to_owned(),
+        effect_class: EffectClass::GovernedExternal,
+        executor: "executor://tenant-a/p7-t04".to_owned(),
+        capabilities: ExecutorCapabilities {
+            queryable: true,
+            idempotent: false,
+        },
+        descriptor_version: 1,
+    }
+}
+
 fn measure_canonical_report_serialization(
     sample_count: usize,
 ) -> Result<BenchmarkObservation, Box<dyn Error>> {
@@ -371,6 +630,11 @@ where
 fn nearest_rank(sorted_samples: &[u128], percentile: usize) -> u128 {
     let rank = (percentile * sorted_samples.len()).div_ceil(100);
     sorted_samples[rank.saturating_sub(1)]
+}
+
+fn benchmark_object_id(sequence: u64) -> ObjectId {
+    ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}"))
+        .expect("benchmark object ID sequence must produce valid UUIDv7")
 }
 
 fn timestamp(value: &str) -> Result<WallTimestamp, Box<dyn Error>> {
