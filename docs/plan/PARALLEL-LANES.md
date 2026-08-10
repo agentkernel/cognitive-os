@@ -75,8 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | no active lease |
-
+| `lease/personal/P7-T01/release-pipeline` | P7-T01/D04 closure CI repair | Lane-RUN | `personal/P7-T01-release-pipeline` | `tools/test/check.test.mjs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/`; `docs/plan/PARALLEL-LANES-CLOSED.md` | cursor-agent/P7-T01-D04 | 2026-08-11 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
