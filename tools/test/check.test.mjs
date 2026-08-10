@@ -152,7 +152,7 @@ test("active lease must match the unique in-progress Slice", () => {
     "docs/plan/PARALLEL-LANES.md": (source) =>
       source.replace(
         "P7-T04/D01 deterministic benchmark and governance consistency",
-        "P7-T04/D02 stage instrumentation mismatch fixture",
+        "P7-T04/D03 B06 observation mismatch fixture",
       ),
   });
 

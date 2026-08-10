@@ -71,7 +71,11 @@ pub use linux_bundle_service::{
     render_personal_user_service_unit, write_rendered_personal_user_service_unit,
 };
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
-pub use perf::{GovernanceOverheadSample, StageLatencyMs};
+pub use perf::{
+    GovernanceOverheadSample, GovernedPathCollectionError, GovernedPathCounters,
+    GovernedPathObservation, GovernedPathStage, GovernedPathStageCollector, GovernedStageSample,
+    StageLatencyMs, validate_governed_path_observation,
+};
 pub use pi_launcher::{
     PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,
     admit_pi_launch,
