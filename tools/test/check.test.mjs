@@ -151,7 +151,7 @@ test("active lease must match the unique in-progress Slice", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PARALLEL-LANES.md": (source) =>
       source.replace(
-        "P7-T04/D01 deterministic benchmark and governance consistency",
+        "P7-T04/D02 governed-path stage collector",
         "P7-T04/D03 B06 observation mismatch fixture",
       ),
   });
