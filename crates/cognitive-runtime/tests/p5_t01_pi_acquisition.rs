@@ -1,3 +1,5 @@
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 use cognitive_runtime::{
     AcceptingOfficialPiAcquisitionLockVerifier, DurableInstallationAuthority, OFFICIAL_NPM_ORIGIN,
     OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION, OfficialPiAcquisitionRequest, PackageInstallRequest,
