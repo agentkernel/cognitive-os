@@ -5,6 +5,7 @@
 //! untrusted candidate record. A real OS sandbox and durable installation
 //! authority are prerequisites for a governed AgentInstallation claim.
 
+#[cfg(test)]
 use cognitive_runtime::SandboxPlatform;
 use pi_agent_adapter::{
     DAEMON_CANDIDATE_FRAME_LIMIT, DaemonCandidateRequest, PiCompatibilityPin,
