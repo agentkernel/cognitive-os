@@ -13,11 +13,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task |
-| Active task lease | `lease/personal/P5-T05/b09-managed-pi` | Active lease owns P5-T05 B09 managed Pi on `personal/P5-T05-b09-managed-pi` / Draft PR #183. | execute ADR-0047 B09 matrix; emit non-claim report; request owner disposition |
+| Active task lease | `lease/personal/P5-T05/b09-managed-pi` | Lease retained on `personal/P5-T05-b09-managed-pi` / Draft PR #183 while D04 awaits owner B09 disposition. | after owner disposition: finalize D04 docs/merge; until then claim non-overlapping ready task |
 | P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence |
 | P5-T02 Sidecar contract, registration, instance identity | **done** | D01-D03 satisfy the unchanged acceptance at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`: inactive registration, epoch-fenced SidecarSession activate, pause/resume/stop/recover, redacted health with `process_bound=false`, and management-session admin-cli callers. Exact native Linux focused runtime 11/11, admin 1/1, Clippy, and required Ubuntu/Windows CI run `31391916831` passed. Identity separation keeps AgentExecution/PiSession/process/Task absent and non-conflated. Closure checkpoint `20260810-personal-p5-t02-sidecar-foundation-closure.md`; PR #181 merged at `main@e0c3fb85e8a99cbcb4d8fd014fb7cc89d0b23a79`. | retain closure evidence; no B09/release/Profile claim |
 | P2-T08 Runtime Spine E2E Gate | **done** | D01–D04 closed under ADR-0046. Fixed matrix + non-claim report at `be7febb490fcbdf9970a700b6b6975ae49aadffe`; CI `31407542786`; owner `affirm all` → B02/B04/B05/B12 MVP `pass`. Closure checkpoint `20260811-personal-p2-t08-runtime-spine-closure.md`; PR #182 merged at `main@9a1befe475e35902447ab1562cb8d747aa908a69`. | retain closure evidence; no GMVP-LINUX/B08/B09/release/Profile claim |
-| P5-T05 B09 managed Pi + sidecar qualification | `in-progress` | D01–D03 closed through `431db73` (process-bound, upgrade fencing, recover/identity). D04 ADR-0047 fixed-denominator B09 campaign preregistered; harness added. B09 remains `not-run` until owner disposition. | execute ADR-0047 matrix on exact Linux + required CI; emit non-claim report; request owner B09 disposition |
+| P5-T05 B09 managed Pi + sidecar qualification | `blocked` | D01–D03 done. D04 ADR-0047 matrix passed at `548f138` on DEV-LINUX-NATIVE-01 (11/11 Rust + 2/2 harness + Clippy); non-claim `report_digest` `sha256:3248ff142fe8672ce8fdacce1284762e8c79ff07d785a36e92220eb7c23cd091`. Evidence: `docs/checkpoints/20260811-personal-p5-t05-d04-b09-execution-evidence.md`. B09 remains `not-run` pending owner disposition. Required CI for `548f138` tracked on PR #183. | owner: affirm or reject B09 MVP against ADR-0047 evidence; then resume D04 closure / merge |
 | P1-T09 route implementation | `done` | `experimental-local-only`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Under ADR-0039 successor `002` completed its fixed six counted outcomes: Attempts 1, 3, 4, 5, and 6 passed the full clean route, while Attempt 2 failed bounded graphical Desktop readiness before product activation. Required aggregate, verifier, and CI closure completed. | select the next ready formal task; Provider credential entry remains graphical hidden input only |
 | B01 first-install/first-conversation Gate | **pass** | Retained campaign `001` is `fail`; successor `B01-clean-linux-first-install-first-conversation-002` completed Attempt 6 of formal minimum 6 with 5 successes, 1 failure, success rate 83.33%, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition. Required Ubuntu and Windows CI passed for closure revision `0ef0b21`. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. | retain the redacted closure evidence; B01 pass does not pass G1, GMVP-LINUX, release, or Profile |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
@@ -49,12 +49,12 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 40 | 1 | 0 | 21 | 22 |
+| 62 | 40 | 0 | 1 | 21 | 22 |
 
-`P2-T08` is done under ADR-0046 with owner-affirmed MVP Gate pass for
-B02/B04/B05/B12. `P5-T05` is the sole `in-progress` formal task. Formal task
-completion remains independent from every product Gate except where the plan
-explicitly binds Gate disposition to task acceptance.
+`P5-T05` is formally `blocked` only on owner B09 MVP disposition under ADR-0047
+(evidence complete at `548f138`). Formal task completion remains independent from
+every product Gate except where the plan explicitly binds Gate disposition to
+task acceptance (P5-T05/D04 binds B09 owner disposition).
 
 ### Layer 2 — Current Delivery Slice queue
 
@@ -123,7 +123,7 @@ explicitly binds Gate disposition to task acceptance.
 | `P5-T05/D01` | `done` | Process-bound SidecarSession at `c9c2248`: schema v4; Linux p5_t05 4/4 + p5_t02 11/11 + migrations 8/8 + admin 1/1 + Clippy/fmt | consumed by D02 |
 | `P5-T05/D02` | `done` | upgrade/rollback/uninstall refuse process-bound; pin/digest drift refuses activation at `ae332e9`; Linux upgrade 4/4 + process 4/4 + p5_t02 11/11 + p5_t01 10/10 + Clippy | consumed by D03 |
 | `P5-T05/D03` | `done` | recover/orphan + identity-separation + install≠permission at `431db73`; Linux identity 3/3 + upgrade 4/4 + process 4/4 + Clippy | consumed by D04 |
-| `P5-T05/D04` | `in-progress` | ADR-0047 fixed-denominator B09 campaign preregistered; non-claim harness added | execute matrix + CI + non-claim report; owner disposition |
+| `P5-T05/D04` | `blocked` | ADR-0047 matrix + non-claim report at `548f138`; awaiting owner B09 disposition | owner affirm/reject B09; then close task |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
@@ -137,7 +137,7 @@ not override this table.
 | B02/B04/B05/B12 | `pass` (MVP, ADR-0046) | fixed authority-path/harness matrix at `be7febb` + CI `31407542786` + non-claim report + owner `affirm all`; see P2-T08 closure | none for MVP scope; does not pass GMVP-LINUX, B08, B09, release, or Profile |
 | B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
 | B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
-| B08/B09 | `not-run` | P5-T05 claimed for B09; no Gate evidence yet | B08 requires its own Memory+Skill campaign; B09 requires P5-T05 formal campaign disposition |
+| B08/B09 | B08 `not-run`; B09 `not-run` (evidence ready) | ADR-0047 matrix + non-claim report at `548f138` (`report_digest` `sha256:3248ff142fe8672ce8fdacce1284762e8c79ff07d785a36e92220eb7c23cd091`); see D04 execution evidence | owner B09 affirm/reject; B08 remains a separate Memory+Skill campaign |
 | GMVP-LINUX | `not-run` | no release evidence | remaining typed promotion dependencies: B08 campaign, B09 (P5-T05), and P7-T01..T03/P7-T08 operability evidence |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
