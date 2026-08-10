@@ -43,7 +43,15 @@ fn write_session(dir: &Path) -> PathBuf {
         "activity_context_ref": "activity://tenant-a/agent-register",
         "scope": {
             "domains": ["cognitiveos.management"],
-            "actions": ["agent.register", "agent.activate"],
+            "actions": [
+                "agent.register",
+                "agent.activate",
+                "agent.pause",
+                "agent.resume",
+                "agent.stop",
+                "agent.recover",
+                "agent.health"
+            ],
             "resources": ["agent-installation://"]
         },
         "risk_ceiling": "R1",
@@ -187,4 +195,118 @@ fn management_register_persists_inactive_instance_without_sidecar() {
     assert_eq!(activated["capability_grants"], 0);
     assert_eq!(activated["effects_created"], 0);
     assert_eq!(activated["tasks_completed"], 0);
+
+    let health = run_cli(&[
+        "agent-health",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+    ]);
+    assert_eq!(
+        health.code, 0,
+        "stdout: {} stderr: {}",
+        health.stdout, health.stderr
+    );
+    let health_value: Value = serde_json::from_str(health.stdout.trim()).unwrap();
+    assert_eq!(health_value["lifecycle_state"], "active");
+    assert_eq!(health_value["process_bound"], false);
+    assert_eq!(health_value["current_sidecar_session"], true);
+    assert_eq!(health_value["capability_grants"], 0);
+
+    let paused = run_cli(&[
+        "agent-pause",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+        "--expected-fencing-epoch",
+        "2",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    ]);
+    assert_eq!(
+        paused.code, 0,
+        "stdout: {} stderr: {}",
+        paused.stdout, paused.stderr
+    );
+    let paused_value: Value = serde_json::from_str(paused.stdout.trim()).unwrap();
+    assert_eq!(paused_value["lifecycle_state"], "paused");
+    assert_eq!(paused_value["current_sidecar_session"], false);
+
+    let resumed = run_cli(&[
+        "agent-resume",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+        "--expected-fencing-epoch",
+        "2",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    ]);
+    assert_eq!(
+        resumed.code, 0,
+        "stdout: {} stderr: {}",
+        resumed.stdout, resumed.stderr
+    );
+    let resumed_value: Value = serde_json::from_str(resumed.stdout.trim()).unwrap();
+    assert_eq!(resumed_value["lifecycle_state"], "active");
+    assert_eq!(resumed_value["fencing_epoch"], 3);
+    assert_ne!(
+        resumed_value["sidecar_session_id"],
+        activated["sidecar_session_id"]
+    );
+
+    let stopped = run_cli(&[
+        "agent-stop",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+        "--expected-fencing-epoch",
+        "3",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    ]);
+    assert_eq!(
+        stopped.code, 0,
+        "stdout: {} stderr: {}",
+        stopped.stdout, stopped.stderr
+    );
+    let stopped_value: Value = serde_json::from_str(stopped.stdout.trim()).unwrap();
+    assert_eq!(stopped_value["lifecycle_state"], "stopped");
+
+    let recovered = run_cli(&[
+        "agent-recover",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+        "--expected-fencing-epoch",
+        "3",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    ]);
+    assert_eq!(
+        recovered.code, 0,
+        "stdout: {} stderr: {}",
+        recovered.stdout, recovered.stderr
+    );
+    let recovered_value: Value = serde_json::from_str(recovered.stdout.trim()).unwrap();
+    assert_eq!(recovered_value["lifecycle_state"], "active");
+    assert_eq!(recovered_value["fencing_epoch"], 4);
+    assert_eq!(recovered_value["capability_grants"], 0);
+    assert_eq!(recovered_value["effects_created"], 0);
+    assert_eq!(recovered_value["tasks_completed"], 0);
 }
