@@ -667,10 +667,7 @@ mod tests {
         );
 
         let manifest_bytes = canonical_manifest_bytes(&valid_manifest(&expected));
-        let mut bad_signature = sign_manifest(&manifest_bytes);
-        // Flip one signature payload byte after signing a different message.
-        let other = sign_manifest(b"{\"tampered\":true}");
-        bad_signature = other;
+        let bad_signature = sign_manifest(b"{\"tampered\":true}");
         assert_eq!(
             verify_personal_release_manifest(
                 &manifest_bytes,
