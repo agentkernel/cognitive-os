@@ -14,6 +14,8 @@ Status: executed; focused evidence independently affirmed; Gate disposition pend
 - Registered implementation revision: `53c2e43`
 - Exact native checkout: `53c2e430e1de51b200d4b9eeb3204a00d1b431dc`
 - Environment: owner-approved `DEV-LINUX-NATIVE-01` / `personal-linux-native-01`
+- Environment attestation: Ubuntu 22.04.5 LTS, native `x86_64`, kernel
+  `6.8.0-83-generic`; checkout was clean before cleanup
 - Operator: Cursor agent
 - Independent verifier: user/owner; focused evidence affirmed; formal Gate
   disposition pending because the full campaign boundary is not satisfied
@@ -43,6 +45,8 @@ not mutate B03 or any Gate state.
 - `node --check tools/src/ucr-runner.mjs`: passed.
 - Focused native Linux Clippy for the Context/Artifact test targets with
   `-D warnings`: passed.
+- Disposable checkout cleanup: passed; `/tmp/cognitiveos-p3-t06-d02-53c2e43`
+  was removed after validation.
 - Initial tooling invocation found missing disposable-clone dependencies
   (`ajv`, `yaml`) before test execution. `pnpm install --frozen-lockfile`
   restored the clean checkout dependencies; the subsequent 11/11 tooling run
