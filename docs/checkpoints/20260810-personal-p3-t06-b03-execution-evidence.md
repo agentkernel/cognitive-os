@@ -3,7 +3,7 @@ Task: P3-T06
 Slice: D02
 Gate: B03
 Campaign: B03-personal-context-correctness-001
-Status: executed; independent verification pending
+Status: executed; focused evidence independently affirmed; Gate disposition pending
 -->
 
 # B03 execution evidence — native Linux
@@ -15,7 +15,8 @@ Status: executed; independent verification pending
 - Exact native checkout: `53c2e430e1de51b200d4b9eeb3204a00d1b431dc`
 - Environment: owner-approved `DEV-LINUX-NATIVE-01` / `personal-linux-native-01`
 - Operator: Cursor agent
-- Independent verifier: user/owner; disposition pending
+- Independent verifier: user/owner; focused evidence affirmed; formal Gate
+  disposition pending because the full campaign boundary is not satisfied
 - Secret and network boundary: no credential, subscription URL, raw provider
   traffic, or raw secret was included in the checkout or evidence
 
@@ -48,14 +49,21 @@ not mutate B03 or any Gate state.
   passed. This setup event is retained for complete accounting and is not a
   B03 correctness outcome.
 
+## Independent-verifier disposition
+
+The user/owner independently affirmed the focused evidence matrix and its
+failure-first results. That affirmation is intentionally limited to the
+evidence listed in this checkpoint. It does not authorize expanding the claim
+to unexecuted workload coverage, B06/B07 benefit, UCR-01 utility, release,
+Profile, or Task completion.
+
 ## Disposition boundary
 
 The native evidence is complete for the registered focused matrix, but this
-record does not itself set B03 to `pass`. The independent verifier must review
-the redacted evidence, confirm the registered assertion matrix and cleanup,
-and record an affirmative or negative disposition. Until that review,
-`P3-T06/D02` remains `in-progress`, `P3-T06` remains `in-progress`, and B03
-remains `not-run`.
+record does not itself set B03 to `pass`. The formal B03 campaign still lacks
+the complete qualified workload/accounting/cleanup evidence required by the
+campaign boundary. Therefore `P3-T06/D02` remains `in-progress`, `P3-T06`
+remains `in-progress`, and B03 remains `not-run`.
 
 ## Non-claims
 
