@@ -34,6 +34,8 @@ not set B03, a Gate, release, Profile, or Task-completion state.
 - `git diff --check`: passed before the implementation commit.
 - Required Ubuntu CI: passed.
 - Required Windows CI: passed.
+- Final required Ubuntu/Windows CI run `31343238674` passed for branch
+  revision `c03106b`.
 - Exact-revision native Linux validation passed at
   `96f616fb3d337b6321cc818961bc48d69f94fda8` after routing GitHub access
   through the existing enabled user-level Mihomo service. The tools test suite
