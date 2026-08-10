@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P7-T04、P8-T01 已完成；P2-T08 `in-progress`；B06/B07 仍为 non-claim observation，B02/B04/B05/B08/B09/B12/GMVP-LINUX 正式验收尚未完成）**
-> **最后更新：2026-08-10**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P7-T04、P8-T01 已完成；P2-T08 `blocked` on owner Gate disposition；B06/B07 仍为 non-claim observation，B02/B04/B05/B08/B09/B12/GMVP-LINUX 正式验收尚未完成）**
+> **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -151,7 +151,7 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
-| Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 1 | 0 | 0 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 1 | 0 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 2 | 0 | 0 | 3 | G5 / B09、B10 |
@@ -159,7 +159,7 @@
 | Phase 7 - 产品化与发布 | 8 | 1 | 0 | 0 | 7 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 1 | 0 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **39** | **1** | **0** | **22** | — |
+| **合计** | **62** | **39** | **0** | **1** | **22** | — |
 
 ## 2. 产品边界与不变量
 
@@ -560,7 +560,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T05 | Native Tool Registry 与 useful operation family | P2-T04 | workspace read/search/write/patch、bounded process/check、read-only HTTP fetch；descriptor/version/digest/risk 绑定；未注册、drift、disabled 均 dispatch=0 | done | 2026-08-07 closure: the daemon-owned static six-family catalog, immutable descriptor digest binding, pre-admission persisted-descriptor verification, private Tool projection, and bounded workspace/process/HTTP pre-executor validators satisfy the unchanged acceptance. Exact native Linux `72a7e55e5a780827438bfb0fb42172cfd1e5bec1` passed focused Tool registry tests 7/7 and `cargo fmt --all -- --check`; required Ubuntu and Windows CI passed in PR #159. P2-T06 execution/supervision, external I/O, actual workspace mutation, and unknown-outcome reconciliation remain explicitly out of scope. Evidence: [closure handoff](../checkpoints/20260807-personal-p2-t05-native-tool-registry-closure.md). |
 | P2-T06 | Tool/process executor、supervisor、cursor 与 reconcile | P2-T05 | persist-before-dispatch；bounded output cursor；before/mid/after fault、orphan、redaction、idempotency、unknown-outcome reconcile | done | 2026-08-08 closure: D01-D04 satisfy the unchanged acceptance at `bfcc684db6685e1077050a4b3c82fcf84c524711`. Exact native Linux passed 26 focused tests, Clippy, and fmt; required Ubuntu/Windows CI passed in Draft PR #162. The daemon-private supervisor uses registered attempt identity, PID ownership, epoch fencing, orphan/recovery/shutdown lifecycle, bounded injected observation, and a fail-closed default source. The Effect path proves persist-before-dispatch and original-key unknown-outcome reconciliation without Task advancement. No public Process resource, arbitrary PID attach, Task completion, release, Gate, or Profile claim is made; platform observation is deferred to managed-Pi/process-supervision work. Evidence: task-scoped Draft PR #162 and `docs/plan/PROGRESS.md` D01-D04 records. |
 | P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | done | 2026-08-08 closure: D01-D02 satisfy the unchanged acceptance. The daemon-private fixed-post-state and verification-request/report boundary stays append-only; verifier identity, currentness, fenced-writer, malformed/duplicate artifact reference, and passed-without-evidence regressions fail closed before report persistence. Exact remote Linux `df7d483282f3ef0a6bbb17bae3d29bb24f13e0f7` passed the focused verifier test module 7/7 and targeted Clippy; local `cargo fmt --all`, `git diff --check`, and lints passed. No Provider/Tool execution, Artifact closure, Task completion, Gate, release, or Profile claim is made. Evidence: [P2-T07 closure](../checkpoints/20260808-personal-p2-t07-d02-verifier-persistence-closure.md). |
-| P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | in-progress | 2026-08-11；`lease/personal/P2-T08/runtime-spine-gates` on `personal/P2-T08-runtime-spine-gates` / Draft PR #182. D01–D03 closed. D04 under ADR-0046 fixed denominator (`runtime-spine-gates/1`); preregistration checkpoint written; Tier-2 purge confirmation negative added. Gates remain `not-run` until owner disposition after exact-revision evidence. |
+| P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | blocked | 2026-08-11；ADR-0046 D04 evidence complete at `be7febb` (native Linux matrix pass, tools 26/26, Clippy, CI `31407542786`). Non-claim report `sha256:8a0103284a8f51bf44ee3863a0ac026c06f1404315346591a0fc48dc2e8a989e`. Blocked only on owner affirm/reject of B02/B04/B05/B12. Gates remain `not-run`. |
 
 ### Phase 3 - Context Resource Value（Context、Token 与 Loop 效率）
 

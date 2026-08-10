@@ -13,10 +13,10 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task |
-| Active task lease | `lease/personal/P2-T08/runtime-spine-gates` | Active lease owns P2-T08 Runtime Spine Gates on `personal/P2-T08-runtime-spine-gates` / Draft PR #182. | execute ADR-0046 D04 fixed-denominator campaign on DEV-LINUX-NATIVE-01 |
+| Active task lease | `lease/personal/P2-T08/runtime-spine-gates` | Active lease retained for owner Gate disposition / D04 closure writes on Draft PR #182. | owner affirm/reject B02/B04/B05/B12 |
 | P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence |
 | P5-T02 Sidecar contract, registration, instance identity | **done** | D01-D03 satisfy the unchanged acceptance at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`: inactive registration, epoch-fenced SidecarSession activate, pause/resume/stop/recover, redacted health with `process_bound=false`, and management-session admin-cli callers. Exact native Linux focused runtime 11/11, admin 1/1, Clippy, and required Ubuntu/Windows CI run `31391916831` passed. Identity separation keeps AgentExecution/PiSession/process/Task absent and non-conflated. Closure checkpoint `20260810-personal-p5-t02-sidecar-foundation-closure.md`; PR #181 merged at `main@e0c3fb85e8a99cbcb4d8fd014fb7cc89d0b23a79`. | retain closure evidence; no B09/release/Profile claim |
-| P2-T08 Runtime Spine E2E Gate | `in-progress` | D01–D03 closed. D04 preregistered under ADR-0046 fixed denominator (`runtime-spine-gates/1`); Tier-2 purge confirmation negative added. Gates remain `not-run` until owner disposition after exact-revision evidence. | exact Linux matrix + non-claim report + owner affirm/reject B02/B04/B05/B12 |
+| P2-T08 Runtime Spine E2E Gate | `blocked` | D01–D03 closed. D04 ADR-0046 fixed matrix + non-claim report complete at `be7febb490fcbdf9970a700b6b6975ae49aadffe` on DEV-LINUX-NATIVE-01; required CI `31407542786` Ubuntu/Windows success. Gates remain `not-run` — blocked only on owner disposition (cannot forge Gate pass). Evidence: `docs/checkpoints/20260811-personal-p2-t08-d04-runtime-spine-execution-evidence.md`. | owner affirm/reject each of B02/B04/B05/B12 |
 | P1-T09 route implementation | `done` | `experimental-local-only`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Under ADR-0039 successor `002` completed its fixed six counted outcomes: Attempts 1, 3, 4, 5, and 6 passed the full clean route, while Attempt 2 failed bounded graphical Desktop readiness before product activation. Required aggregate, verifier, and CI closure completed. | select the next ready formal task; Provider credential entry remains graphical hidden input only |
 | B01 first-install/first-conversation Gate | **pass** | Retained campaign `001` is `fail`; successor `B01-clean-linux-first-install-first-conversation-002` completed Attempt 6 of formal minimum 6 with 5 successes, 1 failure, success rate 83.33%, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition. Required Ubuntu and Windows CI passed for closure revision `0ef0b21`. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. | retain the redacted closure evidence; B01 pass does not pass G1, GMVP-LINUX, release, or Profile |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
@@ -48,14 +48,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 39 | 1 | 0 | 22 | 23 |
+| 62 | 39 | 0 | 1 | 22 | 23 |
 
-`P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
-acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P4-T05, P4-T06, P5-T01, P7-T04, and P8-T01 are fully closed through merged or
-ready-for-merge PR, lease, branch, and local-main reconciliation. The 2026-08-10
-plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks). `P2-T08`
-is the sole `in-progress` formal task after P5-T02 closure.
+`P2-T08` is task-`blocked` solely on owner Gate disposition after ADR-0046
+evidence; Delivery Slice `P2-T08/D04` remains the unique `in-progress` slice so
+the active lease stays consistent until disposition and closure.
 Formal task completion remains independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
@@ -121,7 +118,7 @@ Formal task completion remains independent from every product Gate.
 | `P2-T08/D01` | `done` | Non-claim Runtime Spine Gate suite harness for fixed B02/B04/B05/B12 observations; evaluator cannot set Gate state. Tools Node tests 26/26 and required Ubuntu/Windows CI run `31395283074` passed at `38b45bd64ee898438addeab10f04d96bc80e34d3`. | consumed by D02 |
 | `P2-T08/D02` | `done` | ADR-0018 local-native Provider secret exception expired: run/evaluate/extension-load fail closed; daemon-candidate + daemon Provider proxy remain. Linux focused adapter tests/Clippy and required Ubuntu/Windows CI run `31400044908` passed at `e2cee441b60774326fa224aec3fd8f779584d6f6`. | consumed by D03 |
 | `P2-T08/D03` | `done` | Named Runtime Spine authority-path negatives: shell close preserves authority, daemon close recovers without duplicate dispatch, OUTCOME_UNKNOWN original-key reconcile rejects blind retry, false-completion floor rejects passed-report-as-completion. Linux focused tests/Clippy and required Ubuntu/Windows CI run `31403738305` passed at `2875978b55b5351dc89d51abd9e5397d27ea650d`. | consumed by D04 |
-| `P2-T08/D04` | `in-progress` | ADR-0046 fixed-denominator campaign preregistered; Tier-2 purge negative added; execution pending exact Linux | execute matrix on DEV-LINUX-NATIVE-01; emit non-claim report; owner Gate disposition |
+| `P2-T08/D04` | `in-progress` | ADR-0046 matrix + CI green at `be7febb`; non-claim report ready; parent task blocked only on owner Gate disposition | owner affirm/reject B02/B04/B05/B12; then close D04/task |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
@@ -132,7 +129,7 @@ not override this table.
 | Gate/campaign | Status | Accounted progress | Missing exit |
 |---|---|---|---|
 | B01 | `pass` | retained `001` remains `fail` under its historical N=20 rule (2 successes / 8 failures over 10 started attempts); ADR-0039 successor `002` completed its fixed denominator of 6 counted outcomes with 5 successes / 1 failure, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition (see the canonical B01 row in the Area table above) | none for B01 itself; B01 pass does not transfer to G1, GMVP-LINUX, release, or Profile |
-| B02/B04/B05/B12 | `not-run` | implementation evidence only | preregistered P2 acceptance campaigns via P2-T08 |
+| B02/B04/B05/B12 | `not-run` | ADR-0046 fixed matrix evidence at `be7febb` (all observations pass; CI `31407542786` Ubuntu/Windows success; non-claim report digest `sha256:8a0103284a8f51bf44ee3863a0ac026c06f1404315346591a0fc48dc2e8a989e`); evaluator did not set Gate state | owner affirm/reject each Gate |
 | B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
 | B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
 | B08/B09 | `not-run` | no Gate evidence | B08 requires its own preregistered Memory+Skill campaign over the completed P4 tasks; B09 requires P5-T02 and the P5-T05 managed-Pi sidecar qualification |
