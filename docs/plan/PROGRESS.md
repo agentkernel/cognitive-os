@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task and claim a non-overlapping lease |
-| Active task lease | `none` | `P7-T04` closed through D01-D05 on Draft/Ready PR #179. Module benchmarks, governed-path stage timing, B06/B07 non-claim observations, regression-floor policy, and fixed-native governance A/B non-inferiority report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9` are recorded. | select the next unblocked, implementation-ready Personal task and claim a non-overlapping lease |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task |
+| Active task lease | `none` | P8-T01 D01-D03 acceptance is complete; design revision `cd08da7d69890e98f1736e93215440aa85c881dc` has required CI run `31383446541` pass on PR #180. This closure delivery clears the lease and syncs done status for ready/merge. | merge PR #180 after required CI on the closure revision, then delete task branch and fast-forward local `main` |
+| P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence after PR #180 merge and branch/main reconciliation |
 | P1-T09 route implementation | `done` | `experimental-local-only`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Under ADR-0039 successor `002` completed its fixed six counted outcomes: Attempts 1, 3, 4, 5, and 6 passed the full clean route, while Attempt 2 failed bounded graphical Desktop readiness before product activation. Required aggregate, verifier, and CI closure completed. | select the next ready formal task; Provider credential entry remains graphical hidden input only |
 | B01 first-install/first-conversation Gate | **pass** | Retained campaign `001` is `fail`; successor `B01-clean-linux-first-install-first-conversation-002` completed Attempt 6 of formal minimum 6 with 5 successes, 1 failure, success rate 83.33%, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition. Required Ubuntu and Windows CI passed for closure revision `0ef0b21`. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. | retain the redacted closure evidence; B01 pass does not pass G1, GMVP-LINUX, release, or Profile |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
@@ -36,7 +37,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | P2-T04 private worker composition | **done** | `P2-T04/D01` closes at immutable `a8ef5c00654e1c05a4c30beb193b9c026654c2f1`: the daemon resolves and seals a request-bound ContextView before bounded private Pi proposal; Pi is opaque candidate-only; the daemon owns candidate admission, budget, WIA/continuation, Effect, progress, evidence, and Task state. Real SQLite negatives cover post-discovery revocation, required Context failure, duplicate candidate retry suppression, atomic candidate/WIA one-time handoff, stale/replaced lease rejection, and authority-shaped Pi response rejection. Exact native Linux and required Ubuntu/Windows CI passed. | consumed as a completed prerequisite; B03, release, Profile, Tool execution, and Task completion remain separate/unclaimed |
 | P2-T05 native Tool registry | **done** | The unchanged task acceptance closes at `72a7e55e5a780827438bfb0fb42172cfd1e5bec1`: static daemon-owned six-family catalog; descriptor/version/digest/risk binding; persisted-descriptor verification; private Tool projection; and workspace/process/HTTP pre-executor validators. Exact native Linux focused Tool registry tests passed 7/7 with fmt; required Ubuntu and Windows CI passed in PR #159. | P2-T06 may consume this pre-executor boundary; Tool execution, external I/O, mutation, reconciliation, Task completion, Gates, release, and Profile remain unclaimed |
 | P2-T06 Tool/process executor | **done** | D01-D04 satisfy the current formal acceptance at immutable `bfcc684db6685e1077050a4b3c82fcf84c524711`: bounded WorkspaceRead and ProcessCheck execution; durable Intent/Effect persist-before-dispatch; original-key idempotency and unknown-outcome reconciliation; bounded cursor/output and redaction; before/mid/after fault coverage; and daemon-private supervisor registration, ownership, fencing, orphan/recovery/shutdown, timeout, and fail-closed observation. Exact native Linux focused tests (26 passed), Clippy/fmt, consistency, and required Ubuntu/Windows CI passed in Draft PR #162. The injected `FailClosedProcessObservationSource` is the accepted safety boundary: no arbitrary PID attach, public Process resource, Task completion, release, Gate, or Profile claim is made. Production platform observation remains deferred to the managed-Pi/process-supervision path. | task acceptance is closed; retain D01-D04 evidence and keep B05/B12, release, Gate, Profile, and managed-Pi production supervision separate |
-| GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim | waits for B01; P2 Runtime Spine; P3/B03 Context; P4/B08 Memory+Skill; managed-Pi sidecar B09; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
+| GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim; B01 and B03 (MVP) are already `pass` and do not transfer | waits for P2-T08 Runtime Spine Gates (B02/B04/B05/B12); the B08 Memory+Skill campaign; managed-Pi sidecar B09 (P5-T02/P5-T05); UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
@@ -45,14 +46,15 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 53 | 37 | 0 | 0 | 16 | 16 |
+| 62 | 38 | 0 | 0 | 24 | 24 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P4-T05, P4-T06, P5-T01, and P7-T04 are fully closed through merged or
-ready-for-merge PR, lease, branch, and local-main reconciliation. No formal Personal
-task is currently `in-progress`. Formal task completion remains independent from every
-product Gate.
+weakening any criterion. P4-T05, P4-T06, P5-T01, P7-T04, and P8-T01 are fully closed through merged or
+ready-for-merge PR, lease, branch, and local-main reconciliation. The 2026-08-10
+plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks); no formal
+task is `in-progress` after P8-T01 closure.
+Formal task completion remains independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
 
@@ -108,6 +110,9 @@ product Gate.
 | `P2-T02/D02` | `done` | exact immutable Linux `70f40a5` resource projection process test passed 1/1; required Ubuntu and Windows CI passed. Private versioned projection/watch is management-bound, family/cursor-scoped, and makes unavailable authority sources explicit. | select D03 for deterministic CLI parity without creating public DTOs or fabricating domain authority |
 | `P2-T02/D03` | `done` | exact immutable Linux `af2f6c9` daemon-plus-CLI process test passed 1/1; required Ubuntu and Windows CI passed. Resource projection/watch uses management credentials and Task watch uses task credentials; commands are read-only and do not replay mutations. | claim D04 Shell sidecar parity using the same isolated daemon client semantics |
 | `P2-T02/D04` | `done` | exact immutable Linux `ed01c27` sidecar-to-daemon read/watch path passed; local focused TypeScript build/test and required Ubuntu/Windows CI passed. Pi uses management credentials for resource projection/watch and a distinct Task bearer for Task watch; streams require snapshot-first responses and mutations remain absent. | assess full P2-T02 acceptance against D01-D04 evidence before changing the parent task status |
+| `P8-T01/D01` | `done` | axioms document, governance-rule convergence, authoritative-ledger repair, Phase 8/9 registration, TEST-ENVIRONMENTS truncation/B01 text fix, PARALLEL-LANES closed-history archive, ADR-0008/prompt/docs-sync label corrections delivered on `personal/P8-T01-doc-restructure`; documentation-only | consumed by D02 |
+| `P8-T01/D02` | `done` | whitepaper Personal alignment chapter, product/architecture extensions, headroom chapter, and ADR-0041+ series delivered; documentation-only | consumed by D03 |
+| `P8-T01/D03` | `done` | plan.md/trace sync, acceptance mapping, closure checkpoint, lease-mismatch failure-injection repair, and required Ubuntu/Windows CI run `31383446541` on PR #180 at `cd08da7d69890e98f1736e93215440aa85c881dc`; documentation-only | P8-T01 formal acceptance is complete; retain closure evidence |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
@@ -117,20 +122,19 @@ not override this table.
 
 | Gate/campaign | Status | Accounted progress | Missing exit |
 |---|---|---|---|
-| B01 | `running` | retained `001`: fail, fixed N=20 with 10 outcomes, 2 successes / 8 failures; successor `002`: fixed N=20 with 0 started attempts and a verified artifact/signature | complete graphical hidden-input Provider opt-in and remaining start gate, then begin successor Attempt 1; campaign pass still requires 20 successor outcomes, >=90% success, zero critical failures, aggregate report, and independent verifier |
-| B02/B04/B05/B12 | `not-run` | implementation evidence only | preregistered P2 acceptance campaigns |
-| B03/B08/B09 | `not-run` | no Gate evidence | corresponding Resource Value and managed-Pi task exits |
-| GMVP-LINUX | `not-run` | no release evidence | all typed promotion dependencies |
+| B01 | `pass` | retained `001` remains `fail` under its historical N=20 rule (2 successes / 8 failures over 10 started attempts); ADR-0039 successor `002` completed its fixed denominator of 6 counted outcomes with 5 successes / 1 failure, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition (see the canonical B01 row in the Area table above) | none for B01 itself; B01 pass does not transfer to G1, GMVP-LINUX, release, or Profile |
+| B02/B04/B05/B12 | `not-run` | implementation evidence only | preregistered P2 acceptance campaigns via P2-T08 |
+| B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
+| B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
+| B08/B09 | `not-run` | no Gate evidence | B08 requires its own preregistered Memory+Skill campaign over the completed P4 tasks; B09 requires P5-T02 and the P5-T05 managed-Pi sidecar qualification |
+| GMVP-LINUX | `not-run` | no release evidence | remaining typed promotion dependencies: P2-T08 (B02/B04/B05/B12), B08 campaign, B09 (P5-T02/P5-T05), and P7-T01..T03/P7-T08 operability evidence |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
-The P1-T09 implementation evidence and successful B01 `001` Attempts 1 and 10
-are retained. The owner authorized separately preregistered successor `002`,
-but its B01 Gate is `blocked` before attempt start: native independent
-verification cannot acquire the exact reviewed source over GitHub HTTPS. The
-workflow-only verifier recovery path cannot be dispatched until its definition
-is on the repository default branch, so it does not substitute for the native
-verifier. Campaign `001` remains `fail`; no started attempt is deleted,
-renumbered, or retried.
+B01 closed on 2026-08-09/10 through the ADR-0039 successor policy; the earlier
+successor-verification blocker was resolved before the campaign completed, and
+its history is preserved in the closed-lease ledger and the evidence journal.
+Retained campaign `001` remains `fail`; no started attempt was deleted,
+renumbered, or retried, and none of its artifacts transferred to `002`.
 
 P2-T01 is now task-complete: the L5
 task lifecycle entry point over the intent-chain kernel. `proposal` durably

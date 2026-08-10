@@ -9,7 +9,8 @@
 ## 新会话启动顺序
 
 1. 阅读本文件和 [项目身份](docs/governance/PROJECT-IDENTITY.md)；
-2. 阅读 [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)；
+2. 阅读 [公理体系](docs/governance/AXIOMS.md) 与
+   [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)；
 3. 阅读 Personal 正式计划 [PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)；
 4. 只读 `PROGRESS.md` 的 `Current snapshot`；
 5. 只读 [PARALLEL-LANES.md](docs/plan/PARALLEL-LANES.md) 的活动 lease；
@@ -147,16 +148,14 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 
 ## 不可放松的不变量
 
-1. Rust daemon 是唯一 authority writer；Pi、CLI、SDK、UI 和 fixture 都是客户端。
-2. 概率组件只能产 candidate/proposal；授权、CAS、状态迁移、预算、幂等、fencing、
-   Effect 提交、reconcile 和最终验收由确定性服务端执行。
-3. 外部 mutating operation 必须使用 persist-before-dispatch 的 Intent/Effect；外部成功、
-   Provider response 或 Pi `agent_end` 都不等于 Task 完成。
-4. Provider/user secret 只能进入批准的 Secret Store，绝不进入 argv、普通配置、SQLite、
-   日志、CI、测试输出或 evidence。
-5. 负例、规范向量和合同不能为了迎合实现而删除、放宽或改写。
-6. local、WSL、fixture 和 ordinary CI 只有在 Gate 预注册 campaign 明确纳入时才能贡献
-   Gate 证据；否则只能是 non-claim implementation evidence。
+完整公理体系（A1–A8）与工程原则层（P1–P3）只由
+[docs/governance/AXIOMS.md](docs/governance/AXIOMS.md) 拥有；本入口不得维护第二套
+编号清单。日常提醒（以 AXIOMS 为准）：
+
+1. Rust daemon 是唯一 authority writer（A1）；概率组件与第三方 agent 只产 candidate（A2）。
+2. 外部 mutation 必须 persist-before-dispatch Intent/Effect（A3）；独立 verification 才可完成 Task（A4）。
+3. Secret 只进批准的 Secret Store（A5）；合同与负例不得为实现而削弱（A6）。
+4. 本地/fixture/WSL/ordinary CI 证据不得提升为 Gate/release/Profile（A7）；未知工作树改动受保护（A8）。
 
 ## 命令速查
 

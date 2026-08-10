@@ -2,6 +2,7 @@
 
 - **版本**：2.0
 - **日期**：2026-07-20
+- **时效标注（2026-08-10）**：historical dated review report；现行白皮书版本与 Personal 公理入口见 `CognitiveOS-Architecture.md`（1.0.3-personal-baseline）与 `docs/governance/AXIOMS.md`。本文不创建当前任务、lease 或 Gate 状态。
 - **文档性质**：Informative 审查报告。本文不构成规范义务；本轮登记的 REQ/错误码/向量均已按规范变更流程写入 registry/schema/vector 并在白皮书附录 D 1.0.1 留有迁移记录。
 - **评审对象**：[CognitiveOS-Architecture.md](./CognitiveOS-Architecture.md) v1.0.0（未提交工作区状态）及全部仓库机器资产。
 - **评审方法**：反方优先。先实测资产（不信历史计数），再逐项核验白皮书声明与 registry/schema/transition/vector 的双向一致性，推演 26 类故障场景，核验外部证据，最后在证据支持处直接修复并复验。评审期间仓库出现另一份独立只读审查报告（[CognitiveOS-Architecture-Independent-Review.md](./CognitiveOS-Architecture-Independent-Review.md)，快照 f2f826a，F-001–F-030）；本报告对其每条 finding 独立复核后逐条处置（§6.4），凡采纳修复均以静态反例复验。

@@ -4,6 +4,7 @@
 - **状态**：Normative Companion RFC
 - **标识**：`cognitiveos.governance-context-access/0.2`
 - **发布日期**：2026-07-18
+- **时效标注（2026-08-10）**：normative companion draft；machine schemas and Personal current facts remain authoritative over narrative examples here. Personal axioms live in `docs/governance/AXIOMS.md`.
 - **依赖**：[CognitiveOS Core Companion Specification](./specs/core/README.md)
 - **对应白皮书**：[CognitiveOS 总体架构白皮书](./CognitiveOS-Architecture.md)
 

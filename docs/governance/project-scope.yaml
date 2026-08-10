@@ -20,11 +20,27 @@ active_project:
   architecture_design: docs/architecture/personal/README.md
 canonical_sources:
   project_identity: docs/governance/PROJECT-IDENTITY.md
+  axioms: docs/governance/AXIOMS.md
   development_workflow: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
   change_sync: docs/standards/docs-sync-contract.md
   task_catalog: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   current_snapshot: docs/plan/PROGRESS.md
   active_leases: docs/plan/PARALLEL-LANES.md
+axiom_policy_owner:
+  path: docs/governance/AXIOMS.md
+  axiom_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+  principle_ids:
+    - P1
+    - P2
+    - P3
 workflow_policy_owner:
   path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
   policy_ids:

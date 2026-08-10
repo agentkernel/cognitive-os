@@ -1,7 +1,13 @@
 # ADR-0008: 代理自动提交与自动 push 政策
 
-- Status: Accepted（仓库所有者明确授权）
+- Status: Accepted（historical authorization）; **workflow semantics superseded by**
+  Operating Model `CHECKPOINT-DELIVERY-01` and standing continuous-delivery rules
+  in [DEVELOPMENT-OPERATING-MODEL.md](../governance/DEVELOPMENT-OPERATING-MODEL.md)
 - Date: 2026-07-21
+- Supersession note (2026-08-10, P8-T01): keep this ADR as the original owner
+  authorization record. Do not use it as the executable workflow. Current commit,
+  push, Draft PR, ready/merge, and dirty-handoff rules live only in the Operating
+  Model.
 - Decision owners: 仓库所有者 + CognitiveOS 参考实现维护者
 - Classification: 仓库治理决策。只约束本仓库的开发流程；不是 CognitiveOS 规范要求。
 

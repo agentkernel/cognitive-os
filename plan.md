@@ -15,6 +15,7 @@
 > **Linux 1.0 / managed Pi 对齐（2026-08-02，ADR-0035/0036）：** 正式计划将既有 `GMVP-LINUX` 定义为 Personal `1.0.0` release Gate。Pi-hosted Agent Shell 与 managed Pi 是独立角色；P2-T02 负责 Shell/application-service composition，P5-T01/T02/B09 负责 official npm acquisition、installation、registry/instance/supervision/lifecycle。Pi 是 1.0 唯一 product-qualified Agent；通用 adapter framework 保留给后续 Agent 的独立 qualification。本文件只同步详细卡片，不拥有当前状态。
 > **统一认知资源与 sidecar 重基线（2026-08-02，ADR-0037/0038）：** owner 已批准 Personal 作为 Memory/Skill/Tool/Context/Task/Runtime 统一认知资源基座，六类最小真实 slice 进入 Linux 1.0；Agent 路径采用 per-Agent sidecar-first，Pi 仍是唯一 qualified Agent。1.0 由 Runtime Spine、Resource Value、Product Operability 三条 active track 汇合；Context correctness 与 Memory+Skill actual consumption 进入 promotion，复杂 Context 收益、embedding/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI 和 Windows 后置。本批不改变任何 task status、attempt、evidence、Gate current status 或 Profile：P1-T09 仍 `in-progress`、B01 仍 `running`（1/至少20）、P2-T01/P2-T03 仍 `in-progress`、`GMVP-LINUX` 仍 `not-run`、Profile `implemented: 0`。本文件仍不是状态源；该 product-semantic + structural 文档批不含实现、规范变更或 Gate/release/Profile evidence。
 > **B01 successor campaign amendment（2026-08-09，ADR-0039）：** owner set separately preregistered successor `002` to fixed N=6, at least 5 successes, zero critical safety failures, complete aggregate statistics, and affirmative independent-verifier closure. Attempts 1--6 remain immutable at 5 successes / 1 failure. Transition Attempt 7 is retained but owner-waived outside the denominator because no artifact, Pi, Provider, service, or route operation occurred. Retained `001` remains its historical N=20 failure. This decision does not claim B01, release, or Profile pass; `PROGRESS.md` remains the current-status source.
+> **2.0 设计基线与计划扩展（2026-08-10，P8-T01 / ADR-0041+）：** 正式台账新增 Phase 8/9；公理单一文档见 `docs/governance/AXIOMS.md`；产品定位为认知资源操作系统与主流 Agent 统一管理底座。本文件只补充研究层卡片与依赖说明，不拥有当前状态；Multi-Agent 设计正线化但 Linux 1.0 claim 仍仅资格化 Pi。
 > **本草案不包含生产代码、规范或数据库 Schema 变更。**
 > **落盘说明：** 正式计划与进度台账已保存于 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`；本文件保留研究结论、详细任务卡和原始审计材料。
 
@@ -141,6 +142,8 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 - Phase 5：Agent 与 Tool 生态；
 - Phase 6：Multi-Agent；
 - Phase 7：产品化和发布。
+- Phase 8：通用 Agent 适配与 2.0 设计基线（post-1.0）。
+- Phase 9：性能与结构演进候选池。
 
 ## 2.6 最大风险
 
@@ -1052,6 +1055,11 @@ Pi 不可以：
 
 ## Phase 6 — Multi-Agent
 
+> **2026-08-10 对齐注记：** 正式产品设计将 multi-agent 设为架构正线（ADR-0044），默认
+> fail-closed；Linux 1.0 仍只资格化 Pi。下列 P6 卡保留为历史研究草案；实现主路径以
+> Phase 8 adapter/qualification 与架构章 `multi-agent-orchestration.md` 为准，不得用
+> 本节约束当前正式任务领取。
+
 ### P6-T01 — Delegation admission与AgentInstance/child Task
 
 - 仅当可并行、上下文可隔离、需独立验证时允许。
@@ -1152,6 +1160,57 @@ Pi 不可以：
 - **声明边界：** release manifest 列出六类 schema/version/digest、sidecar/adapter/skill/tool pins 与包含/排除项；只支持 Linux x86_64 + pinned Pi+sidecar。Embedding/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI、Windows 与 non-Pi adapter 不得被暗示为可用。`GMVP-LINUX` 不是 REQ、registry Gate 或 Profile。
 - **失败语义：** 任一 exact promotion benchmark、trust/native service、六类 resource correctness、UCR-01 fixed-scenario assertion、Pi+sidecar、desktop/headless SecretStore、rollback/backup/doctor、secret redaction 或 independent evidence 缺失即 NO-GO；CI/WSL/fixture 不能替代。
 - **回滚：** 保持最新可信 non-release artifact；不提升 B01、RC 或 Profile 状态。
+
+---
+
+## Phase 8 — 通用 Agent 适配与设计基线（研究卡；正式状态见台账）
+
+> 正式定义与状态以 `PERSONAL-DEVELOPMENT-PLAN.md` Phase 8 为准。本卡只补充研究细节。
+> 公理入口：[AXIOMS.md](docs/governance/AXIOMS.md)；决策：ADR-0041..0045。
+
+### P8-T01 — 文档体系重构与 2.0 设计基线
+
+- documentation-only；不改 specs/conformance。
+- 交付：AXIOMS、白皮书 Personal 对齐章、product/architecture 扩展、ADR-0041+、台账修复。
+- 切片 D01 公理/规则 → D02 设计文档 → D03 收口。
+
+### P8-T02 — Universal Agent Adapter Contract 实现
+
+- AKP 唯一适配；能力声明/注册/生命周期；candidate-only + 通道隔离负例。
+- 对齐 A2A 发现语义，默认无公网 listener；Lane-CTR 登记 `agent-adapter-manifest`。
+
+### P8-T03 — 首个非 Pi Agent 独立资格化
+
+- 完整 acquisition/install/activation/rollback/uninstall；证据不继承 Pi；B09 模式泛化。
+
+### P8-T04 — 确定性 hooks 与分级加载
+
+- daemon-owned admission/pre-dispatch/post-effect/verification 拦截点。
+- hooks 不得放松 A1–A8。
+
+### P8-T05 — Context compaction 与自适应预算
+
+- digest 绑定压缩产物 + 显式损失；UCR-01 可复验收益观察（非 Gate）。
+
+### P8-T06 — 跨 episode 学习闭环
+
+- Skill/Memory 候选 → deterministic admission；失败经验可解释可撤销；无自授权。
+
+---
+
+## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）
+
+### P9-T01 — 异步事件底座决策门
+
+- 以 P7-T04 stage 计时区分治理税/实现税；权威 SQLite 保持单写者。
+
+### P9-T02 — 权威路径结构债拆分
+
+- 拆分 oversized modules；行为不变；对照回归地板。
+
+### P9-T03 — 存储访问与组合根优化
+
+- 长生命周期 store；Personal 垂直逻辑下沉；stage 计时对照。
 
 ---
 

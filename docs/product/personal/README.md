@@ -12,11 +12,14 @@ campaign results, evidence or Profile claims.
 
 ## Vision
 
-CognitiveOS Personal is a single-user, local unified cognitive-resource
-substrate for Agents. It gives one owner a low-friction place to organize and
-govern six user-visible families: Memory, Skill, Tool, Context, Task and
-Runtime/Process. A Pi-hosted Agent Shell is the primary conversational entry,
-while the Rust daemon remains the sole authority writer.
+CognitiveOS Personal is a single-user, local **operating system for cognitive
+resources**—a unified substrate for mainstream Agents. It gives one owner a
+low-friction place to organize and govern six user-visible families: Memory,
+Skill, Tool, Context, Task and Runtime/Process. A Pi-hosted Agent Shell is the
+primary conversational entry for Linux 1.0, while the Rust daemon remains the
+sole authority writer. Post-1.0 design (see
+[personal-2.0-scope.md](personal-2.0-scope.md)) extends the same substrate to
+independently qualified Agents under a Universal Adapter Contract.
 
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
 cross-cutting objects, not extra resource families. The product does not
@@ -26,7 +29,7 @@ machine.
 Linux 1.0 delivers a minimum real slice of every family. The per-Agent sidecar
 is the primary Agent integration boundary, and Pi is the only qualified Agent
 and sidecar combination for 1.0. Other Agents remain independently qualified
-future work.
+future work under Phase 8.
 
 ## Stable product shape
 
@@ -62,6 +65,7 @@ The stable top-level spaces are:
 | [Product design](product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
 | [Cognitive resource model](cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
 | [Linux 1.0 scope](linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
+| [Personal 2.0 scope](personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
 | [User journeys](user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
 
 The baseline decisions are

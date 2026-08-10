@@ -1,19 +1,27 @@
 # CognitiveOS：面向自主智能体与具身智能的认知—物理操作系统
 ## ——以可验证治理与上下文工程承载持续认知
-- **版本**：1.0.2
-- **上一版本**：1.0.1（见附录 D）
-- **状态**：总体架构白皮书 · 正式版本（架构基线定稿 + 证据闭环修订 + 治理对象合同统一）
-- **发布日期**：2026-07-20
+- **版本**：1.0.3-personal-baseline
+- **上一版本**：1.0.2（见附录 D）
+- **状态**：总体架构白皮书 · 正式版本（架构基线定稿 + Personal 2.0 设计正名修订）
+- **发布日期**：2026-07-20；**Personal 对齐修订**：2026-08-10（P8-T01）
 - **语言**：中文
 - **文档性质**：Informative Architecture Whitepaper
 - **适用对象**：Agent 平台、自治系统、机器人、边缘智能与异构计算架构师
 - **定稿边界**：1.0.x 仅表示本白皮书的架构基线冻结与评审闭环；各 companion 规范、schema、registry 保持各自 Draft 版本，全部规范资产仍处于"已登记、未经实现验证"状态（§1.2），实现状态以机器可读 manifest 为准
 - **配套资产**：本仓库的 [规范套件](./specs/) 与 [符合性资产](./conformance/) 分别承载实际存在的规范和测试材料；[RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) 是 v0.2 Draft normative companion；仓库已登记治理对象族（[governed-object-contract](./docs/standards/governed-object-contract.md)）、管理会话、性能报告等机器 schema 与 REQ/错误码/声明式向量条目，但这些资产不等于实现
+- **Personal 现行入口**：活动实现项目见 [AGENTS.md](./AGENTS.md)、[AXIOMS.md](./docs/governance/AXIOMS.md)、[Personal 产品](./docs/product/personal/README.md) 与 [Personal 架构](./docs/architecture/personal/README.md)。本文是架构层 informative 白皮书；当前任务/Gate 事实只由 `docs/plan/PROGRESS.md` 拥有。
 > 本文解释 CognitiveOS 的问题边界、总体结构、关键抽象与演进方向。
 > 本文不直接定义一致性义务。
 > 规范性对象、状态机、线协议、错误码与测试要求由规范套件给出。
 
 > **阅读提示**：本文的“架构机制”描述可验证边界与责任划分，不代表某一实现已经具备这些能力；实现状态、适用 Profile、降级项和测试证据必须以其机器可读 manifest 为准。
+
+> **2026-08-10 Personal 正名修订（informative）**：将 CognitiveOS / Personal 明确表述为
+> **认知资源操作系统**（资源抽象、调度语义、隔离保护、统一 Agent 接口、持久状态）；
+> 补充 context / harness / loop 三支柱工程原则；补充与主流 agent harness 的对标差距；
+> 补充生态定位（AKP 唯一适配、A2A 发现语义对齐且默认无公网 listener）。公理正文以
+> [AXIOMS.md](./docs/governance/AXIOMS.md) 为准；本白皮书不覆盖其编号清单。该修订不
+> 改变 specs/conformance 机器合同，也不产生 Gate/release/Profile 证据。
 
 ### 架构契约与规范优先级
 
@@ -26,7 +34,50 @@ CognitiveOS 的架构契约由同一系统的四个正交视图组成：**双内
 
 ## 版本导读
 
-v1.0.2 是**治理对象合同统一修订**：完成独立审查 F-003 认定的最后一项 P0 残余——全部 35 份仍引用 legacy `common-defs.metadata`/`strongRef` 的机器 schema 一次性迁移到 `GovernedObjectHeader`/`object-reference` 合同（Core 竖切对象自此在机器层强制 tenant/scope/purpose/retention 治理维度）；Effect 对象补齐 `reconciliation_result` 持久字段并放开"对账确认已执行"提交路径的观察事实改写问题；落定 VerificationReport 不可变、过期由 Verification 生命周期承载的唯一表达；附录 C 证据分级拆分 `[DRAFT]/[REG]/[GUIDE]` 并校准过期引用（详见附录 D 1.0.2）。
+v1.0.3-personal-baseline 是 **Personal 2.0 设计正名修订**：在不改动机器合同的前提下，
+把 CognitiveOS / Personal 表述为认知资源操作系统，并补充三支柱、对标差距与生态定位
+（见下文“Personal 对齐章”）。v1.0.2 仍是治理对象合同统一修订：完成独立审查 F-003
+认定的最后一项 P0 残余——全部 35 份仍引用 legacy `common-defs.metadata`/`strongRef` 的机器 schema 一次性迁移到 `GovernedObjectHeader`/`object-reference` 合同（Core 竖切对象自此在机器层强制 tenant/scope/purpose/retention 治理维度）；Effect 对象补齐 `reconciliation_result` 持久字段并放开"对账确认已执行"提交路径的观察事实改写问题；落定 VerificationReport 不可变、过期由 Verification 生命周期承载的唯一表达；附录 C 证据分级拆分 `[DRAFT]/[REG]/[GUIDE]` 并校准过期引用（详见附录 D 1.0.2）。
+
+### Personal 对齐章（2026-08-10，informative）
+
+#### OS 定位正名
+
+CognitiveOS Personal 是**认知资源操作系统**，覆盖：
+
+| OS 要素 | Personal 覆盖 |
+|---|---|
+| 资源抽象 | 六族资源 + Budget/Permission/Artifact/Intent/Effect/Evidence 横切 |
+| 调度语义 | Lease/CAS fencing、STOP-before-lease、WIA/continuation |
+| 隔离保护 | tenant/scope（RFC-0001）、通道隔离、capability 衰减 |
+| 统一接口 | AKP + 类型化 Core/Personal 操作（Agent syscall ABI） |
+| 持久状态 | SQLite WAL authority、Intent/Effect、Event、Checkpoint/Resume |
+
+它**不是** Linux 内核替代、设备固件 ABI，或默认的企业多租户控制面。延伸余量见
+[headroom-iot-and-multitenancy.md](./docs/architecture/personal/headroom-iot-and-multitenancy.md)。
+
+#### 对标差距（主流 agent harness）
+
+相对 Codex / Claude Code / Hermes / OpenClaw 等主流 harness，Personal 的结构性优势是
+daemon-only authority、Intent/Effect、独立 verifier 与证据晋升纪律；差距主要在通用
+Agent 适配面、确定性 hooks/分级加载、Context compaction、跨 episode 学习闭环，以及
+多 Agent 编排的产品化。这些差距由 Phase 8 设计/实现列车承接，不改 Linux 1.0 Gate
+组合。
+
+#### 三支柱工程原则
+
+1. **Context engineering** — authorize-before-rank、显式损失、digest 绑定、压缩与自适应预算。
+2. **Harness engineering** — WIA、fencing、budget、独立 verifier、分级 hooks（不得放松公理）。
+3. **Loop engineering** — ACT→VERIFY→CONTINUE→OBSERVE、分层终止、candidate→admission 学习。
+
+详见 [AXIOMS.md](./docs/governance/AXIOMS.md) P1–P3 与 [ADR-0042](./docs/adr/0042-personal-three-pillar-engineering.md)。
+
+#### 生态定位
+
+- AKP 是进入 Personal authority 的**唯一**适配协议。
+- 可对齐 A2A Agent Card **发现语义**，默认不引入公网 listener。
+- MCP/动态 Tool 生态属于 post-1.0 能力列车，不得绕过 Intent/Effect。
+- 每个新 Agent 独立资格化（B09 模式）；Pi 证据不可转移。
 
 v1.0.1 是**证据闭环修订**：第二轮独立审查修复五类已证实缺口——Agent 收益评测合同与 `REQ-PERF-005`（收益声明必须四臂对照 + 预注册门槛，非劣化≠性能提升）、存储降级 fail-closed 语义（`REQ-REC-003`）、同键异参通用拒绝（`EFFECT_IDEMPOTENCY_CONFLICT`）、六个安全/契约负例向量与 EFF-CRASH 三向量行为化、18 条 REQ 的规范权威落点从本白皮书迁至 companion（详见附录 D 1.0.1）。
 

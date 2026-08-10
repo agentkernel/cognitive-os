@@ -14,10 +14,10 @@ Gate evidence, release claims or Profile conformance.
 
 ## Product architecture statement
 
-CognitiveOS Personal is a local unified cognitive-resource control plane. Its
-experience surfaces call two application-service families: the governed Task
-service and a narrow `ResourceApplicationService` projection over six
-independent domain services:
+CognitiveOS Personal is a local **operating system for cognitive resources**: a
+unified control plane above the host OS. Experience surfaces call two
+application-service families: the governed Task service and a narrow
+`ResourceApplicationService` projection over six independent domain services:
 
 1. Memory;
 2. Skill;
@@ -62,6 +62,13 @@ remain distinct even when an implementation co-locates some of them.
 | [System architecture](system-architecture.md) | layered control plane, six domains, common projection, execution boundary and future Linux/hardware ports |
 | [Agent Shell and Agent lifecycle](agent-shell-and-agent-lifecycle.md) | Pi dual roles, strict runtime identity, sidecar supervision, channels and lifecycle operations |
 | [Authority, data and recovery](authority-data-and-recovery.md) | authority data, control/data-plane separation, mutation permits, evidence and restart/reconciliation order |
+| [Agent adapter contract](agent-adapter-contract.md) | universal AKP adapter capabilities, lifecycle, negatives (P8 design) |
+| [Multi-agent orchestration](multi-agent-orchestration.md) | mainline multi-agent design with fail-closed default |
+| [Context evolution](context-evolution.md) | compaction and adaptive budgets (P8-T05 design) |
+| [Learning loop](learning-loop.md) | cross-episode Skill/Memory candidate admission (P8-T06 design) |
+| [Async event evolution](async-event-evolution.md) | measured async migration decision gate (P9-T01) |
+| [Performance architecture](performance-architecture.md) | floors, stage timing, structure-debt candidates |
+| [Headroom: IoT and multi-tenancy](headroom-iot-and-multitenancy.md) | reserved bridges; not formal plan tasks |
 | [UCR-01 workload](../../evaluation/personal-unified-cognitive-resource-workload.md) | target six-resource trace, fault/reuse assertions and bounded benefit-evaluation design |
 
 ## Stable composition rules

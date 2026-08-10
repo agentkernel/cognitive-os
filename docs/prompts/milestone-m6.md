@@ -1,3 +1,11 @@
+# Dated non-executable architecture milestone prompt
+
+> **Non-executable.** This file preserves CognitiveOS architecture-formation
+> guidance only. It must not create CognitiveOS Personal tasks, branches, leases,
+> Gates, or status. Start from root `AGENTS.md`, the Personal formal plan, and
+> the active lease table instead.
+
+---
 # M6 接续提示词：安装与适配、v0.1 发布
 
 > 用法：将本文件全文粘贴到新 Cursor Agent 会话（工作目录 = **干净 worktree / 仓库根**，基于 `origin/main`）。自包含，不依赖历史对话。主车道 Lane-RUN（`lane/run`），Lane-CFR 协作平台矩阵证据。公共前缀内联自 `docs/prompts/common-prefix.md`。

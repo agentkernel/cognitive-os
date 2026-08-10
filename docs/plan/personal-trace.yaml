@@ -306,3 +306,36 @@ personal_requirements:
     tasks: [P2-T02, P3-T01, P5-T01, P5-T02, P7-T01, P7-T08]
     gates: [B09, GMVP-LINUX]
     evidence_status: not-run
+
+  # Added 2026-08-10 (P8-T01 Personal 2.0 design baseline).
+  - id: PERS-PR-031
+    classification: product-only
+    statement: Personal is positioned as an operating system for cognitive resources with a single axiom document (A1-A8) and context/harness/loop engineering pillars; documentation redesign does not alter machine contracts or Gate composition.
+    direct_registry_requirements: []
+    tasks: [P8-T01]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-032
+    classification: product-only
+    statement: Post-1.0 Personal adapts mainstream Agents through a Universal AKP Adapter Contract with independent B09-style qualification; multi-agent orchestration is design-mainline with fail-closed default and does not transfer Pi evidence.
+    direct_registry_requirements: []
+    tasks: [P8-T01, P8-T02, P8-T03]
+    gates: [B09]
+    evidence_status: not-run
+
+  - id: PERS-PR-033
+    classification: product-only
+    statement: Harness hooks, Context compaction, and cross-episode learning admit only candidates into deterministic daemon Memory/Skill authority and must not relax axioms A1-A8.
+    direct_registry_requirements: []
+    tasks: [P8-T01, P8-T04, P8-T05, P8-T06]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-034
+    classification: product-only
+    statement: Performance and structure evolution (async decision gate, god-file splits, long-lived store) use P7-T04 regression floors as before/after evidence and create no new product Gate.
+    direct_registry_requirements: []
+    tasks: [P9-T01, P9-T02, P9-T03, P7-T04]
+    gates: []
+    evidence_status: not-run

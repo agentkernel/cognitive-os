@@ -1,10 +1,13 @@
 # 文档联动与防漂移契约（docs-sync-contract）
 
 - Standard ID: `cognitiveos.standard.docs-sync-contract/0.1`
-- Version: v0.1 Draft
-- Status: repo governance standard（约束本仓库全部提交；不产生 CognitiveOS 规范要求）
+- Version: v0.1
+- Status: active repo governance standard（约束本仓库全部提交；不产生 CognitiveOS 规范要求）
 - Date: 2026-07-20
+- Label correction: 2026-08-10 (P8-T01) — removed stale “Draft” status label; the
+  contract has been enforced by Operating Model + consistency checks since adoption
 - 执行机制：[Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)（会话义务）+ `tools/src/check-consistency.mjs`（机器一致性红灯）；`.cursor/rules/` 如存在仅为编辑器适配层
+- Axiom owner: [AXIOMS.md](../governance/AXIOMS.md)（公理措辞变更须同批联动本标准分类与入口文档）
 
 仓库身份由 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md) 和机器镜像
 `docs/governance/project-scope.yaml` 共同维护：CognitiveOS 是架构/合同参考层，
