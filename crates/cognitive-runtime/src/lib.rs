@@ -24,6 +24,7 @@ pub mod perf;
 pub mod pi_launcher;
 pub mod readiness;
 pub mod recovery_flow;
+pub mod release_manifest;
 pub mod sandbox;
 pub mod scheduler_service;
 pub mod shell;
