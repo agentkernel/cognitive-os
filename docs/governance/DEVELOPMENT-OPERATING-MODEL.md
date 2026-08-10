@@ -140,7 +140,7 @@ The following anti-fragmentation rules apply:
   acceptance item. Do not defer a separate `acceptance-assessment` branch or
   leave task closure as an unowned follow-up. The final slice owns the complete
   acceptance mapping and task-status reconciliation.
-- **Continuous autonomous delivery:** when an owner requests continued
+- **`CONTINUOUS-AUTONOMOUS-DELIVERY-01`:** when an owner requests continued
   development, the agent must autonomously select and implement the next
   smallest vertical slice within the active task and lease. It continues until
   task completion, an explicit non-autonomous blocker, or an owner-requested
@@ -233,6 +233,31 @@ rollback or cleanup path. It does not authorize force push, destructive or
 irreversible repository commands, modification of isolated formal campaign
 guests outside their preregistered procedure, or changes beyond the active
 task's declared system boundary.
+
+### 2.4 Required interactive confirmation boundaries
+
+Routine task-scoped editing, testing, reversible remote validation, checkpoint
+commit/push, Draft PR maintenance, and a fully accepted normal merge use the
+standing authorization and do not require repeated confirmation. Stop and ask
+for the smallest explicit owner decision only when the next action would:
+
+1. expose secret material or move it outside an approved Secret Store and
+   non-logging input path;
+2. perform a destructive or irreversible repository/data operation, force
+   push, mutate shared production infrastructure, or alter an isolated campaign
+   guest outside its preregistered procedure;
+3. decide an unresolved product, normative, structural, release, support,
+   security-policy, Gate-threshold, benchmark-threshold, or default-Agent
+   semantic;
+4. expand filesystem, network, process, model, secret, budget, privilege, or
+   capability scope beyond the registered task boundary; or
+5. bypass a failing test, required CI, branch protection, signature, review, or
+   another governance control.
+
+Before asking, exhaust documented reversible lower-scope routes. A confirmation
+request names the exact action, scope, risk, reversibility, alternatives, and
+the minimum owner choice. Pending CI, an ordinary test failure, a local code
+defect, or a recoverable environment fault is not a confirmation boundary.
 
 A coherent checkpoint must satisfy all locally eligible safeguards: declared
 lease scope, reviewed staged paths, no secret material, no unexpected syntax or
@@ -338,6 +363,34 @@ A checkpoint commit and Draft PR may exist while remote CI is pending.
 Unsupported local environments are recorded as `not-run`; they are neither pass
 evidence nor an automatic blocker for an isolated checkpoint. A required red
 check must never be merged or used for a completion claim.
+
+### 3.1 Performance validation ladder
+
+Performance validation is proportional to the changed risk surface rather than
+an identical heavyweight campaign on every Slice:
+
+1. **Module regression:** performance-sensitive storage, scheduler, Context,
+   cache, CAS, Intent/Effect, sidecar, installer, and supervision paths use
+   deterministic fixed fixtures and record raw samples, fixture digest, exact
+   revision, warm/cold state, and p50/p95/p99 only when sample size supports
+   those percentiles. Ordinary PR CI may enforce an approved low-noise
+   regression floor but cannot become product performance evidence.
+2. **Stage integration:** each release track measures real governed call-chain
+   stages, additional writes/bytes, cache preservation, retries, unknown
+   outcomes, and safety failures on an exact-revision supported environment.
+3. **Release campaign:** release performance uses a preregistered fixed
+   environment, complete denominator, raw evidence digest, independent review,
+   and native-baseline versus governance-only A/B non-inferiority. A general
+   Agent-benefit claim additionally requires the registered A/B/C/D and W1/W2
+   protocol.
+
+Thresholds begin as record-only calibration and become blocking only after an
+owner-approved preregistration records metric, percentile, workload/risk class,
+sample policy, comparison baseline, and breach action. Builder samples, schema
+fixtures, floating hosted-runner wall time, B03 correctness, and B06/B07 raw
+observations are not measured release evidence. B06/B07 remain non-claim
+observations and do not block `GMVP-LINUX` unless a later product-semantic
+decision changes the formal Gate composition.
 
 ## 4. Documentation closure
 
@@ -468,6 +521,16 @@ is incomplete, it remains `in-progress` or `blocked` and needs one task-scoped
 continuation branch/lease; the old merged lease must not be reused.
 
 ## 7. Forward-progress protocol
+
+**`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`:** code, test, formatting, CI
+configuration, integration, transient artifact, and supported-environment
+faults that can be repaired inside the active task are recovery work, not a
+formal blocked state. Use the registered recovery route, persist an immutable
+checkpoint when remote execution requires it, and continue. A task becomes
+`blocked` only after all predeclared supported routes are exhausted or an
+external dependency requires an owner-only decision/action. The blocker record
+must include `blocked_paths`, `blocked_task_ids`, `blocked_gate_ids`, owner,
+evidence, attempted recovery routes, and one executable next action.
 
 After onboarding, a session claims one formal task with complete acceptance and
 a clear vertical path. It continuously executes the smallest internal slices

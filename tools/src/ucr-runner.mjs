@@ -125,6 +125,139 @@ export function buildUcrRunReport(rawRun, stableBaseline) {
   return { report, report_digest: digestJson(report) };
 }
 
+export function buildB06B07ObservationReport(campaign) {
+  const campaignDocument = requireObject(campaign, "B06/B07 campaign");
+  rejectAuthorityClaims(campaignDocument);
+  if (campaignDocument.campaign_id !== "B06-B07-context-benefit-observation/1") {
+    throw new Error("B06/B07 campaign_id must be B06-B07-context-benefit-observation/1");
+  }
+  if (campaignDocument.claim_scope !== "non-claim") {
+    throw new Error("B06/B07 campaign claim_scope must be non-claim");
+  }
+  if (campaignDocument.scenario_id !== UCR_SCENARIO_ID) {
+    throw new Error("B06/B07 campaign must bind UCR-01");
+  }
+  for (const digestField of ["fixture_digest", "trace_digest", "governed_stage_digest"]) {
+    requireDigest(campaignDocument[digestField], `B06/B07 ${digestField}`);
+  }
+
+  const denominator = requireObject(campaignDocument.denominator, "B06/B07 denominator");
+  const startedAttempts = denominator.started_attempts;
+  const retainedAttempts = denominator.retained_attempts;
+  if (
+    !Number.isSafeInteger(startedAttempts) ||
+    !Number.isSafeInteger(retainedAttempts) ||
+    startedAttempts < 1 ||
+    retainedAttempts !== startedAttempts
+  ) {
+    throw new Error(
+      "B06/B07 denominator requires started_attempts >= 1 and retained_attempts equal to started_attempts",
+    );
+  }
+
+  const safety = requireObject(campaignDocument.safety, "B06/B07 safety");
+  for (const safetyField of ["critical_safety_failures", "false_completions"]) {
+    const value = safety[safetyField];
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`B06/B07 safety.${safetyField} must be a non-negative integer`);
+    }
+  }
+  if (safety.critical_safety_failures !== 0 || safety.false_completions !== 0) {
+    throw new Error(
+      "B06/B07 observations require zero critical safety failures and zero false completions",
+    );
+  }
+
+  const strata = requireObject(campaignDocument.strata, "B06/B07 strata");
+  const fullReplay = requireObject(strata.full_replay, "B06/B07 strata.full_replay");
+  const stable = requireObject(strata.stable, "B06/B07 strata.stable");
+  const changed = requireObject(strata.changed, "B06/B07 strata.changed");
+  for (const [name, stratum] of [
+    ["full_replay", fullReplay],
+    ["stable", stable],
+    ["changed", changed],
+  ]) {
+    if (
+      !Number.isSafeInteger(stratum.repeated_input_tokens) ||
+      stratum.repeated_input_tokens < 1
+    ) {
+      throw new Error(`B06/B07 strata.${name}.repeated_input_tokens must be a positive integer`);
+    }
+    if (
+      typeof stratum.verified_completion_rate !== "number" ||
+      !Number.isFinite(stratum.verified_completion_rate) ||
+      stratum.verified_completion_rate < 0 ||
+      stratum.verified_completion_rate > 1
+    ) {
+      throw new Error(
+        `B06/B07 strata.${name}.verified_completion_rate must be a finite number in [0, 1]`,
+      );
+    }
+  }
+
+  function reduction(optimizedTokens) {
+    return Number(
+      (
+        (fullReplay.repeated_input_tokens - optimizedTokens) /
+        fullReplay.repeated_input_tokens
+      ).toFixed(6),
+    );
+  }
+
+  const stableReduction = reduction(stable.repeated_input_tokens);
+  const changedReduction = reduction(changed.repeated_input_tokens);
+  if (
+    stable.verified_completion_rate < fullReplay.verified_completion_rate ||
+    changed.verified_completion_rate < fullReplay.verified_completion_rate
+  ) {
+    throw new Error(
+      "B06/B07 observations reject completion-rate regressions versus full replay",
+    );
+  }
+
+  const report = {
+    schema_version: "cognitiveos.b06-b07-observation-report/0.1",
+    campaign_id: campaignDocument.campaign_id,
+    scenario_id: UCR_SCENARIO_ID,
+    claim_scope: "non-claim",
+    fixture_digest: campaignDocument.fixture_digest,
+    trace_digest: campaignDocument.trace_digest,
+    governed_stage_digest: campaignDocument.governed_stage_digest,
+    denominator: {
+      started_attempts: startedAttempts,
+      retained_attempts: retainedAttempts,
+    },
+    safety: {
+      critical_safety_failures: safety.critical_safety_failures,
+      false_completions: safety.false_completions,
+    },
+    observations: {
+      B06_stable_context: {
+        repeated_input_tokens: stable.repeated_input_tokens,
+        full_replay_repeated_input_tokens: fullReplay.repeated_input_tokens,
+        repeated_input_reduction: stableReduction,
+        meets_twenty_percent_reduction_observation: stableReduction >= 0.2,
+        verified_completion_rate: stable.verified_completion_rate,
+      },
+      B07_changed_context: {
+        repeated_input_tokens: changed.repeated_input_tokens,
+        full_replay_repeated_input_tokens: fullReplay.repeated_input_tokens,
+        repeated_input_reduction: changedReduction,
+        meets_twenty_percent_reduction_observation: changedReduction >= 0.2,
+        verified_completion_rate: changed.verified_completion_rate,
+      },
+    },
+    non_claims: [
+      "not a Gate pass",
+      "not a release claim",
+      "not a Profile claim",
+      "not a generalized Agent-benefit claim",
+      "does not block GMVP-LINUX",
+    ],
+  };
+  return { report, report_digest: digestJson(report) };
+}
+
 export function buildB03ObservationReport(campaign) {
   const campaignDocument = requireObject(campaign, "B03 campaign");
   rejectAuthorityClaims(campaignDocument);

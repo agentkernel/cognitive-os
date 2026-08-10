@@ -55,9 +55,7 @@ test("Personal governance drift is rejected by failure injection", () => {
   const result = runConsistencyFailureInjection({
     "AGENTS.md": (source) =>
       source
-        .replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD")
-        .replace("CHECKPOINT-DELIVERY-01", "REMOVED-CHECKPOINT-DELIVERY-GUARD")
-        .replace("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
+        .replace("COMMAND-SHELL-PS51", "REMOVED-COMMAND-SHELL-GUARD"),
     "docs/governance/DEVELOPMENT-OPERATING-MODEL.md": (source) =>
       source
         .replace(
@@ -65,18 +63,6 @@ test("Personal governance drift is rejected by failure injection", () => {
           "REMOVED-CHECKPOINT-DELIVERY-GUARD",
         )
         .replace("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
-    "docs/governance/PROJECT-IDENTITY.md": (source) =>
-      source.replace(
-        "一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease",
-        "REMOVED-TASK-ATOMIC-DELIVERY-GUARD",
-      ),
-    "docs/standards/docs-sync-contract.md": (source) =>
-      source
-        .replaceAll(
-          "CHECKPOINT-DELIVERY-01",
-          "REMOVED-CHECKPOINT-DELIVERY-GUARD",
-        )
-        .replaceAll("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD"),
     "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md": (source) =>
       source.replaceAll("RUST-LINK-DEV-WIN-GNU-01", "REMOVED-RUST-LINK-GUARD"),
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
@@ -89,7 +75,6 @@ test("Personal governance drift is rejected by failure injection", () => {
         .find((line) => line.startsWith("| `P2-T02/D01` |"));
       assert.ok(deliverySliceRow, "P2-T02/D01 row must exist for duplicate injection");
       return source
-        .replaceAll("TASK-ATOMIC-DELIVERY-01", "REMOVED-TASK-ATOMIC-DELIVERY-GUARD")
         .replace(taskRow, `${taskRow}\n${taskRow}`)
         .replace(deliverySliceRow, `${deliverySliceRow}\n${deliverySliceRow}`);
     },
@@ -99,12 +84,7 @@ test("Personal governance drift is rejected by failure injection", () => {
         "delivery_slice_status: [ready, in-progress, blocked, done]",
       )}\ncurrent_snapshot:\n  B01: pass\n`,
     "docs/plan/PARALLEL-LANES.md": (source) =>
-      source
-        .replace(
-          "一个 task branch/Draft PR + 一份活动 task lease",
-          "REMOVED-TASK-ATOMIC-DELIVERY-GUARD",
-        )
-        .replace(
+      source.replace(
           "### 3.1 最近关闭的 leases",
           "| `lease/personal/P0-T01/broad-fixture` | fixture | Lane-DOC | `fixture` | `docs/plan/**` | test fixture | 2026-08-02 / 2026-08-02 | active |\n### 3.1 最近关闭的 leases",
         ),
@@ -134,39 +114,11 @@ test("Personal governance drift is rejected by failure injection", () => {
   );
   assert.match(
     result.stderr,
-    /AGENTS\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
-  );
-  assert.match(
-    result.stderr,
     /DEVELOPMENT-OPERATING-MODEL\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
   );
   assert.match(
     result.stderr,
-    /docs-sync-contract\.md[\s\S]*checkpoint-delivery guard is missing required fragment: CHECKPOINT-DELIVERY-01/,
-  );
-  assert.match(
-    result.stderr,
-    /AGENTS\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
-  );
-  assert.match(
-    result.stderr,
-    /PROJECT-IDENTITY\.md[\s\S]*task-atomic delivery guard is missing required fragment/,
-  );
-  assert.match(
-    result.stderr,
     /DEVELOPMENT-OPERATING-MODEL\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
-  );
-  assert.match(
-    result.stderr,
-    /PERSONAL-DEVELOPMENT-PLAN\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
-  );
-  assert.match(
-    result.stderr,
-    /PARALLEL-LANES\.md[\s\S]*task-atomic delivery guard is missing required fragment/,
-  );
-  assert.match(
-    result.stderr,
-    /docs-sync-contract\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
   );
   assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
   assert.match(result.stderr, /duplicate formal delivery slice definition: P2-T02\/D01/);
@@ -178,6 +130,39 @@ test("Personal governance drift is rejected by failure injection", () => {
   assert.match(result.stderr, /legacy prompts must be explicitly non-executable/);
   assert.match(result.stderr, /B01 cannot pass before the formal attempt denominator is complete/);
   assert.match(result.stderr, /claims forbidden broad protected tree: docs\/plan\/\*\*/);
+});
+
+test("duplicate Current snapshot lease rows are rejected", () => {
+  const result = runConsistencyFailureInjection({
+    "docs/plan/PROGRESS.md": (source) => {
+      const activeLeaseRow = source
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| Active task lease |"));
+      assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
+      return source.replace(activeLeaseRow, `${activeLeaseRow}\n${activeLeaseRow}`);
+    },
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /CURRENT_SNAPSHOT_DUPLICATE_CANONICAL_ROW/);
+});
+
+test("active lease must match the unique in-progress Slice", () => {
+  const result = runConsistencyFailureInjection({
+    "docs/plan/PARALLEL-LANES.md": (source) => {
+      const header =
+        "| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |\n|---|---|---|---|---|---|---|---|";
+      assert.ok(source.includes(header), "canonical active lease table header must exist");
+      const fakeRow =
+        "| `lease/personal/P7-T04/performance-governance` | P7-T04/D99 mismatch fixture | Lane-CFR | `personal/P7-T04-performance-governance` | `docs/plan/PROGRESS.md` | Cursor continuous-development session | 2026-08-10 / 2026-08-10 | active |";
+      return source.replace(header, `${header}\n${fakeRow}`);
+    },
+    "docs/plan/PROGRESS.md": (source) =>
+      source.replace("| Active task lease | `none` |", "| Active task lease | `lease/personal/P7-T04/performance-governance` |"),
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /CURRENT_SNAPSHOT_LEASE_MISMATCH/);
 });
 
 test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {

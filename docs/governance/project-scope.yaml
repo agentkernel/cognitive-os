@@ -18,6 +18,20 @@ active_project:
   lease_ledger: docs/plan/PARALLEL-LANES.md
   product_design: docs/product/personal/README.md
   architecture_design: docs/architecture/personal/README.md
+canonical_sources:
+  project_identity: docs/governance/PROJECT-IDENTITY.md
+  development_workflow: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
+  change_sync: docs/standards/docs-sync-contract.md
+  task_catalog: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
+  current_snapshot: docs/plan/PROGRESS.md
+  active_leases: docs/plan/PARALLEL-LANES.md
+workflow_policy_owner:
+  path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
+  policy_ids:
+    - TASK-ATOMIC-DELIVERY-01
+    - CHECKPOINT-DELIVERY-01
+    - CONTINUOUS-AUTONOMOUS-DELIVERY-01
+    - RESOLVE-BEFORE-BLOCKED-PROGRESS-01
 work_policy:
   default_scope: active-project-only
   architecture_changes: personal-driven-and-lane-ctr-controlled

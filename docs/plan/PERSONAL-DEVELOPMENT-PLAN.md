@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：in-progress（P0-T01..T07、P1-T01..T08、P2-T01..T07、P3-T01..T03 已完成；P1-T09 in progress：retained B01 `001` fixed-N campaign failed at 2 成功/8 失败 after 10 attempts; successor B01 `002` passed its owner-approved fixed N=6 at 5 successes / 1 failure after aggregate, independent-verifier, and required-CI closure; P2/B03/B09/GMVP-LINUX 正式验收尚未完成）**
-> **最后更新：2026-08-09**
+> **状态：active（P7-T04 已完成；P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P7-T04 已完成；B06/B07 仍为 non-claim observation，B09/GMVP-LINUX 正式验收尚未完成）**
+> **最后更新：2026-08-10**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -86,7 +86,7 @@
    额外填写 `development_track: experimental-local-only`，不得把 acceptance/promotion
    Gate 写成实现阻断。
 2. 一个任务只有在其验收条件满足、相关测试真实执行并留有证据后，才可标为 `done`；未执行的测试必须明确标 `not-run`，不得推断为通过。
-3. **`TASK-ATOMIC-DELIVERY-01`：** 默认 atomic delivery 是一个完整 `P*-T*` 正式任务。
+3. Operating Model **`TASK-ATOMIC-DELIVERY-01`** 要求默认 atomic delivery 是一个完整 `P*-T*` 正式任务。
    一个任务使用一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease，并连续
    完成全部必要 Slice、真实集成、负例、supported validation、完整 acceptance assessment
    与文档/分支收口。Slice 完成、checkpoint、push、CI 发起或阶段结果均不是停点或汇报点。
@@ -145,8 +145,8 @@
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 1 | 0 | 0 | 4 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **36** | **0** | **0** | **17** | — |
+| Phase 7 - 产品化与发布 | 8 | 1 | 0 | 0 | 7 | GMVP-LINUX / G7 / RC |
+| **合计** | **53** | **37** | **0** | **0** | **16** | — |
 
 ## 2. 产品边界与不变量
 
@@ -580,6 +580,11 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P4-T05/D05` | P4-T05 | final daemon-private Memory/Skill application and projection acceptance mapping over the delivered authority callers | `P4-T05/D04` remember/import/bind authority callers | exact acceptance mapping, focused native Linux tests and Clippy, required Ubuntu/Windows CI, consistency/evidence synchronization, and explicit no-public-API/B08/Gate/release/Profile claims |
 | `P4-T06/D01` | P4-T06 | daemon-private Memory/Skill consumption boundary records one Task trace with authority-backed eligibility and provenance | `P4-T05` complete private application boundary | failure-first forgotten/expired Memory, revoked/incompatible Skill, workspace/task mismatch, and missing authority facts; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no B08 pass claim |
 | `P4-T06/D02` | P4-T06 | same-task Context/Task trace consumes eligible Memory and Skill facts without granting client write authority | `P4-T06/D01` eligibility/provenance boundary | failure-first privacy leakage, stale source, duplicate consumption, and cross-task trace negatives; exact native Linux focused tests and Clippy; required Ubuntu/Windows CI; no public API or Gate claim |
+| `P7-T04/D01` | P7-T04 | deterministic module benchmark harness measures Context filtering/builder/cache, Memory FTS5, Artifact CAS, scheduler CAS, Intent/Effect persistence, and canonical report serialization without Provider or Gate claims | P3-T04/P3-T05/P3-T06 and P4-T05 stable boundaries | failure-first invalid fixture/revision/measurement negatives; exact native Linux benchmark run, supported CI, and consistency; output must be digest-bound and non-claim |
+| `P7-T04/D02` | P7-T04 | real governed-path stage collector records authorization, Context resolution, cache reuse, Effect persistence/reconcile, and bounded counters from one daemon-owned path | `P7-T04/D01` benchmark evidence boundary | focused instrumentation tests, warm/cold and omitted-stage negatives, exact native Linux validation, supported CI; no fabricated p95/p99 or Agent-benefit claim |
+| `P7-T04/D03` | P7-T04 | B06/B07 stable and changed Context raw observations compare real bounded execution against full replay with complete denominator and safety accounting | `P7-T04/D02` stage measurement boundary and UCR-01 runner | fixed scenario run, raw evidence digest, independent review, and required CI; observations remain non-claim and do not block GMVP-LINUX |
+| `P7-T04/D04` | P7-T04 | controlled benchmark workflow evaluates module regression floors and report policy without making floating CI a product performance environment | `P7-T04/D01` and shared report validator | positive/negative policy fixtures, workflow consistency, supported CI; release thresholds require preregistration and explicit breach action |
+| `P7-T04/D05` | P7-T04 | fixed-environment release campaign produces A/B governance non-inferiority evidence, exact revision/environment digests, and complete task acceptance closure | `P7-T04/D01-D04` and owner-approved preregistration | fixed native environment, complete denominator, p50/p95/p99, safety/no-false-completion accounting, independent verifier, required CI; no significant-benefit claim without A/B/C/D protocol |
 | `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
@@ -614,7 +619,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T01 | Release pipeline、六资源 manifest、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | release manifest 固定六类 schema/version/digest，以及 sidecar/adapter/skill/tool pins；可验证 Linux artifact；production trust、SBOM/attestation、immutable actions/toolchain/environment | not-started | — |
 | P7-T02 | Transactional lifecycle、Memory/Skill backup/restore | P1-T01, P1-T08, P2-T08, P7-T01 | update/rollback/uninstall；`cognitive backup`/`restore` 覆盖 Memory、Skill 与 bindings，排除 secret；migration preflight 与恢复证据 | not-started | — |
 | P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | not-started | — |
-| P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 固定环境、raw evidence、CI 与阈值 | not-started | — |
+| P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05, P5-T05 | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |

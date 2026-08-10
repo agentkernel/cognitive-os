@@ -35,11 +35,15 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   收口，就继续在同一 task branch、Draft PR 和 lease 内推进；checkpoint、commit、push、CI
   轮次、阶段总结和上下文压缩都不是停止条件。
 
-## 整任务连续交付协议
+## 整任务连续交付协议（Operating Model 摘要）
+
+本节仅是代理入口摘要。完整定义、确认边界、性能验证和冲突解释只由
+[Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md) 拥有；
+本文件不得建立更严格或不同的第二套工作流。
 
 - 默认只领取 `cognitiveos-personal` 的 `P*-T*` 任务；架构层改动必须服务于当前 Personal
   切片，规范合同改动必须走 Lane-CTR。
-- **`TASK-ATOMIC-DELIVERY-01`：** 默认交付单位是一个完整正式任务，而不是单个 Delivery
+- Operating Model **`TASK-ATOMIC-DELIVERY-01`**：默认交付单位是一个完整正式任务，而不是单个 Delivery
   Slice。领取 `P2-T04` 等任务后，代理必须在同一个 task branch、Draft PR 和 task lease
   中连续完成其全部必要 Slice、集成、负例、supported validation、正式验收评估和文档收口，
   直到任务可诚实标为 `done`。只有不可自主消除的外部阻塞、未知并发改动、安全边界冲突或
@@ -61,13 +65,13 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   `blocked_paths` / `blocked_task_ids` / `blocked_gate_ids` / owner / next action 的阻塞记录。
   已确认依赖后不得继续无出口审计；本地可修复的代码、测试、格式、CI 配置或集成问题不算
   中断理由，代理应直接修复并重跑。
-- **`CONTINUOUS-AUTONOMOUS-DELIVERY-01`：** 用户要求持续推进时，代理必须在当前
+- Operating Model **`CONTINUOUS-AUTONOMOUS-DELIVERY-01`**：用户要求持续推进时，代理必须在当前
   已领取任务的可写 task lease 内连续选择并实施下一个最小垂直交付切片，直到该任务完成、
   出现不可自主消除的明确阻塞，或用户明确要求暂停/切换。不得把 checkpoint、CI 发起、
   阶段性总结、单个验证结束或可恢复的临时环境故障当作停止工作的理由；这些只是在继续
   下一个实现、修复或预注册验证动作时记录的中间事实。除非需要用户决定、发现未知外部
   改动或完成用户请求，否则保持工具驱动的开发节奏，不发送临时进度汇报。
-- **`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`：** 对可由当前任务自行恢复的临时依赖、
+- Operating Model **`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`**：对可由当前任务自行恢复的临时依赖、
   artifact 可用性、CI 或环境故障，先在当前 lease 内修复或走已登记的恢复路径；不得在
   `PROGRESS.md` 把它登记为 task `blocked`。B01 等 Gate 的不可逆 attempt ledger 仍须
   立即、如实记录每个已开始 attempt。只有恢复路径已耗尽且必须由 owner 作出不可替代的
@@ -94,7 +98,7 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 
 ### Git checkpoint 与交付协议
 
-- **`CHECKPOINT-DELIVERY-01`：** Git 持久化与任务完成是独立维度。一个正式任务使用一个
+- Operating Model **`CHECKPOINT-DELIVERY-01`**：Git 持久化与任务完成是独立维度。一个正式任务使用一个
   task branch、一个 Draft PR 和一个 task lease。实现不得直接在 `main` 累积，也不得把同一
   任务拆成多个 Slice branch/PR。checkpoint 只在远程 CI、exact-revision Linux 验证或异常
   恢复确实需要 immutable revision 时创建；它是后台持久化事件，不是会话停点、用户汇报点、

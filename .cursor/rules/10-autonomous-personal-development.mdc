@@ -1,231 +1,81 @@
 ---
-description: Autonomously continue CognitiveOS Personal tasks with documented handoffs and guarded user confirmation
+description: Cursor adapter for continuous CognitiveOS Personal delivery
 alwaysApply: true
 ---
 
-# Autonomous continuation command
+# Canonical workflow adapter
 
-Treat a user message of `继续任务`, `继续`, `continue task`, or an equivalent
-request as authorization to autonomously continue the next safe CognitiveOS
-Personal development slice. A new window, a compressed context, or a missing
-chat history is also a continuation event: recover from the repository's
-canonical documents instead of asking the user to restate project context,
-task IDs, prior prompts, or handoff details.
+This file adapts Cursor behavior to the repository workflow. It does not own or
+redefine task, evidence, Git, blocker, confirmation, performance, or closure
+semantics. The canonical workflow is
+[`DEVELOPMENT-OPERATING-MODEL.md`](../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md),
+including:
 
-# Cross-window continuity protocol
+- `TASK-ATOMIC-DELIVERY-01`;
+- `CHECKPOINT-DELIVERY-01`;
+- `CONTINUOUS-AUTONOMOUS-DELIVERY-01`;
+- `RESOLVE-BEFORE-BLOCKED-PROGRESS-01`;
+- required interactive confirmation boundaries;
+- the performance validation ladder; and
+- deterministic task closure.
 
-The repository, not the chat transcript, is the durable memory. At the start
-of every window and after any detected context compression, rebuild state from
-`AGENTS.md`, the governance sources, the Personal plan, the `Current snapshot`,
-the active lease table, and the latest matching handoff. Then verify Git branch,
-worktree, HEAD, upstream, and Draft PR/check status before editing. Do not
-repeat completed work merely because it is absent from the current context.
+If this adapter conflicts with a canonical repository source, follow the
+canonical source and correct this adapter in the same scoped delivery.
 
-Maintain a compact recovery record in the canonical documentation while
-working: current task and slice, exact owned paths, completed acceptance items,
-checks run/not-run, immutable revision when relevant, blockers, and one next
-action. Update it before context is likely to be compressed, before switching
-windows, and immediately before stopping. Never leave the only copy of the
-next action in chat.
+# Continuation and recovery
 
-Use this loop until the whole formal task is closed:
+Treat `继续任务`, `继续`, `continue task`, an equivalent request, a new window,
+or context compression as a continuation event. Recover from repository facts
+instead of asking the user to restate history:
 
-1. Recover facts and ownership from the canonical sources.
-2. Select the next unmet acceptance item and smallest vertical implementation
-   action; prefer real integration over another helper-only slice.
-3. Implement, test, validate, and repair failures in the same task lease.
-4. Persist coherent progress when remote validation or recovery needs an exact
-   revision, then continue rather than treating the checkpoint as a stop.
-5. Reconcile plan, progress, evidence, lease, PR, and handoff state, then loop.
+1. read `AGENTS.md`, project identity, and the Operating Model;
+2. read the Personal formal plan for task acceptance and Slice definitions;
+3. read only `PROGRESS.md` Current snapshot for current facts;
+4. read the active lease table before selecting writable paths;
+5. read only the latest matching handoff and relevant task card;
+6. verify branch, worktree, HEAD/upstream, Draft PR, and required checks.
 
-After a formal task is fully merged and its lease is closed, restart recovery
-and select the next unblocked, implementation-ready Personal task from the
-formal plan. Continue task-by-task until no eligible Personal task remains or
-a real blocker/confirmation boundary applies. Never overlap task leases or use
-one task branch/PR to deliver another task.
+Never read or use `History/` as an operational source. Chat, branch names, old
+prompts, and historical handoffs cannot override canonical repository facts.
 
-If context is low, do not start a large new change. Finish or safely pause the
-current atomic action, persist the recovery record, and continue in the next
-window. Context compression is not task completion, a blocker, or permission
-to downgrade evidence. Only stop for a real external blocker, unknown/unowned
-concurrent changes, a required decision/confirmation, a safety boundary, or
-complete formal task closure. Recoverable failures must be repaired and retried.
+# Cursor execution behavior
 
-Before selecting or changing work, establish the current repository truth in
-this order:
+- Continue the active formal task and its unique `in-progress` Slice. If no
+  task is active, select one implementation-ready Personal task and claim one
+  narrow task lease before editing.
+- Use one task branch, one evolving Draft PR, and one task lease through full
+  acceptance. Do not create Slice branches, Slice PRs, routine Slice handoffs,
+  or separate acceptance-assessment work.
+- Prefer a real caller, durable authority result, or end-to-end correctness
+  property over consecutive helper-only changes.
+- Use focused failure-first or negative tests when they materially reduce
+  regression risk. Do not add tests that merely restate implementation.
+- Protect unknown or user-owned changes. Stop for user direction when their
+  ownership cannot be resolved; never overwrite, revert, stage, or mix them.
+- Respect daemon-only authority, persist-before-dispatch Intent/Effect,
+  fencing, budget, independent verification, secret isolation, and all
+  registered safety boundaries.
+- Route Rust/runtime validation according to
+  `PERSONAL-TEST-ENVIRONMENTS.md`. Remote Linux consumes only pushed exact Git
+  revisions; Windows GNU does not rerun known unsupported Rust linking.
+- Keep campaign guests isolated from ordinary development.
 
-1. Read `AGENTS.md`, `docs/governance/PROJECT-IDENTITY.md`, and
-   `docs/governance/DEVELOPMENT-OPERATING-MODEL.md`.
-2. Read `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` for tasks, acceptance, and
-   Gates.
-3. Read only the `Current snapshot` in `docs/plan/PROGRESS.md` for current
-   task, Gate, and claim facts.
-4. Read the active ownership table in `docs/plan/PARALLEL-LANES.md` before
-   choosing writable paths.
-5. Read the matching product/architecture design index, latest matching
-   handoff, and relevant root `plan.md` task card.
-6. Inspect Git status, branch, upstream, and relevant local changes.
+# Persistence, blockers, and reporting
 
-Never read, cite, or use `History/` as an operational source. Never treat
-chat history, a previous prompt, a branch name, or an old handoff as a source
-that can override the documents above.
+Checkpoint only when remote CI, exact-revision validation, or abnormal recovery
+needs an immutable revision. A checkpoint is a background persistence event,
+not a Slice closure, report boundary, handoff trigger, ready/merge decision, or
+reason to stop. Keep the PR Draft until complete task acceptance is satisfied.
 
-# Selecting and executing work
+Repair task-owned code, tests, formatting, CI configuration, integration, and
+recoverable environment failures directly. Record a formal blocker and ask for
+interaction only at the Operating Model's owner-only confirmation boundaries
+or after all supported recovery routes are exhausted. Never bypass a required
+failure or merge an incomplete task.
 
-- Work only on `cognitiveos-personal`, the repository's sole active
-  implementation project.
-- Select the smallest unblocked, implementation-ready vertical slice from the
-  formal Personal plan. Prefer continuing an existing `in-progress` task whose
-  remaining implementation requirement is clear; otherwise select the next
-  `not-started` task with a safe, bounded first slice.
-- Do not re-audit, re-plan, or rewrite completed design work when an
-  implementation slice is available. A task acceptance Gate or promotion Gate
-  is not an implementation mutex.
-- Before changing task-specific paths, claim one exact, non-overlapping
-  `lease/personal/...` row in `PARALLEL-LANES.md`. Update `PROGRESS.md` only
-  with real current facts and only while the lease is active.
-- Treat unexpected or user-owned dirty worktree changes as protected. Do not
-  overwrite, revert, stage, commit, or mix them into the delivery. Stop and
-  ask the user how to proceed if their ownership cannot be determined from the
-  lease ledger and Git state.
-- Implement a minimal coherent slice. For behavioral work, start with a
-  focused failure-first or negative/regression test when feasible, then make
-  the smallest readable fix. Do not add speculative abstractions, broad
-  refactors, or low-value tests.
-- Respect Rust daemon authority, persist-before-dispatch Intent/Effect,
-  deterministic authorization/CAS/budget/fencing, independent verification,
-  secret isolation, and all other invariants in `AGENTS.md` and the formal
-  design. Pi, sidecars, CLIs, SDKs, UI, fixtures, and models are clients or
-  candidate/observation sources, never authority writers.
-- Do not change `specs/`, `conformance/`, public schemas, generated bindings,
-  errors, transitions, or vectors unless the selected slice proves a contract
-  change is necessary. In that case, stop implementation on those paths and
-  use a narrow Lane-CTR lease and the full docs-sync contract workflow.
-- Route Linux daemon, Pi/sidecar, installer, user-service, native integration,
-  and experimental deployment validation to `personal-linux-native-01` through
-  non-interactive, no-secret SSH as the primary execution target. Before a
-  remote build or test, provision a disposable remote Git worktree from an
-  already committed, remotely reachable revision, then record and verify its
-  exact commit. Never copy uncommitted local sources or use a stale/non-Git
-  snapshot as remote test input. Windows may run static, formatting,
-  documentation, or platform-independent checks, but cannot substitute for
-  native Linux runtime validation.
-- Treat `B01-Clean-Linux-001` and `B01-Desktop-Linux-002` as reserved KVM
-  campaign guests. Do not start, stop, snapshot, deploy to, install on, or
-  otherwise change either guest outside its preregistered B01 procedure and
-  active B01 lease. Use only a task-declared disposable root on the SSH host
-  for ordinary experimental deployment.
-
-# Standing autonomy and required confirmation boundaries
-
-Continue autonomously without asking for approval for ordinary local editing,
-focused tests, non-secret diagnostics, documentation closure, commits, pushes,
-PR creation, and PR merge when the conditions below are met.
-
-The repository owner's standing operator authorization also covers operations
-required by an active leased Personal task: disposable remote validation,
-approved Secret Store access without exposing secret material, least-privilege
-elevation, and narrowly scoped user-service/system configuration changes. Use
-that authority proactively when the task and environment documents authorize
-the operation. Keep every action task-scoped, auditable, minimally privileged,
-and cleanable. Never ask for routine confirmation merely because the action is
-remote or operationally inconvenient.
-
-Stop and obtain explicit, interactive user confirmation before any action that
-would:
-
-1. expose secret material, or move it outside an approved Secret Store and
-   secure non-logging input path. Approved Secret Store access itself is
-   pre-authorized; never place secrets in chat, command arguments, ordinary
-   configuration, logs, SQLite, CI output, tests, or evidence;
-2. perform destructive or irreversible repository/data actions, force-push,
-   alter isolated campaign guests outside their preregistered procedure, or
-   mutate production/shared infrastructure;
-3. make a product-semantic, normative-semantic, structural, release, support,
-   security-policy, Gate-threshold, benchmark, or default-Agent decision not
-   already explicitly decided in canonical documentation;
-4. expand filesystem, network, process, model, secret, budget, or capability
-   scope beyond the documented task boundary;
-5. bypass a failing test, required CI check, branch protection, signature,
-   review requirement, or other governance control.
-
-When a confirmation boundary is encountered, first look for a documented,
-reversible, lower-scope route that stays within the active lease. If such a
-route exists, use it and continue. If the current task has a genuine external
-blocker, record it truthfully and continue with independent, unblocked Personal
-work only when the formal dependency graph and lease ledger permit it; never
-pretend the blocked acceptance passed and never create overlapping ownership.
-
-When confirmation is required, explain the exact action, scope, risk, whether
-it is reversible, alternatives, and the smallest confirmation needed. Keep the
-current task lease active only while actively working; otherwise record a
-bounded blocker in the documentation system with `blocked_paths`,
-`blocked_task_ids`, `blocked_gate_ids`, owner, evidence, and next action.
-
-# Validation, documentation, and Git delivery
-
-- Classify every delivery as `implementation-only`, `corrective`,
-  `product-semantic`, `normative-semantic`, or `structural`; apply the required
-  synchronization in `docs/standards/docs-sync-contract.md`.
-- Before commit, run the focused tests, negative/regression tests, formatting,
-  lint, secret/diff checks, and documentation consistency checks relevant to
-  the changed paths. Record unavailable checks as `not-run` with a reason;
-  never infer a pass.
-- Before push, inspect the complete staged and branch push surface, run broader
-  applicable checks, and ensure there are no known failures in changed
-  behavior.
-- Communicate all durable development state through the documentation system:
-  formal plan for task/Gate definitions, `PROGRESS.md` for current facts,
-  `PARALLEL-LANES.md` for ownership, and a matching checkpoint handoff for
-  session/task continuity. Do not create a parallel current-status document or
-  rely on chat as a handoff.
-- On completing a slice, update the formal plan, trace/support/evidence
-  documents when required by the change class, current snapshot, and handoff.
-  Close the lease in the same closure delivery. Preserve historical evidence;
-  do not edit prior attempts to improve outcomes.
-
-Treat every completed, independently verifiable execution action or coherent
-task batch as a delivery boundary. Once its implementation, required evidence,
-documentation closure and applicable checks are complete, automatically:
-
-1. inspect the owned/staged file set and confirm no unknown change is included;
-2. stage only the delivery's owned files;
-3. create the closure commit or commits with an accurate task-linked message;
-4. push the current task branch without waiting for another user message; and
-5. if repository policy requires or favors a pull request, create or update it,
-   monitor all required CI/checks to a terminal result, and merge when every
-   required check is green and merge policy permits.
-
-Do not defer a completed batch merely to wait for a user message. A pending
-non-required check may be recorded as pending/not-run and must not be presented
-as passing. A required failure, unknown/unowned change, active overlapping
-lease, required confirmation boundary, rejected push, unavailable required
-remote environment, or blocked merge must fail closed for that delivery: record
-the truthful status and blocker in the documentation system, preserve the
-commit when safe, and do not bypass, force-push, merge, or retry around the
-control.
-
-The user authorizes this development window to perform ordinary Git delivery
-without another approval: stage only its owned files, create commits, push the
-current task branch, create or update a pull request, and merge it when all
-required checks are green and repository policy permits it. Prefer a task
-branch and PR for code, contract, governance, or protected-branch work. A
-low-risk docs-only delivery may push directly to `main` only when repository
-policy permits it. Never force-push, amend a published commit, bypass hooks or
-branch protections, merge with unresolved required failures, or include
-unknown/unowned changes.
-
-After each completed autonomous delivery or coherent batch of task slices,
-display a concise **Development progress** section derived from the current
-`PROGRESS.md` `Current snapshot`. Include the active/completed task slice,
-current task and Gate statuses, completed deliverables, remaining milestones or
-blockers, and the next safe action. Do not create a parallel status table or
-infer progress that the canonical snapshot does not support. If the task is
-not closed and no blocker exists, continue working in the same response rather
-than ending with “awaiting the next message”.
-
-The complete delivery report must still state: selected task and slice,
-implementation result, checks run and not run, documentation/handoff updates,
-commit and remote/PR/merge status, remaining blockers, and the next safe
-action. A new window can resume from that durable state without relying on the
-report itself.
+Update canonical documents with durable facts, not chat summaries. Create one
+handoff only for complete task closure, explicit pause/transfer, unknown
+changes, or a genuine external blocker. When the whole task is accepted, run
+the deterministic ready/merge/lease/branch/main reconciliation sequence. If no
+decision or blocker exists, continue in the same response instead of ending at
+an intermediate checkpoint.

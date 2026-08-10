@@ -725,6 +725,49 @@ if (!existsSync(projectScopePath)) {
         );
       }
     }
+    for (const [sourceName, sourcePath] of Object.entries(projectScope?.canonical_sources ?? {})) {
+      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+        fail(
+          "docs/governance/project-scope.yaml",
+          `canonical_sources.${sourceName} must reference an existing repository path`,
+        );
+      }
+    }
+    const workflowPolicyOwnerPath = projectScope?.workflow_policy_owner?.path;
+    const workflowPolicyIds = projectScope?.workflow_policy_owner?.policy_ids ?? [];
+    const requiredWorkflowPolicyIds = [
+      "TASK-ATOMIC-DELIVERY-01",
+      "CHECKPOINT-DELIVERY-01",
+      "CONTINUOUS-AUTONOMOUS-DELIVERY-01",
+      "RESOLVE-BEFORE-BLOCKED-PROGRESS-01",
+    ];
+    if (
+      workflowPolicyOwnerPath !== "docs/governance/DEVELOPMENT-OPERATING-MODEL.md" ||
+      !existsSync(repoPath(...String(workflowPolicyOwnerPath).split("/")))
+    ) {
+      fail(
+        "docs/governance/project-scope.yaml",
+        "WORKFLOW_POLICY_OWNER_INVALID: Operating Model must own workflow policies",
+      );
+    } else {
+      const workflowPolicyOwnerText = readText(
+        repoPath(...workflowPolicyOwnerPath.split("/")),
+      );
+      for (const requiredWorkflowPolicyId of requiredWorkflowPolicyIds) {
+        if (!workflowPolicyIds.includes(requiredWorkflowPolicyId)) {
+          fail(
+            "docs/governance/project-scope.yaml",
+            `WORKFLOW_POLICY_ID_MISSING: ${requiredWorkflowPolicyId}`,
+          );
+        }
+        if (!workflowPolicyOwnerText.includes(`\`${requiredWorkflowPolicyId}\``)) {
+          fail(
+            workflowPolicyOwnerPath,
+            `WORKFLOW_POLICY_DEFINITION_MISSING: ${requiredWorkflowPolicyId}`,
+          );
+        }
+      }
+    }
   } catch (err) {
     fail("docs/governance/project-scope.yaml", `unparseable project identity: ${err.message}`);
   }
@@ -819,18 +862,6 @@ for (const commandEnvironmentGuardDocument of commandEnvironmentGuardDocuments) 
 
 const checkpointDeliveryGuardDocuments = [
   {
-    path: "AGENTS.md",
-    requiredFragments: [
-      "CHECKPOINT-DELIVERY-01",
-      "后台持久化事件",
-      "Draft PR",
-      "完整 task acceptance",
-      "转为 ready 并合并",
-      "禁止 merge",
-      "dirty handoff",
-    ],
-  },
-  {
     path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
     requiredFragments: [
       "CHECKPOINT-DELIVERY-01",
@@ -844,14 +875,11 @@ const checkpointDeliveryGuardDocuments = [
     ],
   },
   {
-    path: "docs/standards/docs-sync-contract.md",
+    path: ".cursor/rules/10-autonomous-personal-development.mdc",
     requiredFragments: [
+      "DEVELOPMENT-OPERATING-MODEL.md",
       "CHECKPOINT-DELIVERY-01",
-      "checkpoint-delivery guard removal",
-      "后台持久化事件",
-      "同一个 task Draft PR",
-      "完整 task acceptance 未满足前",
-      "dirty handoff",
+      "Keep the PR Draft",
     ],
   },
 ];
@@ -882,26 +910,6 @@ for (const checkpointDeliveryGuardDocument of checkpointDeliveryGuardDocuments) 
 
 const taskAtomicDeliveryGuardDocuments = [
   {
-    path: "AGENTS.md",
-    requiredFragments: [
-      "TASK-ATOMIC-DELIVERY-01",
-      "task branch、一个 Draft PR 和一个 task lease",
-      "acceptance-assessment 分支",
-      "MVP-first 授权与实现深度",
-      "完整任务收口协议",
-      "本地安全切回",
-    ],
-  },
-  {
-    path: "docs/governance/PROJECT-IDENTITY.md",
-    requiredFragments: [
-      "一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease",
-      "阶段总结和可恢复故障都不是",
-      "首个 MVP 优先使用",
-      "fast-forward `main`",
-    ],
-  },
-  {
     path: "docs/governance/DEVELOPMENT-OPERATING-MODEL.md",
     requiredFragments: [
       "TASK-ATOMIC-DELIVERY-01",
@@ -910,33 +918,18 @@ const taskAtomicDeliveryGuardDocuments = [
       "Deterministic task closure",
       "Multiple formal tasks must not share one",
       "branch or PR",
+      "Required interactive confirmation boundaries",
+      "Performance validation ladder",
+      "RESOLVE-BEFORE-BLOCKED-PROGRESS-01",
     ],
   },
   {
-    path: "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+    path: "AGENTS.md",
     requiredFragments: [
+      "DEVELOPMENT-OPERATING-MODEL.md",
       "TASK-ATOMIC-DELIVERY-01",
-      "Slice 是内部检查点",
-      "MVP-first",
-      "不得留下“代码完成但验收、分支或状态待收口”",
-    ],
-  },
-  {
-    path: "docs/plan/PARALLEL-LANES.md",
-    requiredFragments: [
-      "一个 task branch/Draft PR + 一份活动 task lease",
-      "不得因 Slice、checkpoint、push、CI 轮次",
-      "一个 branch/PR 不得承载多个正式任务",
-      "fast-forward `main`",
-    ],
-  },
-  {
-    path: "docs/standards/docs-sync-contract.md",
-    requiredFragments: [
-      "TASK-ATOMIC-DELIVERY-01",
-      "一个正式任务使用一个 task branch、一个 Draft PR 和一个",
-      "不得遗留独立 `acceptance-assessment` 分支",
-      "deterministic task closure",
+      "CONTINUOUS-AUTONOMOUS-DELIVERY-01",
+      "RESOLVE-BEFORE-BLOCKED-PROGRESS-01",
     ],
   },
 ];
@@ -985,6 +978,21 @@ const progressPath = repoPath("docs", "plan", "PROGRESS.md");
 const lanesPath = repoPath("docs", "plan", "PARALLEL-LANES.md");
 if (existsSync(progressPath) && existsSync(lanesPath)) {
   const progressText = readText(progressPath);
+  const currentSnapshotHeadingCount = (progressText.match(/^## Current snapshot\b/gm) ?? []).length;
+  const historicalJournalHeadingCount =
+    (progressText.match(/^## Historical evidence journal\b/gm) ?? []).length;
+  if (currentSnapshotHeadingCount !== 1) {
+    fail(
+      "docs/plan/PROGRESS.md",
+      `CURRENT_SNAPSHOT_DUPLICATE_HEADING: expected one Current snapshot heading, found ${currentSnapshotHeadingCount}`,
+    );
+  }
+  if (historicalJournalHeadingCount !== 1) {
+    fail(
+      "docs/plan/PROGRESS.md",
+      `CURRENT_SNAPSHOT_INVALID_BOUNDARY: expected one Historical evidence journal heading, found ${historicalJournalHeadingCount}`,
+    );
+  }
   const currentSnapshot = progressText.split(/^## Historical evidence journal/m, 1)[0];
   if (!currentSnapshot.includes("`cognitiveos-personal`")) {
     fail("docs/plan/PROGRESS.md", "Current snapshot does not identify cognitiveos-personal");
@@ -1029,6 +1037,7 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
   const deliveryQueueSectionMatch = currentSnapshot.match(
     /^### Layer 2 .*Delivery Slice queue\s*\n([\s\S]*?)(?=^### Layer 3 )/m,
   );
+  const currentDeliverySlicesById = new Map();
   if (!deliveryQueueSectionMatch) {
     fail("docs/plan/PROGRESS.md", "Current snapshot has no Delivery Slice queue");
   } else {
@@ -1053,6 +1062,7 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
         fail("docs/plan/PROGRESS.md", `duplicate current delivery slice: ${deliverySliceId}`);
       }
       currentDeliverySliceIds.add(deliverySliceId);
+      currentDeliverySlicesById.set(deliverySliceId, deliverySliceStatus);
       if (!personalDeliverySliceIds.has(deliverySliceId)) {
         fail("docs/plan/PROGRESS.md", `current queue references undefined slice: ${deliverySliceId}`);
       }
@@ -1275,7 +1285,20 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
           );
         }
       }
-      activeLeases.push(leaseId);
+      const leaseTaskSliceMatch = taskDescription.match(/(P\d+-T\d+\/D\d{2})/);
+      const leaseTaskIdMatch = leaseId.match(/^lease\/personal\/(P\d+-T\d+)\//);
+      if (!leaseTaskSliceMatch || !leaseTaskIdMatch) {
+        fail(
+          "docs/plan/PARALLEL-LANES.md",
+          `LEASE_TASK_SLICE_MALFORMED: active lease ${leaseId} must declare a formal task/slice`,
+        );
+      } else if (leaseTaskSliceMatch[1].split("/")[0] !== leaseTaskIdMatch[1]) {
+        fail(
+          "docs/plan/PARALLEL-LANES.md",
+          `LEASE_TASK_MISMATCH: ${leaseId} declares ${leaseTaskSliceMatch[1]} outside its task`,
+        );
+      }
+      activeLeases.push({ id: leaseId, taskSlice: leaseTaskSliceMatch?.[1] });
       for (const writablePath of writablePaths) {
         const normalizedDeclaredPath = writablePath.replaceAll("\\", "/");
         if (forbiddenBroadProtectedTrees.has(normalizedDeclaredPath)) {
@@ -1307,28 +1330,54 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       }
     }
 
-    const progressLeaseRow = currentSnapshot
+    const progressLeaseRows = currentSnapshot
       .split(/\r?\n/)
-      .find((line) => line.startsWith("| Active task lease |"));
+      .filter((line) => line.startsWith("| Active task lease |"));
+    const progressLeaseRow = progressLeaseRows[0];
     if (!progressLeaseRow) {
       fail("docs/plan/PROGRESS.md", "Current snapshot has no Active task lease row");
     } else {
       const referencedLeaseIds = [...progressLeaseRow.matchAll(/`(lease\/personal\/[^`]+)`/g)].map(
         (match) => match[1],
       );
+      if (progressLeaseRows.length !== 1) {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `CURRENT_SNAPSHOT_DUPLICATE_CANONICAL_ROW: expected one Active task lease row, found ${progressLeaseRows.length}`,
+        );
+      }
       for (const activeLease of activeLeases) {
-        if (!referencedLeaseIds.includes(activeLease)) {
-          fail("docs/plan/PROGRESS.md", `active lease is not referenced: ${activeLease}`);
+        if (!referencedLeaseIds.includes(activeLease.id)) {
+          fail("docs/plan/PROGRESS.md", `active lease is not referenced: ${activeLease.id}`);
         }
       }
+      const activeLeaseIds = activeLeases.map((activeLease) => activeLease.id);
       for (const referencedLeaseId of referencedLeaseIds) {
-        if (!activeLeases.includes(referencedLeaseId)) {
+        if (!activeLeaseIds.includes(referencedLeaseId)) {
           fail("docs/plan/PROGRESS.md", `referenced lease is not active: ${referencedLeaseId}`);
         }
       }
       if (activeLeases.length === 0 && !progressLeaseRow.includes("`none`")) {
         fail("docs/plan/PROGRESS.md", "zero active leases must be represented as `none`");
       }
+    }
+
+    const activeTaskSlices = activeLeases
+      .map((activeLease) => activeLease.taskSlice)
+      .filter(Boolean);
+    for (const activeTaskSlice of activeTaskSlices) {
+      if (currentDeliverySlicesById.get(activeTaskSlice) !== "in-progress") {
+        fail(
+          "docs/plan/PROGRESS.md",
+          `CURRENT_SNAPSHOT_LEASE_MISMATCH: active lease slice ${activeTaskSlice} is not the current in-progress slice`,
+        );
+      }
+    }
+    if (new Set(activeTaskSlices.map((slice) => slice.split("/")[0])).size !== activeTaskSlices.length) {
+      fail(
+        "docs/plan/PARALLEL-LANES.md",
+        "LEASE_TASK_DUPLICATE: one formal task must not have multiple active leases",
+      );
     }
   }
 }

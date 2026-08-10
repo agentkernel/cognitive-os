@@ -106,17 +106,15 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
     `&&`/`||`，当前 Windows GNU linker exit 121 是禁止 feature Slice 重复探测的已知
     unsupported boundary，Rust compiling/linking validation 必须预路由到 supported
     CI/MSVC 或 exact-revision native Linux。
-13. 代理入口、Operating Model 与本契约必须保留 `CHECKPOINT-DELIVERY-01`：checkpoint 只在
-    remote CI、exact-revision Linux validation 或异常恢复需要 immutable revision 时创建，
-    并且只是后台持久化事件，不得成为会话停点、用户汇报点、Slice 关闭或 merge 理由。
-    coherent 改动可自动 commit/push 到同一个 task Draft PR；完整 task acceptance 未满足前
-    必须保持 Draft 且禁止 merge。
-14. 代理入口、Operating Model、Personal 正式计划与本契约必须保留
-    `TASK-ATOMIC-DELIVERY-01`：一个正式任务使用一个 task branch、一个 Draft PR 和一个
-    task-scoped lease；Slice 只是内部检查点，完成后立即继续下一 acceptance 项。只有任务
-    完整验收、supported validation、required CI、最终文档/证据和分支/lease 收口全部满足
-    后才能 ready/merge。普通 Slice、commit、push、CI 轮次或可恢复故障不得创建独立 handoff
-    或中断工作；不得遗留独立 `acceptance-assessment` 分支。
+13. `project-scope.yaml` 必须将 Operating Model 登记为 workflow policy owner，且
+    `CHECKPOINT-DELIVERY-01`、`TASK-ATOMIC-DELIVERY-01`、
+    `CONTINUOUS-AUTONOMOUS-DELIVERY-01`、
+    `RESOLVE-BEFORE-BLOCKED-PROGRESS-01` 在该 owner 中存在。代理入口、正式计划和编辑器
+    adapter 可引用/摘要这些 ID，但不得定义冲突的第二套语义。
+14. Current snapshot heading 与 `Active task lease` canonical row 必须唯一；活动 lease 的
+    task/Slice 必须匹配唯一 `in-progress` Slice，且同一 task 不得拥有多份活动 lease。
+    静态检查只证明仓库文本状态；PR、HEAD/upstream 和 required-check closure 仍由动态
+    Git/GitHub 验证证明。
 15. 整任务最终 handoff 必须携带 branch/full HEAD/upstream/PR/worktree/acceptance mapping/
     validation/non-claims；合并后必须关闭 lease、确认 PR merged、清理安全可删的远端 task
     branch、本地切回并 fast-forward `main`，验证 clean worktree 与 HEAD/upstream。coherent
