@@ -1,6 +1,9 @@
-//! Personal production release-manifest authority path (P7-T01/D01).
+//! Personal production release-manifest authority path (P7-T01/D01–D02).
 //!
-//! Verifies a signed six-resource release manifest against caller-fixed pins.
+//! D01 verifies a signed six-resource release manifest against caller-fixed
+//! pins. D02 binds SBOM and Linux artifact digests to a D01-verified manifest
+//! and rejects secret/dev-path contaminated inventories.
+//!
 //! This module does not generate SBOM bytes, publish GitHub Releases, hold a
 //! production signing key, or claim Gate/release/Profile outcomes.
 
@@ -149,7 +152,49 @@ pub enum ReleaseManifestError {
     SignatureMismatch,
     #[error("release manifest bytes are not canonical")]
     NonCanonicalManifest,
+    #[error("SBOM bytes do not match the verified release-manifest sbom_digest")]
+    SbomDigestMismatch,
+    #[error("artifact bytes do not match the verified release-manifest artifact_digest")]
+    ArtifactDigestMismatch,
+    #[error("third-party inventory text is missing for digest binding")]
+    MissingInventory,
+    #[error("third-party inventory contains a forbidden secret or developer path")]
+    ContaminatedInventoryPath,
 }
+
+/// Digests proven after D02 SBOM/artifact binding against a D01-verified manifest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerifiedReleaseArtifactBindings {
+    pub manifest_digest: String,
+    pub sbom_digest: String,
+    pub artifact_digest: String,
+}
+
+const FORBIDDEN_INVENTORY_MARKERS: &[&str] = &[
+    "/.env",
+    "\\.env",
+    "/secrets/",
+    "\\secrets\\",
+    "credential",
+    "api_key",
+    "api-key",
+    "private_key",
+    "ssv1:",
+    "sk-",
+    "/home/",
+    "\\users\\",
+    "/users/",
+    "desktop/",
+    "desktop\\",
+    "\\appdata\\",
+    "/tmp/",
+    "\\temp\\",
+    "node_modules",
+    "target/debug",
+    "target\\debug",
+    ".git/",
+    ".git\\",
+];
 
 impl ReleaseTrustedKeyring {
     pub fn new(
@@ -459,6 +504,52 @@ fn sha256_digest(bytes: &[u8]) -> String {
     format!("sha256:{:x}", Sha256::digest(bytes))
 }
 
+fn inventory_is_contaminated(inventory_text: &str) -> bool {
+    let lowered = inventory_text.to_ascii_lowercase();
+    FORBIDDEN_INVENTORY_MARKERS
+        .iter()
+        .any(|marker| lowered.contains(marker))
+}
+
+/// Bind SBOM and Linux artifact digests to a D01-verified release manifest.
+///
+/// Consumes only a previously verified manifest. Rejects digest mismatch and
+/// inventories that look like secret or developer-path contamination.
+pub fn verify_release_artifact_bindings(
+    verified: &VerifiedPersonalReleaseManifest,
+    sbom_bytes: &[u8],
+    artifact_bytes: &[u8],
+    inventory_text: Option<&str>,
+) -> Result<VerifiedReleaseArtifactBindings, ReleaseManifestError> {
+    if sbom_bytes.is_empty() || artifact_bytes.is_empty() {
+        return Err(ReleaseManifestError::InvalidManifest(
+            "SBOM and artifact payloads must be non-empty",
+        ));
+    }
+    let sbom_digest = sha256_digest(sbom_bytes);
+    if sbom_digest != verified.manifest.sbom_digest {
+        return Err(ReleaseManifestError::SbomDigestMismatch);
+    }
+    let artifact_digest = sha256_digest(artifact_bytes);
+    if artifact_digest != verified.manifest.artifact_digest {
+        return Err(ReleaseManifestError::ArtifactDigestMismatch);
+    }
+    let Some(inventory) = inventory_text else {
+        return Err(ReleaseManifestError::MissingInventory);
+    };
+    if inventory.trim().is_empty() {
+        return Err(ReleaseManifestError::MissingInventory);
+    }
+    if inventory_is_contaminated(inventory) {
+        return Err(ReleaseManifestError::ContaminatedInventoryPath);
+    }
+    Ok(VerifiedReleaseArtifactBindings {
+        manifest_digest: verified.manifest_digest.clone(),
+        sbom_digest,
+        artifact_digest,
+    })
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
@@ -722,6 +813,120 @@ mod tests {
             )
             .unwrap_err(),
             ReleaseManifestError::NonCanonicalManifest
+        );
+    }
+
+    #[test]
+    fn binds_sbom_and_artifact_digests_to_verified_manifest() {
+        let sbom = b"sbom-fixture-bytes";
+        let artifact = b"artifact-fixture-bytes";
+        let expected = expected_pins();
+        let mut manifest = valid_manifest(&expected);
+        manifest.sbom_digest = sha256_digest(sbom);
+        manifest.artifact_digest = sha256_digest(artifact);
+        let manifest_bytes = canonical_manifest_bytes(&manifest);
+        let verified = verify_personal_release_manifest(
+            &manifest_bytes,
+            &sign_manifest(&manifest_bytes),
+            &expected,
+            &test_keyring(),
+        )
+        .expect("aligned manifest must verify");
+        let bound = verify_release_artifact_bindings(
+            &verified,
+            sbom,
+            artifact,
+            Some("crate:example\nlicense:Apache-2.0\n"),
+        )
+        .expect("matching digests and clean inventory must bind");
+        assert_eq!(bound.sbom_digest, verified.manifest.sbom_digest);
+        assert_eq!(bound.artifact_digest, verified.manifest.artifact_digest);
+        assert_eq!(bound.manifest_digest, verified.manifest_digest);
+    }
+
+    #[test]
+    fn rejects_sbom_or_artifact_digest_mismatch() {
+        let sbom = b"sbom-clean";
+        let artifact = b"artifact-clean";
+        let expected = expected_pins();
+        let mut manifest = valid_manifest(&expected);
+        manifest.sbom_digest = sha256_digest(sbom);
+        manifest.artifact_digest = sha256_digest(artifact);
+        let manifest_bytes = canonical_manifest_bytes(&manifest);
+        let verified = verify_personal_release_manifest(
+            &manifest_bytes,
+            &sign_manifest(&manifest_bytes),
+            &expected,
+            &test_keyring(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            verify_release_artifact_bindings(
+                &verified,
+                b"wrong-sbom",
+                artifact,
+                Some("crate:example\n"),
+            )
+            .unwrap_err(),
+            ReleaseManifestError::SbomDigestMismatch
+        );
+        assert_eq!(
+            verify_release_artifact_bindings(
+                &verified,
+                sbom,
+                b"wrong-artifact",
+                Some("crate:example\n"),
+            )
+            .unwrap_err(),
+            ReleaseManifestError::ArtifactDigestMismatch
+        );
+    }
+
+    #[test]
+    fn rejects_missing_inventory_and_contaminated_paths() {
+        let sbom = b"sbom-clean";
+        let artifact = b"artifact-clean";
+        let expected = expected_pins();
+        let mut manifest = valid_manifest(&expected);
+        manifest.sbom_digest = sha256_digest(sbom);
+        manifest.artifact_digest = sha256_digest(artifact);
+        let manifest_bytes = canonical_manifest_bytes(&manifest);
+        let verified = verify_personal_release_manifest(
+            &manifest_bytes,
+            &sign_manifest(&manifest_bytes),
+            &expected,
+            &test_keyring(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            verify_release_artifact_bindings(&verified, sbom, artifact, None).unwrap_err(),
+            ReleaseManifestError::MissingInventory
+        );
+        assert_eq!(
+            verify_release_artifact_bindings(&verified, sbom, artifact, Some("   ")).unwrap_err(),
+            ReleaseManifestError::MissingInventory
+        );
+        assert_eq!(
+            verify_release_artifact_bindings(
+                &verified,
+                sbom,
+                artifact,
+                Some("path=/home/dev/.env\n")
+            )
+            .unwrap_err(),
+            ReleaseManifestError::ContaminatedInventoryPath
+        );
+        assert_eq!(
+            verify_release_artifact_bindings(
+                &verified,
+                sbom,
+                artifact,
+                Some("path=C:\\Users\\dev\\Desktop\\secrets\\key\n")
+            )
+            .unwrap_err(),
+            ReleaseManifestError::ContaminatedInventoryPath
         );
     }
 }
