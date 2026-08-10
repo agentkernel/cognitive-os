@@ -407,8 +407,11 @@ fn health_and_recover_keep_identities_and_zero_capability() {
         health.sidecar_fencing_epoch(),
         Some(session.fencing_epoch())
     );
-    assert!(!health.process_bound());
+    assert!(health.process_bound());
     assert_ne!(health.instance_id(), session.session_id());
+    assert!(session.process_bound());
+    assert!(session.process_attempt_id().is_some());
+    assert_ne!(session.process_attempt_id().unwrap(), session.session_id());
 
     let stopped = stop_official_pi_agent_durable(
         &manager,
@@ -434,7 +437,8 @@ fn health_and_recover_keep_identities_and_zero_capability() {
     assert_eq!(authority.capability_grants(), 0);
     let recovered_health =
         observe_official_pi_agent_health_durable(&manager, OFFICIAL_PI_INSTALLATION_ROOT).unwrap();
-    assert!(!recovered_health.process_bound());
+    assert!(recovered_health.process_bound());
+    assert!(recovered_session.process_bound());
     assert_eq!(
         recovered_health.sidecar_fencing_epoch(),
         Some(recovered_session.fencing_epoch())

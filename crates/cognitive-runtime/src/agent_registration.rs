@@ -154,8 +154,9 @@ pub struct OfficialPiAgentActivationRequest {
 /// Activate one registered official Pi AgentInstance and create its SidecarSession.
 ///
 /// The durable outcome is an `active` instance plus exactly one current
-/// SidecarSession at a new fencing epoch. This path does not spawn a process,
-/// grant capability, create an Effect, or complete a Task.
+/// SidecarSession at a new fencing epoch with a fenced process-attempt binding.
+/// This path does not spawn or attach an OS process, grant capability, create
+/// an Effect, or complete a Task.
 pub fn activate_official_pi_agent_durable(
     manager: &DurableInstallationManager<'_>,
     request: &OfficialPiAgentActivationRequest,
@@ -216,21 +217,29 @@ pub fn activate_official_pi_agent_durable(
             format!("allocate sidecar session id: {err}"),
         )
     })?;
+    let process_attempt_id = UuidV7Generator.next_uuid_v7().map_err(|err| {
+        InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            format!("allocate process attempt id: {err}"),
+        )
+    })?;
     let (registration, session) = manager
         .activate_agent_instance(&AgentActivationCommit {
             session_id,
             instance_id: registration.instance_id().to_owned(),
             expected_fencing_epoch: request.expected_fencing_epoch,
             protocol_digest: request.protocol_digest.clone(),
+            process_attempt_id,
         })
         .map_err(map_store_error)?;
     if registration.lifecycle_state() != "active"
         || session.lifecycle_state() != "active"
         || session.fencing_epoch() != registration.fencing_epoch()
+        || !session.process_bound()
     {
         return Err(InstallerError::new(
             RegisteredErrorCode::StateStoreUnavailable,
-            "activation persisted an unexpected instance or session lifecycle state",
+            "activation persisted an unexpected instance, session, or process-binding state",
         ));
     }
     Ok((registration, session))
@@ -287,21 +296,29 @@ pub fn resume_official_pi_agent_durable(
             format!("allocate resumed sidecar session id: {err}"),
         )
     })?;
+    let process_attempt_id = UuidV7Generator.next_uuid_v7().map_err(|err| {
+        InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            format!("allocate resumed process attempt id: {err}"),
+        )
+    })?;
     let (registration, session) = manager
         .resume_agent_instance(&AgentActivationCommit {
             session_id,
             instance_id: registration.instance_id().to_owned(),
             expected_fencing_epoch: request.expected_fencing_epoch,
             protocol_digest: request.protocol_digest.clone(),
+            process_attempt_id,
         })
         .map_err(map_store_error)?;
     if registration.lifecycle_state() != "active"
         || session.lifecycle_state() != "active"
         || session.fencing_epoch() != registration.fencing_epoch()
+        || !session.process_bound()
     {
         return Err(InstallerError::new(
             RegisteredErrorCode::StateStoreUnavailable,
-            "resume persisted an unexpected instance or session lifecycle state",
+            "resume persisted an unexpected instance, session, or process-binding state",
         ));
     }
     Ok((registration, session))
@@ -401,21 +418,29 @@ pub fn recover_official_pi_agent_durable(
             format!("allocate recovered sidecar session id: {err}"),
         )
     })?;
+    let process_attempt_id = UuidV7Generator.next_uuid_v7().map_err(|err| {
+        InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            format!("allocate recovered process attempt id: {err}"),
+        )
+    })?;
     let (registration, session) = manager
         .recover_agent_instance(&AgentActivationCommit {
             session_id,
             instance_id: registration.instance_id().to_owned(),
             expected_fencing_epoch: request.expected_fencing_epoch,
             protocol_digest: request.protocol_digest.clone(),
+            process_attempt_id,
         })
         .map_err(map_store_error)?;
     if registration.lifecycle_state() != "active"
         || session.lifecycle_state() != "active"
         || session.fencing_epoch() != registration.fencing_epoch()
+        || !session.process_bound()
     {
         return Err(InstallerError::new(
             RegisteredErrorCode::StateStoreUnavailable,
-            "recovery persisted an unexpected instance or session lifecycle state",
+            "recovery persisted an unexpected instance, session, or process-binding state",
         ));
     }
     Ok((registration, session))
