@@ -3,7 +3,7 @@ Task: P3-T06
 Slice: D02
 Gate: B03
 Campaign: B03-personal-context-correctness-001
-Status: MVP evidence complete; final policy-revision CI pending
+Status: B03 MVP pass recorded under ADR-0040
 -->
 
 # B03 execution evidence — native Linux
@@ -18,7 +18,7 @@ Status: MVP evidence complete; final policy-revision CI pending
   `6.8.0-83-generic`; checkout was clean before cleanup
 - Operator: Cursor agent
 - Product owner: focused evidence affirmed; ADR-0040 defines this evidence as
-  the MVP B03 denominator
+  the MVP B03 denominator and decision boundary
 - Secret and network boundary: no credential, subscription URL, raw provider
   traffic, or raw secret was included in the checkout or evidence
 
@@ -64,11 +64,13 @@ UCR-01 utility, release, Profile, or Task completion.
 
 ## Disposition boundary
 
-The MVP evidence is complete. Once required CI passes for the ADR-0040 policy
-revision, this record supports a bounded B03 MVP `pass`; the normal PR, lease,
-and main-reconciliation chain must still complete before P3-T06 is `done`.
+The required CI run `31347323835` passed Ubuntu and Windows for the policy-
+aligned revision `7ea39472899e8ac77f30e589da89b7b4e0b316a2`. Under ADR-0040,
+the bounded B03 MVP result is **pass**. Normal PR, lease, branch, and main
+reconciliation remain delivery closure work; this B03 pass does not pass
+GMVP-LINUX, release, Profile, B06/B07, or UCR-01 utility.
 
 ## Non-claims
 
-This evidence does not claim B03 pass, B06/B07 benefit, UCR-01 utility,
-GMVP-LINUX, release, Profile conformance, Agent benefit, or Task completion.
+This evidence does not claim B06/B07 benefit, UCR-01 utility, GMVP-LINUX,
+release, Profile conformance, Agent benefit, or Task completion.
