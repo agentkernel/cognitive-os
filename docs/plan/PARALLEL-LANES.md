@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T08/runtime-spine-gates` | P2-T08/D04 formal B02/B04/B05/B12 campaign | Lane-RUN | `personal/P2-T08-runtime-spine-gates` | `tools/src/runtime-spine-gate.mjs`; `tools/test/runtime-spine-gate.test.mjs`; `crates/cognitive-management/tests/m5_session_approval.rs`; `docs/adr/0046-personal-runtime-spine-mvp-validation-policy.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P2-T08-claim | 2026-08-10 / 2026-08-11 | active |
+| — | — | — | — | — | — | — | no active lease |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
@@ -84,6 +84,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P2-T08/runtime-spine-gates` | P2-T08/D01-D04 Runtime Spine Gates | `personal/P2-T08-runtime-spine-gates` | 2026-08-11 | ADR-0046 MVP: D01–D04 deliver non-claim harness, ADR-0018 expiry, authority-path negatives, fixed-denominator campaign, and owner-affirmed B02/B04/B05/B12 MVP pass. Exact native Linux matrix and required Ubuntu/Windows CI run `31407542786` passed at `be7febb`; PR #182 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P5-T02/sidecar-foundation` | P5-T02/D01-D03 sidecar foundation | `personal/P5-T02-sidecar-foundation` | 2026-08-10 | D01-D03 deliver official-Pi Agent registration, epoch-fenced SidecarSession activate, pause/resume/stop/recover, redacted health with `process_bound=false`, and management-session admin-cli callers. Exact native Linux focused validation and required Ubuntu/Windows CI run `31391916831` passed at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`; PR #181 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T01/doc-restructure` | P8-T01 complete documentation restructure and 2.0 design baseline | `personal/P8-T01-doc-restructure` | 2026-08-10 | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Required Ubuntu/Windows CI run `31383446541` passed; PR #180 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T04/performance-governance` | P7-T04 complete performance campaign and regression floor | `personal/P7-T04-performance-governance` | 2026-08-10 | D01-D05 deliver deterministic module benchmarks, governed-path stage timing, B06/B07 non-claim observations, module regression-floor policy, and fixed-native governance A/B non-inferiority. Required Ubuntu/Windows CI passed; PR #179 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |

@@ -3,7 +3,7 @@ Task: P2-T08
 Slice: D04
 Gates: B02, B04, B05, B12
 Campaign: runtime-spine-gates/1
-Status: evidence complete under ADR-0046; Gate disposition pending owner review
+Status: owner affirmed under ADR-0046; MVP Gate pass recorded
 -->
 
 # P2-T08/D04 Runtime Spine execution evidence — native Linux
@@ -66,19 +66,21 @@ Primary matrix result: **all required observations pass** at
 
 The evaluator did not mutate Gate state.
 
-## Product-owner disposition ask
+## Product-owner MVP disposition
 
-Under ADR-0046, owner review owns each Gate. Please affirm or reject:
+Owner session reply `affirm all` (2026-08-11) affirms B02, B04, B05, and B12
+against the ADR-0046 fixed matrix, native Linux/Clippy, required CI
+`31407542786`, cleanup/redaction, and the non-claim report digest
+`sha256:8a0103284a8f51bf44ee3863a0ac026c06f1404315346591a0fc48dc2e8a989e`.
+Under ADR-0046 the bounded MVP Gate results are **pass** for each named Gate.
+This does not authorize GMVP-LINUX, B08, B09, release, or Profile claims.
 
-1. **B02** — affirm / reject
-2. **B04** — affirm / reject
-3. **B05** — affirm / reject
-4. **B12** — affirm / reject
+## Disposition boundary
 
-Until that reply, Gate rows remain `not-run` (or stay unchanged). This evidence
-does not pass GMVP-LINUX, release, Profile, B01/B03/B08/B09, or Task completion.
+Gate state is owned by this documented product decision, not by the evaluator.
+Normal PR, lease, branch, and main reconciliation remain delivery closure work.
 
 ## Non-claims
 
-Not a Gate pass by itself. Not a release claim. Not a Profile claim. Does not
-set Gate state.
+This evidence does not claim GMVP-LINUX, release, Profile conformance, B08,
+B09, or Task completion beyond the P2-T08 acceptance boundary.
