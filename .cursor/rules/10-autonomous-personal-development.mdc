@@ -77,6 +77,11 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - Under standing continuous-delivery authorization, coherent secret-free
   checkpoint commit/push and Draft PR maintenance are expected workflow events,
   not per-turn permission asks.
+- Follow Operating Model §2.3 for ADR-0040/0046/0047-class fixed-denominator
+  Gate MVP self-disposition and for importing owner-designated local test
+  Provider keys into an approved Secret Store. Do not re-ask for those
+  authorized cases; never place secret material in Git, chat, logs, or
+  evidence.
 
 # Forbidden stop conditions
 
@@ -87,8 +92,10 @@ following:
 - a task was claimed or Delivery Slices were registered without code progress;
 - a mid-flight status summary was written to chat;
 - context feels long (persist next action into `PROGRESS.md` and continue);
-- Gate disposition was prepared for the owner (record `blocked` + recovery
-  action, then claim a non-overlapping ready task and continue);
+- Gate disposition was prepared for the owner on a true owner-only boundary
+  (record `blocked` + recovery action, then claim a non-overlapping ready task
+  and continue); for ADR-0040-class MVP self-disposition under §2.3, record the
+  Gate result and close the task instead of stopping;
 - local Windows GNU cannot run Rust (route to CI/Linux and continue eligible
   work).
 

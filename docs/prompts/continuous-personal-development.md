@@ -14,6 +14,8 @@
 在遵守仓库公理与 Operating Model 的前提下，我授予你对本仓库 Personal 任务的最高操作授权：
 - 自行决策、自行执行、自行修复、自行 checkpoint/commit/push、维护同一 Draft PR、跑 CI、在 DEV-LINUX-NATIVE-01 做 exact-revision 验证、使用 approved Secret Store、做最小权限提权与可回滚的 user-service/配置修改；
 - 不需要逐次确认常规实现/测试/文档同步/lease 更新/Draft PR 维护/完整验收后的正常 merge 收口；
+- ADR-0040/0046/0047 类固定 denominator 的 Gate MVP：矩阵 + Linux/Clippy + required CI + non-claim report 齐全后，可自行记录 pass/fail，不必再等我逐 Gate affirm（我可覆盖）；未决阈值、live 统计战役、release/Profile/GMVP 仍须确认边界；
+- 我指定的本地测试 Provider 密钥文件（例如 Desktop/deepseek.txt）可导入 approved Secret Store，不必再问；密钥不得进 Git/聊天/日志/证据/普通配置；
 - 你必须以仓库文档为唯一持久记忆；聊天摘要、分支名、旧 handoff、History/ 都不能覆盖正式事实。
 
 # 1. 启动与恢复（每次新窗口 / 继续 / 上下文压缩后都做）
@@ -58,7 +60,7 @@
 - 只 claim 了任务或只注册了 Slice，还没写实现；
 - 聊天里写了进度总结；
 - 上下文变长（先写入 PROGRESS，再继续）；
-- Gate disposition 已准备好等我 affirm（正式 blocked 记账后，改领不重叠就绪任务继续）；
+- Gate disposition：若属 §2.3 ADR-0040 类可自行判定，直接记账并收口；仅真 owner-only 边界才 blocked 后改领其他就绪任务；
 - 本机 GNU 不能跑 Rust（路由到 CI/Linux，继续可做的工作）。
 
 只能在这些情况真正停止：我明确暂停/改范围；确认边界已穷尽且必须我选；未知并发改动；或 Remaining = 0 / 只剩正式 blocked 项。
@@ -75,10 +77,11 @@ A. 先在任务内替代决策（优先）：
 B. 仅当命中 Operating Model 确认边界，且替代路径已穷尽时，才向我请求最小决策：
    1) secret 出批准 Store / 进日志证据；
    2) 破坏性/不可逆仓库或数据操作、force push、改隔离 campaign guest；
-   3) 未决的产品/规范/结构/release/安全策略/Gate 阈值/默认 Agent 语义；
+   3) 未决的产品/规范/结构/release/安全策略/Gate 阈值/默认 Agent 语义（注意：ADR-0040 类固定 denominator MVP 在证据齐全后的 Gate 记账属于 §2.3 授权，不是本条）；
    4) 超出任务边界扩权；
    5) 想绕过失败测试、required CI、branch protection、签名或治理控制。
    提问必须包含：精确动作、范围、风险、可逆性、已尝试替代、我只需做的最小选择。
+   另：owner 指定的本地测试 Provider 密钥导入 approved Secret Store 属于 §2.3，不要再问。
 
 C. 仍无法推进时：正式 blocked 记账，然后允许改领后续任务（追进度，但不偷工）：
    - 把当前任务/Slice 标 blocked（不是 done）；写清 blocked_paths / blocked_task_ids / blocked_gate_ids / owner / 已尝试恢复 / 唯一 recovery action；

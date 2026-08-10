@@ -42,13 +42,15 @@ Focused Linux commands at `548f138`:
 
 ## Required CI
 
-- Ubuntu/Windows CI for `548f138` tracked on Draft PR #183 (run `31422950267` and successors). Record final run id when both jobs pass.
+- Required Ubuntu/Windows CI run `31423464703` passed for PR #183 head
+  `ed1d1a99d90e853c9abd7d55e82b5e13a62570e7` (includes matrix revision
+  `548f138` plus evidence/docs sync).
 
-## Owner disposition required
+## Disposition
 
-ADR-0047 requires product-owner affirmative or rejecting disposition for B09
-against this bounded evidence. Until then B09 remains `not-run` and P5-T05/D04
-awaits disposition (not done).
+Owner session reply `affirm B09` (2026-08-11) records B09 MVP `pass` under
+ADR-0047. See closure checkpoint
+`docs/checkpoints/20260811-personal-p5-t05-b09-managed-pi-closure.md`.
 
 ## Non-claims
 

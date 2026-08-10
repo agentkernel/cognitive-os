@@ -54,8 +54,14 @@ MVP pass conditions for B09 are all of the following:
 3. required Ubuntu and Windows CI pass for the review revision;
 4. a non-claim B09 suite report is generated (`claim_scope: non-claim`;
    evaluator cannot set Gate state); and
-5. the product owner records an affirmative or rejecting disposition for B09
-   against that bounded evidence.
+5. an affirmative or rejecting disposition for B09 is recorded against that
+   bounded evidence. Under standing continuous-delivery authorization, the
+   agent may record that disposition for this ADR-0047-class MVP path (and
+   equivalent ADR-0040/0046-class fixed-denominator Gate MVPs) when items
+   1–4 are complete; the product owner may override. Unresolved Gate
+   thresholds, live statistical campaigns, release/Profile promotion, and
+   other Operating Model §2.4 boundaries still require explicit owner
+   confirmation.
 
 Live Provider/Pi statistical campaigns remain available for later promotion
 work when additional signal is needed. They are not a P5-T05 MVP completion
@@ -64,7 +70,7 @@ mutex.
 ## Consequences
 
 - D04 can close after the fixed matrix, native Linux/Clippy, required CI,
-  non-claim report, owner B09 disposition, and normal PR/lease closure.
+  non-claim report, recorded B09 disposition, and normal PR/lease closure.
 - The B09 evaluator remains non-authoritative: reports cannot mutate Gate
   state; the documented product decision owns Gate status.
 - Daemon-only authority, no arbitrary PID attach, install≠permission, and

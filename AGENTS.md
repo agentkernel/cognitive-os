@@ -77,7 +77,8 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   `implementation_requires` 已满足的就绪 Personal 任务，并开始其首个垂直实现切片；不得
   以 claim-only / docs-only / “下一动作已记录”作为回合结束。战役循环直到
   `PROGRESS.md` Layer 1 Remaining = 0、用户暂停/改范围，或只剩 owner 确认边界 / 真正
-  外部阻塞。Gate disposition 须等待 owner 时：正式 `blocked` 记账后，可改领不重叠的
+  外部阻塞。Gate disposition 若属 Operating Model §2.3 ADR-0040 类可自行判定则直接
+  记账收口；仅真 owner-only 边界才正式 `blocked` 记账后改领不重叠的
   就绪任务继续追进度，不得空等聊天。
 - Operating Model **`RESOLVE-BEFORE-BLOCKED-PROGRESS-01`**：对可由当前任务自行恢复的临时依赖、
   artifact 可用性、CI 或环境故障，先在当前 lease 内修复或走已登记的恢复路径；不得在
