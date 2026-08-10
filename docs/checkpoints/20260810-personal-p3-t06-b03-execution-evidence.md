@@ -45,6 +45,7 @@ not mutate B03 or any Gate state.
 - `node --check tools/src/ucr-runner.mjs`: passed.
 - Focused native Linux Clippy for the Context/Artifact test targets with
   `-D warnings`: passed.
+- Required CI run `31346057300`: Ubuntu `pass`, Windows `pass`.
 - Disposable checkout cleanup: passed; `/tmp/cognitiveos-p3-t06-d02-53c2e43`
   was removed after validation.
 - Initial tooling invocation found missing disposable-clone dependencies
