@@ -149,11 +149,16 @@ test("duplicate Current snapshot lease rows are rejected", () => {
 
 test("active lease must match the unique in-progress Slice", () => {
   const result = runConsistencyFailureInjection({
-    "docs/plan/PARALLEL-LANES.md": (source) =>
-      source.replace(
-        "P7-T04/D03 B06/B07 raw observations",
-        "P7-T04/D04 regression-floor mismatch fixture",
-      ),
+    "docs/plan/PARALLEL-LANES.md": (source) => {
+      const header =
+        "| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |\n|---|---|---|---|---|---|---|---|";
+      assert.ok(source.includes(header), "canonical active lease table header must exist");
+      const fakeRow =
+        "| `lease/personal/P7-T04/performance-governance` | P7-T04/D99 mismatch fixture | Lane-CFR | `personal/P7-T04-performance-governance` | `docs/plan/PROGRESS.md` | Cursor continuous-development session | 2026-08-10 / 2026-08-10 | active |";
+      return source.replace(header, `${header}\n${fakeRow}`);
+    },
+    "docs/plan/PROGRESS.md": (source) =>
+      source.replace("| Active task lease | `none` |", "| Active task lease | `lease/personal/P7-T04/performance-governance` |"),
   });
 
   assert.equal(result.status, 1, result.stdout);

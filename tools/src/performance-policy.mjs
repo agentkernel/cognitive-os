@@ -362,3 +362,204 @@ export function runDeterministicModuleBenchmark({
     raw_samples: durationSamplesNanoseconds,
   };
 }
+
+/**
+ * Evaluate module regression floors. Floating CI may track hypothesis floors
+ * but cannot act as release hardware or raise a release gate.
+ */
+export function evaluateModuleRegressionFloor({
+  environmentKind,
+  observations,
+  floors,
+}) {
+  if (!["floating-ci", "fixed-native", "experimental-local"].includes(environmentKind)) {
+    throw new TypeError(
+      "environmentKind must be floating-ci, fixed-native, or experimental-local",
+    );
+  }
+  if (!Array.isArray(observations) || observations.length === 0) {
+    throw new TypeError("observations must be a non-empty array");
+  }
+  if (!Array.isArray(floors) || floors.length === 0) {
+    throw new TypeError("floors must be a non-empty array");
+  }
+
+  const breaches = [];
+  for (const floor of floors) {
+    if (!String(floor?.benchmark_id ?? "").trim()) {
+      throw new TypeError("each floor requires benchmark_id");
+    }
+    if (!isFiniteNumber(floor?.p95_ceiling_nanoseconds) || floor.p95_ceiling_nanoseconds <= 0) {
+      throw new TypeError("each floor requires a positive p95_ceiling_nanoseconds");
+    }
+    if (floor.release_gate === true) {
+      if (environmentKind === "floating-ci") {
+        throw new Error(
+          "floating CI cannot evaluate release-gating regression floors; use a fixed native environment",
+        );
+      }
+      if (floor.on_breach !== "block_release") {
+        throw new Error("a release-gating floor must set on_breach to block_release");
+      }
+    }
+
+    const observation = observations.find(
+      (candidate) => candidate?.benchmark_id === floor.benchmark_id,
+    );
+    if (!observation) {
+      breaches.push({
+        benchmark_id: floor.benchmark_id,
+        code: "PERFORMANCE_REGRESSION_OBSERVATION_MISSING",
+      });
+      continue;
+    }
+    if (!isFiniteNumber(observation.p95) || observation.p95 < 0) {
+      throw new TypeError(`observation ${floor.benchmark_id} requires a finite non-negative p95`);
+    }
+    if (observation.p95 > floor.p95_ceiling_nanoseconds) {
+      breaches.push({
+        benchmark_id: floor.benchmark_id,
+        code: "PERFORMANCE_REGRESSION_FLOOR_BREACHED",
+        observed_p95: observation.p95,
+        ceiling_p95: floor.p95_ceiling_nanoseconds,
+        on_breach: floor.on_breach ?? "record_only",
+      });
+    }
+  }
+
+  return {
+    claim_level: "hypothesis",
+    environment_kind: environmentKind,
+    release_hardware_evidence: environmentKind === "fixed-native",
+    breaches,
+    non_claims: [
+      "floating CI is not release hardware evidence",
+      "module regression floors are not Gate or Profile evidence",
+      "does not claim Agent benefit",
+    ],
+  };
+}
+
+/**
+ * Assemble a digest-bound governance A/B non-inferiority campaign report.
+ * Requires owner-approved preregistration and rejects significant-benefit claims.
+ */
+export function buildGovernanceAbCampaignReport(campaign) {
+  if (!campaign || typeof campaign !== "object" || Array.isArray(campaign)) {
+    throw new TypeError("campaign must be an object");
+  }
+  if (campaign.claim_level !== "non_inferiority") {
+    throw new Error("governance A/B campaign claim_level must be non_inferiority");
+  }
+  if (!String(campaign.preregistration_ref ?? "").trim()) {
+    throw new Error("governance A/B campaign requires preregistration_ref");
+  }
+  if (!/^sha256:[a-f0-9]{64}$/.test(String(campaign.source_revision_digest ?? ""))) {
+    // allow full git sha as source_revision separately
+  }
+  if (
+    typeof campaign.source_revision !== "string" ||
+    !/^[0-9a-f]{40}$/.test(campaign.source_revision)
+  ) {
+    throw new Error("governance A/B campaign requires a 40-character source_revision");
+  }
+  if (!/^sha256:[a-f0-9]{64}$/.test(String(campaign.environment_digest ?? ""))) {
+    throw new Error("governance A/B campaign requires environment_digest");
+  }
+  if (campaign.environment_kind !== "fixed-native") {
+    throw new Error("governance A/B campaign environment_kind must be fixed-native");
+  }
+
+  const denominator = campaign.denominator;
+  if (
+    !denominator ||
+    !Number.isSafeInteger(denominator.started_attempts) ||
+    denominator.started_attempts < 1 ||
+    denominator.retained_attempts !== denominator.started_attempts
+  ) {
+    throw new Error(
+      "governance A/B campaign requires complete started/retained attempt denominator",
+    );
+  }
+  if (
+    !campaign.safety ||
+    campaign.safety.critical_safety_failures !== 0 ||
+    campaign.safety.false_completions !== 0
+  ) {
+    throw new Error(
+      "governance A/B campaign requires zero critical safety failures and zero false completions",
+    );
+  }
+
+  const report = {
+    schema_version: "cognitiveos.performance-report/0.1",
+    benchmark_manifest: {
+      workload: { name: "p7-t04-governance-ab" },
+      samples: denominator.started_attempts,
+      execution_state: "warm",
+      environment_kind: "fixed-native",
+      source_revision: campaign.source_revision,
+      environment_digest: campaign.environment_digest,
+      risk_class: "R1",
+    },
+    slo_profile: {
+      id: "p7-t04-governance-ab",
+      version: "1",
+      window: "measured",
+      thresholds: [
+        {
+          metric: "governed_latency_ms",
+          release_gate: true,
+          on_breach: "block_release",
+        },
+      ],
+    },
+    metrics: [
+      {
+        name: "governed_latency_ms",
+        p50: campaign.metrics.governed_latency_ms.p50,
+        p95: campaign.metrics.governed_latency_ms.p95,
+        p99: campaign.metrics.governed_latency_ms.p99,
+        sample_count: denominator.started_attempts,
+        confidence_interval: campaign.metrics.governed_latency_ms.confidence_interval,
+      },
+    ],
+    comparison: {
+      arms: [
+        { arm_id: "A", arm_kind: "native_baseline" },
+        { arm_id: "B", arm_kind: "governance_only" },
+      ],
+      claim_level: "non_inferiority",
+      preregistration_ref: campaign.preregistration_ref,
+      results: [
+        {
+          arm_a: "A",
+          arm_b: "B",
+          confidence_interval: campaign.comparison_confidence_interval,
+        },
+      ],
+    },
+    safety_failures: [],
+    non_claims: [
+      "not a significant-benefit claim",
+      "not a Gate pass",
+      "not a Profile claim",
+      "does not block or pass GMVP-LINUX",
+      "B06/B07 remain observations only",
+    ],
+  };
+
+  const policyErrors = validatePerformanceReportPolicy(report);
+  if (policyErrors.length > 0) {
+    throw new Error(
+      `governance A/B campaign failed policy validation: ${policyErrors
+        .map((error) => error.code)
+        .join(",")}`,
+    );
+  }
+
+  const reportDigest = `sha256:${createHash("sha256")
+    .update(JSON.stringify(report))
+    .digest("hex")}`;
+  return { report, report_digest: reportDigest };
+}

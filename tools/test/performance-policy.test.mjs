@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  buildGovernanceAbCampaignReport,
+  evaluateModuleRegressionFloor,
   runDeterministicModuleBenchmark,
   summarizeDurationSamples,
   validatePerformanceReportPolicy,
@@ -137,5 +139,84 @@ test("benchmark input validation rejects missing fixture provenance", () => {
         operation: () => undefined,
       }),
     /fixtureDigest must be a sha256 digest/,
+  );
+});
+
+test("module regression floors reject floating-CI release gates and record breaches", () => {
+  assert.throws(
+    () =>
+      evaluateModuleRegressionFloor({
+        environmentKind: "floating-ci",
+        observations: [{ benchmark_id: "context-cache-full-key-hit", p95: 10 }],
+        floors: [
+          {
+            benchmark_id: "context-cache-full-key-hit",
+            p95_ceiling_nanoseconds: 5,
+            release_gate: true,
+            on_breach: "block_release",
+          },
+        ],
+      }),
+    /floating CI cannot evaluate release-gating/,
+  );
+
+  const evaluation = evaluateModuleRegressionFloor({
+    environmentKind: "floating-ci",
+    observations: [{ benchmark_id: "context-cache-full-key-hit", p95: 40 }],
+    floors: [
+      {
+        benchmark_id: "context-cache-full-key-hit",
+        p95_ceiling_nanoseconds: 10,
+        release_gate: false,
+        on_breach: "record_only",
+      },
+    ],
+  });
+  assert.equal(evaluation.claim_level, "hypothesis");
+  assert.equal(evaluation.release_hardware_evidence, false);
+  assert.equal(evaluation.breaches[0].code, "PERFORMANCE_REGRESSION_FLOOR_BREACHED");
+});
+
+test("governance A/B campaign requires preregistration and fixed-native evidence", () => {
+  const campaign = {
+    claim_level: "non_inferiority",
+    preregistration_ref: "docs/checkpoints/20260810-personal-p7-t04-ab-preregistration.md",
+    source_revision: "a".repeat(40),
+    environment_kind: "fixed-native",
+    environment_digest: `sha256:${"b".repeat(64)}`,
+    denominator: { started_attempts: 6, retained_attempts: 6 },
+    safety: { critical_safety_failures: 0, false_completions: 0 },
+    metrics: {
+      governed_latency_ms: {
+        p50: 2,
+        p95: 4,
+        p99: 7,
+        confidence_interval: { low: 1, high: 8 },
+      },
+    },
+    comparison_confidence_interval: { low: -1, high: 2 },
+  };
+
+  const first = buildGovernanceAbCampaignReport(campaign);
+  const second = buildGovernanceAbCampaignReport(campaign);
+  assert.equal(first.report.comparison.claim_level, "non_inferiority");
+  assert.equal(first.report_digest, second.report_digest);
+  assert.ok(first.report.non_claims.includes("does not block or pass GMVP-LINUX"));
+
+  assert.throws(
+    () =>
+      buildGovernanceAbCampaignReport({
+        ...campaign,
+        environment_kind: "floating-ci",
+      }),
+    /fixed-native/,
+  );
+  assert.throws(
+    () =>
+      buildGovernanceAbCampaignReport({
+        ...campaign,
+        preregistration_ref: "",
+      }),
+    /preregistration_ref/,
   );
 });
