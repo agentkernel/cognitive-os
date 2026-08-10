@@ -123,7 +123,7 @@ task acceptance (P5-T05/D04 binds B09 owner disposition).
 | `P5-T05/D01` | `done` | Process-bound SidecarSession at `c9c2248`: schema v4; Linux p5_t05 4/4 + p5_t02 11/11 + migrations 8/8 + admin 1/1 + Clippy/fmt | consumed by D02 |
 | `P5-T05/D02` | `done` | upgrade/rollback/uninstall refuse process-bound; pin/digest drift refuses activation at `ae332e9`; Linux upgrade 4/4 + process 4/4 + p5_t02 11/11 + p5_t01 10/10 + Clippy | consumed by D03 |
 | `P5-T05/D03` | `done` | recover/orphan + identity-separation + install≠permission at `431db73`; Linux identity 3/3 + upgrade 4/4 + process 4/4 + Clippy | consumed by D04 |
-| `P5-T05/D04` | `blocked` | ADR-0047 matrix + non-claim report at `548f138`; awaiting owner B09 disposition | owner affirm/reject B09; then close task |
+| `P5-T05/D04` | `in-progress` | ADR-0047 matrix + non-claim report at `548f138`; unique slice awaiting owner B09 disposition | owner affirm/reject B09; then close task |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do
