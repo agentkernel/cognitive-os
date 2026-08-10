@@ -1,4 +1,4 @@
-﻿# PARALLEL-LANES closed lease history
+# PARALLEL-LANES closed lease history
 
 - Status: historical coordination archive; grants no writable lease
 - Owner index: [PARALLEL-LANES.md](PARALLEL-LANES.md) §3 active table
@@ -11,6 +11,7 @@ block new leases, or override PROGRESS.md Current snapshot.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P8-T01/doc-restructure` | P8-T01 complete documentation restructure and 2.0 design baseline | `personal/P8-T01-doc-restructure` | 2026-08-10 | D01-D03 AXIOMS/governance, design baseline ADR-0041+, plan/ledger repair, Phase 8/9 registration; required CI run `31383446541`; PR #180. Documentation-only; no Gate/release/Profile claim. |
 | `lease/personal/P7-T04/performance-governance` | P7-T04 complete performance campaign and regression floor | `personal/P7-T04-performance-governance` | 2026-08-10 | D01-D05 deliver deterministic module benchmarks, governed-path stage timing, B06/B07 non-claim observations, module regression-floor policy, and fixed-native governance A/B non-inferiority at report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. Required Ubuntu/Windows CI passed; PR #179 is the task closure PR. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | `lease/personal/P3-T06/context-correctness` | P3-T06 MVP B03 policy, evidence, and task closure | `personal/P3-T06-context-correctness` | 2026-08-10 | ADR-0040 fixed the MVP B03 denominator at 33 checks. Native Linux evidence passed 22/22 Rust authority-path tests and 11/11 evaluator/tooling tests, focused Clippy, cleanup/redaction, owner review, and required Ubuntu/Windows CI run `31347971327`; PR #171 merged at `main@175b1974183fcfd4063bc5a3cd8e9f110af3980e`, the remote task branch was deleted, and local main was reconciled. |
 | `lease/personal/P5-T01/pi-acquisition` | P5-T01 complete official Pi acquisition/install lifecycle | `personal/P5-T01-pi-acquisition` | 2026-08-10 | D01-D03 deliver fixed official-Pi acquisition-lock verification, durable versioned activation/rollback, and stopped/absent uninstall quarantine. Exact native Linux focused runtime/store/admin validation and Clippy passed at `3413598e19746807674c31b12bc7814a848edcdf`; required Ubuntu/Windows CI run `31355979780` passed; PR #178 merged at `main@c20c13c09953b97dbcf023b9f4ad6d9458039c71`, the task branch was deleted, and local main was reconciled. No AgentInstance, sidecar/process supervision, Effect, Task completion, B09, release, or Profile claim. |

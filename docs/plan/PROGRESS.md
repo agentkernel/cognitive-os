@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue P8-T01 documentation restructure within its single task branch, Draft PR, and active lease |
-| Active task lease | `lease/personal/P8-T01/doc-restructure` | `P8-T01/D03` on `personal/P8-T01-doc-restructure`; Draft PR #180. D01-D02 complete; D03 repairing lease-mismatch failure-injection after active-lease state; required CI pending on the next push. Documentation-only. | push CI repair, wait for required Ubuntu/Windows CI, then ready/merge/lease closure |
-| P8-T01 documentation restructure and 2.0 design baseline | `in-progress` | D01-D02 complete locally (axioms/governance, whitepaper/design/ADR-0041+, product/architecture/headroom, plan.md/trace sync). D03 closure in progress. Documentation-only; no implementation, Gate, release, or Profile claim. | finish D03 closure on the same branch/PR/lease |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task |
+| Active task lease | `none` | P8-T01 D01-D03 acceptance is complete; design revision `cd08da7d69890e98f1736e93215440aa85c881dc` has required CI run `31383446541` pass on PR #180. This closure delivery clears the lease and syncs done status for ready/merge. | merge PR #180 after required CI on the closure revision, then delete task branch and fast-forward local `main` |
+| P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence after PR #180 merge and branch/main reconciliation |
 | P1-T09 route implementation | `done` | `experimental-local-only`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Under ADR-0039 successor `002` completed its fixed six counted outcomes: Attempts 1, 3, 4, 5, and 6 passed the full clean route, while Attempt 2 failed bounded graphical Desktop readiness before product activation. Required aggregate, verifier, and CI closure completed. | select the next ready formal task; Provider credential entry remains graphical hidden input only |
 | B01 first-install/first-conversation Gate | **pass** | Retained campaign `001` is `fail`; successor `B01-clean-linux-first-install-first-conversation-002` completed Attempt 6 of formal minimum 6 with 5 successes, 1 failure, success rate 83.33%, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition. Required Ubuntu and Windows CI passed for closure revision `0ef0b21`. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. | retain the redacted closure evidence; B01 pass does not pass G1, GMVP-LINUX, release, or Profile |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
@@ -46,14 +46,14 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 37 | 1 | 0 | 24 | 25 |
+| 62 | 38 | 0 | 0 | 24 | 24 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
-weakening any criterion. P4-T05, P4-T06, P5-T01, and P7-T04 are fully closed through merged or
+weakening any criterion. P4-T05, P4-T06, P5-T01, P7-T04, and P8-T01 are fully closed through merged or
 ready-for-merge PR, lease, branch, and local-main reconciliation. The 2026-08-10
-plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks); the only
-`in-progress` task is P8-T01 (documentation restructure and 2.0 design baseline).
+plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks); no formal
+task is `in-progress` after P8-T01 closure.
 Formal task completion remains independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
@@ -112,7 +112,7 @@ Formal task completion remains independent from every product Gate.
 | `P2-T02/D04` | `done` | exact immutable Linux `ed01c27` sidecar-to-daemon read/watch path passed; local focused TypeScript build/test and required Ubuntu/Windows CI passed. Pi uses management credentials for resource projection/watch and a distinct Task bearer for Task watch; streams require snapshot-first responses and mutations remain absent. | assess full P2-T02 acceptance against D01-D04 evidence before changing the parent task status |
 | `P8-T01/D01` | `done` | axioms document, governance-rule convergence, authoritative-ledger repair, Phase 8/9 registration, TEST-ENVIRONMENTS truncation/B01 text fix, PARALLEL-LANES closed-history archive, ADR-0008/prompt/docs-sync label corrections delivered on `personal/P8-T01-doc-restructure`; documentation-only | consumed by D02 |
 | `P8-T01/D02` | `done` | whitepaper Personal alignment chapter, product/architecture extensions, headroom chapter, and ADR-0041+ series delivered; documentation-only | consumed by D03 |
-| `P8-T01/D03` | `in-progress` | acceptance mapping drafted; Draft PR #180; repaired lease-mismatch failure injection for active-lease snapshots; required Ubuntu/Windows CI pending on the repair push | wait for required CI, then ready/merge and lease/branch/main reconciliation |
+| `P8-T01/D03` | `done` | plan.md/trace sync, acceptance mapping, closure checkpoint, lease-mismatch failure-injection repair, and required Ubuntu/Windows CI run `31383446541` on PR #180 at `cd08da7d69890e98f1736e93215440aa85c881dc`; documentation-only | P8-T01 formal acceptance is complete; retain closure evidence |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do

@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P7-T04 已完成；P8-T01 文档体系重构 in-progress；B06/B07 仍为 non-claim observation，B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T07、P3-T01..T06、P4-T01..T06、P5-T01、P7-T04、P8-T01 已完成；B06/B07 仍为 non-claim observation，B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-10**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -157,9 +157,9 @@
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 1 | 0 | 0 | 4 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 1 | 0 | 0 | 7 | GMVP-LINUX / G7 / RC |
-| Phase 8 - 通用 Agent 适配与设计基线 | 6 | 0 | 1 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
+| Phase 8 - 通用 Agent 适配与设计基线 | 6 | 1 | 0 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **37** | **1** | **0** | **24** | — |
+| **合计** | **62** | **38** | **0** | **0** | **24** | — |
 
 ## 2. 产品边界与不变量
 
@@ -650,7 +650,7 @@ Linux 1.0 的 `GMVP-LINUX` 组合与非阻塞边界；除 P8-T01 的文档基线
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P8-T01 | 文档体系重构与 2.0 设计基线 | — | 单一公理文档与治理规则收敛；现行白皮书（OS 定位正名、对标差距、context/harness/loop 三支柱、生态定位）；产品/架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）；ADR-0041+；P8/P9 任务卡与权威台账修复。documentation-only，不改 specs/conformance 机器合同 | in-progress | 2026-08-10 领取；branch `personal/P8-T01-doc-restructure`；lease `lease/personal/P8-T01/doc-restructure`；slices D01-D03 |
+| P8-T01 | 文档体系重构与 2.0 设计基线 | — | 单一公理文档与治理规则收敛；现行白皮书（OS 定位正名、对标差距、context/harness/loop 三支柱、生态定位）；产品/架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）；ADR-0041+；P8/P9 任务卡与权威台账修复。documentation-only，不改 specs/conformance 机器合同 | done | 2026-08-10；D01-D03 on `personal/P8-T01-doc-restructure`；PR #180；required CI run `31383446541`；closure `20260810-personal-p8-t01-doc-restructure-closure.md`；无 Gate/release/Profile claim |
 | P8-T02 | 通用 Agent Adapter Contract 与 adapter framework 实现 | P8-T01, P5-T02 | AKP 为唯一适配协议的 adapter 能力声明/注册/生命周期实现；candidate-only 与通道隔离负例；对齐 A2A Agent Card 发现语义而不引入公网 listener；Lane-CTR 登记 `agent-adapter-manifest` 合同 | not-started | — |
 | P8-T03 | 首个非 Pi Agent 适配与独立资格化 | P8-T02, P5-T05 | 选定一个主流 CLI agent 走完整 acquisition/install/activation/rollback/uninstall 生命周期与 sidecar 资格化；证据独立于 Pi；B09 模式泛化 campaign | not-started | — |
 | P8-T04 | Harness 扩展原语：确定性 hooks 与分级加载 | P8-T01, P2-T08 | daemon-owned 生命周期拦截点（admission/pre-dispatch/post-effect/verification 事件）与 owner 可编程确定性 hooks；Skill/规则按 context 成本分级加载；hooks 不得放松任何公理边界 | not-started | — |
