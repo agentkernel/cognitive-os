@@ -3997,6 +3997,52 @@ mod tests {
     }
 
     #[test]
+    fn runtime_spine_daemon_close_recoverable_without_duplicate_dispatch() {
+        // B05 observation floor: daemon restart recovers a reconciled Effect and
+        // releases the exact lease without minting a second attempt/dispatch.
+        let database_path = temporary_scheduler_database_path();
+        let (effect_object_id, scheduler_work_key) =
+            persist_pending_bound_handoff(&database_path, true);
+
+        let closing_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        reconcile_effect_for_restart_recovery(&closing_store, &effect_object_id);
+        drop(closing_store);
+
+        let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
+        let mut reopened_scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+        let recovered_attempts = super::reconcile_recovered_worker_attempts(
+            &reopened_store,
+            &mut reopened_scheduler_repository,
+            &super::FixedSchedulerClock::parse("2026-08-04T12:03:00Z").unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(recovered_attempts.len(), 1);
+        assert_eq!(
+            recovered_attempts[0].effect_closure,
+            SchedulerEffectClosure::Closed
+        );
+        let recovered_lease = recovered_attempts[0]
+            .handoff
+            .scheduler_lease
+            .as_ref()
+            .unwrap();
+        assert_eq!(recovered_lease.lease_epoch, 41);
+        let scheduler_row = reopened_scheduler_repository
+            .load(&scheduler_work_key)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
+        assert_eq!(scheduler_row.attempt_count, 1);
+        assert_eq!(scheduler_row.lease_owner, None);
+        assert_eq!(scheduler_row.lease_epoch, 41);
+
+        drop(reopened_scheduler_repository);
+        drop(reopened_store);
+        std::fs::remove_file(database_path).unwrap();
+    }
+
+    #[test]
     fn server_startup_recovers_closed_effect_before_publishing_endpoint() {
         let layout = temporary_personal_layout();
         layout.ensure_directories().unwrap();

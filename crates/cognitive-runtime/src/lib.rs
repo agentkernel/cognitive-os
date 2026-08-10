@@ -142,6 +142,42 @@ mod tests {
     }
 
     #[test]
+    fn runtime_spine_shell_close_preserves_authority_without_cancelling_task() {
+        // B05 observation floor: closing/detaching the Shell never cancels
+        // authority work and never invents a completion claim.
+        let mut shell = crate::ShellService::new();
+        shell
+            .proposal("p-spine", serde_json::json!({"action":"runtime-spine"}))
+            .unwrap();
+        shell.preview("p-spine", "sha256:spine").unwrap();
+        shell
+            .submit(
+                "p-spine",
+                "sha256:spine",
+                "task://runtime-spine/shell-close",
+            )
+            .unwrap();
+        shell.attach("task://runtime-spine/shell-close").unwrap();
+        let closed = shell.detach("task://runtime-spine/shell-close").unwrap();
+        assert_eq!(closed["cancelled"], false);
+        assert_eq!(
+            shell.phase("task://runtime-spine/shell-close"),
+            Some(crate::ShellPhase::Detached)
+        );
+        // Reattach after shell close must resume the same task binding.
+        shell.attach("task://runtime-spine/shell-close").unwrap();
+        assert_eq!(
+            shell.phase("task://runtime-spine/shell-close"),
+            Some(crate::ShellPhase::Attached)
+        );
+        let binding = shell
+            .binding("task://runtime-spine/shell-close")
+            .expect("shell binding remains after close/reattach");
+        assert!(!binding.authority_cancelled);
+        assert!(!binding.effect_terminal);
+    }
+
+    #[test]
     fn shell_cancel_pending_and_too_late() {
         let mut shell = crate::ShellService::new();
         shell
