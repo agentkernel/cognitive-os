@@ -33,7 +33,7 @@ fn write_session(dir: &Path) -> PathBuf {
     let path = dir.join("session.json");
     let value = json!({
         "schema_version": "cognitiveos.privileged-management-session/0.1",
-        "session_id": "pms-register-01",
+        "session_id": "pms_register-01",
         "object_version": 1,
         "management_domain": "cognitiveos.management",
         "session_authority": "authority://tenant-a/management-authority",
