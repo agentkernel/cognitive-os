@@ -372,7 +372,7 @@ fn measure_memory_fts5_retrieval(
     );
     prepare_personal_databases(&layout)?;
     let store = SqliteAuthorityStore::open(&layout.authority_database_path())?;
-    let source = benchmark_memory_source(&benchmark_object_id(10))?;
+    let source = benchmark_memory_source(&benchmark_object_id(10)?)?;
     let memory_id = admit_benchmark_memory(&store, &source)?;
     let query = MemorySearchQuery {
         governance_scope: "workspace://tenant-a/p7-t04".to_owned(),
@@ -405,7 +405,7 @@ fn measure_intent_effect_persistence(
         "intent-effect-durable-persist-before-dispatch",
         sample_count,
         |sample_index| {
-            let effect_id = benchmark_object_id(10_000 + sample_index as u64);
+            let effect_id = benchmark_object_id(10_000 + sample_index as u64)?;
             let engine = TransitionEngine::new(&store, &clock, &identifiers);
             engine.admit_object(&AdmitCommand {
                 object_id: effect_id.clone(),
@@ -424,7 +424,7 @@ fn measure_intent_effect_persistence(
                 &identifiers,
                 &WriterLease { epoch: 1 },
                 &IntentCommand {
-                    intent_id: benchmark_object_id(20_000 + sample_index as u64),
+                    intent_id: benchmark_object_id(20_000 + sample_index as u64)?,
                     effect_object_id: effect_id.clone(),
                     descriptor: benchmark_operation_descriptor(),
                     target: "https://benchmark.invalid/persist-only".to_owned(),
@@ -487,9 +487,9 @@ fn admit_benchmark_memory(
     store: &SqliteAuthorityStore,
     source: &WorkspaceContextSourceRow,
 ) -> Result<ObjectId, Box<dyn Error>> {
-    let candidate_id = benchmark_object_id(11);
-    let decision_id = benchmark_object_id(12);
-    let memory_id = benchmark_object_id(13);
+    let candidate_id = benchmark_object_id(11)?;
+    let decision_id = benchmark_object_id(12)?;
+    let memory_id = benchmark_object_id(13)?;
     store.append_workspace_context_source(source)?;
     let candidate_payload = json!({
         "header": {
@@ -633,9 +633,10 @@ fn nearest_rank(sorted_samples: &[u128], percentile: usize) -> u128 {
     sorted_samples[rank.saturating_sub(1)]
 }
 
-fn benchmark_object_id(sequence: u64) -> ObjectId {
-    ObjectId::parse(&format!("00000000-0000-7000-9000-{sequence:012x}"))
-        .expect("benchmark object ID sequence must produce valid UUIDv7")
+fn benchmark_object_id(sequence: u64) -> Result<ObjectId, Box<dyn Error>> {
+    Ok(ObjectId::parse(&format!(
+        "00000000-0000-7000-9000-{sequence:012x}"
+    ))?)
 }
 
 fn timestamp(value: &str) -> Result<WallTimestamp, Box<dyn Error>> {
