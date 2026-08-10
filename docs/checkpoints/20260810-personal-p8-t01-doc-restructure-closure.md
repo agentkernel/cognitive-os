@@ -2,6 +2,7 @@
 
 - Task: `P8-T01`
 - Branch: `personal/P8-T01-doc-restructure`
+- Draft PR: https://github.com/agentkernel/cognitive-os/pull/180
 - Lease: `lease/personal/P8-T01/doc-restructure`
 - Change class: `product-semantic + corrective + structural` documentation-only
 - Date: 2026-08-10
@@ -19,14 +20,14 @@
 | Product/architecture extensions + headroom + personal-2.0-scope | product + architecture personal docs listed in lease |
 | ADR-0041..0045 | `docs/adr/0041`–`0045` |
 | plan.md + personal-trace sync | `plan.md` Phase 8/9 cards; PERS-PR-031..034 |
-| Local validation | `pnpm run check:consistency` OK; `git diff --check` OK |
-| Required Ubuntu/Windows CI | **pending** on Draft PR (not-run until push) |
+| Local validation | `pnpm run check:consistency` OK; `git diff --check` OK; tools `check.test.mjs` OK |
+| Required Ubuntu/Windows CI | **not-run** pending repair push on Draft PR #180 |
 | Gate/release/Profile | **non-claim** |
 
 ## Non-claims
 
-No specs/conformance edits. No implementation. No Gate, release, or Profile claim.
+No specs/conformance edits. No product implementation. No Gate, release, or Profile claim.
 
 ## Next action
 
-Push branch, open/update Draft PR, record required CI, then complete ready/merge only after CI green and acceptance remains complete.
+Push CI repair for active-lease failure injection; if required CI is green, mark ready, merge, close lease, delete task branch, fast-forward local `main`.

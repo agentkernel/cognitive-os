@@ -150,15 +150,35 @@ test("duplicate Current snapshot lease rows are rejected", () => {
 test("active lease must match the unique in-progress Slice", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PARALLEL-LANES.md": (source) => {
+      const normalized = source.replace(/\r\n/g, "\n");
       const header =
         "| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |\n|---|---|---|---|---|---|---|---|";
-      assert.ok(source.includes(header), "canonical active lease table header must exist");
+      assert.ok(normalized.includes(header), "canonical active lease table header must exist");
       const fakeRow =
         "| `lease/personal/P7-T04/performance-governance` | P7-T04/D99 mismatch fixture | Lane-CFR | `personal/P7-T04-performance-governance` | `docs/plan/PROGRESS.md` | Cursor continuous-development session | 2026-08-10 / 2026-08-10 | active |";
-      return source.replace(header, `${header}\n${fakeRow}`);
+      const injected = normalized.replace(header, `${header}\n${fakeRow}`);
+      // Preserve original newline style so the override mirrors the on-disk file.
+      return source.includes("\r\n") ? injected.replace(/\n/g, "\r\n") : injected;
     },
-    "docs/plan/PROGRESS.md": (source) =>
-      source.replace("| Active task lease | `none` |", "| Active task lease | `lease/personal/P7-T04/performance-governance` |"),
+    "docs/plan/PROGRESS.md": (source) => {
+      const activeLeaseRow = source
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| Active task lease |"));
+      assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
+      // Force a Current-snapshot lease id that cannot match the unique in-progress
+      // Slice ownership, whether the live snapshot currently says `none` or names
+      // another active lease.
+      const mismatchedRow = activeLeaseRow.replace(
+        /\| Active task lease \| `[^`]+` \|/,
+        "| Active task lease | `lease/personal/P7-T04/performance-governance` |",
+      );
+      assert.notEqual(
+        mismatchedRow,
+        activeLeaseRow,
+        "Active task lease injection must rewrite the lease id",
+      );
+      return source.replace(activeLeaseRow, mismatchedRow);
+    },
   });
 
   assert.equal(result.status, 1, result.stdout);
