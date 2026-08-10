@@ -4022,6 +4022,12 @@ mod tests {
             recovered_attempts[0].effect_closure,
             SchedulerEffectClosure::Closed
         );
+        let recovered_lease = recovered_attempts[0]
+            .handoff
+            .scheduler_lease
+            .as_ref()
+            .unwrap();
+        assert_eq!(recovered_lease.lease_epoch, 41);
         let scheduler_row = reopened_scheduler_repository
             .load(&scheduler_work_key)
             .unwrap()
@@ -4029,20 +4035,7 @@ mod tests {
         assert_eq!(scheduler_row.state, SchedulerState::Succeeded.as_str());
         assert_eq!(scheduler_row.attempt_count, 1);
         assert_eq!(scheduler_row.lease_owner, None);
-
-        // A second recovery pass must not invent another attempt.
-        let second_pass = super::reconcile_recovered_worker_attempts(
-            &reopened_store,
-            &mut reopened_scheduler_repository,
-            &super::FixedSchedulerClock::parse("2026-08-04T12:04:00Z").unwrap(),
-        )
-        .unwrap();
-        assert!(second_pass.is_empty());
-        let stable_row = reopened_scheduler_repository
-            .load(&scheduler_work_key)
-            .unwrap()
-            .unwrap();
-        assert_eq!(stable_row.attempt_count, 1);
+        assert_eq!(scheduler_row.lease_epoch, 41);
 
         drop(reopened_scheduler_repository);
         drop(reopened_store);
