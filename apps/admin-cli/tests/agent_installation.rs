@@ -62,7 +62,7 @@ fn write_session(dir: &Path) -> PathBuf {
         "activity_context_ref": "activity://tenant-a/custom-install",
         "scope": {
             "domains": ["cognitiveos.management"],
-            "actions": ["agent.install"],
+            "actions": ["agent.install", "agent.uninstall"],
             "resources": ["agent-installation://"]
         },
         "risk_ceiling": "R1",

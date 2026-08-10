@@ -218,3 +218,111 @@ fn root_activation_is_versioned_durable_and_compare_and_swap_fenced()
     );
     Ok(())
 }
+
+#[test]
+fn quarantine_removes_only_fenced_pointer_and_preserves_immutable_installation_reference()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("installation-authority.db");
+    let store = SqliteInstallationStore::open(&path)?;
+    let acquisition_lock = "official-lock-01";
+    let commit = InstallationCommit::new_with_evidence(
+        "pkg://@earendil-works/pi-coding-agent@0.81.1",
+        "sha256:package-bytes",
+        "sha256:adapter-policy",
+        "sha256:sandbox-policy",
+        "sha256:compatibility-report",
+        InstallationEvidence::official_pi(acquisition_lock, "sha256:dependency-lock")?,
+    )?;
+    store.stage(&commit)?;
+    store.commit(commit.package_ref())?;
+    let active = store.activate_installation_root(
+        "installation-root://personal/pi",
+        None,
+        commit.package_ref(),
+        acquisition_lock,
+    )?;
+    let unrelated = store.activate_installation_root(
+        "installation-root://personal/unrelated",
+        None,
+        "pkg://unrelated",
+        "lock-unrelated",
+    )?;
+
+    let quarantine = store.quarantine_active_installation_root(
+        active.installation_root(),
+        active.activation_version(),
+        "stopped",
+    )?;
+    assert_eq!(quarantine.package_ref(), commit.package_ref());
+    assert!(
+        store
+            .active_installation_root(active.installation_root())?
+            .is_none()
+    );
+    assert_eq!(
+        store.active_installation_root(unrelated.installation_root())?,
+        Some(unrelated)
+    );
+    assert_eq!(store.committed(commit.package_ref())?, Some(commit));
+    assert_eq!(
+        store.installation_root_binding(active.installation_root(), active.activation_version())?,
+        Some(active)
+    );
+    assert_eq!(
+        store
+            .installation_quarantine("installation-root://personal/pi", 1)?
+            .as_ref()
+            .map(|record| record.lifecycle_precondition()),
+        Some("stopped")
+    );
+    Ok(())
+}
+
+#[test]
+fn quarantine_rejects_unsafe_precondition_and_stale_fence_without_partial_write()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("installation-authority.db");
+    let store = SqliteInstallationStore::open(&path)?;
+    let active = store.activate_installation_root(
+        "installation-root://personal/pi",
+        None,
+        "pkg://pi",
+        "official-lock-01",
+    )?;
+
+    let active_error = store.quarantine_active_installation_root(
+        active.installation_root(),
+        active.activation_version(),
+        "active",
+    );
+    assert!(matches!(
+        active_error,
+        Err(InstallationStoreError::InvalidCommit { .. })
+    ));
+    assert_eq!(
+        store.active_installation_root(active.installation_root())?,
+        Some(active.clone())
+    );
+
+    let fence_error = store.quarantine_active_installation_root(
+        active.installation_root(),
+        active.activation_version() + 1,
+        "absent",
+    );
+    assert!(matches!(
+        fence_error,
+        Err(InstallationStoreError::Conflict { .. })
+    ));
+    assert_eq!(
+        store.active_installation_root(active.installation_root())?,
+        Some(active)
+    );
+    assert!(
+        store
+            .installation_quarantine("installation-root://personal/pi", 1)?
+            .is_none()
+    );
+    Ok(())
+}

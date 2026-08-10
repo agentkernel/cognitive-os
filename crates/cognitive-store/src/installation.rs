@@ -66,6 +66,15 @@ CREATE TABLE IF NOT EXISTS active_installation_roots (
   package_ref          TEXT NOT NULL,
   acquisition_lock     TEXT NOT NULL
 ) STRICT;
+
+CREATE TABLE IF NOT EXISTS installation_quarantine (
+  installation_root      TEXT NOT NULL,
+  activation_version     INTEGER NOT NULL,
+  package_ref            TEXT NOT NULL,
+  acquisition_lock       TEXT NOT NULL,
+  lifecycle_precondition TEXT NOT NULL,
+  PRIMARY KEY (installation_root, activation_version)
+) STRICT;
 ";
 
 /// Errors from the local durable installation store.
@@ -208,6 +217,41 @@ pub struct InstallationRootBinding {
     activation_version: u64,
     package_ref: String,
     acquisition_lock: String,
+}
+
+/// Durable record of a quarantined versioned binding.
+///
+/// Quarantine is append-only: it removes only the active pointer while
+/// retaining the immutable binding and package/evidence rows for inspection.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstallationQuarantine {
+    installation_root: String,
+    activation_version: u64,
+    package_ref: String,
+    acquisition_lock: String,
+    lifecycle_precondition: String,
+}
+
+impl InstallationQuarantine {
+    pub fn installation_root(&self) -> &str {
+        &self.installation_root
+    }
+
+    pub const fn activation_version(&self) -> u64 {
+        self.activation_version
+    }
+
+    pub fn package_ref(&self) -> &str {
+        &self.package_ref
+    }
+
+    pub fn acquisition_lock(&self) -> &str {
+        &self.acquisition_lock
+    }
+
+    pub fn lifecycle_precondition(&self) -> &str {
+        &self.lifecycle_precondition
+    }
 }
 
 impl InstallationRootBinding {
@@ -626,6 +670,134 @@ impl SqliteInstallationStore {
         )
         .optional()
         .map_err(|err| unavailable("read installation-root binding", err))
+    }
+
+    /// Atomically quarantine the active binding and remove only its pointer.
+    ///
+    /// The lifecycle precondition is deliberately checked here, inside the
+    /// same transaction as the version fence, so callers cannot turn a stale
+    /// stopped/absent observation into a successful uninstall.
+    pub fn quarantine_active_installation_root(
+        &self,
+        installation_root: &str,
+        expected_activation_version: u64,
+        lifecycle_precondition: &str,
+    ) -> Result<InstallationQuarantine, InstallationStoreError> {
+        if installation_root.trim().is_empty()
+            || !matches!(lifecycle_precondition, "stopped" | "absent")
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "uninstall requires a root and explicit stopped or absent lifecycle precondition"
+                    .to_owned(),
+            });
+        }
+        let expected_version = i64::try_from(expected_activation_version).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid uninstall activation version: {error}"),
+            }
+        })?;
+        let mut conn = self.lock()?;
+        let transaction = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|err| unavailable("begin installation quarantine", err))?;
+        let binding = transaction
+            .query_row(
+                "SELECT installation_root, activation_version, package_ref, acquisition_lock
+                   FROM active_installation_roots
+                  WHERE installation_root = ?1 AND activation_version = ?2",
+                (installation_root, expected_version),
+                binding_from_row,
+            )
+            .optional()
+            .map_err(|err| unavailable("read active installation root for quarantine", err))?
+            .ok_or_else(|| InstallationStoreError::Conflict {
+                detail: format!("active installation root {installation_root} is absent or fenced"),
+            })?;
+        transaction
+            .execute(
+                "INSERT INTO installation_quarantine
+                   (installation_root, activation_version, package_ref, acquisition_lock,
+                    lifecycle_precondition)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                (
+                    binding.installation_root(),
+                    expected_version,
+                    binding.package_ref(),
+                    binding.acquisition_lock(),
+                    lifecycle_precondition,
+                ),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "installation root binding is already quarantined".to_owned(),
+                    }
+                } else {
+                    unavailable("record installation quarantine", err)
+                }
+            })?;
+        let removed = transaction
+            .execute(
+                "DELETE FROM active_installation_roots
+                  WHERE installation_root = ?1 AND activation_version = ?2
+                    AND package_ref = ?3 AND acquisition_lock = ?4",
+                (
+                    installation_root,
+                    expected_version,
+                    binding.package_ref(),
+                    binding.acquisition_lock(),
+                ),
+            )
+            .map_err(|err| unavailable("remove active installation pointer", err))?;
+        if removed != 1 {
+            return Err(InstallationStoreError::Conflict {
+                detail: "active installation pointer changed during quarantine".to_owned(),
+            });
+        }
+        transaction
+            .commit()
+            .map_err(|err| unavailable("commit installation quarantine", err))?;
+        Ok(InstallationQuarantine {
+            installation_root: binding.installation_root().to_owned(),
+            activation_version: binding.activation_version(),
+            package_ref: binding.package_ref().to_owned(),
+            acquisition_lock: binding.acquisition_lock().to_owned(),
+            lifecycle_precondition: lifecycle_precondition.to_owned(),
+        })
+    }
+
+    /// Read a durable quarantine marker without exposing staging state.
+    pub fn installation_quarantine(
+        &self,
+        installation_root: &str,
+        activation_version: u64,
+    ) -> Result<Option<InstallationQuarantine>, InstallationStoreError> {
+        let activation_version = i64::try_from(activation_version).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid quarantine activation version: {error}"),
+            }
+        })?;
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT installation_root, activation_version, package_ref, acquisition_lock,
+                    lifecycle_precondition
+               FROM installation_quarantine
+              WHERE installation_root = ?1 AND activation_version = ?2",
+            (installation_root, activation_version),
+            |row| {
+                let version: i64 = row.get(1)?;
+                Ok(InstallationQuarantine {
+                    installation_root: row.get(0)?,
+                    activation_version: u64::try_from(version)
+                        .map_err(|_| rusqlite::Error::IntegralValueOutOfRange(1, version))?,
+                    package_ref: row.get(2)?,
+                    acquisition_lock: row.get(3)?,
+                    lifecycle_precondition: row.get(4)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(|err| unavailable("read installation quarantine", err))
     }
 
     /// Return the number of non-visible staging rows, for recovery assertions.

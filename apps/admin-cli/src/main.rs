@@ -26,9 +26,11 @@ use cognitive_management::{
 use cognitive_runtime::{
     AcceptingOfficialPiAcquisitionLockVerifier, CUSTOM_USER_PROVIDED_RISK_NOTICE,
     CustomInstallationAcknowledgement, CustomUserProvidedProjectVerifier,
-    DurableInstallationAuthority, InstallerError, OFFICIAL_NPM_ORIGIN, OFFICIAL_PI_PACKAGE,
-    OFFICIAL_PI_VERSION, OfficialPiAcquisitionRequest, PackageInstallRequest,
-    acquire_official_pi_durable, install_package_durable, package_artifact_digest,
+    DurableInstallationAuthority, InstallerError, OFFICIAL_NPM_ORIGIN,
+    OFFICIAL_PI_INSTALLATION_ROOT, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
+    OfficialPiAcquisitionRequest, PackageInstallRequest, PiInstallationLifecyclePrecondition,
+    PiInstallationUninstallRequest, acquire_official_pi_durable, install_package_durable,
+    package_artifact_digest, uninstall_official_pi_root_durable,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
@@ -45,6 +47,7 @@ USAGE:
   admin-cli reconcile --store <db> --session <session.json>
   admin-cli install   --mode custom --session <session.json> --installation-store <db> --project <dir> --package-id <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256> --confirm-custom-source yes
   admin-cli install   --mode official --session <session.json> --installation-store <db> --staged-artifact <file> --dependency-lock <file> --node-version <semver> --signed-lock-ref <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256>
+  admin-cli uninstall --store <db> --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --lifecycle-precondition stopped|absent
 
 Verbs run against the SQLite WAL authority store; every mutation goes
 through the central deterministic transition gate. Errors are registered
@@ -95,6 +98,7 @@ fn run(args: &[String]) -> i32 {
         "revoke" => dispatch_revoke(&flags),
         "reconcile" => dispatch_reconcile(&flags),
         "install" => dispatch_install(&flags),
+        "uninstall" => dispatch_uninstall(&flags),
         other => usage_error(&format!("unknown verb `{other}`")),
     }
 }
@@ -528,6 +532,82 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
         "effects_created": 0,
         "tasks_completed": 0,
     }))
+}
+
+fn dispatch_uninstall(flags: &BTreeMap<String, String>) -> i32 {
+    let root = match required(flags, "installation-root") {
+        Ok(root) if root == OFFICIAL_PI_INSTALLATION_ROOT => root,
+        Ok(_) => return usage_error("--installation-root must be the versioned official Pi root"),
+        Err(message) => return usage_error(&message),
+    };
+    let expected_version = match required(flags, "expected-activation-version") {
+        Ok(value) => match value.parse::<u64>() {
+            Ok(version) => version,
+            Err(_) => return usage_error("--expected-activation-version must be a u64"),
+        },
+        Err(message) => return usage_error(&message),
+    };
+    let lifecycle_precondition = match required(flags, "lifecycle-precondition") {
+        Ok("stopped") => PiInstallationLifecyclePrecondition::Stopped,
+        Ok("absent") => PiInstallationLifecyclePrecondition::Absent,
+        Ok(_) => return usage_error("--lifecycle-precondition must be stopped or absent"),
+        Err(message) => return usage_error(&message),
+    };
+    let (session, _authority_store) = match open_gate(flags) {
+        Ok(gate) => gate,
+        Err(failure) => return gate_failure(failure),
+    };
+    let clock = SystemClock;
+    let now = match clock.now() {
+        Ok(now) => now,
+        Err(error) => {
+            return fail(&ManagementError::Ledger(format!(
+                "read management clock: {error}"
+            )));
+        }
+    };
+    let action = ManagementAction {
+        action: "agent.uninstall".to_owned(),
+        domain: "cognitiveos.management".to_owned(),
+        resource: format!("agent-installation://{root}"),
+        risk: RiskClass::R1,
+        step_up_required: false,
+        step_up_satisfied: false,
+    };
+    if let Err(denial) = session.authorize(&action, &now) {
+        return fail(&ManagementError::Denied(denial));
+    }
+    let installation_store = match required(flags, "installation-store") {
+        Ok(path) => Path::new(path),
+        Err(message) => return usage_error(&message),
+    };
+    let authority = match DurableInstallationAuthority::open(installation_store) {
+        Ok(authority) => authority,
+        Err(error) => return fail_installer(error),
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    match uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: root.to_owned(),
+            expected_activation_version: expected_version,
+            lifecycle_precondition: Some(lifecycle_precondition),
+        },
+    ) {
+        Ok(receipt) => emit(&json!({
+            "installation_root": receipt.installation_root,
+            "activation_version": receipt.activation_version,
+            "package_ref": receipt.package_ref,
+            "quarantine": receipt.quarantine,
+            "capability_grants": authority.capability_grants(),
+            "effects_created": 0,
+            "tasks_completed": 0,
+        })),
+        Err(error) => fail_installer(error),
+    }
 }
 
 /// Acquire an already staged official Pi artifact. This CLI deliberately has

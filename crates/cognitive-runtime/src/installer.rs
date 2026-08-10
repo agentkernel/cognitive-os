@@ -13,8 +13,8 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_store::{
-    InstallationCommit, InstallationEvidence, InstallationRootBinding, InstallationStoreError,
-    SqliteInstallationStore,
+    InstallationCommit, InstallationEvidence, InstallationQuarantine, InstallationRootBinding,
+    InstallationStoreError, SqliteInstallationStore,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256, Sha512};
@@ -249,6 +249,7 @@ pub struct PackageInstallRequest {
 pub const OFFICIAL_PI_PACKAGE: &str = "@earendil-works/pi-coding-agent";
 pub const OFFICIAL_PI_VERSION: &str = "0.81.1";
 pub const OFFICIAL_NPM_ORIGIN: &str = "https://registry.npmjs.org/";
+pub const OFFICIAL_PI_INSTALLATION_ROOT: &str = "installation-root://personal/pi";
 
 /// Signed, immutable inputs for one official Pi acquisition transaction.
 ///
@@ -278,6 +279,40 @@ pub struct PiInstallationRootActivationRequest {
     pub expected_activation_version: Option<u64>,
     pub compatibility_accepted: bool,
     pub health_accepted: bool,
+}
+
+/// Explicit lifecycle fact required before private uninstall/quarantine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PiInstallationLifecyclePrecondition {
+    Stopped,
+    Absent,
+}
+
+impl PiInstallationLifecyclePrecondition {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Stopped => "stopped",
+            Self::Absent => "absent",
+        }
+    }
+}
+
+/// Daemon-private request to quarantine the active versioned Pi binding.
+#[derive(Debug, Clone)]
+pub struct PiInstallationUninstallRequest {
+    pub installation_root: String,
+    pub expected_activation_version: u64,
+    pub lifecycle_precondition: Option<PiInstallationLifecyclePrecondition>,
+}
+
+/// Durable uninstall receipt. It contains references only; no package bytes,
+/// user data, or secret material are returned or removed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PiInstallationUninstallReceipt {
+    pub installation_root: String,
+    pub activation_version: u64,
+    pub package_ref: String,
+    pub quarantine: String,
 }
 
 /// Verifies the detached official acquisition-lock signature or attestation.
@@ -552,6 +587,18 @@ impl DurableInstallationManager<'_> {
             .active_installation_root(installation_root)
             .map_err(map_store_error)
     }
+
+    /// Read a daemon-private quarantine marker for focused lifecycle checks.
+    pub fn installation_quarantine(
+        &self,
+        installation_root: &str,
+        activation_version: u64,
+    ) -> Result<Option<InstallationQuarantine>, InstallerError> {
+        self.authority
+            .store
+            .installation_quarantine(installation_root, activation_version)
+            .map_err(map_store_error)
+    }
 }
 
 fn map_store_error(error: InstallationStoreError) -> InstallerError {
@@ -797,6 +844,74 @@ pub fn rollback_official_pi_root_durable(
             target.acquisition_lock(),
         )
         .map_err(map_store_error)
+}
+
+/// Quarantine the active versioned Pi binding after an explicit stopped/absent
+/// lifecycle observation. The immutable package and acquisition evidence stay
+/// queryable; this function never touches an installation filesystem root.
+pub fn uninstall_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &PiInstallationUninstallRequest,
+) -> Result<PiInstallationUninstallReceipt, InstallerError> {
+    if request.installation_root != OFFICIAL_PI_INSTALLATION_ROOT {
+        return Err(verification_failure(
+            "uninstall root is not the versioned official Pi installation root",
+        ));
+    }
+    let lifecycle_precondition = request.lifecycle_precondition.ok_or_else(|| {
+        verification_failure(
+            "uninstall requires an explicit stopped or absent lifecycle precondition",
+        )
+    })?;
+    let active = manager
+        .active_installation_root(&request.installation_root)?
+        .ok_or_else(|| verification_failure("active installation pointer is absent"))?;
+    if active.activation_version() != request.expected_activation_version {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            format!(
+                "uninstall activation fence mismatch: expected {}, found {}",
+                request.expected_activation_version,
+                active.activation_version()
+            ),
+        ));
+    }
+    let committed = manager
+        .committed_installation(active.package_ref())?
+        .ok_or_else(|| verification_failure("active package reference is not committed"))?;
+    let acquisition_lock = committed
+        .evidence()
+        .filter(|evidence| evidence.source_mode() == "official_pi")
+        .and_then(InstallationEvidence::acquisition_lock)
+        .ok_or_else(|| verification_failure("active package has no immutable official evidence"))?;
+    if acquisition_lock != active.acquisition_lock() {
+        return Err(verification_failure(
+            "active package evidence does not match its installation binding",
+        ));
+    }
+    let quarantine = manager
+        .authority
+        .store
+        .quarantine_active_installation_root(
+            &request.installation_root,
+            request.expected_activation_version,
+            lifecycle_precondition.as_str(),
+        )
+        .map_err(map_store_error)?;
+    Ok(uninstall_receipt(quarantine))
+}
+
+fn uninstall_receipt(quarantine: InstallationQuarantine) -> PiInstallationUninstallReceipt {
+    PiInstallationUninstallReceipt {
+        installation_root: quarantine.installation_root().to_owned(),
+        activation_version: quarantine.activation_version(),
+        package_ref: quarantine.package_ref().to_owned(),
+        quarantine: format!(
+            "{}#{}",
+            quarantine.installation_root(),
+            quarantine.activation_version()
+        ),
+    }
 }
 
 fn verification_failure(detail: impl Into<String>) -> InstallerError {

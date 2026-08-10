@@ -2,12 +2,14 @@
 
 use cognitive_runtime::{
     AcceptingOfficialPiAcquisitionLockVerifier, AcceptingSignaturePort,
-    DurableInstallationAuthority, OFFICIAL_NPM_ORIGIN, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
-    OfficialPiAcquisitionRequest, PackageInstallRequest, PiInstallationRootActivationRequest,
-    acquire_official_pi_durable, activate_official_pi_root_durable, install_package_durable,
-    package_artifact_digest, package_sha256_digest, package_sri_sha512,
-    rollback_official_pi_root_durable,
+    DurableInstallationAuthority, OFFICIAL_NPM_ORIGIN, OFFICIAL_PI_INSTALLATION_ROOT,
+    OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION, OfficialPiAcquisitionRequest, PackageInstallRequest,
+    PiInstallationLifecyclePrecondition, PiInstallationRootActivationRequest,
+    PiInstallationUninstallRequest, acquire_official_pi_durable, activate_official_pi_root_durable,
+    install_package_durable, package_artifact_digest, package_sha256_digest, package_sri_sha512,
+    rollback_official_pi_root_durable, uninstall_official_pi_root_durable,
 };
+use cognitive_store::InstallationRootBinding;
 
 fn official_request() -> OfficialPiAcquisitionRequest {
     let artifact = b"staged-official-pi-package".to_vec();
@@ -94,12 +96,168 @@ fn activation_request(
     expected_activation_version: Option<u64>,
 ) -> PiInstallationRootActivationRequest {
     PiInstallationRootActivationRequest {
-        installation_root: "installation-root://personal/pi".to_owned(),
+        installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
         package_ref,
         expected_activation_version,
         compatibility_accepted: true,
         health_accepted: true,
     }
+}
+
+fn activate_official_for_uninstall(
+    manager: &cognitive_runtime::DurableInstallationManager<'_>,
+    request: &OfficialPiAcquisitionRequest,
+) -> InstallationRootBinding {
+    acquire_official_pi_durable(
+        manager,
+        request,
+        &AcceptingOfficialPiAcquisitionLockVerifier,
+    )
+    .unwrap();
+    activate_official_pi_root_durable(
+        manager,
+        &activation_request(request.install.package_id.clone(), None),
+    )
+    .unwrap()
+}
+
+#[test]
+fn uninstall_denies_active_lifecycle_without_changing_pointer() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let request = official_request();
+    let active = activate_official_for_uninstall(&manager, &request);
+
+    let error = uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: active.installation_root().to_owned(),
+            expected_activation_version: active.activation_version(),
+            lifecycle_precondition: None,
+        },
+    )
+    .unwrap_err();
+    assert_eq!(error.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+    assert_eq!(
+        manager
+            .active_installation_root(active.installation_root())
+            .unwrap(),
+        Some(active)
+    );
+}
+
+#[test]
+fn uninstall_denies_missing_pointer_and_wrong_root_without_receipt() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let missing = uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_activation_version: 1,
+            lifecycle_precondition: Some(PiInstallationLifecyclePrecondition::Absent),
+        },
+    )
+    .unwrap_err();
+    assert_eq!(missing.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+
+    let wrong_root = uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: "installation-root://personal/other".to_owned(),
+            expected_activation_version: 1,
+            lifecycle_precondition: Some(PiInstallationLifecyclePrecondition::Stopped),
+        },
+    )
+    .unwrap_err();
+    assert_eq!(wrong_root.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+}
+
+#[test]
+fn uninstall_quarantines_pointer_and_preserves_evidence_data_secrets_and_unrelated_installation() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let request = official_request();
+    let active = activate_official_for_uninstall(&manager, &request);
+    let user_data = directory.path().join("user-data");
+    let secret_store = directory.path().join("secret-store");
+    std::fs::create_dir_all(&user_data).unwrap();
+    std::fs::create_dir_all(&secret_store).unwrap();
+    std::fs::write(user_data.join("conversation.json"), b"user-data").unwrap();
+    std::fs::write(secret_store.join("provider-token"), b"").unwrap();
+    let receipt = uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: active.installation_root().to_owned(),
+            expected_activation_version: active.activation_version(),
+            lifecycle_precondition: Some(PiInstallationLifecyclePrecondition::Stopped),
+        },
+    )
+    .unwrap();
+    assert_eq!(receipt.package_ref, request.install.package_id);
+    assert!(
+        manager
+            .active_installation_root(active.installation_root())
+            .unwrap()
+            .is_none()
+    );
+    let committed = manager
+        .committed_installation(&receipt.package_ref)
+        .unwrap()
+        .unwrap();
+    assert_eq!(committed.evidence().unwrap().source_mode(), "official_pi");
+    assert!(committed.evidence().unwrap().acquisition_lock().is_some());
+    assert_eq!(
+        std::fs::read(user_data.join("conversation.json")).unwrap(),
+        b"user-data"
+    );
+    assert!(secret_store.join("provider-token").is_file());
+    assert_eq!(
+        manager
+            .installation_quarantine(active.installation_root(), active.activation_version())
+            .unwrap()
+            .unwrap()
+            .lifecycle_precondition(),
+        "stopped"
+    );
+}
+
+#[test]
+fn uninstall_cas_conflict_has_no_success_receipt_or_partial_quarantine() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let request = official_request();
+    let active = activate_official_for_uninstall(&manager, &request);
+    let error = uninstall_official_pi_root_durable(
+        &manager,
+        &PiInstallationUninstallRequest {
+            installation_root: active.installation_root().to_owned(),
+            expected_activation_version: active.activation_version() + 1,
+            lifecycle_precondition: Some(PiInstallationLifecyclePrecondition::Stopped),
+        },
+    )
+    .unwrap_err();
+    assert_eq!(error.code, "STATE_CONFLICT");
+    assert_eq!(
+        manager
+            .active_installation_root(active.installation_root())
+            .unwrap(),
+        Some(active.clone())
+    );
+    assert!(
+        manager
+            .installation_quarantine(active.installation_root(), active.activation_version())
+            .unwrap()
+            .is_none()
+    );
 }
 
 #[test]
