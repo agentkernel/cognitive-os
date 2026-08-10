@@ -599,9 +599,46 @@ impl DurableInstallationManager<'_> {
             .installation_quarantine(installation_root, activation_version)
             .map_err(map_store_error)
     }
+
+    /// Read the current Agent registration for an installation root.
+    pub fn current_agent_registration(
+        &self,
+        installation_root: &str,
+    ) -> Result<Option<cognitive_store::AgentRegistrationRecord>, InstallerError> {
+        self.authority
+            .store
+            .current_agent_registration(installation_root)
+            .map_err(map_store_error)
+    }
+
+    /// Persist a daemon-private registration and inactive instance identity.
+    pub(crate) fn register_agent_from_active_root(
+        &self,
+        registration_id: &str,
+        instance_id: &str,
+        installation_root: &str,
+        expected_activation_version: u64,
+        package_ref: &str,
+        acquisition_lock: &str,
+        adapter_digest: &str,
+        protocol_digest: &str,
+        policy_digest: &str,
+    ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
+        self.authority.store.register_agent_from_active_root(
+            registration_id,
+            instance_id,
+            installation_root,
+            expected_activation_version,
+            package_ref,
+            acquisition_lock,
+            adapter_digest,
+            protocol_digest,
+            policy_digest,
+        )
+    }
 }
 
-fn map_store_error(error: InstallationStoreError) -> InstallerError {
+pub(crate) fn map_store_error(error: InstallationStoreError) -> InstallerError {
     let code = match error {
         InstallationStoreError::InvalidCommit { .. } => {
             RegisteredErrorCode::AgentPackageVerificationFailed
@@ -914,7 +951,7 @@ fn uninstall_receipt(quarantine: InstallationQuarantine) -> PiInstallationUninst
     }
 }
 
-fn verification_failure(detail: impl Into<String>) -> InstallerError {
+pub(crate) fn verification_failure(detail: impl Into<String>) -> InstallerError {
     InstallerError::new(RegisteredErrorCode::AgentPackageVerificationFailed, detail)
 }
 

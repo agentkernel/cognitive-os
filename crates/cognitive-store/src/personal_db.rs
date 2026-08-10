@@ -9,7 +9,7 @@ use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
 };
-use crate::installation::INSTALLATION_SCHEMA_V1;
+use crate::installation::{INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2};
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
 use crate::memory_store::{
     memory_admission_migration_entry, memory_expiry_migration_entry,
@@ -107,9 +107,13 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     ]
 }
 
-/// Production installation migration plan (currently version 1 = full schema).
+/// Production installation migration plan: v1 = package/root/quarantine schema,
+/// v2 = daemon-private Agent registration and inactive instance identity.
 pub fn installation_migration_plan() -> Vec<MigrationPlanEntry> {
-    vec![MigrationPlanEntry::new(1, INSTALLATION_SCHEMA_V1)]
+    vec![
+        MigrationPlanEntry::new(1, INSTALLATION_SCHEMA_V1),
+        MigrationPlanEntry::new(2, INSTALLATION_SCHEMA_V2),
+    ]
 }
 
 /// Create layout directories, acquire the exclusive migration lock, ensure both

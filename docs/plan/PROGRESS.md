@@ -13,8 +13,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next unblocked, implementation-ready Personal task |
-| Active task lease | `none` | P8-T01 D01-D03 acceptance is complete; design revision `cd08da7d69890e98f1736e93215440aa85c881dc` has required CI run `31383446541` pass on PR #180. This closure delivery clears the lease and syncs done status for ready/merge. | merge PR #180 after required CI on the closure revision, then delete task branch and fast-forward local `main` |
-| P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence after PR #180 merge and branch/main reconciliation |
+| Active task lease | `lease/personal/P5-T02/sidecar-foundation` | P8-T01 PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`; lease/branch/main reconciliation complete. Active lease owns P5-T02 sidecar foundation on `personal/P5-T02-sidecar-foundation`. | continue `P5-T02/D01` Agent registration from active official Pi installation root; validate on exact native Linux and required CI |
+| P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence |
+| P5-T02 Sidecar contract, registration, instance identity | `in-progress` | `P5-T02/D01` implements daemon-private Agent registration from an active official Pi installation root: install ≠ register ≠ activate; inactive `registered` instance with fencing epoch; zero capability/Effect/Task/sidecar claims. Branch `personal/P5-T02-sidecar-foundation`; lease `lease/personal/P5-T02/sidecar-foundation`. | complete D01 focused native Linux + required CI, then enter activation/SidecarSession slice |
 | P1-T09 route implementation | `done` | `experimental-local-only`; retained campaign `001` is failed at 2 successes / 8 failures after 10 attempts. Under ADR-0039 successor `002` completed its fixed six counted outcomes: Attempts 1, 3, 4, 5, and 6 passed the full clean route, while Attempt 2 failed bounded graphical Desktop readiness before product activation. Required aggregate, verifier, and CI closure completed. | select the next ready formal task; Provider credential entry remains graphical hidden input only |
 | B01 first-install/first-conversation Gate | **pass** | Retained campaign `001` is `fail`; successor `B01-clean-linux-first-install-first-conversation-002` completed Attempt 6 of formal minimum 6 with 5 successes, 1 failure, success rate 83.33%, zero critical safety failures, complete aggregate statistics, and affirmative independent verifier disposition. Required Ubuntu and Windows CI passed for closure revision `0ef0b21`. Owner-waived transition Attempt 7 is retained outside the denominator because no product operation occurred. | retain the redacted closure evidence; B01 pass does not pass G1, GMVP-LINUX, release, or Profile |
 | P2-T01 TaskApplicationService | **done** | `P2-T01/D01` satisfies the unchanged task acceptance: Linux focused service 4/4, management 3/3, store 6/6, Clippy/fmt and required CI passed at `main@7f763c8`; B02/B04/B05/B12 remain `not-run` | P2-T02/D01 may consume the stable service; task completion creates no Gate/release/Profile claim |
@@ -46,14 +47,14 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 38 | 0 | 0 | 24 | 24 |
+| 62 | 38 | 1 | 0 | 23 | 24 |
 
 `P2-T01`, `P2-T02`, `P2-T03`, `P2-T04`, `P2-T05`, `P2-T06`, `P2-T07`, `P3-T01`, and `P3-T02` are done because their original
 acceptance criteria and required evidence were satisfied without removing or
 weakening any criterion. P4-T05, P4-T06, P5-T01, P7-T04, and P8-T01 are fully closed through merged or
 ready-for-merge PR, lease, branch, and local-main reconciliation. The 2026-08-10
-plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks); no formal
-task is `in-progress` after P8-T01 closure.
+plan extension registered Phase 8 (six tasks) and Phase 9 (three tasks). `P5-T02`
+is the sole `in-progress` formal task after P8-T01 closure.
 Formal task completion remains independent from every product Gate.
 
 ### Layer 2 — Current Delivery Slice queue
@@ -113,6 +114,7 @@ Formal task completion remains independent from every product Gate.
 | `P8-T01/D01` | `done` | axioms document, governance-rule convergence, authoritative-ledger repair, Phase 8/9 registration, TEST-ENVIRONMENTS truncation/B01 text fix, PARALLEL-LANES closed-history archive, ADR-0008/prompt/docs-sync label corrections delivered on `personal/P8-T01-doc-restructure`; documentation-only | consumed by D02 |
 | `P8-T01/D02` | `done` | whitepaper Personal alignment chapter, product/architecture extensions, headroom chapter, and ADR-0041+ series delivered; documentation-only | consumed by D03 |
 | `P8-T01/D03` | `done` | plan.md/trace sync, acceptance mapping, closure checkpoint, lease-mismatch failure-injection repair, and required Ubuntu/Windows CI run `31383446541` on PR #180 at `cd08da7d69890e98f1736e93215440aa85c881dc`; documentation-only | P8-T01 formal acceptance is complete; retain closure evidence |
+| `P5-T02/D01` | `in-progress` | Daemon-private Agent registration from an active official Pi installation root: inactive `registered` instance, fencing epoch seed, digest binding, and management-session caller. SidecarSession/process/activate remain out of scope. | finish focused native Linux + required CI; then enter D02 activate/SidecarSession |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do

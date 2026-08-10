@@ -28,9 +28,10 @@ use cognitive_runtime::{
     CustomInstallationAcknowledgement, CustomUserProvidedProjectVerifier,
     DurableInstallationAuthority, InstallerError, OFFICIAL_NPM_ORIGIN,
     OFFICIAL_PI_INSTALLATION_ROOT, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
-    OfficialPiAcquisitionRequest, PackageInstallRequest, PiInstallationLifecyclePrecondition,
-    PiInstallationUninstallRequest, acquire_official_pi_durable, install_package_durable,
-    package_artifact_digest, uninstall_official_pi_root_durable,
+    OfficialPiAcquisitionRequest, OfficialPiAgentRegistrationRequest, PackageInstallRequest,
+    PiInstallationLifecyclePrecondition, PiInstallationUninstallRequest,
+    acquire_official_pi_durable, install_package_durable, package_artifact_digest,
+    register_official_pi_agent_durable, uninstall_official_pi_root_durable,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
@@ -47,6 +48,7 @@ USAGE:
   admin-cli reconcile --store <db> --session <session.json>
   admin-cli install   --mode custom --session <session.json> --installation-store <db> --project <dir> --package-id <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256> --confirm-custom-source yes
   admin-cli install   --mode official --session <session.json> --installation-store <db> --staged-artifact <file> --dependency-lock <file> --node-version <semver> --signed-lock-ref <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256>
+  admin-cli register  --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --adapter-digest <sha256> --protocol-digest <sha256> --policy-digest <sha256>
   admin-cli uninstall --store <db> --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --lifecycle-precondition stopped|absent
 
 Verbs run against the SQLite WAL authority store; every mutation goes
@@ -98,6 +100,7 @@ fn run(args: &[String]) -> i32 {
         "revoke" => dispatch_revoke(&flags),
         "reconcile" => dispatch_reconcile(&flags),
         "install" => dispatch_install(&flags),
+        "register" => dispatch_register(&flags),
         "uninstall" => dispatch_uninstall(&flags),
         other => usage_error(&format!("unknown verb `{other}`")),
     }
@@ -532,6 +535,117 @@ fn dispatch_install(flags: &BTreeMap<String, String>) -> i32 {
         "effects_created": 0,
         "tasks_completed": 0,
     }))
+}
+
+fn dispatch_register(flags: &BTreeMap<String, String>) -> i32 {
+    let root = match required(flags, "installation-root") {
+        Ok(root) if root == OFFICIAL_PI_INSTALLATION_ROOT => root,
+        Ok(_) => return usage_error("--installation-root must be the versioned official Pi root"),
+        Err(message) => return usage_error(&message),
+    };
+    let expected_version = match required(flags, "expected-activation-version") {
+        Ok(value) => match value.parse::<u64>() {
+            Ok(version) => version,
+            Err(_) => return usage_error("--expected-activation-version must be a u64"),
+        },
+        Err(message) => return usage_error(&message),
+    };
+    let adapter_digest = match required_digest(flags, "adapter-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let protocol_digest = match required_digest(flags, "protocol-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let policy_digest = match required_digest(flags, "policy-digest") {
+        Ok(value) => value,
+        Err(message) => return usage_error(&message),
+    };
+    let session_path = match required(flags, "session") {
+        Ok(path) => path,
+        Err(message) => return usage_error(&message),
+    };
+    let session_text = match std::fs::read_to_string(session_path) {
+        Ok(text) => text,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "read session {session_path}: {err}"
+            )));
+        }
+    };
+    let session_value: Value = match serde_json::from_str(&session_text) {
+        Ok(value) => value,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "parse session {session_path}: {err}"
+            )));
+        }
+    };
+    let session = match PrivilegedManagementSession::from_json_value(&session_value) {
+        Ok(session) => session,
+        Err(denial) => return fail(&ManagementError::Denied(denial)),
+    };
+    let clock = SystemClock;
+    let now = match clock.now() {
+        Ok(now) => now,
+        Err(err) => {
+            return fail(&ManagementError::Ledger(format!(
+                "read management clock: {err}"
+            )));
+        }
+    };
+    let action = ManagementAction {
+        action: "agent.register".to_owned(),
+        domain: "cognitiveos.management".to_owned(),
+        resource: format!("agent-installation://{root}"),
+        risk: RiskClass::R1,
+        step_up_required: false,
+        step_up_satisfied: false,
+    };
+    if let Err(denial) = session.authorize(&action, &now) {
+        return fail(&ManagementError::Denied(denial));
+    }
+    let installation_store = match required(flags, "installation-store") {
+        Ok(path) => Path::new(path),
+        Err(message) => return usage_error(&message),
+    };
+    let authority = match DurableInstallationAuthority::open(installation_store) {
+        Ok(authority) => authority,
+        Err(error) => return fail_installer(error),
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    match register_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentRegistrationRequest {
+            installation_root: root.to_owned(),
+            expected_activation_version: expected_version,
+            expected_adapter_digest: adapter_digest.to_owned(),
+            protocol_digest: protocol_digest.to_owned(),
+            policy_digest: policy_digest.to_owned(),
+        },
+    ) {
+        Ok(record) => emit(&json!({
+            "registration_id": record.registration_id(),
+            "instance_id": record.instance_id(),
+            "installation_root": record.installation_root(),
+            "activation_version": record.activation_version(),
+            "package_ref": record.package_ref(),
+            "adapter_digest": record.adapter_digest(),
+            "protocol_digest": record.protocol_digest(),
+            "policy_digest": record.policy_digest(),
+            "lifecycle_state": record.lifecycle_state(),
+            "fencing_epoch": record.fencing_epoch(),
+            "capability_grants": authority.capability_grants(),
+            "sidecar_sessions": 0,
+            "effects_created": 0,
+            "tasks_completed": 0,
+        })),
+        Err(error) => fail_installer(error),
+    }
 }
 
 fn dispatch_uninstall(flags: &BTreeMap<String, String>) -> i32 {
