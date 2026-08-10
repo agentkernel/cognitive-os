@@ -35,9 +35,9 @@ pub use clock::SystemClock;
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use ids::UuidV7Generator;
 pub use installation::{
-    AgentActivationCommit, AgentRegistrationCommit, AgentRegistrationRecord, InstallationCommit,
-    InstallationEvidence, InstallationQuarantine, InstallationRootBinding, InstallationStoreError,
-    SidecarSessionRecord, SqliteInstallationStore,
+    AgentActivationCommit, AgentLifecycleFenceCommit, AgentRegistrationCommit,
+    AgentRegistrationRecord, InstallationCommit, InstallationEvidence, InstallationQuarantine,
+    InstallationRootBinding, InstallationStoreError, SidecarSessionRecord, SqliteInstallationStore,
 };
 pub use layout::{
     AUTHORITY_DATABASE_FILE_NAME, INSTALLATION_DATABASE_FILE_NAME, PERSONAL_PRODUCT_DIR_NAME,

@@ -4,10 +4,12 @@ use cognitive_runtime::{
     AcceptingOfficialPiAcquisitionLockVerifier, DurableInstallationAuthority, OFFICIAL_NPM_ORIGIN,
     OFFICIAL_PI_INSTALLATION_ROOT, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
     OfficialPiAcquisitionRequest, OfficialPiAgentActivationRequest,
-    OfficialPiAgentRegistrationRequest, PackageInstallRequest, PiInstallationRootActivationRequest,
-    acquire_official_pi_durable, activate_official_pi_agent_durable,
-    activate_official_pi_root_durable, package_artifact_digest, package_sha256_digest,
-    package_sri_sha512, register_official_pi_agent_durable,
+    OfficialPiAgentLifecycleRequest, OfficialPiAgentRegistrationRequest, PackageInstallRequest,
+    PiInstallationRootActivationRequest, acquire_official_pi_durable,
+    activate_official_pi_agent_durable, activate_official_pi_root_durable, package_artifact_digest,
+    package_sha256_digest, package_sri_sha512, pause_official_pi_agent_durable,
+    register_official_pi_agent_durable, resume_official_pi_agent_durable,
+    stop_official_pi_agent_durable,
 };
 
 fn official_request() -> OfficialPiAcquisitionRequest {
@@ -276,4 +278,113 @@ fn duplicate_activation_conflicts() {
     let error = activate_official_pi_agent_durable(&manager, &request).unwrap_err();
 
     assert_eq!(error.code, "STATE_CONFLICT");
+}
+
+fn activate_registered(
+    manager: &cognitive_runtime::DurableInstallationManager<'_>,
+) -> (
+    cognitive_store::AgentRegistrationRecord,
+    cognitive_store::SidecarSessionRecord,
+) {
+    let binding = activate_official_root(manager);
+    let registered = register_official_pi_agent_durable(
+        manager,
+        &registration_request(binding.activation_version()),
+    )
+    .unwrap();
+    activate_official_pi_agent_durable(
+        manager,
+        &OfficialPiAgentActivationRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: registered.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap()
+}
+
+#[test]
+fn active_instance_pause_resume_stop_fences_sessions() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let (activated, first_session) = activate_registered(&manager);
+
+    let paused = pause_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: activated.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+    assert_eq!(paused.lifecycle_state(), "paused");
+    assert_eq!(paused.fencing_epoch(), first_session.fencing_epoch());
+    assert!(
+        manager
+            .current_sidecar_session(paused.instance_id())
+            .unwrap()
+            .is_none()
+    );
+
+    let (resumed, second_session) = resume_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: paused.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+    assert_eq!(resumed.lifecycle_state(), "active");
+    assert_eq!(resumed.fencing_epoch(), first_session.fencing_epoch() + 1);
+    assert_eq!(second_session.fencing_epoch(), resumed.fencing_epoch());
+    assert_ne!(second_session.session_id(), first_session.session_id());
+    assert_eq!(authority.capability_grants(), 0);
+
+    let stopped = stop_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: resumed.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+    assert_eq!(stopped.lifecycle_state(), "stopped");
+    assert!(
+        manager
+            .current_sidecar_session(stopped.instance_id())
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn stale_pause_epoch_fails_closed() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let (activated, _) = activate_registered(&manager);
+
+    let error = pause_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: activated.fencing_epoch() - 1,
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, "STATE_CONFLICT");
+    assert!(
+        manager
+            .current_sidecar_session(activated.instance_id())
+            .unwrap()
+            .is_some()
+    );
 }
