@@ -482,6 +482,20 @@ impl AgentRegistrationRecord {
     }
 }
 
+/// Immutable inputs for one daemon-private Agent registration transaction.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AgentRegistrationCommit {
+    pub registration_id: String,
+    pub instance_id: String,
+    pub installation_root: String,
+    pub expected_activation_version: u64,
+    pub package_ref: String,
+    pub acquisition_lock: String,
+    pub adapter_digest: String,
+    pub protocol_digest: String,
+    pub policy_digest: String,
+}
+
 /// SQLite WAL store with atomic stage-to-commit visibility.
 ///
 /// Committed rows are the only rows returned to a reader, and staging is never
@@ -938,35 +952,28 @@ impl SqliteInstallationStore {
     /// fails closed.
     pub fn register_agent_from_active_root(
         &self,
-        registration_id: &str,
-        instance_id: &str,
-        installation_root: &str,
-        expected_activation_version: u64,
-        package_ref: &str,
-        acquisition_lock: &str,
-        adapter_digest: &str,
-        protocol_digest: &str,
-        policy_digest: &str,
+        commit: &AgentRegistrationCommit,
     ) -> Result<AgentRegistrationRecord, InstallationStoreError> {
-        if registration_id.trim().is_empty()
-            || instance_id.trim().is_empty()
-            || installation_root.trim().is_empty()
-            || package_ref.trim().is_empty()
-            || acquisition_lock.trim().is_empty()
-            || adapter_digest.trim().is_empty()
-            || protocol_digest.trim().is_empty()
-            || policy_digest.trim().is_empty()
+        if commit.registration_id.trim().is_empty()
+            || commit.instance_id.trim().is_empty()
+            || commit.installation_root.trim().is_empty()
+            || commit.package_ref.trim().is_empty()
+            || commit.acquisition_lock.trim().is_empty()
+            || commit.adapter_digest.trim().is_empty()
+            || commit.protocol_digest.trim().is_empty()
+            || commit.policy_digest.trim().is_empty()
         {
             return Err(InstallationStoreError::InvalidCommit {
                 detail: "agent registration requires non-empty identity and digest fields"
                     .to_owned(),
             });
         }
-        let expected_version = i64::try_from(expected_activation_version).map_err(|error| {
-            InstallationStoreError::InvalidCommit {
-                detail: format!("invalid registration activation version: {error}"),
-            }
-        })?;
+        let expected_version =
+            i64::try_from(commit.expected_activation_version).map_err(|error| {
+                InstallationStoreError::InvalidCommit {
+                    detail: format!("invalid registration activation version: {error}"),
+                }
+            })?;
         let mut conn = self.lock()?;
         let transaction = conn
             .transaction_with_behavior(TransactionBehavior::Immediate)
@@ -978,10 +985,10 @@ impl SqliteInstallationStore {
                   WHERE installation_root = ?1 AND activation_version = ?2
                     AND package_ref = ?3 AND acquisition_lock = ?4",
                 (
-                    installation_root,
+                    commit.installation_root.as_str(),
                     expected_version,
-                    package_ref,
-                    acquisition_lock,
+                    commit.package_ref.as_str(),
+                    commit.acquisition_lock.as_str(),
                 ),
                 binding_from_row,
             )
@@ -989,14 +996,15 @@ impl SqliteInstallationStore {
             .map_err(|err| unavailable("read active installation root for registration", err))?
             .ok_or_else(|| InstallationStoreError::Conflict {
                 detail: format!(
-                    "active installation root {installation_root} is absent, mismatched, or fenced"
+                    "active installation root {} is absent, mismatched, or fenced",
+                    commit.installation_root
                 ),
             })?;
         let existing: Option<String> = transaction
             .query_row(
                 "SELECT registration_id FROM current_agent_registrations
                   WHERE installation_root = ?1",
-                [installation_root],
+                [commit.installation_root.as_str()],
                 |row| row.get(0),
             )
             .optional()
@@ -1004,7 +1012,8 @@ impl SqliteInstallationStore {
         if existing.is_some() {
             return Err(InstallationStoreError::Conflict {
                 detail: format!(
-                    "installation root {installation_root} already has a current agent registration"
+                    "installation root {} already has a current agent registration",
+                    commit.installation_root
                 ),
             });
         }
@@ -1015,14 +1024,14 @@ impl SqliteInstallationStore {
                     acquisition_lock, adapter_digest, protocol_digest, policy_digest)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 (
-                    registration_id,
+                    commit.registration_id.as_str(),
                     binding.installation_root(),
                     expected_version,
                     binding.package_ref(),
                     binding.acquisition_lock(),
-                    adapter_digest,
-                    protocol_digest,
-                    policy_digest,
+                    commit.adapter_digest.as_str(),
+                    commit.protocol_digest.as_str(),
+                    commit.policy_digest.as_str(),
                 ),
             )
             .map_err(|err| {
@@ -1040,7 +1049,11 @@ impl SqliteInstallationStore {
                 "INSERT INTO agent_instances
                    (instance_id, registration_id, lifecycle_state, fencing_epoch)
                  VALUES (?1, ?2, 'registered', ?3)",
-                (instance_id, registration_id, INITIAL_FENCING_EPOCH),
+                (
+                    commit.instance_id.as_str(),
+                    commit.registration_id.as_str(),
+                    INITIAL_FENCING_EPOCH,
+                ),
             )
             .map_err(|err| {
                 if is_constraint_violation(&err) {
@@ -1056,7 +1069,11 @@ impl SqliteInstallationStore {
                 "INSERT INTO current_agent_registrations
                    (installation_root, registration_id, instance_id)
                  VALUES (?1, ?2, ?3)",
-                (installation_root, registration_id, instance_id),
+                (
+                    commit.installation_root.as_str(),
+                    commit.registration_id.as_str(),
+                    commit.instance_id.as_str(),
+                ),
             )
             .map_err(|err| {
                 if is_constraint_violation(&err) {
@@ -1072,15 +1089,15 @@ impl SqliteInstallationStore {
             .commit()
             .map_err(|err| unavailable("commit agent registration", err))?;
         Ok(AgentRegistrationRecord {
-            registration_id: registration_id.to_owned(),
+            registration_id: commit.registration_id.clone(),
             installation_root: binding.installation_root().to_owned(),
             activation_version: binding.activation_version(),
             package_ref: binding.package_ref().to_owned(),
             acquisition_lock: binding.acquisition_lock().to_owned(),
-            adapter_digest: adapter_digest.to_owned(),
-            protocol_digest: protocol_digest.to_owned(),
-            policy_digest: policy_digest.to_owned(),
-            instance_id: instance_id.to_owned(),
+            adapter_digest: commit.adapter_digest.clone(),
+            protocol_digest: commit.protocol_digest.clone(),
+            policy_digest: commit.policy_digest.clone(),
+            instance_id: commit.instance_id.clone(),
             fencing_epoch: 1,
             lifecycle_state: "registered".to_owned(),
         })

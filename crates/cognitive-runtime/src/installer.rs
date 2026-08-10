@@ -614,27 +614,9 @@ impl DurableInstallationManager<'_> {
     /// Persist a daemon-private registration and inactive instance identity.
     pub(crate) fn register_agent_from_active_root(
         &self,
-        registration_id: &str,
-        instance_id: &str,
-        installation_root: &str,
-        expected_activation_version: u64,
-        package_ref: &str,
-        acquisition_lock: &str,
-        adapter_digest: &str,
-        protocol_digest: &str,
-        policy_digest: &str,
+        commit: &cognitive_store::AgentRegistrationCommit,
     ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
-        self.authority.store.register_agent_from_active_root(
-            registration_id,
-            instance_id,
-            installation_root,
-            expected_activation_version,
-            package_ref,
-            acquisition_lock,
-            adapter_digest,
-            protocol_digest,
-            policy_digest,
-        )
+        self.authority.store.register_agent_from_active_root(commit)
     }
 }
 

@@ -11,7 +11,7 @@ use crate::installer::{
 };
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_kernel::ports::IdGenerator;
-use cognitive_store::{AgentRegistrationRecord, UuidV7Generator};
+use cognitive_store::{AgentRegistrationCommit, AgentRegistrationRecord, UuidV7Generator};
 
 /// Fixed official Pi sidecar protocol identity for Linux 1.0 foundation work.
 pub const OFFICIAL_PI_SIDECAR_PROTOCOL: &str = "cognitiveos.private-sidecar/1";
@@ -118,17 +118,17 @@ pub fn register_official_pi_agent_durable(
     })?;
 
     let record = manager
-        .register_agent_from_active_root(
-            &registration_id,
-            &instance_id,
-            binding.installation_root(),
-            binding.activation_version(),
-            binding.package_ref(),
-            binding.acquisition_lock(),
-            committed.adapter_digest(),
-            &request.protocol_digest,
-            &request.policy_digest,
-        )
+        .register_agent_from_active_root(&AgentRegistrationCommit {
+            registration_id,
+            instance_id,
+            installation_root: binding.installation_root().to_owned(),
+            expected_activation_version: binding.activation_version(),
+            package_ref: binding.package_ref().to_owned(),
+            acquisition_lock: binding.acquisition_lock().to_owned(),
+            adapter_digest: committed.adapter_digest().to_owned(),
+            protocol_digest: request.protocol_digest.clone(),
+            policy_digest: request.policy_digest.clone(),
+        })
         .map_err(map_store_error)?;
 
     if record.lifecycle_state() != "registered" || record.fencing_epoch() != 1 {
