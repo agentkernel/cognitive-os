@@ -277,15 +277,6 @@ fn join_child_stream(
         .map_err(|error| format!("Pi Extension session {stream_name} read failed: {error}"))
 }
 
-fn write_rpc_probe_command(
-    stdin: &mut std::process::ChildStdin,
-    request_id: &str,
-    command_type: &str,
-) -> Result<(), String> {
-    let record = json!({ "id": request_id, "type": command_type });
-    write_rpc_record(stdin, &record)
-}
-
 fn write_rpc_prompt(
     stdin: &mut std::process::ChildStdin,
     request_id: &str,
@@ -293,6 +284,16 @@ fn write_rpc_prompt(
 ) -> Result<(), String> {
     let record = json!({ "id": request_id, "type": "prompt", "message": message });
     write_rpc_record(stdin, &record)
+}
+
+fn write_rpc_record(stdin: &mut std::process::ChildStdin, record: &Value) -> Result<(), String> {
+    let mut line = serde_json::to_vec(record)
+        .map_err(|error| format!("cannot serialize Pi RPC probe command: {error}"))?;
+    line.push(b'\n');
+    stdin
+        .write_all(&line)
+        .and_then(|()| stdin.flush())
+        .map_err(|error| format!("cannot write Pi RPC probe command: {error}"))
 }
 
 /// Former local PoC verbs that injected Provider secrets into Pi.
