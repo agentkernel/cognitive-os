@@ -165,12 +165,12 @@ test("active lease must match the unique in-progress Slice", () => {
         .split(/\r?\n/)
         .find((line) => line.startsWith("| Active task lease |"));
       assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
-      // Force a Current-snapshot lease id that cannot match the unique in-progress
-      // Slice ownership, whether the live snapshot currently says `none` or names
-      // another active lease.
+      // Force Current-snapshot lease ids that cannot match the unique in-progress
+      // Slice ownership, whether the live snapshot currently names one or more
+      // active leases.
       const mismatchedRow = activeLeaseRow.replace(
-        /\| Active task lease \| `[^`]+` \|/,
-        "| Active task lease | `lease/personal/P7-T04/performance-governance` |",
+        /`(lease\/personal\/[^`]+)`/g,
+        "`lease/personal/P7-T04/performance-governance`",
       );
       assert.notEqual(
         mismatchedRow,
