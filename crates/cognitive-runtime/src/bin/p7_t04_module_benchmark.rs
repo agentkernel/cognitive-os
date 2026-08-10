@@ -264,26 +264,32 @@ fn measure_scheduler_eligible_cas(
     let directory = TemporaryDirectory::create("scheduler")?;
     let mut repository = SchedulerRepository::open(&directory.path().join("scheduler.sqlite"))?;
     let total_operation_count = sample_count + WARMUP_ITERATIONS;
-    let work_keys = (0..total_operation_count)
-        .map(|sample_index| {
-            let task_reference = format!("task://tenant-a/p7-t04/{sample_index}");
-            repository.upsert(&SchedulerRow {
-                task_ref: task_reference.clone(),
-                contract_epoch: 1,
-                state: SchedulerState::Runnable.as_str().to_owned(),
-                lease_owner: None,
-                lease_epoch: 0,
-                lease_expires: None,
-                next_eligible: "2026-08-10T00:00:00Z".to_owned(),
-                attempt_count: 0,
-                cancel_requested: false,
-            })?;
-            Ok(SchedulerWorkKey {
-                task_ref: task_reference,
-                contract_epoch: 1,
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    let work_keys =
+        (0..total_operation_count)
+            .map(
+                |sample_index| -> Result<
+                    SchedulerWorkKey,
+                    cognitive_store::scheduler::SchedulerRepositoryError,
+                > {
+                    let task_reference = format!("task://tenant-a/p7-t04/{sample_index}");
+                    repository.upsert(&SchedulerRow {
+                        task_ref: task_reference.clone(),
+                        contract_epoch: 1,
+                        state: SchedulerState::Runnable.as_str().to_owned(),
+                        lease_owner: None,
+                        lease_epoch: 0,
+                        lease_expires: None,
+                        next_eligible: "2026-08-10T00:00:00Z".to_owned(),
+                        attempt_count: 0,
+                        cancel_requested: false,
+                    })?;
+                    Ok(SchedulerWorkKey {
+                        task_ref: task_reference,
+                        contract_epoch: 1,
+                    })
+                },
+            )
+            .collect::<Result<Vec<_>, cognitive_store::scheduler::SchedulerRepositoryError>>()?;
 
     measure(
         "scheduler-eligible-lease-cas",
