@@ -388,3 +388,54 @@ fn stale_pause_epoch_fails_closed() {
             .is_some()
     );
 }
+
+#[test]
+fn health_and_recover_keep_identities_and_zero_capability() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let (activated, session) = activate_registered(&manager);
+
+    let health =
+        observe_official_pi_agent_health_durable(&manager, OFFICIAL_PI_INSTALLATION_ROOT).unwrap();
+    assert_eq!(health.instance_id(), activated.instance_id());
+    assert_eq!(health.lifecycle_state(), "active");
+    assert!(health.current_sidecar_session());
+    assert_eq!(
+        health.sidecar_fencing_epoch(),
+        Some(session.fencing_epoch())
+    );
+    assert!(!health.process_bound());
+    assert_ne!(health.instance_id(), session.session_id());
+
+    let stopped = stop_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: activated.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+    let (recovered, recovered_session) = recover_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentLifecycleRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: stopped.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+    assert_eq!(recovered.lifecycle_state(), "active");
+    assert_eq!(recovered.fencing_epoch(), stopped.fencing_epoch() + 1);
+    assert_ne!(recovered_session.session_id(), session.session_id());
+    assert_eq!(authority.capability_grants(), 0);
+    let recovered_health =
+        observe_official_pi_agent_health_durable(&manager, OFFICIAL_PI_INSTALLATION_ROOT).unwrap();
+    assert!(!recovered_health.process_bound());
+    assert_eq!(
+        recovered_health.sidecar_fencing_epoch(),
+        Some(recovered_session.fencing_epoch())
+    );
+}

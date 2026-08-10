@@ -116,7 +116,7 @@ Formal task completion remains independent from every product Gate.
 | `P8-T01/D03` | `done` | plan.md/trace sync, acceptance mapping, closure checkpoint, lease-mismatch failure-injection repair, and required Ubuntu/Windows CI run `31383446541` on PR #180 at `cd08da7d69890e98f1736e93215440aa85c881dc`; documentation-only | P8-T01 formal acceptance is complete; retain closure evidence |
 | `P5-T02/D01` | `done` | Daemon-private Agent registration from an active official Pi installation root. Exact native Linux and required Ubuntu/Windows CI run `31389291637` passed at `bf912ee28965201a24fc35183313e5ed3dbd432e`. | consumed by D02 |
 | `P5-T02/D02` | `done` | Activate registered instance into epoch-fenced SidecarSession without OS process/capability/Effect/Task claims. Same Linux suite and CI run `31389291637` at `bf912ee`. | consumed by D03 |
-| `P5-T02/D03` | `in-progress` | Pause/resume/stop fencing for active SidecarSession epochs without process spawn or capability grants | finish focused native Linux + required CI; then process-supervision binding or task closure |
+| `P5-T02/D03` | `in-progress` | Pause/resume/stop plus health observation and stopped/paused recover fencing without process spawn or capability grants | finish focused native Linux + required CI; then process-supervision binding or task closure |
 
 This queue is the only current slice-status view. The formal plan owns slice
 definitions and exits. Handoffs and the chronological evidence detail below do

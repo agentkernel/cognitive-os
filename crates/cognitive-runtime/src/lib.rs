@@ -36,7 +36,8 @@ pub use adapters::{
 pub use agent_registration::{
     OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentActivationRequest,
     OfficialPiAgentLifecycleRequest, OfficialPiAgentRegistrationRequest,
-    activate_official_pi_agent_durable, pause_official_pi_agent_durable,
+    activate_official_pi_agent_durable, observe_official_pi_agent_health_durable,
+    pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
     stop_official_pi_agent_durable,
 };

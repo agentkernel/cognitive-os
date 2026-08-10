@@ -12,8 +12,8 @@ use crate::installer::{
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_kernel::ports::IdGenerator;
 use cognitive_store::{
-    AgentActivationCommit, AgentLifecycleFenceCommit, AgentRegistrationCommit,
-    AgentRegistrationRecord, SidecarSessionRecord, UuidV7Generator,
+    AgentActivationCommit, AgentHealthObservation, AgentLifecycleFenceCommit,
+    AgentRegistrationCommit, AgentRegistrationRecord, SidecarSessionRecord, UuidV7Generator,
 };
 
 /// Fixed official Pi sidecar protocol identity for Linux 1.0 foundation work.
@@ -344,6 +344,81 @@ pub fn stop_official_pi_agent_durable(
         ));
     }
     Ok(record)
+}
+
+/// Observe redacted health for the current official Pi AgentInstance.
+pub fn observe_official_pi_agent_health_durable(
+    manager: &DurableInstallationManager<'_>,
+    installation_root: &str,
+) -> Result<AgentHealthObservation, InstallerError> {
+    if installation_root != OFFICIAL_PI_INSTALLATION_ROOT {
+        return Err(verification_failure(
+            "agent health currently admits only the official Pi installation root",
+        ));
+    }
+    let registration = manager
+        .current_agent_registration(installation_root)?
+        .ok_or_else(|| verification_failure("official Pi agent is not registered"))?;
+    manager
+        .observe_agent_health(registration.instance_id())?
+        .ok_or_else(|| {
+            InstallerError::new(
+                RegisteredErrorCode::StateStoreUnavailable,
+                "registered agent instance health is not queryable",
+            )
+        })
+}
+
+/// Recover a paused or stopped official Pi AgentInstance with a new SidecarSession.
+pub fn recover_official_pi_agent_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &OfficialPiAgentLifecycleRequest,
+) -> Result<(AgentRegistrationRecord, SidecarSessionRecord), InstallerError> {
+    let registration = current_official_registration(manager, request)?;
+    if !matches!(registration.lifecycle_state(), "paused" | "stopped")
+        || registration.fencing_epoch() != request.expected_fencing_epoch
+    {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            format!(
+                "agent instance {} expected paused|stopped@{}, found {}@{}",
+                registration.instance_id(),
+                request.expected_fencing_epoch,
+                registration.lifecycle_state(),
+                registration.fencing_epoch()
+            ),
+        ));
+    }
+    if registration.protocol_digest() != request.protocol_digest {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::ProtocolSchemaDigestMismatch,
+            "protocol digest does not match the registered official Pi agent",
+        ));
+    }
+    let session_id = UuidV7Generator.next_uuid_v7().map_err(|err| {
+        InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            format!("allocate recovered sidecar session id: {err}"),
+        )
+    })?;
+    let (registration, session) = manager
+        .recover_agent_instance(&AgentActivationCommit {
+            session_id,
+            instance_id: registration.instance_id().to_owned(),
+            expected_fencing_epoch: request.expected_fencing_epoch,
+            protocol_digest: request.protocol_digest.clone(),
+        })
+        .map_err(map_store_error)?;
+    if registration.lifecycle_state() != "active"
+        || session.lifecycle_state() != "active"
+        || session.fencing_epoch() != registration.fencing_epoch()
+    {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            "recovery persisted an unexpected instance or session lifecycle state",
+        ));
+    }
+    Ok((registration, session))
 }
 
 fn current_official_registration(

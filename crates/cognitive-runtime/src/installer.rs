@@ -660,6 +660,19 @@ impl DurableInstallationManager<'_> {
         self.authority.store.stop_agent_instance(commit)
     }
 
+    pub(crate) fn recover_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentActivationCommit,
+    ) -> Result<
+        (
+            cognitive_store::AgentRegistrationRecord,
+            cognitive_store::SidecarSessionRecord,
+        ),
+        InstallationStoreError,
+    > {
+        self.authority.store.recover_agent_instance(commit)
+    }
+
     /// Read the current SidecarSession for an AgentInstance.
     pub fn current_sidecar_session(
         &self,
@@ -668,6 +681,17 @@ impl DurableInstallationManager<'_> {
         self.authority
             .store
             .current_sidecar_session(instance_id)
+            .map_err(map_store_error)
+    }
+
+    /// Observe redacted AgentInstance health without mutation.
+    pub fn observe_agent_health(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<cognitive_store::AgentHealthObservation>, InstallerError> {
+        self.authority
+            .store
+            .observe_agent_health(instance_id)
             .map_err(map_store_error)
     }
 }
