@@ -28,7 +28,8 @@ use cognitive_kernel::executor::ExecutorCapabilities;
 use cognitive_kernel::intent_chain::seal_governed_object_content_digest;
 use cognitive_kernel::ports::{
     Clock, ContextStore, IdGenerator, MemoryAdmissionDecisionRow, MemoryCandidateRow,
-    MemoryObjectRow, MemorySearchQuery, MemoryStore, PortFailure, WorkspaceContextSourceRow,
+    MemoryObjectRow, MemorySearchQuery, MemoryStore, PortFailure, ProtocolStore,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{AdmitCommand, TransitionEngine};
 use cognitive_runtime::GovernanceOverheadSample;
@@ -370,7 +371,7 @@ fn measure_memory_fts5_retrieval(
         directory.path().join("runtime"),
     );
     prepare_personal_databases(&layout)?;
-    let store = SqliteAuthorityStore::open(layout.authority_database_path())?;
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path())?;
     let source = benchmark_memory_source(&benchmark_object_id(10))?;
     let memory_id = admit_benchmark_memory(&store, &source)?;
     let query = MemorySearchQuery {
