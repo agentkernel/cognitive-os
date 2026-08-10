@@ -331,6 +331,7 @@ fn verify_pinned_pi_version(pi: &str) -> Result<(), String> {
     PiCompatibilityPin::expected().validate_reported_version(&version_output)
 }
 
+#[cfg(test)]
 fn percentile_ms(samples: &[u128], percentile: u8) -> Option<u128> {
     if samples.is_empty() || percentile == 0 || percentile > 100 {
         return None;
@@ -377,6 +378,7 @@ fn required<'a>(flags: &'a ParsedFlags, name: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("missing required flag --{name}"))
 }
 
+#[cfg(test)]
 fn classify_platform(
     is_windows_native: bool,
     proc_version: &str,
@@ -429,6 +431,7 @@ fn candidate_only_command(program: &str) -> Command {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
