@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS installation_staging (
   operator_ref         TEXT,
   project_ref          TEXT,
   lockfile_digest      TEXT,
-  verification_result  TEXT
+  verification_result  TEXT,
+  acquisition_lock     TEXT
 ) STRICT;
 
 CREATE TABLE IF NOT EXISTS installations (
@@ -39,7 +40,8 @@ CREATE TABLE IF NOT EXISTS installations (
   operator_ref         TEXT,
   project_ref          TEXT,
   lockfile_digest      TEXT,
-  verification_result  TEXT
+  verification_result  TEXT,
+  acquisition_lock     TEXT
 ) STRICT;
 
 CREATE TRIGGER IF NOT EXISTS installations_append_only_update
@@ -49,6 +51,30 @@ BEGIN SELECT RAISE(ABORT, 'append-only: committed installations are immutable');
 CREATE TRIGGER IF NOT EXISTS installations_append_only_delete
 BEFORE DELETE ON installations
 BEGIN SELECT RAISE(ABORT, 'append-only: committed installations are immutable'); END;
+
+CREATE TABLE IF NOT EXISTS installation_root_bindings (
+  installation_root   TEXT NOT NULL,
+  activation_version  INTEGER NOT NULL,
+  package_ref          TEXT NOT NULL,
+  acquisition_lock     TEXT NOT NULL,
+  PRIMARY KEY (installation_root, activation_version)
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS active_installation_roots (
+  installation_root   TEXT PRIMARY KEY,
+  activation_version  INTEGER NOT NULL,
+  package_ref          TEXT NOT NULL,
+  acquisition_lock     TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS installation_quarantine (
+  installation_root      TEXT NOT NULL,
+  activation_version     INTEGER NOT NULL,
+  package_ref            TEXT NOT NULL,
+  acquisition_lock       TEXT NOT NULL,
+  lifecycle_precondition TEXT NOT NULL,
+  PRIMARY KEY (installation_root, activation_version)
+) STRICT;
 ";
 
 /// Errors from the local durable installation store.
@@ -80,6 +106,7 @@ pub struct InstallationEvidence {
     project_ref: String,
     lockfile_digest: String,
     verification_result: String,
+    acquisition_lock: Option<String>,
 }
 
 impl InstallationEvidence {
@@ -96,6 +123,7 @@ impl InstallationEvidence {
             project_ref: project_ref.into(),
             lockfile_digest: lockfile_digest.into(),
             verification_result: verification_result.into(),
+            acquisition_lock: None,
         };
         if !evidence.operator_ref.starts_with("principal://")
             || !evidence.project_ref.starts_with("file://")
@@ -104,6 +132,33 @@ impl InstallationEvidence {
         {
             return Err(InstallationStoreError::InvalidCommit {
                 detail: "Custom evidence requires principal:// operator, file:// bundle, lockfile digest, and verification result".to_owned(),
+            });
+        }
+        Ok(evidence)
+    }
+
+    /// Official acquisition evidence, including the signed lock payload.
+    pub fn official_pi(
+        acquisition_lock: impl Into<String>,
+        lockfile_digest: impl Into<String>,
+    ) -> Result<Self, InstallationStoreError> {
+        let evidence = Self {
+            source_mode: "official_pi".to_owned(),
+            operator_ref: "official-registry".to_owned(),
+            project_ref: "https://registry.npmjs.org/".to_owned(),
+            lockfile_digest: lockfile_digest.into(),
+            verification_result: "official_acquisition_lock_verified".to_owned(),
+            acquisition_lock: Some(acquisition_lock.into()),
+        };
+        if evidence.lockfile_digest.trim().is_empty()
+            || evidence
+                .acquisition_lock
+                .as_deref()
+                .is_none_or(|lock| lock.trim().is_empty())
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "Official evidence requires a dependency lock digest and signed acquisition lock"
+                    .to_owned(),
             });
         }
         Ok(evidence)
@@ -128,6 +183,11 @@ impl InstallationEvidence {
     pub fn verification_result(&self) -> &str {
         &self.verification_result
     }
+
+    /// Canonical official acquisition lock, when this was an official install.
+    pub fn acquisition_lock(&self) -> Option<&str> {
+        self.acquisition_lock.as_deref()
+    }
 }
 
 /// Immutable evidence inputs for an eventual managed installation commit.
@@ -144,6 +204,72 @@ pub struct InstallationCommit {
     sandbox_digest: String,
     compatibility_digest: String,
     evidence: Option<InstallationEvidence>,
+}
+
+/// Immutable durable activation binding for one private installation root.
+///
+/// The binding records only a committed package reference and the acquisition
+/// lock that was consumed. It neither creates an AgentInstance nor starts a
+/// process.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstallationRootBinding {
+    installation_root: String,
+    activation_version: u64,
+    package_ref: String,
+    acquisition_lock: String,
+}
+
+/// Durable record of a quarantined versioned binding.
+///
+/// Quarantine is append-only: it removes only the active pointer while
+/// retaining the immutable binding and package/evidence rows for inspection.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstallationQuarantine {
+    installation_root: String,
+    activation_version: u64,
+    package_ref: String,
+    acquisition_lock: String,
+    lifecycle_precondition: String,
+}
+
+impl InstallationQuarantine {
+    pub fn installation_root(&self) -> &str {
+        &self.installation_root
+    }
+
+    pub const fn activation_version(&self) -> u64 {
+        self.activation_version
+    }
+
+    pub fn package_ref(&self) -> &str {
+        &self.package_ref
+    }
+
+    pub fn acquisition_lock(&self) -> &str {
+        &self.acquisition_lock
+    }
+
+    pub fn lifecycle_precondition(&self) -> &str {
+        &self.lifecycle_precondition
+    }
+}
+
+impl InstallationRootBinding {
+    pub fn installation_root(&self) -> &str {
+        &self.installation_root
+    }
+
+    pub const fn activation_version(&self) -> u64 {
+        self.activation_version
+    }
+
+    pub fn package_ref(&self) -> &str {
+        &self.package_ref
+    }
+
+    pub fn acquisition_lock(&self) -> &str {
+        &self.acquisition_lock
+    }
 }
 
 impl InstallationCommit {
@@ -291,8 +417,8 @@ impl SqliteInstallationStore {
         let inserted = tx.execute(
             "INSERT INTO installation_staging
                (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             (
                 &commit.package_ref,
                 &commit.package_digest,
@@ -307,6 +433,10 @@ impl SqliteInstallationStore {
                     .evidence
                     .as_ref()
                     .map(|e| e.verification_result.as_str()),
+                commit
+                    .evidence
+                    .as_ref()
+                    .and_then(|e| e.acquisition_lock.as_deref()),
             ),
         );
         match inserted {
@@ -329,9 +459,9 @@ impl SqliteInstallationStore {
         let promoted = tx.execute(
                 "INSERT INTO installations
                    (package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result)
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock)
                  SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                        source_mode, operator_ref, project_ref, lockfile_digest, verification_result
+                        source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock
                    FROM installation_staging WHERE package_ref = ?1",
                 [package_ref],
             );
@@ -366,7 +496,7 @@ impl SqliteInstallationStore {
         let conn = self.lock()?;
         conn.query_row(
             "SELECT package_ref, package_digest, adapter_digest, sandbox_digest, compatibility_digest,
-                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result
+                    source_mode, operator_ref, project_ref, lockfile_digest, verification_result, acquisition_lock
                FROM installations WHERE package_ref = ?1",
             [package_ref],
             |row| {
@@ -375,20 +505,23 @@ impl SqliteInstallationStore {
                 let project_ref: Option<String> = row.get(7)?;
                 let lockfile_digest: Option<String> = row.get(8)?;
                 let verification_result: Option<String> = row.get(9)?;
+                let acquisition_lock: Option<String> = row.get(10)?;
                 let evidence = match (
                     source_mode,
                     operator_ref,
                     project_ref,
                     lockfile_digest,
                     verification_result,
+                    acquisition_lock,
                 ) {
-                    (None, None, None, None, None) => None,
-                    (Some(source_mode), Some(operator_ref), Some(project_ref), Some(lockfile_digest), Some(verification_result)) => Some(InstallationEvidence {
+                    (None, None, None, None, None, None) => None,
+                    (Some(source_mode), Some(operator_ref), Some(project_ref), Some(lockfile_digest), Some(verification_result), acquisition_lock) => Some(InstallationEvidence {
                         source_mode,
                         operator_ref,
                         project_ref,
                         lockfile_digest,
                         verification_result,
+                        acquisition_lock,
                     }),
                     _ => return Err(rusqlite::Error::InvalidQuery),
                 };
@@ -404,6 +537,267 @@ impl SqliteInstallationStore {
         )
         .optional()
         .map_err(|err| unavailable("read committed installation", err))
+    }
+
+    /// Atomically append an immutable root binding and publish it as active.
+    ///
+    /// The expected version is a compare-and-swap fence. A failed insert or
+    /// fence check leaves the prior active pointer unchanged.
+    pub fn activate_installation_root(
+        &self,
+        installation_root: &str,
+        expected_activation_version: Option<u64>,
+        package_ref: &str,
+        acquisition_lock: &str,
+    ) -> Result<InstallationRootBinding, InstallationStoreError> {
+        if installation_root.trim().is_empty()
+            || package_ref.trim().is_empty()
+            || acquisition_lock.trim().is_empty()
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "installation root, package reference, and acquisition lock are required"
+                    .to_owned(),
+            });
+        }
+
+        let mut conn = self.lock()?;
+        let transaction = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|err| unavailable("begin root activation", err))?;
+        let current_version: Option<i64> = transaction
+            .query_row(
+                "SELECT activation_version FROM active_installation_roots WHERE installation_root = ?1",
+                [installation_root],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| unavailable("read active installation root", err))?;
+        let current_version = current_version
+            .map(|value| {
+                u64::try_from(value).map_err(|error| InstallationStoreError::Unavailable {
+                    detail: format!("invalid active installation-root version: {error}"),
+                })
+            })
+            .transpose()?;
+        if current_version != expected_activation_version {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} expected version {expected_activation_version:?}, found {current_version:?}"
+                ),
+            });
+        }
+        let activation_version = current_version.unwrap_or(0).checked_add(1).ok_or_else(|| {
+            InstallationStoreError::Unavailable {
+                detail: "installation-root activation version overflow".to_owned(),
+            }
+        })?;
+        let activation_version_i64 = i64::try_from(activation_version).map_err(|error| {
+            InstallationStoreError::Unavailable {
+                detail: format!("invalid next installation-root version: {error}"),
+            }
+        })?;
+        transaction
+            .execute(
+                "INSERT INTO installation_root_bindings
+                   (installation_root, activation_version, package_ref, acquisition_lock)
+                 VALUES (?1, ?2, ?3, ?4)",
+                (
+                    installation_root,
+                    activation_version_i64,
+                    package_ref,
+                    acquisition_lock,
+                ),
+            )
+            .map_err(|err| unavailable("append installation-root binding", err))?;
+        transaction
+            .execute(
+                "INSERT INTO active_installation_roots
+                   (installation_root, activation_version, package_ref, acquisition_lock)
+                 VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(installation_root) DO UPDATE SET
+                   activation_version = excluded.activation_version,
+                   package_ref = excluded.package_ref,
+                   acquisition_lock = excluded.acquisition_lock",
+                (
+                    installation_root,
+                    activation_version_i64,
+                    package_ref,
+                    acquisition_lock,
+                ),
+            )
+            .map_err(|err| unavailable("publish installation-root pointer", err))?;
+        transaction
+            .commit()
+            .map_err(|err| unavailable("commit root activation", err))?;
+        Ok(InstallationRootBinding {
+            installation_root: installation_root.to_owned(),
+            activation_version,
+            package_ref: package_ref.to_owned(),
+            acquisition_lock: acquisition_lock.to_owned(),
+        })
+    }
+
+    /// Return the current durable pointer, never a staging candidate.
+    pub fn active_installation_root(
+        &self,
+        installation_root: &str,
+    ) -> Result<Option<InstallationRootBinding>, InstallationStoreError> {
+        self.read_installation_root_binding(
+            "SELECT installation_root, activation_version, package_ref, acquisition_lock
+               FROM active_installation_roots WHERE installation_root = ?1",
+            installation_root,
+        )
+    }
+
+    /// Read one immutable prior binding for rollback validation.
+    pub fn installation_root_binding(
+        &self,
+        installation_root: &str,
+        activation_version: u64,
+    ) -> Result<Option<InstallationRootBinding>, InstallationStoreError> {
+        let activation_version = i64::try_from(activation_version).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid installation-root version: {error}"),
+            }
+        })?;
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT installation_root, activation_version, package_ref, acquisition_lock
+               FROM installation_root_bindings
+              WHERE installation_root = ?1 AND activation_version = ?2",
+            (installation_root, activation_version),
+            binding_from_row,
+        )
+        .optional()
+        .map_err(|err| unavailable("read installation-root binding", err))
+    }
+
+    /// Atomically quarantine the active binding and remove only its pointer.
+    ///
+    /// The lifecycle precondition is deliberately checked here, inside the
+    /// same transaction as the version fence, so callers cannot turn a stale
+    /// stopped/absent observation into a successful uninstall.
+    pub fn quarantine_active_installation_root(
+        &self,
+        installation_root: &str,
+        expected_activation_version: u64,
+        lifecycle_precondition: &str,
+    ) -> Result<InstallationQuarantine, InstallationStoreError> {
+        if installation_root.trim().is_empty()
+            || !matches!(lifecycle_precondition, "stopped" | "absent")
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail: "uninstall requires a root and explicit stopped or absent lifecycle precondition"
+                    .to_owned(),
+            });
+        }
+        let expected_version = i64::try_from(expected_activation_version).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid uninstall activation version: {error}"),
+            }
+        })?;
+        let mut conn = self.lock()?;
+        let transaction = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|err| unavailable("begin installation quarantine", err))?;
+        let binding = transaction
+            .query_row(
+                "SELECT installation_root, activation_version, package_ref, acquisition_lock
+                   FROM active_installation_roots
+                  WHERE installation_root = ?1 AND activation_version = ?2",
+                (installation_root, expected_version),
+                binding_from_row,
+            )
+            .optional()
+            .map_err(|err| unavailable("read active installation root for quarantine", err))?
+            .ok_or_else(|| InstallationStoreError::Conflict {
+                detail: format!("active installation root {installation_root} is absent or fenced"),
+            })?;
+        transaction
+            .execute(
+                "INSERT INTO installation_quarantine
+                   (installation_root, activation_version, package_ref, acquisition_lock,
+                    lifecycle_precondition)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                (
+                    binding.installation_root(),
+                    expected_version,
+                    binding.package_ref(),
+                    binding.acquisition_lock(),
+                    lifecycle_precondition,
+                ),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "installation root binding is already quarantined".to_owned(),
+                    }
+                } else {
+                    unavailable("record installation quarantine", err)
+                }
+            })?;
+        let removed = transaction
+            .execute(
+                "DELETE FROM active_installation_roots
+                  WHERE installation_root = ?1 AND activation_version = ?2
+                    AND package_ref = ?3 AND acquisition_lock = ?4",
+                (
+                    installation_root,
+                    expected_version,
+                    binding.package_ref(),
+                    binding.acquisition_lock(),
+                ),
+            )
+            .map_err(|err| unavailable("remove active installation pointer", err))?;
+        if removed != 1 {
+            return Err(InstallationStoreError::Conflict {
+                detail: "active installation pointer changed during quarantine".to_owned(),
+            });
+        }
+        transaction
+            .commit()
+            .map_err(|err| unavailable("commit installation quarantine", err))?;
+        Ok(InstallationQuarantine {
+            installation_root: binding.installation_root().to_owned(),
+            activation_version: binding.activation_version(),
+            package_ref: binding.package_ref().to_owned(),
+            acquisition_lock: binding.acquisition_lock().to_owned(),
+            lifecycle_precondition: lifecycle_precondition.to_owned(),
+        })
+    }
+
+    /// Read a durable quarantine marker without exposing staging state.
+    pub fn installation_quarantine(
+        &self,
+        installation_root: &str,
+        activation_version: u64,
+    ) -> Result<Option<InstallationQuarantine>, InstallationStoreError> {
+        let activation_version = i64::try_from(activation_version).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid quarantine activation version: {error}"),
+            }
+        })?;
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT installation_root, activation_version, package_ref, acquisition_lock,
+                    lifecycle_precondition
+               FROM installation_quarantine
+              WHERE installation_root = ?1 AND activation_version = ?2",
+            (installation_root, activation_version),
+            |row| {
+                let version: i64 = row.get(1)?;
+                Ok(InstallationQuarantine {
+                    installation_root: row.get(0)?,
+                    activation_version: u64::try_from(version)
+                        .map_err(|_| rusqlite::Error::IntegralValueOutOfRange(1, version))?,
+                    package_ref: row.get(2)?,
+                    acquisition_lock: row.get(3)?,
+                    lifecycle_precondition: row.get(4)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(|err| unavailable("read installation quarantine", err))
     }
 
     /// Return the number of non-visible staging rows, for recovery assertions.
@@ -426,6 +820,29 @@ impl SqliteInstallationStore {
                 detail: "installation connection poisoned".to_owned(),
             })
     }
+
+    fn read_installation_root_binding(
+        &self,
+        query: &str,
+        installation_root: &str,
+    ) -> Result<Option<InstallationRootBinding>, InstallationStoreError> {
+        let conn = self.lock()?;
+        conn.query_row(query, [installation_root], binding_from_row)
+            .optional()
+            .map_err(|err| unavailable("read active installation root", err))
+    }
+}
+
+fn binding_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<InstallationRootBinding> {
+    let activation_version: i64 = row.get(1)?;
+    let activation_version = u64::try_from(activation_version)
+        .map_err(|_| rusqlite::Error::IntegralValueOutOfRange(1, activation_version))?;
+    Ok(InstallationRootBinding {
+        installation_root: row.get(0)?,
+        activation_version,
+        package_ref: row.get(2)?,
+        acquisition_lock: row.get(3)?,
+    })
 }
 
 fn ensure_evidence_columns(conn: &Connection) -> Result<(), InstallationStoreError> {
@@ -436,6 +853,7 @@ fn ensure_evidence_columns(conn: &Connection) -> Result<(), InstallationStoreErr
             "project_ref TEXT",
             "lockfile_digest TEXT",
             "verification_result TEXT",
+            "acquisition_lock TEXT",
         ] {
             let statement = format!("ALTER TABLE {table} ADD COLUMN {column}");
             match conn.execute(&statement, []) {

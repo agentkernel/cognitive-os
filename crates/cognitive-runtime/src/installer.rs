@@ -9,12 +9,15 @@
 //! [`InstallationLedger::committed_view`]. Staging rows are invisible to
 //! that view; crash/interrupt before commit leaves zero committed state.
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_store::{
-    InstallationCommit, InstallationEvidence, InstallationStoreError, SqliteInstallationStore,
+    InstallationCommit, InstallationEvidence, InstallationQuarantine, InstallationRootBinding,
+    InstallationStoreError, SqliteInstallationStore,
 };
-use serde_json::Value;
+use serde_json::{Value, json};
+use sha2::{Digest, Sha256, Sha512};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
 
@@ -240,6 +243,106 @@ pub struct PackageInstallRequest {
     pub expected_adapter_digest: String,
     pub expected_sandbox_digest: String,
     pub expected_compatibility_digest: String,
+}
+
+/// The fixed official Pi package identity admitted by P5-T01.
+pub const OFFICIAL_PI_PACKAGE: &str = "@earendil-works/pi-coding-agent";
+pub const OFFICIAL_PI_VERSION: &str = "0.81.1";
+pub const OFFICIAL_NPM_ORIGIN: &str = "https://registry.npmjs.org/";
+pub const OFFICIAL_PI_INSTALLATION_ROOT: &str = "installation-root://personal/pi";
+
+/// Signed, immutable inputs for one official Pi acquisition transaction.
+///
+/// The staged bytes are deliberately caller-provided: this transaction never
+/// downloads or follows a network redirect. The injected verifier must attest
+/// the lock reference before the lock may be persisted.
+#[derive(Debug, Clone)]
+pub struct OfficialPiAcquisitionRequest {
+    pub install: PackageInstallRequest,
+    pub registry_origin: String,
+    pub resolved_origin: String,
+    pub sri_sha512: String,
+    pub declared_package_sha256: String,
+    pub dependency_lock: Vec<u8>,
+    pub declared_dependency_lock_digest: String,
+    pub node_version: String,
+    pub signed_acquisition_lock_ref: String,
+}
+
+/// Daemon-private request to publish an already acquired Pi package at an
+/// installation root. Both verification outcomes must be affirmative before
+/// the durable pointer transaction can begin.
+#[derive(Debug, Clone)]
+pub struct PiInstallationRootActivationRequest {
+    pub installation_root: String,
+    pub package_ref: String,
+    pub expected_activation_version: Option<u64>,
+    pub compatibility_accepted: bool,
+    pub health_accepted: bool,
+}
+
+/// Explicit lifecycle fact required before private uninstall/quarantine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PiInstallationLifecyclePrecondition {
+    Stopped,
+    Absent,
+}
+
+impl PiInstallationLifecyclePrecondition {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Stopped => "stopped",
+            Self::Absent => "absent",
+        }
+    }
+}
+
+/// Daemon-private request to quarantine the active versioned Pi binding.
+#[derive(Debug, Clone)]
+pub struct PiInstallationUninstallRequest {
+    pub installation_root: String,
+    pub expected_activation_version: u64,
+    pub lifecycle_precondition: Option<PiInstallationLifecyclePrecondition>,
+}
+
+/// Durable uninstall receipt. It contains references only; no package bytes,
+/// user data, or secret material are returned or removed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PiInstallationUninstallReceipt {
+    pub installation_root: String,
+    pub activation_version: u64,
+    pub package_ref: String,
+    pub quarantine: String,
+}
+
+/// Verifies the detached official acquisition-lock signature or attestation.
+///
+/// Cryptographic key handling intentionally stays at the daemon integration
+/// boundary; this runtime validates the fixed tuple before using this port.
+pub trait OfficialPiAcquisitionLockVerifier: Send + Sync {
+    fn verify_signed_lock_reference(
+        &self,
+        signed_acquisition_lock_ref: &str,
+    ) -> Result<(), InstallerError>;
+}
+
+/// Test-only positive verifier for a supplied signed lock reference.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct AcceptingOfficialPiAcquisitionLockVerifier;
+
+impl OfficialPiAcquisitionLockVerifier for AcceptingOfficialPiAcquisitionLockVerifier {
+    fn verify_signed_lock_reference(
+        &self,
+        signed_acquisition_lock_ref: &str,
+    ) -> Result<(), InstallerError> {
+        if signed_acquisition_lock_ref.trim().is_empty() {
+            return Err(InstallerError::new(
+                RegisteredErrorCode::AgentPackageVerificationFailed,
+                "official acquisition lock reference is required",
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// Pipeline phase (companion prose; not a registered transition table).
@@ -473,6 +576,29 @@ impl DurableInstallationManager<'_> {
             .committed(package_id)
             .map_err(map_store_error)
     }
+
+    /// Read the daemon-private active pointer for an installation root.
+    pub fn active_installation_root(
+        &self,
+        installation_root: &str,
+    ) -> Result<Option<InstallationRootBinding>, InstallerError> {
+        self.authority
+            .store
+            .active_installation_root(installation_root)
+            .map_err(map_store_error)
+    }
+
+    /// Read a daemon-private quarantine marker for focused lifecycle checks.
+    pub fn installation_quarantine(
+        &self,
+        installation_root: &str,
+        activation_version: u64,
+    ) -> Result<Option<InstallationQuarantine>, InstallerError> {
+        self.authority
+            .store
+            .installation_quarantine(installation_root, activation_version)
+            .map_err(map_store_error)
+    }
 }
 
 fn map_store_error(error: InstallationStoreError) -> InstallerError {
@@ -540,6 +666,281 @@ pub fn verify_package(
         ));
     }
     Ok(live)
+}
+
+/// Verify and atomically persist the official Pi acquisition lock.
+///
+/// This path only establishes immutable installation evidence. It never
+/// activates Pi, grants a capability, dispatches an Effect, or completes a
+/// Task.
+pub fn acquire_official_pi_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &OfficialPiAcquisitionRequest,
+    verifier: &dyn OfficialPiAcquisitionLockVerifier,
+) -> Result<CommittedInstallation, InstallerError> {
+    let install = &request.install;
+    if install.publisher != OFFICIAL_PI_PACKAGE
+        || install.package_version != OFFICIAL_PI_VERSION
+        || install.package_id != format!("pkg://{OFFICIAL_PI_PACKAGE}@{OFFICIAL_PI_VERSION}")
+    {
+        return Err(verification_failure(
+            "official Pi identity/version is not fixed",
+        ));
+    }
+    if request.registry_origin != OFFICIAL_NPM_ORIGIN
+        || request.resolved_origin != OFFICIAL_NPM_ORIGIN
+    {
+        return Err(verification_failure(
+            "official npm origin must be exact and redirects are refused",
+        ));
+    }
+    if !node_version_at_least(&request.node_version, (22, 19, 0)) {
+        return Err(verification_failure("Node.js version must be >= 22.19.0"));
+    }
+
+    let live_package_sha256 = package_sha256_digest(&install.artifact);
+    if request.declared_package_sha256 != live_package_sha256 {
+        return Err(verification_failure("independent package digest mismatch"));
+    }
+    let live_sri = package_sri_sha512(&install.artifact);
+    if request.sri_sha512 != live_sri {
+        return Err(verification_failure("package SRI sha512 mismatch"));
+    }
+    let live_dependency_lock_digest = package_artifact_digest(&request.dependency_lock)?;
+    if request.declared_dependency_lock_digest != live_dependency_lock_digest
+        || install.lockfile_digest != live_dependency_lock_digest
+    {
+        return Err(verification_failure("dependency lock digest mismatch"));
+    }
+    verify_package(install, &AcceptingSignaturePort)?;
+    verifier.verify_signed_lock_reference(&request.signed_acquisition_lock_ref)?;
+
+    let acquisition_lock = json!({
+        "adapter_digest": install.adapter_digest,
+        "compatibility_digest": install.compatibility_digest,
+        "dependency_lock_digest": live_dependency_lock_digest,
+        "node_version": request.node_version,
+        "npm_origin": OFFICIAL_NPM_ORIGIN,
+        "package": OFFICIAL_PI_PACKAGE,
+        "package_sha256": live_package_sha256,
+        "resolved_origin": request.resolved_origin,
+        "sandbox_digest": install.sandbox_digest,
+        "signed_lock_ref": request.signed_acquisition_lock_ref,
+        "sri": live_sri,
+        "version": OFFICIAL_PI_VERSION,
+    });
+    let acquisition_lock = canonical::canonical_bytes_of_value(&acquisition_lock)
+        .map_err(|error| verification_failure(error.to_string()))?;
+    let acquisition_lock = String::from_utf8(acquisition_lock)
+        .map_err(|error| verification_failure(error.to_string()))?;
+    let evidence = InstallationEvidence::official_pi(acquisition_lock, live_dependency_lock_digest)
+        .map_err(map_store_error)?;
+    let artifact_digest = package_artifact_digest(&install.artifact)?;
+    let commit = InstallationCommit::new_with_evidence(
+        &install.package_id,
+        artifact_digest.clone(),
+        &install.adapter_digest,
+        &install.sandbox_digest,
+        &install.compatibility_digest,
+        evidence,
+    )
+    .map_err(map_store_error)?;
+    manager
+        .authority
+        .store
+        .stage(&commit)
+        .map_err(map_store_error)?;
+    manager
+        .authority
+        .store
+        .commit(commit.package_ref())
+        .map_err(map_store_error)?;
+    Ok(CommittedInstallation {
+        package_id: install.package_id.clone(),
+        artifact_digest,
+        adapter_digest: install.adapter_digest.clone(),
+        sandbox_digest: install.sandbox_digest.clone(),
+        phase: InstallPhase::Committed,
+    })
+}
+
+/// Publish a versioned private Pi installation-root pointer.
+///
+/// This consumes only a committed D01 official acquisition lock. It has no
+/// AgentInstance, SidecarSession, process, Effect, or Task-completion role.
+pub fn activate_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &PiInstallationRootActivationRequest,
+) -> Result<InstallationRootBinding, InstallerError> {
+    if !request.compatibility_accepted || !request.health_accepted {
+        return Err(verification_failure(
+            "compatibility and health must both pass before publishing an installation root",
+        ));
+    }
+    let committed = manager
+        .committed_installation(&request.package_ref)?
+        .ok_or_else(|| verification_failure("official Pi acquisition lock is not committed"))?;
+    let evidence = committed.evidence().ok_or_else(|| {
+        verification_failure("committed package does not have official Pi acquisition evidence")
+    })?;
+    let acquisition_lock = evidence.acquisition_lock().ok_or_else(|| {
+        verification_failure("committed official Pi evidence has no acquisition lock")
+    })?;
+    if evidence.source_mode() != "official_pi"
+        || evidence.verification_result() != "official_acquisition_lock_verified"
+    {
+        return Err(verification_failure(
+            "committed package is not an official Pi acquisition lock",
+        ));
+    }
+    manager
+        .authority
+        .store
+        .activate_installation_root(
+            &request.installation_root,
+            request.expected_activation_version,
+            &request.package_ref,
+            acquisition_lock,
+        )
+        .map_err(map_store_error)
+}
+
+/// Roll back an installation root by re-publishing a complete prior binding.
+///
+/// A missing or no-longer-complete target produces no receipt and leaves the
+/// active pointer unchanged.
+pub fn rollback_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    installation_root: &str,
+    expected_activation_version: u64,
+    target_activation_version: u64,
+) -> Result<InstallationRootBinding, InstallerError> {
+    let target = manager
+        .authority
+        .store
+        .installation_root_binding(installation_root, target_activation_version)
+        .map_err(map_store_error)?
+        .ok_or_else(|| verification_failure("rollback target binding is incomplete"))?;
+    let committed = manager
+        .committed_installation(target.package_ref())?
+        .ok_or_else(|| verification_failure("rollback target acquisition is incomplete"))?;
+    let evidence = committed
+        .evidence()
+        .filter(|evidence| evidence.source_mode() == "official_pi")
+        .and_then(InstallationEvidence::acquisition_lock)
+        .ok_or_else(|| verification_failure("rollback target has no official acquisition lock"))?;
+    if evidence != target.acquisition_lock() {
+        return Err(verification_failure(
+            "rollback target acquisition lock no longer matches its binding",
+        ));
+    }
+    manager
+        .authority
+        .store
+        .activate_installation_root(
+            installation_root,
+            Some(expected_activation_version),
+            target.package_ref(),
+            target.acquisition_lock(),
+        )
+        .map_err(map_store_error)
+}
+
+/// Quarantine the active versioned Pi binding after an explicit stopped/absent
+/// lifecycle observation. The immutable package and acquisition evidence stay
+/// queryable; this function never touches an installation filesystem root.
+pub fn uninstall_official_pi_root_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &PiInstallationUninstallRequest,
+) -> Result<PiInstallationUninstallReceipt, InstallerError> {
+    if request.installation_root != OFFICIAL_PI_INSTALLATION_ROOT {
+        return Err(verification_failure(
+            "uninstall root is not the versioned official Pi installation root",
+        ));
+    }
+    let lifecycle_precondition = request.lifecycle_precondition.ok_or_else(|| {
+        verification_failure(
+            "uninstall requires an explicit stopped or absent lifecycle precondition",
+        )
+    })?;
+    let active = manager
+        .active_installation_root(&request.installation_root)?
+        .ok_or_else(|| verification_failure("active installation pointer is absent"))?;
+    if active.activation_version() != request.expected_activation_version {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            format!(
+                "uninstall activation fence mismatch: expected {}, found {}",
+                request.expected_activation_version,
+                active.activation_version()
+            ),
+        ));
+    }
+    let committed = manager
+        .committed_installation(active.package_ref())?
+        .ok_or_else(|| verification_failure("active package reference is not committed"))?;
+    let acquisition_lock = committed
+        .evidence()
+        .filter(|evidence| evidence.source_mode() == "official_pi")
+        .and_then(InstallationEvidence::acquisition_lock)
+        .ok_or_else(|| verification_failure("active package has no immutable official evidence"))?;
+    if acquisition_lock != active.acquisition_lock() {
+        return Err(verification_failure(
+            "active package evidence does not match its installation binding",
+        ));
+    }
+    let quarantine = manager
+        .authority
+        .store
+        .quarantine_active_installation_root(
+            &request.installation_root,
+            request.expected_activation_version,
+            lifecycle_precondition.as_str(),
+        )
+        .map_err(map_store_error)?;
+    Ok(uninstall_receipt(quarantine))
+}
+
+fn uninstall_receipt(quarantine: InstallationQuarantine) -> PiInstallationUninstallReceipt {
+    PiInstallationUninstallReceipt {
+        installation_root: quarantine.installation_root().to_owned(),
+        activation_version: quarantine.activation_version(),
+        package_ref: quarantine.package_ref().to_owned(),
+        quarantine: format!(
+            "{}#{}",
+            quarantine.installation_root(),
+            quarantine.activation_version()
+        ),
+    }
+}
+
+fn verification_failure(detail: impl Into<String>) -> InstallerError {
+    InstallerError::new(RegisteredErrorCode::AgentPackageVerificationFailed, detail)
+}
+
+/// Calculate the independently recorded SHA-256 package digest.
+pub fn package_sha256_digest(bytes: &[u8]) -> String {
+    format!("sha256:{:x}", Sha256::digest(bytes))
+}
+
+/// Calculate npm-compatible SHA-512 Subresource Integrity for staged bytes.
+pub fn package_sri_sha512(bytes: &[u8]) -> String {
+    format!("sha512-{}", STANDARD.encode(Sha512::digest(bytes)))
+}
+
+fn node_version_at_least(version: &str, minimum: (u64, u64, u64)) -> bool {
+    let version = version.strip_prefix('v').unwrap_or(version);
+    let mut components = version.split('.').map(str::parse::<u64>);
+    let Some(Ok(major)) = components.next() else {
+        return false;
+    };
+    let Some(Ok(minor)) = components.next() else {
+        return false;
+    };
+    let Some(Ok(patch)) = components.next() else {
+        return false;
+    };
+    components.next().is_none() && (major, minor, patch) >= minimum
 }
 
 /// Run the install pipeline. Optional crash point aborts before publish.
