@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P5-T05/b09-managed-pi` | P5-T05/D01 process-bound SidecarSession | Lane-RUN | `personal/P5-T05-b09-managed-pi` | `crates/cognitive-store/src/installation.rs`; `crates/cognitive-runtime/src/installer.rs`; `apps/admin-cli/src/main.rs`; `apps/admin-cli/tests/agent_registration.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P5-T05-claim | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P5-T05/b09-managed-pi` | P5-T05/D01 process-bound SidecarSession | Lane-RUN | `personal/P5-T05-b09-managed-pi` | `crates/cognitive-store/src/installation.rs`; `crates/cognitive-runtime/src/installer.rs`; `apps/admin-cli/src/main.rs`; `apps/admin-cli/tests/agent_registration.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/`; `docs/governance/DEVELOPMENT-OPERATING-MODEL.md`; `docs/governance/project-scope.yaml`; `docs/standards/docs-sync-contract.md`; `AGENTS.md`; `.cursor/rules/10-autonomous-personal-development.mdc`; `docs/prompts/continuous-personal-development.md` | cursor-agent/P5-T05-claim | 2026-08-11 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.

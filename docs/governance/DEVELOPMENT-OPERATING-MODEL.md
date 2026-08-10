@@ -150,6 +150,19 @@ The following anti-fragmentation rules apply:
   implementation, repair, or registered validation action. It must not stop
   merely to provide a progress summary unless a decision is needed, unknown
   concurrent changes appear, or the owner asks for one.
+- **`CAMPAIGN-BACKLOG-CONTINUATION-01`:** when standing continuous-delivery
+  authorization is active, task completion is not a campaign stop. In the same
+  continuous session, after ready/merge/lease/branch/main reconciliation, the
+  agent immediately selects the next implementation-ready Personal task whose
+  `implementation_requires` are satisfied, claims a non-overlapping lease, and
+  begins its first vertical slice. The campaign loop continues until
+  `PROGRESS.md` Layer 1 Remaining is 0, the owner pauses/changes scope, or only
+  owner-only confirmation boundaries / genuine external blockers remain. A
+  claim-only, docs-only, or “next action recorded” turn without implementation
+  progress is not a valid campaign stop. Formal Gate disposition that must wait
+  on the owner is recorded as task `blocked` with a single recovery action;
+  after that recording, the agent may claim a non-overlapping ready task and
+  continue rather than idle on the disposition chat.
 
 ### 2.1.1 MVP-first implementation and authorization
 
