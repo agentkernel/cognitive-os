@@ -1,8 +1,10 @@
-//! Personal production release-manifest authority path (P7-T01/D01–D02).
+//! Personal production release-manifest authority path (P7-T01/D01–D03).
 //!
 //! D01 verifies a signed six-resource release manifest against caller-fixed
 //! pins. D02 binds SBOM and Linux artifact digests to a D01-verified manifest
-//! and rejects secret/dev-path contaminated inventories.
+//! and rejects secret/dev-path contaminated inventories. D03 binds immutable
+//! toolchain/environment/action pins and an acquisition-lock production-trust
+//! reference without floating refs.
 //!
 //! This module does not generate SBOM bytes, publish GitHub Releases, hold a
 //! production signing key, or claim Gate/release/Profile outcomes.
@@ -160,6 +162,16 @@ pub enum ReleaseManifestError {
     MissingInventory,
     #[error("third-party inventory contains a forbidden secret or developer path")]
     ContaminatedInventoryPath,
+    #[error("release toolchain pin document is invalid: {0}")]
+    InvalidToolchainPins(&'static str),
+    #[error("release toolchain pin does not bind the verified manifest digest")]
+    ToolchainManifestDigestMismatch,
+    #[error("release toolchain pin drifts from caller-fixed expected pins")]
+    ToolchainPinMismatch,
+    #[error("release toolchain pin uses a floating or non-exact identity")]
+    FloatingToolchainRef,
+    #[error("release toolchain acquisition-lock trust reference is unsupported")]
+    InvalidAcquisitionLockTrustReference,
 }
 
 /// Digests proven after D02 SBOM/artifact binding against a D01-verified manifest.
@@ -169,6 +181,46 @@ pub struct VerifiedReleaseArtifactBindings {
     pub sbom_digest: String,
     pub artifact_digest: String,
 }
+
+/// Caller-fixed toolchain / environment / action identities for D03.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpectedToolchainPins {
+    pub rust_channel: String,
+    pub node_version: String,
+    pub pnpm_version: String,
+    pub pi_pin: String,
+    pub sidecar_protocol_digest: String,
+    pub ci_workflow_digest: String,
+    pub environment_digest: String,
+    pub acquisition_lock_trust_ref: String,
+}
+
+/// Immutable pin document bound to a verified release manifest.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ReleaseToolchainPinDocument {
+    pub schema: String,
+    pub schema_version: u32,
+    pub manifest_digest: String,
+    pub rust_channel: String,
+    pub node_version: String,
+    pub pnpm_version: String,
+    pub pi_pin: String,
+    pub sidecar_protocol_digest: String,
+    pub ci_workflow_digest: String,
+    pub environment_digest: String,
+    pub acquisition_lock_trust_ref: String,
+}
+
+/// Proven toolchain pins after D03 verification.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerifiedReleaseToolchainPins {
+    pub manifest_digest: String,
+    pub pins: ReleaseToolchainPinDocument,
+}
+
+const TOOLCHAIN_PIN_SCHEMA: &str = "cognitiveos.personal.release-toolchain-pins";
+const MAX_TOOLCHAIN_PIN_BYTES: usize = 32 * 1024;
 
 const FORBIDDEN_INVENTORY_MARKERS: &[&str] = &[
     "/.env",
@@ -194,6 +246,10 @@ const FORBIDDEN_INVENTORY_MARKERS: &[&str] = &[
     "target\\debug",
     ".git/",
     ".git\\",
+];
+
+const FLOATING_REF_MARKERS: &[&str] = &[
+    "latest", "main", "master", "nightly", "stable", "beta", "*", "^", "~", "x", "X",
 ];
 
 impl ReleaseTrustedKeyring {
@@ -547,6 +603,100 @@ pub fn verify_release_artifact_bindings(
         manifest_digest: verified.manifest_digest.clone(),
         sbom_digest,
         artifact_digest,
+    })
+}
+
+fn is_exact_pin(value: &str) -> bool {
+    let trimmed = value.trim();
+    if trimmed.is_empty() || trimmed.len() > 256 {
+        return false;
+    }
+    if trimmed.chars().any(|ch| ch.is_whitespace()) {
+        return false;
+    }
+    let lowered = trimmed.to_ascii_lowercase();
+    if FLOATING_REF_MARKERS
+        .iter()
+        .any(|marker| lowered == *marker || lowered.contains(marker))
+    {
+        return false;
+    }
+    true
+}
+
+/// Bind immutable toolchain/environment/action pins to D01+D02 verified facts.
+pub fn verify_release_toolchain_pins(
+    verified: &VerifiedPersonalReleaseManifest,
+    bindings: &VerifiedReleaseArtifactBindings,
+    pin_document_bytes: &[u8],
+    expected: &ExpectedToolchainPins,
+) -> Result<VerifiedReleaseToolchainPins, ReleaseManifestError> {
+    if bindings.manifest_digest != verified.manifest_digest {
+        return Err(ReleaseManifestError::InvalidToolchainPins(
+            "artifact bindings do not match the verified manifest digest",
+        ));
+    }
+    if pin_document_bytes.is_empty() || pin_document_bytes.len() > MAX_TOOLCHAIN_PIN_BYTES {
+        return Err(ReleaseManifestError::InvalidToolchainPins(
+            "toolchain pin document size is out of bounds",
+        ));
+    }
+    let pin_text = std::str::from_utf8(pin_document_bytes).map_err(|_| {
+        ReleaseManifestError::InvalidToolchainPins("toolchain pin document must be UTF-8 JSON")
+    })?;
+    let pins: ReleaseToolchainPinDocument = deserialize_strict_json(pin_text)
+        .map_err(|_| ReleaseManifestError::InvalidToolchainPins("strict JSON parsing failed"))?;
+    let canonical = serde_json_canonicalizer::to_vec(&pins).map_err(|_| {
+        ReleaseManifestError::InvalidToolchainPins("pin document cannot be canonicalized")
+    })?;
+    if canonical != pin_document_bytes {
+        return Err(ReleaseManifestError::InvalidToolchainPins(
+            "toolchain pin document bytes are not canonical",
+        ));
+    }
+    if pins.schema != TOOLCHAIN_PIN_SCHEMA || pins.schema_version != 1 {
+        return Err(ReleaseManifestError::InvalidToolchainPins(
+            "unsupported toolchain pin schema",
+        ));
+    }
+    if pins.manifest_digest != verified.manifest_digest {
+        return Err(ReleaseManifestError::ToolchainManifestDigestMismatch);
+    }
+    if !is_strict_https_reference(&pins.acquisition_lock_trust_ref) {
+        return Err(ReleaseManifestError::InvalidAcquisitionLockTrustReference);
+    }
+    for candidate in [
+        &pins.rust_channel,
+        &pins.node_version,
+        &pins.pnpm_version,
+        &pins.pi_pin,
+        &pins.sidecar_protocol_digest,
+        &pins.ci_workflow_digest,
+        &pins.environment_digest,
+    ] {
+        if !is_exact_pin(candidate) {
+            return Err(ReleaseManifestError::FloatingToolchainRef);
+        }
+    }
+    if pins.rust_channel != expected.rust_channel
+        || pins.node_version != expected.node_version
+        || pins.pnpm_version != expected.pnpm_version
+        || pins.pi_pin != expected.pi_pin
+        || pins.sidecar_protocol_digest != expected.sidecar_protocol_digest
+        || pins.ci_workflow_digest != expected.ci_workflow_digest
+        || pins.environment_digest != expected.environment_digest
+        || pins.acquisition_lock_trust_ref != expected.acquisition_lock_trust_ref
+    {
+        return Err(ReleaseManifestError::ToolchainPinMismatch);
+    }
+    if pins.pi_pin != verified.manifest.pi_pin
+        || pins.sidecar_protocol_digest != verified.manifest.sidecar_protocol_digest
+    {
+        return Err(ReleaseManifestError::ToolchainPinMismatch);
+    }
+    Ok(VerifiedReleaseToolchainPins {
+        manifest_digest: verified.manifest_digest.clone(),
+        pins,
     })
 }
 
@@ -927,6 +1077,114 @@ mod tests {
             )
             .unwrap_err(),
             ReleaseManifestError::ContaminatedInventoryPath
+        );
+    }
+
+    fn aligned_verified_and_bindings() -> (
+        VerifiedPersonalReleaseManifest,
+        VerifiedReleaseArtifactBindings,
+        ExpectedToolchainPins,
+    ) {
+        let sbom = b"sbom-toolchain";
+        let artifact = b"artifact-toolchain";
+        let expected = expected_pins();
+        let mut manifest = valid_manifest(&expected);
+        manifest.sbom_digest = sha256_digest(sbom);
+        manifest.artifact_digest = sha256_digest(artifact);
+        let manifest_bytes = canonical_manifest_bytes(&manifest);
+        let verified = verify_personal_release_manifest(
+            &manifest_bytes,
+            &sign_manifest(&manifest_bytes),
+            &expected,
+            &test_keyring(),
+        )
+        .unwrap();
+        let bindings = verify_release_artifact_bindings(
+            &verified,
+            sbom,
+            artifact,
+            Some("crate:example\nlicense:Apache-2.0\n"),
+        )
+        .unwrap();
+        let toolchain = ExpectedToolchainPins {
+            rust_channel: "1.97.1".to_owned(),
+            node_version: "22.23.2".to_owned(),
+            pnpm_version: "10.9.8".to_owned(),
+            pi_pin: verified.manifest.pi_pin.clone(),
+            sidecar_protocol_digest: verified.manifest.sidecar_protocol_digest.clone(),
+            ci_workflow_digest: digest("ci-workflow"),
+            environment_digest: digest("environment"),
+            acquisition_lock_trust_ref: "https://example.invalid/acquisition-lock/v1".to_owned(),
+        };
+        (verified, bindings, toolchain)
+    }
+
+    fn toolchain_doc_bytes(
+        verified: &VerifiedPersonalReleaseManifest,
+        expected: &ExpectedToolchainPins,
+    ) -> Vec<u8> {
+        let doc = ReleaseToolchainPinDocument {
+            schema: TOOLCHAIN_PIN_SCHEMA.to_owned(),
+            schema_version: 1,
+            manifest_digest: verified.manifest_digest.clone(),
+            rust_channel: expected.rust_channel.clone(),
+            node_version: expected.node_version.clone(),
+            pnpm_version: expected.pnpm_version.clone(),
+            pi_pin: expected.pi_pin.clone(),
+            sidecar_protocol_digest: expected.sidecar_protocol_digest.clone(),
+            ci_workflow_digest: expected.ci_workflow_digest.clone(),
+            environment_digest: expected.environment_digest.clone(),
+            acquisition_lock_trust_ref: expected.acquisition_lock_trust_ref.clone(),
+        };
+        serde_json_canonicalizer::to_vec(&doc).unwrap()
+    }
+
+    #[test]
+    fn binds_exact_toolchain_pins_to_verified_manifest() {
+        let (verified, bindings, expected) = aligned_verified_and_bindings();
+        let pin_bytes = toolchain_doc_bytes(&verified, &expected);
+        let proven = verify_release_toolchain_pins(&verified, &bindings, &pin_bytes, &expected)
+            .expect("exact toolchain pins must bind");
+        assert_eq!(proven.manifest_digest, verified.manifest_digest);
+        assert_eq!(proven.pins.rust_channel, "1.97.1");
+    }
+
+    #[test]
+    fn rejects_floating_toolchain_refs_and_pin_drift() {
+        let (verified, bindings, expected) = aligned_verified_and_bindings();
+        let mut floating = expected.clone();
+        floating.rust_channel = "stable".to_owned();
+        let floating_bytes = toolchain_doc_bytes(&verified, &floating);
+        // Document carries floating value; expected still has exact pin → floating fails first
+        // when validating document fields before expected compare. Force document to float while
+        // expected stays exact by rewriting after canonicalization path.
+        let mut doc: ReleaseToolchainPinDocument =
+            serde_json::from_slice(&toolchain_doc_bytes(&verified, &expected)).unwrap();
+        doc.rust_channel = "latest".to_owned();
+        let floating_doc = serde_json_canonicalizer::to_vec(&doc).unwrap();
+        assert_eq!(
+            verify_release_toolchain_pins(&verified, &bindings, &floating_doc, &expected)
+                .unwrap_err(),
+            ReleaseManifestError::FloatingToolchainRef
+        );
+        let _ = floating_bytes;
+
+        let mut drifted = expected.clone();
+        drifted.node_version = "22.0.0".to_owned();
+        let drifted_bytes = toolchain_doc_bytes(&verified, &drifted);
+        assert_eq!(
+            verify_release_toolchain_pins(&verified, &bindings, &drifted_bytes, &expected)
+                .unwrap_err(),
+            ReleaseManifestError::ToolchainPinMismatch
+        );
+
+        let mut bad_trust = expected.clone();
+        bad_trust.acquisition_lock_trust_ref = "http://insecure.example/lock".to_owned();
+        let bad_trust_bytes = toolchain_doc_bytes(&verified, &bad_trust);
+        assert_eq!(
+            verify_release_toolchain_pins(&verified, &bindings, &bad_trust_bytes, &bad_trust)
+                .unwrap_err(),
+            ReleaseManifestError::InvalidAcquisitionLockTrustReference
         );
     }
 }

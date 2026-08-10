@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T01/release-pipeline` | P7-T01/D02 SBOM and artifact digest binding | Lane-RUN | `personal/P7-T01-release-pipeline` | `crates/cognitive-runtime/src/release_manifest.rs`; `crates/cognitive-runtime/src/lib.rs`; `tools/test/check.test.mjs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P7-T01-D02 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P7-T01/release-pipeline` | P7-T01/D03 immutable toolchain and acquisition-lock pins | Lane-RUN | `personal/P7-T01-release-pipeline` | `crates/cognitive-runtime/src/release_manifest.rs`; `crates/cognitive-runtime/src/lib.rs`; `tools/test/check.test.mjs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P7-T01-D03 | 2026-08-11 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
