@@ -79,22 +79,9 @@ Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等
 
 ## 5. 整任务交付与反原地打转规则
 
-默认开发出口是一个完整正式 `P*-T*` 任务，而不是单个 Slice 或会话。领取任务后必须使用
-一个 task branch、一个持续更新的 Draft PR 和一个 task-scoped lease，连续完成全部必要
-Slice、真实集成、focused negatives、supported validation、完整 acceptance assessment 和
-最终文档/分支/lease 收口。Slice、checkpoint、push、CI 轮次、阶段总结和可恢复故障都不是
-停点或用户汇报点。
-
-开发工作只能以下列两种方式结束：
-
-- 任务全部验收满足，PR 正常合并，lease 关闭，远端 task branch 安全清理，本地切回并
-  fast-forward `main`，worktree/HEAD/upstream 均已核对；
-- 出现不可自主消除的外部阻塞、未知并发改动、安全边界冲突或 owner 明确暂停，并留下
-  `blocked_paths`、`blocked_task_ids`、`blocked_gate_ids`、责任方和唯一下一动作。
-
-纯研究、重新阅读文档、阶段性汇报或另建计划不能替代实现。本地可修复的代码、测试、
-格式、CI 配置和集成问题必须在同一任务内直接修复。首个 MVP 优先使用 owner-local、
-single-principal、task-scoped、daemon-issued 的最小授权组合；完整 RBAC、审批链、通用
-capability administration 或未来扩展框架不得在真实垂直路径前成为 implementation mutex，
-但 daemon-only authority、SecretStore、Intent/Effect、budget/fencing 和 independent verifier
-边界不得放松。
+默认开发出口是一个完整正式 `P*-T*` 任务，不是单个 Slice、checkpoint 或会话。
+完整的 branch/PR/lease、持续推进、阻塞恢复、用户确认、性能验证和 deterministic closure
+语义只由 [Development Operating Model](DEVELOPMENT-OPERATING-MODEL.md) 定义。本文件仅
+固定项目身份和来源优先级，不建立第二套工作流。Personal 正式计划拥有任务验收，Current
+snapshot 拥有当前事实，active lease table 拥有可写权限；任何实现都不得放松 daemon-only
+authority、SecretStore、Intent/Effect、budget/fencing 或 independent verifier 边界。

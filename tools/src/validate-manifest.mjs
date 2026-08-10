@@ -12,6 +12,7 @@ import addFormats from "ajv-formats";
 import { readFileSync } from "node:fs";
 import { validateLocalEvidenceGraph } from "./evidence-graph.mjs";
 import { loadSchemas, readJson, repoPath } from "./lib.mjs";
+import { validatePerformanceReportPolicy } from "./performance-policy.mjs";
 
 const manifestPath =
   process.argv[2] ??
@@ -49,6 +50,11 @@ for (const performanceReportPath of evidenceGraph.performanceReportPaths) {
   if (!validatePerformanceReport(performanceReport)) {
     evidenceGraph.errors.push(
       `invalid performance report ${performanceReportPath}: ${ajv.errorsText(validatePerformanceReport.errors, { separator: "\n" })}`,
+    );
+  }
+  for (const policyError of validatePerformanceReportPolicy(performanceReport)) {
+    evidenceGraph.errors.push(
+      `invalid performance policy ${performanceReportPath}: ${policyError.code} at ${policyError.path}: ${policyError.message}`,
     );
   }
 }
