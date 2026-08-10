@@ -884,6 +884,7 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        Self::refuse_process_bound_root_mutation(&transaction, installation_root)?;
         let activation_version = current_version.unwrap_or(0).checked_add(1).ok_or_else(|| {
             InstallationStoreError::Unavailable {
                 detail: "installation-root activation version overflow".to_owned(),
@@ -1011,6 +1012,8 @@ impl SqliteInstallationStore {
             .ok_or_else(|| InstallationStoreError::Conflict {
                 detail: format!("active installation root {installation_root} is absent or fenced"),
             })?;
+        Self::refuse_process_bound_root_mutation(&transaction, installation_root)?;
+        Self::refuse_active_or_paused_agent_for_root(&transaction, installation_root)?;
         transaction
             .execute(
                 "INSERT INTO installation_quarantine
@@ -1359,6 +1362,7 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         let existing_session: Option<String> = transaction
             .query_row(
                 "SELECT session_id FROM current_sidecar_sessions WHERE instance_id = ?1",
@@ -1631,6 +1635,14 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        let registration_id: String = transaction
+            .query_row(
+                "SELECT registration_id FROM agent_instances WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|err| unavailable("read registration id for recovery pin check", err))?;
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         Self::fence_current_sidecar_session(
             &transaction,
             commit.instance_id.as_str(),
@@ -1845,6 +1857,14 @@ impl SqliteInstallationStore {
                 ),
             });
         }
+        let registration_id: String = transaction
+            .query_row(
+                "SELECT registration_id FROM agent_instances WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|err| unavailable("read registration id for resume pin check", err))?;
+        Self::refuse_registration_pin_drift(&transaction, &registration_id)?;
         let existing_session: Option<String> = transaction
             .query_row(
                 "SELECT session_id FROM current_sidecar_sessions WHERE instance_id = ?1",
@@ -2032,6 +2052,109 @@ impl SqliteInstallationStore {
             .commit()
             .map_err(|err| unavailable(&format!("commit {what}"), err))?;
         Ok(registration)
+    }
+
+    fn refuse_process_bound_root_mutation(
+        transaction: &rusqlite::Transaction<'_>,
+        installation_root: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let bound: Option<String> = transaction
+            .query_row(
+                "SELECT b.process_attempt_id
+                   FROM current_sidecar_process_bindings b
+                   JOIN agent_instances i ON i.instance_id = b.instance_id
+                   JOIN agent_registrations r ON r.registration_id = i.registration_id
+                  WHERE r.installation_root = ?1
+                  LIMIT 1",
+                [installation_root],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| unavailable("read process binding for root mutation", err))?;
+        if bound.is_some() {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} has a process-bound SidecarSession; stop or clear the binding before upgrade, rollback, or uninstall"
+                ),
+            });
+        }
+        Ok(())
+    }
+
+    fn refuse_active_or_paused_agent_for_root(
+        transaction: &rusqlite::Transaction<'_>,
+        installation_root: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let blocking: Option<(String, String)> = transaction
+            .query_row(
+                "SELECT i.instance_id, i.lifecycle_state
+                   FROM agent_instances i
+                   JOIN agent_registrations r ON r.registration_id = i.registration_id
+                  WHERE r.installation_root = ?1
+                    AND i.lifecycle_state IN ('active', 'paused')
+                  LIMIT 1",
+                [installation_root],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read agent lifecycle for uninstall", err))?;
+        if let Some((instance_id, lifecycle_state)) = blocking {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} agent {instance_id} is {lifecycle_state}; uninstall requires stopped or absent agent lifecycle"
+                ),
+            });
+        }
+        Ok(())
+    }
+
+    fn refuse_registration_pin_drift(
+        transaction: &rusqlite::Transaction<'_>,
+        registration_id: &str,
+    ) -> Result<(), InstallationStoreError> {
+        let registration: Option<(String, i64, String, String)> = transaction
+            .query_row(
+                "SELECT installation_root, activation_version, package_ref, acquisition_lock
+                   FROM agent_registrations WHERE registration_id = ?1",
+                [registration_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read registration for pin check", err))?;
+        let Some((installation_root, activation_version, package_ref, acquisition_lock)) =
+            registration
+        else {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!("agent registration {registration_id} is absent"),
+            });
+        };
+        let active: Option<(i64, String, String)> = transaction
+            .query_row(
+                "SELECT activation_version, package_ref, acquisition_lock
+                   FROM active_installation_roots WHERE installation_root = ?1",
+                [installation_root.as_str()],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read active root for pin check", err))?;
+        let Some((active_version, active_package, active_lock)) = active else {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "installation root {installation_root} is absent; refuse activation on pin drift"
+                ),
+            });
+        };
+        if activation_version != active_version
+            || package_ref != active_package
+            || acquisition_lock != active_lock
+        {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "agent registration {registration_id} pin/digest drift versus active installation root {installation_root}"
+                ),
+            });
+        }
+        Ok(())
     }
 
     fn fence_current_sidecar_session(
