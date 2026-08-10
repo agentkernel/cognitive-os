@@ -495,13 +495,12 @@ mod tests {
         assert!(short_revision.is_err());
 
         let exact_revision = "a".repeat(40);
-        assert_eq!(
+        assert!(matches!(
             parse_source_revision(
                 ["--source-revision".to_owned(), exact_revision.clone()].into_iter()
-            )
-            .as_deref(),
-            Ok(exact_revision.as_str())
-        );
+            ),
+            Ok(revision) if revision == exact_revision
+        ));
     }
 
     #[test]
