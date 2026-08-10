@@ -453,15 +453,21 @@ mod tests {
         let error = parse_flags(&[format!("--{EXPIRED_LOCAL_NATIVE_PROVIDER_SECRET_FLAG}")])
             .expect_err("expired exception flag must fail closed");
         assert!(error.contains("expired at P2 end"));
-        assert!(candidate_record(&ParsedFlags::default())
-            .expect_err("run path must fail closed")
-            .contains("expired at P2 end"));
-        assert!(extension_load_record(&ParsedFlags::default())
-            .expect_err("extension-load path must fail closed")
-            .contains("expired at P2 end"));
-        assert!(evaluate_candidates(&ParsedFlags::default())
-            .expect_err("evaluate path must fail closed")
-            .contains("expired at P2 end"));
+        assert!(
+            candidate_record(&ParsedFlags::default())
+                .expect_err("run path must fail closed")
+                .contains("expired at P2 end")
+        );
+        assert!(
+            extension_load_record(&ParsedFlags::default())
+                .expect_err("extension-load path must fail closed")
+                .contains("expired at P2 end")
+        );
+        assert!(
+            evaluate_candidates(&ParsedFlags::default())
+                .expect_err("evaluate path must fail closed")
+                .contains("expired at P2 end")
+        );
     }
 
     #[test]
