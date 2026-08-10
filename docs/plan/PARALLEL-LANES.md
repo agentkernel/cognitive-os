@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P3-T06/context-correctness` | P3-T06/D01 native Linux validation recovery and B03 campaign readiness | Lane-CFR | `personal/P3-T06-context-correctness` | `tools/src/ucr-runner.mjs`; `tools/test/ucr-runner.test.mjs`; `docs/checkpoints/`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-10 | 2026-08-10 / 2026-08-10 | active |
+| `lease/personal/P3-T06/context-correctness` | P3-T06 MVP B03 policy, evidence, and task closure | Lane-CFR | `personal/P3-T06-context-correctness` | `docs/adr/`; `tools/src/ucr-runner.mjs`; `tools/test/ucr-runner.test.mjs`; `docs/checkpoints/`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor agent / 2026-08-10 | 2026-08-10 / 2026-08-10 | active |
 
 The closed lease used an isolated user-level Mihomo route solely to acquire the
 exact reviewed source and artifact on `personal-linux-native-01`. It did not

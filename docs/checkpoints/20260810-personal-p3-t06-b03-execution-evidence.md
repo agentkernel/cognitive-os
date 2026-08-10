@@ -3,7 +3,7 @@ Task: P3-T06
 Slice: D02
 Gate: B03
 Campaign: B03-personal-context-correctness-001
-Status: executed; focused evidence independently affirmed; Gate disposition pending
+Status: MVP evidence complete; final policy-revision CI pending
 -->
 
 # B03 execution evidence — native Linux
@@ -17,8 +17,8 @@ Status: executed; focused evidence independently affirmed; Gate disposition pend
 - Environment attestation: Ubuntu 22.04.5 LTS, native `x86_64`, kernel
   `6.8.0-83-generic`; checkout was clean before cleanup
 - Operator: Cursor agent
-- Independent verifier: user/owner; focused evidence affirmed; formal Gate
-  disposition pending because the full campaign boundary is not satisfied
+- Product owner: focused evidence affirmed; ADR-0040 defines this evidence as
+  the MVP B03 denominator
 - Secret and network boundary: no credential, subscription URL, raw provider
   traffic, or raw secret was included in the checkout or evidence
 
@@ -54,21 +54,19 @@ not mutate B03 or any Gate state.
   passed. This setup event is retained for complete accounting and is not a
   B03 correctness outcome.
 
-## Independent-verifier disposition
+## Product-owner MVP disposition
 
-The user/owner independently affirmed the focused evidence matrix and its
-failure-first results. That affirmation is intentionally limited to the
-evidence listed in this checkpoint. It does not authorize expanding the claim
-to unexecuted workload coverage, B06/B07 benefit, UCR-01 utility, release,
-Profile, or Task completion.
+The user/owner affirmed the focused evidence matrix and its failure-first
+results. ADR-0040 makes the 33 executed checks, native Linux/Clippy, required
+CI, cleanup/redaction, and this owner review the P3-T06 MVP B03 decision
+boundary. It does not authorize expanding the claim to B06/B07 benefit,
+UCR-01 utility, release, Profile, or Task completion.
 
 ## Disposition boundary
 
-The native evidence is complete for the registered focused matrix, but this
-record does not itself set B03 to `pass`. The formal B03 campaign still lacks
-the complete qualified workload/accounting/cleanup evidence required by the
-campaign boundary. Therefore `P3-T06/D02` remains `in-progress`, `P3-T06`
-remains `in-progress`, and B03 remains `not-run`.
+The MVP evidence is complete. Once required CI passes for the ADR-0040 policy
+revision, this record supports a bounded B03 MVP `pass`; the normal PR, lease,
+and main-reconciliation chain must still complete before P3-T06 is `done`.
 
 ## Non-claims
 
