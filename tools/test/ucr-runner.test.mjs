@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildB03ObservationReport, buildUcrRunReport } from "../src/ucr-runner.mjs";
+import { buildB03ObservationReport, buildB06B07ObservationReport, buildUcrRunReport } from "../src/ucr-runner.mjs";
 
 const digest = (character) => `sha256:${character.repeat(64)}`;
 
@@ -122,4 +122,79 @@ test("buildB03ObservationReport rejects incomplete observations and authority cl
   const authorityClaimCampaign = b03Campaign();
   authorityClaimCampaign.gate = "pass";
   assert.throws(() => buildB03ObservationReport(authorityClaimCampaign), /forbidden/);
+});
+
+function b06B07Campaign() {
+  return {
+    campaign_id: "B06-B07-context-benefit-observation/1",
+    scenario_id: "UCR-01",
+    claim_scope: "non-claim",
+    fixture_digest: digest("f"),
+    trace_digest: digest("1"),
+    governed_stage_digest: digest("2"),
+    denominator: {
+      started_attempts: 4,
+      retained_attempts: 4,
+    },
+    safety: {
+      critical_safety_failures: 0,
+      false_completions: 0,
+    },
+    strata: {
+      full_replay: {
+        repeated_input_tokens: 100,
+        verified_completion_rate: 1,
+      },
+      stable: {
+        repeated_input_tokens: 70,
+        verified_completion_rate: 1,
+      },
+      changed: {
+        repeated_input_tokens: 75,
+        verified_completion_rate: 1,
+      },
+    },
+  };
+}
+
+test("buildB06B07ObservationReport records stable and changed reductions against full replay", () => {
+  const firstResult = buildB06B07ObservationReport(b06B07Campaign());
+  const secondResult = buildB06B07ObservationReport(b06B07Campaign());
+
+  assert.equal(firstResult.report.claim_scope, "non-claim");
+  assert.equal(firstResult.report.observations.B06_stable_context.repeated_input_reduction, 0.3);
+  assert.equal(
+    firstResult.report.observations.B06_stable_context.meets_twenty_percent_reduction_observation,
+    true,
+  );
+  assert.equal(firstResult.report.observations.B07_changed_context.repeated_input_reduction, 0.25);
+  assert.ok(firstResult.report.non_claims.includes("does not block GMVP-LINUX"));
+  assert.equal(firstResult.report_digest, secondResult.report_digest);
+});
+
+test("buildB06B07ObservationReport rejects incomplete denominator and safety regressions", () => {
+  const incompleteDenominator = b06B07Campaign();
+  incompleteDenominator.denominator.retained_attempts = 3;
+  assert.throws(
+    () => buildB06B07ObservationReport(incompleteDenominator),
+    /retained_attempts equal to started_attempts/,
+  );
+
+  const safetyFailure = b06B07Campaign();
+  safetyFailure.safety.false_completions = 1;
+  assert.throws(
+    () => buildB06B07ObservationReport(safetyFailure),
+    /zero false completions/,
+  );
+
+  const completionRegression = b06B07Campaign();
+  completionRegression.strata.stable.verified_completion_rate = 0.5;
+  assert.throws(
+    () => buildB06B07ObservationReport(completionRegression),
+    /completion-rate regressions/,
+  );
+
+  const authorityClaim = b06B07Campaign();
+  authorityClaim.release = "pass";
+  assert.throws(() => buildB06B07ObservationReport(authorityClaim), /forbidden/);
 });
