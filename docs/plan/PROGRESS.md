@@ -62,7 +62,7 @@ disposition to task acceptance (P5-T05/D04 binds B09 owner disposition).
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
-| `P7-T01/D01` | `in-progress` | signed six-family release-manifest authority path in `cognitive-runtime::release_manifest` with failure-first negatives | exact native Linux focused module tests + Clippy; required Ubuntu/Windows CI; then close D01 and enter D02 |
+| `P7-T01/D01` | `in-progress` | signed six-family release-manifest authority path in `cognitive-runtime::release_manifest`; exact native Linux 6/6 + Clippy passed at `3108889e0f9ff9c8932e599d835a9085adc4ec69` | await required Ubuntu/Windows CI on Draft PR #184; then mark D01 done and start D02 |
 | `P7-T01/D02` | `ready` | not started | waits for D01 close |
 | `P7-T01/D03` | `ready` | not started | waits for D02 |
 | `P7-T01/D04` | `ready` | not started | waits for D03; final acceptance mapping |
