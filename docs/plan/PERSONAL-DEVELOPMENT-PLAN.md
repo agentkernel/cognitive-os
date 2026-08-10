@@ -592,6 +592,11 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | not-started | — |
 | P5-T05 | B09 managed Pi + sidecar qualification | P5-T02 | 只负责 Pi + sidecar acquisition/install/registration/instance/process/lifecycle/recovery qualification；Pi 证据不资格化其他 adapter；任务完成与 B10 解耦 | not-started | — |
 
+| Slice | Parent | Delivery | Prerequisites | Verification boundary |
+|---|---|---|---|---|
+| `P5-T01/D01` | P5-T01 | authenticated official-Pi acquisition transaction commits one daemon-private immutable acquisition lock only after fixed official package identity, origin, npm SRI, independently computed tarball digest, dependency lock, Node compatibility, adapter pin, and signed-lock reference validation | P0-T04 persistence; P0-T06 Pi pin; P1-T08 staging/rollback patterns | failure-first wrong identity/origin/SRI/digest/dependency/Node/signature and no-commit negatives; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; no activation, capability, Effect, Task completion, B09, release, or Profile claim |
+| `P5-T01/D02` | P5-T01 | immutable versioned Pi installation root and activation-pointer transaction consume only D01 committed acquisition locks; upgrade preserves the prior complete binding and rollback never emits an early success receipt | `P5-T01/D01` immutable official acquisition lock and P1-T08 lifecycle lease/staging patterns | failure-first uncommitted-lock, incompatible/failed health, pointer/publish fault, competing-upgrade, and rollback-incomplete negatives; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; no AgentInstance, sidecar session, process supervision, Effect, Task completion, B09, release, or Profile claim |
+
 ### Phase 6 - Multi-Agent
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
