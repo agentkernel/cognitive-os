@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-
+| `lease/personal/P2-T08/runtime-spine-gates` | P2-T08/D01 Runtime Spine Gate suite harness | Lane-CFR | `personal/P2-T08-runtime-spine-gates` | `tools/src/runtime-spine-gate.mjs`; `tools/test/runtime-spine-gate.test.mjs`; `tools/package.json`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` | cursor-agent/P2-T08-claim | 2026-08-10 / 2026-08-10 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
