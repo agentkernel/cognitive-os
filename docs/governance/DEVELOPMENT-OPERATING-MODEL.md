@@ -150,6 +150,20 @@ The following anti-fragmentation rules apply:
   implementation, repair, or registered validation action. It must not stop
   merely to provide a progress summary unless a decision is needed, unknown
   concurrent changes appear, or the owner asks for one.
+- **`CAMPAIGN-BACKLOG-CONTINUATION-01`:** when standing continuous-delivery
+  authorization is active, task completion is not a campaign stop. In the same
+  continuous session, after ready/merge/lease/branch/main reconciliation, the
+  agent immediately selects the next implementation-ready Personal task whose
+  `implementation_requires` are satisfied, claims a non-overlapping lease, and
+  begins its first vertical slice. The campaign loop continues until
+  `PROGRESS.md` Layer 1 Remaining is 0, the owner pauses/changes scope, or only
+  owner-only confirmation boundaries / genuine external blockers remain. A
+  claim-only, docs-only, or “next action recorded” turn without implementation
+  progress is not a valid campaign stop. When a Gate disposition is still an
+  owner-only confirmation boundary (not covered by §2.3 ADR-0040-class MVP
+  self-disposition), record the task `blocked` with a single recovery action;
+  after that recording, the agent may claim a non-overlapping ready task and
+  continue rather than idle on the disposition chat.
 
 ### 2.1.1 MVP-first implementation and authorization
 
@@ -226,6 +240,28 @@ remote build still uses a pushed exact revision; every action remains within the
 task lease; and Gate, release, Profile, task-completion, and campaign claims
 remain governed by their separately registered evidence requirements.
 
+**Owner-designated test Provider keys:** when the owner designates a local,
+quota-controlled test Provider key file for Personal work (for example
+`C:\Users\wuron\Desktop\deepseek.txt` for DeepSeek), the agent may import that
+material into an approved Secret Store / `ProviderKeyService` path without a
+per-operation confirmation, using a non-logging input path (stdin or file read
+into the Store only). The file path and provider id may be recorded as redacted
+operational facts; the key material itself must never enter Git, ordinary
+config, SQLite, argv, logs, CI, tests, evidence, chat, or commits. Prefer the
+Linux Secret Service backend on `DEV-LINUX-NATIVE-01` when native validation
+needs the key; do not invent a plaintext fallback.
+
+**ADR-0040-class Gate MVP disposition:** when a formal Gate/campaign slice uses
+an accepted ADR-0040 / ADR-0046 / ADR-0047-class fixed authority-path (or
+equivalent fixture) denominator, and the registered matrix, native
+Linux/Clippy (where required), required Ubuntu/Windows CI, and non-claim
+report are complete at one exact reviewed revision, the agent may record the
+bounded MVP Gate `pass` or `fail` disposition without waiting for a fresh
+per-Gate chat affirm. The product owner may override. This does not authorize
+disposing unresolved Gate thresholds, live Provider/Pi statistical campaigns,
+release/Profile/GMVP promotion, or inventing a pass without the registered
+evidence.
+
 The authorization does not relax secret handling: secret material must never be
 placed in arguments, ordinary configuration, SQLite, logs, CI output, tests, or
 evidence. Operations must be narrowly scoped, auditable, and use an available
@@ -242,13 +278,17 @@ standing authorization and do not require repeated confirmation. Stop and ask
 for the smallest explicit owner decision only when the next action would:
 
 1. expose secret material or move it outside an approved Secret Store and
-   non-logging input path;
+   non-logging input path (importing an owner-designated local test Provider
+   key file into an approved Store is authorized under §2.3 and is not this
+   boundary);
 2. perform a destructive or irreversible repository/data operation, force
    push, mutate shared production infrastructure, or alter an isolated campaign
    guest outside its preregistered procedure;
 3. decide an unresolved product, normative, structural, release, support,
    security-policy, Gate-threshold, benchmark-threshold, or default-Agent
-   semantic;
+   semantic (recording an ADR-0040/0046/0047-class fixed-denominator MVP Gate
+   disposition after complete registered evidence is authorized under §2.3 and
+   is not this boundary);
 4. expand filesystem, network, process, model, secret, budget, privilege, or
    capability scope beyond the registered task boundary; or
 5. bypass a failing test, required CI, branch protection, signature, review, or

@@ -112,6 +112,7 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 13. `project-scope.yaml` 必须将 Operating Model 登记为 workflow policy owner，且
     `CHECKPOINT-DELIVERY-01`、`TASK-ATOMIC-DELIVERY-01`、
     `CONTINUOUS-AUTONOMOUS-DELIVERY-01`、
+    `CAMPAIGN-BACKLOG-CONTINUATION-01`、
     `RESOLVE-BEFORE-BLOCKED-PROGRESS-01` 在该 owner 中存在。代理入口、正式计划和编辑器
     adapter 可引用/摘要这些 ID，但不得定义冲突的第二套语义。
 14. Current snapshot heading 与 `Active task lease` canonical row 必须唯一；活动 lease 的

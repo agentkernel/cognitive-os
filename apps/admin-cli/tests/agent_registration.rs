@@ -212,7 +212,7 @@ fn management_register_persists_inactive_instance_without_sidecar() {
     );
     let health_value: Value = serde_json::from_str(health.stdout.trim()).unwrap();
     assert_eq!(health_value["lifecycle_state"], "active");
-    assert_eq!(health_value["process_bound"], false);
+    assert_eq!(health_value["process_bound"], true);
     assert_eq!(health_value["current_sidecar_session"], true);
     assert_eq!(health_value["capability_grants"], 0);
 
@@ -237,6 +237,23 @@ fn management_register_persists_inactive_instance_without_sidecar() {
     let paused_value: Value = serde_json::from_str(paused.stdout.trim()).unwrap();
     assert_eq!(paused_value["lifecycle_state"], "paused");
     assert_eq!(paused_value["current_sidecar_session"], false);
+
+    let paused_health = run_cli(&[
+        "agent-health",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+    ]);
+    assert_eq!(
+        paused_health.code, 0,
+        "stdout: {} stderr: {}",
+        paused_health.stdout, paused_health.stderr
+    );
+    let paused_health_value: Value = serde_json::from_str(paused_health.stdout.trim()).unwrap();
+    assert_eq!(paused_health_value["process_bound"], false);
 
     let resumed = run_cli(&[
         "agent-resume",
