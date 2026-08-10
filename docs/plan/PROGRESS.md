@@ -121,8 +121,8 @@ explicitly binds Gate disposition to task acceptance.
 | `P2-T08/D03` | `done` | Named Runtime Spine authority-path negatives: shell close preserves authority, daemon close recovers without duplicate dispatch, OUTCOME_UNKNOWN original-key reconcile rejects blind retry, false-completion floor rejects passed-report-as-completion. Linux focused tests/Clippy and required Ubuntu/Windows CI run `31403738305` passed at `2875978b55b5351dc89d51abd9e5397d27ea650d`. | consumed by D04 |
 | `P2-T08/D04` | `done` | ADR-0046 matrix + CI at `be7febb`; owner `affirm all`; B02/B04/B05/B12 MVP pass; closure checkpoint written | consumed by completed P2-T08 task |
 | `P5-T05/D01` | `done` | Process-bound SidecarSession at `c9c2248`: schema v4; Linux p5_t05 4/4 + p5_t02 11/11 + migrations 8/8 + admin 1/1 + Clippy/fmt | consumed by D02 |
-| `P5-T05/D02` | `in-progress` | upgrade/rollback/uninstall refuse process-bound; pin/digest drift refuses activation | push checkpoint; exact native Linux + CI |
-| `P5-T05/D03` | `ready` | recover/orphan and identity-separation negatives | enter after D02 |
+| `P5-T05/D02` | `done` | upgrade/rollback/uninstall refuse process-bound; pin/digest drift refuses activation at `ae332e9`; Linux upgrade 4/4 + process 4/4 + p5_t02 11/11 + p5_t01 10/10 + Clippy | consumed by D03 |
+| `P5-T05/D03` | `in-progress` | recover/orphan and identity-separation negatives | push checkpoint; exact native Linux + CI |
 | `P5-T05/D04` | `ready` | formal B09 campaign preregistration and disposition | enter after D03 |
 
 This queue is the only current slice-status view. The formal plan owns slice
