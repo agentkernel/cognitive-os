@@ -77,13 +77,19 @@ fn prepare_active_official_root(database: &Path) -> u64 {
             declared_artifact_digest: artifact_digest,
             signature_ref: "official-lock".to_owned(),
             provenance_ref: OFFICIAL_NPM_ORIGIN.to_owned(),
-            adapter_digest: "sha256:adapter".to_owned(),
-            sandbox_digest: "sha256:sandbox".to_owned(),
-            compatibility_digest: "sha256:compatibility".to_owned(),
+            adapter_digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                .to_owned(),
+            sandbox_digest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                .to_owned(),
+            compatibility_digest:
+                "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc".to_owned(),
             lockfile_digest: lock_digest.clone(),
-            expected_adapter_digest: "sha256:adapter".to_owned(),
-            expected_sandbox_digest: "sha256:sandbox".to_owned(),
-            expected_compatibility_digest: "sha256:compatibility".to_owned(),
+            expected_adapter_digest:
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned(),
+            expected_sandbox_digest:
+                "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_owned(),
+            expected_compatibility_digest:
+                "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc".to_owned(),
         },
         registry_origin: OFFICIAL_NPM_ORIGIN.to_owned(),
         resolved_origin: OFFICIAL_NPM_ORIGIN.to_owned(),
@@ -133,11 +139,11 @@ fn management_register_persists_inactive_instance_without_sidecar() {
         "--expected-activation-version",
         &version,
         "--adapter-digest",
-        "sha256:adapter",
-        "--protocol-digest",
         "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         "--policy-digest",
-        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     ]);
 
     assert_eq!(
