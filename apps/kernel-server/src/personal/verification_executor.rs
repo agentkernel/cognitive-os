@@ -667,4 +667,48 @@ mod tests {
         let _ = std::fs::remove_file(database_path);
         let _ = std::fs::remove_dir_all(artifact_directory);
     }
+
+    #[test]
+    fn runtime_spine_false_completion_self_check_rejects_passed_report_as_task_completion() {
+        // Suite floor: a passed independent verification report is evidence only.
+        // Remote-done / zero-exit / report-passed narratives must not complete Task.
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let (artifact_directory, artifact_store, artifact_evidence_ref) =
+            artifact_store_with_evidence();
+        let task_object_id = object_id(41);
+        admit_task_fixture(&store, &task_object_id);
+        let verification_request_id = persist_verification_fixture(&store, &task_object_id);
+
+        let report = record_independent_verification(
+            &store,
+            &artifact_store,
+            &FixedClock,
+            &SequentialIdentifiers::new(40),
+            &PassingVerifier {
+                artifact_evidence_ref,
+            },
+            &verification_request_id,
+            &WriterLease { epoch: 1 },
+        )
+        .expect("verification report persists");
+
+        assert_eq!(report.status, "passed");
+        let task = store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load task")
+            .expect("task remains durable");
+        assert_eq!(task.state.as_str(), "DRAFT");
+        assert_eq!(task.version, Version::INITIAL);
+        for forbidden in ["CANDIDATE_COMPLETE", "COMPLETED", "FAILED", "CANCELLED"] {
+            assert_ne!(
+                task.state.as_str(),
+                forbidden,
+                "passed report must not derive Task {forbidden}"
+            );
+        }
+
+        let _ = std::fs::remove_file(database_path);
+        let _ = std::fs::remove_dir_all(artifact_directory);
+    }
 }

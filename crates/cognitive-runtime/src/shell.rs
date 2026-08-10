@@ -177,6 +177,10 @@ impl ShellService {
         self.tasks.get(task_ref).map(|t| t.phase)
     }
 
+    pub fn binding(&self, task_ref: &str) -> Option<&ShellTaskBinding> {
+        self.tasks.get(task_ref)
+    }
+
     fn task_mut(&mut self, task_ref: &str) -> Result<&mut ShellTaskBinding, ShellError> {
         self.tasks.get_mut(task_ref).ok_or_else(|| {
             ShellError::new(

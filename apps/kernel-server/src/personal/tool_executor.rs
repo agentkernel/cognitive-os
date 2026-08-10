@@ -1963,6 +1963,220 @@ mod tests {
     }
 
     #[test]
+    fn runtime_spine_outcome_unknown_reconciles_original_key_and_rejects_blind_retry() {
+        // B12 observation floor: OUTCOME_UNKNOWN reconciles by the original key
+        // and never remints a second supervisor access / blind retry.
+        let database_path = temporary_authority_database_path();
+        let store =
+            Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+        let task_object_id = object_id(541);
+        let effect_object_id = object_id(542);
+        let intent_object_id = object_id(543);
+        let admitted_at =
+            WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+        for (object_id, domain, lifecycle_state, event_id) in [
+            (
+                task_object_id.clone(),
+                LifecycleDomain::Task,
+                "RUNNING",
+                541,
+            ),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "PROPOSED",
+                542,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: state(lifecycle_state),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t08-d03-unknown"}),
+                    },
+                    admitted_at: admitted_at.clone(),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_id:012x}"
+                        ))
+                        .expect("valid event identifier"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{\"fixture\":true}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit durable fixture object");
+        }
+
+        let idempotency_key = "p2-t08-d03-unknown-process-check";
+        let parameters_digest = "sha256:p2-t08-d03-unknown-process-check";
+        store
+            .insert_intent(
+                &IntentRow {
+                    intent_id: intent_object_id.clone(),
+                    idempotency_key: idempotency_key.to_owned(),
+                    parameters_digest: parameters_digest.to_owned(),
+                    action: "check".to_owned(),
+                    target: "process://4242".to_owned(),
+                    effect_object_id: effect_object_id.clone(),
+                    expected_state_version: Version::INITIAL,
+                    grant_epoch: 1,
+                    capability_set_version: 1,
+                    task_binding: None,
+                    canonical_json: "{\"intent\":\"p2-t08-d03-unknown\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000543")
+                        .expect("valid intent event identifier"),
+                    object_id: intent_object_id,
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "intent.minted".to_owned(),
+                    canonical_json: "{\"intent\":\"p2-t08-d03-unknown\"}".to_owned(),
+                },
+            )
+            .expect("persist durable intent");
+
+        let mut request = process_check_request();
+        request.descriptor.output_limit_bytes = 32;
+        let validated_request =
+            validate_native_tool_request(&request).expect("valid process check request");
+        let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
+        supervisor.register(
+            4242,
+            b"state=ready token=secret process output that is too long",
+            Duration::from_millis(1),
+        );
+        let executor =
+            NativeProcessCheckExecutor::new(1, Arc::clone(&supervisor), Duration::from_secs(1));
+        executor
+            .stage_request(
+                idempotency_key.to_owned(),
+                parameters_digest.to_owned(),
+                &validated_request,
+            )
+            .expect("stage durable intent identity");
+        let supervisor_accesses = Arc::new(AtomicUsize::new(0));
+        let hook_supervisor_accesses = Arc::clone(&supervisor_accesses);
+        executor.install_before_check_hook(move || {
+            hook_supervisor_accesses.fetch_add(1, Ordering::SeqCst);
+        });
+
+        let clock = FixedEffectClock(admitted_at);
+        let identifiers = UuidV7Generator;
+        let effect_protocol = EffectProtocol::new(
+            store.as_ref(),
+            &clock,
+            &identifiers,
+            UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+            UriRef::parse("authority://personal/effect-authority")
+                .expect("valid authority reference"),
+            UriRef::parse("correlation://personal/p2-t08-d03-unknown")
+                .expect("valid correlation reference"),
+        );
+        let grant = effect_grant();
+        let governance_currency = GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        };
+        let writer_lease = WriterLease { epoch: 1 };
+        let authorized = effect_protocol
+            .authorize_effect(
+                &effect_object_id,
+                Version::INITIAL,
+                &grant,
+                &governance_currency,
+                &writer_lease,
+            )
+            .expect("authorize durable process check");
+        let unknown_executor = UnknownAfterNativeProcessCheckDispatchExecutor {
+            native_executor: &executor,
+        };
+        let (dispatched, outcome) = effect_protocol
+            .dispatch_effect(
+                &effect_object_id,
+                authorized.after_version,
+                &grant,
+                &governance_currency,
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("dispatch unknown process check");
+        assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+        effect_protocol
+            .record_outcome(
+                &effect_object_id,
+                dispatched.after_version,
+                &outcome,
+                &writer_lease,
+            )
+            .expect("record unknown process check outcome");
+
+        let (reconciled, query) = effect_protocol
+            .reconcile(
+                &effect_object_id,
+                "OUTCOME_UNKNOWN",
+                Version::new(4).expect("valid unknown outcome version"),
+                &unknown_executor,
+                &writer_lease,
+            )
+            .expect("reconcile unknown process check");
+        assert_eq!(query, ExecutorQueryResult::ExecutedWithOriginalKey);
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            reconciled.after_version,
+            Version::new(5).expect("valid reconciled version")
+        );
+
+        // Blind retry / reminted key must not re-enter the supervisor. Query and
+        // duplicate dispatch keep the original key and do not increment access.
+        assert_eq!(
+            executor.query_outcome(idempotency_key),
+            Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+        );
+        let reminted = process_check_call(
+            "p2-t08-d03-reminted-key",
+            parameters_digest,
+            "process://4242",
+            1,
+        );
+        let remint_outcome = executor
+            .dispatch(&reminted)
+            .expect("reminted key fails closed without supervisor access");
+        assert!(matches!(
+            remint_outcome,
+            DispatchOutcome::NotExecuted { .. }
+        ));
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+        let duplicate = process_check_call(idempotency_key, parameters_digest, "process://4242", 1);
+        let duplicate_outcome = executor
+            .dispatch(&duplicate)
+            .expect("original key absorbs without second supervisor access");
+        assert!(matches!(
+            duplicate_outcome,
+            DispatchOutcome::Executed { .. }
+        ));
+        assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
+
+        let task = store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load unchanged task")
+            .expect("durable task exists");
+        assert_eq!(task.state.as_str(), "RUNNING");
+        assert_eq!(task.version, Version::INITIAL);
+
+        std::fs::remove_file(database_path).unwrap_or(());
+    }
+
+    #[test]
     fn workspace_target_cannot_escape_approved_root() {
         let mut request = request_for(NativeOperationFamily::WorkspaceRead);
         request.target = "workspace://../secrets.txt".to_owned();
