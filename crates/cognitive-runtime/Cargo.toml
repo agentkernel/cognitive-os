@@ -25,6 +25,10 @@ name = "linux_bundle_campaign_post_pointer_fault_daemon"
 path = "src/bin/linux_bundle_campaign_post_pointer_fault_daemon.rs"
 required-features = ["native-campaign-faults"]
 
+[[bin]]
+name = "p7_t04_module_benchmark"
+path = "src/bin/p7_t04_module_benchmark.rs"
+
 [dependencies]
 cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }
