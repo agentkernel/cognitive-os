@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P7-T04、P8-T01 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B06/B07 仍为 non-claim observation，B08/B09/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P7-T04、P8-T01 已完成；P5-T05 `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B06/B07 仍为 non-claim observation，B08/B09/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -154,12 +154,12 @@
 | Phase 2 - 单 Agent 任务闭环 | 8 | 8 | 0 | 0 | 0 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
-| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 2 | 0 | 0 | 3 | G5 / B09、B10 |
+| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 2 | 1 | 0 | 2 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 1 | 0 | 0 | 7 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 1 | 0 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **40** | **0** | **0** | **22** | — |
+| **合计** | **62** | **40** | **1** | **0** | **21** | — |
 
 ## 2. 产品边界与不变量
 
@@ -611,7 +611,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P5-T02 | Sidecar contract、registration、instance/process identity 与 Pi foundation | P5-T01, P2-T03, P2-T06 | versioned sidecar protocol/adapter/instance pin；AgentInstallation/Instance/Execution、SidecarSession、PiSession、process、Task 分离；health/activate/pause/resume/stop/recover 与 epoch fencing | done | 2026-08-10；`lease/personal/P5-T02/sidecar-foundation` on `personal/P5-T02-sidecar-foundation`; closure checkpoint `20260810-personal-p5-t02-sidecar-foundation-closure.md`; D01-D03 complete with exact native Linux focused validation and required Ubuntu/Windows CI at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`. No OS process spawn, AgentExecution/PiSession resource, B09, release, or Profile claim. |
 | P5-T03 | Post-1.0 MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；protocol/manifest drift、timeout、direct-bypass 测试；不阻塞 1.0 | not-started | — |
 | P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | not-started | — |
-| P5-T05 | B09 managed Pi + sidecar qualification | P5-T02 | 只负责 Pi + sidecar acquisition/install/registration/instance/process/lifecycle/recovery qualification；Pi 证据不资格化其他 adapter；任务完成与 B10 解耦 | not-started | — |
+| P5-T05 | B09 managed Pi + sidecar qualification | P5-T02 | 只负责 Pi + sidecar acquisition/install/registration/instance/process/lifecycle/recovery qualification；Pi 证据不资格化其他 adapter；任务完成与 B10 解耦 | in-progress | 2026-08-11；`lease/personal/P5-T05/b09-managed-pi` on `personal/P5-T05-b09-managed-pi`. D01 process-bound SidecarSession is the unique in-progress slice. B09 remains `not-run` until the formal campaign disposition. |
 
 | Slice | Parent | Delivery | Prerequisites | Verification boundary |
 |---|---|---|---|---|
@@ -621,6 +621,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P5-T02/D01` | P5-T02 | daemon-private Agent registration from an active official Pi installation root persists an inactive `registered` AgentInstance identity bound to exact package/adapter/protocol/policy digests without creating a SidecarSession, process, capability, Effect, or Task completion | P5-T01 active installation root; P2-T03/P2-T06 fencing concepts | failure-first inactive-root, adapter-digest mismatch, duplicate current-root registration, and zero-capability negatives; management-session caller; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; no activate/health/pause/resume/stop, B09, release, or Profile claim |
 | `P5-T02/D02` | P5-T02 | activate a `registered` AgentInstance into exactly one current SidecarSession at a bumped fencing epoch, preserving register ≠ activate and rejecting protocol-digest drift without spawning a process or granting capability | `P5-T02/D01` registered instance | failure-first unregistered-root, protocol-digest mismatch, duplicate activation, and zero-capability negatives; management-session caller; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; no pause/resume/stop/recover, process supervision, B09, release, or Profile claim |
 | `P5-T02/D03` | P5-T02 | pause fences the current SidecarSession and clears the current pointer; resume creates a new epoch-bound session; stop quiesces active/paused instances; health returns redacted non-mutating facts with process_bound=false; recover restarts paused/stopped instances at a new epoch without capability, Effect, Task completion, or OS process adoption | `P5-T02/D02` active SidecarSession | failure-first stale-epoch pause/resume/stop/recover and zero-capability negatives; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; no process supervision, B09, release, or Profile claim |
+| `P5-T05/D01` | P5-T05 | daemon-owned process-bound SidecarSession: activate registers a fenced process-attempt identity; health reports `process_bound=true` only with that durable binding; pause/stop clear the binding without arbitrary PID attach, capability grant, Effect, or Task completion | completed P5-T02 SidecarSession foundation and P2-T06 supervisor boundary | failure-first unbound health, stale-epoch clear, and zero-capability negatives; exact native Linux focused validation, Clippy, and required Ubuntu/Windows CI; B09 remains `not-run` |
+| `P5-T05/D02` | P5-T05 | upgrade/rollback and uninstall/quarantine paths preserve process-bound fencing and fail closed on pin/digest drift before activation | `P5-T05/D01` | exact native Linux focused validation and required CI; no B09 claim |
+| `P5-T05/D03` | P5-T05 | recover/orphan and identity-separation negatives for AgentInstance/SidecarSession/process/Task; install ≠ permission | `P5-T05/D02` | exact native Linux focused validation and required CI; Gate campaign remains `not-run` until D04 |
+| `P5-T05/D04` | P5-T05 | formal B09 campaign preregistration and supported execution with redacted evidence and owner disposition | `P5-T05/D01-D03` | preregistered campaign on supported env; owner disposition; no non-Pi adapter qualification |
 | `P2-T08/D01` | P2-T08 | preregistered Runtime Spine Gate suite harness and non-claim evaluator for the fixed B02/B04/B05/B12 observation set (projection/channel isolation, confirmation accounting, fault/OUTCOME_UNKNOWN/no-blind-retry, false-completion, ADR-0018 expiry) without allowing the runner to set Gate state | completed P2-T01..T07 Runtime Spine boundaries and UCR/B03 non-claim report patterns | failure-first incomplete observation, authority-shaped claim, wrong gate set, and confirmation-ceiling negatives; tools Node tests, consistency, and required Ubuntu/Windows CI; B02/B04/B05/B12 stay `not-run` |
 | `P2-T08/D02` | P2-T08 | remove or replace the ADR-0018 local-native Provider secret development exception so only the daemon-owned Provider proxy path remains, and record residual-exception failure in the suite | `P2-T08/D01` suite harness; P1-T07 daemon Provider proxy | focused adapter/proxy negatives, exact native Linux or supported CI validation, required Ubuntu/Windows CI; no Gate pass claim |
 | `P2-T08/D03` | P2-T08 | authority-path focused Runtime Spine negatives covering shell/daemon close, OUTCOME_UNKNOWN original-key reconcile, no-blind-retry, and false-completion self-check floor | `P2-T08/D01` and completed P2-T06/P2-T07 executor/verifier boundaries | exact native Linux focused validation, Clippy where applicable, required Ubuntu/Windows CI; Gate campaigns remain `not-run` until D04 |
