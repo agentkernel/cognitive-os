@@ -7,6 +7,12 @@ const DIGEST_PREFIX = "CognitiveOS-Digest-V1\n";
 const REPORT_DOMAIN = "cognitiveos.personal.ucr-run-report/0.1";
 const REQUIRED_RESOURCE_FAMILIES = ["memory", "skill", "tool", "context", "task", "runtime"];
 const PROHIBITED_CLAIM_KEYS = ["gate", "release", "profile", "completion", "passed"];
+const B03_REQUIRED_OBSERVATIONS = [
+  "authorized_context_only",
+  "current_source_versions_only",
+  "required_source_present",
+  "no_false_completion",
+];
 
 function canonicalizeJson(value) {
   if (value === null || typeof value === "boolean" || typeof value === "string") {
@@ -115,6 +121,32 @@ export function buildUcrRunReport(rawRun, stableBaseline) {
       stable_repeated_input_delta: run.measurements.stable.repeated_input_tokens - baseline.measurements.stable.repeated_input_tokens,
       changed_repeated_input_delta: run.measurements.changed.repeated_input_tokens - baseline.measurements.changed.repeated_input_tokens,
     },
+  };
+  return { report, report_digest: digestJson(report) };
+}
+
+export function buildB03ObservationReport(campaign) {
+  const campaignDocument = requireObject(campaign, "B03 campaign");
+  rejectAuthorityClaims(campaignDocument);
+  if (campaignDocument.campaign_id !== "B03-context-correctness/1") {
+    throw new Error("B03 campaign_id must be B03-context-correctness/1");
+  }
+  if (campaignDocument.claim_scope !== "non-claim") {
+    throw new Error("B03 campaign claim_scope must be non-claim");
+  }
+  requireDigest(campaignDocument.context_view_digest, "B03 context_view_digest");
+  const observations = requireObject(campaignDocument.observations, "B03 observations");
+  for (const observationName of B03_REQUIRED_OBSERVATIONS) {
+    if (observations[observationName] !== true) {
+      throw new Error(`B03 observation ${observationName} must be explicitly true`);
+    }
+  }
+  const report = {
+    schema_version: "cognitiveos.b03-observation-report/0.1",
+    campaign_id: campaignDocument.campaign_id,
+    claim_scope: "non-claim",
+    context_view_digest: campaignDocument.context_view_digest,
+    observations: B03_REQUIRED_OBSERVATIONS,
   };
   return { report, report_digest: digestJson(report) };
 }

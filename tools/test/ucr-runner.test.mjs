@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildUcrRunReport } from "../src/ucr-runner.mjs";
+import { buildB03ObservationReport, buildUcrRunReport } from "../src/ucr-runner.mjs";
 
 const digest = (character) => `sha256:${character.repeat(64)}`;
 
@@ -72,4 +72,54 @@ test("buildUcrRunReport rejects incomplete fixtures and unbounded measurements",
     () => buildUcrRunReport(invalidMeasurementRun, stableBaseline()),
     /tool_failures/,
   );
+});
+
+function b03Campaign() {
+  return {
+    campaign_id: "B03-context-correctness/1",
+    claim_scope: "non-claim",
+    context_view_digest: digest("e"),
+    observations: {
+      authorized_context_only: true,
+      current_source_versions_only: true,
+      required_source_present: true,
+      no_false_completion: true,
+    },
+  };
+}
+
+test("buildB03ObservationReport records complete non-claim correctness observations", () => {
+  const result = buildB03ObservationReport(b03Campaign());
+
+  assert.equal(result.report.claim_scope, "non-claim");
+  assert.deepEqual(result.report.observations, [
+    "authorized_context_only",
+    "current_source_versions_only",
+    "required_source_present",
+    "no_false_completion",
+  ]);
+  assert.match(result.report_digest, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("buildB03ObservationReport rejects incomplete observations and authority claims", () => {
+  const staleSourceCampaign = b03Campaign();
+  staleSourceCampaign.observations.current_source_versions_only = false;
+  assert.throws(
+    () => buildB03ObservationReport(staleSourceCampaign),
+    /current_source_versions_only/,
+  );
+
+  const missingRequiredSourceCampaign = b03Campaign();
+  missingRequiredSourceCampaign.observations.required_source_present = false;
+  assert.throws(
+    () => buildB03ObservationReport(missingRequiredSourceCampaign), /required_source_present/);
+
+  const falseCompletionCampaign = b03Campaign();
+  falseCompletionCampaign.observations.no_false_completion = false;
+  assert.throws(
+    () => buildB03ObservationReport(falseCompletionCampaign), /no_false_completion/);
+
+  const authorityClaimCampaign = b03Campaign();
+  authorityClaimCampaign.gate = "pass";
+  assert.throws(() => buildB03ObservationReport(authorityClaimCampaign), /forbidden/);
 });

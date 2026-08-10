@@ -940,10 +940,14 @@ Pi 不可以：
 
 ### P3-T06 — B03 Context correctness 与 B06/B07 采集
 
-- B03 必须验证真实 source、scope-before-ranking、required fail-closed、显式 loss、Artifact access、revocation 与 stale-cache negatives。
-- 同 campaign 采集 B06/B07 delta/stable-prefix/cache/loop benefit raw evidence；B06/B07
-  未达或未运行不阻塞 Linux 1.0，不得伪造 pass。UCR-01 的固定场景 utility assertion
-  仍由 P7-T08 单独验收，不等同于 B06/B07 pass。
+- MVP B03 依 ADR-0040 使用固定 33-test authority-path/evaluator denominator：真实
+  source、scope-before-ranking、required fail-closed、显式 loss、Artifact access、
+  revocation 与 stale-cache negatives；并要求 qualified native Linux/Clippy、Ubuntu/
+  Windows CI、redacted cleanup 和 owner review。更大 workload/statistical campaign 进入
+  后续 promotion，不是 MVP mutex。
+- B06/B07 只采集可重复的 delta/stable-prefix/cache/loop raw metrics；未达或未运行不
+  阻塞 Linux 1.0，也不得形成一般 Agent-benefit claim。UCR-01 的固定场景 utility
+  assertion 仍由 P7-T08 单独验收，不等同于 B06/B07 pass。
 - `acceptance_requires`: B03 correctness；`promotion_requires`: GMVP-LINUX Gate composition
   只 requires B03。P4 implementation 可在 P3-T01/T02 stable ports 后并行。
 
