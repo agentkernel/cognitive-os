@@ -2,17 +2,17 @@
 Task: P3-T06
 Gate: B03
 Classification: campaign-preregistration-draft
-Status: draft; not registered; not run
+Status: registered; execution in progress; result not yet determined
 -->
 
 # P3-T06 B03 Context correctness campaign preregistration draft
 
 ## Claim boundary
 
-This document is a preregistration **draft** only. It does not register or
-start B03, produce a Gate decision, or claim release, Profile, UCR-01 utility,
-or general Agent benefit. No workload attempt has started and no denominator
-exists.
+This document is the registered preregistration for a bounded B03 campaign. It
+does not yet produce a Gate decision or claim release, Profile, UCR-01 utility,
+or general Agent benefit. The campaign result remains undetermined until the
+complete native evidence and independent-verifier review are recorded.
 
 ## Fixed campaign identity
 
@@ -20,21 +20,21 @@ exists.
 |---|---|---|
 | Task | `P3-T06` | fixed |
 | Gate | `B03` | fixed; remains `not-run` |
-| Campaign ID | `B03-personal-context-correctness-001` | proposed; owner confirmation required |
-| Formal plan revision | `main@9fa5f127c25769c2d153c0214b48472c5c216305` | source revision to bind at registration |
-| Implementation revision | `personal/P3-T06-context-correctness@22689de` | code revision to bind at registration |
+| Campaign ID | `B03-personal-context-correctness-001` | registered |
+| Formal plan revision | `main@9fa5f127c25769c2d153c0214b48472c5c216305` | registered source baseline |
+| Implementation revision | `personal/P3-T06-context-correctness@dc565b7` | registered |
 | UCR-01 revision | `docs/evaluation/personal-unified-cognitive-resource-workload.md` | reference only; fixed-scenario utility remains P7-T08 scope |
-| Operator | `TBD` | user/operator confirmation required |
-| Independent verifier | `TBD` | independent identity and acceptance required |
-| Registration authority | `TBD` | owner confirmation required |
-| Execution authorization | `not granted` | must be explicit before execution |
+| Operator | `Cursor agent` | owner-authorized |
+| Independent verifier | `user/owner` | owner-authorized independent review |
+| Registration authority | `user/owner` | confirmed |
+| Execution authorization | `granted` | confirmed |
 
 ## Qualified environment and reset
 
 | Field | Required value | Status |
 |---|---|---|
-| Environment | `DEV-LINUX-NATIVE-01` (`personal-linux-native-01`) or another owner-approved native Linux environment | requires owner selection |
-| OS/image | exact native Linux distribution/image, architecture, kernel, and reset procedure | must be captured before registration |
+| Environment | `DEV-LINUX-NATIVE-01` (`personal-linux-native-01`) | registered |
+| OS/image | Ubuntu 22.04 x86_64 native Linux; exact kernel and disposable `/tmp` checkout captured in execution evidence | registered |
 | Source checkout | clean disposable clone/worktree at the fixed implementation revision | required |
 | Database state | fresh authority store or explicitly reset fixture state; schema/migration versions recorded | required |
 | Context sources | fixed real source fixture with current, stale, unauthorized, and required-source cases | required |
@@ -101,7 +101,8 @@ retain the complete outcome, including rejected or unavailable cases:
 
 ## Registration gates
 
-Before changing this document from `draft` to `registered`, obtain:
+Before execution, the following registration gates were required and are now
+recorded as satisfied:
 
 1. owner approval of the campaign ID and exact formal-plan/implementation
    revisions;
@@ -113,13 +114,14 @@ Before changing this document from `draft` to `registered`, obtain:
 6. a dedicated campaign execution lease that does not reuse B01's reserved
    desktop guest and does not write secrets or raw evidence into the repo.
 
-## User/operator input required
+## User/operator confirmation recorded
 
-Please provide or confirm these four items before formal registration:
+The owner confirmed these four items before execution:
 
-- the operator identity;
-- the independent verifier identity;
-- the approved native Linux environment/reset procedure; and
-- authorization to register and start `B03-personal-context-correctness-001`.
+- operator: Cursor agent;
+- independent verifier: user/owner;
+- environment/reset: `DEV-LINUX-NATIVE-01` disposable native Linux checkout;
+- authorization: register and start `B03-personal-context-correctness-001`.
 
-Until then, `P3-T06` remains `blocked` and `B03` remains `not-run`.
+The campaign is registered and execution is in progress. B03 remains
+`not-run` until evidence review produces an explicit Gate state.
