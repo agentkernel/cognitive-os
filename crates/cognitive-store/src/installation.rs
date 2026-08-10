@@ -1264,7 +1264,8 @@ impl SqliteInstallationStore {
         if lifecycle_state != "registered" || fencing_epoch != expected_epoch {
             return Err(InstallationStoreError::Conflict {
                 detail: format!(
-                    "agent instance {} expected registered@{expected_epoch}, found {lifecycle_state}@{fencing_epoch}"
+                    "agent instance {} expected registered@{}, found {}@{}",
+                    commit.instance_id, expected_epoch, lifecycle_state, fencing_epoch
                 ),
             });
         }
