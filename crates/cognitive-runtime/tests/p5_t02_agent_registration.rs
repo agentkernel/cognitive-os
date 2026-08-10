@@ -6,8 +6,9 @@ use cognitive_runtime::{
     OfficialPiAcquisitionRequest, OfficialPiAgentActivationRequest,
     OfficialPiAgentLifecycleRequest, OfficialPiAgentRegistrationRequest, PackageInstallRequest,
     PiInstallationRootActivationRequest, acquire_official_pi_durable,
-    activate_official_pi_agent_durable, activate_official_pi_root_durable, package_artifact_digest,
-    package_sha256_digest, package_sri_sha512, pause_official_pi_agent_durable,
+    activate_official_pi_agent_durable, activate_official_pi_root_durable,
+    observe_official_pi_agent_health_durable, package_artifact_digest, package_sha256_digest,
+    package_sri_sha512, pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
     stop_official_pi_agent_durable,
 };
