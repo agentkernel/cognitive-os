@@ -3,8 +3,9 @@
 use cognitive_runtime::{
     AcceptingOfficialPiAcquisitionLockVerifier, DurableInstallationAuthority, OFFICIAL_NPM_ORIGIN,
     OFFICIAL_PI_INSTALLATION_ROOT, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
-    OfficialPiAcquisitionRequest, OfficialPiAgentRegistrationRequest, PackageInstallRequest,
-    PiInstallationRootActivationRequest, acquire_official_pi_durable,
+    OfficialPiAcquisitionRequest, OfficialPiAgentActivationRequest,
+    OfficialPiAgentRegistrationRequest, PackageInstallRequest, PiInstallationRootActivationRequest,
+    acquire_official_pi_durable, activate_official_pi_agent_durable,
     activate_official_pi_root_durable, package_artifact_digest, package_sha256_digest,
     package_sri_sha512, register_official_pi_agent_durable,
 };
@@ -160,6 +161,119 @@ fn duplicate_registration_for_same_root_conflicts() {
     register_official_pi_agent_durable(&manager, &request).unwrap();
 
     let error = register_official_pi_agent_durable(&manager, &request).unwrap_err();
+
+    assert_eq!(error.code, "STATE_CONFLICT");
+}
+
+#[test]
+fn registered_instance_activates_sidecar_session_without_capability() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let binding = activate_official_root(&manager);
+    let registered = register_official_pi_agent_durable(
+        &manager,
+        &registration_request(binding.activation_version()),
+    )
+    .unwrap();
+
+    let (activated, session) = activate_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentActivationRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: registered.fencing_epoch(),
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap();
+
+    assert_eq!(activated.lifecycle_state(), "active");
+    assert_eq!(activated.fencing_epoch(), 2);
+    assert_eq!(session.lifecycle_state(), "active");
+    assert_eq!(session.fencing_epoch(), 2);
+    assert_eq!(session.protocol_digest(), "sha256:sidecar-protocol");
+    assert_eq!(authority.capability_grants(), 0);
+    let current = manager
+        .current_sidecar_session(activated.instance_id())
+        .unwrap()
+        .unwrap();
+    assert_eq!(current.session_id(), session.session_id());
+}
+
+#[test]
+fn unregistered_root_cannot_activate() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    activate_official_root(&manager);
+
+    let error = activate_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentActivationRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: 1,
+            protocol_digest: "sha256:sidecar-protocol".to_owned(),
+        },
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, "AGENT_PACKAGE_VERIFICATION_FAILED");
+}
+
+#[test]
+fn protocol_digest_mismatch_rejects_activation() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let binding = activate_official_root(&manager);
+    let registered = register_official_pi_agent_durable(
+        &manager,
+        &registration_request(binding.activation_version()),
+    )
+    .unwrap();
+
+    let error = activate_official_pi_agent_durable(
+        &manager,
+        &OfficialPiAgentActivationRequest {
+            installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+            expected_fencing_epoch: registered.fencing_epoch(),
+            protocol_digest: "sha256:other-protocol".to_owned(),
+        },
+    )
+    .unwrap_err();
+
+    assert_eq!(error.code, "PROTOCOL_SCHEMA_DIGEST_MISMATCH");
+    assert!(
+        manager
+            .current_sidecar_session(registered.instance_id())
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn duplicate_activation_conflicts() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority =
+        DurableInstallationAuthority::open(&directory.path().join("install.db")).unwrap();
+    let manager = authority.acquire_installation_manager().unwrap();
+    let binding = activate_official_root(&manager);
+    let registered = register_official_pi_agent_durable(
+        &manager,
+        &registration_request(binding.activation_version()),
+    )
+    .unwrap();
+    let request = OfficialPiAgentActivationRequest {
+        installation_root: OFFICIAL_PI_INSTALLATION_ROOT.to_owned(),
+        expected_fencing_epoch: registered.fencing_epoch(),
+        protocol_digest: "sha256:sidecar-protocol".to_owned(),
+    };
+    activate_official_pi_agent_durable(&manager, &request).unwrap();
+
+    let error = activate_official_pi_agent_durable(&manager, &request).unwrap_err();
 
     assert_eq!(error.code, "STATE_CONFLICT");
 }

@@ -34,7 +34,8 @@ pub use adapters::{
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
 };
 pub use agent_registration::{
-    OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentRegistrationRequest,
+    OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentActivationRequest,
+    OfficialPiAgentRegistrationRequest, activate_official_pi_agent_durable,
     register_official_pi_agent_durable,
 };
 pub use channel_binding::{

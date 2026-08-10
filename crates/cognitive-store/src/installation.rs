@@ -120,6 +120,29 @@ CREATE TABLE IF NOT EXISTS current_agent_registrations (
 ) STRICT;
 ";
 
+/// Installation schema body for Personal migration plan version 3.
+///
+/// Daemon-private SidecarSession identity for an activated AgentInstance.
+/// Session creation does not grant capability, Effect, or Task completion.
+pub(crate) const INSTALLATION_SCHEMA_V3: &str = "
+CREATE TABLE IF NOT EXISTS sidecar_sessions (
+  session_id        TEXT PRIMARY KEY,
+  instance_id       TEXT NOT NULL,
+  protocol_digest   TEXT NOT NULL,
+  fencing_epoch     INTEGER NOT NULL,
+  lifecycle_state   TEXT NOT NULL
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS sidecar_sessions_append_only_delete
+BEFORE DELETE ON sidecar_sessions
+BEGIN SELECT RAISE(ABORT, 'append-only: sidecar sessions may not be deleted'); END;
+
+CREATE TABLE IF NOT EXISTS current_sidecar_sessions (
+  instance_id   TEXT PRIMARY KEY,
+  session_id    TEXT NOT NULL
+) STRICT;
+";
+
 /// Errors from the local durable installation store.
 ///
 /// These are adapter errors, not protocol error codes: no machine contract is
@@ -482,6 +505,47 @@ impl AgentRegistrationRecord {
     }
 }
 
+/// Daemon-private SidecarSession bound to one activated AgentInstance epoch.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SidecarSessionRecord {
+    session_id: String,
+    instance_id: String,
+    protocol_digest: String,
+    fencing_epoch: u64,
+    lifecycle_state: String,
+}
+
+impl SidecarSessionRecord {
+    pub fn session_id(&self) -> &str {
+        &self.session_id
+    }
+
+    pub fn instance_id(&self) -> &str {
+        &self.instance_id
+    }
+
+    pub fn protocol_digest(&self) -> &str {
+        &self.protocol_digest
+    }
+
+    pub const fn fencing_epoch(&self) -> u64 {
+        self.fencing_epoch
+    }
+
+    pub fn lifecycle_state(&self) -> &str {
+        &self.lifecycle_state
+    }
+}
+
+/// Immutable inputs for activating a registered AgentInstance into a SidecarSession.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AgentActivationCommit {
+    pub session_id: String,
+    pub instance_id: String,
+    pub expected_fencing_epoch: u64,
+    pub protocol_digest: String,
+}
+
 /// Immutable inputs for one daemon-private Agent registration transaction.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AgentRegistrationCommit {
@@ -527,6 +591,8 @@ impl SqliteInstallationStore {
         ensure_evidence_columns(&conn)?;
         conn.execute_batch(INSTALLATION_SCHEMA_V2)
             .map_err(|err| unavailable("install agent registration schema", err))?;
+        conn.execute_batch(INSTALLATION_SCHEMA_V3)
+            .map_err(|err| unavailable("install sidecar session schema", err))?;
 
         Ok(Self {
             conn: Mutex::new(conn),
@@ -1141,6 +1207,207 @@ impl SqliteInstallationStore {
         )
         .optional()
         .map_err(|err| unavailable("read current agent registration", err))
+    }
+
+    /// Activate a `registered` instance and create its current SidecarSession.
+    ///
+    /// Activation bumps the instance fencing epoch and publishes exactly one
+    /// current session. It never grants capability, Effect, or Task completion,
+    /// and it does not spawn an OS process.
+    pub fn activate_agent_instance(
+        &self,
+        commit: &AgentActivationCommit,
+    ) -> Result<(AgentRegistrationRecord, SidecarSessionRecord), InstallationStoreError> {
+        if commit.session_id.trim().is_empty()
+            || commit.instance_id.trim().is_empty()
+            || commit.protocol_digest.trim().is_empty()
+        {
+            return Err(InstallationStoreError::InvalidCommit {
+                detail:
+                    "agent activation requires non-empty session, instance, and protocol digest"
+                        .to_owned(),
+            });
+        }
+        let expected_epoch = i64::try_from(commit.expected_fencing_epoch).map_err(|error| {
+            InstallationStoreError::InvalidCommit {
+                detail: format!("invalid expected fencing epoch: {error}"),
+            }
+        })?;
+        let next_epoch = commit
+            .expected_fencing_epoch
+            .checked_add(1)
+            .ok_or_else(|| InstallationStoreError::Unavailable {
+                detail: "agent instance fencing epoch overflow".to_owned(),
+            })?;
+        let next_epoch_i64 =
+            i64::try_from(next_epoch).map_err(|error| InstallationStoreError::Unavailable {
+                detail: format!("invalid next fencing epoch: {error}"),
+            })?;
+        let mut conn = self.lock()?;
+        let transaction = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|err| unavailable("begin agent activation", err))?;
+        let instance_state: Option<(String, String, i64)> = transaction
+            .query_row(
+                "SELECT registration_id, lifecycle_state, fencing_epoch
+                   FROM agent_instances WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(|err| unavailable("read agent instance for activation", err))?;
+        let Some((registration_id, lifecycle_state, fencing_epoch)) = instance_state else {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!("agent instance {} is absent", commit.instance_id),
+            });
+        };
+        if lifecycle_state != "registered" || fencing_epoch != expected_epoch {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "agent instance {} expected registered@{expected_epoch}, found {lifecycle_state}@{fencing_epoch}"
+                ),
+            });
+        }
+        let existing_session: Option<String> = transaction
+            .query_row(
+                "SELECT session_id FROM current_sidecar_sessions WHERE instance_id = ?1",
+                [commit.instance_id.as_str()],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|err| unavailable("read current sidecar session", err))?;
+        if existing_session.is_some() {
+            return Err(InstallationStoreError::Conflict {
+                detail: format!(
+                    "agent instance {} already has a current sidecar session",
+                    commit.instance_id
+                ),
+            });
+        }
+        let updated = transaction
+            .execute(
+                "UPDATE agent_instances
+                    SET lifecycle_state = 'active', fencing_epoch = ?1
+                  WHERE instance_id = ?2 AND lifecycle_state = 'registered'
+                    AND fencing_epoch = ?3",
+                (next_epoch_i64, commit.instance_id.as_str(), expected_epoch),
+            )
+            .map_err(|err| unavailable("advance agent instance epoch", err))?;
+        if updated != 1 {
+            return Err(InstallationStoreError::Conflict {
+                detail: "agent instance fencing changed during activation".to_owned(),
+            });
+        }
+        transaction
+            .execute(
+                "INSERT INTO sidecar_sessions
+                   (session_id, instance_id, protocol_digest, fencing_epoch, lifecycle_state)
+                 VALUES (?1, ?2, ?3, ?4, 'active')",
+                (
+                    commit.session_id.as_str(),
+                    commit.instance_id.as_str(),
+                    commit.protocol_digest.as_str(),
+                    next_epoch_i64,
+                ),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "sidecar session identity already exists".to_owned(),
+                    }
+                } else {
+                    unavailable("insert sidecar session", err)
+                }
+            })?;
+        transaction
+            .execute(
+                "INSERT INTO current_sidecar_sessions (instance_id, session_id)
+                 VALUES (?1, ?2)",
+                (commit.instance_id.as_str(), commit.session_id.as_str()),
+            )
+            .map_err(|err| {
+                if is_constraint_violation(&err) {
+                    InstallationStoreError::Conflict {
+                        detail: "competing sidecar session won the current-instance pointer"
+                            .to_owned(),
+                    }
+                } else {
+                    unavailable("publish current sidecar session", err)
+                }
+            })?;
+        let registration = transaction
+            .query_row(
+                "SELECT r.registration_id, r.installation_root, r.activation_version, r.package_ref,
+                        r.acquisition_lock, r.adapter_digest, r.protocol_digest, r.policy_digest,
+                        i.instance_id, i.fencing_epoch, i.lifecycle_state
+                   FROM agent_registrations r
+                   JOIN agent_instances i ON i.registration_id = r.registration_id
+                  WHERE i.instance_id = ?1 AND r.registration_id = ?2",
+                (commit.instance_id.as_str(), registration_id.as_str()),
+                |row| {
+                    let activation_version: i64 = row.get(2)?;
+                    let fencing_epoch: i64 = row.get(9)?;
+                    Ok(AgentRegistrationRecord {
+                        registration_id: row.get(0)?,
+                        installation_root: row.get(1)?,
+                        activation_version: u64::try_from(activation_version).map_err(|_| {
+                            rusqlite::Error::IntegralValueOutOfRange(2, activation_version)
+                        })?,
+                        package_ref: row.get(3)?,
+                        acquisition_lock: row.get(4)?,
+                        adapter_digest: row.get(5)?,
+                        protocol_digest: row.get(6)?,
+                        policy_digest: row.get(7)?,
+                        instance_id: row.get(8)?,
+                        fencing_epoch: u64::try_from(fencing_epoch).map_err(|_| {
+                            rusqlite::Error::IntegralValueOutOfRange(9, fencing_epoch)
+                        })?,
+                        lifecycle_state: row.get(10)?,
+                    })
+                },
+            )
+            .map_err(|err| unavailable("reload activated agent registration", err))?;
+        transaction
+            .commit()
+            .map_err(|err| unavailable("commit agent activation", err))?;
+        Ok((
+            registration,
+            SidecarSessionRecord {
+                session_id: commit.session_id.clone(),
+                instance_id: commit.instance_id.clone(),
+                protocol_digest: commit.protocol_digest.clone(),
+                fencing_epoch: next_epoch,
+                lifecycle_state: "active".to_owned(),
+            },
+        ))
+    }
+
+    /// Read the current SidecarSession for an AgentInstance.
+    pub fn current_sidecar_session(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<SidecarSessionRecord>, InstallationStoreError> {
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT s.session_id, s.instance_id, s.protocol_digest, s.fencing_epoch, s.lifecycle_state
+               FROM current_sidecar_sessions c
+               JOIN sidecar_sessions s ON s.session_id = c.session_id
+              WHERE c.instance_id = ?1",
+            [instance_id],
+            |row| {
+                let fencing_epoch: i64 = row.get(3)?;
+                Ok(SidecarSessionRecord {
+                    session_id: row.get(0)?,
+                    instance_id: row.get(1)?,
+                    protocol_digest: row.get(2)?,
+                    fencing_epoch: u64::try_from(fencing_epoch)
+                        .map_err(|_| rusqlite::Error::IntegralValueOutOfRange(3, fencing_epoch))?,
+                    lifecycle_state: row.get(4)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(|err| unavailable("read current sidecar session", err))
     }
 
     /// Return the number of non-visible staging rows, for recovery assertions.

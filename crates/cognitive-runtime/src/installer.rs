@@ -618,6 +618,31 @@ impl DurableInstallationManager<'_> {
     ) -> Result<cognitive_store::AgentRegistrationRecord, InstallationStoreError> {
         self.authority.store.register_agent_from_active_root(commit)
     }
+
+    /// Activate a registered instance and create its SidecarSession.
+    pub(crate) fn activate_agent_instance(
+        &self,
+        commit: &cognitive_store::AgentActivationCommit,
+    ) -> Result<
+        (
+            cognitive_store::AgentRegistrationRecord,
+            cognitive_store::SidecarSessionRecord,
+        ),
+        InstallationStoreError,
+    > {
+        self.authority.store.activate_agent_instance(commit)
+    }
+
+    /// Read the current SidecarSession for an AgentInstance.
+    pub fn current_sidecar_session(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<cognitive_store::SidecarSessionRecord>, InstallerError> {
+        self.authority
+            .store
+            .current_sidecar_session(instance_id)
+            .map_err(map_store_error)
+    }
 }
 
 pub(crate) fn map_store_error(error: InstallationStoreError) -> InstallerError {

@@ -43,7 +43,7 @@ fn write_session(dir: &Path) -> PathBuf {
         "activity_context_ref": "activity://tenant-a/agent-register",
         "scope": {
             "domains": ["cognitiveos.management"],
-            "actions": ["agent.register"],
+            "actions": ["agent.register", "agent.activate"],
             "resources": ["agent-installation://"]
         },
         "risk_ceiling": "R1",
@@ -77,10 +77,10 @@ fn prepare_active_official_root(database: &Path) -> u64 {
             declared_artifact_digest: artifact_digest,
             signature_ref: "official-lock".to_owned(),
             provenance_ref: OFFICIAL_NPM_ORIGIN.to_owned(),
-            adapter_digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                .to_owned(),
-            sandbox_digest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-                .to_owned(),
+            adapter_digest:
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned(),
+            sandbox_digest:
+                "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_owned(),
             compatibility_digest:
                 "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc".to_owned(),
             lockfile_digest: lock_digest.clone(),
@@ -160,4 +160,31 @@ fn management_register_persists_inactive_instance_without_sidecar() {
     assert_eq!(value["tasks_completed"], 0);
     assert!(value["registration_id"].as_str().unwrap().len() > 8);
     assert!(value["instance_id"].as_str().unwrap().len() > 8);
+
+    let activate = run_cli(&[
+        "activate",
+        "--session",
+        session.to_str().unwrap(),
+        "--installation-store",
+        database.to_str().unwrap(),
+        "--installation-root",
+        OFFICIAL_PI_INSTALLATION_ROOT,
+        "--expected-fencing-epoch",
+        "1",
+        "--protocol-digest",
+        "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    ]);
+    assert_eq!(
+        activate.code, 0,
+        "stdout: {} stderr: {}",
+        activate.stdout, activate.stderr
+    );
+    let activated: Value = serde_json::from_str(activate.stdout.trim()).unwrap();
+    assert_eq!(activated["lifecycle_state"], "active");
+    assert_eq!(activated["fencing_epoch"], 2);
+    assert_eq!(activated["sidecar_lifecycle_state"], "active");
+    assert_eq!(activated["sidecar_fencing_epoch"], 2);
+    assert_eq!(activated["capability_grants"], 0);
+    assert_eq!(activated["effects_created"], 0);
+    assert_eq!(activated["tasks_completed"], 0);
 }

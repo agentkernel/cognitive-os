@@ -11,7 +11,10 @@ use crate::installer::{
 };
 use cognitive_contracts::generated::error_registry::RegisteredErrorCode;
 use cognitive_kernel::ports::IdGenerator;
-use cognitive_store::{AgentRegistrationCommit, AgentRegistrationRecord, UuidV7Generator};
+use cognitive_store::{
+    AgentActivationCommit, AgentRegistrationCommit, AgentRegistrationRecord, SidecarSessionRecord,
+    UuidV7Generator,
+};
 
 /// Fixed official Pi sidecar protocol identity for Linux 1.0 foundation work.
 pub const OFFICIAL_PI_SIDECAR_PROTOCOL: &str = "cognitiveos.private-sidecar/1";
@@ -138,6 +141,99 @@ pub fn register_official_pi_agent_durable(
         ));
     }
     Ok(record)
+}
+
+/// Request to activate a registered official Pi AgentInstance.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OfficialPiAgentActivationRequest {
+    pub installation_root: String,
+    pub expected_fencing_epoch: u64,
+    pub protocol_digest: String,
+}
+
+/// Activate one registered official Pi AgentInstance and create its SidecarSession.
+///
+/// The durable outcome is an `active` instance plus exactly one current
+/// SidecarSession at a new fencing epoch. This path does not spawn a process,
+/// grant capability, create an Effect, or complete a Task.
+pub fn activate_official_pi_agent_durable(
+    manager: &DurableInstallationManager<'_>,
+    request: &OfficialPiAgentActivationRequest,
+) -> Result<(AgentRegistrationRecord, SidecarSessionRecord), InstallerError> {
+    if request.installation_root != OFFICIAL_PI_INSTALLATION_ROOT {
+        return Err(verification_failure(
+            "agent activation currently admits only the official Pi installation root",
+        ));
+    }
+    if !is_digest(&request.protocol_digest) {
+        return Err(verification_failure(
+            "agent activation requires a sha256 protocol digest",
+        ));
+    }
+    let registration = manager
+        .current_agent_registration(&request.installation_root)?
+        .ok_or_else(|| {
+            verification_failure("official Pi agent is not registered; register ≠ activate")
+        })?;
+    if registration.lifecycle_state() != "registered" {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            format!(
+                "agent instance {} is not in registered state",
+                registration.instance_id()
+            ),
+        ));
+    }
+    if registration.fencing_epoch() != request.expected_fencing_epoch {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            format!(
+                "agent instance expected fencing epoch {}, found {}",
+                request.expected_fencing_epoch,
+                registration.fencing_epoch()
+            ),
+        ));
+    }
+    if registration.protocol_digest() != request.protocol_digest {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::ProtocolSchemaDigestMismatch,
+            "protocol digest does not match the registered official Pi agent",
+        ));
+    }
+    if manager
+        .current_sidecar_session(registration.instance_id())?
+        .is_some()
+    {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateConflict,
+            "agent instance already has a current sidecar session",
+        ));
+    }
+
+    let session_id = UuidV7Generator.next_uuid_v7().map_err(|err| {
+        InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            format!("allocate sidecar session id: {err}"),
+        )
+    })?;
+    let (registration, session) = manager
+        .activate_agent_instance(&AgentActivationCommit {
+            session_id,
+            instance_id: registration.instance_id().to_owned(),
+            expected_fencing_epoch: request.expected_fencing_epoch,
+            protocol_digest: request.protocol_digest.clone(),
+        })
+        .map_err(map_store_error)?;
+    if registration.lifecycle_state() != "active"
+        || session.lifecycle_state() != "active"
+        || session.fencing_epoch() != registration.fencing_epoch()
+    {
+        return Err(InstallerError::new(
+            RegisteredErrorCode::StateStoreUnavailable,
+            "activation persisted an unexpected instance or session lifecycle state",
+        ));
+    }
+    Ok((registration, session))
 }
 
 fn is_digest(value: &str) -> bool {
