@@ -143,10 +143,10 @@
 | Phase 2 - 单 Agent 任务闭环 | 8 | 7 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
-| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 0 | 1 | 0 | 4 | G5 / B09、B10 |
+| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 1 | 0 | 0 | 4 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 0 | 0 | 0 | 8 | GMVP-LINUX / G7 / RC |
-| **合计** | **53** | **35** | **1** | **0** | **17** | — |
+| **合计** | **53** | **36** | **0** | **0** | **17** | — |
 
 ## 2. 产品边界与不变量
 
@@ -586,7 +586,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P5-T01 | Agent + sidecar package acquisition/install lifecycle | P0-T04, P0-T06, P1-T08 | adapter-neutral Agent/sidecar package pins；fixed official npm exact Pi；identity/version/SRI/digest/dependency/Node checks；signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权 | in-progress | 2026-08-10；`lease/personal/P5-T01/pi-acquisition` on `personal/P5-T01-pi-acquisition`. D01 is the authenticated official-Pi acquisition-lock transaction: fail-closed verification and atomic daemon-private commit, with no activation, capability, Effect, Task completion, B09, release, or Profile claim. |
+| P5-T01 | Agent + sidecar package acquisition/install lifecycle | P0-T04, P0-T06, P1-T08 | adapter-neutral Agent/sidecar package pins；fixed official npm exact Pi；identity/version/SRI/digest/dependency/Node checks；signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权 | done | 2026-08-10；`lease/personal/P5-T01/pi-acquisition` on `personal/P5-T01-pi-acquisition`; closure checkpoint `20260810-personal-p5-t01-pi-acquisition-closure.md`; D01-D03 complete with exact native Linux focused validation and required Ubuntu/Windows CI. No AgentInstance/sidecar/process supervision, Effect, Task completion, B09, release, or Profile claim. |
 | P5-T02 | Sidecar contract、registration、instance/process identity 与 Pi foundation | P5-T01, P2-T03, P2-T06 | versioned sidecar protocol/adapter/instance pin；AgentInstallation/Instance/Execution、SidecarSession、PiSession、process、Task 分离；health/activate/pause/resume/stop/recover 与 epoch fencing | not-started | — |
 | P5-T03 | Post-1.0 MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；protocol/manifest drift、timeout、direct-bypass 测试；不阻塞 1.0 | not-started | — |
 | P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | not-started | — |
