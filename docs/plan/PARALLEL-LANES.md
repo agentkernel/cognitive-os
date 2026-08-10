@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T08/runtime-spine-gates` | P2-T08/D03 authority-path Runtime Spine negatives | Lane-RUN | `personal/P2-T08-runtime-spine-gates` | `apps/kernel-server/src/personal/tool_executor.rs`; `apps/kernel-server/src/personal/scheduler_authority.rs`; `apps/kernel-server/src/personal/verification_executor.rs`; `crates/cognitive-runtime/src/lib.rs`; `crates/cognitive-runtime/src/shell.rs`; `apps/pi-agent-adapter/src/main.rs`; `Cargo.lock`; `tools/src/runtime-spine-gate.mjs`; `tools/test/runtime-spine-gate.test.mjs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` | cursor-agent/P2-T08-claim | 2026-08-10 / 2026-08-10 | active |
+| `lease/personal/P2-T08/runtime-spine-gates` | P2-T08/D04 formal B02/B04/B05/B12 campaign | Lane-RUN | `personal/P2-T08-runtime-spine-gates` | `tools/src/runtime-spine-gate.mjs`; `tools/test/runtime-spine-gate.test.mjs`; `crates/cognitive-management/tests/m5_session_approval.rs`; `docs/adr/0046-personal-runtime-spine-mvp-validation-policy.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P2-T08-claim | 2026-08-10 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.

@@ -225,3 +225,63 @@ fn r1_gate_covers_all_f011_negative_semantics_and_zero_dispatch() {
     assert_eq!(first.request_id, second.request_id);
     assert_eq!(gate.dispatches(), 1);
 }
+
+/// P2-T08/D04 + ADR-0026: purge-class Tier-2 actions must not dispatch without
+/// an explicit structured confirmation. Natural-language assent is not enough.
+#[test]
+fn runtime_spine_tier2_purge_requires_explicit_confirmation() {
+    let mut gate = ApprovalGate::new(2);
+    let purge = ManagementActionProposal::new(
+        "map_runtime-spine-purge-01",
+        "pms://runtime-spine/session",
+        "purge_data",
+        vec!["workspace://tenant-a/personal-data".to_owned()],
+        json!({"scope":"personal-data","irreversible":true}),
+        RiskClass::R1,
+        "principal://tenant-a/worker-purge",
+        format!("sha256:{}", "55".repeat(32)),
+        &ts("2026-08-11T00:00:00Z"),
+        &ts("2026-08-11T00:05:00Z"),
+    )
+    .unwrap();
+    let request = gate
+        .issue_request(
+            &purge,
+            "principal://tenant-a/owner",
+            "channel://os/management",
+            &ts("2026-08-11T00:00:01Z"),
+            &ts("2026-08-11T00:01:00Z"),
+        )
+        .unwrap();
+
+    for presentation in [
+        ApprovalPresentation::Missing,
+        ApprovalPresentation::NaturalLanguage("yes, purge everything".to_owned()),
+    ] {
+        assert_eq!(
+            gate.authorize(&purge, &request, presentation, &ts("2026-08-11T00:00:10Z"))
+                .unwrap_err()
+                .code_str(),
+            "MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED"
+        );
+    }
+    assert_eq!(
+        gate.dispatches(),
+        0,
+        "Tier-2 purge must not dispatch without structured confirmation"
+    );
+
+    let confirmed = gate.test_decision(
+        &request,
+        "principal://tenant-a/owner",
+        format!("sha256:{}", "66".repeat(32)),
+    );
+    gate.authorize(
+        &purge,
+        &request,
+        ApprovalPresentation::Structured(Box::new(confirmed)),
+        &ts("2026-08-11T00:00:20Z"),
+    )
+    .unwrap();
+    assert_eq!(gate.dispatches(), 1);
+}
