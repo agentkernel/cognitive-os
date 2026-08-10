@@ -256,6 +256,45 @@ where
     (reader, agent_end_receiver)
 }
 
+fn collect_child_stream<R>(mut stream: R) -> JoinHandle<Result<Vec<u8>, std::io::Error>>
+where
+    R: Read + Send + 'static,
+{
+    thread::spawn(move || {
+        let mut output = Vec::new();
+        stream.read_to_end(&mut output)?;
+        Ok(output)
+    })
+}
+
+fn join_child_stream(
+    reader: JoinHandle<Result<Vec<u8>, std::io::Error>>,
+    stream_name: &str,
+) -> Result<Vec<u8>, String> {
+    reader
+        .join()
+        .map_err(|_| format!("Pi Extension session {stream_name} reader panicked"))?
+        .map_err(|error| format!("Pi Extension session {stream_name} read failed: {error}"))
+}
+
+fn write_rpc_probe_command(
+    stdin: &mut std::process::ChildStdin,
+    request_id: &str,
+    command_type: &str,
+) -> Result<(), String> {
+    let record = json!({ "id": request_id, "type": command_type });
+    write_rpc_record(stdin, &record)
+}
+
+fn write_rpc_prompt(
+    stdin: &mut std::process::ChildStdin,
+    request_id: &str,
+    message: &str,
+) -> Result<(), String> {
+    let record = json!({ "id": request_id, "type": "prompt", "message": message });
+    write_rpc_record(stdin, &record)
+}
+
 /// Former local PoC verbs that injected Provider secrets into Pi.
 /// P2-T08/D02 expires the ADR-0018 exception; callers must use daemon-candidate.
 fn extension_load_record(_flags: &ParsedFlags) -> Result<Value, String> {
