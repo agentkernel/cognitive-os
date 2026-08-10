@@ -204,9 +204,9 @@ fn measure_context_resolution(sample_count: usize) -> Result<BenchmarkObservatio
         let view = resolve(&request, &candidates, &ranker)
             .map_err(|error| io::Error::other(error.to_string()))?;
         if view.loaded.len() != 1 {
-            return Err(io::Error::other(
+            return Err(Box::new(io::Error::other(
                 "fixture no longer yields one authorized Context item",
-            ));
+            )));
         }
         Ok(())
     })
@@ -228,9 +228,9 @@ fn measure_context_cache_hit(sample_count: usize) -> Result<BenchmarkObservation
         sample_count,
         |_| match cache.lookup_current(&cache_key) {
             ContextCacheLookup::Hit(_) => Ok(()),
-            ContextCacheLookup::MissResolveFresh => Err(io::Error::other(
+            ContextCacheLookup::MissResolveFresh => Err(Box::new(io::Error::other(
                 "fixture unexpectedly missed the full Context cache key",
-            )),
+            ))),
         },
     )
 }
@@ -249,9 +249,9 @@ fn measure_artifact_cas_publish(
             let reference = store.put(payload.as_bytes())?;
             let restored = store.get(&reference)?;
             if restored.as_deref() != Some(payload.as_bytes()) {
-                return Err(io::Error::other(
+                return Err(Box::new(io::Error::other(
                     "published Artifact CAS bytes did not round-trip",
-                ));
+                )));
             }
             Ok(())
         },
@@ -297,9 +297,9 @@ fn measure_scheduler_eligible_cas(
                 "2026-08-10T00:01:00Z",
             )?;
             if leased.lease_owner.as_deref() != Some("p7-t04-benchmark-worker") {
-                return Err(io::Error::other(
+                return Err(Box::new(io::Error::other(
                     "scheduler CAS did not persist benchmark owner",
-                ));
+                )));
             }
             Ok(())
         },
@@ -319,9 +319,9 @@ fn measure_canonical_report_serialization(
             let report = report_sample.to_report_json();
             let digest = report_sample.report_digest().map_err(io::Error::other)?;
             if !digest.starts_with("sha256:") || report.get("comparison").is_some() {
-                return Err(io::Error::other(
+                return Err(Box::new(io::Error::other(
                     "serialization fixture violated its non-claim boundary",
-                ));
+                )));
             }
             Ok(())
         },
