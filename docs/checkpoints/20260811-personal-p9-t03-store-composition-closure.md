@@ -24,6 +24,6 @@ Store-access stage timings are hypothesis-only observations.
 ## Closure
 
 Required Ubuntu/Windows CI for PR #193 HEAD
-`648e69f30156efb5ddc37a943ac52554f170bd48` is recorded at merge time.
+`7e2db96736c95b220b65e449b1635ca1b63f03a4` is recorded at merge time.
 Lease `lease/personal/P9-T03/store-composition` closes with merge; task branch
 deleted after merge; local `main` reconciled.
