@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P8-T05/context-compaction` | P8-T05/D01 digest-bound compaction | Lane-RUN | `personal/P8-T05-context-compaction` | `crates/cognitive-runtime/src/context_compaction.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T05-D01 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P8-T05/context-compaction` | P8-T05/D02 adaptive budgets | Lane-RUN | `personal/P8-T05-context-compaction` | `crates/cognitive-runtime/src/context_compaction.rs`; `crates/cognitive-runtime/src/adaptive_budget.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T05-D02 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

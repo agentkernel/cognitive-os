@@ -38,6 +38,9 @@ pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
 };
+pub use adaptive_budget::{
+    AdaptiveBudgetDecision, AdaptiveBudgetError, AdaptiveBudgetTelemetry, adapt_fragment_budget,
+};
 pub use agent_adapter_manifest::{
     AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
     AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
