@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T04、P8-T01 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -156,10 +156,10 @@
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 3 | 0 | 0 | 2 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 8 | 3 | 0 | 0 | 5 | GMVP-LINUX / G7 / RC |
+| Phase 7 - 产品化与发布 | 8 | 4 | 0 | 0 | 4 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 1 | 0 | 0 | 5 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **43** | **0** | **0** | **19** | — |
+| **合计** | **62** | **44** | **0** | **0** | **18** | — |
 
 ## 2. 产品边界与不变量
 
@@ -609,6 +609,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P7-T02/D02` | P7-T02 | Memory/Skill/bindings export consumes only D01-approved inventory categories and binds digests without secret material | `P7-T02/D01` | failure-first secret contamination and missing-binding negatives; exact native Linux and required CI |
 | `P7-T02/D03` | P7-T02 | restore preflight and migration checks reject incompatible/incomplete backups before mutation | `P7-T02/D02` | failure-first schema/migration/preflight negatives; exact native Linux and required CI |
 | `P7-T02/D04` | P7-T02 | transactional update/rollback/uninstall and final acceptance over D01-D03 backup/restore evidence | `P7-T02/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile claim |
+| `P7-T03/D01` | P7-T03 | redacted six-resource doctor health projection with stable error codes and no secret/authority claims | completed P1-T05 doctor surface; P7-T02 done | failure-first missing-family, secret-contamination, and authority-claim negatives; exact native Linux focused tests, Clippy, required CI; no vault unlock, Gate, release, or Profile claim |
+| `P7-T03/D02` | P7-T03 | headless vault locked/TTY/unattended diagnostic paths remain redacted and secret-free | `P7-T03/D01` | failure-first secret-in-unit/env negatives; exact native Linux and required CI |
+| `P7-T03/D03` | P7-T03 | sidecar drift, process/effect reconcile, and migration doctor facts with operable recovery hints | `P7-T03/D02` | failure-first drift/reconcile negatives; exact native Linux and required CI |
+| `P7-T03/D04` | P7-T03 | final acceptance over D01-D03 doctor/support evidence | `P7-T03/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile claim |
 | `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
@@ -653,7 +657,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 |---|---|---|---|---|---|
 | P7-T01 | Release pipeline、六资源 manifest、SBOM 与 attestation | P0-T03, P1-T08, P2-T08 | release manifest 固定六类 schema/version/digest，以及 sidecar/adapter/skill/tool pins；可验证 Linux artifact；production trust、SBOM/attestation、immutable actions/toolchain/environment | done | 2026-08-11；PR #184 merged at `main@3198614496571ac251821d2eff1f982274959f06`. D01–D04 closed. Closure: `docs/checkpoints/20260811-personal-p7-t01-release-pipeline-closure.md`. No Gate/release/Profile/GMVP-LINUX claim. |
 | P7-T02 | Transactional lifecycle、Memory/Skill backup/restore | P1-T01, P1-T08, P2-T08, P7-T01 | update/rollback/uninstall；`cognitive backup`/`restore` 覆盖 Memory、Skill 与 bindings，排除 secret；migration preflight 与恢复证据 | done | 2026-08-11；`lease/personal/P7-T02/lifecycle-backup` on `personal/P7-T02-lifecycle-backup` / PR #185. D01–D04 closed. Linux `personal_backup` 15/15 + Clippy at `68abc82`; required CI `31449589853` on `8b388e8`. Closure: `docs/checkpoints/20260811-personal-p7-t02-lifecycle-backup-closure.md`. No Gate/release/Profile claim. |
-| P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | not-started | — |
+| P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | done | 2026-08-11；`lease/personal/P7-T03/six-resource-doctor` on `personal/P7-T03-six-resource-doctor` / PR #186. D01–D04 closed. Linux through `749a0c3`; required CI `31451402260` on `a8db5cf`. Closure: `docs/checkpoints/20260811-personal-p7-t03-six-resource-doctor-closure.md`. No Gate/release/Profile claim. |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05（原列 P5-T05 依赖仅约束 D03 之后的 sidecar 阶段计时；D01-D05 实际依赖已按 slice register 拆分，D05 经 owner 预注册批准执行） | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |

@@ -6,14 +6,17 @@
 
 mod auth;
 mod bounds;
+mod headless_vault_doctor;
 mod lifecycle;
 mod memory_admission;
+mod operability_doctor;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
 mod resource_api;
 mod scheduler_authority;
 mod server;
+mod six_resource_doctor;
 mod skill_package;
 mod task_api;
 mod tool_executor;

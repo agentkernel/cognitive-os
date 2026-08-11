@@ -18,7 +18,20 @@ use cognitive_secret::{
 use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
 
+use super::headless_vault_doctor::{
+    HeadlessVaultDoctorPath, HeadlessVaultPathObservation, HeadlessVaultPathStatus,
+    evaluate_headless_vault_doctor, headless_vault_doctor_projection_json,
+};
+use super::operability_doctor::{
+    OperabilityDoctorObservation, OperabilityDoctorStatus, OperabilityDoctorTopic,
+    evaluate_operability_doctor, operability_doctor_projection_json,
+};
 use super::pi_runtime::{PINNED_PI_VERSION, PiRuntimeObservation, observe_pi_runtime};
+use super::six_resource_doctor::{
+    SixResourceFamily, SixResourceHealthFact, SixResourceHealthObservation,
+    SixResourceHealthStatus, evaluate_six_resource_doctor_health,
+    six_resource_doctor_projection_json,
+};
 
 /// Product-local schema version for readiness projections (not a registry schema).
 pub const PERSONAL_READINESS_SCHEMA_VERSION: u32 = 1;
@@ -176,12 +189,94 @@ pub fn doctor_projection_json(report: &ReadinessReport) -> Value {
         "first_conversation_ready": report.first_conversation_ready,
         "evaluated_at_unix_ms": report.evaluated_at_unix_ms,
         "components": report.components.iter().map(component_detail_json).collect::<Vec<_>>(),
+        "six_resource": default_six_resource_doctor_section(),
+        "headless_vault": default_headless_vault_doctor_section(),
+        "operability": default_operability_doctor_section(),
         "static_check_is_not_runtime_ready": true,
         "profile_claim": "not-claimed",
         "gate_claim": "not-claimed",
         "authority_side_effects": false,
         "guidance": doctor_guidance(report)
     })
+}
+
+fn default_operability_doctor_section() -> Value {
+    let observations: Vec<OperabilityDoctorObservation> = OperabilityDoctorTopic::ALL
+        .iter()
+        .map(|topic| OperabilityDoctorObservation {
+            topic: *topic,
+            status: OperabilityDoctorStatus::NotConfigured,
+            error_code: Some("OPERABILITY_TOPIC_NOT_PROBED"),
+            recovery_hint: Some("await supported operability probe"),
+            facts: vec![("probe".to_owned(), "not_run".to_owned())],
+        })
+        .collect();
+    match evaluate_operability_doctor(&observations) {
+        Ok(report) => operability_doctor_projection_json(&report),
+        Err(_) => json!({
+            "schema": "personal-operability-doctor",
+            "surface": "personal-doctor-operability",
+            "overall": "blocked",
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+            "error_code": "OPERABILITY_DOCTOR_INTERNAL",
+            "topics": [],
+        }),
+    }
+}
+
+fn default_headless_vault_doctor_section() -> Value {
+    let observations: Vec<HeadlessVaultPathObservation> = HeadlessVaultDoctorPath::ALL
+        .iter()
+        .map(|path| HeadlessVaultPathObservation {
+            path: *path,
+            status: HeadlessVaultPathStatus::NotConfigured,
+            error_code: Some("VAULT_PATH_NOT_PROBED"),
+            recovery_hint: Some("await supported vault path probe"),
+            facts: vec![("probe".to_owned(), "not_run".to_owned())],
+        })
+        .collect();
+    match evaluate_headless_vault_doctor(&observations) {
+        Ok(report) => headless_vault_doctor_projection_json(&report),
+        Err(_) => json!({
+            "schema": "personal-headless-vault-doctor",
+            "surface": "personal-doctor-headless-vault",
+            "overall": "unavailable",
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+            "error_code": "HEADLESS_VAULT_DOCTOR_INTERNAL",
+            "paths": [],
+        }),
+    }
+}
+
+fn default_six_resource_doctor_section() -> Value {
+    let observations: Vec<SixResourceHealthObservation> = SixResourceFamily::ALL
+        .iter()
+        .map(|family| SixResourceHealthObservation {
+            family: *family,
+            status: SixResourceHealthStatus::NotConfigured,
+            error_code: Some("RESOURCE_HEALTH_NOT_PROBED"),
+            recovery_hint: Some("await resource-specific doctor probe"),
+            facts: vec![SixResourceHealthFact {
+                key: "probe",
+                value: "not_run".to_owned(),
+            }],
+        })
+        .collect();
+    match evaluate_six_resource_doctor_health(&observations) {
+        Ok(report) => six_resource_doctor_projection_json(&report),
+        Err(_) => json!({
+            "schema": "personal-six-resource-doctor",
+            "schema_version": 1,
+            "surface": "personal-doctor-six-resource",
+            "overall": "blocked",
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+            "error_code": "SIX_RESOURCE_DOCTOR_INTERNAL",
+            "families": [],
+        }),
+    }
 }
 
 fn component_summary_json(check: &ComponentCheck) -> Value {
@@ -947,6 +1042,28 @@ mod tests {
         assert_eq!(doctor["overall"], "ready");
         assert_eq!(doctor["first_conversation_ready"], false);
         assert_eq!(doctor["gate_claim"], "not-claimed");
+        assert_eq!(
+            doctor["six_resource"]["surface"],
+            "personal-doctor-six-resource"
+        );
+        assert_eq!(doctor["six_resource"]["gate_claim"], "not-claimed");
+        assert_eq!(
+            doctor["six_resource"]["families"]
+                .as_array()
+                .expect("six families")
+                .len(),
+            6
+        );
+        assert_eq!(
+            doctor["headless_vault"]["surface"],
+            "personal-doctor-headless-vault"
+        );
+        assert_eq!(doctor["headless_vault"]["gate_claim"], "not-claimed");
+        assert_eq!(
+            doctor["operability"]["surface"],
+            "personal-doctor-operability"
+        );
+        assert_eq!(doctor["operability"]["gate_claim"], "not-claimed");
         let guidance = doctor["guidance"].as_array().expect("guidance array");
         assert!(
             guidance.iter().any(|entry| entry
