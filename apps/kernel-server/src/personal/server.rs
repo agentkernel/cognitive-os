@@ -1638,7 +1638,7 @@ mod tests {
             ChannelClass, ResourceApi, SessionIssueRequest, handle_task_consumption_route,
         };
 
-        let (layout, authority, authority_store) = test_fixture("shared-store-request");
+        let (_layout, authority, authority_store) = test_fixture("shared-store-request");
         let task_token = {
             let mut guard = authority.lock().expect("authority lock");
             let bootstrap_secret = guard.bootstrap_secret_for_tests().to_owned();
