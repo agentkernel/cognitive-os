@@ -53,6 +53,11 @@ fn wait_for_connection(port: u16) -> TcpStream {
 
 fn exchange_http_request(port: u16, request: &str) -> String {
     let mut stream = wait_for_connection(port);
+    // A daemon regression must fail this integration test instead of leaving a
+    // Windows CI worker blocked forever while waiting for connection closure.
+    stream
+        .set_read_timeout(Some(Duration::from_secs(20)))
+        .unwrap();
     stream.write_all(request.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut response = String::new();
@@ -64,7 +69,9 @@ fn read_bootstrap_secret(runtime_root: &std::path::Path) -> String {
     let path = runtime_root
         .join("cognitiveos")
         .join("local-bootstrap.secret");
-    for _ in 0..100 {
+    // Windows hosted runners can delay a newly spawned process's first file
+    // write long enough to exceed the former two-second polling budget.
+    for _ in 0..500 {
         if let Ok(contents) = std::fs::read_to_string(&path) {
             let secret = contents.trim();
             if !secret.is_empty() {
