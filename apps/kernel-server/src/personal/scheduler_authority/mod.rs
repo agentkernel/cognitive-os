@@ -2390,6 +2390,90 @@ fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorit
 mod tests;
 
 
+/// Resolve the exact durable Effect bound to one scheduler TaskContract epoch.
+///
+/// This is deliberately a read-only authority boundary. It rejects zero or
+/// multiple bindings, missing objects, adapter-inconsistent rows, and unknown
+/// states before any worker can turn a process result into a scheduler outcome.
+pub(crate) fn resolve_scheduler_effect_for_task_binding<S>(
+    store: &S,
+    task_binding: &TaskBinding,
+) -> Result<SchedulerEffectResolution, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore,
+{
+    if task_binding.task_ref.is_empty() {
+        return Err(SchedulerAuthorityError::EmptyTaskReference);
+    }
+    if task_binding.contract_epoch <= 0 {
+        return Err(SchedulerAuthorityError::InvalidContractEpoch(
+            task_binding.contract_epoch,
+        ));
+    }
+
+    let intent_rows = store
+        .list_intents_for_task_binding(task_binding)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let intent_row = select_single_effect_intent(task_binding, &intent_rows)?;
+
+    let effect_object = store
+        .load_object(LifecycleDomain::Effect, &intent_row.effect_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffect(intent_row.effect_object_id.as_str().to_owned())
+        })?;
+    let closure = classify_scheduler_effect_closure(effect_object.state.as_str())?;
+
+    Ok(SchedulerEffectResolution {
+        effect_object_id: intent_row.effect_object_id.clone(),
+        closure,
+    })
+}
+
+/// Reconstruct the sole dispatchable TaskBinding from durable task work.
+///
+/// A scheduler row does not carry a mutable copy of contract or action
+/// identity. Each worker tick instead reads the current immutable contract
+/// epoch and requires exactly one matching persisted Intent. Missing,
+/// ambiguous, or internally inconsistent binding rows fail before lease
+/// acquisition, so recovery cannot guess which Effect a task should drive.
+pub(crate) fn resolve_scheduler_work_for_task<S>(
+    store: &S,
+    task_ref: &str,
+) -> Result<ResolvedSchedulerWork, SchedulerAuthorityError>
+where
+    S: IntentChainStore + ProtocolStore,
+{
+    if task_ref.is_empty() {
+        return Err(SchedulerAuthorityError::EmptyTaskReference);
+    }
+    let contract_epoch = store
+        .current_contract_epoch(task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if contract_epoch <= 0 {
+        return Err(SchedulerAuthorityError::MissingContract(
+            task_ref.to_owned(),
+        ));
+    }
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    };
+    let intent_rows = store
+        .list_intents_for_task_binding(&task_binding)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
+    let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
+    Ok(ResolvedSchedulerWork {
+        authority_binding: SchedulerAuthorityBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch,
+            action_fingerprint,
+        },
+        task_binding,
+    })
+}
+
 /// Select exactly one immutable Intent and verify that its stored binding
 /// agrees with the reverse-index query used to find it.
 fn select_single_effect_intent<'intent>(
