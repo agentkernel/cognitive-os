@@ -36,8 +36,10 @@ pub use adapters::{
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
 };
 pub use agent_adapter_manifest::{
-    AdapterCapabilityDeclaration, AdapterTransportProfile, AgentAdapterError,
-    RegisteredAgentAdapter, register_agent_adapter, verify_registered_agent_adapter,
+    AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
+    AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
+    open_registered_adapter_lifecycle, pause_adapter_lifecycle, register_agent_adapter,
+    stop_adapter_lifecycle, verify_registered_agent_adapter,
 };
 pub use agent_registration::{
     OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentActivationRequest,

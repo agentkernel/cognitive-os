@@ -1,12 +1,15 @@
-//! Universal Agent Adapter Contract — private MVP (P8-T02/D01).
+//! Universal Agent Adapter Contract — private MVP (P8-T02/D01–D02).
 //!
-//! Daemon-owned adapter capability declaration and registration facts use AKP
-//! as the only adaptation protocol. Public listeners, direct authority writes,
-//! and Task-completion claims fail closed. Lane-CTR public
-//! `agent-adapter-manifest` schema registration remains a later slice.
+//! Daemon-owned adapter capability declaration, registration, and lifecycle
+//! facts use AKP as the only adaptation protocol. Public listeners, direct
+//! authority writes, Task-completion claims, and Task-channel lifecycle
+//! mutations fail closed. Lane-CTR public `agent-adapter-manifest` schema
+//! registration remains a later slice.
 
 use sha2::{Digest, Sha256};
 use thiserror::Error;
+
+use crate::channel_binding::AuthorityChannel;
 
 /// Supported adapter transport profile for the MVP.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,7 +45,25 @@ pub struct RegisteredAgentAdapter {
     pub candidate_only: bool,
 }
 
-/// Fail-closed adapter registration errors.
+/// Daemon-owned adapter lifecycle vocabulary for the private MVP.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AdapterLifecycleState {
+    Registered,
+    Active,
+    Paused,
+    Stopped,
+}
+
+/// Epoch-fenced lifecycle handle bound to a registered declaration digest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdapterLifecycleHandle {
+    pub adapter_id: String,
+    pub declaration_digest: String,
+    pub state: AdapterLifecycleState,
+    pub fencing_epoch: u64,
+}
+
+/// Fail-closed adapter registration and lifecycle errors.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum AgentAdapterError {
     #[error("adapter declaration is missing required identity or digest material")]
@@ -57,6 +78,14 @@ pub enum AgentAdapterError {
     UnsupportedProtocol,
     #[error("adapter declaration digest mismatch")]
     DigestMismatch,
+    #[error("adapter lifecycle digest is stale relative to the registered declaration")]
+    StaleDeclarationDigest,
+    #[error("adapter lifecycle requires the management channel")]
+    ChannelIsolationViolation,
+    #[error("adapter lifecycle transition is invalid for the current state")]
+    InvalidLifecycleTransition,
+    #[error("adapter lifecycle fencing epoch mismatch")]
+    StaleLifecycleEpoch,
 }
 
 /// Validate and register a private MVP agent adapter declaration.
@@ -106,6 +135,127 @@ pub fn verify_registered_agent_adapter(
     Ok(())
 }
 
+/// Open a registered adapter into the inactive lifecycle handle (epoch 0).
+pub fn open_registered_adapter_lifecycle(
+    registered: &RegisteredAgentAdapter,
+) -> Result<AdapterLifecycleHandle, AgentAdapterError> {
+    if registered.adapter_id.trim().is_empty() || registered.declaration_digest.trim().is_empty() {
+        return Err(AgentAdapterError::MissingIdentity);
+    }
+    if !registered.candidate_only {
+        return Err(AgentAdapterError::CandidateOnlyRequired);
+    }
+    if registered.protocol != AdapterTransportProfile::AkpHttpJsonSse {
+        return Err(AgentAdapterError::UnsupportedProtocol);
+    }
+    Ok(AdapterLifecycleHandle {
+        adapter_id: registered.adapter_id.clone(),
+        declaration_digest: registered.declaration_digest.clone(),
+        state: AdapterLifecycleState::Registered,
+        fencing_epoch: 0,
+    })
+}
+
+/// Activate a registered/paused/stopped adapter over an exact declaration digest.
+pub fn activate_adapter_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, AgentAdapterError> {
+    require_management_channel(channel)?;
+    require_current_digest(handle, expected_declaration_digest)?;
+    require_current_epoch(handle, expected_epoch)?;
+    match handle.state {
+        AdapterLifecycleState::Registered
+        | AdapterLifecycleState::Paused
+        | AdapterLifecycleState::Stopped => Ok(AdapterLifecycleHandle {
+            adapter_id: handle.adapter_id.clone(),
+            declaration_digest: handle.declaration_digest.clone(),
+            state: AdapterLifecycleState::Active,
+            fencing_epoch: handle.fencing_epoch.saturating_add(1),
+        }),
+        AdapterLifecycleState::Active => Err(AgentAdapterError::InvalidLifecycleTransition),
+    }
+}
+
+/// Pause an active adapter over an exact declaration digest.
+pub fn pause_adapter_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, AgentAdapterError> {
+    require_management_channel(channel)?;
+    require_current_digest(handle, expected_declaration_digest)?;
+    require_current_epoch(handle, expected_epoch)?;
+    match handle.state {
+        AdapterLifecycleState::Active => Ok(AdapterLifecycleHandle {
+            adapter_id: handle.adapter_id.clone(),
+            declaration_digest: handle.declaration_digest.clone(),
+            state: AdapterLifecycleState::Paused,
+            fencing_epoch: handle.fencing_epoch.saturating_add(1),
+        }),
+        AdapterLifecycleState::Registered
+        | AdapterLifecycleState::Paused
+        | AdapterLifecycleState::Stopped => Err(AgentAdapterError::InvalidLifecycleTransition),
+    }
+}
+
+/// Stop an active or paused adapter over an exact declaration digest.
+pub fn stop_adapter_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, AgentAdapterError> {
+    require_management_channel(channel)?;
+    require_current_digest(handle, expected_declaration_digest)?;
+    require_current_epoch(handle, expected_epoch)?;
+    match handle.state {
+        AdapterLifecycleState::Active | AdapterLifecycleState::Paused => {
+            Ok(AdapterLifecycleHandle {
+                adapter_id: handle.adapter_id.clone(),
+                declaration_digest: handle.declaration_digest.clone(),
+                state: AdapterLifecycleState::Stopped,
+                fencing_epoch: handle.fencing_epoch.saturating_add(1),
+            })
+        }
+        AdapterLifecycleState::Registered | AdapterLifecycleState::Stopped => {
+            Err(AgentAdapterError::InvalidLifecycleTransition)
+        }
+    }
+}
+
+fn require_management_channel(channel: AuthorityChannel) -> Result<(), AgentAdapterError> {
+    if channel != AuthorityChannel::Management {
+        return Err(AgentAdapterError::ChannelIsolationViolation);
+    }
+    Ok(())
+}
+
+fn require_current_digest(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+) -> Result<(), AgentAdapterError> {
+    if expected_declaration_digest.trim().is_empty()
+        || expected_declaration_digest != handle.declaration_digest
+    {
+        return Err(AgentAdapterError::StaleDeclarationDigest);
+    }
+    Ok(())
+}
+
+fn require_current_epoch(
+    handle: &AdapterLifecycleHandle,
+    expected_epoch: u64,
+) -> Result<(), AgentAdapterError> {
+    if expected_epoch != handle.fencing_epoch {
+        return Err(AgentAdapterError::StaleLifecycleEpoch);
+    }
+    Ok(())
+}
+
 fn bind_declaration_digest(declaration: &AdapterCapabilityDeclaration) -> String {
     let mut hasher = Sha256::new();
     hasher.update(declaration.adapter_id.as_bytes());
@@ -136,6 +286,13 @@ mod tests {
             authority_writer: false,
             discovery_card_digest: "aa".repeat(32),
         }
+    }
+
+    fn registered_handle() -> (RegisteredAgentAdapter, AdapterLifecycleHandle) {
+        let registered = register_agent_adapter(&valid_declaration()).expect("register");
+        let handle =
+            open_registered_adapter_lifecycle(&registered).expect("open registered lifecycle");
+        (registered, handle)
     }
 
     #[test]
@@ -179,6 +336,93 @@ mod tests {
         assert_eq!(
             verify_registered_agent_adapter(&registered, &tampered).unwrap_err(),
             AgentAdapterError::DigestMismatch
+        );
+    }
+
+    #[test]
+    fn activates_pauses_and_stops_over_declaration_digest() {
+        let (registered, handle) = registered_handle();
+        assert_eq!(handle.state, AdapterLifecycleState::Registered);
+        assert_eq!(handle.fencing_epoch, 0);
+
+        let active = activate_adapter_lifecycle(
+            &handle,
+            &registered.declaration_digest,
+            0,
+            AuthorityChannel::Management,
+        )
+        .expect("activate");
+        assert_eq!(active.state, AdapterLifecycleState::Active);
+        assert_eq!(active.fencing_epoch, 1);
+
+        let paused = pause_adapter_lifecycle(
+            &active,
+            &registered.declaration_digest,
+            1,
+            AuthorityChannel::Management,
+        )
+        .expect("pause");
+        assert_eq!(paused.state, AdapterLifecycleState::Paused);
+        assert_eq!(paused.fencing_epoch, 2);
+
+        let stopped = stop_adapter_lifecycle(
+            &paused,
+            &registered.declaration_digest,
+            2,
+            AuthorityChannel::Management,
+        )
+        .expect("stop");
+        assert_eq!(stopped.state, AdapterLifecycleState::Stopped);
+        assert_eq!(stopped.fencing_epoch, 3);
+    }
+
+    #[test]
+    fn rejects_stale_digest_and_task_channel_lifecycle() {
+        let (registered, handle) = registered_handle();
+
+        assert_eq!(
+            activate_adapter_lifecycle(&handle, "deadbeef", 0, AuthorityChannel::Management,)
+                .unwrap_err(),
+            AgentAdapterError::StaleDeclarationDigest
+        );
+
+        assert_eq!(
+            activate_adapter_lifecycle(
+                &handle,
+                &registered.declaration_digest,
+                0,
+                AuthorityChannel::Task,
+            )
+            .unwrap_err(),
+            AgentAdapterError::ChannelIsolationViolation
+        );
+
+        let active = activate_adapter_lifecycle(
+            &handle,
+            &registered.declaration_digest,
+            0,
+            AuthorityChannel::Management,
+        )
+        .expect("activate");
+        assert_eq!(
+            pause_adapter_lifecycle(
+                &active,
+                &registered.declaration_digest,
+                0,
+                AuthorityChannel::Management,
+            )
+            .unwrap_err(),
+            AgentAdapterError::StaleLifecycleEpoch
+        );
+        assert_eq!(
+            stop_adapter_lifecycle(
+                &active,
+                &registered.declaration_digest,
+                1,
+                AuthorityChannel::Task,
+            )
+            .unwrap_err(),
+            AgentAdapterError::ChannelIsolationViolation
         );
     }
 }
