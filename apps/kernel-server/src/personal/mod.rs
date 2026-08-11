@@ -8,7 +8,6 @@ mod auth;
 mod bounds;
 mod headless_vault_doctor;
 mod lifecycle;
-mod memory_admission;
 mod operability_doctor;
 mod pi_runtime;
 mod provider_proxy;

@@ -22,6 +22,7 @@ pub mod faults;
 pub mod ids;
 pub mod installation;
 pub mod layout;
+pub mod memory_admission;
 pub mod memory_store;
 pub mod migration;
 pub mod personal_backup;
@@ -45,6 +46,7 @@ pub use layout::{
     AUTHORITY_DATABASE_FILE_NAME, INSTALLATION_DATABASE_FILE_NAME, PERSONAL_PRODUCT_DIR_NAME,
     PersonalDataLayout, PersonalLayoutError,
 };
+pub use memory_admission::admit_memory_candidate;
 pub use migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,

@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P9-T03/D02` on `personal/P9-T03-store-composition` |
-| Active task lease | `lease/personal/P9-T03/store-composition` | P9-T03 owns server + scheduler_authority long-lived store paths on Draft PR #193. | D02: wire request-path opens through daemon-owned store |
-| P9-T03 Store access and composition-root optimization | `in-progress` | Draft PR #193. D01 shared-store recovery/tick at `54be4c1`: Linux scheduler_authority 39/39 + Clippy. | D02 request-path single-writer store wiring |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P9-T03/D03` on `personal/P9-T03-store-composition` |
+| Active task lease | `lease/personal/P9-T03/store-composition` | P9-T03 owns server + store admission seam + store-access stage timing on Draft PR #193. | D03: sink Memory admission + non-claim stage timing |
+| P9-T03 Store access and composition-root optimization | `in-progress` | Draft PR #193. D01 at `54be4c1`; D02 request-path Arc store at `2eb82c9` (Linux request_path 1/1, scheduler_authority 39/39, Clippy). | D03 composition seam + stage-timing non-claim |
 | P9-T02 Authority-path structure debt | **done** | D01–D04 closed; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Linux evidence through `a11d0bd`; required CI `31471319404` on `b1cc8a7`. Closure checkpoint `20260811-personal-p9-t02-structure-debt-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
 | P8-T06 Cross-episode learning loop | **done** | D01–D04 closed; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Reflexion Memory/Skill candidate planners + daemon admission wiring. Required CI `31461384771` / closure `31462013806`. Closure checkpoint `20260811-personal-p8-t06-learning-loop-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
@@ -62,7 +62,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | 62 | 50 | 1 | 0 | 11 | 12 |
 
 `P9-T02` is `done` (PR #192 merged). `P9-T03` is `in-progress` with unique
-slice `P9-T03/D01`. Formal task completion remains independent from every
+slice `P9-T03/D03`. Formal task completion remains independent from every
 product Gate except where the plan explicitly binds Gate disposition to task
 acceptance.
 
@@ -107,8 +107,8 @@ acceptance.
 | `P9-T02/D03` | `done` | `tool_executor/` + `sqlite/` directory splits with focused-test parity; Linux tool_executor 27/27, sqlite 1/1, scheduler 38/38, Clippy at `a11d0bd` | consumed by D04 |
 | `P9-T02/D04` | `done` | acceptance mapping + closure; required CI `31471319404` on `b1cc8a7`; checkpoint written; PR #192 merged at `main@cff7401` | consumed by completed P9-T02 task |
 | `P9-T03/D01` | `done` | daemon startup recovery+tick share one `SqliteAuthorityStore`; Linux scheduler_authority 39/39 + Clippy at `54be4c1` | consumed by D02 |
-| `P9-T03/D02` | `in-progress` | wire remaining personal request-path opens through the daemon-owned store | exact native Linux focused tests + Clippy |
-| `P9-T03/D03` | `ready` | not started | waits for D02 |
+| `P9-T03/D02` | `done` | request-path handlers reuse daemon-owned `Arc<SqliteAuthorityStore>`; Linux request_path 1/1, scheduler_authority 39/39, Clippy at `2eb82c9` | consumed by D03 |
+| `P9-T03/D03` | `in-progress` | sink Memory admission seam to `cognitive-store` + store-access stage-timing non-claim in `cognitive-runtime` | exact native Linux focused tests + Clippy |
 | `P9-T03/D04` | `ready` | not started | waits for D03; final acceptance |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
