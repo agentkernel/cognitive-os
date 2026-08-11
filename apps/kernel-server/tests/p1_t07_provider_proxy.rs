@@ -53,6 +53,11 @@ fn wait_for_connection(port: u16) -> TcpStream {
 
 fn exchange_http_request(port: u16, request: &str) -> String {
     let mut stream = wait_for_connection(port);
+    // A daemon regression must fail this integration test instead of leaving a
+    // Windows CI worker blocked forever while waiting for connection closure.
+    stream
+        .set_read_timeout(Some(Duration::from_secs(20)))
+        .unwrap();
     stream.write_all(request.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut response = String::new();
