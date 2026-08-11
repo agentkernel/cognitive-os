@@ -496,6 +496,22 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
     let authority_store = SqliteAuthorityStore::open(authority_database_path)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    run_private_scheduler_tick_with_store(
+        &authority_store,
+        &mut scheduler_repository,
+        provider_config_dir,
+    )
+}
+
+/// Run one private scheduler pass against an already-open daemon-owned store.
+///
+/// Production startup opens the authority store once and reuses that
+/// single-writer handle for recovery plus this tick (P9-T03/D01).
+pub(crate) fn run_private_scheduler_tick_with_store(
+    authority_store: &SqliteAuthorityStore,
+    scheduler_repository: &mut SchedulerRepository,
+    provider_config_dir: &Path,
+) -> Result<(), SchedulerAuthorityError> {
     let clock = SystemClock;
     let identifiers = UuidV7Generator;
     let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
@@ -508,7 +524,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
             continue;
         }
         let resolved_work =
-            resolve_scheduler_work_for_task(&authority_store, &scheduler_row.task_ref)?;
+            resolve_scheduler_work_for_task(authority_store, &scheduler_row.task_ref)?;
         if resolved_work.task_binding.contract_epoch != scheduler_row.contract_epoch {
             return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
                 "runnable scheduler work {} at epoch {} is not the current contract epoch {}",
@@ -518,7 +534,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
             )));
         }
         let context_execution_policy =
-            load_context_execution_policy(&authority_store, &resolved_work.task_binding)?;
+            load_context_execution_policy(authority_store, &resolved_work.task_binding)?;
         let observed_wall_time = clock
             .now()
             .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
@@ -553,7 +569,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
                 PrivatePiCandidateProcess::from_config(&pi_config, provider_config_dir),
             );
             propose_persist_and_admit_candidate(
-                &authority_store,
+                authority_store,
                 &clock,
                 &identifiers,
                 &context_command,
@@ -571,7 +587,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
         })?;
         let worker_attempt_id = next_object_id(&identifiers)?;
         let driver = LoopDriver::new(
-            &authority_store,
+            authority_store,
             &clock,
             &identifiers,
             UriRef::parse("principal://personal/daemon").map_err(|error| {
@@ -585,8 +601,8 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
             })?,
         );
         run_bounded_scheduler_attempt(
-            &authority_store,
-            &mut scheduler_repository,
+            authority_store,
+            scheduler_repository,
             &mut scheduler_service,
             &driver,
             &resolved_work.authority_binding,

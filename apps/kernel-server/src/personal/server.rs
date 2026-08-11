@@ -16,7 +16,10 @@ use cognitive_kernel::ports::{
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
-use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
+use cognitive_store::{
+    PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
+    scheduler::SchedulerRepository,
+};
 use serde_json::json;
 
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
@@ -31,7 +34,7 @@ use super::readiness::{
 };
 use super::resource_api::ResourceApi;
 use super::scheduler_authority::{
-    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick_with_provider_config,
+    reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
 use super::task_api::TaskApi;
 
@@ -103,18 +106,34 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         "kernel-server personal: acquired single-instance lock at {}",
         lock.path().display()
     );
-    reconcile_scheduler_recovery_at_startup(&config.layout.authority_database_path()).map_err(
+    // Open the authority store once for the daemon process and reuse the
+    // single-writer handle for startup recovery plus the private scheduler tick
+    // (P9-T03/D01). Later request handlers still open their own handles until D02.
+    let authority_store = SqliteAuthorityStore::open(&config.layout.authority_database_path())
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: format!("open Personal authority store for daemon startup: {error}"),
+        })?;
+    let mut scheduler_repository =
+        SchedulerRepository::open(&config.layout.authority_database_path()).map_err(|error| {
+            PersonalDaemonError::Io {
+                detail: format!("open Personal scheduler repository for daemon startup: {error}"),
+            }
+        })?;
+    reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository).map_err(
         |error| PersonalDaemonError::Io {
             detail: format!("reconcile durable scheduler recovery before startup: {error}"),
         },
     )?;
-    run_private_scheduler_tick_with_provider_config(
-        &config.layout.authority_database_path(),
+    run_private_scheduler_tick_with_store(
+        &authority_store,
+        &mut scheduler_repository,
         config.layout.config_dir(),
     )
     .map_err(|error| PersonalDaemonError::Io {
         detail: format!("run private scheduler tick before startup: {error}"),
     })?;
+    drop(scheduler_repository);
+    drop(authority_store);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)

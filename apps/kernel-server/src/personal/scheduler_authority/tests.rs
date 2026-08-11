@@ -2350,3 +2350,33 @@ fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
         Err(SchedulerAuthorityError::UnsupportedEffectState(state)) if state == "UNRECOGNIZED"
     ));
 }
+
+#[test]
+fn shared_authority_store_drives_startup_recovery_and_private_tick() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let database_path = layout.authority_database_path();
+    let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    super::run_private_scheduler_tick_with_store(
+        &authority_store,
+        &mut scheduler_repository,
+        layout.config_dir(),
+    )
+    .unwrap();
+
+    // A second recovery+tick pass on the same open store must remain fail-closed
+    // for empty work without requiring another SqliteAuthorityStore::open.
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    super::run_private_scheduler_tick_with_store(
+        &authority_store,
+        &mut scheduler_repository,
+        layout.config_dir(),
+    )
+    .unwrap();
+}

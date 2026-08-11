@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | no active lease |
+| `lease/personal/P9-T03/store-composition` | P9-T03/D01 long-lived authority store | Lane-RUN | `personal/P9-T03-store-composition` | `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/src/personal/scheduler_authority/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/traceability/matrix.yaml`; `docs/checkpoints/` | cursor-agent/P9-T03-D01 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
@@ -85,7 +85,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
-| `lease/personal/P9-T02/structure-debt` | P9-T02/D01-D04 structure debt | `personal/P9-T02-structure-debt` | 2026-08-11 | D01–D04 deliver scheduler_authority/tool_executor/sqlite structure splits with focused-test parity and acceptance closure. Linux evidence through `a11d0bd`; required CI `31470278984` on `eddaa70`; PR #192 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
+| `lease/personal/P9-T02/structure-debt` | P9-T02/D01-D04 structure debt | `personal/P9-T02-structure-debt` | 2026-08-11 | D01–D04 deliver scheduler_authority/tool_executor/sqlite structure splits with focused-test parity and acceptance closure. Linux evidence through `a11d0bd`; required CI `31470278984` on `eddaa70`; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T03/non-pi-agent` | P8-T03/D01-D04 non-Pi Codex | `personal/P8-T03-non-pi-agent` | 2026-08-11 | D01–D04 deliver Codex fixture identity, lifecycle, non-claim qualification matrix, and acceptance closure. Linux evidence through `b41f06f`; required CI `31463130827` / closure on `3beb825`; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T06/learning-loop` | P8-T06/D01-D04 learning loop | `personal/P8-T06-learning-loop` | 2026-08-11 | D01–D04 deliver Reflexion failure-lesson Memory/Skill candidate planners, daemon Memory admission wiring, and acceptance closure. Linux evidence through `b81414d`; required CI `31461384771` / closure `31462013806` on `db6fa7a`; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T05/context-compaction` | P8-T05/D01-D04 context compaction | `personal/P8-T05-context-compaction` | 2026-08-11 | D01–D04 deliver digest-bound compaction, adaptive budgets, UCR-01 non-claim benefit observation, and acceptance closure. Linux evidence through `e15492a`; required CI `31459558236` / closure `31460220901` on `c02b272`; PR #189 merged at `main@fa4f74a8feaadaa74affca90cb37660f40cdeb25`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
