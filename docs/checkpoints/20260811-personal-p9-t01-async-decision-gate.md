@@ -55,7 +55,7 @@ or generalized performance/Agent-benefit claim.
 | task claim, exact lease, and plan reconciliation | pass | current `PROGRESS.md`, formal plan, and active recovery lease row |
 | native Linux exact-revision collector | pass | exact `826745c` bundle worktree; focused `perf::tests` 5/5 |
 | local diff/consistency checks | pass | `git diff --check`; linter diagnostics absent |
-| required CI | pass | required Ubuntu/Windows CI `31516749535` passed on recovery closure head `195510c849aa4f94be932b4f8434b17f7ebdb9f6` |
+| required CI | pass | final required Ubuntu/Windows CI `31540218963` passed on merged PR #197 head `498852fe9805bcf4d2843e1a11994631d9e22f1e` |
 
 ## Exact native Linux result
 
@@ -77,6 +77,7 @@ single-writer authority path.
 
 The native result is `tested-local` implementation evidence. A subsequent
 Windows test-stall recovery added bounded socket reads and serialized
-loopback-daemon test execution; required CI `31516749535` passed for recovery
-closure revision `195510c849aa4f94be932b4f8434b17f7ebdb9f6`. No Gate, release,
+loopback-daemon test execution; final required CI `31540218963` passed for
+closure revision `498852fe9805bcf4d2843e1a11994631d9e22f1e`, which merged at
+`main@af64b85`. No Gate, release,
 Profile, or generalized performance claim is made.

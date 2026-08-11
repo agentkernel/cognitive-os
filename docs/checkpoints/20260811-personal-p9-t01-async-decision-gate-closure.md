@@ -4,8 +4,8 @@
 - Branch: `personal/P9-T01-async-decision-gate`
 - Leases: `lease/personal/P9-T01/async-decision-gate`; `lease/personal/P9-T01/windows-ci-recovery`
 - Decision implementation revision: `826745c868b26a5aab71e0abeedb038e364267e4`
-- Closure revision: `53d9c007dced054a117ca92a731ce80f0fee51d9`
-- Draft PR: https://github.com/agentkernel/cognitive-os/pull/197
+- Closure revision: `498852fe9805bcf4d2843e1a11994631d9e22f1e`
+- PR: https://github.com/agentkernel/cognitive-os/pull/197 (merged at `af64b85c21b201f3b86f48a48be73398d1421cfa`)
 - Date: 2026-08-11
 
 ## Acceptance mapping
@@ -21,7 +21,7 @@
 
 | Slice | Status | Evidence |
 |---|---|---|
-| D01 | done | Exact native Linux `cargo test -p cognitive-runtime --lib perf::tests -- --nocapture` passed 5/5 at `826745c`; the decision runner returned `conservative-no-migration`; after a Windows integration-test stall, bounded socket reads and serial loopback-daemon execution were added and required Ubuntu/Windows CI `31516749535` passed on recovery head `195510c`, then final closure CI `31539326728` passed on `53d9c00`. |
+| D01 | done | Exact native Linux `cargo test -p cognitive-runtime --lib perf::tests -- --nocapture` passed 5/5 at `826745c`; the decision runner returned `conservative-no-migration`; after a Windows integration-test stall, bounded socket reads and serial loopback-daemon execution were added. Final required Ubuntu/Windows CI `31540218963` passed on PR #197 head `498852f`, which then merged at `main@af64b85`. |
 
 ## Validation
 
@@ -30,7 +30,7 @@
 | Exact native Linux focused performance tests | **pass** 5/5 | `826745c` on `DEV-LINUX-NATIVE-01` |
 | Local `cargo fmt --all -- --check` | **pass** | closure worktree |
 | Local `pnpm run check:consistency` | **pass** | closure worktree |
-| Required Ubuntu/Windows CI | **pass** run `31539326728` | PR #197 head `53d9c00` |
+| Required Ubuntu/Windows CI | **pass** run `31540218963` | PR #197 head `498852f` |
 
 ## Non-claims
 
@@ -42,4 +42,4 @@
 
 1. D01 acceptance mapping is complete with the conservative decision.
 2. Required CI is green on the closure head.
-3. PR #197 is the task closure PR; merge it normally, then remove the task branch and reconcile local `main`.
+3. PR #197 merged normally at `main@af64b85`; the remote task branch was deleted and local `main` reconciled.
