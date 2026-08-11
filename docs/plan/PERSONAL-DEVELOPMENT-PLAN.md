@@ -712,7 +712,7 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P9-T01 | 异步事件底座演进 | P8-T01 | 以 P7-T04/D02 治理路径 stage 计时区分"治理税/实现税"为决策门：若连接/open/锁竞争主导 p95，分阶段将 HTTP/watch/sidecar 流层迁移到异步 runtime，权威 SQLite 写路径保持单写者语义；否则记录保守优化结论 | not-started | — |
-| P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | in-progress | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt`. D01 extract scheduler_authority tests. |
+| P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | in-progress | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt` / PR #192. D01–D03 complete; D04 acceptance. |
 | P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | not-started | — |
 
 ## 5. Gate 与证据要求
