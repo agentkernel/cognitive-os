@@ -189,10 +189,7 @@ pub fn plan_memory_skill_export(
     let mut planned = Vec::with_capacity(units.len());
 
     for unit in units {
-        if !approved
-            .iter()
-            .any(|category| *category == unit.inventory_category)
-        {
+        if !approved.contains(&unit.inventory_category) {
             return Err(PersonalBackupError::UnapprovedInventoryCategory);
         }
         if unit.inventory_category != MEMORY_SKILL_EXPORT_CATEGORY {
