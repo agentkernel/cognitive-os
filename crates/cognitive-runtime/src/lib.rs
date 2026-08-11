@@ -15,6 +15,7 @@ pub mod agent_registration;
 pub mod channel_binding;
 pub mod compaction_benefit;
 pub mod context_compaction;
+pub mod dynamic_tool_ecosystem;
 pub mod event_envelope;
 pub mod graded_load;
 pub mod harness_hooks;
@@ -72,6 +73,17 @@ pub use compaction_benefit::{
 pub use context_compaction::{
     CompactContextArtifact, CompactionLossRecord, CompactionSourceFact, ContextCompactionError,
     plan_context_compaction,
+};
+pub use dynamic_tool_ecosystem::{
+    B10_REQUIRED_OBSERVATIONS, B10QualificationObservation, CompositeChildEvidenceSlot,
+    CompositeToolPlan, DYNAMIC_TOOL_FIXTURE_PACKAGE_ID, DYNAMIC_TOOL_PACKAGE_SCHEMA_PIN,
+    DynamicToolCacheEntry, DynamicToolCacheTelemetry, DynamicToolCandidate,
+    DynamicToolEcosystemError, DynamicToolExposurePlan, DynamicToolLifecycleState,
+    DynamicToolPackageManifest, DynamicToolReconcileReceipt, bind_dynamic_tool_package,
+    build_b10_qualification_report, disable_dynamic_tool, discover_dynamic_tool_candidate,
+    enable_dynamic_tool, lookup_pure_read_cache, mediate_dynamic_tool_access, plan_composite_tool,
+    plan_task_contract_exposure, quarantine_dynamic_tool, reconcile_dynamic_tool_unknown_outcome,
+    verify_dynamic_tool_package_current,
 };
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use graded_load::{

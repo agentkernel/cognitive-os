@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P5-T03 merge |
-| Active task lease | `none` | P5-T03 lease closing with PR #195 merge | claim next implementation-ready Personal task |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P5-T04 merge |
+| Active task lease | `none` | P5-T04 lease closing with PR #196 merge | claim next implementation-ready Personal task |
+| P5-T04 Post-1.0 dynamic Tool + B10 | **done** | D01–D04 closed under ADR-0050. Linux 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; B10 MVP `pass`. Closure `20260811-personal-p5-t04-dynamic-tool-closure.md`. | retain closure evidence; no GMVP-LINUX/release/Profile claim |
 | P5-T03 Post-1.0 MCP Tool adapter | **done** | D01–D04 closed; Linux 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure checkpoint `20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. | retain closure evidence; no B10/Gate/release/Profile claim |
 | P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **done** | D01–D04 closed; B08 MVP `pass` (ADR-0048) at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` (ADR-0049) at `b3f4b88` + CI `31480604511`. Closure checkpoint `20260811-personal-p7-t08-gmvp-linux-closure.md`. | retain closure evidence; no Profile/Windows B01-W claim |
 | B08 Memory + Skill Gate | **pass** (MVP, ADR-0048) | Fixed 11-row authority-path matrix + harness at `65a736c`; Linux 14/14+1/1+Clippy; CI `31479512940` | retain evidence |
@@ -62,15 +63,20 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 53 | 0 | 0 | 9 | 9 |
+| 62 | 54 | 0 | 0 | 8 | 8 |
 
-`P5-T03` is `done` (PR #195). Formal task completion remains independent from
-B10, Gate, Profile, and Windows B01-W claims.
+`P5-T04` is `done` (PR #196). Formal task completion remains independent from
+GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
+under ADR-0050.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P5-T04/D01` | `done` | dynamic package bind + disabled discovery; Linux 4/4 + Clippy at `b49d274` | consumed by D02 |
+| `P5-T04/D02` | `done` | enable/disable/quarantine + TaskContract exposure; covered in same Linux 4/4 | consumed by D03 |
+| `P5-T04/D03` | `done` | reconcile/composite/cache/bypass; covered in same Linux 4/4 | consumed by D04 |
+| `P5-T04/D04` | `done` | ADR-0050 B10 MVP pass; required CI `31486478177` on `992dfe3`; PR #196 | consumed by completed P5-T04 task |
 | `P5-T03/D01` | `done` | fixture manifest + transport-only init at `a83bdb8`; Linux 4/4 | consumed by D02 |
 | `P5-T03/D02` | `done` | drift/timeout/no-auto-enable covered in same Linux 4/4 | consumed by D03 |
 | `P5-T03/D03` | `done` | direct-bypass + non-claim report covered in same Linux 4/4 | consumed by D04 |
@@ -197,6 +203,7 @@ not override this table.
 | B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
 | B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
 | B08/B09 | B08 `pass` (MVP, ADR-0048); B09 `pass` (MVP, ADR-0047) | B08 matrix at `65a736c` + CI `31479512940` + disposition; B09 matrix at `548f138` + CI `31423464703` | none for MVP scopes; neither alone passes GMVP-LINUX/release/Profile |
+| B10 | `pass` (MVP, ADR-0050) | fixed matrix at `b49d274` + CI `31486478177` on `992dfe3` + non-claim report + §2.3 disposition | none for MVP scope; does not pass GMVP-LINUX/release/Profile |
 | GMVP-LINUX | `pass` (MVP, ADR-0049) | fixed composition binder at `b3f4b88` + CI `31480604511` + prior Gate MVP dispositions; see P7-T08 closure | none for MVP scope; does not claim Profile or Windows B01-W |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
