@@ -64,7 +64,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 54 | 1 | 0 | 7 | 7 |
+| 62 | 54 | 1 | 0 | 7 | 8 |
 
 `P5-T04` is `done` (PR #196). Formal task completion remains independent from
 GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
