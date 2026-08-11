@@ -9,9 +9,12 @@
 //! directly.
 
 pub mod adapters;
+pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
+pub mod compaction_benefit;
+pub mod context_compaction;
 pub mod event_envelope;
 pub mod graded_load;
 pub mod harness_hooks;
@@ -37,6 +40,9 @@ pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
 };
+pub use adaptive_budget::{
+    AdaptiveBudgetDecision, AdaptiveBudgetError, AdaptiveBudgetTelemetry, adapt_fragment_budget,
+};
 pub use agent_adapter_manifest::{
     AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
     AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
@@ -54,6 +60,14 @@ pub use agent_registration::{
 pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
     is_privileged_management_action, request_from_vector_input,
+};
+pub use compaction_benefit::{
+    CompactionBenefitError, CompactionBenefitFacts, CompactionBenefitObservation,
+    observe_compaction_benefit,
+};
+pub use context_compaction::{
+    CompactContextArtifact, CompactionLossRecord, CompactionSourceFact, ContextCompactionError,
+    plan_context_compaction,
 };
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use graded_load::{
