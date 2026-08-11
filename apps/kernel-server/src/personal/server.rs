@@ -1605,11 +1605,12 @@ mod tests {
     fn request_path_handlers_reuse_daemon_owned_authority_store() {
         use std::time::Instant;
 
-        use cognitive_kernel::ports::AuthorityStore;
+        use cognitive_kernel::ProtocolStore;
         use cognitive_store::{SqliteAuthorityStore, prepare_personal_databases};
 
-        use super::auth::{ChannelClass, SessionIssueRequest};
-        use super::{ResourceApi, handle_task_consumption_route};
+        use super::{
+            ChannelClass, ResourceApi, SessionIssueRequest, handle_task_consumption_route,
+        };
 
         let (layout, authority) = test_fixture("shared-store-request");
         prepare_personal_databases(&layout).expect("prepare databases");
