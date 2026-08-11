@@ -220,7 +220,7 @@ mod tests {
             invoke_registered_harness_hook(
                 &registered,
                 &registered.declaration_digest,
-                "bb".repeat(32),
+                &("bb".repeat(32)),
                 HarnessHookEvent::Verification,
                 AuthorityChannel::Management,
             )
