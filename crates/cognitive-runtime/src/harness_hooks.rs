@@ -1,12 +1,15 @@
-//! Deterministic harness hooks — private MVP (P8-T04/D01).
+//! Deterministic harness hooks — private MVP (P8-T04/D01–D02).
 //!
 //! Daemon-owned lifecycle interception points for admission, pre-dispatch,
-//! post-effect, and verification. Hooks are candidate-only observation
-//! programs: they cannot relax axioms, write authority, complete Tasks, or
-//! mint capabilities. Graded Skill/rule loading remains a later slice.
+//! post-effect, and verification. Owner-programmable hooks are digest-bound
+//! observation programs invoked only on the management channel. They cannot
+//! relax axioms, write authority, complete Tasks, or mint capabilities.
+//! Graded Skill/rule loading remains a later slice.
 
 use sha2::{Digest, Sha256};
 use thiserror::Error;
+
+use crate::channel_binding::AuthorityChannel;
 
 /// Lifecycle interception points owned by the daemon harness.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,10 +69,12 @@ pub enum HarnessHookError {
     AxiomRelaxationForbidden,
     #[error("harness hook claims authority-writer capability")]
     AuthorityWriterForbidden,
-    #[error("harness hook declaration digest mismatch")]
+    #[error("harness hook declaration or program digest mismatch")]
     DigestMismatch,
     #[error("harness hook is not registered for the requested event")]
     HookNotRegistered,
+    #[error("harness hook invocation requires the management channel")]
+    ChannelIsolationViolation,
 }
 
 /// Validate and register a daemon-owned deterministic harness hook.
@@ -95,14 +100,21 @@ pub fn register_harness_hook(
     })
 }
 
-/// Invoke a registered hook over an exact declaration digest (observation only).
+/// Invoke a registered owner-programmable hook over exact digests (observation only).
 pub fn invoke_registered_harness_hook(
     registered: &RegisteredHarnessHook,
     expected_declaration_digest: &str,
+    expected_program_digest: &str,
     event: HarnessHookEvent,
+    channel: AuthorityChannel,
 ) -> Result<HarnessHookObservation, HarnessHookError> {
+    if channel != AuthorityChannel::Management {
+        return Err(HarnessHookError::ChannelIsolationViolation);
+    }
     if expected_declaration_digest.trim().is_empty()
+        || expected_program_digest.trim().is_empty()
         || expected_declaration_digest != registered.declaration_digest
+        || expected_program_digest != registered.program_digest
     {
         return Err(HarnessHookError::DigestMismatch);
     }
@@ -155,12 +167,18 @@ mod tests {
             HarnessHookEvent::PostEffect,
             HarnessHookEvent::Verification,
         ] {
-            let registered = register_harness_hook(&valid_declaration(event)).expect("register");
+            let declaration = valid_declaration(event);
+            let registered = register_harness_hook(&declaration).expect("register");
             assert_eq!(registered.event, event);
             assert_eq!(registered.declaration_digest.len(), 64);
-            let observation =
-                invoke_registered_harness_hook(&registered, &registered.declaration_digest, event)
-                    .expect("invoke");
+            let observation = invoke_registered_harness_hook(
+                &registered,
+                &registered.declaration_digest,
+                &declaration.program_digest,
+                event,
+                AuthorityChannel::Management,
+            )
+            .expect("invoke");
             assert_eq!(observation.decision, "observe");
             assert_eq!(observation.event, event);
         }
@@ -185,21 +203,57 @@ mod tests {
 
     #[test]
     fn rejects_stale_digest_and_event_mismatch() {
-        let registered =
-            register_harness_hook(&valid_declaration(HarnessHookEvent::Verification)).unwrap();
+        let declaration = valid_declaration(HarnessHookEvent::Verification);
+        let registered = register_harness_hook(&declaration).unwrap();
         assert_eq!(
-            invoke_registered_harness_hook(&registered, "deadbeef", HarnessHookEvent::Verification)
-                .unwrap_err(),
+            invoke_registered_harness_hook(
+                &registered,
+                "deadbeef",
+                &declaration.program_digest,
+                HarnessHookEvent::Verification,
+                AuthorityChannel::Management,
+            )
+            .unwrap_err(),
             HarnessHookError::DigestMismatch
         );
         assert_eq!(
             invoke_registered_harness_hook(
                 &registered,
                 &registered.declaration_digest,
+                "bb".repeat(32),
+                HarnessHookEvent::Verification,
+                AuthorityChannel::Management,
+            )
+            .unwrap_err(),
+            HarnessHookError::DigestMismatch
+        );
+        assert_eq!(
+            invoke_registered_harness_hook(
+                &registered,
+                &registered.declaration_digest,
+                &declaration.program_digest,
                 HarnessHookEvent::Admission,
+                AuthorityChannel::Management,
             )
             .unwrap_err(),
             HarnessHookError::HookNotRegistered
+        );
+    }
+
+    #[test]
+    fn rejects_task_channel_hook_invocation() {
+        let declaration = valid_declaration(HarnessHookEvent::PreDispatch);
+        let registered = register_harness_hook(&declaration).unwrap();
+        assert_eq!(
+            invoke_registered_harness_hook(
+                &registered,
+                &registered.declaration_digest,
+                &declaration.program_digest,
+                HarnessHookEvent::PreDispatch,
+                AuthorityChannel::Task,
+            )
+            .unwrap_err(),
+            HarnessHookError::ChannelIsolationViolation
         );
     }
 }
