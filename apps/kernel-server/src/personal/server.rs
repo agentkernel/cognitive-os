@@ -356,6 +356,7 @@ fn handle_connection_with_task_api(
 /// process-lifetime watch continuity; pre-existing front-door tests do not
 /// exercise that state and use an isolated instance.
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 fn handle_connection(
     stream: TcpStream,
     bounds: &PersonalResourceBounds,
