@@ -13,6 +13,8 @@ pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
 pub mod event_envelope;
+pub mod graded_load;
+pub mod harness_hooks;
 pub mod harness_loop;
 pub mod installer;
 pub mod intent_flow;
@@ -54,6 +56,13 @@ pub use channel_binding::{
     is_privileged_management_action, request_from_vector_input,
 };
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
+pub use graded_load::{
+    GradedLoadCandidate, GradedLoadError, GradedLoadPlan, GradedLoadTier, plan_graded_context_load,
+};
+pub use harness_hooks::{
+    HarnessHookDeclaration, HarnessHookError, HarnessHookEvent, HarnessHookObservation,
+    RegisteredHarnessHook, invoke_registered_harness_hook, register_harness_hook,
+};
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
 pub use installer::{
     AcceptingOfficialPiAcquisitionLockVerifier, AcceptingSignaturePort,
