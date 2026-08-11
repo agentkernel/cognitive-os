@@ -9,14 +9,8 @@ use thiserror::Error;
 
 const CLAIM_SCOPE_NON_CLAIM: &str = "non-claim";
 const SCENARIO_UCR_01: &str = "UCR-01";
-const PROHIBITED_CLAIM_LABELS: &[&str] = &[
-    "gate",
-    "release",
-    "profile",
-    "completion",
-    "passed",
-    "pass",
-];
+const PROHIBITED_CLAIM_LABELS: &[&str] =
+    &["gate", "release", "profile", "completion", "passed", "pass"];
 
 /// Durable compaction/budget facts used for a non-claim benefit observation.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -131,8 +125,7 @@ mod tests {
 
     #[test]
     fn observes_digest_bound_non_claim_benefit() {
-        let observation =
-            observe_compaction_benefit(&valid_facts(), &[]).expect("observe");
+        let observation = observe_compaction_benefit(&valid_facts(), &[]).expect("observe");
         assert_eq!(observation.claim_scope, CLAIM_SCOPE_NON_CLAIM);
         assert_eq!(observation.scenario_id, SCENARIO_UCR_01);
         assert_eq!(observation.retained_source_count, 2);
