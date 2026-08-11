@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P8-T06/D04` on `personal/P8-T06-learning-loop` |
-| Active task lease | `lease/personal/P8-T06/learning-loop` | P8-T06 owns learning_loop + plan/checkpoint paths on Draft PR #190. | required CI green → ready/merge/lease/branch/main |
-| P8-T06 Cross-episode learning loop | `in-progress` | Draft PR #190. D01 at `8ba3fe0`; D02 at `31e7384`; D03 Linux 5/5 + Clippy at `b81414d`; D04 acceptance closure. | wait required CI on `b81414d`; then merge |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | claim next ready Personal task after P8-T06 merge |
+| Active task lease | `none` | P8-T06 closure pending merge of PR #190; no new lease until merge/reconcile completes. | merge PR #190; then claim next ready task |
+| P8-T06 Cross-episode learning loop | `done` | D01–D04 closed; Draft PR #190 HEAD `29399b7`. Linux evidence through `b81414d`; required CI `31461384771`. Closure checkpoint `20260811-personal-p8-t06-learning-loop-closure.md`. | ready/merge/lease/branch/main; no Gate/release/Profile claim |
 | P8-T05 Context compaction and adaptive budgets | **done** | D01–D04 closed; PR #189 merged at `main@fa4f74a8feaadaa74affca90cb37660f40cdeb25`. Digest-bound compaction, adaptive budgets, UCR-01 non-claim benefit observation. Required CI `31459558236` / closure `31460220901`. Closure checkpoint `20260811-personal-p8-t05-context-compaction-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T04 Deterministic harness hooks | **done** | D01–D04 closed; PR #188 merged at `main@f85a14b5eba20311e49367bf1e6a3222767691b0`. Lifecycle hooks + graded Skill/rule load. Required CI `31458052642`. Closure checkpoint `20260811-personal-p8-t04-harness-hooks-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T02 Universal Agent Adapter Contract | **done** | D01–D04 closed; PR #187 merged at `main@f31eefd69f6992d7b7957fef8f6fe00afaa1ae3c`. Private AKP registration/lifecycle + Lane-CTR `agent-adapter-manifest` + generated bindings. Required CI `31453659735`. Closure checkpoint `20260811-personal-p8-t02-agent-adapter-contract-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
@@ -56,12 +56,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 47 | 1 | 0 | 14 | 15 |
+| 62 | 48 | 0 | 0 | 14 | 14 |
 
-`P8-T05` is `done` (PR #189 merged). `P8-T06` is `in-progress` with unique
-slice `P8-T06/D04`. Formal task completion remains independent from every
-product Gate except where the plan explicitly binds Gate disposition to task
-acceptance.
+`P8-T06` is `done` pending PR #190 merge reconciliation. Formal task completion
+remains independent from every product Gate except where the plan explicitly
+binds Gate disposition to task acceptance.
 
 ### Layer 2 — Current Delivery Slice queue
 
@@ -94,7 +93,7 @@ acceptance.
 | `P8-T06/D01` | `done` | Reflexion failure-lesson → digest-bound Memory candidate planner; Linux `learning_loop` 2/2 + Clippy at `8ba3fe0` | consumed by D02 |
 | `P8-T06/D02` | `done` | admit only via `decide_memory_admission`; forged outcome + source mismatch + explainable forget; Linux 4/4 + Clippy at `31e7384` | consumed by D03 |
 | `P8-T06/D03` | `done` | Skill candidate plan + capability-grant reject + explainable binding revoke; Linux 5/5 + Clippy at `b81414d` | consumed by D04 |
-| `P8-T06/D04` | `in-progress` | acceptance mapping + closure checkpoint; Draft PR #190 HEAD `b81414d` | required CI green → ready/merge/lease/branch/main |
+| `P8-T06/D04` | `done` | acceptance mapping + closure; required CI `31461384771` on `29399b7`; checkpoint written; PR #190 | consumed by completed P8-T06 task |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |
