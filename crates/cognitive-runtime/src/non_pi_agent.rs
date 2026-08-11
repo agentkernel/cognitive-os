@@ -6,9 +6,12 @@
 //! never transfers Pi/B09 claims.
 
 use crate::agent_adapter_manifest::{
-    AdapterCapabilityDeclaration, AdapterTransportProfile, AgentAdapterError,
-    RegisteredAgentAdapter, register_agent_adapter,
+    AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
+    AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
+    open_registered_adapter_lifecycle, pause_adapter_lifecycle, register_agent_adapter,
+    stop_adapter_lifecycle,
 };
+use crate::channel_binding::AuthorityChannel;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
@@ -81,6 +84,59 @@ pub fn register_codex_fixture_adapter(
     Ok(register_agent_adapter(&declaration)?)
 }
 
+/// Open Codex fixture lifecycle (Registered, epoch 0).
+pub fn open_codex_fixture_lifecycle(
+    registered: &RegisteredAgentAdapter,
+) -> Result<AdapterLifecycleHandle, NonPiAgentError> {
+    if registered.adapter_id != FIRST_NON_PI_AGENT_ID {
+        return Err(NonPiAgentError::MissingIdentity);
+    }
+    Ok(open_registered_adapter_lifecycle(registered)?)
+}
+
+/// Activate/pause/stop Codex fixture lifecycle on the management channel only.
+pub fn activate_codex_fixture_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, NonPiAgentError> {
+    Ok(activate_adapter_lifecycle(
+        handle,
+        expected_declaration_digest,
+        expected_epoch,
+        channel,
+    )?)
+}
+
+pub fn pause_codex_fixture_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, NonPiAgentError> {
+    Ok(pause_adapter_lifecycle(
+        handle,
+        expected_declaration_digest,
+        expected_epoch,
+        channel,
+    )?)
+}
+
+pub fn stop_codex_fixture_lifecycle(
+    handle: &AdapterLifecycleHandle,
+    expected_declaration_digest: &str,
+    expected_epoch: u64,
+    channel: AuthorityChannel,
+) -> Result<AdapterLifecycleHandle, NonPiAgentError> {
+    Ok(stop_adapter_lifecycle(
+        handle,
+        expected_declaration_digest,
+        expected_epoch,
+        channel,
+    )?)
+}
+
 fn bind_discovery_card_digest(package: &NonPiAgentPackageIdentity) -> String {
     let mut hasher = Sha256::new();
     hasher.update(package.agent_id.as_bytes());
@@ -128,5 +184,53 @@ mod tests {
             bind_codex_fixture_package_identity("  ").unwrap_err(),
             NonPiAgentError::MissingIdentity
         );
+    }
+
+    #[test]
+    fn activates_pauses_and_stops_on_management_channel_only() {
+        let package = bind_codex_fixture_package_identity(&format!("sha256:{}", "c".repeat(64)))
+            .expect("bind");
+        let registered =
+            register_codex_fixture_adapter(&package, false, false, false).expect("register");
+        let opened = open_codex_fixture_lifecycle(&registered).expect("open");
+        assert_eq!(opened.state, AdapterLifecycleState::Registered);
+
+        let active = activate_codex_fixture_lifecycle(
+            &opened,
+            &opened.declaration_digest,
+            opened.fencing_epoch,
+            AuthorityChannel::Management,
+        )
+        .expect("activate");
+        assert_eq!(active.state, AdapterLifecycleState::Active);
+
+        assert!(matches!(
+            activate_codex_fixture_lifecycle(
+                &opened,
+                &opened.declaration_digest,
+                opened.fencing_epoch,
+                AuthorityChannel::Task,
+            )
+            .unwrap_err(),
+            NonPiAgentError::Adapter(AgentAdapterError::ChannelIsolationViolation)
+        ));
+
+        let paused = pause_codex_fixture_lifecycle(
+            &active,
+            &active.declaration_digest,
+            active.fencing_epoch,
+            AuthorityChannel::Management,
+        )
+        .expect("pause");
+        assert_eq!(paused.state, AdapterLifecycleState::Paused);
+
+        let stopped = stop_codex_fixture_lifecycle(
+            &paused,
+            &paused.declaration_digest,
+            paused.fencing_epoch,
+            AuthorityChannel::Management,
+        )
+        .expect("stop");
+        assert_eq!(stopped.state, AdapterLifecycleState::Stopped);
     }
 }
