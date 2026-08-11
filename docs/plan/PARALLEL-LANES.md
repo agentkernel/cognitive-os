@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T03/six-resource-doctor` | P7-T03/D04 acceptance closure | Lane-RUN | `personal/P7-T03-six-resource-doctor` | `apps/kernel-server/src/personal/six_resource_doctor.rs`; `apps/kernel-server/src/personal/headless_vault_doctor.rs`; `apps/kernel-server/src/personal/operability_doctor.rs`; `apps/kernel-server/src/personal/mod.rs`; `apps/kernel-server/src/personal/readiness.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P7-T03-D04 | 2026-08-11 / 2026-08-11 | active |
+
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
@@ -84,6 +84,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P7-T03/six-resource-doctor` | P7-T03/D01-D04 six-resource doctor | `personal/P7-T03-six-resource-doctor` | 2026-08-11 | D01–D04 deliver redacted six-resource, headless vault, and operability doctor sections on `/personal/doctor`. Linux evidence through `749a0c3`; required CI `31451402260`; PR #186 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T02/lifecycle-backup` | P7-T02/D01-D04 lifecycle backup | `personal/P7-T02-lifecycle-backup` | 2026-08-11 | D01–D04 deliver secret-excluding inventory, digest-bound Memory/Skill/bindings export, restore preflight, and transactional update/rollback/uninstall. Exact native Linux `personal_backup` 15/15 + Clippy at `68abc82`; required CI `31449589853`; PR #185 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T01/release-pipeline` | P7-T01/D01-D04 release pipeline | `personal/P7-T01-release-pipeline` | 2026-08-11 | D01–D04 deliver signed six-family release-manifest, SBOM/artifact digest binding, immutable toolchain pins, and acceptance closure. Exact native Linux `release_manifest` 11/11 + Clippy at `34812f8`; required CI green; PR #184 merged at `main@3198614496571ac251821d2eff1f982274959f06`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P5-T05/b09-managed-pi` | P5-T05/D01-D04 B09 managed Pi | `personal/P5-T05-b09-managed-pi` | 2026-08-11 | ADR-0047 MVP: D01–D04 deliver process-bound SidecarSession, upgrade/uninstall fencing, recover/orphan identity negatives, fixed-denominator B09 matrix, and owner-affirmed B09 MVP pass. Exact native Linux matrix and required Ubuntu/Windows CI run `31423464703` passed; PR #183 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
