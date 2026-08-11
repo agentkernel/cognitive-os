@@ -1257,7 +1257,7 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
-    use cognitive_store::PersonalDataLayout;
+    use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
 
     use super::{
         LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
@@ -1270,7 +1270,7 @@ mod tests {
         Arc<Mutex<LocalSessionAuthority>>,
         Arc<SqliteAuthorityStore>,
     ) {
-        use cognitive_store::{SqliteAuthorityStore, prepare_personal_databases};
+        use cognitive_store::prepare_personal_databases;
 
         let temporary_root = std::env::temp_dir().join(format!(
             "cos-personal-server-test-{test_name}-{}-{}",
