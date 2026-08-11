@@ -1,6 +1,6 @@
-//! Focused tests extracted from scheduler_authority (P9-T02/D01).
+//! Focused tests extracted from `scheduler_authority` (P9-T02/D01).
 
-#[allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used)]
 
 use super::{
     ContextResolutionCommand, RecoveredWorkerAttempt, SchedulerAuthorityBinding,

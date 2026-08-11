@@ -2386,7 +2386,6 @@ fn next_record_id<G: IdGenerator>(ids: &G) -> Result<RecordId, SchedulerAuthorit
 
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests;
 
 

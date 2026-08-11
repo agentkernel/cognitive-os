@@ -13,8 +13,8 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P9-T02/D01` on `personal/P9-T02-structure-debt` |
-| Active task lease | `lease/personal/P9-T02/structure-debt` | P9-T02 owns scheduler_authority split + plan/checkpoint paths on Draft PR (pending). | Linux validate D01 test extraction; then D02 production splits |
-| P9-T02 Authority-path structure debt | `in-progress` | Branch `personal/P9-T02-structure-debt`. D01 extract `scheduler_authority` embedded tests. | exact native Linux focused scheduler_authority tests + Clippy |
+| Active task lease | `lease/personal/P9-T02/structure-debt` | P9-T02 owns scheduler_authority split + plan/checkpoint paths on Draft PR #192. | D01 Linux green at `76b062d`; continue D02 production splits |
+| P9-T02 Authority-path structure debt | `in-progress` | Draft PR #192. D01 extract tests: Linux `scheduler_authority` 38/38 + Clippy at `76b062d`. | split production helpers (D02) |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
 | P8-T06 Cross-episode learning loop | **done** | D01–D04 closed; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Reflexion Memory/Skill candidate planners + daemon admission wiring. Required CI `31461384771` / closure `31462013806`. Closure checkpoint `20260811-personal-p8-t06-learning-loop-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T05 Context compaction and adaptive budgets | **done** | D01–D04 closed; PR #189 merged at `main@fa4f74a8feaadaa74affca90cb37660f40cdeb25`. Digest-bound compaction, adaptive budgets, UCR-01 non-claim benefit observation. Required CI `31459558236` / closure `31460220901`. Closure checkpoint `20260811-personal-p8-t05-context-compaction-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
@@ -61,7 +61,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | 62 | 49 | 1 | 0 | 12 | 13 |
 
 `P8-T03` is `done` (PR #191 merged; Phase 8 complete). `P9-T02` is
-`in-progress` with unique slice `P9-T02/D01`. Formal task completion remains
+`in-progress` with unique slice `P9-T02/D02`. Formal task completion remains
 independent from every product Gate except where the plan explicitly binds Gate
 disposition to task acceptance.
 
@@ -101,8 +101,8 @@ disposition to task acceptance.
 | `P8-T03/D02` | `done` | Codex fixture activate/pause/stop on management channel; Linux 3/3 + Clippy at `6847889` | consumed by D03 |
 | `P8-T03/D03` | `done` | fixed-denominator non-claim qualification report; Linux 4/4 + Clippy at `b41f06f` | consumed by D04 |
 | `P8-T03/D04` | `done` | acceptance mapping + closure; required CI `31463130827` on `5d1c0c7`; checkpoint written; PR #191 merged at `main@47478e4` | consumed by completed P8-T03 task |
-| `P9-T02/D01` | `in-progress` | extract `scheduler_authority` embedded tests to `scheduler_authority/tests.rs` without behavior change | exact native Linux focused tests + Clippy |
-| `P9-T02/D02` | `ready` | not started | waits for D01 |
+| `P9-T02/D01` | `done` | extract `scheduler_authority` embedded tests; Linux 38/38 + Clippy at `76b062d` | consumed by D02 |
+| `P9-T02/D02` | `in-progress` | split `scheduler_authority` production helpers into cohesive submodules | exact native Linux focused tests + Clippy |
 | `P9-T02/D03` | `ready` | not started | waits for D02 |
 | `P9-T02/D04` | `ready` | not started | waits for D03; final acceptance |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
