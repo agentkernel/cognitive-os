@@ -151,6 +151,7 @@ fn bind_discovery_card_digest(package: &NonPiAgentPackageIdentity) -> String {
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use crate::agent_adapter_manifest::AdapterLifecycleState;
 
     #[test]
     fn binds_codex_fixture_independent_of_pi() {
