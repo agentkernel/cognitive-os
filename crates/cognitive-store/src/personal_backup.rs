@@ -7,8 +7,11 @@
 //!
 //! D02 builds a digest-bound Memory/Skill/bindings export plan that may only
 //! reference D01-approved inventory categories and never carries secret
-//! material. This module does not write archives, restore data, or claim
-//! Gate/release outcomes.
+//! material.
+//!
+//! D03 runs restore preflight and migration compatibility checks that reject
+//! incompatible or incomplete backups before any mutation. This module does
+//! not write archives, apply restores, or claim Gate/release outcomes.
 
 use crate::layout::PersonalDataLayout;
 use sha2::{Digest, Sha256};
@@ -80,6 +83,24 @@ pub struct PersonalBackupExportPlan {
     pub plan_digest: String,
 }
 
+/// Caller-described backup archive facts for restore preflight (D03).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BackupRestoreCandidate {
+    pub export_plan: PersonalBackupExportPlan,
+    pub categories_present: Vec<&'static str>,
+    pub backup_schema_version: u32,
+    pub expected_schema_version: u32,
+    pub migration_plan_digest: String,
+}
+
+/// Successful restore preflight result; no mutation has occurred.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PersonalBackupRestorePreflight {
+    pub export_plan_digest: String,
+    pub backup_schema_version: u32,
+    pub migration_plan_digest: String,
+}
+
 /// Fail-closed errors for backup inventory and export planning.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PersonalBackupError {
@@ -95,6 +116,14 @@ pub enum PersonalBackupError {
     MissingBinding,
     #[error("backup export unit is missing a required content digest")]
     MissingDigest,
+    #[error("backup restore preflight rejected incompatible schema versions")]
+    SchemaIncompatible,
+    #[error("backup restore preflight found an incomplete backup archive")]
+    IncompleteBackup,
+    #[error("backup restore preflight rejected migration plan mismatch")]
+    MigrationPreflightFailed,
+    #[error("backup restore preflight rejected export plan digest mismatch")]
+    ExportPlanDigestMismatch,
 }
 
 /// Plan the default user-facing backup inventory for a Personal layout.
@@ -204,6 +233,63 @@ pub fn plan_memory_skill_export(
         inventory_categories: approved,
         units: planned,
         plan_digest,
+    })
+}
+
+/// Preflight a restore against D01 inventory completeness, D02 export digests,
+/// and schema/migration compatibility. Rejects before any mutation.
+pub fn preflight_personal_backup_restore(
+    inventory: &PersonalBackupInventory,
+    candidate: &BackupRestoreCandidate,
+) -> Result<PersonalBackupRestorePreflight, PersonalBackupError> {
+    validate_backup_inventory(&inventory.entries, &inventory.excluded_secret_paths)?;
+
+    if candidate.backup_schema_version == 0
+        || candidate.expected_schema_version == 0
+        || candidate.backup_schema_version != candidate.expected_schema_version
+    {
+        return Err(PersonalBackupError::SchemaIncompatible);
+    }
+
+    if candidate.migration_plan_digest.trim().is_empty()
+        || export_text_is_contaminated(&candidate.migration_plan_digest)
+    {
+        return Err(PersonalBackupError::MigrationPreflightFailed);
+    }
+
+    let required = [
+        "authority-db",
+        "installation-db",
+        "config",
+        "data",
+        "state",
+        "artifacts",
+    ];
+    for category in required {
+        if !candidate.categories_present.contains(&category) {
+            return Err(PersonalBackupError::IncompleteBackup);
+        }
+        if !inventory
+            .entries
+            .iter()
+            .any(|entry| entry.category == category)
+        {
+            return Err(PersonalBackupError::IncompleteBackup);
+        }
+    }
+
+    let recomputed = bind_export_plan_digest(&candidate.export_plan.units);
+    if recomputed != candidate.export_plan.plan_digest {
+        return Err(PersonalBackupError::ExportPlanDigestMismatch);
+    }
+
+    // Re-validate units against inventory to catch tampered plans.
+    let _ = plan_memory_skill_export(inventory, &candidate.export_plan.units)?;
+
+    Ok(PersonalBackupRestorePreflight {
+        export_plan_digest: candidate.export_plan.plan_digest.clone(),
+        backup_schema_version: candidate.backup_schema_version,
+        migration_plan_digest: candidate.migration_plan_digest.clone(),
     })
 }
 
@@ -480,6 +566,80 @@ mod tests {
         assert_eq!(
             plan_memory_skill_export(&inventory, &units).unwrap_err(),
             PersonalBackupError::UnapprovedInventoryCategory
+        );
+    }
+
+    fn sample_restore_candidate(inventory: &PersonalBackupInventory) -> BackupRestoreCandidate {
+        let plan = plan_memory_skill_export(inventory, &sample_units()).unwrap();
+        BackupRestoreCandidate {
+            export_plan: plan,
+            categories_present: inventory
+                .entries
+                .iter()
+                .map(|entry| entry.category)
+                .collect(),
+            backup_schema_version: 23,
+            expected_schema_version: 23,
+            migration_plan_digest: "ee".repeat(32),
+        }
+    }
+
+    #[test]
+    fn accepts_compatible_complete_restore_preflight() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let candidate = sample_restore_candidate(&inventory);
+        let preflight =
+            preflight_personal_backup_restore(&inventory, &candidate).expect("preflight");
+        assert_eq!(
+            preflight.export_plan_digest,
+            candidate.export_plan.plan_digest
+        );
+        assert_eq!(preflight.backup_schema_version, 23);
+    }
+
+    #[test]
+    fn rejects_incompatible_schema_versions() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let mut candidate = sample_restore_candidate(&inventory);
+        candidate.backup_schema_version = 22;
+        assert_eq!(
+            preflight_personal_backup_restore(&inventory, &candidate).unwrap_err(),
+            PersonalBackupError::SchemaIncompatible
+        );
+    }
+
+    #[test]
+    fn rejects_incomplete_backup_categories() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let mut candidate = sample_restore_candidate(&inventory);
+        candidate
+            .categories_present
+            .retain(|category| *category != "artifacts");
+        assert_eq!(
+            preflight_personal_backup_restore(&inventory, &candidate).unwrap_err(),
+            PersonalBackupError::IncompleteBackup
+        );
+    }
+
+    #[test]
+    fn rejects_migration_digest_and_plan_digest_mismatches() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let mut candidate = sample_restore_candidate(&inventory);
+        candidate.migration_plan_digest.clear();
+        assert_eq!(
+            preflight_personal_backup_restore(&inventory, &candidate).unwrap_err(),
+            PersonalBackupError::MigrationPreflightFailed
+        );
+
+        candidate = sample_restore_candidate(&inventory);
+        candidate.export_plan.plan_digest = "00".repeat(32);
+        assert_eq!(
+            preflight_personal_backup_restore(&inventory, &candidate).unwrap_err(),
+            PersonalBackupError::ExportPlanDigestMismatch
         );
     }
 }

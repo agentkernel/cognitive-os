@@ -50,9 +50,10 @@ pub use migration::{
     execute_sqlite_migration_plan,
 };
 pub use personal_backup::{
-    BackupExportKind, BackupExportUnit, BackupInventoryEntry, PersonalBackupError,
-    PersonalBackupExportPlan, PersonalBackupInventory, plan_memory_skill_export,
-    plan_personal_backup_inventory, validate_backup_inventory,
+    BackupExportKind, BackupExportUnit, BackupInventoryEntry, BackupRestoreCandidate,
+    PersonalBackupError, PersonalBackupExportPlan, PersonalBackupInventory,
+    PersonalBackupRestorePreflight, plan_memory_skill_export, plan_personal_backup_inventory,
+    preflight_personal_backup_restore, validate_backup_inventory,
 };
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
