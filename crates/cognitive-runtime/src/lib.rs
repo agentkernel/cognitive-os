@@ -9,6 +9,7 @@
 //! directly.
 
 pub mod adapters;
+pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
