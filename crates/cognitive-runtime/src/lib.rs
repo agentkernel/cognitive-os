@@ -12,6 +12,7 @@ pub mod adapters;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
+pub mod context_compaction;
 pub mod event_envelope;
 pub mod graded_load;
 pub mod harness_hooks;
@@ -54,6 +55,10 @@ pub use agent_registration::{
 pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
     is_privileged_management_action, request_from_vector_input,
+};
+pub use context_compaction::{
+    CompactContextArtifact, CompactionLossRecord, CompactionSourceFact, ContextCompactionError,
+    plan_context_compaction,
 };
 pub use event_envelope::{EventEnvelopeError, assemble_persisted_event};
 pub use graded_load::{
