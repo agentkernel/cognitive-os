@@ -237,9 +237,14 @@ impl EffectExecutor for NativeWorkspaceReadExecutor {
     }
 }
 
-/// A daemon-private process observation port. The supervisor owns process
-/// lifetime and timeout decisions; this executor never discovers or launches
-
+/// Drive an already staged workspace read through the durable Effect protocol.
+///
+/// Staging binds the native request to the Intent's idempotency key and
+/// parameter digest; this function is the only adapter path that can invoke
+/// it. The protocol records `EXECUTING` before filesystem access and records
+/// the executor outcome afterwards. It deliberately has no Task, Loop,
+/// progress, evidence, or completion inputs, so a read cannot be mistaken for
+/// a Task outcome.
 pub(crate) fn dispatch_staged_workspace_read_effect<S, C, G>(
     effect_protocol: &EffectProtocol<'_, S, C, G>,
     effect_object_id: &ObjectId,
