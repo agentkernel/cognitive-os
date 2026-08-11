@@ -52,7 +52,9 @@ pub use migration::{
 pub use personal_backup::{
     BackupExportKind, BackupExportUnit, BackupInventoryEntry, BackupRestoreCandidate,
     PersonalBackupError, PersonalBackupExportPlan, PersonalBackupInventory,
-    PersonalBackupRestorePreflight, plan_memory_skill_export, plan_personal_backup_inventory,
+    PersonalBackupRestorePreflight, PersonalLifecycleOperation, PersonalLifecyclePlan,
+    UninstallTargetClass, abort_personal_lifecycle, commit_personal_lifecycle,
+    plan_memory_skill_export, plan_personal_backup_inventory, plan_personal_lifecycle,
     preflight_personal_backup_restore, validate_backup_inventory,
 };
 pub use personal_db::{

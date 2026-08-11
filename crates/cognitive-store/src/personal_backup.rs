@@ -10,8 +10,11 @@
 //! material.
 //!
 //! D03 runs restore preflight and migration compatibility checks that reject
-//! incompatible or incomplete backups before any mutation. This module does
-//! not write archives, apply restores, or claim Gate/release outcomes.
+//! incompatible or incomplete backups before any mutation.
+//!
+//! D04 plans transactional update/rollback/uninstall over D01–D03 evidence.
+//! Secret material stays excluded from destructive uninstall by default.
+//! This module does not claim Gate/release outcomes.
 
 use crate::layout::PersonalDataLayout;
 use sha2::{Digest, Sha256};
@@ -101,6 +104,33 @@ pub struct PersonalBackupRestorePreflight {
     pub migration_plan_digest: String,
 }
 
+/// Transactional lifecycle operation planned over backup evidence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersonalLifecycleOperation {
+    Update,
+    Rollback,
+    Uninstall,
+}
+
+/// Uninstall target classes. Secret is never selected by default.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UninstallTargetClass {
+    Binary,
+    Config,
+    Cache,
+    Data,
+    Secret,
+}
+
+/// Planned transactional lifecycle step. Commit is a separate explicit action.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PersonalLifecyclePlan {
+    pub operation: PersonalLifecycleOperation,
+    pub preflight: PersonalBackupRestorePreflight,
+    pub uninstall_targets: Vec<UninstallTargetClass>,
+    pub staged: bool,
+}
+
 /// Fail-closed errors for backup inventory and export planning.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PersonalBackupError {
@@ -124,6 +154,12 @@ pub enum PersonalBackupError {
     MigrationPreflightFailed,
     #[error("backup restore preflight rejected export plan digest mismatch")]
     ExportPlanDigestMismatch,
+    #[error("lifecycle plan requires a successful restore preflight")]
+    LifecyclePreflightRequired,
+    #[error("lifecycle uninstall refused secret or unconfirmed data deletion")]
+    UninstallConfirmationRequired,
+    #[error("lifecycle commit refused because the plan was not staged")]
+    LifecycleNotStaged,
 }
 
 /// Plan the default user-facing backup inventory for a Personal layout.
@@ -290,6 +326,86 @@ pub fn preflight_personal_backup_restore(
         export_plan_digest: candidate.export_plan.plan_digest.clone(),
         backup_schema_version: candidate.backup_schema_version,
         migration_plan_digest: candidate.migration_plan_digest.clone(),
+    })
+}
+
+/// Plan a transactional update/rollback/uninstall over a successful D03
+/// preflight. Destructive data uninstall requires explicit confirmation.
+/// Secret targets are always refused.
+pub fn plan_personal_lifecycle(
+    preflight: &PersonalBackupRestorePreflight,
+    operation: PersonalLifecycleOperation,
+    uninstall_targets: &[UninstallTargetClass],
+    confirm_data_deletion: bool,
+) -> Result<PersonalLifecyclePlan, PersonalBackupError> {
+    if preflight.export_plan_digest.trim().is_empty()
+        || preflight.migration_plan_digest.trim().is_empty()
+        || preflight.backup_schema_version == 0
+    {
+        return Err(PersonalBackupError::LifecyclePreflightRequired);
+    }
+
+    let mut targets = Vec::new();
+    match operation {
+        PersonalLifecycleOperation::Update | PersonalLifecycleOperation::Rollback => {
+            if !uninstall_targets.is_empty() {
+                return Err(PersonalBackupError::UninstallConfirmationRequired);
+            }
+        }
+        PersonalLifecycleOperation::Uninstall => {
+            if uninstall_targets.is_empty() {
+                return Err(PersonalBackupError::UninstallConfirmationRequired);
+            }
+            for target in uninstall_targets {
+                match target {
+                    UninstallTargetClass::Secret => {
+                        return Err(PersonalBackupError::UninstallConfirmationRequired);
+                    }
+                    UninstallTargetClass::Data if !confirm_data_deletion => {
+                        return Err(PersonalBackupError::UninstallConfirmationRequired);
+                    }
+                    UninstallTargetClass::Binary
+                    | UninstallTargetClass::Config
+                    | UninstallTargetClass::Cache
+                    | UninstallTargetClass::Data => targets.push(*target),
+                }
+            }
+        }
+    }
+
+    Ok(PersonalLifecyclePlan {
+        operation,
+        preflight: preflight.clone(),
+        uninstall_targets: targets,
+        staged: true,
+    })
+}
+
+/// Commit a previously staged lifecycle plan. This authority-path commit does
+/// not delete host files; callers must still perform OS mutations separately.
+pub fn commit_personal_lifecycle(
+    plan: &PersonalLifecyclePlan,
+) -> Result<PersonalLifecyclePlan, PersonalBackupError> {
+    if !plan.staged {
+        return Err(PersonalBackupError::LifecycleNotStaged);
+    }
+    Ok(PersonalLifecyclePlan {
+        staged: false,
+        ..plan.clone()
+    })
+}
+
+/// Abort a staged lifecycle plan without committing destructive work.
+pub fn abort_personal_lifecycle(
+    plan: &PersonalLifecyclePlan,
+) -> Result<PersonalLifecyclePlan, PersonalBackupError> {
+    if !plan.staged {
+        return Err(PersonalBackupError::LifecycleNotStaged);
+    }
+    Ok(PersonalLifecyclePlan {
+        staged: false,
+        uninstall_targets: Vec::new(),
+        ..plan.clone()
     })
 }
 
@@ -640,6 +756,90 @@ mod tests {
         assert_eq!(
             preflight_personal_backup_restore(&inventory, &candidate).unwrap_err(),
             PersonalBackupError::ExportPlanDigestMismatch
+        );
+    }
+
+    #[test]
+    fn plans_and_commits_transactional_update_over_preflight() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let candidate = sample_restore_candidate(&inventory);
+        let preflight = preflight_personal_backup_restore(&inventory, &candidate).unwrap();
+        let plan =
+            plan_personal_lifecycle(&preflight, PersonalLifecycleOperation::Update, &[], false)
+                .expect("update plan");
+        assert!(plan.staged);
+        let committed = commit_personal_lifecycle(&plan).expect("commit");
+        assert!(!committed.staged);
+        assert_eq!(committed.operation, PersonalLifecycleOperation::Update);
+    }
+
+    #[test]
+    fn rollback_aborts_without_commit() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let candidate = sample_restore_candidate(&inventory);
+        let preflight = preflight_personal_backup_restore(&inventory, &candidate).unwrap();
+        let plan =
+            plan_personal_lifecycle(&preflight, PersonalLifecycleOperation::Rollback, &[], false)
+                .unwrap();
+        let aborted = abort_personal_lifecycle(&plan).unwrap();
+        assert!(!aborted.staged);
+        assert!(aborted.uninstall_targets.is_empty());
+    }
+
+    #[test]
+    fn uninstall_refuses_secret_and_unconfirmed_data() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let candidate = sample_restore_candidate(&inventory);
+        let preflight = preflight_personal_backup_restore(&inventory, &candidate).unwrap();
+        assert_eq!(
+            plan_personal_lifecycle(
+                &preflight,
+                PersonalLifecycleOperation::Uninstall,
+                &[UninstallTargetClass::Secret],
+                true,
+            )
+            .unwrap_err(),
+            PersonalBackupError::UninstallConfirmationRequired
+        );
+        assert_eq!(
+            plan_personal_lifecycle(
+                &preflight,
+                PersonalLifecycleOperation::Uninstall,
+                &[UninstallTargetClass::Data],
+                false,
+            )
+            .unwrap_err(),
+            PersonalBackupError::UninstallConfirmationRequired
+        );
+        let plan = plan_personal_lifecycle(
+            &preflight,
+            PersonalLifecycleOperation::Uninstall,
+            &[UninstallTargetClass::Config, UninstallTargetClass::Data],
+            true,
+        )
+        .expect("confirmed data uninstall");
+        assert_eq!(
+            plan.uninstall_targets,
+            vec![UninstallTargetClass::Config, UninstallTargetClass::Data]
+        );
+    }
+
+    #[test]
+    fn commit_refuses_unstaged_lifecycle_plan() {
+        let layout = sample_layout();
+        let inventory = plan_personal_backup_inventory(&layout, &[]).unwrap();
+        let candidate = sample_restore_candidate(&inventory);
+        let preflight = preflight_personal_backup_restore(&inventory, &candidate).unwrap();
+        let plan =
+            plan_personal_lifecycle(&preflight, PersonalLifecycleOperation::Update, &[], false)
+                .unwrap();
+        let committed = commit_personal_lifecycle(&plan).unwrap();
+        assert_eq!(
+            commit_personal_lifecycle(&committed).unwrap_err(),
+            PersonalBackupError::LifecycleNotStaged
         );
     }
 }
