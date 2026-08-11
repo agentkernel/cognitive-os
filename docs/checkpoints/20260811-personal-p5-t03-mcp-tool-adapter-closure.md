@@ -34,7 +34,7 @@
 | Exact native Linux `cargo clippy -p cognitive-runtime --all-targets -- -D warnings` | **pass** | `a83bdb8` |
 | Local `pnpm run check:consistency` | **pass** | before checkpoint |
 | Local `git diff --check` | **pass** | before checkpoint |
-| Required Ubuntu/Windows CI | recorded on PR #195 | must be green before ready/merge |
+| Required Ubuntu/Windows CI | **pass** run `31482773002` | head `4c06161` on PR #195 |
 
 ## Non-claims
 
@@ -42,6 +42,8 @@
 - No live MCP SDK packaging, dynamic marketplace enablement (P5-T04), or native Tool catalog mutation.
 - MCP protocol capabilities are transport facts only; they are not CognitiveOS capability grants.
 
-## Next action
+## Closure sequence
 
-Required CI green on PR #195 → convert Draft to ready → merge → close lease → delete branch → fast-forward local `main`.
+1. Acceptance mapping complete against D01–D03 evidence.
+2. Required CI green on merge head.
+3. PR ready → merge → close lease → delete task branch → fast-forward local `main`.
