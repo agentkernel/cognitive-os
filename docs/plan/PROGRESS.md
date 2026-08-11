@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | close `P9-T03/D04` on Draft PR #193 after required CI |
-| Active task lease | `lease/personal/P9-T03/store-composition` | P9-T03 owns server + store admission seam + store-access stage timing on Draft PR #193. | D04: acceptance mapping, CI, ready/merge/lease/branch/main |
-| P9-T03 Store access and composition-root optimization | `in-progress` | Draft PR #193. D01 `54be4c1`; D02 `2eb82c9`; D03 Memory admission sink + store_access stage timing at `648e69f` (Linux memory 1/1, store_access 3/3, request_path 1/1, Clippy). | D04 acceptance + required CI + merge |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P9-T03 merge |
+| Active task lease | `none` | P9-T03 lease closed with PR #193 merge. | claim next implementation-ready Personal task |
+| P9-T03 Store access and composition-root optimization | **done** | D01–D04 closed; PR #193 merged. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure checkpoint `20260811-personal-p9-t03-store-composition-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P9-T02 Authority-path structure debt | **done** | D01–D04 closed; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Linux evidence through `a11d0bd`; required CI `31471319404` on `b1cc8a7`. Closure checkpoint `20260811-personal-p9-t02-structure-debt-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
 | P8-T06 Cross-episode learning loop | **done** | D01–D04 closed; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Reflexion Memory/Skill candidate planners + daemon admission wiring. Required CI `31461384771` / closure `31462013806`. Closure checkpoint `20260811-personal-p8-t06-learning-loop-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
@@ -59,10 +59,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 50 | 1 | 0 | 11 | 12 |
+| 62 | 51 | 0 | 0 | 11 | 11 |
 
-`P9-T02` is `done` (PR #192 merged). `P9-T03` is `in-progress` with unique
-slice `P9-T03/D04`. Formal task completion remains independent from every
+`P9-T03` is `done` (PR #193). Formal task completion remains independent from every
 product Gate except where the plan explicitly binds Gate disposition to task
 acceptance.
 
@@ -109,7 +108,7 @@ acceptance.
 | `P9-T03/D01` | `done` | daemon startup recovery+tick share one `SqliteAuthorityStore`; Linux scheduler_authority 39/39 + Clippy at `54be4c1` | consumed by D02 |
 | `P9-T03/D02` | `done` | request-path handlers reuse daemon-owned `Arc<SqliteAuthorityStore>`; Linux request_path 1/1, scheduler_authority 39/39, Clippy at `2eb82c9` | consumed by D03 |
 | `P9-T03/D03` | `done` | Memory admission sunk to `cognitive-store`; store_access stage-timing non-claim in `cognitive-runtime`; Linux memory 1/1, store_access 3/3, request_path 1/1, Clippy at `648e69f` | consumed by D04 |
-| `P9-T03/D04` | `in-progress` | final acceptance mapping + required CI + closure | checkpoint + ready/merge/lease/branch/main |
+| `P9-T03/D04` | `done` | acceptance mapping + closure; required CI `31476761080` on `64f89cd`; checkpoint written; PR #193 | consumed by completed P9-T03 task |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |

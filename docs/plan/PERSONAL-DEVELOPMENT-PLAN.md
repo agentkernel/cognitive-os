@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06、P9-T02 已完成；P9-T03 `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06、P9-T02、P9-T03 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -158,8 +158,8 @@
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 4 | 0 | 0 | 4 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
-| Phase 9 - 性能与结构演进 | 3 | 1 | 1 | 0 | 1 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **50** | **1** | **0** | **11** | — |
+| Phase 9 - 性能与结构演进 | 3 | 2 | 0 | 0 | 1 | 无新 Gate；沿用 P7-T04 回归地板 |
+| **合计** | **62** | **51** | **0** | **0** | **11** | — |
 
 ## 2. 产品边界与不变量
 
@@ -717,7 +717,7 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 |---|---|---|---|---|---|
 | P9-T01 | 异步事件底座演进 | P8-T01 | 以 P7-T04/D02 治理路径 stage 计时区分"治理税/实现税"为决策门：若连接/open/锁竞争主导 p95，分阶段将 HTTP/watch/sidecar 流层迁移到异步 runtime，权威 SQLite 写路径保持单写者语义；否则记录保守优化结论 | not-started | — |
 | P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | done | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt` / PR #192. D01–D04 closed. Linux evidence through `a11d0bd`; required CI `31470278984`. Closure: `docs/checkpoints/20260811-personal-p9-t02-structure-debt-closure.md`. No Gate/release/Profile claim. |
-| P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | in-progress | 2026-08-11；`lease/personal/P9-T03/store-composition` on `personal/P9-T03-store-composition` / Draft PR #193. D01–D02 long-lived store + request-path wiring at `2eb82c9`. |
+| P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | done | 2026-08-11；`lease/personal/P9-T03/store-composition` on `personal/P9-T03-store-composition` / PR #193. D01–D04 closed. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure: `docs/checkpoints/20260811-personal-p9-t03-store-composition-closure.md`. No Gate/release/Profile claim. |
 
 ## 5. Gate 与证据要求
 
