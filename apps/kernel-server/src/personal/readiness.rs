@@ -18,6 +18,10 @@ use cognitive_secret::{
 use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
 
+use super::headless_vault_doctor::{
+    HeadlessVaultDoctorPath, HeadlessVaultPathObservation, HeadlessVaultPathStatus,
+    evaluate_headless_vault_doctor, headless_vault_doctor_projection_json,
+};
 use super::pi_runtime::{PINNED_PI_VERSION, PiRuntimeObservation, observe_pi_runtime};
 use super::six_resource_doctor::{
     SixResourceFamily, SixResourceHealthFact, SixResourceHealthObservation,
@@ -182,12 +186,38 @@ pub fn doctor_projection_json(report: &ReadinessReport) -> Value {
         "evaluated_at_unix_ms": report.evaluated_at_unix_ms,
         "components": report.components.iter().map(component_detail_json).collect::<Vec<_>>(),
         "six_resource": default_six_resource_doctor_section(),
+        "headless_vault": default_headless_vault_doctor_section(),
         "static_check_is_not_runtime_ready": true,
         "profile_claim": "not-claimed",
         "gate_claim": "not-claimed",
         "authority_side_effects": false,
         "guidance": doctor_guidance(report)
     })
+}
+
+fn default_headless_vault_doctor_section() -> Value {
+    let observations: Vec<HeadlessVaultPathObservation> = HeadlessVaultDoctorPath::ALL
+        .iter()
+        .map(|path| HeadlessVaultPathObservation {
+            path: *path,
+            status: HeadlessVaultPathStatus::NotConfigured,
+            error_code: Some("VAULT_PATH_NOT_PROBED"),
+            recovery_hint: Some("await supported vault path probe"),
+            facts: vec![("probe".to_owned(), "not_run".to_owned())],
+        })
+        .collect();
+    match evaluate_headless_vault_doctor(&observations) {
+        Ok(report) => headless_vault_doctor_projection_json(&report),
+        Err(_) => json!({
+            "schema": "personal-headless-vault-doctor",
+            "surface": "personal-doctor-headless-vault",
+            "overall": "unavailable",
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+            "error_code": "HEADLESS_VAULT_DOCTOR_INTERNAL",
+            "paths": [],
+        }),
+    }
 }
 
 fn default_six_resource_doctor_section() -> Value {
@@ -994,6 +1024,11 @@ mod tests {
                 .len(),
             6
         );
+        assert_eq!(
+            doctor["headless_vault"]["surface"],
+            "personal-doctor-headless-vault"
+        );
+        assert_eq!(doctor["headless_vault"]["gate_claim"], "not-claimed");
         let guidance = doctor["guidance"].as_array().expect("guidance array");
         assert!(
             guidance.iter().any(|entry| entry

@@ -6,6 +6,7 @@
 
 mod auth;
 mod bounds;
+mod headless_vault_doctor;
 mod lifecycle;
 mod memory_admission;
 mod pi_runtime;

@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T03/six-resource-doctor` | P7-T03/D01 six-resource doctor health | Lane-RUN | `personal/P7-T03-six-resource-doctor` | `apps/kernel-server/src/personal/six_resource_doctor.rs`; `apps/kernel-server/src/personal/mod.rs`; `apps/kernel-server/src/personal/readiness.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P7-T03-D01 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P7-T03/six-resource-doctor` | P7-T03/D02 headless vault doctor diagnostics | Lane-RUN | `personal/P7-T03-six-resource-doctor` | `apps/kernel-server/src/personal/six_resource_doctor.rs`; `apps/kernel-server/src/personal/mod.rs`; `apps/kernel-server/src/personal/readiness.rs`; `apps/kernel-server/src/personal/headless_vault_doctor.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P7-T03-D02 | 2026-08-11 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
