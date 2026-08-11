@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| *(none)* | — | — | — | — | — | — | — |
+| `lease/personal/P9-T01/async-decision-gate` | P9-T01/D01 async event decision gate | Lane-RUN | `personal/P9-T01-async-decision-gate` | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/architecture/personal/async-event-evolution.md`; `docs/checkpoints/20260811-personal-p9-t01-async-decision-gate.md`; task-scoped performance decision/report tooling only if required | Cursor continuous-delivery session | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
