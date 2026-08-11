@@ -1,10 +1,11 @@
 # Universal Agent Adapter Contract
 
 - Status: informative Personal architecture design
-- Change class: product-semantic documentation
+- Change class: product-semantic / normative-semantic documentation
 - Related: [ADR-0043](../../adr/0043-personal-universal-agent-adapter.md),
   [ADR-0044](../../adr/0044-personal-multi-agent-mainline.md), P8-T02/P8-T03
-- Normative machines: unchanged; future `agent-adapter-manifest` requires Lane-CTR
+- Normative machines: `specs/schemas/agent-adapter-manifest.schema.json`
+  (P8-T02/D03 Lane-CTR); no transition/vector claim in this design file
 
 ## 1. Purpose
 
@@ -54,5 +55,6 @@ qualifies another (B09-style independence).
 
 ## 6. Non-claims
 
-This file is design only. Implementation and machine contracts land in P8-T02
-and Lane-CTR. No Gate/release/Profile claim.
+This file remains design narrative. Machine contract registration is owned by
+P8-T02/D03 (`agent-adapter-manifest.schema.json` + generated bindings). No
+Gate/release/Profile claim.

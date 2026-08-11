@@ -26,7 +26,8 @@ sole adaptation and authority path.
 3. Each new agent is independently qualified (B09-style campaign); Pi evidence
    does not transfer.
 4. Implementation belongs to P8-T02/T03 after P8-T01 design baseline; Lane-CTR
-   registers any new machine contract such as `agent-adapter-manifest`.
+   registers the machine contract `agent-adapter-manifest.schema.json` and its
+   generated bindings.
 
 ## Consequences
 

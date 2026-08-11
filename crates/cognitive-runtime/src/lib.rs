@@ -9,6 +9,7 @@
 //! directly.
 
 pub mod adapters;
+pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
 pub mod event_envelope;
@@ -33,6 +34,12 @@ pub mod target_resolution;
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
     MemoryAdapter, ToolAdapter, compatibility_matrix, on_adapter_failure,
+};
+pub use agent_adapter_manifest::{
+    AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
+    AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
+    open_registered_adapter_lifecycle, pause_adapter_lifecycle, register_agent_adapter,
+    stop_adapter_lifecycle, verify_registered_agent_adapter,
 };
 pub use agent_registration::{
     OFFICIAL_PI_SIDECAR_PROTOCOL, OfficialPiAgentActivationRequest,

@@ -91,7 +91,12 @@ const GENERATOR_VERSION: &str = "0.2.1";
 /// consumers. GENERATOR_VERSION bumped to 0.2.1 for `number` support.
 /// No installation transition table or readiness carrier is registered
 /// in this batch (see D-020/D-021).
-const CORE_SET: [&str; 50] = [
+///
+/// P8-T02/D03 (2026-08-11): append the public `agent-adapter-manifest`
+/// capability declaration so generated Rust/TS bindings pin AKP-only,
+/// candidate-only, no-public-listener facts. Input-set extension only;
+/// rendering semantics unchanged, so GENERATOR_VERSION stays 0.2.1.
+const CORE_SET: [&str; 51] = [
     "authorization-capability.schema.json",
     "common-defs.schema.json",
     "context-request.schema.json",
@@ -142,6 +147,7 @@ const CORE_SET: [&str; 50] = [
     "agent-compatibility-report.schema.json",
     "performance-report.schema.json",
     "profile-manifest.schema.json",
+    "agent-adapter-manifest.schema.json",
 ];
 
 /// Legacy `$defs` excluded from generation: deprecated, zero-reference,
