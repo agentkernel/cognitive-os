@@ -345,7 +345,8 @@ requirements:
     vectors:
       - conformance/vectors/worker-authorization-001.json
     impl:
-      - apps/kernel-server/src/personal/scheduler_authority.rs
+      - apps/kernel-server/src/personal/scheduler_authority/mod.rs
+      - apps/kernel-server/src/personal/scheduler_authority/tests.rs
       - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests: []
     evidence: []

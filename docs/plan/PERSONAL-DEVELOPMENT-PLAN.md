@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01、P8-T02、P8-T03、P8-T04、P8-T05、P8-T06 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06 已完成；P9-T02 `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -158,8 +158,8 @@
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 4 | 0 | 0 | 4 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
-| Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **49** | **0** | **0** | **13** | — |
+| Phase 9 - 性能与结构演进 | 3 | 0 | 1 | 0 | 2 | 无新 Gate；沿用 P7-T04 回归地板 |
+| **合计** | **62** | **49** | **1** | **0** | **12** | — |
 
 ## 2. 产品边界与不变量
 
@@ -633,6 +633,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P8-T03/D02` | P8-T03 | Codex fixture lifecycle activate/pause/stop/recover over registered declaration digests with management-channel isolation | `P8-T03/D01` | failure-first channel/digest/epoch negatives; exact native Linux and required CI |
 | `P8-T03/D03` | P8-T03 | fixed-denominator independent qualification matrix and non-claim report (B09-mode generalization; no Pi evidence transfer) | `P8-T03/D02` | failure-first incomplete matrix and authority-shaped claim rejection; exact native Linux and required CI |
 | `P8-T03/D04` | P8-T03 | final acceptance over D01-D03 non-Pi qualification evidence | `P8-T03/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile/Pi-transfer claim |
+| `P9-T02/D01` | P9-T02 | extract embedded tests from `scheduler_authority.rs` into `scheduler_authority/tests.rs` without behavior change | completed Phase 8 structure baseline on main | exact native Linux focused scheduler_authority tests, Clippy, required CI |
+| `P9-T02/D02` | P9-T02 | split `scheduler_authority` production helpers into cohesive submodules without behavior change | `P9-T02/D01` | exact native Linux focused tests, Clippy, required CI |
+| `P9-T02/D03` | P9-T02 | extract/split oversized regions of `sqlite.rs` and `tool_executor.rs` with focused-test parity | `P9-T02/D02` | exact native Linux focused tests, Clippy, required CI |
+| `P9-T02/D04` | P9-T02 | final acceptance over D01-D03 structure-debt evidence | `P9-T02/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile claim |
 | `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
@@ -708,7 +712,7 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P9-T01 | 异步事件底座演进 | P8-T01 | 以 P7-T04/D02 治理路径 stage 计时区分"治理税/实现税"为决策门：若连接/open/锁竞争主导 p95，分阶段将 HTTP/watch/sidecar 流层迁移到异步 runtime，权威 SQLite 写路径保持单写者语义；否则记录保守优化结论 | not-started | — |
-| P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | not-started | — |
+| P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | in-progress | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt`. D01 extract scheduler_authority tests. |
 | P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | not-started | — |
 
 ## 5. Gate 与证据要求
