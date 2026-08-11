@@ -31,6 +31,7 @@ pub mod mcp_tool_adapter;
 pub mod non_pi_agent;
 pub mod oob;
 pub mod perf;
+pub mod performance_campaign;
 pub mod pi_launcher;
 pub mod readiness;
 pub mod recovery_flow;
@@ -152,6 +153,10 @@ pub use perf::{
     GovernanceOverheadSample, GovernedPathCollectionError, GovernedPathCounters,
     GovernedPathObservation, GovernedPathStage, GovernedPathStageCollector, GovernedStageSample,
     StageLatencyMs, validate_governed_path_observation,
+};
+pub use performance_campaign::{
+    CampaignCorrelationId, CampaignMeasurementEnvelope, CampaignStage, CampaignStageTiming,
+    PerformanceCampaignError, ProviderUsage,
 };
 pub use pi_launcher::{
     PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,

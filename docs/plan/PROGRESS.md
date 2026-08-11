@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | no new task is active; stop after P9-T01 closure record reconciliation as requested |
-| Active task lease | `none` | P9-T01 is merged and has no active task/slice lease | retain the reconciled P9-T01 evidence; do not claim another task without owner direction |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue P9-T04 comprehensive performance campaign under ADR-0051 |
+| Active task lease | `lease/personal/P9-T04/comprehensive-performance-campaign` | P9-T04/D01 is the sole active delivery slice on `personal/P9-T04-comprehensive-performance-campaign` | complete secret-free measurement-envelope negatives, push the exact revision, then perform the registered B01 start-gate checks |
+| P9-T04 Comprehensive performance and real Task campaign | **in-progress** | ADR-0051 and preregistration `20260812-personal-p9-t04-performance-campaign-preregistration.md` are registered. D01 adds the secret-free measurement-envelope foundation; B01 guest remains shut off and no Provider import, guest mutation, benchmark execution, Gate, release, Profile, or Agent-benefit claim has occurred. | obtain exact Linux validation for D01 from a pushed revision, then connect the envelope to the real daemon/Pi/Provider path without exposing secrets or adding an authority writer |
 | P9-T01 Async event foundation decision gate | **done** | D01's exact native Linux observation at `826745c` passed `perf::tests` 5/5 and selected hypothesis-only `conservative-no-migration`. Recovery added bounded socket reads and serialized loopback-daemon test execution after a Windows stall. Final required Ubuntu/Windows CI `31540218963` passed on merged PR #197 head `498852f`; merge commit `af64b85`. No async migration, Gate, release, or Profile claim. | retain closure evidence; any reconsideration needs separately measured HTTP/watch/sidecar transport evidence |
 | P5-T04 Post-1.0 dynamic Tool + B10 | **done** | D01–D04 closed under ADR-0050. Linux 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; B10 MVP `pass`. Closure `20260811-personal-p5-t04-dynamic-tool-closure.md`. | retain closure evidence; no GMVP-LINUX/release/Profile claim |
 | P5-T03 Post-1.0 MCP Tool adapter | **done** | D01–D04 closed; Linux 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure checkpoint `20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. | retain closure evidence; no B10/Gate/release/Profile claim |
@@ -64,7 +65,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 55 | 0 | 0 | 7 | 7 |
+| 63 | 55 | 1 | 0 | 7 | 8 |
 
 `P5-T04` is `done` (PR #196). Formal task completion remains independent from
 GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
@@ -74,6 +75,7 @@ under ADR-0050.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P9-T04/D01` | `in-progress` | secret-free correlation/timing/Provider-usage envelope implementation is locally formatted; supported Linux validation is not yet run | checkpoint and push the exact revision, then validate focused negatives in an isolated Linux worktree |
 | `P5-T04/D01` | `done` | dynamic package bind + disabled discovery; Linux 4/4 + Clippy at `b49d274` | consumed by D02 |
 | `P5-T04/D02` | `done` | enable/disable/quarantine + TaskContract exposure; covered in same Linux 4/4 | consumed by D03 |
 | `P5-T04/D03` | `done` | reconcile/composite/cache/bypass; covered in same Linux 4/4 | consumed by D04 |

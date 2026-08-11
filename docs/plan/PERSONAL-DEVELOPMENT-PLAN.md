@@ -158,8 +158,8 @@
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 0 | 3 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
-| Phase 9 - 性能与结构演进 | 3 | 3 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **55** | **0** | **0** | **7** | — |
+| Phase 9 - 性能与结构演进 | 4 | 3 | 1 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
+| **合计** | **63** | **55** | **1** | **0** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -682,6 +682,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P2-T08/D03` | P2-T08 | authority-path focused Runtime Spine negatives covering shell/daemon close, OUTCOME_UNKNOWN original-key reconcile, no-blind-retry, and false-completion self-check floor | `P2-T08/D01` and completed P2-T06/P2-T07 executor/verifier boundaries | exact native Linux focused validation, Clippy where applicable, required Ubuntu/Windows CI; Gate campaigns remain `not-run` until D04 |
 | `P2-T08/D04` | P2-T08 | formal B02/B04/B05/B12 campaign preregistration and supported execution with redacted evidence, independent review, and explicit Gate disposition | `P2-T08/D01-D03` complete suite and ADR-0018 closure | preregistered campaign on a supported environment; complete denominator/threshold accounting; required CI for suite artifacts; owner interaction only if Provider/environment prerequisites are unavailable |
 | `P9-T01/D01` | P9-T01 | repeat the P7-T04 governed-path stage observation on an immutable native revision, summarize stage tails, and apply a deterministic migration decision rule; preserve single-writer SQLite and keep the result hypothesis/non-claim | P7-T04/D02 collector and P8-T01 design baseline | exact native Linux observation, raw redacted report, static/consistency checks, and required CI; if async migration is selected, D02 must define a bounded stream-only migration slice; otherwise D01 closes the task with a conservative outcome |
+| `P9-T04/D01` | P9-T04 | establish a daemon-client-safe, secret-free campaign measurement envelope for opaque correlation IDs, monotonic stage timing, and Provider usage availability; missing usage must remain `not_available`, and the envelope must not write authority state | P7-T04/D02 collector, P8-T05/P9-T03 measurement boundaries, and ADR-0051 preregistration | failure-first invalid correlation, partial/inconsistent Provider usage, and zero-duration stage negatives; exact-revision Linux focused tests and required CI; completion enables real daemon/Pi/Provider instrumentation, not benchmark execution or any claim |
 
 ### Phase 6 - Multi-Agent
 
@@ -731,6 +732,7 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 | P9-T01 | 异步事件底座演进 | P8-T01 | 以 P7-T04/D02 治理路径 stage 计时区分"治理税/实现税"为决策门：若连接/open/锁竞争主导 p95，分阶段将 HTTP/watch/sidecar 流层迁移到异步 runtime，权威 SQLite 写路径保持单写者语义；否则记录保守优化结论 | done | 2026-08-12；D01 produced the hypothesis-only `conservative-no-migration` decision: the aggregate authority `effect_persistence` stage is not separable transport evidence. Exact native Linux focused tests passed at `826745c`; CI recovery added bounded socket reads and serial loopback-daemon execution after a Windows test stall. Final CI `31540218963` passed on PR #197 head `498852f`, which merged at `main@af64b85`. Closure: `docs/checkpoints/20260811-personal-p9-t01-async-decision-gate-closure.md`. No async migration, Gate, release, or Profile claim. |
 | P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | done | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt` / PR #192. D01–D04 closed. Linux evidence through `a11d0bd`; required CI `31470278984`. Closure: `docs/checkpoints/20260811-personal-p9-t02-structure-debt-closure.md`. No Gate/release/Profile claim. |
 | P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | done | 2026-08-11；`lease/personal/P9-T03/store-composition` on `personal/P9-T03-store-composition` / PR #193. D01–D04 closed. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure: `docs/checkpoints/20260811-personal-p9-t03-store-composition-closure.md`. No Gate/release/Profile claim. |
+| P9-T04 | 全面性能与真实 Task campaign | P7-T04, P8-T05, P9-T01, P9-T03 | measurement-only correlation/timing/usage/transport/resource/evidence runner；在单一 preregistered B01 campaign 中完整执行 L1--L5，保留完整分母、独立 verifier、报告和 cleanup。不得建立第二 authority writer、伪造 TTFT 或 Provider usage；L5 不达标也必须完成 non-claim report 和收口 | in-progress | Owner-authorized 2026-08-12 under ADR-0051. D01 secret-free measurement-envelope implementation and failure-first negatives are in progress on `personal/P9-T04-comprehensive-performance-campaign` under `lease/personal/P9-T04/comprehensive-performance-campaign`. Preregistration: `docs/checkpoints/20260812-personal-p9-t04-performance-campaign-preregistration.md`. No campaign execution, Provider import, guest mutation, benchmark, Gate, release, Profile, or generalized Agent-benefit claim yet. |
 
 ## 5. Gate 与证据要求
 
