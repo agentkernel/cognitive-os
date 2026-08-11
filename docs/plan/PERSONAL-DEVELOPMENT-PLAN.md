@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06、P9-T02、P9-T03 已完成；P7-T08 `in-progress` under ADR-0048 B08 MVP path；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06、P9-T02、P9-T03 已完成；P7-T08 `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -694,7 +694,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
-| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | in-progress | 2026-08-11；`lease/personal/P7-T08/gmvp-linux` on `personal/P7-T08-gmvp-linux`. D01 registers ADR-0048 B08 fixed-denominator non-claim harness. B08/GMVP-LINUX remain unset until later slices. |
+| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | in-progress | 2026-08-11；`lease/personal/P7-T08/gmvp-linux` / PR #194. D01–D02 closed: ADR-0048 B08 MVP `pass` at `65a736c` + CI `31479512940`. D03 ADR-0049 composition binder in progress. GMVP-LINUX unset until D04. |
 
 ### Phase 8 - 通用 Agent 适配与设计基线（post-1.0 能力列车）
 
