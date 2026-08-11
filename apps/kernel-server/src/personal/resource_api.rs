@@ -7,7 +7,6 @@
 use std::collections::VecDeque;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::memory_admission::admit_memory_candidate;
 use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
@@ -17,7 +16,7 @@ use cognitive_kernel::ports::{
     SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
     SkillRevisionRow, SkillStore, StorePortError,
 };
-use cognitive_store::SqliteAuthorityStore;
+use cognitive_store::{SqliteAuthorityStore, admit_memory_candidate};
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";

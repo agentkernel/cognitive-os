@@ -16,7 +16,10 @@ use cognitive_kernel::ports::{
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
-use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
+use cognitive_store::{
+    PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
+    scheduler::SchedulerRepository,
+};
 use serde_json::json;
 
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
@@ -31,7 +34,7 @@ use super::readiness::{
 };
 use super::resource_api::ResourceApi;
 use super::scheduler_authority::{
-    reconcile_scheduler_recovery_at_startup, run_private_scheduler_tick_with_provider_config,
+    reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
 use super::task_api::TaskApi;
 
@@ -103,18 +106,37 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         "kernel-server personal: acquired single-instance lock at {}",
         lock.path().display()
     );
-    reconcile_scheduler_recovery_at_startup(&config.layout.authority_database_path()).map_err(
+    // Open the authority store once for the daemon process and reuse the
+    // single-writer handle for startup recovery, the private scheduler tick,
+    // and personal request-path handlers (P9-T03/D01-D02).
+    let authority_store = SqliteAuthorityStore::open(&config.layout.authority_database_path())
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: format!("open Personal authority store for daemon startup: {error}"),
+        })?;
+    let mut scheduler_repository =
+        SchedulerRepository::open(&config.layout.authority_database_path()).map_err(|error| {
+            PersonalDaemonError::Io {
+                detail: format!("open Personal scheduler repository for daemon startup: {error}"),
+            }
+        })?;
+    reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository).map_err(
         |error| PersonalDaemonError::Io {
             detail: format!("reconcile durable scheduler recovery before startup: {error}"),
         },
     )?;
-    run_private_scheduler_tick_with_provider_config(
-        &config.layout.authority_database_path(),
+    run_private_scheduler_tick_with_store(
+        &authority_store,
+        &mut scheduler_repository,
         config.layout.config_dir(),
     )
     .map_err(|error| PersonalDaemonError::Io {
         detail: format!("run private scheduler tick before startup: {error}"),
     })?;
+    drop(scheduler_repository);
+    // Retain the single-writer authority store for the daemon accept loop
+    // (P9-T03/D02). Request handlers must reuse this handle instead of opening
+    // a second connection per call.
+    let authority_store = Arc::new(authority_store);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
@@ -156,6 +178,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             &config.bounds,
             &config.layout,
             &authority,
+            &authority_store,
             &task_api,
             &resource_api,
             &active_connections,
@@ -179,6 +202,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                 let authority = Arc::clone(&authority);
                 let task_api = Arc::clone(&task_api);
                 let resource_api = Arc::clone(&resource_api);
+                let authority_store = Arc::clone(&authority_store);
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
@@ -187,6 +211,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                         &bounds,
                         &layout,
                         &authority,
+                        &authority_store,
                         &task_api,
                         &resource_api,
                         &active_connections,
@@ -263,6 +288,7 @@ fn handle_connection_with_task_api(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     task_api: &Arc<Mutex<TaskApi>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
     active_connections: &Arc<AtomicUsize>,
@@ -309,6 +335,7 @@ fn handle_connection_with_task_api(
         bounds,
         layout,
         authority,
+        authority_store,
         task_api,
         resource_api,
     );
@@ -327,13 +354,16 @@ fn handle_connection_with_task_api(
 
 /// Single-connection test helper. Production keeps one shared TaskApi for
 /// process-lifetime watch continuity; pre-existing front-door tests do not
-/// exercise that state and use an isolated instance.
+/// exercise that state and use an isolated instance. The authority store is
+/// opened once by the fixture (mirroring the daemon-owned handle) so limit
+/// checks are not delayed by per-connection SQLite open.
 #[cfg(test)]
 fn handle_connection(
     stream: TcpStream,
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
@@ -344,6 +374,7 @@ fn handle_connection(
         bounds,
         layout,
         authority,
+        authority_store,
         &task_api,
         &resource_api,
         active_connections,
@@ -356,6 +387,7 @@ fn process_http_request(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     task_api: &Arc<Mutex<TaskApi>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
 ) -> Result<(), String> {
@@ -389,8 +421,8 @@ fn process_http_request(
             stream,
             &headers,
             body.as_slice(),
-            layout,
             authority,
+            authority_store,
         );
     }
     if method_path.starts_with("POST /management/context-authorization/revocations ") {
@@ -398,8 +430,8 @@ fn process_http_request(
             stream,
             &headers,
             body.as_slice(),
-            layout,
             authority,
+            authority_store,
         );
     }
     if method_path.starts_with("GET /management/resource/")
@@ -409,8 +441,8 @@ fn process_http_request(
             stream,
             &method_path,
             &headers,
-            layout,
             authority,
+            authority_store,
             resource_api,
             &body,
         );
@@ -429,8 +461,8 @@ fn process_http_request(
             stream,
             &headers,
             &body,
-            layout,
             authority,
+            authority_store,
             resource_api,
         );
     }
@@ -505,8 +537,8 @@ fn handle_context_authorization_fact_admission(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
@@ -514,9 +546,7 @@ fn handle_context_authorization_fact_admission(
     let facts: ContextAuthorizationFactsRow = serde_json::from_slice(body).map_err(|_| {
         "Context authorization facts must be a valid daemon-admin payload".to_owned()
     })?;
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open Context authority store: {error}"))?;
-    store
+    authority_store
         .append_context_authorization_facts(&facts)
         .map_err(|error| format!("admit Context authorization facts: {error}"))?;
     write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
@@ -526,17 +556,15 @@ fn handle_context_revocation_fact_admission(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let fact: ContextRevocationFactRow = serde_json::from_slice(body)
         .map_err(|_| "Context revocation fact must be a valid daemon-admin payload".to_owned())?;
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open Context authority store: {error}"))?;
-    store
+    authority_store
         .append_context_revocation_fact(&fact)
         .map_err(|error| format!("admit Context revocation fact: {error}"))?;
     write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
@@ -756,8 +784,8 @@ fn handle_task_consumption_route(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     resource_api: &Arc<Mutex<ResourceApi>>,
 ) -> Result<(), String> {
     let Some(token) = extract_bearer_token(headers) else {
@@ -780,12 +808,10 @@ fn handle_task_consumption_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     drop(authority_guard);
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open authority store: {error}"))?;
     let response = resource_api
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
-        .handle_task_consumption(body, &store);
+        .handle_task_consumption(body, authority_store.as_ref());
     write_response(
         stream,
         response.status,
@@ -798,20 +824,18 @@ fn handle_authority_resource_route(
     stream: &mut TcpStream,
     method_path: &str,
     headers: &str,
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     resource_api: &Arc<Mutex<ResourceApi>>,
     body: &[u8],
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open resource authority store: {error}"))?;
     let response = resource_api
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
-        .handle_authority_or_mutation(method_path, body, &store);
+        .handle_authority_or_mutation(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,
@@ -1233,13 +1257,21 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
-    use cognitive_store::PersonalDataLayout;
+    use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
 
     use super::{
         LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
     };
 
-    fn test_fixture(test_name: &str) -> (PersonalDataLayout, Arc<Mutex<LocalSessionAuthority>>) {
+    fn test_fixture(
+        test_name: &str,
+    ) -> (
+        PersonalDataLayout,
+        Arc<Mutex<LocalSessionAuthority>>,
+        Arc<SqliteAuthorityStore>,
+    ) {
+        use cognitive_store::prepare_personal_databases;
+
         let temporary_root = std::env::temp_dir().join(format!(
             "cos-personal-server-test-{test_name}-{}-{}",
             std::process::id(),
@@ -1256,12 +1288,17 @@ mod tests {
             &temporary_root,
         );
         layout.ensure_directories().expect("test directories");
+        prepare_personal_databases(&layout).expect("prepare test authority databases");
+        let authority_store = Arc::new(
+            SqliteAuthorityStore::open(&layout.authority_database_path())
+                .expect("open shared test authority store"),
+        );
         let authority = LocalSessionAuthority::initialize(
             layout.local_bootstrap_secret_path(),
             PersonalResourceBounds::personal_v1_baseline(),
         )
         .expect("test authority");
-        (layout, Arc::new(Mutex::new(authority)))
+        (layout, Arc::new(Mutex::new(authority)), authority_store)
     }
 
     fn accept_connection(listener: &TcpListener) -> TcpStream {
@@ -1290,11 +1327,12 @@ mod tests {
         let port = listener.local_addr().expect("listener address").port();
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("timeout");
+        let (layout, authority, authority_store) = test_fixture("timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1303,6 +1341,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1340,11 +1379,12 @@ mod tests {
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
         bounds.request_body_read_timeout_secs = 1;
-        let (layout, authority) = test_fixture("body-timeout");
+        let (layout, authority, authority_store) = test_fixture("body-timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1353,6 +1393,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1392,7 +1433,7 @@ mod tests {
         // connection ceiling, not the in-flight ceiling.
         bounds.max_in_flight_requests = 8;
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("concurrency");
+        let (layout, authority, authority_store) = test_fixture("concurrency");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let mut first = TcpStream::connect(("127.0.0.1", port)).expect("first connection");
@@ -1402,6 +1443,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1409,6 +1451,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1426,6 +1469,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1433,6 +1477,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1450,6 +1495,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1457,6 +1503,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1487,7 +1534,7 @@ mod tests {
         bounds.max_concurrent_connections = 3;
         bounds.max_in_flight_requests = 2;
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("in-flight");
+        let (layout, authority, authority_store) = test_fixture("in-flight");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
 
@@ -1498,6 +1545,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1505,6 +1553,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1522,6 +1571,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1529,6 +1579,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1546,6 +1597,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1553,6 +1605,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1573,5 +1626,81 @@ mod tests {
         third_server.join().expect("third server thread");
         assert_eq!(active_connections.load(Ordering::SeqCst), 0);
         assert_eq!(in_flight.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn request_path_handlers_reuse_daemon_owned_authority_store() {
+        use std::time::Instant;
+
+        use cognitive_kernel::ProtocolStore;
+
+        use super::{
+            ChannelClass, ResourceApi, SessionIssueRequest, handle_task_consumption_route,
+        };
+
+        let (_layout, authority, authority_store) = test_fixture("shared-store-request");
+        let task_token = {
+            let mut guard = authority.lock().expect("authority lock");
+            let bootstrap_secret = guard.bootstrap_secret_for_tests().to_owned();
+            guard
+                .issue_session(
+                    SessionIssueRequest {
+                        channel: ChannelClass::Task,
+                        principal_id: "principal://tenant-a/owner".to_owned(),
+                        bootstrap_secret,
+                    },
+                    Instant::now(),
+                )
+                .expect("issue task session")
+                .token
+        };
+        let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
+        let body = br#"{"task_ref":"task://local/missing","query_text":"fact","skill_binding_id":"00000000-0000-7000-9000-000000000001"}"#;
+        let headers = format!("Authorization: Bearer {task_token}\r\n");
+
+        // Two sequential request-path calls must reuse the same open store and
+        // still reach the store-backed fail-closed outcome (no second open).
+        for _ in 0..2 {
+            let listener = TcpListener::bind("127.0.0.1:0").expect("listener");
+            let port = listener.local_addr().expect("addr").port();
+            let server = {
+                let authority = Arc::clone(&authority);
+                let authority_store = Arc::clone(&authority_store);
+                let resource_api = Arc::clone(&resource_api);
+                let headers = headers.clone();
+                std::thread::spawn(move || {
+                    let mut stream = accept_connection(&listener);
+                    handle_task_consumption_route(
+                        &mut stream,
+                        &headers,
+                        body,
+                        &authority,
+                        &authority_store,
+                        &resource_api,
+                    )
+                    .expect("shared-store consumption route");
+                })
+            };
+            let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client");
+            client
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .expect("client timeout");
+            let mut response = String::new();
+            client
+                .read_to_string(&mut response)
+                .expect("shared-store response");
+            server.join().expect("server thread");
+            assert!(
+                response.contains("RESOURCE_TASK_NOT_FOUND"),
+                "expected store-backed miss on shared handle, got {response}"
+            );
+        }
+
+        assert_eq!(
+            authority_store
+                .current_contract_epoch("task://local/missing")
+                .expect("shared store still readable"),
+            0
+        );
     }
 }

@@ -36,6 +36,7 @@ pub mod release_manifest;
 pub mod sandbox;
 pub mod scheduler_service;
 pub mod shell;
+pub mod store_access;
 pub mod target_resolution;
 
 pub use adapters::{
@@ -150,6 +151,11 @@ pub use scheduler_service::{
     SchedulerDispatch, SchedulerService, SchedulerServiceError, SchedulerStopReason,
 };
 pub use shell::{ShellError, ShellPhase, ShellService};
+pub use store_access::{
+    StoreAccessCollectionError, StoreAccessStage, StoreAccessStageObservation,
+    StoreAccessStageSample, collect_store_access_stage_observation,
+    validate_store_access_stage_observation,
+};
 pub use target_resolution::{
     TargetSelectorDecision, TargetSelectorRequest, admit_target_selector, is_strong_reference,
     request_from_target_vector_input,

@@ -13,7 +13,10 @@ use cognitive_kernel::ports::{
     StorePortError,
 };
 
-pub(crate) fn admit_memory_candidate<S>(
+/// Daemon-owned Memory admission seam (P9-T03/D03): Personal callers supply a
+/// candidate plus evidence-shaped decision, but this store-layer service
+/// reloads the current Context source and re-derives policy before persist.
+pub fn admit_memory_candidate<S>(
     store: &S,
     candidate: &MemoryCandidateRow,
     requested_decision: &MemoryAdmissionDecisionRow,

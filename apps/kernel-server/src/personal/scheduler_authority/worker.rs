@@ -314,9 +314,29 @@ pub(crate) fn reconcile_scheduler_recovery_at_startup(
     let authority_store = cognitive_store::SqliteAuthorityStore::open(authority_database_path)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+}
+
+/// Startup recovery against an already-open daemon-owned authority store.
+///
+/// Personal daemon startup must open the authority store once and reuse that
+/// single-writer handle for recovery and the subsequent private tick
+/// (P9-T03/D01). Callers that still pass only a path go through
+/// [`reconcile_scheduler_recovery_at_startup`].
+pub(crate) fn reconcile_scheduler_recovery_with_store<S>(
+    authority_store: &S,
+    scheduler_repository: &mut SchedulerRepository,
+) -> Result<(), SchedulerAuthorityError>
+where
+    S: AuthorityStore
+        + IntentChainStore
+        + ProtocolStore
+        + WorkerAuthorizationStore
+        + ContinuationAuthorityStore,
+{
     reconcile_recovered_worker_attempts(
-        &authority_store,
-        &mut scheduler_repository,
+        authority_store,
+        scheduler_repository,
         &cognitive_store::SystemClock,
     )?;
     Ok(())
