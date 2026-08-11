@@ -4,7 +4,7 @@
 - Slice: `P7-T08/D03`
 - Campaign: `GMVP-LINUX-composition/1`
 - Policy: ADR-0049 MVP fixed composition
-- Binder revision (this checkpoint commit): pending push after docs sync
+- Binder revision: `b3f4b88ac2ab672b194b6c0ebf42e01841f63041`
 - B08 matrix revision: `65a736cd00a4b3da39a96be799ed6b60e434eeac`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/194
 - Date: 2026-08-11
@@ -56,7 +56,7 @@
 ## Harness validation
 
 - Local `pnpm -C tools test` includes `gmvp-linux-gate` 2/2
-- Required CI for the composition binder commit: pending after push
+- Required CI run `31480604511` SUCCESS for composition binder head `b3f4b88`
 
 ## Non-claims
 

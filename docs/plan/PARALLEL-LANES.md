@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T08/gmvp-linux` | P7-T08/D03 GMVP composition binder (D04 follow) | Lane-CFR + Lane-DOC | `personal/P7-T08-gmvp-linux` | `tools/src/b08-memory-skill-gate.mjs`; `tools/test/b08-memory-skill-gate.test.mjs`; `tools/src/gmvp-linux-gate.mjs`; `tools/test/gmvp-linux-gate.test.mjs`; `tools/test/check.test.mjs`; `tools/package.json`; `docs/adr/0048-personal-b08-mvp-validation-policy.md`; `docs/adr/0049-personal-gmvp-linux-mvp-validation-policy.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `docs/checkpoints/20260811-personal-p7-t08-*` | continuous-delivery session | 2026-08-11 / 2026-08-11 | active |
+| *(none)* | — | — | — | — | — | — | — |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
@@ -85,6 +85,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P7-T08/gmvp-linux` | P7-T08/D01-D04 GMVP-LINUX | `personal/P7-T08-gmvp-linux` | 2026-08-11 | D01–D04 deliver ADR-0048 B08 MVP pass, ADR-0049 GMVP composition binder, and GMVP-LINUX MVP pass. B08 CI `31479512940`; composition CI `31480604511`; PR #194. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P9-T02/structure-debt` | P9-T02/D01-D04 structure debt | `personal/P9-T02-structure-debt` | 2026-08-11 | D01–D04 deliver scheduler_authority/tool_executor/sqlite structure splits with focused-test parity and acceptance closure. Linux evidence through `a11d0bd`; required CI `31470278984` on `eddaa70`; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T03/non-pi-agent` | P8-T03/D01-D04 non-Pi Codex | `personal/P8-T03-non-pi-agent` | 2026-08-11 | D01–D04 deliver Codex fixture identity, lifecycle, non-claim qualification matrix, and acceptance closure. Linux evidence through `b41f06f`; required CI `31463130827` / closure on `3beb825`; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T06/learning-loop` | P8-T06/D01-D04 learning loop | `personal/P8-T06-learning-loop` | 2026-08-11 | D01–D04 deliver Reflexion failure-lesson Memory/Skill candidate planners, daemon Memory admission wiring, and acceptance closure. Linux evidence through `b81414d`; required CI `31461384771` / closure `31462013806` on `db6fa7a`; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
