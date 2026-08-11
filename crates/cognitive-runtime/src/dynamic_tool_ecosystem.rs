@@ -421,7 +421,11 @@ pub fn lookup_pure_read_cache(
     hasher.update(b"\0");
     hasher.update(result_utilization.to_string().as_bytes());
     hasher.update(b"\0");
-    hasher.update(if cache_hit { b"hit" } else { b"miss" });
+    hasher.update(if cache_hit {
+        "hit".as_bytes()
+    } else {
+        "miss".as_bytes()
+    });
     Ok(DynamicToolCacheTelemetry {
         schema_token_cost,
         result_utilization,
