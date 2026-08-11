@@ -110,7 +110,7 @@ impl NativeWorkspaceReadExecutor {
     }
 
     #[cfg(test)]
-    fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
+    pub(crate) fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
         self.completed_reads
             .lock()
             .ok()
@@ -119,7 +119,7 @@ impl NativeWorkspaceReadExecutor {
     }
 
     #[cfg(test)]
-    fn install_before_read_hook(&self, hook: impl Fn() + Send + 'static) {
+    pub(crate) fn install_before_read_hook(&self, hook: impl Fn() + Send + 'static) {
         let mut before_read_hook = match self.before_read_hook.lock() {
             Ok(before_read_hook) => before_read_hook,
             Err(poisoned_before_read_hook) => poisoned_before_read_hook.into_inner(),

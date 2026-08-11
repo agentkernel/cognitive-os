@@ -314,7 +314,7 @@ impl BoundedProcessCheckSupervisor {
     }
 
     #[cfg(test)]
-    fn register(&self, process_id: u32, output: &[u8], required_runtime: Duration) {
+    pub(crate) fn register(&self, process_id: u32, output: &[u8], required_runtime: Duration) {
         let mut registered_processes = match self.registered_processes.lock() {
             Ok(registered_processes) => registered_processes,
             Err(poisoned_registered_processes) => poisoned_registered_processes.into_inner(),
@@ -330,7 +330,7 @@ impl BoundedProcessCheckSupervisor {
     }
 
     #[cfg(test)]
-    fn orphan(&self, process_id: u32) {
+    pub(crate) fn orphan(&self, process_id: u32) {
         let mut registered_processes = match self.registered_processes.lock() {
             Ok(registered_processes) => registered_processes,
             Err(poisoned_registered_processes) => poisoned_registered_processes.into_inner(),
@@ -341,7 +341,7 @@ impl BoundedProcessCheckSupervisor {
     }
 
     #[cfg(test)]
-    fn access_count(&self) -> usize {
+    pub(crate) fn access_count(&self) -> usize {
         self.access_count.load(std::sync::atomic::Ordering::SeqCst)
     }
 }
@@ -440,7 +440,7 @@ where
     }
 
     #[cfg(test)]
-    fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
+    pub(crate) fn completed_output(&self, idempotency_key: &str) -> Option<Vec<u8>> {
         self.completed_checks
             .lock()
             .ok()
@@ -449,7 +449,7 @@ where
     }
 
     #[cfg(test)]
-    fn install_before_check_hook(&self, hook: impl Fn() + Send + 'static) {
+    pub(crate) fn install_before_check_hook(&self, hook: impl Fn() + Send + 'static) {
         let mut before_check_hook = match self.before_check_hook.lock() {
             Ok(before_check_hook) => before_check_hook,
             Err(poisoned_before_check_hook) => poisoned_before_check_hook.into_inner(),
