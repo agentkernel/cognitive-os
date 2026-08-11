@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| *(none)* | — | — | — | — | — | — | — |
+| `lease/personal/P7-T08/gmvp-linux` | P7-T08/D02 B08 matrix + disposition (D03–D04 follow) | Lane-CFR + Lane-DOC | `personal/P7-T08-gmvp-linux` | `tools/src/b08-memory-skill-gate.mjs`; `tools/test/b08-memory-skill-gate.test.mjs`; `tools/test/check.test.mjs`; `tools/package.json`; `docs/adr/0048-personal-b08-mvp-validation-policy.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `docs/checkpoints/20260811-personal-p7-t08-*` | continuous-delivery session | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

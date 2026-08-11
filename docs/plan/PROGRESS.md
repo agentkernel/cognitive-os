@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P9-T03 merge |
-| Active task lease | `none` | P9-T03 lease closed with PR #193 merge. | claim next implementation-ready Personal task |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P7-T08/D02` B08 matrix on DEV-LINUX-NATIVE-01 |
+| Active task lease | `lease/personal/P7-T08/gmvp-linux` | branch `personal/P7-T08-gmvp-linux`; writable paths listed in PARALLEL-LANES §3 | execute ADR-0048 matrix + Clippy; produce non-claim report |
+| P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **in-progress** | D01 closed: ADR-0048 + `b08-memory-skill-gate` harness (tools 30/30, consistency OK). B08/GMVP-LINUX remain `not-run` until D02/D04. | enter D02: exact Linux store/server matrix |
 | P9-T03 Store access and composition-root optimization | **done** | D01–D04 closed; PR #193 merged. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure checkpoint `20260811-personal-p9-t03-store-composition-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P9-T02 Authority-path structure debt | **done** | D01–D04 closed; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Linux evidence through `a11d0bd`; required CI `31471319404` on `b1cc8a7`. Closure checkpoint `20260811-personal-p9-t02-structure-debt-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
@@ -59,16 +60,20 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 51 | 0 | 0 | 11 | 11 |
+| 62 | 51 | 1 | 0 | 10 | 11 |
 
-`P9-T03` is `done` (PR #193). Formal task completion remains independent from every
-product Gate except where the plan explicitly binds Gate disposition to task
-acceptance.
+`P7-T08` is `in-progress` (`lease/personal/P7-T08/gmvp-linux`). Formal task
+completion remains independent from every product Gate except where the plan
+explicitly binds Gate disposition to task acceptance.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P7-T08/D01` | `done` | ADR-0048 + `tools` B08 non-claim harness; local tools 30/30 + consistency | consumed by D02 |
+| `P7-T08/D02` | `in-progress` | ADR-0048 matrix pending exact native Linux | run focused store/server tests + Clippy on DEV-LINUX-NATIVE-01 |
+| `P7-T08/D03` | `ready` | waits on D02 B08 disposition | GMVP composition binder / UCR-01 checklist |
+| `P7-T08/D04` | `ready` | waits on D03 | GMVP disposition + task closure |
 | `P7-T01/D01` | `done` | signed six-family release-manifest authority path; native Linux 6/6 + Clippy at `3108889`; required CI `31425522168` for `3bde68c`; merged onto main after P5-T05 | consumed by D02 |
 | `P7-T01/D02` | `done` | SBOM/artifact digest binding + contaminated-inventory rejection; Linux `release_manifest` 9/9 + Clippy at `c1f06f4` | consumed by D03 |
 | `P7-T01/D03` | `done` | immutable toolchain pins + acquisition-lock trust; Linux `release_manifest` 11/11 + Clippy at `34812f8` | consumed by D04 |
@@ -186,7 +191,7 @@ not override this table.
 | B02/B04/B05/B12 | `pass` (MVP, ADR-0046) | fixed authority-path/harness matrix at `be7febb` + CI `31407542786` + non-claim report + owner `affirm all`; see P2-T08 closure | none for MVP scope; does not pass GMVP-LINUX, B08, B09, release, or Profile |
 | B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
 | B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
-| B08/B09 | B08 `not-run`; B09 `pass` (MVP, ADR-0047) | fixed process-bound matrix at `548f138` + CI `31423464703` + non-claim report + owner `affirm B09`; see P5-T05 closure | none for MVP scope; does not pass GMVP-LINUX, B08, release, or Profile; B08 remains a separate Memory+Skill campaign |
+| B08/B09 | B08 `not-run` (ADR-0048 D01 harness in progress); B09 `pass` (MVP, ADR-0047) | fixed process-bound matrix at `548f138` + CI `31423464703` + non-claim report + owner `affirm B09`; see P5-T05 closure | B08 waits P7-T08/D02 matrix + disposition; B09 MVP closed; neither passes GMVP-LINUX/release/Profile |
 | GMVP-LINUX | `not-run` | no release evidence | remaining typed promotion dependencies: B08 campaign and P7-T01..T03/P7-T08 operability evidence |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
