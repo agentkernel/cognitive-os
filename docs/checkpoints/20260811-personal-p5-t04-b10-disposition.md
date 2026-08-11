@@ -4,10 +4,10 @@
 - Task: P5-T04 / D04
 - Gate: B10
 - Policy: [ADR-0050](../adr/0050-personal-b10-mvp-validation-policy.md)
-- Exact revision: `b49d2748b76ca463f2d159b4cae2a58b1c2940f9`
+- Exact authority-path revision: `b49d2748b76ca463f2d159b4cae2a58b1c2940f9`
+- Required CI revision: `992dfe34a5a401b12a1bde9f6b2046e397071cfc`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/196
-- Required CI run: `31485767981` (pending at disposition draft; final pass
-  recorded in closure checkpoint)
+- Required CI run: `31486478177` **success**
 
 ## Fixed matrix evidence at `b49d274`
 
@@ -31,13 +31,14 @@ Native Linux (`DEV-LINUX-NATIVE-01`) at exact `b49d274`:
 - `cargo test -p cognitive-runtime dynamic_tool_ecosystem` → **4/4 passed**
 - `cargo clippy -p cognitive-runtime --all-targets -- -D warnings` → **passed**
 
+Required Ubuntu/Windows CI run `31486478177` passed for docs/fmt HEAD `992dfe3`
+(authority path unchanged from `b49d274`).
+
 ## Disposition
 
 Under Operating Model §2.3 and ADR-0050, with the fixed authority-path matrix,
-native Linux/Clippy, and non-claim harness complete at one exact reviewed
-revision, B10 MVP disposition is recorded as **pass** once required
-Ubuntu/Windows CI for `b49d274` (or a successor docs-only HEAD that does not
-change the authority path) is green.
+native Linux/Clippy, required CI, and non-claim harness complete, B10 MVP
+disposition is **pass**.
 
 Non-claims: no automatic marketplace discovery enablement, no public Tool
 schema authority, no GMVP-LINUX/release/Profile transfer.

@@ -154,12 +154,12 @@
 | Phase 2 - 单 Agent 任务闭环 | 8 | 8 | 0 | 0 | 0 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
-| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 4 | 1 | 0 | 0 | G5 / B09、B10 |
+| Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 0 | 3 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 2 | 0 | 0 | 1 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **53** | **1** | **0** | **8** | — |
+| **合计** | **62** | **54** | **0** | **0** | **8** | — |
 
 ## 2. 产品边界与不变量
 
@@ -654,7 +654,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P5-T01 | Agent + sidecar package acquisition/install lifecycle | P0-T04, P0-T06, P1-T08 | adapter-neutral Agent/sidecar package pins；fixed official npm exact Pi；identity/version/SRI/digest/dependency/Node checks；signed acquisition lock；stage/commit/upgrade/rollback/uninstall；安装不授权 | done | 2026-08-10；`lease/personal/P5-T01/pi-acquisition` on `personal/P5-T01-pi-acquisition`; closure checkpoint `20260810-personal-p5-t01-pi-acquisition-closure.md`; D01-D03 complete with exact native Linux focused validation and required Ubuntu/Windows CI. No AgentInstance/sidecar/process supervision, Effect, Task completion, B09, release, or Profile claim. |
 | P5-T02 | Sidecar contract、registration、instance/process identity 与 Pi foundation | P5-T01, P2-T03, P2-T06 | versioned sidecar protocol/adapter/instance pin；AgentInstallation/Instance/Execution、SidecarSession、PiSession、process、Task 分离；health/activate/pause/resume/stop/recover 与 epoch fencing | done | 2026-08-10；`lease/personal/P5-T02/sidecar-foundation` on `personal/P5-T02-sidecar-foundation`; closure checkpoint `20260810-personal-p5-t02-sidecar-foundation-closure.md`; D01-D03 complete with exact native Linux focused validation and required Ubuntu/Windows CI at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`. No OS process spawn, AgentExecution/PiSession resource, B09, release, or Profile claim. |
 | P5-T03 | Post-1.0 MCP Tool adapter qualification | P2-T05, P2-T08 | MCP 不成为 authority；protocol/manifest drift、timeout、direct-bypass 测试；不阻塞 1.0 | done | 2026-08-11；`lease/personal/P5-T03/mcp-tool-adapter` / PR #195. D01–D04 closed. Linux `mcp_tool_adapter` 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure: `docs/checkpoints/20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. No B10/Gate/release/Profile claim. |
-| P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | in-progress | 2026-08-11；`lease/personal/P5-T04/dynamic-tool-ecosystem` on `personal/P5-T04-dynamic-tool-ecosystem`. D01–D03 implement dynamic package bind/discovery/enable/disable/quarantine, TaskContract-scoped exposure, composite child Intent/Effect retention, pure-read cache, and original-key reconcile. D04 ADR-0050 B10 MVP matrix + tools non-claim harness pending exact Linux + required CI. No GMVP-LINUX/release/Profile claim. |
+| P5-T04 | Post-1.0 dynamic Tool ecosystem 与 B10 | P5-T03 | dynamic discovery/package/exposure/enable/disable/quarantine/reconcile；B10 独立 campaign；不阻塞 1.0 | done | 2026-08-11；`lease/personal/P5-T04/dynamic-tool-ecosystem` / PR #196. D01–D04 closed under ADR-0050. Linux `dynamic_tool_ecosystem` 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; B10 MVP `pass`. Closure: `docs/checkpoints/20260811-personal-p5-t04-dynamic-tool-closure.md`. No GMVP-LINUX/release/Profile claim. |
 | P5-T05 | B09 managed Pi + sidecar qualification | P5-T02 | 只负责 Pi + sidecar acquisition/install/registration/instance/process/lifecycle/recovery qualification；Pi 证据不资格化其他 adapter；任务完成与 B10 解耦 | done | 2026-08-11；`lease/personal/P5-T05/b09-managed-pi` on `personal/P5-T05-b09-managed-pi` / PR #183. D01–D04 closed under ADR-0047. Fixed matrix + non-claim report at `548f138`; CI `31423464703`; owner `affirm B09` → B09 MVP `pass`. Closure: `docs/checkpoints/20260811-personal-p5-t05-b09-managed-pi-closure.md`. No GMVP-LINUX/B08/release/Profile/non-Pi claim. |
 
 | Slice | Parent | Delivery | Prerequisites | Verification boundary |
