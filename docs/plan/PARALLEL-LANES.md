@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P9-T02/structure-debt` | P9-T02/D02 split scheduler_authority production | Lane-RUN | `personal/P9-T02-structure-debt` | `apps/kernel-server/src/personal/scheduler_authority/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/traceability/matrix.yaml`; `docs/checkpoints/` | cursor-agent/P9-T02-D02 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P9-T02/structure-debt` | P9-T02/D03 split sqlite + tool_executor | Lane-RUN | `personal/P9-T02-structure-debt` | `apps/kernel-server/src/personal/scheduler_authority/`; `apps/kernel-server/src/personal/tool_executor/`; `apps/kernel-server/src/personal/tool_executor.rs`; `crates/cognitive-store/src/sqlite/`; `crates/cognitive-store/src/sqlite.rs`; `crates/cognitive-store/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/traceability/matrix.yaml`; `docs/checkpoints/` | cursor-agent/P9-T02-D03 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
