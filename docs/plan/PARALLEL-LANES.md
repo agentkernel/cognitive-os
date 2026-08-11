@@ -75,7 +75,8 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P8-T02/agent-adapter-contract` | P8-T02/D04 acceptance closure | Lane-CTR | `personal/P8-T02-agent-adapter-contract` | `specs/schemas/agent-adapter-manifest.schema.json`; `crates/cognitive-contracts/src/bin/contracts-codegen.rs`; `crates/cognitive-contracts/src/generated/`; `crates/cognitive-contracts/tests/agent_adapter_manifest_schema.rs`; `crates/cognitive-contracts/tests/generated_types.rs`; `packages/contracts-ts/src/generated/`; `packages/contracts-ts/src/generated-types.test.ts`; `crates/cognitive-runtime/src/agent_adapter_manifest.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/architecture/personal/agent-adapter-contract.md`; `docs/adr/0043-personal-universal-agent-adapter.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T02-D04 | 2026-08-11 / 2026-08-11 | active |
+| — | — | — | — | — | — | — | none active |
+
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
@@ -84,6 +85,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P8-T02/agent-adapter-contract` | P8-T02/D01-D04 agent adapter contract | `personal/P8-T02-agent-adapter-contract` | 2026-08-11 | D01–D04 deliver private AKP registration/lifecycle, Lane-CTR `agent-adapter-manifest` + generated bindings, and acceptance closure. Linux evidence through `791d5ff`; required CI `31453659735` on `f5e427f`; PR #187 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T03/six-resource-doctor` | P7-T03/D01-D04 six-resource doctor | `personal/P7-T03-six-resource-doctor` | 2026-08-11 | D01–D04 deliver redacted six-resource, headless vault, and operability doctor sections on `/personal/doctor`. Linux evidence through `749a0c3`; required CI `31451402260`; PR #186 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T02/lifecycle-backup` | P7-T02/D01-D04 lifecycle backup | `personal/P7-T02-lifecycle-backup` | 2026-08-11 | D01–D04 deliver secret-excluding inventory, digest-bound Memory/Skill/bindings export, restore preflight, and transactional update/rollback/uninstall. Exact native Linux `personal_backup` 15/15 + Clippy at `68abc82`; required CI `31449589853`; PR #185 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T01/release-pipeline` | P7-T01/D01-D04 release pipeline | `personal/P7-T01-release-pipeline` | 2026-08-11 | D01–D04 deliver signed six-family release-manifest, SBOM/artifact digest binding, immutable toolchain pins, and acceptance closure. Exact native Linux `release_manifest` 11/11 + Clippy at `34812f8`; required CI green; PR #184 merged at `main@3198614496571ac251821d2eff1f982274959f06`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
