@@ -21,6 +21,7 @@ pub mod harness_hooks;
 pub mod harness_loop;
 pub mod installer;
 pub mod intent_flow;
+pub mod learning_loop;
 pub mod linux_bundle;
 pub mod linux_bundle_installation;
 pub mod linux_bundle_installer_adapter;
@@ -93,6 +94,10 @@ pub use installer::{
     uninstall_official_pi_root_durable, verify_package,
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
+pub use learning_loop::{
+    FailureLessonFact, LearningLoopError, LearningMemoryCandidatePlan,
+    plan_failure_lesson_memory_candidate,
+};
 pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
     TrustedKeyInput, TrustedKeyStatus, TrustedKeyring, VerifiedLinuxBundle, verify_linux_bundle,
