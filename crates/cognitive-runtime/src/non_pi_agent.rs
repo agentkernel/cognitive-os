@@ -6,8 +6,8 @@
 //! never transfers Pi/B09 claims.
 
 use crate::agent_adapter_manifest::{
-    AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,
-    AdapterTransportProfile, AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
+    AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterTransportProfile,
+    AgentAdapterError, RegisteredAgentAdapter, activate_adapter_lifecycle,
     open_registered_adapter_lifecycle, pause_adapter_lifecycle, register_agent_adapter,
     stop_adapter_lifecycle,
 };
