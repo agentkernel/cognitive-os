@@ -177,10 +177,7 @@ fn validate_observation(
         return Err(OperabilityDoctorError::SecretContamination);
     }
     for (key, value) in &observation.facts {
-        if FORBIDDEN_CLAIM_KEYS
-            .iter()
-            .any(|forbidden| *forbidden == key.as_str())
-        {
+        if FORBIDDEN_CLAIM_KEYS.contains(&key.as_str()) {
             return Err(OperabilityDoctorError::AuthorityClaimRejected);
         }
         if text_is_contaminated(key) || text_is_contaminated(value) {
