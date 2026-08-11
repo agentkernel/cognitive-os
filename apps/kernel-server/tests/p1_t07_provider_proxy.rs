@@ -64,7 +64,9 @@ fn read_bootstrap_secret(runtime_root: &std::path::Path) -> String {
     let path = runtime_root
         .join("cognitiveos")
         .join("local-bootstrap.secret");
-    for _ in 0..100 {
+    // Windows hosted runners can delay a newly spawned process's first file
+    // write long enough to exceed the former two-second polling budget.
+    for _ in 0..500 {
         if let Ok(contents) = std::fs::read_to_string(&path) {
             let secret = contents.trim();
             if !secret.is_empty() {
