@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P8-T03/non-pi-agent` | P8-T03/D02 Codex fixture lifecycle | Lane-RUN | `personal/P8-T03-non-pi-agent` | `crates/cognitive-runtime/src/non_pi_agent.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T03-D02 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P8-T03/non-pi-agent` | P8-T03/D03 qualification matrix | Lane-RUN | `personal/P8-T03-non-pi-agent` | `crates/cognitive-runtime/src/non_pi_agent.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T03-D03 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

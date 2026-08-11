@@ -121,7 +121,8 @@ pub use linux_bundle_service::{
 };
 pub use non_pi_agent::{
     FIRST_NON_PI_AGENT_ID, NonPiAgentError, NonPiAgentPackageIdentity,
-    activate_codex_fixture_lifecycle, bind_codex_fixture_package_identity,
+    NonPiQualificationObservation, activate_codex_fixture_lifecycle,
+    bind_codex_fixture_package_identity, build_codex_qualification_report,
     open_codex_fixture_lifecycle, pause_codex_fixture_lifecycle, register_codex_fixture_adapter,
     stop_codex_fixture_lifecycle,
 };

@@ -37,6 +37,8 @@ pub enum NonPiAgentError {
     PiIdentityForbidden,
     #[error("non-Pi qualification cannot inherit Pi or B09 evidence")]
     PiEvidenceTransferForbidden,
+    #[error("non-Pi qualification rejects Gate/authority-shaped claims")]
+    AuthorityShapedClaimForbidden,
     #[error("non-Pi adapter registration failed: {0}")]
     Adapter(#[from] AgentAdapterError),
 }
@@ -147,6 +149,81 @@ fn bind_discovery_card_digest(package: &NonPiAgentPackageIdentity) -> String {
     format!("{:x}", hasher.finalize())
 }
 
+const NON_CLAIM: &str = "non-claim";
+const REQUIRED_OBSERVATIONS: &[&str] = &[
+    "package_identity_bound",
+    "akp_registration_independent_of_pi",
+    "lifecycle_management_channel_only",
+    "no_pi_evidence_transfer",
+];
+
+/// Fixed-denominator non-Pi qualification observation (non-authoritative).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NonPiQualificationObservation {
+    pub agent_id: String,
+    pub package_digest: String,
+    pub declaration_digest: String,
+    pub claim_scope: &'static str,
+    pub observations: Vec<&'static str>,
+    pub report_digest: String,
+}
+
+/// Build a B09-mode non-claim qualification report for the Codex fixture.
+pub fn build_codex_qualification_report(
+    package: &NonPiAgentPackageIdentity,
+    registered: &RegisteredAgentAdapter,
+    observations: &[&str],
+    authority_claim_labels: &[&str],
+) -> Result<NonPiQualificationObservation, NonPiAgentError> {
+    if package.agent_id != FIRST_NON_PI_AGENT_ID
+        || registered.adapter_id != FIRST_NON_PI_AGENT_ID
+        || package.package_digest.trim().is_empty()
+        || registered.declaration_digest.trim().is_empty()
+    {
+        return Err(NonPiAgentError::MissingIdentity);
+    }
+    if !package.independent_of_pi {
+        return Err(NonPiAgentError::PiEvidenceTransferForbidden);
+    }
+    for label in authority_claim_labels {
+        let normalized = label.trim().to_ascii_lowercase();
+        if matches!(
+            normalized.as_str(),
+            "gate" | "release" | "profile" | "b09" | "pass" | "passed"
+        ) {
+            return Err(NonPiAgentError::AuthorityShapedClaimForbidden);
+        }
+    }
+    let mut sorted_required: Vec<&str> = REQUIRED_OBSERVATIONS.to_vec();
+    sorted_required.sort_unstable();
+    let mut sorted_actual: Vec<&str> = observations.to_vec();
+    sorted_actual.sort_unstable();
+    if sorted_actual != sorted_required {
+        return Err(NonPiAgentError::MissingIdentity);
+    }
+
+    let mut hasher = Sha256::new();
+    hasher.update(package.agent_id.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(package.package_digest.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(registered.declaration_digest.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(NON_CLAIM.as_bytes());
+    for observation in sorted_required.iter() {
+        hasher.update(observation.as_bytes());
+        hasher.update(b"\0");
+    }
+    Ok(NonPiQualificationObservation {
+        agent_id: package.agent_id.clone(),
+        package_digest: package.package_digest.clone(),
+        declaration_digest: registered.declaration_digest.clone(),
+        claim_scope: NON_CLAIM,
+        observations: REQUIRED_OBSERVATIONS.to_vec(),
+        report_digest: format!("{:x}", hasher.finalize()),
+    })
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
@@ -233,5 +310,35 @@ mod tests {
         )
         .expect("stop");
         assert_eq!(stopped.state, AdapterLifecycleState::Stopped);
+    }
+
+    #[test]
+    fn builds_non_claim_qualification_report_and_rejects_authority_claims() {
+        let package = bind_codex_fixture_package_identity(&format!("sha256:{}", "c".repeat(64)))
+            .expect("bind");
+        let registered =
+            register_codex_fixture_adapter(&package, false, false, false).expect("register");
+        let report =
+            build_codex_qualification_report(&package, &registered, REQUIRED_OBSERVATIONS, &[])
+                .expect("report");
+        assert_eq!(report.claim_scope, NON_CLAIM);
+        assert_eq!(report.observations.len(), 4);
+        assert_eq!(report.report_digest.len(), 64);
+
+        assert_eq!(
+            build_codex_qualification_report(
+                &package,
+                &registered,
+                REQUIRED_OBSERVATIONS,
+                &["B09"],
+            )
+            .unwrap_err(),
+            NonPiAgentError::AuthorityShapedClaimForbidden
+        );
+        assert_eq!(
+            build_codex_qualification_report(&package, &registered, &["incomplete"], &[])
+                .unwrap_err(),
+            NonPiAgentError::MissingIdentity
+        );
     }
 }
