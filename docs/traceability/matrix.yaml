@@ -42,7 +42,7 @@ requirements:
       - conformance/vectors/state-conflict.json
     impl:
       - crates/cognitive-kernel/src/engine.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m2_acceptance.rs
       - crates/cognitive-kernel/tests/engine_gate.rs
@@ -204,7 +204,7 @@ requirements:
       - conformance/vectors/eff-flow-001.json
     impl:
       - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_effects.rs
       - crates/cognitive-store/tests/m4_tracer_bullet.rs
@@ -313,7 +313,7 @@ requirements:
     impl:
       - crates/cognitive-kernel/src/recovery.rs
       - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m4_recovery.rs
       - crates/cognitive-store/tests/m5_harness.rs
@@ -345,7 +345,8 @@ requirements:
     vectors:
       - conformance/vectors/worker-authorization-001.json
     impl:
-      - apps/kernel-server/src/personal/scheduler_authority.rs
+      - apps/kernel-server/src/personal/scheduler_authority/mod.rs
+      - apps/kernel-server/src/personal/scheduler_authority/tests.rs
       - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests: []
     evidence: []
@@ -2349,7 +2350,7 @@ requirements:
     vectors:
       - conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m2_acceptance.rs
     evidence:
@@ -2932,7 +2933,7 @@ requirements:
       - conformance/vectors/task-preview-admit-008.json
     impl:
       - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_intent_chain.rs
     evidence:
@@ -2954,7 +2955,7 @@ requirements:
       - conformance/vectors/task-intent-api-009.json
     impl:
       - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_intent_chain.rs
     evidence:
@@ -2975,7 +2976,7 @@ requirements:
     impl:
       - crates/cognitive-kernel/src/intent_chain.rs
       - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
       - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_intent_chain.rs
@@ -3388,7 +3389,7 @@ requirements:
     vectors:
       - conformance/vectors/state-store-degradation.json
     impl:
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
       - crates/cognitive-kernel/src/error.rs
     impl_tests:
       - crates/cognitive-store/tests/m2_acceptance.rs
@@ -3468,7 +3469,7 @@ requirements:
       - conformance/vectors/spec-contract-coverage.json
     impl:
       - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-store/src/sqlite.rs
+      - crates/cognitive-store/src/sqlite/mod.rs
       - crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
       - crates/cognitive-store/tests/m5_harness.rs

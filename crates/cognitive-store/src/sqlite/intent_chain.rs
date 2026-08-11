@@ -1,0 +1,356 @@
+#![allow(dead_code, unused_imports)]
+
+use crate::context_store::{
+    CONTEXT_AUTHORIZATION_FACT_SCHEMA_V14, CONTEXT_STORE_SCHEMA_V12,
+    SCHEDULER_EXECUTION_POLICY_SCHEMA_V15, WORKSPACE_CONTEXT_SOURCE_SCHEMA_V13,
+};
+use crate::memory_store::{MEMORY_ADMISSION_SCHEMA_V16, MEMORY_SEARCH_SCHEMA_V17};
+use crate::scheduler::SCHEDULER_SCHEMA_CURRENT;
+use crate::worker_authorization::{
+    CONTINUATION_AUTHORITY_CONSUMPTION_SCHEMA_V11, CONTINUATION_AUTHORITY_SCHEMA_V10,
+    DAEMON_AUTHORIZATION_SNAPSHOT_SCHEMA_V6, DAEMON_OPERATION_DESCRIPTOR_SCHEMA_V5,
+    WORKER_AUTHORIZATION_LEASE_BINDING_SCHEMA_V9, WORKER_AUTHORIZATION_SCHEMA_V4,
+    WORKER_ITERATION_AUTHORIZATION_CONSUMPTION_SCHEMA_V8, WORKER_ITERATION_AUTHORIZATION_SCHEMA_V7,
+};
+use cognitive_contracts::generated::context_request::ContextRequest;
+use cognitive_contracts::generated::context_view::ContextView;
+use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
+use cognitive_contracts::generated::object_reference::StrongReferenceKind;
+use cognitive_contracts::projection::verify_content_digest;
+use cognitive_domain::{
+    BudgetId, EventId, LifecycleDomain, ObjectId, StateName, Version, WallTimestamp,
+};
+use cognitive_kernel::authz::ObjectGovernance;
+use cognitive_kernel::effects::GOVERNED_OBJECT_CONTENT_DIGEST_DOMAIN;
+use cognitive_kernel::ports::{
+    AuthorityStore, BoundContinuationAuthorizationConsumption, BoundWorkerAuthorizationConsumption,
+    CandidateAdmissionCommit, CandidateAdmissionReceipt, CheckpointRow, CommitReceipt,
+    CommittedEvent, ConsumedWorkerIterationAuthorization, ContextAuthorizationFactStore,
+    ContextAuthorizationFactsRow, ContextCandidateMetadata, ContextCandidateQuery,
+    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContextViewRow,
+    ContinuationAuthorityStore, ContinuationAuthorizationRow, DaemonAuthorizationSnapshotRow,
+    DaemonOperationDescriptorRow, FixedPostStateRow, GovernanceObjectStore, HarnessStore,
+    IntentChainStore, IntentRow, InterpretationRow, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    MemoryObjectRow, MemorySearchCandidateRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow,
+    MemoryUpdateRequest, ObjectAdmission, OperationCandidateProposalRow, OutboxEntry,
+    ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
+    SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
+};
+use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
+use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::path::Path;
+use std::sync::{Mutex, MutexGuard};
+
+use super::*;
+
+impl GovernanceObjectStore for SqliteAuthorityStore {
+    fn load_governed_object_header(
+        &self,
+        object_id: &ObjectId,
+    ) -> Result<Option<GovernedObjectHeader>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(
+                "SELECT canonical_json FROM user_intent_records WHERE record_id = ?1 \
+                 UNION ALL SELECT canonical_json FROM intent_interpretations WHERE interpretation_id = ?1 \
+                 UNION ALL SELECT canonical_json FROM task_contracts WHERE contract_id = ?1",
+            )
+            .map_err(unavailable("prepare governed-header lookup"))?;
+        let rows = statement
+            .query_map([object_id.as_str()], |row| row.get::<_, String>(0))
+            .map_err(unavailable("query governed-header lookup"))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read governed-header lookup"))?;
+        let [canonical_json] = rows.as_slice() else {
+            return if rows.is_empty() {
+                Ok(None)
+            } else {
+                Err(StorePortError::Unavailable {
+                    detail: "ambiguous governed object identity".to_owned(),
+                })
+            };
+        };
+        let value: serde_json::Value = serde_json::from_str(canonical_json)
+            .map_err(|err| corrupt("governed canonical json", err))?;
+        let header: GovernedObjectHeader =
+            serde_json::from_value(value.get("header").cloned().ok_or_else(|| {
+                StorePortError::Unavailable {
+                    detail: "governed object has no header".to_owned(),
+                }
+            })?)
+            .map_err(|err| corrupt("governed header", err))?;
+        if header.id.0 != object_id.as_str() {
+            return Err(StorePortError::Unavailable {
+                detail: "governed header identity mismatch".to_owned(),
+            });
+        }
+        Ok(Some(header))
+    }
+}
+
+impl IntentChainStore for SqliteAuthorityStore {
+    fn insert_user_intent(
+        &self,
+        record: &UserIntentRecordRow,
+        event: &cognitive_kernel::ports::EventDraft,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin user intent"))?;
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO user_intent_records ({USER_INTENT_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)"
+            ),
+            (
+                record.record_id.as_str(),
+                record.conversation_or_scope_ref.as_str(),
+                record.actor_chain_digest.as_str(),
+                record.raw_expression.as_str(),
+                record.recorded_at.as_str(),
+                record.intent_authority_ref.as_str(),
+                record.intent_digest.as_str(),
+                record.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!("user intent record {} already fixed", record.record_id),
+                });
+            }
+            Err(err) => return Err(unavailable("insert user intent")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit user intent"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_user_intent(
+        &self,
+        record_id: &ObjectId,
+    ) -> Result<Option<UserIntentRecordRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {USER_INTENT_COLUMNS} FROM user_intent_records WHERE record_id = ?1"
+            ))
+            .map_err(unavailable("prepare load_user_intent"))?;
+        statement
+            .query_row((record_id.as_str(),), row_to_user_intent)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_user_intent")(other)),
+            })
+    }
+
+    fn list_user_intents_for_scope(
+        &self,
+        conversation_or_scope_ref: &str,
+    ) -> Result<Vec<UserIntentRecordRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {USER_INTENT_COLUMNS} FROM user_intent_records
+                 WHERE conversation_or_scope_ref = ?1 ORDER BY record_seq ASC"
+            ))
+            .map_err(unavailable("prepare list_user_intents_for_scope"))?;
+        let mut rows = statement
+            .query((conversation_or_scope_ref,))
+            .map_err(unavailable("query list_user_intents_for_scope"))?;
+        let mut records = Vec::new();
+        while let Some(row) = rows.next().map_err(unavailable("read user intent row"))? {
+            records.push(row_to_user_intent(row).map_err(|err| corrupt("user intent row", err))?);
+        }
+        Ok(records)
+    }
+
+    fn insert_interpretation(
+        &self,
+        interpretation: &InterpretationRow,
+        event: &cognitive_kernel::ports::EventDraft,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin interpretation"))?;
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO intent_interpretations ({INTERPRETATION_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7)"
+            ),
+            (
+                interpretation.interpretation_id.as_str(),
+                interpretation.user_intent_record_id.as_str(),
+                interpretation.recorded_status.as_str(),
+                interpretation.material_ambiguity_count,
+                interpretation
+                    .supersedes_interpretation
+                    .as_ref()
+                    .map(|id| id.as_str()),
+                interpretation.interpretation_digest.as_str(),
+                interpretation.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "interpretation {} already persisted",
+                        interpretation.interpretation_id
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert interpretation")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit interpretation"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_interpretation(
+        &self,
+        interpretation_id: &ObjectId,
+    ) -> Result<Option<InterpretationRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {INTERPRETATION_COLUMNS} FROM intent_interpretations
+                 WHERE interpretation_id = ?1"
+            ))
+            .map_err(unavailable("prepare load_interpretation"))?;
+        statement
+            .query_row((interpretation_id.as_str(),), row_to_interpretation)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_interpretation")(other)),
+            })
+    }
+
+    fn insert_task_contract(
+        &self,
+        contract: &TaskContractRow,
+        event: &cognitive_kernel::ports::EventDraft,
+        expected_current_epoch: i64,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let mut conn = self.lock()?;
+        let tx = conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin task contract"))?;
+        // Contract-epoch CAS inside the transaction: the current epoch
+        // must equal the caller's expectation and the new row must be its
+        // immediate successor. Any race rolls the whole unit back.
+        let current: i64 = tx
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref = ?1",
+                (contract.task_ref.as_str(),),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("read contract epoch"))?;
+        if current != expected_current_epoch {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "contract epoch raced for {}: expected {expected_current_epoch}, \
+                     current {current}",
+                    contract.task_ref
+                ),
+            });
+        }
+        if contract.contract_epoch != expected_current_epoch + 1 {
+            return Err(StorePortError::Conflict {
+                detail: format!(
+                    "contract epoch must advance by exactly one: current \
+                     {expected_current_epoch}, proposed {}",
+                    contract.contract_epoch
+                ),
+            });
+        }
+        let inserted = tx.execute(
+            &format!(
+                "INSERT INTO task_contracts ({TASK_CONTRACT_COLUMNS}) \
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)"
+            ),
+            (
+                contract.contract_id.as_str(),
+                contract.task_ref.as_str(),
+                contract.contract_epoch,
+                contract.user_intent_record_id.as_str(),
+                contract.interpretation_id.as_str(),
+                contract.accepted_by.as_str(),
+                contract.contract_digest.as_str(),
+                contract.canonical_json.as_str(),
+            ),
+        );
+        match inserted {
+            Ok(_) => {}
+            Err(err) if is_constraint_violation(&err) => {
+                return Err(StorePortError::Conflict {
+                    detail: format!(
+                        "contract {} or epoch {} of {} already persisted",
+                        contract.contract_id, contract.contract_epoch, contract.task_ref
+                    ),
+                });
+            }
+            Err(err) => return Err(unavailable("insert task contract")(err)),
+        }
+        let sequence = append_event_in_tx(&tx, event)?;
+        tx.commit().map_err(unavailable("commit task contract"))?;
+        Ok(CommitReceipt {
+            event_sequence: sequence,
+        })
+    }
+
+    fn load_task_contract(
+        &self,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<Option<TaskContractRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {TASK_CONTRACT_COLUMNS} FROM task_contracts
+                 WHERE task_ref = ?1 AND contract_epoch = ?2"
+            ))
+            .map_err(unavailable("prepare load_task_contract"))?;
+        statement
+            .query_row((task_ref, contract_epoch), row_to_task_contract)
+            .map(Some)
+            .or_else(|err| match err {
+                rusqlite::Error::QueryReturnedNoRows => Ok(None),
+                other => Err(unavailable("query load_task_contract")(other)),
+            })
+    }
+
+    fn list_intents_for_task(&self, task_ref: &str) -> Result<Vec<IntentRow>, StorePortError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare_cached(&format!(
+                "SELECT {INTENT_COLUMNS} FROM intents WHERE task_ref = ?1 ORDER BY intent_id"
+            ))
+            .map_err(unavailable("prepare list_intents_for_task"))?;
+        let mut rows = statement
+            .query((task_ref,))
+            .map_err(unavailable("query list_intents_for_task"))?;
+        let mut intents = Vec::new();
+        while let Some(row) = rows.next().map_err(unavailable("read intent row"))? {
+            intents.push(row_to_intent(row).map_err(|err| corrupt("intent row", err))?);
+        }
+        Ok(intents)
+    }
+}
