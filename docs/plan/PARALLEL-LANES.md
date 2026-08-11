@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P8-T03/non-pi-agent` | P8-T03/D04 acceptance closure | Lane-RUN | `personal/P8-T03-non-pi-agent` | `crates/cognitive-runtime/src/non_pi_agent.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T03-D04 | 2026-08-11 / 2026-08-11 | active |
+| — | — | — | — | — | — | — | no active lease |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
@@ -85,6 +85,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P8-T03/non-pi-agent` | P8-T03/D01-D04 non-Pi Codex | `personal/P8-T03-non-pi-agent` | 2026-08-11 | D01–D04 deliver Codex fixture identity, lifecycle, non-claim qualification matrix, and acceptance closure. Linux evidence through `b41f06f`; required CI `31463130827` on `5d1c0c7`; PR #191 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T06/learning-loop` | P8-T06/D01-D04 learning loop | `personal/P8-T06-learning-loop` | 2026-08-11 | D01–D04 deliver Reflexion failure-lesson Memory/Skill candidate planners, daemon Memory admission wiring, and acceptance closure. Linux evidence through `b81414d`; required CI `31461384771` / closure `31462013806` on `db6fa7a`; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T05/context-compaction` | P8-T05/D01-D04 context compaction | `personal/P8-T05-context-compaction` | 2026-08-11 | D01–D04 deliver digest-bound compaction, adaptive budgets, UCR-01 non-claim benefit observation, and acceptance closure. Linux evidence through `e15492a`; required CI `31459558236` / closure `31460220901` on `c02b272`; PR #189 merged at `main@fa4f74a8feaadaa74affca90cb37660f40cdeb25`. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P8-T04/harness-hooks` | P8-T04/D01-D04 harness hooks | `personal/P8-T04-harness-hooks` | 2026-08-11 | D01–D04 deliver lifecycle hooks, management-channel digest invoke, graded Skill/rule load, and acceptance closure. Linux evidence through `bc3dacd`; required CI `31457314002` on `15e7200`; PR #188 is the task closure PR. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
