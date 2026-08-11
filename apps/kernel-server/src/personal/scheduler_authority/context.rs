@@ -68,7 +68,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
 
-use super::pi_runtime::{
+use crate::personal::pi_runtime::{
     PrivatePiCandidateProcess, PrivatePiCandidateRequest, PrivatePiCandidateResponse,
     load_pi_config,
 };
