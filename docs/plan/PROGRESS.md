@@ -12,9 +12,10 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | claim next ready Personal task after P8-T02 merge |
-| Active task lease | `none` | P8-T02 lease closes with PR #187 merge | claim next ready Personal task |
-| P8-T02 Universal Agent Adapter Contract | **done** | D01–D04 closed; PR #187. Private AKP registration/lifecycle + Lane-CTR `agent-adapter-manifest` + generated bindings. Linux evidence through `791d5ff`; required CI `31453659735` on `f5e427f`. Closure checkpoint `20260811-personal-p8-t02-agent-adapter-contract-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P8-T04/D01` on `personal/P8-T04-harness-hooks` |
+| Active task lease | `lease/personal/P8-T04/harness-hooks` | P8-T04 owns harness_hooks + plan/checkpoint paths on Draft PR (pending). | implement D01 lifecycle hook registry; Linux focused tests + Clippy |
+| P8-T04 Deterministic harness hooks | `in-progress` | `lease/personal/P8-T04/harness-hooks` on `personal/P8-T04-harness-hooks`. D01 private lifecycle hook registry (admission/pre-dispatch/post-effect/verification). | exact native Linux focused tests + Clippy for D01 |
+| P8-T02 Universal Agent Adapter Contract | **done** | D01–D04 closed; PR #187 merged at `main@f31eefd69f6992d7b7957fef8f6fe00afaa1ae3c`. Private AKP registration/lifecycle + Lane-CTR `agent-adapter-manifest` + generated bindings. Required CI `31453659735`. Closure checkpoint `20260811-personal-p8-t02-agent-adapter-contract-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence |
 | P5-T02 Sidecar contract, registration, instance identity | **done** | D01-D03 satisfy the unchanged acceptance at `58ff0a723a8eae0f7fc89d9a99e9fdd55406aa92`: inactive registration, epoch-fenced SidecarSession activate, pause/resume/stop/recover, redacted health with `process_bound=false`, and management-session admin-cli callers. Exact native Linux focused runtime 11/11, admin 1/1, Clippy, and required Ubuntu/Windows CI run `31391916831` passed. Identity separation keeps AgentExecution/PiSession/process/Task absent and non-conflated. Closure checkpoint `20260810-personal-p5-t02-sidecar-foundation-closure.md`; PR #181 merged at `main@e0c3fb85e8a99cbcb4d8fd014fb7cc89d0b23a79`. | retain closure evidence; no B09/release/Profile claim |
 | P2-T08 Runtime Spine E2E Gate | **done** | D01–D04 closed under ADR-0046. Fixed matrix + non-claim report at `be7febb490fcbdf9970a700b6b6975ae49aadffe`; CI `31407542786`; owner `affirm all` → B02/B04/B05/B12 MVP `pass`. Closure checkpoint `20260811-personal-p2-t08-runtime-spine-closure.md`; PR #182 merged at `main@9a1befe475e35902447ab1562cb8d747aa908a69`. | retain closure evidence; no GMVP-LINUX/B08/B09/release/Profile claim |
@@ -53,9 +54,10 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 45 | 0 | 0 | 17 | 17 |
+| 62 | 45 | 1 | 0 | 16 | 17 |
 
-`P8-T02` is `done` (PR #187). Formal task completion remains independent from every
+`P8-T02` is `done` (PR #187 merged). `P8-T04` is `in-progress` with unique
+slice `P8-T04/D01`. Formal task completion remains independent from every
 product Gate except where the plan explicitly binds Gate disposition to task
 acceptance.
 
@@ -79,6 +81,10 @@ acceptance.
 | `P8-T02/D02` | `done` | adapter lifecycle activate/pause/stop; Linux `agent_adapter_manifest` 5/5 + Clippy at `b94d4c6` | consumed by D03 |
 | `P8-T02/D03` | `done` | Lane-CTR `agent-adapter-manifest` schema + generated Rust/TS bindings; Linux schema tests 2/2 + Clippy at `791d5ff` | consumed by D04 |
 | `P8-T02/D04` | `done` | acceptance mapping + closure; required CI `31453659735` on `f5e427f`; checkpoint written; PR #187 | consumed by completed P8-T02 task |
+| `P8-T04/D01` | `in-progress` | daemon-owned lifecycle hook registry for admission/pre-dispatch/post-effect/verification; axiom-relaxation negatives | exact native Linux focused tests + Clippy |
+| `P8-T04/D02` | `ready` | not started | waits for D01 |
+| `P8-T04/D03` | `ready` | not started | waits for D02 |
+| `P8-T04/D04` | `ready` | not started | waits for D03; final acceptance |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |

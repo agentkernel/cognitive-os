@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | none active |
+| `lease/personal/P8-T04/harness-hooks` | P8-T04/D01 deterministic hook registry | Lane-RUN | `personal/P8-T04-harness-hooks` | `crates/cognitive-runtime/src/harness_hooks.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T04-D01 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
