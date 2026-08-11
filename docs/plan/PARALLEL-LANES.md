@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P9-T01/windows-ci-recovery` | P9-T01 corrective required-CI recovery | Lane-RUN | `personal/P9-T01-async-decision-gate` | `apps/kernel-server/tests/p1_t07_provider_proxy.rs`; `docs/plan/PROGRESS.md` | Cursor performance campaign session | 2026-08-12 / 2026-08-12 | active |
+| `lease/personal/P9-T01/windows-ci-recovery` | P9-T01/D01 corrective required-CI recovery | Lane-RUN | `personal/P9-T01-async-decision-gate` | `apps/kernel-server/tests/p1_t07_provider_proxy.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor performance campaign session | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

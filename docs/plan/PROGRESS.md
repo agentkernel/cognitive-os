@@ -64,7 +64,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 55 | 0 | 0 | 7 | 7 |
+| 62 | 54 | 1 | 0 | 7 | 8 |
 
 `P5-T04` is `done` (PR #196). Formal task completion remains independent from
 GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
@@ -126,7 +126,7 @@ under ADR-0050.
 | `P9-T03/D02` | `done` | request-path handlers reuse daemon-owned `Arc<SqliteAuthorityStore>`; Linux request_path 1/1, scheduler_authority 39/39, Clippy at `2eb82c9` | consumed by D03 |
 | `P9-T03/D03` | `done` | Memory admission sunk to `cognitive-store`; store_access stage-timing non-claim in `cognitive-runtime`; Linux memory 1/1, store_access 3/3, request_path 1/1, Clippy at `648e69f` | consumed by D04 |
 | `P9-T03/D04` | `done` | acceptance mapping + closure; required CI `31476761080` on `64f89cd`; checkpoint written; PR #193 | consumed by completed P9-T03 task |
-| `P9-T01/D01` | `done` | exact native Linux `perf::tests` 5/5 at `826745c`; aggregate authority-stage observation selected hypothesis-only `conservative-no-migration`; required CI `31510283352` passed on `98896cf` | consumed by completed P9-T01 task; no migration or performance claim |
+| `P9-T01/D01` | `in-progress` | exact native Linux `perf::tests` 5/5 at `826745c`; aggregate authority-stage observation selected hypothesis-only `conservative-no-migration`; prior CI `31510283352` passed on `98896cf`. The later closure CI recovery is active after a Windows Provider-proxy integration-test stall. | validate the bounded socket-read failure behavior and pass required CI before restoring task closure; no migration or performance claim |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |
