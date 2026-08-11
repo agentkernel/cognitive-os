@@ -2,7 +2,7 @@
 //!
 //! Daemon-owned budget adjustment consumes durable telemetry facts only and
 //! never authorizes skipping body reauthorization. Compaction benefit
-//! observation remains a later slice.
+//! observation lives in `compaction_benefit`.
 
 use thiserror::Error;
 

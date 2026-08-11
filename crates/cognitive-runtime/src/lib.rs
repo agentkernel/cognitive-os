@@ -13,6 +13,7 @@ pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
 pub mod channel_binding;
+pub mod compaction_benefit;
 pub mod context_compaction;
 pub mod event_envelope;
 pub mod graded_load;
@@ -41,6 +42,10 @@ pub use adapters::{
 };
 pub use adaptive_budget::{
     AdaptiveBudgetDecision, AdaptiveBudgetError, AdaptiveBudgetTelemetry, adapt_fragment_budget,
+};
+pub use compaction_benefit::{
+    CompactionBenefitError, CompactionBenefitFacts, CompactionBenefitObservation,
+    observe_compaction_benefit,
 };
 pub use agent_adapter_manifest::{
     AdapterCapabilityDeclaration, AdapterLifecycleHandle, AdapterLifecycleState,

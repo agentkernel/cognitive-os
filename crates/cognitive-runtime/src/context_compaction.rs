@@ -4,7 +4,7 @@
 //! into a digest-bound compact artifact with explicit loss records. Compact
 //! output is a Context source candidate only: it cannot complete Tasks, grant
 //! capability, or self-authorize inclusion. Adaptive budgets and UCR-01
-//! benefit observation remain later slices.
+//! benefit observation live in sibling modules.
 
 use sha2::{Digest, Sha256};
 use thiserror::Error;

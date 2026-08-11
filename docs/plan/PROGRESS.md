@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P8-T05/D01` on `personal/P8-T05-context-compaction` |
-| Active task lease | `lease/personal/P8-T05/context-compaction` | P8-T05 owns context_compaction/adaptive_budget + plan/checkpoint paths on Draft PR #189. | Linux D02 validation; then D03 non-claim observation |
-| P8-T05 Context compaction and adaptive budgets | `in-progress` | Draft PR #189. D01 compact artifact Linux 2/2 + Clippy at `8544b1e`; D02 adaptive budgets. | exact native Linux focused tests + Clippy for D02 |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P8-T05/D03` on `personal/P8-T05-context-compaction` |
+| Active task lease | `lease/personal/P8-T05/context-compaction` | P8-T05 owns compaction/adaptive_budget/compaction_benefit + plan/checkpoint paths on Draft PR #189. | Linux D03 validation; then D04 acceptance/merge |
+| P8-T05 Context compaction and adaptive budgets | `in-progress` | Draft PR #189. D01 compact artifact Linux 2/2 + Clippy at `8544b1e`; D02 adaptive budgets Linux 2/2 + Clippy at `0f0f65c`; D03 non-claim benefit observation. | exact native Linux focused tests + Clippy for D03 |
 | P8-T04 Deterministic harness hooks | **done** | D01–D04 closed; PR #188 merged at `main@f85a14b5eba20311e49367bf1e6a3222767691b0`. Lifecycle hooks + graded Skill/rule load. Required CI `31458052642`. Closure checkpoint `20260811-personal-p8-t04-harness-hooks-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T02 Universal Agent Adapter Contract | **done** | D01–D04 closed; PR #187 merged at `main@f31eefd69f6992d7b7957fef8f6fe00afaa1ae3c`. Private AKP registration/lifecycle + Lane-CTR `agent-adapter-manifest` + generated bindings. Required CI `31453659735`. Closure checkpoint `20260811-personal-p8-t02-agent-adapter-contract-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T01 documentation restructure and 2.0 design baseline | **done** | D01-D03 deliver AXIOMS/governance convergence, whitepaper/product/architecture/ADR-0041+ design baseline, plan/ledger repair, Phase 8/9 registration, and closure checkpoint. Local consistency/diff and tools failure-injection passed; required Ubuntu/Windows CI run `31383446541` passed for design revision `cd08da7`. PR #180 merged at `main@aa18ec2296cdf317ef0689365ea466652add816b`. Documentation-only; no implementation, Gate, release, or Profile claim. | retain closure evidence |
@@ -58,7 +58,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | 62 | 46 | 1 | 0 | 15 | 16 |
 
 `P8-T04` is `done` (PR #188 merged). `P8-T05` is `in-progress` with unique
-slice `P8-T05/D02`. Formal task completion remains independent from every
+slice `P8-T05/D03`. Formal task completion remains independent from every
 product Gate except where the plan explicitly binds Gate disposition to task
 acceptance.
 
@@ -87,8 +87,8 @@ acceptance.
 | `P8-T04/D03` | `done` | graded Skill/rule load by context cost; Linux `graded_load` 2/2 + Clippy at `bc3dacd` | consumed by D04 |
 | `P8-T04/D04` | `done` | acceptance mapping + closure; required CI `31457314002` on `15e7200`; checkpoint written; PR #188 | consumed by completed P8-T04 task |
 | `P8-T05/D01` | `done` | digest-bound compact artifact with explicit loss; Linux `context_compaction` 2/2 + Clippy at `8544b1e` | consumed by D02 |
-| `P8-T05/D02` | `in-progress` | adaptive fragment budgets without skipping body reauthorization | implement D02 |
-| `P8-T05/D03` | `ready` | not started | waits for D02 |
+| `P8-T05/D02` | `done` | adaptive fragment budgets without skipping body reauthorization; Linux `adaptive_budget` 2/2 + Clippy at `0f0f65c` | consumed by D03 |
+| `P8-T05/D03` | `in-progress` | UCR-01-compatible non-claim benefit observation over compaction digests | exact native Linux focused tests + Clippy |
 | `P8-T05/D04` | `ready` | not started | waits for D03; final acceptance |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
