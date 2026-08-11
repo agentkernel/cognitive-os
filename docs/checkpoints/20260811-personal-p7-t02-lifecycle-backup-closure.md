@@ -26,6 +26,5 @@ authority-path staging/commit does not perform destructive host I/O.
 
 ## Remaining delivery actions
 
-Mark Draft PR #185 ready after required CI for the closure HEAD, merge, close
-`lease/personal/P7-T02/lifecycle-backup`, delete the task branch, and reconcile
-local `main`. Then claim `P7-T03`.
+Mark Draft PR #185 ready after required CI for the closure HEAD, merge, delete
+the task branch, and reconcile local `main`. Then claim `P7-T03`.
