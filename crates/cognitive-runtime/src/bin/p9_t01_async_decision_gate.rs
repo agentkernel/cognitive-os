@@ -76,7 +76,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let (dominant_stage, dominant_share) = cold_dominant_stage(&runs);
-    let should_migrate = cold_effect_dominant
+    // The collector measures one authority-shaped persistence stage, not a
+    // separable HTTP/watch/sidecar transport stage. Its dominance can trigger
+    // more profiling, but cannot itself authorize a stream migration.
+    let stream_transport_measured = false;
+    let should_migrate = stream_transport_measured
+        && cold_effect_dominant
         && dominant_stage == Some("effect_persistence")
         && dominant_share >= 0.5;
     let decision = if should_migrate {
@@ -91,7 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             outcome: "conservative-no-migration",
             dominant_stage,
             dominant_share_of_cold_p95: Some(dominant_share),
-            rationale: "the preregistered reproducible I/O dominance rule was not satisfied; retain the synchronous path",
+            rationale: "the collector did not measure a separable stream transport stage; retain the synchronous path and profile connection/open/lock components before reconsidering migration",
         }
     };
 
