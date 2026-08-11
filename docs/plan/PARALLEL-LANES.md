@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P8-T02/agent-adapter-contract` | P8-T02/D02 adapter lifecycle | Lane-RUN | `personal/P8-T02-agent-adapter-contract` | `crates/cognitive-runtime/src/agent_adapter_manifest.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T02-D02 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P8-T02/agent-adapter-contract` | P8-T02/D03 agent-adapter-manifest CTR | Lane-CTR | `personal/P8-T02-agent-adapter-contract` | `specs/schemas/agent-adapter-manifest.schema.json`; `crates/cognitive-contracts/src/bin/contracts-codegen.rs`; `crates/cognitive-contracts/src/generated/`; `crates/cognitive-contracts/tests/agent_adapter_manifest_schema.rs`; `packages/contracts-ts/src/generated/`; `docs/architecture/personal/agent-adapter-contract.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/` | cursor-agent/P8-T02-D03 | 2026-08-11 / 2026-08-11 | active |
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
