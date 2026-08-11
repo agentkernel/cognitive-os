@@ -36,11 +36,11 @@ claim about a production request distribution.
 2. Select the dominant stage by cold p95 share of the total cold p95. A stage
    is dominant only when it contributes at least 50% of that total and is
    reproducible in both native runs.
-3. Select **stream-only async migration** only if the dominant stage is an
-   I/O-bound `effect_persistence` or stream transport stage and the result is
-   reproduced in both runs. Authorization, Context resolution, and cache
-   reuse are implementation/governance work, not permission to move the
-   authority writer to an async executor.
+3. Select **stream-only async migration** only if a separately measured
+   HTTP/watch/sidecar transport stage dominates p95 and the result is
+   reproduced in both runs. The aggregate `effect_persistence` stage includes
+   authority-store open, admission, Intent persistence, and reload, so it can
+   request component profiling but cannot authorize a stream migration.
 4. Otherwise select the conservative outcome: no async migration is justified
    by this evidence; retain the synchronous stream path and record follow-up
    profiling as non-claim work.
@@ -53,13 +53,28 @@ or generalized performance/Agent-benefit claim.
 | Check | Status | Evidence |
 |---|---|---|
 | task claim, exact lease, and plan reconciliation | pass | current `PROGRESS.md`, formal plan, and active lease row |
-| native Linux exact-revision collector | not-run | must run after this checkpoint is pushed |
+| native Linux exact-revision collector | pass | exact `826745c` bundle worktree; focused `perf::tests` 5/5 |
 | local diff/consistency checks | pass | `git diff --check`; linter diagnostics absent |
 | required CI | not-run | required after the immutable checkpoint revision exists |
 
-## Next action
+## Exact native Linux result
 
-Push this secret-free checkpoint, create the single Draft PR, run the
-collector on `DEV-LINUX-NATIVE-01` at the exact revision, then append the
-redacted result and either close P9-T01 conservatively or register the bounded
-stream-only D02 slice.
+At `826745c868b26a5aab71e0abeedb038e364267e4`, a disposable native worktree
+created from the transferred Git bundle on `DEV-LINUX-NATIVE-01` passed
+`cargo test -p cognitive-runtime --lib perf::tests -- --nocapture` (5/5).
+The P9-T01 runner then collected two cold and two warm five-sample observations.
+`effect_persistence` dominated cold p95 (run 1: 310.790 ms of 311.863 ms;
+run 2: 1250.922 ms of 1251.939 ms). This is explicitly **not** stream
+transport evidence: the stage includes authority-store open, admission, Intent
+persistence, and reload.
+
+The executable rule therefore returned `conservative-no-migration`. No async
+runtime migration is authorized. Any later P9-T01 reconsideration needs a new
+bounded measurement that separates HTTP/watch/sidecar transport from the
+single-writer authority path.
+
+## Remaining validation
+
+The native result is `tested-local` implementation evidence only. Required CI
+for the exact final task revision remains pending; no Gate, release, Profile,
+or generalized performance claim is made.
