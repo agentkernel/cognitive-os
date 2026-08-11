@@ -14,6 +14,7 @@ mod readiness;
 mod resource_api;
 mod scheduler_authority;
 mod server;
+mod six_resource_doctor;
 mod skill_package;
 mod task_api;
 mod tool_executor;

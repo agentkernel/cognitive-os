@@ -19,6 +19,11 @@ use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
 
 use super::pi_runtime::{PINNED_PI_VERSION, PiRuntimeObservation, observe_pi_runtime};
+use super::six_resource_doctor::{
+    SixResourceFamily, SixResourceHealthFact, SixResourceHealthObservation,
+    SixResourceHealthStatus, evaluate_six_resource_doctor_health,
+    six_resource_doctor_projection_json,
+};
 
 /// Product-local schema version for readiness projections (not a registry schema).
 pub const PERSONAL_READINESS_SCHEMA_VERSION: u32 = 1;
@@ -176,12 +181,32 @@ pub fn doctor_projection_json(report: &ReadinessReport) -> Value {
         "first_conversation_ready": report.first_conversation_ready,
         "evaluated_at_unix_ms": report.evaluated_at_unix_ms,
         "components": report.components.iter().map(component_detail_json).collect::<Vec<_>>(),
+        "six_resource": default_six_resource_doctor_section(),
         "static_check_is_not_runtime_ready": true,
         "profile_claim": "not-claimed",
         "gate_claim": "not-claimed",
         "authority_side_effects": false,
         "guidance": doctor_guidance(report)
     })
+}
+
+fn default_six_resource_doctor_section() -> Value {
+    let observations: Vec<SixResourceHealthObservation> = SixResourceFamily::ALL
+        .iter()
+        .map(|family| SixResourceHealthObservation {
+            family: *family,
+            status: SixResourceHealthStatus::NotConfigured,
+            error_code: Some("RESOURCE_HEALTH_NOT_PROBED"),
+            recovery_hint: Some("await resource-specific doctor probe"),
+            facts: vec![SixResourceHealthFact {
+                key: "probe",
+                value: "not_run".to_owned(),
+            }],
+        })
+        .collect();
+    let six_resource_report = evaluate_six_resource_doctor_health(&observations)
+        .expect("default six-resource observations are complete and redacted");
+    six_resource_doctor_projection_json(&six_resource_report)
 }
 
 fn component_summary_json(check: &ComponentCheck) -> Value {
@@ -947,6 +972,18 @@ mod tests {
         assert_eq!(doctor["overall"], "ready");
         assert_eq!(doctor["first_conversation_ready"], false);
         assert_eq!(doctor["gate_claim"], "not-claimed");
+        assert_eq!(
+            doctor["six_resource"]["surface"],
+            "personal-doctor-six-resource"
+        );
+        assert_eq!(doctor["six_resource"]["gate_claim"], "not-claimed");
+        assert_eq!(
+            doctor["six_resource"]["families"]
+                .as_array()
+                .expect("six families")
+                .len(),
+            6
+        );
         let guidance = doctor["guidance"].as_array().expect("guidance array");
         assert!(
             guidance.iter().any(|entry| entry
