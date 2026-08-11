@@ -14,8 +14,10 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 const TARGET_MEMORY_CANDIDATE: &str = "memory_candidate";
+const TARGET_SKILL_CANDIDATE: &str = "skill_candidate";
 const LINEAGE_REFLEXION: &str = "reflexion_failure_lesson";
 const FORGET_REASON: &str = "learning_memory_forgotten";
+const REVOKE_REASON: &str = "learning_skill_binding_revoked";
 
 /// One episode failure lesson eligible for Memory-candidate planning.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,6 +52,27 @@ pub struct LearningMemoryForgetPlan {
     pub resurrectable: bool,
 }
 
+/// Non-authoritative Skill candidate plan derived from a failure lesson.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LearningSkillCandidatePlan {
+    pub plan_digest: String,
+    pub package_key: String,
+    pub revision_digest: String,
+    pub lesson_digest: String,
+    pub lineage: &'static str,
+    pub grants_capability: bool,
+}
+
+/// Explainable Skill binding revocation plan (non-resurrecting).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LearningSkillRevokePlan {
+    pub revoke_digest: String,
+    pub binding_id: String,
+    pub lesson_digest: String,
+    pub reason: &'static str,
+    pub resurrectable: bool,
+}
+
 /// Fail-closed learning-loop planner errors.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum LearningLoopError {
@@ -57,12 +80,14 @@ pub enum LearningLoopError {
     MissingIdentity,
     #[error("learning proposal cannot self-authorize durable admission")]
     SelfAuthorizationForbidden,
-    #[error("learning lesson may only promote to a Memory candidate")]
+    #[error("learning lesson may only promote to a Memory or Skill candidate")]
     DirectPromotionForbidden,
     #[error("learning admission rejects a producer-forged outcome")]
     ProducerForgedAdmit,
     #[error("learning admission source facts do not match the candidate plan")]
     SourceMismatch,
+    #[error("learning Skill candidate cannot grant capability")]
+    CapabilityGrantForbidden,
 }
 
 /// Plan a Memory candidate from a Reflexion-family failure lesson.
@@ -167,6 +192,73 @@ pub fn plan_learning_memory_forget(
         memory_id: memory_id.to_owned(),
         lesson_digest: lesson_digest.to_owned(),
         reason: FORGET_REASON,
+        resurrectable: false,
+    })
+}
+
+/// Plan a Skill package candidate from a Reflexion-family failure lesson.
+///
+/// Output is provenance-only for later `import_local_skill_package`. It never
+/// grants capability or executes package content.
+pub fn plan_failure_lesson_skill_candidate(
+    lesson: &FailureLessonFact,
+    package_manifest_digest: &str,
+    claims_capability: bool,
+) -> Result<LearningSkillCandidatePlan, LearningLoopError> {
+    if lesson.claims_authority {
+        return Err(LearningLoopError::SelfAuthorizationForbidden);
+    }
+    if claims_capability {
+        return Err(LearningLoopError::CapabilityGrantForbidden);
+    }
+    if lesson.episode_id.trim().is_empty()
+        || lesson.lesson_digest.trim().is_empty()
+        || package_manifest_digest.trim().is_empty()
+    {
+        return Err(LearningLoopError::MissingIdentity);
+    }
+    if lesson.promotion_target != TARGET_SKILL_CANDIDATE {
+        return Err(LearningLoopError::DirectPromotionForbidden);
+    }
+
+    let package_key = format!("learn.skill.{}", lesson.episode_id.trim());
+    let mut hasher = Sha256::new();
+    hasher.update(LINEAGE_REFLEXION.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(package_key.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(lesson.lesson_digest.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(package_manifest_digest.as_bytes());
+    Ok(LearningSkillCandidatePlan {
+        plan_digest: format!("{:x}", hasher.finalize()),
+        package_key,
+        revision_digest: package_manifest_digest.to_owned(),
+        lesson_digest: lesson.lesson_digest.clone(),
+        lineage: LINEAGE_REFLEXION,
+        grants_capability: false,
+    })
+}
+
+/// Plan an explainable, non-resurrecting Skill binding revocation.
+pub fn plan_learning_skill_binding_revoke(
+    binding_id: &str,
+    lesson_digest: &str,
+) -> Result<LearningSkillRevokePlan, LearningLoopError> {
+    if binding_id.trim().is_empty() || lesson_digest.trim().is_empty() {
+        return Err(LearningLoopError::MissingIdentity);
+    }
+    let mut hasher = Sha256::new();
+    hasher.update(REVOKE_REASON.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(binding_id.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(lesson_digest.as_bytes());
+    Ok(LearningSkillRevokePlan {
+        revoke_digest: format!("{:x}", hasher.finalize()),
+        binding_id: binding_id.to_owned(),
+        lesson_digest: lesson_digest.to_owned(),
+        reason: REVOKE_REASON,
         resurrectable: false,
     })
 }
@@ -315,5 +407,48 @@ mod tests {
             plan_learning_memory_forget("  ", "sha256:x").unwrap_err(),
             LearningLoopError::MissingIdentity
         );
+    }
+
+    #[test]
+    fn plans_skill_candidate_and_rejects_capability_grant() {
+        let mut lesson = valid_lesson();
+        lesson.promotion_target = TARGET_SKILL_CANDIDATE.to_owned();
+        let plan = plan_failure_lesson_skill_candidate(
+            &lesson,
+            &format!("sha256:{}", "d".repeat(64)),
+            false,
+        )
+        .expect("skill plan");
+        assert_eq!(plan.package_key, "learn.skill.ep-42");
+        assert!(!plan.grants_capability);
+        assert_eq!(plan.plan_digest.len(), 64);
+
+        assert_eq!(
+            plan_failure_lesson_skill_candidate(
+                &lesson,
+                &format!("sha256:{}", "d".repeat(64)),
+                true,
+            )
+            .unwrap_err(),
+            LearningLoopError::CapabilityGrantForbidden
+        );
+
+        let mut memory_target = lesson.clone();
+        memory_target.promotion_target = TARGET_MEMORY_CANDIDATE.to_owned();
+        assert_eq!(
+            plan_failure_lesson_skill_candidate(
+                &memory_target,
+                &format!("sha256:{}", "d".repeat(64)),
+                false,
+            )
+            .unwrap_err(),
+            LearningLoopError::DirectPromotionForbidden
+        );
+
+        let revoke =
+            plan_learning_skill_binding_revoke("bind-1", &format!("sha256:{}", "a".repeat(64)))
+                .expect("revoke");
+        assert!(!revoke.resurrectable);
+        assert_eq!(revoke.reason, REVOKE_REASON);
     }
 }
