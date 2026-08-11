@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue `P9-T02/D04` acceptance on `personal/P9-T02-structure-debt` |
-| Active task lease | `lease/personal/P9-T02/structure-debt` | P9-T02 owns structure-debt paths on Draft PR #192. | D04: acceptance mapping, required CI, closure, ready/merge |
-| P9-T02 Authority-path structure debt | `in-progress` | Draft PR #192. D01 Linux 38/38 + Clippy at `c4bbbde`. D02 Linux 38/38 + Clippy at `dba5e2b`. D03 tool_executor 27/27 + sqlite 1/1 + scheduler 38/38 + Clippy at `a11d0bd`. | D04 final acceptance |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select the next ready Personal task after P9-T02 merge |
+| Active task lease | `none` (closing with P9-T02 merge) | P9-T02 structure-debt closed on PR #192. | claim next implementation-ready Personal task |
+| P9-T02 Authority-path structure debt | **done** | D01–D04 closed; PR #192. Linux evidence through `a11d0bd`; required CI `31470278984` on `eddaa70`. Closure checkpoint `20260811-personal-p9-t02-structure-debt-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
 | P8-T06 Cross-episode learning loop | **done** | D01–D04 closed; PR #190 merged at `main@ad6656566ca0ea365b532b8e059d50d061c5c1df`. Reflexion Memory/Skill candidate planners + daemon admission wiring. Required CI `31461384771` / closure `31462013806`. Closure checkpoint `20260811-personal-p8-t06-learning-loop-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T05 Context compaction and adaptive budgets | **done** | D01–D04 closed; PR #189 merged at `main@fa4f74a8feaadaa74affca90cb37660f40cdeb25`. Digest-bound compaction, adaptive budgets, UCR-01 non-claim benefit observation. Required CI `31459558236` / closure `31460220901`. Closure checkpoint `20260811-personal-p8-t05-context-compaction-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
@@ -58,12 +58,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 49 | 1 | 0 | 12 | 13 |
+| 62 | 50 | 0 | 0 | 12 | 12 |
 
-`P8-T03` is `done` (PR #191 merged; Phase 8 complete). `P9-T02` is
-`in-progress` with unique slice `P9-T02/D04`. Formal task completion remains
-independent from every product Gate except where the plan explicitly binds Gate
-disposition to task acceptance.
+`P9-T02` is `done` (PR #192; structure-debt split closed). Formal task
+completion remains independent from every product Gate except where the plan
+explicitly binds Gate disposition to task acceptance.
 
 ### Layer 2 — Current Delivery Slice queue
 
@@ -104,7 +103,7 @@ disposition to task acceptance.
 | `P9-T02/D01` | `done` | extract `scheduler_authority` embedded tests; Linux 38/38 + Clippy at `c4bbbde` | consumed by D02 |
 | `P9-T02/D02` | `done` | production helpers split into cohesive submodules; Linux `scheduler_authority` 38/38 + Clippy at `dba5e2b` | consumed by D03 |
 | `P9-T02/D03` | `done` | `tool_executor/` + `sqlite/` directory splits with focused-test parity; Linux tool_executor 27/27, sqlite 1/1, scheduler 38/38, Clippy at `a11d0bd` | consumed by D04 |
-| `P9-T02/D04` | `in-progress` | final acceptance over D01-D03 structure-debt evidence | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure |
+| `P9-T02/D04` | `done` | acceptance mapping + closure; required CI `31470278984` on `eddaa70`; checkpoint written; PR #192 | consumed by completed P9-T02 task |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |
