@@ -79,7 +79,6 @@ acceptance.
 | `P8-T02/D01` | `done` | daemon-private AKP-only adapter capability registration; Linux `agent_adapter_manifest` 3/3 + Clippy at `d5b12a9` | consumed by D02 |
 | `P8-T02/D02` | `done` | adapter lifecycle activate/pause/stop; Linux `agent_adapter_manifest` 5/5 + Clippy at `b94d4c6` | consumed by D03 |
 | `P8-T02/D03` | `in-progress` | Lane-CTR `agent-adapter-manifest` schema + generated bindings | implement D03 |
-| `P8-T02/D03` | `ready` | not started | waits for D02 |
 | `P8-T02/D04` | `ready` | not started | waits for D03; final acceptance |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
