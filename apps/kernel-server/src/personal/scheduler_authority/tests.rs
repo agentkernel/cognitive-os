@@ -10,9 +10,8 @@ use super::{
     complete_resolved_effect_and_release, complete_scheduler_admission,
     complete_scheduler_worker_attempt, ensure_current_contract_epoch,
     parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
-    release_closed_effect_dispatch, release_closed_recovered_attempt,
-    select_single_effect_intent, validate_untrusted_pi_candidate,
-    validate_worker_authorization_evidence,
+    release_closed_effect_dispatch, release_closed_recovered_attempt, select_single_effect_intent,
+    validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
 };
 use cognitive_contracts::{
     canonical,
@@ -115,8 +114,7 @@ fn loop_control_switches_after_a_repeated_daemon_signature() {
         progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/a\"]"),
     ];
 
-    let decision =
-        super::derive_loop_control_from_facts(&facts, "sha256:action", 3, 5).unwrap();
+    let decision = super::derive_loop_control_from_facts(&facts, "sha256:action", 3, 5).unwrap();
     assert!(matches!(
         decision,
         super::LoopControlDecision::Switch { .. }
@@ -168,8 +166,7 @@ fn loop_control_rejects_malformed_durable_facts_and_resets_on_new_evidence() {
         progress_fact(2, "none", "sha256:action", "[\"artifact://sha256/b\"]"),
     ];
     assert_eq!(
-        super::derive_loop_control_from_facts(&changed_evidence, "sha256:action", 3, 5)
-            .unwrap(),
+        super::derive_loop_control_from_facts(&changed_evidence, "sha256:action", 3, 5).unwrap(),
         super::LoopControlDecision::Continue
     );
 }
@@ -178,10 +175,7 @@ fn context_governance() -> GovernanceSeed {
     GovernanceSeed {
         owner: strong_reference_to(&object_id(910), &format!("sha256:{}", "a".repeat(64))),
         authority: strong_reference_to(&object_id(911), &format!("sha256:{}", "b".repeat(64))),
-        resource_scope: strong_reference_to(
-            &object_id(912),
-            &format!("sha256:{}", "c".repeat(64)),
-        ),
+        resource_scope: strong_reference_to(&object_id(912), &format!("sha256:{}", "c".repeat(64))),
         tenant_id: Some("tenant-a".to_owned()),
         created_by: "principal://tenant-a/daemon".to_owned(),
         sensitivity: GovernedObjectHeaderSensitivity::Internal,
@@ -364,8 +358,7 @@ fn append_context_race_fixture_with_budget(
         })
         .unwrap();
 
-    let initial_revocation =
-        context_revocation_fact(&governance, object_id(923), 1, &issued_at);
+    let initial_revocation = context_revocation_fact(&governance, object_id(923), 1, &issued_at);
     store
         .append_context_revocation_fact(&initial_revocation)
         .unwrap();
@@ -437,8 +430,7 @@ fn append_context_race_fixture_with_budget(
         ),
         worker_authorization_root_id: Some(contract_id.to_generated()),
     };
-    let (contract_json, contract_digest) =
-        seal_payload(serde_json::to_value(contract).unwrap());
+    let (contract_json, contract_digest) = seal_payload(serde_json::to_value(contract).unwrap());
     store
         .insert_task_contract(
             &TaskContractRow {
@@ -610,16 +602,11 @@ fn governed_context_cache_rejects_revoked_sources_instead_of_reusing_metadata() 
     prepare_personal_databases(&layout).unwrap();
     let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
     let task_ref = "task://tenant-a/p3-t04-cache-revocation";
-    let (context_command, later_revocation) =
-        append_context_race_fixture(&store, task_ref, None);
+    let (context_command, later_revocation) = append_context_race_fixture(&store, task_ref, None);
     let mut context_cache = GovernedContextCache::default();
 
-    super::resolve_authorized_task_context_with_cache(
-        &store,
-        &context_command,
-        &mut context_cache,
-    )
-    .unwrap();
+    super::resolve_authorized_task_context_with_cache(&store, &context_command, &mut context_cache)
+        .unwrap();
     store
         .append_context_revocation_fact(&later_revocation)
         .unwrap();
@@ -716,16 +703,14 @@ fn revocation_after_metadata_discovery_blocks_body_ranking_and_private_pi() {
     prepare_personal_databases(&layout).unwrap();
     let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
     let task_ref = "task://tenant-a/p2-t04-revocation-race";
-    let (context_command, later_revocation) =
-        append_context_race_fixture(&store, task_ref, None);
+    let (context_command, later_revocation) = append_context_race_fixture(&store, task_ref, None);
     let proposer = CountingPiProposer::default();
     let candidate_id = object_id(931);
     let admission_command = super::DaemonCandidateAdmissionCommand {
         candidate_id: candidate_id.clone(),
         authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
         authorization_purpose: "task_execution".to_owned(),
-        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
-            .unwrap(),
+        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
         governance: context_governance(),
         actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
         authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
@@ -790,8 +775,7 @@ fn missing_required_context_blocks_private_pi_and_candidate_admission() {
         candidate_id: candidate_id.clone(),
         authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
         authorization_purpose: "task_execution".to_owned(),
-        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
-            .unwrap(),
+        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
         governance: context_governance(),
         actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
         authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
@@ -857,8 +841,7 @@ fn duplicate_candidate_retry_does_not_reinvoke_private_pi() {
         candidate_id: candidate_id.clone(),
         authorization_subject_ref: "principal://tenant-a/daemon".to_owned(),
         authorization_purpose: "task_execution".to_owned(),
-        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)]))
-            .unwrap(),
+        budget_charge: BudgetCharge::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
         governance: context_governance(),
         actor_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
         authority_ref: UriRef::parse("authority://tenant-a/daemon").unwrap(),
@@ -999,10 +982,7 @@ fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {
         budget_charge: budget_charge.clone(),
         budget_id: budget_id.to_generated(),
         contract_epoch: 1,
-        effect_ref: strong_reference_to(
-            &effect_object_id,
-            &format!("sha256:{}", "e".repeat(64)),
-        ),
+        effect_ref: strong_reference_to(&effect_object_id, &format!("sha256:{}", "e".repeat(64))),
         expected_loop_version: 1,
         header,
         intent_ref: strong_reference_to(&intent_id, &format!("sha256:{}", "f".repeat(64))),
@@ -1021,8 +1001,7 @@ fn sealed_worker_authorization_row() -> WorkerIterationAuthorizationRow {
     let payload_value = serde_json::to_value(&payload).unwrap();
     let (sealed_payload, _) = seal_governed_object_content_digest(payload_value).unwrap();
     let budget_charge_canonical_json = String::from_utf8(
-        canonical::canonical_bytes_of_value(&serde_json::to_value(budget_charge).unwrap())
-            .unwrap(),
+        canonical::canonical_bytes_of_value(&serde_json::to_value(budget_charge).unwrap()).unwrap(),
     )
     .unwrap();
 
@@ -1132,9 +1111,7 @@ fn wait_for_published_endpoint(layout: &PersonalDataLayout) -> Option<String> {
 fn send_health_request_to_once_server(endpoint: &str) {
     let mut stream = TcpStream::connect(endpoint).unwrap();
     stream
-        .write_all(
-            b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
-        )
+        .write_all(b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
         .unwrap();
 }
 
@@ -1332,8 +1309,7 @@ fn persist_pending_bound_handoff(
             fencing_epoch: Some(authorization.issued_fencing_epoch),
         })
         .unwrap();
-    let budget_state =
-        BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
+    let budget_state = BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
     let budget_state_json = serde_json::to_string(&budget_state).unwrap();
     store
         .create_budget(&authorization.budget_id, &budget_state_json, &admitted_at)
@@ -1490,10 +1466,8 @@ fn effect_intent(intent_suffix: u64, binding: Option<TaskBinding>) -> IntentRow 
         parameters_digest: format!("sha256:{}", "ab".repeat(32)),
         action: "scheduler.effect".to_owned(),
         target: "effect://personal/scheduler".to_owned(),
-        effect_object_id: ObjectId::parse(&format!(
-            "00000000-0000-7000-9000-{intent_suffix:012x}"
-        ))
-        .unwrap(),
+        effect_object_id: ObjectId::parse(&format!("00000000-0000-7000-9000-{intent_suffix:012x}"))
+            .unwrap(),
         expected_state_version: Version::INITIAL,
         grant_epoch: 1,
         capability_set_version: 1,
@@ -1740,14 +1714,13 @@ fn server_startup_recovery_stale_contract_does_not_publish_endpoint() {
         .unwrap();
     drop(store);
 
-    let result = super::super::server::serve_personal_loopback(
-        super::super::server::PersonalDaemonConfig {
+    let result =
+        super::super::server::serve_personal_loopback(super::super::server::PersonalDaemonConfig {
             bind_address: "127.0.0.1:0".to_owned(),
             layout: layout.clone(),
             bounds: super::super::bounds::PersonalResourceBounds::personal_v1_baseline(),
             once: true,
-        },
-    );
+        });
 
     assert!(matches!(
         result,
