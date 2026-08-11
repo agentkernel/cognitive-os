@@ -15,7 +15,11 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { test } from "node:test";
 
-import { PersonalDaemonClient, parseReadinessProjection } from "./daemon-client.js";
+import {
+  PersonalDaemonClient,
+  parseBoundedCompletion,
+  parseReadinessProjection,
+} from "./daemon-client.js";
 import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
 import { DaemonClientError, isDaemonUnavailable } from "./errors.js";
@@ -56,6 +60,30 @@ function filesFor(endpoint: string, secret: string = BOOTSTRAP_SECRET): FileRead
     },
   };
 }
+
+test("Provider usage is measured only for complete internally consistent counters", () => {
+  const measured = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+  }));
+  assert.deepEqual(measured.providerUsage, {
+    availability: "measured",
+    promptTokens: 7,
+    completionTokens: 3,
+    totalTokens: 10,
+  });
+
+  const missingUsage = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+  }));
+  assert.deepEqual(missingUsage.providerUsage, { availability: "not_available" });
+
+  const inconsistentUsage = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 9 },
+  }));
+  assert.deepEqual(inconsistentUsage.providerUsage, { availability: "not_available" });
+});
 
 test("a session is minted and the readiness projection is returned verbatim", async () => {
   const daemon = await startFakeDaemon({

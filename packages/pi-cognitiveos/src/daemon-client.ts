@@ -82,7 +82,22 @@ export interface SelectedModelProjection {
 export interface BoundedCompletion {
   readonly content: string;
   readonly finishReason: "stop";
+  /**
+   * Numeric usage is retained only when the Provider supplied a complete,
+   * internally consistent OpenAI-compatible `usage` object. This is campaign
+   * telemetry, not a fallback token estimate.
+   */
+  readonly providerUsage: ProviderUsage;
 }
+
+export type ProviderUsage =
+  | { readonly availability: "not_available" }
+  | {
+      readonly availability: "measured";
+      readonly promptTokens: number;
+      readonly completionTokens: number;
+      readonly totalTokens: number;
+    };
 
 /** Private versioned resource projection accepted from the Personal daemon. */
 export interface ResourceProjection {
@@ -458,7 +473,39 @@ export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
     throw completionProtocolError();
   }
   if (choiceRecord["finish_reason"] !== "stop") throw completionProtocolError();
-  return { content: messageRecord["content"], finishReason: "stop" };
+  return {
+    content: messageRecord["content"],
+    finishReason: "stop",
+    providerUsage: parseProviderUsage(record["usage"]),
+  };
+}
+
+function parseProviderUsage(value: unknown): ProviderUsage {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { availability: "not_available" };
+  }
+  const usage = value as Record<string, unknown>;
+  const promptTokens = usage["prompt_tokens"];
+  const completionTokens = usage["completion_tokens"];
+  const totalTokens = usage["total_tokens"];
+  if (
+    !isNonnegativeSafeInteger(promptTokens)
+    || !isNonnegativeSafeInteger(completionTokens)
+    || !isNonnegativeSafeInteger(totalTokens)
+    || promptTokens + completionTokens !== totalTokens
+  ) {
+    return { availability: "not_available" };
+  }
+  return {
+    availability: "measured",
+    promptTokens,
+    completionTokens,
+    totalTokens,
+  };
+}
+
+function isNonnegativeSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function parseJsonRecord(bodyText: string, label: string): Record<string, unknown> {

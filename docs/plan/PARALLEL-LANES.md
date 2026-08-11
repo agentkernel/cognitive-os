@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P9-T04/comprehensive-performance-campaign` | P9-T04/D01 campaign registration and measurement-runner foundation | Lane-RUN | `personal/P9-T04-comprehensive-performance-campaign` | `crates/cognitive-runtime/src/lib.rs`; `crates/cognitive-runtime/src/performance_campaign.rs`; `docs/adr/0051-comprehensive-performance-campaign.md`; `docs/checkpoints/20260812-personal-p9-t04-performance-campaign-preregistration.md`; `docs/evaluation/personal-performance-benchmark-execution-plan.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `plan.md` | Cursor continuous campaign session | 2026-08-12 / 2026-08-12 | active |
+| `lease/personal/P9-T04/comprehensive-performance-campaign` | P9-T04/D01 campaign registration and measurement-runner foundation | Lane-RUN | `personal/P9-T04-comprehensive-performance-campaign` | `crates/cognitive-runtime/src/lib.rs`; `crates/cognitive-runtime/src/performance_campaign.rs`; `packages/pi-cognitiveos/src/daemon-client.ts`; `packages/pi-cognitiveos/src/daemon-client.test.ts`; `docs/adr/0051-comprehensive-performance-campaign.md`; `docs/checkpoints/20260812-personal-p9-t04-performance-campaign-preregistration.md`; `docs/evaluation/personal-performance-benchmark-execution-plan.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `plan.md` | Cursor continuous campaign session | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
