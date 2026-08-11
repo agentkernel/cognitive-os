@@ -1,6 +1,6 @@
 # P9-T01 async event decision gate
 
-- Status: `in-progress` / D01
+- Status: `done` / D01; superseded for task closure by `20260811-personal-p9-t01-async-decision-gate-closure.md`
 - Task: `P9-T01`
 - Change class: `implementation-only` decision evidence; no runtime semantic change
 - Branch: `personal/P9-T01-async-decision-gate`
@@ -55,7 +55,7 @@ or generalized performance/Agent-benefit claim.
 | task claim, exact lease, and plan reconciliation | pass | current `PROGRESS.md`, formal plan, and active lease row |
 | native Linux exact-revision collector | pass | exact `826745c` bundle worktree; focused `perf::tests` 5/5 |
 | local diff/consistency checks | pass | `git diff --check`; linter diagnostics absent |
-| required CI | not-run | required after the immutable checkpoint revision exists |
+| required CI | pass | required Ubuntu/Windows CI `31510283352` passed on closure head `98896cfba0c45e4d5d07d43a4378056c137483ad` |
 
 ## Exact native Linux result
 
@@ -75,6 +75,6 @@ single-writer authority path.
 
 ## Remaining validation
 
-The native result is `tested-local` implementation evidence only. Required CI
-for the exact final task revision remains pending; no Gate, release, Profile,
-or generalized performance claim is made.
+The native result is `tested-local` implementation evidence. Required CI
+`31510283352` passed for the exact final task revision. No Gate, release,
+Profile, or generalized performance claim is made.

@@ -11,6 +11,7 @@ block new leases, or override PROGRESS.md Current snapshot.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P9-T01/async-decision-gate` | P9-T01/D01 async event decision gate | `personal/P9-T01-async-decision-gate` | 2026-08-11 | D01 re-ran P7-T04 governed-path timing and recorded a hypothesis-only `conservative-no-migration`: aggregate authority `effect_persistence` is not separable HTTP/watch/sidecar transport evidence. Exact native Linux `perf::tests` 5/5 at `826745c`; required Ubuntu/Windows CI `31510283352` on `98896cf`; PR #197. No async migration, Gate, release, or Profile claim. |
 | `lease/personal/P5-T04/dynamic-tool-ecosystem` | P5-T04/D01-D04 dynamic Tool + B10 | `personal/P5-T04-dynamic-tool-ecosystem` | 2026-08-11 | D01–D04 deliver dynamic discovery/enable/disable/quarantine/exposure/reconcile with ADR-0050 B10 MVP pass. Linux `dynamic_tool_ecosystem` 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; PR #196. No GMVP-LINUX/release/Profile claim. |
 | `lease/personal/P7-T08/gmvp-linux` | P7-T08/D01-D04 GMVP-LINUX | `personal/P7-T08-gmvp-linux` | 2026-08-11 | D01–D04 deliver ADR-0048 B08 MVP pass, ADR-0049 GMVP composition binder, and GMVP-LINUX MVP pass. B08 CI `31479512940` on `65a736c`; composition CI `31480604511` on `b3f4b88`; PR #194. No Profile/Windows B01-W claim. |
 | `lease/personal/P9-T03/store-composition` | P9-T03/D01-D04 store composition | `personal/P9-T03-store-composition` | 2026-08-11 | D01–D04 deliver long-lived single-writer store, request-path Arc reuse, Memory admission sink to `cognitive-store`, and hypothesis-only store-access stage timing. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`; PR #193 is the task closure PR. No Gate/release/Profile claim. |
@@ -122,4 +123,3 @@ block new leases, or override PROGRESS.md Current snapshot.
 | `lease/personal/P1-T09/linux-environment-qualification` | Linux-native Pi environment qualification | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | SSH qualification recorded; exact Pi availability remains `not-run` |
 
 Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
-
