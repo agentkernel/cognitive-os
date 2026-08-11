@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P9-T03/store-composition` | P9-T03/D01 long-lived authority store | Lane-RUN | `personal/P9-T03-store-composition` | `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/src/personal/scheduler_authority/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/traceability/matrix.yaml`; `docs/checkpoints/` | cursor-agent/P9-T03-D01 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P9-T03/store-composition` | P9-T03/D02 request-path store wiring | Lane-RUN | `personal/P9-T03-store-composition` | `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/src/personal/scheduler_authority/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/traceability/matrix.yaml`; `docs/checkpoints/` | cursor-agent/P9-T03-D02 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
