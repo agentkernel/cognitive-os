@@ -83,6 +83,11 @@ test("Provider usage is measured only for complete internally consistent counter
     usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 9 },
   }));
   assert.deepEqual(inconsistentUsage.providerUsage, { availability: "not_available" });
+
+  const zeroDuration = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+  }), 0);
+  assert.equal(zeroDuration.loopbackHttpElapsedNanos, 1);
 });
 
 test("a session is minted and the readiness projection is returned verbatim", async () => {

@@ -83,6 +83,11 @@ export interface BoundedCompletion {
   readonly content: string;
   readonly finishReason: "stop";
   /**
+   * Monotonic duration around the Pi-to-daemon loopback HTTP exchange only.
+   * It deliberately excludes Pi Context construction and Provider parsing.
+   */
+  readonly loopbackHttpElapsedNanos: number;
+  /**
    * Numeric usage is retained only when the Provider supplied a complete,
    * internally consistent OpenAI-compatible `usage` object. This is campaign
    * telemetry, not a fallback token estimate.
@@ -199,19 +204,21 @@ export class PersonalDaemonClient {
     const paths = resolvePersonalDaemonPaths(this.environment);
     const endpoint = readDaemonEndpoint(paths, this.files);
     const token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+    const loopbackRequestStartedAt = performance.now();
     const response = await this.send(endpoint, "/provider/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ model, messages, stream: false }),
       ...(signal === undefined ? {} : { signal }),
     });
+    const loopbackHttpElapsedNanos = elapsedMonotonicNanos(loopbackRequestStartedAt);
     const bodyText = await readBodyText(response);
     if (response.status !== 200) {
       if (response.status === 401) this.managementSessionToken = undefined;
       throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
     }
     this.managementSessionToken = token;
-    return parseBoundedCompletion(bodyText);
+    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos);
   }
 
   /** Read one private resource projection through the management channel. */
@@ -459,7 +466,10 @@ export function parseResourceProjection(
   };
 }
 
-export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
+export function parseBoundedCompletion(
+  bodyText: string,
+  loopbackHttpElapsedNanos: number = 1,
+): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
   if (!Array.isArray(choices) || choices.length !== 1) throw completionProtocolError();
@@ -476,8 +486,13 @@ export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
   return {
     content: messageRecord["content"],
     finishReason: "stop",
+    loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
     providerUsage: parseProviderUsage(record["usage"]),
   };
+}
+
+function elapsedMonotonicNanos(startedAt: number): number {
+  return Math.max(1, Math.round((performance.now() - startedAt) * 1_000_000));
 }
 
 function parseProviderUsage(value: unknown): ProviderUsage {
