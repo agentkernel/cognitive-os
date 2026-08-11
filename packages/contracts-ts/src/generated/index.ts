@@ -8,6 +8,7 @@
 // several modules (each schema owns its inline definitions).
 
 export * as actorChain from "./actor-chain.js";
+export * as agentAdapterManifest from "./agent-adapter-manifest.js";
 export * as agentCompatibilityReport from "./agent-compatibility-report.js";
 export * as agentExecutionBinding from "./agent-execution-binding.js";
 export * as agentInstallation from "./agent-installation.js";
@@ -68,6 +69,7 @@ export * as errorRegistry from "./error-registry.js";
  */
 export const SCHEMA_DIGESTS = {
   "actor-chain.schema.json": "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
+  "agent-adapter-manifest.schema.json": "sha256:d1181a0aeaec72eac724f7e8b3338e75eb679267d6db673ed34da4ce51ad523a",
   "agent-compatibility-report.schema.json": "sha256:fe3324eca3c955babde7ca5eeeacde83f53086df2f076d38c98857d6378dd399",
   "agent-execution-binding.schema.json": "sha256:3ce877a258dcc2719cbedb149706c026b678c0699da81087e341cb28654f0b91",
   "agent-installation.schema.json": "sha256:15b7aab85fcdfd9eda729cb5ba50e3c2f89208f5786016d13a3302105594f0f0",

@@ -5,6 +5,7 @@
 //! specs/registry/errors.yaml).
 
 pub mod actor_chain;
+pub mod agent_adapter_manifest;
 pub mod agent_compatibility_report;
 pub mod agent_execution_binding;
 pub mod agent_installation;
@@ -61,10 +62,14 @@ pub mod world_state;
 /// Schema file name (== `$id`) -> canonical schema content digest
 /// (canonical bytes, domain `schema-bundle/0.1`) for every generated
 /// schema module; the envelope `schema_digest` pin table.
-pub const SCHEMA_DIGESTS: [(&str, &str); 52] = [
+pub const SCHEMA_DIGESTS: [(&str, &str); 53] = [
     (
         "actor-chain.schema.json",
         "sha256:08e600844fe7726709ab1cfa0f31a8ba49d4eca0f88f9b1abbc00c4fd0f072ae",
+    ),
+    (
+        "agent-adapter-manifest.schema.json",
+        "sha256:d1181a0aeaec72eac724f7e8b3338e75eb679267d6db673ed34da4ce51ad523a",
     ),
     (
         "agent-compatibility-report.schema.json",

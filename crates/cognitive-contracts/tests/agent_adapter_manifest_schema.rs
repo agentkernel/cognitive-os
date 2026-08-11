@@ -104,6 +104,15 @@ fn agent_adapter_manifest_accepts_candidate_only_akp_shape() {
         compiled.is_valid(&valid_manifest()),
         "valid AKP candidate-only manifest must validate"
     );
+
+    assert_eq!(
+        cognitive_contracts::generated::agent_adapter_manifest::SCHEMA_ID,
+        MANIFEST
+    );
+    assert!(
+        cognitive_contracts::generated::agent_adapter_manifest::SCHEMA_DIGEST
+            .starts_with("sha256:")
+    );
 }
 
 #[test]
