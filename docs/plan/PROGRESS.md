@@ -13,8 +13,8 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | claim the next implementation-ready non-overlapping formal Personal task |
-| Active task lease | `lease/personal/P9-T01/windows-ci-recovery` | Narrow corrective lease on the existing P9-T01 branch after the required Windows CI job stalled in the Provider proxy integration test; no campaign/B01 path is leased yet | validate the bounded socket-read recovery, pass both required CI jobs, then merge P9-T01 and reconcile `main` |
-| P9-T01 Async event foundation decision gate | **in-progress (CI recovery)** | D01's exact native Linux observation at `826745c` passed `perf::tests` 5/5 and its deterministic hypothesis-only rule selected `conservative-no-migration`; prior required CI `31510283352` passed on `98896cf`. A later closure CI job stalled before completing Windows Rust tests, so the final merge is not yet honest. Aggregate `effect_persistence` is not transport evidence; no async migration, Gate, release, or Profile claim. | validate the bounded Provider-proxy socket-read failure path, rerun required CI on the exact recovery revision, then complete the existing closure |
+| Active task lease | `none` | P9-T01 recovery validation is complete and its task closure is ready to merge | merge P9-T01, reconcile `main`, then claim the next ready task |
+| P9-T01 Async event foundation decision gate | **done** | D01's exact native Linux observation at `826745c` passed `perf::tests` 5/5 and selected hypothesis-only `conservative-no-migration`. Recovery added bounded socket reads and serialized loopback-daemon test execution after a Windows stall; required Ubuntu/Windows CI `31516749535` passed on final head `195510c`. Aggregate `effect_persistence` is not transport evidence; no async migration, Gate, release, or Profile claim. Closure: `20260811-personal-p9-t01-async-decision-gate-closure.md`. | retain evidence; any reconsideration needs separately measured HTTP/watch/sidecar transport evidence |
 | P5-T04 Post-1.0 dynamic Tool + B10 | **done** | D01–D04 closed under ADR-0050. Linux 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; B10 MVP `pass`. Closure `20260811-personal-p5-t04-dynamic-tool-closure.md`. | retain closure evidence; no GMVP-LINUX/release/Profile claim |
 | P5-T03 Post-1.0 MCP Tool adapter | **done** | D01–D04 closed; Linux 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure checkpoint `20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. | retain closure evidence; no B10/Gate/release/Profile claim |
 | P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **done** | D01–D04 closed; B08 MVP `pass` (ADR-0048) at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` (ADR-0049) at `b3f4b88` + CI `31480604511`. Closure checkpoint `20260811-personal-p7-t08-gmvp-linux-closure.md`. | retain closure evidence; no Profile/Windows B01-W claim |
@@ -64,7 +64,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 54 | 1 | 0 | 7 | 8 |
+| 62 | 55 | 0 | 0 | 7 | 7 |
 
 `P5-T04` is `done` (PR #196). Formal task completion remains independent from
 GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
@@ -126,7 +126,7 @@ under ADR-0050.
 | `P9-T03/D02` | `done` | request-path handlers reuse daemon-owned `Arc<SqliteAuthorityStore>`; Linux request_path 1/1, scheduler_authority 39/39, Clippy at `2eb82c9` | consumed by D03 |
 | `P9-T03/D03` | `done` | Memory admission sunk to `cognitive-store`; store_access stage-timing non-claim in `cognitive-runtime`; Linux memory 1/1, store_access 3/3, request_path 1/1, Clippy at `648e69f` | consumed by D04 |
 | `P9-T03/D04` | `done` | acceptance mapping + closure; required CI `31476761080` on `64f89cd`; checkpoint written; PR #193 | consumed by completed P9-T03 task |
-| `P9-T01/D01` | `in-progress` | exact native Linux `perf::tests` 5/5 at `826745c`; aggregate authority-stage observation selected hypothesis-only `conservative-no-migration`; prior CI `31510283352` passed on `98896cf`. The later closure CI recovery is active after a Windows Provider-proxy integration-test stall. | validate the bounded socket-read failure behavior and pass required CI before restoring task closure; no migration or performance claim |
+| `P9-T01/D01` | `done` | exact native Linux `perf::tests` 5/5 at `826745c`; aggregate authority-stage observation selected hypothesis-only `conservative-no-migration`; bounded socket reads and serial loopback-daemon tests restored required CI `31516749535` on `195510c` | consumed by completed P9-T01 task; no migration or performance claim |
 | `P2-T01/D01` | `done` | unchanged task acceptance plus Linux focused tests and required CI | consumed by P2-T02/D01 |
 | `P2-T03/D01` | `done` | scheduler persistence, CAS lease and eligibility passed prior Linux/store validation | consumed by D02 |
 | `P2-T03/D02` | `done` | durable authority ceilings and STOP-before-lease passed prior exact-Linux focused validation | consumed by D03 |

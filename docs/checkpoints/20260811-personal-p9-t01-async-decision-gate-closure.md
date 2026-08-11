@@ -2,9 +2,9 @@
 
 - Task: `P9-T01`
 - Branch: `personal/P9-T01-async-decision-gate`
-- Lease: `lease/personal/P9-T01/async-decision-gate`
+- Leases: `lease/personal/P9-T01/async-decision-gate`; `lease/personal/P9-T01/windows-ci-recovery`
 - Decision implementation revision: `826745c868b26a5aab71e0abeedb038e364267e4`
-- Closure revision: `98896cfba0c45e4d5d07d43a4378056c137483ad`
+- Closure revision: `195510c849aa4f94be932b4f8434b17f7ebdb9f6`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/197
 - Date: 2026-08-11
 
@@ -21,7 +21,7 @@
 
 | Slice | Status | Evidence |
 |---|---|---|
-| D01 | done | Exact native Linux `cargo test -p cognitive-runtime --lib perf::tests -- --nocapture` passed 5/5 at `826745c`; the decision runner returned `conservative-no-migration`; required Ubuntu/Windows CI `31510283352` passed on closure head `98896cf`. |
+| D01 | done | Exact native Linux `cargo test -p cognitive-runtime --lib perf::tests -- --nocapture` passed 5/5 at `826745c`; the decision runner returned `conservative-no-migration`; after a Windows integration-test stall, bounded socket reads and serial loopback-daemon execution were added and required Ubuntu/Windows CI `31516749535` passed on closure head `195510c`. |
 
 ## Validation
 
@@ -30,7 +30,7 @@
 | Exact native Linux focused performance tests | **pass** 5/5 | `826745c` on `DEV-LINUX-NATIVE-01` |
 | Local `cargo fmt --all -- --check` | **pass** | closure worktree |
 | Local `pnpm run check:consistency` | **pass** | closure worktree |
-| Required Ubuntu/Windows CI | **pass** run `31510283352` | PR #197 head `98896cf` |
+| Required Ubuntu/Windows CI | **pass** run `31516749535` | PR #197 head `195510c` |
 
 ## Non-claims
 
