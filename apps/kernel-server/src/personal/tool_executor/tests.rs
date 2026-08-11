@@ -3,15 +3,25 @@
 #![allow(clippy::expect_used, clippy::panic, unused_imports)]
 
 use super::*;
-use cognitive_domain::{EventId, LifecycleDomain, StateName, UriRef, WallTimestamp};
+use cognitive_domain::{
+    EventId, LifecycleDomain, ObjectId, StateName, UriRef, Version, WallTimestamp,
+};
 use cognitive_kernel::authz::{
-    AccessRequest, ActorChainFacts, AuthzSnapshot, MembershipFacts, ObjectGovernance,
-    PrincipalFacts, authorize,
+    AccessRequest, ActorChainFacts, AuthorizationGrant, AuthzSnapshot, MembershipFacts,
+    ObjectGovernance, PrincipalFacts, authorize,
+};
+use cognitive_kernel::effects::{EffectError, EffectProtocol, GovernanceCurrency, WriterLease};
+use cognitive_kernel::engine::CommittedTransition;
+use cognitive_kernel::executor::{
+    DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, Clock, EventDraft, IntentRow, ObjectAdmission, ProtocolStore, StoredObject,
+    AuthorityStore, Clock, EventDraft, IntentRow, ObjectAdmission, PortFailure, ProtocolStore,
+    StoredObject,
 };
-use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, ToolAvailability};
+use cognitive_kernel::tool_registry::{
+    BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolAvailability, ToolRisk,
+};
 use cognitive_store::{SqliteAuthorityStore, UuidV7Generator};
 use serde_json::json;
 use std::path::PathBuf;

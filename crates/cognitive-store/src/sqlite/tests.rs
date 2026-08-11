@@ -2,6 +2,9 @@
 
 #![allow(clippy::unwrap_used, clippy::panic)]
 
+use super::SqliteAuthorityStore;
+use rusqlite::Connection;
+
 #[test]
 fn open_asserts_wal_and_installs_append_only_triggers() {
     let dir = tempfile::tempdir().unwrap();

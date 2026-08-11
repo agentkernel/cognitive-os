@@ -35,7 +35,6 @@ mod util;
 mod worker;
 
 pub(crate) use context::*;
-pub(crate) use memory::*;
 pub(crate) use schema::AUTHORITY_SCHEMA_V1;
 pub use store::SqliteAuthorityStore;
 pub(crate) use util::*;
