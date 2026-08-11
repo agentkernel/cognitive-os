@@ -107,8 +107,8 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         lock.path().display()
     );
     // Open the authority store once for the daemon process and reuse the
-    // single-writer handle for startup recovery plus the private scheduler tick
-    // (P9-T03/D01). Later request handlers still open their own handles until D02.
+    // single-writer handle for startup recovery, the private scheduler tick,
+    // and personal request-path handlers (P9-T03/D01-D02).
     let authority_store = SqliteAuthorityStore::open(&config.layout.authority_database_path())
         .map_err(|error| PersonalDaemonError::Io {
             detail: format!("open Personal authority store for daemon startup: {error}"),
@@ -133,7 +133,10 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         detail: format!("run private scheduler tick before startup: {error}"),
     })?;
     drop(scheduler_repository);
-    drop(authority_store);
+    // Retain the single-writer authority store for the daemon accept loop
+    // (P9-T03/D02). Request handlers must reuse this handle instead of opening
+    // a second connection per call.
+    let authority_store = Arc::new(authority_store);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
@@ -175,6 +178,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             &config.bounds,
             &config.layout,
             &authority,
+            &authority_store,
             &task_api,
             &resource_api,
             &active_connections,
@@ -198,6 +202,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                 let authority = Arc::clone(&authority);
                 let task_api = Arc::clone(&task_api);
                 let resource_api = Arc::clone(&resource_api);
+                let authority_store = Arc::clone(&authority_store);
                 let active_connections = Arc::clone(&active_connections);
                 let in_flight = Arc::clone(&in_flight);
                 let _connection_thread = std::thread::spawn(move || {
@@ -206,6 +211,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
                         &bounds,
                         &layout,
                         &authority,
+                        &authority_store,
                         &task_api,
                         &resource_api,
                         &active_connections,
@@ -282,6 +288,7 @@ fn handle_connection_with_task_api(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     task_api: &Arc<Mutex<TaskApi>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
     active_connections: &Arc<AtomicUsize>,
@@ -328,6 +335,7 @@ fn handle_connection_with_task_api(
         bounds,
         layout,
         authority,
+        authority_store,
         task_api,
         resource_api,
     );
@@ -358,11 +366,17 @@ fn handle_connection(
 ) {
     let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
     let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
+    prepare_personal_databases(layout).expect("prepare test authority databases");
+    let authority_store = Arc::new(
+        SqliteAuthorityStore::open(&layout.authority_database_path())
+            .expect("open test authority store"),
+    );
     handle_connection_with_task_api(
         stream,
         bounds,
         layout,
         authority,
+        &authority_store,
         &task_api,
         &resource_api,
         active_connections,
@@ -375,6 +389,7 @@ fn process_http_request(
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     task_api: &Arc<Mutex<TaskApi>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
 ) -> Result<(), String> {
@@ -408,8 +423,8 @@ fn process_http_request(
             stream,
             &headers,
             body.as_slice(),
-            layout,
             authority,
+            authority_store,
         );
     }
     if method_path.starts_with("POST /management/context-authorization/revocations ") {
@@ -417,8 +432,8 @@ fn process_http_request(
             stream,
             &headers,
             body.as_slice(),
-            layout,
             authority,
+            authority_store,
         );
     }
     if method_path.starts_with("GET /management/resource/")
@@ -428,8 +443,8 @@ fn process_http_request(
             stream,
             &method_path,
             &headers,
-            layout,
             authority,
+            authority_store,
             resource_api,
             &body,
         );
@@ -448,8 +463,8 @@ fn process_http_request(
             stream,
             &headers,
             &body,
-            layout,
             authority,
+            authority_store,
             resource_api,
         );
     }
@@ -524,8 +539,8 @@ fn handle_context_authorization_fact_admission(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
@@ -533,9 +548,7 @@ fn handle_context_authorization_fact_admission(
     let facts: ContextAuthorizationFactsRow = serde_json::from_slice(body).map_err(|_| {
         "Context authorization facts must be a valid daemon-admin payload".to_owned()
     })?;
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open Context authority store: {error}"))?;
-    store
+    authority_store
         .append_context_authorization_facts(&facts)
         .map_err(|error| format!("admit Context authorization facts: {error}"))?;
     write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
@@ -545,17 +558,15 @@ fn handle_context_revocation_fact_admission(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let fact: ContextRevocationFactRow = serde_json::from_slice(body)
         .map_err(|_| "Context revocation fact must be a valid daemon-admin payload".to_owned())?;
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open Context authority store: {error}"))?;
-    store
+    authority_store
         .append_context_revocation_fact(&fact)
         .map_err(|error| format!("admit Context revocation fact: {error}"))?;
     write_json_response(stream, 201, &json!({"status": "admitted"}).to_string())
@@ -775,8 +786,8 @@ fn handle_task_consumption_route(
     stream: &mut TcpStream,
     headers: &str,
     body: &[u8],
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     resource_api: &Arc<Mutex<ResourceApi>>,
 ) -> Result<(), String> {
     let Some(token) = extract_bearer_token(headers) else {
@@ -799,12 +810,10 @@ fn handle_task_consumption_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     drop(authority_guard);
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open authority store: {error}"))?;
     let response = resource_api
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
-        .handle_task_consumption(body, &store);
+        .handle_task_consumption(body, authority_store.as_ref());
     write_response(
         stream,
         response.status,
@@ -817,20 +826,18 @@ fn handle_authority_resource_route(
     stream: &mut TcpStream,
     method_path: &str,
     headers: &str,
-    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     resource_api: &Arc<Mutex<ResourceApi>>,
     body: &[u8],
 ) -> Result<(), String> {
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
-    let store = SqliteAuthorityStore::open(&layout.authority_database_path())
-        .map_err(|error| format!("open resource authority store: {error}"))?;
     let response = resource_api
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
-        .handle_authority_or_mutation(method_path, body, &store);
+        .handle_authority_or_mutation(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,
@@ -1592,5 +1599,86 @@ mod tests {
         third_server.join().expect("third server thread");
         assert_eq!(active_connections.load(Ordering::SeqCst), 0);
         assert_eq!(in_flight.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn request_path_handlers_reuse_daemon_owned_authority_store() {
+        use std::time::Instant;
+
+        use cognitive_kernel::ports::AuthorityStore;
+        use cognitive_store::{SqliteAuthorityStore, prepare_personal_databases};
+
+        use super::auth::{ChannelClass, SessionIssueRequest};
+        use super::{ResourceApi, handle_task_consumption_route};
+
+        let (layout, authority) = test_fixture("shared-store-request");
+        prepare_personal_databases(&layout).expect("prepare databases");
+        let authority_store = Arc::new(
+            SqliteAuthorityStore::open(&layout.authority_database_path())
+                .expect("open shared authority store"),
+        );
+        let task_token = {
+            let mut guard = authority.lock().expect("authority lock");
+            let bootstrap_secret = guard.bootstrap_secret_for_tests().to_owned();
+            guard
+                .issue_session(
+                    SessionIssueRequest {
+                        channel: ChannelClass::Task,
+                        principal_id: "principal://tenant-a/owner".to_owned(),
+                        bootstrap_secret,
+                    },
+                    Instant::now(),
+                )
+                .expect("issue task session")
+                .token
+        };
+        let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
+        let body = br#"{"task_ref":"task://local/missing","query_text":"fact","skill_binding_id":"00000000-0000-7000-9000-000000000001"}"#;
+        let headers = format!("Authorization: Bearer {task_token}\r\n");
+
+        // Two sequential request-path calls must reuse the same open store and
+        // still reach the store-backed fail-closed outcome (no second open).
+        for _ in 0..2 {
+            let listener = TcpListener::bind("127.0.0.1:0").expect("listener");
+            let port = listener.local_addr().expect("addr").port();
+            let server = {
+                let authority = Arc::clone(&authority);
+                let authority_store = Arc::clone(&authority_store);
+                let resource_api = Arc::clone(&resource_api);
+                let headers = headers.clone();
+                std::thread::spawn(move || {
+                    let mut stream = accept_connection(&listener);
+                    handle_task_consumption_route(
+                        &mut stream,
+                        &headers,
+                        body,
+                        &authority,
+                        &authority_store,
+                        &resource_api,
+                    )
+                    .expect("shared-store consumption route");
+                })
+            };
+            let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client");
+            client
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .expect("client timeout");
+            let mut response = String::new();
+            client
+                .read_to_string(&mut response)
+                .expect("shared-store response");
+            server.join().expect("server thread");
+            assert!(
+                response.contains("RESOURCE_TASK_NOT_FOUND"),
+                "expected store-backed miss on shared handle, got {response}"
+            );
+        }
+
+        assert_eq!(
+            authority_store
+                .current_contract_epoch("task://local/missing")
+                .expect("shared store still readable"),
+            0
+        );
     }
 }
