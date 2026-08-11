@@ -601,20 +601,22 @@ mod tests {
         assert!(enabled.enabled);
         assert_eq!(enabled.state, DynamicToolLifecycleState::Enabled);
 
-        let plan = plan_task_contract_exposure("task-1", &["tool.read"], &[enabled.clone()])
+        let plan = plan_task_contract_exposure("task-1", &["tool.read"], std::slice::from_ref(&enabled))
             .expect("expose");
         assert_eq!(plan.exposed_tool_ids, vec!["tool.read".to_owned()]);
         assert_eq!(plan.exposure_digest.len(), 64);
 
         assert_eq!(
-            plan_task_contract_exposure("task-1", &["tool.other"], &[enabled.clone()]).unwrap_err(),
+            plan_task_contract_exposure("task-1", &["tool.other"], std::slice::from_ref(&enabled))
+                .unwrap_err(),
             DynamicToolEcosystemError::TaskContractDenied
         );
 
         let disabled = disable_dynamic_tool(&enabled).expect("disable");
         assert!(!disabled.enabled);
-        let empty = plan_task_contract_exposure("task-1", &["tool.read"], &[disabled.clone()])
-            .expect("no expose");
+        let empty =
+            plan_task_contract_exposure("task-1", &["tool.read"], std::slice::from_ref(&disabled))
+                .expect("no expose");
         assert!(empty.exposed_tool_ids.is_empty());
 
         let quarantined = quarantine_dynamic_tool(&disabled).expect("quarantine");
