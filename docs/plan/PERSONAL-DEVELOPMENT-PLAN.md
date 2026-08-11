@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01、P8-T02、P8-T04、P8-T05、P8-T06 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01、P8-T02、P8-T03、P8-T04、P8-T05、P8-T06 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -157,9 +157,9 @@
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 3 | 0 | 0 | 2 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 4 | 0 | 0 | 4 | GMVP-LINUX / G7 / RC |
-| Phase 8 - 通用 Agent 适配与设计基线 | 6 | 5 | 0 | 0 | 1 | post-1.0；沿用 B09 模式逐 agent 资格化 |
+| Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 0 | 0 | 0 | 3 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **48** | **0** | **0** | **14** | — |
+| **合计** | **62** | **49** | **0** | **0** | **13** | — |
 
 ## 2. 产品边界与不变量
 
@@ -629,6 +629,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P8-T06/D02` | P8-T06 | admitted Memory candidates persist only through existing daemon Memory admission; forget/tombstone remains explainable | `P8-T06/D01` | failure-first producer-forged admit and source-mismatch negatives; exact native Linux and required CI |
 | `P8-T06/D03` | P8-T06 | Skill candidate import/bind/revoke through existing Skill package lifecycle without capability grant | `P8-T06/D02` | failure-first channel/self-auth/capability-grant negatives; exact native Linux and required CI |
 | `P8-T06/D04` | P8-T06 | final acceptance over D01-D03 learning-loop evidence | `P8-T06/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile claim |
+| `P8-T03/D01` | P8-T03 | select OpenAI Codex CLI as first non-Pi agent; bind fixture package identity and AKP registration independent of Pi/B09 evidence | completed P8-T02; P5-T05 done | failure-first Pi-evidence-transfer, public-listener, and authority-writer negatives; exact native Linux focused tests, Clippy, required CI |
+| `P8-T03/D02` | P8-T03 | Codex fixture lifecycle activate/pause/stop/recover over registered declaration digests with management-channel isolation | `P8-T03/D01` | failure-first channel/digest/epoch negatives; exact native Linux and required CI |
+| `P8-T03/D03` | P8-T03 | fixed-denominator independent qualification matrix and non-claim report (B09-mode generalization; no Pi evidence transfer) | `P8-T03/D02` | failure-first incomplete matrix and authority-shaped claim rejection; exact native Linux and required CI |
+| `P8-T03/D04` | P8-T03 | final acceptance over D01-D03 non-Pi qualification evidence | `P8-T03/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile/Pi-transfer claim |
 | `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
@@ -691,7 +695,7 @@ Linux 1.0 的 `GMVP-LINUX` 组合与非阻塞边界；除 P8-T01 的文档基线
 |---|---|---|---|---|---|
 | P8-T01 | 文档体系重构与 2.0 设计基线 | — | 单一公理文档与治理规则收敛；现行白皮书（OS 定位正名、对标差距、context/harness/loop 三支柱、生态定位）；产品/架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）；ADR-0041+；P8/P9 任务卡与权威台账修复。documentation-only，不改 specs/conformance 机器合同 | done | 2026-08-10；D01-D03 on `personal/P8-T01-doc-restructure`；PR #180；required CI run `31383446541`；closure `20260810-personal-p8-t01-doc-restructure-closure.md`；无 Gate/release/Profile claim |
 | P8-T02 | 通用 Agent Adapter Contract 与 adapter framework 实现 | P8-T01, P5-T02 | AKP 为唯一适配协议的 adapter 能力声明/注册/生命周期实现；candidate-only 与通道隔离负例；对齐 A2A Agent Card 发现语义而不引入公网 listener；Lane-CTR 登记 `agent-adapter-manifest` 合同 | done | 2026-08-11；`lease/personal/P8-T02/agent-adapter-contract` on `personal/P8-T02-agent-adapter-contract` / PR #187. D01–D04 complete; Linux evidence through `791d5ff`; required CI `31453659735` on `f5e427f`. Closure: `docs/checkpoints/20260811-personal-p8-t02-agent-adapter-contract-closure.md`. No Gate/release/Profile claim. |
-| P8-T03 | 首个非 Pi Agent 适配与独立资格化 | P8-T02, P5-T05 | 选定一个主流 CLI agent 走完整 acquisition/install/activation/rollback/uninstall 生命周期与 sidecar 资格化；证据独立于 Pi；B09 模式泛化 campaign | not-started | — |
+| P8-T03 | 首个非 Pi Agent 适配与独立资格化 | P8-T02, P5-T05 | 选定一个主流 CLI agent 走完整 acquisition/install/activation/rollback/uninstall 生命周期与 sidecar 资格化；证据独立于 Pi；B09 模式泛化 campaign | done | 2026-08-11；`lease/personal/P8-T03/non-pi-agent` on `personal/P8-T03-non-pi-agent` / PR #191. Selected: OpenAI Codex CLI fixture. D01–D04 complete; Linux evidence through `b41f06f`; required CI `31463130827` on `5d1c0c7`. Closure: `docs/checkpoints/20260811-personal-p8-t03-non-pi-agent-closure.md`. No Gate/release/Profile/Pi-transfer claim. |
 | P8-T04 | Harness 扩展原语：确定性 hooks 与分级加载 | P8-T01, P2-T08 | daemon-owned 生命周期拦截点（admission/pre-dispatch/post-effect/verification 事件）与 owner 可编程确定性 hooks；Skill/规则按 context 成本分级加载；hooks 不得放松任何公理边界 | done | 2026-08-11；`lease/personal/P8-T04/harness-hooks` on `personal/P8-T04-harness-hooks` / PR #188. D01–D04 complete; Linux evidence through `bc3dacd`; required CI `31457314002` on `15e7200`. Closure: `docs/checkpoints/20260811-personal-p8-t04-harness-hooks-closure.md`. No Gate/release/Profile claim. |
 | P8-T05 | Context compaction 与自适应预算 | P8-T01, P3-T04 | daemon-owned 会话/Context 压缩与汇总策略；预算自适应；压缩产物走 digest 绑定与显式损失记录；UCR-01 可复验收益观察 | done | 2026-08-11；`lease/personal/P8-T05/context-compaction` on `personal/P8-T05-context-compaction` / PR #189. D01–D04 complete; Linux evidence through `e15492a`; required CI `31459558236` on `1d2103e`. Closure: `docs/checkpoints/20260811-personal-p8-t05-context-compaction-closure.md`. No Gate/release/Profile claim. |
 | P8-T06 | 跨 episode 学习闭环 | P8-T01, P4-T05 | agent 自产 Skill/Memory 候选经既有 candidate→deterministic admission 进入 Skill revision/Memory 生命周期；失败经验（Reflexion 谱系）沉淀为可解释、可撤销的治理事实；不引入自授权 | done | 2026-08-11；`lease/personal/P8-T06/learning-loop` on `personal/P8-T06-learning-loop` / PR #190. D01–D04 complete; Linux evidence through `b81414d`; required CI `31461384771` on `29399b7`. Closure: `docs/checkpoints/20260811-personal-p8-t06-learning-loop-closure.md`. No Gate/release/Profile claim. |

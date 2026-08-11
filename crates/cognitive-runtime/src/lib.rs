@@ -26,6 +26,7 @@ pub mod linux_bundle;
 pub mod linux_bundle_installation;
 pub mod linux_bundle_installer_adapter;
 pub mod linux_bundle_service;
+pub mod non_pi_agent;
 pub mod oob;
 pub mod perf;
 pub mod pi_launcher;
@@ -117,6 +118,13 @@ pub use linux_bundle_service::{
     LinuxBundleSingleServiceController, PersonalUserServiceUnitKind, SystemdUserServiceController,
     install_linux_bundle_service, install_linux_bundle_single_service, probe_personal_health,
     render_personal_user_service_unit, write_rendered_personal_user_service_unit,
+};
+pub use non_pi_agent::{
+    FIRST_NON_PI_AGENT_ID, NonPiAgentError, NonPiAgentPackageIdentity,
+    NonPiQualificationObservation, activate_codex_fixture_lifecycle,
+    bind_codex_fixture_package_identity, build_codex_qualification_report,
+    open_codex_fixture_lifecycle, pause_codex_fixture_lifecycle, register_codex_fixture_adapter,
+    stop_codex_fixture_lifecycle,
 };
 pub use oob::{OobCandidate, OobReconciler, ProjectionObject};
 pub use perf::{
