@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P7-T08 merge |
-| Active task lease | `none` | P7-T08 lease closing with PR #194 merge | claim next implementation-ready Personal task |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | complete P5-T03 MCP Tool adapter qualification |
+| Active task lease | `lease/personal/P5-T03/mcp-tool-adapter` | branch `personal/P5-T03-mcp-tool-adapter`; writable: `mcp_tool_adapter.rs`, `lib.rs`, plan/PROGRESS, P5-T03 checkpoints | validate D01–D03 focused tests on DEV-LINUX-NATIVE-01 then close D04 |
+| P5-T03 Post-1.0 MCP Tool adapter | **in-progress** (`P5-T03/D01`) | Fixture manifest + transport-only initialize + drift/timeout/bypass/non-claim report module landed; Linux validation `not-run` | exact native Linux `mcp_tool_adapter` tests + Clippy; then D04 acceptance |
 | P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **done** | D01–D04 closed; B08 MVP `pass` (ADR-0048) at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` (ADR-0049) at `b3f4b88` + CI `31480604511`. Closure checkpoint `20260811-personal-p7-t08-gmvp-linux-closure.md`. | retain closure evidence; no Profile/Windows B01-W claim |
 | B08 Memory + Skill Gate | **pass** (MVP, ADR-0048) | Fixed 11-row authority-path matrix + harness at `65a736c`; Linux 14/14+1/1+Clippy; CI `31479512940` | retain evidence |
 | GMVP-LINUX / Linux 1.0 | **pass** (MVP, ADR-0049) | Fixed composition binder + prior Gate MVP dispositions; CI `31480604511` on `b3f4b88` | retain evidence; no Profile claim |
@@ -61,15 +62,20 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 52 | 0 | 0 | 10 | 10 |
+| 62 | 52 | 1 | 0 | 9 | 10 |
 
-`P7-T08` is `done` (PR #194). Formal task completion remains independent from
-Profile and Windows B01-W claims.
+`P5-T03` is `in-progress` on `lease/personal/P5-T03/mcp-tool-adapter`.
+Formal task completion remains independent from B10, Gate, Profile, and
+Windows B01-W claims.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P5-T03/D01` | `in-progress` | fixture MCP manifest + transport-only initialize module; Linux `not-run` | exact native Linux focused `mcp_tool_adapter` tests + Clippy |
+| `P5-T03/D02` | `ready` | protocol/manifest drift + timeout + no-auto-enable | enter after D01 Linux evidence |
+| `P5-T03/D03` | `ready` | direct-bypass + non-claim report | enter after D02 |
+| `P5-T03/D04` | `ready` | acceptance mapping + closure | enter after D03 |
 | `P7-T08/D01` | `done` | ADR-0048 + `tools` B08 non-claim harness | consumed by D02 |
 | `P7-T08/D02` | `done` | ADR-0048 matrix at `65a736c`; CI `31479512940`; B08 MVP pass | consumed by D03 |
 | `P7-T08/D03` | `done` | ADR-0049 + `gmvp-linux-gate` composition binder at `b3f4b88`; CI `31480604511` | consumed by D04 |
