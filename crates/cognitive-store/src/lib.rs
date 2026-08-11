@@ -24,6 +24,7 @@ pub mod installation;
 pub mod layout;
 pub mod memory_store;
 pub mod migration;
+pub mod personal_backup;
 pub mod personal_db;
 pub mod scheduler;
 pub mod skill_store;
@@ -47,6 +48,14 @@ pub use layout::{
 pub use migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
+};
+pub use personal_backup::{
+    BackupExportKind, BackupExportUnit, BackupInventoryEntry, BackupRestoreCandidate,
+    PersonalBackupError, PersonalBackupExportPlan, PersonalBackupInventory,
+    PersonalBackupRestorePreflight, PersonalLifecycleOperation, PersonalLifecyclePlan,
+    UninstallTargetClass, abort_personal_lifecycle, commit_personal_lifecycle,
+    plan_memory_skill_export, plan_personal_backup_inventory, plan_personal_lifecycle,
+    preflight_personal_backup_restore, validate_backup_inventory,
 };
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
