@@ -354,30 +354,27 @@ fn handle_connection_with_task_api(
 
 /// Single-connection test helper. Production keeps one shared TaskApi for
 /// process-lifetime watch continuity; pre-existing front-door tests do not
-/// exercise that state and use an isolated instance.
+/// exercise that state and use an isolated instance. The authority store is
+/// opened once by the fixture (mirroring the daemon-owned handle) so limit
+/// checks are not delayed by per-connection SQLite open.
 #[cfg(test)]
-#[allow(clippy::expect_used)]
 fn handle_connection(
     stream: TcpStream,
     bounds: &PersonalResourceBounds,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
     let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
     let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
-    prepare_personal_databases(layout).expect("prepare test authority databases");
-    let authority_store = Arc::new(
-        SqliteAuthorityStore::open(&layout.authority_database_path())
-            .expect("open test authority store"),
-    );
     handle_connection_with_task_api(
         stream,
         bounds,
         layout,
         authority,
-        &authority_store,
+        authority_store,
         &task_api,
         &resource_api,
         active_connections,
@@ -1266,7 +1263,15 @@ mod tests {
         LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
     };
 
-    fn test_fixture(test_name: &str) -> (PersonalDataLayout, Arc<Mutex<LocalSessionAuthority>>) {
+    fn test_fixture(
+        test_name: &str,
+    ) -> (
+        PersonalDataLayout,
+        Arc<Mutex<LocalSessionAuthority>>,
+        Arc<SqliteAuthorityStore>,
+    ) {
+        use cognitive_store::{SqliteAuthorityStore, prepare_personal_databases};
+
         let temporary_root = std::env::temp_dir().join(format!(
             "cos-personal-server-test-{test_name}-{}-{}",
             std::process::id(),
@@ -1283,12 +1288,17 @@ mod tests {
             &temporary_root,
         );
         layout.ensure_directories().expect("test directories");
+        prepare_personal_databases(&layout).expect("prepare test authority databases");
+        let authority_store = Arc::new(
+            SqliteAuthorityStore::open(&layout.authority_database_path())
+                .expect("open shared test authority store"),
+        );
         let authority = LocalSessionAuthority::initialize(
             layout.local_bootstrap_secret_path(),
             PersonalResourceBounds::personal_v1_baseline(),
         )
         .expect("test authority");
-        (layout, Arc::new(Mutex::new(authority)))
+        (layout, Arc::new(Mutex::new(authority)), authority_store)
     }
 
     fn accept_connection(listener: &TcpListener) -> TcpStream {
@@ -1317,11 +1327,12 @@ mod tests {
         let port = listener.local_addr().expect("listener address").port();
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("timeout");
+        let (layout, authority, authority_store) = test_fixture("timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1330,6 +1341,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1367,11 +1379,12 @@ mod tests {
         let mut bounds = PersonalResourceBounds::personal_v1_baseline();
         bounds.read_header_timeout_secs = 1;
         bounds.request_body_read_timeout_secs = 1;
-        let (layout, authority) = test_fixture("body-timeout");
+        let (layout, authority, authority_store) = test_fixture("body-timeout");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let server = std::thread::spawn({
             let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
             move || {
@@ -1380,6 +1393,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1419,7 +1433,7 @@ mod tests {
         // connection ceiling, not the in-flight ceiling.
         bounds.max_in_flight_requests = 8;
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("concurrency");
+        let (layout, authority, authority_store) = test_fixture("concurrency");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
         let mut first = TcpStream::connect(("127.0.0.1", port)).expect("first connection");
@@ -1429,6 +1443,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1436,6 +1451,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1453,6 +1469,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1460,6 +1477,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1477,6 +1495,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1484,6 +1503,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1514,7 +1534,7 @@ mod tests {
         bounds.max_concurrent_connections = 3;
         bounds.max_in_flight_requests = 2;
         bounds.read_header_timeout_secs = 1;
-        let (layout, authority) = test_fixture("in-flight");
+        let (layout, authority, authority_store) = test_fixture("in-flight");
         let active_connections = Arc::new(AtomicUsize::new(0));
         let in_flight = Arc::new(AtomicUsize::new(0));
 
@@ -1525,6 +1545,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1532,6 +1553,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1549,6 +1571,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1556,6 +1579,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1573,6 +1597,7 @@ mod tests {
             let layout = layout.clone();
             let active_connections = Arc::clone(&active_connections);
             let in_flight = Arc::clone(&in_flight);
+            let authority_store = Arc::clone(&authority_store);
             let bounds = bounds;
             move || {
                 handle_connection(
@@ -1580,6 +1605,7 @@ mod tests {
                     &bounds,
                     &layout,
                     &authority,
+                    &authority_store,
                     &active_connections,
                     &in_flight,
                 );
@@ -1607,18 +1633,12 @@ mod tests {
         use std::time::Instant;
 
         use cognitive_kernel::ProtocolStore;
-        use cognitive_store::{SqliteAuthorityStore, prepare_personal_databases};
 
         use super::{
             ChannelClass, ResourceApi, SessionIssueRequest, handle_task_consumption_route,
         };
 
-        let (layout, authority) = test_fixture("shared-store-request");
-        prepare_personal_databases(&layout).expect("prepare databases");
-        let authority_store = Arc::new(
-            SqliteAuthorityStore::open(&layout.authority_database_path())
-                .expect("open shared authority store"),
-        );
+        let (layout, authority, authority_store) = test_fixture("shared-store-request");
         let task_token = {
             let mut guard = authority.lock().expect("authority lock");
             let bootstrap_secret = guard.bootstrap_secret_for_tests().to_owned();
