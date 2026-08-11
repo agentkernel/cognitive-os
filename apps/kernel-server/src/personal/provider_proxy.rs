@@ -3,6 +3,8 @@
 //! The proxy is deliberately not an authority writer. It only attaches the
 //! daemon-resolved Provider credential to a bounded outbound HTTPS request.
 
+use std::time::Instant;
+
 pub use cognitive_provider_transport::RustlsProviderTransport;
 use cognitive_secret::{
     ProviderConfigRepository, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
@@ -60,6 +62,13 @@ pub struct ProviderProxyService<'transport, T: ProviderTransport + ?Sized> {
     transport: &'transport T,
 }
 
+/// Daemon-private Provider response metadata that contains no request,
+/// response, credential, or authority data.
+pub struct TimedProviderResponse {
+    pub response: ProviderHttpResponse,
+    pub provider_network_elapsed_nanos: u128,
+}
+
 impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport, T> {
     /// Build a proxy around the daemon-owned secret backend and transport.
     pub fn new(
@@ -79,6 +88,16 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         &self,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
+        self.forward_chat_completion_with_timing(request_body)
+            .map(|timed_response| timed_response.response)
+    }
+
+    /// Forward one non-streaming completion and retain the duration of only
+    /// the daemon-owned Provider transport exchange for campaign telemetry.
+    pub fn forward_chat_completion_with_timing(
+        &self,
+        request_body: &[u8],
+    ) -> Result<TimedProviderResponse, ProviderProxyError> {
         let requested_model = validate_chat_request(request_body)?;
         self.forward_selected_chat_completion(requested_model, request_body)
     }
@@ -92,16 +111,17 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
         let requested_model = validate_chat_request(request_body)?;
-        let response = self.forward_selected_chat_completion(requested_model, request_body)?;
-        validate_private_candidate_response(&response)?;
-        Ok(response)
+        let timed_response =
+            self.forward_selected_chat_completion(requested_model, request_body)?;
+        validate_private_candidate_response(&timed_response.response)?;
+        Ok(timed_response.response)
     }
 
     fn forward_selected_chat_completion(
         &self,
         requested_model: String,
         request_body: &[u8],
-    ) -> Result<ProviderHttpResponse, ProviderProxyError> {
+    ) -> Result<TimedProviderResponse, ProviderProxyError> {
         let provider_key_service =
             ProviderKeyService::new(self.secret_store, self.config_repository.clone());
         let provider_config = provider_key_service
@@ -137,9 +157,16 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
             timeout_ms: 60_000,
             cancel_requested: false,
         };
-        self.transport
+        let provider_network_started_at = Instant::now();
+        let response = self
+            .transport
             .exchange(&request)
-            .map_err(map_transport_error)
+            .map_err(map_transport_error)?;
+        Ok(TimedProviderResponse {
+            response,
+            // Campaign evidence refuses zero-duration stages.
+            provider_network_elapsed_nanos: provider_network_started_at.elapsed().as_nanos().max(1),
+        })
     }
 }
 

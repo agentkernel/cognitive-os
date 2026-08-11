@@ -880,8 +880,13 @@ fn handle_provider_proxy_route(
         ProviderConfigRepository::under_config_dir(layout.config_dir()),
         &transport,
     );
-    match service.forward_chat_completion(request_body) {
-        Ok(response) => write_provider_response(stream, response.status, &response.body),
+    match service.forward_chat_completion_with_timing(request_body) {
+        Ok(timed_response) => write_provider_response(
+            stream,
+            timed_response.response.status,
+            &timed_response.response.body,
+            timed_response.provider_network_elapsed_nanos,
+        ),
         Err(error) => write_error_response(
             stream,
             error.status_code(),
@@ -1191,8 +1196,32 @@ fn write_response(
         .map_err(|error| error.to_string())
 }
 
-fn write_provider_response(stream: &mut TcpStream, status: u16, body: &[u8]) -> Result<(), String> {
-    write_json_bytes_response(stream, status, body)
+fn write_provider_response(
+    stream: &mut TcpStream,
+    status: u16,
+    body: &[u8],
+    provider_network_elapsed_nanos: u128,
+) -> Result<(), String> {
+    let reason = match status {
+        200 => "OK",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        408 => "Request Timeout",
+        429 => "Too Many Requests",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable",
+        _ => "Error",
+    };
+    let header = format!(
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nX-CognitiveOS-Provider-Network-Nanos: {provider_network_elapsed_nanos}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    stream
+        .write_all(header.as_bytes())
+        .and_then(|()| stream.write_all(body))
+        .map_err(|error| error.to_string())
 }
 
 fn write_json_bytes_response(

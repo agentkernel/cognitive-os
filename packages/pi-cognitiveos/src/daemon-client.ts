@@ -88,6 +88,11 @@ export interface BoundedCompletion {
    */
   readonly loopbackHttpElapsedNanos: number;
   /**
+   * Daemon-measured duration of the outbound Provider transport exchange.
+   * It is unavailable when the daemon does not provide a valid telemetry header.
+   */
+  readonly providerNetworkElapsedNanos: number | undefined;
+  /**
    * Numeric usage is retained only when the Provider supplied a complete,
    * internally consistent OpenAI-compatible `usage` object. This is campaign
    * telemetry, not a fallback token estimate.
@@ -212,13 +217,16 @@ export class PersonalDaemonClient {
       ...(signal === undefined ? {} : { signal }),
     });
     const loopbackHttpElapsedNanos = elapsedMonotonicNanos(loopbackRequestStartedAt);
+    const providerNetworkElapsedNanos = parsePositiveDurationHeader(
+      response.headers.get("x-cognitiveos-provider-network-nanos"),
+    );
     const bodyText = await readBodyText(response);
     if (response.status !== 200) {
       if (response.status === 401) this.managementSessionToken = undefined;
       throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
     }
     this.managementSessionToken = token;
-    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos);
+    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos, providerNetworkElapsedNanos);
   }
 
   /** Read one private resource projection through the management channel. */
@@ -469,6 +477,7 @@ export function parseResourceProjection(
 export function parseBoundedCompletion(
   bodyText: string,
   loopbackHttpElapsedNanos: number = 1,
+  providerNetworkElapsedNanos: number | undefined = undefined,
 ): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
@@ -487,8 +496,15 @@ export function parseBoundedCompletion(
     content: messageRecord["content"],
     finishReason: "stop",
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
+    providerNetworkElapsedNanos,
     providerUsage: parseProviderUsage(record["usage"]),
   };
+}
+
+function parsePositiveDurationHeader(value: string | null): number | undefined {
+  if (value === null || !/^\d+$/.test(value)) return undefined;
+  const elapsedNanos = Number(value);
+  return Number.isSafeInteger(elapsedNanos) && elapsedNanos > 0 ? elapsedNanos : undefined;
 }
 
 function elapsedMonotonicNanos(startedAt: number): number {

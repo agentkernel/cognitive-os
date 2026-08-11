@@ -90,6 +90,38 @@ test("Provider usage is measured only for complete internally consistent counter
   assert.equal(zeroDuration.loopbackHttpElapsedNanos, 1);
 });
 
+test("Provider-network timing is accepted only from a positive daemon telemetry header", async () => {
+  const measuredDaemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    providerNetworkElapsedNanos: "123456",
+  });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(measuredDaemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.equal(completion.providerNetworkElapsedNanos, 123456);
+  } finally {
+    await measuredDaemon.close();
+  }
+
+  const malformedDaemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    providerNetworkElapsedNanos: "0",
+  });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(malformedDaemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.equal(completion.providerNetworkElapsedNanos, undefined);
+  } finally {
+    await malformedDaemon.close();
+  }
+});
+
 test("a session is minted and the readiness projection is returned verbatim", async () => {
   const daemon = await startFakeDaemon({
     bootstrapSecret: BOOTSTRAP_SECRET,
