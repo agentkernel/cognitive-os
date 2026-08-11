@@ -196,10 +196,10 @@ fn validate_observation(
             return Err(SixResourceDoctorError::SecretContamination);
         }
     }
-    if let Some(hint) = observation.recovery_hint {
-        if text_is_contaminated(hint) {
-            return Err(SixResourceDoctorError::SecretContamination);
-        }
+    if let Some(hint) = observation.recovery_hint
+        && text_is_contaminated(hint)
+    {
+        return Err(SixResourceDoctorError::SecretContamination);
     }
     for fact in &observation.facts {
         if FORBIDDEN_CLAIM_KEYS.contains(&fact.key) {

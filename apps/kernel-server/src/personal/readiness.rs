@@ -204,9 +204,19 @@ fn default_six_resource_doctor_section() -> Value {
             }],
         })
         .collect();
-    let six_resource_report = evaluate_six_resource_doctor_health(&observations)
-        .expect("default six-resource observations are complete and redacted");
-    six_resource_doctor_projection_json(&six_resource_report)
+    match evaluate_six_resource_doctor_health(&observations) {
+        Ok(report) => six_resource_doctor_projection_json(&report),
+        Err(_) => json!({
+            "schema": "personal-six-resource-doctor",
+            "schema_version": 1,
+            "surface": "personal-doctor-six-resource",
+            "overall": "blocked",
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+            "error_code": "SIX_RESOURCE_DOCTOR_INTERNAL",
+            "families": [],
+        }),
+    }
 }
 
 fn component_summary_json(check: &ComponentCheck) -> Value {
