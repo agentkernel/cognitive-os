@@ -68,7 +68,7 @@ test("Personal governance drift is rejected by failure injection", () => {
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
       const taskRow = source
         .split(/\r?\n/)
-        .find((line) => line.startsWith("| P9-T01 |") && line.includes("| not-started |"));
+        .find((line) => line.startsWith("| P9-T01 |"));
       assert.ok(taskRow, "P9-T01 task row must exist for duplicate injection");
       const deliverySliceRow = source
         .split(/\r?\n/)
