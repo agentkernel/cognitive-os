@@ -12,9 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue P5-T04/D01–D04 on task branch |
-| Active task lease | `lease/personal/P5-T04/dynamic-tool-ecosystem` | branch `personal/P5-T04-dynamic-tool-ecosystem`; writable paths listed in PARALLEL-LANES | exact native Linux `dynamic_tool_ecosystem` tests + Clippy; Draft PR + required CI; ADR-0050 B10 disposition |
-| P5-T04 Post-1.0 dynamic Tool + B10 | **in-progress** | D01–D03 authority-path module + ADR-0050 + tools B10 harness written; Linux/CI `not-run` | push checkpoint; run Linux focused tests; close D04 |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | close P5-T04/D04 after required CI + B10 MVP disposition |
+| Active task lease | `lease/personal/P5-T04/dynamic-tool-ecosystem` | branch `personal/P5-T04-dynamic-tool-ecosystem` @ `b49d274`; Draft PR #196 | wait required CI `31485767981`; record ADR-0050 B10 disposition; acceptance closure |
+| P5-T04 Post-1.0 dynamic Tool + B10 | **in-progress** | D01–D03 closed: Linux `dynamic_tool_ecosystem` 4/4 + Clippy at `b49d274`; ADR-0050 + tools B10 harness present; required CI running | D04: CI green → B10 MVP pass → merge/lease/branch/main |
 | P5-T03 Post-1.0 MCP Tool adapter | **done** | D01–D04 closed; Linux 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure checkpoint `20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. | retain closure evidence; no B10/Gate/release/Profile claim |
 | P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **done** | D01–D04 closed; B08 MVP `pass` (ADR-0048) at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` (ADR-0049) at `b3f4b88` + CI `31480604511`. Closure checkpoint `20260811-personal-p7-t08-gmvp-linux-closure.md`. | retain closure evidence; no Profile/Windows B01-W claim |
 | B08 Memory + Skill Gate | **pass** (MVP, ADR-0048) | Fixed 11-row authority-path matrix + harness at `65a736c`; Linux 14/14+1/1+Clippy; CI `31479512940` | retain evidence |
@@ -73,10 +73,10 @@ GMVP-LINUX, release, Profile, and Windows B01-W claims.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
-| `P5-T04/D01` | `in-progress` | dynamic package bind + disabled discovery in `dynamic_tool_ecosystem.rs`; Linux `not-run` | exact native Linux focused tests; then close D01 and enter D02 |
-| `P5-T04/D02` | `ready` | enable/disable/quarantine + TaskContract exposure implemented pending D01 Linux exit | start after D01 Linux pass |
-| `P5-T04/D03` | `ready` | reconcile/composite/cache/bypass implemented pending D01–D02 exit | start after D02 |
-| `P5-T04/D04` | `ready` | ADR-0050 + `tools` B10 non-claim harness written; disposition pending | close after D01–D03 evidence + CI |
+| `P5-T04/D01` | `done` | dynamic package bind + disabled discovery; Linux 4/4 + Clippy at `b49d274` | consumed by D02 |
+| `P5-T04/D02` | `done` | enable/disable/quarantine + TaskContract exposure; covered in same Linux 4/4 | consumed by D03 |
+| `P5-T04/D03` | `done` | reconcile/composite/cache/bypass; covered in same Linux 4/4 | consumed by D04 |
+| `P5-T04/D04` | `in-progress` | ADR-0050 + tools B10 harness; required CI `31485767981` on `b49d274` pending | record B10 MVP disposition after CI; acceptance closure |
 | `P5-T03/D01` | `done` | fixture manifest + transport-only init at `a83bdb8`; Linux 4/4 | consumed by D02 |
 | `P5-T03/D02` | `done` | drift/timeout/no-auto-enable covered in same Linux 4/4 | consumed by D03 |
 | `P5-T03/D03` | `done` | direct-bypass + non-claim report covered in same Linux 4/4 | consumed by D04 |

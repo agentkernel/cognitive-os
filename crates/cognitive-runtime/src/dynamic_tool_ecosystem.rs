@@ -601,8 +601,9 @@ mod tests {
         assert!(enabled.enabled);
         assert_eq!(enabled.state, DynamicToolLifecycleState::Enabled);
 
-        let plan = plan_task_contract_exposure("task-1", &["tool.read"], std::slice::from_ref(&enabled))
-            .expect("expose");
+        let plan =
+            plan_task_contract_exposure("task-1", &["tool.read"], std::slice::from_ref(&enabled))
+                .expect("expose");
         assert_eq!(plan.exposed_tool_ids, vec!["tool.read".to_owned()]);
         assert_eq!(plan.exposure_digest.len(), 64);
 
