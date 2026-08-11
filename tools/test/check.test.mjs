@@ -68,8 +68,8 @@ test("Personal governance drift is rejected by failure injection", () => {
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
       const taskRow = source
         .split(/\r?\n/)
-        .find((line) => line.startsWith("| P7-T08 |") && line.includes("| not-started |"));
-      assert.ok(taskRow, "P7-T08 task row must exist for duplicate injection");
+        .find((line) => line.startsWith("| P9-T01 |") && line.includes("| not-started |"));
+      assert.ok(taskRow, "P9-T01 task row must exist for duplicate injection");
       const deliverySliceRow = source
         .split(/\r?\n/)
         .find((line) => line.startsWith("| `P2-T02/D01` |"));
@@ -120,7 +120,7 @@ test("Personal governance drift is rejected by failure injection", () => {
     result.stderr,
     /DEVELOPMENT-OPERATING-MODEL\.md[\s\S]*task-atomic delivery guard is missing required fragment: TASK-ATOMIC-DELIVERY-01/,
   );
-  assert.match(result.stderr, /duplicate formal task definition: P7-T08/);
+  assert.match(result.stderr, /duplicate formal task definition: P9-T01/);
   assert.match(result.stderr, /duplicate formal delivery slice definition: P2-T02\/D01/);
   assert.match(result.stderr, /summary counts .* do not match task rows/);
   assert.match(result.stderr, /P2-T03 has 2 in-progress delivery slices; maximum is 1/);

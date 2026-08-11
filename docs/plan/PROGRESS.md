@@ -12,8 +12,11 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P9-T03 merge |
-| Active task lease | `none` | P9-T03 lease closed with PR #193 merge. | claim next implementation-ready Personal task |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | select next ready Personal task after P7-T08 merge |
+| Active task lease | `none` | P7-T08 lease closing with PR #194 merge | claim next implementation-ready Personal task |
+| P7-T08 Public Linux 1.0 Gate (`GMVP-LINUX`) | **done** | D01–D04 closed; B08 MVP `pass` (ADR-0048) at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` (ADR-0049) at `b3f4b88` + CI `31480604511`. Closure checkpoint `20260811-personal-p7-t08-gmvp-linux-closure.md`. | retain closure evidence; no Profile/Windows B01-W claim |
+| B08 Memory + Skill Gate | **pass** (MVP, ADR-0048) | Fixed 11-row authority-path matrix + harness at `65a736c`; Linux 14/14+1/1+Clippy; CI `31479512940` | retain evidence |
+| GMVP-LINUX / Linux 1.0 | **pass** (MVP, ADR-0049) | Fixed composition binder + prior Gate MVP dispositions; CI `31480604511` on `b3f4b88` | retain evidence; no Profile claim |
 | P9-T03 Store access and composition-root optimization | **done** | D01–D04 closed; PR #193 merged. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure checkpoint `20260811-personal-p9-t03-store-composition-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P9-T02 Authority-path structure debt | **done** | D01–D04 closed; PR #192 merged at `main@cff740192601f97fd7071f9f0e1a00f824ae6141`. Linux evidence through `a11d0bd`; required CI `31471319404` on `b1cc8a7`. Closure checkpoint `20260811-personal-p9-t02-structure-debt-closure.md`. | retain closure evidence; no Gate/release/Profile claim |
 | P8-T03 First non-Pi Agent qualification | **done** | D01–D04 closed; PR #191 merged at `main@47478e40aed0c96808875225df91d6452ca1fb49`. Codex fixture identity/lifecycle/non-claim matrix. Required CI `31463130827`. Closure checkpoint `20260811-personal-p8-t03-non-pi-agent-closure.md`. | retain closure evidence; no Gate/release/Profile/Pi-transfer claim |
@@ -50,7 +53,6 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 | P2-T04 private worker composition | **done** | `P2-T04/D01` closes at immutable `a8ef5c00654e1c05a4c30beb193b9c026654c2f1`: the daemon resolves and seals a request-bound ContextView before bounded private Pi proposal; Pi is opaque candidate-only; the daemon owns candidate admission, budget, WIA/continuation, Effect, progress, evidence, and Task state. Real SQLite negatives cover post-discovery revocation, required Context failure, duplicate candidate retry suppression, atomic candidate/WIA one-time handoff, stale/replaced lease rejection, and authority-shaped Pi response rejection. Exact native Linux and required Ubuntu/Windows CI passed. | consumed as a completed prerequisite; B03, release, Profile, Tool execution, and Task completion remain separate/unclaimed |
 | P2-T05 native Tool registry | **done** | The unchanged task acceptance closes at `72a7e55e5a780827438bfb0fb42172cfd1e5bec1`: static daemon-owned six-family catalog; descriptor/version/digest/risk binding; persisted-descriptor verification; private Tool projection; and workspace/process/HTTP pre-executor validators. Exact native Linux focused Tool registry tests passed 7/7 with fmt; required Ubuntu and Windows CI passed in PR #159. | P2-T06 may consume this pre-executor boundary; Tool execution, external I/O, mutation, reconciliation, Task completion, Gates, release, and Profile remain unclaimed |
 | P2-T06 Tool/process executor | **done** | D01-D04 satisfy the current formal acceptance at immutable `bfcc684db6685e1077050a4b3c82fcf84c524711`: bounded WorkspaceRead and ProcessCheck execution; durable Intent/Effect persist-before-dispatch; original-key idempotency and unknown-outcome reconciliation; bounded cursor/output and redaction; before/mid/after fault coverage; and daemon-private supervisor registration, ownership, fencing, orphan/recovery/shutdown, timeout, and fail-closed observation. Exact native Linux focused tests (26 passed), Clippy/fmt, consistency, and required Ubuntu/Windows CI passed in Draft PR #162. The injected `FailClosedProcessObservationSource` is the accepted safety boundary: no arbitrary PID attach, public Process resource, Task completion, release, Gate, or Profile claim is made. Production platform observation remains deferred to the managed-Pi/process-supervision path. | task acceptance is closed; retain D01-D04 evidence and keep B05/B12, release, Gate, Profile, and managed-Pi production supervision separate |
-| GMVP-LINUX / Linux 1.0 | `not-run` | no release or Profile claim; B01, B03 (MVP), B02/B04/B05/B12 (MVP, ADR-0046), and B09 (MVP, ADR-0047) are `pass` and do not transfer | waits for the B08 Memory+Skill campaign; UCR-01 fixed-scenario acceptance; and P7 production-operability evidence |
 | Personal 1.0 design baseline | `documented` | ADR-0035..0038, six-family product/architecture docs, Pi sidecar map, UCR-01, B01 statistical addendum, typed release dependencies, support/environment registry and handoff are synchronized; consistency and diff checks passed; this is documentation/tooling evidence only | select the next non-overlapping Lane-CTR, Runtime Spine or B01 campaign slice from the formal plan |
 | Local command/test routing | `fail-fast baseline` | `COMMAND-SHELL-PS51`: local commands use Windows PowerShell 5.1, so `&&`/`||` are forbidden. `RUST-LINK-DEV-WIN-GNU-01`: local Windows GNU Rust compiling/linking is unsupported with known linker exit 121; required Rust validation routes to supported CI or exact-revision native Linux | do not repeat parser/linker failures in feature Slices; use the environment registry before selecting validation commands |
 | Profile conformance | `implemented: 0` | non-claim | independent applicable-MUST evidence only |
@@ -59,16 +61,19 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 51 | 0 | 0 | 11 | 11 |
+| 62 | 52 | 0 | 0 | 10 | 10 |
 
-`P9-T03` is `done` (PR #193). Formal task completion remains independent from every
-product Gate except where the plan explicitly binds Gate disposition to task
-acceptance.
+`P7-T08` is `done` (PR #194). Formal task completion remains independent from
+Profile and Windows B01-W claims.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P7-T08/D01` | `done` | ADR-0048 + `tools` B08 non-claim harness | consumed by D02 |
+| `P7-T08/D02` | `done` | ADR-0048 matrix at `65a736c`; CI `31479512940`; B08 MVP pass | consumed by D03 |
+| `P7-T08/D03` | `done` | ADR-0049 + `gmvp-linux-gate` composition binder at `b3f4b88`; CI `31480604511` | consumed by D04 |
+| `P7-T08/D04` | `done` | GMVP-LINUX MVP pass + acceptance closure; PR #194 | consumed by completed P7-T08 task |
 | `P7-T01/D01` | `done` | signed six-family release-manifest authority path; native Linux 6/6 + Clippy at `3108889`; required CI `31425522168` for `3bde68c`; merged onto main after P5-T05 | consumed by D02 |
 | `P7-T01/D02` | `done` | SBOM/artifact digest binding + contaminated-inventory rejection; Linux `release_manifest` 9/9 + Clippy at `c1f06f4` | consumed by D03 |
 | `P7-T01/D03` | `done` | immutable toolchain pins + acquisition-lock trust; Linux `release_manifest` 11/11 + Clippy at `34812f8` | consumed by D04 |
@@ -186,8 +191,8 @@ not override this table.
 | B02/B04/B05/B12 | `pass` (MVP, ADR-0046) | fixed authority-path/harness matrix at `be7febb` + CI `31407542786` + non-claim report + owner `affirm all`; see P2-T08 closure | none for MVP scope; does not pass GMVP-LINUX, B08, B09, release, or Profile |
 | B03 | `pass` (MVP, ADR-0040) | fixed 33-check matrix (22 Rust authority-path + 11 evaluator/tooling tests) with native Linux/Clippy, cleanup/redaction, owner review, and required CI; see the P3-T06 row in the Area table for the exact revision and run | none for the MVP scope; B03 pass does not cover B06/B07, UCR-01 utility, GMVP-LINUX, release, or Profile |
 | B06/B07 | non-claim observations | P7-T04/D03 recorded stable/changed Context raw observations against full replay with complete denominator and safety accounting | remain observations; they do not block GMVP-LINUX and create no benefit claim |
-| B08/B09 | B08 `not-run`; B09 `pass` (MVP, ADR-0047) | fixed process-bound matrix at `548f138` + CI `31423464703` + non-claim report + owner `affirm B09`; see P5-T05 closure | none for MVP scope; does not pass GMVP-LINUX, B08, release, or Profile; B08 remains a separate Memory+Skill campaign |
-| GMVP-LINUX | `not-run` | no release evidence | remaining typed promotion dependencies: B08 campaign and P7-T01..T03/P7-T08 operability evidence |
+| B08/B09 | B08 `pass` (MVP, ADR-0048); B09 `pass` (MVP, ADR-0047) | B08 matrix at `65a736c` + CI `31479512940` + disposition; B09 matrix at `548f138` + CI `31423464703` | none for MVP scopes; neither alone passes GMVP-LINUX/release/Profile |
+| GMVP-LINUX | `pass` (MVP, ADR-0049) | fixed composition binder at `b3f4b88` + CI `31480604511` + prior Gate MVP dispositions; see P7-T08 closure | none for MVP scope; does not claim Profile or Windows B01-W |
 | Profile | `implemented: 0` | non-claim | independent applicable-MUST conformance evidence |
 
 B01 closed on 2026-08-09/10 through the ADR-0039 successor policy; the earlier

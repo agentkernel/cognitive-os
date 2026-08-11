@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P8-T01..T06、P9-T02、P9-T03 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B09 MVP `pass` under ADR-0047；B06/B07 仍为 non-claim observation，B08/GMVP-LINUX 正式验收尚未完成）**
+> **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-11**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
@@ -156,10 +156,10 @@
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 3 | 0 | 0 | 2 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 8 | 4 | 0 | 0 | 4 | GMVP-LINUX / G7 / RC |
+| Phase 7 - 产品化与发布 | 8 | 5 | 0 | 0 | 3 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 3 | 2 | 0 | 0 | 1 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **62** | **51** | **0** | **0** | **11** | — |
+| **合计** | **62** | **52** | **0** | **0** | **10** | — |
 
 ## 2. 产品边界与不变量
 
@@ -642,6 +642,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P9-T03/D03` | P9-T03 | sink one Personal vertical composition seam out of `kernel-server` and record stage-timing non-claim comparison | `P9-T03/D02` | exact native Linux focused tests / stage timing observation, Clippy, required CI |
 | `P9-T03/D04` | P9-T03 | final acceptance over D01-D03 store/composition evidence | `P9-T03/D01-D03` | exact acceptance mapping, required CI, consistency, checkpoint, PR, lease, and branch closure; no Gate/release/Profile claim |
 | `P4-T06/D03` | P4-T06 | final acceptance mapping and non-claim evidence for the daemon-private correctness slice | `P4-T06/D02` same-task consumption trace | exact native Linux, Clippy, required Ubuntu/Windows CI, consistency, checkpoint, PR, lease, and branch closure; B08/Gate/release/Profile remain separate |
+| `P7-T08/D01` | P7-T08 | ADR-0048 fixed-denominator B08 Memory/Skill non-claim Gate suite harness binds required observations and rejects incomplete/authority-shaped claims | completed P4-T01..T06 Memory/Skill authority paths; ADR-0040/0046/0047 Gate suite patterns | failure-first incomplete observation, wrong-gate, and authority-shaped claim negatives; tools Node tests, consistency, and required Ubuntu/Windows CI; B08 stays `not-run` until D02 disposition |
+| `P7-T08/D02` | P7-T08 | execute ADR-0048 B08 matrix on exact native Linux + Clippy, produce non-claim report, and record B08 MVP disposition under §2.3 | `P7-T08/D01` harness and ADR-0048 | exact native Linux focused store/server tests + Clippy; non-claim report; required CI; B08 MVP disposition; no GMVP-LINUX/release/Profile claim |
+| `P7-T08/D03` | P7-T08 | GMVP-LINUX composition binder: UCR-01 fixed-scenario assertion checklist + six-resource/release/doctor/backup/SecretStore/Pi pin evidence rollup as non-claim composition report | `P7-T08/D02` B08 MVP; completed B01/B02/B03/B04/B05/B09/B12 | failure-first incomplete composition and authority-shaped claim negatives; tools tests; required CI; GMVP remains `not-run` until D04 |
+| `P7-T08/D04` | P7-T08 | formal GMVP-LINUX disposition over D01–D03 composition evidence plus final task acceptance, checkpoint, PR, lease, and branch closure | `P7-T08/D01-D03` | preregistered composition evidence; §2.3 ADR-0040-class disposition when complete; required CI; no Profile claim |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
 
@@ -690,7 +694,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | not-started | — |
-| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | not-started | — |
+| P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | done | 2026-08-11；`lease/personal/P7-T08/gmvp-linux` / PR #194. D01–D04 closed under ADR-0048/0049. B08 MVP `pass` at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` at `b3f4b88` + CI `31480604511`. Closure: `docs/checkpoints/20260811-personal-p7-t08-gmvp-linux-closure.md`. No Profile/Windows B01-W claim. |
 
 ### Phase 8 - 通用 Agent 适配与设计基线（post-1.0 能力列车）
 
