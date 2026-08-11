@@ -179,7 +179,7 @@ fn schema_digest_constants_match_live_schemas() {
     }
     assert_eq!(
         cognitive_contracts::generated::SCHEMA_DIGESTS.len(),
-        52,
+        53,
         "generated schema module count drifted"
     );
     // Per-module constants are the same values (spot checks across families).
@@ -270,10 +270,11 @@ fn m6_consumer_bindings_are_exported_with_required_members() {
         g::agent_compatibility_report::SCHEMA_ID,
         g::performance_report::SCHEMA_ID,
         g::profile_manifest::SCHEMA_ID,
+        g::agent_adapter_manifest::SCHEMA_ID,
     ] {
         assert!(
             by_file.contains_key(id),
-            "M6 schema {id} missing from SCHEMA_DIGESTS"
+            "M6/P8 schema {id} missing from SCHEMA_DIGESTS"
         );
     }
     assert_eq!(

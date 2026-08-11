@@ -80,13 +80,13 @@ test("generated literal unions reject wrong states at compile time", () => {
   assert.ok(effect.verification.status);
 });
 
-test("SCHEMA_DIGESTS constants match the live schema files (52 generated modules)", () => {
+test("SCHEMA_DIGESTS constants match the live schema files (53 generated modules)", () => {
   // Gap 5 of the 20260720 lane-tsc handoff: the digest is a RUNTIME
   // constant clients pin envelope `schema_digest` with; it must equal the
   // re-derived canonical digest of the live schema (the schema-bundle
   // manifest per-asset recipe).
   const entries = Object.entries(SCHEMA_DIGESTS);
-  assert.equal(entries.length, 52, "generated schema module count drifted");
+  assert.equal(entries.length, 53, "generated schema module count drifted");
   for (const [file, pinned] of entries) {
     const raw = readFileSync(path.join(REPO_ROOT, "specs", "schemas", file), "utf-8");
     const live = digest(canonicalize(raw), "schema-bundle/0.1");
@@ -142,6 +142,7 @@ test("M6 consumer bindings export required members and digest pins", () => {
   assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "agent-compatibility-report.schema.json"), true);
   assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "performance-report.schema.json"), true);
   assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "profile-manifest.schema.json"), true);
+  assert.equal(Object.hasOwn(SCHEMA_DIGESTS, "agent-adapter-manifest.schema.json"), true);
 });
 
 test("generated error registry is table-complete and fail-closed on unknown codes", () => {
