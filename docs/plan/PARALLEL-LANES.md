@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| *(none)* | — | — | — | — | — | — | — |
+| `lease/personal/P5-T04/dynamic-tool-ecosystem` | P5-T04/D01 dynamic Tool + B10 | Lane-RUN | `personal/P5-T04-dynamic-tool-ecosystem` | `crates/cognitive-runtime/src/dynamic_tool_ecosystem.rs`; `crates/cognitive-runtime/src/lib.rs`; `tools/src/b10-dynamic-tool-gate.mjs`; `tools/test/b10-dynamic-tool-gate.test.mjs`; `tools/package.json`; `docs/adr/0050-personal-b10-mvp-validation-policy.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | cursor-agent/P5-T04 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
