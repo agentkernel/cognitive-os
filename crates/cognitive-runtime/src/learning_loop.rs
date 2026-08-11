@@ -1,15 +1,21 @@
-//! Cross-episode learning-loop planner — private MVP (P8-T06/D01).
+//! Cross-episode learning-loop planner — private MVP (P8-T06).
 //!
 //! Reflexion-family failure experience becomes a digest-bound Memory candidate
-//! proposal only. The planner never self-authorizes, never writes authority
-//! SQLite, and never promotes lessons into Policy/Model/Verifier controls.
-//! Durable admission remains a later slice through existing Memory admission.
+//! proposal, then may be admitted only through `decide_memory_admission`.
+//! The planner never self-authorizes, never writes authority SQLite, and never
+//! promotes lessons into Policy/Model/Verifier controls. Forget remains an
+//! explainable, non-resurrecting tombstone plan.
 
+use cognitive_kernel::memory_admission::{
+    CurrentMemorySourceFacts, MemoryAdmissionDecision, MemoryAdmissionOutcome,
+    MemoryAdmissionPolicy, MemoryProposal, decide_memory_admission,
+};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 const TARGET_MEMORY_CANDIDATE: &str = "memory_candidate";
 const LINEAGE_REFLEXION: &str = "reflexion_failure_lesson";
+const FORGET_REASON: &str = "learning_memory_forgotten";
 
 /// One episode failure lesson eligible for Memory-candidate planning.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,7 +24,7 @@ pub struct FailureLessonFact {
     pub lesson_digest: String,
     pub source_digest: String,
     pub purpose: String,
-    /// Declared promotion target; only `memory_candidate` is accepted in D01.
+    /// Declared promotion target; only `memory_candidate` is accepted.
     pub promotion_target: String,
     pub claims_authority: bool,
 }
@@ -34,6 +40,16 @@ pub struct LearningMemoryCandidatePlan {
     pub lineage: &'static str,
 }
 
+/// Explainable forget/tombstone plan for an admitted learning Memory object.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LearningMemoryForgetPlan {
+    pub forget_digest: String,
+    pub memory_id: String,
+    pub lesson_digest: String,
+    pub reason: &'static str,
+    pub resurrectable: bool,
+}
+
 /// Fail-closed learning-loop planner errors.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum LearningLoopError {
@@ -43,11 +59,15 @@ pub enum LearningLoopError {
     SelfAuthorizationForbidden,
     #[error("learning lesson may only promote to a Memory candidate")]
     DirectPromotionForbidden,
+    #[error("learning admission rejects a producer-forged outcome")]
+    ProducerForgedAdmit,
+    #[error("learning admission source facts do not match the candidate plan")]
+    SourceMismatch,
 }
 
 /// Plan a Memory candidate from a Reflexion-family failure lesson.
 ///
-/// Output is a proposal shape for later daemon admission. It does not admit,
+/// Output is a proposal shape for daemon admission. It does not admit,
 /// persist, or grant capability.
 pub fn plan_failure_lesson_memory_candidate(
     lesson: &FailureLessonFact,
@@ -80,6 +100,74 @@ pub fn plan_failure_lesson_memory_candidate(
         purpose: lesson.purpose.clone(),
         lesson_digest: lesson.lesson_digest.clone(),
         lineage: LINEAGE_REFLEXION,
+    })
+}
+
+/// Build a daemon Memory proposal from a learning plan and current source facts.
+pub fn memory_proposal_from_learning_plan(
+    plan: &LearningMemoryCandidatePlan,
+    current_source: &CurrentMemorySourceFacts,
+    retention_expires_at_unix_seconds: i64,
+) -> Result<MemoryProposal, LearningLoopError> {
+    if plan.source_digest != current_source.source_digest {
+        return Err(LearningLoopError::SourceMismatch);
+    }
+    Ok(MemoryProposal {
+        candidate_id: plan.candidate_id.clone(),
+        source_id: current_source.source_id.clone(),
+        source_digest: current_source.source_digest.clone(),
+        source_provenance_ref: current_source.provenance_ref.clone(),
+        governance_scope: current_source.governance_scope.clone(),
+        target_scope: current_source.governance_scope.clone(),
+        purpose: plan.purpose.clone(),
+        retention_expires_at_unix_seconds,
+        observed_at_unix_seconds: current_source.observed_at_unix_seconds,
+    })
+}
+
+/// Admit a learning Memory candidate only through daemon policy derivation.
+///
+/// `requested_outcome` must match `decide_memory_admission`; forged Admit fails
+/// closed. This does not write SQLite — it gates the durable append path.
+pub fn decide_learning_memory_admission(
+    plan: &LearningMemoryCandidatePlan,
+    current_source: &CurrentMemorySourceFacts,
+    policy: &MemoryAdmissionPolicy,
+    retention_expires_at_unix_seconds: i64,
+    requested_outcome: MemoryAdmissionOutcome,
+) -> Result<MemoryAdmissionDecision, LearningLoopError> {
+    let proposal = memory_proposal_from_learning_plan(
+        plan,
+        current_source,
+        retention_expires_at_unix_seconds,
+    )?;
+    let derived = decide_memory_admission(&proposal, current_source, policy);
+    if requested_outcome != derived.outcome {
+        return Err(LearningLoopError::ProducerForgedAdmit);
+    }
+    Ok(derived)
+}
+
+/// Plan an explainable, non-resurrecting forget for a learning Memory object.
+pub fn plan_learning_memory_forget(
+    memory_id: &str,
+    lesson_digest: &str,
+) -> Result<LearningMemoryForgetPlan, LearningLoopError> {
+    if memory_id.trim().is_empty() || lesson_digest.trim().is_empty() {
+        return Err(LearningLoopError::MissingIdentity);
+    }
+    let mut hasher = Sha256::new();
+    hasher.update(FORGET_REASON.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(memory_id.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(lesson_digest.as_bytes());
+    Ok(LearningMemoryForgetPlan {
+        forget_digest: format!("{:x}", hasher.finalize()),
+        memory_id: memory_id.to_owned(),
+        lesson_digest: lesson_digest.to_owned(),
+        reason: FORGET_REASON,
+        resurrectable: false,
     })
 }
 
@@ -118,6 +206,24 @@ mod tests {
         }
     }
 
+    fn current_source_for(plan: &LearningMemoryCandidatePlan) -> CurrentMemorySourceFacts {
+        CurrentMemorySourceFacts {
+            source_id: "context-source-1".to_owned(),
+            source_digest: plan.source_digest.clone(),
+            provenance_ref: "workspace://source/1".to_owned(),
+            governance_scope: "workspace://personal".to_owned(),
+            observed_at_unix_seconds: 100,
+        }
+    }
+
+    fn policy() -> MemoryAdmissionPolicy {
+        MemoryAdmissionPolicy {
+            policy_version: 1,
+            now_unix_seconds: 100,
+            maximum_retention_seconds: 3600,
+        }
+    }
+
     #[test]
     fn plans_digest_bound_memory_candidate_from_failure_lesson() {
         let plan = plan_failure_lesson_memory_candidate(&valid_lesson()).expect("plan");
@@ -152,6 +258,61 @@ mod tests {
         missing.purpose = "  ".to_owned();
         assert_eq!(
             plan_failure_lesson_memory_candidate(&missing).unwrap_err(),
+            LearningLoopError::MissingIdentity
+        );
+    }
+
+    #[test]
+    fn admits_only_through_daemon_policy_and_rejects_forged_outcome() {
+        let plan = plan_failure_lesson_memory_candidate(&valid_lesson()).expect("plan");
+        let source = current_source_for(&plan);
+        let decision = decide_learning_memory_admission(
+            &plan,
+            &source,
+            &policy(),
+            3700,
+            MemoryAdmissionOutcome::Admit,
+        )
+        .expect("admit");
+        assert_eq!(decision.outcome, MemoryAdmissionOutcome::Admit);
+
+        assert_eq!(
+            decide_learning_memory_admission(
+                &plan,
+                &source,
+                &policy(),
+                3700,
+                MemoryAdmissionOutcome::Reject,
+            )
+            .unwrap_err(),
+            LearningLoopError::ProducerForgedAdmit
+        );
+
+        let mut mismatched = source.clone();
+        mismatched.source_digest = format!("sha256:{}", "c".repeat(64));
+        assert_eq!(
+            decide_learning_memory_admission(
+                &plan,
+                &mismatched,
+                &policy(),
+                3700,
+                MemoryAdmissionOutcome::Admit,
+            )
+            .unwrap_err(),
+            LearningLoopError::SourceMismatch
+        );
+    }
+
+    #[test]
+    fn plans_explainable_non_resurrecting_forget() {
+        let forget =
+            plan_learning_memory_forget("mem-learn-1", &format!("sha256:{}", "a".repeat(64)))
+                .expect("forget");
+        assert!(!forget.resurrectable);
+        assert_eq!(forget.reason, FORGET_REASON);
+        assert_eq!(forget.forget_digest.len(), 64);
+        assert_eq!(
+            plan_learning_memory_forget("  ", "sha256:x").unwrap_err(),
             LearningLoopError::MissingIdentity
         );
     }

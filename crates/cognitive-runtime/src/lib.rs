@@ -95,8 +95,9 @@ pub use installer::{
 };
 pub use intent_flow::{admit_and_mint_contract, correct_and_supersede};
 pub use learning_loop::{
-    FailureLessonFact, LearningLoopError, LearningMemoryCandidatePlan,
-    plan_failure_lesson_memory_candidate,
+    FailureLessonFact, LearningLoopError, LearningMemoryCandidatePlan, LearningMemoryForgetPlan,
+    decide_learning_memory_admission, memory_proposal_from_learning_plan,
+    plan_failure_lesson_memory_candidate, plan_learning_memory_forget,
 };
 pub use linux_bundle::{
     ExpectedPiCompatibility, LinuxBundleDeployment, LinuxBundleError, LinuxBundleManifest,
