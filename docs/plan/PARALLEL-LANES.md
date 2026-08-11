@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P5-T03/mcp-tool-adapter` | P5-T03/D01-D04 MCP Tool adapter | Lane-RUN | `personal/P5-T03-mcp-tool-adapter` | `crates/cognitive-runtime/src/mcp_tool_adapter.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260811-personal-p5-t03-*.md` | continuous-delivery/P5-T03 | 2026-08-11 / 2026-08-11 | active |
+| `lease/personal/P5-T03/mcp-tool-adapter` | P5-T03/D04 MCP Tool adapter | Lane-RUN | `personal/P5-T03-mcp-tool-adapter` | `crates/cognitive-runtime/src/mcp_tool_adapter.rs`; `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260811-personal-p5-t03-*.md` | continuous-delivery/P5-T03 | 2026-08-11 / 2026-08-11 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
