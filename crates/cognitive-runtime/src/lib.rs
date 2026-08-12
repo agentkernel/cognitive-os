@@ -46,6 +46,7 @@ pub mod scheduler_service;
 pub mod shell;
 pub mod store_access;
 pub mod target_resolution;
+pub mod task_scenario_harness;
 
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
@@ -213,6 +214,11 @@ pub use store_access::{
 pub use target_resolution::{
     TargetSelectorDecision, TargetSelectorRequest, admit_target_selector, is_strong_reference,
     request_from_target_vector_input,
+};
+pub use task_scenario_harness::{
+    ScenarioObservation, ScenarioOracle, ScenarioOutcome, ScenarioRunFacts, TaskScenario,
+    TaskScenarioError, build_scenario_observation, judge_scenario_run, scenario_safety_accounting,
+    validate_scenario_observation, verified_completion_count,
 };
 
 /// Runtime role marker (M6: harness/shell + install/sandbox/adapter/readiness/PERF).

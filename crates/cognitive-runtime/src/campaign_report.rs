@@ -91,6 +91,9 @@ pub struct CampaignSafetyAccounting {
     pub stale_epoch_commits: u64,
     pub unreconciled_effects: u64,
     pub completions_without_independent_acceptance: u64,
+    /// An `L4` scenario that exceeded the mutation budget its oracle allows,
+    /// for example a read-only analysis that wrote a file.
+    pub scenario_boundary_violations: u64,
 }
 
 impl CampaignSafetyAccounting {
@@ -102,6 +105,7 @@ impl CampaignSafetyAccounting {
             .saturating_add(self.stale_epoch_commits)
             .saturating_add(self.unreconciled_effects)
             .saturating_add(self.completions_without_independent_acceptance)
+            .saturating_add(self.scenario_boundary_violations)
     }
 }
 
