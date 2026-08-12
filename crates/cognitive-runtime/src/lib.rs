@@ -28,6 +28,7 @@ pub mod linux_bundle;
 pub mod linux_bundle_installation;
 pub mod linux_bundle_installer_adapter;
 pub mod linux_bundle_service;
+pub mod loopback_transport;
 pub mod mcp_tool_adapter;
 pub mod non_pi_agent;
 pub mod oob;
@@ -139,6 +140,10 @@ pub use linux_bundle_service::{
     LinuxBundleSingleServiceController, PersonalUserServiceUnitKind, SystemdUserServiceController,
     install_linux_bundle_service, install_linux_bundle_single_service, probe_personal_health,
     render_personal_user_service_unit, write_rendered_personal_user_service_unit,
+};
+pub use loopback_transport::{
+    EXCLUDED_TRANSPORT_ATTRIBUTIONS, LoopbackTransportError, LoopbackTransportObservation,
+    LoopbackTransportSample, LoopbackTransportStage, validate_loopback_transport_observation,
 };
 pub use mcp_tool_adapter::{
     MCP_FIXTURE_SERVER_ID, MCP_INITIALIZE_TIMEOUT_BUDGET_MS, MCP_PROTOCOL_VERSION_PIN,

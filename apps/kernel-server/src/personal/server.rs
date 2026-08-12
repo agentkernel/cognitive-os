@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
 };
+use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
     ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
@@ -294,6 +295,8 @@ fn handle_connection_with_task_api(
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
+    loopback_transport::begin_connection();
+    let connection_admission_started = Instant::now();
     if stream
         .set_read_timeout(Some(Duration::from_secs(bounds.read_header_timeout_secs)))
         .is_err()
@@ -329,6 +332,10 @@ fn handle_connection_with_task_api(
         );
         return;
     }
+    loopback_transport::record_stage(
+        LoopbackTransportStage::ConnectionAdmission,
+        connection_admission_started.elapsed().as_nanos(),
+    );
 
     let result = process_http_request(
         &mut stream,
@@ -350,6 +357,7 @@ fn handle_connection_with_task_api(
 
     in_flight.fetch_sub(1, Ordering::SeqCst);
     active_connections.fetch_sub(1, Ordering::SeqCst);
+    let _ = loopback_transport::finish_connection();
 }
 
 /// Single-connection test helper. Production keeps one shared TaskApi for
@@ -391,36 +399,98 @@ fn process_http_request(
     task_api: &Arc<Mutex<TaskApi>>,
     resource_api: &Arc<Mutex<ResourceApi>>,
 ) -> Result<(), String> {
+    let request_read_started = Instant::now();
     let (request_line, headers, body) = read_bounded_http_request(stream, bounds)?;
-    if headers_contain_cookie(&headers) {
-        write_error_response(
-            stream,
-            403,
-            LocalAuthError::CookieAuthForbidden.code(),
-            "cookie auth forbidden",
-        )?;
-        return Ok(());
+    loopback_transport::record_stage(
+        LoopbackTransportStage::RequestRead,
+        request_read_started.elapsed().as_nanos(),
+    );
+    loopback_transport::add_request_bytes(bounded_request_size(&request_line, &headers, &body));
+
+    let header_admission_started = Instant::now();
+    let cookie_rejected = headers_contain_cookie(&headers);
+    let host_error = validate_host_header(&headers);
+    loopback_transport::record_stage(
+        LoopbackTransportStage::HeaderAdmission,
+        header_admission_started.elapsed().as_nanos(),
+    );
+    if cookie_rejected {
+        return timed_route_dispatch(|| {
+            write_error_response(
+                stream,
+                403,
+                LocalAuthError::CookieAuthForbidden.code(),
+                "cookie auth forbidden",
+            )
+        });
     }
-    if let Some(host_error) = validate_host_header(&headers) {
-        write_error_response(stream, 400, "LOCAL_HOST_HEADER_REJECTED", host_error)?;
-        return Ok(());
+    if let Some(host_error) = host_error {
+        return timed_route_dispatch(|| {
+            write_error_response(stream, 400, "LOCAL_HOST_HEADER_REJECTED", host_error)
+        });
     }
 
-    let method_path = parse_request_line(&request_line)?;
+    timed_route_dispatch(|| {
+        dispatch_http_route(
+            stream,
+            layout,
+            authority,
+            authority_store,
+            task_api,
+            resource_api,
+            &request_line,
+            &headers,
+            &body,
+        )
+    })
+}
+
+/// Measure one route window and attribute accumulated socket writes to the
+/// response-write stage instead of route work.
+fn timed_route_dispatch<Route>(route: Route) -> Result<(), String>
+where
+    Route: FnOnce() -> Result<(), String>,
+{
+    let dispatch_started = Instant::now();
+    let outcome = route();
+    loopback_transport::record_route_dispatch(dispatch_started.elapsed().as_nanos());
+    outcome
+}
+
+/// Bounded byte count of one request. Only the size is retained; the request
+/// line, headers, and body never enter a transport observation.
+fn bounded_request_size(request_line: &str, headers: &str, body: &[u8]) -> u64 {
+    let total = request_line.len() + headers.len() + body.len();
+    u64::try_from(total).unwrap_or(u64::MAX)
+}
+
+#[allow(clippy::too_many_arguments)] // The front door owns all shared daemon state.
+fn dispatch_http_route(
+    stream: &mut TcpStream,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    task_api: &Arc<Mutex<TaskApi>>,
+    resource_api: &Arc<Mutex<ResourceApi>>,
+    request_line: &str,
+    headers: &str,
+    body: &[u8],
+) -> Result<(), String> {
+    let method_path = parse_request_line(request_line)?;
     if method_path.starts_with("POST /local/session ") {
-        return handle_session_issue(stream, &body, authority);
+        return handle_session_issue(stream, body, authority);
     }
     if method_path.starts_with("POST /provider/v1/chat/completions ") {
-        return handle_provider_proxy_route(stream, &headers, &body, layout, authority);
+        return handle_provider_proxy_route(stream, headers, body, layout, authority);
     }
     if method_path.starts_with("GET /provider/v1/selected-model ") {
-        return handle_selected_model_route(stream, &headers, layout, authority);
+        return handle_selected_model_route(stream, headers, layout, authority);
     }
     if method_path.starts_with("POST /management/context-authorization/facts ") {
         return handle_context_authorization_fact_admission(
             stream,
-            &headers,
-            body.as_slice(),
+            headers,
+            body,
             authority,
             authority_store,
         );
@@ -428,8 +498,8 @@ fn process_http_request(
     if method_path.starts_with("POST /management/context-authorization/revocations ") {
         return handle_context_revocation_fact_admission(
             stream,
-            &headers,
-            body.as_slice(),
+            headers,
+            body,
             authority,
             authority_store,
         );
@@ -440,17 +510,17 @@ fn process_http_request(
         return handle_authority_resource_route(
             stream,
             &method_path,
-            &headers,
+            headers,
             authority,
             authority_store,
             resource_api,
-            &body,
+            body,
         );
     }
     if method_path.starts_with("POST /management/") {
         return handle_channel_route(
             stream,
-            &headers,
+            headers,
             ChannelClass::Management,
             authority,
             "management",
@@ -459,29 +529,29 @@ fn process_http_request(
     if method_path.starts_with("POST /task/resource/v1/consumption") {
         return handle_task_consumption_route(
             stream,
-            &headers,
-            &body,
+            headers,
+            body,
             authority,
             authority_store,
             resource_api,
         );
     }
     if method_path.starts_with("GET /task/resource/") {
-        return handle_task_resource_route(stream, &method_path, &headers, authority, resource_api);
+        return handle_task_resource_route(stream, &method_path, headers, authority, resource_api);
     }
     if method_path.starts_with("POST /task/") || method_path.starts_with("GET /task/") {
-        return handle_task_route(stream, &method_path, &headers, &body, authority, task_api);
+        return handle_task_route(stream, &method_path, headers, body, authority, task_api);
     }
     if method_path.starts_with("GET /resource/") {
-        return handle_resource_route(stream, &method_path, &headers, authority, resource_api);
+        return handle_resource_route(stream, &method_path, headers, authority, resource_api);
     }
     if method_path.starts_with("GET /personal/status ")
         || method_path.starts_with("GET /personal/readiness ")
     {
-        return handle_readiness_route(stream, &headers, layout, authority, "status");
+        return handle_readiness_route(stream, headers, layout, authority, "status");
     }
     if method_path.starts_with("GET /personal/doctor ") {
-        return handle_readiness_route(stream, &headers, layout, authority, "doctor");
+        return handle_readiness_route(stream, headers, layout, authority, "doctor");
     }
     if method_path.starts_with("GET /personal/health ") {
         let body = json!({
@@ -1190,10 +1260,21 @@ fn write_response(
         "HTTP/1.1 {status} {reason}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
-    stream
+    write_timed(stream, &header, body)
+}
+
+/// Write one response and attribute its socket time to the transport
+/// response-write stage rather than to route work.
+fn write_timed(stream: &mut TcpStream, header: &str, body: &[u8]) -> Result<(), String> {
+    let write_started = Instant::now();
+    let outcome = stream
         .write_all(header.as_bytes())
-        .and_then(|()| stream.write_all(body))
-        .map_err(|error| error.to_string())
+        .and_then(|()| stream.write_all(body));
+    loopback_transport::add_response_write(
+        write_started.elapsed().as_nanos(),
+        u64::try_from(header.len() + body.len()).unwrap_or(u64::MAX),
+    );
+    outcome.map_err(|error| error.to_string())
 }
 
 fn write_provider_response(
@@ -1218,10 +1299,7 @@ fn write_provider_response(
         "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nX-CognitiveOS-Provider-Network-Nanos: {provider_network_elapsed_nanos}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
-    stream
-        .write_all(header.as_bytes())
-        .and_then(|()| stream.write_all(body))
-        .map_err(|error| error.to_string())
+    write_timed(stream, &header, body)
 }
 
 fn write_json_bytes_response(
@@ -1245,10 +1323,7 @@ fn write_json_bytes_response(
         "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
-    stream
-        .write_all(header.as_bytes())
-        .and_then(|()| stream.write_all(body))
-        .map_err(|error| error.to_string())
+    write_timed(stream, &header, body)
 }
 
 fn write_error_response(
@@ -1289,8 +1364,10 @@ mod tests {
     use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
 
     use super::{
-        LocalSessionAuthority, PersonalResourceBounds, ensure_loopback_bind, handle_connection,
+        LocalSessionAuthority, LoopbackTransportStage, PersonalResourceBounds,
+        ensure_loopback_bind, handle_connection, loopback_transport,
     };
+    use cognitive_runtime::loopback_transport::validate_loopback_transport_observation;
 
     fn test_fixture(
         test_name: &str,
@@ -1348,6 +1425,84 @@ mod tests {
     fn non_loopback_bind_is_rejected() {
         assert!(ensure_loopback_bind("0.0.0.0:8080").is_err());
         assert!(ensure_loopback_bind("127.0.0.1:0").is_ok());
+    }
+
+    /// P9-T04/D02: one real loopback request must produce disjoint transport
+    /// stages that stay separate from `effect_persistence` and never retain the
+    /// credential the client presented.
+    #[test]
+    fn real_loopback_request_records_redacted_disjoint_transport_stages() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let bounds = PersonalResourceBounds::personal_v1_baseline();
+        let (layout, authority, authority_store) = test_fixture("transport-stages");
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            move || {
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &authority_store,
+                    &active_connections,
+                    &in_flight,
+                );
+                loopback_transport::last_observation()
+            }
+        });
+
+        let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client connection");
+        client
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("client timeout");
+        client
+            .write_all(
+                b"GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer transport-probe-value\r\nConnection: close\r\n\r\n",
+            )
+            .expect("request");
+        let mut response = String::new();
+        client.read_to_string(&mut response).expect("response");
+        let observation = server
+            .join()
+            .expect("server thread")
+            .expect("transport observation");
+
+        assert!(response.contains("personal-health"), "{response}");
+        validate_loopback_transport_observation(&observation).expect("publishable observation");
+        assert_eq!(
+            observation
+                .stages
+                .iter()
+                .map(|sample| sample.stage)
+                .collect::<Vec<_>>(),
+            vec![
+                LoopbackTransportStage::ConnectionAdmission,
+                LoopbackTransportStage::RequestRead,
+                LoopbackTransportStage::HeaderAdmission,
+                LoopbackTransportStage::RouteDispatch,
+                LoopbackTransportStage::ResponseWrite,
+            ]
+        );
+        assert!(observation.stages.iter().all(|sample| !sample.omitted));
+        assert!(observation.request_bytes > 0);
+        assert!(observation.response_bytes > 0);
+        assert!(
+            observation
+                .excluded_attributions
+                .contains(&"effect_persistence")
+        );
+        let serialized = serde_json::to_string(&observation).expect("serialize observation");
+        assert!(
+            !serialized.contains("transport-probe-value"),
+            "{serialized}"
+        );
+        assert!(!serialized.contains("Bearer"), "{serialized}");
     }
 
     #[test]
