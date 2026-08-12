@@ -53,11 +53,18 @@ function classifyFailure(errorCode, errorName) {
   return "outcome_unknown";
 }
 
+/**
+ * Prefer the daemon's own registered code over the client's transport-level
+ * wrapper, so a model mismatch is not recorded as a generic protocol error.
+ * Only an all-caps registered constant is retained; anything else is dropped so
+ * a free-form message can never enter campaign evidence.
+ */
 function registeredErrorCode(error) {
-  const code = error && typeof error === "object" ? error["code"] : undefined;
-  // Only an all-caps registered constant is retained; anything else is dropped
-  // so a free-form message can never enter campaign evidence.
-  return typeof code === "string" && /^[A-Z0-9_]+$/.test(code) ? code : null;
+  if (!error || typeof error !== "object") return null;
+  for (const candidate of [error["daemonErrorCode"], error["code"]]) {
+    if (typeof candidate === "string" && /^[A-Z0-9_]+$/.test(candidate)) return candidate;
+  }
+  return null;
 }
 
 const startedRequests = Number.parseInt(requiredArgument("--samples", "30"), 10);
