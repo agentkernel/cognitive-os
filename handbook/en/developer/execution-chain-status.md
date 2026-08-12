@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:2805f2200ceaba36615ada52d812e360f2b48ede182a61d8a2d2868524119fc1"
+fingerprint: "sha256:8f94f4031710d5d6e3e7a5e5a1a4076a2293f281514fef017d48856ce85f0137"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -53,12 +53,13 @@ verification → verified continuation or ceiling STOP.
 2. **One tick, no loop**: the daemon executes
    `run_private_scheduler_tick_with_store` once during startup; no periodic
    scheduler thread exists.
-3. **Executors unwired**: `dispatch_staged_workspace_read_effect`,
-   `dispatch_staged_process_check_effect` have no production caller. The daemon
-   does now report this honestly: the resource projection derives per-tool
-   `execution_readiness` from `ASSEMBLED_EXECUTOR_FAMILIES` (WorkspaceRead,
-   ProcessCheck), so every other family surfaces as `registered_only` instead of
-   looking executable.
+3. **Executors unwired**: all six registered families now have an assembled
+   sink (P2-T10), so `ASSEMBLED_EXECUTOR_FAMILIES` lists all six and the
+   resource projection reports each as `execution_ready`. Read that fact
+   narrowly: it means *this binary contains an executor for the family*, not
+   that an Agent can reach one. No `dispatch_staged_*_effect` function has a
+   production caller — the sinks are reachable only from tests and, once gaps 1
+   and 2 close, from the daemon's own worker path.
 4. **Verifier unwired**: `record_independent_verification` and loop-continuation
    entry are exercised by tests only; no production route advances verification
    or Task acceptance.

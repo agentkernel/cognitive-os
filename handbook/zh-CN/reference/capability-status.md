@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-fingerprint: "sha256:ec5c301e205f58771e15120f1e27f05810ee2f761de19c98c21722697be6fb9c"
+fingerprint: "sha256:7b8f88bd9038bb615518a0713a5e9aebb996cd179312a6360480273c502db910"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -36,8 +36,8 @@ non_claims:
 | Task watch | implemented | 进程本地事件源 |
 | HTTP 上的 Task control/query | unavailable | 服务方法存在、无路由 |
 | 自主调度循环 | partial | 仅启动一次 tick；准入不产生引导行 |
-| 受治理工具执行（workspace 读 / 进程检查） | partial | 执行器仅测试调用；投影将其余族报告为 `registered_only` |
-| workspace write/patch 执行器 | designed | 校验器存在、无执行器 |
+| 受治理工具执行（全部六个已登记族） | partial | 六族现在都有已装配 executor，投影因此报告 `execution_ready`；这只表示本二进制含有 sink，不表示 Agent 能到达它——sink 仍仅测试调用 |
+| workspace write/patch 执行器 | partial | expected-preimage 比较交换加原子发布；无生产调用者 |
 | 独立验证循环 | partial | verifier 接缝仅测试调用 |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |

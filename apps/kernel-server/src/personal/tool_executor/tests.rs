@@ -3601,6 +3601,140 @@ fn http_fetch_sink_rejects_stale_fencing_before_egress() {
     assert!(transport.observed_urls().is_empty());
 }
 
+// ---------------------------------------------------------------------------
+// P2-T10/D04 — assembled-executor parity for the readiness projection
+// ---------------------------------------------------------------------------
+
+/// Stage one request of `family` through whichever sink owns that family.
+fn stage_family_through_its_executor(
+    family: NativeOperationFamily,
+    workspace_root: &std::path::Path,
+) -> Result<(), NativeToolExecutionError> {
+    let idempotency_key = format!("parity-{family:?}");
+    let parameters_digest = "parity-digest".to_owned();
+    match family {
+        NativeOperationFamily::WorkspaceRead => {
+            let mut request = request_for(family);
+            request.target = "workspace://notes.txt".to_owned();
+            request.input.clear();
+            request.workspace_root = Some(workspace_root.to_path_buf());
+            let validated = validate_native_tool_request(&request)?;
+            NativeWorkspaceReadExecutor::new(1).stage_request(
+                idempotency_key,
+                parameters_digest,
+                &validated,
+            )
+        }
+        NativeOperationFamily::WorkspaceSearch => {
+            let validated = staged_search_request(workspace_root, "workspace://", b"needle");
+            NativeWorkspaceSearchExecutor::new(1).stage_request(
+                idempotency_key,
+                parameters_digest,
+                &validated,
+            )
+        }
+        NativeOperationFamily::WorkspaceWrite => {
+            let validated = staged_mutation_request(
+                family,
+                workspace_root,
+                "workspace://notes.txt",
+                b"content\n",
+                WorkspacePreimage::Absent,
+            );
+            NativeWorkspaceMutationExecutor::new(1).stage_request(
+                idempotency_key,
+                parameters_digest,
+                &validated,
+            )
+        }
+        NativeOperationFamily::WorkspacePatch => {
+            let validated = staged_mutation_request(
+                family,
+                workspace_root,
+                "workspace://notes.txt",
+                b"@@ -1 +1 @@\n-old\n+new\n",
+                WorkspacePreimage::Absent,
+            );
+            NativeWorkspaceMutationExecutor::new(1).stage_request(
+                idempotency_key,
+                parameters_digest,
+                &validated,
+            )
+        }
+        NativeOperationFamily::ProcessCheck => {
+            let validated = validate_native_tool_request(&process_check_request())?;
+            NativeProcessCheckExecutor::new(
+                1,
+                Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(1))),
+                Duration::from_secs(1),
+            )
+            .stage_request(idempotency_key, parameters_digest, &validated)
+        }
+        NativeOperationFamily::HttpFetchReadOnly => {
+            let validated = staged_fetch_request(&format!("{FETCH_ORIGIN}/data"), 512);
+            scripted_fetch_executor(Arc::new(ScriptedFetchTransport::responding(200, b"body")))
+                .stage_request(idempotency_key, parameters_digest, &validated)
+        }
+    }
+}
+
+/// The readiness projection is only honest if the list it derives from is.
+/// This fails the moment `ASSEMBLED_EXECUTOR_FAMILIES` names a family that no
+/// sink will accept.
+#[test]
+fn every_assembled_family_has_a_sink_that_accepts_it() {
+    let temporary_workspace = TestWorkspace::new("assembled-family-parity");
+    for family in ASSEMBLED_EXECUTOR_FAMILIES {
+        let staged = stage_family_through_its_executor(family, &temporary_workspace.path);
+        assert!(
+            staged.is_ok(),
+            "{family:?} is reported assembled but no sink accepts it: {staged:?}"
+        );
+    }
+}
+
+/// Readiness still follows the assembled set rather than registry
+/// availability, and still leaves every immutable descriptor digest alone.
+#[test]
+fn readiness_follows_the_assembled_set_without_touching_any_descriptor_digest() {
+    let digests_before = BUILTIN_TOOL_CATALOG
+        .iter()
+        .map(|descriptor| {
+            cognitive_kernel::tool_registry::compute_descriptor_digest(descriptor)
+                .expect("descriptor digest")
+        })
+        .collect::<Vec<_>>();
+
+    for descriptor in BUILTIN_TOOL_CATALOG.iter() {
+        assert_eq!(
+            cognitive_kernel::tool_registry::tool_execution_readiness(
+                descriptor,
+                &ASSEMBLED_EXECUTOR_FAMILIES,
+            ),
+            cognitive_kernel::tool_registry::ToolExecutionReadiness::ExecutionReady,
+            "{} has a sink and is enabled, so it must project as executable",
+            descriptor.operation_id
+        );
+        // The projection is derived, not stored: drop the assembled set and
+        // the same enabled descriptor immediately reads registered-only.
+        assert_eq!(
+            cognitive_kernel::tool_registry::tool_execution_readiness(descriptor, &[]),
+            cognitive_kernel::tool_registry::ToolExecutionReadiness::RegisteredOnly,
+            "{} must never forge readiness from registry availability",
+            descriptor.operation_id
+        );
+    }
+
+    let digests_after = BUILTIN_TOOL_CATALOG
+        .iter()
+        .map(|descriptor| {
+            cognitive_kernel::tool_registry::compute_descriptor_digest(descriptor)
+                .expect("descriptor digest")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(digests_before, digests_after);
+}
+
 #[test]
 fn non_fetch_descriptor_cannot_be_staged_for_fetch_dispatch() {
     let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
