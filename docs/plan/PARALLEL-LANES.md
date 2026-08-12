@@ -75,7 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| (none) | — | — | — | — | — | — | — |
+| `lease/personal/P7-T07/windows-install-surface` | P7-T07/D01 Windows credential store backend | Lane-RUN | `personal/P7-T07-windows-install-surface` | `crates/cognitive-secret/Cargo.toml`; `crates/cognitive-secret/src/lib.rs`; `crates/cognitive-secret/src/backend_select.rs`; `crates/cognitive-secret/src/windows_credential_manager.rs`; `crates/cognitive-secret/tests/p7_t07_windows_credential_store.rs`; `crates/cognitive-secret/tests/p1_t02_provider_secret.rs`; `apps/admin-cli/src/personal_cli/init.rs`; `deploy/windows/`; `docs/adr/0052-personal-windows-install-surface.md`; `docs/checkpoints/20260812-personal-p7-t07-b01-w-preregistration.md`; `docs/checkpoints/20260812-personal-p7-t07-windows-install-closure.md`; `docs/plan/PERSONAL-TEST-ENVIRONMENTS.md` | Cursor parallel session B (concurrent with the active `lease/personal/P9-T04/comprehensive-performance-campaign` session; formal-plan/PROGRESS/trace/plan.md status registration is deferred because those exact files are held by that active lease and will be reconciled by the later merger; this task routes Rust validation to `CI-UBUNTU-01`/`CI-WINDOWS-MSVC-01` only and does not touch `DEV-LINUX-NATIVE-01` or `B01-DESKTOP-002` while the performance campaign is running) | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
