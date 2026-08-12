@@ -18,22 +18,26 @@ tests:
   - crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:616fc34313bb4014816cd476a65db4a5e66de09b5a1da232c44cedd4ee8d47d3"
+fingerprint: "sha256:444eac6bfc507c208cf35852ad059a2a1290b9cca6f4c112c420ac0c0b1dc7c9"
 non_claims:
-  - 尽力而为的内存清零不构成侧信道或 mlock 保证。今天生产可选的只有 Linux Secret Service 后端；headless 加密 vault 运行仍是设计目标。
+  - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
 
 # Provider 与 secret
 
 ## key 存在哪里——以及绝不会出现在哪里
 
-Provider API key 在 `cognitive init` 期间经隐藏输入或 stdin 进入，**只**存储在
-Linux Secret Service（经 `secret-tool`、会话 D-Bus）。配置只保留不透明引用
-（`SecretRef`），绝无材料本体。强制禁区——进程参数、普通配置、SQLite、日志、CI/测试
-输出、证据、Pi 进程环境——均有聚焦测试与源码扫描覆盖。
+Provider API key 在 `cognitive init` 期间经隐藏输入或 stdin 进入，**只**存储在批准
+的 OS secret store：Linux Secret Service（经 `secret-tool`、会话 D-Bus），或在
+Windows 主机上的 Windows Credential Manager（经固定且经审计的 PowerShell helper、
+从绝对系统路径调用；secret 材料只经 helper 的 stdin/stdout 传递、持久化仅限本机、
+blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），绝无材料本体。强制禁
+区——进程参数、普通配置、SQLite、日志、CI/测试输出、证据、Pi 进程环境——均有聚焦测试
+与源码扫描覆盖。
 
-在没有生产后端的平台（今天的 Windows/macOS）或密钥环锁定/缺失时，一切 secret 操作
-fail-closed；有意不提供明文回退。轮换：`cognitive init --rotate-key`。
+后端选择基于探测且 fail-closed：在其他平台（今天的 macOS），或密钥环/凭据库锁定、不
+可用时，一切 secret 操作拒绝执行；有意不提供明文回退。轮换：
+`cognitive init --rotate-key`。
 
 ## Provider 流量如何流动
 

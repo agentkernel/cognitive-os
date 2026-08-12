@@ -16,7 +16,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-fingerprint: "sha256:6568d67c4a52eba172c9d9fdc8ceda7d82e74f9a86676b30c21b6dca75a50505"
+fingerprint: "sha256:f543ba606e59b310562b3f241c4b8b140dfb8ff82d9da65d257964ec6da8f5fe"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -52,10 +52,12 @@ cognitive init --provider <id> --base-url <https-url> --api-key-file -
 ```
 
 `cognitive init` prepares the databases (with pre-migration backups), stores your
-Provider key into the Linux Secret Service (stdin/hidden input; never argv or
-files), probes the Provider, and persists two non-secret files: `provider.json`
-(with an opaque `SecretRef`) and `selected-model.json`. If no Secret Service is
-available the command fails closed — there is no plaintext fallback.
+Provider key into the OS secret store (Linux Secret Service here; on Windows
+hosts the same command selects the Credential Manager backend) via stdin/hidden
+input — never argv or files — probes the Provider, and persists two non-secret
+files: `provider.json` (with an opaque `SecretRef`) and `selected-model.json`. If
+no production secret backend is usable the command fails closed — there is no
+plaintext fallback.
 
 ## 3. Start and check the daemon
 

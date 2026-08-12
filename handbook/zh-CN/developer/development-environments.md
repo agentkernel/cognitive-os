@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:3e3ce206ee0b9041acbc3ebd62a42b928074cfb9518d52a6323294afdcc1d455"
+fingerprint: "sha256:f8ddc74106b682817debad87f9953c745f3c5936d09a9870892b2443da92e3ca"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -28,6 +28,7 @@ non_claims:
 | 本地 Windows GNU 主机 | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作 | 任何 workspace `cargo build/test/clippy/run`——已登记 linker exit 121 |
 | WSL2 | 历史工程证据 | 产品路径声明（产品目标是 native Linux） |
 | `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest | 普通开发、部署或测试 |
+| `B01-W-DESKTOP-001` | 已注册但未供给的 Windows Gate guest（B01-W） | 按其预注册供给前的一切用途 |
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22
 （`package.json`）、workspace 级 `unsafe_code = "forbid"` 与 pedantic clippy

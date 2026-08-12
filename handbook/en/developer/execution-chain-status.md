@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:575e8cd82b2890bfa667f672c1c7e247224a87b07e63aa78ff90662879f7fa9a"
+fingerprint: "sha256:5775b5c95826fe2ffe699747ec9827f86960120bc1f01902607d14ea1509221d"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -52,7 +52,11 @@ verification → verified continuation or ceiling STOP.
    `run_private_scheduler_tick_with_store` once during startup; no periodic
    scheduler thread exists.
 3. **Executors unwired**: `dispatch_staged_workspace_read_effect`,
-   `dispatch_staged_process_check_effect` have no production caller.
+   `dispatch_staged_process_check_effect` have no production caller. The daemon
+   does now report this honestly: the resource projection derives per-tool
+   `execution_readiness` from `ASSEMBLED_EXECUTOR_FAMILIES` (WorkspaceRead,
+   ProcessCheck), so every other family surfaces as `registered_only` instead of
+   looking executable.
 4. **Verifier unwired**: `record_independent_verification` and loop-continuation
    entry are exercised by tests only; no production route advances verification
    or Task acceptance.

@@ -27,7 +27,7 @@ core (`cognitive-kernel`) has no HTTP, SQLite, or model SDK dependency by design
 | `crates/cognitive-store` | SQLite WAL adapter: migrations v1–v23 (+installation v1–v4), scheduler leases, Memory/Skill/Context/Artifact stores, backup planning | `sqlite/`, `migration.rs`, `personal_db.rs` (`prepare_personal_databases`), `scheduler.rs` |
 | `crates/cognitive-runtime` | execution layer: Linux bundle verify/install/service, Pi acquisition/registration/lifecycle, adapters/hooks/compaction/learning planners, perf surfaces | `installer.rs`, `linux_bundle*.rs`, `agent_registration.rs`, `scheduler_service.rs`, `perf.rs` |
 | `crates/cognitive-management` | deterministic management plane (inspect/stop/revoke/reconcile), privileged sessions, R1 approvals, audit port, TaskApplicationService | `plane.rs` (`ManagementPlane`), `session.rs`, `task_application.rs` |
-| `crates/cognitive-secret` | SecretStore backends (Linux Secret Service; fail-closed elsewhere), Provider config/discovery/transport | `store.rs` (`SecretStore`), `provider_service.rs`, `provider_transport.rs` |
+| `crates/cognitive-secret` | SecretStore backends (Linux Secret Service; Windows Credential Manager; fail-closed elsewhere), Provider config/discovery/transport | `store.rs` (`SecretStore`), `backend_select.rs`, `provider_service.rs`, `provider_transport.rs` |
 | `crates/cognitive-provider-transport` | loopback TLS Provider fixture for deterministic tests | `bin/p1_t09_provider_fixture.rs` |
 | `crates/cognitive-akp` | AKP 0.2 envelope parsing/digests, in-memory watch log | `lib.rs` (`parse_request`, `WatchLog`) |
 | `crates/cognitive-conformance` | conformance runner: 89 vectors, five-state report, 41-flip self-check | `src/main.rs`, `src/exec/` |

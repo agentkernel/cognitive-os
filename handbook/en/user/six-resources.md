@@ -16,7 +16,7 @@ tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:a628e54f3d77af804a2eaeee37a6cf36972210a4a083f3081ff6304fa46f5997"
+fingerprint: "sha256:ef95daa06e8fac7268dba1f69ff30475e8447d972586c964204c52c27c050ba0"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---
@@ -32,7 +32,7 @@ store and daemon services; user-facing reach varies, so the honest label is
 |---|---|---|
 | **Memory** | admitted durable knowledge with scope, purpose, provenance, versions, expiry, forget/tombstone | `remember`/`forget`/explain via daemon routes; full-text search is a rebuildable FTS5 index behind authority filters; no automatic conversation harvesting |
 | **Skill** | immutable locally imported package/revision with bindings | import/bind/revoke/explain via daemon routes; scripts never execute by themselves |
-| **Tool** | six static native operations (workspace read/search/write/patch, process check, HTTP fetch) | catalog + validators implemented; execution requires the governed Effect path (see [Tasks and execution](./tasks-and-execution.md)) |
+| **Tool** | six static native operations (workspace read/search/write/patch, process check, HTTP fetch) | catalog + validators implemented; the projection reports registration and execution readiness separately (`execution_ready` today only for workspace read + process check; other families are `registered_only`); execution requires the governed Effect path (see [Tasks and execution](./tasks-and-execution.md)) |
 | **Context** | per-Task authorized input request + resolved view with explicit losses | fully daemon-side: metadata-first filtering, per-body reauthorization, sealed views, digest-bound caches |
 | **Task** | raw intent → interpretation → preview → admitted contract | the four admission operations work over HTTP; watch is bounded and snapshot-first |
 | **Runtime/Process** | agent package, installation, registration, instance, sidecar session, process attempt | full Pi lifecycle via `admin-cli`; identities never merge |

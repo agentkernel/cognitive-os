@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:575e8cd82b2890bfa667f672c1c7e247224a87b07e63aa78ff90662879f7fa9a"
+fingerprint: "sha256:5775b5c95826fe2ffe699747ec9827f86960120bc1f01902607d14ea1509221d"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -49,7 +49,9 @@ non_claims:
 2. **单 tick、无循环**：daemon 仅在启动时执行一次
    `run_private_scheduler_tick_with_store`；不存在周期调度线程。
 3. **执行器未接线**：`dispatch_staged_workspace_read_effect`、
-   `dispatch_staged_process_check_effect` 无生产调用者。
+   `dispatch_staged_process_check_effect` 无生产调用者。daemon 现在对此诚实呈报：资
+   源投影从 `ASSEMBLED_EXECUTOR_FAMILIES`（WorkspaceRead、ProcessCheck）派生逐工具
+   `execution_readiness`，其余族显示为 `registered_only` 而非看似可执行。
 4. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
    仅测试演练；没有生产路由推进验证或 Task 验收。
 

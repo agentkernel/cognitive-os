@@ -45,5 +45,6 @@ non_claims:
 - 产品平台：Linux x86_64 + user systemd；桌面需要 Secret Service 密钥环。WSL2 是工
   程环境，不是产品目标。
 - headless 加密 vault 运行已设计但今天不可选。
-- Windows：daemon/CLI 在 CI 可编译，但没有安装器/服务/凭据后端（本地文件无 ACL 加
-  固）。
+- Windows：daemon/CLI 在 CI 可编译，Credential Manager 后端与安装器/scheduled-task
+  模板已存在，但 B01-W 安装战役未执行——没有可安装的 Windows 产品，本地文件也无
+  ACL 加固。

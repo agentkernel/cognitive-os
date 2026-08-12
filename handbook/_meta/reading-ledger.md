@@ -15,9 +15,13 @@ generated: false
 
 - **Reading baseline**: commit `9fbd3904a1f8e0893fcb7d8d2b434e636d546e8c`
   (`origin/main` at audit start) — 1,148 tracked paths, every path classified.
-- **Increment**: `9fbd390..6b637a5194dc56b568d2be25bb9ceb3bb24a0f72` (P9-T04
+- **Increment 1**: `9fbd390..6b637a5194dc56b568d2be25bb9ceb3bb24a0f72` (P9-T04
   merge, PR #199, 31 paths) — read in full before authoring completed.
-- **Implementation baseline**: `6b637a5194dc56b568d2be25bb9ceb3bb24a0f72`,
+- **Increment 2**: `6b637a5..5dd7003` (P2-T09 tool-execution-readiness
+  projection PR #201; P7-T07 Windows install surface PR #200, 18 paths) — read
+  before task closure; the affected pages were updated and re-fingerprinted in
+  the same delivery.
+- **Implementation baseline**: `5dd7003` (`origin/main` at closure),
   recorded in [`source-set.json`](./source-set.json).
 
 ## Coverage method

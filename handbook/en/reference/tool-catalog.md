@@ -8,7 +8,7 @@ generated: true
 sources:
   - path: crates/cognitive-kernel/src/tool_registry.rs
   - path: handbook/_meta/annotations/tool-catalog.json
-fingerprint: "sha256:d45adf22e6cb3e32c5ad796a731096f4a2e2dc66183763fbdc2364545f6c90b9"
+fingerprint: "sha256:a6e113ec3a4c4336a8708831fe2c56be29debeb1a0a978ba2a436e37a63cc1fb"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."

@@ -39,9 +39,13 @@ are explicitly refused by the Pi launch admission path.
 ## What compiles vs what is supported
 
 CI builds and tests the workspace on Ubuntu and Windows MSVC; that is engineering
-evidence, not Windows product support (no installer, no service, no credential
-backend, no file-ACL hardening). The registered local Windows GNU host cannot
-link Rust at all. macOS has no CI lane and no backend.
+evidence, not Windows product support. A Windows install **surface** now exists in
+the tree — the Windows Credential Manager production secret backend plus
+inspectable bootstrap-installer and per-user scheduled-task templates
+(ADR-0052) — but the end-to-end Windows install campaign (B01-W) has not been
+executed, so no install parity is claimed and local files still carry no
+ACL hardening. The registered local Windows GNU host cannot link Rust at all.
+macOS has no CI lane and no backend.
 
 ## Client compatibility
 

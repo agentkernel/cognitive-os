@@ -27,7 +27,7 @@ non_claims:
 | `crates/cognitive-store` | SQLite WAL 适配器：迁移 v1–v23（安装库 v1–v4）、调度 lease、Memory/Skill/Context/Artifact 存储、备份规划 | `sqlite/`、`migration.rs`、`personal_db.rs`（`prepare_personal_databases`）、`scheduler.rs` |
 | `crates/cognitive-runtime` | 执行层：Linux bundle 校验/安装/服务、Pi 获取/注册/生命周期、adapter/hook/压缩/学习规划器、性能面 | `installer.rs`、`linux_bundle*.rs`、`agent_registration.rs`、`scheduler_service.rs`、`perf.rs` |
 | `crates/cognitive-management` | 确定性管理面（inspect/stop/revoke/reconcile）、特权会话、R1 审批、审计端口、TaskApplicationService | `plane.rs`（`ManagementPlane`）、`session.rs`、`task_application.rs` |
-| `crates/cognitive-secret` | SecretStore 后端（Linux Secret Service；其余 fail-closed）、Provider 配置/发现/传输 | `store.rs`（`SecretStore`）、`provider_service.rs`、`provider_transport.rs` |
+| `crates/cognitive-secret` | SecretStore 后端（Linux Secret Service；Windows Credential Manager；其余 fail-closed）、Provider 配置/发现/传输 | `store.rs`（`SecretStore`）、`backend_select.rs`、`provider_service.rs`、`provider_transport.rs` |
 | `crates/cognitive-provider-transport` | 用于确定性测试的 loopback TLS Provider fixture | `bin/p1_t09_provider_fixture.rs` |
 | `crates/cognitive-akp` | AKP 0.2 信封解析/digest、内存 watch log | `lib.rs`（`parse_request`、`WatchLog`） |
 | `crates/cognitive-conformance` | 符合性 runner：89 向量、五态报告、41 项自检翻转 | `src/main.rs`、`src/exec/` |

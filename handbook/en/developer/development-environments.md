@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:3e3ce206ee0b9041acbc3ebd62a42b928074cfb9518d52a6323294afdcc1d455"
+fingerprint: "sha256:f8ddc74106b682817debad87f9953c745f3c5936d09a9870892b2443da92e3ca"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -28,6 +28,7 @@ owns what each environment may claim. Practical routing:
 | Local Windows GNU host | pnpm builds/tests, `cargo fmt`, Node checkers, docs work | any workspace `cargo build/test/clippy/run` — registered linker exit 121 |
 | WSL2 | historical engineering evidence | product-path claims (product target is native Linux) |
 | `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures | ordinary development, deployment, or testing |
+| `B01-W-DESKTOP-001` | registered-but-not-provisioned Windows Gate guest (B01-W) | anything until provisioned per its preregistration |
 
 Toolchain pins: Rust 1.97.1 (`rust-toolchain.toml`), pnpm 10.33.2 + Node ≥22
 (`package.json`), workspace-wide `unsafe_code = "forbid"` and pedantic clippy

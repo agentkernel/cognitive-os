@@ -44,9 +44,11 @@ budgeted, recoverable, and never falsely completed**:
   (the pinned Pi package) with its sidecar; other agents require independent
   qualification.
 - Not a Linux kernel replacement, driver framework, or eBPF control plane.
-- Not Windows-installable today: the product target for 1.0 is Linux x86_64 only
-  (Windows daemon/CLI code compiles in CI but there is no installer, service, or
-  credential backend).
+- Not Windows-installable today: the product target for 1.0 is Linux x86_64 only.
+  A Windows install surface (Credential Manager secret backend, inspectable
+  installer and scheduled-task templates) exists in the tree and passes CI, but
+  its end-to-end install campaign (B01-W) has not been executed, so Windows
+  installation is not offered or claimed.
 
 ## Current shape (honest summary)
 

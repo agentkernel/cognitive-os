@@ -38,8 +38,9 @@ non_claims:
 - 不是通用 agent 市场：Linux 1.0 只资格化一个 agent（钉住版本的 Pi 包）及其
   sidecar；其他 agent 需要独立资格化。
 - 不是 Linux 内核替代、驱动框架或 eBPF 控制面。
-- 今天不可在 Windows 安装：1.0 的产品目标只有 Linux x86_64（Windows 的 daemon/CLI
-  代码在 CI 可编译，但没有安装器、服务或凭据后端）。
+- 今天不可在 Windows 安装：1.0 的产品目标只有 Linux x86_64。仓库中已存在 Windows 安
+  装表面（Credential Manager secret 后端、可检查的安装器与 scheduled-task 模板）且
+  通过 CI，但其端到端安装战役（B01-W）尚未执行，因此不提供也不声明 Windows 安装。
 
 ## 当前形态（诚实概括）
 

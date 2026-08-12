@@ -16,7 +16,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-fingerprint: "sha256:6568d67c4a52eba172c9d9fdc8ceda7d82e74f9a86676b30c21b6dca75a50505"
+fingerprint: "sha256:f543ba606e59b310562b3f241c4b8b140dfb8ff82d9da65d257964ec6da8f5fe"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -46,10 +46,11 @@ fail-closed 的 shell 设置、HTTPS-only 有界下载、单一钉住的跳转�
 cognitive init --provider <id> --base-url <https-url> --api-key-file -
 ```
 
-`cognitive init` 准备数据库（带迁移前备份），把 Provider key 存入 Linux Secret
-Service（stdin/隐藏输入；绝不走 argv 或文件落盘），探测 Provider，并持久化两个非
+`cognitive init` 准备数据库（带迁移前备份），把 Provider key 经 stdin/隐藏输入存入
+OS secret store（此处为 Linux Secret Service；在 Windows 主机上同一命令会选择
+Credential Manager 后端）——绝不走 argv 或文件落盘——探测 Provider，并持久化两个非
 secret 文件：`provider.json`（含不透明 `SecretRef`）与 `selected-model.json`。若无可
-用 Secret Service，命令 fail-closed——没有明文回退。
+用的生产 secret 后端，命令 fail-closed——没有明文回退。
 
 ## 3. 启动并检查 daemon
 

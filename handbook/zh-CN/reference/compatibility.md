@@ -38,8 +38,10 @@ Windows 原生主机被 Pi 启动准入路径显式拒绝。
 ## 可编译 vs 受支持
 
 CI 在 Ubuntu 与 Windows MSVC 上构建并测试 workspace；那是工程证据，不是 Windows 产
-品支持（无安装器、无服务、无凭据后端、无文件 ACL 加固）。已登记的本地 Windows GNU
-主机完全无法链接 Rust。macOS 无 CI 泳道也无后端。
+品支持。仓库中现已存在 Windows 安装**表面**——Windows Credential Manager 生产
+secret 后端，以及可检查的引导安装器与按用户 scheduled-task 模板（ADR-0052）——但端到
+端 Windows 安装战役（B01-W）尚未执行，因此不声明安装对等，本地文件也仍无 ACL 加固。
+已登记的本地 Windows GNU 主机完全无法链接 Rust。macOS 无 CI 泳道也无后端。
 
 ## 客户端兼容性
 

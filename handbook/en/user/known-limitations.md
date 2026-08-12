@@ -50,5 +50,6 @@ current fact of the code.
 - Product platform: Linux x86_64 with user systemd; desktop needs a Secret Service
   keyring. WSL2 is an engineering environment, not a product target.
 - Headless encrypted-vault operation is designed but not selectable today.
-- Windows: daemon/CLI compile in CI, but no installer/service/credential backend
-  exists (no ACL hardening on local files).
+- Windows: daemon/CLI compile in CI and a Credential Manager backend plus
+  installer/scheduled-task templates exist, but the B01-W install campaign has
+  not run — no installable Windows product, and no ACL hardening on local files.
