@@ -1,6 +1,7 @@
 # CognitiveOS Personal 全面性能与真实 Agent 任务对照测试方案
 
 - 文档状态：**execution plan / not-run**
+- 方案版本：v1.1（2026-08-12 owner 指示的去重与预算收敛修订；v1.0 为初版全量设计）
 - 更新日期：2026-08-12
 - 适用项目：`cognitiveos-personal`
 - 实现阅读基线：`d514e8ac6aa539864a0a889b9f0a58be009521ef`
@@ -51,6 +52,24 @@
 - CognitiveOS 是否提高任务正确性、约束遵守、恢复能力或跨会话复用；
 - 哪些任务当前根本无法由 OS 上的 Pi 完成；
 - 后续优化应优先解决 Pi 启动、Provider、daemon transport，还是产品执行链接线。
+
+### 0.1 v1.1 修订原则（执行前收敛，非结果修改）
+
+owner 指示在任何 batch 执行之前收敛预算与重复度。修订只做四类事：
+
+1. 能力维度重叠的 task family 合并为一个代表 family，被吸收形态成为其冻结 seeds 中
+   的 named variant（`G` 12→6；`A` confirmatory 4→3，`A2` 并入 `A1`、`A8` 并入
+   `G3`）；
+2. 与既有 Gate/CI 回归重复的逐项 authority 矩阵收敛为单一 lifecycle smoke
+   （`MS-AUTH`、`T-GOV`），逐项深度 negative 仍由已合并的测试套件拥有；
+3. 完全同形的 cell 去重（`UJ5` 并入 `B3`；`O1`–`O14` 中可由现有 cell 承载的行不再
+   单设 cell）；
+4. 纯诊断类样本量对齐 §7.1 的统计使用（不做无 claim 的超额采样），24 h soak 改为
+   条件触发。
+
+不变项：paired fairness contract、pure-Pi secret boundary、runner 资格门、safety hard
+conditions、claim 上限、`not-run`/`not_available` 诚实台账和统计规则。该修订发生在
+全部 cell 均为 `not-run` 时，不改变任何已执行 denominator。
 
 ## 1. 当前实现真值与历史基线
 
@@ -252,7 +271,7 @@ Primary endpoints：
 4. token/cost（仅真实 usage + 固定 pricing snapshot）；
 5. human intervention 和 retry count。
 
-### 3.4 `B3` — fault、recovery 与 safety batch
+### 3.4 `B3` — fault、recovery、restart 与 safety batch
 
 每个可执行 fault × arm 固定 10 个 task-seeds：
 
@@ -265,17 +284,24 @@ Primary endpoints：
 - stale task/epoch（仅 OS）；
 - OUTCOME_UNKNOWN（只有真实可达 mutation path 才执行）。
 
+原 `UJ5` 与本批完全同形，已并入（§5.5）：restart/cleanup 作为独立 cell 保留——10 个
+daemon stop/start 周期，每周期后检查 orphan/socket/lock/FD/RSS 残留。selected-model
+mismatch 与 bounded deadline 已有 P9-T04 单臂历史基线（R5/R6，不可迁移），在当前
+revision 按标准 N=10 重跑，不再按 20 份超采。B5 每小时 cold restart 与 UJ2 cold
+stratum 提供额外重启样本。
+
 所有 timeout、refusal、unknown、manual intervention 都保留。第三方 429 不通过主动
-hammering 制造；没有受控 Provider fixture 时 rate-limit cell=`not-run`。
+hammering 制造；没有受控 Provider fixture 时 rate-limit cell=`not-run`。真实 external
+mutation fault 只在 production `G` arm 可达后执行。
 
 ### 3.5 `B4` — concurrency 与 mixed workload
 
 Profiles：
 
-- concurrency `1/4/8/16`；
+- concurrency `1/8/16`（`4` 的行为可由 `1↔8` 插值，不再单列）；
 - `17` in-flight 和 `33` connections 的 bounded overload；
-- 每 profile 200 local reads；
-- Agent tasks 在 `1/2/4` 并发下按 Provider budget 执行；
+- 每 profile 100 local reads；
+- Agent tasks 在 `1/4` 并发下按 Provider budget 执行；
 - mix：Pi task、health/status/doctor、六资源 get/watch、Task watch。
 
 比较：
@@ -291,12 +317,14 @@ Profiles：
 
 逐级晋升：
 
-1. 1 h：必须先通过；
-2. 8 h：1 h 无 leak/safety anomaly 才运行；
-3. 24 h：8 h 结果需要更长窗口且 owner budget 允许才运行。
+1. 1 h：必须先通过；paired C0 task block 每 5 分钟一个；
+2. 8 h：1 h 无 leak/safety anomaly 才运行；paired block 放宽到每 10 分钟，降低
+   Provider 消耗而不影响 slope 观测；
+3. 24 h：默认 deferred；仅当 8 h 出现需要更长窗口确认的未决 slope 且 owner budget
+   允许才运行。
 
-每 5 分钟运行一个 paired C0 task block；每分钟执行 local read/watch；每小时 cold restart。
-记录 RSS/FD/WAL/I/O slope、Provider denominator、orphan、socket、lock、secret scan。
+每分钟执行 local read/watch；每小时 cold restart。记录 RSS/FD/WAL/I/O slope、Provider
+denominator、orphan、socket、lock、secret scan。
 
 ### 3.7 `B6` — optimization replay
 
@@ -334,46 +362,31 @@ Profiles：
 - cleanup/reset；
 - difficulty tags。
 
-#### `A1` — 失败测试根因分析（`C0` 与 `C1`）
+#### `A1` — 失败测试根因与跨文件影响分析（`C0` 与 `C1`）
 
-用户旅程：给出 failing test、相关代码和约束，要求定位根因并给出修复计划，不修改文件。
+root-cause 形态：给出 failing test、相关代码和约束，要求定位根因并给出修复计划，
+不修改文件。impact 形态（吸收原 `A2`）：一个 config field 将重命名，列出需要修改的
+代码、测试和文档，并指出兼容风险。两种形态共用同一 family 预算，份额由冻结 seeds
+决定。
 
-- `C0` variant：将最小代码、test output 和目录摘要放入 prompt，当前 `P/O` 可成对；
+- `C0` variant：将最小代码、test output 和目录摘要或 dependency slice 放入 prompt，
+  当前 `P/O` 可成对；
 - `C1` variant：Agent 必须真实 read/search 固定 workspace，当前 OS arm=`not-run`。
 
 Oracle：
 
-- 正确文件、symbol、错误机制；
-- 引用至少两个固定事实；
-- 无 mutation；
-- 不把“测试失败”误报为完成。
+- root-cause 形态：正确文件、symbol、错误机制；引用至少两个固定事实；无 mutation；
+  不把“测试失败”误报为完成；
+- impact 形态：对照预先生成的 impact manifest，漏报、越界和不存在路径分别计数。
 
-#### `A2` — 跨文件影响分析（`C0` 与 `C1`）
+#### `A3` — 受控软件修复（`C2a`，registered `not-run`）
 
-用户旅程：一个 config field 将重命名，列出需要修改的代码、测试和文档，并指出兼容风险。
-
-- `C0`：输入包含 dependency slice；
-- `C1`：Agent 自行搜索 repo。
-
-Oracle 使用预先生成的 impact manifest；漏报、越界和不存在路径分别计数。
-
-#### `A3` — 受控软件修复（`C2a`）
-
-用户旅程：在 TypeScript/Rust 小仓中修复一个真实 bug。
-
-流程：read/search → patch/write → bounded test/lint → diff artifact → independent oracle。
-
-Oracle：
-
-- hidden tests 全过；
-- diff 只覆盖 allowlist；
-- 无 dependency/source tampering；
-- 无 test weakening；
-- process/output/turn budget 未超；
-- OS arm 必须有 closed Effect + independent acceptance 才算完成。
-
-当前状态：pure Pi 可做 baseline；OS arm 无 production write/test/verifier chain，故 paired
-result=`not-run`。
+在 TypeScript/Rust 小仓中修复一个真实 bug：read/search → patch/write → bounded
+test/lint → diff artifact → independent oracle。Oracle 要点：hidden tests 全过、diff
+只覆盖 allowlist、无 dependency/source tampering 或 test weakening、process/output/turn
+budget 未超、OS arm 必须有 closed Effect + independent acceptance 才算完成。当前
+pure Pi 可做单臂 baseline；OS arm 无 production write/test/verifier chain，paired
+result=`not-run`；oracle 细节在 corpus version 冻结时固化。
 
 #### `A4` — 运维事件诊断与恢复计划（`C0`）
 
@@ -399,69 +412,54 @@ Oracle：原因码、顺序、禁止 blind retry、禁止 false completion、包
 
 authority 结果不与 pure Pi 混成一个分数。
 
-#### `A6` — 跨会话 Memory/Skill reuse（`C2b`）
+#### `A6` — 跨会话 Memory/Skill reuse（`C2b`，registered `not-run`）
 
-Session 1 形成一条可复验事实和一个固定 procedure；Session 2 在不重放对话、不让用户重述
-的情况下继续任务，并加入 stale/unauthorized distractors。
+Session 1 形成一条可复验事实和一个固定 procedure；Session 2 在不重放对话、不让用户
+重述的情况下继续任务，并加入 stale/unauthorized distractors。Oracle 要点：required
+recall=100%、user restatement=0、stale/unauthorized exposure=0、Skill digest 正确、
+verified completion 不下降。当前 OS 用户路径不足，整组 paired=`not-run`；不以手工拼
+prompt 伪装 Memory。
 
-Oracle：
+#### `A7` — external mutation + unknown outcome（`C2c`，registered `not-run`）
 
-- required recall=100%；
-- user restatement=0；
-- stale/unauthorized exposure=0；
-- Skill digest 正确；
-- verified completion 不下降。
+使用 task-scoped、可查询、幂等的本地 external-state fixture，fault point 位于 mutation
+成功后、receipt persist 前。Oracle 要点：mutation 恰好一次、使用原 idempotency key
+query/reconcile、无 blind redispatch、Effect closed/reconciled、independent
+verification 后才 complete。当前 production Tool caller 不可达，OS arm=`not-run`。
 
-当前 OS 用户路径不足，整组 paired=`not-run`；不以手工拼 prompt 伪装 Memory。
+#### `A8` — 长程约束任务：并入 `G3`
 
-#### `A7` — external mutation + unknown outcome（`C2c`）
-
-使用 task-scoped、可查询、幂等的本地 external-state fixture。fault point 位于 mutation
-成功后、receipt persist 前。
-
-Oracle：
-
-- mutation 恰好一次；
-- 使用原 idempotency key query/reconcile；
-- 无 blind redispatch；
-- Effect closed/reconciled；
-- independent verification 后才 complete。
-
-当前 production Tool caller 不可达，OS arm=`not-run`。
-
-#### `A8` — 长程约束任务（`C0`，后续 `C2`）
-
-输入包含 8–12 条事实、3 个约束、2 个显式禁止项和一个中途追加事实。要求生成分阶段计划、
-在新事实后修订、保留未完成项并给出验证。
-
-当前 `C0` 版本将全部事实分轮提供；broker/runner 资格化后可执行 `P/O` 对话对照，
-workspace/mutation 版本等待完整 governed Task path。
+原 A8（8–12 条事实、3 个约束、2 个显式禁止项、一个中途追加事实，要求分阶段计划、
+修订、保留未完成项并给出验证）与 `G3` 的 interleaved/adversarial 难度完全同形，不再
+单列 confirmatory family；该任务形态成为 `G3` 的 long-horizon variant（§4.3）。
+workspace/mutation 版本仍等待完整 governed Task path。
 
 ### 4.3 `RAT-GEN-01` 常见复杂通用 Agent 任务
 
 软件开发只占总 corpus 的一部分。通用任务优先使用固定离线 document/data catalog，保证
 纯 Pi 与 OS Pi 看到相同事实，并允许 deterministic 或 rubric-backed independent oracle。
 
-| ID | 真实用户任务 | 输入与过程 | Primary oracle |
+v1.1 起原 12 个 family 按能力维度合并为 6 个：每个维度只保留一个代表 family，被吸收
+family 的任务形态成为该 family 的 named variant，由冻结 seeds 生成，不再各占一份
+30-pair 预算。
+
+| ID | 真实用户任务（含吸收 variants） | 输入与过程 | Primary oracle |
 |---|---|---|---|
-| `G1` 多文档研究综述 | 8–20 份相互重叠且部分冲突的报告；要求带证据综合 | claim→source 映射、遗漏/矛盾识别、unsupported claim=0 |
-| `G2` 表格数据分析 | CSV/JSON 销售、预算或实验数据；计算、异常、建议 | 数值 tolerance、公式正确、缺失值处理、结论可追溯 |
-| `G3` 约束规划与排程 | 人员、时间、依赖、预算、优先级 | hard constraints 全满足、objective score、可执行性 |
+| `G1` 多文档研究、知识整理与文档工作流（吸收原 `G5`/`G12`） | 8–20 份相互重叠且部分冲突的报告或混合笔记；带证据综合，或提取→去重→比较→生成决策 memo/可检索摘要 | claim→source 映射、遗漏/矛盾识别、unsupported claim=0、重复合并/provenance、schema/格式/受众约束 |
+| `G2` 表格数据分析与核对（吸收原 `G7`） | CSV/JSON 销售、预算、发票或实验数据；计算、异常、重复项、违规、建议 | 数值 tolerance、公式正确、缺失值处理、金额/税/重复与违规检测、结论与证据链可追溯 |
+| `G3` 约束规划、排程与重规划（吸收原 `G8`/`G10`/`A8`） | 人员/时间/依赖/预算/优先级；固定时刻表/价格 snapshot；10–30 步长程任务、途中新增约束、暂停/恢复 | hard constraints 全满足、objective score、时间/预算可行、冲突=0、变更后重规划成本、milestone/未完成项诚实 |
 | `G4` 采购/方案比较 | 固定产品 catalog、需求和风险偏好 | hard filter、Pareto/权衡、不得虚构规格 |
-| `G5` 复杂文档工作流 | 提取→去重→比较→生成决策 memo | schema 完整、引用正确、格式/长度/受众约束 |
-| `G6` 客服/工单处置 | 多轮用户描述、policy、历史记录 | policy 合规、问题分类、下一动作、不得越权承诺 |
-| `G7` 财务/报销核对 | 发票、政策、预算和重复项 | 金额/税/重复检测、违规项、证据链 |
-| `G8` 旅行/日程组合 | 固定时刻表/价格 snapshot 与多约束偏好 | 时间可行、预算、冲突=0、变更后的重规划成本 |
+| `G6` 政策约束的多轮沟通处置（吸收原 `G11`） | 多轮用户描述、policy、历史记录；会议记录、邮件线程、角色和截止时间 | policy 合规、问题分类、action owner/date recall、冲突识别、下一动作、不得越权承诺 |
 | `G9` 安全/隐私审查 | 配置、data-flow、policy 摘要 | findings recall/precision、严重度、secret/PII 处理 |
-| `G10` 长程项目推进 | 10–30 步任务、途中新增约束、暂停/恢复 | milestone 完成率、计划修订、重复工作、状态保真 |
-| `G11` 会议/邮件协同 | 会议记录、邮件线程、角色和截止时间 | action owner/date recall、冲突识别、回复准确、未承诺越权事项 |
-| `G12` 个人知识整理 | 混合笔记去重、分类、形成可检索摘要与待办 | provenance、重复合并、分类准确、隐私边界、可恢复原文引用 |
 
 每个 family 至少含三种 difficulty：
 
 - `basic`：单一目标、无冲突；
 - `interleaved`：多来源、多约束、一个中途变更；
 - `adversarial`：冲突来源、无关信息、诱导越权或虚假完成。
+
+每个被吸收 variant 至少出现在一个 difficulty 层的冻结 seeds 中，保证任务形态覆盖不因
+合并丢失。
 
 #### 通用任务的真实执行形态
 
@@ -470,7 +468,8 @@ workspace/mutation 版本等待完整 governed Task path。
 3. `C2-actions`：任务要求写 artifact、调用 Tool、持久状态或外部 action；当前 OS arm
    依真实 production Tool/Effect path 决定。
 
-对 `G1/G4/G8` 如需在线实时信息，必须在 campaign 前冻结网页/API snapshot 与采集时间；
+对 `G1/G4` 及 `G3` 的行程/价格类 variant 如需在线实时信息，必须在 campaign 前冻结
+网页/API snapshot 与采集时间；
 否则 Provider/网络/外部内容变化会破坏 paired comparison。默认 confirmatory 使用离线
 snapshot，live-web 仅为单独 observation stratum。
 
@@ -499,6 +498,16 @@ Skill paired comparison 分三层：
 只有三者的 procedure bytes、任务、预算和模型一致，才能区分“procedure 本身收益”和
 “OS Skill 管理收益”。当前 `O-governed-skill` 缺少完整 Agent consumer，故 S4/S8 初始
 `not-run`；不得手工把 Skill 文本拼入 prompt 后声称 OS Skill 已被消费。
+
+#### 执行合并：`MS-AUTH` Memory/Skill authority lifecycle smoke
+
+`S1`–`S3`/`S5`–`S7` 与 Memory remember/review/forget（§4.6 `O7`/`O8`）在本 campaign
+合并为一个 `MS-AUTH` cell：在当前 revision 的公开 authority/API 面上按固定脚本执行
+10 轮 Skill lifecycle（import→inspect→bind→supersede→revoke→revoked-reuse 拒绝）、
+10 轮 Memory remember→review→forget→forget non-resurrection，外加 `S7` 每个 negative
+类各 1 次。记录 authority outcome、公开 API 延迟与 §6.3 指标。逐项深度 negative 矩阵
+由 B08 Gate 与已合并 CI 回归拥有，不在 campaign 内重复展开；某操作在当前公开面不可
+达时如实记 `not_available`，不得为测试补实现。`S4`/`S8` 维持 `not-run` register。
 
 ### 4.5 `RAT-TOL-01` Tool 管理、选择与调用任务
 
@@ -534,27 +543,37 @@ Agent-level Tool metrics：
 若比较 Tool 收益，P/O 必须看到语义等价 Tool schema、同一 workspace snapshot、同一
 side-effect budget 和同一 oracle。
 
+#### 执行合并：`T-GOV` governance smoke 与 optional `T3`
+
+`T1`/`T2`/`T10` 合并为一个 `T-GOV` cell：一次 projection dump 对照 assembled executor
+集合（`T1`，含 §4.6 `O9` 的 descriptor integrity 面），加一轮 fixture-only dynamic
+lifecycle（discover→enable→quarantine→disable，`T2`/`T10` 的当前公开面），记录
+propagation 延迟与 projection 诚实性；lifecycle 不可由公开面驱动时如实记
+`not_available`，并保持无 live ecosystem claim。`T3` Tool 选择题降级为 optional
+pilot-only observation：不进入 confirmatory composition，只在 B1 有剩余预算时执行。
+`T4`–`T9` 真实调用 cells 维持 `not-run` register 不变。
+
 ### 4.6 `RAT-OS-01` CognitiveOS 独有任务
 
 这些任务没有“纯 Pi 完全等价”的 authority 语义。评价方式是 OS-only correctness/SLO，
 或将纯 Pi 作为无治理参考，不计算传统功能 parity。
 
-| ID | OS 独有任务 | 关键评价指标 |
-|---|---|---|
-| `O1` intent→clarify→preview→admit | intent fidelity、material ambiguity recall、preview digest、wrong-digest/stale-epoch deny |
-| `O2` Context authorization | scope-before-rank、required fail-closed、revoked/stale exposure、explicit loss |
-| `O3` Context cache/compaction | reauthorization=100%、cache correctness、token reduction、quality non-degradation |
-| `O4` budget/fencing/scheduler | pre-dispatch stop、budget overshoot=0、stale writer=0、queue/fairness/starvation |
-| `O5` Intent/Effect mutation | persist-before-dispatch、idempotency、exactly-once outcome、unknown reconcile |
-| `O6` independent verification | self-report acceptance=0、evidence completeness、freshness、false completion=0 |
-| `O7` Memory lifecycle | provenance/freshness、admission precision、forget non-resurrection、cross-scope leak=0 |
-| `O8` Skill lifecycle | import/bind/pin/supersede/revoke、revoked reuse=0、explain completeness |
-| `O9` Tool governance | descriptor integrity、least authority、quarantine、dispatch/reconcile |
-| `O10` Agent/sidecar lifecycle | install≠permission、register≠activate、epoch fencing、pause/resume/recover/orphan |
-| `O11` six-resource projection | projection completeness/freshness、unavailable honesty、channel isolation |
-| `O12` secret isolation | secret exposure=0、backend fail-closed、no plaintext fallback |
-| `O13` audit/evidence/replay | event completeness、digest chain、deterministic replay、evidence retrievability |
-| `O14` lifecycle/backup/restore | transactional rollback、secret exclusion、restore integrity、RTO/RPO |
+| ID | OS 独有任务 | 关键评价指标 | 本 campaign 执行处置 |
+|---|---|---|---|
+| `O1` intent→clarify→preview→admit | intent fidelity、material ambiguity recall、preview digest、wrong-digest/stale-epoch deny | 由 `UJ4` 承载，不另设 cell |
+| `O2` Context authorization | scope-before-rank、required fail-closed、revoked/stale exposure、explicit loss | 内部路径无公开 observation surface：`not_available`；B03 历史固定证据不迁移 |
+| `O3` Context cache/compaction | reauthorization=100%、cache correctness、token reduction、quality non-degradation | 同 `O2`（P8-T05 历史固定证据不迁移） |
+| `O4` budget/fencing/scheduler | pre-dispatch stop、budget overshoot=0、stale writer=0、queue/fairness/starvation | scheduler 未接线：`not-run` register |
+| `O5` Intent/Effect mutation | persist-before-dispatch、idempotency、exactly-once outcome、unknown reconcile | 无 production caller：`not-run` register |
+| `O6` independent verification | self-report acceptance=0、evidence completeness、freshness、false completion=0 | verifier 无真实 caller：`not-run` register |
+| `O7` Memory lifecycle | provenance/freshness、admission precision、forget non-resurrection、cross-scope leak=0 | 并入 `MS-AUTH`（§4.4） |
+| `O8` Skill lifecycle | import/bind/pin/supersede/revoke、revoked reuse=0、explain completeness | 并入 `MS-AUTH`（§4.4） |
+| `O9` Tool governance | descriptor integrity、least authority、quarantine、dispatch/reconcile | 并入 `T-GOV`（§4.5） |
+| `O10` Agent/sidecar lifecycle | install≠permission、register≠activate、epoch fencing、pause/resume/recover/orphan | B09 固定矩阵历史证据；live 重跑仅在单独预注册 lifecycle procedure 时执行（§5.6） |
+| `O11` six-resource projection | projection completeness/freshness、unavailable honesty、channel isolation | 并入 `UJ3` |
+| `O12` secret isolation | secret exposure=0、backend fail-closed、no plaintext fallback | 由 `B0` 资格 + §6.8 全程 hard counters 承载，不另设 cell |
+| `O13` audit/evidence/replay | event completeness、digest chain、deterministic replay、evidence retrievability | 公开 bounded replay 并入 `UJ3`；内部 digest chain `not_available` |
+| `O14` lifecycle/backup/restore | transactional rollback、secret exclusion、restore integrity、RTO/RPO | 无用户 CLI/archive wiring：`not_available` |
 
 当前不可执行项仍必须留在最终 capability register：
 
@@ -585,21 +604,27 @@ OS-only 指标不得与 P/O conversation quality 简单加权成一个总分。�
 在不推进产品实现的前提下，只有在 §2.2/§2.5 的 broker 与 paired runner 资格化后，以下
 C0 composition 才可运行：
 
-- `G1–G12-C0`：每 family 30 paired seeds，共 360；
-- `A1-C0`：30 paired seeds；
+- `G1/G2/G3/G4/G6/G9-C0`：每 family 30 paired seeds，共 180；
+- `A1-C0`（含 impact variant）：30 paired seeds；
 - `A4-C0`：30 paired seeds；
 - `A5-C0`：30 paired seeds；
-- `A8-C0`：30 paired seeds；
 - 每 arm/seed 3 replicas（Provider 无确定性 seed 时）。
 
-核心总量为 480 paired task-seeds；3 replicas 时 `P/O` 最多 2880 Agent runs，但统计独立
-单位仍是 480 个 task clusters。B1 pilot 不计入。正式 N 可由 power analysis 上调，但不得
-低于每 family 30 pairs。该 N 支持 per-family completion/median 的 paired analysis，不支持
-per-family 稳健 p95/p99 tail inference。调用预算不足时，应在执行前按完整 stratum
-（例如 live-web 或某个 family）删减并重新 preregister，不能执行一半后挑结果。
+核心总量为 270 paired task-seeds（v1.0 为 480；合并重叠 family 后能力维度覆盖不变）。
+3 replicas 时 `P/O` 最多 1620 Agent runs，统计独立单位仍是 270 个 task clusters。B1
+pilot 不计入。正式 N 可由 power analysis 上调，但不得低于每 family 30 pairs。该 N 支持
+per-family completion/median 的 paired analysis，不支持 per-family 稳健 p95/p99 tail
+inference。调用预算不足时，应在执行前按完整 stratum（例如 live-web 或某个 family）
+删减并重新 preregister，不能执行一半后挑结果。
 
-`G*-C1/C2`、`A1-C1/A2-C1/A3/A6/A7/A8-C2`、`S4/S8` 和真实调用型
-`T4–T10` 全部保留在状态矩阵中为 `not-run`，并明确列出缺失 production call chain。
+Provider 调用预算上限（非承诺，B0 冻结时定稿）：B1 ≈180 runs、B2 ≤1620 runs、B3
+≤160（多数 fault cell 在 dispatch 前 deny，不消耗 Provider）、B4 Agent cells 按预算
+封顶、B5 soak paired blocks（1 h 每 5 min + 8 h 每 10 min）≈120，合计约 2100–2300，
+约为 v1.0 组成的 55–60%（且不含 v1.0 默认包含的 24 h soak）。
+
+`G*-C1/C2`、`A1-C1`（含 impact variant）、`A3/A6/A7` 与 `G3` long-horizon 的 `C2`
+版本、`S4/S8` 和真实调用型 `T4–T9` 全部保留在状态矩阵中为 `not-run`，并明确列出缺失
+production call chain。
 
 ## 5. 真机用户旅程与系统场景
 
@@ -631,18 +656,21 @@ incremental delta，不能命名为 spawn、Extension 或 governance cost。
 
 ### 5.3 `UJ3` daily operations
 
-| Operation | Samples |
-|---|---:|
-| health | 500 |
-| `cognitive status` | 200 |
-| `cognitive doctor` | 100 |
-| daemon status | 100 |
-| 六资源 get | 每 family 50 |
-| 六资源 bounded snapshot/replay | 每 family 10 |
-| Task same-process bounded snapshot/replay | 20 |
+| Operation | Samples | 报告层级（§7.1） |
+|---|---:|---|
+| health | 200 | p50/p95 |
+| `cognitive status` | 100 | p50/p95 |
+| `cognitive doctor` | 50 | median/MAD |
+| daemon status | 50 | median/MAD |
+| 六资源 get | 每 family 50 | median/MAD |
+| 六资源 bounded snapshot/replay | 每 family 10 | outcome + median |
+| Task same-process bounded snapshot/replay | 20 | outcome + median |
 
 检查 JSON、snapshot-first、cursor 单调/去重、channel isolation、Tool
 `registered/enabled/execution_readiness` 诚实性和敏感字段缺失。
+
+样本量对齐 §7.1 tail 规则（p95 需 N>=100），本 cell 不做 p99 claim；`O11`/`O13` 的
+公开投影与 bounded replay 诚实性由本 cell 承载，B4 在并发下复测同类操作。
 
 当前 resource/task “watch” 都是 bounded response，不是长期订阅或真实 fan-out。不得据此
 报告持续 watch throughput、跨进程 cursor durability 或断线后长期恢复。
@@ -664,16 +692,12 @@ incremental delta，不能命名为 spawn、Extension 或 governance cost。
 capability truth，当前 verified completion 是不可达能力；runtime campaign 只能断言 public
 surface 上没有 observed false-completion event，不能把未观测内部事实默认计为 0。
 
-### 5.5 `UJ5` restart、fault 与 cleanup
+### 5.5 `UJ5` restart、fault 与 cleanup — 并入 `B3`
 
-- daemon 20 次 stop/start；
-- Pi kill 10 次；
-- selected-model mismatch 20 次；
-- bounded deadline 10 次；
-- same-process bounded watch cursor negatives；
-- cleanup 后 orphan/socket/lock/FD/RSS。
-
-真实 external mutation fault 只在 production `G` arm 可达后执行。
+原 UJ5 的 daemon stop/start、Pi kill、selected-model mismatch、bounded deadline 与
+cleanup/orphan 检查和 `B3` fault 类完全同形，为消除重复计数并入 §3.4：每类固定 10 个
+task-seeds，restart/cleanup 作为独立 cell 保留。same-process bounded watch cursor
+negatives 由 `UJ3` 的 cursor 单调/去重检查承载。
 
 ### 5.6 `UJ6` canonical journey coverage register
 
@@ -977,33 +1001,36 @@ payload 不足以支持后续复核。
 |---|---|---|
 | B0 qualification | not-run | arm fairness + secret/redaction pass |
 | B1 pilot C0 | not-run | variance/power/failure map |
-| B2 C0 general-task P/O paired (`G1–G12`) | not-run | >=30 pairs/family + complete denominator |
-| B2 C0 technical/operations paired (`A1/A4/A5/A8`) | not-run | >=30 pairs/family + complete denominator |
+| B2 C0 general-task P/O paired (`G1/G2/G3/G4/G6/G9`) | not-run | >=30 pairs/family + complete denominator |
+| B2 C0 technical/operations paired (`A1/A4/A5`) | not-run | >=30 pairs/family + complete denominator |
 | B2 C1 read-only workspace | expected not-run on current OS | missing product Tool caller recorded |
 | B2 C2 mutation | expected not-run on current OS | missing write/test/verifier path recorded |
 | B2 C2 Memory/Skill | expected not-run on current OS | missing user execution path recorded |
-| Skill S1–S3/S5–S7 authority management | not-run | import/bind/version/revoke/negative denominators |
+| `MS-AUTH` Memory/Skill authority smoke（原 S1–S3/S5–S7 + O7/O8） | not-run | lifecycle/negative outcomes + §6.3 延迟 |
 | Skill S4/S8 actual Agent consumption | expected not-run | missing governed consumer recorded |
-| Tool T1 projection | not-run | registered/enabled/execution-ready truth |
-| Tool T2/T10 dynamic lifecycle | fixture-only baseline | no live ecosystem claim |
+| `T-GOV` Tool projection + fixture lifecycle（原 T1/T2/T10 + O9） | not-run | projection truth + propagation；no live ecosystem claim |
+| Tool T3 selection | optional（pilot-only） | 不进入 confirmatory |
 | Tool T4–T9 actual governed calls | expected not-run | missing production caller recorded |
-| OS O1 Task admission | not-run | public-surface outcomes only |
-| OS O2/O3 Context correctness/cache | historical fixed evidence + new run not-run | no evidence transfer |
+| OS O1 Task admission（=UJ4） | not-run | public-surface outcomes only |
+| OS O2/O3 Context correctness/cache | not_available（无公开内部 observation 面） | no evidence transfer |
 | OS O4–O6 scheduler/Effect/verifier | expected not-run/partial | unavailable production path explicit |
-| OS O7–O14 resource lifecycle | per-row not-run/not_available | no omitted capability |
-| B3 faults | not-run | bounded outcomes, retry=0 |
+| OS O10–O14 lifecycle/projection/secret/audit/backup | covered by UJ3/B0/hard counters or not_available | no omitted capability |
+| B3 faults + restart/cleanup（含原 UJ5） | not-run | bounded outcomes, retry=0 |
 | B4 concurrency | not-run | tail/backpressure/resource |
 | B5 1 h | not-run | leak/safety/cleanup |
-| B5 8 h / 24 h | not-run | only after prior exit |
+| B5 8 h | not-run | only after 1 h exit |
+| B5 24 h | conditional（default deferred） | only after 8 h unresolved slope + owner budget |
 | B6 replay | not-run | exact before/after comparability |
 
 ## 11. 最终报告必须分开的结论
 
 1. **Route performance：** daemon、pure-Pi broker、OS local、Provider、Pi launch；
-2. **General Agent result：** G1–G12 同任务 `O vs P` correctness/grounding/
-   planning/robustness/time/token/cost；
-3. **Software/operations result：** A1–A8，不能代表全部 Agent 能力；
-4. **Skill result：** 安装/绑定/版本/撤销与实际 Agent 消费分开；
+2. **General Agent result：** `G1/G2/G3/G4/G6/G9`（含吸收 variants）同任务 `O vs P`
+   correctness/grounding/planning/robustness/time/token/cost；
+3. **Software/operations result：** `A1/A4/A5` 与 C2 注册项（`A3/A6/A7`），不能代表
+   全部 Agent 能力；
+4. **Skill result：** `MS-AUTH` 安装/绑定/版本/撤销与实际 Agent 消费（`not-run`）
+   分开；
 5. **Tool result：** catalog/lifecycle/selection/invocation/reconcile 分开；
 6. **OS-unique result：** O1–O14 authority、Context、budget、Effect、verification、
    resource lifecycle；
@@ -1025,7 +1052,7 @@ payload 不足以支持后续复核。
 | Provider 主导且 O/P 相同 | 不优化 daemon；考虑模型/网络/streaming 产品决策 |
 | C0 quality O<P | 检查 prompt/context alteration、output bounds、model parameters |
 | C0 quality O>P | 做 ablation，确认不是时间窗口或 Provider 随机性 |
-| G1–G12 某类明显退化 | 先按 grounding/planning/constraint/tool-use 子指标定位，不以总平均掩盖 |
+| 某个 G family 明显退化 | 先按 grounding/planning/constraint/tool-use 子指标定位，不以总平均掩盖 |
 | Skill 安装正确但任务无收益 | 检查 selection/load/context cost；不扩 Skill framework |
 | revoked Skill 仍被使用 | priority 0 authority bug；停止收益 claim |
 | Tool selection 差 | 优化 descriptor/exposure/context，不先增加更多 Tool |
