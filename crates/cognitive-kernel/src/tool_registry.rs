@@ -535,6 +535,43 @@ pub fn validate_read_only_http_fetch(
     Ok(())
 }
 
+/// Whether the daemon can actually dispatch a registered operation.
+///
+/// This is a composition-root fact, not a descriptor fact: it depends on which
+/// executors the running daemon assembled, so it is deliberately absent from
+/// [`NativeToolDescriptor`] and from the descriptor digest. Registry
+/// availability answers "is this operation registered and permitted"; readiness
+/// answers "can this daemon run it". Presenting the first as the second is what
+/// made unimplemented families look executable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolExecutionReadiness {
+    /// The descriptor permits dispatch and an executor is assembled.
+    ExecutionReady,
+    /// Registered and enabled, but this daemon assembled no executor for the
+    /// family, so staging would fail with an unsupported family.
+    RegisteredOnly,
+    /// The descriptor itself forbids dispatch, independent of any executor.
+    NotDispatchable,
+}
+
+/// Derive execution readiness from the descriptor plus the families this
+/// daemon actually assembled. A family absent from `assembled_families` can
+/// never be reported ready, whatever its registry availability says.
+pub fn tool_execution_readiness(
+    descriptor: &NativeToolDescriptor,
+    assembled_families: &[NativeOperationFamily],
+) -> ToolExecutionReadiness {
+    if descriptor.availability != ToolAvailability::Enabled {
+        return ToolExecutionReadiness::NotDispatchable;
+    }
+    if assembled_families.contains(&descriptor.family) {
+        ToolExecutionReadiness::ExecutionReady
+    } else {
+        ToolExecutionReadiness::RegisteredOnly
+    }
+}
+
 /// Return a stable map for resource projections and diagnostics.
 pub fn builtin_catalog_projection() -> BTreeMap<String, NativeToolDescriptor> {
     BUILTIN_TOOL_CATALOG
@@ -688,6 +725,80 @@ mod tests {
                 digest
             );
         }
+    }
+
+    /// P2-T09/D01: a registered, enabled family with no assembled executor
+    /// must never be presented as executable.
+    #[test]
+    fn registered_family_without_an_executor_is_not_execution_ready() {
+        let assembled = [
+            NativeOperationFamily::WorkspaceRead,
+            NativeOperationFamily::ProcessCheck,
+        ];
+        for descriptor in BUILTIN_TOOL_CATALOG.iter() {
+            let readiness = tool_execution_readiness(descriptor, &assembled);
+            let expected = if assembled.contains(&descriptor.family) {
+                ToolExecutionReadiness::ExecutionReady
+            } else {
+                ToolExecutionReadiness::RegisteredOnly
+            };
+            assert_eq!(
+                readiness, expected,
+                "{} readiness must follow the assembled executor set",
+                descriptor.operation_id
+            );
+            assert_eq!(
+                descriptor.availability,
+                ToolAvailability::Enabled,
+                "registry availability stays a descriptor fact"
+            );
+        }
+    }
+
+    #[test]
+    fn readiness_cannot_be_forged_from_registry_availability() {
+        let search = BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceSearch)
+            .expect("workspace search descriptor");
+        assert_eq!(search.availability, ToolAvailability::Enabled);
+        assert_eq!(
+            tool_execution_readiness(search, &[]),
+            ToolExecutionReadiness::RegisteredOnly
+        );
+    }
+
+    #[test]
+    fn a_non_dispatchable_descriptor_stays_non_dispatchable_with_an_executor() {
+        let mut disabled = BUILTIN_TOOL_CATALOG[0].clone();
+        disabled.availability = ToolAvailability::Disabled;
+        assert_eq!(
+            tool_execution_readiness(&disabled, &[disabled.family]),
+            ToolExecutionReadiness::NotDispatchable
+        );
+        let mut quarantined = BUILTIN_TOOL_CATALOG[0].clone();
+        quarantined.availability = ToolAvailability::Quarantined;
+        assert_eq!(
+            tool_execution_readiness(&quarantined, &[quarantined.family]),
+            ToolExecutionReadiness::NotDispatchable
+        );
+    }
+
+    /// Readiness must not leak into the immutable descriptor digest.
+    #[test]
+    fn execution_readiness_does_not_change_any_descriptor_digest() {
+        let digests_now = || {
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .map(|descriptor| compute_descriptor_digest(descriptor).expect("digest"))
+                .collect::<Vec<_>>()
+        };
+        let before = digests_now();
+        for descriptor in BUILTIN_TOOL_CATALOG.iter() {
+            let _ = tool_execution_readiness(descriptor, &[descriptor.family]);
+            let _ = tool_execution_readiness(descriptor, &[]);
+        }
+        assert_eq!(before, digests_now());
     }
 
     #[test]

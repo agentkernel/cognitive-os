@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T09/tool-execution-readiness` | P2-T09/D01 Tool execution-readiness projection | Lane-RUN | `personal/P2-T09-tool-execution-readiness` | `crates/cognitive-kernel/src/tool_registry.rs`; `apps/kernel-server/src/personal/resource_api.rs`; `apps/kernel-server/src/personal/tool_executor/mod.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md` | Cursor continuous campaign session | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
