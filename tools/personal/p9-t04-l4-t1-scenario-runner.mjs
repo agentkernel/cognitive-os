@@ -65,10 +65,16 @@ async function post(path, token, body) {
   return { status: response.status, body: parsed };
 }
 
-/** Registered error code only; a free-form message never leaves this function. */
+/**
+ * Registered error code only; a free-form message never leaves this function.
+ * The Task routes answer with a flat `code`, the front door with a nested
+ * `error.code`, so both shapes are read.
+ */
 function errorCodeOf(response) {
-  const code = response.body?.error?.code;
-  return typeof code === "string" && /^[A-Z0-9_]+$/.test(code) ? code : null;
+  for (const candidate of [response.body?.code, response.body?.error?.code]) {
+    if (typeof candidate === "string" && /^[A-Z0-9_]+$/.test(candidate)) return candidate;
+  }
+  return null;
 }
 
 function elapsedSince(startedAt) {
@@ -79,7 +85,12 @@ function taskContractDraft(runIndex) {
   return {
     allowed_state_domains: ["Task"],
     allowed_tools: ["tool://cognitiveos/workspace.read"],
-    budget: { cost_cents: 0, tokens: 0, wall_clock_ms: 60000 },
+    budget: {
+      input_tokens: 4096,
+      output_tokens: 1024,
+      semantic_calls: 2,
+      tool_calls: 8,
+    },
     budget_id: `00000000-0000-7000-8000-${String(runIndex).padStart(12, "0")}`,
     conditions: [
       {
