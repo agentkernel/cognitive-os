@@ -838,7 +838,8 @@ fn probe_production_secret_store() -> SecretProbeObservation {
 /// fact, a log, or the report; only the three-way outcome is retained.
 fn resolve_production_provider_secret(config_path: &Path) -> ProviderSecretResolution {
     let repository = ProviderConfigRepository::from_file_path(config_path);
-    let service = ProviderKeyService::new(select_production_secret_store(), repository);
+    let backend = select_production_secret_store();
+    let service = ProviderKeyService::new(backend.as_secret_store(), repository);
     match service.resolve_provider_material() {
         Ok(_material) => ProviderSecretResolution::Resolves,
         Err(ProviderKeyServiceError::SecretMissing) => ProviderSecretResolution::Missing,
