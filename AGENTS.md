@@ -41,6 +41,25 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   收口，就继续在同一 task branch、Draft PR 和 lease 内推进；checkpoint、commit、push、CI
   轮次、阶段总结和上下文压缩都不是停止条件。
 
+### Owner-directed 评测 campaign 路由（优先于开发续跑）
+
+完整语义由 Operating Model §2.5 拥有；本节只是入口摘要。
+
+- `PROGRESS.md` Current snapshot 的 `Owner-directed campaign` 行是评测模式的唯一激活
+  开关。该行登记 active 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）时，新窗口、
+  `继续`、context compression 等 continuation event 一律恢复并执行该评测，**不得**自动
+  领取或继续任何 `P*-T*` 开发任务，也不得进入 `CAMPAIGN-BACKLOG-CONTINUATION-01`
+  backlog 循环。
+- 评测恢复顺序：读该行 → 读其 execution plan（`docs/evaluation/`）→ 读最新评测
+  checkpoint/preregistration → 读 active lease 表 → 核对 branch/HEAD。写入前领取
+  `lease/personal/EVAL-<id>/<purpose>` 评测 lease，writable paths 只允许
+  `docs/evaluation/`、`docs/checkpoints/` 与 `docs/plan/PROGRESS.md`。
+- 评测是 measurement-only：不修改产品代码、合同、负例、测试或 handbook 生成源来"补齐"
+  能力；能力/runner/凭据缺口如实记 `not-run`/`not_available`。公理、secret、campaign
+  guest 隔离、exact-revision 与证据/claim 边界全部不变。
+- 该行由 owner 关闭或 campaign 收口后失效；评测结束**不会**自动恢复开发续跑，backlog
+  循环只在 owner 重新给出持续交付指令后恢复。
+
 ## 整任务连续交付协议（Operating Model 摘要）
 
 本节仅是代理入口摘要。完整定义、确认边界、性能验证和冲突解释只由

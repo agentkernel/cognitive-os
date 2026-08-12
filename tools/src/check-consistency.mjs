@@ -1285,20 +1285,59 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
           );
         }
       }
-      const leaseTaskSliceMatch = taskDescription.match(/(P\d+-T\d+\/D\d{2})/);
-      const leaseTaskIdMatch = leaseId.match(/^lease\/personal\/(P\d+-T\d+)\//);
-      if (!leaseTaskSliceMatch || !leaseTaskIdMatch) {
-        fail(
-          "docs/plan/PARALLEL-LANES.md",
-          `LEASE_TASK_SLICE_MALFORMED: active lease ${leaseId} must declare a formal task/slice`,
-        );
-      } else if (leaseTaskSliceMatch[1].split("/")[0] !== leaseTaskIdMatch[1]) {
-        fail(
-          "docs/plan/PARALLEL-LANES.md",
-          `LEASE_TASK_MISMATCH: ${leaseId} declares ${leaseTaskSliceMatch[1]} outside its task`,
-        );
+      // Operating Model §2.5: owner-directed evaluation campaigns use a
+      // measurement/documentation-only lease class without a formal slice.
+      const evaluationLeaseIdMatch = leaseId.match(/^lease\/personal\/(EVAL-[A-Za-z0-9._-]+)\//);
+      const evaluationCampaignMatch = taskDescription.match(/\b(PERSONAL-[A-Z0-9]+-EVAL-\d{3})\b/);
+      const isEvaluationLease = Boolean(evaluationLeaseIdMatch || evaluationCampaignMatch);
+      let leaseTaskSlice;
+      if (isEvaluationLease) {
+        if (!evaluationLeaseIdMatch || !evaluationCampaignMatch) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `EVAL_LEASE_MALFORMED: evaluation lease ${leaseId} must use lease/personal/EVAL-<id>/<purpose> and name its campaign id`,
+          );
+        } else if (!currentSnapshot.includes(evaluationCampaignMatch[1])) {
+          fail(
+            "docs/plan/PROGRESS.md",
+            `EVAL_LEASE_UNREGISTERED: evaluation campaign ${evaluationCampaignMatch[1]} is not registered in the Current snapshot`,
+          );
+        }
+        for (const writablePath of writablePaths) {
+          const normalizedEvaluationPath = writablePath
+            .replace(/\/\*\*$/, "")
+            .replaceAll("\\", "/")
+            .replace(/\/$/, "");
+          const evaluationPathAllowed =
+            normalizedEvaluationPath === "docs/plan/PROGRESS.md" ||
+            normalizedEvaluationPath === "docs/evaluation" ||
+            normalizedEvaluationPath.startsWith("docs/evaluation/") ||
+            normalizedEvaluationPath === "docs/checkpoints" ||
+            normalizedEvaluationPath.startsWith("docs/checkpoints/");
+          if (!evaluationPathAllowed) {
+            fail(
+              "docs/plan/PARALLEL-LANES.md",
+              `EVAL_LEASE_PATH_FORBIDDEN: evaluation lease ${leaseId} may own only docs/evaluation/, docs/checkpoints/, and docs/plan/PROGRESS.md, not ${normalizedEvaluationPath}`,
+            );
+          }
+        }
+      } else {
+        const leaseTaskSliceMatch = taskDescription.match(/(P\d+-T\d+\/D\d{2})/);
+        const leaseTaskIdMatch = leaseId.match(/^lease\/personal\/(P\d+-T\d+)\//);
+        if (!leaseTaskSliceMatch || !leaseTaskIdMatch) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `LEASE_TASK_SLICE_MALFORMED: active lease ${leaseId} must declare a formal task/slice`,
+          );
+        } else if (leaseTaskSliceMatch[1].split("/")[0] !== leaseTaskIdMatch[1]) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `LEASE_TASK_MISMATCH: ${leaseId} declares ${leaseTaskSliceMatch[1]} outside its task`,
+          );
+        }
+        leaseTaskSlice = leaseTaskSliceMatch?.[1];
       }
-      activeLeases.push({ id: leaseId, taskSlice: leaseTaskSliceMatch?.[1] });
+      activeLeases.push({ id: leaseId, taskSlice: leaseTaskSlice });
       for (const writablePath of writablePaths) {
         const normalizedDeclaredPath = writablePath.replaceAll("\\", "/");
         if (forbiddenBroadProtectedTrees.has(normalizedDeclaredPath)) {

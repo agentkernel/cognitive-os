@@ -10,7 +10,7 @@ sources:
   - path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
     symbols: ["TASK-ATOMIC-DELIVERY-01", "Sources of truth"]
   - path: docs/standards/normative-source-and-versioning.md
-fingerprint: "sha256:a74810316a655d570cd98ef6212797680ec681755d4de475294a2b08c73f2f0e"
+fingerprint: "sha256:f7d2670e56701dd86d6576ef1dbb97bdc8bc4b4570e2ca1ff29ce25685a4906d"
 non_claims:
   - This page routes to canonical owners; it never replaces or restates their current content.
 ---
@@ -23,7 +23,7 @@ When two sources disagree, resolve in this order (from
 1. [`docs/governance/PROJECT-IDENTITY.md`](../../../docs/governance/PROJECT-IDENTITY.md) — repository identity; `cognitiveos-personal` is the only active project.
 2. [`docs/governance/DEVELOPMENT-OPERATING-MODEL.md`](../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md) — workflow, evidence, lease, and closure semantics.
 3. [`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) — formal tasks, acceptance, Delivery Slices, Gates.
-4. [`docs/plan/PROGRESS.md`](../../../docs/plan/PROGRESS.md) `Current snapshot` — the only current task/Slice/Gate/claim facts. Read it fresh every session; never quote from memory or from this handbook.
+4. [`docs/plan/PROGRESS.md`](../../../docs/plan/PROGRESS.md) `Current snapshot` — the only current task/Slice/Gate/claim facts. Read it fresh every session; never quote from memory or from this handbook. Its `Owner-directed campaign` row, when active, routes continuation to that evaluation campaign and suspends development-task claiming (Operating Model §2.5).
 5. [`docs/plan/PARALLEL-LANES.md`](../../../docs/plan/PARALLEL-LANES.md) active lease table — current writable paths.
 6. [`docs/product/personal/`](../../../docs/product/personal/README.md) and [`docs/architecture/personal/`](../../../docs/architecture/personal/README.md) — stable design intent (never current status).
 7. Latest matching handoff under [`docs/checkpoints/`](../../../docs/checkpoints/TEMPLATE.md) — operational continuity only.

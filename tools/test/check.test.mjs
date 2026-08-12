@@ -190,6 +190,65 @@ test("active lease must match the unique in-progress Slice", () => {
   assert.match(result.stderr, /CURRENT_SNAPSHOT_LEASE_MISMATCH/);
 });
 
+const evaluationLeaseTableHeader =
+  "| Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |\n|---|---|---|---|---|---|---|---|";
+
+function injectEvaluationLease(leaseRow) {
+  return {
+    "docs/plan/PARALLEL-LANES.md": (source) => {
+      const normalized = source.replace(/\r\n/g, "\n");
+      assert.ok(
+        normalized.includes(evaluationLeaseTableHeader),
+        "canonical active lease table header must exist",
+      );
+      const injected = normalized.replace(
+        evaluationLeaseTableHeader,
+        `${evaluationLeaseTableHeader}\n${leaseRow}`,
+      );
+      return source.includes("\r\n") ? injected.replace(/\n/g, "\r\n") : injected;
+    },
+    "docs/plan/PROGRESS.md": (source) => {
+      const activeLeaseRow = source
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| Active task lease |"));
+      assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
+      const leaseId = leaseRow.match(/`(lease\/personal\/[^`]+)`/)?.[1];
+      assert.ok(leaseId, "evaluation lease row must carry a lease id");
+      const referencedRow = /`none`/.test(activeLeaseRow)
+        ? activeLeaseRow.replace(/`none`/, `\`${leaseId}\``)
+        : activeLeaseRow.replace(/`(lease\/personal\/[^`]+)`/, `\`${leaseId}\``);
+      assert.notEqual(referencedRow, activeLeaseRow);
+      return source.replace(activeLeaseRow, referencedRow);
+    },
+  };
+}
+
+test("owner-directed evaluation lease is accepted without a formal task slice", () => {
+  const result = runConsistencyFailureInjection(
+    injectEvaluationLease(
+      "| `lease/personal/EVAL-20260812/performance-evaluation-002` | `PERSONAL-PERF-EVAL-002` owner-directed evaluation campaign; no formal task/slice | Lane-CFR + Lane-DOC | `evaluation/personal-performance-002` | `docs/evaluation/personal-performance-benchmark-execution-plan.md`; `docs/checkpoints/`; `docs/plan/PROGRESS.md` | evaluation session | 2026-08-12 / 2026-08-12 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /check-consistency: OK/);
+});
+
+test("evaluation lease rejects product paths and unregistered campaigns", () => {
+  const result = runConsistencyFailureInjection(
+    injectEvaluationLease(
+      "| `lease/personal/EVAL-20260812/rogue` | `PERSONAL-PERF-EVAL-999` unregistered evaluation fixture | Lane-CFR | `evaluation/fixture` | `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | evaluation session | 2026-08-12 / 2026-08-12 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /EVAL_LEASE_UNREGISTERED: evaluation campaign PERSONAL-PERF-EVAL-999/);
+  assert.match(
+    result.stderr,
+    /EVAL_LEASE_PATH_FORBIDDEN: evaluation lease lease\/personal\/EVAL-20260812\/rogue .* not crates\/cognitive-runtime\/src\/lib\.rs/,
+  );
+});
+
 test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PROGRESS.md": (source) =>

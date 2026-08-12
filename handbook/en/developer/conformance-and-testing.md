@@ -14,7 +14,7 @@ sources:
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:cb544d78a172f53192bf769985d062742e3f9829688f917d25f441028663301e"
+fingerprint: "sha256:1c75431a8cc006d7cea207bf2f29aaa97fb1c6b88349f4e8a41503035d24ae14"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -44,7 +44,10 @@ must fail their vectors — a checker that cannot fail is treated as broken.
 
 `tools/src/check-consistency.mjs` enforces repository invariants: schema
 validity (draft 2020-12), registry↔schema↔vector bidirectional references,
-Markdown link resolution, Personal plan/lease/slice/Gate bookkeeping shape,
+Markdown link resolution, Personal plan/lease/slice/Gate bookkeeping shape
+(including the `lease/personal/EVAL-<id>/…` owner-directed evaluation-campaign
+lease class, which must name a snapshot-registered campaign and may own only
+`docs/evaluation/`, `docs/checkpoints/`, and `docs/plan/PROGRESS.md`),
 command/environment routing text, checkpoint-delivery and task-atomic wording,
 and more. `tools/src/gen-matrix.mjs --check` keeps
 `docs/traceability/matrix.yaml` fresh. Both run in CI and locally
