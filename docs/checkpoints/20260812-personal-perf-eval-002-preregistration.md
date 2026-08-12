@@ -771,9 +771,151 @@ review. Locator: `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`,
 17 files, 156 KiB, retained until the independent verifier disposition changes
 from `not_reviewed`. Per-file SHA-256 digests were recorded at cleanup time.
 
-### 10.13 Campaign closure, 2026-08-12
+### 10.13 Phase-1 closure, 2026-08-12
 
-All executable preregistered cells have run. Closure disposition is published in
+All cells executable under the phase-1 boundary have run. Phase-1 disposition is
+published in
 [personal-performance-assessment-20260812.md](../evaluation/personal-performance-assessment-20260812.md).
 Claim level `hypothesis`, independent verifier `not_reviewed`, Agent benefit not
 claimed, no Gate/release/Profile/B01 promotion.
+
+## 11. Phase 2 — owner scope change, 2026-08-12
+
+The owner granted highest authorization to act on the phase-1 recommendations
+and complete all tests. This lifts the two phase-1 blockers and is recorded here
+as a deliberate scope change, not a quiet reinterpretation.
+
+- Lease: `lease/personal/EVAL-20260812/performance-evaluation-002-phase2`
+- Unchanged: source revision `4cbec8470bc7a19f23f978e8754ed20133122eb1`,
+  environment, guest allowlist, denominator and retention discipline, claim
+  ceiling `hypothesis`, verifier `not_reviewed`.
+- **Still unchanged and non-negotiable:** no product code, contract, negative,
+  test or generated documentation source may be modified. The phase-2
+  instruments (broker, corpus, paired runner) are campaign-only measurement
+  tools living solely in the ignored `artifacts/` root and the guest campaign
+  root. Nothing under `crates/`, `apps/`, `packages/`, `specs/`, `conformance/`
+  or `handbook/` is touched.
+
+### 11.1 Provider credential import — `pass`
+
+Operating Model §2.3 already authorizes importing an owner-designated local
+Provider key into an approved Secret Store, so this needed no new permission
+once the owner widened the campaign scope.
+
+The owner's own file `~/下载/deepseek.txt` was located by name, and inspected by
+**shape only** — line count, line lengths, and a character-class mask. That
+inspection showed the file is the owner's own saved `cognitive init` invocation:
+
+| Line | Content class |
+|---|---|
+| 2–3 | the `cognitive` binary path and `--runtime-root` |
+| 4 | `--provider deepseek` |
+| 5 | `--base-url https://api.deepseek.com/v1` |
+| 6 | `--model-id deepseek-v4-flash` |
+| 8 | a 35-character `sk-`-prefixed key |
+
+The campaign therefore invented no Provider parameters: provider id, base URL
+and model came from the owner's own recorded intent, and they match the
+non-secret config already present in the campaign runtime.
+
+Import used the product's own stdin path,
+`sed -n '8p' … | cognitive init … --api-key-file -`. The key travelled
+file → pipe → product stdin → SecretStore and never entered argv, environment,
+ordinary config, logs, evidence or chat. Result: `secret_material_written: true`,
+backend `linux-secret-tool`, Secret Service item now present at
+`/org/freedesktop/secrets/collection/login/7`, owner source file untouched
+(mtime unchanged at `12:51:02`).
+
+### 11.2 `D1` / `D2` re-run against a working Provider — `pass`
+
+| Cell | Started | Retained | Outcomes | Marker | Usage |
+|---|---:|---:|---|---:|---|
+| `D1` proxy marker | 30 | 30 | `complete_response` 30 | 30/30 | measured 30/30 |
+| `D2` warm repeated | 50 | 50 | `complete_response` 50 | 50/50 | measured 50/50 |
+
+| Measurement | `D1` | `D2` | P9-T04 baseline |
+|---|---:|---:|---:|
+| Provider network p50 | 985.81 ms | 922.91 ms | 898.9 / 1016.1 ms |
+| Provider network p95 | 1404.27 ms | 1229.73 ms | 1224.6 / 1400.2 ms |
+| local governance + loopback residual p50 | **127.30 ms** | **128.48 ms** | **126.5 / 128.5 ms** |
+| residual MAD | 11.47 ms | 12.22 ms | — |
+| residual share of the loopback exchange | 11.51 % | 12.24 % | 11.76 % |
+
+The local residual reproduces the P9-T04 figures to within 1 ms at a different
+revision, on a different day, with an independently rebuilt binary. That is the
+strongest stability evidence this campaign produced.
+
+### 11.3 `O1` OS Pi first response — `pass`
+
+30 counted runs through the unmodified frozen route smoke, 3 warmups discarded:
+**30/30 `ok`**, marker observed 30/30, first response **4625 ms p50 / 5006 ms
+p95** (4270–5089 ms, MAD 142.5 ms), full smoke wall 8195 ms p50.
+
+P9-T04 measured 4625 ms p50 / 5004 ms p95. The p50 is identical and the p95
+differs by 2 ms.
+
+### 11.4 Pure-Pi credential broker — qualified
+
+Plan §2.2 option 2, implemented as a campaign-only instrument.
+
+| Fact | Value |
+|---|---|
+| Instrument | `pure-pi-broker.py`, Python standard library only |
+| Digest | `sha256:d29bc159254b596d739f4289a3d1ebeb43aa53b01ee424690a5e8fdb456b74be` |
+| Bind | `127.0.0.1:48383`, loopback only, single user |
+| Key source | read once from the Linux Secret Service into process memory |
+| Pi-facing credential | fixed **non-secret** string `campaign-broker-nonsecret-token` |
+| Bounds | 1 MiB request, 4 MiB response, 120 s upstream timeout |
+| Retry | none |
+| Logging | counters, durations, status, byte counts and non-secret request parameters only — never a body, header, key or model output |
+
+Secret-boundary review against plan §2.2, item by item: the key is never written
+to disk, never placed in argv or environment, and never echoed; Pi's own
+`models.json` holds only the placeholder token, verified by scanning it for
+`sk-` (0 matches); the broker performs **no** Context assembly, Tool dispatch,
+Memory, Task state, retry, caching or verification, so the `P` arm remains pure
+Pi; and its own local latency is recorded separately from upstream time.
+
+Verification: one pure-Pi call returned the expected marker with exit 0 in
+3418 ms, broker local overhead **1.48 ms**, upstream 1458 ms.
+
+### 11.5 Frozen corpus and paired runner
+
+| Instrument | Digest |
+|---|---|
+| `paired_corpus.py` (corpus v1) | `sha256:38e282d4e3ceba0d62768073cf64e27a0e910832ad2ef4bfcca3f2460c919ab1` |
+| `paired_runner.py` | `sha256:6b3989520a51aa5c6a59c3d2f2a7dcea0233ad10446c1f4067a275063a69465b` |
+
+Nine C0 families — `G1`, `G2`, `G3`, `G4`, `G6`, `G9`, `A1`, `A4`, `A5` — each
+generated from a frozen seed string and each carrying a **mechanical** oracle:
+exact number, exact text, sorted id set, or a schedule validated as a
+permutation satisfying every dependency edge. No model-as-judge is used
+anywhere. Every prompt ends with the identical output contract
+(`ANSWER: <value>` as the final line) so the parser is byte-identical across
+arms. Each family cycles the three plan §4.3 difficulty layers (`basic`,
+`interleaved`, `adversarial`). Pilot and confirmatory seeds are generated from
+different stratum strings and therefore cannot overlap (plan §4.7).
+
+**Realized fairness contract (plan §2.3).** Both arms use the same Pi `0.81.1`
+binary, the same Node, the same model `deepseek-v4-flash`, byte-identical
+prompts, the same tool policy (`--no-tools`), the same discovery suppression
+(`--no-extensions`, `--no-skills`, `--no-prompt-templates`, `--no-context-files`,
+`--no-themes`, `--no-session`), the same 180 s timeout, `retry = 0`, the same
+guest, and arm order randomized inside each block from a frozen seed
+(`20260812`). Sampling parameters are not injected by either path: the daemon
+proxy forwards the request body **verbatim** (`body: Some(request_body.to_vec())`
+in `provider_proxy.rs`), and the broker forwards it verbatim too.
+
+**Two declared arm differences, both consequences of the OS path itself:**
+
+1. the `O` arm's daemon proxy is **non-streaming** by design, while Pi streams
+   to the broker in the `P` arm (`stream: true` observed in broker metrics).
+   The fair endpoint is therefore time-to-complete-response, and TTFT stays
+   `not_available` exactly as plan §6.6 requires;
+2. token and cost accounting is observable for `P` (from the broker) but not for
+   `O`, because the Extension does not surface per-request usage to the runner.
+   Token/cost delta is therefore reported `not_available` rather than estimated.
+
+Harness validation before any counted batch: one block, both arms completed and
+both oracles passed, arm order randomized, `P` wall 4853 ms with 0.37 ms broker
+local overhead, `O` wall 5567 ms.
