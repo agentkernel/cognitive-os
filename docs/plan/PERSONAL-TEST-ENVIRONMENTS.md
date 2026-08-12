@@ -61,6 +61,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
 | `BUILD-LINUX-EXPERIMENTAL-01` | protected experimental campaign builder | reviewed CI build/sign | experimental artifact evidence |
 | `B01-DESKTOP-002` | Ubuntu Desktop KVM campaign host | **sole active B01 environment** | individual B01 attempt evidence |
+| `B01-W-DESKTOP-001` | required clean Windows B01-W campaign VM | **not provisioned** | none; nothing may cite it until it is provisioned and qualified |
 | `FIXTURE-SYSTEMD-01` | fake-systemd/installer fixtures | deterministic fixture | lifecycle implementation evidence |
 | `FIXTURE-PROVIDER-HTTPS-01` | loopback HTTPS Provider fixture | deterministic fixture | Provider transport implementation evidence |
 | `CONTRACT-RUNNERS-01` | golden/conformance/consistency runners | contract/tooling | scoped contract and tooling evidence |
@@ -230,7 +231,28 @@ ordinary development target.
   [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), and the
   PROGRESS.md Current snapshot B01 row.
 
-## 11. `FIXTURE-SYSTEMD-01` — installer/fake-systemd fixtures
+## 11. `B01-W-DESKTOP-001` — required Windows B01-W campaign environment (not provisioned)
+
+- **Status:** requirement registration only. No VM exists; no evidence may
+  cite this ID until the environment is provisioned, snapshotted, and
+  qualified under the §15 template.
+- **Required platform:** dedicated clean Windows 11 x86_64 (or Windows 10
+  22H2+) VM with a PID-controlled reset snapshot, native per-user Credential
+  Manager, a graphical interactive session capable of hidden input, system
+  Windows PowerShell 5.1 and System32 `curl.exe`, and no developer toolchain
+  or preexisting CognitiveOS state.
+- **Purpose:** sole future execution environment for the preregistered
+  `B01-W-clean-windows-first-install-first-conversation-001` campaign
+  ([preregistration](../checkpoints/20260812-personal-p7-t07-b01-w-preregistration.md),
+  [ADR-0052 §3](../adr/0052-personal-windows-install-surface.md)).
+- **Isolation:** ordinary development must not target this ID once it exists;
+  only the preregistered B01-W campaign procedure and lease may change its
+  state. The Linux `B01-DESKTOP-002` guest and its host are not B01-W targets.
+- **Maximum evidence:** none until provisioned and qualified.
+- **Cannot claim:** anything; `CI-WINDOWS-MSVC-01`, fixtures, WSL, or local
+  Windows development hosts cannot substitute for it.
+
+## 12. `FIXTURE-SYSTEMD-01` — installer/fake-systemd fixtures
 
 - **Form:** temporary roots, synthetic signed archives, recording controllers,
   fake `systemctl --user` scripts and loopback health fixtures.
@@ -242,7 +264,7 @@ ordinary development target.
 - **Tests:** `crates/cognitive-runtime/tests/linux_bundle_*.rs` and
   `linux_installer_bootstrap.rs`.
 
-## 12. `FIXTURE-PROVIDER-HTTPS-01` — loopback HTTPS Provider fixture
+## 13. `FIXTURE-PROVIDER-HTTPS-01` — loopback HTTPS Provider fixture
 
 - **Form:** local TLS Provider with a test-only additional root that preserves
   production Rustls policy.
@@ -256,7 +278,7 @@ ordinary development target.
 - **Test:**
   [`p1_t09_deterministic_provider_fixture.rs`](../../crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs).
 
-## 13. `CONTRACT-RUNNERS-01` — golden, conformance and consistency
+## 14. `CONTRACT-RUNNERS-01` — golden, conformance and consistency
 
 - **Golden:** Rust and TypeScript canonical JSON/digest consumers share
   `tests/golden/` fixtures.
@@ -268,7 +290,7 @@ ordinary development target.
 - **Cannot claim:** a Personal product Gate, Agent benefit, release or Profile
   without the separately required applicable-MUST evidence.
 
-## 14. Formal campaign qualification template
+## 15. Formal campaign qualification template
 
 Before an environment contributes to B01, P2/P3/P4 Gates, B09 or `GMVP-LINUX`, its
 preregistration must bind:
