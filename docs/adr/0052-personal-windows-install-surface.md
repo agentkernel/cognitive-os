@@ -1,8 +1,8 @@
 # ADR-0052: Personal Windows Install Surface (Credential Backend, Installer/Service, B01-W)
 
-- Status: Accepted for the credential-backend decision (§1); the
-  installer/service (§2) and B01-W campaign (§3) sections are added by later
-  P7-T07 slices in the same task before the task closes
+- Status: Accepted (§1 credential backend, §2 installer/service surface,
+  §3 B01-W gate policy; B01-W execution itself remains preregistered and
+  unexecuted)
 - Date: 2026-08-12
 - Decision owners: CognitiveOS reference implementation maintainers
 - Classification: Personal product platform decision for the P7-T07 Windows
@@ -85,11 +85,63 @@ by this ADR.
 
 ## §2 Decision: inspectable installer/service surface
 
-Added by the P7-T07 installer/service slice.
+1. The Windows install surface reuses the Linux bootstrap contract instead of
+   inventing a second trust design. `deploy/windows/install.ps1` is a
+   source-controlled **template** with the same `@COGNITIVEOS_*@` placeholder
+   policy surface as `deploy/linux/install.sh`; release automation renders it
+   into a reviewed, version-specific script. The unrendered template fails
+   closed (exit 64) before any network or filesystem action.
+2. Rendered-policy validation is identical in shape to Linux: version charset,
+   HTTPS-only object directory without user-info/query/fragment, restricted
+   redirect host, and `sha256:<64 hex>` installer digest, all checked before
+   any download.
+3. Downloads run only through the **absolute** `%SystemRoot%\System32\curl.exe`
+   with the same bounded flags as Linux (`--proto '=https'`, connect/transfer
+   timeouts, retry budget, `--max-filesize`, explicit single-redirect policy
+   against the rendered redirect host). PATH lookup is never used. Partial
+   files live in a private owned temporary directory that is always cleaned.
+4. The bootstrap delegates only to the digest-verified downloaded
+   `cognitiveos-windows-bundle-installer.exe` with the same argument surface
+   as the Linux installer (bundle directory, expected release/Pi pins, keyring
+   material). The bootstrap itself never touches secret material, never
+   registers services, and never elevates.
+5. The daemon start model is a **per-user, least-privilege scheduled task**
+   (`deploy/windows/cognitiveos-personal-task.xml`): logon trigger,
+   `InteractiveToken`, `LeastPrivilege`, restart-on-failure, and the same
+   rendered `@COGNITIVEOS_RELEASE_ROOT@`/`@COGNITIVEOS_PERSONAL_HEALTH_PORT@`/
+   `@COGNITIVEOS_RUNTIME_ROOT@` daemon arguments as the Linux user service.
+   A Windows service (admin, service wrapper, SYSTEM surface) is rejected for
+   the per-user product path.
+6. Validation boundary: required CI executes the static required/forbidden
+   fragment checks everywhere and the behavioral unrendered, version-mismatch,
+   malformed-digest, non-HTTPS, and extra-argument rejections plus the
+   least-privilege task-XML parse on Windows. The download/delegation path
+   stays inspectable-only until B01-W executes with real rendered artifacts;
+   CI evidence is implementation evidence, not an install claim.
 
 ## §3 Decision: dedicated B01-W gate
 
-Added by the P7-T07 B01-W authoring slice.
+1. B01-W is a dedicated Windows first-install/first-conversation gate. It is
+   defined by the fixed campaign policy in the preregistration checkpoint
+   `docs/checkpoints/20260812-personal-p7-t07-b01-w-preregistration.md`,
+   mirroring the ADR-0039 B01 successor rule: fixed denominator **N=6**
+   counted clean outcomes, at least **5/6** successes, **zero critical safety
+   failures**, a complete aggregate report, and an affirmative independent
+   verifier disposition before `pass`.
+2. Each attempt is a clean-reset Windows VM journey: rendered bootstrap
+   download, verified install, per-user scheduled-task activation, daemon
+   readiness, graphical **hidden-input** Provider credential entry into the
+   Windows Credential Manager backend (§1), one bounded first conversation,
+   and secret cleanup. Credential material never enters argv, files, logs, or
+   evidence.
+3. Authoring this gate creates no execution. Execution has registered
+   prerequisites that do not exist yet and are enumerated in the
+   preregistration: a provisioned clean Windows campaign VM
+   (`B01-W-DESKTOP-001`), Windows release artifacts (bundle, installer
+   executable, signatures) from the release pipeline, and an operator for the
+   graphical credential step. Until B01-W actually executes, no Windows
+   install parity may be claimed (ADR-0025 / PERS-PR-021), and B01-W cannot
+   borrow B01 (Linux), CI, fixture, or local evidence.
 
 ## Consequences
 
