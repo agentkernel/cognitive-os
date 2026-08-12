@@ -1,4 +1,4 @@
-﻿# CognitiveOS Personal 产品化开发计划与进度表
+# CognitiveOS Personal 产品化开发计划与进度表
 
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
@@ -151,7 +151,7 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
-| Phase 2 - 单 Agent 任务闭环 | 11 | 9 | 1 | 0 | 1 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 11 | 10 | 0 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
@@ -159,7 +159,7 @@
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 1 | 2 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 8 | 8 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 4 | 4 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **68** | **59** | **1** | **1** | **7** | — |
+| **合计** | **68** | **60** | **0** | **1** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -562,7 +562,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T07 | Checkpoint、Artifact、Evidence 与独立 Verifier | P2-T03, P2-T04, P2-T06 | checkpoint/restart、artifact digest、criteria evidence、Effect closure；partial/receipt/exit/`agent_end` 不得 complete | done | 2026-08-08 closure: D01-D02 satisfy the unchanged acceptance. The daemon-private fixed-post-state and verification-request/report boundary stays append-only; verifier identity, currentness, fenced-writer, malformed/duplicate artifact reference, and passed-without-evidence regressions fail closed before report persistence. Exact remote Linux `df7d483282f3ef0a6bbb17bae3d29bb24f13e0f7` passed the focused verifier test module 7/7 and targeted Clippy; local `cargo fmt --all`, `git diff --check`, and lints passed. No Provider/Tool execution, Artifact closure, Task completion, Gate, release, or Profile claim is made. Evidence: [P2-T07 closure](../checkpoints/20260808-personal-p2-t07-d02-verifier-persistence-closure.md). |
 | P2-T09 | 已登记 Tool family 的 execution readiness 投影诚实性 | P2-T05, P2-T06 | private Tool projection 必须区分 `registered/enabled` 与 `execution_ready`，composition root 只为已装配 executor 的 family 报 execution ready；readiness 不得进入 immutable descriptor 或其 digest，也不得由 registry availability 伪造 | done | 2026-08-12 owner-authorized under optimization-proposal INV-TASK-1（由 P9-T04 `L4` 能力缺口直接触发）。D01 完成：`tool_execution_readiness` 以已装配 executor 集合（`WorkspaceRead`、`ProcessCheck`）为准，四个 failure-first 负例含"readiness 不改变任何 descriptor digest"。exact native Linux `cbb830a2dc64855f51c4b5ffdf04ae4f6fba4e4c` tool_registry 11/11 + Clippy，tool_executor 27/27 不变；required Ubuntu/Windows CI 于 `0227b97` 通过；PR #201。无 Gate/release/Profile claim；不继承 P9-T04 证据。 |
 | P2-T10 | 已登记 Tool family 的 executor parity | P2-T09 | 按 WorkspaceSearch → WorkspaceWrite/Patch → HttpFetchReadOnly 顺序补齐已登记 family 的真实 executor，每个都沿用 daemon authority、descriptor digest、persist-before-dispatch、幂等、fencing 与 reconcile；mutation 另加 expected preimage、atomic publish、partial write、symlink/path race、duplicate dispatch 与 OUTCOME_UNKNOWN 负例；不得新增未登记 family，不得因"本地工具"绕过 Effect 语义 | not-started | 2026-08-12 registered under optimization-proposal INV-TASK-2。Kill criterion（提案 §4.3）：产品明确只读定位，或 mutation 无法可靠 query/reconcile。`ProcessRun` 与 Git 专用面属 INV-TASK-3，需 owner 先做 product-semantic 决策，不在本任务内。 |
-| P2-T11 | 公共面正确性缺陷修复（PERSONAL-PERF-EVAL-002 实测发现） | P2-T09 | (1) Provider readiness 必须反映 `secret_ref` 的**可解析性**而非仅字段存在：配置存在但引用无法解析时 `provider` 组件必须 `Blocked`（`provider_secret_unresolvable`），backend 不可答时为 `provider_secret_store_unavailable`，且 `overall`/`first_conversation_ready` 不得为 ready；readiness 不得输出任何 secret material。(2) `POST /management/resource/v1/skill/binding/revoke` 必须到达 revoke handler：路由分派不得被 `skill/bind` 前缀吞掉，并以只有 revoke handler 能产生的 registered code 作为判别性负例 | in-progress | 2026-08-12 由 owner 授权、依据 `PERSONAL-PERF-EVAL-002` 最终评估的证据排序 Priority 1 与 Priority 2 登记。实测证据：80/80 Provider 请求以 `PERSONAL_PROVIDER_SECRET_UNAVAILABLE` fail closed，同时 `status`/`doctor` 报 `provider: ready`、`overall: ready`、`first_conversation_ready: true`；差分探针证明 revoke 路径返回 bind handler 的报文。不含 Priority 3（readiness 热路径成本）与 Priority 1b（Extension per-request 开销），二者需独立任务与 nested timing。 |
+| P2-T11 | 公共面正确性缺陷修复（PERSONAL-PERF-EVAL-002 实测发现） | P2-T09 | (1) Provider readiness 必须反映 `secret_ref` 的**可解析性**而非仅字段存在：配置存在但引用无法解析时 `provider` 组件必须 `Blocked`（`provider_secret_unresolvable`），backend 不可答时为 `provider_secret_store_unavailable`，且 `overall`/`first_conversation_ready` 不得为 ready；readiness 不得输出任何 secret material。(2) `POST /management/resource/v1/skill/binding/revoke` 必须到达 revoke handler：路由分派不得被 `skill/bind` 前缀吞掉，并以只有 revoke handler 能产生的 registered code 作为判别性负例 | done | 2026-08-12 由 owner 授权、依据 `PERSONAL-PERF-EVAL-002` 最终评估的证据排序 Priority 1 与 Priority 2 登记。实测证据：80/80 Provider 请求以 `PERSONAL_PROVIDER_SECRET_UNAVAILABLE` fail closed，同时 `status`/`doctor` 报 `provider: ready`、`overall: ready`、`first_conversation_ready: true`；差分探针证明 revoke 路径返回 bind handler 的报文。不含 Priority 3（readiness 热路径成本）与 Priority 1b（Extension per-request 开销），二者需独立任务与 nested timing。 |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | done | 2026-08-11；ADR-0046 MVP: D01–D04 closed. Fixed matrix + non-claim report at `be7febb`; CI `31407542786`; owner `affirm all` → B02/B04/B05/B12 MVP `pass`. Closure: `docs/checkpoints/20260811-personal-p2-t08-runtime-spine-closure.md`; Draft PR #182. No GMVP-LINUX/B08/B09/release/Profile claim. |
 
 ### Phase 3 - Context Resource Value（Context、Token 与 Loop 效率）
