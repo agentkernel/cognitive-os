@@ -1,6 +1,6 @@
 # PERSONAL-PERF-EVAL-002 preregistration and freeze record
 
-- Status: **frozen; execution complete; campaign closed 2026-08-12**
+- Status: **frozen; phases 1 and 2 complete; campaign closed 2026-08-12**
 - Campaign ID: `PERSONAL-PERF-EVAL-002`
 - Kind: owner-directed evaluation campaign
   ([Operating Model §2.5](../governance/DEVELOPMENT-OPERATING-MODEL.md)); not a
@@ -919,3 +919,141 @@ in `provider_proxy.rs`), and the broker forwards it verbatim too.
 Harness validation before any counted batch: one block, both arms completed and
 both oracles passed, arm order randomized, `P` wall 4853 ms with 0.37 ms broker
 local overhead, `O` wall 5567 ms.
+
+### 11.6 `B1` pilot — `pass`
+
+9 families × 5 seeds × 2 replicas = **90 paired blocks, 180 started runs, 180
+retained**. No timeout and no process error in either arm.
+
+| Endpoint | `P` pure Pi | `O` OS Pi |
+|---|---:|---:|
+| oracle completion | 82 / 90 = **91.1 %** | 81 / 90 = **90.0 %** |
+| wall time median | **4504.7 ms** | **6182.7 ms** |
+| wall MAD | 746.4 ms | 807.5 ms |
+
+- paired completion difference `O − P`: **−1.1 pp**, 95 % clustered bootstrap
+  CI **[−3.33, 0.00] pp** (10 000 resamples, clustered on task-seed);
+- McNemar exact on discordant pairs (P-only 1, O-only 0): **p = 1.0000**;
+- paired wall delta `O − P`: median **+1854.3 ms**, 95 % CI
+  **[1643.3, 2007.7] ms**; relative median **+43.3 %**;
+- broker local overhead: **0.5 ms** median (0.3–2.0 ms), against the daemon
+  path's ~127 ms residual;
+- Provider calls per `P` task: median 1, max 2.
+
+Per-family completion was identical in both arms for seven of nine families
+(all 100 %). `G6` policy handling sat at 60 % in both arms and `G9` security
+review at 60 % `P` versus 50 % `O`. Those two families are what makes the corpus
+discriminating: an oracle set where everything passes would measure nothing.
+
+Retained outliers, not deleted (plan §7.1): one `P` run reached 149 880 ms and
+produced the paired-delta minimum of −140 305 ms. It stays in every figure
+above, which is why medians and MAD are the headline statistics rather than
+means.
+
+**Power reading for `B2`.** The completion difference is already bounded inside
+±3.3 pp at N = 90 with a single discordant pair, so the confirmatory batch is
+sized by the plan's floor (30 paired seeds per family) rather than by a variance
+estimate: 9 × 30 = 270 held-out blocks, generated from a different stratum
+string so they cannot overlap the pilot seeds. No sample-size change was made in
+response to how close anything looked.
+
+### 11.7 `B2` confirmatory held-out paired batch — `pass`
+
+9 families × 30 held-out seeds × 1 replica = **270 paired blocks, 540 started
+runs, 540 retained**. No timeout and no process error in either arm.
+
+| Endpoint | `P` pure Pi | `O` OS Pi |
+|---|---:|---:|
+| oracle completion | 240 / 270 = **88.9 %** | 242 / 270 = **89.6 %** |
+| wall median | **4367.2 ms** | **6204.6 ms** |
+| wall MAD | 682.8 ms | 804.2 ms |
+| wall p95 (N >= 100, reportable) | 23 190.1 ms | 17 408.4 ms |
+| wall max | 123 482.0 ms | 133 013.5 ms |
+
+- paired completion difference `O − P`: **+0.7 pp**, 95 % clustered bootstrap CI
+  **[−2.22, +3.70] pp** (10 000 resamples, clustered on task-seed);
+- McNemar exact, discordant pairs P-only 8 / O-only 10: **p = 0.8145**;
+- paired wall delta `O − P`: median **+1828.5 ms**, 95 % CI
+  **[1753.6, 1893.9] ms**, relative median **+44.2 %**, delta p95 8061.7 ms;
+- broker local overhead: **0.5 ms** median, p95 1.0 ms;
+- Provider calls per `P` task: mean 1.01, only 2 of 270 tasks needed two.
+
+Per-family completion:
+
+| Family | `P` | `O` | delta |
+|---|---:|---:|---:|
+| `A1` root cause | 30/30 | 30/30 | 0.0 pp |
+| `A4` operations | 30/30 | 30/30 | 0.0 pp |
+| `A5` ambiguity | 24/30 | 27/30 | +10.0 pp |
+| `G1` research | 30/30 | 30/30 | 0.0 pp |
+| `G2` tabular | 30/30 | 30/30 | 0.0 pp |
+| `G3` scheduling | 30/30 | 30/30 | 0.0 pp |
+| `G4` procurement | 30/30 | 30/30 | 0.0 pp |
+| `G6` policy | 20/30 | 21/30 | +3.3 pp |
+| `G9` security review | 16/30 | 14/30 | −6.7 pp |
+
+Six families saturate at 100 % in both arms; `G6` and `G9` are the
+discriminating ones. Per-family deltas are secondary endpoints and none would
+survive Holm correction across nine families, so they are descriptive only.
+
+Every failure in both arms was a task-quality failure with output present
+(`set` mismatch 20 `P` / 19 `O`, `value` mismatch 10 `P` / 9 `O`). There were no
+transport, timeout or process failures at all.
+
+Retained outliers, not deleted: `P` max 123 482 ms and `O` max 133 013 ms, with
+a paired-delta minimum of −108 501 ms. Medians and MAD are the headline
+statistics for exactly this reason.
+
+### 11.8 Attribution of the `O − P` gap — four causes excluded by measurement
+
+The +1828 ms is real and tight (CI ±70 ms). Rather than assert where it comes
+from, each candidate was measured.
+
+| Candidate cause | Measurement | Verdict |
+|---|---|---|
+| CognitiveOS Extension **load** cost | `pi --version` with and without `--extension`, 10 samples each: 1619.0 ms vs 1614.5 ms p50 (MAD 41–56 ms) | **excluded** — 4.5 ms, inside noise |
+| Non-streaming OS proxy vs streamed `P` arm | identical prompts through the same broker, `stream=true` vs `false`, 12 pairs, order alternated: medians 2203.9 vs 2164.0 ms | **excluded** — paired median delta **−38.7 ms** |
+| Daemon residual scaling with real payloads | daemon client driven with 12 real corpus prompts: residual **128.1 ms** median (102.7–173.3), against 127.3/128.5 ms on the tiny marker | **excluded** — flat, does not scale |
+| `O` arm doing more model work | output size on all 270 confirmatory blocks: `P` 237.5 vs `O` 235.0 chars median, paired delta **−4.5 chars** | **excluded** — same work, same answers |
+| Broker overhead inflating `P`'s advantage | 0.5 ms median, p95 1.0 ms | **excluded** — negligible |
+
+What remains, by arithmetic over independently measured parts: Pi start costs
+~1615 ms in **both** arms; the whole daemon route for a real corpus prompt —
+Provider plus residual, no Pi — measured ~2008 ms median; yet the `O` arm's wall
+median is 6204.6 ms against `P`'s 4367.2 ms. After subtracting the components
+above, roughly 2 s of `O`-arm cost sits in neither the daemon, nor Extension
+load, nor streaming, nor extra output.
+
+The remaining locus is the Extension's **per-request** path as executed inside
+Pi. This is an inference from three independently measured quantities, not a
+directly observed stage, and plan §5.2 forbids naming it as a measured cost.
+Confirming it requires nested per-stage timing inside a single Pi run, which no
+current instrument produces. The honest statement is therefore: the daemon is
+measurably **not** the cause (128 ms of a 1828 ms gap), and the four other
+obvious explanations are excluded by direct measurement.
+
+### 11.9 Phase-2 cleanup and closure — `pass`
+
+| Check | Result |
+|---|---|
+| broker stopped (drops the only in-memory key copy) | 0 processes, no listener on 48383 |
+| campaign daemon / Pi processes | 0 / 0 |
+| campaign-created SecretStore entry cleared (plan §8.2) | `SearchItems` returns `[]` |
+| owner source file | byte- and mtime-unchanged |
+| key-shaped scan: evidence, runtime, `arm-p`, `arm-o`, broker, corpus, runner | **0 hits each** |
+| `P` arm `models.json` real-key hits | **0** (placeholder token only) |
+| P9-T04 residue | pid 11176 running, config mtimes unchanged |
+| snapshot / guest power state | untouched |
+| scenario boundary violations | **0** |
+
+Broker lifetime totals: 389 metric rows, 362 forwarded requests, 3 rejected
+(all pre-campaign token probes), **0 upstream failures**.
+
+Evidence retained at `b01guest:~/perfeval002/evidence/`: 30 files, 624 KiB,
+per-file SHA-256 captured at cleanup, held until the verifier disposition
+changes from `not_reviewed`.
+
+**Campaign closed.** Final report:
+[personal-performance-assessment-20260812.md](../evaluation/personal-performance-assessment-20260812.md).
+Claim level `hypothesis`, verifier `not_reviewed`, no Agent-benefit claim, no
+Gate/release/Profile/B01 promotion.

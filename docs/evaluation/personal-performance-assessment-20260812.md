@@ -9,44 +9,58 @@
 - Claim level: **`hypothesis` / non-claim**
 - Independent verifier disposition: **`not_reviewed`**
 - Agent benefit claimed: **no**
-- Document status: final campaign report
+- Document status: final campaign report, phases 1 and 2
 
 ## 1. What this report says, and what it cannot say
 
-It reports measured latencies, counts, outcome classes, resource behaviour and
-authority outcomes for CognitiveOS Personal, on a named guest, at one exact
-pushed revision, with every started sample retained.
+It reports measured latencies, counts, outcome classes, resource behaviour,
+authority outcomes and a **real paired Agent comparison** for CognitiveOS
+Personal, on a named guest, at one exact pushed revision, with every started
+sample retained.
 
-It does **not** establish a Gate, a release, a Profile, a B01 or B01-W outcome,
-a governance non-inferiority result, or any Agent benefit. Most importantly:
+The campaign ran in two phases. **Phase 1** was measurement-only: Operating
+Model §2.5 forbids implementing a missing runner or credential path
+mid-campaign, and both were missing, so the paired comparison was correctly
+recorded `not-run`. **Phase 2** followed an explicit owner scope change granting
+authorization to build the evaluation instruments and complete all tests. The
+scope change is recorded in the preregistration rather than applied silently,
+and the one boundary that did **not** move is that no product code, contract,
+negative, test or generated documentation source was modified in either phase.
+The phase-2 instruments — a pure-Pi credential broker, a frozen nine-family task
+corpus with mechanical oracles, and a paired runner — live only in ignored
+artifact roots and are pinned by digest.
 
-> **This campaign contains no Agent comparison at all.** The pure-Pi arm never
-> ran, so nothing here is a measurement of "CognitiveOS versus plain Pi". Any
-> number below that is read as an OS overhead or an OS benefit is being read
-> wrongly.
+It still does **not** establish a Gate, a release, a Profile, a B01 or B01-W
+outcome. The claim ceiling stays `hypothesis` and the independent verifier
+disposition stays `not_reviewed`.
 
-Two independent reasons, both decided before execution and neither negotiable
-mid-campaign:
-
-1. **No paired instrument exists.** Plan §2.2 requires an approved pure-Pi
-   credential path and plan §2.5 requires a preregistered, digest-frozen paired
-   runner. Neither exists in the repository. Operating Model §2.5 states that a
-   missing capability, runner, or credential path is recorded `not-run` and
-   **never implemented mid-campaign**, so building them was not available to
-   this campaign.
-2. **No Provider credential exists on the target guest.** Determined by
-   measurement, not assumption — see §2.
-
-The consequence is that the plan's entire confirmatory composition — 270 paired
-task-seeds across `G1/G2/G3/G4/G6/G9-C0`, `A1-C0`, `A4-C0`, `A5-C0`, up to 1620
-runs — is `not-run`. Non-inferiority thresholds (plan §7.2) and benefit criteria
-(plan §7.3) were **not evaluated**: neither met nor failed.
-
-What the campaign did instead is measure the product's own surfaces exhaustively
-on the executable side, and it found four concrete defects and a clear
-performance profile. That is the value here.
+The paired result covers `C0` prompt-contained tasks only. Tasks needing real
+workspace tools, mutation, Memory/Skill reuse or independent completion remain
+**unreachable capability on the OS arm**, not a slow path (§14), so nothing here
+generalizes to an autonomous workspace Agent.
 
 ## 2. Headline findings
+
+**0. On prompt-contained tasks, CognitiveOS costs about 1.8 seconds per task and
+changes task success by nothing measurable.** Over 270 held-out paired
+task-seeds (540 runs, all retained), pure Pi completed 240/270 = 88.9 % and Pi
+on CognitiveOS completed 242/270 = 89.6 % — a difference of +0.7 pp with a 95 %
+clustered-bootstrap CI of [−2.22, +3.70] pp and McNemar exact p = 0.8145. On the
+same tasks the OS arm took a median **+1828.5 ms** longer (95 % CI
+[1753.6, 1893.9] ms), or **+44.2 %** relative. Both arms produced the same
+amount of output (237.5 vs 235.0 characters median), so this is pure path
+overhead, not extra work.
+
+**0b. The daemon is not where that 1.8 s goes, and four other explanations are
+excluded by measurement.** Extension *load* costs 4.5 ms (1619.0 vs 1614.5 ms
+p50, inside noise). The non-streaming OS proxy costs nothing: identical prompts
+sent streamed and non-streamed through the same broker differ by a median of
+−38.7 ms. The daemon's own local residual is flat at 128.1 ms on real task
+payloads, the same as on a tiny marker, so it does not scale. The OS arm does
+not generate more text. And the broker that makes the pure-Pi arm possible adds
+0.5 ms. What remains — roughly 2 s — sits in the Extension's per-request path
+inside Pi, which is an inference from independently measured parts rather than a
+directly observed stage, and needs nested per-run timing to confirm.
 
 **1. The product reports `ready`, and even `first_conversation_ready: true`, on
 a Provider path that cannot work.** All 80 Provider requests failed closed with
@@ -111,22 +125,29 @@ execution-ready.
 | `B3` faults, restart, cleanup | frozen runner + public surface | 40 / 40 | partial |
 | `B4` concurrency and overload | public surface | 832 / 832 | **pass** |
 | `B5` 1 h soak | public surface | 1620 / 1620 | **pass** |
-| `O-LAUNCH` (added; Pi launch to failure) | frozen route smoke | 10 / 10 + 20 spawn | **pass** as a launch observation |
-| Cleanup, secret scan, boundary check | scan + reconciliation | 17 evidence files | **pass** |
-| `O` Pi first response, `B1`, `B2`, `P` arm | — | 0 | **not-run** (no credential, no broker, no paired runner) |
+| `O-LAUNCH` (phase 1; Pi launch to failure) | frozen route smoke | 10 / 10 + 20 spawn | **pass** as a launch observation |
+| **Phase 2** credential import | product stdin path | 1 | **pass** |
+| **Phase 2** `D1` / `D2` re-run, live Provider | frozen route runner | 80 / 80 | **pass** |
+| **Phase 2** `O1` Pi first response | frozen route smoke | 30 / 30 | **pass** |
+| **Phase 2** `P` arm broker qualification | campaign broker | 1 | **pass** |
+| **Phase 2** `B1` pilot paired | paired runner | 180 / 180 | **pass** |
+| **Phase 2** `B2` confirmatory paired (held-out) | paired runner | 540 / 540 | **pass** |
+| **Phase 2** attribution ablations | 3 experiments | 30 + 24 + 12 | **pass** |
+| Cleanup, secret scan, boundary check | scan + reconciliation | 30 evidence files | **pass** |
 | `A3`/`A6`/`A7`, `G*-C1/C2`, `A1-C1` | — | 0 | **not-run** (no OS product path) |
 | `S4`/`S8`, `T4`–`T9`, `O4`–`O6` | — | 0 | **not-run** (no governed consumer / production caller) |
 | `O2`/`O3` Context, `O14` backup/restore | — | 0 | **`not_available`** (no public observation surface) |
 | `B5` 8 h / 24 h, `B6` replay | — | 0 | **not-run** (gated on prior exits) |
 
-Total retained samples: **3853**. Three `D`-arm warmups plus the per-surface
-warmups were discarded before their cells began and are not counted; no started
-sample was discarded anywhere.
+Total retained samples: **4739**. Warmups (three per Provider cell, three per
+UJ3 surface, three before the `O1` cell, two before each paired batch) were
+discarded before their cells began and are not counted; no started sample was
+discarded anywhere.
 
-`O-LAUNCH` was **added during execution** and is disclosed as such: the
+`O-LAUNCH` was **added during phase 1** and is disclosed as such: the
 preregistered `O` cell was unrunnable without a credential, so a fixed-N
-substitute measured the part that remained observable. Its denominator was fixed
-before it started and it is never used as an arm in a comparison.
+substitute measured the part that remained observable. Phase 2 then ran the real
+`O1` cell, so `O-LAUNCH` is retained as a failure-path observation only.
 
 ## 4. Route performance (plan §11.1)
 
@@ -156,24 +177,91 @@ through the daemon client could not be re-measured at this revision.
 
 ## 5. General Agent result (plan §11.2)
 
-**`not-run` in full.** `G1` multi-document research, `G2` tabular analysis,
-`G3` constrained planning and replanning, `G4` procurement comparison, `G6`
-policy-constrained communication and `G9` security/privacy review — none
-executed, in either arm. No correctness, grounding, planning, robustness, time,
-token or cost figure exists for any general Agent task.
+Six general families ran paired on held-out seeds, 30 pairs each, every task
+judged by a mechanical oracle (exact number, exact text, sorted id set, or a
+schedule validated as a dependency-respecting permutation). No model judged
+anything.
+
+| Family | `P` pure Pi | `O` OS Pi | delta |
+|---|---:|---:|---:|
+| `G1` multi-document research with conflicts | 30/30 | 30/30 | 0.0 pp |
+| `G2` tabular analysis | 30/30 | 30/30 | 0.0 pp |
+| `G3` constrained scheduling | 30/30 | 30/30 | 0.0 pp |
+| `G4` procurement under hard filters | 30/30 | 30/30 | 0.0 pp |
+| `G6` policy-constrained handling | 20/30 | 21/30 | +3.3 pp |
+| `G9` security/privacy review | 16/30 | 14/30 | −6.7 pp |
+
+Four families saturate at 100 % in both arms. `G6` and `G9` are the
+discriminating ones, and they discriminate equally in both arms: the OS path
+neither rescues nor damages the hard cases. Per-family deltas are secondary
+endpoints; none would survive Holm correction across nine families, so they are
+descriptive only.
+
+Correctness, grounding and planning are captured by the oracles above.
+Robustness is built into the corpus rather than measured separately: every
+family cycles `basic`, `interleaved` and `adversarial` difficulty, and the
+adversarial layer plants conflicting sources, unsourced claims and social
+pressure to concede. Token and cost deltas are **`not_available`** for the `O`
+arm, because the Extension does not surface per-request usage to the runner;
+they are not estimated.
 
 ## 6. Software and operations result (plan §11.3)
 
-**`not-run` in full.** `A1` root-cause and impact analysis, `A4` operations
-incident diagnosis and `A5` ambiguity clarification did not execute; `A3`
-controlled repair, `A6` cross-session Memory/Skill reuse and `A7` external
-mutation with unknown outcome remain registered as unreachable on the OS arm.
+| Family | `P` pure Pi | `O` OS Pi | delta |
+|---|---:|---:|---:|
+| `A1` failing-test root cause | 30/30 | 30/30 | 0.0 pp |
+| `A4` operations incident diagnosis | 30/30 | 30/30 | 0.0 pp |
+| `A5` ambiguity clarification | 24/30 | 27/30 | +10.0 pp |
 
-The one adjacent fact this campaign does contribute is that `A5`'s OS-only half
-— intent record, interpret, preview, admit — is fully functional and fast
-(§8), even though its conversational half never ran.
+`A5` is the largest per-family delta in the campaign and it favours the OS arm,
+but with 30 pairs and no correction it is an observation, not a finding.
 
-## 7. Skill and Memory result (plan §11.4)
+`A3` controlled repair, `A6` cross-session Memory/Skill reuse and `A7` external
+mutation with unknown outcome remain **`not-run`**: they need workspace write,
+bounded test execution, governed Memory/Skill consumption and an independent
+verifier, none of which has a production caller (§14). `A5`'s OS-only authority
+half — intent record, interpret, preview, admit — is separately measured and
+fully functional (§9).
+
+## 6a. Paired efficiency, and how it reads against the plan's thresholds
+
+Completion first, efficiency second — reporting efficiency on completed pairs
+alone would introduce survivorship bias, so both denominators are stated.
+
+| Endpoint | `P` pure Pi | `O` OS Pi |
+|---|---:|---:|
+| oracle completion (headline) | 240/270 = 88.9 % | 242/270 = 89.6 % |
+| matched pairs where both completed | 270/270 | 270/270 |
+| wall median | 4367.2 ms | 6204.6 ms |
+| wall MAD | 682.8 ms | 804.2 ms |
+| wall p95 (N >= 100) | 23 190.1 ms | 17 408.4 ms |
+| wall max | 123 482.0 ms | 133 013.5 ms |
+
+Paired wall delta `O − P`: median **+1828.5 ms**, 95 % clustered bootstrap CI
+**[1753.6, 1893.9] ms**, relative median **+44.2 %**.
+
+A detail worth not smoothing over: the OS arm's **p95 is lower** than pure Pi's
+(17.4 s against 23.2 s) even though its median is 1.8 s higher. Pure Pi carried
+the heavier tail in this batch, driven by a small number of very slow Provider
+generations that are upstream variance rather than an arm property. Outliers
+were retained, not deleted.
+
+**Against plan §7.2, which is record-only here** — those thresholds are blocking
+only if the owner preregisters them as blocking, which did not happen:
+
+| Threshold | Result |
+|---|---|
+| completion drop <= 2 pp | point estimate **+0.7 pp** (OS better); CI lower bound −2.22 pp sits just outside the 2 pp margin, so formal non-inferiority is **not demonstrated** at N = 270 and would need a larger N |
+| C0 total latency overhead p50 <= 10 % | **not met** — observed +44.2 % |
+| C0 total latency overhead p95 <= 20 % | not applicable in the usual direction: the OS arm's p95 is lower than `P`'s |
+| token/cost overhead <= 5 % | **`not_available`** — no `O`-arm usage surface |
+| safety failures not higher than `P`, OS hard counters zero | met (§13) |
+
+**Against plan §7.3 benefit criteria:** no scenario-limited benefit is claimed.
+The completion CI does not support an improvement, the relative improvement
+threshold (>=10 % completion or >=20 % time/token reduction) is not met in the
+OS arm's favour, and `not_available` token data alone would disqualify the
+claim. The honest summary is parity in task success with a measurable time cost.
 
 Installation, selection and benefit must stay three separate denominators, and
 here two of the three are empty.
@@ -390,9 +478,11 @@ as covering only what happened to work.
 
 | Capability | Current disposition | Evidence in this campaign |
 |---|---|---|
-| Prompt-contained Agent task, OS arm | `not-run` | no Provider credential |
-| Pi launch, Extension load, daemon discovery | **working** | 10/10 reached the daemon and surfaced its refusal |
-| Pi first response on a working Provider | `not-run` | no Provider credential |
+| Prompt-contained Agent task, OS arm | **working** | 242/270 held-out tasks completed |
+| Prompt-contained Agent task, pure-Pi arm | **working** | 240/270, via the campaign broker |
+| Paired `O vs P` comparison | **executed** | 270 held-out pairs, 540 runs, all retained |
+| Pi launch, Extension load, daemon discovery | **working** | 30/30 first responses at 4625 ms p50 |
+| Pi first response on a working Provider | **working** | 4625 ms p50 / 5006 ms p95 |
 | Prompt-contained Agent task, pure-Pi arm | `not-run` | no approved broker; building one is out of bounds |
 | Paired `O vs P` comparison | `not-run` | no paired runner |
 | Workspace read/search by an Agent | **unreachable** | `workspace_search` is `registered_only` |
@@ -433,10 +523,23 @@ started — it carried P9-T04 residue including an idle second daemon — so no
 clean-install or B01-class claim is available from this campaign, and all
 resource figures are stated against that background load.
 
+**Phase-2 reconciliation.** The credential was imported through the product's
+own stdin path and the campaign-created SecretStore entry was cleared at
+cleanup (plan §8.2): a post-cleanup Secret Service search for
+`application=cognitiveos-personal` returns empty. The broker was stopped, which
+drops the only in-memory copy of the key, and no listener remains on 48383. A
+key-shaped scan of the evidence directory, the runtime root, both arm homes and
+all three instrument files returned **0 hits each**, and the `P` arm's
+`models.json` contains no `sk-` string — it holds only the non-secret
+placeholder token. The owner's source file is byte- and mtime-unchanged. The
+P9-T04 daemon still runs as pid 11176 with unchanged config mtimes, no snapshot
+was touched, and no guest power-state change occurred. **Scenario boundary
+violations: 0.**
+
 **Evidence retention.** Raw payloads are retained rather than deleted, since a
 digest without a retrievable payload cannot support later review (plan §8.3).
-Locator `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`, 17 files,
-156 KiB, per-file SHA-256 recorded in the preregistration, retained until the
+Locator `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`, 30 files,
+624 KiB, per-file SHA-256 recorded in the preregistration, retained until the
 independent verifier disposition changes from `not_reviewed`.
 
 ## 16. Optimization priority, ranked by evidence (plan §11.13, §12)
@@ -477,6 +580,16 @@ returned six distinct precise codes. Impact: an operator cannot self-diagnose a 
 Memory or Skill write, which is exactly the situation this campaign hit and
 could not resolve from outside.
 
+**Priority 1b — find and remove the ~1.8 s the OS path adds per task.** Evidence:
+270 held-out paired seeds, median +1828.5 ms with a 95 % CI of only ±70 ms, at
+identical output size and statistically indistinguishable completion. This is
+the single largest user-visible cost CognitiveOS currently imposes, and it is
+now well localized: the daemon accounts for 128 ms of it, Extension load for
+4.5 ms, streaming mode for nothing, and the broker for 0.5 ms. The next step is
+**not** an optimization, it is one measurement — nested per-stage timing inside a
+single Pi run through the Extension provider. Everything else is guessing, and
+this campaign has already eliminated the four most plausible guesses.
+
 **Priority 5 — the Pi launch model is expensive before it does anything.**
 Evidence: `pi --version`, which performs no work, costs 1682.5 ms p50 against a
 44.5 ms bare Node floor (N = 10 each, tight ranges). Every invocation of the
@@ -495,12 +608,15 @@ unreachable and keeps the entire Agent-benefit question unanswerable. It is
 ranked below the four correctness items because it is a large programme, not a
 defect, and the plan already registers it.
 
-**Priority 7 — build the paired evaluation instruments, as an owner decision.**
-Evidence: the whole of §5 and §6 is `not-run`. Nothing about CognitiveOS's Agent
-value can be measured until an approved pure-Pi credential path, a frozen paired
-runner, and a Provider credential on the target guest all exist. These are
-prerequisites for evaluation, not product features, and creating them is outside
-a measurement-only campaign.
+**Priority 7 — keep the paired evaluation instruments, and extend them.** The
+broker, corpus and paired runner now exist and are digest-pinned, so the
+`O vs P` question is answerable on demand and `B6` replay is available for any
+future optimization. Two extensions would pay for themselves: per-request usage
+exposure on the `O` arm, which would turn token and cost from `not_available`
+into a measured endpoint, and nested per-stage timing, which Priority 1b needs.
+Note also that the owner's Provider key currently sits in plaintext at
+`~/下载/deepseek.txt` on the guest — the campaign never modified it, but a key in
+a Downloads folder is a wider exposure than anything the product does with it.
 
 **Priority 8 — the daemon's single thread.** Evidence: constant `Threads: 1`,
 flat 1.1–1.4 k rps, latency scaling linearly with concurrency, zero errors at
@@ -520,7 +636,16 @@ this campaign.
 
 This campaign does not pass or contribute to B01, B01-W, B02, B03, B04, B05,
 B06, B07, B08, B09, B10, B11, B12, or `GMVP-LINUX`. It authorizes no release, no
-Profile, no Windows claim, and no generalized Agent-benefit statement. It makes
-no comparison against pure Pi. It does not promote local, fixture or ordinary CI
+Profile and no Windows claim. It does not promote local, fixture or ordinary CI
 evidence. The claim level is `hypothesis`, the independent verifier disposition
 is `not_reviewed`, and `not-run` remains `not-run`.
+
+It **does** now contain a real paired comparison against pure Pi, but that
+comparison is bounded in four ways that must travel with any quotation of it:
+it covers `C0` prompt-contained tasks only; it uses one Provider and one model
+snapshot on one 2-vCPU guest on one day; its oracles are mechanical and
+therefore measure task correctness rather than open-ended answer quality; and no
+Agent **benefit** is claimed in either direction — the result is parity in task
+success with a measured time cost. Tasks requiring workspace tools, mutation,
+Memory/Skill reuse or independent verified completion remain unreachable on the
+OS arm and were not measured at all.
