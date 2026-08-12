@@ -52,6 +52,10 @@ Clients never talk to the Provider. The daemon owns egress:
 2. The daemon resolves the `SecretRef` in memory and attaches the bearer header.
 3. `RustlsProviderTransport` enforces HTTPS-only, no redirects, no URL user-info,
    header CR/LF rejection, a 1 MiB response cap, and a caller timeout.
+4. Successful proxy responses carry an `X-CognitiveOS-Provider-Network-Nanos`
+   header (daemon-measured Provider network time only). Clients may send an
+   opaque `x-cognitiveos-correlation-id` request header for their own
+   measurement records; the daemon ignores it and never persists it.
 
 Discovery (`cognitive init`) probes `GET /models` plus a chat/stream/tool/cancel
 campaign and persists a non-secret capability snapshot with an identity digest; the
