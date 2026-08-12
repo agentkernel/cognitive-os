@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-fingerprint: "sha256:237f41301ae730695cca9dfeada23cdb6b8006814bbebf4023fda3ee435e920a"
+fingerprint: "sha256:f98bc8e61e7e1ba5c838bfecc792cad4544291a9b951988d35d62fdfcd907eae"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---

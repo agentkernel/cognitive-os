@@ -52,12 +52,24 @@ pub(crate) fn validate_native_tool_request(
         }
     };
 
+    // A mutation that cannot name the state it replaces has no compare-and-swap
+    // guard, so it can silently clobber a concurrently changed target. Refuse
+    // to validate it rather than leaving the check to the sink.
+    if matches!(
+        request.descriptor.family,
+        NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch
+    ) && request.expected_preimage.is_none()
+    {
+        return Err(NativeToolExecutionError::MutationPreimageRequired);
+    }
+
     Ok(ValidatedNativeToolRequest {
         descriptor: request.descriptor.clone(),
         target: request.target.clone(),
         input: request.input.clone(),
         approved_workspace_root: request.workspace_root.clone(),
         resolved_workspace_path,
+        expected_preimage: request.expected_preimage.clone(),
     })
 }
 

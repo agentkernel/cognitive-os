@@ -9,12 +9,14 @@
 
 #![allow(unused)]
 
+mod mutate;
 mod process;
 mod search;
 mod types;
 mod validate;
 mod workspace;
 
+pub(crate) use mutate::*;
 pub(crate) use process::*;
 pub(crate) use search::*;
 pub(crate) use types::*;

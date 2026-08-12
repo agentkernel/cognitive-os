@@ -65,11 +65,17 @@ fn request_for(family: NativeOperationFamily) -> NativeToolExecutionRequest {
         .find(|descriptor| descriptor.family == family)
         .cloned()
         .unwrap_or_else(|| panic!("catalog family missing: {family:?}"));
+    let expected_preimage = matches!(
+        family,
+        NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch
+    )
+    .then_some(WorkspacePreimage::Absent);
     NativeToolExecutionRequest {
         descriptor,
         target: "workspace://notes/today.txt".to_owned(),
         input: b"bounded input".to_vec(),
         workspace_root: Some(PathBuf::from("/tmp/cognitiveos-workspace")),
+        expected_preimage,
     }
 }
 
@@ -2439,6 +2445,831 @@ fn unknown_native_workspace_search_reconciles_original_key_without_second_scan()
         native_executor.scan_count(),
         1,
         "reconciliation must query the original key, never rescan"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load reconciled effect")
+            .expect("durable effect exists")
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load unchanged task")
+            .expect("durable task exists")
+            .version,
+        Version::INITIAL
+    );
+
+    std::fs::remove_file(database_path).unwrap_or(());
+}
+
+// ---------------------------------------------------------------------------
+// P2-T10/D02 — WorkspaceWrite / WorkspacePatch mutation executor
+// ---------------------------------------------------------------------------
+
+fn image_digest(bytes: &[u8]) -> String {
+    workspace_image_digest(bytes).expect("workspace image digest")
+}
+
+fn workspace_mutation_call(
+    action: &str,
+    idempotency_key: &str,
+    parameters_digest: &str,
+    target: &str,
+    fencing_epoch: i64,
+) -> ExecutorCall {
+    ExecutorCall {
+        action: action.to_owned(),
+        target: target.to_owned(),
+        idempotency_key: idempotency_key.to_owned(),
+        parameters_digest: parameters_digest.to_owned(),
+        authorization_digest: "authorization-digest".to_owned(),
+        fencing_epoch,
+    }
+}
+
+fn staged_mutation_request(
+    family: NativeOperationFamily,
+    workspace_root: &std::path::Path,
+    target: &str,
+    payload: &[u8],
+    expected_preimage: WorkspacePreimage,
+) -> ValidatedNativeToolRequest {
+    let mut request = request_for(family);
+    request.target = target.to_owned();
+    request.input = payload.to_vec();
+    request.workspace_root = Some(workspace_root.to_path_buf());
+    request.expected_preimage = Some(expected_preimage);
+    validate_native_tool_request(&request).expect("valid workspace mutation")
+}
+
+/// Names in the target directory, so a test can prove no staging residue.
+fn directory_entry_names(directory: &std::path::Path) -> Vec<String> {
+    let mut names = std::fs::read_dir(directory)
+        .expect("read target directory")
+        .map(|entry| {
+            entry
+                .expect("directory entry")
+                .file_name()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect::<Vec<_>>();
+    names.sort();
+    names
+}
+
+struct UnknownAfterNativeMutationDispatchExecutor<'executor> {
+    native_executor: &'executor NativeWorkspaceMutationExecutor,
+}
+
+impl EffectExecutor for UnknownAfterNativeMutationDispatchExecutor<'_> {
+    fn capabilities(&self) -> ExecutorCapabilities {
+        self.native_executor.capabilities()
+    }
+
+    fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+        self.native_executor.dispatch(call)?;
+        Ok(DispatchOutcome::Unknown {
+            detail: "simulated lost post-publication response".to_owned(),
+        })
+    }
+
+    fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+        self.native_executor.query_outcome(idempotency_key)
+    }
+}
+
+#[test]
+fn workspace_mutation_cannot_be_validated_without_an_expected_preimage() {
+    for family in [
+        NativeOperationFamily::WorkspaceWrite,
+        NativeOperationFamily::WorkspacePatch,
+    ] {
+        let mut request = request_for(family);
+        request.input = b"@@ -1 +1 @@\n-old\n+new\n".to_vec();
+        request.expected_preimage = None;
+        assert_eq!(
+            validate_native_tool_request(&request),
+            Err(NativeToolExecutionError::MutationPreimageRequired),
+            "{family:?} must declare the state it replaces"
+        );
+    }
+}
+
+#[test]
+fn workspace_write_refuses_a_preimage_mismatch_without_touching_the_target() {
+    let temporary_workspace = TestWorkspace::new("write-preimage-mismatch");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "current content\n").expect("write fixture");
+
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"replacement content\n",
+        WorkspacePreimage::Digest(image_digest(b"a different preimage\n")),
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-mismatch".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage mutation");
+
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-mismatch",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target still readable"),
+        "current content\n"
+    );
+    assert_eq!(executor.publish_count(), 0);
+    assert_eq!(
+        directory_entry_names(&temporary_workspace.path),
+        vec!["notes.txt".to_owned()],
+        "a refused mutation must leave no staging residue"
+    );
+    assert_eq!(executor.completed_output("write-mismatch"), None);
+}
+
+#[test]
+fn workspace_write_publishes_atomically_and_leaves_no_staging_residue() {
+    let temporary_workspace = TestWorkspace::new("write-atomic-publish");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-atomic".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage mutation");
+    executor.install_after_staging_write_hook(|target, staging| {
+        // The postimage is fully on disk in the staging file while the target
+        // still holds the preimage: a concurrent reader cannot observe a
+        // partially written target.
+        assert!(
+            staging.is_file(),
+            "staging file must exist before the rename"
+        );
+        assert_eq!(
+            std::fs::read_to_string(staging).expect("staging readable"),
+            "after\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(target).expect("target readable"),
+            "before\n"
+        );
+    });
+
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-atomic",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "after\n"
+    );
+    assert_eq!(executor.publish_count(), 1);
+    assert_eq!(
+        directory_entry_names(&temporary_workspace.path),
+        vec!["notes.txt".to_owned()],
+        "a published mutation must leave no staging residue"
+    );
+    let receipt = String::from_utf8(
+        executor
+            .completed_output("write-atomic")
+            .expect("mutation retains a bounded receipt"),
+    )
+    .expect("receipt is UTF-8");
+    assert!(receipt.starts_with("workspace://notes.txt:write:6:sha256:"));
+    assert!(
+        !receipt.contains("after"),
+        "the receipt must record what changed, never the bytes: {receipt}"
+    );
+}
+
+#[test]
+fn workspace_mutation_refuses_a_target_that_changed_before_publication() {
+    let temporary_workspace = TestWorkspace::new("write-publication-race");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-race".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage mutation");
+    executor.install_after_staging_write_hook(|target, _staging| {
+        // A concurrent writer wins the race between the preimage check and the
+        // rename. The mutation must not clobber it.
+        std::fs::write(target, "concurrent writer\n").expect("concurrent write");
+    });
+
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-race",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "concurrent writer\n"
+    );
+    assert_eq!(executor.publish_count(), 0);
+    assert_eq!(
+        directory_entry_names(&temporary_workspace.path),
+        vec!["notes.txt".to_owned()]
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn workspace_mutation_refuses_a_symlinked_target_and_an_escaping_parent() {
+    use std::os::unix::fs::symlink;
+
+    let temporary_workspace = TestWorkspace::new("write-symlink-refusal");
+    let approved_root = temporary_workspace.path.join("root");
+    std::fs::create_dir_all(&approved_root).expect("create approved root");
+    std::fs::create_dir_all(temporary_workspace.path.join("outside")).expect("create outside tree");
+    std::fs::write(
+        temporary_workspace.path.join("outside/secret.txt"),
+        "outside content\n",
+    )
+    .expect("write outside fixture");
+    symlink(
+        temporary_workspace.path.join("outside/secret.txt"),
+        approved_root.join("linked.txt"),
+    )
+    .expect("plant a symlinked target");
+    symlink(
+        temporary_workspace.path.join("outside"),
+        approved_root.join("escape"),
+    )
+    .expect("plant an escaping parent");
+
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let linked_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &approved_root,
+        "workspace://linked.txt",
+        b"clobber\n",
+        WorkspacePreimage::Digest(image_digest(b"outside content\n")),
+    );
+    executor
+        .stage_request(
+            "write-linked".to_owned(),
+            "digest-1".to_owned(),
+            &linked_request,
+        )
+        .expect("stage linked mutation");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-linked",
+            "digest-1",
+            "workspace://linked.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+
+    let escaping_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &approved_root,
+        "workspace://escape/planted.txt",
+        b"clobber\n",
+        WorkspacePreimage::Absent,
+    );
+    executor
+        .stage_request(
+            "write-escape".to_owned(),
+            "digest-2".to_owned(),
+            &escaping_request,
+        )
+        .expect("stage escaping mutation");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-escape",
+            "digest-2",
+            "workspace://escape/planted.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+
+    assert_eq!(
+        std::fs::read_to_string(temporary_workspace.path.join("outside/secret.txt"))
+            .expect("outside fixture readable"),
+        "outside content\n",
+        "a symlinked target must never be written through"
+    );
+    assert!(
+        !temporary_workspace
+            .path
+            .join("outside/planted.txt")
+            .exists(),
+        "an escaping parent must never receive a new file"
+    );
+    assert_eq!(executor.publish_count(), 0);
+}
+
+#[test]
+fn duplicate_workspace_write_dispatch_publishes_exactly_once() {
+    let temporary_workspace = TestWorkspace::new("write-duplicate-dispatch");
+    let target_path = temporary_workspace.path.join("notes.txt");
+
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"created\n",
+        WorkspacePreimage::Absent,
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-once".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage mutation");
+    let call = workspace_mutation_call(
+        "write",
+        "write-once",
+        "digest-1",
+        "workspace://notes.txt",
+        7,
+    );
+
+    let first_outcome = executor.dispatch(&call).expect("first publication");
+    let second_outcome = executor.dispatch(&call).expect("absorbed duplicate");
+    assert_eq!(first_outcome, second_outcome);
+    assert_eq!(
+        executor.publish_count(),
+        1,
+        "one original key must publish exactly once"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "created\n"
+    );
+    assert_eq!(
+        executor.query_outcome("write-once"),
+        Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+    );
+}
+
+#[test]
+fn workspace_patch_applies_only_when_every_context_line_matches() {
+    let temporary_workspace = TestWorkspace::new("patch-context");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "alpha\nbeta\ngamma\n").expect("write fixture");
+    let preimage_digest = image_digest(b"alpha\nbeta\ngamma\n");
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+
+    // A patch whose context does not match the preimage must fail closed.
+    let drifted_request = staged_mutation_request(
+        NativeOperationFamily::WorkspacePatch,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"@@ -1,3 +1,3 @@\n alpha\n-DRIFTED\n+delta\n gamma\n",
+        WorkspacePreimage::Digest(preimage_digest.clone()),
+    );
+    executor
+        .stage_request(
+            "patch-drift".to_owned(),
+            "digest-1".to_owned(),
+            &drifted_request,
+        )
+        .expect("stage drifted patch");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "patch",
+            "patch-drift",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "alpha\nbeta\ngamma\n"
+    );
+
+    // A hunk header that does not describe its own body must fail closed too.
+    let miscounted_request = staged_mutation_request(
+        NativeOperationFamily::WorkspacePatch,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"@@ -1,9 +1,3 @@\n alpha\n-beta\n+delta\n gamma\n",
+        WorkspacePreimage::Digest(preimage_digest.clone()),
+    );
+    executor
+        .stage_request(
+            "patch-miscounted".to_owned(),
+            "digest-2".to_owned(),
+            &miscounted_request,
+        )
+        .expect("stage miscounted patch");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "patch",
+            "patch-miscounted",
+            "digest-2",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "alpha\nbeta\ngamma\n"
+    );
+    assert_eq!(executor.publish_count(), 0);
+
+    // The matching patch applies through the same atomic publish.
+    let matching_request = staged_mutation_request(
+        NativeOperationFamily::WorkspacePatch,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"@@ -1,3 +1,3 @@\n alpha\n-beta\n+delta\n gamma\n",
+        WorkspacePreimage::Digest(preimage_digest),
+    );
+    executor
+        .stage_request(
+            "patch-apply".to_owned(),
+            "digest-3".to_owned(),
+            &matching_request,
+        )
+        .expect("stage matching patch");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "patch",
+            "patch-apply",
+            "digest-3",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "alpha\ndelta\ngamma\n"
+    );
+    assert_eq!(executor.publish_count(), 1);
+    assert_eq!(
+        directory_entry_names(&temporary_workspace.path),
+        vec!["notes.txt".to_owned()]
+    );
+}
+
+#[test]
+fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
+    let temporary_workspace = TestWorkspace::new("write-durable-query");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let build_request = || {
+        staged_mutation_request(
+            NativeOperationFamily::WorkspaceWrite,
+            &temporary_workspace.path,
+            "workspace://notes.txt",
+            b"after\n",
+            WorkspacePreimage::Digest(image_digest(b"before\n")),
+        )
+    };
+
+    // Before the mutation runs, a restarted daemon that re-stages the same
+    // Intent must read `NotExecuted` from the filesystem alone.
+    let restarted_before = NativeWorkspaceMutationExecutor::new(7);
+    restarted_before
+        .stage_request(
+            "write-durable".to_owned(),
+            "digest-1".to_owned(),
+            &build_request(),
+        )
+        .expect("stage mutation");
+    assert_eq!(
+        restarted_before.query_outcome("write-durable"),
+        Ok(ExecutorQueryResult::NotExecuted)
+    );
+    // An unstaged key is never claimed either way.
+    assert_eq!(
+        restarted_before.query_outcome("write-unknown-key"),
+        Ok(ExecutorQueryResult::Indeterminate)
+    );
+
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-durable".to_owned(),
+            "digest-1".to_owned(),
+            &build_request(),
+        )
+        .expect("stage mutation");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-durable",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+
+    // After the mutation, a fresh executor with an empty completed ledger --
+    // the state a restarted daemon is in -- still resolves the original key
+    // from the durable target.
+    let restarted_after = NativeWorkspaceMutationExecutor::new(7);
+    restarted_after
+        .stage_request(
+            "write-durable".to_owned(),
+            "digest-1".to_owned(),
+            &build_request(),
+        )
+        .expect("stage mutation");
+    assert_eq!(restarted_after.publish_count(), 0);
+    assert_eq!(
+        restarted_after.query_outcome("write-durable"),
+        Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+    );
+}
+
+#[test]
+fn workspace_mutation_sink_rejects_stale_fencing_before_any_write() {
+    let temporary_workspace = TestWorkspace::new("write-stale-fencing");
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"created\n",
+        WorkspacePreimage::Absent,
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7);
+    executor
+        .stage_request(
+            "write-fenced".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage mutation");
+
+    assert_eq!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-fenced",
+            "digest-1",
+            "workspace://notes.txt",
+            6,
+        )),
+        Ok(DispatchOutcome::FencedStaleEpoch { sink_epoch: 7 })
+    );
+    assert_eq!(executor.publish_count(), 0);
+    assert!(!temporary_workspace.path.join("notes.txt").exists());
+}
+
+#[test]
+fn durable_workspace_write_records_executing_before_mutation_and_reconciles_once() {
+    let temporary_workspace = TestWorkspace::new("durable-write-dispatch");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let database_path = temporary_authority_database_path();
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+    let task_object_id = object_id(621);
+    let effect_object_id = object_id(622);
+    let intent_object_id = object_id(623);
+    let admitted_at = WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+    for (object_id, domain, lifecycle_state, event_id) in [
+        (
+            task_object_id.clone(),
+            LifecycleDomain::Task,
+            "RUNNING",
+            621,
+        ),
+        (
+            effect_object_id.clone(),
+            LifecycleDomain::Effect,
+            "PROPOSED",
+            622,
+        ),
+    ] {
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: object_id.clone(),
+                    domain,
+                    state: state(lifecycle_state),
+                    version: Version::INITIAL,
+                    body: json!({"fixture": "p2-t10-d02"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse(&format!("00000000-0000-7000-a000-{event_id:012x}"))
+                        .expect("valid event identifier"),
+                    object_id,
+                    domain,
+                    object_version: Version::INITIAL,
+                    event_type: "fixture.admitted".to_owned(),
+                    canonical_json: "{\"fixture\":true}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            })
+            .expect("admit durable fixture object");
+    }
+    let idempotency_key = "p2-t10-d02-workspace-write";
+    let parameters_digest = "sha256:p2-t10-d02-workspace-write";
+    store
+        .insert_intent(
+            &IntentRow {
+                intent_id: intent_object_id.clone(),
+                idempotency_key: idempotency_key.to_owned(),
+                parameters_digest: parameters_digest.to_owned(),
+                action: "write".to_owned(),
+                target: "workspace://notes.txt".to_owned(),
+                effect_object_id: effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: None,
+                canonical_json: "{\"intent\":\"p2-t10-d02\"}".to_owned(),
+            },
+            &EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000623")
+                    .expect("valid intent event identifier"),
+                object_id: intent_object_id,
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"intent\":\"p2-t10-d02\"}".to_owned(),
+            },
+        )
+        .expect("persist durable intent");
+
+    let validated_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let native_executor = NativeWorkspaceMutationExecutor::new(1);
+    native_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &validated_request,
+        )
+        .expect("stage durable intent identity");
+    let hook_store = Arc::clone(&store);
+    let hook_effect_object_id = effect_object_id.clone();
+    let hook_task_object_id = task_object_id.clone();
+    native_executor.install_after_staging_write_hook(move |target, _staging| {
+        let effect = hook_store
+            .load_object(LifecycleDomain::Effect, &hook_effect_object_id)
+            .expect("load effect before publication")
+            .expect("durable effect exists");
+        let task = hook_store
+            .load_object(LifecycleDomain::Task, &hook_task_object_id)
+            .expect("load task before publication")
+            .expect("durable task exists");
+        assert_eq!(effect.state.as_str(), "EXECUTING");
+        assert_eq!(task.state.as_str(), "RUNNING");
+        assert_eq!(task.version, Version::INITIAL);
+        assert_eq!(
+            std::fs::read_to_string(target).expect("target readable"),
+            "before\n",
+            "the durable EXECUTING record must precede the mutation"
+        );
+    });
+    let unknown_executor = UnknownAfterNativeMutationDispatchExecutor {
+        native_executor: &native_executor,
+    };
+
+    let clock = FixedEffectClock(admitted_at);
+    let identifiers = UuidV7Generator;
+    let effect_protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/p2-t10-d02").expect("valid correlation reference"),
+    );
+    let grant = effect_grant();
+    let governance_currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let writer_lease = WriterLease { epoch: 1 };
+
+    let authorized = effect_protocol
+        .authorize_effect(
+            &effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &writer_lease,
+        )
+        .expect("authorize staged effect");
+    let (dispatched, outcome) = effect_protocol
+        .dispatch_effect(
+            &effect_object_id,
+            authorized.after_version,
+            &grant,
+            &governance_currency,
+            &unknown_executor,
+            &writer_lease,
+        )
+        .expect("dispatch native mutation through lost-response wrapper");
+    assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+    let unknown = effect_protocol
+        .record_outcome(
+            &effect_object_id,
+            dispatched.after_version,
+            &outcome,
+            &writer_lease,
+        )
+        .expect("record unknown post-publication outcome");
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load unknown effect")
+            .expect("durable effect exists")
+            .state
+            .as_str(),
+        "OUTCOME_UNKNOWN"
+    );
+    assert_eq!(native_executor.publish_count(), 1);
+    assert_eq!(
+        std::fs::read_to_string(&target_path).expect("target readable"),
+        "after\n"
+    );
+
+    let (_, reconciliation_result) = effect_protocol
+        .reconcile(
+            &effect_object_id,
+            "OUTCOME_UNKNOWN",
+            unknown.after_version,
+            &unknown_executor,
+            &writer_lease,
+        )
+        .expect("reconcile the original idempotency key");
+    assert_eq!(
+        reconciliation_result,
+        ExecutorQueryResult::ExecutedWithOriginalKey
+    );
+    assert_eq!(
+        native_executor.publish_count(),
+        1,
+        "reconciliation must query the original key, never write again"
     );
     assert_eq!(
         store

@@ -21,6 +21,28 @@ use thiserror::Error;
 
 use super::*;
 
+/// What a workspace mutation expects to find at its target before it writes.
+///
+/// This is the filesystem's compare-and-swap guard. A mutation that cannot
+/// name the state it is replacing cannot be staged at all, so a stale or
+/// concurrently changed target fails closed instead of being overwritten.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum WorkspacePreimage {
+    /// The target must not exist yet.
+    Absent,
+    /// The target must currently hash to this digest.
+    Digest(String),
+}
+
+/// Canonical digest domain for workspace mutation pre/post images.
+pub(crate) const WORKSPACE_IMAGE_DIGEST_DOMAIN: &str = "native-tool-workspace-image/0.1";
+
+/// Digest the bytes currently at, or intended for, a mutation target.
+pub(crate) fn workspace_image_digest(bytes: &[u8]) -> Result<String, NativeToolExecutionError> {
+    cognitive_contracts::canonical::digest(bytes, WORKSPACE_IMAGE_DIGEST_DOMAIN)
+        .map_err(|error| NativeToolExecutionError::InvalidDescriptor(error.to_string()))
+}
+
 /// Bounded daemon-private input for one native Tool operation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct NativeToolExecutionRequest {
@@ -28,6 +50,8 @@ pub(crate) struct NativeToolExecutionRequest {
     pub target: String,
     pub input: Vec<u8>,
     pub workspace_root: Option<PathBuf>,
+    /// Required for the workspace mutation families and unused elsewhere.
+    pub expected_preimage: Option<WorkspacePreimage>,
 }
 
 /// Validated execution input. The validated target is still an observation
@@ -39,6 +63,7 @@ pub(crate) struct ValidatedNativeToolRequest {
     pub input: Vec<u8>,
     pub approved_workspace_root: Option<PathBuf>,
     pub resolved_workspace_path: Option<PathBuf>,
+    pub expected_preimage: Option<WorkspacePreimage>,
 }
 
 /// Monotonic cursor over bounded output chunks. A cursor never exposes more
@@ -117,6 +142,10 @@ pub(crate) enum NativeToolExecutionError {
     WorkspaceTargetEscapesRoot,
     #[error("workspace mutation requires a non-empty input")]
     MutationInputRequired,
+    #[error("workspace mutation must declare the preimage it expects to replace")]
+    MutationPreimageRequired,
+    #[error("workspace mutation payload exceeds the registered limit")]
+    MutationPayloadTooLarge,
     #[error("network target must use HTTPS")]
     NetworkTargetMustUseHttps,
     #[error("network target contains credentials")]
