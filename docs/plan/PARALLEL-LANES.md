@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| _(none)_ | — | — | — | — | — | — | — |
+| `lease/personal/P2-T11/surface-correctness` | P2-T11/D01 campaign-found public-surface correctness defects | KRN | `personal/P2-T11-surface-correctness` | `apps/kernel-server/src/personal/readiness.rs`、`apps/kernel-server/src/personal/resource_api.rs`、`apps/kernel-server/src/personal/server.rs`、`apps/kernel-server/tests/p4_t05_resource_api.rs`、`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`、`docs/plan/PROGRESS.md` | cursor-agent (owner-directed session) | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
