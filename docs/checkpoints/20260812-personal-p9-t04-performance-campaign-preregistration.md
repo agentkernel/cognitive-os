@@ -169,6 +169,18 @@ dispatches**, `not_available` usage, and bounded denial latency of 35.1 ms p50
 and 44.0 ms maximum. Report digest
 `sha256:d859c7531ccac6ffb171c1f0314366ca896e89aa8dada4536ae0113b7af15982`.
 
+Scenario `R4-warm-repeated-conversation` completed its formal cell of 50 at the
+same revision: 50 / 50 `complete_response`, marker 50 / 50, usage `measured`
+50 / 50, Provider network p50 1016.1 ms and p95 1400.2 ms, local governance plus
+loopback overhead p50 128.5 ms and p95 158.1 ms, and 0.85 serial requests per
+second. Report digest
+`sha256:1b3f45601ff0ba4ac7df93b87431fbd3cba1c7f6c40443472b7d6fcec042046e`.
+
+Across the two Provider cells the local overhead is stable — 126.5 ms p50 over
+30 samples and 128.5 ms p50 over 50 — while Provider network latency varies far
+more (898.9 ms against 1016.1 ms p50). That separation is the point of measuring
+them apart: Provider variance must not be reported as governance cost.
+
 Two runner corrections were needed before this cell was honest, and both are
 recorded rather than quietly fixed. Classifying failures by fuzzy message text
 logged a clean deterministic denial as `outcome_unknown`; classification now
