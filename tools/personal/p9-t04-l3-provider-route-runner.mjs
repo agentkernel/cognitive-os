@@ -13,7 +13,7 @@ import { PersonalDaemonClient } from "../../packages/pi-cognitiveos/dist/daemon-
 
 const MARKER = "cognitiveos-provider-smoke-ok";
 const PROMPT = `Reply exactly: ${MARKER}`;
-const REQUEST_TIMEOUT_MS = 60_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
 
 function requiredArgument(name, fallback) {
   const argv = process.argv.slice(2);
@@ -84,7 +84,20 @@ const scenarioId = requiredArgument("--scenario", "R1-provider-proxy-marker");
  */
 const modelOverride = requiredArgument("--model-override", "");
 
-const daemonClient = new PersonalDaemonClient({ requestTimeoutMs: REQUEST_TIMEOUT_MS });
+/**
+ * `R6` shortens the client deadline to exercise the bounded timeout path. It
+ * changes only this client's patience; it never alters daemon configuration,
+ * and a timed-out sample is still retained rather than retried.
+ */
+const requestTimeoutMs = Number.parseInt(
+  requiredArgument("--request-timeout-ms", String(DEFAULT_REQUEST_TIMEOUT_MS)),
+  10,
+);
+if (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs < 1) {
+  throw new Error("--request-timeout-ms must be a positive integer");
+}
+
+const daemonClient = new PersonalDaemonClient({ requestTimeoutMs });
 const selectedModel = (await daemonClient.fetchSelectedModel()).selectedModel;
 const requestedModel = modelOverride === "" ? selectedModel : modelOverride;
 const samples = [];
@@ -150,6 +163,7 @@ console.log(JSON.stringify({
   requested_model: requestedModel,
   model_override_applied: modelOverride !== "",
   retry_budget: 0,
+  request_timeout_ms: requestTimeoutMs,
   first_token_timing: "not_streaming",
   cost_available: false,
   started_requests: startedRequests,
