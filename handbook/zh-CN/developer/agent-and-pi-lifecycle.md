@@ -1,0 +1,68 @@
+---
+doc_id: dev.agent-pi-lifecycle
+locale: zh-CN
+kind: concept
+audience: [developer]
+status: implemented
+generated: false
+sources:
+  - path: crates/cognitive-runtime/src/installer.rs
+    symbols: ["install_package", "acquire_official_pi_durable"]
+  - path: crates/cognitive-runtime/src/agent_registration.rs
+    symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
+  - path: crates/cognitive-runtime/src/pi_launcher.rs
+    symbols: ["admit_pi_launch"]
+  - path: apps/pi-agent-adapter/src/lib.rs
+  - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
+    symbols: ["register_agent_adapter"]
+  - path: crates/cognitive-runtime/src/non_pi_agent.rs
+tests:
+  - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
+  - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
+fingerprint: "sha256:664c75ea6bac850eb570260e8c7fb323172c990e7cebf49330d812eee496ae14"
+non_claims:
+  - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
+---
+
+# Agent 与 Pi 生命周期
+
+三个分离阶段——**install ≠ register ≠ activate**——各自是 daemon 侧持久权威记录，全
+部 epoch fencing。
+
+## 获取与安装
+
+`acquire_official_pi_durable` 以精确 `sha512-…` integrity 钉住
+`@mariozechner/pi@0.81.1`：对 npm 元数据 URL 做白名单规范化/校验、验证 tarball 哈
+希、确定性重打包，并产出失败类别类型化的获取报告。`install_package` 校验 digest +
+签名端口并提交**零能力授予**的不可变安装证据。另有 custom-project 校验器路径服务本
+地操作者包（路径安全 + digest + 本地策略 id）。
+
+## 注册与 sidecar 会话
+
+`register_official_pi_agent_durable` 要求持久安装证据并绑定精确包 digest；激活在
+epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
+（`process_bound`），以 fencing 强制 pause/resume/stop/recover 迁移并报告脱敏健
+康。升级/卸载 fence 旧 epoch；recover/orphan 负例有测试。`admin-cli`
+（`install/register/activate/agent-*`）是确定性调用者。
+
+## 启动准入（shell 宿主角色）
+
+`admit_pi_launch` 在以下条件不满足时一律 fail-close：Linux native（非 WSL2/
+Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径绝对且存在、版本
+精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。只传
+`--extension <绝对路径>`。
+
+## candidate 生产角色
+
+`pi-agent-adapter`（钉住适配器，仅 `daemon-candidate` 能力）运行受限 Pi 子进程：禁
+用工具/skill/会话/扩展发现、环境白名单、带字节上限与截止的一次性私有 socketpair、结
+构化 `AdapterOutcome`（绝非权威状态）。daemon 把其输出当作待准入 candidate——仅此而
+已。
+
+## Pi 之外
+
+Universal Agent Adapter Contract（`agent_adapter_manifest`）注册讲 AKP 的适配器
+（公网 listener 与权威写者被拒；仅 candidate 能力），生命周期 epoch fencing。首个非
+Pi 资格化（OpenAI Codex CLI）是 fixture 范围的身份/生命周期矩阵，证明证据独立于
+Pi——明确不是网络或二进制集成。

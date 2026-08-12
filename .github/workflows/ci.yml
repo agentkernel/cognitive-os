@@ -81,6 +81,13 @@ jobs:
       - name: Traceability matrix freshness
         run: node tools/src/gen-matrix.mjs --check
 
+      # Handbook drift gate (manifest, locale pairing, links, fingerprints,
+      # coverage, generated-page byte equality; see handbook/_meta) ----------
+      - name: Handbook consistency and generated-page drift
+        run: |
+          node tools/src/check-handbook.mjs
+          node tools/src/generate-handbook.mjs --check
+
       # Conformance runner (M1 static-contract + M2 kernel-behavioral
       # execution; honest not-run for later-milestone behavior) ------------
       - name: Run conformance runner (five-state report + sample manifest)

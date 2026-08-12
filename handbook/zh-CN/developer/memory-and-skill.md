@@ -1,0 +1,57 @@
+---
+doc_id: dev.memory-skill
+locale: zh-CN
+kind: concept
+audience: [developer]
+status: implemented
+generated: false
+sources:
+  - path: crates/cognitive-store/src/sqlite/memory.rs
+  - path: crates/cognitive-store/src/memory_admission.rs
+    symbols: ["admit_memory_candidate"]
+  - path: crates/cognitive-kernel/src/memory_admission.rs
+    symbols: ["decide_memory_admission"]
+  - path: crates/cognitive-store/src/sqlite/harness_skill.rs
+  - path: apps/kernel-server/src/personal/resource_api.rs
+tests:
+  - crates/cognitive-store/tests/p4_t01_memory_store.rs
+  - crates/cognitive-store/tests/p4_t02_memory_search.rs
+  - crates/cognitive-store/tests/p4_t04_skill_store.rs
+  - apps/kernel-server/tests/p4_t05_resource_api.rs
+fingerprint: "sha256:c84efc2f816f07b153422ac9ca5f715b16caddafa8ab634997469c8d3743fa47"
+non_claims:
+  - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
+---
+
+# Memory 与 Skill
+
+## Memory：candidate → decision → object
+
+没有任何路径直接写 `MemoryObject`。服务接缝（`admit_memory_candidate`，daemon 唯一
+生产调用路径经 `POST /management/resource/v1/memory/remember`）重载当前 Context
+source、重推导确定性策略结论（`decide_memory_admission`），并拒绝与之不符的调用方决
+定——然后在单事务内持久化 candidate + 带原因码的 decision + object + 版本行 + FTS
+行，并复核 source 绑定（过期 source ⇒ 冲突）。
+
+生命周期是追加式事实：forget 与 expiry tombstone（精确截止检查、重复清扫被拒）、
+expected-version CAS 下的版本化替换（`UNIQUE(supersedes_memory_id)` 谱系）、FTS 行
+的原子迁移。FTS5 索引是可弃的：重建只从权威行填充，被 tombstone 的 Memory 绝不可能
+经索引复活。
+
+检索（`search_memory_candidates`）先跑权威过滤 CTE（admit 决定、无 tombstone、精确
+scope+purpose、retention 未过期、source 绑定现时），之后才 `MATCH`，按 `bm25` 排序
+并稳定破平。
+
+## Skill：不可变包、精确 pin
+
+导入拒绝不安全的本地来源（绝对/UNC/`..` 路径）与 digest/载荷漂移；package 与
+revision 原子提交。绑定要求同 workspace scope 下 `compatible` 的 revision；撤销是独
+立不可变事实（active = 状态 active 且无撤销行）；同包 supersede 追加谱系、每个
+revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移到后继。
+
+## HTTP 可及面
+
+management 通道：remember/forget、skill import/bind/revoke、object/explain 读取。
+task 通道：task 绑定的投影/watch，以及把选中 Memory/Skill 来源绑定到当前
+TaskContract/ContextRequest 事实的消费记录（被撤销/遗忘/过期项由同一权威读取排
+除）。task bearer 在任何管理变更前即被拒绝。
