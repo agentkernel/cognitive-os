@@ -121,9 +121,49 @@ cleanup — not an automated run with one manual credential step. Establishing a
 campaign-scoped access path inside the guest would itself change the qualified
 baseline and needs its own owner decision.
 
-### Provider-dependent layers
+### `L3` Provider route on `B01-Desktop-Linux-002`, 2026-08-12
 
-`L3`-`L5` remain not-run. `L3` and `L4` require the preregistered B01 start-gate
+The owner authorized and performed the graphical hidden-input Provider import,
+and authorized a campaign-scoped SSH path into the guest using the pre-existing
+`b01-desktop-guest-002` key. Both are recorded here as deliberate baseline
+changes rather than silent drift. The guest was a genuinely clean baseline: no
+`git`, no Rust toolchain, no `pnpm`, and no prior CognitiveOS state.
+
+Product binaries for pushed revision `76d3d943b3ac8b06076f7122ab204e70dfdbb37d`
+were built on `DEV-LINUX-NATIVE-01` (Ubuntu 22.04, glibc 2.35) and executed on
+the guest (Ubuntu 24.04.4, kernel 7.0.0-28, glibc 2.39, 2 vCPU), which is the
+forward-compatible direction; every transferred binary was SHA-256 matched
+against its host build. The Provider secret was never read, echoed, copied,
+passed in argv, or written to the runtime tree, and a scan of the runtime tree
+found no key material.
+
+Scenario `R1-provider-proxy-marker` completed its formal cell:
+
+| Fact | Value |
+|---|---|
+| Started requests / retained samples | 30 / 30 |
+| Outcomes | `complete_response` 30; no timeout, rate limit, upstream failure, denial, or unknown |
+| Retry budget | 0 |
+| Expected marker observed | 30 / 30 |
+| Provider usage availability | `measured` 30 / 30 |
+| Provider network latency | p50 898.9 ms, p95 1224.6 ms, min 649.2 ms, max 1778.0 ms |
+| Local governance + loopback overhead | p50 126.5 ms, p95 147.6 ms, min 108.3 ms, max 157.6 ms |
+| Governance share of the loopback exchange | 11.76 % |
+| Time to first token | not reported; the proxy is non-streaming |
+| Cost | not reported; no preregistered pricing snapshot |
+
+Report digest
+`sha256:e6a62b91a2c42c44f60f908ff88372c646b71f97cb9fbeb170cb73a347533094`;
+the payload stays outside Git in the ignored campaign artifact root.
+
+The 11.76 % governance share is a raw single-arm observation. It is **not** a
+comparison against the execution plan's `B` versus `A` non-inferiority
+thresholds, because no `A` arm has been run and no A-arm baseline runner exists.
+Reading it as a threshold pass or failure would be a category error.
+
+### Remaining Provider-dependent layers
+
+`L4` and `L5` remain not-run. `L3` and `L4` require the preregistered B01 start-gate
 facts and an operator-performed graphical hidden-input Provider import into the
 guest approved SecretStore, which a non-interactive session cannot perform.
 `L5` additionally requires the A-arm baseline decision recorded in the execution
