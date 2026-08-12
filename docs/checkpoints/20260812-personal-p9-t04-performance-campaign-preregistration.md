@@ -104,6 +104,23 @@ cost roughly 121 ms against roughly 0.7 ms for the long-lived handle over 50
 iterations, consistent with the `P9-T03` composition change. Neither is a
 release, Gate, Profile, or Agent-benefit claim.
 
+### B01 guest access finding, 2026-08-12
+
+Under this preregistration and the active campaign lease, the guest was
+reverted to `b01-platform-qualified-baseline`, started, observed at its NAT
+address, and returned to the recorded shut-off baseline. No product was
+installed, no Provider was configured, no benchmark ran, and no guest state
+was left changed.
+
+The observation that matters for planning: the guest exposes no non-interactive
+access path. SSH is refused for the host account and the QEMU guest agent is
+not connected, so an automated session cannot drive the guest at all. A B01
+`L3`/`L4` attempt is therefore an operator-driven procedure at the graphical
+console from start to finish — install, daemon start, Provider import, run, and
+cleanup — not an automated run with one manual credential step. Establishing a
+campaign-scoped access path inside the guest would itself change the qualified
+baseline and needs its own owner decision.
+
 ### Provider-dependent layers
 
 `L3`-`L5` remain not-run. `L3` and `L4` require the preregistered B01 start-gate
