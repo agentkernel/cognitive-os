@@ -1196,6 +1196,23 @@ Pi 不可以：
 
 - Skill/Memory 候选 → deterministic admission；失败经验可解释可撤销；无自授权。
 
+### P8-T07 — 独立双语 handbook 文档系统
+
+- 独立 `handbook/` 根：en 与 zh-CN 平行树，user/developer/reference/AI 四类读者入口；
+  informative 派生层，不建第二事实源，动态状态只链接 `PROGRESS.md` 不复制。
+- 机器模型：manifest、frontmatter JSON Schema、source-map、tracked-source coverage
+  （全树分类，新文件未分类即失败）、per-page source fingerprint（内容 SHA-256 + 稳定
+  symbol，存在性校验，不用行号）、source-set 记录（明确实现基线 revision，避免自引用
+  HEAD）。
+- 生成 reference：CLI usage、HTTP 路由、错误注册表、配置文件、env 变量、transition
+  表、schema 清单、native tool 目录从实现/机器合同提取，注释文件双向防腐；生成页禁止
+  手改（`--check` 字节比对）。
+- 独立 `check-handbook` 检查器 + focused negative fixtures（缺源、陈旧指纹、断链、未
+  映射新文件、非法状态、生成漂移、缺双语、secret-shaped、动态状态复制、History 引
+  用）；`.cursor/rules/20` 同步适配、根 `llms.txt`、AGENTS 单指针、root
+  `check:handbook` 脚本与命名 CI step。
+- 与基线相比现有文档字节不变（最小治理记账与单指针除外，`--diff-base` 白名单证明）。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

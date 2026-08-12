@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P8-T07/independent-handbook` | P8-T07/D01 handbook machine core, checker and generator | Lane-DOC | `personal/P8-T07-independent-handbook` | `handbook/**`; `llms.txt`; `tools/src/handbook-lib.mjs`; `tools/src/check-handbook.mjs`; `tools/src/generate-handbook.mjs`; `tools/src/fill-handbook-fingerprints.mjs`; `tools/test/handbook-check.test.mjs`; `tools/package.json`; `package.json`; `.github/workflows/ci.yml`; `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc`; `AGENTS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `plan.md`; `docs/checkpoints/20260812-personal-p8-t07-independent-handbook-closure.md` | Cursor handbook session | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
