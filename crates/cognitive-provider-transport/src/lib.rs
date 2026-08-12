@@ -146,11 +146,241 @@ fn map_reqwest_error(error: reqwest::Error) -> ProviderTransportError {
     }
 }
 
+/// Largest read-only fetch timeout the transport will accept.
+pub const MAXIMUM_READ_ONLY_FETCH_TIMEOUT_MS: u32 = 30_000;
+
+/// Verbs a read-only fetch may use. There is deliberately no request body and
+/// no caller-supplied header, so this boundary cannot carry a credential.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadOnlyFetchMethod {
+    Get,
+    Head,
+}
+
+/// One bounded, credential-free read-only HTTP fetch.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReadOnlyFetchRequest {
+    pub method: ReadOnlyFetchMethod,
+    pub url: String,
+    pub timeout_ms: u32,
+    pub maximum_response_bytes: usize,
+}
+
+/// A bounded read-only fetch response.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReadOnlyFetchResponse {
+    pub status: u16,
+    pub body: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadOnlyFetchError {
+    /// Refused before any egress.
+    Policy { detail: &'static str },
+    /// A request may have reached the network.
+    Network { detail: &'static str },
+    /// The bounded deadline expired.
+    Timeout,
+    /// A response arrived but exceeded the caller's bound, so none is returned.
+    ResponseTooLarge,
+}
+
+/// The daemon's read-only outbound HTTP boundary.
+///
+/// It is separate from [`ProviderTransport`] on purpose: Provider egress
+/// carries credentials to one configured endpoint, while this boundary carries
+/// none and is used for caller-named origins. Keeping them apart means a Tool
+/// fetch can never inherit Provider authorization.
+pub trait ReadOnlyFetchTransport: Send + Sync {
+    fn fetch(
+        &self,
+        request: &ReadOnlyFetchRequest,
+    ) -> Result<ReadOnlyFetchResponse, ReadOnlyFetchError>;
+}
+
+/// Production read-only HTTPS fetch over the same Rustls stack as Provider
+/// egress: no redirects, no proxy inherited from the ambient environment, no
+/// request headers, no body, a bounded timeout and a bounded response.
+#[derive(Debug, Default)]
+pub struct RustlsReadOnlyFetchTransport {
+    additional_root_certificates_der: Vec<Vec<u8>>,
+}
+
+impl RustlsReadOnlyFetchTransport {
+    /// Trust one extra DER root so hermetic loopback fixtures can exercise the
+    /// real TLS path without a plaintext exception or a process-wide change.
+    pub fn with_additional_root_certificate_der(
+        certificate_der: Vec<u8>,
+    ) -> Result<Self, ReadOnlyFetchError> {
+        reqwest::Certificate::from_der(&certificate_der).map_err(|_| {
+            ReadOnlyFetchError::Policy {
+                detail: "additional read-only fetch root certificate is invalid",
+            }
+        })?;
+        Ok(Self {
+            additional_root_certificates_der: vec![certificate_der],
+        })
+    }
+}
+
+impl ReadOnlyFetchTransport for RustlsReadOnlyFetchTransport {
+    fn fetch(
+        &self,
+        request: &ReadOnlyFetchRequest,
+    ) -> Result<ReadOnlyFetchResponse, ReadOnlyFetchError> {
+        validate_read_only_fetch_request(request)?;
+        let timeout = Duration::from_millis(u64::from(request.timeout_ms));
+        let mut client_builder = reqwest::blocking::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .no_proxy()
+            .timeout(timeout)
+            .use_rustls_tls();
+        for certificate_der in &self.additional_root_certificates_der {
+            let certificate = reqwest::Certificate::from_der(certificate_der).map_err(|_| {
+                ReadOnlyFetchError::Policy {
+                    detail: "additional read-only fetch root certificate is invalid",
+                }
+            })?;
+            client_builder = client_builder.add_root_certificate(certificate);
+        }
+        let client = client_builder
+            .build()
+            .map_err(|_| ReadOnlyFetchError::Network {
+                detail: "failed to construct the read-only Rustls transport",
+            })?;
+        let method = match request.method {
+            ReadOnlyFetchMethod::Get => reqwest::Method::GET,
+            ReadOnlyFetchMethod::Head => reqwest::Method::HEAD,
+        };
+        let mut response = client
+            .request(method, &request.url)
+            .send()
+            .map_err(map_read_only_fetch_error)?;
+        let mut response_body = Vec::new();
+        let read_ceiling = u64::try_from(request.maximum_response_bytes)
+            .unwrap_or(u64::MAX)
+            .saturating_add(1);
+        let bytes_read = response
+            .by_ref()
+            .take(read_ceiling)
+            .read_to_end(&mut response_body)
+            .map_err(|_| ReadOnlyFetchError::Network {
+                detail: "failed to read the read-only fetch response",
+            })?;
+        if bytes_read > request.maximum_response_bytes {
+            return Err(ReadOnlyFetchError::ResponseTooLarge);
+        }
+        Ok(ReadOnlyFetchResponse {
+            status: response.status().as_u16(),
+            body: response_body,
+        })
+    }
+}
+
+/// Refuse anything that must never reach the network, before it does.
+pub fn validate_read_only_fetch_request(
+    request: &ReadOnlyFetchRequest,
+) -> Result<(), ReadOnlyFetchError> {
+    if !request.url.starts_with("https://") {
+        return Err(ReadOnlyFetchError::Policy {
+            detail: "read-only fetch requires HTTPS",
+        });
+    }
+    let authority = request
+        .url
+        .get("https://".len()..)
+        .unwrap_or_default()
+        .split(['/', '?', '#'])
+        .next()
+        .unwrap_or_default();
+    if authority.is_empty() || authority.contains('@') {
+        return Err(ReadOnlyFetchError::Policy {
+            detail: "read-only fetch URL must be credential-free",
+        });
+    }
+    if request.timeout_ms == 0 || request.timeout_ms > MAXIMUM_READ_ONLY_FETCH_TIMEOUT_MS {
+        return Err(ReadOnlyFetchError::Policy {
+            detail: "read-only fetch timeout is outside the registered bound",
+        });
+    }
+    if request.maximum_response_bytes == 0 {
+        return Err(ReadOnlyFetchError::Policy {
+            detail: "read-only fetch response bound must be positive",
+        });
+    }
+    Ok(())
+}
+
+fn map_read_only_fetch_error(error: reqwest::Error) -> ReadOnlyFetchError {
+    if error.is_timeout() {
+        ReadOnlyFetchError::Timeout
+    } else {
+        ReadOnlyFetchError::Network {
+            detail: "read-only HTTPS fetch failed",
+        }
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used)]
 mod tests {
-    use super::validate_transport_request;
+    use super::{
+        ReadOnlyFetchError, ReadOnlyFetchMethod, ReadOnlyFetchRequest,
+        validate_read_only_fetch_request, validate_transport_request,
+    };
     use cognitive_secret::{ProviderHttpMethod, ProviderHttpRequest, ProviderTransportError};
+
+    fn read_only_fetch_request(url: &str) -> ReadOnlyFetchRequest {
+        ReadOnlyFetchRequest {
+            method: ReadOnlyFetchMethod::Get,
+            url: url.to_owned(),
+            timeout_ms: 1_000,
+            maximum_response_bytes: 4_096,
+        }
+    }
+
+    #[test]
+    fn read_only_fetch_refuses_unsafe_urls_and_bounds_before_egress() {
+        for url in [
+            "http://example.test/data",
+            "https://user:secret@example.test/data",
+            "https:///data",
+        ] {
+            assert!(
+                matches!(
+                    validate_read_only_fetch_request(&read_only_fetch_request(url)),
+                    Err(ReadOnlyFetchError::Policy { .. })
+                ),
+                "unsafe read-only fetch URL must be refused before egress: {url}"
+            );
+        }
+
+        let mut unbounded_timeout = read_only_fetch_request("https://example.test/data");
+        unbounded_timeout.timeout_ms = super::MAXIMUM_READ_ONLY_FETCH_TIMEOUT_MS + 1;
+        assert!(matches!(
+            validate_read_only_fetch_request(&unbounded_timeout),
+            Err(ReadOnlyFetchError::Policy { .. })
+        ));
+
+        let mut zero_timeout = read_only_fetch_request("https://example.test/data");
+        zero_timeout.timeout_ms = 0;
+        assert!(matches!(
+            validate_read_only_fetch_request(&zero_timeout),
+            Err(ReadOnlyFetchError::Policy { .. })
+        ));
+
+        let mut unbounded_response = read_only_fetch_request("https://example.test/data");
+        unbounded_response.maximum_response_bytes = 0;
+        assert!(matches!(
+            validate_read_only_fetch_request(&unbounded_response),
+            Err(ReadOnlyFetchError::Policy { .. })
+        ));
+
+        assert!(
+            validate_read_only_fetch_request(&read_only_fetch_request("https://example.test/data"))
+                .is_ok()
+        );
+    }
 
     fn transport_request(url: &str) -> ProviderHttpRequest {
         ProviderHttpRequest {

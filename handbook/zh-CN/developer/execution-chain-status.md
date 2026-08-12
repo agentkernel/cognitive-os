@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:5775b5c95826fe2ffe699747ec9827f86960120bc1f01902607d14ea1509221d"
+fingerprint: "sha256:8f94f4031710d5d6e3e7a5e5a1a4076a2293f281514fef017d48856ce85f0137"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -36,7 +36,9 @@ non_claims:
 | Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试 |
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
-| WorkspaceRead / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | `tool_executor/tests.rs` |
+| WorkspaceRead / WorkspaceSearch / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | `tool_executor/tests.rs` |
+| WorkspaceWrite / WorkspacePatch 变更执行器：expected-preimage 比较交换、staging 文件加 rename 发布、通过重读目标对账 | implemented，仅测试调用 | `tool_executor/tests.rs` |
+| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | `tool_executor/tests.rs`；回环 TLS 证明见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动时恢复已消费交接 | implemented | daemon 启动路径 |
 
@@ -48,10 +50,11 @@ non_claims:
    的生产调用者：无（仅测试与 benchmark）。
 2. **单 tick、无循环**：daemon 仅在启动时执行一次
    `run_private_scheduler_tick_with_store`；不存在周期调度线程。
-3. **执行器未接线**：`dispatch_staged_workspace_read_effect`、
-   `dispatch_staged_process_check_effect` 无生产调用者。daemon 现在对此诚实呈报：资
-   源投影从 `ASSEMBLED_EXECUTOR_FAMILIES`（WorkspaceRead、ProcessCheck）派生逐工具
-   `execution_readiness`，其余族显示为 `registered_only` 而非看似可执行。
+3. **执行器未接线**：六个已登记族现在都有已装配 sink（P2-T10），因此
+   `ASSEMBLED_EXECUTOR_FAMILIES` 列出全部六族，资源投影把每一族报告为
+   `execution_ready`。这一事实必须窄读：它表示*本二进制含有该族的执行器*，不表示
+   Agent 能到达它。没有任何 `dispatch_staged_*_effect` 存在生产调用者——sink 目前只能
+   从测试到达；缺口 1 与 2 关闭后，才能从 daemon 自身的 worker 路径到达。
 4. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
    仅测试演练；没有生产路由推进验证或 Task 验收。
 
