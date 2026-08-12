@@ -10,11 +10,13 @@
 #![allow(unused)]
 
 mod process;
+mod search;
 mod types;
 mod validate;
 mod workspace;
 
 pub(crate) use process::*;
+pub(crate) use search::*;
 pub(crate) use types::*;
 pub(crate) use validate::*;
 pub(crate) use workspace::*;

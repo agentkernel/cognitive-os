@@ -1790,3 +1790,673 @@ fn workspace_read_sink_rejects_stale_fencing_before_io() {
     );
     assert_eq!(executor.completed_output("read-key-3"), None);
 }
+
+// ---------------------------------------------------------------------------
+// P2-T10/D01 — WorkspaceSearch executor
+// ---------------------------------------------------------------------------
+
+fn workspace_search_call(
+    idempotency_key: &str,
+    parameters_digest: &str,
+    target: &str,
+    fencing_epoch: i64,
+) -> ExecutorCall {
+    ExecutorCall {
+        action: "search".to_owned(),
+        target: target.to_owned(),
+        idempotency_key: idempotency_key.to_owned(),
+        parameters_digest: parameters_digest.to_owned(),
+        authorization_digest: "authorization-digest".to_owned(),
+        fencing_epoch,
+    }
+}
+
+fn staged_search_request(
+    workspace_root: &std::path::Path,
+    target: &str,
+    query: &[u8],
+) -> ValidatedNativeToolRequest {
+    let mut request = request_for(NativeOperationFamily::WorkspaceSearch);
+    request.target = target.to_owned();
+    request.input = query.to_vec();
+    request.workspace_root = Some(workspace_root.to_path_buf());
+    validate_native_tool_request(&request).expect("valid workspace search")
+}
+
+/// Simulates a lost response after the native search completed. Queries still
+/// reach the real sink and its original idempotency key.
+struct UnknownAfterNativeSearchDispatchExecutor<'executor> {
+    native_executor: &'executor NativeWorkspaceSearchExecutor,
+}
+
+impl EffectExecutor for UnknownAfterNativeSearchDispatchExecutor<'_> {
+    fn capabilities(&self) -> ExecutorCapabilities {
+        self.native_executor.capabilities()
+    }
+
+    fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+        self.native_executor.dispatch(call)?;
+        Ok(DispatchOutcome::Unknown {
+            detail: "simulated lost post-scan response".to_owned(),
+        })
+    }
+
+    fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+        self.native_executor.query_outcome(idempotency_key)
+    }
+}
+
+#[test]
+fn workspace_search_requires_a_staged_digest_bound_request_before_io() {
+    let temporary_workspace = TestWorkspace::new("search-digest-binding");
+    std::fs::create_dir_all(temporary_workspace.path.join("tree")).expect("create search tree");
+    std::fs::write(
+        temporary_workspace.path.join("tree/notes.txt"),
+        "alpha needle beta\n",
+    )
+    .expect("write search fixture");
+    let validated_request =
+        staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+    executor
+        .stage_request(
+            "search-key-1".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage daemon-bound search");
+
+    let mismatched_call =
+        workspace_search_call("search-key-1", "different-digest", "workspace://tree", 7);
+    assert!(matches!(
+        executor.dispatch(&mismatched_call),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(executor.completed_output("search-key-1"), None);
+    assert_eq!(executor.scan_count(), 0);
+
+    let unstaged_call =
+        workspace_search_call("search-key-absent", "digest-1", "workspace://tree", 7);
+    assert!(matches!(
+        executor.dispatch(&unstaged_call),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(executor.scan_count(), 0);
+
+    let matched_call = workspace_search_call("search-key-1", "digest-1", "workspace://tree", 7);
+    assert!(matches!(
+        executor.dispatch(&matched_call),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(
+        executor.completed_output("search-key-1"),
+        Some(b"tree/notes.txt:1:alpha needle beta\n".to_vec())
+    );
+    assert_eq!(executor.scan_count(), 1);
+}
+
+#[test]
+fn non_search_descriptor_cannot_be_staged_for_search_dispatch() {
+    let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+    request.input.clear();
+    let validated_request = validate_native_tool_request(&request).expect("valid read request");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+
+    assert_eq!(
+        executor.stage_request(
+            "read-key-1".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        ),
+        Err(NativeToolExecutionError::UnsupportedExecutionFamily)
+    );
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "read-key-1",
+            "digest-1",
+            "workspace://notes/today.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+}
+
+#[test]
+fn workspace_search_rejects_an_empty_or_oversized_query_at_the_sink() {
+    let temporary_workspace = TestWorkspace::new("search-query-bounds");
+    std::fs::create_dir_all(temporary_workspace.path.join("tree")).expect("create search tree");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+
+    // The validator permits an empty payload for read-risk families, so the
+    // sink is the boundary that must refuse an unbounded scan request.
+    let empty_query = staged_search_request(&temporary_workspace.path, "workspace://tree", b"");
+    assert!(matches!(
+        executor.stage_request(
+            "search-empty".to_owned(),
+            "digest-1".to_owned(),
+            &empty_query,
+        ),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    let oversized_query = staged_search_request(
+        &temporary_workspace.path,
+        "workspace://tree",
+        &b"n".repeat(cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES + 1),
+    );
+    assert!(matches!(
+        executor.stage_request(
+            "search-oversized".to_owned(),
+            "digest-1".to_owned(),
+            &oversized_query,
+        ),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+    assert_eq!(executor.scan_count(), 0);
+}
+
+#[cfg(unix)]
+#[test]
+fn workspace_search_never_leaves_the_approved_root_through_a_symlink() {
+    use std::os::unix::fs::symlink;
+
+    let temporary_workspace = TestWorkspace::new("search-symlink-containment");
+    std::fs::create_dir_all(temporary_workspace.path.join("tree")).expect("create search tree");
+    std::fs::create_dir_all(temporary_workspace.path.join("outside")).expect("create outside tree");
+    std::fs::write(
+        temporary_workspace.path.join("tree/inside.txt"),
+        "needle inside the root\n",
+    )
+    .expect("write contained fixture");
+    std::fs::write(
+        temporary_workspace.path.join("outside/secret.txt"),
+        "needle outside the root\n",
+    )
+    .expect("write uncontained fixture");
+    symlink(
+        temporary_workspace.path.join("outside/secret.txt"),
+        temporary_workspace.path.join("tree/linked.txt"),
+    )
+    .expect("plant a symlink inside the search tree");
+
+    let approved_root = temporary_workspace.path.join("tree");
+    let validated_request = staged_search_request(&approved_root, "workspace://", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+    executor
+        .stage_request(
+            "search-symlink".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage contained search");
+
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-symlink",
+            "digest-1",
+            "workspace://",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    let output = String::from_utf8(
+        executor
+            .completed_output("search-symlink")
+            .expect("search retains bounded output"),
+    )
+    .expect("search output is UTF-8");
+    assert!(output.contains("inside.txt:1:needle inside the root"));
+    assert!(
+        !output.contains("outside"),
+        "a symlink must never be traversed out of the approved root: {output}"
+    );
+
+    // A staged search root that is itself a link out of the approved root is
+    // refused after canonicalization, before any directory is read.
+    symlink(
+        temporary_workspace.path.join("outside"),
+        temporary_workspace.path.join("tree/escape"),
+    )
+    .expect("plant an escaping search root");
+    let escaping_request = staged_search_request(&approved_root, "workspace://escape", b"needle");
+    executor
+        .stage_request(
+            "search-escape".to_owned(),
+            "digest-2".to_owned(),
+            &escaping_request,
+        )
+        .expect("stage escaping search root");
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-escape",
+            "digest-2",
+            "workspace://escape",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(executor.completed_output("search-escape"), None);
+}
+
+#[test]
+fn workspace_search_bounds_matches_and_redacts_before_retention() {
+    let temporary_workspace = TestWorkspace::new("search-bounds");
+    let tree = temporary_workspace.path.join("tree");
+    std::fs::create_dir_all(&tree).expect("create search tree");
+    for file_name in ["a.txt", "b.txt", "c.txt"] {
+        std::fs::write(tree.join(file_name), "token=secret needle\n").expect("write fixture");
+    }
+    std::fs::write(tree.join("big.txt"), "needle\n".repeat(64)).expect("write oversized fixture");
+
+    let validated_request =
+        staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::with_bounds(
+        7,
+        WorkspaceSearchBounds {
+            maximum_visited_entries: 4096,
+            maximum_matches: 2,
+            maximum_file_bytes: 64,
+            maximum_line_bytes: 512,
+        },
+    );
+    executor
+        .stage_request(
+            "search-bounds".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        )
+        .expect("stage bounded search");
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-bounds",
+            "digest-1",
+            "workspace://tree",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+
+    let output = String::from_utf8(
+        executor
+            .completed_output("search-bounds")
+            .expect("search retains bounded output"),
+    )
+    .expect("search output is UTF-8");
+    assert_eq!(
+        output.lines().count(),
+        2,
+        "the match ceiling must truncate the scan: {output}"
+    );
+    assert!(
+        !output.contains("secret"),
+        "sensitive values must be redacted before retention: {output}"
+    );
+    assert!(output.contains("token=[REDACTED]"));
+    assert!(
+        !output.contains("big.txt"),
+        "a file over the size ceiling must be skipped, not read: {output}"
+    );
+}
+
+#[test]
+fn workspace_search_sink_rejects_stale_fencing_before_io() {
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+    let call = workspace_search_call("search-key-3", "digest-3", "workspace://tree", 6);
+    assert_eq!(
+        executor.dispatch(&call),
+        Ok(DispatchOutcome::FencedStaleEpoch { sink_epoch: 7 })
+    );
+    assert_eq!(executor.completed_output("search-key-3"), None);
+    assert_eq!(executor.scan_count(), 0);
+}
+
+#[test]
+fn durable_workspace_search_dispatch_records_executing_before_io_without_advancing_task() {
+    let temporary_workspace = TestWorkspace::new("durable-search-dispatch");
+    let tree = temporary_workspace.path.join("tree");
+    std::fs::create_dir_all(&tree).expect("create search tree");
+    std::fs::write(tree.join("notes.txt"), "token=secret needle\n").expect("write fixture");
+    let database_path = temporary_authority_database_path();
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+    let task_object_id = object_id(601);
+    let effect_object_id = object_id(602);
+    let intent_object_id = object_id(603);
+    let admitted_at = WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+    for (object_id, domain, lifecycle_state, event_id) in [
+        (
+            task_object_id.clone(),
+            LifecycleDomain::Task,
+            "RUNNING",
+            601,
+        ),
+        (
+            effect_object_id.clone(),
+            LifecycleDomain::Effect,
+            "PROPOSED",
+            602,
+        ),
+    ] {
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: object_id.clone(),
+                    domain,
+                    state: state(lifecycle_state),
+                    version: Version::INITIAL,
+                    body: json!({"fixture": "p2-t10-d01"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse(&format!("00000000-0000-7000-a000-{event_id:012x}"))
+                        .expect("valid event identifier"),
+                    object_id,
+                    domain,
+                    object_version: Version::INITIAL,
+                    event_type: "fixture.admitted".to_owned(),
+                    canonical_json: "{\"fixture\":true}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            })
+            .expect("admit durable fixture object");
+    }
+    let idempotency_key = "p2-t10-d01-workspace-search";
+    let parameters_digest = "sha256:p2-t10-d01-workspace-search";
+    store
+        .insert_intent(
+            &IntentRow {
+                intent_id: intent_object_id.clone(),
+                idempotency_key: idempotency_key.to_owned(),
+                parameters_digest: parameters_digest.to_owned(),
+                action: "search".to_owned(),
+                target: "workspace://tree".to_owned(),
+                effect_object_id: effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: None,
+                canonical_json: "{\"intent\":\"p2-t10-d01\"}".to_owned(),
+            },
+            &EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000603")
+                    .expect("valid intent event identifier"),
+                object_id: intent_object_id,
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"intent\":\"p2-t10-d01\"}".to_owned(),
+            },
+        )
+        .expect("persist durable intent");
+
+    let validated_request =
+        staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::new(1);
+    executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &validated_request,
+        )
+        .expect("stage durable intent identity");
+    let hook_store = Arc::clone(&store);
+    let hook_effect_object_id = effect_object_id.clone();
+    let hook_task_object_id = task_object_id.clone();
+    executor.install_before_search_hook(move || {
+        let effect = hook_store
+            .load_object(LifecycleDomain::Effect, &hook_effect_object_id)
+            .expect("load effect before scan")
+            .expect("durable effect exists");
+        let task = hook_store
+            .load_object(LifecycleDomain::Task, &hook_task_object_id)
+            .expect("load task before scan")
+            .expect("durable task exists");
+        assert_eq!(effect.state.as_str(), "EXECUTING");
+        assert_eq!(task.state.as_str(), "RUNNING");
+        assert_eq!(task.version, Version::INITIAL);
+    });
+
+    let clock = FixedEffectClock(admitted_at);
+    let identifiers = UuidV7Generator;
+    let effect_protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/p2-t10-d01").expect("valid correlation reference"),
+    );
+    let grant = effect_grant();
+    let governance_currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let writer_lease = WriterLease { epoch: 1 };
+
+    dispatch_staged_workspace_search_effect(
+        &effect_protocol,
+        &effect_object_id,
+        Version::INITIAL,
+        &grant,
+        &governance_currency,
+        &executor,
+        &writer_lease,
+    )
+    .expect("dispatch durable workspace search");
+
+    assert_eq!(
+        executor.completed_output(idempotency_key),
+        Some(b"tree/notes.txt:1:token=[REDACTED] needle\n".to_vec())
+    );
+    assert_eq!(executor.scan_count(), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load effect after scan")
+            .expect("durable effect exists")
+            .state
+            .as_str(),
+        "EXECUTED"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load task after scan")
+            .expect("durable task exists")
+            .version,
+        Version::INITIAL
+    );
+
+    std::fs::remove_file(database_path).unwrap_or(());
+}
+
+#[test]
+fn unknown_native_workspace_search_reconciles_original_key_without_second_scan() {
+    let temporary_workspace = TestWorkspace::new("search-unknown-outcome");
+    let tree = temporary_workspace.path.join("tree");
+    std::fs::create_dir_all(&tree).expect("create search tree");
+    std::fs::write(tree.join("notes.txt"), "needle\n").expect("write fixture");
+    let database_path = temporary_authority_database_path();
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+    let task_object_id = object_id(611);
+    let effect_object_id = object_id(612);
+    let intent_object_id = object_id(613);
+    let admitted_at = WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
+
+    for (object_id, domain, lifecycle_state, event_id) in [
+        (
+            task_object_id.clone(),
+            LifecycleDomain::Task,
+            "RUNNING",
+            611,
+        ),
+        (
+            effect_object_id.clone(),
+            LifecycleDomain::Effect,
+            "PROPOSED",
+            612,
+        ),
+    ] {
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: object_id.clone(),
+                    domain,
+                    state: state(lifecycle_state),
+                    version: Version::INITIAL,
+                    body: json!({"fixture": "p2-t10-d01-unknown"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse(&format!("00000000-0000-7000-a000-{event_id:012x}"))
+                        .expect("valid event identifier"),
+                    object_id,
+                    domain,
+                    object_version: Version::INITIAL,
+                    event_type: "fixture.admitted".to_owned(),
+                    canonical_json: "{\"fixture\":true}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            })
+            .expect("admit durable fixture object");
+    }
+    let idempotency_key = "p2-t10-d01-workspace-search-unknown";
+    let parameters_digest = "sha256:p2-t10-d01-workspace-search-unknown";
+    store
+        .insert_intent(
+            &IntentRow {
+                intent_id: intent_object_id.clone(),
+                idempotency_key: idempotency_key.to_owned(),
+                parameters_digest: parameters_digest.to_owned(),
+                action: "search".to_owned(),
+                target: "workspace://tree".to_owned(),
+                effect_object_id: effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: None,
+                canonical_json: "{\"intent\":\"p2-t10-d01-unknown\"}".to_owned(),
+            },
+            &EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000613")
+                    .expect("valid intent event identifier"),
+                object_id: intent_object_id,
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"intent\":\"p2-t10-d01-unknown\"}".to_owned(),
+            },
+        )
+        .expect("persist durable intent");
+
+    let validated_request =
+        staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let native_executor = NativeWorkspaceSearchExecutor::new(1);
+    native_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &validated_request,
+        )
+        .expect("stage durable intent identity");
+    let unknown_executor = UnknownAfterNativeSearchDispatchExecutor {
+        native_executor: &native_executor,
+    };
+
+    let clock = FixedEffectClock(admitted_at);
+    let identifiers = UuidV7Generator;
+    let effect_protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/p2-t10-d01-unknown")
+            .expect("valid correlation reference"),
+    );
+    let grant = effect_grant();
+    let governance_currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let writer_lease = WriterLease { epoch: 1 };
+
+    let authorized = effect_protocol
+        .authorize_effect(
+            &effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &writer_lease,
+        )
+        .expect("authorize staged effect");
+    let (dispatched, outcome) = effect_protocol
+        .dispatch_effect(
+            &effect_object_id,
+            authorized.after_version,
+            &grant,
+            &governance_currency,
+            &unknown_executor,
+            &writer_lease,
+        )
+        .expect("dispatch native search through lost-response wrapper");
+    assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+    let unknown = effect_protocol
+        .record_outcome(
+            &effect_object_id,
+            dispatched.after_version,
+            &outcome,
+            &writer_lease,
+        )
+        .expect("record unknown post-scan outcome");
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load unknown effect")
+            .expect("durable effect exists")
+            .state
+            .as_str(),
+        "OUTCOME_UNKNOWN"
+    );
+    assert_eq!(native_executor.scan_count(), 1);
+
+    let (_, reconciliation_result) = effect_protocol
+        .reconcile(
+            &effect_object_id,
+            "OUTCOME_UNKNOWN",
+            unknown.after_version,
+            &unknown_executor,
+            &writer_lease,
+        )
+        .expect("reconcile the original idempotency key");
+    assert_eq!(
+        reconciliation_result,
+        ExecutorQueryResult::ExecutedWithOriginalKey
+    );
+    assert_eq!(
+        native_executor.scan_count(),
+        1,
+        "reconciliation must query the original key, never rescan"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &effect_object_id)
+            .expect("load reconciled effect")
+            .expect("durable effect exists")
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Task, &task_object_id)
+            .expect("load unchanged task")
+            .expect("durable task exists")
+            .version,
+        Version::INITIAL
+    );
+
+    std::fs::remove_file(database_path).unwrap_or(());
+}

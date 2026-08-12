@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:5775b5c95826fe2ffe699747ec9827f86960120bc1f01902607d14ea1509221d"
+fingerprint: "sha256:18ffcccc703230369f08c9f46445eaef953b315788d82c10eab8e7a7317afb4f"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -37,7 +37,7 @@ verification → verified continuation or ceiling STOP.
 | Sealed ContextRequest/View before Pi, per-body reauthorization | implemented | kernel-server scheduler_authority tests over real SQLite |
 | Locked-down Pi candidate process over a one-shot private socket | implemented | pi-agent-adapter protocol/launch tests |
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
-| WorkspaceRead / ProcessCheck executors with persist-before-dispatch and original-key reconciliation | implemented, test-called only | `tool_executor/tests.rs` |
+| WorkspaceRead / WorkspaceSearch / ProcessCheck executors with persist-before-dispatch and original-key reconciliation | implemented, test-called only | `tool_executor/tests.rs` |
 | Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, test-called only | verifier module tests |
 | Recovery of consumed handoffs at startup | implemented | daemon startup path |
 

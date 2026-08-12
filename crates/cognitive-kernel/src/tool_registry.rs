@@ -20,6 +20,15 @@ pub const TOOL_DESCRIPTOR_DIGEST_DOMAIN: &str = "native-tool-descriptor/0.1";
 /// Stable version of the built-in catalog representation.
 pub const BUILTIN_TOOL_CATALOG_VERSION: i64 = 1;
 
+/// Largest accepted `WorkspaceSearch` query. The pre-executor validator and
+/// the executor sink both enforce this so a caller that reached the sink
+/// without validation cannot widen the bound.
+pub const MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES: usize = 4096;
+
+/// Largest accepted `WorkspaceWrite`/`WorkspacePatch` payload, enforced in the
+/// same two places and for the same reason.
+pub const MAXIMUM_WORKSPACE_MUTATION_PAYLOAD_BYTES: usize = 256 * 1024;
+
 /// Risk classification is a descriptor fact, not an authorization grant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -441,17 +450,17 @@ pub fn validate_workspace_operation(
             }
         }
         NativeOperationFamily::WorkspaceSearch => {
-            if payload.is_empty() || payload.len() > 4096 {
+            if payload.is_empty() || payload.len() > MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES {
                 return Err("workspace search query exceeds the registered bounds".to_owned());
             }
         }
         NativeOperationFamily::WorkspaceWrite => {
-            if payload.len() > 256 * 1024 {
+            if payload.len() > MAXIMUM_WORKSPACE_MUTATION_PAYLOAD_BYTES {
                 return Err("workspace write payload exceeds the registered bounds".to_owned());
             }
         }
         NativeOperationFamily::WorkspacePatch => {
-            if payload.is_empty() || payload.len() > 256 * 1024 {
+            if payload.is_empty() || payload.len() > MAXIMUM_WORKSPACE_MUTATION_PAYLOAD_BYTES {
                 return Err("workspace patch payload exceeds the registered bounds".to_owned());
             }
             if !payload.lines().any(|line| {
