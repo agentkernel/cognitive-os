@@ -12,6 +12,8 @@ pub mod adapters;
 pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
+pub mod campaign_report;
+pub mod campaign_runner;
 pub mod channel_binding;
 pub mod compaction_benefit;
 pub mod context_compaction;
@@ -27,19 +29,24 @@ pub mod linux_bundle;
 pub mod linux_bundle_installation;
 pub mod linux_bundle_installer_adapter;
 pub mod linux_bundle_service;
+pub mod loopback_transport;
 pub mod mcp_tool_adapter;
 pub mod non_pi_agent;
 pub mod oob;
 pub mod perf;
+pub mod performance_campaign;
 pub mod pi_launcher;
+pub mod provider_route_policy;
 pub mod readiness;
 pub mod recovery_flow;
 pub mod release_manifest;
+pub mod resource_sampler;
 pub mod sandbox;
 pub mod scheduler_service;
 pub mod shell;
 pub mod store_access;
 pub mod target_resolution;
+pub mod task_scenario_harness;
 
 pub use adapters::{
     CheckpointAdapter, CompatibilityProfile, CompletionAdapter, FeatureStatus, IdentityAdapter,
@@ -61,6 +68,17 @@ pub use agent_registration::{
     pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
     stop_official_pi_agent_durable,
+};
+pub use campaign_report::{
+    CAMPAIGN_REPORT_KIND, CampaignClaimLevel, CampaignCleanupOutcome, CampaignEvidenceReport,
+    CampaignLayer, CampaignReportError, CampaignSafetyAccounting, LayerDisposition, LayerOutcome,
+    REQUIRED_CAMPAIGN_LAYERS, REQUIRED_CAMPAIGN_NON_CLAIMS, VerifierDisposition,
+    build_campaign_evidence_report, not_run_layer, validate_campaign_evidence_report,
+};
+pub use campaign_runner::{
+    CAMPAIGN_ID, CAMPAIGN_RUNNER_CLAIM_LEVEL, CAMPAIGN_RUNNER_REPORT_KIND, CampaignRunRequest,
+    CampaignRunnerError, CampaignRunnerReport, L0EligibilityFacts, build_campaign_runner_report,
+    parse_campaign_run_request,
 };
 pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
@@ -133,6 +151,10 @@ pub use linux_bundle_service::{
     install_linux_bundle_service, install_linux_bundle_single_service, probe_personal_health,
     render_personal_user_service_unit, write_rendered_personal_user_service_unit,
 };
+pub use loopback_transport::{
+    EXCLUDED_TRANSPORT_ATTRIBUTIONS, LoopbackTransportError, LoopbackTransportObservation,
+    LoopbackTransportSample, LoopbackTransportStage, validate_loopback_transport_observation,
+};
 pub use mcp_tool_adapter::{
     MCP_FIXTURE_SERVER_ID, MCP_INITIALIZE_TIMEOUT_BUDGET_MS, MCP_PROTOCOL_VERSION_PIN,
     McpQualificationObservation, McpServerManifest, McpToolAdapterError, McpToolListCandidate,
@@ -153,14 +175,27 @@ pub use perf::{
     GovernedPathObservation, GovernedPathStage, GovernedPathStageCollector, GovernedStageSample,
     StageLatencyMs, validate_governed_path_observation,
 };
+pub use performance_campaign::{
+    CampaignCorrelationId, CampaignMeasurementEnvelope, CampaignStage, CampaignStageTiming,
+    PerformanceCampaignError, ProviderUsage,
+};
 pub use pi_launcher::{
     PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,
     admit_pi_launch,
+};
+pub use provider_route_policy::{
+    FirstTokenTiming, ProviderRouteObservation, ProviderRouteOutcome, ProviderRoutePolicyError,
+    ProviderRouteSample, build_provider_route_observation, count_outcome,
+    validate_provider_route_observation,
 };
 pub use readiness::{R0ThinPath, ReadinessEvaluator, ReadinessFacts, ReadinessGrade};
 pub use recovery_flow::{
     ObligationDecision, RecoveryContinuationPlan, plan_recovery_continuations,
     pre_crash_binding_is_stale,
+};
+pub use resource_sampler::{
+    CampaignProcessRole, ProcessResourceSample, ProcessResourceSeries, ResourceSamplerError,
+    build_process_resource_series, read_process_resource_sample, validate_process_resource_series,
 };
 pub use sandbox::{
     ChannelClaim, PlatformChannelRow, SandboxChannel, SandboxGate, SandboxPlatform, SandboxPolicy,
@@ -179,6 +214,12 @@ pub use store_access::{
 pub use target_resolution::{
     TargetSelectorDecision, TargetSelectorRequest, admit_target_selector, is_strong_reference,
     request_from_target_vector_input,
+};
+pub use task_scenario_harness::{
+    JudgedScenarioRun, ScenarioObservation, ScenarioOracle, ScenarioOutcome, ScenarioRunFacts,
+    ScenarioRunSafety, TaskScenario, TaskScenarioError, build_scenario_observation,
+    judge_scenario_run, scenario_safety_accounting, validate_scenario_observation,
+    verified_completion_count,
 };
 
 /// Runtime role marker (M6: harness/shell + install/sandbox/adapter/readiness/PERF).

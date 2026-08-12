@@ -75,7 +75,6 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| (none) | — | — | — | — | — | — | — |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
@@ -85,6 +84,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P9-T04/comprehensive-performance-campaign` | P9-T04/D01-D09 comprehensive performance campaign | `personal/P9-T04-comprehensive-performance-campaign` | 2026-08-12 | D01-D09 deliver the measurement envelope, L0/L1 runner, transport decomposition, resource sampler, campaign claim policy, L3 route policy and L4 scenario harness. `L0`-`L3` executed; `L4` `T1` partial; `L5` closed by owner disposition. Closure: [20260812-personal-p9-t04-performance-campaign-closure.md](../checkpoints/20260812-personal-p9-t04-performance-campaign-closure.md). Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P5-T04/dynamic-tool-ecosystem` | P5-T04/D01-D04 dynamic Tool + B10 | `personal/P5-T04-dynamic-tool-ecosystem` | 2026-08-11 | D01–D04 deliver dynamic discovery/enable/disable/quarantine/exposure/reconcile with ADR-0050 B10 MVP pass. Linux `dynamic_tool_ecosystem` 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; PR #196. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P5-T03/mcp-tool-adapter` | P5-T03/D01-D04 MCP Tool adapter | `personal/P5-T03-mcp-tool-adapter` | 2026-08-11 | D01–D04 deliver transport-only MCP fixture adapter with drift/timeout/bypass negatives and non-claim report. Linux `mcp_tool_adapter` 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`; PR #195. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |
 | `lease/personal/P7-T08/gmvp-linux` | P7-T08/D01-D04 GMVP-LINUX | `personal/P7-T08-gmvp-linux` | 2026-08-11 | D01–D04 deliver ADR-0048 B08 MVP pass, ADR-0049 GMVP composition binder, and GMVP-LINUX MVP pass. B08 CI `31479512940`; composition CI `31480604511`; PR #194. Full closed history: [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). |

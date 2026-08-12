@@ -1,6 +1,7 @@
 /** Complete pinned-Pi provider whose only model transport is the local daemon. */
 
 import { PersonalDaemonClient } from "./daemon-client.js";
+import type { ProviderUsage } from "./daemon-client.js";
 import type {
   AssistantMessageEventStream,
   PiAssistantMessage,
@@ -62,7 +63,7 @@ async function dispatchCompletion(
 ): Promise<void> {
   const timestamp = Date.now();
   if (signal?.aborted) return endFailure(stream, model, timestamp, "aborted", "completion cancelled before dispatch");
-  const partial = assistantMessage(model, [], "stop", timestamp);
+  const partial = assistantMessage(model, [], "stop", timestamp, { availability: "not_available" });
   stream.push({ type: "start", partial });
   try {
     const completion = await client.completeChat(model.id, toDaemonMessages(context), signal);
@@ -71,7 +72,7 @@ async function dispatchCompletion(
     stream.push({ type: "text_start", contentIndex: 0, partial: content });
     stream.push({ type: "text_delta", contentIndex: 0, delta: content.text });
     stream.push({ type: "text_end", contentIndex: 0, content });
-    const message = assistantMessage(model, [content], "stop", timestamp);
+    const message = assistantMessage(model, [content], "stop", timestamp, completion.providerUsage);
     stream.push({ type: "done", message });
     stream.end(message);
   } catch (error) {
@@ -107,16 +108,38 @@ function extractText(content: unknown): string | undefined {
 }
 
 function endFailure(stream: LocalAssistantMessageEventStream, model: PiModel, timestamp: number, stopReason: "error" | "aborted", errorMessage: string): void {
-  const message = assistantMessage(model, [], stopReason, timestamp, errorMessage);
+  const message = assistantMessage(model, [], stopReason, timestamp, { availability: "not_available" }, errorMessage);
   stream.push({ type: "error", error: message });
   stream.end(message);
 }
 
-function assistantMessage(model: PiModel, content: readonly PiTextContent[], stopReason: PiAssistantMessage["stopReason"], timestamp: number, errorMessage?: string): PiAssistantMessage {
+function assistantMessage(
+  model: PiModel,
+  content: readonly PiTextContent[],
+  stopReason: PiAssistantMessage["stopReason"],
+  timestamp: number,
+  providerUsage: ProviderUsage,
+  errorMessage?: string,
+): PiAssistantMessage {
   return {
     role: "assistant", content, api: model.api, provider: model.provider, model: model.id,
-    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+    usage: toPiUsage(providerUsage),
     stopReason, timestamp, ...(errorMessage === undefined ? {} : { errorMessage }),
+  };
+}
+
+function toPiUsage(providerUsage: ProviderUsage): PiAssistantMessage["usage"] {
+  const unavailableCost = { input: undefined, output: undefined, cacheRead: undefined, cacheWrite: undefined, total: undefined };
+  if (providerUsage.availability === "not_available") {
+    return { input: undefined, output: undefined, cacheRead: undefined, cacheWrite: undefined, totalTokens: undefined, cost: unavailableCost };
+  }
+  return {
+    input: providerUsage.promptTokens,
+    output: providerUsage.completionTokens,
+    cacheRead: undefined,
+    cacheWrite: undefined,
+    totalTokens: providerUsage.totalTokens,
+    cost: unavailableCost,
   };
 }
 

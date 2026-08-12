@@ -186,6 +186,7 @@ export interface FakeDaemonOptions {
   readonly unauthorizedStatusResponses?: number;
   readonly selectedModelBody?: string;
   readonly completionBody?: string;
+  readonly providerNetworkElapsedNanos?: string;
 }
 
 export interface FakeDaemon {
@@ -331,7 +332,14 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
           respond(response, 401, errorBody("LOCAL_SESSION_UNAUTHORIZED"));
           return;
         }
-        respond(response, 200, options.completionBody ?? boundedCompletionBody());
+        respond(
+          response,
+          200,
+          options.completionBody ?? boundedCompletionBody(),
+          options.providerNetworkElapsedNanos === undefined
+            ? undefined
+            : { "x-cognitiveos-provider-network-nanos": options.providerNetworkElapsedNanos },
+        );
         return;
       }
 
@@ -399,11 +407,17 @@ export function resourceWatchSnapshotBody(): string {
   return "event: snapshot\ndata: {\"kind\":\"snapshot\",\"family\":\"runtime\"}\n\n";
 }
 
-function respond(response: ServerResponse, status: number, body: string): void {
+function respond(
+  response: ServerResponse,
+  status: number,
+  body: string,
+  additionalHeaders: Readonly<Record<string, string>> = {},
+): void {
   response.writeHead(status, {
     "content-type": "application/json",
     "content-length": Buffer.byteLength(body),
     connection: "close",
+    ...additionalHeaders,
   });
   response.end(body);
 }

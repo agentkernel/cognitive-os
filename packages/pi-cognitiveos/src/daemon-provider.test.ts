@@ -53,6 +53,33 @@ test("custom Pi provider configuration registers one projected model and emits b
   }
 });
 
+test("Pi completion exposes only measured Provider usage and leaves cost unavailable", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionBody: JSON.stringify({
+      choices: [{ message: { content: "daemon text" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+    }),
+  });
+  try {
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const stream = provider.streamSimple(provider.models[0]!, { messages: [{ role: "user", content: "hello" }] });
+    const message = await stream.result();
+
+    assert.deepEqual(message.usage, {
+      input: 7,
+      output: 3,
+      cacheRead: undefined,
+      cacheWrite: undefined,
+      totalTokens: 10,
+      cost: { input: undefined, output: undefined, cacheRead: undefined, cacheWrite: undefined, total: undefined },
+    });
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("unsupported tool output produces one terminal error without tool events", async () => {
   const daemon = await startFakeDaemon({
     bootstrapSecret: BOOTSTRAP_SECRET,
