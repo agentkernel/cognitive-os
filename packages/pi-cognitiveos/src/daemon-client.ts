@@ -30,6 +30,7 @@ import {
   type PersonalDaemonPaths,
 } from "./daemon-discovery.js";
 import { DaemonClientError } from "./errors.js";
+import { randomBytes } from "node:crypto";
 
 /** Principal the Personal CLI uses for the local owner session. */
 export const LOCAL_OWNER_PRINCIPAL = "principal://local/owner";
@@ -82,6 +83,8 @@ export interface SelectedModelProjection {
 export interface BoundedCompletion {
   readonly content: string;
   readonly finishReason: "stop";
+  /** Opaque campaign metadata, never a bearer or user/provider payload. */
+  readonly correlationId: string;
   /**
    * Monotonic duration around the Pi-to-daemon loopback HTTP exchange only.
    * It deliberately excludes Pi Context construction and Provider parsing.
@@ -209,10 +212,15 @@ export class PersonalDaemonClient {
     const paths = resolvePersonalDaemonPaths(this.environment);
     const endpoint = readDaemonEndpoint(paths, this.files);
     const token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+    const correlationId = createCampaignCorrelationId();
     const loopbackRequestStartedAt = performance.now();
     const response = await this.send(endpoint, "/provider/v1/chat/completions", {
       method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "x-cognitiveos-correlation-id": correlationId,
+      },
       body: JSON.stringify({ model, messages, stream: false }),
       ...(signal === undefined ? {} : { signal }),
     });
@@ -226,7 +234,7 @@ export class PersonalDaemonClient {
       throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
     }
     this.managementSessionToken = token;
-    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos, providerNetworkElapsedNanos);
+    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos, providerNetworkElapsedNanos, correlationId);
   }
 
   /** Read one private resource projection through the management channel. */
@@ -478,6 +486,7 @@ export function parseBoundedCompletion(
   bodyText: string,
   loopbackHttpElapsedNanos: number = 1,
   providerNetworkElapsedNanos: number | undefined = undefined,
+  correlationId: string = createCampaignCorrelationId(),
 ): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
@@ -495,10 +504,15 @@ export function parseBoundedCompletion(
   return {
     content: messageRecord["content"],
     finishReason: "stop",
+    correlationId,
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
     providerNetworkElapsedNanos,
     providerUsage: parseProviderUsage(record["usage"]),
   };
+}
+
+function createCampaignCorrelationId(): string {
+  return `campaign-${randomBytes(16).toString("hex")}`;
 }
 
 function parsePositiveDurationHeader(value: string | null): number | undefined {

@@ -122,6 +122,25 @@ test("Provider-network timing is accepted only from a positive daemon telemetry 
   }
 });
 
+test("completion dispatch carries only an opaque campaign correlation header", async () => {
+  const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}" });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(daemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.match(completion.correlationId, /^campaign-[0-9a-f]{32}$/);
+    const completionRequest = daemon.requests.find(
+      (request) => request.url === "/provider/v1/chat/completions",
+    );
+    assert.ok(completionRequest);
+    assert.equal(completionRequest.headers["x-cognitiveos-correlation-id"], completion.correlationId);
+    assert.ok(!completionRequest.body.includes(completion.correlationId));
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("a session is minted and the readiness projection is returned verbatim", async () => {
   const daemon = await startFakeDaemon({
     bootstrapSecret: BOOTSTRAP_SECRET,
