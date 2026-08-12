@@ -142,10 +142,23 @@ fn configure_provider_if_requested(
                 "linux-secret-tool",
             )
         }
+        cognitive_secret::ProductionSecretBackend::WindowsCredentialManager(store) => {
+            configure_and_discover_with_store(
+                &store,
+                &RustlsProviderTransport::default(),
+                options,
+                config_repository,
+                already_configured,
+                &provider_id,
+                &base_url,
+                "windows-credential-manager",
+            )
+        }
         cognitive_secret::ProductionSecretBackend::Unavailable(_) => Err(
             "no production SecretStore is available on this host. On Linux install \
-             FreeDesktop Secret Service and secret-tool, then retry. For hermetic tests only, \
-             pass --allow-ephemeral-secret-backend (never for real keys)."
+             FreeDesktop Secret Service and secret-tool, then retry. On Windows ensure the \
+             system Windows PowerShell and Credential Manager are usable, then retry. For \
+             hermetic tests only, pass --allow-ephemeral-secret-backend (never for real keys)."
                 .to_owned(),
         ),
     }
@@ -305,6 +318,9 @@ fn run_self_check(
     } else {
         match select_production_secret_store() {
             cognitive_secret::ProductionSecretBackend::LinuxSecretTool(_) => "linux-secret-tool",
+            cognitive_secret::ProductionSecretBackend::WindowsCredentialManager(_) => {
+                "windows-credential-manager"
+            }
             cognitive_secret::ProductionSecretBackend::Unavailable(_) => "unavailable",
         }
     };
