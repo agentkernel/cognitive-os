@@ -205,6 +205,29 @@ may have consumed an unobservable Provider request. The rate-limit class stays
 not-run: inducing HTTP 429 would mean deliberately hammering a third-party
 Provider, which the campaign does not authorize.
 
+Scenario `R2-pi-first-response` completed 30 / 30 at pushed revision
+`a9a2304175becf3d8ad06a78f9364f8da8f31f73`, closing `L3`. Pi `0.81.1`
+(`@earendil-works/pi-coding-agent`) was acquired from the official npm origin
+with integrity
+`sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==`.
+All 30 samples returned `ok` with the expected marker and
+`authority_side_effects=false`; first response was 4625 ms p50, 5004 ms p95,
+4169 ms minimum and 5127 ms maximum. Sample set digest
+`sha256:f6c6ac44a360d82e79b37f4d25f8f9b728c9b274b88f6b32e1780628585b4484`.
+
+Set against `R1`, where the same Provider call through the daemon client took
+about 1.0 s end to end, the Pi-hosted path costs roughly 3.5 s more per first
+response. Pi process spawn and agent initialisation, not the governed daemon
+path or the Provider, dominate what a user experiences as first-response time.
+
+Reaching this cell required a genuine fix to
+`tools/personal/p1-t09-product-route-smoke.sh`. Its minimal `env -i` allowlist
+forwarded `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME` and
+`XDG_RUNTIME_DIR` but omitted `XDG_STATE_HOME`, which is the one root the daemon
+publishes `daemon-endpoint.json` into. The Extension therefore could not find
+the daemon under any non-default runtime root. The probe passed in P1-T09 only
+because that campaign used the default state directory.
+
 Two runner corrections were needed before this cell was honest, and both are
 recorded rather than quietly fixed. Classifying failures by fuzzy message text
 logged a clean deterministic denial as `outcome_unknown`; classification now
