@@ -1057,3 +1057,439 @@ changes from `not_reviewed`.
 [personal-performance-assessment-20260812.md](../evaluation/personal-performance-assessment-20260812.md).
 Claim level `hypothesis`, verifier `not_reviewed`, no Agent-benefit claim, no
 Gate/release/Profile/B01 promotion.
+
+## 12. Phase 3 recovery — owner-directed continuation, 2026-08-13
+
+The previously published phase-3 closure said that no phase-3 cell had started.
+That statement is superseded, append-only, by retained guest evidence recovered
+under lease
+`lease/personal/EVAL-20260813/performance-evaluation-002-recovery`. A parent
+session had already staged a post-P2-T11 binary and started `B6`; the later
+closure did not observe that process. The recovered run is retained rather than
+discarded or rerun.
+
+### 12.1 `B6` post-P2-T11 optimization replay — `pass`
+
+**Instrument and immutable environment.** The native build worktree
+`DEV-LINUX-NATIVE-01:~/perfeval002/build` is clean at exact pushed revision
+`158e9276e49573db84aeb6ab55012d314368a76c`. That revision has P2-T11 closure
+`c83b755da05c2956ae3d4d5c5741aa5b9d49a2cf` as its parent and does **not**
+contain the later P2-T10 merge `3f766020c4d822556887ff8af59d41ed0cb92d75`;
+this result is therefore labelled **post-P2-T11 only**, never post-P2-T10.
+The staged and guest `kernel-server` digest is
+`sha256:5bc8ffeb1fa69ba2ec911eb1896f8a87c1e3a72a28140395f241dce019761aa7`.
+The unchanged campaign corpus, runner, and analyzer digests are respectively
+`sha256:38e282d4e3ceba0d62768073cf64e27a0e910832ad2ef4bfcca3f2460c919ab1`,
+`sha256:6b3989520a51aa5c6a59c3d2f2a7dcea0233ad10446c1f4067a275063a69465b`,
+and
+`sha256:6575f912a21c9b3563c883682cddc26d1facac7054ea92d408e79aa0d991906b`.
+
+**Started and retained denominator.** `evidence/b6-replay.jsonl` contains
+**270 / 270 paired blocks and 540 / 540 started runs retained**, with SHA-256
+`8872181a96337b857846b523112af8f6eaf0b5235b4be26dcb3ecdd947884cff`.
+There are 270 unique task IDs, 30 in each of the nine frozen families and 90 in
+each difficulty stratum. Every task ID, family, difficulty, replica, seed
+digest, prompt digest, and randomized arm order is byte-for-byte equal to the
+phase-2 `B2` metadata. Both arms completed 269 runs; both retained the same
+`confirmatory-G3-016` block as a 180 s timeout. No started sample was removed,
+reclassified, or retried.
+
+**Existing paired-analyzer result.**
+
+| Endpoint | Phase-2 `B2` baseline | Post-P2-T11 `B6` replay |
+|---|---:|---:|
+| `P` oracle completion | 240/270 = 88.9 % | 240/270 = 88.9 % |
+| `O` oracle completion | 242/270 = 89.6 % | 243/270 = 90.0 % |
+| paired completion delta `O − P` | +0.7 pp, CI [−2.22, +3.70] pp | +1.1 pp, CI [−1.48, +4.07] pp |
+| McNemar exact | p = 0.8145 | p = 0.6072 |
+| matched completed pairs | 270/270 | 269/270 |
+| `P` wall median | 4367.2 ms | 4396.5 ms |
+| `O` wall median | 6204.6 ms | 6257.7 ms |
+| paired wall delta median | +1828.5 ms, CI [1753.6, 1893.9] ms | +1731.6 ms, CI [1626.1, 1836.9] ms |
+| paired relative delta median | +44.2 % | +42.7 % |
+
+The same analyzer's 10,000-resample task-cluster bootstrap over the 270 matched
+before/after task IDs gives a change in the completion delta of **+0.37 pp**
+(95 % CI **[−3.33, +4.07] pp**). Over the 269 blocks completed by both arms in
+both batches, the change in median paired overhead is **−91.5 ms** (95 % CI
+**[−219.9, +31.2] ms**). Both intervals include zero. The replay therefore
+shows **no measurable completion or latency change** from B2; it cannot support
+an optimization claim, and P2-T11 did not target this paired request path.
+
+**Safety and evidence disposition.** Provider-secret exposure is
+`observed_zero` in the B6 evidence and runtime files: a boundary-aware scan of
+55 campaign files found no credential-shaped match; its sole match was a
+19-character, digit-free alphabetic identifier in the frozen corpus. The
+Context, Effect, stale-epoch, reconciliation, and independent-acceptance
+counters are `not_applicable` to these C0 oracle tasks; no CognitiveOS Task
+completion is claimed. Scenario-boundary violations observed for this cell are
+0. Raw evidence remains at
+`b01guest:~/perfeval002/evidence/b6-replay.jsonl`; the analyzer output is
+reproducible from the retained payload and pinned instrument.
+
+**Unique next action:** append this recovered result to the final assessment,
+then disposition the next preregistered executable phase-3 cell, `UJ2`
+cold/warm conversation strata, before starting any later cell.
+
+### 12.2 Recovered added cell `O-NESTED-PILOT` — `partial`
+
+Retained evidence proves that a 20-run nested-timing pilot also finished at the
+post-P2-T11 revision before `B6` began. It is disclosed as an added diagnostic
+cell, not a preregistered `UJ2` stratum and not an optimization result.
+
+**Instrument and denominator.** Campaign-only passive observer
+`loopback-observer.py`
+(`sha256:2aa96011868c3839f22f078631dc8f09faaaa496244bcc5d8783152af19ff275`)
+forwarded bytes and headers verbatim from loopback port 48484 to the campaign
+daemon and retained only route class, status, byte count, and monotonic
+arrival/departure timing—never a body, header value, key, or model output.
+`evidence/nested-timing.jsonl` contains **20 / 20 started and retained runs**
+(`sha256:2d27c66eed70d81df190361533739acbf3bc086aa77b7421b98636d2f7b530c5`);
+the 116 observer events are retained under
+`sha256:75fb2deb4d5ed320881449988ebd9b8f9e24b185de8be6184219c44eb46b161a`.
+
+**Outcome.** Nine runs observed the exact marker and eleven did not. Eight
+successful runs needed one Provider request; one successful run retained three
+503 responses before a 200; eleven failed runs retained four 503 responses
+each. There were no retries by the observer, but Pi's own request behaviour
+made the per-run Provider-call denominator 1 for eight runs and 4 for twelve
+runs. Total process wall time over all 20 runs was 18 036.5 ms median
+(MAD 709.8 ms, 4214.4–18 965.2 ms). For the nine successful Provider responses,
+observer-local daemon-plus-Provider time was 1041.9 ms median (MAD 139.0 ms,
+795.9–1439.7 ms).
+
+**Instrument failure retained honestly.** The process wrapper recorded
+`spawn_ns` / `exit_ns` from the epoch wall clock while the observer recorded
+`arrived_ns` / `departed_ns` with `perf_counter_ns`. Subtracting across those
+clock domains produces impossible negative pre-request and enormous
+post-response intervals. Therefore pre-request and post-response decomposition
+are **`not_available`**, and the pilot does not close the plan's nested-timing
+follow-up. Measurement-only rules forbid repairing and rerunning this instrument
+inside the campaign; all 20 samples remain retained.
+
+Provider-secret exposure is `observed_zero` in the retained files; Context,
+Effect, stale-epoch, reconciliation, and independent-acceptance counters are
+`not_applicable`; scenario-boundary violations observed are 0.
+
+**Unique next action:** append this partial diagnostic to the final assessment,
+then disposition `UJ2` cold, daemon-warm/Pi-cold, and warm-process strata.
+
+### 12.3 `UJ2` cold/warm conversation strata — `partial`
+
+**Instrument and exact environment.** The unchanged paired runner and frozen
+`A4` confirmatory task inputs ran against the post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`. The daemon-warm/Pi-cold stratum is
+the recovered `B6` denominator: the broker and campaign daemon stayed warm
+while every arm invocation started a fresh Pi process. A fixed ten-task subset
+(`A4` confirmatory seeds 0–9) was selected before the cold stratum; the cold
+records have the same task IDs, family, difficulty, seed digests, prompt
+digests, and replica as those ten `B6` blocks.
+
+| Stratum | Started / retained | Outcome |
+|---|---:|---|
+| daemon-warm / Pi-cold (`B6`) | 270 pairs / 540 runs | 269 completed pairs; `P` 240/270, `O` 243/270 |
+| same ten `A4` tasks, daemon-warm / Pi-cold | 10 pairs / 20 runs | `P` 10/10, `O` 10/10; medians 4008.5 / 6160.0 ms; paired delta +1775.2 ms |
+| daemon-cold / Pi-cold | **10 pairs / 20 runs, all retained** | `P` 10/10; `O` 0/10, all `process_error` |
+| daemon-warm / Pi-warm | 0 | **`not_available`** — the product and frozen runner have no persistent Pi process-reuse path |
+
+Cold evidence is retained at `evidence/uj2-cold-paired.jsonl`
+(`sha256:d448cb21416fe8ac2a3d5c10317fe8ce342dea506334a3ebdd0d83ced89f7b84`).
+The `P` arm remained healthy (10/10, 3882.8 ms wall median, one Provider call
+per task). Before each `O` arm, the public
+`cognitive daemon start --runtime-root … --kernel-server …` path was attempted
+once after stopping the campaign daemon. All ten starts returned exit 1 in
+86–108 ms, and the subsequent fresh Pi invocation returned process exit 1
+(1747.0 ms median) without an oracle completion. A focused post-cell diagnostic
+returned the redacted product error `kernel-server exited before becoming
+ready`; the same exact `kernel-server` binary was then restored successfully by
+the campaign's preregistered explicit loopback bind on port 48282. No cold
+sample was rerun or replaced.
+
+Because the cold sub-cell never reached a comparable Provider exchange, no
+cold-versus-warm latency delta is calculated. The ten one-block runner
+invocations also reset the frozen arm-order RNG and therefore all ran `O`
+before `P`, unlike the 5/5 order split in the matching B6 subset; that limitation
+is retained even though the `O` failure occurred before Provider dispatch.
+
+Provider-secret exposure is `observed_zero`; the ten pure-Pi requests used the
+approved in-memory broker and the failing OS arm emitted no secret. Context,
+Effect, stale-epoch, reconciliation, and independent-acceptance counters are
+`not_applicable`; scenario-boundary violations observed are 0.
+
+**Unique next action:** append `UJ2` to the assessment, then execute or
+disposition `B3` client-deadline behaviour at the restored campaign daemon.
+
+### 12.4 `B3` bounded client deadline — `partial`
+
+Instrument: unchanged
+`p9-t04-l3-provider-route-runner.mjs` at exact post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`, with
+`--request-timeout-ms 120`, `retry=0`, and a fixed denominator of 10 declared
+before execution.
+
+All **10 / 10 started requests were retained**. Every request returned registered
+client code `PI_EXTENSION_DAEMON_UNREACHABLE` and the frozen runner classified
+all ten as `outcome_unknown`; marker and usage denominators were 0/10. Total
+elapsed time was 122.27 ms median (MAD 0.40 ms, 121.22–123.38 ms), so the
+120 ms client bound held within 3.38 ms. The campaign daemon remained present
+on its loopback listener, but the registered code does not distinguish deadline
+expiry from an absent daemon, so the result is not relabelled `timeout`.
+Provider dispatch/network outcome is `not_available`, and no retry or
+replacement request was made.
+
+Raw aggregate evidence:
+`b01guest:~/perfeval002/evidence/b3-client-deadline-120ms.json`,
+`sha256:7c42f207b0468e24621c7d1868dce0b6db35fe0bb5827dab3b613be435bd25cd`.
+Provider-secret exposure is `observed_zero`; Context, Effect, stale-epoch,
+reconciliation, and independent-acceptance counters are `not_applicable`;
+scenario-boundary violations observed are 0.
+
+**Unique next action:** append this result to the assessment, then execute the
+`B3` daemon-unavailable and broker-unavailable controlled refusal sub-cells.
+
+### 12.5 `B3` daemon / broker unavailable — `partial`
+
+**Daemon unavailable.** The ten `UJ2` cold-stratum `O` runs also provide the
+preregistered daemon-unavailable denominator at the same revision: **10 / 10
+started and retained**, all `process_error` / exit 1 in 1747.0 ms median while
+the paired `P` arm completed 10/10. Those samples are referenced here rather
+than counted a second time. They prove a bounded fail-closed result, not a
+Provider exchange.
+
+**Broker unavailable.** The campaign-only pure-Pi broker was stopped and its
+loopback listener verified absent before a fixed ten-block `A4` cell began.
+The unchanged paired runner retained **10 / 10 blocks, 20 / 20 runs** at exact
+revision `158e9276e49573db84aeb6ab55012d314368a76c`. The output is
+`evidence/b3-broker-unavailable.jsonl`,
+`sha256:acaf9e6c254170a7b238a275b145031483d1b41dc54c16b840664ae0e436eb4e`.
+
+| Arm | Started / retained | Outcome |
+|---|---:|---|
+| `P`, broker absent | 10 / 10 | timeout 10/10, exit 124, 180 105.9 ms median |
+| `O`, campaign daemon present | 10 / 10 | timeout 10/10, exit 124, 180 102.0 ms median |
+
+The broker fault therefore did **not** isolate a broker-only delta: the
+nominally unaffected `O` arm also timed out throughout the one-hour cell. No
+completion or latency comparison is calculated, and the `O` timeout is retained
+as an uncontrolled concurrent route failure rather than attributed to the
+broker. Arm order remained randomized (7 `O→P`, 3 `P→O`). No runner retry or
+replacement sample occurred.
+
+After the complete denominator was retained, the broker was restarted from the
+same digest-pinned instrument; it resolved the already-active approved
+SecretStore entry itself and restored loopback listener 48383. No key was read,
+entered, moved, logged, or passed through argv/environment/config/evidence.
+Provider-secret exposure is `observed_zero`; Context, Effect, stale-epoch,
+reconciliation, and independent-acceptance counters are `not_applicable`;
+scenario-boundary violations observed are 0.
+
+**Unique next action:** append this partial cell to the assessment, then execute
+the `B3` Pi-process-kill cell without changing either Provider or product state.
+
+### 12.6 `B3` Pi process kill — `pass`
+
+Instrument: direct invocation of the frozen Pi `0.81.1` plus unchanged
+CognitiveOS Extension at exact post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`. The denominator and kill point were
+fixed before execution: ten fresh `O`-arm Pi processes, one per sample, with
+SIGKILL at 2 s if the process remained alive. Output was discarded rather than
+retaining a model response; no sample was retried.
+
+All **10 / 10 started samples were retained**. Every process was alive at the
+kill point, every SIGKILL was delivered, every wait returned 137, and elapsed
+time was 2022.5 ms median (2018–2041 ms). The post-wait orphan Pi count was
+0 in every sample; the campaign daemon remained running on its isolated
+loopback port. Provider dispatch state is `not_available` because the cell
+deliberately retained no response or internal Provider observation, and process
+exit is not completion.
+
+Evidence:
+`b01guest:~/perfeval002/evidence/b3-pi-kill.jsonl`,
+`sha256:f15839243e3db9f8473bc5be55d161835c97c2be357d9cc845120b9a13d6c099`.
+Provider-secret exposure and scenario-boundary violations are
+`observed_zero`; Context, Effect, stale-epoch, reconciliation, and independent
+acceptance are `not_applicable`. Cleanup/orphan safety passed 10/10.
+
+**Unique next action:** append the Pi-kill result to the assessment, then
+execute or disposition `B3` response-size bound.
+
+### 12.7 `B3` response-size bound — `not-run`
+
+Started / retained denominator: **0 / 0**. The retained campaign instrument set
+contains no controlled oversize-response Provider fixture and the frozen route
+runner has no response-size injection mode. The passive observer forwards
+bytes verbatim and is not a response generator. Coercing the live third-party
+Provider to emit an oversized response would not be deterministic, would spend
+unbounded budget, and would not prove the transport's exact bound. Changing
+product configuration or authoring a fixture mid-campaign is outside the
+measurement-only boundary.
+
+Outcome class: `not-run`; measurement: `not_available`. No secret, process,
+network, Provider, or product state changed for this disposition. All safety
+counters are `not_applicable`, with scenario-boundary violations 0.
+
+**Unique next action:** append this disposition to the assessment, then execute
+the pre-dispatch `B3` selected-model mismatch cell.
+
+### 12.8 `B3` selected-model mismatch — `pass`
+
+Instrument: unchanged
+`p9-t04-l3-provider-route-runner.mjs` at exact post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`; fixed mismatch identifier,
+ten samples, `retry=0`.
+
+All **10 / 10 started requests were retained** and denied before dispatch with
+registered code `PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH`. Denial latency was
+30.72 ms median (MAD 2.16 ms, 28.08–46.64 ms). Marker, Provider timing, and
+usage denominators were 0/10, as required for a pre-dispatch refusal. This
+reproduces the phase-1 safety result at the post-P2-T11 revision without
+touching P2-T10.
+
+Evidence:
+`b01guest:~/perfeval002/evidence/b3-model-mismatch.json`,
+`sha256:c56aa5227862e32cd09342235009c0637b78a7ebb6e6e2c89fbf28968c931214`.
+Provider-secret exposure and Provider dispatch are `observed_zero`; Context,
+Effect, stale-epoch, reconciliation, and independent acceptance are
+`not_applicable`; scenario-boundary violations observed are 0.
+
+**Unique next action:** append this pass to the assessment, then disposition
+controlled Provider upstream timeout and rate-limit cells.
+
+### 12.9 `B3` Provider upstream timeout / rate limit — `not-run`
+
+Started / retained denominator: **0 / 0 for each sub-cell**. No campaign-owned
+controlled upstream fixture exists for delayed responses or HTTP 429, and the
+frozen runner has no such injection mode. The real-Provider timeouts observed
+concurrently during the broker-unavailable cell are uncontrolled outcomes and
+cannot be relabelled as this fault injection. Deliberately delaying or
+hammering the third-party Provider would violate the execution plan and the
+owner's explicit instruction.
+
+Both sub-cells are `not-run`; controlled upstream timing, dispatch count, and
+rate-limit recovery are `not_available`. No Provider call, secret operation, or
+state change occurred for this disposition; all safety counters are
+`not_applicable` and scenario-boundary violations are 0.
+
+**Unique next action:** append both dispositions to the assessment, then
+determine whether stale Task/epoch has a public runnable path at this revision.
+
+### 12.10 `B3` stale Task / epoch — `not-run`
+
+Started / retained denominator: **0 / 0**. Public Task admission exists, but
+the frozen campaign runner ends after preview/admit/watch and exposes no
+stale-bearer / superseding-control fault mode. More importantly, at the
+post-P2-T11 revision an admitted Task still does not enter a production
+scheduler/Tool dispatch, so there is no public epoch-bearing execution commit
+whose stale rejection this campaign can observe. Raw authority-store reads are
+forbidden and would not make the path public.
+
+Outcome class: `not-run`; stale-epoch dispatch/commit observation:
+`not_available`. A new runner or product caller would be implementation work
+forbidden by the measurement-only campaign. No state or safety boundary changed.
+
+**Unique next action:** append this disposition to the assessment, then
+disposition the optional pilot-only `T3` Tool-selection observation.
+
+### 12.11 Optional `T3` Tool selection — `not-run`
+
+Started / retained denominator: **0 / 0**. Plan §4.5 permits `T3` only as an
+optional B1 pilot observation when budget remains. The completed B1 corpus and
+runner contain only the nine frozen C0 families; they contain no T3 selection
+task, competing descriptor set, or mechanical selection oracle. B1 is already
+closed, and adding those materials now would change the frozen pilot rather than
+measure it.
+
+Outcome class: `not-run` (optional cell not activated); Tool selection precision,
+recall, and unnecessary-call rate remain `not_available`. No implementation,
+fixture, Provider request, or product state change occurred.
+
+**Unique next action:** append this disposition to the assessment, then execute
+or disposition the remaining `B4` mixed Agent/local profile.
+
+### 12.12 `B4` mixed Agent/local profiles — `partial`
+
+Exact revision:
+`158e9276e49573db84aeb6ab55012d314368a76c` (post-P2-T11 only). The fixed
+profiles were declared before execution: one and four concurrent paired `A4`
+blocks; during each profile, 60 health reads, 20 `cognitive status`, and
+20 `cognitive doctor` calls; then the same 100 local operations after all Agent
+processes exited. The frozen paired runner retained Agent outcomes without raw
+model responses.
+
+| Profile | Started / retained | Outcome |
+|---|---:|---|
+| Agent concurrency 1 | 1 pair / 2 runs | `P` and `O` completed and passed; 5076.6 / 7363.8 ms |
+| Agent concurrency 4 | 4 pairs / 8 runs | all 8 completed and passed; `P` / `O` medians 8613.3 / 14 995.8 ms |
+| local mix during c1 | 100 / 100 | all successful |
+| local mix during c4 | 100 / 100 | all successful |
+| post-load local mix | 100 / 100 | all successful |
+
+Local latency:
+
+| Operation | c1 median | c4 median | post-load median |
+|---|---:|---:|---:|
+| health (N=60/profile) | 0.51 ms | 2.68 ms | 0.65 ms |
+| `cognitive status` (N=20/profile) | 1815.0 ms | 1960.5 ms | 1778.0 ms |
+| `cognitive doctor` (N=20/profile) | 1824.5 ms | 1812.5 ms | 1790.0 ms |
+
+The local health path shows bounded queueing at four Agent processes and returns
+to baseline afterwards. Status/doctor are already ~1.8 s with no Agent load at
+this revision; c4 adds little relative to that baseline. This differs from the
+~70 ms phase-1 result because P2-T11 now performs an actual Provider-secret
+resolution in readiness. The correctness fix is measured as a current
+diagnostic hot-path cost; it is not attributed to Agent concurrency.
+
+The paired wall deltas (+2287.1 ms at c1 and +5482.9 ms median at c4) are
+descriptive only: N=1/4, both arms share a live Provider window, and the four
+one-block runner processes all started `O` before `P`. No throughput,
+non-inferiority, or tail claim is made. The six-resource get/watch and Task-watch
+portion has no retained mixed-profile driver and remains `not-run`; therefore
+the overall cell is `partial` even though every executed sample passed.
+
+Evidence locators and SHA-256:
+
+- `evidence/b4-mixed-c1-agent.jsonl`:
+  `e122bfb671e214dc9bb7a0b32f37bf661a62ddf2c042945d43afd8faf3fcad19`;
+- `evidence/b4-mixed-c1-local.jsonl`:
+  `2a38394b8c8292771ca67292b8d430e479dc42b0772151c0cf86f9d833383626`;
+- `evidence/b4-mixed-c4-agent-{1..4}.jsonl`: respectively
+  `f997b4adeb4873134ca163d0cd524857a007ffd74aca053171c032f6dc9bb0fe`,
+  `f8ae695c8c69320249745344ca9b0eaa986c651a69c09020ed1f917cd7bd755d`,
+  `50829bddfb71f2d6abd0de145bc94103283a08da591ef694649a869f1b871930`,
+  and `023e1c4d89d4a3c7b2723de7ba778cbb3f2ab03b884caf48f7bda1fa36ae3dfe`;
+- `evidence/b4-mixed-c4-local.jsonl`:
+  `803231d70a2cbb06866d52ae04d2d246c5847e706d3a9c0bcb80ec5e41fc6da3`;
+- `evidence/b4-mixed-post-local.jsonl`:
+  `574c03511b77a6ef408d294576a918d824454d8aca26be8bd43e329b736b2486`.
+
+Provider-secret exposure and scenario-boundary violations are
+`observed_zero`; Context, Effect, stale-epoch, reconciliation, and independent
+acceptance are `not_applicable`.
+
+**Unique next action:** append this mixed-profile result to the assessment, then
+run the plan-authorized `B5` 8 h soak because the 1 h promotion gate passed.
+
+### 12.13 Superseding classification for `UJ2` cold start — `instrument_error`
+
+Post-cell review found that the ten retained cold-start attempts in §12.3
+invoked `cognitive daemon start` **without** the campaign's required
+`--bind 127.0.0.1:48282`. The shipped CLI documents its default as 48181, while
+the untouched P9-T04 daemon was and remains listening on 48181. The attempts
+therefore did not establish the preregistered isolated daemon route; their
+child-exited-before-ready result cannot be attributed to product cold-start
+behaviour.
+
+The 10 pairs / 20 runs remain retained and still validly show the paired `P`
+arm completing while the `O` arm had no daemon, so §12.5 may use them as a
+daemon-unavailable observation. They are **not** a valid `UJ2` cold-conversation
+measurement and are reclassified `instrument_error`, append-only. They are not
+discarded, edited, or rerun for beautification. The correctly bound product
+cold-conversation stratum remains `not-run`.
+
+The same review also established the safe recovery route already in use by the
+8 h soak: `cognitive daemon start --bind 127.0.0.1:48282 …`; its hourly restart
+records are separate B5 evidence, not retroactive UJ2 samples.
+
+**Unique next action:** continue the active `B5` 8 h denominator to 480/480
+minute records, append its result immediately, and run no 24 h cell unless an
+actual unresolved 8 h slope triggers the plan condition.

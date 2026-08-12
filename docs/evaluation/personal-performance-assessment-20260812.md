@@ -4,21 +4,24 @@
   [Operating Model §2.5](../governance/DEVELOPMENT-OPERATING-MODEL.md))
 - Execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Freeze and per-cell execution record: [20260812-personal-perf-eval-002-preregistration.md](../checkpoints/20260812-personal-perf-eval-002-preregistration.md)
-- Source revision: `4cbec8470bc7a19f23f978e8754ed20133122eb1` (pushed, clean)
+- Source revisions: phases 1–2
+  `4cbec8470bc7a19f23f978e8754ed20133122eb1`; recovered phase-3 `B6`
+  `158e9276e49573db84aeb6ab55012d314368a76c` (both pushed and clean)
 - Environment: `B01-DESKTOP-002`, guest `B01-Desktop-Linux-002`
 - Claim level: **`hypothesis` / non-claim**
 - Independent verifier disposition: **`not_reviewed`**
 - Agent benefit claimed: **no**
-- Document status: final campaign report, phases 1 and 2
+- Document status: running final campaign report; phases 1 and 2 complete,
+  phase-3 recovery in progress
 
 ## 1. What this report says, and what it cannot say
 
 It reports measured latencies, counts, outcome classes, resource behaviour,
 authority outcomes and a **real paired Agent comparison** for CognitiveOS
-Personal, on a named guest, at one exact pushed revision, with every started
+Personal, on a named guest, at named exact pushed revisions, with every started
 sample retained.
 
-The campaign ran in two phases. **Phase 1** was measurement-only: Operating
+The original campaign ran in two phases. **Phase 1** was measurement-only: Operating
 Model §2.5 forbids implementing a missing runner or credential path
 mid-campaign, and both were missing, so the paired comparison was correctly
 recorded `not-run`. **Phase 2** followed an explicit owner scope change granting
@@ -29,6 +32,11 @@ negative, test or generated documentation source was modified in either phase.
 The phase-2 instruments — a pure-Pi credential broker, a frozen nine-family task
 corpus with mechanical oracles, and a paired runner — live only in ignored
 artifact roots and are pinned by digest.
+
+**Phase 3** was later closed as wholly `not-run`, but retained guest evidence
+proves that `B6` had already started and completed. Section 6b and the appended
+execution record supersede that one phase-3 disposition without rewriting or
+discarding the earlier publication.
 
 It still does **not** establish a Gate, a release, a Profile, a B01 or B01-W
 outcome. The claim ceiling stays `hypothesis` and the independent verifier
@@ -61,6 +69,14 @@ not generate more text. And the broker that makes the pure-Pi arm possible adds
 0.5 ms. What remains — roughly 2 s — sits in the Extension's per-request path
 inside Pi, which is an inference from independently measured parts rather than a
 directly observed stage, and needs nested per-run timing to confirm.
+
+**0c. The recovered post-P2-T11 replay does not show a measurable change.**
+All 270 frozen held-out blocks / 540 runs completed as a retained `B6` replay at
+`158e9276e49573db84aeb6ab55012d314368a76c`: completion delta changed by
++0.37 pp versus B2 (95 % task-cluster CI [−3.33, +4.07] pp), and median paired
+overhead changed by −91.5 ms over the 269 common completed blocks (95 % CI
+[−219.9, +31.2] ms). Both include zero. This is a post-P2-T11-only replay; it
+predates and says nothing about P2-T10.
 
 **1. The product reports `ready`, and even `first_conversation_ready: true`, on
 a Provider path that cannot work.** All 80 Provider requests failed closed with
@@ -133,13 +149,31 @@ execution-ready.
 | **Phase 2** `B1` pilot paired | paired runner | 180 / 180 | **pass** |
 | **Phase 2** `B2` confirmatory paired (held-out) | paired runner | 540 / 540 | **pass** |
 | **Phase 2** attribution ablations | 3 experiments | 30 + 24 + 12 | **pass** |
+| **Phase 3 recovered** `B6` post-P2-T11 replay | unchanged paired runner | 540 / 540 | **pass**; no measurable change |
+| **Phase 3 recovered** `O-NESTED-PILOT` | passive loopback observer | 20 / 20 | **partial**; cross-clock decomposition invalid |
+| **Phase 3** `UJ2` cold/warm conversation | paired runner + public daemon lifecycle | 20 new / 20 retained | **partial**; warm works, cold=`instrument_error`, Pi-warm unavailable |
+| **Phase 3** `B3` client deadline | frozen route runner | 10 / 10 | **partial**; bounded `outcome_unknown` |
+| **Phase 3** `B3` daemon/broker unavailable | paired runner + controlled process stop | 20 new / 20 retained | **partial**; daemon fails closed, broker fault confounded |
+| **Phase 3** `B3` Pi process kill | frozen Pi + controlled SIGKILL | 10 / 10 | **pass**; 0 orphans |
+| **Phase 3** `B3` response-size bound | — | 0 / 0 | **not-run**; no controlled oversize fixture |
+| **Phase 3** `B3` model mismatch | frozen route runner | 10 / 10 | **pass**; denied before dispatch |
+| **Phase 3** `B3` upstream timeout / rate limit | — | 0 / 0 each | **not-run**; no controlled fixture |
+| **Phase 3** `B3` stale Task / epoch | — | 0 / 0 | **not-run**; no public execution commit path |
+| **Phase 3** optional `T3` Tool selection | — | 0 / 0 | **not-run**; no frozen pilot task/oracle |
+| **Phase 3** `B4` mixed Agent/local | paired runner + health/status/doctor | 310 / 310 | **partial**; executed subset all passed |
 | Cleanup, secret scan, boundary check | scan + reconciliation | 30 evidence files | **pass** |
 | `A3`/`A6`/`A7`, `G*-C1/C2`, `A1-C1` | — | 0 | **not-run** (no OS product path) |
 | `S4`/`S8`, `T4`–`T9`, `O4`–`O6` | — | 0 | **not-run** (no governed consumer / production caller) |
 | `O2`/`O3` Context, `O14` backup/restore | — | 0 | **`not_available`** (no public observation surface) |
 | `B5` 8 h / 24 h, `B6` replay | — | 0 | **not-run** (gated on prior exits) |
 
-Total retained samples: **4739**. Warmups (three per Provider cell, three per
+The last row is the phase-2 publication-time disposition. The recovered `B6`
+row above supersedes its `B6` half; `B5` 8 h / 24 h remain to be dispositioned.
+
+Total retained samples: **5679** (4739 through phase 2, 540 recovered `B6`
+runs, 20 recovered nested-timing pilot runs, and 20 new `UJ2` cold-stratum
+runs, 10 phase-3 deadline requests, 20 broker-fault runs, 10 Pi-kill runs, and
+10 model-mismatch requests, plus 310 mixed-profile Agent/local samples). Warmups (three per Provider cell, three per
 UJ3 surface, three before the `O1` cell, two before each paired batch) were
 discarded before their cells began and are not counted; no started sample was
 discarded anywhere.
@@ -174,6 +208,29 @@ reported: there is no pricing snapshot and no Provider call succeeded.
 Pure-Pi broker latency, OS Pi route latency and Pi launch cost are **`not-run`**.
 The P9-T04 observation that Pi launch adds roughly 3.5 s over the same call
 through the daemon client could not be re-measured at this revision.
+
+The preceding two sentences describe the phase-1 boundary only; phase 2
+subsequently measured the broker and working OS Pi route, and phase 3 adds the
+strata below.
+
+### 4a. `UJ2` cold/warm strata at the post-P2-T11 revision
+
+The daemon-warm/Pi-cold stratum is the recovered `B6` batch: each Agent
+invocation starts a fresh Pi process while the daemon and broker remain warm.
+Across the full 270-pair denominator, `P` completed 240 and `O` completed 243.
+On the ten `A4` task inputs reused for the cold comparison, both arms completed
+10/10 with wall medians 4008.5 ms (`P`) and 6160.0 ms (`O`).
+
+The attempted daemon-cold/Pi-cold sub-cell retained 10 pairs / 20 runs. `P`
+completed 10/10 at 3882.8 ms median; `O` completed 0/10 because every daemon
+start returned exit 1 before the fresh Pi process could reach a Provider
+exchange. Review then found the orchestration had omitted the campaign's
+required `--bind 127.0.0.1:48282` and fallen onto the CLI's 48181 default, where
+the untouched P9-T04 daemon was already listening. The samples remain retained
+as daemon-unavailable evidence but the UJ2 cold stratum is `instrument_error`,
+not a product result, and no cold/warm latency comparison is made.
+Daemon-warm/Pi-warm is `not_available`: neither the product path nor the frozen
+runner reuses a persistent Pi process.
 
 ## 5. General Agent result (plan §11.2)
 
@@ -263,6 +320,50 @@ threshold (>=10 % completion or >=20 % time/token reduction) is not met in the
 OS arm's favour, and `not_available` token data alone would disqualify the
 claim. The honest summary is parity in task success with a measurable time cost.
 
+## 6b. Recovered post-P2-T11 `B6` replay
+
+The guest retained **270 / 270 paired blocks, 540 / 540 started runs**, at exact
+pushed revision `158e9276e49573db84aeb6ab55012d314368a76c`; both arms retained
+the same `G3` block as a 180 s timeout, so 269 blocks completed in both arms.
+The corpus and runner digests are byte-identical to B2, and all 270 task IDs,
+families, difficulty strata, replicas, seed digests, prompt digests, and arm
+orders match B2 line-for-line.
+
+| Endpoint | B2 | B6 |
+|---|---:|---:|
+| `P` completion | 240/270 = 88.9 % | 240/270 = 88.9 % |
+| `O` completion | 242/270 = 89.6 % | 243/270 = 90.0 % |
+| completion delta `O − P` | +0.7 pp, CI [−2.22, +3.70] | +1.1 pp, CI [−1.48, +4.07] |
+| paired wall delta | +1828.5 ms, CI [1753.6, 1893.9] | +1731.6 ms, CI [1626.1, 1836.9] |
+| relative paired wall delta | +44.2 % | +42.7 % |
+
+The existing analyzer's paired before/after task-cluster bootstrap gives
+**+0.37 pp [−3.33, +4.07]** for the change in completion delta and
+**−91.5 ms [−219.9, +31.2]** for the change in median overhead. Neither is
+distinguishable from zero. P2-T11 corrected Provider readiness and a Skill
+revoke route; it did not target this C0 request path. The result is therefore
+replay stability evidence, not an optimization result. It predates P2-T10 and
+must never be cited as P2-T10 evidence.
+
+## 6c. Recovered nested-timing pilot
+
+An added 20-run passive-observer pilot is retained as **partial**: 20 / 20
+started runs remain, with 9 exact-marker successes and 11 failures. Eight runs
+made one Provider request; twelve made four. The retained status sequences were
+eight `(200)`, one `(503, 503, 503, 200)`, and eleven
+`(503, 503, 503, 503)`. Total process wall time was 18 036.5 ms median
+(MAD 709.8 ms, 4214.4–18 965.2 ms); the nine successful Provider responses
+spent 1041.9 ms median inside the passive daemon-plus-Provider relay.
+
+The intended pre-request / in-daemon / post-response decomposition is invalid:
+the wrapper used epoch wall-clock nanoseconds while the observer used monotonic
+`perf_counter_ns`, so cross-process subtraction yielded impossible values.
+Pre-request and post-response timing are therefore `not_available`; the
+instrument is not repaired or rerun in this measurement-only campaign. No raw
+body, header value, key, or model output was retained.
+
+## 7. Skill result (plan §11.4)
+
 Installation, selection and benefit must stay three separate denominators, and
 here two of the three are empty.
 
@@ -351,9 +452,14 @@ the product.
 | RSS across 10 restart cycles | 8828–9084 kB, no trend |
 | FD / threads across 10 cycles | constant 9 / constant 1 |
 | Selected-model mismatch | 10 / 10 denied before dispatch, **zero Provider dispatches** |
+| Phase-3 selected-model mismatch | 10 / 10 denied before dispatch at 30.72 ms median, zero Provider timing/usage |
 | Fail-closed Provider path | 80 / 80 refused, no plaintext fallback |
 | Client deadline 120 ms | 10 / 10 retained; max 125.35 ms, slightly past the deadline |
+| Phase-3 client deadline 120 ms | 10 / 10 retained; `PI_EXTENSION_DAEMON_UNREACHABLE` / `outcome_unknown`; 122.27 ms median, 123.38 ms max |
 | Client deadline 20 ms | **`not-run`** — the frozen runner applies the deadline to its own preflight and aborted before sampling |
+| Phase-3 daemon unavailable | 10 / 10 `O` runs failed closed with process exit 1 in 1747.0 ms median; retained from the invalidly bound UJ2 attempt, not double-counted or treated as cold-start evidence |
+| Phase-3 broker unavailable | 10 / 10 `P` and 10 / 10 `O` runs timed out at 180 s; broker-only attribution unavailable |
+| Phase-3 Pi process kill | 10 / 10 alive at 2 s, SIGKILL exit 137, 0 orphan Pi processes |
 | Pi kill, upstream timeout, rate limit, size bound, stale epoch, unknown outcome | **`not-run`** — need a credential or a reachable mutation path |
 
 Restart and cleanup behaviour is the strongest reliability result in this
@@ -382,8 +488,23 @@ is graceful and recovery is immediate: health returned to sub-1.5 ms within
 faster than the pre-overload baseline. RSS moved ~600 kB across the whole
 sequence with FD constant at 9.
 
-Agent throughput, Provider dispatch counts under concurrency and mixed
-Pi workload are **`not-run`**.
+Agent throughput, Provider dispatch counts under concurrency and mixed Pi
+workload were **`not-run` in phase 1**. Phase 3 executed the bounded subset that
+the retained instruments support:
+
+| Mixed profile | Agent result | health median | status median | doctor median |
+|---|---|---:|---:|---:|
+| c1 | 1/1 pair, both arms passed; P/O 5076.6 / 7363.8 ms | 0.51 ms | 1815.0 ms | 1824.5 ms |
+| c4 | 4/4 pairs, all arms passed; P/O medians 8613.3 / 14 995.8 ms | 2.68 ms | 1960.5 ms | 1812.5 ms |
+| post-load | no Agent | 0.65 ms | 1778.0 ms | 1790.0 ms |
+
+All 300 local operations succeeded, and all 10 Agent runs completed and passed
+their mechanical oracle. Health shows bounded queueing at c4 and returns to
+baseline afterwards. Status/doctor are already ~1.8 s after load is gone: that
+is the post-P2-T11 cost of resolving the Provider secret during readiness, not
+an Agent-concurrency effect. N=1/4 supports no tail, throughput, or
+non-inferiority claim. Six-resource get/watch and Task-watch were not run in the
+mixed profile because no retained driver composes them with live Agent load.
 
 ## 11a. The Pi route, as far as it can be observed (added cell `O-LAUNCH`)
 
@@ -638,7 +759,9 @@ This campaign does not pass or contribute to B01, B01-W, B02, B03, B04, B05,
 B06, B07, B08, B09, B10, B11, B12, or `GMVP-LINUX`. It authorizes no release, no
 Profile and no Windows claim. It does not promote local, fixture or ordinary CI
 evidence. The claim level is `hypothesis`, the independent verifier disposition
-is `not_reviewed`, and `not-run` remains `not-run`.
+is `not_reviewed`, and `not-run` remains `not-run` except where the append-only
+phase-3 recovery explicitly supersedes the earlier `B6` disposition with
+retained evidence.
 
 It **does** now contain a real paired comparison against pure Pi, but that
 comparison is bounded in four ways that must travel with any quotation of it:

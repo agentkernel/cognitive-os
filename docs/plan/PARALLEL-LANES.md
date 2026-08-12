@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-_No active lease. Claim one before writing._
+| `lease/personal/EVAL-20260813/performance-evaluation-002-recovery` | PERSONAL-PERF-EVAL-002 evidence recovery and remaining executable cells | Lane-DOC | `main` | `docs/evaluation/personal-performance-benchmark-execution-plan.md`; `docs/evaluation/personal-performance-assessment-20260812.md`; `docs/checkpoints/20260812-personal-perf-eval-002-preregistration.md`; `docs/plan/PROGRESS.md` | eval-recovery-worker | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
