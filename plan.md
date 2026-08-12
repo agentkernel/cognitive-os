@@ -1212,6 +1212,13 @@ Pi 不可以：
 
 - 长生命周期 store；Personal 垂直逻辑下沉；stage 计时对照。
 
+### P9-T04 — 全面性能与真实 Task campaign
+
+- ADR-0051 注册的单一 B01 campaign；先完成 secret-free correlation、stage timing、Provider
+  usage availability、transport/resource/evidence runner，再依序执行 L1--L5。
+- 只记录实际获得的 B01 campaign evidence；无 streaming timestamp 时 TTFT 不可用，缺失
+  Provider usage 必须为 `not_available`，L5 未达标时仍需完成 non-claim report 与 cleanup。
+
 ---
 
 # 12. 机器可读 typed dependency 图

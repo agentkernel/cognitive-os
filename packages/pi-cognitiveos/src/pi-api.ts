@@ -107,17 +107,19 @@ export interface PiAssistantMessage {
   readonly provider: string;
   readonly model: string;
   readonly usage: {
-    readonly input: number;
-    readonly output: number;
-    readonly cacheRead: number;
-    readonly cacheWrite: number;
-    readonly totalTokens: number;
+    /** Undefined means the daemon did not receive complete Provider counters. */
+    readonly input: number | undefined;
+    readonly output: number | undefined;
+    readonly cacheRead: number | undefined;
+    readonly cacheWrite: number | undefined;
+    readonly totalTokens: number | undefined;
     readonly cost: {
-      readonly input: number;
-      readonly output: number;
-      readonly cacheRead: number;
-      readonly cacheWrite: number;
-      readonly total: number;
+      /** Cost is unavailable until a campaign collector receives a priced source. */
+      readonly input: number | undefined;
+      readonly output: number | undefined;
+      readonly cacheRead: number | undefined;
+      readonly cacheWrite: number | undefined;
+      readonly total: number | undefined;
     };
   };
   readonly stopReason: "stop" | "error" | "aborted";

@@ -30,6 +30,7 @@ import {
   type PersonalDaemonPaths,
 } from "./daemon-discovery.js";
 import { DaemonClientError } from "./errors.js";
+import { randomBytes } from "node:crypto";
 
 /** Principal the Personal CLI uses for the local owner session. */
 export const LOCAL_OWNER_PRINCIPAL = "principal://local/owner";
@@ -82,7 +83,34 @@ export interface SelectedModelProjection {
 export interface BoundedCompletion {
   readonly content: string;
   readonly finishReason: "stop";
+  /** Opaque campaign metadata, never a bearer or user/provider payload. */
+  readonly correlationId: string;
+  /**
+   * Monotonic duration around the Pi-to-daemon loopback HTTP exchange only.
+   * It deliberately excludes Pi Context construction and Provider parsing.
+   */
+  readonly loopbackHttpElapsedNanos: number;
+  /**
+   * Daemon-measured duration of the outbound Provider transport exchange.
+   * It is unavailable when the daemon does not provide a valid telemetry header.
+   */
+  readonly providerNetworkElapsedNanos: number | undefined;
+  /**
+   * Numeric usage is retained only when the Provider supplied a complete,
+   * internally consistent OpenAI-compatible `usage` object. This is campaign
+   * telemetry, not a fallback token estimate.
+   */
+  readonly providerUsage: ProviderUsage;
 }
+
+export type ProviderUsage =
+  | { readonly availability: "not_available" }
+  | {
+      readonly availability: "measured";
+      readonly promptTokens: number;
+      readonly completionTokens: number;
+      readonly totalTokens: number;
+    };
 
 /** Private versioned resource projection accepted from the Personal daemon. */
 export interface ResourceProjection {
@@ -184,19 +212,29 @@ export class PersonalDaemonClient {
     const paths = resolvePersonalDaemonPaths(this.environment);
     const endpoint = readDaemonEndpoint(paths, this.files);
     const token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+    const correlationId = createCampaignCorrelationId();
+    const loopbackRequestStartedAt = performance.now();
     const response = await this.send(endpoint, "/provider/v1/chat/completions", {
       method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "x-cognitiveos-correlation-id": correlationId,
+      },
       body: JSON.stringify({ model, messages, stream: false }),
       ...(signal === undefined ? {} : { signal }),
     });
+    const loopbackHttpElapsedNanos = elapsedMonotonicNanos(loopbackRequestStartedAt);
+    const providerNetworkElapsedNanos = parsePositiveDurationHeader(
+      response.headers.get("x-cognitiveos-provider-network-nanos"),
+    );
     const bodyText = await readBodyText(response);
     if (response.status !== 200) {
       if (response.status === 401) this.managementSessionToken = undefined;
       throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
     }
     this.managementSessionToken = token;
-    return parseBoundedCompletion(bodyText);
+    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos, providerNetworkElapsedNanos, correlationId);
   }
 
   /** Read one private resource projection through the management channel. */
@@ -444,7 +482,12 @@ export function parseResourceProjection(
   };
 }
 
-export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
+export function parseBoundedCompletion(
+  bodyText: string,
+  loopbackHttpElapsedNanos: number = 1,
+  providerNetworkElapsedNanos: number | undefined = undefined,
+  correlationId: string = createCampaignCorrelationId(),
+): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
   if (!Array.isArray(choices) || choices.length !== 1) throw completionProtocolError();
@@ -458,7 +501,56 @@ export function parseBoundedCompletion(bodyText: string): BoundedCompletion {
     throw completionProtocolError();
   }
   if (choiceRecord["finish_reason"] !== "stop") throw completionProtocolError();
-  return { content: messageRecord["content"], finishReason: "stop" };
+  return {
+    content: messageRecord["content"],
+    finishReason: "stop",
+    correlationId,
+    loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
+    providerNetworkElapsedNanos,
+    providerUsage: parseProviderUsage(record["usage"]),
+  };
+}
+
+function createCampaignCorrelationId(): string {
+  return `campaign-${randomBytes(16).toString("hex")}`;
+}
+
+function parsePositiveDurationHeader(value: string | null): number | undefined {
+  if (value === null || !/^\d+$/.test(value)) return undefined;
+  const elapsedNanos = Number(value);
+  return Number.isSafeInteger(elapsedNanos) && elapsedNanos > 0 ? elapsedNanos : undefined;
+}
+
+function elapsedMonotonicNanos(startedAt: number): number {
+  return Math.max(1, Math.round((performance.now() - startedAt) * 1_000_000));
+}
+
+function parseProviderUsage(value: unknown): ProviderUsage {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { availability: "not_available" };
+  }
+  const usage = value as Record<string, unknown>;
+  const promptTokens = usage["prompt_tokens"];
+  const completionTokens = usage["completion_tokens"];
+  const totalTokens = usage["total_tokens"];
+  if (
+    !isNonnegativeSafeInteger(promptTokens)
+    || !isNonnegativeSafeInteger(completionTokens)
+    || !isNonnegativeSafeInteger(totalTokens)
+    || promptTokens + completionTokens !== totalTokens
+  ) {
+    return { availability: "not_available" };
+  }
+  return {
+    availability: "measured",
+    promptTokens,
+    completionTokens,
+    totalTokens,
+  };
+}
+
+function isNonnegativeSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function parseJsonRecord(bodyText: string, label: string): Record<string, unknown> {

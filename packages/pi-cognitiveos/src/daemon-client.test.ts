@@ -15,7 +15,11 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { test } from "node:test";
 
-import { PersonalDaemonClient, parseReadinessProjection } from "./daemon-client.js";
+import {
+  PersonalDaemonClient,
+  parseBoundedCompletion,
+  parseReadinessProjection,
+} from "./daemon-client.js";
 import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
 import { DaemonClientError, isDaemonUnavailable } from "./errors.js";
@@ -56,6 +60,86 @@ function filesFor(endpoint: string, secret: string = BOOTSTRAP_SECRET): FileRead
     },
   };
 }
+
+test("Provider usage is measured only for complete internally consistent counters", () => {
+  const measured = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+  }));
+  assert.deepEqual(measured.providerUsage, {
+    availability: "measured",
+    promptTokens: 7,
+    completionTokens: 3,
+    totalTokens: 10,
+  });
+
+  const missingUsage = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+  }));
+  assert.deepEqual(missingUsage.providerUsage, { availability: "not_available" });
+
+  const inconsistentUsage = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 9 },
+  }));
+  assert.deepEqual(inconsistentUsage.providerUsage, { availability: "not_available" });
+
+  const zeroDuration = parseBoundedCompletion(JSON.stringify({
+    choices: [{ message: { content: "bounded" }, finish_reason: "stop" }],
+  }), 0);
+  assert.equal(zeroDuration.loopbackHttpElapsedNanos, 1);
+});
+
+test("Provider-network timing is accepted only from a positive daemon telemetry header", async () => {
+  const measuredDaemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    providerNetworkElapsedNanos: "123456",
+  });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(measuredDaemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.equal(completion.providerNetworkElapsedNanos, 123456);
+  } finally {
+    await measuredDaemon.close();
+  }
+
+  const malformedDaemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    providerNetworkElapsedNanos: "0",
+  });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(malformedDaemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.equal(completion.providerNetworkElapsedNanos, undefined);
+  } finally {
+    await malformedDaemon.close();
+  }
+});
+
+test("completion dispatch carries only an opaque campaign correlation header", async () => {
+  const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}" });
+  try {
+    const completion = await new PersonalDaemonClient({
+      environment: ENVIRONMENT,
+      files: filesFor(daemon.endpoint),
+    }).completeChat("deepseek-v4-flash", []);
+    assert.match(completion.correlationId, /^campaign-[0-9a-f]{32}$/);
+    const completionRequest = daemon.requests.find(
+      (request) => request.url === "/provider/v1/chat/completions",
+    );
+    assert.ok(completionRequest);
+    assert.equal(completionRequest.headers["x-cognitiveos-correlation-id"], completion.correlationId);
+    assert.ok(!completionRequest.body.includes(completion.correlationId));
+  } finally {
+    await daemon.close();
+  }
+});
 
 test("a session is minted and the readiness projection is returned verbatim", async () => {
   const daemon = await startFakeDaemon({

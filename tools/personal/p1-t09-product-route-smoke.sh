@@ -145,6 +145,7 @@ if ! timeout 5 env -i \
     XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}" \
     XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" \
     XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}" \
+    XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}" \
     XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
     "$pi_executable" --version >"$pi_version_output" 2>&1; then
     printf '{"status":"error","phase":"pi_version","error_class":"pi_version_probe_failed","authority_side_effects":false}\n'
@@ -167,6 +168,7 @@ timeout "$timeout_seconds" env -i \
     XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}" \
     XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" \
     XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}" \
+    XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}" \
     XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
     "$pi_executable" \
         --extension "$extension_entry" \
