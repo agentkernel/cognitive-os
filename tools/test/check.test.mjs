@@ -201,10 +201,19 @@ function injectEvaluationLease(leaseRow) {
         normalized.includes(evaluationLeaseTableHeader),
         "canonical active lease table header must exist",
       );
-      const injected = normalized.replace(
-        evaluationLeaseTableHeader,
-        `${evaluationLeaseTableHeader}\n${leaseRow}`,
-      );
+      // Replace the active-lease table body rather than appending to it, so the
+      // fixture exercises the injected lease in isolation. Appending would make
+      // the outcome depend on whichever real task lease happens to be active,
+      // and any real lease that also owns `docs/plan/PROGRESS.md` would trip the
+      // overlapping-writable-paths rule instead of the behaviour under test.
+      const headerIndex = normalized.indexOf(evaluationLeaseTableHeader);
+      const bodyStart = headerIndex + evaluationLeaseTableHeader.length;
+      const remainder = normalized.slice(bodyStart);
+      const existingRows = remainder.match(/^(?:\n\|[^\n]*)*/)?.[0] ?? "";
+      const injected =
+        normalized.slice(0, bodyStart) +
+        `\n${leaseRow}` +
+        remainder.slice(existingRows.length);
       return source.includes("\r\n") ? injected.replace(/\n/g, "\r\n") : injected;
     },
     "docs/plan/PROGRESS.md": (source) => {

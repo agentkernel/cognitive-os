@@ -41,7 +41,10 @@ claim ceilings.
 - Execute the plan's preregistered batch order (qualification first). Freeze
   manifests, seeds, oracles, and runners before guest execution; retain every
   started sample; `retry=0` for Provider cells; record every cell
-  `pass/fail/partial/not-run`.
+  `pass/fail/partial/not-run`. Per Operating Model
+  `TEST-REPORT-INCREMENTAL-01`, append each finished cell to the campaign's
+  single running report document as soon as it completes; never hold
+  conclusions until the end of a batch.
 - **Measurement-only:** never modify product code, contracts, negatives,
   tests, or generated documentation sources to make a cell runnable. A missing
   capability, runner, or credential path is `not-run`/`not_available` — not a

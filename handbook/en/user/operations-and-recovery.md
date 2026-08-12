@@ -17,7 +17,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:ef459476c20a71de1c4c674b63fcac101a95030bd8e0f143a75deff2dcad8d05"
+fingerprint: "sha256:88e38bb7bef16ef56fc45a825c514fd5edc0008fe65ef8d408f410b58a9120d8"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -28,9 +28,12 @@ non_claims:
 
 - `cognitive status` / `cognitive doctor`: six components (system, database,
   secret, provider, daemon, pi) with `blocked | degraded | ready` levels plus
-  `first_conversation_ready`. Doctor adds redacted six-resource, headless-vault,
-  and operability sections (currently static `not_run`/`not_configured` reports —
-  redaction validators more than live probes).
+  `first_conversation_ready`. The `provider` component resolves the configured
+  `secret_ref`, so a Provider whose stored key was removed reports
+  `provider_secret_unresolvable` and blocks rather than claiming ready; re-run
+  `cognitive init` to store the key again. Doctor adds redacted six-resource,
+  headless-vault, and operability sections (currently static
+  `not_run`/`not_configured` reports — redaction validators more than live probes).
 - `GET /personal/health` (no auth) is liveness only — the installer and service
   controller use it; don't read readiness into it.
 - Service logs: `journalctl --user -u cognitiveos-personal.service`.

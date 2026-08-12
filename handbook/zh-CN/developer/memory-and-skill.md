@@ -18,7 +18,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:c84efc2f816f07b153422ac9ca5f715b16caddafa8ab634997469c8d3743fa47"
+fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -52,6 +52,8 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 ## HTTP 可及面
 
 management 通道：remember/forget、skill import/bind/revoke、object/explain 读取。
+`skill/binding/revoke` 必须先于 `skill/bind` 匹配：后者是前者的前缀，否则每次撤销都
+会落到 bind handler。
 task 通道：task 绑定的投影/watch，以及把选中 Memory/Skill 来源绑定到当前
 TaskContract/ContextRequest 事实的消费记录（被撤销/遗忘/过期项由同一权威读取排
 除）。task bearer 在任何管理变更前即被拒绝。

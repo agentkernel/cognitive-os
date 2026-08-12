@@ -8,12 +8,13 @@
 //! Ownership: lives in the Personal composition root (`kernel-server`) so
 //! Personal does not take Lane-RUN ownership of `cognitive-management`.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_secret::{
-    ProviderConfigError, ProviderConfigRepository, SecretStoreAvailability, SecretStoreClass,
-    SelectedModelRepository, select_production_secret_store,
+    ProviderConfigError, ProviderConfigRepository, ProviderKeyService, ProviderKeyServiceError,
+    SecretStoreAvailability, SecretStoreClass, SelectedModelRepository,
+    select_production_secret_store,
 };
 use cognitive_store::PersonalDataLayout;
 use serde_json::{Value, json};
@@ -117,6 +118,9 @@ pub struct ReadinessEvaluationContext {
     pub secret_probe_override: Option<SecretProbeObservation>,
     /// Optional override for Provider config path (defaults to layout config).
     pub provider_config_path_override: Option<PathBuf>,
+    /// Optional override for the Provider secret-ref resolution observation
+    /// (tests inject; production None).
+    pub provider_secret_resolution_override: Option<ProviderSecretResolution>,
     /// Optional override for the Pi runtime observation (tests inject; production None).
     pub pi_observation_override: Option<PiRuntimeObservation>,
 }
@@ -126,6 +130,23 @@ pub struct ReadinessEvaluationContext {
 pub struct SecretProbeObservation {
     pub class: SecretStoreClass,
     pub availability: SecretStoreAvailability,
+}
+
+/// Whether the configured Provider `secret_ref` actually resolves.
+///
+/// A reachable SecretStore does not imply that the reference recorded in
+/// `provider.json` still points at a stored item: a cleanup can remove the item
+/// and leave the reference behind. Readiness must distinguish the two, so this
+/// observation is derived from a real resolution attempt. It carries no secret
+/// material and the resolved bytes are dropped immediately.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProviderSecretResolution {
+    /// The configured ref resolved to stored material.
+    Resolves,
+    /// The backend answered, and the configured ref has no stored item.
+    Missing,
+    /// The backend could not answer, so resolvability is unknown.
+    Unavailable,
 }
 
 /// Evaluate Personal readiness from filesystem and probe facts.
@@ -535,6 +556,9 @@ fn check_provider(
     let repository = ProviderConfigRepository::from_file_path(&config_path);
     match repository.load() {
         Ok(config) => {
+            let resolution = context
+                .provider_secret_resolution_override
+                .unwrap_or_else(|| resolve_production_provider_secret(&config_path));
             let selected_snapshot_digest = config.selected_snapshot_digest();
             let digest_present = selected_snapshot_digest.is_some();
             let mut facts = vec![
@@ -553,6 +577,10 @@ fn check_provider(
                 ReadinessFact {
                     key: "secret_ref_present",
                     value: "true".to_owned(),
+                },
+                ReadinessFact {
+                    key: "secret_ref_resolves",
+                    value: provider_secret_resolution_token(resolution).to_owned(),
                 },
                 ReadinessFact {
                     key: "selected_snapshot_digest_present",
@@ -627,11 +655,25 @@ fn check_provider(
                     }
                 }
             };
+            // A configured Provider whose secret_ref no longer resolves cannot
+            // serve a single request, so it must never read as ready. This
+            // outranks the snapshot-digest verdict above.
+            let (status, error_class) = match resolution {
+                ProviderSecretResolution::Missing => (
+                    ComponentStatus::Blocked,
+                    Some("provider_secret_unresolvable"),
+                ),
+                ProviderSecretResolution::Unavailable => (
+                    ComponentStatus::Blocked,
+                    Some("provider_secret_store_unavailable"),
+                ),
+                ProviderSecretResolution::Resolves => (status, error_class),
+            };
             ComponentCheck {
                 component: "provider",
                 status,
                 required: true,
-                source: "filesystem:provider-config",
+                source: "filesystem:provider-config+secret-store:resolve",
                 duration_ms: elapsed_ms(started),
                 observed_at_unix_ms,
                 error_class,
@@ -791,6 +833,28 @@ fn probe_production_secret_store() -> SecretProbeObservation {
     }
 }
 
+/// Attempt to resolve the configured Provider secret ref against the production
+/// SecretStore. The resolved material is dropped immediately and never enters a
+/// fact, a log, or the report; only the three-way outcome is retained.
+fn resolve_production_provider_secret(config_path: &Path) -> ProviderSecretResolution {
+    let repository = ProviderConfigRepository::from_file_path(config_path);
+    let backend = select_production_secret_store();
+    let service = ProviderKeyService::new(backend.as_secret_store(), repository);
+    match service.resolve_provider_material() {
+        Ok(_material) => ProviderSecretResolution::Resolves,
+        Err(ProviderKeyServiceError::SecretMissing) => ProviderSecretResolution::Missing,
+        Err(_) => ProviderSecretResolution::Unavailable,
+    }
+}
+
+fn provider_secret_resolution_token(resolution: ProviderSecretResolution) -> &'static str {
+    match resolution {
+        ProviderSecretResolution::Resolves => "true",
+        ProviderSecretResolution::Missing => "false",
+        ProviderSecretResolution::Unavailable => "unknown",
+    }
+}
+
 fn presence_token(present: bool) -> String {
     if present {
         "present".to_owned()
@@ -911,6 +975,7 @@ mod tests {
             session_count: 0,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
@@ -939,6 +1004,7 @@ mod tests {
             session_count: 1,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: None,
         });
         // daemon lock/bootstrap may be missing → degraded or blocked; force
@@ -971,6 +1037,7 @@ mod tests {
             session_count: 1,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(missing_selected_model.overall, OverallReadiness::Blocked);
@@ -993,6 +1060,7 @@ mod tests {
             session_count: 1,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(mismatched_selected_model.overall, OverallReadiness::Blocked);
@@ -1006,6 +1074,83 @@ mod tests {
         assert_eq!(
             mismatched_provider.error_class,
             Some("provider_selected_model_digest_mismatch")
+        );
+    }
+
+    /// PERSONAL-PERF-EVAL-002 observed 80/80 Provider requests refused with
+    /// `PERSONAL_PROVIDER_SECRET_UNAVAILABLE` while `status` and `doctor`
+    /// reported `provider: ready`. A reachable backend is not a resolvable ref.
+    #[test]
+    fn dangling_provider_secret_ref_never_reads_as_ready() {
+        let layout = temp_layout("dangling-secret-ref");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
+        fs::write(layout.daemon_lock_path(), b"lock").unwrap();
+        fs::write(layout.local_bootstrap_secret_path(), b"bootstrap").unwrap();
+        let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 1,
+            // The backend itself is reachable; only the referenced item is gone.
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Missing),
+            pi_observation_override: Some(PiRuntimeObservation::Ready),
+        });
+        let provider = report
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider component");
+        assert_eq!(provider.status, ComponentStatus::Blocked);
+        assert_eq!(provider.error_class, Some("provider_secret_unresolvable"));
+        assert!(
+            provider
+                .facts
+                .iter()
+                .any(|fact| fact.key == "secret_ref_resolves" && fact.value == "false"),
+            "readiness must publish that the configured ref does not resolve"
+        );
+        assert_eq!(report.overall, OverallReadiness::Blocked);
+        assert!(
+            !report.first_conversation_ready,
+            "a first conversation cannot be ready without a resolvable Provider key"
+        );
+    }
+
+    /// An unreachable backend must not be reported as a resolvable ref either;
+    /// unknown is its own answer, not an optimistic one.
+    #[test]
+    fn unresolvable_provider_secret_store_blocks_rather_than_assumes() {
+        let layout = temp_layout("secret-store-unknown");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
+        let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 0,
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Unavailable),
+            pi_observation_override: Some(PiRuntimeObservation::Ready),
+        });
+        let provider = report
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider component");
+        assert_eq!(provider.status, ComponentStatus::Blocked);
+        assert_eq!(
+            provider.error_class,
+            Some("provider_secret_store_unavailable")
+        );
+        assert!(
+            provider
+                .facts
+                .iter()
+                .any(|fact| fact.key == "secret_ref_resolves" && fact.value == "unknown")
         );
     }
 
@@ -1024,6 +1169,7 @@ mod tests {
             session_count: 2,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Ready);
@@ -1087,6 +1233,7 @@ mod tests {
             session_count: 1,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(report.overall, OverallReadiness::Ready);
@@ -1159,6 +1306,7 @@ mod tests {
                 session_count: 0,
                 secret_probe_override: Some(available_secret_probe()),
                 provider_config_path_override: None,
+                provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
                 pi_observation_override: Some(observation),
             });
             // `pi` is optional, so a broken Pi never rewrites the required-set
@@ -1196,6 +1344,7 @@ mod tests {
                 availability: SecretStoreAvailability::Locked,
             }),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
@@ -1228,6 +1377,7 @@ mod tests {
             session_count: 0,
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
+            provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
             pi_observation_override: None,
         });
         let doctor_text = doctor_projection_json(&report).to_string();

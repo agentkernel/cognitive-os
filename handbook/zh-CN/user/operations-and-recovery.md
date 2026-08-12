@@ -17,7 +17,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:ef459476c20a71de1c4c674b63fcac101a95030bd8e0f143a75deff2dcad8d05"
+fingerprint: "sha256:88e38bb7bef16ef56fc45a825c514fd5edc0008fe65ef8d408f410b58a9120d8"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -28,8 +28,10 @@ non_claims:
 
 - `cognitive status` / `cognitive doctor`：六组件（system、database、secret、
   provider、daemon、pi），级别为 `blocked | degraded | ready`，另有
-  `first_conversation_ready`。doctor 追加脱敏的六资源、headless vault 与可运维性小节
-  （当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
+  `first_conversation_ready`。`provider` 组件会真实解析配置中的 `secret_ref`：若已存
+  的密钥被移除，它报 `provider_secret_unresolvable` 并阻塞，而不会谎称 ready——重新执行
+  `cognitive init` 即可再次存入密钥。doctor 追加脱敏的六资源、headless vault 与可运维性
+  小节（当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
 - `GET /personal/health`（免认证）仅是存活探测——安装器与服务控制器使用它；不要把
   readiness 读进去。
 - 服务日志：`journalctl --user -u cognitiveos-personal.service`。

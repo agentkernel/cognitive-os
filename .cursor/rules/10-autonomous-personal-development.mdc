@@ -12,6 +12,8 @@ semantics. The canonical workflow is
 including:
 
 - `TASK-ATOMIC-DELIVERY-01`;
+- `TEST-REPORT-INCREMENTAL-01` (append every finished test/validation unit to
+ its single running report document immediately, before starting the next);
 - `CHECKPOINT-DELIVERY-01`;
 - `CONTINUOUS-AUTONOMOUS-DELIVERY-01`;
 - `CAMPAIGN-BACKLOG-CONTINUATION-01`;

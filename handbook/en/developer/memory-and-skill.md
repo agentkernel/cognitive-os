@@ -18,7 +18,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:c84efc2f816f07b153422ac9ca5f715b16caddafa8ab634997469c8d3743fa47"
+fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -58,7 +58,8 @@ bindings keep their exact pins — they never drift to a successor.
 ## HTTP reach
 
 Management channel: remember/forget, skill import/bind/revoke, object/explain
-reads. Task channel: task-bound projection/watch plus consumption records that
+reads. `skill/binding/revoke` is matched before `skill/bind`, since the shorter
+route is a prefix of the longer one and would otherwise handle every revoke. Task channel: task-bound projection/watch plus consumption records that
 bind selected Memory/Skill provenance to current TaskContract/ContextRequest
 facts (revoked/forgotten/expired items are excluded by the same authority reads).
 Task bearers are rejected before any management mutation.
