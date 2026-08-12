@@ -40,6 +40,15 @@ function readRepoText(rel) {
   return readFileSync(repoPath(...rel.split("/")), "utf8");
 }
 
+function revisionAvailable(revision) {
+  try {
+    execFileSync("git", ["-C", REPO_ROOT, "cat-file", "-e", `${revision}^{tree}`], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const diffBaseIndex = argv.indexOf("--diff-base");
@@ -104,11 +113,15 @@ function main() {
   }
 
   // ---- HB013: source-set record is reproducible from its recorded revision ------
+  // Shallow CI checkouts usually lack the baseline commit object; reproducibility
+  // is then skipped with a notice and enforced on full clones (authoring/closure).
   try {
     const sourceSet = JSON.parse(readRepoText("handbook/_meta/source-set.json"));
     const revision = sourceSet.implementation_baseline_revision;
     if (!/^[0-9a-f]{40}$/.test(revision ?? "")) {
       diagnostics.push({ rule: "HB013", file: "handbook/_meta/source-set.json", message: "implementation_baseline_revision must be a full 40-hex commit" });
+    } else if (!revisionAvailable(revision)) {
+      console.log(`check-handbook: note — source-set baseline ${revision.slice(0, 12)} is not in this (shallow) clone; digest reproducibility skipped here and verified on full clones`);
     } else {
       const lsTree = git("ls-tree", "-r", revision);
       const entries = [];

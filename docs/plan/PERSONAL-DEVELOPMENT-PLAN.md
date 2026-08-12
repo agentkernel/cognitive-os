@@ -157,9 +157,9 @@
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 0 | 3 | GMVP-LINUX / G7 / RC |
-| Phase 8 - 通用 Agent 适配与设计基线 | 7 | 6 | 1 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
+| Phase 8 - 通用 Agent 适配与设计基线 | 7 | 7 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 4 | 4 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **64** | **56** | **1** | **0** | **7** | — |
+| **合计** | **64** | **57** | **0** | **0** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -734,7 +734,7 @@ Linux 1.0 的 `GMVP-LINUX` 组合与非阻塞边界；除 P8-T01 的文档基线
 | P8-T04 | Harness 扩展原语：确定性 hooks 与分级加载 | P8-T01, P2-T08 | daemon-owned 生命周期拦截点（admission/pre-dispatch/post-effect/verification 事件）与 owner 可编程确定性 hooks；Skill/规则按 context 成本分级加载；hooks 不得放松任何公理边界 | done | 2026-08-11；`lease/personal/P8-T04/harness-hooks` on `personal/P8-T04-harness-hooks` / PR #188. D01–D04 complete; Linux evidence through `bc3dacd`; required CI `31457314002` on `15e7200`. Closure: `docs/checkpoints/20260811-personal-p8-t04-harness-hooks-closure.md`. No Gate/release/Profile claim. |
 | P8-T05 | Context compaction 与自适应预算 | P8-T01, P3-T04 | daemon-owned 会话/Context 压缩与汇总策略；预算自适应；压缩产物走 digest 绑定与显式损失记录；UCR-01 可复验收益观察 | done | 2026-08-11；`lease/personal/P8-T05/context-compaction` on `personal/P8-T05-context-compaction` / PR #189. D01–D04 complete; Linux evidence through `e15492a`; required CI `31459558236` on `1d2103e`. Closure: `docs/checkpoints/20260811-personal-p8-t05-context-compaction-closure.md`. No Gate/release/Profile claim. |
 | P8-T06 | 跨 episode 学习闭环 | P8-T01, P4-T05 | agent 自产 Skill/Memory 候选经既有 candidate→deterministic admission 进入 Skill revision/Memory 生命周期；失败经验（Reflexion 谱系）沉淀为可解释、可撤销的治理事实；不引入自授权 | done | 2026-08-11；`lease/personal/P8-T06/learning-loop` on `personal/P8-T06-learning-loop` / PR #190. D01–D04 complete; Linux evidence through `b81414d`; required CI `31461384771` on `29399b7`. Closure: `docs/checkpoints/20260811-personal-p8-t06-learning-loop-closure.md`. No Gate/release/Profile claim. |
-| P8-T07 | 独立双语 handbook 文档系统 | P8-T01 | 新建独立 `handbook/`（en + zh-CN 平行树，user/developer/reference/AI 四类读者入口）；机器 manifest、frontmatter schema、source-map、tracked-source coverage、per-page source fingerprint 与 source-set 记录；CLI/HTTP/错误/配置/env/transition/schema/tool catalog reference 从实现与机器合同生成；独立 `check-handbook` 检查器带 focused negative fixtures（缺源、陈旧指纹、断链、未映射新文件、非法状态、生成漂移、缺双语、secret-shaped、动态状态复制、History 引用）；`.cursor/rules/20` 同步适配、根 `llms.txt` 与 AGENTS 单指针接入；不建立第二事实源，不复制 `PROGRESS.md` 动态状态，与基线相比现有文档除最小治理记账外字节不变。documentation-only + 工具，不改 specs/conformance 机器合同 | in-progress | 2026-08-12 owner 指令登记；`lease/personal/P8-T07/independent-handbook` on `personal/P8-T07-independent-handbook`；阅读基线 `9fbd3904a1f8e0893fcb7d8d2b434e636d546e8c`、实现基线 `6b637a5194dc56b568d2be25bb9ceb3bb24a0f72`；无 Gate/release/Profile claim |
+| P8-T07 | 独立双语 handbook 文档系统 | P8-T01 | 新建独立 `handbook/`（en + zh-CN 平行树，user/developer/reference/AI 四类读者入口）；机器 manifest、frontmatter schema、source-map、tracked-source coverage、per-page source fingerprint 与 source-set 记录；CLI/HTTP/错误/配置/env/transition/schema/tool catalog reference 从实现与机器合同生成；独立 `check-handbook` 检查器带 focused negative fixtures（缺源、陈旧指纹、断链、未映射新文件、非法状态、生成漂移、缺双语、secret-shaped、动态状态复制、History 引用）；`.cursor/rules/20` 同步适配、根 `llms.txt` 与 AGENTS 单指针接入；不建立第二事实源，不复制 `PROGRESS.md` 动态状态，与基线相比现有文档除最小治理记账外字节不变。documentation-only + 工具，不改 specs/conformance 机器合同 | done | 2026-08-12；D01–D04 on `personal/P8-T07-independent-handbook` / PR #202。54 文档 ×2 语言 + 9 生成族；checker 负例 15/15、`check-handbook`/`generate --check`/`--diff-base`/consistency/tools 49/49 本地全绿；required CI 于 PR #202 收口头（内容头 run `31572262460` 除浅克隆 HB013 外全绿，收口头带修复）。阅读基线 `9fbd390`、实现基线 `6b637a5`。Closure：`docs/checkpoints/20260812-personal-p8-t07-independent-handbook-closure.md`。无 Gate/release/Profile claim |
 
 ### Phase 9 - 性能与结构演进（工程健康候选池）
 

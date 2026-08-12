@@ -45,9 +45,11 @@ never be confused with a registered contract digest.
   `cognitiveos-handbook-source-set/0.1\n`).
 
 The checker verifies internal consistency (the digest is reproducible from the recorded
-revision via `git ls-tree`). It does not require the record to equal the current HEAD;
-new files are instead caught by the coverage check, and stale pages by per-page
-fingerprints.
+revision via `git ls-tree`) whenever that revision is present in the local object store
+— authoring machines and full clones. Shallow CI checkouts skip the reproducibility
+recomputation with a printed notice and still enforce the record's shape. The record is
+not required to equal the current HEAD; new files are instead caught by the coverage
+check, and stale pages by per-page fingerprints.
 
 ## 3. Generated pages
 
