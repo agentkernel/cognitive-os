@@ -1,0 +1,8 @@
+{
+  "schema": "cognitiveos-handbook-source-set/0.1",
+  "description": "Implementation baseline the handbook content was authored against. The digest is reproducible from `git ls-tree -r <revision>` minus the exclusions listed in handbook/_meta/generation.md; verified by check-handbook rule HB013.",
+  "implementation_baseline_revision": "6b637a5194dc56b568d2be25bb9ceb3bb24a0f72",
+  "reading_baseline_revision": "9fbd3904a1f8e0893fcb7d8d2b434e636d546e8c",
+  "tracked_entries": 1150,
+  "digest": "sha256:714ab8523ca381cef6287884192bd200ed8dc0690618363382cf881e1ad159b2"
+}

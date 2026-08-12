@@ -1,0 +1,64 @@
+---
+doc_id: dev.memory-skill
+locale: en
+kind: concept
+audience: [developer]
+status: implemented
+generated: false
+sources:
+  - path: crates/cognitive-store/src/sqlite/memory.rs
+  - path: crates/cognitive-store/src/memory_admission.rs
+    symbols: ["admit_memory_candidate"]
+  - path: crates/cognitive-kernel/src/memory_admission.rs
+    symbols: ["decide_memory_admission"]
+  - path: crates/cognitive-store/src/sqlite/harness_skill.rs
+  - path: apps/kernel-server/src/personal/resource_api.rs
+tests:
+  - crates/cognitive-store/tests/p4_t01_memory_store.rs
+  - crates/cognitive-store/tests/p4_t02_memory_search.rs
+  - crates/cognitive-store/tests/p4_t04_skill_store.rs
+  - apps/kernel-server/tests/p4_t05_resource_api.rs
+fingerprint: "sha256:02bf5e97faddb02be7610b2ba697d92b5cb6079c86aa318964eb3e4943078e9a"
+non_claims:
+  - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
+---
+
+# Memory and Skill
+
+## Memory: candidate → decision → object
+
+Nothing writes a `MemoryObject` directly. The service seam
+(`admit_memory_candidate`, the daemon's only production caller path via
+`POST /management/resource/v1/memory/remember`) reloads the current Context
+source, re-derives the deterministic policy outcome (`decide_memory_admission`),
+and rejects any caller-supplied decision that disagrees — then persists candidate
++ reason-coded decision + object + version row + FTS row in one transaction,
+re-verifying the source binding (stale source ⇒ conflict).
+
+Lifecycle is append-only facts: forget and expiry tombstones (exact deadline
+checks, duplicate sweeps rejected), versioned replacement under expected-version
+CAS with `UNIQUE(supersedes_memory_id)` lineage, and atomic FTS row moves. The
+FTS5 index is disposable: rebuilds repopulate only from authority rows, so
+tombstoned Memory can never resurrect through the index.
+
+Retrieval (`search_memory_candidates`) runs the authority filter CTE first
+(admitted decision, no tombstone, exact scope+purpose, unexpired retention,
+current source binding) and only then `MATCH`, ranked by `bm25` with stable
+tie-breaks.
+
+## Skill: immutable packages, exact pins
+
+Import rejects unsafe local provenance (absolute/UNC/`..` paths) and
+digest/payload drift; package + revision commit atomically. Bindings demand a
+`compatible` revision in the same workspace scope; revocations are separate
+immutable facts (active = status active AND no revocation row); same-package
+supersession appends lineage with one successor per revision, and existing
+bindings keep their exact pins — they never drift to a successor.
+
+## HTTP reach
+
+Management channel: remember/forget, skill import/bind/revoke, object/explain
+reads. Task channel: task-bound projection/watch plus consumption records that
+bind selected Memory/Skill provenance to current TaskContract/ContextRequest
+facts (revoked/forgotten/expired items are excluded by the same authority reads).
+Task bearers are rejected before any management mutation.

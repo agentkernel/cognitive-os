@@ -1,0 +1,12 @@
+{
+  "schema": "cognitiveos-handbook-tool-catalog/0.1",
+  "description": "Hand-maintained annotations for the generated native Tool catalog reference. The generator extracts `native.*.*` ids from crates/cognitive-kernel/src/tool_registry.rs and fails on any bidirectional mismatch.",
+  "tools": [
+    { "id": "native.workspace.read", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded read of a validated relative path inside an admitted workspace root.", "description_zh": "在已准入 workspace 根内对经校验相对路径的有界读取。" },
+    { "id": "native.workspace.search", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded search within admitted workspace roots.", "description_zh": "在已准入 workspace 根内的有界搜索。" },
+    { "id": "native.workspace.write", "risk": "WorkspaceMutation", "executor": "daemon.workspace", "description_en": "Governed workspace write; requires the persist-before-dispatch Intent/Effect path.", "description_zh": "受治理的 workspace 写入；要求 persist-before-dispatch 的 Intent/Effect 路径。" },
+    { "id": "native.workspace.patch", "risk": "WorkspaceMutation", "executor": "daemon.workspace", "description_en": "Governed workspace patch (patch-shaped payload enforced by the pre-executor validator).", "description_zh": "受治理的 workspace patch（预执行校验器强制 patch 形状载荷）。" },
+    { "id": "native.process.check", "risk": "ProcessExecution", "executor": "daemon.process", "description_en": "Bounded registered check-command execution with timeout, output caps, and supervision.", "description_zh": "有界的已注册检查命令执行，含超时、输出上限与监督。" },
+    { "id": "native.http.fetch", "risk": "NetworkRead", "executor": "daemon.http", "description_en": "Read-only HTTPS GET/HEAD against an exact registered origin allowlist; no userinfo, port, query, or fragment.", "description_zh": "只读 HTTPS GET/HEAD，仅限精确注册的 origin 白名单；不允许 userinfo、端口、query 或 fragment。" }
+  ]
+}

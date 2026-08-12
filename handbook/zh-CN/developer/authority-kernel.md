@@ -1,0 +1,86 @@
+---
+doc_id: dev.authority-kernel
+locale: zh-CN
+kind: concept
+audience: [developer]
+status: implemented
+generated: false
+sources:
+  - path: crates/cognitive-kernel/src/engine.rs
+    symbols: ["TransitionEngine", "prepare_transition", "validate_registered_transition"]
+  - path: crates/cognitive-kernel/src/intent_chain.rs
+    symbols: ["record_user_intent", "admit_interpretation", "supersede_task_contract", "verify_task_binding_current"]
+  - path: crates/cognitive-kernel/src/effects.rs
+    symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
+  - path: crates/cognitive-kernel/src/authz.rs
+    symbols: ["authorize", "revalidate_grant", "capability_and_revocation_current"]
+  - path: crates/cognitive-kernel/src/budget.rs
+    symbols: ["check_and_debit"]
+  - path: crates/cognitive-kernel/src/recovery.rs
+    symbols: ["RECOVERY_ORDER", "run_recovery"]
+contracts:
+  - specs/transitions/effect.transitions.json
+  - specs/transitions/task.transitions.json
+  - specs/registry/errors.yaml
+tests:
+  - crates/cognitive-kernel/tests/engine_gate.rs
+  - crates/cognitive-kernel/tests/governance_gate.rs
+  - crates/cognitive-store/tests/m4_effects.rs
+  - crates/cognitive-store/tests/m4_recovery.rs
+fingerprint: "sha256:c5fc4946fb9158ed24ac7cc5b3dc0addcfa167a7358015757afb313f2a3e5ec6"
+non_claims:
+  - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
+---
+
+# 权威内核
+
+`cognitive-kernel` 是确定性内核：无 HTTP、无 SQLite、无模型 SDK。适配器实现其 port
+trait；参考适配器是 `cognitive-store`。
+
+## 十步转移门
+
+`TransitionEngine::prepare_transition` 按固定顺序校验：(1) 表 pin（注册转移表的版本
++ canonical digest）；(2) 权威行加载；(3) from 状态现时性；(4) `expected_version`
+CAS；(5) 边查找 `(from, to, reason)`；(6) 每个守卫必须在调用方声明集合中——缺失即
+fail-closed；(7) 必需证据以强引用提供；(8) 可选硬预算扣减（纯函数
+`check_and_debit`，并入同一提交）；(9) schema 形状的提交记录 + canonical 事件；
+(10) 单原子 `TransitionCommit`（对象 CAS + 事件 + 记录 + 预算 CAS + outbox +
+fencing epoch）。拒绝携带权威状态/版本与排序后的合法出口，并确定性映射到注册错误码
+（`STATE_CONFLICT`、`DIGEST_MISMATCH`、`STATE_STORE_UNAVAILABLE`、
+`RESOURCE_BUDGET_EXHAUSTED`，以及钉住的 `EFFECT_OUTCOME_UNKNOWN` 特例）。
+
+复合原子事务仅有两个受认可的旁路：纯校验器 `validate_registered_transition`（供
+candidate 准入）与 `PreparedTransition`（在 verified-continuation 消费内原样提
+交）。两者都保持精确的已校验提交。
+
+## Intent chain
+
+`record_user_intent` 在解释前固定原文；解释候选以提案持久化，其状态**推导**得出
+（实质歧义 ⇒ `clarification_required`）；`admit_interpretation` 是 admitted 解释的唯
+一构造器（权威身份 + 精确 digest）；`mint_task_contract` 要求可判定的验收条件并在合
+同 epoch CAS 下铸造；`supersede_task_contract` fence 旧 epoch 工作（在 mint 与
+dispatch 两个 sink 上 `INTENT_VERSION_SUPERSEDED`）并对在途 Effect 分类以待对账。
+
+## Effect：七性质、四 sink
+
+`mint_intent` 执行持久幂等算术：同键同 canonical 参数 digest 即重放；同键不同
+digest 为 `EFFECT_IDEMPOTENCY_CONFLICT`。`EffectProtocol` 驱动
+PROPOSED→AUTHORIZED→EXECUTING→…→COMMITTED，守卫只从持久重载推导
+（`intent_durably_persisted`、`capability_and_revocation_current`、
+`verification_still_current`）；dispatch 在外部调用**之前**先提交 EXECUTING；未知结
+果用原键对账或隔离。四个提交 sink（executor、权威提交、准入+outbox、checkpoint）都
+在存储事务内复核写者 fencing epoch。
+
+## 授权与预算
+
+`authorize` 走六步 fail-closed（authn/链 → 租户/成员 → 能力交集 + 撤销现时性 → 显
+式拒绝优先 → lease 窗口 → scope/purpose/action）。拒绝对存在性安全（denied 与
+not-found 字节相同）。`revalidate_grant` 在 dispatch 与 commit 时点复核 F-007 竞态。
+预算是九个注册维度上的纯整数台账。
+
+## 恢复
+
+`RECOVERY_ORDER` 固定八步（barrier → 身份/epoch → fence → 重放 → 对账 → 重授权 →
+重解析 context → 恢复 loop）；`run_recovery` 对 AUTHORIZED 工作用原键恰好一次重派
+发，把 EXECUTING 压入 OUTCOME_UNKNOWN 再对账，不确定者隔离，且只恢复 checkpoint 校
+验通过（epoch 更旧、水位在重放历史内）的 loop。

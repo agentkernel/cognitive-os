@@ -22,6 +22,11 @@
 handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历史 handoff、旧提示词和
 聊天上下文不能覆盖正式来源。禁止读取或引用 `History/`。
 
+面向使用者/开发者/AI 工具的派生说明书在 [`handbook/`](handbook/README.md)（双语；AI
+入口 `handbook/en/ai/README.md`）。它不拥有任何任务、Gate、合同或状态事实；改动实现
+时按 `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` 与
+`handbook/_meta/sync-policy.md` 联动更新。
+
 ### 上下文压缩与跨窗口连续推进
 
 - 仓库文档是唯一持久记忆；新窗口、上下文压缩或聊天历史缺失都按“恢复并继续”处理，

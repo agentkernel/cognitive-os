@@ -1,0 +1,18 @@
+{
+  "schema": "cognitiveos-handbook-env-vars/0.1",
+  "description": "Hand-maintained annotations for the generated environment-variable reference. The generator extracts literal env reads from non-test first-party Rust/TypeScript and fails on any bidirectional mismatch with this list. Entries here may need reconciliation on the first generator run after a baseline advance.",
+  "variables": [
+    { "name": "XDG_RUNTIME_DIR", "consumer": "daemon, Pi extension", "description_en": "Runtime root; hosts the bootstrap secret and daemon lock. No fallback: absence fails closed.", "description_zh": "运行时根目录；存放 bootstrap secret 与 daemon lock。无回退：缺失即 fail closed。" },
+    { "name": "XDG_STATE_HOME", "consumer": "daemon, CLI, Pi extension", "description_en": "State root for databases, backups, and the published daemon endpoint document.", "description_zh": "状态根目录，存放数据库、备份与已发布的 daemon endpoint 文档。" },
+    { "name": "XDG_DATA_HOME", "consumer": "daemon, installer", "description_en": "Data root; also hosts the product deployment root for the Linux bundle installer.", "description_zh": "数据根目录；也是 Linux bundle 安装器的产品部署根。" },
+    { "name": "XDG_CONFIG_HOME", "consumer": "daemon, CLI", "description_en": "Config root for non-secret provider/model/Pi configuration files.", "description_zh": "配置根目录，存放非 secret 的 provider/model/Pi 配置文件。" },
+    { "name": "HOME", "consumer": "daemon, CLI, Pi extension", "description_en": "Fallback base for the XDG roots when the specific variables are absent.", "description_zh": "XDG 变量缺失时的回退基目录。" },
+    { "name": "USERPROFILE", "consumer": "daemon, CLI, Pi extension (Windows)", "description_en": "Windows stand-in for HOME when resolving the XDG-style layout.", "description_zh": "Windows 上解析 XDG 式布局时替代 HOME。" },
+    { "name": "DBUS_SESSION_BUS_ADDRESS", "consumer": "SecretStore backend selection", "description_en": "Signals a session bus for the Linux Secret Service backend probe.", "description_zh": "为 Linux Secret Service 后端探测提供会话总线信号。" },
+    { "name": "COGNITIVE_KERNEL_SERVER", "consumer": "cognitive daemon start", "description_en": "Overrides the kernel-server executable path used to spawn the daemon.", "description_zh": "覆盖用于启动 daemon 的 kernel-server 可执行文件路径。" },
+    { "name": "COGNITIVEOS_PRIVATE_COMPLETION_SOCKET", "consumer": "pi-agent-adapter", "description_en": "Path of the daemon-created one-shot private completion socket handed to the Pi candidate process.", "description_zh": "daemon 创建并交给 Pi candidate 进程的一次性私有 completion socket 路径。" },
+    { "name": "COGNITIVEOS_BENCHMARK_SAMPLES", "consumer": "p7_t04_module_benchmark", "description_en": "Sample count for the deterministic module benchmark (hypothesis-only output).", "description_zh": "确定性模块基准的采样数（输出仅为 hypothesis）。" },
+    { "name": "P9_T01_RUNS", "consumer": "p9_t01_async_decision_gate", "description_en": "Run count for the async-migration decision observation.", "description_zh": "异步迁移决策观测的运行次数。" },
+    { "name": "P9_T01_SAMPLES", "consumer": "p9_t01_async_decision_gate", "description_en": "Per-run sample count for the async-migration decision observation.", "description_zh": "异步迁移决策观测的每轮采样数。" }
+  ]
+}
