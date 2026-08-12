@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:37a877cfee6df60f4d6e254b6041184edb94940659d47321516adbe6866cfabb"
+fingerprint: "sha256:d44f25a1e7be454221d5c045f932d07e507f7851a8225660a6e38cdeb9e80bce"
 non_claims:
   - The Operating Model owns the binding workflow; this page is an oriented summary for contributors.
 ---
@@ -35,12 +35,16 @@ the practical shape:
    routed per [development environments](./development-environments.md).
 4. **Checkpoint** by committing/pushing coherent secret-free progress to the same
    Draft PR — checkpoints are background persistence, not report boundaries or
-   merge triggers.
-5. **Sync docs in the same PR**: declare the change class and follow
-   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) for
-   legacy docs plus [`handbook/_meta/sync-policy.md`](../../_meta/sync-policy.md)
+   merge triggers. Every commit and push must first pass the docs-sync gate
+   (`node tools/src/docs-sync-gate.mjs --staged|--push`; enable the repo hooks
+   once with `pnpm run hooks:install`).
+5. **Sync docs in the same change set, before commit/push/merge**: declare the
+   change class and follow
+   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) §2
+   for legacy docs plus [`handbook/_meta/sync-policy.md`](../../_meta/sync-policy.md)
    for this handbook (source-map lookup, regenerate generated pages, refresh
-   fingerprints, or record `docs-impact: none — reason`).
+   fingerprints). A genuinely documentation-neutral change passes the gate only
+   with `DOCS_IMPACT_NONE="<concrete reason>"`, recorded in the commit/PR.
 6. **Close deterministically**: map every acceptance item to implementation +
    negatives + executed evidence; run required CI at the exact merge-candidate
    head; flip the PR from Draft only then; merge; close the lease; delete the

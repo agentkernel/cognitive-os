@@ -9,7 +9,7 @@ sources:
   - path: Cargo.toml
   - path: pnpm-workspace.yaml
   - path: package.json
-fingerprint: "sha256:e6d441c874a79672839fcba333a2bd2338665feb9e1c09c6edafefa8d461bcc8"
+fingerprint: "sha256:46b917bfe579dbf7c271b70078934ab94e4005fe0d05477789e247eb1a021ffe"
 non_claims:
   - Directory presence is not implementation or Gate evidence; wiring status lives in execution-chain-status.
 ---
@@ -24,7 +24,8 @@ non_claims:
 | `specs/` | requirement/error/state-domain registries, 74 JSON schemas, 5 transition tables, narrative companions | architecture contracts — Lane-CTR only; never bent to fit code |
 | `conformance/` | 89 vectors + README | contract assets — same protection |
 | `tests/` | baseline/e2e/faults/security indexes + `tests/golden/` cross-language fixtures | golden JSONs are generated |
-| `tools/` | Node checkers/generators (consistency, traceability, gate evaluators, handbook) | syntax-checked and tested by `@cognitiveos/repo-tools` |
+| `tools/` | Node checkers/generators (consistency, traceability, gate evaluators, handbook, docs-sync gate) | syntax-checked and tested by `@cognitiveos/repo-tools` |
+| `.githooks/` | repo-tracked pre-commit/pre-push docs-sync hooks (opt-in: `pnpm run hooks:install`) | thin `sh` wrappers over `tools/src/docs-sync-gate.mjs` |
 | `docs/` | governance, formal plan + current snapshot + lease ledger, product/architecture design, ADRs, standards, checkpoints, prompts | canonical documentation system; the handbook links to it and never edits it |
 | `handbook/` | this bilingual derived documentation system | validated by `tools/src/check-handbook.mjs` |
 | `deploy/` | inspected installer template + systemd unit templates | rendered by the campaign builder |

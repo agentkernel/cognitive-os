@@ -77,6 +77,16 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - Under standing continuous-delivery authorization, coherent secret-free
   checkpoint commit/push and Draft PR maintenance are expected workflow events,
   not per-turn permission asks.
+- After every development step and **before every commit, push, and
+  ready/merge flip**, satisfy the docs-sync obligations of
+  `docs/standards/docs-sync-contract.md` §2: route changed paths through
+  `handbook/_meta/source-map.json`; update or regenerate the mapped handbook
+  documents (both locales, fingerprints refreshed) in the same change set, or
+  acknowledge a genuinely documentation-neutral change with
+  `DOCS_IMPACT_NONE="<concrete reason>"` recorded in the commit/PR
+  description. Run `node tools/src/docs-sync-gate.mjs --staged` (the
+  `.githooks` hooks run it automatically once `pnpm run hooks:install` has
+  been executed for the clone); never hand-edit generated handbook pages.
 - Follow Operating Model §2.3 for ADR-0040/0046/0047-class fixed-denominator
   Gate MVP self-disposition and for importing owner-designated local test
   Provider keys into an approved Secret Store. Do not re-ask for those

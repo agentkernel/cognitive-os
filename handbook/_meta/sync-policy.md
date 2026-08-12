@@ -22,8 +22,12 @@ generated: false
 3. **User-visible changes** (CLI, config, errors, security, install, recovery)
    update the user + reference trees; **architectural changes** (data, protocol,
    authority, environments) update the developer + AI trees.
-4. **Same task, same PR**: affected handbook pages ship with the code change. A
-   genuinely doc-neutral change records `docs-impact: none — <reason>` in the PR.
+4. **Same change set, enforced timing**: synchronization happens after each
+   development step and **before every commit, push, and merge** — not "later in
+   the PR". The docs-sync gate fails a commit/push whose mapped source changes
+   carry no handbook update; the only escape is an explicit
+   `DOCS_IMPACT_NONE="<concrete reason>"` acknowledgment, recorded in the
+   commit/PR description (blank or trivial reasons are rejected).
 5. **Checks**: `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
    `pnpm run check:consistency` must pass; CI runs them on every PR.
@@ -32,9 +36,11 @@ generated: false
 
 | Layer | Mechanism |
 |---|---|
-| Editor/AI guidance | always-applied rule `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` (adapter only; this file owns the policy) |
+| Canonical obligation | [`docs/standards/docs-sync-contract.md`](../../docs/standards/docs-sync-contract.md) §2 handbook block (all change classes) + §5 items 16–17 |
+| Pre-commit / pre-push gate | `tools/src/docs-sync-gate.mjs` (`--staged` / `--push`): source-map routing, conditional handbook check set, fail-closed on unsynced mapped changes; wired through repo `.githooks/` — enable once per clone with `pnpm run hooks:install` |
+| Editor/AI guidance | always-applied rules `.cursor/rules/10-…` (checkpoint/closure obligations) and `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` (adapters only; this file + the contract own the policy) |
 | Non-Cursor AI tools | root `llms.txt` + [`handbook/en/ai/README.md`](../en/ai/README.md) |
-| Machine gate | `check-handbook.mjs` rules HB001–HB015 (manifest, pairing, links, sources, symbols, fingerprints, coverage, generated equality, forbidden content, source-set reproducibility) |
+| Machine gate (CI, unconditional) | `check-handbook.mjs` rules HB001–HB015 (manifest, pairing, links, sources, symbols, fingerprints, coverage, generated equality, forbidden content, source-set reproducibility) + generator `--check` byte equality |
 | Task-closure gate | `check-handbook.mjs --diff-base <rev>` proves legacy docs changed only on the allowlist ([`legacy-change-allowlist.json`](./legacy-change-allowlist.json)) |
 
 ## Failure semantics

@@ -21,11 +21,17 @@ sources always win over handbook content.
 5. A new tracked file must be classified in
    `handbook/_meta/source-coverage.json` (owning docs, or an excluded category
    with a reason).
-6. If a change truly affects no documentation, record a concrete
-   `docs-impact: none — <reason>` line in the PR description.
-7. Run `node tools/src/check-handbook.mjs`,
+6. If a change truly affects no documentation, acknowledge it explicitly:
+   pass `DOCS_IMPACT_NONE="<concrete reason>"` to the docs-sync gate and record
+   the same reason in the commit/PR description. Blank or trivial reasons do
+   not pass.
+7. Timing is mandatory, not advisory: the docs-sync gate
+   (`node tools/src/docs-sync-gate.mjs --staged|--push`) runs before **every
+   commit and push** — enable the repo hooks once per clone with
+   `pnpm run hooks:install`. Before flipping a task PR to ready, additionally
+   run `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
-   `pnpm run check:consistency` before closing the change.
+   `pnpm run check:consistency`; CI enforces the same set on every PR.
 8. When a canonical source (governance, formal plan, `specs/`, `conformance/`,
    standards) conflicts with a handbook page, the canonical source wins; correct
    the handbook page in the same delivery. Never copy dynamic

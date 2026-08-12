@@ -9,7 +9,7 @@ sources:
   - path: Cargo.toml
   - path: pnpm-workspace.yaml
   - path: package.json
-fingerprint: "sha256:e6d441c874a79672839fcba333a2bd2338665feb9e1c09c6edafefa8d461bcc8"
+fingerprint: "sha256:46b917bfe579dbf7c271b70078934ab94e4005fe0d05477789e247eb1a021ffe"
 non_claims:
   - 目录存在不是实现或 Gate 证据；接线状态见执行链状态页。
 ---
@@ -24,7 +24,8 @@ non_claims:
 | `specs/` | 需求/错误/状态域注册表、74 个 JSON schema、5 张转移表、叙述伴随文档 | 架构合同——只走 Lane-CTR；绝不为迎合代码改写 |
 | `conformance/` | 89 个向量 + README | 合同资产——同等保护 |
 | `tests/` | baseline/e2e/faults/security 索引 + `tests/golden/` 跨语言 fixture | golden JSON 为生成物 |
-| `tools/` | Node 检查器/生成器（consistency、traceability、Gate 评估器、handbook） | 由 `@cognitiveos/repo-tools` 语法检查与测试 |
+| `tools/` | Node 检查器/生成器（consistency、traceability、Gate 评估器、handbook、docs-sync 门） | 由 `@cognitiveos/repo-tools` 语法检查与测试 |
+| `.githooks/` | 仓库内置 pre-commit/pre-push 文档同步 hooks（opt-in：`pnpm run hooks:install`） | `tools/src/docs-sync-gate.mjs` 之上的薄 `sh` 包装 |
 | `docs/` | 治理、正式计划 + 当前快照 + lease 台账、产品/架构设计、ADR、标准、checkpoint、prompt | canonical 文档系统；手册只链接、绝不编辑 |
 | `handbook/` | 本双语派生文档系统 | 由 `tools/src/check-handbook.mjs` 校验 |
 | `deploy/` | 可检查安装模板 + systemd unit 模板 | 由 campaign 构建器渲染 |

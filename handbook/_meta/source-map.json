@@ -97,6 +97,12 @@
       "sources": ["handbook/**", "llms.txt", ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc"],
       "docs": ["meta.doc-standards", "meta.sync-policy", "ai.entry"],
       "note": "changes here run the handbook checker and generator --check"
+    },
+    {
+      "id": "docs-sync-enforcement",
+      "sources": [".githooks/**", "tools/src/docs-sync-gate.mjs", "docs/standards/docs-sync-contract.md"],
+      "docs": ["meta.sync-policy", "ai.docs-impact", "dev.contributing-workflow", "ai.validation-commands"],
+      "note": "the commit/push/merge docs-sync obligation surface itself"
     }
   ]
 }

@@ -312,7 +312,7 @@ personal_requirements:
     classification: product-only
     statement: Personal is positioned as an operating system for cognitive resources with a single axiom document (A1-A8) and context/harness/loop engineering pillars; documentation redesign does not alter machine contracts or Gate composition.
     direct_registry_requirements: []
-    tasks: [P8-T01, P8-T07]
+    tasks: [P8-T01, P8-T07, P8-T08]
     gates: []
     evidence_status: not-run
 

@@ -1,12 +1,15 @@
 # 文档联动与防漂移契约（docs-sync-contract）
 
 - Standard ID: `cognitiveos.standard.docs-sync-contract/0.1`
-- Version: v0.1
+- Version: v0.2
 - Status: active repo governance standard（约束本仓库全部提交；不产生 CognitiveOS 规范要求）
 - Date: 2026-07-20
 - Label correction: 2026-08-10 (P8-T01) — removed stale “Draft” status label; the
   contract has been enforced by Operating Model + consistency checks since adoption
-- 执行机制：[Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)（会话义务）+ `tools/src/check-consistency.mjs`（机器一致性红灯）；`.cursor/rules/` 如存在仅为编辑器适配层
+- Handbook obligations: 2026-08-12 (P8-T08, owner-directed) — §2 新增全档位通用
+  handbook 联动义务；§5 登记 handbook 机器门（`check-handbook` + 生成器字节门 +
+  `docs-sync-gate` pre-commit/pre-push）；§6 新增作者自查项
+- 执行机制：[Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)（会话义务）+ `tools/src/check-consistency.mjs`（机器一致性红灯）+ `tools/src/check-handbook.mjs`、`tools/src/generate-handbook.mjs --check`、`tools/src/docs-sync-gate.mjs`（handbook 派生层红灯与 commit/push 前置门）；`.cursor/rules/` 如存在仅为编辑器适配层
 - Axiom owner: [AXIOMS.md](../governance/AXIOMS.md)（公理措辞变更须同批联动本标准分类与入口文档）
 
 仓库身份由 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md) 和机器镜像
@@ -61,6 +64,24 @@ scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步�
 
 9. 新增 ADR（沿用 `docs/adr/` 格式）；
 10. 迁移说明（旧对象/旧引用如何处置，读者为实现者与 runner）。
+
+**Handbook 联动（全部档位通用，P8-T08 起）**：任何改动路径命中
+`handbook/_meta/source-map.json` 规则的变更，必须在提交/推送/合并**之前**、在同一变更
+集内同步派生文档系统 `handbook/`：
+
+1. 更新映射到的手写页面（en 与 zh-CN 双语，事实与 status 一致）；
+2. 生成页只经 `node tools/src/generate-handbook.mjs` 重生成，禁止手改；
+3. 手写页或其映射源变化后运行 `node tools/src/fill-handbook-fingerprints.mjs`
+   刷新指纹（指纹漂移即 CI 红灯）；
+4. 新增 tracked 文件必须在 `handbook/_meta/source-coverage.json` 归类；
+5. 确实无文档影响时，必须以 `DOCS_IMPACT_NONE="<具体理由>"` 显式确认通过本地门，并把
+   同一理由记入 commit/PR 描述——空白或敷衍理由不放行。
+
+义务时点由机器门执行：pre-commit/pre-push 经 `.githooks` 的
+`tools/src/docs-sync-gate.mjs`（`pnpm run hooks:install` 每克隆注册一次）；merge 前由
+CI `verify` 的 handbook 步骤无条件红灯。handbook 是 informative 派生层：联动只修正
+handbook，不得反向改写 canonical 来源迎合文档；动态 `PROGRESS.md`/Gate 状态只链接不
+复制。
 
 ## 3. 影响面扫描方法（结果写入 PR 描述）
 
@@ -123,6 +144,16 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
     validation/non-claims；合并后必须关闭 lease、确认 PR merged、清理安全可删的远端 task
     branch、本地切回并 fast-forward `main`，验证 clean worktree 与 HEAD/upstream。coherent
     dirty handoff、“实现完成但待验收”或 merged PR + active lease 不得成为正常出口。
+16. handbook 派生层红灯：`tools/src/check-handbook.mjs`（manifest/双语配对/链接/源路
+    径与 symbol/指纹/全树 coverage/生成页登记/禁止内容）与
+    `tools/src/generate-handbook.mjs --check`（生成页字节一致）在 CI `verify` 对每个
+    PR 无条件运行。
+17. commit/push 前置门：`tools/src/docs-sync-gate.mjs` 按 source-map 条件路由改动路
+    径，命中即运行第 16 条检查集；映射源改动而 handbook 未同步时 fail-closed，唯一逃
+    生口为 `DOCS_IMPACT_NONE="<具体理由>"` 且理由必须留痕于 commit/PR。经
+    `pnpm run hooks:install` 注册仓库内 `.githooks` pre-commit/pre-push 执行。修改
+    handbook 检查器、生成器或本门的 PR 必须保持其 focused negative fixtures
+    （`tools/test/handbook-check.test.mjs`、`tools/test/docs-sync-gate.test.mjs`）全绿。
 
 破坏性验证义务：本契约生效时（M0）已做一次注入演练——临时分支故意制造孤儿 REQ
 引用与断链，确认 CI 检查失败并指出位置后回滚（记录见 M0 milestone review §注入演练）。
@@ -136,6 +167,9 @@ executable legacy prompt；不得为演练直接改坏工作树。
 
 - [ ] 变更分类已声明（实现型/修正型/产品语义型/规范语义型/结构型）
 - [ ] §2 对应档位的联动清单逐项完成或写明"无影响"
+- [ ] handbook 联动已完成：source-map 路由的页面/生成页/指纹已同步（双语），或
+      `DOCS_IMPACT_NONE` 具体理由已记入 commit/PR；`pnpm run check:handbook` 与
+      `node tools/src/generate-handbook.mjs --check` 本地绿（或经 docs-sync-gate 通过）
 - [ ] §3 扫描结果贴入 PR 描述
 - [ ] `pnpm run check:consistency` 本地绿
 - [ ] PROGRESS 已更新；触碰 F/IMP/漂移时 findings-ledger 已更新

@@ -16,6 +16,7 @@
 
     { "glob": "handbook/**", "category": "handbook", "docs": ["meta.doc-standards"] },
     { "glob": "llms.txt", "category": "handbook", "docs": ["ai.entry"] },
+    { "glob": ".githooks/**", "category": "first-party-source", "docs": ["meta.sync-policy", "ai.docs-impact", "dev.contributing-workflow"] },
 
     { "glob": "crates/cognitive-contracts/src/generated/**", "category": "generated-bindings", "docs": ["dev.contracts-codegen"] },
     { "glob": "packages/contracts-ts/src/generated/**", "category": "generated-bindings", "docs": ["dev.contracts-codegen"] },

@@ -9,7 +9,7 @@ sources:
   - path: docs/governance/AXIOMS.md
     symbols: ["A1", "A8"]
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:b3316cfa704a9a42d8a5c7c6ddd2a3a78c8b15c53b6f384b60c3cc2d5707f482"
+fingerprint: "sha256:63a1b9f80879c9580e59eee41ae25b239915dbc0c77d282d9f79b1650c9081c1"
 non_claims:
   - 本页仅为导引摘要；具约束力的措辞由所链接的治理文档拥有。
 ---
