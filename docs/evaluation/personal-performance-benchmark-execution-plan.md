@@ -1,722 +1,1059 @@
-# CognitiveOS Personal 全面性能 Benchmark 与真实任务测试执行方案
+# CognitiveOS Personal 全面性能与真实 Agent 任务对照测试方案
 
 - 文档状态：**execution plan / not-run**
-- 编写日期：2026-08-12
+- 更新日期：2026-08-12
 - 适用项目：`cognitiveos-personal`
-- 设计基线 revision：`9fbd3904a1f8e0893fcb7d8d2b434e636d546e8c`
-- 变更分类：`corrective + informative`；不改变产品语义、任务状态、Gate 或 Profile
-- 关联实现：`P7-T04`、`P8-T05`、`P9-T01`、`P9-T03`
-- 关联合同：`REQ-PERF-001..005`、`cognitiveos.performance-report/0.1`
-- 真实 Provider：DeepSeek；专用测试密钥的 owner-local 来源为
-  `C:\Users\wuron\Desktop\deepseek.txt`
-- 执行状态：**本文未读取该文件、未导入密钥、未构建、未启动服务、未调用 Provider、
-  未运行任何测试或 benchmark。本文中的所有结果栏初始值均为 `not-run`。**
+- 实现阅读基线：`d514e8ac6aa539864a0a889b9f0a58be009521ef`
+- 目标环境 ID：`B01-DESKTOP-002`
+- 目标 guest/domain：`B01-Desktop-Linux-002`（下文简称 `linux-002`）
+- 对照主体：同版本 Pi、同一 DeepSeek 模型、同一任务、同一预算下的
+  **纯 Pi** 与 **Pi + CognitiveOS Personal**
+- 变更分类：`corrective + informative`
+- 本次范围：只完善方案；**未执行 benchmark，不改变任务、Gate、release 或 Profile**
 
-## 1. 执行摘要
+## 0. 执行摘要
 
-当前实现已经具备一套可信的性能测量基础，但还不是一个可以直接宣称“端到端性能收益”的
-完整 campaign：
+本方案明确设计了多批次、同任务、成对的真实 Pi Agent 对照，但必须先说明当前实现的
+能力边界：
 
-1. `p7_t04_module_benchmark` 已覆盖 Context 过滤、Context cache、Artifact CAS、scheduler
-   lease CAS、Memory FTS5、Intent/Effect 持久化和 canonical report serialization。
-2. `GovernedPathStageCollector` 已能记录 authorization、Context resolution、cache reuse、
-   Effect persistence 四阶段原始耗时；`p9_t01_async_decision_gate` 已证明现有 collector 的
-   `effect_persistence` 包含 store open/admission/persist/reload，**不能**被解释成
-   HTTP/watch/sidecar transport 耗时。
-3. `P9-T03` 已把 daemon request path 改为复用长生命周期 `SqliteAuthorityStore`；现有
-   `store_access` collector 可做 per-open 与 long-lived 对照，但目前只是 test-level、
-   hypothesis-only 观测。
-4. 真实 DeepSeek 路径已存在：`cognitive init` 将密钥导入 approved Secret Store，
-   daemon 代理 OpenAI-compatible `/chat/completions`，Pi Extension 不接触密钥；已有
-   redacted Provider smoke 和 Pi first-response smoke。
-5. 当前 Provider 路径是**非流式**请求；因此可测完整响应耗时，但不能伪造 TTFT。
-   Pi adapter 当前把 token/cost usage 填成 0，daemon client 也不保留 Provider `usage`，
-   因而在增加脱敏 usage collector 前，不得发布 token/cost 节省结论。
-6. Task API、scheduler、Context、Pi candidate、Tool/Effect、recovery 和 independent verifier
-   的 authority primitives 已实现；但仓库目前没有一个面向性能 campaign 的、可一次提交
-   “真实完整 Task”并导出所有阶段时间的公共 runner。该 runner 是正式端到端 campaign
-   开始前的必要准备项，不能用 fixture matrix 或单元测试耗时代替。
+1. **当前唯一具备产品路径的成对候选：** 对 prompt-contained、无工具的 Agent 任务，
+   可以设计为使用同一个 Pi `0.81.1` 进程分别运行：
+   - `P`：纯 Pi，不经过 CognitiveOS；
+   - `O`：Pi + CognitiveOS Extension + daemon Provider proxy。
+   但仓库当前只有固定 marker 的单臂 runner，没有安全 pure-Pi broker 和 RAT-01 paired
+   runner；因此正式 `P/O` campaign 初始仍是 `not-run`，不能把“设计可行”写成“已可执行”。
+2. **当前不可诚实执行的成对对照：** 需要 workspace read/search/write/patch、process
+   check、Memory/Skill、Effect/reconcile 或 independent verifier 的完整 Agent 任务。
+   原因不是缺少测试描述，而是当前产品尚未把 admitted Task 接入持续 scheduler，
+   production Tool executor 与 verifier 也没有真实 caller。
+3. 因此本方案把任务分成三个 capability class：
+   - `C0`：prompt-contained Agent task，当前两条产品路线原则上可达，但 paired runner/
+     broker 尚未资格化；
+   - `C1`：read-only workspace Agent task，当前纯 Pi 可执行，但 OS arm 不可达；
+   - `C2`：mutation/recovery/cross-session governed Task，当前 OS arm 不可达。
+4. `C1/C2` 的单臂纯 Pi 结果可以说明“纯 Pi 能做什么”，但不能冒充 `P/O` 性能对比。
+   只有两个 arm 使用相同任务、工具和 oracle 并完整保留 denominator，才计算 OS 开销或
+   收益。
 
-建议采用六层方案：
+多批次结构为：
 
-| 层 | 目的 | Provider | 结论上限 |
-|---|---|---|---|
-| L0 | 环境、revision、secret、correctness 资格检查 | 否 | 是否允许开始测量 |
-| L1 | deterministic module microbenchmark | 否 | implementation regression floor |
-| L2 | daemon governed-path 与 store/transport stage timing | 否 | 瓶颈定位，hypothesis |
-| L3 | 真实 DeepSeek + daemon proxy + Pi first response | 是 | route-level tested-local |
-| L4 | 真实 governed Task 情景、fault、并发、soak | 是 | scenario-limited performance report |
-| L5 | W1/W2 A/B/C/D 对照与统计 | 是 | non-inferiority；满足全部合同后才可能 significant benefit |
+- `B0` 环境、secret broker、能力和 oracle 资格；
+- `B1` 小样本 pilot；
+- `B2` 独立 held-out confirmatory paired campaign；
+- `B3` 故障、恢复和边界任务；
+- `B4` 并发与 mixed workload；
+- `B5` 1 h → 8 h → 24 h soak；
+- `B6` 优化后的原样 replay。
 
-推荐先完成 L0-L3 的工程基线，再完成 L4 的真实 Task campaign；只有需要对外声明 Agent
-收益时，才执行成本最高的 L5。任何一层失败都保留完整 denominator，并按本方案的退出规则
-停止升格，但不删除失败样本。
+这使最终报告同时回答：
 
-## 2. 范围、问题与明确非目标
+- OS 上的 Pi 相对纯 Pi 增加了多少延迟、CPU、RSS、token 和失败；
+- CognitiveOS 是否提高任务正确性、约束遵守、恢复能力或跨会话复用；
+- 哪些任务当前根本无法由 OS 上的 Pi 完成；
+- 后续优化应优先解决 Pi 启动、Provider、daemon transport，还是产品执行链接线。
 
-### 2.1 本方案回答的问题
+## 1. 当前实现真值与历史基线
 
-1. 当前实现中，纯本地 deterministic module 的 p50/p95/p99 和抖动是多少？
-2. daemon-only 治理路径的耗时由 authorization、Context、cache、SQLite/Effect、HTTP、
-   watch、sidecar、Pi 进程、Provider 网络中的哪一段主导？
-3. cold start、warm state、稳定 Context、变化 Context、重启恢复时的差异是多少？
-4. 在真实 DeepSeek 请求中，CognitiveOS 治理路径相对安全 native baseline 是否非劣？
-5. Context compaction、stable prefix/delta、Memory/Skill reuse 是否在不降低 verified
-   completion 的前提下降低重复输入或端到端时间？
-6. 并发、背压、Provider timeout、sidecar crash、daemon restart、OUTCOME_UNKNOWN 等情况下，
-   尾延迟、恢复时间、重复 Effect 和 false completion 是否满足安全边界？
-7. 长时间运行时，RSS、CPU、SQLite WAL、Artifact、watch queue 和文件描述符是否稳定？
+### 1.1 当前真实用户路径
 
-### 2.2 非目标
-
-- 不把本地结果自动提升为 B01-B12、GMVP-LINUX、RC、release 或 Profile 证据。
-- 不把 microbenchmark、fixture matrix、单次 first response 或模型主观评分写成 Agent 收益。
-- 不为获得更好数字放松 daemon-only writer、SecretStore、persist-before-dispatch、fencing、
-  budget、independent verifier 或负例。
-- 不使用 `B01-Desktop-Linux-002` 或退役的 `B01-Clean-Linux-001` 做普通性能开发。
-- 不在 Windows GNU host 运行 Rust build/test/bench。
-- 不把 Provider 网络波动混入本地治理开销后宣称是 daemon regression。
-- 不自动删除 owner 的原始 `deepseek.txt`；只处理 campaign 自己创建的临时输入和 SecretStore
-  条目。
-
-## 3. 当前实现能力与测量缺口
-
-| 测量面 | 当前实现/入口 | 当前可测 | 主要缺口 |
-|---|---|---|---|
-| Module benchmark | `crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs` | 7 个 deterministic benchmark 的 raw samples、p50/p95/p99/min/max | fixture 规模偏小；默认 25 samples、3 warmups；尚无多进程重复和 CPU/RSS |
-| Governed stages | `crates/cognitive-runtime/src/perf.rs` | authorization、Context、cache、Effect persistence raw nanos | Effect stage 聚合了 open/admit/persist/reload；没有 HTTP/watch/sidecar 分解 |
-| Async decision | `p9_t01_async_decision_gate.rs` | cold/warm 每阶段 percentile 与 conservative decision | transport 未单独测量，不能据此决定 async migration |
-| Store access | `crates/cognitive-runtime/src/store_access.rs` | per-open 与 long-lived read 总耗时 | 没有独立 release runner、percentile、并发/锁分层 |
-| Loopback daemon | `apps/kernel-server/src/personal/server.rs` | 请求总耗时可从外部测；连接/在途上限明确 | 缺少 secret-free server timing headers/trace；thread-per-connection 成本未量化 |
-| Provider proxy | `personal/provider_proxy.rs` | non-streaming 完整 completion；60 s upstream timeout | 无 TTFT；未保留 usage；Provider 与本地 stage 未拆分 |
-| Pi first response | `tools/personal/p1-t09-product-route-smoke.sh` | redacted complete-response `duration_ms`、marker、exit/timeout | 只测固定 marker；不提供 token、阶段分解、任务 authority closure |
-| Pi candidate | `pi_runtime.rs` + `pi-agent-adapter daemon-candidate` | private socket、进程启动、bounded candidate、65/70 s deadlines | 缺少 campaign timing envelope；单次 one-shot 进程成本与模型成本未分离 |
-| Task admission | `/task/intent.record`、`interpret`、`preview`、`admit` | 每步可测，Task watch 可恢复 | CLI 只有 watch；性能 runner 不能把 bearer 放入 shell/log |
-| Tool/Effect | scheduler authority + tool executor | persist-before-dispatch、original-key reconcile、bounded process | 缺少真实任务级 stage correlation 和统一 report export |
-| Verifier | `personal/verification_executor.rs` | append-only report 与 fail-closed negatives | 缺少从 admission 到 independent acceptance 的统一 wall-clock runner |
-| UCR-01 | `tools/src/ucr-runner.mjs` | 六资源、stable/changed/full replay、denominator 与 digest | 输入是 raw-run document；它不是自动执行真实资源链的 runner |
-| Report policy | schema + `tools/src/performance-policy.mjs` | schema、percentile、CI、comparison、claim-level policy | 不能替代真实数据采集和独立 verifier |
-
-### 3.1 当前 benchmark 的七个固定模块 ID
-
-1. `context-resolution-filter-builder`
-2. `context-cache-full-key-hit`
-3. `artifact-cas-immutable-publish-readback`
-4. `scheduler-eligible-lease-cas`
-5. `memory-fts5-metadata-first-retrieval`
-6. `intent-effect-durable-persist-before-dispatch`
-7. `canonical-performance-report-serialization`
-
-这些 ID 应保持不变以维持历史对照。规模扩展应新增 manifest dimensions，不应复用同一 ID
-却静默改变 fixture。
-
-### 3.2 在正式执行前必须补齐的 measurement-only 能力
-
-以下属于 instrumentation，不得改变 authority 语义：
-
-1. **统一 run/correlation ID：** 从 Task admission 到 Context、Pi candidate、Tool/Effect、
-   reconciliation、verification 使用同一随机 campaign correlation ID；不得包含 prompt、
-   response、secret 或 bearer。
-2. **monotonic stage timestamps：** 至少分解为 client→daemon、session mint、Task record、
-   interpret、preview、admit、scheduler wait、Context build、cache、Pi process start、
-   Provider proxy local preflight、Provider network、candidate parse、Intent persist、dispatch、
-   reconcile、verification、acceptance。
-3. **Provider usage collector：** 仅在 Provider 响应明确包含有限数值 `prompt_tokens`、
-   `completion_tokens`、`total_tokens` 时记录；不记录 raw headers/body。缺失时写
-   `not_available`，绝不写 0 代表实测值。
-4. **transport collector：** 单独测量 loopback accept/read/auth/route/write、resource/task
-   watch、private Unix socket 和 Pi process launch，避免继续把 transport 归入 Effect stage。
-5. **OS resource sampler：** 每秒记录 daemon/Pi/adapter 的 CPU、RSS、线程、FD、I/O bytes；
-   只记录 process identity 和数值，不抓 argv/environment。
-6. **campaign runner：** 直接调用已有 Rust/TS client/service，不在 shell 命令中暴露 bearer；
-   输出只含 ID、digest、duration、count、status 和 registered error code。
-
-在这些能力完成前，L1-L3 仍可执行，但 L4/L5 中对应指标必须明确为 `not-run` 或
-`not_available`。
-
-## 4. 不可放松的安全、证据和 secret 规则
-
-### 4.1 DeepSeek 密钥处理
-
-1. 本方案只登记源路径，不读取内容，不计算源文件 digest，不复制内容到 Git、聊天、日志、
-   SQLite、普通配置、evidence 或 shell history。
-2. 正式执行时，推荐在 `DEV-LINUX-NATIVE-01` 的交互 TTY 中运行 `cognitive init`，通过
-   CLI 的 hidden-input 路径手工粘贴一次；该路径关闭 terminal echo，并由 daemon/client
-   代码把材料写入 production Secret Service。
-3. 如果必须使用文件输入，只允许 campaign 临时创建的 `0600` 文件，经
-   `--api-key-file <path>` 导入后立即安全删除；不得把 Windows Desktop 原文件复制到
-   Git worktree、`artifacts/`、普通远程目录或 VM image。
-4. 不使用 `--allow-ephemeral-secret-backend` 保存真实密钥。
-5. 不使用已到期的 ADR-0018 direct-Pi secret injection；`pi-agent-adapter run/evaluate` 不能
-   作为真实 Provider 路径。
-6. DeepSeek 请求必须通过 daemon Provider proxy；Pi、sidecar、benchmark runner 只见
-   selected model 和 bounded response，不见 secret。
-7. campaign 结束后删除 campaign 专用 SecretStore entry 和临时文件；是否删除 owner 的
-   `C:\Users\wuron\Desktop\deepseek.txt` 由 owner 决定，本方案不自动操作。
-
-### 4.2 Evidence 等级
-
-- `DEV-LINUX-NATIVE-01` 的结果最多为 `tested-local` / `experimental-local-only`。
-- Ubuntu/Windows ordinary CI 只支持 `tested-supported-ci` implementation evidence。
-- 只有另行 preregistered、qualified campaign 才能产生 product Gate/release/Profile claim。
-- `not-run`、timeout、refusal、OUTCOME_UNKNOWN、quarantine 和 manual intervention 都保留在
-  denominator；不能删除后重算。
-- 本文设计本身不改变 `PROGRESS.md` 中已完成任务或 Gate 状态。
-
-## 5. 环境与固定变量
-
-### 5.1 执行环境
-
-| 用途 | 环境 | 要求 |
+| 能力 | 当前状态 | 对 benchmark 的含义 |
 |---|---|---|
-| 文档/静态校验 | `DEV-WIN-GNU-01` | 仅非 linking 工作；不运行 Rust bench |
-| 主性能环境 | `DEV-LINUX-NATIVE-01`，`wuz@192.168.1.2` | exact pushed Git revision、disposable worktree、native Linux、user-systemd |
-| 支持性回归 | `CI-UBUNTU-01`、`CI-WINDOWS-MSVC-01` | correctness only；floating CI 不作固定硬件性能地板 |
-| 正式 release 性能 | 新的 preregistered fixed-native campaign environment | 固定硬件、OS image、governor、background load、reset |
+| Linux install、SecretStore、daemon | implemented | 可做真实启动、日常操作与 Provider route |
+| Pi + CognitiveOS Extension 对话 | implemented / non-streaming | 可做 `C0` 真实 Agent 任务 |
+| Pi built-in tools | OS 路径全部拒绝 | `C1/C2` 不能从 Pi shell 偷跑 |
+| Task record→interpret→preview→admit→watch | implemented | 可测真实准入与持久化 |
+| admitted Task → scheduler bootstrap | 未接线 | 准入后不会自主进入完整执行 |
+| WorkspaceRead/ProcessCheck executor | implemented，仅测试 caller | 不可冒充真实用户任务 |
+| WorkspaceSearch/Write/Patch/HTTP executor | registered，但未 execution-ready | 相关任务 OS arm=`not-run` |
+| independent verifier/acceptance | implemented，仅测试 caller | Provider/Pi 成功不等于 Task complete |
+| Memory/Skill authority | implemented，用户面 partial | 跨会话 Agent 对照尚无完整产品路径 |
 
-不得将 `B01-Desktop-Linux-002` 用作普通 benchmark guest。
+稳定事实来源：
 
-### 5.2 BenchmarkManifest 必须固定的字段
+- [Task 与执行](../../handbook/zh-CN/user/tasks-and-execution.md)
+- [Pi 对话壳](../../handbook/zh-CN/user/pi-shell.md)
+- [已知限制](../../handbook/zh-CN/user/known-limitations.md)
+- [执行链状态](../../handbook/zh-CN/developer/execution-chain-status.md)
+- [性能面](../../handbook/zh-CN/developer/performance-surfaces.md)
 
-- 完整 Git revision、dirty=false、构建 profile=`release`、Rust `1.97.1`；
-- Linux kernel、distribution/image digest、glibc、CPU model/microcode、core/NUMA、RAM、磁盘、
-  filesystem、free space；
-- CPU governor、turbo 状态、CPU affinity、thermal 状态、background services；
-- Node `>=22.19.0`、pnpm `10.33.2`、Pi `0.81.1`、Pi source/SRI；
-- daemon artifact、Pi package、Extension、adapter、Skill、Tool descriptor digest；
-- DeepSeek provider ID、base URL、selected model ID、discovery snapshot digest、测试时间窗口；
-- temperature、top_p、seed 支持情况、max output tokens；
-- 并发、request size、Context candidate 数、Memory corpus 规模、cache state；
-- timeout/retry policy；Provider completion **不自动 retry**；
-- fault profile、risk class、任务集 digest、verifier/grader digest；
-- secret backend class，只记 `linux-secret-tool` 等类别，不记 SecretRef 或 key digest；
-- raw evidence root、redacted report digest、cleanup result。
+### 1.2 历史真机结果
 
-### 5.3 执行隔离
+以下只作比较基线，不自动成为新 campaign 结果：
 
-- 每个 cold sample 使用新临时 XDG root 或明确重启的 daemon，并记录 cache reset。
-- warm sample 在固定 warmup 后测量，warmup 不进入 denominator。
-- microbenchmark 固定单 CPU affinity；并发 benchmark 另开 profile，不混合。
-- Provider arms 采用 randomized block 顺序，避免把时段、限流或网络拥塞误判为 arm 差异。
-- 每轮之间检查温度、CPU throttling、磁盘空间和 Provider rate-limit；违反 preregistration
-  时样本仍保留，但标记 `environment_invalid`，不得静默重跑替换。
+| 历史 cell | Result | Claim boundary |
+|---|---|---|
+| B01 successor `002` | clean Linux N=6，5 success / 1 failure | 已有 B01 结论，不重判 |
+| P9 L1 | 七模块各 200 samples | hypothesis |
+| P9 L2 | governed path 52/52 | hypothesis |
+| P9 L3 | DeepSeek 六 cell 共 160/160 retained | hypothesis |
+| P9 L4 T1 | 10 retained，8 admitted，0 verified completion | partial |
+| P9 L5 | owner closed as `not-run` | 无 Agent-benefit 结论 |
+
+关键历史观测：
+
+- daemon route 的 `local_non_provider_residual`：126.5–128.5 ms p50；
+- DeepSeek network：898.9–1016.1 ms p50；
+- Pi first response：4625 ms p50 / 5004 ms p95；
+- cold daemon startup-to-ready：182.6 ms p50；
+- Task admission：68.17 ms p50 / 140.77 ms p95；
+- Pi route 相对 direct daemon route 的未归因增量约 3.5 s；历史 cell 使用不同 revision，
+  不能把该差值直接归因于 spawn 或初始化；
+- 八个 hard safety counters 均为 0。
+
+权威报告：
+[P9-T04 closure](../checkpoints/20260812-personal-p9-t04-performance-campaign-closure.md)。
+
+## 2. 对照实验模型
+
+### 2.1 Arms
+
+| Arm | 定义 | 作用 |
+|---|---|---|
+| `D` daemon diagnostic | client → CognitiveOS daemon → DeepSeek，不启动 Pi | 分解 Provider 与 daemon local cost；不是 Agent baseline |
+| `P` pure Pi | official Pi `0.81.1` → approved baseline credential broker → DeepSeek；无 CognitiveOS Extension/daemon/Task/Context/Memory | 用户要求的纯 Pi baseline |
+| `O` OS Pi | official Pi `0.81.1` → CognitiveOS Extension → daemon proxy → DeepSeek | 当前可执行的 OS Agent arm |
+| `G` governed Task | Task admission → Context → Pi candidate → Tool/Effect → verifier → acceptance | 完整 OS 目标 arm；当前实现 `not-run` |
+
+Primary comparison 是 `O vs P`。`D` 只用于诊断 `O` 中 daemon/loopback 与 Pi launch
+的贡献；`G` 只有在 production call chain 真正可达时才启用。
+
+### 2.2 Pure Pi secret boundary
+
+纯 Pi 不能通过环境变量、argv、普通配置、日志或 evidence 接收 Provider key，也不能恢复
+已到期的 direct-Pi secret injection。
+
+`P` arm 的 start gate 必须选择并独立评审以下一种路径：
+
+1. Pi 已支持的 approved OS SecretStore + non-logging input；或
+2. campaign-only loopback credential broker：
+   - 从 Linux Secret Service 读取 key；
+   - 只在内存中给上游请求注入认证；
+   - loopback-only、single-user、无 request/response/header 日志；
+   - Pi 只看到固定非敏感本地 endpoint/token；
+   - 每请求有计数、时长、response-byte bound；
+   - cleanup 删除 broker socket/process，不删除 owner key。
+
+broker 只解决 secret transport，不能做 Context、Tool、Memory、Task、retry、cache 或
+verification；否则 `P` 已不是 pure Pi。broker 自身的 local latency 必须独立记录。若这条
+路径未通过评审，`P` arm 为 `blocked/not-run`，不能用 daemon proxy 伪装纯 Pi。
+
+### 2.3 Paired fairness contract
+
+每个 task-seed 的 `P/O` 必须固定：
+
+- 同一 Pi package/version/SRI 与 Node 版本；
+- 同一 DeepSeek provider、base URL、selected model snapshot；
+- 相同 system/task prompt 字节与 task input digest；
+- 相同 temperature、top_p、seed 支持、max output tokens；
+- 相同 task timeout、retry=`0`、最大 Agent turn；
+- 相同可见工具集合、工具 schema、workspace snapshot 和网络策略；
+- 相同 CPU affinity、memory limit、cwd、filesystem state；
+- 相同 oracle/verifier version；
+- 相同 warm/cold stratum 与 Provider 时间 block。
+
+唯一预期差异：
+
+- `P` 不经过 CognitiveOS；
+- `O` 使用 Extension、daemon proxy 和当前可达的 OS read/governance surface。
+
+如果工具集合不相同，该 task 不进入 `O vs P` 性能比较，只进入 capability-gap 报告。
+
+### 2.4 当前可比性矩阵
+
+| Capability class | Example | `P` | `O` | 当前是否可成对 |
+|---|---|---:|---:|---|
+| `C0` prompt-contained reasoning | 代码片段诊断、事件抽取、约束计划 | route yes，broker pending | route yes，paired runner pending | **conditional / initial not-run** |
+| `C1` workspace read/search | 在固定 repo 找失败原因 | yes | no product path | **no** |
+| `C2a` workspace mutation/test | patch bug + run deterministic test | yes | no product path | **no** |
+| `C2b` Memory/Skill reuse | session 2 无重述继续任务 | native Pi baseline可定义 | OS user path partial | **no** |
+| `C2c` Effect recovery | mutation 后 receipt 前 crash | baseline fixture可定义 | no product caller | **no** |
+| `C2d` verified completion | independent oracle closes Task | external oracle可定义 | verifier未接线 | **no** |
+
+当前 campaign 若补齐并资格化 broker/runner，正式 paired conclusion 最多覆盖 `C0`。
+`C1/C2` 是预注册好的后续 acceptance matrix，并在本次报告中诚实显示 `not-run` 及缺失
+call chain。
+
+### 2.5 Runner 可执行性门
+
+现有 runner 不能直接执行本方案的多任务 paired campaign：
+
+| Existing runner | 实际能力 | 不得扩大的结论 |
+|---|---|---|
+| `p9-t04-l3-provider-route-runner.mjs` | 单一 hard-coded marker 的 daemon route | 不能执行 RAT-01 或 pure Pi |
+| `p1-t09-product-route-smoke.sh` | 单一 marker 的 OS Pi route | 不能执行 A1–A8 或输出完整 token/task metrics |
+| `p9-t04-l4-t1-scenario-runner.mjs` | Task admission，固定 identity/deadline | 不执行 Context/Tool/verifier |
+| `p9_t04_l0_l1_campaign_runner` | offline L0–L2 | 不能标记为 B01/P/O Agent evidence |
+| `resource_sampler` | library/test helper | 没有 transient Pi/daemon campaign driver |
+
+执行 B1/B2 前必须 preregister 一个 campaign-only paired runner，冻结：
+
+- P/O 进程命令、输入字节、task-seed、arm order；
+- pure Pi broker 与 OS Extension 的 digest；
+- response 在内存/受控 raw store 中的 oracle 判定与立即 redaction；
+- output schema、denominator、timeout、retry、process cleanup；
+- runner 与 analysis code digest。
+
+runner 只负责测量，不能成为第二 authority writer。未满足时，B1/B2 保持 `not-run`；不得
+临时拼接 shell 命令后称为正式 paired campaign。
+
+## 3. 多批次执行设计
+
+### 3.1 `B0` — qualification 与 dry run
+
+目的：证明环境和对照公平，而不是产生性能结论。
+
+固定：
+
+- exact pushed Git revision、Pi SRI、Extension digest；
+- OS/kernel/glibc/CPU/RAM/disk/governor/background services；
+- Provider/model snapshot、sampling window 和调用预算；
+- pure Pi secret broker digest、threat review 和 cleanup；
+- task corpus version、task-seed list、oracle digest；
+- arm delta manifest；
+- raw/redacted evidence policy。
+
+执行：
+
+- 每个 arm 3 个 non-counted warmup；
+- 每个 task family 1 个 qualification sample；
+- secret scan、response redaction、timeout、retry=0；
+- 确认 `P/O` 工具集合和输入字节相同。
+
+任何不一致都阻止进入 paired campaign。
+
+### 3.2 `B1` — pilot batch
+
+- 独立 pilot seeds，不进入正式样本；
+- 每个通过 B0 的 C0 task family：5 seeds；
+- 每个 seed：`P/O` 各 2 次；
+- task block 内 arm 顺序随机；
+- 估计 completion variance、latency variance、Provider failure 和 task timeout；
+- 只调整未来 manifest 中预先允许调整的 timeout/sample size；
+- 不基于“接近显著”追加样本。
+
+输出：power analysis、正式 N、异常分类、不可执行 capability。
+
+### 3.3 `B2` — confirmatory paired batch
+
+- 使用未在 B1 出现的 held-out seeds；
+- 每个 capability class 至少 30 个 paired task-seeds，最终
+  `N=max(30, power-analysis result)`；
+- Provider 不支持 deterministic seed 时，每个 task-arm 重复 3 次；
+- 每个 seed 的 `P/O` 组成一个 paired block；
+- block 顺序使用冻结 seed 随机化；
+- 每 10 个 blocks 检查温度、throttle、rate-limit 和 model snapshot；
+- started outcome 全部 retained。
+
+Primary endpoints：
+
+1. deterministic-oracle completion rate；
+2. completion 非劣时的 time-to-oracle-completion；
+3. total/provider/local/Pi-launch latency decomposition；
+4. token/cost（仅真实 usage + 固定 pricing snapshot）；
+5. human intervention 和 retry count。
+
+### 3.4 `B3` — fault、recovery 与 safety batch
+
+每个可执行 fault × arm 固定 10 个 task-seeds：
+
+- client deadline；
+- daemon/broker unavailable；
+- selected-model mismatch；
+- Provider upstream timeout；
+- Pi process kill；
+- response-size bound；
+- stale task/epoch（仅 OS）；
+- OUTCOME_UNKNOWN（只有真实可达 mutation path 才执行）。
+
+所有 timeout、refusal、unknown、manual intervention 都保留。第三方 429 不通过主动
+hammering 制造；没有受控 Provider fixture 时 rate-limit cell=`not-run`。
+
+### 3.5 `B4` — concurrency 与 mixed workload
+
+Profiles：
+
+- concurrency `1/4/8/16`；
+- `17` in-flight 和 `33` connections 的 bounded overload；
+- 每 profile 200 local reads；
+- Agent tasks 在 `1/2/4` 并发下按 Provider budget 执行；
+- mix：Pi task、health/status/doctor、六资源 get/watch、Task watch。
+
+比较：
+
+- `P/O` Agent throughput；
+- p50/p95/p99；
+- Provider dispatch count；
+- CPU/RSS/FD/thread；
+- watch cursor completeness；
+- overload 后恢复到 warm baseline 的时间。
+
+### 3.6 `B5` — soak
+
+逐级晋升：
+
+1. 1 h：必须先通过；
+2. 8 h：1 h 无 leak/safety anomaly 才运行；
+3. 24 h：8 h 结果需要更长窗口且 owner budget 允许才运行。
+
+每 5 分钟运行一个 paired C0 task block；每分钟执行 local read/watch；每小时 cold restart。
+记录 RSS/FD/WAL/I/O slope、Provider denominator、orphan、socket、lock、secret scan。
+
+### 3.7 `B6` — optimization replay
+
+后续每项优化必须：
+
+- 使用同一环境 class、任务集版本和 arm contract；
+- 保留原始 B2 held-out set，不把它变成调参集；
+- 另加一份新的 generalization set；
+- 一次只改变一个 dominant-stage hypothesis；
+- 同时报 before/after 和 `P/O` delta；
+- 任何 safety regression 直接否决优化。
+
+## 4. 真实 Agent 任务与场景
+
+### 4.1 Route smoke 不算真实 Agent task
+
+固定 marker、简单算术和单字段抽取只用于：
+
+- Provider route qualification；
+- redaction 和 oracle plumbing；
+- cold/warm transport decomposition。
+
+它们不得进入“Agent 完成真实任务”的 headline 指标。
+
+### 4.2 `RAT-DEV-01` software、运维与 governed-task corpus
+
+每个任务来自固定、无 secret、可 reset 的小型 Git repository 或输入包。每个 seed 包含：
+
+- immutable input/workspace digest；
+- user goal 和明确 scope；
+- allowed tools/capabilities；
+- budget、deadline、max turns；
+- hidden deterministic oracle；
+- expected mutation set 或 `mutation_budget=0`；
+- cleanup/reset；
+- difficulty tags。
+
+#### `A1` — 失败测试根因分析（`C0` 与 `C1`）
+
+用户旅程：给出 failing test、相关代码和约束，要求定位根因并给出修复计划，不修改文件。
+
+- `C0` variant：将最小代码、test output 和目录摘要放入 prompt，当前 `P/O` 可成对；
+- `C1` variant：Agent 必须真实 read/search 固定 workspace，当前 OS arm=`not-run`。
+
+Oracle：
+
+- 正确文件、symbol、错误机制；
+- 引用至少两个固定事实；
+- 无 mutation；
+- 不把“测试失败”误报为完成。
+
+#### `A2` — 跨文件影响分析（`C0` 与 `C1`）
+
+用户旅程：一个 config field 将重命名，列出需要修改的代码、测试和文档，并指出兼容风险。
+
+- `C0`：输入包含 dependency slice；
+- `C1`：Agent 自行搜索 repo。
+
+Oracle 使用预先生成的 impact manifest；漏报、越界和不存在路径分别计数。
+
+#### `A3` — 受控软件修复（`C2a`）
+
+用户旅程：在 TypeScript/Rust 小仓中修复一个真实 bug。
+
+流程：read/search → patch/write → bounded test/lint → diff artifact → independent oracle。
+
+Oracle：
+
+- hidden tests 全过；
+- diff 只覆盖 allowlist；
+- 无 dependency/source tampering；
+- 无 test weakening；
+- process/output/turn budget 未超；
+- OS arm 必须有 closed Effect + independent acceptance 才算完成。
+
+当前状态：pure Pi 可做 baseline；OS arm 无 production write/test/verifier chain，故 paired
+result=`not-run`。
+
+#### `A4` — 运维事件诊断与恢复计划（`C0`）
+
+输入一组脱敏 journal、status、doctor、resource facts，要求输出：
+
+1. root-cause class；
+2. 三步恢复计划；
+3. 明确哪些动作尚未执行；
+4. 验证与 rollback。
+
+这是当前最接近真实用户问题、且 `P/O` 可公平执行的任务。
+
+Oracle：原因码、顺序、禁止 blind retry、禁止 false completion、包含 independent check。
+
+#### `A5` — 不完整需求澄清与 Task preview（`C0` + OS admission）
+
+用户提出有实质歧义的目标。Agent 必须先提出 clarification，不能直接声称完成或扩大 scope。
+
+两层结果：
+
+- `P/O` 对话质量：是否识别全部 material ambiguities；
+- OS-only authority：intent record/interpret/preview/admit 是否在未澄清时 fail closed。
+
+authority 结果不与 pure Pi 混成一个分数。
+
+#### `A6` — 跨会话 Memory/Skill reuse（`C2b`）
+
+Session 1 形成一条可复验事实和一个固定 procedure；Session 2 在不重放对话、不让用户重述
+的情况下继续任务，并加入 stale/unauthorized distractors。
+
+Oracle：
+
+- required recall=100%；
+- user restatement=0；
+- stale/unauthorized exposure=0；
+- Skill digest 正确；
+- verified completion 不下降。
+
+当前 OS 用户路径不足，整组 paired=`not-run`；不以手工拼 prompt 伪装 Memory。
+
+#### `A7` — external mutation + unknown outcome（`C2c`）
+
+使用 task-scoped、可查询、幂等的本地 external-state fixture。fault point 位于 mutation
+成功后、receipt persist 前。
+
+Oracle：
+
+- mutation 恰好一次；
+- 使用原 idempotency key query/reconcile；
+- 无 blind redispatch；
+- Effect closed/reconciled；
+- independent verification 后才 complete。
+
+当前 production Tool caller 不可达，OS arm=`not-run`。
+
+#### `A8` — 长程约束任务（`C0`，后续 `C2`）
+
+输入包含 8–12 条事实、3 个约束、2 个显式禁止项和一个中途追加事实。要求生成分阶段计划、
+在新事实后修订、保留未完成项并给出验证。
+
+当前 `C0` 版本将全部事实分轮提供；broker/runner 资格化后可执行 `P/O` 对话对照，
+workspace/mutation 版本等待完整 governed Task path。
+
+### 4.3 `RAT-GEN-01` 常见复杂通用 Agent 任务
+
+软件开发只占总 corpus 的一部分。通用任务优先使用固定离线 document/data catalog，保证
+纯 Pi 与 OS Pi 看到相同事实，并允许 deterministic 或 rubric-backed independent oracle。
+
+| ID | 真实用户任务 | 输入与过程 | Primary oracle |
+|---|---|---|---|
+| `G1` 多文档研究综述 | 8–20 份相互重叠且部分冲突的报告；要求带证据综合 | claim→source 映射、遗漏/矛盾识别、unsupported claim=0 |
+| `G2` 表格数据分析 | CSV/JSON 销售、预算或实验数据；计算、异常、建议 | 数值 tolerance、公式正确、缺失值处理、结论可追溯 |
+| `G3` 约束规划与排程 | 人员、时间、依赖、预算、优先级 | hard constraints 全满足、objective score、可执行性 |
+| `G4` 采购/方案比较 | 固定产品 catalog、需求和风险偏好 | hard filter、Pareto/权衡、不得虚构规格 |
+| `G5` 复杂文档工作流 | 提取→去重→比较→生成决策 memo | schema 完整、引用正确、格式/长度/受众约束 |
+| `G6` 客服/工单处置 | 多轮用户描述、policy、历史记录 | policy 合规、问题分类、下一动作、不得越权承诺 |
+| `G7` 财务/报销核对 | 发票、政策、预算和重复项 | 金额/税/重复检测、违规项、证据链 |
+| `G8` 旅行/日程组合 | 固定时刻表/价格 snapshot 与多约束偏好 | 时间可行、预算、冲突=0、变更后的重规划成本 |
+| `G9` 安全/隐私审查 | 配置、data-flow、policy 摘要 | findings recall/precision、严重度、secret/PII 处理 |
+| `G10` 长程项目推进 | 10–30 步任务、途中新增约束、暂停/恢复 | milestone 完成率、计划修订、重复工作、状态保真 |
+| `G11` 会议/邮件协同 | 会议记录、邮件线程、角色和截止时间 | action owner/date recall、冲突识别、回复准确、未承诺越权事项 |
+| `G12` 个人知识整理 | 混合笔记去重、分类、形成可检索摘要与待办 | provenance、重复合并、分类准确、隐私边界、可恢复原文引用 |
+
+每个 family 至少含三种 difficulty：
+
+- `basic`：单一目标、无冲突；
+- `interleaved`：多来源、多约束、一个中途变更；
+- `adversarial`：冲突来源、无关信息、诱导越权或虚假完成。
+
+#### 通用任务的真实执行形态
+
+1. `C0-contained`：所有输入以 bounded Context 分轮提供；当前可设计 P/O paired；
+2. `C1-files`：Agent 必须真实浏览固定 document/data workspace；当前 OS arm `not-run`；
+3. `C2-actions`：任务要求写 artifact、调用 Tool、持久状态或外部 action；当前 OS arm
+   依真实 production Tool/Effect path 决定。
+
+对 `G1/G4/G8` 如需在线实时信息，必须在 campaign 前冻结网页/API snapshot 与采集时间；
+否则 Provider/网络/外部内容变化会破坏 paired comparison。默认 confirmatory 使用离线
+snapshot，live-web 仅为单独 observation stratum。
+
+### 4.4 `RAT-SKL-01` Skill 安装、管理与实际复用任务
+
+Skill 不只是 prompt 片段。评测必须覆盖 package、immutable revision、provenance、binding、
+scope、revoke/supersede 和 Agent 实际消费。
+
+| ID | Skill 任务 | 成功条件 | 当前产品状态 |
+|---|---|---|---|
+| `S1` 发现与检查 | 从候选 package 中识别兼容 Skill；核对 manifest/digest/provenance | 正确选择；不读取未授权 body；无隐式 capability | authority/API 可测，Agent 消费 partial |
+| `S2` 安全安装/import | 导入本地 Skill package/revision | digest/SRI/来源/大小/兼容性通过；不可变 revision | daemon management path 已有 |
+| `S3` scope/task bind | 绑定到精确 workspace/Task/目的 | cross-scope bind=0；expected version/fence 正确 | authority path 已有 |
+| `S4` Agent 实际调用 | Agent 在目标任务中选择并遵循 Skill | 正确调用、步骤 adherence、结果提升、无 capability expansion | paired Agent path 当前 `not-run` |
+| `S5` update/supersede | 导入新 revision，保留旧 pin，可回滚 | lineage 完整、旧 exact-pin 可解释、current 选择正确 | store path 已有 |
+| `S6` revoke/forget | revoke binding 后立即不可再用 | revoked reuse=0；audit/explain 保留 | authority path 已有 |
+| `S7` 冲突与恶意 Skill | capability-grant、越界路径、prompt injection、digest drift | 全部 fail closed；未产生 partial binding | negative path 可设计 |
+| `S8` 跨任务复用 | 新 session 不重述 procedure，按允许 scope 复用 | reuse success、token/time delta、stale distractor exposure=0 | 用户执行闭环不足 |
+
+Skill paired comparison 分三层：
+
+- `P-no-skill`：纯 Pi 只有 task input；
+- `P-static-procedure`：纯 Pi 得到相同 procedure bytes，但无 OS Skill lifecycle；
+- `O-governed-skill`：Skill 经 OS import/bind/select/revoke 后消费。
+
+只有三者的 procedure bytes、任务、预算和模型一致，才能区分“procedure 本身收益”和
+“OS Skill 管理收益”。当前 `O-governed-skill` 缺少完整 Agent consumer，故 S4/S8 初始
+`not-run`；不得手工把 Skill 文本拼入 prompt 后声称 OS Skill 已被消费。
+
+### 4.5 `RAT-TOL-01` Tool 管理、选择与调用任务
+
+Tool 评测分开衡量 catalog 管理与真实 invocation：
+
+| ID | Tool 任务 | Oracle / hard conditions | 当前产品状态 |
+|---|---|---|---|
+| `T1` catalog/projection | 列出 registered、enabled、execution-ready、risk/digest | projection 与 assembled executor 一致 | 可读；仅 Read/ProcessCheck ready |
+| `T2` enable/disable/quarantine | lifecycle 切换后 Agent exposure 更新 | disabled/quarantined invocation=0 | dynamic path 仅 post-1.0 fixture evidence |
+| `T3` Tool 选择 | 多个相似 Tool 中选择最窄能力 | selection precision、unnecessary call=0 | C0 可做选择题；真实调用未接线 |
+| `T4` Workspace read/search | 定位 document/code/data fact | path/scope 正确、bounded output、fact recall | Read test-only；Search registered-only |
+| `T5` write/patch | 产生 allowlisted artifact/diff | preimage、atomic publish、diff oracle、越界写=0 | registered-only / no caller |
+| `T6` process/check | 运行 bounded deterministic verifier | command allowlist、timeout/output、exit semantics | executor test-only，production observation fail closed |
+| `T7` HTTP read-only | 获取 pinned HTTPS snapshot | redirect/credential URL/size/timeout policy | registered-only |
+| `T8` descriptor/version drift | invocation 时 descriptor 被替换 | deny before dispatch、dispatch=0 | negative 可设计 |
+| `T9` unknown outcome/reconcile | dispatch 后 receipt 前 crash | original key、duplicate Effect=0、bounded recovery | no production caller |
+| `T10` MCP/dynamic Tool | discover→enable→use→quarantine→reconcile | package/manifest pin、no bypass、cleanup | fixed fixture qualification；非 live ecosystem |
+
+Agent-level Tool metrics：
+
+- Tool selection precision/recall；
+- unnecessary Tool calls / completed task；
+- call success、denial、timeout、unknown denominator；
+- arguments schema validity；
+- first-use latency、steady-state latency；
+- output bytes/tokens、redaction loss；
+- task improvement versus no-Tool arm；
+- duplicate dispatch、side effect count、reconcile time；
+- capability/scope/risk violations；
+- disable/quarantine propagation latency。
+
+若 `P` 可以调用某 Tool 而 `O` 不能，记录 capability gap，不计算 latency non-inferiority。
+若比较 Tool 收益，P/O 必须看到语义等价 Tool schema、同一 workspace snapshot、同一
+side-effect budget 和同一 oracle。
+
+### 4.6 `RAT-OS-01` CognitiveOS 独有任务
+
+这些任务没有“纯 Pi 完全等价”的 authority 语义。评价方式是 OS-only correctness/SLO，
+或将纯 Pi 作为无治理参考，不计算传统功能 parity。
+
+| ID | OS 独有任务 | 关键评价指标 |
+|---|---|---|
+| `O1` intent→clarify→preview→admit | intent fidelity、material ambiguity recall、preview digest、wrong-digest/stale-epoch deny |
+| `O2` Context authorization | scope-before-rank、required fail-closed、revoked/stale exposure、explicit loss |
+| `O3` Context cache/compaction | reauthorization=100%、cache correctness、token reduction、quality non-degradation |
+| `O4` budget/fencing/scheduler | pre-dispatch stop、budget overshoot=0、stale writer=0、queue/fairness/starvation |
+| `O5` Intent/Effect mutation | persist-before-dispatch、idempotency、exactly-once outcome、unknown reconcile |
+| `O6` independent verification | self-report acceptance=0、evidence completeness、freshness、false completion=0 |
+| `O7` Memory lifecycle | provenance/freshness、admission precision、forget non-resurrection、cross-scope leak=0 |
+| `O8` Skill lifecycle | import/bind/pin/supersede/revoke、revoked reuse=0、explain completeness |
+| `O9` Tool governance | descriptor integrity、least authority、quarantine、dispatch/reconcile |
+| `O10` Agent/sidecar lifecycle | install≠permission、register≠activate、epoch fencing、pause/resume/recover/orphan |
+| `O11` six-resource projection | projection completeness/freshness、unavailable honesty、channel isolation |
+| `O12` secret isolation | secret exposure=0、backend fail-closed、no plaintext fallback |
+| `O13` audit/evidence/replay | event completeness、digest chain、deterministic replay、evidence retrievability |
+| `O14` lifecycle/backup/restore | transactional rollback、secret exclusion、restore integrity、RTO/RPO |
+
+当前不可执行项仍必须留在最终 capability register：
+
+- scheduler fairness/global picker：未实现；
+- production Tool/Effect/verifier full path：未接线；
+- Skill/Memory Agent 消费：partial；
+- backup/restore user command：unavailable；
+- live MCP ecosystem、多 Agent：deferred/not-run。
+
+OS-only 指标不得与 P/O conversation quality 简单加权成一个总分。报告至少分成：
+
+1. general Agent capability；
+2. managed Skill/Tool capability；
+3. OS authority/correctness；
+4. performance/resource；
+5. safety/recovery。
+
+### 4.7 Seeds 与防泄漏
+
+- B1 pilot 与 B2 confirmatory 的 seed 不重叠；
+- hidden oracle 不进入 prompt、Context 或 Agent 可写目录；
+- task family 模板公开，具体值/bug/location 由冻结 seed 生成；
+- report 只记录 task ID、seed digest、结果和指标，不提交 raw model response；
+- oracle 变更必须产生新 corpus version，不能回改已执行 denominator。
+
+### 4.8 当前建议的 confirmatory composition
+
+在不推进产品实现的前提下，只有在 §2.2/§2.5 的 broker 与 paired runner 资格化后，以下
+C0 composition 才可运行：
+
+- `G1–G12-C0`：每 family 30 paired seeds，共 360；
+- `A1-C0`：30 paired seeds；
+- `A4-C0`：30 paired seeds；
+- `A5-C0`：30 paired seeds；
+- `A8-C0`：30 paired seeds；
+- 每 arm/seed 3 replicas（Provider 无确定性 seed 时）。
+
+核心总量为 480 paired task-seeds；3 replicas 时 `P/O` 最多 2880 Agent runs，但统计独立
+单位仍是 480 个 task clusters。B1 pilot 不计入。正式 N 可由 power analysis 上调，但不得
+低于每 family 30 pairs。该 N 支持 per-family completion/median 的 paired analysis，不支持
+per-family 稳健 p95/p99 tail inference。调用预算不足时，应在执行前按完整 stratum
+（例如 live-web 或某个 family）删减并重新 preregister，不能执行一半后挑结果。
+
+`G*-C1/C2`、`A1-C1/A2-C1/A3/A6/A7/A8-C2`、`S4/S8` 和真实调用型
+`T4–T10` 全部保留在状态矩阵中为 `not-run`，并明确列出缺失 production call chain。
+
+## 5. 真机用户旅程与系统场景
+
+### 5.1 `UJ1` install → init → first response
+
+复用已完成 B01 clean-install 统计作为历史证据；新 campaign 只在独立 preregistration
+需要当前 revision 安装回归时重跑，不能污染既有 B01 ledger。
+
+指标：安装成功率、startup-to-ready、doctor-ready、Pi first response、cleanup。
+
+### 5.2 `UJ2` cold/warm conversation
+
+- cold：daemon/Pi 都未启动；
+- daemon-warm/Pi-cold；
+- daemon/Pi 都 warm（仅在产品真实支持 process reuse 时）；
+- 每 stratum 使用相同 paired tasks。
+
+分解：
+
+- daemon startup；
+- Pi route total；
+- 有真实 nested timestamp 时才单列 process spawn 与 Extension load；
+- `local_non_provider_residual`；
+- Provider network；
+- oracle。
+
+若没有同一次 paired run 的嵌套计时，`Pi total - daemon total` 只能报告为未归因
+incremental delta，不能命名为 spawn、Extension 或 governance cost。
+
+### 5.3 `UJ3` daily operations
+
+| Operation | Samples |
+|---|---:|
+| health | 500 |
+| `cognitive status` | 200 |
+| `cognitive doctor` | 100 |
+| daemon status | 100 |
+| 六资源 get | 每 family 50 |
+| 六资源 bounded snapshot/replay | 每 family 10 |
+| Task same-process bounded snapshot/replay | 20 |
+
+检查 JSON、snapshot-first、cursor 单调/去重、channel isolation、Tool
+`registered/enabled/execution_readiness` 诚实性和敏感字段缺失。
+
+当前 resource/task “watch” 都是 bounded response，不是长期订阅或真实 fan-out。不得据此
+报告持续 watch throughput、跨进程 cursor durability 或断线后长期恢复。
+
+### 5.4 `UJ4` Task admission truth
+
+创建 30 个唯一 read-only Task，测 session mint、intent record、interpret、preview、admit
+和同一 daemon process 内的 bounded watch delivery。
+
+当前 public surface 的 watch log 在进程内存中，snapshot 固定不枚举 durable Tasks；重启后
+不能通过 public API 证明 Task 仍可见。因此分开记账：
+
+1. admission HTTP outcome 和同进程 watch event；
+2. restart 后 watch 返回的实际 bounded snapshot；
+3. durable Task post-restart query：`not_available`；
+4. scheduler/Context/candidate/Effect/Verification/acceptance 内部状态：`not_available`。
+
+不得读取 raw SQLite 或把 60 秒沉默当作“内部路径未运行”的证据。基于 source-backed
+capability truth，当前 verified completion 是不可达能力；runtime campaign 只能断言 public
+surface 上没有 observed false-completion event，不能把未观测内部事实默认计为 0。
+
+### 5.5 `UJ5` restart、fault 与 cleanup
+
+- daemon 20 次 stop/start；
+- Pi kill 10 次；
+- selected-model mismatch 20 次；
+- bounded deadline 10 次；
+- same-process bounded watch cursor negatives；
+- cleanup 后 orphan/socket/lock/FD/RSS。
+
+真实 external mutation fault 只在 production `G` arm 可达后执行。
+
+### 5.6 `UJ6` canonical journey coverage register
+
+全面评估不能因当前不可执行而省略用户旅程：
+
+| Journey | Current disposition |
+|---|---|
+| Memory remember/review/forget | authority/API partial；Agent consumption paired path `not-run` |
+| Skill import/pin/revoke | authority/API partial；Agent execution paired path `not-run` |
+| Workspace read/search | read executor test-only、search registered-only；real OS Agent `not-run` |
+| Workspace write/patch/check | production call chain absent；`not-run` |
+| Pi install/register/activate/pause/resume/stop/recover | fixed-matrix/history evidence；live current campaign需独立 lifecycle procedure |
+| Pi upgrade/rollback/uninstall | implementation/history evidence；current live run `not-run` by default |
+| backup/restore | no user CLI/archive wiring；`not_available` |
+| Web UI / Multi-Agent | unavailable/deferred |
+| full Task independent acceptance | production verifier caller absent；`not_available` |
+
+最终报告必须保留这些行，不能只汇报成功运行的 C0 route。
 
 ## 6. 指标体系
 
-### 6.1 正确性和安全指标（硬条件）
+### 6.1 Primary task metrics
 
-| 指标 | 目标 |
+- deterministic-oracle completion rate；
+- paired completion delta `O-P`；
+- time-to-oracle-completion；
+- 对 `G` arm：time-to-independent-verified-completion；
+- user intervention count/time；
+- turns、Provider calls、Tool calls；
+- duplicate work/retry；
+- prompt/completion/total tokens；
+- 每 completed task 的费用（只有固定 pricing snapshot 才报告）。
+
+不要把 C0 oracle pass 叫作 CognitiveOS Task completion。
+
+### 6.2 通用复杂任务质量指标
+
+不同 family 使用各自 oracle，同时保留统一维度：
+
+| Dimension | Metric |
+|---|---|
+| Correctness | exact/partial score、事实错误、数值误差、constraint violations |
+| Grounding | supported claim precision/recall、citation correctness、source coverage |
+| Completeness | required item recall、遗漏 critical fact、unfinished item honesty |
+| Planning | hard-constraint satisfaction、dependency order、replan quality、schedule score |
+| Robustness | 输入顺序扰动、无关信息、冲突来源、中途变化后的 score delta |
+| Efficiency | turns、tokens、time、Tool calls、重复步骤、每成功任务费用 |
+| Autonomy | human intervention count/time、clarification quality、escalation correctness |
+| Honesty | unsupported completion、fabricated source/path/action、unknown 保留 |
+| Artifact quality | schema/format、diff、可执行性、可复验性、受众/长度约束 |
+| Continuity | pause/resume state fidelity、user restatement、duplicate work |
+
+开放式输出不能只用 model-as-judge。优先级：
+
+1. deterministic parser/test/calculation；
+2. hidden fact/constraint manifest；
+3. independent rule-based rubric；
+4. 只有机械 oracle 不可能时才用 blind out-of-band model judge，并报告 judge agreement、
+   position bias 和人工抽检。
+
+### 6.3 Skill 安装、管理与复用指标
+
+- package/revision provenance completeness；
+- digest/integrity/compatibility validation pass rate；
+- import/bind/revoke/supersede latency；
+- immutable revision 和 exact-pin correctness；
+- scope/task binding violation count；
+- revoked/stale Skill reuse count；
+- Agent Skill selection precision/recall；
+- Skill procedure adherence；
+- skill-assisted task completion/time/token delta；
+- wrong-Skill/unused-Skill/unnecessary-load rate；
+- context cost 与 graded-load 命中；
+- rollback/revoke propagation latency；
+- explain/audit completeness；
+- malicious Skill rejection 与 partial-state residue。
+
+必须把“Skill 安装成功”“Skill 被选中”“Skill 改善任务”分成三个 denominator。
+
+### 6.4 Tool 管理与真实调用指标
+
+- catalog completeness 与 projection truth；
+- enable/disable/quarantine/revoke propagation；
+- registered→execution-ready 差异；
+- Tool selection precision/recall；
+- argument schema validity；
+- pre-dispatch denial correctness；
+- invocation success/timeout/unknown/denied denominator；
+- first-use/warm latency、output bytes/tokens；
+- unnecessary call、duplicate dispatch、repeated read；
+- side-effect count 与 mutation budget；
+- descriptor/version/policy drift detection；
+- original-key reconciliation rate/time；
+- sandbox/path/network/credential boundary violations；
+- Tool-assisted task completion/time/token delta；
+- cleanup 后 process/socket/temp/artifact residue。
+
+Tool exit 0 不是任务完成；任务收益必须由任务 oracle/independent verifier判定。
+
+### 6.5 OS 独有指标
+
+| OS property | Metrics |
+|---|---|
+| Authority separation | non-daemon write attempts accepted=0、authority escape=0 |
+| Task contract | intent fidelity、clarification recall、preview/admit digest mismatch denial |
+| Context governance | unauthorized/stale exposure=0、scope-before-rank、explicit-loss completeness |
+| Budget/fencing | budget overshoot=0、dispatch-after-stop=0、stale-epoch commit=0 |
+| Scheduling | admission→lease、queue wait、throughput、fairness、starvation；未实现则 `not_available` |
+| Intent/Effect | persist-before-dispatch=100%、duplicate mutation=0、unknown reconcile RTO |
+| Verification | self-report acceptance=0、evidence completeness、false completion=0 |
+| Memory | admission precision、recall、forget non-resurrection、cross-scope leak=0 |
+| Skill | provenance/binding/revoke/explain correctness |
+| Tool | descriptor integrity、least authority、quarantine、reconcile |
+| Runtime/sidecar | install/register/activate identity、pause/resume/recover、orphan=0 |
+| Secret | exposure=0、plaintext fallback=0、locked backend fail-closed |
+| Evidence/audit | event coverage、digest/replay consistency、raw evidence retrievability |
+| Lifecycle | startup/restart、rollback、backup/restore RTO/RPO、cleanup residue |
+
+不生成跨维度“OS 总分”。Safety/correctness 是 hard condition；capability、quality、latency、
+resource 分别报告，避免高速度掩盖 authority failure。
+
+### 6.6 Latency decomposition
+
+- process start → Pi ready；
+- Extension/baseline adapter load；
+- client → local endpoint；
+- daemon/broker local preflight；
+- Provider network complete-response；
+- candidate parse/render；
+- oracle；
+- 对 G：admission、scheduler、Context、Tool/Effect、reconcile、verification、acceptance。
+
+当前 non-streaming，TTFT=`not_available`。
+
+### 6.7 Resource and capacity
+
+- CPU seconds、peak/steady RSS、threads、FD、I/O bytes；
+- daemon、broker、Pi 分进程；
+- authority DB/WAL/cache/artifact growth；
+- tasks/hour、completed tasks/hour；
+- concurrency tail；
+- 1 h/8 h/24 h slope；
+- cleanup residue。
+
+采样器禁止读取 argv、environment、descriptor target、prompt 或 response。
+
+### 6.8 Safety hard conditions
+
+| Counter | Target |
 |---|---:|
-| unauthorized/stale Context exposure | 0 |
 | Provider secret exposure | 0 |
+| unauthorized/stale Context exposure | 0 |
 | duplicate external Effect | 0 |
 | false completion | 0 |
 | stale-epoch commit | 0 |
-| unreconciled state after bounded recovery window | 0 |
-| Task reported complete without independent acceptance | 0 |
-
-任何一项大于 0 都终止 claim 升格；性能改善不能抵消安全失败。
-
-### 6.2 延迟指标
-
-- module operation p50/p95/p99/min/max/MAD；
-- daemon startup to health、startup to doctor-ready；
-- session mint、Task record/interpret/preview/admit；
-- scheduler queue wait 与 lease acquisition；
-- Context discovery/authorization/body load/build/cache；
-- Pi process spawn、Pi model activation、candidate total；
-- Provider proxy local preflight、Provider network complete-response；
-- Intent persist、dispatch、receipt/reconcile、verification、acceptance；
-- time-to-first-complete-response；
-- time-to-verified-completion；
-- recovery-to-runnable、recovery-to-reconciled、recovery-to-verified。
-
-**TTFT 当前不可测。** Provider proxy 和 Pi adapter 都是 non-streaming，只有在实现真实
-stream timestamp 后才能新增 TTFT 指标。
-
-### 6.3 吞吐和容量
-
-- requests/s、Tasks/hour、verified Tasks/hour；
-- concurrent profiles：1、4、8、16；
-- overload probes：17 个 in-flight、33 个 connections，验证 bounded 429/fail-closed；
-- request body：1 KiB、64 KiB、256 KiB、1 MiB，以及 1 MiB + 1 byte rejection；
-- private Pi frame：小、中、接近 256 KiB limit，以及 limit + 1 rejection；
-- watch fan-out、resume cursor、128-event replay window 边界；
-- scheduler queue depth：1、10、100、1000；
-- Memory corpus：1K、10K、100K records，分别测高/低 selectivity 和 miss。
-
-### 6.4 资源与存储
-
-- daemon/Pi/adapter CPU seconds、peak/steady RSS、threads、FD；
-- bytes read/write、fsync count、SQLite query count；
-- authority DB/WAL、Artifact CAS、cache 增长；
-- 每 governed call 额外 writes/bytes；
-- 1 h、8 h、24 h soak 的 RSS/WAL/FD 斜率；
-- cleanup 后残留进程、socket、temporary file、stale lock 数。
-
-### 6.5 Provider、token 和费用
-
-- Provider request count、success/timeout/rate-limit/upstream-failure denominator；
-- Provider complete-response latency；
-- prompt/completion/total tokens（仅 Provider 返回真实 usage 时）；
-- cache-read/cache-write token（仅 Provider 明确提供时）；
-- 每 verified task 的 token 与费用；费用使用 campaign 开始前固定的 pricing snapshot，
-  不把硬编码 0 当作真实价格。
-
-### 6.6 统计方法
-
-- 比例：Wilson 95% CI；
-- 连续量和 percentile：BCa/bootstrap 95% CI，至少 10,000 resamples；
-- A/B/C/D：同任务 paired comparison，报告 absolute delta、relative delta 和配对效应量；
-- task order：固定 seed 的 randomized block；
-- secondary endpoints 多重比较：Holm correction；
-- 不用均值替代 p95/p99；同时报告 median、MAD、min/max 和 outliers；
-- pilot 用于方差估计，正式 sample size 由 power >= 0.8 决定；不得 optional stopping。
-
-## 7. Benchmark suite
-
-### 7.1 L1 deterministic module suite
-
-在已有七项基础上使用以下矩阵：
-
-| Family | Dimensions | 重复策略 |
-|---|---|---|
-| Context resolve | candidates 10/100/1000；authorized 1%/10%/100%；required miss | 每 cell 10 process × 200 measured iterations |
-| Context cache | cold miss、full-key hit、stale digest、revoked source | 同上；negative 只看正确拒绝与耗时分布 |
-| Artifact CAS | 1 KiB/64 KiB/1 MiB；new/dedup/readback | 每 cell 200 iterations |
-| Scheduler CAS | queue 1/10/100/1000；contention 1/4/8 workers | 每 cell 30 independent runs |
-| Memory FTS5 | corpus 1K/10K/100K；hit 1/10/miss；scope selectivity | 每 cell 100 queries × 10 runs |
-| Intent/Effect | new intent、idempotent replay、reload、unknown reconcile | 每 cell 100 operations × 10 runs |
-| Report serialization | metrics 10/100/1000；comparison/no comparison | 每 cell 500 iterations |
-
-当前 binary 的 fixture 只覆盖最小规模。规模矩阵应作为新的 manifest-driven runner 实现，
-原有七项先作为 continuity baseline 保留。
-
-**现有命令模板（仅计划，不在本文执行）：**
-
-```bash
-export REVISION="<full-immutable-revision>"
-export COGNITIVEOS_BENCHMARK_SAMPLES=200
-cargo run --release --locked -p cognitive-runtime \
-  --bin p7_t04_module_benchmark -- \
-  --source-revision "$REVISION" \
-  > artifacts/performance/<run-id>/module-observation.json
-```
-
-### 7.2 L2 governed-path、store 与 transport suite
-
-1. 运行 cold/warm `GovernedPathStageCollector`，每个 run 100 samples，至少 10 个独立 run。
-2. 保留当前四阶段，以便和 P7-T04/P9-T01 历史对照。
-3. 新增 transport-only stage 后，再测 HTTP/watch/sidecar；不能回填历史数据。
-4. long-lived store 与 per-open 对照使用同一 DB、同一 read set、同一 process affinity；
-   先随机化模式顺序，再报告 paired delta。
-5. 同时记录 WAL、fsync、RSS 和 CPU，解释 latency 改善是否以资源增长换取。
-
-**现有 P9-T01 命令模板：**
-
-```bash
-export REVISION="<full-immutable-revision>"
-export P9_T01_RUNS=10
-export P9_T01_SAMPLES=100
-cargo run --release --locked -p cognitive-runtime \
-  --bin p9_t01_async_decision_gate -- \
-  --source-revision "$REVISION" \
-  > artifacts/performance/<run-id>/governed-stage-observation.json
-```
-
-该命令的结果仍是 `hypothesis`；即使 `effect_persistence` 占比超过 50%，也不能推导 stream
-async migration。
-
-### 7.3 L3 DeepSeek route suite
-
-| Scenario | 路径 | Primary metric | Samples |
-|---|---|---|---:|
-| R1 Provider proxy marker | daemon client → proxy → DeepSeek | complete-response latency、success rate | pilot 10；正式 30 |
-| R2 Pi first response | Pi → Extension → daemon proxy → DeepSeek | process-to-complete-response latency | pilot 10；正式 30 |
-| R3 cold daemon + first response | start → doctor → Pi → Provider | total cold journey | 20 |
-| R4 warm repeated conversation | same daemon/session，fixed prompt set | p50/p95/p99、Provider count | 50 |
-| R5 selected-model mismatch | wrong model ID | fail-closed latency、dispatch=0 | 20 |
-| R6 timeout/cancel/rate-limit | bounded fault/network policy | failure class、bounded time、retry=0 | 每类 10 |
-
-`p1-t09-provider-proxy-smoke.mjs` 和 `p1-t09-product-route-smoke.sh` 可作为 R1/R2 的现有
-redacted smoke，但正式 suite 需要 runner 在不输出 response 的前提下保存 correlation、
-timing 和 denominator。
-
-### 7.4 L4 真实 governed Task scenarios
-
-#### T1：任务准入与只读项目分析
-
-- 用户目标：分析固定 Git revision 中一个失败测试，给出候选修复计划，不修改文件。
-- 路径：intent record → interpret → preview → admit → Context → Pi candidate → read/search Tool
-  → Artifact → independent verifier。
-- Oracle：候选必须引用固定事实；未执行 mutation；Task 只有 verifier 后才能 complete。
-- 指标：admission latency、Context tokens、Provider calls、read calls、verified completion。
-
-#### T2：受控软件修复（W1）
-
-- 输入：固定的小型 Rust 或 TypeScript repository fixture；预先植入一个可由 deterministic
-  tests 判定的 bug。
-- 操作：read/search → patch/write Effect → bounded check process → Artifact → verifier。
-- Oracle：固定测试、build、lint 和 expected diff；模型自述不计完成。
-- 负例：越界路径、descriptor drift、stale epoch、budget exhausted、test 不通过。
-- 指标：time-to-verified-completion、tool calls、duplicate work、token、cost、Effect count。
-
-#### T3：跨会话 Memory/Skill reuse（W2/UCR-01）
-
-- Session 1 通过 daemon admission 写入一条 required Memory 和一个 immutable SkillRevision。
-- Session 2 不重放对话、不让用户重述；Task 必须检索 admitted Memory 并 pin 同一 Skill digest。
-- 加入 stale 和 unauthorized distractors。
-- Oracle：required recall=100%、user restatement=0、stale/unauthorized exposure=0。
-- 指标：retrieval latency、Context size、token、verified completion、Skill reuse digest。
-
-#### T4：stable/changed/full-replay Context
-
-- 对同一 Task、模型、预算和事实运行 full replay、stable prefix、changed delta 三个 strata。
-- stable 与 changed 分开统计；Provider cache 设置必须对称。
-- 目标观测：重复输入 token 相对 full replay降低 >=20%，且 verified completion 不下降。
-- 这是 UCR-01/B06/B07 scenario-limited 观测，不自动成为 generalized benefit。
-
-#### T5：external mutation + OUTCOME_UNKNOWN recovery
-
-- 使用 task-scoped、可查询、幂等的本地 external-state fixture。
-- fault point：外部 mutation 完成后、receipt persist 前终止 daemon/sidecar。
-- restart 后必须以原 idempotency key query/reconcile，不得 blind redispatch。
-- Oracle：外部 mutation 恰好一次；Effect reconciled；independent verifier 后 Task 才 complete。
-- 指标：recovery latency、recompute ratio、duplicate Effect、manual intervention。
-
-#### T6：sidecar/Pi lifecycle
-
-- install/register/activate → candidate → pause/resume → stop/recover。
-- 注入 sidecar kill、protocol digest drift、epoch replacement 和 orphan process。
-- Oracle：旧 epoch 无法提交；Pi/process/AgentExecution/Task identity 不混淆。
-- 指标：activation、candidate、recovery latency，orphan count，RSS/FD cleanup。
-
-#### T7：mixed interactive workload
-
-- 同时运行 1 个 Task mutation、4 个 resource watches、4 个 Task watches、8 个 read-only
-  projection clients 和 1 个 Provider request。
-- 并发从 1/4/8/16 递增，随后执行 17 in-flight 与 33 connection overload probes。
-- Oracle：有效请求无 authority corruption；超限请求 bounded 429；watch 无 missing/duplicate。
-
-#### T8：8 h / 24 h soak
-
-- 每分钟执行 status/doctor/resource watch；每 5 分钟一个 bounded read-only Task；每 30 分钟
-  一个真实 DeepSeek completion；每小时一次 daemon restart/reconcile。
-- 24 h run 只在 8 h 无增长异常后开始。
-- Oracle：无 secret leak、stale lock、unbounded WAL、FD/RSS 单调异常增长或 false completion。
-
-## 8. A/B/C/D Agent benefit campaign
-
-### 8.1 Arms
-
-| Arm | 定义 |
-|---|---|
-| A native baseline | 同一 Pi/DeepSeek/任务/工具/预算，不经过 CognitiveOS；但仍必须通过独立的 approved non-logging secret broker，不能恢复已过期的 direct-secret adapter |
-| B governance-only | CognitiveOS 全治理路径开启；语义优化关闭；保留 deterministic Context filtering、Effect、audit、verifier |
-| C optimized | B + 被测单项或明确组合：compaction、adaptive budget、stable prefix/delta、Memory/Skill reuse |
-| D ablation | 从 C 每次关闭一个机制，形成 `C-minus-x` |
-
-当前仓库没有一个可直接执行 A arm 且同时满足 A5 的 baseline runner。正式 L5 前必须建立
-**非产品、隔离、approved secret broker**，或由 owner 明确指定符合 SecretStore 边界的 native
-Agent baseline。若做不到，L5 状态必须是 `blocked/not-run`，不能用 daemon proxy 伪装成
-“无 CognitiveOS 的 A arm”。
-
-### 8.2 Workload 与样本量
-
-- W1：至少 30 个 paired task-seed，最终 N 取 `max(30, power-analysis result)`；
-- W2：至少 30 个 paired task-seed，最终 N 同上；
-- Provider 不支持 deterministic seed 时，每个 task-arm 至少重复 3 次，并在 power analysis
-  中使用 task block 与 run-level variance；
-- pilot 每 family 10 个 task，只用于估计方差和失败模式，不与 confirmatory result 合并；
-- arm 顺序按 task block 随机化；所有 arms 使用同一模型 revision、budget、tool、data、
-  timeout、grader 和 cache policy。
-
-### 8.3 Primary endpoints
-
-- W1：`verified task completion rate`；非劣时再看每 verified task 的 time/token/cost；
-- W2：`verified task completion rate`；secondary 为 repeated-input token 与 cross-session recall；
-- Recovery stratum：`time-to-verified-completion` 与 duplicate Effect count。
-
-### 8.4 合同门槛
-
-治理非劣化 B vs A：
-
-- verified completion 绝对下降 <=2 percentage points（按 95% CI）；
-- W1 governance latency overhead <=3% p50 / <=8% p99，cost overhead <=2%，cache
-  preservation >=0.90；
-- W2 governance latency overhead <=10% p50 / <=20% p99，cost overhead <=5%，cache
-  preservation >=0.90；
-- 安全失败不高于 A。
-
-显著收益必须同时满足：95% CI 支持改善；completion 相对提高 >=10%，或 completion 非劣时
-token/cost/time 降低 >=20%；W1/W2 同时成立；ablation 可归因；安全失败不增加；p95/p99、
-人工和维护成本不抵消收益。
-
-## 9. 回归地板与判定
-
-### 9.1 工程地板（本方案建议，执行前须 preregister）
-
-以下是建议阈值，不是当前已通过能力，也不是 release Gate：
-
-| 指标 | Alert | Block benchmark promotion |
-|---|---:|---:|
-| deterministic module p95 vs fixed-native baseline | >5% regression | >10% regression |
-| deterministic module p99 | >10% | >15% |
-| local daemon throughput | >3% drop | >5% drop |
-| steady RSS after warmup | >5% growth | >10% growth or positive leak slope |
-| WAL/FD after cleanup | any unexplained residue | unbounded growth / cleanup failure |
-| safety counters | — | any non-zero |
-
-阈值只在同一 fixed-native environment、相同 manifest 和足够样本下比较。Floating CI 只执行
-correctness 和 hypothesis tracking，不阻断 release performance。
-
-### 9.2 Provider 波动判定
-
-- Provider complete-response latency 不作为本地 module regression gate。
-- 同时报告 local pre-provider、Provider network、post-provider 三段；只有 local 段可进入本地
-  regression floor。
-- rate-limit 和 upstream failures 全部保留，并按时间 block 分层。
-- 若 DeepSeek model revision 无法固定，report 必须写 `provider_revision_unpinned`，claim_level
-  上限为 `hypothesis`。
-
-## 10. 分阶段执行 runbook
-
-### Phase 0：预注册与 dry preparation
-
-1. 创建新的 campaign ID、manifest、SLO profile、task-set digest 和 cleanup plan。
-2. 选定已经 push 的 exact Git revision；远端 disposable worktree 必须 checkout 该 revision。
-3. 记录环境、toolchain、Pi/artifact/adapter digest；确认 worktree clean。
-4. 完成 measurement-only runner 和 focused negative tests。
-5. 用 synthetic Provider fixture 检查报告/redaction；此步骤不产生真实性能结论。
-6. 独立 reviewer 检查 manifest、secret path、denominator、fault points 和 claim ceiling。
-
-**Exit：** manifest 冻结、runner tests pass、secret scan pass；否则不进入真实 Provider。
-
-### Phase 1：deterministic baseline
-
-1. release build 一次；保留 build time 但不混入 operation latency。
-2. 运行原有七项 continuity benchmark。
-3. 运行规模矩阵、governed stages、store access、HTTP/watch/sidecar transport。
-4. 每轮前后采集 OS 状态；计算 raw digest 和 summary。
-5. 与 P7-T04 fixed-native baseline 做可比项对照；不可比项建立新 baseline version。
-
-**Exit：** correctness=pass、安全计数=0、数据完整；regression breach 进入分析而非重跑删除。
-
-### Phase 2：daemon load、fault 与 soak（无真实 Provider）
-
-1. 使用 Provider fixture 或完全不进入 Provider 的 Task paths。
-2. 执行 concurrency/request-size/watch/scheduler/FTS/CAS matrix。
-3. 执行 stale epoch、locked SecretStore、disk full、socket timeout、sidecar kill、daemon restart。
-4. 先 1 h soak，再 8 h；24 h 只在 8 h 合格后执行。
-
-**Exit：** bounded failure、无重复 Effect/false completion、无资源 leak。
-
-### Phase 3：DeepSeek SecretStore 导入与 route smoke
-
-1. owner 在 native Linux interactive TTY 从 owner-local source 手工粘贴密钥；不在命令、SSH、
-   terminal capture 中传递 secret。
-2. 运行 `cognitive init --provider deepseek --base-url https://api.deepseek.com/v1`，可按
-   preregistration 指定 `--model-id`；不使用 ephemeral backend。
-3. 运行 `cognitive daemon start`、`cognitive doctor`，只保留 redacted readiness。
-4. 执行 R1/R2 pilot；确认 marker、response、usage collector、redaction 和 Provider budget。
-5. pilot 通过后执行正式 route samples；失败和限流都保留。
-
-**命令模板：**
-
-```bash
-# Interactive hidden input: do not put the key in argv or environment.
-cognitive init \
-  --provider deepseek \
-  --base-url https://api.deepseek.com/v1 \
-  --model-id "<preregistered-selected-model>"
-
-cognitive daemon start --bind 127.0.0.1:48181
-cognitive doctor
-
-node tools/personal/p1-t09-provider-proxy-smoke.mjs
-
-bash tools/personal/p1-t09-product-route-smoke.sh \
-  --cognitive "<absolute-cognitive-path>" \
-  --pi "<absolute-pi-path>" \
-  --extension "<absolute-extension-path>" \
-  --timeout-seconds 90 \
-  --expected-marker cognitiveos-first-response-ok
-```
-
-上述现有 smoke 只输出 redacted marker/status。不要把 response body 重定向进 evidence。
-
-### Phase 4：真实 Task scenarios
-
-1. 先执行 T1/T3 只读和跨会话路径。
-2. 再执行 T2 的 task-scoped workspace mutation。
-3. 执行 T5 fault recovery；每个 fault 使用新 task/idempotency key，不能重用失败 state。
-4. 执行 T6 sidecar lifecycle 和 T7 mixed load。
-5. 每个 Task 都必须由独立 deterministic oracle 或 out-of-band verifier 结束。
-
-**Exit：** 每个 scenario 的完整 denominator、stage correlation、Effect、Verification、cleanup
-齐全；缺失任一 authority stage 时不得写“端到端完成”。
-
-### Phase 5：A/B/C/D confirmatory campaign
-
-1. 使用 pilot 方差做 power analysis，冻结正式 N。
-2. 冻结 A/B/C/D manifest delta 和 arm randomization。
-3. 执行 W1/W2 paired tasks；禁止看到结果后追加样本至显著。
-4. 独立分析程序生成 CI、effect size、tail 和 safety table。
-5. `performance-policy.mjs`、JSON schema 和 independent reviewer 三重校验。
-
-**Exit：** 只按实际门槛写 `hypothesis`、`non_inferiority` 或 `significant_benefit`。
-
-### Phase 6：cleanup 与归档
-
-1. 停止 campaign daemon/sidecar/Pi，确认无 orphan/stale lock/socket。
-2. 清理 disposable worktree、XDG root、temporary secret file 和 campaign SecretStore entry。
-3. 不操作 owner 的 Desktop 原文件。
-4. raw payload 保存在 ignored `artifacts/performance/<run-id>/` 或批准的外部 evidence store；
-   Git 只保留 redacted report、digest、attestation reference 和 non-claims。
-5. 记录所有 `pass/fail/not-run/not_available`；不得把未执行项省略。
-
-## 11. Evidence 目录与报告格式
-
-建议 ignored 目录：
+| unreconciled Effect after bounded window | 0 |
+| completion without independent acceptance | 0 |
+| scenario boundary violation | 0 |
+
+任一非零：停止 claim promotion；保留完整 denominator；latency/quality 改善不能抵消。
+
+每项还必须记录 evidence disposition：
+
+- `observed_zero`：存在主动 collector、适用 denominator 和 negative control；
+- `not_applicable`：该 cell 没有进入对应 mutation/authority path；
+- `not_available`：路径适用但当前没有授权 observation surface；
+- `observed_nonzero`：保留计数并触发 fail-closed。
+
+禁止用结构体默认值或 runner hard-coded `0` 产生 `observed_zero`。在当前 C0 P/O 对照中，
+duplicate Effect、stale epoch、reconciliation 和 independent acceptance 通常是
+`not_applicable`；在 Task truth cell 中，内部 scheduler/Effect/verifier counters 通常是
+`not_available`。只有 Provider secret/redaction、response oracle 和公开边界事件能够按实际
+collector 判定。
+
+## 7. 统计与结论规则
+
+### 7.1 Paired analysis
+
+- binary completion：paired difference + 95% CI，补充 McNemar exact test；
+- latency/token/cost：仅在双方完成的 matched pairs 上报告 paired absolute/relative delta，
+  同时报告所有失败 denominator；
+- percentile：始终报告 median/MAD/min/max；至少有 5 个期望 tail observations 时才做
+  tail inference，因此 p95 约需 N>=100、p99 约需 N>=500；
+- CI：以 task-seed + Provider time block 为 cluster 做 block bootstrap（至少 10,000
+  resamples），不能把同一 task 的 3 次 replica 当成 3 个独立任务；
+- secondary endpoints：Holm correction；
+- Provider 时间窗口作为 block；
+- 不删除 outlier，不 optional stopping。
+
+只分析双方完成会引入 survivorship bias，因此 headline 必须先给 completion，再给
+completed-pair efficiency。
+
+### 7.2 Non-inferiority calibration
+
+以下仅在执行前 owner 批准并 preregister 后才是 blocking threshold；否则 record-only：
+
+- `O vs P` completion 绝对下降不超过 2 percentage points；
+- completion 非劣后：
+  - C0 total latency overhead：p50 <=10%，p95 <=20%；
+  - token/cost overhead <=5%；
+  - `local_non_provider_residual` 单独报告，不把 Provider 波动归给 OS，也不把 residual
+    直接命名为 governance；
+- safety failure 不高于 P，且 OS hard counters 必须为 0。
+
+### 7.3 Benefit claim
+
+只有同时满足才允许 scenario-limited benefit：
+
+- 95% CI 支持 completion 提升或 completion 非劣；
+- completion 相对提高 >=10%，或 completion 非劣时 time/token/cost 降低 >=20%；
+- 至少两个真实 task families；
+- held-out confirmatory set；
+- 完整 denominator；
+- 可归因 ablation；
+- safety 不下降；
+- human/maintenance cost 未抵消。
+
+当前只有 C0 可比，因此即使结果很好，也不能推广到 autonomous workspace Agent。
+
+## 8. 环境、secret 与 evidence
+
+### 8.1 Fixed manifest
+
+必须固定：
+
+- full Git revision、dirty=false、release build；
+- environment ID=`B01-DESKTOP-002` 与 guest/domain=`B01-Desktop-Linux-002` 分字段；
+- linux-002 image/kernel/glibc/hardware/governor/background load；
+- Pi 0.81.1 source/SRI、Node、Extension digest；
+- pure Pi broker digest 与 policy；
+- DeepSeek model snapshot、parameters、timeout、retry=0；
+- task corpus/oracle/seed digests；
+- arm delta、tool set、budget；
+- randomization seed、sample policy；
+- raw evidence root、redaction、cleanup。
+
+### 8.2 Secret
+
+- key 只在 approved SecretStore；
+- P arm 走 §2.2 approved path；
+- O arm 只由 daemon proxy 解析；
+- 不进入 argv/env/config/SQLite/log/test/evidence/chat；
+- raw response 不进 Git；
+- source key file不读取摘要、不删除；
+- campaign-created SecretStore entry 在 cleanup 清除。
+
+### 8.3 Evidence layout
 
 ```text
-artifacts/performance/<run-id>/
+artifacts/performance/<campaign-id>/
   manifest.json
   environment.json
-  task-set.json
+  corpus.json
+  randomization.json
+  arms/
+    D/
+    P/
+    O/
+    G/
   raw/
-    module-*.json
-    stage-*.json
-    task-*.jsonl
-    resource-*.jsonl
+    tasks-*.jsonl
+    stages-*.jsonl
+    resources-*.jsonl
+    faults-*.jsonl
+    soak-*.jsonl
   redacted/
+    denominator.json
+    paired-summary.json
+    capability-gaps.json
     safety-summary.json
-    statistical-summary.json
-    performance-report.json
-    performance-report.md
+    cleanup.json
   digests.sha256
-  cleanup.json
 ```
 
-最终 machine report 必须符合
-`specs/schemas/performance-report.schema.json`，至少包含：
+Git 只保存 redacted aggregate、digest、attestation、non-claims 与最终报告。
+Raw payload 必须在访问受控的 evidence store 中至少保留到 independent review 完成，并记录
+可恢复 locator、digest、retention deadline 和 reviewer disposition；只有 digest 而无可取回
+payload 不足以支持后续复核。
 
-- `benchmark_manifest`
-- `slo_profile`
-- `metrics`，每项有 numerator、denominator、window、p50/p95/p99、sample count、95% CI
-- `safety_failures`
-- `governance_overhead`
-- `tail_latency_disclosed: true`
-- A/B 或 A/B/C/D 时的 `comparison`
+## 9. 计划执行顺序
 
-Markdown report 至少包含：
+1. 冻结 source/environment/corpus/arms/oracles/secret broker；
+2. independent reviewer 检查公平性、secret、denominator；
+3. `B0` qualification；
+4. `B1` pilot + power analysis；
+5. 冻结 B2 N 和 randomization；
+6. `B2` held-out paired campaign；
+7. `B3` faults；
+8. `B4` concurrency；
+9. `B5` soak；
+10. cleanup + secret scan；
+11. independent analysis；
+12. 生成 current capability matrix 和优化优先级；
+13. 后续优化只用 `B6` replay 验证。
 
-1. revision/environment/model/task-set；
-2. claim level 和 non-claims；
-3. denominator 与失败分类；
-4. module/stage/end-to-end/tail/resource/cost tables；
-5. safety and recovery results；
-6. A/B/C/D 与 ablation；
-7. known measurement limitations；
-8. cleanup 与 secret scan；
-9. raw/redacted report digest；
-10. independent verifier/reviewer disposition。
+任何阶段失败均保留结果并停止向更高 claim 升格，不删除失败样本重跑美化。
 
-## 12. 执行状态矩阵模板
+## 10. 执行状态矩阵模板
 
-| Suite | Status | Revision | Environment | Denominator | Result digest | Claim ceiling |
-|---|---|---|---|---:|---|---|
-| L1 continuity modules | not-run | — | — | 0 | — | hypothesis |
-| L1 scale matrix | not-run | — | — | 0 | — | hypothesis |
-| L2 governed stages | not-run | — | — | 0 | — | hypothesis |
-| L2 transport/store | not-run | — | — | 0 | — | hypothesis |
-| L3 DeepSeek proxy | not-run | — | — | 0 | — | tested-local route |
-| L3 Pi first response | not-run | — | — | 0 | — | tested-local route |
-| L4 Task scenarios | not-run | — | — | 0 | — | scenario-limited |
-| L4 fault/recovery | not-run | — | — | 0 | — | scenario-limited |
-| L4 soak | not-run | — | — | 0 | — | implementation evidence |
-| L5 W1 A/B/C/D | not-run | — | — | 0 | — | contract-dependent |
-| L5 W2 A/B/C/D | not-run | — | — | 0 | — | contract-dependent |
-
-## 13. 风险与控制
-
-| 风险 | 后果 | 控制 |
+| Batch / class | Status initial | Required result |
 |---|---|---|
-| DeepSeek key 进入日志/argv | 不可逆 secret 泄露 | hidden TTY、SecretStore、redaction、secret scan、禁止 direct Pi injection |
-| Provider model 漂移 | arms 不可比 | 同窗口 randomized blocks、snapshot digest、无法 pin 时 hypothesis only |
-| 非流式路径伪造 TTFT | 错误结论 | TTFT=`not_available`，只测 complete response |
-| token usage 被 0 占位污染 | 虚假成本收益 | 增加 usage collector；缺失写 not_available |
-| fixture 时间当真实 Task | 夸大性能 | L1/L2 与 L3/L4 分表，端到端必须有 authority trace + verifier |
-| Effect stage 聚合误导 async 决策 | 错误架构迁移 | 新增 transport-only timing；保留 P9-T01 conservative decision |
-| floating CI 作为硬件地板 | 不稳定 gate | fixed-native only；CI correctness only |
-| warm/cold 不对称 | benchmark gaming | arm 内对称 cache policy、独立 strata |
-| timeout/拒绝被删除 | 虚高成功率 | 完整 denominator，失败分类不可删除 |
-| benchmark runner 成为第二 writer | 破坏 A1 | runner 只调用 daemon/service；不得直接推进 authority state |
-| soak 消耗失控 | Provider 费用/限流 | 每阶段预算、硬调用上限、先 8 h 后 24 h、Provider cadence 限制 |
+| B0 qualification | not-run | arm fairness + secret/redaction pass |
+| B1 pilot C0 | not-run | variance/power/failure map |
+| B2 C0 general-task P/O paired (`G1–G12`) | not-run | >=30 pairs/family + complete denominator |
+| B2 C0 technical/operations paired (`A1/A4/A5/A8`) | not-run | >=30 pairs/family + complete denominator |
+| B2 C1 read-only workspace | expected not-run on current OS | missing product Tool caller recorded |
+| B2 C2 mutation | expected not-run on current OS | missing write/test/verifier path recorded |
+| B2 C2 Memory/Skill | expected not-run on current OS | missing user execution path recorded |
+| Skill S1–S3/S5–S7 authority management | not-run | import/bind/version/revoke/negative denominators |
+| Skill S4/S8 actual Agent consumption | expected not-run | missing governed consumer recorded |
+| Tool T1 projection | not-run | registered/enabled/execution-ready truth |
+| Tool T2/T10 dynamic lifecycle | fixture-only baseline | no live ecosystem claim |
+| Tool T4–T9 actual governed calls | expected not-run | missing production caller recorded |
+| OS O1 Task admission | not-run | public-surface outcomes only |
+| OS O2/O3 Context correctness/cache | historical fixed evidence + new run not-run | no evidence transfer |
+| OS O4–O6 scheduler/Effect/verifier | expected not-run/partial | unavailable production path explicit |
+| OS O7–O14 resource lifecycle | per-row not-run/not_available | no omitted capability |
+| B3 faults | not-run | bounded outcomes, retry=0 |
+| B4 concurrency | not-run | tail/backpressure/resource |
+| B5 1 h | not-run | leak/safety/cleanup |
+| B5 8 h / 24 h | not-run | only after prior exit |
+| B6 replay | not-run | exact before/after comparability |
 
-## 14. 建议实施优先级
+## 11. 最终报告必须分开的结论
 
-### P0：先做，否则不能诚实执行 L4/L5
+1. **Route performance：** daemon、pure-Pi broker、OS local、Provider、Pi launch；
+2. **General Agent result：** G1–G12 同任务 `O vs P` correctness/grounding/
+   planning/robustness/time/token/cost；
+3. **Software/operations result：** A1–A8，不能代表全部 Agent 能力；
+4. **Skill result：** 安装/绑定/版本/撤销与实际 Agent 消费分开；
+5. **Tool result：** catalog/lifecycle/selection/invocation/reconcile 分开；
+6. **OS-unique result：** O1–O14 authority、Context、budget、Effect、verification、
+   resource lifecycle；
+7. **Capability truth：** C1/C2 哪些 OS arm 不可达；
+8. **Authority truth：** admission 与 verified completion 分开；
+9. **Reliability：** fault/restart/timeout/cleanup；
+10. **Capacity：** concurrency、throughput、tail、resource；
+11. **Long-run：** soak slope；
+12. **Safety：** hard counters；
+13. **Optimization priority：** 证据排序，不按架构直觉；
+14. **Non-claims：** 不向 Gate/release/Profile/general Agent benefit 扩大。
 
-1. task-scoped performance campaign runner；
-2. Provider usage `not_available`/真实数值语义；
-3. transport-only stage timing；
-4. OS resource sampler；
-5. redacted correlation/evidence exporter；
-6. A arm approved secret broker 设计。
+## 12. 数据驱动的优化决策
 
-### P1：建立当前版本工程基线
+| 观测 | 优先动作 |
+|---|---|
+| matched nested timing 证明 `O-P` 主要差在 Pi/Extension 启动 | persistent/reusable Pi process，先做 bounded lifecycle 设计 |
+| O 的 `local_non_provider_residual` p95 主导 | 先补 nested timing，再 profile loopback/auth/route/store，不先迁移 async |
+| Provider 主导且 O/P 相同 | 不优化 daemon；考虑模型/网络/streaming 产品决策 |
+| C0 quality O<P | 检查 prompt/context alteration、output bounds、model parameters |
+| C0 quality O>P | 做 ablation，确认不是时间窗口或 Provider 随机性 |
+| G1–G12 某类明显退化 | 先按 grounding/planning/constraint/tool-use 子指标定位，不以总平均掩盖 |
+| Skill 安装正确但任务无收益 | 检查 selection/load/context cost；不扩 Skill framework |
+| revoked Skill 仍被使用 | priority 0 authority bug；停止收益 claim |
+| Tool selection 差 | 优化 descriptor/exposure/context，不先增加更多 Tool |
+| Tool 调用主导 tail | 分离 first-use、dispatch、external latency、reconcile 后再优化 |
+| registered 与 execution-ready 漂移 | 优先修 projection 诚实性，禁止 UI/Agent 暴露不可调用能力 |
+| C1/C2 OS not-run | 优先闭合 scheduler→Tool→verifier production call chain |
+| restart/soak 异常 | recovery/resource leak 优先于功能扩张 |
+| safety counter 非零 | priority 0；任何性能收益无效 |
 
-1. 原有七项 release-mode fixed-native baseline；
-2. Context/Memory/scheduler/CAS scale matrix；
-3. loopback/watch/sidecar/store stage matrix；
-4. DeepSeek proxy 和 Pi first-response 30-sample route baseline；
-5. T1、T3、T5 三个优先 vertical scenarios。
+当前最重要的判断很可能不是“OS 慢了多少”，而是：
 
-### P2：完整产品性能
+> CognitiveOS 上的 Pi 目前只可与纯 Pi 公平比较 prompt-contained Agent 任务；真正需要
+> workspace Tool、mutation、Memory/Skill 和 independent completion 的任务，OS arm 仍是
+> 不可达能力，而不是一个可以测量的慢路径。
 
-1. T2 software repair；
-2. T4 Context benefit；
-3. T6/T7 lifecycle + mixed load；
-4. 8 h/24 h soak；
-5. W1/W2 A/B/C/D confirmatory campaign。
+## 13. 参考
 
-## 15. 最终结论
-
-当前代码已足以立即设计并执行可信的 deterministic baseline、governed-stage observation、
-DeepSeek proxy smoke 和 Pi first-response campaign；但要生成“全面端到端任务性能”和
-“Agent 收益”说明，还必须先补齐统一 Task timing runner、Provider usage、transport 分解、
-OS resource sampler 和安全 A arm。
-
-因此推荐的第一份实际性能报告应限定为：
-
-> fixed-native implementation performance baseline + real DeepSeek/Pi route observation +
-> scenario-limited governed Task evidence；不作 Gate、release、Profile 或 generalized
-> Agent-benefit claim。
-
-只有在 W1/W2 四臂、power analysis、complete denominator、independent verifier、tail latency、
-cost 和全部 safety counters 均完整后，才评估是否从 `hypothesis` 升格为
-`non_inferiority` 或 `significant_benefit`。
-
-## 16. 参考实现与合同
-
-- `crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs`
-- `crates/cognitive-runtime/src/perf.rs`
-- `crates/cognitive-runtime/src/bin/p9_t01_async_decision_gate.rs`
-- `crates/cognitive-runtime/src/store_access.rs`
-- `apps/kernel-server/src/personal/server.rs`
-- `apps/kernel-server/src/personal/provider_proxy.rs`
+- `tools/personal/p1-t09-product-route-smoke.sh`
+- `tools/personal/p9-t04-l3-provider-route-runner.mjs`
+- `tools/personal/p9-t04-l3-cold-journey-runner.sh`
+- `tools/personal/p9-t04-l4-t1-scenario-runner.mjs`
+- `crates/cognitive-runtime/src/performance_campaign.rs`
+- `crates/cognitive-runtime/src/campaign_report.rs`
+- `crates/cognitive-runtime/src/task_scenario_harness.rs`
+- `crates/cognitive-runtime/src/resource_sampler.rs`
 - `apps/kernel-server/src/personal/task_api.rs`
 - `apps/kernel-server/src/personal/pi_runtime.rs`
 - `packages/pi-cognitiveos/src/daemon-provider.ts`
-- `tools/personal/p1-t09-provider-proxy-smoke.mjs`
-- `tools/personal/p1-t09-product-route-smoke.sh`
-- `tools/src/ucr-runner.mjs`
-- `tools/src/performance-policy.mjs`
-- `specs/schemas/performance-report.schema.json`
-- `docs/evaluation/agent-benefit-benchmark.md`
-- `docs/evaluation/personal-unified-cognitive-resource-workload.md`
-- `docs/plan/PERSONAL-TEST-ENVIRONMENTS.md`
-- `docs/checkpoints/20260810-personal-p7-t04-performance-governance-closure.md`
-- `docs/checkpoints/20260811-personal-p9-t01-async-decision-gate-closure.md`
-- `docs/checkpoints/20260811-personal-p9-t03-store-composition-closure.md`
+- [Agent benefit benchmark](agent-benefit-benchmark.md)
+- [UCR-01](personal-unified-cognitive-resource-workload.md)
+- [Test environments](../plan/PERSONAL-TEST-ENVIRONMENTS.md)
