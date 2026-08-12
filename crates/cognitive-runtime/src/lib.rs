@@ -38,6 +38,7 @@ pub mod pi_launcher;
 pub mod readiness;
 pub mod recovery_flow;
 pub mod release_manifest;
+pub mod resource_sampler;
 pub mod sandbox;
 pub mod scheduler_service;
 pub mod shell;
@@ -177,6 +178,10 @@ pub use readiness::{R0ThinPath, ReadinessEvaluator, ReadinessFacts, ReadinessGra
 pub use recovery_flow::{
     ObligationDecision, RecoveryContinuationPlan, plan_recovery_continuations,
     pre_crash_binding_is_stale,
+};
+pub use resource_sampler::{
+    CampaignProcessRole, ProcessResourceSample, ProcessResourceSeries, ResourceSamplerError,
+    build_process_resource_series, read_process_resource_sample, validate_process_resource_series,
 };
 pub use sandbox::{
     ChannelClaim, PlatformChannelRow, SandboxChannel, SandboxGate, SandboxPlatform, SandboxPolicy,
