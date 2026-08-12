@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:723b1c76bd5f992da2d2334bd1220ea7f630bc63e0a1af0a38a2656b493d6f43"
+fingerprint: "sha256:4892a22017890401a3d83d3dd4125ca702b14e847d00534de5aad08506c5763e"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -30,7 +30,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi). |
 | `GET` | `/personal/readiness` | management | Alias of the status projection. |
 | `GET` | `/personal/doctor` | management | Redacted diagnostic projection including six-resource, headless-vault, and operability sections. |
-| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. |
+| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. Success responses carry the `X-CognitiveOS-Provider-Network-Nanos` timing header; a client-sent `x-cognitiveos-correlation-id` request header is tolerated but never read or persisted by the daemon. |
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |
 | `GET` | `/resource/v1/watch` | management | Family-scoped resource watch with optional resume_from cursor. |

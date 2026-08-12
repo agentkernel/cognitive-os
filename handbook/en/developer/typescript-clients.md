@@ -42,7 +42,11 @@ Transports: in-memory fake for tests plus loopback HTTP.
 `PersonalDaemonClient` does discovery (`daemon-endpoint.json` + bootstrap
 secret), separate management/task session minting, health/status/doctor reads,
 provider chat completion, resource projection/watch, and task watch — each with
-bounded timeouts/sizes and typed `PERSONAL_*`/`PI_EXTENSION_*` errors. The
+bounded timeouts/sizes and typed `PERSONAL_*`/`PI_EXTENSION_*` errors. Each
+completion dispatch attaches an opaque `campaign-…` correlation id header
+(client-side metadata the daemon ignores) and reports measured loopback and
+daemon-supplied Provider-network durations plus real token usage — or
+`not_available`; zeros are never fabricated. The
 extension registers the provider bridge and tool policy documented in
 [the Pi shell](../user/pi-shell.md).
 

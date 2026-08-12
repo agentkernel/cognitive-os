@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:723b1c76bd5f992da2d2334bd1220ea7f630bc63e0a1af0a38a2656b493d6f43"
+fingerprint: "sha256:4892a22017890401a3d83d3dd4125ca702b14e847d00534de5aad08506c5763e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -30,7 +30,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/personal/status` | management | 组件状态投影（system、database、secret、provider、daemon、pi）。 |
 | `GET` | `/personal/readiness` | management | status 投影的别名。 |
 | `GET` | `/personal/doctor` | management | 脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |
-| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；非流式、绑定 selected model；secret 仅在服务端解析。 |
+| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；非流式、绑定 selected model；secret 仅在服务端解析。成功响应携带 `X-CognitiveOS-Provider-Network-Nanos` 计时头；客户端发送的 `x-cognitiveos-correlation-id` 请求头被容忍但 daemon 绝不读取或持久化。 |
 | `GET` | `/provider/v1/selected-model` | management | 非 secret 的 selected-model 投影。 |
 | `GET` | `/resource/v1/projection` | management | 私有版本化六资源族投影（family + version 查询参数）。 |
 | `GET` | `/resource/v1/watch` | management | 按资源族的 watch，支持可选 resume_from 游标。 |

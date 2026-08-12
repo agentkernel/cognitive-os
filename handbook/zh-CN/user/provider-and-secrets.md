@@ -48,6 +48,9 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
 2. daemon 在内存中解析 `SecretRef` 并附加 bearer 头。
 3. `RustlsProviderTransport` 强制 HTTPS-only、禁跳转、禁 URL user-info、拒绝头部
    CR/LF、1 MiB 响应上限与调用方超时。
+4. 成功的代理响应携带 `X-CognitiveOS-Provider-Network-Nanos` 头（仅 daemon 测得的
+   Provider 网络耗时）。客户端可为自身测量记录发送不透明的
+   `x-cognitiveos-correlation-id` 请求头；daemon 忽略且绝不持久化它。
 
 发现流程（`cognitive init`）探测 `GET /models` 及 chat/stream/tool/cancel 战役，持久
 化带身份 digest 的非 secret 能力快照；selected model 必须匹配该快照。

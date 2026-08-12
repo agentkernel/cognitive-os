@@ -40,7 +40,9 @@ fake 加 loopback HTTP。
 `PersonalDaemonClient` 负责发现（`daemon-endpoint.json` + bootstrap secret）、分离
 的 management/task 会话铸造、health/status/doctor 读取、provider chat completion、
 资源投影/watch 与 task watch——均带有界超时/大小与类型化 `PERSONAL_*`/
-`PI_EXTENSION_*` 错误。扩展注册的 provider 桥与工具策略见
+`PI_EXTENSION_*` 错误。每次 completion 派发附带不透明的 `campaign-…` 关联 id 头
+（daemon 忽略的客户端侧元数据），并报告实测 loopback 与 daemon 提供的 Provider 网络
+耗时及真实 token 用量——或 `not_available`；绝不伪造零值。扩展注册的 provider 桥与工具策略见
 [Pi 对话壳](../user/pi-shell.md)。
 
 ## `apps/agent-shell` —— 会话库
