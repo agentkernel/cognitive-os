@@ -236,6 +236,22 @@ transport-level wrapper code instead of the daemon code the client already
 preserves as `daemonErrorCode`, which collapsed every denial into a generic
 protocol error. The product was correct in both cases; the measurement was not.
 
+### `L4` `T1` read-only admission, 2026-08-12
+
+Scenario `T1-read-only-analysis` ran 10 admission cycles at pushed revision
+`2eb7c602780751d4362f25eb443129fb2b19ceb8`: 10 started, 10 retained, 8 admitted,
+2 refused with the registered `TASK_ADMISSION_REJECTED` and kept in the
+denominator. Zero mutations occurred, independent acceptance occurred in no run,
+and the report therefore claims zero verified completions. Stage medians were
+session mint 3.67 ms, `intent.record` 13.90 ms, `intent.interpret` 16.57 ms,
+`task.preview` 8.65 ms and `task.admit` 25.74 ms, for an admission total of
+68.17 ms p50 and 140.77 ms p95. Report digest
+`sha256:34b3c34d5455db748009cad50825e0e2d708c7146eb886f84bc1793c7150fec1`.
+
+This covers only the admission half of `T1`. The execution half — Context
+resolution, Pi candidate, read/search Tool, Artifact and independent verifier —
+was not driven, so `T1` is partial and `T2`-`T8` are not-run.
+
 ### Remaining Provider-dependent layers
 
 `L4` and `L5` remain not-run. `L3` scenarios `R2` (Pi first response), `R3`
