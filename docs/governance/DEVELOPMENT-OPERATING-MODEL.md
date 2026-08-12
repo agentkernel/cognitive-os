@@ -396,6 +396,39 @@ The canonical capability registry is
 Handoffs may record an execution result but cannot redefine these routing
 rules.
 
+### 3.1 Incremental test reporting
+
+**`TEST-REPORT-INCREMENTAL-01`:** a test, validation cell, batch, or campaign
+step is not finished when it stops running — it is finished when its result is
+written down. Every completed unit must be appended to **one** running report
+document for that activity, immediately on completion and before the next unit
+starts.
+
+1. **One document per activity.** A campaign, Gate run, or validation sequence
+   writes into a single report file that grows by appending. Do not scatter
+   results across chat, terminal scrollback, per-run files, or a summary
+   deferred to the end.
+2. **Append on completion, not at the end.** The entry is written as soon as the
+   unit produces a result. A long batch that fails, is interrupted, hits a
+   context boundary, or is abandoned must still leave every already-finished
+   unit recorded.
+3. **Each entry is self-contained.** Record the unit's identity, instrument,
+   exact revision or environment, started/retained denominator, outcome class
+   (`pass`/`fail`/`partial`/`not-run`/`not_available`), the measurement itself,
+   and any disposition the unit's policy requires. A reader must not need the
+   chat transcript to interpret it.
+4. **A negative result is a result.** `fail`, `not-run` and `not_available`
+   entries are written with the same discipline and the same immediacy as
+   passes, together with the reason. Silence is never recorded as success.
+5. **Append-only within an activity.** Correct a published entry by adding a
+   superseding entry that states what changed and why; do not rewrite an
+   executed result in place.
+
+This rule exists because conclusions are the scarce output of testing and are
+the easiest thing to lose. It does not change what may be claimed: report
+entries inherit the activity's own claim ceiling and evidence-promotion
+boundaries (A7) unchanged.
+
 ### Before checkpoint commit
 
 - observe the intended failure-first test fail for behavior changes;
