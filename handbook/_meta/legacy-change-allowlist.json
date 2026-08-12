@@ -1,6 +1,6 @@
 {
   "schema": "cognitiveos-handbook-legacy-allowlist/0.1",
-  "description": "Legacy (pre-handbook) paths the handbook task is allowed to touch, consumed by `check-handbook.mjs --diff-base <rev>` to prove the existing documentation system stayed byte-identical apart from minimal governance bookkeeping and the single agent-entry pointer.",
+  "description": "Legacy (pre-handbook) paths the ACTIVE documentation-system task may touch, consumed by `check-handbook.mjs --diff-base <rev>` to prove the existing documentation system stayed byte-identical apart from minimal governance bookkeeping and registered obligation surfaces. Update this list per active docs task.",
   "allowed_paths": [
     "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
     "docs/plan/PROGRESS.md",
@@ -9,6 +9,11 @@
     "plan.md",
     "AGENTS.md",
     "tools/package.json",
-    "docs/checkpoints/20260812-personal-p8-t07-independent-handbook-closure.md"
+    "docs/standards/docs-sync-contract.md",
+    ".cursor/rules/10-autonomous-personal-development.mdc",
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    "docs/checkpoints/20260812-personal-p8-t07-independent-handbook-closure.md",
+    "docs/checkpoints/20260812-personal-p8-t08-docs-sync-enforcement-closure.md"
   ]
 }

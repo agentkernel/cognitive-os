@@ -11,7 +11,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:8709f5356504f53b34fce3bb462df863c23715aa868719dd24218b560ef2af31"
+fingerprint: "sha256:416656a35feaf294a2aac3e6a5113f25a22cfd7427206722844857619e716263"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -31,6 +31,8 @@ pnpm run check:consistency          # tools/src/check-consistency.mjs
 node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # handbook drift gate
 node tools/src/generate-handbook.mjs --check
+node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push / --range)
+pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
 ```

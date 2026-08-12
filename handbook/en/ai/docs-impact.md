@@ -8,12 +8,23 @@ generated: false
 sources:
   - path: handbook/_meta/source-map.json
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:8850171a249edefcb02838b5f515e05567defc06dcbd2fe3b2e6320ccfb96481"
+  - path: tools/src/docs-sync-gate.mjs
+    symbols: ["routeChangedPaths", "decideDocsSync"]
+fingerprint: "sha256:d6550d1f80264d4d76f1051b8d998d8ac4451e622b3ea66344a5311e15b10e0d"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
 
 # Docs impact
+
+Documentation synchronization is an **enforced pre-commit/pre-push/pre-merge
+obligation** (contract §2), not a courtesy. The machine gate is
+`node tools/src/docs-sync-gate.mjs --staged|--push|--range`: it routes changed
+paths through the source map, runs the handbook check set on any hit, and fails
+a change set whose mapped sources carry no handbook update. Enable the repo
+hooks once per clone: `pnpm run hooks:install`. The only escape for a genuinely
+documentation-neutral change is `DOCS_IMPACT_NONE="<concrete reason>"`, and the
+same reason must be recorded in the commit/PR description.
 
 Decide documentation impact **before** finishing a change, using
 [`handbook/_meta/source-map.json`](../../_meta/source-map.json):
@@ -37,6 +48,7 @@ Decide documentation impact **before** finishing a change, using
 Verification set for any documentation-affecting change:
 
 ```powershell
+node tools/src/docs-sync-gate.mjs --staged   # or --push / --range
 node tools/src/generate-handbook.mjs --check
 node tools/src/check-handbook.mjs
 pnpm run check:consistency

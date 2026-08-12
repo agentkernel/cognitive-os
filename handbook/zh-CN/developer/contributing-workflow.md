@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:37a877cfee6df60f4d6e254b6041184edb94940659d47321516adbe6866cfabb"
+fingerprint: "sha256:d44f25a1e7be454221d5c045f932d07e507f7851a8225660a6e38cdeb9e80bce"
 non_claims:
   - 具约束力的工作流由 Operating Model 拥有；本页是面向贡献者的导向性摘要。
 ---
@@ -33,11 +33,14 @@ non_claims:
    helper）；聚焦 failure-first 测试；验证按[开发环境](./development-environments.md)
    路由。
 4. **checkpoint**：把 coherent、secret-free 的进展 commit/push 到同一 Draft PR——
-   checkpoint 是后台持久化，不是汇报边界或 merge 触发器。
-5. **同一 PR 内联动文档**：声明变更类别，旧文档走
-   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md)，手册走
+   checkpoint 是后台持久化，不是汇报边界或 merge 触发器。每次 commit 与 push 必须先
+   通过 docs-sync 门（`node tools/src/docs-sync-gate.mjs --staged|--push`；每克隆运
+   行一次 `pnpm run hooks:install` 启用仓库 hooks）。
+5. **同一变更集内、commit/push/merge 之前联动文档**：声明变更类别，旧文档走
+   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) §2，手册走
    [`handbook/_meta/sync-policy.md`](../../_meta/sync-policy.md)（source-map 查询、
-   重生成生成页、刷新指纹，或记录 `docs-impact: none — 理由`）。
+   重生成生成页、刷新指纹）。确无文档影响的变更只能以
+   `DOCS_IMPACT_NONE="<具体理由>"` 过门，并把理由记入 commit/PR。
 6. **确定性收口**：把每条 acceptance 映射到实现 + 负例 + 已执行证据；在精确 merge
    候选 head 上跑 required CI；仅此后才把 PR 从 Draft 转 ready；合并；关闭 lease；
    删除任务分支；本地 `main` fast-forward；`git status` 干净。

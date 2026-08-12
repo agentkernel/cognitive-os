@@ -1,0 +1,6 @@
+#!/bin/sh
+# CognitiveOS Personal docs-sync gate (pre-commit).
+# Enforces documentation-system synchronization for staged changes before every
+# commit. Canonical obligations: docs/standards/docs-sync-contract.md §2/§5.
+# Enable once per clone: pnpm run hooks:install
+exec node tools/src/docs-sync-gate.mjs --staged

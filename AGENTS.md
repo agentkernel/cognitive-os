@@ -121,6 +121,12 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
   push 并更新同一个 Draft PR，无需逐次等待授权。不得为每个 checkpoint 单独创建 handoff、
   closure docs 或新 PR；验证结果累计到任务最终收口记录。Draft PR 在完整 task acceptance
   未满足前必须保持 Draft，禁止 merge。
+- 每次 commit/push 之前必须满足 docs-sync 义务（docs-sync-contract §2/§5）：改动路径
+  命中 `handbook/_meta/source-map.json` 时，同一变更集内同步受影响 handbook 页面
+  （双语）、重生成生成页并刷新指纹；确无文档影响时以
+  `DOCS_IMPACT_NONE="<具体理由>"` 过门并把理由记入 commit/PR。本地门为
+  `node tools/src/docs-sync-gate.mjs --staged|--push`（`pnpm run hooks:install`
+  一次注册 `.githooks` 后自动执行）；merge 前由 CI handbook 步骤无条件红灯。
 - 下载的 campaign package、installer、runtime archive 和执行 evidence payload 必须放在
   已忽略的 `/artifacts/` 或系统临时目录；Git 只记录可复验的 digest、attestation reference、
   脱敏事实和 checkpoint。不得暂存这些 payload，也不得以 untracked artifact 作为后续任务的
@@ -150,8 +156,9 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
    立即继续实现或验证，不能先标 `done`。
 2. 运行该任务要求的 supported validation 和 required CI，并确认验证 revision 等于待合并
    HEAD；普通 product Gate 仍按独立 campaign 记账，不与 task completion 混淆。
-3. 同步正式计划、`PROGRESS.md` Current snapshot、必要 trace 与唯一最终 handoff；未执行项
-   写 `not-run`，不得推断为通过。
+3. 同步正式计划、`PROGRESS.md` Current snapshot、必要 trace 与唯一最终 handoff；同时完成
+   handbook 联动（source-map 路由的页面、生成页与指纹，`check:handbook` 与生成器
+   `--check` 绿）；未执行项写 `not-run`，不得推断为通过。
 4. 确认 task branch 只包含该任务允许的改动，worktree 无未归属改动，PR 从 Draft 转 ready
    后正常合并，禁止 force push 或 amend 已推送历史。
 5. 合并后关闭 task lease，确认远端 PR 为 merged、远端 task branch 可删除；本地安全切回

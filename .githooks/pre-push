@@ -1,0 +1,7 @@
+#!/bin/sh
+# CognitiveOS Personal docs-sync gate (pre-push).
+# Verifies the whole outgoing range (merge-base with @{upstream} or
+# origin/main) kept the documentation system synchronized before every push.
+# Canonical obligations: docs/standards/docs-sync-contract.md §2/§5.
+# Enable once per clone: pnpm run hooks:install
+exec node tools/src/docs-sync-gate.mjs --push

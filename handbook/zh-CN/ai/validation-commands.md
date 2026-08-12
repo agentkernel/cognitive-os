@@ -11,7 +11,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:8709f5356504f53b34fce3bb462df863c23715aa868719dd24218b560ef2af31"
+fingerprint: "sha256:416656a35feaf294a2aac3e6a5113f25a22cfd7427206722844857619e716263"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -31,6 +31,8 @@ pnpm run check:consistency          # tools/src/check-consistency.mjs
 node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # 手册防漂移门
 node tools/src/generate-handbook.mjs --check
+node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--push / --range）
+pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
 ```

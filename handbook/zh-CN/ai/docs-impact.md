@@ -8,12 +8,20 @@ generated: false
 sources:
   - path: handbook/_meta/source-map.json
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:8850171a249edefcb02838b5f515e05567defc06dcbd2fe3b2e6320ccfb96481"
+  - path: tools/src/docs-sync-gate.mjs
+    symbols: ["routeChangedPaths", "decideDocsSync"]
+fingerprint: "sha256:d6550d1f80264d4d76f1051b8d998d8ac4451e622b3ea66344a5311e15b10e0d"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
 
 # 文档影响
+
+文档同步是**强制的 commit/push/merge 前置义务**（契约 §2），不是善意建议。机器门为
+`node tools/src/docs-sync-gate.mjs --staged|--push|--range`：它把改动路径经 source
+map 路由，命中即运行手册检查集，并使"映射源改动而无手册更新"的变更集失败。每个克隆
+运行一次 `pnpm run hooks:install` 启用仓库 hooks。确实无文档影响的变更，唯一逃生口是
+`DOCS_IMPACT_NONE="<具体理由>"`，且同一理由必须记入 commit/PR 描述。
 
 在完成变更**之前**，用
 [`handbook/_meta/source-map.json`](../../_meta/source-map.json) 判定文档影响：
@@ -35,6 +43,7 @@ non_claims:
 任何影响文档的变更的验证集：
 
 ```powershell
+node tools/src/docs-sync-gate.mjs --staged   # 或 --push / --range
 node tools/src/generate-handbook.mjs --check
 node tools/src/check-handbook.mjs
 pnpm run check:consistency
