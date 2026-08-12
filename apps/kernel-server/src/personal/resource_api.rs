@@ -920,6 +920,14 @@ fn family_projection(family: &str) -> Value {
                     "required_capability": descriptor.required_capability,
                     "family": descriptor.family,
                     "availability": descriptor.availability,
+                    // Registry availability is a descriptor fact; readiness is
+                    // this daemon's assembled-executor fact. They are reported
+                    // separately so an unimplemented family cannot read as
+                    // executable.
+                    "execution_readiness": cognitive_kernel::tool_registry::tool_execution_readiness(
+                        descriptor,
+                        &super::tool_executor::ASSEMBLED_EXECUTOR_FAMILIES,
+                    ),
                     "input_limit_bytes": descriptor.input_limit_bytes,
                     "output_limit_bytes": descriptor.output_limit_bytes,
                 })

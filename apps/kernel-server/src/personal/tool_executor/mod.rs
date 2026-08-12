@@ -19,5 +19,16 @@ pub(crate) use types::*;
 pub(crate) use validate::*;
 pub(crate) use workspace::*;
 
+/// Operation families this daemon actually assembled an executor for.
+///
+/// P2-T09/D01: registry availability is a descriptor fact and says nothing
+/// about whether this binary can dispatch. Every other registered family
+/// currently fails staging with `UnsupportedExecutionFamily`, so the projection
+/// must derive readiness from this list rather than from availability.
+pub const ASSEMBLED_EXECUTOR_FAMILIES: [cognitive_kernel::tool_registry::NativeOperationFamily; 2] = [
+    cognitive_kernel::tool_registry::NativeOperationFamily::WorkspaceRead,
+    cognitive_kernel::tool_registry::NativeOperationFamily::ProcessCheck,
+];
+
 #[cfg(test)]
 mod tests;
