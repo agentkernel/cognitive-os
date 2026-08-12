@@ -444,6 +444,8 @@ mod tests {
                 "9fbd390".to_owned(),
                 CORRELATION_ID_ARGUMENT.to_owned(),
                 VALID_CORRELATION_ID.to_owned(),
+                ENVIRONMENT_ARGUMENT.to_owned(),
+                "DEV-LINUX-NATIVE-01".to_owned(),
             ],
             Vec::<String>::new(),
         )
@@ -462,6 +464,8 @@ mod tests {
                 VALID_REVISION.to_owned(),
                 CORRELATION_ID_ARGUMENT.to_owned(),
                 "Bearer task-session-value".to_owned(),
+                ENVIRONMENT_ARGUMENT.to_owned(),
+                "DEV-LINUX-NATIVE-01".to_owned(),
             ],
             Vec::<String>::new(),
         )
