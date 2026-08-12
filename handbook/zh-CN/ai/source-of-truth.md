@@ -10,7 +10,7 @@ sources:
   - path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
     symbols: ["TASK-ATOMIC-DELIVERY-01", "Sources of truth"]
   - path: docs/standards/normative-source-and-versioning.md
-fingerprint: "sha256:a74810316a655d570cd98ef6212797680ec681755d4de475294a2b08c73f2f0e"
+fingerprint: "sha256:f7d2670e56701dd86d6576ef1dbb97bdc8bc4b4570e2ca1ff29ce25685a4906d"
 non_claims:
   - 本页只做 canonical 来源路由，绝不替代或复述其当前内容。
 ---
@@ -23,7 +23,7 @@ non_claims:
 1. [`docs/governance/PROJECT-IDENTITY.md`](../../../docs/governance/PROJECT-IDENTITY.md) —— 仓库身份；`cognitiveos-personal` 是唯一活动项目。
 2. [`docs/governance/DEVELOPMENT-OPERATING-MODEL.md`](../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md) —— 工作流、证据、lease 与收口语义。
 3. [`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) —— 正式任务、验收、Delivery Slice 与 Gate。
-4. [`docs/plan/PROGRESS.md`](../../../docs/plan/PROGRESS.md) 的 `Current snapshot` —— 唯一的当前任务/Slice/Gate/claim 事实。每个会话现读，绝不凭记忆或本手册转述。
+4. [`docs/plan/PROGRESS.md`](../../../docs/plan/PROGRESS.md) 的 `Current snapshot` —— 唯一的当前任务/Slice/Gate/claim 事实。每个会话现读，绝不凭记忆或本手册转述。其 `Owner-directed campaign` 行处于 active 时，continuation 一律路由到该评测 campaign 并暂停开发任务领取（Operating Model §2.5）。
 5. [`docs/plan/PARALLEL-LANES.md`](../../../docs/plan/PARALLEL-LANES.md) 活动 lease 表 —— 当前可写路径。
 6. [`docs/product/personal/`](../../../docs/product/personal/README.md) 与 [`docs/architecture/personal/`](../../../docs/architecture/personal/README.md) —— 稳定设计意图（绝非当前状态）。
 7. [`docs/checkpoints/`](../../../docs/checkpoints/TEMPLATE.md) 下最新匹配 handoff —— 仅提供操作连续性。

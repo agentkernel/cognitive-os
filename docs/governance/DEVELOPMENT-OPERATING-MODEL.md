@@ -321,6 +321,45 @@ merged branch lease, record the premature merge, and require one task-scoped
 continuation branch and lease. Do not rewrite history or retroactively claim
 closure.
 
+### 2.5 Owner-directed evaluation campaigns
+
+The owner may direct a standing evaluation/measurement campaign over the
+current implementation (for example `PERSONAL-PERF-EVAL-002`). Such a campaign
+is an owner scope decision. It is not a formal `P*-T*` task, not a Delivery
+Slice, and not a product Gate; its execution plan (under `docs/evaluation/`)
+owns its batches, task corpus, metrics, and claim ceilings.
+
+1. **Activation and routing.** The campaign is activated by an
+   `Owner-directed campaign` row in the `PROGRESS.md` Current snapshot naming
+   the campaign id and its execution plan. While that row is active,
+   continuation events (a new window, `继续`, context compression, an
+   equivalent request) resume the campaign itself.
+   `CAMPAIGN-BACKLOG-CONTINUATION-01` claiming of implementation tasks is
+   suspended, and `CONTINUOUS-AUTONOMOUS-DELIVERY-01` applies to the
+   campaign's own preregistered steps instead. Sessions must not claim,
+   continue, or register a `P*-T*` implementation task while the row is
+   active.
+2. **Evaluation leases.** Campaign writes use a
+   `lease/personal/EVAL-<id>/<purpose>` lease whose Task/slice column names
+   the campaign id instead of a formal slice. The campaign id must be
+   registered in the Current snapshot, and the lease's writable paths may
+   cover only `docs/evaluation/`, `docs/checkpoints/`, and
+   `docs/plan/PROGRESS.md`. Evaluation leases create no task status and
+   follow the ordinary date, non-overlap, and closure rules.
+3. **Measurement-only boundary.** The campaign must not modify product code,
+   contracts, negatives, tests, or generated documentation sources to make a
+   cell runnable. A missing capability, runner, or credential path is
+   recorded as `not-run`/`not_available`, never implemented mid-campaign. All
+   axioms, secret rules, campaign-guest isolation and preregistration
+   procedures, exact-revision staging, and evidence-promotion boundaries (A7)
+   apply unchanged; claim ceilings stay at the level the campaign's plan
+   declares.
+4. **Deactivation.** The owner closes or supersedes the row, normally at
+   campaign closure together with the final report and lease closure. Closing
+   an evaluation campaign does not itself reactivate continuous development;
+   backlog continuation resumes only under a standing owner delivery
+   instruction.
+
 ## 3. Validation stages
 
 ### 3.0 Command shell and environment routing

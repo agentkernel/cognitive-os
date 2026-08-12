@@ -68,6 +68,16 @@ flowchart LR
 
 该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
+### 2.2 Owner-directed 评测 campaign lease（Operating Model §2.5）
+
+Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
+`lease/personal/EVAL-<id>/<purpose>` 形式的评测 lease：Task/slice 列写 campaign id 而非
+正式 `P*-T*/DNN` slice；campaign id 必须已在 `PROGRESS.md` Current snapshot 的
+`Owner-directed campaign` 行登记；writable paths 只允许 `docs/evaluation/`、
+`docs/checkpoints/` 与 `docs/plan/PROGRESS.md` 下的精确路径。评测 lease 不创建任务状态，
+不得覆盖产品代码、specs 或其他 protected trees；日期、非重叠与关闭规则与普通 lease 相同。
+一致性检查器按此格式校验（`EVAL_LEASE_*`）。
+
 ## 3. 活动 ownership leases（唯一当前台账）
 
 只有下表中的 `active` 行授予当前写权限。开始写入前必须新增一行；`PROGRESS.md`

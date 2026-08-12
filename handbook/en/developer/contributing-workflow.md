@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:d44f25a1e7be454221d5c045f932d07e507f7851a8225660a6e38cdeb9e80bce"
+fingerprint: "sha256:962dad04a00b9bd53df8b14483aa4eefbad65ff5c0082cfe468e40651040483e"
 non_claims:
   - The Operating Model owns the binding workflow; this page is an oriented summary for contributors.
 ---
@@ -25,7 +25,9 @@ the practical shape:
    [`PERSONAL-DEVELOPMENT-PLAN.md`](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
    whose dependencies are met. Read
    [`PROGRESS.md`](../../../docs/plan/PROGRESS.md) Current snapshot and the active
-   lease table fresh.
+   lease table fresh. Exception: an active `Owner-directed campaign` row in the
+   snapshot suspends task selection — sessions execute that evaluation campaign
+   instead (Operating Model §2.5).
 2. **Claim** it whole: one task branch, one Draft PR, one exact-path lease in
    [`PARALLEL-LANES.md`](../../../docs/plan/PARALLEL-LANES.md); register Delivery
    Slices (`<task>/DNN`) in the plan. Slices are execution checkpoints, not

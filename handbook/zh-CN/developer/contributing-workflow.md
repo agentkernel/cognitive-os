@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:d44f25a1e7be454221d5c045f932d07e507f7851a8225660a6e38cdeb9e80bce"
+fingerprint: "sha256:962dad04a00b9bd53df8b14483aa4eefbad65ff5c0082cfe468e40651040483e"
 non_claims:
   - 具约束力的工作流由 Operating Model 拥有；本页是面向贡献者的导向性摘要。
 ---
@@ -25,7 +25,8 @@ non_claims:
    [`PERSONAL-DEVELOPMENT-PLAN.md`](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
    选依赖已满足的正式任务。现读
    [`PROGRESS.md`](../../../docs/plan/PROGRESS.md) Current snapshot 与活动 lease
-   表。
+   表。例外：snapshot 的 `Owner-directed campaign` 行处于 active 时暂停任务选取，
+   会话改为执行该评测 campaign（Operating Model §2.5）。
 2. **整体领取**：一个 task branch、一个 Draft PR、一条精确路径 lease（登记于
    [`PARALLEL-LANES.md`](../../../docs/plan/PARALLEL-LANES.md)）；在计划中登记
    Delivery Slice（`<task>/DNN`）。Slice 是执行检查点，不是独立分支/PR。

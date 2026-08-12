@@ -1,0 +1,76 @@
+---
+description: Route continuation to the active owner-directed evaluation campaign instead of development
+alwaysApply: true
+---
+
+# Owner-directed evaluation campaign adapter
+
+This adapter routes sessions while an owner-directed evaluation campaign is
+active. It owns no semantics: activation, lease class, measurement-only
+boundary, and deactivation are defined by
+[Operating Model §2.5](../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md);
+the campaign's execution plan owns its batches, task corpus, metrics, and
+claim ceilings.
+
+# Activation check (first action in every new window)
+
+1. Read the `Owner-directed campaign` row in `docs/plan/PROGRESS.md` Current
+   snapshot.
+2. If it names an **active** campaign (currently `PERSONAL-PERF-EVAL-002`),
+   this adapter applies: development-backlog continuation is suspended and the
+   session's objective is the campaign itself.
+3. If no such row is active, this adapter is dormant. Do not invent an
+   evaluation mode from chat history.
+
+# Recovery order while active
+
+1. the `Owner-directed campaign` row (current facts and unique next step);
+2. the campaign execution plan under `docs/evaluation/` (for
+   `PERSONAL-PERF-EVAL-002`:
+   `docs/evaluation/personal-performance-benchmark-execution-plan.md`);
+3. the latest matching evaluation preregistration/checkpoint under
+   `docs/checkpoints/`;
+4. the active lease table in `docs/plan/PARALLEL-LANES.md`;
+5. branch/worktree/HEAD state.
+
+# Execution behavior
+
+- Claim `lease/personal/EVAL-<id>/<purpose>` before writing. Writable paths
+  are limited to `docs/evaluation/`, `docs/checkpoints/`, and
+  `docs/plan/PROGRESS.md`; raw payloads stay in ignored `artifacts/` roots.
+- Execute the plan's preregistered batch order (qualification first). Freeze
+  manifests, seeds, oracles, and runners before guest execution; retain every
+  started sample; `retry=0` for Provider cells; record every cell
+  `pass/fail/partial/not-run`.
+- **Measurement-only:** never modify product code, contracts, negatives,
+  tests, or generated documentation sources to make a cell runnable. A missing
+  capability, runner, or credential path is `not-run`/`not_available` — not a
+  development TODO to fix mid-campaign. Optimization ideas go only into the
+  final assessment's evidence-ranked priority list.
+- Do not claim, continue, or register any `P*-T*` implementation task or
+  Delivery Slice, and do not open implementation branches or PRs.
+- Unchanged boundaries: axioms A1–A8; secret isolation (keys only through
+  approved SecretStore / non-logging input paths — never argv, env, config,
+  logs, evidence, or chat); `B01-Desktop-Linux-002` isolation and its
+  preregistered procedure; exact pushed revisions for any remote build or
+  staging; evidence redaction; claim ceilings (`hypothesis`/non-claim — no
+  Gate, release, Profile, or Agent-benefit promotion).
+- `COMMAND-SHELL-PS51` and `RUST-LINK-DEV-WIN-GNU-01` still apply: local shell
+  is Windows PowerShell 5.1 (no `&&`/`||`), and Rust build/test runs only on
+  supported CI or exact-revision native Linux.
+
+# Stop conditions
+
+Stop only for: owner pause or scope change; a required confirmation boundary
+(secret exposure, destructive/irreversible action, guest-baseline or snapshot
+change beyond the preregistered allowlist); unknown concurrent worktree
+changes; or campaign completion. A finished batch, a `not-run` cell, a Provider
+budget stop, or a recoverable environment fault is recorded and the campaign
+continues with the next preregistered cell.
+
+# Closure
+
+Publish the final assessment, reconcile the `Owner-directed campaign` row and
+the evaluation lease, and stop. Campaign closure does **not** reactivate
+development: wait for an explicit owner delivery instruction before claiming
+any implementation task.

@@ -14,7 +14,7 @@ sources:
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:cb544d78a172f53192bf769985d062742e3f9829688f917d25f441028663301e"
+fingerprint: "sha256:1c75431a8cc006d7cea207bf2f29aaa97fb1c6b88349f4e8a41503035d24ae14"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -41,7 +41,10 @@ non_claims:
 
 `tools/src/check-consistency.mjs` 强制仓库不变量：schema 合法性（draft 2020-12）、
 registry↔schema↔vector 双向引用、Markdown 链接解析、Personal 计划/lease/slice/
-Gate 记账形状、命令/环境路由文本、checkpoint-delivery 与 task-atomic 措辞等。
+Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 campaign lease
+类别：必须命名已在 Current snapshot 登记的 campaign，且只能拥有
+`docs/evaluation/`、`docs/checkpoints/` 与 `docs/plan/PROGRESS.md`）、命令/环境路由
+文本、checkpoint-delivery 与 task-atomic 措辞等。
 `tools/src/gen-matrix.mjs --check` 保持 `docs/traceability/matrix.yaml` 新鲜。两者
 在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见

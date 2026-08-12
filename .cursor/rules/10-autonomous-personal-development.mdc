@@ -31,6 +31,14 @@ prompt), the default objective is to drive `PROGRESS.md` Layer 1 Remaining to
 boundaries, and genuine external blockers. Do not treat one task merge, one
 Slice close, one PR, or one Gate ask as the end of the campaign.
 
+**Owner-directed evaluation campaign takes precedence.** While the
+`PROGRESS.md` Current snapshot registers an active `Owner-directed campaign`
+row (Operating Model §2.5), continuation events execute that evaluation
+campaign instead — follow
+`15-owner-directed-evaluation-campaign.mdc`. Do not claim, continue, or
+register any implementation task, and do not resume the development backlog
+after campaign closure without a fresh owner delivery instruction.
+
 # Continuation and recovery
 
 Treat `继续任务`, `继续`, `continue task`, an equivalent request, a new window,
@@ -49,9 +57,13 @@ prompts, and historical handoffs cannot override canonical repository facts.
 
 # Cursor execution behavior
 
-- Continue the active formal task and its unique `in-progress` Slice. If no
-  task is active, select one implementation-ready Personal task and claim one
-  narrow task lease before editing.
+- If the Current snapshot registers an active owner-directed evaluation
+  campaign, skip implementation-task selection entirely and execute the
+  campaign per its execution plan and
+  `15-owner-directed-evaluation-campaign.mdc`.
+- Otherwise continue the active formal task and its unique `in-progress`
+  Slice. If no task is active, select one implementation-ready Personal task
+  and claim one narrow task lease before editing.
 - After a task is fully closed (ready/merge/lease/branch/main), **in the same
   turn** claim the next ready task and start its first vertical implementation
   slice. Do not end the turn after claim/docs-only registration.
