@@ -12,6 +12,7 @@ pub mod adapters;
 pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
+pub mod campaign_report;
 pub mod campaign_runner;
 pub mod channel_binding;
 pub mod compaction_benefit;
@@ -65,6 +66,12 @@ pub use agent_registration::{
     pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
     stop_official_pi_agent_durable,
+};
+pub use campaign_report::{
+    CAMPAIGN_REPORT_KIND, CampaignClaimLevel, CampaignCleanupOutcome, CampaignEvidenceReport,
+    CampaignLayer, CampaignReportError, CampaignSafetyAccounting, LayerDisposition, LayerOutcome,
+    REQUIRED_CAMPAIGN_LAYERS, REQUIRED_CAMPAIGN_NON_CLAIMS, VerifierDisposition,
+    build_campaign_evidence_report, not_run_layer, validate_campaign_evidence_report,
 };
 pub use campaign_runner::{
     CAMPAIGN_ID, CAMPAIGN_RUNNER_CLAIM_LEVEL, CAMPAIGN_RUNNER_REPORT_KIND, CampaignRunRequest,
