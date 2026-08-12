@@ -164,6 +164,30 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     assert!(task_revoke.contains("403 Forbidden"), "{task_revoke}");
     assert!(task_revoke.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
 
+    // `skill/bind` is a prefix of `skill/binding/revoke`. A channel-binding
+    // assertion passes whichever handler runs, so this discriminates by a code
+    // only the revoke handler can produce: the payload carries a valid
+    // `binding_id` but no `revocation_id` and no `revision_id`, so the revoke
+    // handler answers `RESOURCE_SKILL_REVOCATION_ID_INVALID` while the bind
+    // handler would answer `RESOURCE_SKILL_ID_INVALID`.
+    let revoke_route_body =
+        "{\"binding_id\":\"00000000-0000-7000-8000-000000000001\",\"reason\":\"route probe\"}";
+    let revoke_reaches_revoke_handler = request(
+        port,
+        &format!(
+            "POST /management/resource/v1/skill/binding/revoke HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{revoke_route_body}",
+            revoke_route_body.len()
+        ),
+    );
+    assert!(
+        revoke_reaches_revoke_handler.contains("RESOURCE_SKILL_REVOCATION_ID_INVALID"),
+        "revoke route must reach the revoke handler, not the bind handler: {revoke_reaches_revoke_handler}"
+    );
+    assert!(
+        !revoke_reaches_revoke_handler.contains("RESOURCE_SKILL_ID_INVALID"),
+        "revoke route was shadowed by the bind prefix: {revoke_reaches_revoke_handler}"
+    );
+
     let management_consumption_crossing = request(
         port,
         &format!(

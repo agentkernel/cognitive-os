@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:8c8e8688bc7913198ecace6ced13319d83d21e1d069945de81493b6b5f45646f"
+fingerprint: "sha256:85ce92463ff2425393fdfee1cf109e4933851ce886ccf11bb9bdeeb50ad851cb"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -61,8 +61,14 @@ enumerates the full table and channels).
 ## Projections
 
 Readiness evaluates six components from filesystem/config facts (`blocked |
-degraded | ready` + `first_conversation_ready`); it does not probe the Provider
-live. Doctor adds redacted six-resource/vault/operability sections. The Provider
+degraded | ready` + `first_conversation_ready`); it never sends a Provider
+request. It does resolve the configured `secret_ref` against the SecretStore,
+because a reachable backend does not mean the reference still points at a
+stored item: a dangling reference reports `secret_ref_resolves: false` and
+blocks with `provider_secret_unresolvable`, and a backend that cannot answer
+blocks with `provider_secret_store_unavailable`. Resolved material is dropped
+immediately and never enters a fact. Doctor adds redacted
+six-resource/vault/operability sections. The Provider
 proxy validates config + selected model, resolves the secret in memory, and
 forwards via the bounded Rustls transport; the private one-shot Unix socket
 (`POST /chat/completions`) serves only the daemon-launched Pi candidate process

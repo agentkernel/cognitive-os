@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-fingerprint: "sha256:64674ff583de22e13f4ff7c02613ae058497150a8932fd3077bccb91546636b4"
+fingerprint: "sha256:c4c170b1e066a5668577fca0b22ffd941e7d2659d7a0d5acc1f726114fd130c2"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---

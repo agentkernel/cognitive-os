@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:8c8e8688bc7913198ecace6ced13319d83d21e1d069945de81493b6b5f45646f"
+fingerprint: "sha256:85ce92463ff2425393fdfee1cf109e4933851ce886ccf11bb9bdeeb50ad851cb"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -54,8 +54,11 @@ shutdown 路由，也没有常驻调度线程（见[执行链状态](./execution
 ## 投影
 
 readiness 从文件系统/配置事实评估六组件（`blocked | degraded | ready` +
-`first_conversation_ready`），不做 Provider 实时探测。doctor 追加脱敏的六资源/
-vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
+`first_conversation_ready`），从不发出 Provider 请求；但它会把配置里的
+`secret_ref` 拿到 SecretStore 真实解析一次——后端可达并不代表该引用仍指向已存条目：
+悬空引用报 `secret_ref_resolves: false` 并以 `provider_secret_unresolvable` 阻塞，
+后端无法作答则以 `provider_secret_store_unavailable` 阻塞。解析出的材料立即丢弃，
+绝不进入任何 fact。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
 Rustls 传输转发；一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启
 动的 Pi candidate 进程且禁止 Authorization 头。
 

@@ -435,11 +435,13 @@ impl ResourceApi {
         if method_path.starts_with("POST /management/resource/v1/skill/import") {
             return self.import_skill(body, store);
         }
-        if method_path.starts_with("POST /management/resource/v1/skill/bind") {
-            return self.bind_skill(body, store);
-        }
+        // `skill/bind` is a prefix of `skill/binding/revoke`, so the longer
+        // route must be matched first or revoke is silently handled as a bind.
         if method_path.starts_with("POST /management/resource/v1/skill/binding/revoke") {
             return self.revoke_skill_binding(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/skill/bind") {
+            return self.bind_skill(body, store);
         }
         self.handle_authority(method_path, store)
     }
