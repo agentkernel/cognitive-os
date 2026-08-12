@@ -48,16 +48,24 @@ performance profile. That is the value here.
 
 ## 2. Headline findings
 
-**1. The product reports `ready` on a Provider path that cannot work.**
-All 80 Provider requests failed closed with `PERSONAL_PROVIDER_SECRET_UNAVAILABLE`,
-while `cognitive status` and `cognitive doctor` reported `secret: ready`,
-`provider: ready`, `overall: ready`. A Secret Service search (object paths only,
-no value ever requested) showed the referenced key item is **absent**: the
-P9-T04 cleanup removed its SecretStore entry while leaving the `provider.json`
-that references it. The `provider` readiness component's source is
-`filesystem:provider-config` and it asserts only `secret_ref_present: true`; the
-`secret` component probes backend availability, not the reference. A dangling
-reference therefore reads as ready and fails on every real request.
+**1. The product reports `ready`, and even `first_conversation_ready: true`, on
+a Provider path that cannot work.** All 80 Provider requests failed closed with
+`PERSONAL_PROVIDER_SECRET_UNAVAILABLE`, while `cognitive status` and
+`cognitive doctor` reported `secret: ready`, `provider: ready`,
+`overall: ready`. A Secret Service search (object paths only, no value ever
+requested) showed the referenced key item is **absent**: the P9-T04 cleanup
+removed its SecretStore entry while leaving the `provider.json` that references
+it. The `provider` readiness component's source is `filesystem:provider-config`
+and it asserts only `secret_ref_present: true`; the `secret` component probes
+backend availability, not the reference. A dangling reference therefore reads as
+ready and fails on every real request.
+
+It gets sharper. Once Pi was configured (§11a), **all six components read
+`ready` and `first_conversation_ready` flipped to `true`** with no Provider key
+on the machine at all. The product's own route smoke refuses to run unless
+`overall == ready && first_conversation_ready == true`; that gate passed, and
+all 10 conversations then failed. A user following the product's own readiness
+signal is told they are ready to talk when they are not.
 
 **2. `POST /management/resource/v1/skill/binding/revoke` is unreachable.**
 The dispatcher tests `starts_with(".../skill/bind")` before
@@ -74,12 +82,19 @@ That single probe is essentially all of the ~65 ms in-daemon cost of
 `cognitive status` / `doctor`; CLI process start adds only ~6 ms. The same probe
 that costs 57.5 ms is the one that failed to notice finding 1.
 
-**4. Everything else about the local daemon is fast, clean and honest.**
+**4. Pi start is expensive before it does any work.** `pi --version`, which does
+nothing, costs 1682.5 ms p50 against a 44.5 ms bare Node floor. The daemon's own
+refusal on the same path costs about 110 ms, so the daemon is not where the
+Pi-route time goes — corroborating P9-T04's conclusion with a cleaner baseline.
+
+**5. Everything else about the local daemon is fast, clean and honest.**
 In-daemon reads answer in under 1 ms; 832 concurrent requests through 33
 connections produced zero errors; ten stop/start cycles left zero orphans, zero
-stale locks and zero stale endpoint files with flat RSS, FD and thread counts;
-all six authority negative controls failed closed with precise registered codes;
-and the Tool projection honestly declares 2 of 6 families execution-ready.
+stale locks and zero stale endpoint files; a 1 h soak of 1620 requests moved RSS
+by 40 kB with zero additional disk writes and flat FD, thread, database and WAL
+figures; all six authority negative controls failed closed with precise
+registered codes; and the Tool projection honestly declares 2 of 6 families
+execution-ready.
 
 ## 3. Cell disposition
 
@@ -89,20 +104,29 @@ and the Tool projection honestly declares 2 of 6 families execution-ready.
 | `D1` Provider proxy marker | frozen route runner | 30 / 30 | partial (fail-closed only) |
 | `D2` warm repeated route | frozen route runner | 50 / 50 | partial (fail-closed only) |
 | `UJ4` / `O1` Task admission | frozen T1 runner | 30 / 30 | **pass** |
-| `UJ3` daily operations | public surface | 730 / 730 | **pass** |
-| `UJ3b` readiness attribution | public surface | 180 / 180 | **pass** |
+| `UJ3` daily operations | public surface | 930 / 930 | **pass** |
+| `UJ3b` readiness cost attribution | public surface | 180 / 180 | **pass** |
 | `T-GOV` Tool projection + lifecycle | public surface | 1 dump + 4 probes | partial |
-| `MS-AUTH` Memory/Skill authority | public surface | 46 / 46 | partial |
+| `MS-AUTH` Memory/Skill authority | public surface | 106 / 106 | partial |
 | `B3` faults, restart, cleanup | frozen runner + public surface | 40 / 40 | partial |
 | `B4` concurrency and overload | public surface | 832 / 832 | **pass** |
-| `B5` 1 h soak | public surface | see §12 | see §12 |
-| `O` Pi route, `B1`, `B2`, `P` arm | — | 0 | **not-run** (no credential, no broker, no paired runner) |
+| `B5` 1 h soak | public surface | 1620 / 1620 | **pass** |
+| `O-LAUNCH` (added; Pi launch to failure) | frozen route smoke | 10 / 10 + 20 spawn | **pass** as a launch observation |
+| Cleanup, secret scan, boundary check | scan + reconciliation | 17 evidence files | **pass** |
+| `O` Pi first response, `B1`, `B2`, `P` arm | — | 0 | **not-run** (no credential, no broker, no paired runner) |
 | `A3`/`A6`/`A7`, `G*-C1/C2`, `A1-C1` | — | 0 | **not-run** (no OS product path) |
 | `S4`/`S8`, `T4`–`T9`, `O4`–`O6` | — | 0 | **not-run** (no governed consumer / production caller) |
 | `O2`/`O3` Context, `O14` backup/restore | — | 0 | **`not_available`** (no public observation surface) |
 | `B5` 8 h / 24 h, `B6` replay | — | 0 | **not-run** (gated on prior exits) |
 
-Total retained samples: 1954 across the executed cells, plus the soak in §12.
+Total retained samples: **3853**. Three `D`-arm warmups plus the per-surface
+warmups were discarded before their cells began and are not counted; no started
+sample was discarded anywhere.
+
+`O-LAUNCH` was **added during execution** and is disclosed as such: the
+preregistered `O` cell was unrunnable without a credential, so a fixed-N
+substitute measured the part that remained observable. Its denominator was fixed
+before it started and it is never used as an arm in a comparison.
 
 ## 4. Route performance (plan §11.1)
 
@@ -157,13 +181,14 @@ here two of the three are empty.
 | Layer | Result |
 |---|---|
 | Authority negatives | **6 / 6 fail closed** with precise registered codes: `RESOURCE_SKILL_CONFLICT`, `RESOURCE_SKILL_ID_INVALID`, `RESOURCE_OBJECT_ID_INVALID`, `SHELL_CHANNEL_BINDING_MISMATCH`, `LOCAL_SESSION_UNAUTHORIZED`, `RESOURCE_MEMORY_REASON_REQUIRED` |
-| Positive lifecycle writes | **0 / 40 admitted** — every Memory and Skill write returned a generic 409 |
+| Positive lifecycle writes | **0 / 60 admitted** — 50 returned a generic 409 conflict, 10 returned 400 from the shadowed revoke route |
+| Lifecycle reads after those writes | 40 / 40 returned 404, consistent with nothing having been admitted |
 | `skill/binding/revoke` | **unreachable** (route shadowing, §2 finding 2) |
 | Forget non-resurrection / revoked reuse | **`not_applicable`** — nothing was admitted, so nothing could resurrect or be reused. This is explicitly *not* `observed_zero` |
 | `S4` Agent Skill invocation, `S8` cross-task reuse | **`not-run`** — no governed Agent consumer |
 | Per-operation latency | 0.78–0.91 ms p50 across all ten operations |
 
-**Honest limit.** 0 / 40 does not prove the authority layer is broken. The deep
+**Honest limit.** 0 / 60 does not prove the authority layer is broken. The deep
 per-operation matrix is owned by the B08 Gate and merged CI regressions, which
 this campaign does not re-run or override. What is established is narrower: from
 the product's own public management surface, using payloads derived from that
@@ -272,12 +297,68 @@ sequence with FD constant at 9.
 Agent throughput, Provider dispatch counts under concurrency and mixed
 Pi workload are **`not-run`**.
 
+## 11a. The Pi route, as far as it can be observed (added cell `O-LAUNCH`)
+
+The preregistered `O` first-response cell is `not-run`. This added cell, with a
+denominator of 10 fixed before it started, measures the part that remains
+observable without a credential: Pi launching, loading the Extension, reaching
+the daemon, and surfacing the refusal.
+
+Pi provenance was verified as `@earendil-works/pi-coding-agent` `0.81.1` with
+integrity `sha512-r6ovAsZO…kN/P8A==`, byte-identical to the pin P9-T04 recorded.
+
+| Measurement | N | p50 | range |
+|---|---:|---:|---|
+| bare `node -e ''` (runtime floor) | 10 | 44.5 ms | 39–80 ms |
+| `pi --version` (Node + Pi init; no Extension, daemon or Provider) | 10 | **1682.5 ms** | 1518–1814 ms |
+| Pi route to refusal (Extension + daemon + failing Provider) | 10 | **18 067 ms** | 17 941–18 500 ms |
+| daemon client to the same refusal (§4) | 80 | ~110 ms | — |
+
+Outcome was `pi_nonzero_exit` in 10 / 10 with the expected marker never observed
+and non-empty output every time.
+
+Two things are worth stating carefully.
+
+**Pi start is expensive before anything happens.** `pi --version` does no work
+at all and still costs 1.68 s — 37× the bare Node floor. That cost is paid on
+every invocation of the current launch model.
+
+**The remaining ~16.4 s is unattributed, and stays that way.** There is no
+nested timing inside a single run, so plan §5.2 forbids naming the interval
+between 1.68 s and 18.07 s as spawn, Extension load or governance cost.
+Candidate contributors are Extension load, daemon discovery, and whatever Pi
+itself does when a provider call fails. What *can* be said is that the daemon is
+not the cause: its own refusal costs about 110 ms, well under 1 % of the total.
+
+**This is time-to-failure on a broken Provider, not first-response latency.** It
+is not comparable to P9-T04's 4625 ms first response, which was measured against
+a working Provider, and it must not be quoted as a regression against it.
+
 ## 12. Long-run behaviour (plan §11.11)
 
-See [§12 of this section](#12-long-run-behaviour-plan-1111) — filled in from the
-`B5` 1 h soak below.
+One hour, 60 one-minute blocks, **1620 started, 1620 retained, zero non-200**.
 
-<!-- SOAK-RESULT -->
+| Slope fact | First minute | Last minute | Delta over 1 h |
+|---|---:|---:|---:|
+| daemon RSS | 9820 kB | 9860 kB | **+40 kB** |
+| FD count | 9 | 9 | 0 |
+| threads | 1 | 1 | 0 |
+| `authority.sqlite` | 1 044 480 B | 1 044 480 B | **0** |
+| `authority.sqlite-wal` | 0 B | 0 B | 0 |
+| process `write_bytes` | 1 347 584 | 1 347 584 | **0** |
+| per-minute p50 | 0.677 ms | 1.288 ms | +0.61 ms |
+| worst single sample | — | — | 13.16 ms |
+
+The closing hourly cold restart was clean: no orphan process, no stale lock, no
+stale endpoint file, daemon ready again.
+
+**No leak signature of any kind.** Memory, descriptors, threads, database size
+and WAL are flat, and the daemon issued literally zero additional disk writes
+across an hour of read traffic. The sub-millisecond p50 drift is non-monotonic
+across the run and is reported as observed variation, not a trend.
+
+Paired Provider soak blocks are **`not-run`** — the plan schedules a paired C0
+task block every 5 minutes and no Provider arm exists.
 
 `B5` 8 h and 24 h are **`not-run`**: the plan promotes to 8 h only after a clean
 1 h exit, and 24 h is conditional on an unresolved 8 h slope plus owner budget.
@@ -289,7 +370,7 @@ hard-coded zero never produces `observed_zero`.
 
 | Counter | Result | Disposition | Basis |
 |---|---:|---|---|
-| Provider secret exposure | 0 | `not_applicable` for the Provider key (no such item existed on the guest at any point) + `observed_zero` for the local bootstrap secret | the campaign entered, read, copied and hashed no credential; the bootstrap secret was held in memory only and never printed, logged or passed in argv; Secret Service was queried by object path only |
+| Provider secret exposure | 0 | `not_applicable` for the Provider key (no such item existed on the guest at any point) + `observed_zero` for the local bootstrap secret | the campaign entered, read, copied and hashed no credential; the bootstrap secret was held in memory only, kept at mode `600`, and never printed, logged or passed in argv; Secret Service was queried by object path only; a key-shaped scan of the whole campaign root found **0 hits in `evidence/` or `runtime/`**, and the 10 repository-wide hits were triaged by character class to pure-alphabetic identifiers containing no digits (vendored OpenTelemetry constants and a runner filename) |
 | unauthorized / stale Context exposure | — | **`not_available`** | no public Context observation surface |
 | duplicate external Effect | — | `not_applicable` | no mutation path was reachable |
 | false completion | — | **`not_available`** for the internal fact; publicly, 0 completion events were observed in 30 admission runs | plan §5.4 forbids inferring internal state from silence |
@@ -310,6 +391,8 @@ as covering only what happened to work.
 | Capability | Current disposition | Evidence in this campaign |
 |---|---|---|
 | Prompt-contained Agent task, OS arm | `not-run` | no Provider credential |
+| Pi launch, Extension load, daemon discovery | **working** | 10/10 reached the daemon and surfaced its refusal |
+| Pi first response on a working Provider | `not-run` | no Provider credential |
 | Prompt-contained Agent task, pure-Pi arm | `not-run` | no approved broker; building one is out of bounds |
 | Paired `O vs P` comparison | `not-run` | no paired runner |
 | Workspace read/search by an Agent | **unreachable** | `workspace_search` is `registered_only` |
@@ -338,10 +421,23 @@ daemon were read but never modified or stopped. No `apt`, systemd, user or
 network change was made. No credential was entered, read, copied, hashed or
 relocated. All campaign state is confined to `~/perfeval002`.
 
+Reconciled at cleanup: the residual P9-T04 daemon still runs unchanged as
+pid 11176, its config mtimes are unchanged at 12:51 and 13:37 — hours before
+this campaign began — and Secret Service still holds no
+`application=cognitiveos-personal` entry, because the campaign created none.
+After cleanup there were zero campaign daemon processes, zero campaign Pi
+processes, no stale lock, no stale endpoint file and no listener on 48282.
+
 The guest was **not** in its pristine qualified baseline when the campaign
 started — it carried P9-T04 residue including an idle second daemon — so no
 clean-install or B01-class claim is available from this campaign, and all
 resource figures are stated against that background load.
+
+**Evidence retention.** Raw payloads are retained rather than deleted, since a
+digest without a retrievable payload cannot support later review (plan §8.3).
+Locator `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`, 17 files,
+156 KiB, per-file SHA-256 recorded in the preregistration, retained until the
+independent verifier disposition changes from `not_reviewed`.
 
 ## 16. Optimization priority, ranked by evidence (plan §11.13, §12)
 
@@ -375,31 +471,43 @@ interacts with Priority 1: the probe should become *more* informative, not
 merely faster.
 
 **Priority 4 — give the authority transition boundary a discriminating error
-vocabulary.** Evidence: 40/40 writes returned one generic 409 per family,
-identical for rich and minimal payloads, while validation errors returned six
-distinct precise codes. Impact: an operator cannot self-diagnose a rejected
+vocabulary.** Evidence: 50 of the 60 attempted writes returned one generic 409
+per family, identical for rich and minimal payloads, while validation errors
+returned six distinct precise codes. Impact: an operator cannot self-diagnose a rejected
 Memory or Skill write, which is exactly the situation this campaign hit and
 could not resolve from outside.
 
-**Priority 5 — close the `scheduler → Tool → verifier` production chain.**
+**Priority 5 — the Pi launch model is expensive before it does anything.**
+Evidence: `pi --version`, which performs no work, costs 1682.5 ms p50 against a
+44.5 ms bare Node floor (N = 10 each, tight ranges). Every invocation of the
+current launch model pays that. This corroborates P9-T04's finding that Pi
+launch, not governance or the Provider, dominates what a user experiences —
+with a cleaner baseline than P9-T04 had. The further ~16.4 s observed on the
+route-to-failure path stays **unattributed** and must not be used to size a
+fix; what would size it is nested per-stage timing inside a single Pi run,
+which no current instrument produces. A persistent or reusable Pi process is
+the obvious direction, but it needs that timing first.
+
+**Priority 6 — close the `scheduler → Tool → verifier` production chain.**
 Evidence: 30/30 admitted with 0 executed and 0 verified; 4 of 6 Tool families
 `registered_only`. Impact: this is the gap that makes every `C1`/`C2` capability
 unreachable and keeps the entire Agent-benefit question unanswerable. It is
 ranked below the four correctness items because it is a large programme, not a
 defect, and the plan already registers it.
 
-**Priority 6 — build the paired evaluation instruments, as an owner decision.**
+**Priority 7 — build the paired evaluation instruments, as an owner decision.**
 Evidence: the whole of §5 and §6 is `not-run`. Nothing about CognitiveOS's Agent
 value can be measured until an approved pure-Pi credential path, a frozen paired
 runner, and a Provider credential on the target guest all exist. These are
 prerequisites for evaluation, not product features, and creating them is outside
 a measurement-only campaign.
 
-**Priority 7 — the daemon's single thread.** Evidence: constant `Threads: 1`,
+**Priority 8 — the daemon's single thread.** Evidence: constant `Threads: 1`,
 flat 1.1–1.4 k rps, latency scaling linearly with concurrency, zero errors at
-33 connections. Deliberately ranked last: nothing observed here shows a user
-hitting this ceiling, degradation is graceful, and recovery is instant.
-Optimising it now would be architectural intuition rather than evidence.
+33 connections, and a 1 h soak with a +40 kB RSS delta and zero extra writes.
+Deliberately ranked last: nothing observed here shows a user hitting this
+ceiling, degradation is graceful, and recovery is instant. Optimising it now
+would be architectural intuition rather than evidence.
 
 **Measurement-side, not product:** the frozen route runner classifies
 `PERSONAL_PROVIDER_SECRET_UNAVAILABLE` as `outcome_unknown` because that code is

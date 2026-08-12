@@ -1,6 +1,6 @@
 # PERSONAL-PERF-EVAL-002 preregistration and freeze record
 
-- Status: **frozen; execution started**
+- Status: **frozen; execution complete; campaign closed 2026-08-12**
 - Campaign ID: `PERSONAL-PERF-EVAL-002`
 - Kind: owner-directed evaluation campaign
   ([Operating Model §2.5](../governance/DEVELOPMENT-OPERATING-MODEL.md)); not a
@@ -494,7 +494,8 @@ Instrument: public-surface observation against `/management/resource/v1/`,
 | unauthenticated management mutation | 401 | `LOCAL_SESSION_UNAUTHORIZED` |
 | forget without a reason | 400 | `RESOURCE_MEMORY_REASON_REQUIRED` |
 
-**Positive lifecycle — 0 / 40 writes admitted:**
+**Positive lifecycle — 0 / 60 writes admitted (50 × generic 409, 10 × 400 from
+the shadowed revoke route); the 40 reads that followed all returned 404:**
 
 | Operation | N | Status | Registered code | p50 |
 |---|---:|---:|---|---:|
@@ -657,3 +658,122 @@ baseline. RSS moved from 9228 kB to 9820 kB across the whole B4 sequence
 
 p95 is reported because each profile has N >= 100 (plan §7.1). No p99 is
 claimed anywhere.
+
+### 10.10 `B5` 1 h soak, 2026-08-12 — `pass`
+
+60 one-minute blocks, each 20 health reads plus the six resource projections
+plus one bounded watch: **1620 started, 1620 retained, 0 non-200**.
+
+| Slope fact | First minute | Last minute | Delta |
+|---|---:|---:|---:|
+| daemon RSS | 8820 kB → measured 9820 kB | 9860 kB | **+40 kB / hour** |
+| FD count | 9 | 9 | 0 |
+| threads | 1 | 1 | 0 |
+| `authority.sqlite` | 1 044 480 B | 1 044 480 B | **0** |
+| `authority.sqlite-wal` | 0 B | 0 B | 0 |
+| process `write_bytes` | 1 347 584 | 1 347 584 | **0** |
+| per-minute p50 | 0.677 ms | 1.288 ms | +0.61 ms |
+| worst single sample over the hour | — | — | 13.16 ms |
+
+The closing hourly cold restart was clean: `orphan_process: false`,
+`stale_lock: false`, `stale_endpoint: false`, `restart_ready: true`.
+
+No leak signature of any kind: memory, descriptors, threads, database and WAL
+are all flat, and the daemon performed literally zero additional writes over an
+hour of read traffic. The p50 drift from 0.68 ms to 1.29 ms is sub-millisecond
+and non-monotonic across the run, so it is reported as observed variation rather
+than a trend. Paired Provider soak blocks are `not-run`; `B5` 8 h and 24 h are
+`not-run` per the plan's promotion gates.
+
+### 10.11 Added cell `O-LAUNCH`, 2026-08-12 — `pass` (as a launch observation)
+
+**Disclosure:** this cell was **added during execution** and is not the
+preregistered `O` Pi-first-response cell, which is `not-run` for want of a
+Provider credential. Its denominator (10) was fixed before it started, it
+retains every started sample, and it is explicitly labelled a launch/failure
+observation rather than a first-response latency result. It is not an arm in any
+comparison.
+
+Pi provenance in the campaign root: `@earendil-works/pi-coding-agent` `0.81.1`,
+lock-resolved from `registry.npmjs.org`, integrity
+`sha512-r6ovAsZOgAqbC/aU6s+/dPnv/sGZBuWyZNvi3pXjpbuX5wvp3XvGkQI7/VLvX2o9XpmpFaPUxKNym1WfkN/P8A==`
+— byte-identical to the pin P9-T04 recorded.
+
+**Readiness before and after configuring Pi, with the Provider credential still
+absent:**
+
+| Moment | `overall` | `first_conversation_ready` | components |
+|---|---|---|---|
+| before `pi configure` | `ready` | `false` | pi `not_configured`, all others `ready` |
+| after `pi configure` | `ready` | **`true`** | **all six `ready`** |
+
+This is the sharpest form of the §10.2 defect. With no Provider key in the
+Secret Service at all, the product declares every component ready *and*
+`first_conversation_ready: true`. The frozen route smoke's own gate — which
+refuses to run unless `overall == ready && first_conversation_ready == true` —
+passed, and then the conversation failed.
+
+**10 runs through the frozen `p1-t09-product-route-smoke.sh`:**
+
+| Fact | Value |
+|---|---:|
+| Started / retained | 10 / 10 |
+| Outcome | `error / first_response / pi_nonzero_exit` × 10 |
+| Expected marker observed | 0 / 10 |
+| Response received (non-empty output) | 10 / 10 |
+| Pi invocation | **18 067 ms p50** (17 941–18 500 ms) |
+| Full smoke wall time | 21 600 ms p50 (21 476–22 110 ms) |
+
+**Spawn baseline, 10 samples each:** bare `node -e ''` 44.5 ms p50 (39–80 ms);
+`pi --version` — Node start plus Pi CLI init, no Extension, no daemon, no
+Provider — **1682.5 ms p50** (1518–1814 ms).
+
+Decomposition discipline (plan §5.2): there is no nested timing inside a single
+run, so the interval between the 1.68 s bare Pi start and the 18.07 s
+route-to-failure is reported as an **unattributed incremental delta of roughly
+16.4 s**. It must not be named spawn cost, Extension load, or governance cost.
+Candidate contributors include Extension load, daemon discovery and whatever Pi
+itself does when a provider call fails — the daemon-side refusal is only ~110 ms
+(§10.2), so the daemon accounts for well under 1 % of it.
+
+This is **time-to-failure on a broken Provider**, not first-response latency.
+It is not comparable to P9-T04's 4625 ms first response, which was measured on a
+working Provider.
+
+### 10.12 Cleanup, secret scan and boundary reconciliation, 2026-08-12 — `pass`
+
+| Check | Result |
+|---|---|
+| campaign `kernel-server` processes after stop | **0** |
+| campaign Pi processes after stop | **0** |
+| stale `daemon.lock` / `daemon-endpoint.json` | none / none |
+| listener on 48282 | none |
+| bootstrap secret file mode | `600` |
+| Secret Service entries for `application=cognitiveos-personal` | **`[]`** — the campaign created none |
+| key-shaped scan hits inside `evidence/` or `runtime/` | **0** |
+
+The repository-root scan reported 10 files matching `sk-[A-Za-z0-9_-]{16,}`,
+which was triaged by path and character class without printing any matched text.
+All were pure-alphabetic hyphenated identifiers — mask `AA-AAAAAAAA-AAAAAAAAA`,
+containing **no digits at all** — inside vendored OpenTelemetry
+`experimental_metrics` constants under the Pi package and the frozen runner's
+own filename. No API key shape exists anywhere in the campaign root.
+
+Boundary reconciliation against the §4 allowlist: the residual P9-T04 daemon is
+still running unchanged as pid 11176; the P9-T04 config mtimes are unchanged at
+12:51 and 13:37, hours before this campaign began; no snapshot was created,
+reverted or deleted; no guest power-state change occurred; no system
+configuration was touched. **Scenario boundary violations: 0.**
+
+**Evidence retention (plan §8.3).** Raw payloads are retained rather than
+deleted, because a digest without a retrievable payload cannot support later
+review. Locator: `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`,
+17 files, 156 KiB, retained until the independent verifier disposition changes
+from `not_reviewed`. Per-file SHA-256 digests were recorded at cleanup time.
+
+### 10.13 Campaign closure, 2026-08-12
+
+All executable preregistered cells have run. Closure disposition is published in
+[personal-performance-assessment-20260812.md](../evaluation/personal-performance-assessment-20260812.md).
+Claim level `hypothesis`, independent verifier `not_reviewed`, Agent benefit not
+claimed, no Gate/release/Profile/B01 promotion.
