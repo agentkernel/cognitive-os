@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:17defef26d28ff8e88cfb19f00b2ea27b139966ed4bd51a8038792da6bc09bd6"
+fingerprint: "sha256:2805f2200ceaba36615ada52d812e360f2b48ede182a61d8a2d2868524119fc1"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -39,6 +39,7 @@ verification → verified continuation or ceiling STOP.
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead / WorkspaceSearch / ProcessCheck executors with persist-before-dispatch and original-key reconciliation | implemented, test-called only | `tool_executor/tests.rs` |
 | WorkspaceWrite / WorkspacePatch mutation executor: expected-preimage compare-and-swap, staging-file plus rename publish, reconciliation by re-reading the target | implemented, test-called only | `tool_executor/tests.rs` |
+| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | `tool_executor/tests.rs`; loopback TLS proof in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, test-called only | verifier module tests |
 | Recovery of consumed handoffs at startup | implemented | daemon startup path |
 

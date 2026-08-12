@@ -9,6 +9,7 @@
 
 #![allow(unused)]
 
+mod http_fetch;
 mod mutate;
 mod process;
 mod search;
@@ -16,6 +17,7 @@ mod types;
 mod validate;
 mod workspace;
 
+pub(crate) use http_fetch::*;
 pub(crate) use mutate::*;
 pub(crate) use process::*;
 pub(crate) use search::*;

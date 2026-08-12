@@ -76,8 +76,13 @@ pub(crate) struct NativeWorkspaceMutationExecutor {
     #[cfg(test)]
     publish_count: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
-    after_staging_write_hook: Mutex<Option<Box<dyn Fn(&Path, &Path) + Send>>>,
+    after_staging_write_hook: Mutex<Option<AfterStagingWriteHook>>,
 }
+
+/// Test seam invoked with `(target, staging_path)` once the postimage is fully
+/// written but before the rename publishes it.
+#[cfg(test)]
+type AfterStagingWriteHook = Box<dyn Fn(&Path, &Path) + Send>;
 
 impl NativeWorkspaceMutationExecutor {
     pub(crate) fn new(trusted_fencing_epoch: i64) -> Self {

@@ -1,4 +1,4 @@
-//! Focused tests extracted from `tool_executor` (P9-T02/D03).
+﻿//! Focused tests extracted from `tool_executor` (P9-T02/D03).
 
 #![allow(clippy::expect_used, clippy::panic, unused_imports)]
 
@@ -22,13 +22,17 @@ use cognitive_kernel::ports::{
 use cognitive_kernel::tool_registry::{
     BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolAvailability, ToolRisk,
 };
+use cognitive_provider_transport::{
+    ReadOnlyFetchError, ReadOnlyFetchMethod, ReadOnlyFetchRequest, ReadOnlyFetchResponse,
+    ReadOnlyFetchTransport,
+};
 use cognitive_store::{SqliteAuthorityStore, UuidV7Generator};
 use serde_json::json;
 use std::path::PathBuf;
 use std::{
     collections::BTreeMap,
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicUsize, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -3290,4 +3294,327 @@ fn durable_workspace_write_records_executing_before_mutation_and_reconciles_once
     );
 
     std::fs::remove_file(database_path).unwrap_or(());
+}
+
+// ---------------------------------------------------------------------------
+// P2-T10/D03 — HttpFetchReadOnly executor
+// ---------------------------------------------------------------------------
+
+const FETCH_ORIGIN: &str = "https://registered.example";
+
+/// Records every request the sink attempts and returns a scripted result, so
+/// the executor's Effect-boundary behaviour is provable without the network.
+/// The real TLS policy is proven separately against a loopback server in
+/// `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs`.
+struct ScriptedFetchTransport {
+    result: Mutex<Result<ReadOnlyFetchResponse, ReadOnlyFetchError>>,
+    observed_urls: Mutex<Vec<String>>,
+}
+
+impl ScriptedFetchTransport {
+    fn responding(status: u16, body: &[u8]) -> Self {
+        Self {
+            result: Mutex::new(Ok(ReadOnlyFetchResponse {
+                status,
+                body: body.to_vec(),
+            })),
+            observed_urls: Mutex::new(Vec::new()),
+        }
+    }
+
+    fn failing(error: ReadOnlyFetchError) -> Self {
+        Self {
+            result: Mutex::new(Err(error)),
+            observed_urls: Mutex::new(Vec::new()),
+        }
+    }
+
+    fn observed_urls(&self) -> Vec<String> {
+        self.observed_urls
+            .lock()
+            .map(|urls| urls.clone())
+            .unwrap_or_default()
+    }
+}
+
+impl ReadOnlyFetchTransport for ScriptedFetchTransport {
+    fn fetch(
+        &self,
+        request: &ReadOnlyFetchRequest,
+    ) -> Result<ReadOnlyFetchResponse, ReadOnlyFetchError> {
+        assert_eq!(
+            request.method,
+            ReadOnlyFetchMethod::Get,
+            "the MVP sink issues GET only"
+        );
+        if let Ok(mut observed_urls) = self.observed_urls.lock() {
+            observed_urls.push(request.url.clone());
+        }
+        match self.result.lock() {
+            Ok(result) => result.clone(),
+            Err(_) => Err(ReadOnlyFetchError::Network {
+                detail: "scripted transport is poisoned",
+            }),
+        }
+    }
+}
+
+fn http_fetch_call(
+    idempotency_key: &str,
+    parameters_digest: &str,
+    target: &str,
+    fencing_epoch: i64,
+) -> ExecutorCall {
+    ExecutorCall {
+        action: "fetch".to_owned(),
+        target: target.to_owned(),
+        idempotency_key: idempotency_key.to_owned(),
+        parameters_digest: parameters_digest.to_owned(),
+        authorization_digest: "authorization-digest".to_owned(),
+        fencing_epoch,
+    }
+}
+
+fn staged_fetch_request(target: &str, output_limit_bytes: usize) -> ValidatedNativeToolRequest {
+    let mut request = request_for(NativeOperationFamily::HttpFetchReadOnly);
+    request.target = target.to_owned();
+    request.input.clear();
+    request.workspace_root = None;
+    request.descriptor.output_limit_bytes = output_limit_bytes;
+    validate_native_tool_request(&request).expect("valid read-only fetch")
+}
+
+fn scripted_fetch_executor(
+    transport: Arc<ScriptedFetchTransport>,
+) -> NativeHttpFetchReadOnlyExecutor<ScriptedFetchTransport> {
+    NativeHttpFetchReadOnlyExecutor::new(7, transport, vec![FETCH_ORIGIN.to_owned()], 5_000)
+}
+
+#[test]
+fn http_fetch_staging_applies_the_registered_network_policy() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+
+    for unsafe_target in [
+        "https://unregistered.example/data",
+        "https://registered.example/data?query=1",
+        "https://registered.example/data#fragment",
+    ] {
+        let validated_request = staged_fetch_request(unsafe_target, 512);
+        assert!(
+            matches!(
+                executor.stage_request(
+                    "fetch-policy".to_owned(),
+                    "digest-1".to_owned(),
+                    &validated_request,
+                ),
+                Err(NativeToolExecutionError::InvalidDescriptor(_))
+            ),
+            "the registered validator must refuse {unsafe_target}"
+        );
+    }
+
+    // A plaintext or credential-bearing URL never even validates.
+    let mut plaintext = request_for(NativeOperationFamily::HttpFetchReadOnly);
+    plaintext.target = "http://registered.example/data".to_owned();
+    assert_eq!(
+        validate_native_tool_request(&plaintext),
+        Err(NativeToolExecutionError::NetworkTargetMustUseHttps)
+    );
+
+    // A read-only fetch has no request body.
+    let mut with_body = request_for(NativeOperationFamily::HttpFetchReadOnly);
+    with_body.target = format!("{FETCH_ORIGIN}/data");
+    with_body.input = b"payload".to_vec();
+    with_body.workspace_root = None;
+    let validated_with_body =
+        validate_native_tool_request(&with_body).expect("body is not a validator concern");
+    assert!(matches!(
+        executor.stage_request(
+            "fetch-body".to_owned(),
+            "digest-1".to_owned(),
+            &validated_with_body,
+        ),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    assert_eq!(executor.fetch_count(), 0);
+    assert!(transport.observed_urls().is_empty());
+}
+
+#[test]
+fn http_fetch_requires_a_staged_digest_bound_request_before_egress() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"payload body"));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+    let target = format!("{FETCH_ORIGIN}/data");
+    executor
+        .stage_request(
+            "fetch-key-1".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage read-only fetch");
+
+    assert!(matches!(
+        executor.dispatch(&http_fetch_call("fetch-key-1", "wrong-digest", &target, 7)),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert!(matches!(
+        executor.dispatch(&http_fetch_call("fetch-key-absent", "digest-1", &target, 7)),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(executor.fetch_count(), 0);
+    assert!(transport.observed_urls().is_empty());
+
+    assert!(matches!(
+        executor.dispatch(&http_fetch_call("fetch-key-1", "digest-1", &target, 7)),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(transport.observed_urls(), vec![target]);
+}
+
+#[test]
+fn http_fetch_bounds_and_redacts_the_retained_response() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(
+        200,
+        b"token=secret trailing content that must be truncated",
+    ));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+    let target = format!("{FETCH_ORIGIN}/data");
+    executor
+        .stage_request(
+            "fetch-bounds".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 24),
+        )
+        .expect("stage read-only fetch");
+    assert!(matches!(
+        executor.dispatch(&http_fetch_call("fetch-bounds", "digest-1", &target, 7)),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+
+    let retained = executor
+        .completed_output("fetch-bounds")
+        .expect("fetch retains bounded output");
+    assert!(retained.len() <= 24);
+    let retained_text = String::from_utf8_lossy(&retained).into_owned();
+    assert!(retained_text.starts_with("200\n"));
+    assert!(
+        !retained_text.contains("secret"),
+        "sensitive values must be redacted before retention: {retained_text}"
+    );
+}
+
+#[test]
+fn duplicate_http_fetch_dispatch_performs_exactly_one_request() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+    let target = format!("{FETCH_ORIGIN}/data");
+    executor
+        .stage_request(
+            "fetch-once".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage read-only fetch");
+    let call = http_fetch_call("fetch-once", "digest-1", &target, 7);
+
+    let first_outcome = executor.dispatch(&call).expect("first fetch");
+    let second_outcome = executor.dispatch(&call).expect("absorbed duplicate");
+    assert_eq!(first_outcome, second_outcome);
+    assert_eq!(transport.observed_urls().len(), 1);
+    assert_eq!(
+        executor.query_outcome("fetch-once"),
+        Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+    );
+}
+
+#[test]
+fn http_fetch_classifies_transport_failures_without_inventing_a_result() {
+    let target = format!("{FETCH_ORIGIN}/data");
+    for (error, expects_unknown) in [
+        (
+            ReadOnlyFetchError::Policy {
+                detail: "refused before egress",
+            },
+            false,
+        ),
+        (ReadOnlyFetchError::ResponseTooLarge, false),
+        (ReadOnlyFetchError::Timeout, true),
+        (
+            ReadOnlyFetchError::Network {
+                detail: "transport fault",
+            },
+            true,
+        ),
+    ] {
+        let transport = Arc::new(ScriptedFetchTransport::failing(error));
+        let executor = scripted_fetch_executor(Arc::clone(&transport));
+        executor
+            .stage_request(
+                "fetch-failure".to_owned(),
+                "digest-1".to_owned(),
+                &staged_fetch_request(&target, 512),
+            )
+            .expect("stage read-only fetch");
+
+        let outcome = executor
+            .dispatch(&http_fetch_call("fetch-failure", "digest-1", &target, 7))
+            .expect("dispatch classifies the failure");
+        if expects_unknown {
+            assert!(
+                matches!(outcome, DispatchOutcome::Unknown { .. }),
+                "a request that may have reached the origin is uncertain: {outcome:?}"
+            );
+        } else {
+            assert!(
+                matches!(outcome, DispatchOutcome::NotExecuted { .. }),
+                "a refusal with nothing retained is authoritative non-execution: {outcome:?}"
+            );
+        }
+        assert_eq!(executor.completed_output("fetch-failure"), None);
+        assert_eq!(
+            executor.query_outcome("fetch-failure"),
+            Ok(ExecutorQueryResult::NotExecuted)
+        );
+    }
+}
+
+#[test]
+fn http_fetch_sink_rejects_stale_fencing_before_egress() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+    let target = format!("{FETCH_ORIGIN}/data");
+    executor
+        .stage_request(
+            "fetch-fenced".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage read-only fetch");
+
+    assert_eq!(
+        executor.dispatch(&http_fetch_call("fetch-fenced", "digest-1", &target, 6)),
+        Ok(DispatchOutcome::FencedStaleEpoch { sink_epoch: 7 })
+    );
+    assert_eq!(executor.fetch_count(), 0);
+    assert!(transport.observed_urls().is_empty());
+}
+
+#[test]
+fn non_fetch_descriptor_cannot_be_staged_for_fetch_dispatch() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let executor = scripted_fetch_executor(transport);
+    let mut request = request_for(NativeOperationFamily::WorkspaceRead);
+    request.input.clear();
+    let validated_request = validate_native_tool_request(&request).expect("valid read request");
+
+    assert_eq!(
+        executor.stage_request(
+            "read-key".to_owned(),
+            "digest-1".to_owned(),
+            &validated_request,
+        ),
+        Err(NativeToolExecutionError::UnsupportedExecutionFamily)
+    );
 }

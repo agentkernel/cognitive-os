@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:17defef26d28ff8e88cfb19f00b2ea27b139966ed4bd51a8038792da6bc09bd6"
+fingerprint: "sha256:2805f2200ceaba36615ada52d812e360f2b48ede182a61d8a2d2868524119fc1"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -38,6 +38,7 @@ non_claims:
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead / WorkspaceSearch / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | `tool_executor/tests.rs` |
 | WorkspaceWrite / WorkspacePatch 变更执行器：expected-preimage 比较交换、staging 文件加 rename 发布、通过重读目标对账 | implemented，仅测试调用 | `tool_executor/tests.rs` |
+| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | `tool_executor/tests.rs`；回环 TLS 证明见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动时恢复已消费交接 | implemented | daemon 启动路径 |
 
