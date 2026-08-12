@@ -11,7 +11,6 @@
  */
 import { PersonalDaemonClient } from "../../packages/pi-cognitiveos/dist/daemon-client.js";
 
-const SCENARIO_ID = "R1-provider-proxy-marker";
 const MARKER = "cognitiveos-provider-smoke-ok";
 const PROMPT = `Reply exactly: ${MARKER}`;
 const REQUEST_TIMEOUT_MS = 60_000;
@@ -56,14 +55,23 @@ if (!/^[0-9a-f]{40}$/.test(sourceRevision)) {
   throw new Error("--source-revision must be a full hexadecimal Git revision");
 }
 
+const scenarioId = requiredArgument("--scenario", "R1-provider-proxy-marker");
+/**
+ * `R5` deliberately requests a model the daemon did not select, so the request
+ * must fail closed before any Provider dispatch. The override is a model
+ * identifier only; it is never a credential.
+ */
+const modelOverride = requiredArgument("--model-override", "");
+
 const daemonClient = new PersonalDaemonClient({ requestTimeoutMs: REQUEST_TIMEOUT_MS });
 const selectedModel = (await daemonClient.fetchSelectedModel()).selectedModel;
+const requestedModel = modelOverride === "" ? selectedModel : modelOverride;
 const samples = [];
 
 for (let sample = 0; sample < startedRequests; sample += 1) {
   const startedAt = process.hrtime.bigint();
   try {
-    const completion = await daemonClient.completeChat(selectedModel, [
+    const completion = await daemonClient.completeChat(requestedModel, [
       { role: "user", content: PROMPT },
     ]);
     samples.push({
@@ -112,9 +120,11 @@ function percentile(fraction) {
 console.log(JSON.stringify({
   report_kind: "p9-t04-l3-provider-route/0.1",
   claim_level: "hypothesis",
-  scenario_id: SCENARIO_ID,
+  scenario_id: scenarioId,
   source_revision: sourceRevision,
   selected_model: selectedModel,
+  requested_model: requestedModel,
+  model_override_applied: modelOverride !== "",
   retry_budget: 0,
   first_token_timing: "not_streaming",
   cost_available: false,
