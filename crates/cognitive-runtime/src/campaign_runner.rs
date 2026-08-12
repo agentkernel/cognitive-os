@@ -21,8 +21,16 @@ pub const CAMPAIGN_RUNNER_CLAIM_LEVEL: &str = "hypothesis";
 const SOURCE_REVISION_ARGUMENT: &str = "--source-revision";
 const CORRELATION_ID_ARGUMENT: &str = "--correlation-id";
 const SAMPLES_ARGUMENT: &str = "--samples";
+const ENVIRONMENT_ARGUMENT: &str = "--environment";
 const DEFAULT_SAMPLE_COUNT: usize = 25;
 const MAXIMUM_SAMPLE_COUNT: usize = 100_000;
+
+/// Environments this offline runner may label its own output with. The sole
+/// active B01 campaign guest is deliberately absent: only the separately
+/// preregistered B01 procedure may produce B01 evidence, and a measurement
+/// runner must never be able to promote a local observation into one.
+pub const OFFLINE_CAMPAIGN_ENVIRONMENTS: [&str; 3] =
+    ["DEV-LINUX-NATIVE-01", "CI-UBUNTU-01", "CI-WINDOWS-MSVC-01"];
 
 /// Environment families that may legitimately carry Provider or daemon
 /// credentials. The runner refuses to start while any of them is visible so a
@@ -67,6 +75,7 @@ pub struct CampaignRunRequest {
     pub source_revision: String,
     pub correlation_id: CampaignCorrelationId,
     pub sample_count: usize,
+    pub environment_id: String,
 }
 
 /// L0 records whether measurement may begin at all. Every field is a decision
@@ -107,6 +116,10 @@ pub enum CampaignRunnerError {
     DuplicateArgument,
     #[error("campaign sample count must be a positive integer within the registered bound")]
     InvalidSampleCount,
+    #[error(
+        "the offline campaign runner may only label output with a registered non-Gate environment"
+    )]
+    UnregisteredEnvironment,
     #[error("secret-shaped campaign environment input is not accepted")]
     SecretShapedEnvironmentInput,
     #[error("campaign observations must not carry Provider content or credential material")]
@@ -138,12 +151,14 @@ where
     let mut source_revision: Option<String> = None;
     let mut correlation_id: Option<String> = None;
     let mut sample_count: Option<String> = None;
+    let mut environment_id: Option<String> = None;
     let mut arguments = arguments.into_iter();
     while let Some(argument) = arguments.next() {
         let slot = match argument.as_str() {
             SOURCE_REVISION_ARGUMENT => &mut source_revision,
             CORRELATION_ID_ARGUMENT => &mut correlation_id,
             SAMPLES_ARGUMENT => &mut sample_count,
+            ENVIRONMENT_ARGUMENT => &mut environment_id,
             _ => return Err(CampaignRunnerError::UnregisteredArgument),
         };
         if slot.is_some() {
@@ -158,6 +173,10 @@ where
 
     let source_revision = source_revision.ok_or(CampaignRunnerError::MissingArgument)?;
     let correlation_id = correlation_id.ok_or(CampaignRunnerError::MissingArgument)?;
+    let environment_id = environment_id.ok_or(CampaignRunnerError::MissingArgument)?;
+    if !OFFLINE_CAMPAIGN_ENVIRONMENTS.contains(&environment_id.as_str()) {
+        return Err(CampaignRunnerError::UnregisteredEnvironment);
+    }
     let sample_count = match sample_count {
         None => DEFAULT_SAMPLE_COUNT,
         Some(declared) => declared
@@ -171,6 +190,7 @@ where
         source_revision: validated_source_revision(source_revision)?,
         correlation_id: CampaignCorrelationId::parse(correlation_id)?,
         sample_count,
+        environment_id,
     })
 }
 
@@ -278,6 +298,8 @@ mod tests {
             VALID_REVISION.to_owned(),
             CORRELATION_ID_ARGUMENT.to_owned(),
             VALID_CORRELATION_ID.to_owned(),
+            ENVIRONMENT_ARGUMENT.to_owned(),
+            "DEV-LINUX-NATIVE-01".to_owned(),
         ]
     }
 
@@ -337,6 +359,36 @@ mod tests {
         let error = parse_campaign_run_request(arguments, Vec::<String>::new()).unwrap_err();
         assert_eq!(error, CampaignRunnerError::UnregisteredArgument);
         assert!(!error.to_string().contains("sk-live"));
+    }
+
+    /// A7: a local measurement runner must never be able to label its own
+    /// output as evidence from the sole active B01 campaign guest.
+    #[test]
+    fn the_offline_runner_cannot_declare_the_b01_campaign_guest() {
+        for declared in [
+            "B01-DESKTOP-002",
+            "B01-Desktop-Linux-002",
+            "b01-desktop-002",
+        ] {
+            let arguments = vec![
+                SOURCE_REVISION_ARGUMENT.to_owned(),
+                VALID_REVISION.to_owned(),
+                CORRELATION_ID_ARGUMENT.to_owned(),
+                VALID_CORRELATION_ID.to_owned(),
+                ENVIRONMENT_ARGUMENT.to_owned(),
+                declared.to_owned(),
+            ];
+            assert_eq!(
+                parse_campaign_run_request(arguments, Vec::<String>::new()).unwrap_err(),
+                CampaignRunnerError::UnregisteredEnvironment,
+                "environment {declared} must not be declarable"
+            );
+        }
+        assert!(
+            !OFFLINE_CAMPAIGN_ENVIRONMENTS
+                .iter()
+                .any(|environment| { environment.to_ascii_uppercase().starts_with("B01") })
+        );
     }
 
     #[test]
