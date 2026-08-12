@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| _(none)_ | — | — | — | — | — | — | — |
+| `lease/personal/EVAL-20260812/performance-evaluation-002-phase3` | PERSONAL-PERF-EVAL-002 phase 3 (owner instruction 2026-08-12: complete the execution plan and the assessment) | evaluation (Operating Model §2.5) | `main` | `docs/evaluation/`、`docs/checkpoints/`、`docs/plan/PROGRESS.md` | cursor-agent (owner-directed session) | 2026-08-12 / 2026-08-12 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
