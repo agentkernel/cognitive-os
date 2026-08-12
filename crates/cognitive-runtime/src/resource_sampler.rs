@@ -377,6 +377,28 @@ mod tests {
         );
     }
 
+    /// The fixture cannot prove the `/proc` field offsets are right. Sampling
+    /// this test process against the real kernel interface can.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn real_linux_process_is_sampled_from_the_kernel_interface() {
+        let pid = std::process::id();
+        let sample = read_process_resource_sample(
+            CampaignProcessRole::Daemon,
+            pid,
+            1,
+            100,
+            Path::new("/proc"),
+        )
+        .expect("sampled this test process");
+        assert_eq!(sample.pid, pid);
+        assert!(sample.thread_count >= 1, "{sample:?}");
+        assert!(sample.resident_bytes > 0, "{sample:?}");
+        assert!(sample.file_descriptor_count > 0, "{sample:?}");
+        let serialized = serde_json::to_string(&sample).expect("serialize sample");
+        assert!(!serialized.contains("cognitive_runtime"), "{serialized}");
+    }
+
     #[test]
     fn self_promoted_series_is_not_publishable() {
         let fixture = ProcFixture::new(4242, 1, 1, 1, 1);
