@@ -216,9 +216,10 @@ pub use target_resolution::{
     request_from_target_vector_input,
 };
 pub use task_scenario_harness::{
-    ScenarioObservation, ScenarioOracle, ScenarioOutcome, ScenarioRunFacts, TaskScenario,
-    TaskScenarioError, build_scenario_observation, judge_scenario_run, scenario_safety_accounting,
-    validate_scenario_observation, verified_completion_count,
+    JudgedScenarioRun, ScenarioObservation, ScenarioOracle, ScenarioOutcome, ScenarioRunFacts,
+    ScenarioRunSafety, TaskScenario, TaskScenarioError, build_scenario_observation,
+    judge_scenario_run, scenario_safety_accounting, validate_scenario_observation,
+    verified_completion_count,
 };
 
 /// Runtime role marker (M6: harness/shell + install/sandbox/adapter/readiness/PERF).
