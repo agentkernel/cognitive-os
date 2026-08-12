@@ -84,6 +84,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     }
 
     /// Forward one non-streaming OpenAI-compatible chat completion request.
+    #[cfg(test)]
     pub fn forward_chat_completion(
         &self,
         request_body: &[u8],
