@@ -28,22 +28,36 @@ function requiredArgument(name, fallback) {
 }
 
 /**
- * Map a failure onto the fixed outcome vocabulary. The classification uses the
- * registered error class only, never the message body.
+ * Registered daemon error codes that mean the request was refused before any
+ * Provider dispatch could occur.
  */
-function classifyFailure(error) {
-  const code = typeof error?.code === "string" ? error.code : "";
-  const name = error instanceof Error ? error.name : "unknown";
-  const text = `${code} ${name}`.toLowerCase();
-  if (text.includes("timeout") || text.includes("abort")) return "timeout";
-  if (text.includes("429") || text.includes("rate")) return "rate_limited";
-  if (text.includes("401") || text.includes("403") || text.includes("denied")) {
-    return "denied_before_dispatch";
-  }
-  if (text.includes("502") || text.includes("upstream") || text.includes("provider")) {
-    return "upstream_failure";
-  }
+const DENIED_BEFORE_DISPATCH_CODES = new Set([
+  "PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH",
+  "PERSONAL_PROVIDER_SELECTED_MODEL_UNAVAILABLE",
+  "PERSONAL_PROVIDER_REQUEST_INVALID",
+  "PERSONAL_PROVIDER_NOT_CONFIGURED",
+  "LOCAL_SESSION_UNAUTHORIZED",
+]);
+
+/**
+ * Map a failure onto the fixed outcome vocabulary using the registered error
+ * code. The message body is never inspected, so no Provider content can reach
+ * a classification decision.
+ */
+function classifyFailure(errorCode, errorName) {
+  if (DENIED_BEFORE_DISPATCH_CODES.has(errorCode)) return "denied_before_dispatch";
+  if (errorCode === "PERSONAL_PROVIDER_UPSTREAM_TIMEOUT") return "timeout";
+  if (errorCode === "PERSONAL_PROVIDER_UPSTREAM_RATE_LIMITED") return "rate_limited";
+  if (errorCode === "PERSONAL_PROVIDER_TRANSPORT_UNAVAILABLE") return "upstream_failure";
+  if (errorName === "AbortError" || errorName === "TimeoutError") return "timeout";
   return "outcome_unknown";
+}
+
+function registeredErrorCode(error) {
+  const code = error && typeof error === "object" ? error["code"] : undefined;
+  // Only an all-caps registered constant is retained; anything else is dropped
+  // so a free-form message can never enter campaign evidence.
+  return typeof code === "string" && /^[A-Z0-9_]+$/.test(code) ? code : null;
 }
 
 const startedRequests = Number.parseInt(requiredArgument("--samples", "30"), 10);
@@ -82,18 +96,21 @@ for (let sample = 0; sample < startedRequests; sample += 1) {
       usage_availability: completion.providerUsage.availability,
       marker_observed: completion.content.includes(MARKER),
       response_characters: completion.content.length,
+      error_code: null,
     });
   } catch (error) {
     // A failed sample is retained and classified. It is never retried and
     // never replaced by a fresh attempt.
+    const errorCode = registeredErrorCode(error);
     samples.push({
-      outcome: classifyFailure(error),
+      outcome: classifyFailure(errorCode, error instanceof Error ? error.name : "unknown"),
       total_elapsed_nanos: Number(process.hrtime.bigint() - startedAt),
       loopback_http_elapsed_nanos: null,
       provider_network_elapsed_nanos: null,
       usage_availability: "not_available",
       marker_observed: false,
       response_characters: 0,
+      error_code: errorCode,
     });
   }
 }
