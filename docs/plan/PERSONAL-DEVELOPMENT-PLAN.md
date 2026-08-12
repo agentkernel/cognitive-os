@@ -156,10 +156,10 @@
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 8 | 5 | 1 | 0 | 2 | GMVP-LINUX / G7 / RC |
+| Phase 7 - 产品化与发布 | 8 | 5 | 0 | 1 | 2 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 6 | 6 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 4 | 4 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **63** | **56** | **1** | **0** | **6** | — |
+| **合计** | **63** | **56** | **0** | **1** | **6** | — |
 
 ## 2. 产品边界与不变量
 
@@ -716,7 +716,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05（原列 P5-T05 依赖仅约束 D03 之后的 sidecar 阶段计时；D01-D05 实际依赖已按 slice register 拆分，D05 经 owner 预注册批准执行） | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；只读 daemon projection | not-started | — |
 | P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
-| P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | in-progress | 2026-08-12 claimed under `lease/personal/P7-T07/windows-install-surface` on `personal/P7-T07-windows-install-surface` (Draft PR #200), concurrent with the P9-T04 campaign session and touching none of its leased paths or environments. D01 Windows Credential Manager backend and D02 installer/scheduled-task templates are implemented with failure-first negatives under ADR-0052; required CI validation in progress. No B01-W, install parity, Gate, release, or Profile claim. |
+| P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | blocked | 2026-08-12：D01-D03 complete under ADR-0052 on `personal/P7-T07-windows-install-surface` (Draft PR #200): Windows Credential Manager backend + failure-first negatives (real roundtrip on Windows CI), inspectable installer/scheduled-task templates + behavioral fail-closed negatives, and the authored B01-W gate with preregistration and `B01-W-DESKTOP-001` requirement registration. Required CI `31570126985` passed at `13e772a`. **Blocked on B01-W execution prerequisites**: Windows release artifacts (release-pipeline scope), `B01-W-DESKTOP-001` provisioning, operator for graphical hidden-input credential entry. Blocked-closure record `docs/checkpoints/20260812-personal-p7-t07-windows-install-closure.md`; lease released, branch/PR retained. No install parity, B01-W, Gate, release, or Profile claim. |
 | P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | done | 2026-08-11；`lease/personal/P7-T08/gmvp-linux` / PR #194. D01–D04 closed under ADR-0048/0049. B08 MVP `pass` at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` at `b3f4b88` + CI `31480604511`. Closure: `docs/checkpoints/20260811-personal-p7-t08-gmvp-linux-closure.md`. No Profile/Windows B01-W claim. |
 
 ### Phase 8 - 通用 Agent 适配与设计基线（post-1.0 能力列车）
