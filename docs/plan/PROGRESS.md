@@ -12,8 +12,9 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | no new task is active; stop after P9-T01 closure record reconciliation as requested |
-| Active task lease | `none` | P9-T01 is merged and has no active task/slice lease | retain the reconciled P9-T01 evidence; do not claim another task without owner direction |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | continue P7-T07 Windows install surface under its active lease |
+| Active task lease | `lease/personal/P7-T07/windows-install-surface` | P7-T07/D01 is the active delivery slice on `personal/P7-T07-windows-install-surface` (Draft PR #200). This session runs concurrently with the P9-T04 campaign window and touches neither its leased paths nor `DEV-LINUX-NATIVE-01`/`B01-DESKTOP-002`; Rust validation routes to `CI-UBUNTU-01`/`CI-WINDOWS-MSVC-01` only | validate D01 on required CI, then continue the remaining P7-T07 slices |
+| P7-T07 Windows install surface | **in-progress** | D01 implements the Windows Credential Manager production backend (fixed audited PowerShell helper from the absolute system path, secrets only on helper stdin/stdout, local-only persistence, 2560-byte blob ceiling, fail-closed selection with no plaintext fallback) plus failure-first negatives; D02 adds the inspectable Windows bootstrap installer and least-privilege per-user scheduled-task templates with behavioral fail-closed negatives. ADR-0052 records the decisions. Required Ubuntu/Windows CI validation is in progress on Draft PR #200; no B01-W, install parity, Gate, release, or Profile claim | complete D01/D02 required CI validation, then author the dedicated B01-W gate (D03) |
 | P9-T01 Async event foundation decision gate | **done** | D01's exact native Linux observation at `826745c` passed `perf::tests` 5/5 and selected hypothesis-only `conservative-no-migration`. Recovery added bounded socket reads and serialized loopback-daemon test execution after a Windows stall. Final required Ubuntu/Windows CI `31540218963` passed on merged PR #197 head `498852f`; merge commit `af64b85`. No async migration, Gate, release, or Profile claim. | retain closure evidence; any reconsideration needs separately measured HTTP/watch/sidecar transport evidence |
 | P5-T04 Post-1.0 dynamic Tool + B10 | **done** | D01–D04 closed under ADR-0050. Linux 4/4 + Clippy at `b49d274`; required CI `31486478177` on `992dfe3`; B10 MVP `pass`. Closure `20260811-personal-p5-t04-dynamic-tool-closure.md`. | retain closure evidence; no GMVP-LINUX/release/Profile claim |
 | P5-T03 Post-1.0 MCP Tool adapter | **done** | D01–D04 closed; Linux 4/4 + Clippy at `a83bdb8`; required CI `31482773002` on `4c06161`. Closure checkpoint `20260811-personal-p5-t03-mcp-tool-adapter-closure.md`. | retain closure evidence; no B10/Gate/release/Profile claim |
@@ -64,7 +65,7 @@ second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 62 | 55 | 0 | 0 | 7 | 7 |
+| 62 | 55 | 1 | 0 | 6 | 7 |
 
 `P5-T04` is `done` (PR #196). Formal task completion remains independent from
 GMVP-LINUX, release, Profile, and Windows B01-W claims. B10 MVP is `pass`
@@ -74,6 +75,10 @@ under ADR-0050.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P7-T07/D01` | `in-progress` | Windows Credential Manager backend, production selection, admin-cli arm, and failure-first negatives implemented at `fe11da8` on Draft PR #200 under ADR-0052 §1; required Ubuntu/Windows CI validation pending | pass required CI (real Credential Manager roundtrip on `CI-WINDOWS-MSVC-01`, fail-closed negatives on `CI-UBUNTU-01`), then close D01 |
+| `P7-T07/D02` | `ready` | inspectable installer/scheduled-task templates and their static plus behavioral negatives are drafted in-branch; not yet validated | after D01 closes, validate template negatives on required CI |
+| `P7-T07/D03` | `ready` | not started | author the B01-W campaign policy, preregistration, and environment registration |
+| `P7-T07/D04` | `ready` | not started | acceptance mapping and closure, or honest blocked accounting for the owner-gated B01-W execution |
 | `P5-T04/D01` | `done` | dynamic package bind + disabled discovery; Linux 4/4 + Clippy at `b49d274` | consumed by D02 |
 | `P5-T04/D02` | `done` | enable/disable/quarantine + TaskContract exposure; covered in same Linux 4/4 | consumed by D03 |
 | `P5-T04/D03` | `done` | reconcile/composite/cache/bypass; covered in same Linux 4/4 | consumed by D04 |
