@@ -10,6 +10,8 @@
 //! - this crate is not an authority writer and never touches SQLite
 //! - Provider configuration (P1-T02) may store only opaque `SecretRef` handles
 //! - Provider discovery/probes (P1-T03) attach secret material only to egress headers
+//! - the Windows Credential Manager backend (P7-T07) keeps the same fail-closed
+//!   boundary; secret material transits only helper stdin/stdout, never argv
 
 mod backend_select;
 mod backends;
@@ -24,6 +26,7 @@ mod provider_transport;
 mod secret_input;
 mod selected_model;
 mod store;
+mod windows_credential_manager;
 
 pub use backend_select::{
     ProductionSecretBackend, select_production_secret_store, select_production_secret_store_with,
@@ -60,3 +63,4 @@ pub use selected_model::{
     SELECTED_MODEL_FILE_NAME, SelectedModel, SelectedModelError, SelectedModelRepository,
 };
 pub use store::{SecretStore, SecretStoreAvailability, SecretStoreClass};
+pub use windows_credential_manager::WindowsCredentialManagerStore;
