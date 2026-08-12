@@ -38,6 +38,19 @@ by the final report. In particular:
   active, and every execution uses an exact pushed revision in a disposable
   Git worktree.
 
+## Owner disposition on `L5`, 2026-08-12
+
+The owner dropped `L5`. The repository has no runner that can execute the `A`
+arm while satisfying the approved-SecretStore boundary, and no owner-designated
+native Agent baseline was nominated, so the A/B/C/D benefit campaign is closed
+as `not-run` rather than approximated. The campaign therefore concludes with a
+complete non-claim report over `L0`-`L4`.
+
+The direct consequence is that no governance non-inferiority or Agent-benefit
+conclusion may be drawn from this campaign. The measured governance overhead
+remains a single-arm observation; the execution plan's `B`-versus-`A` thresholds
+are not evaluated, not met, and not failed.
+
 ## Consequences
 
 P9-T04 may add internal instrumentation and runner surfaces only when they

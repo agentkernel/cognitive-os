@@ -181,6 +181,30 @@ Across the two Provider cells the local overhead is stable — 126.5 ms p50 over
 more (898.9 ms against 1016.1 ms p50). That separation is the point of measuring
 them apart: Provider variance must not be reported as governance cost.
 
+Scenario `R3-cold-daemon-first-response` completed 20 / 20 at pushed revision
+`8a9e2664c7c2ae554818252461e5f9e383a3683d`. Every sample stopped the daemon,
+reset the cache, restarted, polled readiness, and issued one real completion:
+20 / 20 started, 20 / 20 became ready, 20 / 20 produced a complete response.
+Startup to ready was 182.6 ms p50 and 207.3 ms p95; the total cold journey was
+2069.2 ms p50 and 3012.8 ms p95. Report digest
+`sha256:11fb69dc1686d5c67e79fc2ab7448b3d61bfb6909ee91fb1ca958ecf7ab4fa7d`.
+
+Scenario `R6-bounded-timeout` completed 10 / 10 at pushed revision
+`e94c649c539224f5fb92c362878f617eb94de401` with a deliberately short 120 ms
+client deadline. The bound held: 122.9 ms p50 and 131.5 ms maximum, `retry=0`,
+usage `not_available`, and no Provider network duration observed. Report digest
+`sha256:68d76dffef701cf27af2b4c3b28ce1615b3fdcbf79ab749b77735b293660b335`.
+
+These samples are retained as `outcome_unknown`, not `timeout`, and that is
+deliberate. The client reported registered code `PI_EXTENSION_DAEMON_UNREACHABLE`,
+which cannot distinguish a client deadline expiry from an absent daemon, and a
+client that abandons a request cannot know whether the daemon went on to
+complete the Provider call. Recording these as clean timeouts would assert
+knowledge the measurement does not have, and would also hide that such a sample
+may have consumed an unobservable Provider request. The rate-limit class stays
+not-run: inducing HTTP 429 would mean deliberately hammering a third-party
+Provider, which the campaign does not authorize.
+
 Two runner corrections were needed before this cell was honest, and both are
 recorded rather than quietly fixed. Classifying failures by fuzzy message text
 logged a clean deterministic denial as `outcome_unknown`; classification now
