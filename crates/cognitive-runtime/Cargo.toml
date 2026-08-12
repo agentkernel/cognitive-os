@@ -29,6 +29,10 @@ required-features = ["native-campaign-faults"]
 name = "p7_t04_module_benchmark"
 path = "src/bin/p7_t04_module_benchmark.rs"
 
+[[bin]]
+name = "p9_t04_l0_l1_campaign_runner"
+path = "src/bin/p9_t04_l0_l1_campaign_runner.rs"
+
 [dependencies]
 cognitive-contracts = { workspace = true }
 cognitive-domain = { workspace = true }

@@ -12,6 +12,7 @@ pub mod adapters;
 pub mod adaptive_budget;
 pub mod agent_adapter_manifest;
 pub mod agent_registration;
+pub mod campaign_runner;
 pub mod channel_binding;
 pub mod compaction_benefit;
 pub mod context_compaction;
@@ -62,6 +63,11 @@ pub use agent_registration::{
     pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
     stop_official_pi_agent_durable,
+};
+pub use campaign_runner::{
+    CAMPAIGN_ID, CAMPAIGN_RUNNER_CLAIM_LEVEL, CAMPAIGN_RUNNER_REPORT_KIND, CampaignRunRequest,
+    CampaignRunnerError, CampaignRunnerReport, L0EligibilityFacts, build_campaign_runner_report,
+    parse_campaign_run_request,
 };
 pub use channel_binding::{
     AuthorityChannel, ChannelBindingDecision, ChannelBindingRequest, admit_channel_binding,
