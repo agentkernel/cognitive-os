@@ -1,12 +1,18 @@
 # P9-T04 comprehensive performance campaign preregistration
 
-- Status: preregistered; execution not started
+- Status: preregistered; offline layers executed, Provider-dependent layers not
+  started
 - Task: `P9-T04`
 - Campaign ID: `P9-T04-comprehensive-performance-001`
 - Campaign lease: `lease/personal/P9-T04/comprehensive-performance-campaign`
 - Branch: `personal/P9-T04-comprehensive-performance-campaign`
 - Source revision: `9fbd3904a1f8e0893fcb7d8d2b434e636d546e8c`
-- Environment: `B01-Desktop-Linux-002`
+- Environment for Provider-dependent layers (`L3`-`L5`): `B01-Desktop-Linux-002`
+- Environment for offline layers (`L0`-`L2`): `DEV-LINUX-NATIVE-01`, per the
+  execution plan's main performance environment and its prohibition on using
+  the B01 campaign guest as an ordinary benchmark host. The offline runner
+  cannot declare a B01 environment, so an offline result can never be relabelled
+  as B01 evidence.
 - Operator: standing owner-authorized campaign operator
 - Independent verifier: separate redacted-evidence review before disposition
 - Claim ceiling: `hypothesis` until all applicable report-policy conditions
@@ -65,6 +71,49 @@ references, reports, and non-claims. Cleanup stops campaign processes, removes
 campaign state, temporary secret carriers and the campaign SecretStore entry,
 checks for orphan processes/sockets/locks, and restores the guest baseline
 shut off. It never deletes the owner-local Desktop source file.
+
+## Execution record
+
+### Offline layers, 2026-08-12
+
+One `L0`-`L2` execution completed on `DEV-LINUX-NATIVE-01` at exact pushed
+revision `ba141838c4949a6a16a95aa581ac6e3129a6cdb2` in a disposable Git
+worktree. The redacted report is
+`sha256:c18a63db97400df8c254e2fe5ee6195826203b8183187501075505bb528e83be`; the
+payload stays outside Git in the operator's ignored campaign artifact root.
+
+| Layer | Disposition | Started | Retained | Warmups excluded |
+|---|---|---:|---:|---:|
+| `L0` eligibility | completed | 1 | 1 | 0 |
+| `L1` module benchmark | completed | 200 | 200 | 3 |
+| `L2` governed path and store access | completed | 52 | 52 | 0 |
+| `L3` Provider route | not-run | 0 | 0 | 0 |
+| `L4` governed Task scenarios | not-run | 0 | 0 | 0 |
+| `L5` benefit campaign | not-run | 0 | 0 | 0 |
+
+All seven hard safety counters are zero, cleanup reported no orphan process,
+socket, or stale lock, and the owner's Provider source file was never read or
+touched. Claim level is `hypothesis`, `benefit_claimed` is false, and the
+independent verifier disposition is `not_reviewed`.
+
+Hypothesis-only observations worth carrying into the remaining layers: governed
+`effect_persistence` dominated the path at roughly 265 ms cold and 242 ms warm,
+consistent with the `P9-T01` finding that the stage aggregates SQLite open,
+admission, persist, and reload rather than transport; and a per-open store read
+cost roughly 121 ms against roughly 0.7 ms for the long-lived handle over 50
+iterations, consistent with the `P9-T03` composition change. Neither is a
+release, Gate, Profile, or Agent-benefit claim.
+
+### Provider-dependent layers
+
+`L3`-`L5` remain not-run. `L3` and `L4` require the preregistered B01 start-gate
+facts and an operator-performed graphical hidden-input Provider import into the
+guest approved SecretStore, which a non-interactive session cannot perform.
+`L5` additionally requires the A-arm baseline decision recorded in the execution
+plan: an isolated non-product approved secret broker, or an owner-designated
+native Agent baseline that satisfies the SecretStore boundary. Until that
+decision exists, `L5` stays `blocked/not-run` and the daemon Provider proxy is
+never presented as an "A arm without CognitiveOS".
 
 ## Abort and recovery
 

@@ -36,6 +36,7 @@ pub mod oob;
 pub mod perf;
 pub mod performance_campaign;
 pub mod pi_launcher;
+pub mod provider_route_policy;
 pub mod readiness;
 pub mod recovery_flow;
 pub mod release_manifest;
@@ -180,6 +181,11 @@ pub use performance_campaign::{
 pub use pi_launcher::{
     PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,
     admit_pi_launch,
+};
+pub use provider_route_policy::{
+    FirstTokenTiming, ProviderRouteObservation, ProviderRouteOutcome, ProviderRoutePolicyError,
+    ProviderRouteSample, build_provider_route_observation, count_outcome,
+    validate_provider_route_observation,
 };
 pub use readiness::{R0ThinPath, ReadinessEvaluator, ReadinessFacts, ReadinessGrade};
 pub use recovery_flow::{
