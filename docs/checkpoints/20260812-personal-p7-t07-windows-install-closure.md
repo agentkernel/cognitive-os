@@ -4,8 +4,10 @@
 - Lease: `lease/personal/P7-T07/windows-install-surface` (closed by this record;
   branch and Draft PR retained for resumption)
 - Branch / PR: `personal/P7-T07-windows-install-surface` /
-  [Draft PR #200](https://github.com/agentkernel/cognitive-os/pull/200) — stays
-  Draft and unmerged because the full task acceptance is not satisfied
+  [PR #200](https://github.com/agentkernel/cognitive-os/pull/200) — on
+  2026-08-12 the owner directed landing the validated D01-D03 implementation
+  and this blocked accounting on `main`; merging the code does not change the
+  task status, satisfy the B01-W acceptance item, or create any claim
 - Validated revision: merge head `13e772a` (includes D01 `fe11da8`,
   D02+ledger `2f1a8e9`, D03 `eb15327`, and the origin/main merge after the
   P9-T04 closure landed)
@@ -63,8 +65,10 @@
   disposition changing the B01-W scope), then execute the preregistered
   campaign on an exact pushed revision of this branch and complete D04
   acceptance mapping to `done`.
-- Until then the Draft PR stays unmerged, the branch is retained, and the
-  lease is closed so the paths do not block unrelated work.
+- The implementation and this record are merged to `main` by owner directive;
+  the lease is closed and the task branch is deleted after the merge.
+  Resumption starts from `main` under a new task lease once the prerequisites
+  exist; the merge itself changes no acceptance, Gate, or claim state.
 
 ## 4. Non-claims
 
