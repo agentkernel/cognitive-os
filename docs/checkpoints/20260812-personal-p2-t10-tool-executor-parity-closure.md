@@ -75,11 +75,35 @@ Each unit was appended to `PROGRESS.md` Layer 2 as it finished. Consolidated:
 | `cargo clippy` for `kernel-server`, `cognitive-provider-transport`, `cognitive-kernel` | `1193235`, `8979749…` | **clean** |
 | `pnpm run check:consistency` | local | **pass** |
 | `check-handbook` + `generate-handbook --check` + `docs-sync-gate --staged` | local, every checkpoint | **pass**, never via `DOCS_IMPACT_NONE` |
-| Required Ubuntu/Windows CI | PR #207 | recorded on the PR |
+| Required Ubuntu/Windows CI | closure head `effae9a4365db9d538942ec5dc3b1535af37ccc3` | **both pass**, run `31617885666` |
 
 All Rust evidence is exact-revision native Linux on `DEV-LINUX-NATIVE-01`
 consuming pushed revisions only. The local Windows GNU host cannot link Rust
 (`RUST-LINK-DEV-WIN-GNU-01`) and ran no Rust build, test or Clippy.
+
+**One CI failure was observed and is recorded rather than hidden.** The first
+`verify (windows-latest)` attempt on `effae9a` failed after 8m20s in
+`p1_t05_personal_readiness::status_and_doctor_require_management_channel_and_report_blocked`
+with `bootstrap secret not found`. All 151 unit tests, including every test
+added by this task, passed in that same run; the failing assertion is a
+pre-existing integration test that allows the daemon only 100 × 20 ms = 2 s to
+publish its bootstrap secret, and the runner's daemon start took ≈2.2 s. It was
+diagnosed as a timing flake and confirmed by re-running the identical revision,
+which passed. Nothing in this task's change set touches daemon startup, the
+bootstrap secret path or that test. The thin wait budget is a real latent
+fragility on slow Windows runners but is outside this task's scope and lease,
+so it is reported here rather than modified.
+
+## 3a. Task closure
+
+- PR [#207](https://github.com/agentkernel/cognitive-os/pull/207) merged at
+  `main@3f766020c4d822556887ff8af59d41ed0cb92d75`.
+- Lease `lease/personal/P2-T10/tool-executor-parity` moved to the closed table.
+- Local and remote task branches deleted; local `main` fast-forwarded to the
+  merge with a clean worktree.
+- Formal plan, phase summary, totals and `PROGRESS.md` Layer 1/Layer 2
+  reconciled; the two remaining structural blockers registered as `P2-T12` and
+  `P2-T13`.
 
 ## 4. What this task deliberately did not do
 
