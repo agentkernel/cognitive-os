@@ -1213,6 +1213,17 @@ Pi 不可以：
   `check:handbook` 脚本与命名 CI step。
 - 与基线相比现有文档字节不变（最小治理记账与单指针除外，`--diff-base` 白名单证明）。
 
+### P8-T08 — Handbook 同步强制化
+
+- 把"提交/推送/合并前同步文档系统"升级为义务 + 机器门：docs-sync-contract §2 全档位
+  handbook 联动、§5 机器门登记、§6 自查项；rule 10/20 与 AGENTS 检查点/收口协议同步。
+- `docs-sync-gate`：`--staged`（pre-commit）/`--push`（pre-push）/`--range`（收口/CI 可选）
+  三模式；用 source-map 路由改动路径，命中即运行 `check-handbook` + `generate --check`；
+  映射源改动而手册未同步时 fail-closed，唯一逃生口 `DOCS_IMPACT_NONE=<理由>`（须记入
+  commit/PR 描述）。
+- 仓库内 `.githooks/`（sh + node，跨平台）+ `pnpm run hooks:install` 一次性注册 +
+  `check:docs-sync` 聚合脚本；CI 既有 handbook 步骤保持无条件全量。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

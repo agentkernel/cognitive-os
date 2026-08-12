@@ -75,6 +75,7 @@ flowchart LR
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P8-T08/docs-sync-enforcement` | P8-T08/D01 docs-sync gate, hooks and canonical obligations | Lane-DOC | `personal/P8-T08-docs-sync-enforcement` | `.githooks/**`; `tools/src/docs-sync-gate.mjs`; `tools/test/docs-sync-gate.test.mjs`; `tools/package.json`; `package.json`; `.cursor/rules/10-autonomous-personal-development.mdc`; `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc`; `AGENTS.md`; `docs/standards/docs-sync-contract.md`; `handbook/**`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `plan.md`; `docs/checkpoints/20260812-personal-p8-t08-docs-sync-enforcement-closure.md` | Cursor handbook session | 2026-08-12 / 2026-08-12 | active |
 | (none) | — | — | — | — | — | — | — |
 
 Closed historical leases are archived in
