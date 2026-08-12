@@ -161,9 +161,28 @@ comparison against the execution plan's `B` versus `A` non-inferiority
 thresholds, because no `A` arm has been run and no A-arm baseline runner exists.
 Reading it as a threshold pass or failure would be a category error.
 
+Scenario `R5-selected-model-mismatch` completed its formal cell at pushed
+revision `c45ed243033bb697d44ab1b361cd35d38190dddc`. Requesting a model the
+daemon never selected produced 20 / 20 `denied_before_dispatch` outcomes with
+registered code `PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH`, **zero Provider
+dispatches**, `not_available` usage, and bounded denial latency of 35.1 ms p50
+and 44.0 ms maximum. Report digest
+`sha256:d859c7531ccac6ffb171c1f0314366ca896e89aa8dada4536ae0113b7af15982`.
+
+Two runner corrections were needed before this cell was honest, and both are
+recorded rather than quietly fixed. Classifying failures by fuzzy message text
+logged a clean deterministic denial as `outcome_unknown`; classification now
+uses the registered error code only. The runner then read the client's
+transport-level wrapper code instead of the daemon code the client already
+preserves as `daemonErrorCode`, which collapsed every denial into a generic
+protocol error. The product was correct in both cases; the measurement was not.
+
 ### Remaining Provider-dependent layers
 
-`L4` and `L5` remain not-run. `L3` and `L4` require the preregistered B01 start-gate
+`L4` and `L5` remain not-run. `L3` scenarios `R2` (Pi first response), `R3`
+(cold daemon journey), `R4` (warm repeated conversation), and `R6`
+(timeout/cancel/rate-limit) are also not-run; `R2` additionally requires the
+pinned Pi `0.81.1` runtime, which is absent from the guest baseline. `L3` and `L4` require the preregistered B01 start-gate
 facts and an operator-performed graphical hidden-input Provider import into the
 guest approved SecretStore, which a non-interactive session cannot perform.
 `L5` additionally requires the A-arm baseline decision recorded in the execution
