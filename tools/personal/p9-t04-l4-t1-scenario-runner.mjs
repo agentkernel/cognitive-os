@@ -163,8 +163,11 @@ for (let runIndex = 0; runIndex < startedRuns; runIndex += 1) {
       });
       stages.interpret_nanos = elapsedSince(interpretStartedAt);
       const interpretationId = interpreted.body?.interpretation_id;
+      // Acceptance binds to the digest of the interpretation the caller
+      // reviewed, not to the later preview digest.
+      const interpretationDigest = interpreted.body?.interpretation_digest;
 
-      if (typeof interpretationId !== "string") {
+      if (typeof interpretationId !== "string" || typeof interpretationDigest !== "string") {
         terminalErrorCode = errorCodeOf(interpreted) ?? "INTERPRETATION_NOT_PERSISTED";
       } else {
         const draft = taskContractDraft(runIndex);
@@ -183,7 +186,7 @@ for (let runIndex = 0; runIndex < startedRuns; runIndex += 1) {
           const admitted = await post("/task/admit", token, {
             acceptance: {
               accepted_by: "principal://local/owner",
-              accepted_digest: previewDigest,
+              accepted_digest: interpretationDigest,
               interpretation_id: interpretationId,
             },
             expected_current_epoch: 0,
