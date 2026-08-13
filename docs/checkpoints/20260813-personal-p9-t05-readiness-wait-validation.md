@@ -123,3 +123,53 @@ so extracting the wait changed nothing else.
 The observed Windows failure was at 2.33 s of wall time for a 2.5 s publication,
 which reproduces the reported production symptom (a ~2.2 s start against a 2 s
 budget) deterministically rather than by chance.
+
+### 6. Required CI run `31719017732` at `9cfe7ccc591eb1f6eb25deac2f58ae8d2f39538a` — **pass**
+
+Both required jobs passed on the exact D02 implementation revision:
+
+| Job | Result | Evidence |
+|---|---|---|
+| `verify (ubuntu-latest)` | **pass** | job `94510950522`; completed 2026-08-13 |
+| `verify (windows-latest)` | **pass** | job `94510950592`; completed 2026-08-13 |
+
+This proves the shared 60 s deadline and 20 ms poll interval tolerate the
+deterministic 2.5 s publication on both supported CI platforms, while the
+never-published secret and exited-child cases remain bounded and fail closed.
+The Windows job is the required environment for the original flake. The PR
+remains Draft because the recovered acceptance review found one unrecorded
+case: the TCP listener path also needs a direct bounded never-ready negative.
+
+### 7. Recovered acceptance review — **in-progress**
+
+The final requirement map is explicit:
+
+- slow healthy startup: `readiness_wait_tolerates_a_start_slower_than_two_seconds`;
+- missing bootstrap publication: `readiness_wait_fails_closed_with_a_diagnostic_when_the_secret_never_appears`;
+- daemon exits before publication:
+  `readiness_wait_reports_an_exited_daemon_instead_of_consuming_the_ceiling`;
+- port never listens:
+  `readiness_wait_fails_closed_when_the_daemon_port_never_listens`.
+
+The fourth case has now been authored against the same bounded poll. It is not
+claimed passing until the next exact-head Ubuntu and Windows CI run completes.
+
+### 8. `cargo fmt --all -- --check` after recovered acceptance edit — **pass**
+
+Executed locally on `DEV-WIN-GNU-01`. This command formats only and does not
+compile or link Rust, so it is within the registered local allowlist.
+
+### 9. `node tools/src/check-consistency.mjs` after recovered acceptance edit — **pass**
+
+The checker verified 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+links, traceability, Personal plan/Gates, environment routing, task delivery
+and leases.
+
+### 10. `git diff --check` — **pass**
+
+The recovered acceptance edit has no whitespace errors.
+
+### 11. `node tools/src/docs-sync-gate.mjs --staged` — **pass**
+
+The gate found no handbook-routed source change among the two exact staged
+paths. No `DOCS_IMPACT_NONE` escape was needed or used.

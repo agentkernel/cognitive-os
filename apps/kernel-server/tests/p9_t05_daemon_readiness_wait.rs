@@ -99,6 +99,33 @@ fn readiness_wait_fails_closed_with_a_diagnostic_when_the_secret_never_appears()
     let _ = std::fs::remove_dir_all(&root);
 }
 
+#[test]
+fn readiness_wait_fails_closed_when_the_daemon_port_never_listens() {
+    let budget = Duration::from_millis(300);
+
+    let started = Instant::now();
+    let outcome = common::try_connect_when_ready(0, budget);
+    let waited = started.elapsed();
+
+    let diagnostic = outcome.expect_err("a port that never listens must fail the wait");
+    assert!(
+        diagnostic.contains("127.0.0.1:0"),
+        "the diagnostic must name the unavailable endpoint: {diagnostic}"
+    );
+    assert!(diagnostic.contains("within 300 ms"), "{diagnostic}");
+    assert!(
+        waited >= budget,
+        "the port wait gave up after {} ms, short of its own budget",
+        waited.as_millis()
+    );
+    assert!(
+        waited < budget * 20,
+        "the port wait ran {} ms past a {} ms budget",
+        waited.as_millis(),
+        budget.as_millis()
+    );
+}
+
 /// A generous ceiling must not turn a dead daemon into a slow one. `--serve`
 /// refuses a non-loopback bind before it does any work, so this child is gone
 /// immediately and can never publish anything.
