@@ -836,3 +836,63 @@
 - Outcome: `pass`；store and handbook mappings routed；54×2 handbook and
   generated 18/18 checks pass.
 - Disposition: test-only checkpoint can be pushed without production repair.
+
+### D02-NATIVE-RED-02 — conflicting append and restart replay
+
+- Instruments: focused conflict negative and store reopen/latest test.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached
+  `~/p2-t19-msconsumer`, exact
+  `2160c55851fa6bbf84e94f7d3eb6cf63ebffbc6c`.
+- Started/retained: 2/2.
+- Outcome: expected conflict test `fail` 0/1 because production returned loaded
+  Memory/Skill candidates after the fake store reported a competing durable
+  binding；restart persistence test `pass` 1/1 across two store reopen cycles.
+- Disposition: 红灯精确证明 unconditional conflict swallowing；restart adapter
+  behavior is independently green。Implement post-conflict exact-record
+  equality verification before treating it as idempotent.
+
+### D02-FMT-14 — conflict repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `2160c558`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: post-conflict equality repair is formatted.
+
+### D02-DIFF-16 — conflict repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `2160c558`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair and running report have no whitespace defects.
+
+### D02-HANDBOOK-10 — conflict repair fingerprint refresh
+
+- Instruments: fingerprint filler, handbook check, generated-page byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `2160c558`
+- Started/retained: 3/3.
+- Outcome: exactly two mapped fingerprints refreshed；54×2 handbook and
+  generated 18/18 checks pass.
+- Disposition: green candidate is docs-sync ready.
+
+### D02-DIFF-17 — complete conflict green candidate
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted repair over `2160c558`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: ready for staged gate, push and exact Linux retest.
+
+### D02-DOCSYNC-10 — staged conflict green gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `2160c558`
+- Started/retained: 1/1.
+- Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
+- Disposition: repair can be committed and pushed.

@@ -477,7 +477,18 @@ where
     };
     match store.append_memory_skill_consumption(&record) {
         Ok(()) => Ok(()),
-        Err(StorePortError::Conflict { .. }) => Ok(()),
+        Err(StorePortError::Conflict { detail }) => {
+            let persisted = store
+                .load_memory_skill_consumption(&record.consumption_id)
+                .map_err(consumption_store_error)?;
+            if persisted.as_ref() == Some(&record) {
+                Ok(())
+            } else {
+                Err(SchedulerAuthorityError::ContextResolution(format!(
+                    "durable Memory/Skill consumption conflict is not an exact idempotent replay: {detail}"
+                )))
+            }
+        }
         Err(error) => Err(consumption_store_error(error)),
     }
 }
