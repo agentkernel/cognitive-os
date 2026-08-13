@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3c83d3fa228e5fb62fa0b55961777d1a3c5354bd83377c4a65a168085a5f44a3"
+fingerprint: "sha256:9e2931b9660026ae5fdf97ba59d5ab95dd08e63d5037b869f2b45c22e318dbb1"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -62,13 +62,19 @@ worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而
 workspace 变更使用持久原键 receipt；相同文件字节本身不是执行证明，重启会保守清理
 orphan staging。
 
-成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`START` Loop、硬 Budget 与
-runnable 调度行一起出现。提交前失败不会留下这些准入成员；成功响应后崩溃重开会看到
-完整发布。绑定后的周期 worker 与 WorkspaceRead Effect 生产派发已接线，但这本身不表
-示结果已得到独立验证。
+成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`DRAFT` governed Task、
+`START` Loop、硬 Budget 与 runnable 调度行一起出现。提交前失败不会留下这些准入成员；
+成功响应后崩溃重开会看到完整发布。启动可修复缺失的旧 Task 投影，且不会重置任何既有
+生命周期状态。
 
 验证启动时，闭合 Effect pin、verification request 与 Loop `ACT -> VERIFY` 发布属于同
 一崩溃原子权威事务；过期 writer 或 Loop 不会留下其中任何新成员。
+
+Task 完成是更靠后的权威边界。daemon 先重查最新 independent passed report 及每个所引
+Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixed Effect 版本、
+完整闭合 Effect 集合、当前 epoch 与 Task CAS。两条 transition 之间崩溃会保留
+`CANDIDATE_COMPLETE`，供同一 evidence-bound acceptance 重试；重复 acceptance 不能写
+第二次完成。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

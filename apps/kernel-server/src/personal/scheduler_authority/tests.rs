@@ -2232,7 +2232,7 @@ fn persist_native_workspace_read_dispatch_fixture(
             },
             &EventDraft {
                 event_id: EventId::parse("00000000-0000-7000-a000-000000001501").unwrap(),
-                object_id: contract_id,
+                object_id: contract_id.clone(),
                 domain: LifecycleDomain::Task,
                 object_version: Version::INITIAL,
                 event_type: "task-contract.minted".to_owned(),
@@ -2240,6 +2240,32 @@ fn persist_native_workspace_read_dispatch_fixture(
             },
             0,
         )
+        .unwrap();
+    store
+        .admit_object(&ObjectAdmission {
+            object: StoredObject {
+                object_id: contract_id.clone(),
+                domain: LifecycleDomain::Task,
+                state: StateName::parse("DRAFT").unwrap(),
+                version: Version::INITIAL,
+                body: json!({
+                    "contract_epoch": authorization.contract_epoch,
+                    "task_contract_id": contract_id.as_str(),
+                    "task_ref": authorization.task_ref,
+                }),
+            },
+            admitted_at: issued_at.clone(),
+            event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000001514").unwrap(),
+                object_id: contract_id,
+                domain: LifecycleDomain::Task,
+                object_version: Version::INITIAL,
+                event_type: "task.lifecycle.materialized".to_owned(),
+                canonical_json: "{\"event\":\"task-lifecycle\"}".to_owned(),
+            },
+            outbox: Vec::new(),
+            fencing_epoch: Some(1),
+        })
         .unwrap();
     store
         .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
@@ -2695,75 +2721,6 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
             .unwrap()
             .unwrap()
             .state,
-        SchedulerState::Runnable.as_str()
-    );
-    assert!(
-        store
-            .load_unconsumed_continuation_authorization(&TaskBinding {
-                task_ref: authorization.task_ref.clone(),
-                contract_epoch: authorization.contract_epoch,
-            })
-            .unwrap()
-            .is_some()
-    );
-
-    repository
-        .acquire_lease(
-            &scheduler_work_key(&authorization.task_ref),
-            "personal-daemon-scheduler",
-            77,
-            "2026-08-13T08:10:00Z",
-        )
-        .unwrap();
-    super::run_private_scheduler_tick_with_store(
-        &store,
-        &mut repository,
-        layout.config_dir(),
-        &router,
-        &artifact_store,
-    )
-    .unwrap();
-    assert_eq!(
-        repository
-            .load(&scheduler_work_key(&authorization.task_ref))
-            .unwrap()
-            .unwrap()
-            .state,
-        SchedulerState::Runnable.as_str()
-    );
-    assert!(
-        store
-            .load_unconsumed_continuation_authorization(&TaskBinding {
-                task_ref: authorization.task_ref.clone(),
-                contract_epoch: authorization.contract_epoch,
-            })
-            .unwrap()
-            .is_some()
-    );
-
-    super::run_private_scheduler_tick_with_store(
-        &store,
-        &mut repository,
-        layout.config_dir(),
-        &router,
-        &artifact_store,
-    )
-    .unwrap();
-    assert_eq!(
-        store
-            .load_object(LifecycleDomain::Loop, &authorization.loop_object_id)
-            .unwrap()
-            .unwrap()
-            .state
-            .as_str(),
-        "OBSERVE"
-    );
-    assert_eq!(
-        repository
-            .load(&scheduler_work_key(&authorization.task_ref))
-            .unwrap()
-            .unwrap()
-            .state,
         SchedulerState::Succeeded.as_str()
     );
     assert!(
@@ -2774,6 +2731,18 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
             })
             .unwrap()
             .is_none()
+    );
+    assert_eq!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED"
     );
     assert_eq!(
         store

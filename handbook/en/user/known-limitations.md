@@ -24,9 +24,9 @@ current fact of the code.
 - **Autonomous execution is not wired end-to-end**: Task admission does enqueue
   its complete scheduler bootstrap and a post-bind periodic worker reaches
   candidate admission. Parameter-free WorkspaceRead has a durable production
-  Effect caller and independent verifier through checkpoint-backed Loop
-  `OBSERVE`; the other Tool request carriers and Task completion remain
-  unwired.
+  Effect caller, independent verifier, and a written evidence-bound Task
+  acceptance caller; exact native validation of the final public C1 completion
+  and its negatives is pending. The other Tool request carriers remain unwired.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet.

@@ -356,12 +356,16 @@ where
         };
         match authority_store.repair_task_execution_bootstrap(&contract, &bootstrap) {
             Ok(repair)
-                if repair.loop_created || repair.budget_created || repair.scheduler_created =>
+                if repair.task_created
+                    || repair.loop_created
+                    || repair.budget_created
+                    || repair.scheduler_created =>
             {
                 eprintln!(
-                    "kernel-server personal scheduler recovery: repaired Task bootstrap {} at epoch {} (loop={}, budget={}, scheduler={})",
+                    "kernel-server personal scheduler recovery: repaired Task bootstrap {} at epoch {} (task={}, loop={}, budget={}, scheduler={})",
                     contract.task_ref,
                     contract.contract_epoch,
+                    repair.task_created,
                     repair.loop_created,
                     repair.budget_created,
                     repair.scheduler_created

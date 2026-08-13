@@ -66,4 +66,5 @@ fail indeterminate），workspace 变更完成则要求批准 workspace 外的�
 字节提升为 Task 完成。P2-T14 保留该边界并已加入 failure-first 公共 C1 证明：只有当前
 已闭合 Effects、精确 fixed post-state、最新匹配的独立 passed report、可检索的 Artifact
 CAS evidence 与 daemon-private acceptance principal 才可推导已登记 candidate/acceptance
-guards；本 checkpoint 尚未实现 acceptance caller。
+guards。实现已写入但 exact native validation 尚待运行；该 API 不接受任何原始 completion
+signal。

@@ -95,3 +95,69 @@ public transition contract:
 - All three mapped scheduler pages in both locales record the same honest
   boundary: the owner decision and expected-red proof exist, but the acceptance
   caller is not yet implemented.
+
+### Unit 007 — exact native expected-red launch
+
+- Finished: 2026-08-13 23:56 +08:00
+- Revision: `108b0cb`
+- Result: **not-run** — the local PowerShell-to-remote-Bash quoting around the
+  clean-worktree probe was malformed, so Bash rejected the command before clone,
+  checkout, compilation, or test execution.
+- Recovery: retry with a quote-free `git diff --quiet` /
+  `git diff --cached --quiet` clean-worktree probe.
+
+### Unit 008 — exact native expected-red filter
+
+- Finished: 2026-08-13 23:58 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `108b0cbfd81b08aaee4c9d1975bf8de2c1b7b53c`
+- Result: **not-run** — checkout and compilation succeeded, but the `--exact`
+  filter omitted the `personal::` module prefix and selected 0 tests.
+- Recovery: rerun the same immutable checkout with the full unit-test path.
+
+### Unit 009 — full-path expected-red launch
+
+- Finished: 2026-08-13 23:59 +08:00
+- Result: **not-run** — a redundant quoted command-substitution revision check
+  again broke the PowerShell-to-Bash command before test execution.
+- Recovery: print `git rev-parse HEAD` as evidence and use only quote-free
+  `git diff --quiet` probes before the full-path filter.
+
+### Unit 010 — exact native public C1 expected red
+
+- Finished: 2026-08-14 00:00 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `108b0cbfd81b08aaee4c9d1975bf8de2c1b7b53c`
+- Command: focused full-path `cargo test -p kernel-server --locked ... --exact`
+- Result: **expected fail** — 0 passed / 1 failed. The production tick completed
+  its existing Effect/verification path, then the assertion failed because the
+  governed Task does not exist. This is the preregistered P2-T14 gap, not an
+  infrastructure or unrelated test failure.
+
+### Unit 011 — initial implementation formatting
+
+- Finished: 2026-08-14 00:18 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **fail** — rustfmt reported mechanical wrapping only in the new Task
+  completion module and persisted-report validator.
+- Recovery: apply repository rustfmt; no semantic change.
+
+### Unit 012 — formatted implementation static checks
+
+- Finished: 2026-08-14 00:22 +08:00
+- Results: `cargo fmt --all -- --check` **pass**; `git diff --check` **pass**;
+  edited-file IDE diagnostics **clean**.
+- Rust compilation/tests remain **not-run locally** under the registered Windows
+  GNU restriction.
+
+### Unit 013 — initial implementation documentation checks
+
+- Finished: 2026-08-14 00:31 +08:00
+- Results:
+  - rustfmt: **pass**;
+  - consistency: **pass**;
+  - handbook: **pass** (54 documents × 2 locales);
+  - generated handbook `--check`: **pass** (18 pages byte-identical);
+  - whitespace: **pass**.
+- Mapped scheduler/kernel/store and user pages now describe the written
+  implementation as validation-pending; no completion claim is made yet.

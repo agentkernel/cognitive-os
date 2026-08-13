@@ -72,8 +72,8 @@ indeterminate), and workspace mutation completion requires a durable receipt bou
 to the original idempotency key in a state store outside the approved workspace.
 None of these executor guarantees turns admission, a Tool receipt, or matching
 workspace bytes into Task completion. P2-T14 keeps that boundary and now has a
-failure-first public C1 proof: only current closed Effects, the exact fixed
-post-state, the newest matching independent passed report, retrievable Artifact
-CAS evidence, and a daemon-private acceptance principal may derive the
-registered candidate/acceptance guards. The acceptance caller is not yet
-implemented at this checkpoint.
+failure-first public C1 proof plus an implementation pending exact native
+validation: only current closed Effects, the exact fixed post-state, the newest
+matching independent passed report, retrievable Artifact CAS evidence, and a
+daemon-private acceptance principal derive the registered candidate/acceptance
+guards. Raw completion signals are not accepted by this API.
