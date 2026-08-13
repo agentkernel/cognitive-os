@@ -269,4 +269,77 @@
 - Measurement: focused suite 10/10; kernel-server all-target Clippy clean; rustfmt check clean. Crash mid-mutation original-key restart, original-key replay, and duplicate Effect rejection all remain green. `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result.
 - Safety: disposable worktree only; no B01 guest or campaign root touched
 
+### V026 — required CI implementation-head diagnosis
+
+- Instrument: GitHub Actions run `31723080010` plus failed-job log inspection
+- Exact revision: `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `fail` (Ubuntu pass; Windows fail)
+- Measurement: Ubuntu completed the full required workflow. Windows stopped at `cargo build --workspace --locked` because the Unix-only parent-directory durability call left `std::fs::File` unconditionally imported and therefore unused under `RUSTFLAGS=-D warnings`.
+- Disposition: conditionally import `File` only on Unix; this is a platform compile correction with no Effect, fixture, oracle, or evidence-semantic change
+- Safety: no assertion, contract, fault boundary, or claim was weakened
+
+### V027 — Windows compile correction formatting attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: uncommitted conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted command)
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: rustfmt required the `#[cfg(unix)] use std::fs::File` declaration to precede the grouped `std` import
+- Disposition: apply rustfmt and rerun the same check
+- Safety: no Rust build, test, Clippy, or linking command ran locally
+
+### V028 — Windows compile correction whitespace check
+
+- Instrument: `git diff --check`
+- Exact revision: uncommitted conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: no whitespace errors
+- Safety: no external mutation or fixture process started
+
+### V029 — Windows compile correction formatting recheck
+
+- Instrument: `cargo fmt --all`; `cargo fmt --all -- --check`
+- Exact revision: uncommitted conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted commands)
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: rustfmt applied the import ordering and the immediate byte-drift recheck passed
+- Safety: local Rust build/test/Clippy remained `not-run`
+
+### V030 — conditional-import staged docs-sync attempt
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: source-map correctly routed `campaign_observation.rs` to both `dev.execution-chain-status` locales. The concrete documentation-neutral reason was accepted, but HB008 required both source fingerprints to refresh after the mapped source byte change.
+- Disposition: run the fingerprint filler, stage both generated fingerprint-only page changes, and rerun the gate
+- Safety: no handbook prose or product semantics are changed
+
+### V031 — conditional-import handbook fingerprint refresh
+
+- Instrument: `node tools/src/fill-handbook-fingerprints.mjs`
+- Exact revision: uncommitted conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `2 / 2` mapped locale pages
+- Outcome: `pass`
+- Measurement: only the en/zh-CN `dev.execution-chain-status` source fingerprints refreshed
+- Safety: bilingual prose and all non-claim wording remain byte-identical
+
+### V032 — conditional-import staged docs-sync recheck
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged conditional-import correction over `5e734c9bc51863fdb48b1fa825386f2a76184e5c`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: check-handbook verified 54 documents × 2 locales and generator `--check` verified 18 byte-identical generated pages
+- Safety: the recorded docs-impact reason is limited to conditional compilation of a Unix-only import
+
 <!-- Append each completed validation unit below before starting the next one. -->

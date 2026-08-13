@@ -35,9 +35,11 @@ use cognitive_kernel::{
 use cognitive_store::{ArtifactStore, SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+#[cfg(unix)]
+use std::fs::File;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::{self, File, OpenOptions},
+    fs::{self, OpenOptions},
     io::{Read, Write},
     net::{Shutdown, TcpListener, TcpStream},
     path::{Path, PathBuf},
