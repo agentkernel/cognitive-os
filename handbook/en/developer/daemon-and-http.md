@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:3728cd3f20bfd4ce33c2a91856e890a2dcfce05d93cc0449c3dbe5c5cd1c975f"
+fingerprint: "sha256:b374a22c7174b283175001f4c20e61a10c41284bf90d0890b14c85f75695c87b"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -30,9 +30,10 @@ non_claims:
 `serve_personal_loopback`: lexical loopback check → XDG layout → database
 preparation/migrations → `daemon.lock` acquisition → one `SqliteAuthorityStore`
 open (+ a separate `SchedulerRepository` connection to the same file) → recovery of
-consumed worker handoffs → bootstrap secret load/create → TCP bind → atomic
-`daemon-endpoint.json` publication → one periodic scheduler worker →
-thread-per-connection serving. No scheduler pass runs before the listener and
+consumed worker handoffs → native Tool descriptor/router composition → one
+bounded ArtifactStore at `data_dir()/artifacts` → bootstrap secret load/create →
+TCP bind → atomic `daemon-endpoint.json` publication → one periodic scheduler
+worker → thread-per-connection serving. No scheduler pass runs before the listener and
 endpoint exist, so a Task admitted by this process can be observed by a later
 pass. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
 passes behind a non-reentrant gate, logs and retries pass-level failures, and is

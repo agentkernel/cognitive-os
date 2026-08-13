@@ -41,6 +41,7 @@ use super::scheduler_authority::{
 };
 use super::task_api::TaskApi;
 use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
+use super::verification_executor::open_daemon_artifact_store;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
 const SCHEDULER_TICK_INTERVAL: Duration = Duration::from_millis(250);
@@ -248,6 +249,12 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("assemble native Tool executor router: {error}"),
         })?,
     );
+    let _artifact_store =
+        Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
+            PersonalDaemonError::Io {
+                detail: format!("assemble daemon ArtifactStore: {error}"),
+            }
+        })?);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)

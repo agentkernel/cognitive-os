@@ -64,3 +64,36 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 20:13 +08:00
 - Result: **pass**; generated references remained source-derived and two
   execution-chain fingerprints were refreshed.
+
+### Unit 007 — exact native D01 ArtifactStore expected red
+
+- Finished: 2026-08-13 20:17 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `fd838060f8331893fbaa955437ba88ca94e27b85`
+- Result: **expected compile fail**; `open_daemon_artifact_store` does not
+  exist.
+- No test executed. The missing symbol pins the daemon composition gap.
+
+### Unit 008 — daemon ArtifactStore composition implementation
+
+- Finished: 2026-08-13 20:22 +08:00
+- Result: **implemented; validation pending**
+- Change: the daemon opens one 8 MiB-bounded existing `ArtifactStore` under
+  `data_dir()/artifacts` at startup and retains that shared instance for the
+  process lifetime.
+- Boundary: no alternate CAS, verifier call, verification record, or Task state
+  mutation is introduced.
+
+### Unit 009 — D01 ArtifactStore bilingual handbook sync
+
+- Finished: 2026-08-13 20:25 +08:00
+- Result: **authored; generation/fingerprint validation pending**
+- Change: both locales record the unique daemon CAS root, 8 MiB ceiling, and
+  startup ordering while retaining the explicit no-production-verifier
+  boundary.
+
+### Unit 010 — D01 ArtifactStore implementation local gates
+
+- Finished: 2026-08-13 20:26 +08:00
+- Results: generated references **pass**; ten mapped fingerprints refreshed;
+  rustfmt **pass**; handbook **pass**; whitespace **pass**.

@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:2fcec4a237ef51b255321f17868f450a067047220a7a7d9eedf7a8dfbe6c5f81"
+fingerprint: "sha256:98aca1010467bc9ce987d858562a6d8debd630be23feb3ceb6b4211d04b305b7"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---

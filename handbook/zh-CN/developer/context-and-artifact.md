@@ -64,4 +64,5 @@ digest，且只存 digest 级 prefix/delta 元数据。过期绑定按构造 mis
 staging 文件 + 原子 rename 发布前校验大小 + digest，`get` 读取时重哈希（篡改 ⇒
 `DigestMismatch`），`get_authorized(_, false)` fail-closed（策略归调用方），只清理被
 遗弃的 staging 文件。verifier 经此存储消费证据，因此证据字节不存在或哈希不符时报告
-无法持久化。
+无法持久化。Personal daemon 现在会在 `data_dir()/artifacts` 打开一个进程期唯一实例，
+逐 artifact 上限 8 MiB；D01 组合本身不表示生产 verifier 已运行。

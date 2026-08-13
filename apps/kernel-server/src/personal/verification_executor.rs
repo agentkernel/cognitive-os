@@ -16,9 +16,24 @@ use cognitive_kernel::{
         ProtocolStore, VerificationReportRow, VerificationRequestRow,
     },
 };
-use cognitive_store::ArtifactStore;
+use cognitive_store::{ArtifactStore, PersonalDataLayout};
 use serde_json::json;
 use thiserror::Error;
+
+const DAEMON_ARTIFACT_MAXIMUM_BYTES: usize = 8 * 1024 * 1024;
+
+/// Compose the daemon's single private Artifact CAS under its durable data
+/// layout. Verification callers receive this shared instance; they never open
+/// an alternate CAS root or infer filesystem authority from a digest.
+pub(crate) fn open_daemon_artifact_store(
+    layout: &PersonalDataLayout,
+) -> Result<ArtifactStore, VerificationExecutorError> {
+    ArtifactStore::open(
+        layout.data_dir().join("artifacts"),
+        DAEMON_ARTIFACT_MAXIMUM_BYTES,
+    )
+    .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))
+}
 
 /// A daemon-private verifier result. Evidence references identify immutable
 /// artifacts by content digest; they are not worker receipts or progress.
