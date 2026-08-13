@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:ce5bfdfa308c04b10ad6612475bb995ac35f147efafbcbe530b3f31778590b63"
+fingerprint: "sha256:6c9bf2f4b93939532733c2aea2dc10e98b37536c3b6413d941e2e67e8810d3dd"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -51,7 +51,11 @@ Two credential planes, deliberately unrelated:
 - **Local channel bearers** (this surface): `POST /local/session` exchanges the
   per-boot bootstrap secret for a `management` or `task` token; every
   authenticated route checks channel binding first. Process-local, 12 h/30 min
-  expiries, no per-action scopes.
+  expiries, no per-action scopes. Bootstrap and session tokens each use 256 bits
+  from the OS CSPRNG; entropy failure or an invalid/repeated probe fails before
+  file/session creation, with no PID/time/hash fallback. Bootstrap reload accepts
+  only the current lowercase `boot-32hex-32hex` shape, so legacy predictable or
+  malformed non-empty credentials stop startup instead of being grandfathered.
 - **Privileged management sessions** (`admin-cli`): JSON documents validated by
   `cognitive-management` — a separate plane, not interchangeable with local
   bearers.

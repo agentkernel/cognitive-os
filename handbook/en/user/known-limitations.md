@@ -7,9 +7,12 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/server.rs
+  - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:53fe46f3d13db44953d186c7fa14b5209f5136f9d91d780bd3aa762c05ac9157"
+tests:
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+fingerprint: "sha256:826bc25b9db9e67ca78c8dc6410ffb6c19a63c79c54642cf43d3576f8399b338"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -56,3 +59,8 @@ current fact of the code.
 - Windows: daemon/CLI compile in CI and a Credential Manager backend plus
   installer/scheduled-task templates exist, but the B01-W install campaign has
   not run — no installable Windows product, and no ACL hardening on local files.
+  Local bootstrap/session tokens do use the OS CSPRNG; that correction does not
+  strengthen Windows file ACLs.
+- A runtime left with the pre-CSPRNG bootstrap shape intentionally fails daemon
+  startup after upgrade. Stop the daemon and remove only `local-bootstrap.secret`
+  from its private runtime directory so the next start can mint a replacement.
