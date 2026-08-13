@@ -227,6 +227,11 @@ impl LocalSessionAuthority {
         if bootstrap_secret.is_empty() {
             return Err(LocalAuthError::BootstrapMissing);
         }
+        if !has_current_opaque_token_shape(&bootstrap_secret, "boot") {
+            return Err(LocalAuthError::InvalidRequest {
+                detail: "persisted bootstrap secret does not have the current CSPRNG token shape",
+            });
+        }
         Ok(Self {
             bootstrap_secret_path,
             bootstrap_secret,
@@ -420,6 +425,23 @@ fn encode_lower_hex(bytes: &[u8]) -> String {
         encoded.push(HEX[(byte & 0x0f) as usize] as char);
     }
     encoded
+}
+
+fn has_current_opaque_token_shape(value: &str, expected_prefix: &str) -> bool {
+    let mut parts = value.split('-');
+    let (Some(prefix), Some(first_group), Some(second_group)) =
+        (parts.next(), parts.next(), parts.next())
+    else {
+        return false;
+    };
+    prefix == expected_prefix
+        && first_group.len() == TOKEN_ENTROPY_BYTES
+        && second_group.len() == TOKEN_ENTROPY_BYTES
+        && first_group
+            .bytes()
+            .chain(second_group.bytes())
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+        && parts.next().is_none()
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {

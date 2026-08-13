@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:b193b29eed279757986a929e8170a178fcc83a6952049e7a31850cfc7f30a84e"
+fingerprint: "sha256:732c36112118a369fd5f33bdccba32b60e53d61e2d6c222840d3aac0263ebcb3"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -54,3 +54,6 @@ non_claims:
   模板已存在，但 B01-W 安装战役未执行——没有可安装的 Windows 产品，本地文件也无
   ACL 加固。本地 bootstrap/session token 已使用 OS CSPRNG；该修正不增强 Windows 文件
   ACL。
+- 升级后若 runtime 仍留有 CSPRNG 修正前的 bootstrap 形状，daemon 会有意拒绝启动。
+  停止 daemon，并只删除其私有 runtime 目录中的 `local-bootstrap.secret`，下次启动即可
+  签发替代凭据。

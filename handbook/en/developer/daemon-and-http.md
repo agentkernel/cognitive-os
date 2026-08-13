@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:8c1dc11275f9fa87bfb1a1a061f2c9c8a811465872d7f82d4df7b62ba300d5c1"
+fingerprint: "sha256:bde588c96e96b040d9194066c3437149d0d80addfb8a0e71d4097fe8b93d5dc6"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -50,7 +50,9 @@ Two credential planes, deliberately unrelated:
   authenticated route checks channel binding first. Process-local, 12 h/30 min
   expiries, no per-action scopes. Bootstrap and session tokens each use 256 bits
   from the OS CSPRNG; entropy failure or an invalid/repeated probe fails before
-  file/session creation, with no PID/time/hash fallback.
+  file/session creation, with no PID/time/hash fallback. Bootstrap reload accepts
+  only the current lowercase `boot-32hex-32hex` shape, so legacy predictable or
+  malformed non-empty credentials stop startup instead of being grandfathered.
 - **Privileged management sessions** (`admin-cli`): JSON documents validated by
   `cognitive-management` — a separate plane, not interchangeable with local
   bearers.

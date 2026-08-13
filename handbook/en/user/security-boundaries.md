@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - packages/pi-cognitiveos/src/safety.test.ts
   - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:fd8b6afcd657e3ebafcd0143b17f85a4fb3a04fa7fca2aa3664e3ebf9adb7a8e"
+fingerprint: "sha256:d14b04a56a471a6dfba7ee302d6c4efd6850d4fdd2ee10118b7daca3a8303bf8"
 non_claims:
   - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
 ---
@@ -42,9 +42,12 @@ idle) and die with the daemon process.
 Bootstrap and session opaque tokens each carry 256 bits produced by the operating
 system CSPRNG. If OS entropy is unavailable, short, zero, or repeats its independent
 probe block, initialization/session issuance fails before creating a file, session,
-or token; there is no PID/time/hash fallback. Whoever can read the bootstrap file
-can still name any principal, and per-OS-user isolation relies on file permissions
-(no Windows ACL hardening).
+or token; there is no PID/time/hash fallback. A persisted bootstrap with the legacy
+predictable shape or any malformed non-empty shape is not grandfathered: startup
+fails closed. With the daemon stopped, remove only that runtime credential to let
+the next start mint a CSPRNG replacement. Whoever can read the bootstrap file can
+still name any principal, and per-OS-user isolation relies on file permissions (no
+Windows ACL hardening).
 
 ## Agent containment
 

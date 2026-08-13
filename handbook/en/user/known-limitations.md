@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:b193b29eed279757986a929e8170a178fcc83a6952049e7a31850cfc7f30a84e"
+fingerprint: "sha256:732c36112118a369fd5f33bdccba32b60e53d61e2d6c222840d3aac0263ebcb3"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -61,3 +61,6 @@ current fact of the code.
   not run — no installable Windows product, and no ACL hardening on local files.
   Local bootstrap/session tokens do use the OS CSPRNG; that correction does not
   strengthen Windows file ACLs.
+- A runtime left with the pre-CSPRNG bootstrap shape intentionally fails daemon
+  startup after upgrade. Stop the daemon and remove only `local-bootstrap.secret`
+  from its private runtime directory so the next start can mint a replacement.
