@@ -210,3 +210,57 @@
 - `DOCS_IMPACT_NONE="import-only compile fix; no documented behavior change"`
   because the mapped handbook pages already describe RegisteredCheckRun and
   this commit does not alter that surface.
+
+## 2026-08-14 — NATIVE-001 focused suites at compile-fix head
+
+- Exact revision: `c75749ccb926793480e5a8c1cea5ad606ebc2352`.
+- Environment: disposable `DEV-LINUX-NATIVE-01` clone
+  `/home/wuz/cos-p2t16-c75749cc` (not a shared P2-T13/T14 worktree).
+- Instruments and retained outcomes:
+  - `cargo test -p kernel-server registered_check -- --test-threads=1`:
+    **16/16 pass** (registry, Effect reconcile, CAS/verifier and crash
+    negatives, plus the independent verifier identity test).
+  - `cargo test -p cognitive-kernel tool_registry -- --test-threads=1`:
+    **11/11 pass**.
+  - `cargo test -p kernel-server tool_executor -- --test-threads=1`:
+    **76/76 pass**.
+  - `cargo test -p kernel-server --test p2_t16_registered_check -- --test-threads=1`:
+    **2/2 pass** (fixed C2a worker with empty env; extra argv rejected).
+  - `cargo clippy -p kernel-server --all-targets -- -D warnings`: **pass**.
+  - `cargo fmt --all -- --check`: **pass**.
+- The first `registered_check` filter did not execute the integration-test
+  binary's two tests (function names lack that substring); they were rerun
+  with `--test p2_t16_registered_check` and retained.
+- Non-claims: native focused pass is not Task completion, Gate, release,
+  Profile, B01, or EVAL promotion. Required Windows CI remains open.
+
+## 2026-08-14 — CI-GREEN-002 Ubuntu at compile-fix head
+
+- Exact revision: `c75749ccb926793480e5a8c1cea5ad606ebc2352`.
+- Instrument: required CI run
+  [31721644351](https://github.com/agentkernel/cognitive-os/actions/runs/31721644351).
+- Ubuntu `verify (ubuntu-latest)`: **pass** (workspace build/test, Clippy,
+  rustfmt, codegen, consistency, handbook, conformance).
+- Windows `verify (windows-latest)`: **fail**. Workspace Rust tests
+  `202 passed; 4 failed`. All four failures are scheduler WorkspaceRead
+  cleanup after assertions: `remove_dir_all` hits Win32 error 32 while
+  `ProductionNativeToolExecutorRouter` still holds a cap-std `Dir` on
+  `native-executor-state` (opened because `open()` now composes the
+  RegisteredCheck ArtifactStore/state store). The four tests are
+  `production_native_caller_persists_executing_before_workspace_io`,
+  `private_tick_dispatches_admitted_workspace_read_through_production_router`,
+  `interrupted_native_dispatch_reconciles_original_key_without_second_io`,
+  and `restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read`.
+- Control: every `personal::registered_check` test and the registered-check
+  verifier identity test **passed** on Windows before the cleanup failures.
+- Disposition: drop the router/ArtifactStore handles before `remove_dir_all`;
+  no production dispatch or registry change.
+
+## 2026-08-14 — LOCAL-012 Windows cleanup drop order
+
+- Change: the four failing scheduler tests now drop
+  `ProductionNativeToolExecutorRouter` (and any sibling ArtifactStore)
+  before deleting the temporary personal layout.
+- Outcome: source review **pass**. Required Windows CI must confirm the
+  Win32 error 32 is gone.
+- `DOCS_IMPACT_NONE="Windows test cleanup drops router Dir handles before remove_dir_all; no production or documented behavior change"`

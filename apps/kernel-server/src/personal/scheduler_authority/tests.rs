@@ -2633,6 +2633,8 @@ fn production_native_caller_persists_executing_before_workspace_io() {
             .as_str(),
         "RECONCILED"
     );
+    // Windows 不能在 cap-std 目录句柄仍打开时删除树；router 持有 durable state Dir。
+    drop(router);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -2783,6 +2785,9 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
         1
     );
 
+    // Windows 不能在 cap-std 目录句柄仍打开时删除树；router 持有 durable state Dir。
+    drop(router);
+    drop(artifact_store);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
@@ -2875,6 +2880,8 @@ fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
         "RECONCILED"
     );
 
+    // Windows 不能在 cap-std 目录句柄仍打开时删除树；router 持有 durable state Dir。
+    drop(router);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -3006,6 +3013,9 @@ fn restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read() {
         SchedulerState::Failed.as_str()
     );
 
+    // Windows 不能在 cap-std 目录句柄仍打开时删除树；router 持有 durable state Dir。
+    drop(restarted_router);
+    drop(artifact_store);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
