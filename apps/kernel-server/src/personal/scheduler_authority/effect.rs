@@ -375,6 +375,82 @@ where
     }
 }
 
+/// Reconcile a native Effect whose durable state proves dispatch may already
+/// have occurred.
+///
+/// The router is staged from the same durable WIA/candidate/Intent binding, but
+/// this function never calls `dispatch`. `EXECUTING` first becomes
+/// `OUTCOME_UNKNOWN`; all paths then query only the original idempotency key.
+pub(crate) fn reconcile_interrupted_native_worker_effect<S, C, G>(
+    effect_protocol: &cognitive_kernel::effects::EffectProtocol<'_, S, C, G>,
+    resolved: &ResolvedNativeWorkerDispatch,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    writer_lease: &WriterLease,
+) -> Result<SchedulerEffectClosure, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    executor_router
+        .stage_resolved(resolved)
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let (from_state, version) = match resolved.effect_state.as_str() {
+        "EXECUTING" => {
+            let unknown = effect_protocol.record_outcome(
+                &resolved.authorization.effect_object_id,
+                resolved.effect_version,
+                &cognitive_kernel::executor::DispatchOutcome::Unknown {
+                    detail: "worker interrupted after durable dispatch".to_owned(),
+                },
+                writer_lease,
+            )?;
+            ("OUTCOME_UNKNOWN", unknown.after_version)
+        }
+        "OUTCOME_UNKNOWN" => ("OUTCOME_UNKNOWN", resolved.effect_version),
+        "EXECUTED" => ("EXECUTED", resolved.effect_version),
+        "RECONCILED" | "VERIFIED" | "VERIFY_FAILED" => {
+            return Ok(SchedulerEffectClosure::Closed);
+        }
+        "NOT_EXECUTED" | "QUARANTINED" => {
+            return Ok(SchedulerEffectClosure::PendingReconciliation);
+        }
+        other => {
+            return Err(SchedulerAuthorityError::UnsupportedEffectState(
+                other.to_owned(),
+            ));
+        }
+    };
+    let (reconciled, query) = effect_protocol.reconcile(
+        &resolved.authorization.effect_object_id,
+        from_state,
+        version,
+        executor_router,
+        writer_lease,
+    )?;
+    match query {
+        cognitive_kernel::executor::ExecutorQueryResult::ExecutedWithOriginalKey => {
+            Ok(SchedulerEffectClosure::Closed)
+        }
+        cognitive_kernel::executor::ExecutorQueryResult::NotExecuted => {
+            effect_protocol.close_not_executed(
+                &resolved.authorization.effect_object_id,
+                reconciled.after_version,
+                writer_lease,
+            )?;
+            Ok(SchedulerEffectClosure::PendingReconciliation)
+        }
+        cognitive_kernel::executor::ExecutorQueryResult::Indeterminate => {
+            effect_protocol.quarantine_still_unknown(
+                &resolved.authorization.effect_object_id,
+                reconciled.after_version,
+                writer_lease,
+            )?;
+            Ok(SchedulerEffectClosure::PendingReconciliation)
+        }
+    }
+}
+
 /// Re-authorize one resolved native dispatch from current daemon facts.
 ///
 /// The immutable candidate-admission snapshot is evidence of the earlier WIA
@@ -478,7 +554,9 @@ pub(crate) fn classify_scheduler_effect_closure(
     match state {
         "RECONCILED" | "VERIFIED" | "VERIFY_FAILED" => Ok(SchedulerEffectClosure::Closed),
         "PROPOSED" | "AUTHORIZED" | "EXECUTING" | "OUTCOME_UNKNOWN" | "EXECUTED"
-        | "COMPENSATING" | "QUARANTINED" => Ok(SchedulerEffectClosure::PendingReconciliation),
+        | "NOT_EXECUTED" | "COMPENSATING" | "QUARANTINED" => {
+            Ok(SchedulerEffectClosure::PendingReconciliation)
+        }
         _ => Err(SchedulerAuthorityError::UnsupportedEffectState(
             state.to_owned(),
         )),

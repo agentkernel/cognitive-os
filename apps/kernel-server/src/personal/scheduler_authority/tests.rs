@@ -2927,6 +2927,10 @@ fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
         classify_scheduler_effect_closure("EXECUTING").unwrap(),
         SchedulerEffectClosure::PendingReconciliation
     );
+    assert_eq!(
+        classify_scheduler_effect_closure("NOT_EXECUTED").unwrap(),
+        SchedulerEffectClosure::PendingReconciliation
+    );
     assert!(matches!(
         classify_scheduler_effect_closure("UNRECOGNIZED"),
         Err(SchedulerAuthorityError::UnsupportedEffectState(state)) if state == "UNRECOGNIZED"

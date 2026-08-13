@@ -1479,3 +1479,51 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 18:20 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 174 — exact native D04 recovery expected red
+
+- Finished: 2026-08-13 18:23 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `71b10bb40f0324c9f048b943e25dfe4928ac16db`
+- Result: **expected compile fail**; the scheduler has no
+  `reconcile_interrupted_native_worker_effect`.
+- No test executed. The missing symbol pins crash recovery separately from the
+  normal successful caller.
+
+### Unit 175 — D04 interrupted-dispatch recovery implementation
+
+- Finished: 2026-08-13 18:29 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - `EXECUTING` is durably converted to `OUTCOME_UNKNOWN` after interruption,
+    then queried only through the original staged key;
+  - existing `OUTCOME_UNKNOWN`/`EXECUTED` states use the same query path;
+  - the periodic pass now inspects exact leased-row/WIA bindings, releases
+    confirmed execution as scheduler success, and releases confirmed
+    non-execution/quarantine as scheduler failure;
+  - no recovery branch calls executor `dispatch`.
+
+### Unit 176 — interrupted-dispatch recovery local checks
+
+- Finished: 2026-08-13 18:30 +08:00
+- Results: rustfmt **pass**; whitespace **pass**; diagnostics **pass**.
+
+### Unit 177 — recovery handbook sync and fingerprints
+
+- Finished: 2026-08-13 18:32 +08:00
+- Result: **pass**; both locales now state that interrupted leased rows query
+  the original key without redispatch, and six mapped fingerprints were
+  refreshed.
+
+### Unit 178 — non-execution restart classification
+
+- Finished: 2026-08-13 18:34 +08:00
+- Result: **fixed**; durable `NOT_EXECUTED` is a pending scheduler disposition,
+  not an unsupported Effect state. Startup retains it for the periodic
+  leased-row path, which releases the scheduler row as `failed`, never
+  `succeeded`.
+
+### Unit 179 — recovery implementation local checks
+
+- Finished: 2026-08-13 18:35 +08:00
+- Results: rustfmt **pass**; whitespace **pass**; diagnostics **pass**.
