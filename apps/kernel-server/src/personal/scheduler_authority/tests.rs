@@ -2502,7 +2502,7 @@ fn startup_recovery_repairs_only_missing_loop_without_duplicate_scheduler_work()
     let repaired_loop = authority_store
         .load_object(LifecycleDomain::Loop, &loop_object_id)
         .unwrap()
-        .expect("startup recovery must repair the missing Loop");
+        .unwrap();
     assert_eq!(repaired_loop.state.as_str(), "START");
     assert_eq!(
         authority_store
@@ -2563,10 +2563,7 @@ fn startup_recovery_repairs_only_missing_budget_without_replacing_loop() {
         loop_before,
         "startup repair must not replace an existing Loop"
     );
-    let repaired_budget = authority_store
-        .load_budget(&budget_id)
-        .unwrap()
-        .expect("startup recovery must repair the missing Budget");
+    let repaired_budget = authority_store.load_budget(&budget_id).unwrap().unwrap();
     assert_eq!(
         repaired_budget.state.remaining(),
         &BTreeMap::from([

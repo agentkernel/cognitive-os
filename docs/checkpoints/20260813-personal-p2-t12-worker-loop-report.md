@@ -500,3 +500,91 @@ Windows GNU linker host.
 - Finished: 2026-08-13 14:32 +08:00
 - Command: `git diff --cached --check`
 - Result: **pass**
+
+### Unit 062 — exact native D01 startup repair
+
+- Finished: 2026-08-13 13:54 +08:00
+- Environment: `DEV-LINUX-NATIVE-01`
+- Exact pushed revision: `eeaec3ac9a365e464cea16f9c7016e633d2d528e`
+- Commands:
+  - `cargo test -p cognitive-runtime --locked --test
+    p2_t01_task_application_service`
+  - `cargo test -p kernel-server --locked
+    scheduler_authority::tests::startup_recovery_repairs --
+    --test-threads=1`
+- Result: **pass**; admission suite 8/8 and startup-repair focused tests 2/2
+  (179 kernel-server tests filtered, integration targets 0 selected).
+
+### Unit 063 — full scheduler-authority native suite
+
+- Finished: 2026-08-13 13:55 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `eeaec3ac9a365e464cea16f9c7016e633d2d528e`
+- Command: `cargo test -p kernel-server --locked
+  scheduler_authority::tests -- --test-threads=1`
+- Result: **pass**; 41 passed, 0 failed, 140 filtered.
+
+### Unit 064 — D01 native Clippy
+
+- Finished: 2026-08-13 13:55 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `eeaec3ac9a365e464cea16f9c7016e633d2d528e`
+- Command: `cargo clippy -p cognitive-kernel -p cognitive-store -p
+  cognitive-management -p cognitive-runtime -p kernel-server --all-targets
+  --locked -- -D warnings`
+- Result: **fail** after all five crates checked; two new test-only
+  `.expect(...)` calls violated the repository's `clippy::expect_used` denial.
+- Recovery: replace only those Option extractions with the test module's
+  already-allowed `.unwrap()` convention; rerun formatting and exact Clippy.
+
+### Unit 065 — D01 Clippy repair
+
+- Finished: 2026-08-13 13:57 +08:00
+- Result: **fixed**; replaced only the two new test-only `.expect(...)` calls
+  with the module's explicitly allowed `.unwrap()` convention. Production code
+  is unchanged.
+
+### Unit 066 — Clippy-repair formatting check
+
+- Finished: 2026-08-13 13:58 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **fail**; rustfmt requested one mechanical line collapse.
+
+### Unit 067 — Clippy-repair whitespace and diagnostics
+
+- Finished: 2026-08-13 13:58 +08:00
+- Results: `git diff --check` **pass**; edited-file diagnostics **pass**.
+
+### Unit 068 — Clippy-repair rustfmt
+
+- Finished: 2026-08-13 13:59 +08:00
+- Command: `cargo fmt --all`
+- Result: **fixed**; one mechanical line collapse.
+
+### Unit 069 — Clippy-repair formatting rerun
+
+- Finished: 2026-08-13 14:01 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**
+
+### Unit 070 — Clippy-repair staged whitespace
+
+- Finished: 2026-08-13 14:01 +08:00
+- Command: `git diff --cached --check`
+- Result: **pass**
+
+### Unit 071 — documentation-neutral test repair gate
+
+- Finished: 2026-08-13 14:01 +08:00
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **pass** with
+  `DOCS_IMPACT_NONE="The only mapped source change replaces two test-only
+  expect calls with the module's allowed unwrap convention; production
+  behavior and handbook guidance are unchanged."`
+- Full handbook and generated-page checks also passed.
+
+### Unit 072 — Clippy-repair consistency
+
+- Finished: 2026-08-13 14:01 +08:00
+- Command: `pnpm run check:consistency`
+- Result: **pass**
