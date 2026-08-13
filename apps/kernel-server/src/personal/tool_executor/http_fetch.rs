@@ -226,6 +226,13 @@ where
         self.fetch_count.load(std::sync::atomic::Ordering::SeqCst)
     }
 
+    #[cfg(test)]
+    pub(crate) fn remove_durable_state(&self, idempotency_key: &str) -> std::io::Result<bool> {
+        self.state_store
+            .lock_key(HTTP_FETCH_STATE_NAMESPACE, idempotency_key)?
+            .remove_record()
+    }
+
     fn fetch_staged_target(
         &self,
         call: &ExecutorCall,
@@ -432,7 +439,7 @@ where
                 detail: format!("durable fetch state read failed: {error}"),
             })?;
         let Some(state) = state else {
-            return Ok(ExecutorQueryResult::NotExecuted);
+            return Ok(ExecutorQueryResult::Indeterminate);
         };
         if state.schema != HTTP_FETCH_STATE_SCHEMA || state.idempotency_key != idempotency_key {
             return Ok(ExecutorQueryResult::Indeterminate);

@@ -701,3 +701,128 @@ repeats, its bounded wait will be repaired rather than ignored.
   standard-library idioms; runtime semantics and mapped handbook facts are
   unchanged.”
 - Disposition: record the same reason in the commit and PR.
+
+### V-CI-005 — Required Ubuntu/Windows matrix, checkpoint fdb0ea4
+
+- Instrument: GitHub Actions `CI`, run `31661255206`
+- Revision: `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `CI-UBUNTU-01` job `94326380221`;
+  `CI-WINDOWS-MSVC-01` job `94326380431`
+- Started/retained: 2/2 jobs
+- Outcome: `pass`
+- Measurement: both jobs passed TypeScript build/tests, Rust workspace
+  build/tests, Clippy with deny-warnings, rustfmt, codegen diff, consistency,
+  traceability, handbook/generated drift, conformance report/honesty,
+  wrong-implementation self-check, cross-language digest and artifact upload.
+  Ubuntu completed in 2m32s; Windows completed in 9m13s.
+- Disposition: strongest evidence is `tested-supported-ci`; ordinary CI creates
+  no Gate/release/Profile/B01/benchmark claim. Exact native Linux remains
+  deferred until the active soak/campaign closes.
+
+## Post-CI independent self-review
+
+The defect-first review of `origin/main...fdb0ea4` found three additional
+actionable fail-closed gaps before declaring the change clean:
+
+1. absent/corrupt HTTP durable state still mapped to `NotExecuted`, which could
+   erase an unresolved attempt after state loss;
+2. state-root `create_dir_all` could create through a planted link before the
+   later no-follow open rejected it;
+3. mutation receipts were not required to live outside the approved workspace,
+   allowing a workspace Tool path to target its own proof store.
+
+The follow-up makes missing HTTP state `Indeterminate`, creates every state-root
+component handle-relatively with no-follow semantics, requires mutation state
+outside the workspace, moves all focused fixtures to isolated sibling state,
+and adds negatives for state loss, linked-root creation, and unsafe receipt
+placement.
+
+### V-LOCAL-052 — Self-review repair formatting, first attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `fail`
+- Measurement: rustfmt requested two test-expression compactions; exit 1.
+- Disposition: apply rustfmt and rerun.
+
+### V-LOCAL-053 — Self-review repair rustfmt
+
+- Instrument: `cargo fmt --all`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: two test-expression compactions applied; exit 0.
+- Disposition: rerun the no-write check.
+
+### V-LOCAL-054 — Self-review repair formatting verification
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: self-review repairs are formatting-clean.
+
+### V-LOCAL-055 — Self-review repair consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: complete consistency set passed; exit 0.
+- Disposition: no static contract/governance drift.
+
+### V-LOCAL-056 — Self-review handbook fingerprint convergence
+
+- Instrument: `node tools/src/fill-handbook-fingerprints.mjs`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: 0 additional fingerprint updates required; exit 0.
+- Disposition: run complete handbook/generated checks.
+
+### V-LOCAL-057 — Self-review generated-page check
+
+- Instrument: `node tools/src/generate-handbook.mjs --check`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 18/18 pages
+- Outcome: `pass`
+- Measurement: all generated pages byte-identical; exit 0.
+- Disposition: generated references remain converged.
+
+### V-LOCAL-058 — Self-review handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty self-review worktree after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: complete handbook check set passed; exit 0.
+- Disposition: bilingual self-review documentation is synchronized.
+
+### V-LOCAL-059 — Self-review staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged self-review candidate after
+  `fdb0ea4b797a914de0c0c70ee07750018795a093`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: five scheduler-execution paths and six bilingual handbook
+  paths routed correctly; full handbook and generated-byte checks passed;
+  exit 0.
+- Disposition: no docs-impact escape was used.

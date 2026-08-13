@@ -1,4 +1,4 @@
-﻿//! Focused tests extracted from `tool_executor` (P9-T02/D03).
+//! Focused tests extracted from `tool_executor` (P9-T02/D03).
 
 #![allow(clippy::expect_used, clippy::panic, unused_imports)]
 
@@ -53,6 +53,7 @@ impl TestWorkspace {
 impl Drop for TestWorkspace {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.path);
+        let _ = std::fs::remove_dir_all(durable_state_path(&self.path));
     }
 }
 
@@ -71,9 +72,18 @@ fn temporary_workspace_path(test_name: &str) -> PathBuf {
 
 fn durable_state_store(root: &std::path::Path) -> Arc<DurableExecutorStateStore> {
     Arc::new(
-        DurableExecutorStateStore::open(&root.join(".executor-state"))
-            .expect("open durable executor state"),
+        DurableExecutorStateStore::open(&durable_state_path(root))
+            .expect("open isolated durable executor state"),
     )
+}
+
+fn durable_state_path(root: &std::path::Path) -> PathBuf {
+    let parent = root.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let name = root
+        .file_name()
+        .unwrap_or_else(|| std::ffi::OsStr::new("workspace"))
+        .to_string_lossy();
+    parent.join(format!(".{name}-executor-state"))
 }
 
 fn mutation_executor(
@@ -2902,6 +2912,50 @@ fn workspace_mutation_cannot_be_validated_without_an_expected_preimage() {
 }
 
 #[test]
+fn workspace_mutation_rejects_a_receipt_store_inside_the_approved_workspace() {
+    let temporary_workspace = TestWorkspace::new("write-state-isolation");
+    let state_store = Arc::new(
+        DurableExecutorStateStore::open(&temporary_workspace.path.join(".unsafe-state"))
+            .expect("open intentionally unsafe state location"),
+    );
+    let executor = NativeWorkspaceMutationExecutor::new(7, state_store);
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Absent,
+    );
+    assert!(matches!(
+        executor.stage_request(
+            "write-unsafe-state".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        ),
+        Err(NativeToolExecutionError::ExecutorUnavailable(_))
+    ));
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn durable_executor_state_creation_never_follows_a_link_or_reparse_point() {
+    let temporary_workspace = TestWorkspace::new("state-root-link");
+    let outside = temporary_workspace.path.join("outside");
+    let linked_state = temporary_workspace.path.join("linked-state");
+    std::fs::create_dir_all(&outside).expect("create outside state target");
+    create_test_directory_link(&outside, &linked_state);
+
+    assert!(
+        DurableExecutorStateStore::open(&linked_state.join("nested")).is_err(),
+        "state construction must reject a linked path component"
+    );
+    assert!(
+        !outside.join("nested").exists(),
+        "rejected state construction must not create through the link"
+    );
+}
+
+#[test]
 fn workspace_write_refuses_a_preimage_mismatch_without_touching_the_target() {
     let temporary_workspace = TestWorkspace::new("write-preimage-mismatch");
     let target_path = temporary_workspace.path.join("notes.txt");
@@ -4219,7 +4273,9 @@ fn scripted_fetch_executor_at_epoch(
         Arc::clone(&transport),
         vec![FETCH_ORIGIN.to_owned()],
         5_000,
-        durable_state_store(&transport.state_path),
+        Arc::new(
+            DurableExecutorStateStore::open(&transport.state_path).expect("open fetch state store"),
+        ),
     )
 }
 
@@ -4436,6 +4492,41 @@ fn http_fetch_unresolved_attempt_reconciles_indeterminate_after_restart() {
         transport.observed_urls().len(),
         1,
         "restart must not blindly repeat an unresolved original-key attempt"
+    );
+}
+
+#[test]
+fn http_fetch_missing_durable_attempt_record_fails_closed_after_restart() {
+    let transport = Arc::new(ScriptedFetchTransport::failing(ReadOnlyFetchError::Timeout));
+    let target = format!("{FETCH_ORIGIN}/data");
+    let first = scripted_fetch_executor(Arc::clone(&transport));
+    first
+        .stage_request(
+            "fetch-missing-state".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage fetch");
+    assert!(matches!(
+        first.dispatch(&http_fetch_call(
+            "fetch-missing-state",
+            "digest-1",
+            &target,
+            7,
+        )),
+        Ok(DispatchOutcome::Unknown { .. })
+    ));
+    assert!(
+        first
+            .remove_durable_state("fetch-missing-state")
+            .expect("remove test state")
+    );
+
+    let restarted = scripted_fetch_executor(Arc::clone(&transport));
+    assert_eq!(
+        restarted.query_outcome("fetch-missing-state"),
+        Ok(ExecutorQueryResult::Indeterminate),
+        "loss of durable attempt state must never become authoritative non-execution"
     );
 }
 

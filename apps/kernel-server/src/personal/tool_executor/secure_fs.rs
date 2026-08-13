@@ -38,7 +38,12 @@ pub(crate) struct AnchoredWorkspace {
 
 impl AnchoredWorkspace {
     pub(crate) fn open(root_path: &Path) -> io::Result<Self> {
-        let root = open_absolute_directory_nofollow(root_path)?;
+        let root = open_absolute_directory_nofollow(root_path, false)?;
+        Ok(Self { root })
+    }
+
+    pub(crate) fn open_or_create(root_path: &Path) -> io::Result<Self> {
+        let root = open_absolute_directory_nofollow(root_path, true)?;
         Ok(Self { root })
     }
 
@@ -224,7 +229,7 @@ fn open_directory_chain(mut current: Dir, relative_path: &Path) -> io::Result<Di
     Ok(current)
 }
 
-fn open_absolute_directory_nofollow(path: &Path) -> io::Result<Dir> {
+fn open_absolute_directory_nofollow(path: &Path, create_missing: bool) -> io::Result<Dir> {
     let absolute_path = if path.is_absolute() {
         path.to_path_buf()
     } else {
@@ -254,7 +259,16 @@ fn open_absolute_directory_nofollow(path: &Path) -> io::Result<Dir> {
     }
     let mut current = Dir::open_ambient_dir(ambient_root, ambient_authority())?;
     for descendant in descendants {
-        current = match open_entry_at(&current, &descendant)? {
+        let mut opened = open_entry_at(&current, &descendant)?;
+        if matches!(&opened, SecureEntry::Absent) && create_missing {
+            match current.create_dir(&descendant) {
+                Ok(()) => {}
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+                Err(error) => return Err(error),
+            }
+            opened = open_entry_at(&current, &descendant)?;
+        }
+        current = match opened {
             SecureEntry::Directory(directory) => directory,
             SecureEntry::Absent => {
                 return Err(io::Error::new(

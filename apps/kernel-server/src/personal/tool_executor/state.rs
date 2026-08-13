@@ -10,7 +10,7 @@ use std::{
     ffi::{OsStr, OsString},
     fs::File,
     io::{self, Read, Seek, SeekFrom, Write},
-    path::Path,
+    path::{Component, Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
 
@@ -27,13 +27,28 @@ static STATE_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 pub(crate) struct DurableExecutorStateStore {
     directory: Dir,
+    absolute_path: PathBuf,
 }
 
 impl DurableExecutorStateStore {
     pub(crate) fn open(path: &Path) -> io::Result<Self> {
-        std::fs::create_dir_all(path)?;
-        let directory = AnchoredWorkspace::open(path)?.root_dir()?;
-        Ok(Self { directory })
+        let absolute_path = absolute_lexical_path(path)?;
+        let directory = AnchoredWorkspace::open_or_create(&absolute_path)?.root_dir()?;
+        Ok(Self {
+            directory,
+            absolute_path,
+        })
+    }
+
+    pub(crate) fn ensure_outside_workspace(&self, workspace_root: &Path) -> io::Result<()> {
+        let workspace_root = absolute_lexical_path(workspace_root)?;
+        if self.absolute_path.starts_with(&workspace_root) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "durable executor state must be outside the approved workspace root",
+            ));
+        }
+        Ok(())
     }
 
     pub(crate) fn lock_key(&self, namespace: &str, key: &str) -> io::Result<StateGuard<'_>> {
@@ -197,4 +212,29 @@ fn temporary_record_name(record_name: &OsStr) -> OsString {
         std::process::id(),
         sequence
     ))
+}
+
+fn absolute_lexical_path(path: &Path) -> io::Result<PathBuf> {
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()?.join(path)
+    };
+    let mut normalized = PathBuf::new();
+    for component in absolute.components() {
+        match component {
+            Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
+            Component::RootDir | Component::Normal(_) => {
+                normalized.push(component.as_os_str());
+            }
+            Component::CurDir => {}
+            Component::ParentDir => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "durable executor state path contains parent traversal",
+                ));
+            }
+        }
+    }
+    Ok(normalized)
 }

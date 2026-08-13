@@ -51,6 +51,7 @@ HTTP 的更正不可用；fencing 机制（`INTENT_VERSION_SUPERSEDED`）在 ker
 （非 404）；watch 事件源是进程本地的——该表面尚未消费持久事件 outbox。
 
 下游原生工具 staging 只接受与 daemon 不可变目录条目完全相等的 descriptor。执行 attempt
-仍归 Effect 所有：不确定 HTTP attempt 跨重启后保持 indeterminate，workspace 变更完成则
-要求绑定原始幂等键的持久 receipt。这些执行器保证都不会把准入、Tool receipt 或相同
-workspace 字节提升为 Task 完成。
+仍归 Effect 所有：不确定 HTTP attempt 跨重启后保持 indeterminate（持久状态缺失同样
+fail indeterminate），workspace 变更完成则要求批准 workspace 外的状态存储中存在绑定
+原始幂等键的持久 receipt。这些执行器保证都不会把准入、Tool receipt 或相同 workspace
+字节提升为 Task 完成。

@@ -160,6 +160,13 @@ impl NativeWorkspaceMutationExecutor {
             .expected_preimage
             .as_ref()
             .ok_or(NativeToolExecutionError::MutationPreimageRequired)?;
+        self.state_store
+            .ensure_outside_workspace(approved_workspace_root)
+            .map_err(|error| {
+                NativeToolExecutionError::ExecutorUnavailable(format!(
+                    "durable mutation state isolation failed: {error}"
+                ))
+            })?;
         if idempotency_key.is_empty() || parameters_digest.is_empty() {
             return Err(NativeToolExecutionError::InvalidDescriptor(
                 "idempotency key and parameters digest are required".to_owned(),

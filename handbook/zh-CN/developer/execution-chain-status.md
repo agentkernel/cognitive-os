@@ -37,8 +37,8 @@ non_claims:
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead / WorkspaceSearch / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | 每个 sink 都重查不可变目录完全相等；search 使用句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
-| WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、持久原键 attempt/receipt 与 orphan 清理 |
-| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
+| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动时恢复已消费交接 | implemented | daemon 启动路径 |
 

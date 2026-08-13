@@ -37,7 +37,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task control/query over HTTP | unavailable | service methods exist, no route |
 | Autonomous scheduler loop | partial | one startup tick; no bootstrap row from admission |
 | Governed tool execution (all six registered families) | partial | every family now has an assembled executor, so the projection reports `execution_ready`; that means this binary has a sink, not that an Agent can reach one — the sinks are still test-called only |
-| Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
+| Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
 | Independent verification loop | partial | verifier seam test-called only |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |
