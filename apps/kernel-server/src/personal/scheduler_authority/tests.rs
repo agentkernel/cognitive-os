@@ -2219,7 +2219,8 @@ fn persist_native_workspace_read_dispatch_fixture(
                 domain: LifecycleDomain::Effect,
                 object_version: Version::INITIAL,
                 event_type: "intent.minted".to_owned(),
-                canonical_json: "{\"event\":\"intent\"}".to_owned(),
+                canonical_json: "{\"event\":\"intent\",\"event_time\":\"2026-08-13T08:00:00Z\"}"
+                    .to_owned(),
             },
         )
         .unwrap();

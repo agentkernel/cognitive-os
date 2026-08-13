@@ -1210,3 +1210,43 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 17:03 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 142 — exact D04 resolver recovery bundle
+
+- Finished: 2026-08-13 17:07 +08:00
+- Result: **pass**; ignored bundle
+  `artifacts/p2-t12-d04-c0f9147.bundle` verified exact tip
+  `c0f914796e11566e2d23da4b4dad7d62e149dff7` with prerequisite
+  `ed5a29ec557ddb61d53aa54d68e03c3dca081139`, remotely fetched, and checked
+  out cleanly.
+
+### Unit 143 — first exact D04 resolver test invocation
+
+- Finished: 2026-08-13 17:07 +08:00
+- Result: **not-run**; both commands passed a shortened module path together
+  with `--exact`, so libtest selected 0 tests.
+- Recovery: rerun the same revision with unique test-name filters and no
+  `--exact`; do not count the zero-test exits as validation.
+
+### Unit 144 — exact D04 resolver fixture failure
+
+- Finished: 2026-08-13 17:08 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `c0f914796e11566e2d23da4b4dad7d62e149dff7`
+- Result: **fail** before the resolver; the new test's task-bound Intent event
+  omitted the canonical `event_time` required when scheduler registration is
+  derived.
+- Recovery: add only the fixture timestamp and rerun both resolver negatives.
+  Production code is unchanged.
+
+### Unit 145 — resolver fixture repair local checks
+
+- Finished: 2026-08-13 17:10 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on one
+  mechanical string-call wrap.
+- Recovery: apply rustfmt only.
+
+### Unit 146 — resolver fixture repair formatting rerun
+
+- Finished: 2026-08-13 17:11 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
