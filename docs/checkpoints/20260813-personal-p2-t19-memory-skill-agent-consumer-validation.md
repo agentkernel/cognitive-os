@@ -1628,3 +1628,25 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Test-only bounded session retry removes a Windows startup race without changing production behavior"`
   must remain in the commit record.
+
+### D05-NATIVE-03 — Windows-retry native regression
+
+- Instruments: full HTTP lifecycle/restart/retry integration and strict
+  kernel-server Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `f46b5df9e6a1ae662e54b604a094f7507fad24ee`.
+- Started/retained: 2/2.
+- Outcome: HTTP suite `pass` 5/5；strict Clippy `pass`.
+- Disposition: bounded session helper change preserves lifecycle behavior and
+  lint cleanliness；final cross-platform CI rerun remains.
+
+### D05-DOCSYNC-04 — staged native-evidence gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged report append over `f46b5df9`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Append-only native validation evidence changes no shipped behavior or handbook claims"`
+  must remain in the commit record.
