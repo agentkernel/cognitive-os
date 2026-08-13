@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-_No active lease. Claim one before writing._
+| `lease/personal/P2-T12/worker-loop-production-chain` | P2-T12/D01 admitted Task scheduler bootstrap and governed Tool dispatch | Lane-RUN | `personal/P2-T12-worker-loop` | `crates/cognitive-kernel/src/{intent_chain.rs,ports.rs}`; `crates/cognitive-management/src/task_application.rs`; `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`; `crates/cognitive-store/src/scheduler.rs`; `crates/cognitive-store/src/sqlite/{intent_chain.rs,store.rs}`; `apps/kernel-server/src/personal/task_api.rs`; `apps/kernel-server/src/personal/server.rs`; `apps/kernel-server/src/personal/scheduler_authority/`; `apps/kernel-server/src/personal/tool_executor/`; `apps/kernel-server/tests/p2_t12_production_chain.rs`; `handbook/en/developer/execution-chain-status.md`; `handbook/zh-CN/developer/execution-chain-status.md`; `docs/checkpoints/20260813-personal-p2-t12-worker-loop-report.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` | `cursor-gpt-5.6-sol-20260813` | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

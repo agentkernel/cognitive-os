@@ -16,15 +16,20 @@ use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::object_reference::{StrongReference, StrongReferenceKind};
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
-use cognitive_domain::{ObjectId, UriRef, WallTimestamp};
+use cognitive_domain::{LifecycleDomain, ObjectId, UriRef, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
     SupersedeCommand, TaskContractCommand, UserIntentCommand, verify_task_binding_current,
 };
-use cognitive_kernel::ports::{Clock, IdGenerator, PortFailure, ProtocolStore, TaskBinding};
+use cognitive_kernel::ports::{
+    AuthorityStore, Clock, IdGenerator, PortFailure, ProtocolStore, TaskBinding,
+};
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
-use cognitive_store::SqliteAuthorityStore;
+use cognitive_store::{
+    SqliteAuthorityStore,
+    scheduler::{SchedulerRepository, SchedulerState, SchedulerWorkKey},
+};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 // ---------------------------------------------------------------------
@@ -423,4 +428,74 @@ fn stale_writer_lease_is_refused() {
         &uri("corr://tenant-a/p2-t01"),
     );
     assert!(result.is_err(), "stale writer lease must be refused");
+}
+
+// ---------------------------------------------------------------------
+// P2-T12/D01 failure-first: admission publishes runnable work atomically
+// ---------------------------------------------------------------------
+
+#[test]
+fn admit_atomically_publishes_runnable_scheduler_work_and_authority_prerequisites() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut service = make_service(&dir);
+    let record = service
+        .propose(&lease(1), &intent_cmd(7, "read the governed workspace"))
+        .unwrap();
+    let interpretation = service
+        .clarify(
+            &lease(1),
+            &record.record_id,
+            &clean_candidate(7),
+            &seed(),
+            &uri("corr://tenant-a/p2-t12"),
+        )
+        .unwrap();
+    let command = contract_cmd(7, "task://tenant-a/read-workspace");
+    let preview = service.preview(&command).unwrap();
+    let contract = service
+        .admit(
+            &lease(1),
+            &preview.preview_digest,
+            &AcceptanceCommand {
+                interpretation_id: interpretation.interpretation_id,
+                accepted_by: uri("principal://tenant-a/user-1"),
+                accepted_digest: interpretation.interpretation_digest,
+            },
+            &command,
+            0,
+        )
+        .unwrap();
+    assert_eq!(contract.contract_epoch, 1);
+
+    // Model a crash immediately after the successful admission response.
+    // Reopening the durable database must reveal one indivisible publication:
+    // contract + runnable scheduler row + START Loop + hard Budget.
+    drop(service);
+    let reopened = open_store(&dir);
+    let mut scheduler =
+        SchedulerRepository::open(&dir.path().join("authority.db")).expect("reopen scheduler");
+    let scheduler_row = scheduler
+        .load(&SchedulerWorkKey {
+            task_ref: command.task_ref.as_str().to_owned(),
+            contract_epoch: contract.contract_epoch,
+        })
+        .expect("load scheduler work")
+        .expect("admission must publish runnable scheduler work");
+    assert_eq!(scheduler_row.state, SchedulerState::Runnable.as_str());
+    assert_eq!(scheduler_row.lease_owner, None);
+    assert_eq!(scheduler_row.lease_epoch, 0);
+    assert_eq!(scheduler_row.attempt_count, 0);
+
+    let loop_object = reopened
+        .load_object(LifecycleDomain::Loop, &command.loop_object_id)
+        .expect("load admitted Loop")
+        .expect("admission must publish its contract-named Loop");
+    assert_eq!(loop_object.state.as_str(), "START");
+    assert_eq!(loop_object.version.get(), 1);
+
+    let budget = reopened
+        .load_budget(&command.budget_id)
+        .expect("load admitted Budget")
+        .expect("admission must publish its contract-named Budget");
+    assert_eq!(budget.state.remaining().get("tool_calls"), Some(&50));
 }
