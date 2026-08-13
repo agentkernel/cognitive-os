@@ -1550,3 +1550,27 @@
 - Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
   18/18 checks pass.
 - Disposition: review repair can be committed and pushed.
+
+### D05-NATIVE-02 — post-review focused validation
+
+- Instruments: all replay negatives, full HTTP lifecycle/restart/retry
+  integration, targeted kernel/store/server strict Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `e8759c67459119c83d80643ce56b8529b1cf0b89`.
+- Started/retained: 3/3.
+- Outcome: replay negatives `pass` 7/7；HTTP suite `pass` 5/5；strict Clippy
+  `pass`.
+- Disposition: review repair preserves every task-owned safety and lifecycle
+  behavior. Full adjacent native regression remains recorded at `1d3fc215`;
+  current-head required CI must still pass.
+
+### D05-DOCSYNC-02 — final evidence-only staged gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged report append over `e8759c67`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Append-only exact-revision validation evidence changes no shipped behavior or handbook claims"`
+  must remain in the commit record.
