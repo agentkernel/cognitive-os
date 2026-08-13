@@ -1493,3 +1493,121 @@ records are separate B5 evidence, not retroactive UJ2 samples.
 **Unique next action:** continue the active `B5` 8 h denominator to 480/480
 minute records, append its result immediately, and run no 24 h cell unless an
 actual unresolved 8 h slope triggers the plan condition.
+
+### 12.14 `B5` 8 h incremental checkpoint — `running`
+
+The 1 h promotion gate passed, so the preregistered 8 h soak is independently
+running at exact post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`. Durable minute, paired-block, and
+restart records are written on the guest as each unit finishes. The last
+owner-observed progress for this checkpoint is minute **414 / 480** with
+`local_rc=0`.
+
+This is an in-progress durability checkpoint, **not** a B5 result. No 8 h
+pass/fail, slope, cleanup, safety, or 24 h-trigger conclusion is claimed, and
+none of the running denominator is added to the assessment total yet.
+
+**Single resume trigger and next action:** after `B5_8H_DONE`, analyze exactly
+480 minute rows, 48 paired blocks, and 8 restart rows; append the complete B5
+result; disposition the conditional 24 h cell; then clean up, reconcile
+digests/locator and reports, and close the evaluation lease and campaign.
+
+### 12.15 `B5` 8 h soak — `pass`
+
+`B5_8H_DONE minutes=480 paired_files=48 restarts=8`, driver exit 0, at exact
+post-P2-T11 revision `158e9276e49573db84aeb6ab55012d314368a76c`.
+
+**Local read/watch/readiness workload.** 480 / 480 one-minute blocks retained;
+each block ran 20 health reads, 5 resource projections, 1 bounded watch, and
+1 readiness fetch: **12 960 / 12 960 operations retained, 0 non-OK**.
+Per-minute p50 was 2.913 ms median across the run (first minute 4.281 ms, last
+3.07 ms, worst minute 5.705 ms). The worst single sample was 2338.6 ms, which
+is the known ~1.8 s post-P2-T11 readiness/secret-resolution cost (§12.12) plus
+queueing under a concurrent paired block — an expected property of this
+revision, not a new long-run anomaly.
+
+**Hourly cold restarts.** 8 / 8 clean through the product
+`daemon stop` / `daemon start --bind 127.0.0.1:48282` path: stop exit 0 ×8,
+0 orphan processes, no stale lock, no stale endpoint file, start exit 0 ×8 with
+the emergency fallback never used, ready 8/8, full cycle 159 ms median
+(114–187 ms).
+
+**Slope facts across 8 one-hour daemon segments.** Every fresh daemon started
+at ~9.2–10.5 MB RSS and ended its hour at 10.9–14.7 MB; the within-hour fill
+saturates near 14 MB and does **not** compound across segments (segment-final
+RSS 17 816 kB for the first segment — a daemon that predated the soak and
+carried earlier phase-3 load — then 14 504, 14 668, 10 912, 13 784, 14 036,
+14 104, 13 700 kB). `authority.sqlite` was flat at 1 044 480 B in every sample,
+WAL flat at 0, per-segment `write_bytes` flat, FD settled from 12 to 9, and
+observed thread count varied 1–5 (this binary resolves the Provider secret in
+readiness). No cross-restart growth trend exists in RSS, FD, threads, database,
+WAL, or write bytes.
+
+**Paired Provider blocks (plan: one block per 10 minutes).** 48 / 48 blocks,
+**96 / 96 started runs retained**, on fresh held-out confirmatory seeds 30–35
+per family (`A1`/`A4`/`A5` ×6, `G1`/`G2`/`G3`/`G4`/`G6`/`G9` ×5) that overlap
+neither `B2` nor `B6` (both used seeds 0–29). Every run completed — no
+transport, timeout, or process failure in 8 hours. Oracle completion `P` 43/48
+(89.6 %) vs `O` 44/48 (91.7 %); all 9 oracle failures (5 `P` / 4 `O`) were
+completed-with-wrong-answer (`set`/`value`) concentrated in the discriminating
+`A5`/`G6`/`G9` families. On the 48 both-completed pairs, wall medians were
+4424.3 ms (`P`) and 6477.9 ms (`O`), paired delta median +2217.7 ms —
+directionally consistent with `B2`/`B6` but descriptive only: each block was a
+separate runner invocation, which resets the frozen arm-order RNG, so all 48
+blocks ran `O` before `P`. Broker health: exactly 1 Provider call per `P` task,
+0.5 ms local median.
+
+Evidence and digests: `evidence/b5-soak-8h-minutes.jsonl`
+(`sha256:214d9c15e51f279431300bb81a5dce2ebb0fae6bd61ad55da5b8e98c2b2cbfca`),
+`evidence/b5-soak-8h-restarts.jsonl`
+(`sha256:4a47c5bd780830913d577ec5c5280bc4bb757ff942d424202fda24a72702d1c5`),
+48 paired `.jsonl` + 48 `.log` files enumerated in the driver-written manifest
+`evidence/b5-soak-8h-digests.sha256` (98 entries), plus
+`b5-soak-8h-progress.log`. Provider-secret exposure is `observed_zero`
+(§12.17 scan); Context, Effect, stale-epoch, reconciliation, and
+independent-acceptance counters are `not_applicable`; scenario-boundary
+violations observed are 0.
+
+**Unique next action:** disposition the conditional `B5` 24 h cell against
+these slope facts.
+
+### 12.16 `B5` 24 h soak — `not-run` (condition not met)
+
+The plan makes 24 h conditional on an **unresolved** 8 h slope needing a longer
+window plus owner budget. §12.15 leaves no unresolved slope: the only growth is
+a within-hour RSS fill that saturates near 14 MB and resets at each hourly
+restart by design, with no cross-segment trend, flat database/WAL/write bytes,
+flat FD/threads envelope, and 0 non-OK operations in 12 960. The trigger is
+therefore not met and no 24 h cell is started. Started / retained denominator:
+**0 / 0**; outcome class `not-run`.
+
+### 12.17 Phase-3 cleanup, secret scan, and campaign closure — `pass`
+
+| Check | Result |
+|---|---|
+| soak driver | exited 0 after `B5_8H_DONE` |
+| campaign `kernel-server` | stopped via product `daemon stop` (exit 0); 0 processes |
+| campaign broker / observer / Pi processes | 0 / 0 / 0 |
+| stale `daemon.lock` / `daemon-endpoint.json` | none / none after stop |
+| listeners on 48282 / 48383 / 48484 | none |
+| campaign-created SecretStore entry | present at `…/collection/login/8` (paths-only check), cleared with `secret-tool clear`; post-clear `SearchItems` returns `[]` |
+| key-shaped scan (digit-bearing `sk-…`, whole campaign root) | **0 hits across 18 972 files** |
+| P9-T04 residue | pid 11176 still serving 48181; config mtimes unchanged at 1786510292 |
+| guest snapshot / power state | untouched; no snapshot or power operation occurred in any phase-3 session |
+
+**Evidence retention (plan §8.3).** Locator
+`b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`: **159 files,
+1 143 332 bytes**, retained until the independent verifier disposition changes
+from `not_reviewed`. Per-file SHA-256 digests are recorded in this document's
+per-cell entries and in the retained `digests.sha256` /
+`b5-soak-8h-digests.sha256` manifests.
+
+**Campaign closed (phase-3 recovery complete).** Every currently executable
+plan cell is executed or honestly dispositioned; the remaining `not-run` /
+`not_available` rows are structural (no product path, no public observation
+surface, or no safe controlled fixture) and are enumerated in the final
+assessment. Claim ceiling stays `hypothesis`, verifier `not_reviewed`, no
+Gate, release, Profile, B01, B01-W, or Agent-benefit promotion. The
+`lease/personal/EVAL-20260813/performance-evaluation-002-recovery` lease is
+closed with this record, and campaign closure does **not** reactivate
+development.

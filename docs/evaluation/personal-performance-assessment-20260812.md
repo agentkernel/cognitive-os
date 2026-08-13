@@ -11,8 +11,8 @@
 - Claim level: **`hypothesis` / non-claim**
 - Independent verifier disposition: **`not_reviewed`**
 - Agent benefit claimed: **no**
-- Document status: running final campaign report; phases 1 and 2 complete,
-  phase-3 recovery in progress
+- Document status: final campaign report; phases 1 and 2 complete, phase-3
+  recovery complete and campaign closed 2026-08-13
 
 ## 1. What this report says, and what it cannot say
 
@@ -141,6 +141,8 @@ execution-ready.
 | `B3` faults, restart, cleanup | frozen runner + public surface | 40 / 40 | partial |
 | `B4` concurrency and overload | public surface | 832 / 832 | **pass** |
 | `B5` 1 h soak | public surface | 1620 / 1620 | **pass** |
+| **Phase 3** `B5` 8 h soak | durable minute/block/restart records | 12 960 + 96 / 12 960 + 96 | **pass**; no leak signature, 8/8 clean restarts |
+| **Phase 3** `B5` 24 h soak | — | 0 / 0 | **not-run**; 8 h left no unresolved slope |
 | `O-LAUNCH` (phase 1; Pi launch to failure) | frozen route smoke | 10 / 10 + 20 spawn | **pass** as a launch observation |
 | **Phase 2** credential import | product stdin path | 1 | **pass** |
 | **Phase 2** `D1` / `D2` re-run, live Provider | frozen route runner | 80 / 80 | **pass** |
@@ -167,13 +169,18 @@ execution-ready.
 | `O2`/`O3` Context, `O14` backup/restore | — | 0 | **`not_available`** (no public observation surface) |
 | `B5` 8 h / 24 h, `B6` replay | — | 0 | **not-run** (gated on prior exits) |
 
-The last row is the phase-2 publication-time disposition. The recovered `B6`
-row above supersedes its `B6` half; `B5` 8 h / 24 h remain to be dispositioned.
+The last row is the phase-2 publication-time disposition. The phase-3 rows
+above supersede it in full: `B6` was recovered as executed, `B5` 8 h ran to a
+complete passing denominator, and `B5` 24 h is `not-run` because its trigger
+condition was not met.
 
-Total retained samples: **5679** (4739 through phase 2, 540 recovered `B6`
-runs, 20 recovered nested-timing pilot runs, and 20 new `UJ2` cold-stratum
-runs, 10 phase-3 deadline requests, 20 broker-fault runs, 10 Pi-kill runs, and
-10 model-mismatch requests, plus 310 mixed-profile Agent/local samples). Warmups (three per Provider cell, three per
+Total retained samples: **18 735** (4739 through phase 2, 540 recovered `B6`
+runs, 20 recovered nested-timing pilot runs, 20 `UJ2` cold-stratum runs,
+10 phase-3 deadline requests, 20 broker-fault runs, 10 Pi-kill runs,
+10 model-mismatch requests, 310 mixed-profile Agent/local samples, and the
+completed `B5` 8 h soak's 12 960 local operations plus 96 paired runs). The 8
+hourly restart cycles are recorded facts alongside, consistent with the 1 h
+soak's accounting. Warmups (three per Provider cell, three per
 UJ3 surface, three before the `O1` cell, two before each paired batch) were
 discarded before their cells began and are not counted; no started sample was
 discarded anywhere.
@@ -572,6 +579,27 @@ task block every 5 minutes and no Provider arm exists.
 `B5` 8 h and 24 h are **`not-run`**: the plan promotes to 8 h only after a clean
 1 h exit, and 24 h is conditional on an unresolved 8 h slope plus owner budget.
 
+That sentence is the phase-2 publication-time disposition. Phase 3 then ran the
+eligible 8 h cell to its complete denominator at
+`158e9276e49573db84aeb6ab55012d314368a76c` — **pass**:
+
+| 8 h fact | Result |
+|---|---|
+| one-minute blocks | 480 / 480 retained |
+| local operations (health, projections, watch, readiness) | **12 960 / 12 960, 0 non-OK** |
+| per-minute p50 | 2.913 ms median (4.281 first, 3.07 last, 5.705 worst) |
+| worst single sample | 2338.6 ms — the known ~1.8 s post-P2-T11 readiness cost under a concurrent paired block, not a new anomaly |
+| hourly cold restarts | **8 / 8 clean** (0 orphans, no stale lock/endpoint, fallback never used, 159 ms median cycle) |
+| RSS across 8 daemon segments | fresh ~9.2–10.5 MB → hour-end 10.9–14.7 MB; within-hour fill saturates ~14 MB, **no cross-segment trend** |
+| `authority.sqlite` / WAL / per-segment write bytes | flat / 0 / flat |
+| paired Provider blocks every 10 min | 48 / 48 blocks, **96 / 96 runs**, held-out seeds 30–35, zero transport/timeout/process failures |
+| paired oracle completion | `P` 43/48 (89.6 %) vs `O` 44/48 (91.7 %); all 9 failures wrong-answer in `A5`/`G6`/`G9` |
+| paired wall medians (descriptive; per-block invocation fixed arm order `O→P`) | `P` 4424.3 ms, `O` 6477.9 ms, delta +2217.7 ms |
+
+`B5` 24 h stays **`not-run`**: its trigger is an unresolved 8 h slope, and the
+only observed growth is a within-hour RSS fill that saturates and resets at
+each hourly restart with flat database, WAL, write, FD, and thread envelopes.
+
 ## 13. Safety hard conditions (plan §11.12, §6.8)
 
 Every counter carries its evidence disposition. A structure default or a
@@ -657,10 +685,25 @@ P9-T04 daemon still runs as pid 11176 with unchanged config mtimes, no snapshot
 was touched, and no guest power-state change occurred. **Scenario boundary
 violations: 0.**
 
+**Phase-3 reconciliation (2026-08-13).** Phase-3 cells ran under the same
+allowlist: campaign-owned daemon, broker, observer, and soak driver only, with
+no snapshot, power, system, user, or network change in any session. At closure
+the campaign daemon was stopped through the product path (0 processes, no stale
+lock or endpoint, no listener on 48282/48383/48484), the campaign-created
+SecretStore entry at `…/collection/login/8` was cleared and `SearchItems` now
+returns `[]`, and a digit-bearing key-shaped scan of the entire campaign root
+found **0 hits across 18 972 files**. The P9-T04 residue still runs unchanged
+as pid 11176 on 48181 with unmodified config mtimes. The one phase-3
+orchestration mistake is retained, not hidden: ten `UJ2` cold-start attempts
+omitted the required `--bind` and are reclassified `instrument_error`
+(§4a). **Scenario boundary violations: 0.**
+
 **Evidence retention.** Raw payloads are retained rather than deleted, since a
 digest without a retrievable payload cannot support later review (plan §8.3).
-Locator `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002`, 30 files,
-624 KiB, per-file SHA-256 recorded in the preregistration, retained until the
+Locator `b01guest:~/perfeval002/evidence/` on `B01-Desktop-Linux-002` — now
+**159 files, ~1.1 MiB** including all phase-3 and B5 8 h records — with
+per-file SHA-256 recorded in the preregistration and the retained
+`digests.sha256` / `b5-soak-8h-digests.sha256` manifests, held until the
 independent verifier disposition changes from `not_reviewed`.
 
 ## 16. Optimization priority, ranked by evidence (plan §11.13, §12)
