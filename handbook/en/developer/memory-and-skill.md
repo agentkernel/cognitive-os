@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:973db6fbccd2f3807f680b973a3c6aa926de1e71f9b5ba3fc529e2cdb9c405a3"
+fingerprint: "sha256:7cec02be97f088e993bac6d871e8e09cad0e3c82723a19f19a1e331fe6236f60"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -68,8 +68,10 @@ access. Memory admission accepts a sealed `MemoryCandidate`; the daemon derives
 the decision and Memory identities. `skill/binding/revoke` is matched before
 `skill/bind`, since the shorter route is a prefix of the longer one and would
 otherwise handle every revoke. All mutation rows and revision lineage remain
-available after daemon restart. Task channel: task-bound projection/watch plus
-a production governed consumer.
+available after daemon restart. A policy-rejected Memory candidate may retry
+the exact same sealed source without raw cleanup; a same-id source with
+different fields remains a conflict. Task channel: task-bound projection/watch
+plus a production governed consumer.
 `resolve_authorized_task_context` loads eligible Memory/Skill only after
 metadata-first eligibility, exact Task-or-workspace scope/pin/digest checks,
 and current

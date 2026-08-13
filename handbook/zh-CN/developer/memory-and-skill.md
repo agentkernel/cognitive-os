@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:973db6fbccd2f3807f680b973a3c6aa926de1e71f9b5ba3fc529e2cdb9c405a3"
+fingerprint: "sha256:7cec02be97f088e993bac6d871e8e09cad0e3c82723a19f19a1e331fe6236f60"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -60,7 +60,9 @@ management 通道发布生命周期前置条件，准入封存的 `WorkspaceCont
 import/revision-inspect/bind/supersede/revoke。Memory 准入只接受封存
 `MemoryCandidate`，decision 与 Memory 身份由 daemon 推导。
 `skill/binding/revoke` 必须先于 `skill/bind` 匹配：后者是前者的前缀，否则每次撤销都
-会落到 bind handler。所有变更行与 revision 谱系在 daemon 重启后仍可读取。
+会落到 bind handler。所有变更行与 revision 谱系在 daemon 重启后仍可读取。被策略
+拒绝的 Memory candidate 可直接重试字段完全相同的封存 source，无需原始清理；相同 id
+但字段不同的 source 仍冲突。
 task 通道：task 绑定的投影/watch，以及生产受治理消费方。
 `resolve_authorized_task_context` 只在元数据资格、精确当前 Task 或 workspace
 scope/pin/digest 复核和当前 forget/revoke 重验之后装载 Memory/Skill，并把片段写入

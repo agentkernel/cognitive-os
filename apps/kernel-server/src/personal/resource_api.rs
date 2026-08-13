@@ -547,11 +547,21 @@ impl ResourceApi {
         };
         match store.append_workspace_context_source(&source) {
             Ok(()) => Ok(source),
-            Err(StorePortError::Conflict { .. }) => Err(error(
-                409,
-                "RESOURCE_CONTEXT_SOURCE_CONFLICT",
-                "Context source conflicts with existing authority facts",
-            )),
+            Err(StorePortError::Conflict { .. }) => {
+                match store.load_workspace_context_source_body(&source.source_id) {
+                    Ok(Some(existing)) if existing == source => Ok(source),
+                    Ok(_) => Err(error(
+                        409,
+                        "RESOURCE_CONTEXT_SOURCE_CONFLICT",
+                        "Context source conflicts with existing authority facts",
+                    )),
+                    Err(_) => Err(error(
+                        503,
+                        "RESOURCE_CONTEXT_SOURCE_UNAVAILABLE",
+                        "Context authority store is unavailable",
+                    )),
+                }
+            }
             Err(StorePortError::Unavailable { .. }) => Err(error(
                 503,
                 "RESOURCE_CONTEXT_SOURCE_UNAVAILABLE",

@@ -1367,3 +1367,54 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Failure-first retry-residue test adds no shipped behavior before exact-source replay is repaired"`
   must remain in the commit record.
+
+### D04-NATIVE-RED-02 — exact-source retry residue observation
+
+- Instrument: focused HTTP retry-residue negative.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `d86c680127ec465eb215c3757cce792d81b9f492`.
+- Started/retained: 1/1.
+- Outcome: expected `fail`；first policy-rejected candidate returned 409, then
+  exact-source retry returned `RESOURCE_CONTEXT_SOURCE_CONFLICT` instead of
+  reaching the corrected candidate.
+- Disposition: on source insert conflict, reload by identity and accept only a
+  field-exact immutable row as idempotent；different bytes/metadata remain 409.
+
+### D04-FMT-09 — exact-source retry repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `d86c6801`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair is formatted.
+
+### D04-DIFF-06 — exact-source retry repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `d86c6801`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair and report have no whitespace defects.
+
+### D04-HANDBOOK-06 — exact-source retry docs and generation
+
+- Instruments: handbook generator, fingerprint filler, handbook check,
+  generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `d86c6801`
+- Started/retained: 4/4.
+- Outcome: generated 18 pages, refreshed the two Memory/Skill fingerprints；
+  final 54×2 handbook and 18/18 checks pass.
+- Disposition: repair and retry semantics are docs-sync ready.
+
+### D04-DOCSYNC-05 — staged exact-source retry gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `d86c6801`
+- Started/retained: 1/1.
+- Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
+  18/18 checks pass.
+- Disposition: repair can be committed and pushed.
