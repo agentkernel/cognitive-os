@@ -738,7 +738,7 @@ fn forgotten_memory_and_revoked_skill_fail_closed_on_reuse() {
     assert!(
         matches!(
             forgotten,
-            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail))
                 if detail.contains("forgotten")
         ),
         "遗忘后的复用必须失败闭合，得到 {forgotten:?}"
@@ -771,7 +771,7 @@ fn revoked_skill_and_digest_mismatch_fail_closed() {
     assert!(
         matches!(
             revoked,
-            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail))
                 if detail.contains("revoked")
         ),
         "撤销后的复用必须失败闭合，得到 {revoked:?}"
@@ -835,7 +835,7 @@ fn digest_mismatch_on_durable_consumption_record_fails_closed() {
     assert!(
         matches!(
             mismatched,
-            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(detail))
+            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail))
                 if detail.contains("digest")
         ),
         "digest 漂移的持久记录必须失败闭合，得到 {mismatched:?}"

@@ -221,3 +221,13 @@
 - Environment: `DEV-WIN-GNU-01`
 - Outcome: `not-run`；`RUST-LINK-DEV-WIN-GNU-01` 禁止本机 GNU 链接。
 - Disposition: 推送后在 exact-revision `DEV-LINUX-NATIVE-01` 与 required CI 观察。
+
+### D02-RUST-02 — native compile observation at `0c3520cc`
+
+- Instrument: `cargo test -p kernel-server --locked` focused filter on
+  `DEV-LINUX-NATIVE-01` disposable worktree `~/p2-t19-msconsumer`
+- Revision: `0c3520cce78975e9d6744dd75e30a8ef64836e3f`
+- Started/retained: 1/1
+- Outcome: `fail`；三个负例 `matches!` 模式把 `detail` 移出后再在断言消息里借用
+  `forgotten`/`revoked`/`mismatched`，触发 `E0382`。不是产品语义失败。
+- Disposition: 已改为 `ref detail`；该红灯不得写成消费行为回归。
