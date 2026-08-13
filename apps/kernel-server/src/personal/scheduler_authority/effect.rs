@@ -165,6 +165,111 @@ where
     })
 }
 
+/// Reload the exact native Tool binding selected by one consumed WIA.
+///
+/// The WIA, candidate, Intent, descriptor, current contract epoch, and Effect
+/// object must all agree before a concrete executor can stage a request. The
+/// caller supplies the composition-root family set so an unassembled family
+/// fails while the Effect remains untouched.
+pub(crate) fn resolve_native_worker_dispatch_with_families<S>(
+    store: &S,
+    authorization: &WorkerIterationAuthorizationRow,
+    assembled_families: &[cognitive_kernel::tool_registry::NativeOperationFamily],
+) -> Result<ResolvedNativeWorkerDispatch, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore + WorkerAuthorizationStore,
+{
+    validate_worker_authorization_evidence(authorization)?;
+    let current_contract_epoch = store
+        .current_contract_epoch(&authorization.task_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    if current_contract_epoch != authorization.contract_epoch {
+        return Err(SchedulerAuthorityError::StaleContractEpoch {
+            task_ref: authorization.task_ref.clone(),
+            requested_epoch: authorization.contract_epoch,
+            current_epoch: current_contract_epoch,
+        });
+    }
+    let task_binding = TaskBinding {
+        task_ref: authorization.task_ref.clone(),
+        contract_epoch: authorization.contract_epoch,
+    };
+    let candidate = store
+        .load_operation_candidate_proposal(&authorization.selected_candidate_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateUnavailable(
+                authorization.selected_candidate_id.to_string(),
+            )
+        })?;
+    if candidate.task_ref != authorization.task_ref
+        || candidate.contract_epoch != authorization.contract_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "WIA-selected candidate is bound to a different TaskContract epoch".to_owned(),
+        ));
+    }
+    let intent = store
+        .load_intent_for_effect(&authorization.effect_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingEffectBinding {
+            task_ref: authorization.task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+        })?;
+    let intent_matches_authorization = intent.intent_id == authorization.intent_id
+        && intent.effect_object_id == authorization.effect_object_id
+        && intent.task_binding.as_ref() == Some(&task_binding);
+    let candidate_matches_intent = candidate.action == intent.action
+        && candidate.target == intent.target
+        && candidate.parameters_digest == intent.parameters_digest
+        && candidate.expected_state_version == intent.expected_state_version.get();
+    if !intent_matches_authorization || !candidate_matches_intent {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "WIA, candidate, and durable Intent execution bindings disagree".to_owned(),
+        ));
+    }
+    let descriptor = store
+        .load_daemon_operation_descriptor(&candidate.operation_descriptor_ref)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                candidate.operation_descriptor_ref.to_string(),
+            )
+        })?;
+    if descriptor.descriptor.operation_id != candidate.tool_ref
+        || descriptor.descriptor.action != candidate.action
+    {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            "candidate and persisted descriptor disagree".to_owned(),
+        ));
+    }
+    let native_tool =
+        resolve_persisted_native_descriptor(&descriptor.descriptor).map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(format!(
+                "persisted native descriptor was rejected: {error:?}"
+            ))
+        })?;
+    if !assembled_families.contains(&native_tool.descriptor.family) {
+        return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+            "persisted native descriptor has no assembled executor".to_owned(),
+        ));
+    }
+    let effect = store
+        .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffect(authorization.effect_object_id.to_string())
+        })?;
+    Ok(ResolvedNativeWorkerDispatch {
+        authorization: authorization.clone(),
+        candidate,
+        intent,
+        native_tool,
+        effect_version: effect.version,
+        effect_state: effect.state.as_str().to_owned(),
+    })
+}
+
 /// Select exactly one immutable Intent and verify that its stored binding
 /// agrees with the reverse-index query used to find it.
 pub(crate) fn select_single_effect_intent<'intent>(

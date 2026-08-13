@@ -1132,3 +1132,81 @@ Windows GNU linker host.
   changed because these are additive expected-red tests only.
 - Docs impact: no handbook semantics change until the production caller exists;
   this concrete test-only reason is used for the checkpoint gate.
+
+### Unit 133 — first exact D04 native fetch
+
+- Finished: 2026-08-13 16:45 +08:00
+- Result: **not-run**; Git reported an HTTP/2 stream failure after advertising
+  the branch update, then the SSH transport failed to terminate. The bounded
+  invocation was stopped before checkout or Cargo.
+- Recovery: transfer a secret-free Git bundle containing only the already
+  pushed `4f0d625..ed5a29e` delta, verify the exact tip remotely, and run the
+  unchanged expected-red test.
+
+### Unit 134 — exact D04 recovery bundle
+
+- Finished: 2026-08-13 16:47 +08:00
+- Result: **pass**
+- Bundle: ignored `artifacts/p2-t12-d04-ed5a29e.bundle`, containing exact tip
+  `ed5a29ec557ddb61d53aa54d68e03c3dca081139` with prerequisite
+  `4f0d625b5e4476cfc1956088134b9a4e1afd3e08`; local and remote verification
+  passed.
+
+### Unit 135 — stale task-owned native checkout recovery
+
+- Finished: 2026-08-13 16:51 +08:00
+- Result: **not-run** as a test; bundle fetch passed, but checkout found the
+  index lock left by Unit 133's still-running remote Git child.
+- Recovery: a bounded process/lock check identified only that exact task-owned
+  command and its Git children; they were terminated, and Git removed the
+  zero-byte lock. No unrelated process or path was changed.
+
+### Unit 136 — interrupted native checkout residue
+
+- Finished: 2026-08-13 16:53 +08:00
+- Result: **not-run**; the killed checkout had already truncated exactly two
+  tracked files (`scheduler_authority/tests.rs` and this report) in the
+  disposable native clone while HEAD remained `4f0d625`.
+- Recovery: restore only those two known interrupted-checkout paths from that
+  clone's unchanged HEAD, confirm no tracked diff, then checkout the verified
+  bundle tip. The local delivery worktree is unaffected.
+
+### Unit 137 — native checkout residue repair
+
+- Finished: 2026-08-13 16:55 +08:00
+- Result: **pass**; only the two known paths were restored from exact
+  `4f0d625`, tracked staged/unstaged diffs were empty, and the clone then
+  checked out exact `ed5a29ec557ddb61d53aa54d68e03c3dca081139`.
+
+### Unit 138 — exact native D04 expected red
+
+- Finished: 2026-08-13 16:55 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `ed5a29ec557ddb61d53aa54d68e03c3dca081139`
+- Result: **expected compile fail**; the scheduler authority has no
+  `resolve_native_worker_dispatch_with_families`.
+- No test executed. The missing symbol pins the durable
+  WIA/candidate/Intent/descriptor reload boundary before any Effect transition.
+
+### Unit 139 — D04 durable native-dispatch reload implementation
+
+- Finished: 2026-08-13 17:01 +08:00
+- Result: **implemented; validation pending**
+- Change: the scheduler now has one read-only pre-dispatch resolver that
+  revalidates sealed WIA evidence and reloads the current Task epoch, selected
+  candidate, exact Intent/Effect binding, persisted descriptor, immutable native
+  catalog entry, assembled-family membership, and current Effect version/state.
+- Boundary: this unit performs no staging, Effect transition, lease release, or
+  external I/O.
+
+### Unit 140 — D04 resolver local static checks
+
+- Finished: 2026-08-13 17:02 +08:00
+- Results: whitespace **pass**; edited-file diagnostics **pass**; rustfmt
+  **fail** on two mechanical expression layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 141 — D04 resolver formatting rerun
+
+- Finished: 2026-08-13 17:03 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
