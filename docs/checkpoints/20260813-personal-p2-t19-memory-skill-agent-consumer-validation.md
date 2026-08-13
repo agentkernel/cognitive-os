@@ -267,3 +267,67 @@
   `load_latest` 按 `consumption_id DESC` 取回了第一会话哈希更大的记录，
   `reuse_of` 为空。
 - Disposition: 只追加表按 `rowid DESC` 取最近写入；不把哈希身份当成时间顺序。
+
+### D02-CI-RUST-01 — exact-revision required Rust build and tests
+
+- Instrument: GitHub CI run `31723698486`, Ubuntu/Windows `Build Rust workspace`
+  and `Test Rust workspace`.
+- Revision: `dc06910bf75aa66d524736f692b3ead8b02881f8`
+- Started/retained: 2/2 platform jobs.
+- Outcome: `pass`；两个平台的 workspace build 与 workspace Rust tests 均完成成功，
+  包括受治理消费、forget/revoke、digest mismatch 与 session-2 reuse 负例。
+- Disposition: 行为测试已绿；该 run 的后续 Clippy 门禁仍失败，因此 required CI
+  整体不得记为 pass。
+
+### D02-CI-CLIPPY-01 — exact-revision required Clippy
+
+- Instrument: GitHub CI run `31723698486`, Ubuntu/Windows
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`.
+- Revision: `dc06910bf75aa66d524736f692b3ead8b02881f8`
+- Started/retained: 2/2 platform jobs.
+- Outcome: `fail`；两个平台均只报告
+  `crates/cognitive-store/src/sqlite/memory_skill_consumption.rs:281`
+  的 `clippy::too_many_arguments`（`row_to_record` 为 8/7），无其他诊断。
+- Disposition: 这是本任务可自主修复的适配器结构缺陷；保持行为不变，将持久行参数
+  聚合为单一内部值后重跑 exact-revision CI。该失败不得通过 `allow` 弱化。
+
+### D02-FMT-03 — Clippy repair formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `dc06910b`
+- Started/retained: 1/1.
+- Outcome: `fail`；rustfmt 要求调整 `StoredConsumptionRow` 的错误字段缩进，并将
+  `row_to_record` 签名换行。
+- Disposition: 仅应用 rustfmt 机械格式，不改变消费语义；格式通过前不开始下一验证单元。
+
+### D02-FMT-04 — Clippy repair formatting recheck
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted repair over `dc06910b`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: `StoredConsumptionRow` 聚合修复符合仓库格式；仍需 pushed exact-revision
+  Clippy 才能关闭原 CI 失败。
+
+### D02-DIFF-02 — Clippy repair whitespace validation
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted repair over `dc06910b`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 当前修复与增量报告没有 Git 空白错误。
+
+### D02-DOCSYNC-03 — staged Clippy repair docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `dc06910b`
+- Started/retained: 1/1.
+- Outcome: `pass`；store 路径映射到三组 handbook 页面；双语 54×2 检查与 18 个
+  生成页 byte gate 通过。
+- Disposition:
+  `DOCS_IMPACT_NONE="Internal SQLite row decoding refactor fixes Clippy without changing behavior or public documentation"`
+  必须进入 commit/PR 记录；该结构修复不改变已同步的消费行为。

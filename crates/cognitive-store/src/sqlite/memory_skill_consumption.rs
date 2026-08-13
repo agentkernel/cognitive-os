@@ -10,6 +10,17 @@ use cognitive_kernel::ports::StorePortError;
 use rusqlite::OptionalExtension;
 use serde_json::{Value, json};
 
+struct StoredConsumptionRow {
+    consumption_id: ObjectId,
+    task_ref: String,
+    contract_epoch: i64,
+    context_request_id: String,
+    context_request_digest: String,
+    session_ref: String,
+    reuse_of: Option<String>,
+    canonical_json: String,
+}
+
 impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
     fn list_eligible_memory_pins(
         &self,
@@ -179,16 +190,16 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
                     reuse_of,
                     canonical_json,
                 )| {
-                    row_to_record(
-                        consumption_id.clone(),
+                    row_to_record(StoredConsumptionRow {
+                        consumption_id: consumption_id.clone(),
                         task_ref,
                         contract_epoch,
-                        request_id,
-                        request_digest,
+                        context_request_id: request_id,
+                        context_request_digest: request_digest,
                         session_ref,
                         reuse_of,
                         canonical_json,
-                    )
+                    })
                 },
             )
             .transpose()
@@ -235,18 +246,20 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
                     reuse_of,
                     canonical_json,
                 )| {
-                    row_to_record(
-                        ObjectId::parse(&id).map_err(|error| StorePortError::Unavailable {
-                            detail: format!("Memory/Skill consumption id is invalid: {error}"),
+                    row_to_record(StoredConsumptionRow {
+                        consumption_id: ObjectId::parse(&id).map_err(|error| {
+                            StorePortError::Unavailable {
+                                detail: format!("Memory/Skill consumption id is invalid: {error}"),
+                            }
                         })?,
                         task_ref,
                         contract_epoch,
-                        request_id,
-                        request_digest,
+                        context_request_id: request_id,
+                        context_request_digest: request_digest,
                         session_ref,
                         reuse_of,
                         canonical_json,
-                    )
+                    })
                 },
             )
             .transpose()
@@ -279,15 +292,18 @@ fn parse_object_id(value: String, column: usize) -> Result<ObjectId, rusqlite::E
 }
 
 fn row_to_record(
-    consumption_id: ObjectId,
-    task_ref: String,
-    contract_epoch: i64,
-    context_request_id: String,
-    context_request_digest: String,
-    session_ref: String,
-    reuse_of: Option<String>,
-    canonical_json: String,
+    row: StoredConsumptionRow,
 ) -> Result<MemorySkillConsumptionRecord, StorePortError> {
+    let StoredConsumptionRow {
+        consumption_id,
+        task_ref,
+        contract_epoch,
+        context_request_id,
+        context_request_digest,
+        session_ref,
+        reuse_of,
+        canonical_json,
+    } = row;
     let document: Value =
         serde_json::from_str(&canonical_json).map_err(|error| StorePortError::Unavailable {
             detail: format!("Memory/Skill consumption payload is malformed: {error}"),
