@@ -182,3 +182,18 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 20:56 +08:00
 - Result: **pass**; two fingerprints refreshed, docs-sync and staged whitespace
   clean.
+
+### Unit 022 — exact native D01 verification-start compile
+
+- Finished: 2026-08-13 21:00 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `0b0b981b9e693e9bf2f38bd02d8368ce2fca9171`
+- Result: **fail** before test execution; the split SQLite continuation module
+  omitted the new `VerificationStartCommit` import.
+- Recovery: add only that module import and rerun the same exact proof.
+
+### Unit 023 — verification-start import repair checks
+
+- Finished: 2026-08-13 21:01 +08:00
+- Results: rustfmt **pass**; whitespace **pass**; generated pages stable; zero
+  fingerprint changes.

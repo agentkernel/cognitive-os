@@ -37,9 +37,9 @@ use cognitive_kernel::ports::{
     SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
     SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
     StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
-    WorkspaceContextSourceRow,
+    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, VerificationStartCommit,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
