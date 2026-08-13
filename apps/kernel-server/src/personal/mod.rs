@@ -9,6 +9,8 @@ mod bounds;
 mod headless_vault_doctor;
 mod lifecycle;
 mod operability_doctor;
+#[cfg(test)]
+mod p2_t17_a7_failure_first;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
