@@ -2202,9 +2202,41 @@ fn persist_native_workspace_read_dispatch_fixture(
             canonical_json: "{\"candidate\":\"native.workspace.read\"}".to_owned(),
         })
         .unwrap();
+    let admitted_at = WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap();
     store
-        .insert_intent(
-            &IntentRow {
+        .admit_object(&ObjectAdmission {
+            object: StoredObject {
+                object_id: authorization.loop_object_id.clone(),
+                domain: LifecycleDomain::Loop,
+                state: state("DECIDE"),
+                version: Version::INITIAL,
+                body: json!({"loop": "native.workspace.read"}),
+            },
+            admitted_at: admitted_at.clone(),
+            event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000001505").unwrap(),
+                object_id: authorization.loop_object_id.clone(),
+                domain: LifecycleDomain::Loop,
+                object_version: Version::INITIAL,
+                event_type: "loop.admitted".to_owned(),
+                canonical_json: "{\"event\":\"loop\"}".to_owned(),
+            },
+            outbox: Vec::new(),
+            fencing_epoch: Some(1),
+        })
+        .unwrap();
+    let initial_budget = BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
+    store
+        .create_budget(
+            &authorization.budget_id,
+            &serde_json::to_string(&initial_budget).unwrap(),
+            &admitted_at,
+        )
+        .unwrap();
+    store
+        .commit_candidate_admission(&CandidateAdmissionCommit {
+            selected_candidate_id: authorization.selected_candidate_id.clone(),
+            intent: IntentRow {
                 intent_id: authorization.intent_id.clone(),
                 idempotency_key: "p2-t12-d04-workspace-read".to_owned(),
                 parameters_digest,
@@ -2220,7 +2252,7 @@ fn persist_native_workspace_read_dispatch_fixture(
                 }),
                 canonical_json: "{\"intent\":\"native.workspace.read\"}".to_owned(),
             },
-            &EventDraft {
+            intent_event: EventDraft {
                 event_id: EventId::parse("00000000-0000-7000-a000-000000001504").unwrap(),
                 object_id: authorization.intent_id.clone(),
                 domain: LifecycleDomain::Effect,
@@ -2229,28 +2261,66 @@ fn persist_native_workspace_read_dispatch_fixture(
                 canonical_json: "{\"event\":\"intent\",\"event_time\":\"2026-08-13T08:00:00Z\"}"
                     .to_owned(),
             },
-        )
-        .unwrap();
-    store
-        .admit_object(&ObjectAdmission {
-            object: StoredObject {
-                object_id: authorization.effect_object_id.clone(),
-                domain: LifecycleDomain::Effect,
-                state: state("PROPOSED"),
-                version: Version::INITIAL,
-                body: json!({"effect": "native.workspace.read"}),
+            effect_admission: ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    state: state("PROPOSED"),
+                    version: Version::INITIAL,
+                    body: json!({"effect": "native.workspace.read"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000001506").unwrap(),
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "effect.admitted".to_owned(),
+                    canonical_json: "{\"event\":\"effect\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
             },
-            admitted_at: WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap(),
-            event: EventDraft {
-                event_id: EventId::parse("00000000-0000-7000-a000-000000001505").unwrap(),
-                object_id: authorization.effect_object_id.clone(),
-                domain: LifecycleDomain::Effect,
-                object_version: Version::INITIAL,
-                event_type: "effect.admitted".to_owned(),
-                canonical_json: "{\"event\":\"effect\"}".to_owned(),
+            worker_authorization: authorization.clone(),
+            loop_transition: TransitionCommit {
+                cas: ObjectCas {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    from_state: state("DECIDE"),
+                    to_state: state("ACT"),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    committed_at: admitted_at.clone(),
+                },
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000001507").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: Version::INITIAL.next().unwrap(),
+                    event_type: "loop.operation-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                record: RecordDraft {
+                    record_id: RecordId::parse("00000000-0000-7000-8000-000000001508").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: Version::INITIAL.next().unwrap(),
+                    canonical_json: "{\"record\":\"loop\"}".to_owned(),
+                },
+                budget: Some(BudgetCas {
+                    budget_id: authorization.budget_id.clone(),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                    next_state_canonical_json: serde_json::to_string(
+                        &BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
+                    )
+                    .unwrap(),
+                }),
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
             },
-            outbox: Vec::new(),
-            fencing_epoch: Some(1),
+            fencing_epoch: 1,
         })
         .unwrap();
     authorization
@@ -2467,6 +2537,134 @@ fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
         "RECONCILED"
     );
 
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row(&authorization.task_ref))
+        .unwrap();
+    let leased = repository
+        .acquire_lease(
+            &scheduler_work_key(&authorization.task_ref),
+            "personal-daemon-scheduler",
+            51,
+            "2026-08-13T08:05:00Z",
+        )
+        .unwrap();
+    let dispatch = SchedulerDispatch {
+        task_ref: authorization.task_ref.clone(),
+        contract_epoch: authorization.contract_epoch,
+        lease_owner: leased.lease_owner.unwrap(),
+        lease_epoch: leased.lease_epoch,
+        lease_expires: leased.lease_expires.unwrap(),
+        attempt_count: leased.attempt_count,
+    };
+    super::consume_worker_authorization_for_attempt(
+        &store,
+        &super::FixedSchedulerClock::parse("2026-08-13T08:01:00Z").unwrap(),
+        &authorization.authorization_id,
+        object_id(1_509),
+        &dispatch,
+    )
+    .unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let first_router = ProductionNativeToolExecutorRouter::open(1, workspace_root.clone()).unwrap();
+    first_router.stage_resolved(&resolved).unwrap();
+    let first_io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let first_io_count_at_read = Arc::clone(&first_io_count);
+    first_router.install_workspace_read_before_io_hook(move || {
+        first_io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    let crash_clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let crash_ids = UuidV7Generator;
+    let crash_protocol = EffectProtocol::new(
+        &store,
+        &crash_clock,
+        &crash_ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04-restart").unwrap(),
+    );
+    let grant = recovery_effect_grant();
+    let currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let lease = WriterLease { epoch: 1 };
+    let authorized = crash_protocol
+        .authorize_effect(
+            &authorization.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &currency,
+            &lease,
+        )
+        .unwrap();
+    crash_protocol
+        .dispatch_effect(
+            &authorization.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &currency,
+            &first_router,
+            &lease,
+        )
+        .unwrap();
+    assert_eq!(first_io_count.load(Ordering::SeqCst), 1);
+    drop(first_router);
+
+    let restarted_router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let restarted_io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let restarted_io_count_at_read = Arc::clone(&restarted_io_count);
+    restarted_router.install_workspace_read_before_io_hook(move || {
+        restarted_io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &restarted_router,
+    )
+    .unwrap();
+
+    assert_eq!(first_io_count.load(Ordering::SeqCst), 1);
+    assert_eq!(restarted_io_count.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "NOT_EXECUTED"
+    );
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Failed.as_str()
+    );
+
+    drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }

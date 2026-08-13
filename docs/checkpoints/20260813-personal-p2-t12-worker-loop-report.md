@@ -1527,3 +1527,36 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 18:35 +08:00
 - Results: rustfmt **pass**; whitespace **pass**; diagnostics **pass**.
+
+### Unit 180 — exact native D04 recovery negatives
+
+- Finished: 2026-08-13 18:39 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `3bf4152252440a22f1d55388708a247b199e9401`
+- Result: **pass**
+  - interrupted `EXECUTING` original-key reconciliation/no-second-I/O: 1/1;
+  - replaced scheduler lease rejected before Effect dispatch: 1/1.
+- The missing recovery symbol at `71b10bb` is now implemented.
+
+### Unit 181 — D04 process-restart no-redispatch negative
+
+- Finished: 2026-08-13 18:48 +08:00
+- Result: **test authored; execution pending**
+- Property: after real WorkspaceRead I/O leaves the Effect at `EXECUTING`, a
+  new router with no process-memory receipt must run the real periodic
+  leased-row recovery, perform zero second I/O, close the Effect
+  `NOT_EXECUTED`, and release the scheduler row as `failed`.
+- Fixture strengthening: the native dispatch fixture now persists WIA/Intent/
+  Effect/Loop/Budget through the real atomic candidate-admission transaction.
+
+### Unit 182 — restart-negative local static checks
+
+- Finished: 2026-08-13 18:49 +08:00
+- Results: whitespace **pass**; diagnostics **not-run** after the bounded IDE
+  timeout; rustfmt **fail** on two mechanical constructor layouts.
+- Recovery: apply rustfmt only and checkpoint for exact native execution.
+
+### Unit 183 — restart-negative formatting rerun
+
+- Finished: 2026-08-13 18:50 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
