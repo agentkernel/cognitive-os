@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:e35fda38455012bc6e8eb3061d032fde77bc8b436c77939774c4bec485f74c59"
+fingerprint: "sha256:20cec2cd5d867500ec24b5cb57a640f9d404d75e2b5d68003d6d48d89a8cf067"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -68,6 +68,8 @@ route is a prefix of the longer one and would otherwise handle every revoke. Tas
 metadata-first eligibility, exact scope/pin/digest checks, and current
 forget/revoke revalidation. The resulting fragments enter the sealed
 ContextView; an append-only v24 consumption record keyed by Task, epoch,
-ContextRequest and session supports cross-session reuse. Reuse reloads current
-authority facts and fails closed on forget, revoke, or digest mismatch.
+ContextRequest and session supports cross-session reuse. The latest row is the
+last appended record, not the lexicographically greatest hashed identity.
+Reuse reloads current authority facts and fails closed on forget, revoke, or
+digest mismatch.
 Task bearers are rejected before any management mutation.

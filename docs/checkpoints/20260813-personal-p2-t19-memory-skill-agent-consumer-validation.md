@@ -256,3 +256,14 @@
   `conversation_ref`，预过滤后 required 集无法闭合。
 - Disposition: 复用路径按当前会话重写 Memory governance conversation，不改钉或
   digest。
+
+### D02-RUST-05 — native retest after session conversation rebind at `0369ac5d`
+
+- Instrument: `cargo test -p kernel-server --locked scheduler_authority::tests`
+- Environment: `DEV-LINUX-NATIVE-01` `~/p2-t19-msconsumer`
+- Revision: `0369ac5d7e1b93108276164b058d441903644e8f`
+- Started/retained: 1/1
+- Outcome: `fail`；54 passed, 1 failed. Session-2 已装入 Memory/Skill，但
+  `load_latest` 按 `consumption_id DESC` 取回了第一会话哈希更大的记录，
+  `reuse_of` 为空。
+- Disposition: 只追加表按 `rowid DESC` 取最近写入；不把哈希身份当成时间顺序。

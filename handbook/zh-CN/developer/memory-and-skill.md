@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:e35fda38455012bc6e8eb3061d032fde77bc8b436c77939774c4bec485f74c59"
+fingerprint: "sha256:20cec2cd5d867500ec24b5cb57a640f9d404d75e2b5d68003d6d48d89a8cf067"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -62,5 +62,6 @@ task 通道：task 绑定的投影/watch，以及生产受治理消费方。
 `resolve_authorized_task_context` 只在元数据资格、精确 scope/pin/digest 复核和
 当前 forget/revoke 重验之后装载 Memory/Skill，并把片段写入封存 ContextView。
 v24 只追加消费记录按 Task、epoch、ContextRequest 与 session 绑定，供跨会话复用；
+最近一条是最后追加的行，而不是哈希身份字典序最大的行。
 复用必须重读当前权威事实，遗忘、撤销或 digest 漂移一律失败闭合。
 task bearer 在任何管理变更前即被拒绝。

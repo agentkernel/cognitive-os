@@ -206,7 +206,7 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
                 "SELECT consumption_id, task_ref, contract_epoch, context_request_id, context_request_digest, session_ref, reuse_of, canonical_json
                  FROM memory_skill_consumption_records
                  WHERE task_ref=?1 AND contract_epoch=?2 AND context_request_id=?3
-                 ORDER BY consumption_id DESC LIMIT 1",
+                 ORDER BY rowid DESC LIMIT 1",
                 rusqlite::params![task_ref, contract_epoch, context_request_id.as_str()],
                 |row| {
                     Ok((
