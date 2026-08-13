@@ -635,3 +635,156 @@
   fingerprints 与 V44–V52 增量证据已提交；hook 通过。
 - Disposition: 将 commit 与本条增量记录一起推送，随后只在该 pushed exact revision 上运行
   Rust 验证。
+
+### V54 — request-Debug 修复 push
+
+- Revision: pushed ledger HEAD `862fdb33`；product parent `51962e7e`
+- Environment/instrument: isolated Windows worktree；Git push；pre-push docs-sync hook
+- Started/retained denominator: 1/1 push；1/1 hook
+- Outcome: `pass`
+- Result: 同一 P2-T18 branch/PR 已前进到 redaction candidate；pre-push handbook/generated/
+  docs-sync 全门禁通过，worktree 在追加本条前 clean。
+- Disposition: 在 `DEV-LINUX-NATIVE-01` 将 V45 的 clean clone fetch/checkout 到 pushed full
+  `862fdb33`，依次执行 required Rust units。
+
+### V55 — exact Linux request-Debug redaction
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-LINUX-NATIVE-01`；
+  `/home/wuz/cos-p2t18-red-9e35d588` clean detached clone；
+  `cargo test -p kernel-server --locked
+  personal::auth::tests::session_issue_request_debug_redacts_bootstrap_secret -- --exact
+  --test-threads=1`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: request `Debug` redaction 1/1；输出不含 real 或 synthetic bootstrap/session token
+  material。
+- Disposition: 在同一 exact checkout 运行完整 auth unit matrix。
+
+### V56 — exact Linux 完整 auth unit matrix
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked personal::auth::tests -- --test-threads=1`
+- Started/retained denominator: 14/14 auth unit tests
+- Outcome: `pass`
+- Result: 14/14；OS RNG、failure/short/repeated/zero-block 无文件、session failure/duplicate
+  无新 session、bounded uniqueness、0600、channel/expiry/revoke，以及 authority/request/view
+  Debug redaction全部通过；输出无 token material。
+- Disposition: 运行 production-source fallback guard。
+
+### V57 — exact Linux production-source fallback guard
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked --test p2_t18_local_token_csprng`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: production token generation 只含 OS CSPRNG marker；已知 PID/time/
+  `DefaultHasher`/handcrafted fallback markers 均不存在。输出无 token material。
+- Disposition: 运行完整 kernel-server regressions，核对 front door 与日志路径未回退。
+
+### V58 — exact Linux 完整 kernel-server regressions
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked -- --test-threads=1`
+- Started/retained denominator: 221/221 tests（205 unit + 16 integration）
+- Outcome: `pass`
+- Result: 221/221；真实 front door bootstrap/session、restart、channel、readiness、Provider、
+  Task/Resource、scheduler/Tool/verifier regressions全通过。stderr 只输出 daemon lock、private
+  bootstrap 文件路径与 loopback endpoint；没有 bootstrap/session token bytes，错误响应也
+  未回显 bearer。
+- Disposition: 运行 kernel-server all-target Clippy。
+
+### V59 — exact Linux kernel-server all-target Clippy
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Started/retained denominator: 1/1 Clippy run
+- Outcome: `pass`
+- Result: all targets finished，无 warning/error。
+- Disposition: 核对该 pushed exact HEAD 的 required GitHub Ubuntu/Windows CI；若仍运行则持续
+  到终态，不以启动为停点。
+
+### V60 — required CI Ubuntu（request-Debug candidate）
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: GitHub Actions run `31729398912`；
+  `verify (ubuntu-latest)` job `94545791550`
+- Started/retained denominator: 1/1 required Ubuntu job
+- Outcome: `pass`
+- Result: Ubuntu required check SUCCESS；PR HEAD 与 native Linux exact revision 一致。
+- Disposition: Windows job `94545791435` 仍 `IN_PROGRESS`；继续等待其终态。
+
+### V61 — required CI Windows 与 exact-HEAD aggregate
+
+- Revision: `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: GitHub Actions run `31729398912`；
+  `verify (windows-latest)` job `94545791435`；PR #215 status rollup
+- Started/retained denominator: 1/1 required Windows job；2/2 aggregate jobs
+- Outcome: `pass`
+- Result: Windows required check SUCCESS；Ubuntu/Windows 2/2 均在同一 exact HEAD 通过。
+  PR `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`。
+- Disposition: 执行最终 defect-first call-site/secret-output review、completion verification，
+  同步 task/slice/PR ready 状态后保持不合并。
+
+### V62 — persisted bootstrap 完整调用点审查与 failure-first 格式
+
+- Revision: working tree after
+  `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `LocalSessionAuthority::initialize/load_existing`、旧生成器输出形状与
+  restart caller 定向审查；`cargo fmt --all -- --check`
+- Started/retained denominator: 1/1 review unit；1/1 formatting unit
+- Outcome: review `fail`（defect-first finding）；formatting `fail`；新增 Rust behavior
+  `not-run`
+- Result: 新建 bootstrap/session 都集中使用 OS CSPRNG，但 `load_existing` 只拒绝空串，
+  会接受旧 PID/time/hash 生成器留下的 16+16 hex bootstrap 并在升级后继续授权。已先加入
+  `load_existing_rejects_non_csprng_bootstrap_material`，覆盖空文件与旧可预测形状；首次 fmt
+  只报告一个链式调用换行，无语义问题。
+- Disposition: 运行 `cargo fmt --all` 修正机械格式，再次 `--check`；随后提交/push
+  failure-first revision 并在 exact native Linux 观察旧格式 case 的预期失败。
+
+### V63 — persisted bootstrap failure-first 格式恢复
+
+- Revision: working tree after
+  `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: `DEV-WIN-GNU-01`；`cargo fmt --all` 后
+  `cargo fmt --all -- --check`
+- Started/retained denominator: 1/1 formatting write；1/1 formatting check
+- Outcome: `pass`
+- Result: failure-first test 符合 workspace Rust 格式；本机未编译/链接。
+- Disposition: 刷新 6 个 mapped fingerprints，运行 handbook/docs-sync 后提交 pushed
+  failure-first revision。
+
+### V64 — persisted bootstrap failure-first fingerprint
+
+- Revision: working tree after
+  `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: Windows Node；`fill-handbook-fingerprints.mjs`
+- Started/retained denominator: 6/6 mapped locale pages
+- Outcome: `pass`
+- Result: 6 页来源指纹刷新；页面语义尚未变化，无 token material。
+- Disposition: 运行 handbook 全门禁。
+
+### V65 — persisted bootstrap failure-first handbook
+
+- Revision: working tree after
+  `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:handbook`
+- Started/retained denominator: 54 documents × 2 locales；9 generated families
+- Outcome: `pass`
+- Result: coverage、link、fingerprint、status 与 secret checks 全通过。
+- Disposition: 精确暂存并运行 staged docs-sync gate；本 test-only revision 记录文档中性原因。
+
+### V66 — persisted bootstrap failure-first staged docs-sync
+
+- Revision: staged working tree after
+  `862fdb3309a881528025c81d53b3e97489b2ac7e`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged gate
+- Outcome: `pass`
+- Result: mapped source、6 fingerprints、54×2 handbook 与 18 generated pages 全部通过。
+- Disposition: 提交/push failure-first exact revision，在 native Linux 定向观察旧格式 case
+  被当前代码错误接受。

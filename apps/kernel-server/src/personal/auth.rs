@@ -927,6 +927,36 @@ mod tests {
         assert!(debug.contains("[REDACTED]"));
     }
 
+    #[test]
+    fn load_existing_rejects_non_csprng_bootstrap_material() {
+        let cases = [
+            ("empty", "", "LOCAL_BOOTSTRAP_MISSING"),
+            (
+                "legacy-predictable",
+                "boot-0123456789abcdef-fedcba9876543210",
+                "LOCAL_AUTH_INVALID_REQUEST",
+            ),
+        ];
+
+        for (label, material, expected_code) in cases {
+            let temp = std::env::temp_dir()
+                .join(format!("cos-auth-existing-{label}-{}", std::process::id()));
+            let _ = fs::remove_dir_all(&temp);
+            fs::create_dir_all(&temp).unwrap();
+            let secret_path = temp.join("local-bootstrap.secret");
+            write_private_file(&secret_path, material.as_bytes()).unwrap();
+
+            let error = LocalSessionAuthority::load_existing(
+                &secret_path,
+                PersonalResourceBounds::personal_v1_baseline(),
+            )
+            .unwrap_err();
+
+            assert_eq!(error.code(), expected_code);
+            let _ = fs::remove_dir_all(&temp);
+        }
+    }
+
     #[cfg(unix)]
     #[test]
     fn bootstrap_file_keeps_private_mode() {
