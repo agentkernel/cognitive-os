@@ -187,6 +187,12 @@ export interface FakeDaemonOptions {
   readonly selectedModelBody?: string;
   readonly completionBody?: string;
   readonly providerNetworkElapsedNanos?: string;
+  /** Nested daemon preflight/SecretStore duration reported next to the network stage. */
+  readonly daemonPreflightElapsedNanos?: string;
+  /** Echo the request correlation id, as an authorized instrumented daemon does. */
+  readonly echoCorrelationId?: boolean;
+  /** Echo this value instead of the request correlation id, modelling a broken join. */
+  readonly correlationIdEchoOverride?: string;
 }
 
 export interface FakeDaemon {
@@ -336,9 +342,7 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
           response,
           200,
           options.completionBody ?? boundedCompletionBody(),
-          options.providerNetworkElapsedNanos === undefined
-            ? undefined
-            : { "x-cognitiveos-provider-network-nanos": options.providerNetworkElapsedNanos },
+          observationResponseHeaders(options, headers["x-cognitiveos-correlation-id"]),
         );
         return;
       }
@@ -405,6 +409,32 @@ export function taskWatchSnapshotBody(): string {
 
 export function resourceWatchSnapshotBody(): string {
   return "event: snapshot\ndata: {\"kind\":\"snapshot\",\"family\":\"runtime\"}\n\n";
+}
+
+/**
+ * Build the campaign observation headers an authorized daemon would attach.
+ * An unconfigured fake daemon attaches none, which is the default product
+ * behaviour a Pi client must tolerate without fabricating daemon stages.
+ */
+function observationResponseHeaders(
+  options: FakeDaemonOptions,
+  requestCorrelationId: string | undefined,
+): Record<string, string> {
+  const observationHeaders: Record<string, string> = {};
+  if (options.providerNetworkElapsedNanos !== undefined) {
+    observationHeaders["x-cognitiveos-provider-network-nanos"] = options.providerNetworkElapsedNanos;
+  }
+  if (options.daemonPreflightElapsedNanos !== undefined) {
+    observationHeaders["x-cognitiveos-daemon-preflight-nanos"] = options.daemonPreflightElapsedNanos;
+  }
+  const echoedCorrelationId = options.correlationIdEchoOverride ?? requestCorrelationId;
+  if (
+    (options.echoCorrelationId === true || options.correlationIdEchoOverride !== undefined) &&
+    echoedCorrelationId !== undefined
+  ) {
+    observationHeaders["x-cognitiveos-correlation-id"] = echoedCorrelationId;
+  }
+  return observationHeaders;
 }
 
 function respond(
