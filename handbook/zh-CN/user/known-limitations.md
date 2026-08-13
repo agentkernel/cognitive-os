@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:de22ebe929e06ee816da039cac7f3c32f6b33c7ee7027296f9c63990f7a55436"
+fingerprint: "sha256:d638d906877c0443fda34b41d06f3dcc0b8957f9115718cc218a1d819793d12f"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -20,8 +20,9 @@ non_claims:
 
 ## 功能
 
-- **自主执行未端到端接线**：Task 准入不入列调度；daemon 仅启动时跑一次调度；工具执
-  行器与独立 verifier 仅有测试调用者。
+- **自主执行未端到端接线**：Task 准入会入列完整调度引导，绑定后的周期 worker 可到
+  candidate 准入，但持久 Effect 仍没有生产 Tool 执行器调用者，独立 verifier 也仍仅由
+  测试调用。
 - **无备份/恢复命令**；仅有规划 API（secret 恒排除）。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
   UX。

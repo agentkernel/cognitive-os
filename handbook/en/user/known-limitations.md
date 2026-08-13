@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:de22ebe929e06ee816da039cac7f3c32f6b33c7ee7027296f9c63990f7a55436"
+fingerprint: "sha256:d638d906877c0443fda34b41d06f3dcc0b8957f9115718cc218a1d819793d12f"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -21,9 +21,10 @@ current fact of the code.
 
 ## Functional
 
-- **Autonomous execution is not wired end-to-end**: Task admission does not enqueue
-  scheduler work; the daemon runs one scheduler pass at startup only; tool
-  executors and the independent verifier have test callers only.
+- **Autonomous execution is not wired end-to-end**: Task admission does enqueue
+  its complete scheduler bootstrap and a post-bind periodic worker reaches
+  candidate admission, but the durable Effect still has no production Tool
+  executor caller and the independent verifier remains test-called only.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet.

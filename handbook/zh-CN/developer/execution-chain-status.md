@@ -6,6 +6,8 @@ audience: [developer, ai]
 status: partial
 generated: false
 sources:
+  - path: apps/kernel-server/src/personal/server.rs
+    symbols: ["PeriodicSchedulerWorker", "serve_personal_loopback"]
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick_with_store"]
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
@@ -21,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:5d507773e83524453a3b6952ea9cdc563f9aea09cfc03d058ba99bbea946f4a0"
+fingerprint: "sha256:f9c1ffe5ad98b7201f517815e26e3ad1609a1094cf8396563bc8bfa65af3bdac"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -39,6 +41,7 @@ non_claims:
 |---|---|---|
 | 调度持久化、CAS lease、fencing、上限 | implemented | store 调度测试；`SchedulerService` 上限测试 |
 | Task 准入调度引导 | implemented | 单个 fenced SQLite 事务发布 TaskContract + `START` Loop + 硬 Budget + 当前 epoch runnable 行；含崩溃/重复/回滚负例 |
+| daemon 周期调度 worker | implemented | 仅在绑定/发布 endpoint 后启动；唯一固定延迟串行 worker 拒绝重入、在 pass 错误后继续，顺序退出时取消并 join |
 | Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试 |
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
@@ -54,16 +57,16 @@ non_claims:
 `TaskApplicationService::admit` 会把合同命名的 Loop、Budget 与 runnable 调度行原子发
 布。零 Intent 行现在进入 pre-admission candidate 分支，而非抛出
 `MissingEffectBinding`；该趟签发 WIA 后立即返回，不能消费自己刚产生的 worker 权威。
-逐行失败彼此隔离，不会中止有界 pass 中的后续行。剩余缺口为：
+逐行失败彼此隔离，不会中止有界 pass 中的后续行。daemon 现在只在绑定并发布 endpoint
+后启动唯一、非重入且可取消的周期 worker；pass 级失败会重试，不能阻止监听。剩余缺口
+为：
 
-1. **单 tick、无循环**：daemon 仅在启动时执行一次
-   `run_private_scheduler_tick_with_store`；不存在周期调度线程。
-2. **执行器未接线**：六个已登记族现在都有已装配 sink（P2-T10），因此
+1. **执行器未接线**：六个已登记族现在都有已装配 sink（P2-T10），因此
    `ASSEMBLED_EXECUTOR_FAMILIES` 列出全部六族，资源投影把每一族报告为
    `execution_ready`。这一事实必须窄读：它表示*本二进制含有该族的执行器*，不表示
    Agent 能到达它。没有任何 `dispatch_staged_*_effect` 存在生产调用者——sink 目前只能
-   从测试到达；周期 daemon worker 派发接线后才可从生产路径到达。
-3. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
+   从测试到达；周期 daemon worker 的持久 Effect 派发接线后才可从生产路径到达。
+2. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
    仅测试演练；没有生产路由推进验证或 Task 验收。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面

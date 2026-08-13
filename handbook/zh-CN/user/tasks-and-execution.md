@@ -49,9 +49,11 @@ Intent + Effect + 一次性 Worker Iteration Authorization → 受治理工具�
 今天准入会持久入列完整的调度引导，后续每个环节也存在且有聚焦测试（lease CAS 与
 fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的六族已装配 Tool 执行
 器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
-留给后续 pass。**但 daemon 尚未自主驱动整条链**：它只在接受 Task 准入前跑一次调度，
-生产代码尚未调用 Tool 执行器与 verifier。因此已接纳 Task 在权威状态中
-持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
+留给后续 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
+到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**但 daemon
+尚未自主驱动完整链路**：生产代码尚未把持久 Effect 派发给 Tool 执行器，也未调用
+verifier。因此已接纳 Task 在权威状态中持久、可观察且 runnable；自主执行仍为
+`partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 
 ## 构造上绝不可能发生的事

@@ -49,7 +49,9 @@ endpoint document only after the process is confirmed gone; a live-looking lock 
 never deleted. On every start the daemon re-runs migrations idempotently, recovers
 consumed worker handoffs, repairs only missing Loop/Budget/scheduler
 prerequisites for current admitted contracts without resetting existing rows,
-and republishes the endpoint atomically.
+and republishes the endpoint atomically. Only then does one periodic scheduler
+worker start; orderly exit cancels, wakes, and joins it before daemon state is
+released.
 
 ## Database safety — `implemented`
 
@@ -74,9 +76,9 @@ orphan staging is cleaned conservatively on restart.
 A successful Task admission is also crash-atomic inside the authority database:
 the contract, `START` Loop, hard Budget, and runnable scheduler row appear
 together. A failure before commit leaves none of those admission members, while
-a crash after the success response reopens the complete publication. This does
-not by itself mean the daemon's periodic worker loop or independent verifier is
-wired.
+a crash after the success response reopens the complete publication. The
+post-bind periodic worker is now wired, but this does not by itself mean a Tool
+Effect is production-dispatched or independently verified.
 
 ## Backup and restore — `unavailable` as a user feature
 

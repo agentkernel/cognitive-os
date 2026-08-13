@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:45f2313f580b24d3814265b774b0d88dac9dee6e034070aa2b58bee088fbb21a"
+fingerprint: "sha256:0d4e0d018155f9d0803792ad238d52f8cb46e99043fb3e8f1889edcb2fcb9fd3"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -30,11 +30,14 @@ non_claims:
 `serve_personal_loopback`: lexical loopback check → XDG layout → database
 preparation/migrations → `daemon.lock` acquisition → one `SqliteAuthorityStore`
 open (+ a separate `SchedulerRepository` connection to the same file) → recovery of
-consumed worker handoffs → **one** private scheduler tick → bootstrap secret
-load/create → TCP bind → atomic `daemon-endpoint.json` publication →
-thread-per-connection serving. Recovery and the single tick run before the
-endpoint appears; a scheduler error prevents listening entirely. There is no
-shutdown route and no continuing scheduler thread (see
+consumed worker handoffs → bootstrap secret load/create → TCP bind → atomic
+`daemon-endpoint.json` publication → one periodic scheduler worker →
+thread-per-connection serving. No scheduler pass runs before the listener and
+endpoint exist, so a Task admitted by this process can be observed by a later
+pass. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
+passes behind a non-reentrant gate, logs and retries pass-level failures, and is
+explicitly cancelled, unparked, and joined on orderly exit. Row-local failures
+remain isolated inside each pass. There is still no HTTP shutdown route (see
 [execution-chain status](./execution-chain-status.md)).
 
 ## Authentication

@@ -949,3 +949,97 @@ Windows GNU linker host.
 - Finished: 2026-08-13 15:23 +08:00
 - Result: **pass**; 275 requirements, task/slice state, and the single active
   lease are consistent.
+
+### Unit 114 — exact native D03 expected red
+
+- Finished: 2026-08-13 15:27 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `cf166656b888762317050020ad6eb9eb0aa9ac09`
+- Result: **expected compile fail**; the test import cannot resolve
+  `PeriodicSchedulerWorker`, `SchedulerTickRun`, or
+  `run_scheduler_tick_non_reentrant`.
+- No test executed. The compiler failure pins exactly the missing periodic
+  lifecycle, cancellation, and non-reentrant gate that D03 must add.
+
+### Unit 115 — D03 periodic scheduler worker implementation
+
+- Finished: 2026-08-13 15:32 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - removed the one-shot private tick that ran before listener bind;
+  - after loopback bind and endpoint publication, one named worker owns the
+    scheduler repository and runs fixed-delay 250 ms passes;
+  - an atomic RAII gate rejects self-reentry and always clears after a pass;
+  - pass-level errors are logged and retried after the fixed delay rather than
+    failing daemon startup;
+  - cancellation unparks and joins the worker on both once-mode and normal
+    orderly exit.
+- Boundary: the worker reuses the existing scheduler authority path and shared
+  daemon store; it adds no parallel writer, executor dispatch, Task completion,
+  Gate, release, or Profile claim.
+
+### Unit 116 — D03 implementation local static checks
+
+- Finished: 2026-08-13 15:34 +08:00
+- Results: whitespace **pass**; edited-file diagnostics **pass**; rustfmt
+  **fail** on one mechanical worker-spawn layout.
+- Recovery: apply rustfmt only and rerun before handbook synchronization.
+
+### Unit 117 — D03 implementation formatting rerun
+
+- Finished: 2026-08-13 15:35 +08:00
+- Result: **pass**; rustfmt and whitespace are clean after the requested
+  mechanical layout.
+
+### Unit 118 — D03 bilingual handbook semantic sync
+
+- Finished: 2026-08-13 15:42 +08:00
+- Result: **authored; generation/fingerprint validation pending**
+- Change: both locales now record the post-bind periodic worker's single-thread
+  ownership, 250 ms fixed delay, reentry rejection, pass-error survival, and
+  cancellation/join lifecycle. Capability, Task, limitation, recovery, and AI
+  code-map pages remove the obsolete pre-bind one-shot claim.
+- Non-claim: durable Tool Effect dispatch and independent verification remain
+  unwired; autonomous execution stays `partial`.
+
+### Unit 119 — D03 handbook generation and fingerprints
+
+- Finished: 2026-08-13 15:43 +08:00
+- Result: **pass**; 18 generated reference pages regenerated and ten
+  source-bound bilingual pages received current fingerprints.
+
+### Unit 120 — D03 implementation local gates
+
+- Finished: 2026-08-13 15:44 +08:00
+- Results: rustfmt **pass**; handbook **pass**; generated-page byte check
+  **pass**; consistency **pass**; whitespace **pass**; edited-file diagnostics
+  **pass**.
+
+### Unit 121 — D03 failure-first required CI
+
+- Finished: 2026-08-13 15:45 +08:00
+- Exact revision/run:
+  `cf166656b888762317050020ad6eb9eb0aa9ac09` / `31676662014`
+- Result: **expected fail** on both Ubuntu job `94372610240` and Windows job
+  `94372610243`; this immutable revision intentionally imports the three
+  missing periodic-worker symbols pinned by Unit 114.
+- Boundary: this red checkpoint is not the implementation validation revision.
+
+### Unit 122 — completed D02 required CI
+
+- Finished: 2026-08-13 14:56 +08:00; observed after takeover at 15:46 +08:00
+- Exact revision/run:
+  `01ef6c831186a0c815a06f498f2bf348508a25a9` / `31675250046`
+- Result: **pass**
+  - Ubuntu job `94368307611`: success;
+  - Windows job `94368307608`: success.
+- Both jobs passed workspace build/test, Clippy, rustfmt, codegen, consistency,
+  handbook, conformance, honesty, and digest gates. Unit 104's pending status is
+  therefore closed by actual evidence rather than inference.
+
+### Unit 123 — D03 implementation staged gates
+
+- Finished: 2026-08-13 15:47 +08:00
+- Results: docs-sync **pass** across daemon-HTTP and handbook-self routes;
+  consistency **pass**; staged whitespace **pass**. No docs-impact escape was
+  used.

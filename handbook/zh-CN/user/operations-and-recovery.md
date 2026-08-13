@@ -44,7 +44,8 @@ non_claims:
 `cognitive daemon stop` 向记录的 PID 发信号，仅在确认进程消失后移除 `daemon.lock`
 与 endpoint 文档；看似存活的锁绝不删除。每次启动 daemon 幂等地重跑迁移、恢复已消费的
 worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而不重置既有行，并原子地
-重新发布 endpoint。
+重新发布 endpoint。随后才启动唯一周期调度 worker；顺序退出会在释放 daemon 状态前取
+消、唤醒并 join 它。
 
 ## 数据库安全 —— `implemented`
 
@@ -63,7 +64,8 @@ orphan staging。
 
 成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`START` Loop、硬 Budget 与
 runnable 调度行一起出现。提交前失败不会留下这些准入成员；成功响应后崩溃重开会看到
-完整发布。这本身不表示 daemon 的周期 worker loop 或独立 verifier 已接线。
+完整发布。绑定后的周期 worker 现已接线，但这本身不表示 Tool Effect 已从生产派发或得
+到独立验证。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

@@ -57,9 +57,12 @@ stage exists with focused tests (lease CAS and fencing, sealed ContextViews,
 candidate admission bundles, six assembled Tool executors with unknown-outcome
 reconciliation, an independent verifier seam). Zero-Intent work now reaches
 candidate admission and leaves its new worker authorization for a later pass.
-**The daemon still does not drive the chain autonomously**: it runs only one
-scheduler pass before accepting Task admissions, and production code does not
-yet call the Tool executors or verifier.
+One non-reentrant periodic worker starts after the daemon is listening, so later
+passes can observe Tasks admitted by the running process; pass errors do not
+stop the listener, and orderly shutdown cancels and joins the worker.
+**The daemon still does not drive the full chain autonomously**: production
+code does not yet dispatch the durable Effect through a Tool executor or call
+the verifier.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).

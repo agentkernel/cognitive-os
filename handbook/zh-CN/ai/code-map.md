@@ -42,7 +42,7 @@ non_claims:
 关键真实调用链（细节见[开发者指南](../developer/README.md)）：
 
 - CLI 初始化：`cognitive init` → `prepare_personal_databases` → `SecretStore` → `ProviderDiscoveryService` → 快照持久化。
-- daemon 启动：`serve_personal_loopback` → 迁移 → 恢复 → 一次私有调度 tick → 绑定 → endpoint 发布。
+- daemon 启动：`serve_personal_loopback` → 迁移 → 恢复 → 绑定 → endpoint 发布 → 唯一可取消的周期调度 worker。
 - Task 准入：`POST /task/*` → `TaskApi` → `KernelTaskApplicationService` → `cognitive_kernel::intent_chain` → SQLite。
 - Pi 对话：Pi 扩展 → `POST /provider/v1/chat/completions` → daemon 持有的 SecretStore + `RustlsProviderTransport`。
 - 安装：`deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate（单服务事务）。
