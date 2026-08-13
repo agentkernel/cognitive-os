@@ -514,4 +514,140 @@
 - Measurement: both mapped source paths and both synchronized handbook locales passed check-handbook 54 × 2 and generator `--check` 18 byte-identical pages
 - Safety: no docs-impact escape was used for the behavior change
 
+### V050 — response-loss implementation checkpoint
+
+- Instrument: scoped `git commit` with repository pre-commit docs-sync hook
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: task branch `personal/P2-T17-a7-unknown-outcome-observation`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the five-path checkpoint adds the one-shot post-commit response drop, durable mutation/query attempt counters, receipt-ref binding, minimal test-harness correction, bilingual behavior statement, fingerprints, and incremental evidence
+- Safety: no assertion relaxation, contract change, force, amend, or unrelated path
+
+### V051 — response-loss implementation remote visibility
+
+- Instrument: `git push`
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: GitHub Draft PR #212
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: ordinary fast-forward push made the implementation checkpoint available to required CI and exact-revision native Linux
+- Safety: pre-push docs-sync revalidated both mapped sources, both handbook locales, handbook 54 × 2, and 18 generated pages; no force or rewrite
+
+### V052 — prior native worktree recovery probe
+
+- Instrument: non-interactive SSH Git inspection of `/home/wuz/cos-p2t17-57f10bea`
+- Exact revision: intended `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started / retained: `1 / 1`
+- Outcome: `not-run`
+- Measurement: the prior disposable validation worktree had already been cleaned up, so Git could not enter that path and no validation command started
+- Disposition: locate the retained native source clone and create a fresh exact-revision disposable worktree
+- Safety: read-only probe; no host state changed
+
+### V053 — native clone and process ownership probe
+
+- Instrument: non-interactive SSH Git probes plus bounded process query
+- Exact revision: intended `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started / retained: `1 / 1`
+- Outcome: `partial`
+- Measurement: `/home/wuz/agent-kernel` is not the retained Git clone. One unrelated P2-T05 fixture process owns a separate `agent-kernel-validation` path; no A7/P2-T17 process or worktree owner was present.
+- Disposition: leave the unrelated process untouched, locate the retained Git common directory, and use an isolated P2-T17 worktree plus target directory
+- Safety: read-only; no process signal, cleanup, or repository mutation
+
+### V054 — native validation clone qualification
+
+- Instrument: non-interactive SSH directory inventory and Git remote/status inspection
+- Exact revision: intended `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: `/home/wuz/agent-kernel-validation/canonical-acc4875` is a clean detached Git clone with the expected GitHub `origin`; `/home/wuz/cos-p2t17-61e8d7b` is unused and can be created as an isolated disposable validation clone
+- Safety: P2-T14's separate `/home/wuz/cos-p2t14-108b0cb` clone was inspected read-only and remains untouched
+
+### V055 — native clone creation quoting attempt
+
+- Instrument: non-interactive SSH clone/checkout command
+- Exact revision: intended `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-WIN-GNU-01` command routing to `DEV-LINUX-NATIVE-01`
+- Started / retained: `0 / 0`
+- Outcome: `not-run`
+- Measurement: PowerShell expanded an embedded command-substitution expression before SSH, so the remote shell rejected unmatched quoting before clone or checkout started
+- Disposition: remove command substitution, create/checkout first, then verify HEAD in a separate SSH command
+- Safety: no remote directory, repository, build, or test was created
+
+### V056 — native direct-clone transport attempt
+
+- Instrument: isolated `git clone --reference` from GitHub on `DEV-LINUX-NATIVE-01`
+- Exact revision: intended `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started / retained: `1 / 1`
+- Outcome: `not-run`
+- Measurement: the remote host could not reach `github.com:443` and timed out after 133634 ms before checkout; no source revision was available to test
+- Disposition: remove the incomplete disposable clone and transfer a secret-free Git bundle of the already pushed exact revision, then verify the detached HEAD before testing
+- Safety: transport failure only; no Rust command, fixture, external mutation, or product state change
+
+### V057 — exact-revision bundle preparation
+
+- Instrument: `git bundle create`; `git bundle verify`
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-WIN-GNU-01` Git-only preparation
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the secret-free bundle contains exactly the P2-T17 branch ref at the pushed implementation revision, records complete history, and passed Git bundle integrity verification
+- Safety: bundle is a transport artifact in the system temporary directory; it is ignored/untracked and contains no runtime evidence or secret
+
+### V058 — native exact-revision checkout
+
+- Instrument: SCP of the verified bundle; isolated clone; detached checkout; HEAD/status verification
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01` clone `/home/wuz/cos-p2t17-61e8d7b`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the detached clean worktree resolves exactly to the pushed implementation revision
+- Safety: P2-T14 and unrelated validation clones/processes remain untouched; the bundle is transport only
+
+### V059 — expanded native A7 suite first implementation run
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7 -- --test-threads=1`
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clone/target
+- Started / retained: `15 / 15`
+- Outcome: `fail` (14 pass / 1 fail)
+- Measurement: response loss, timeout/ambiguity, duplicate count, receipt tamper, stale writer, original-key replay, cleanup, and the other fault cells passed. The `VerificationBefore` row expected two fixture queries but observed one.
+- Root cause: `EffectProtocol::reconcile` intentionally does not call the executor when a durable `EXECUTED` receipt is already present; the only external query occurs after restart from `RECONCILED`. The implementation is correct and the new oracle overcounted a query that must not occur.
+- Disposition: correct that literal to one and assert the observed query key digest is the original prepared key; change no production behavior
+- Safety: all 15 started tests were retained; no assertion covering mutation count, POST count, original-key binding, verification, or absent acceptance is relaxed
+
+### V060 — corrected query oracle formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: uncommitted oracle correction over `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted command)
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: corrected literal and original-key digest assertion are rustfmt-clean
+- Safety: local Rust linking remained `not-run`
+
+### V061 — corrected query oracle whitespace check
+
+- Instrument: `git diff --check`
+- Exact revision: uncommitted oracle correction over `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: no whitespace errors
+- Safety: no product behavior, fixture, or external state changed
+
+### V062 — corrected query oracle staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged oracle correction over `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: test source routed to `dev.execution-chain-status`; explicit behavior-neutral reason accepted; handbook 54 × 2 and 18 generated pages verified
+- Safety: no handbook prose or production behavior changed
+
 <!-- Append each completed validation unit below before starting the next one. -->

@@ -289,7 +289,7 @@ fn post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance() 
             "A7-022",
             "a7-022",
             CampaignFaultPoint::VerificationBefore,
-            2,
+            1,
         ),
     ] {
         let root = unique_test_root(case_suffix);
@@ -305,6 +305,7 @@ fn post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance() 
         )
         .unwrap();
         let prepared = persist_increment(&service, case_suffix, 21);
+        let original_key_digest = prepared.idempotency_key_digest.clone();
 
         assert_eq!(
             service.dispatch(&prepared.run_ref, fault, 21).unwrap_err(),
@@ -335,6 +336,10 @@ fn post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance() 
         assert_eq!(fixture.mutation_count().unwrap(), 1);
         assert_eq!(fixture.mutation_request_count().unwrap(), 1);
         assert_eq!(fixture.query_count().unwrap(), expected_queries);
+        assert_eq!(
+            fixture.last_query_key_digest().unwrap(),
+            Some(original_key_digest)
+        );
         assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
         assert!(observation.verification_report_ref.is_some());
         assert_eq!(observation.acceptance_ref, None);
