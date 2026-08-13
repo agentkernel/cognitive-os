@@ -14,11 +14,14 @@ sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
   - path: apps/kernel-server/src/personal/provider_proxy.rs
+  - path: apps/kernel-server/src/personal/route_observation.rs
+    symbols: ["observation_response_headers"]
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:bde588c96e96b040d9194066c3437149d0d80addfb8a0e71d4097fe8b93d5dc6"
+  - apps/kernel-server/tests/p9_t07_route_observation.rs
+fingerprint: "sha256:6c9bf2f4b93939532733c2aea2dc10e98b37536c3b6413d941e2e67e8810d3dd"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -80,7 +83,12 @@ Provider config snapshot; it never reloads `provider.json` and combine a newer
 secret reference with the older provider/model/digest facts. Doctor adds redacted
 six-resource/vault/operability sections. The Provider
 proxy validates config + selected model, resolves the secret in memory, and
-forwards via the bounded Rustls transport; the private one-shot Unix socket
+forwards via the bounded Rustls transport. Successful proxy responses always
+carry `X-CognitiveOS-Provider-Network-Nanos`. Nested preflight timing and the
+correlation echo are denied unless `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled`
+and the request carries one well-formed opaque correlation id; malformed or
+duplicate ids are ignored, the product body is unchanged, and the observer
+writes nothing. The private one-shot Unix socket
 (`POST /chat/completions`) serves only the daemon-launched Pi candidate process
 and forbids Authorization headers.
 
