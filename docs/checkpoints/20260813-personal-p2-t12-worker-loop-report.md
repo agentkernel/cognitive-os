@@ -1043,3 +1043,92 @@ Windows GNU linker host.
 - Results: docs-sync **pass** across daemon-HTTP and handbook-self routes;
   consistency **pass**; staged whitespace **pass**. No docs-impact escape was
   used.
+
+### Unit 124 — exact native D03 implementation validation
+
+- Finished: 2026-08-13 15:52 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `4f0d625b5e4476cfc1956088134b9a4e1afd3e08`
+- Results:
+  - server module **9/9 pass**, including both new periodic-worker negatives;
+  - scheduler-authority suite **43/43 pass**;
+  - `kernel-server` all-target Clippy with `-D warnings`: **pass**.
+- The same failure-first tests that did not compile at `cf16665` now pass
+  without weakening their reentry, retry, seriality, or cancellation
+  assertions.
+
+### Unit 125 — current D03 required CI observation
+
+- Checked: 2026-08-13 15:53 +08:00
+- Exact revision/run:
+  `4f0d625b5e4476cfc1956088134b9a4e1afd3e08` / `31677480018`
+- Result: Ubuntu job `94375138494` and Windows job `94375138509` are both
+  **in progress**.
+- Boundary: neither unfinished job is inferred as pass; D04 seam inspection
+  proceeds without waiting on CI.
+
+### Unit 126 — completed D03 required CI
+
+- Finished: 2026-08-13 15:31 +08:00; observed at 15:58 +08:00
+- Exact revision/run:
+  `4f0d625b5e4476cfc1956088134b9a4e1afd3e08` / `31677480018`
+- Result: **pass**
+  - Ubuntu job `94375138494`: success;
+  - Windows job `94375138509`: success.
+- D03 exit: satisfied. The daemon now observes admissions made after bind
+  through one bounded periodic worker; durable Tool Effect I/O remains D04.
+
+### Unit 127 — D04 production-caller seam inspection
+
+- Finished: 2026-08-13 16:01 +08:00
+- Result: **complete**
+- Facts:
+  - the tick reloads Task/Intent/WIA and obtains a fenced scheduler lease;
+  - `EffectProtocol` already durably commits `EXECUTING` before invoking an
+    `EffectExecutor`;
+  - all six registered native families have hardened staging/dispatch sinks;
+  - the scheduler currently calls none of them and only classifies the Effect's
+    pre-existing state.
+- Slice transition: D03 is `done`; the same lease advances in place to D04.
+
+### Unit 128 — D04 failure-first persisted-descriptor negatives
+
+- Finished: 2026-08-13 16:10 +08:00
+- Result: **tests authored; execution pending**
+- Coverage:
+  - the worker must reload the WIA-selected candidate, durable Intent, exact
+    persisted descriptor, and immutable native family before dispatch;
+  - a family absent from the assembled executor set fails while the Effect
+    remains `PROPOSED`, before authorization or I/O.
+- Current expected failure:
+  `resolve_native_worker_dispatch_with_families` and its resolved dispatch
+  record do not exist.
+
+### Unit 129 — D04 failure-first local static checks
+
+- Finished: 2026-08-13 16:11 +08:00
+- Results: whitespace **pass**; edited-file diagnostics **pass**; rustfmt
+  **fail** on two mechanical import wraps.
+- Recovery: apply rustfmt only, then create the immutable expected-red
+  checkpoint.
+
+### Unit 130 — D04 failure-first formatting rerun
+
+- Finished: 2026-08-13 16:12 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 131 — D04 failure-first docs-sync routing
+
+- Finished: 2026-08-13 16:14 +08:00
+- Results: consistency **pass**; docs-sync **fail** because the scheduler test
+  source maps to execution-chain, task-pipeline, and capability pages.
+- Recovery: regenerate references and refresh mapped bilingual fingerprints;
+  the expected-red tests do not change handbook semantics.
+
+### Unit 132 — D04 failure-first handbook regeneration
+
+- Finished: 2026-08-13 16:15 +08:00
+- Result: **pass**; generated references were byte-stable and no fingerprint
+  changed because these are additive expected-red tests only.
+- Docs impact: no handbook semantics change until the production caller exists;
+  this concrete test-only reason is used for the checkpoint gate.
