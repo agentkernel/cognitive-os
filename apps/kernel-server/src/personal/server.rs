@@ -1359,15 +1359,16 @@ fn find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 mod tests {
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::{Arc, Mutex};
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex, mpsc};
     use std::time::Duration;
 
     use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
 
     use super::{
-        LocalSessionAuthority, LoopbackTransportStage, PersonalResourceBounds,
-        ensure_loopback_bind, handle_connection, loopback_transport,
+        LocalSessionAuthority, LoopbackTransportStage, PeriodicSchedulerWorker,
+        PersonalResourceBounds, SchedulerTickRun, ensure_loopback_bind, handle_connection,
+        loopback_transport, run_scheduler_tick_non_reentrant,
     };
     use cognitive_runtime::loopback_transport::validate_loopback_transport_observation;
 
@@ -1427,6 +1428,66 @@ mod tests {
     fn non_loopback_bind_is_rejected() {
         assert!(ensure_loopback_bind("0.0.0.0:8080").is_err());
         assert!(ensure_loopback_bind("127.0.0.1:0").is_ok());
+    }
+
+    #[test]
+    fn scheduler_tick_gate_rejects_self_reentry() {
+        let active = AtomicBool::new(false);
+        let nested_tick_called = AtomicBool::new(false);
+
+        let outer = run_scheduler_tick_non_reentrant(&active, || {
+            let nested = run_scheduler_tick_non_reentrant(&active, || {
+                nested_tick_called.store(true, Ordering::SeqCst);
+                Ok::<(), String>(())
+            });
+            assert!(matches!(nested, SchedulerTickRun::AlreadyRunning));
+            Ok::<(), String>(())
+        });
+
+        assert!(matches!(outer, SchedulerTickRun::Executed(Ok(()))));
+        assert!(!nested_tick_called.load(Ordering::SeqCst));
+        assert!(!active.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn periodic_scheduler_worker_survives_tick_error_and_cancels_cleanly() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let active = Arc::new(AtomicUsize::new(0));
+        let maximum_active = Arc::new(AtomicUsize::new(0));
+        let (call_sender, call_receiver) = mpsc::channel();
+        let mut worker = PeriodicSchedulerWorker::spawn(Duration::from_millis(10), {
+            let calls = Arc::clone(&calls);
+            let active = Arc::clone(&active);
+            let maximum_active = Arc::clone(&maximum_active);
+            move || {
+                let current_active = active.fetch_add(1, Ordering::SeqCst) + 1;
+                maximum_active.fetch_max(current_active, Ordering::SeqCst);
+                let call = calls.fetch_add(1, Ordering::SeqCst) + 1;
+                call_sender.send(call).unwrap();
+                active.fetch_sub(1, Ordering::SeqCst);
+                if call == 1 {
+                    Err("injected row-independent tick failure".to_owned())
+                } else {
+                    Ok(())
+                }
+            }
+        })
+        .unwrap();
+
+        assert_eq!(
+            call_receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
+            1
+        );
+        assert_eq!(
+            call_receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
+            2,
+            "a failed pass must not terminate the periodic worker"
+        );
+        worker.shutdown().unwrap();
+        assert_eq!(maximum_active.load(Ordering::SeqCst), 1);
+        let stopped_at = calls.load(Ordering::SeqCst);
+        std::thread::sleep(Duration::from_millis(40));
+        assert_eq!(calls.load(Ordering::SeqCst), stopped_at);
     }
 
     /// P9-T04/D02: one real loopback request must produce disjoint transport

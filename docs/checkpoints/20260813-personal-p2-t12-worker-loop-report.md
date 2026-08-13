@@ -875,3 +875,77 @@ Windows GNU linker host.
   D02 zero-Intent admission and row isolation is implemented and exact-native
   clean with Windows CI still running. The unique next unimplemented item is
   D03's bounded, non-reentrant, cancellable production periodic tick.
+
+### Unit 106 — D03 failure-first periodic-worker negatives
+
+- Finished: 2026-08-13 15:09 +08:00
+- Result: **tests authored; execution pending**
+- Coverage:
+  - a scheduler tick cannot reenter its own gate or invoke the nested callback;
+  - one tick-level error does not terminate later periodic passes;
+  - periodic calls remain serial;
+  - explicit shutdown wakes and joins the worker, after which no later pass
+    runs.
+- Current expected failure: the production composition has no
+  `PeriodicSchedulerWorker`, non-reentrant gate, or cancellable lifecycle.
+- Boundary: tests add no second scheduler authority path and do not infer the
+  still-running Windows CI result.
+
+### Unit 107 — D03 failure-first local static checks
+
+- Finished: 2026-08-13 15:11 +08:00
+- Results: `git diff --check` **pass**; edited-file diagnostics **pass**;
+  rustfmt **fail** on one mechanical import wrap.
+- Recovery: apply rustfmt only, then checkpoint the unchanged failure-first
+  semantics for exact native execution.
+
+### Unit 108 — D03 failure-first rustfmt repair
+
+- Finished: 2026-08-13 15:12 +08:00
+- Result: **pass**; rustfmt applied only its requested import wrap.
+- Whitespace remained clean.
+
+### Unit 109 — D03 failure-first docs-sync routing
+
+- Finished: 2026-08-13 15:15 +08:00
+- Result: **fail** despite a truthful test-only `DOCS_IMPACT_NONE`: the mapped
+  daemon-HTTP source changed fingerprints for five pages per locale and the
+  generated HTTP reference bytes.
+- Recovery: regenerate the generated reference and refresh every mapped
+  bilingual fingerprint. No semantic handbook claim is added for an
+  expected-red test checkpoint.
+
+### Unit 110 — D03 mapped handbook regeneration
+
+- Finished: 2026-08-13 15:17 +08:00
+- Result: **pass**
+  - all 18 generated reference pages regenerated from machine sources;
+  - the generated HTTP reference changed in both locales;
+  - eight authored mapped pages received refreshed fingerprints.
+- Coordination: the existing P2-T12 lease was advanced in place from D02 to
+  D03 and its writable paths were extended only for the newly mapped bilingual
+  daemon-HTTP, HTTP-reference, known-limitations, and Personal-overview pages.
+  No second lease was created.
+
+### Unit 111 — D03 lease/current-snapshot reconciliation
+
+- Finished: 2026-08-13 15:20 +08:00
+- Initial consistency result: **fail** because the lease had advanced to D03
+  while the Current snapshot still named D01.
+- Recovery: advanced the existing Current snapshot lease pointer and P2-T12
+  queue facts to D03, retaining D02's exact native pass and the unfinished
+  Windows CI status without inference.
+
+### Unit 112 — D02/D03 slice-state reconciliation
+
+- Finished: 2026-08-13 15:22 +08:00
+- Follow-up consistency result: **fail** because the queue's slice table still
+  marked D02 in progress and D03 ready.
+- Recovery: closed D02 as `done` on its exact native evidence and moved only
+  D03 to `in-progress`; D04 and D05 remain ready and untouched.
+
+### Unit 113 — D03 checkpoint consistency rerun
+
+- Finished: 2026-08-13 15:23 +08:00
+- Result: **pass**; 275 requirements, task/slice state, and the single active
+  lease are consistent.
