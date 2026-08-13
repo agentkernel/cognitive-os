@@ -175,7 +175,7 @@ pub(crate) fn directory_identity(directory: &Dir) -> io::Result<FileIdentity> {
 pub(crate) fn sync_directory(directory: &Dir) -> io::Result<()> {
     #[cfg(unix)]
     {
-        return directory.try_clone()?.into_std_file().sync_all();
+        directory.try_clone()?.into_std_file().sync_all()
     }
     #[cfg(not(unix))]
     {

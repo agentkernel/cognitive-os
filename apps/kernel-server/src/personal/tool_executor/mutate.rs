@@ -441,11 +441,13 @@ impl NativeWorkspaceMutationExecutor {
             detail: format!("persist resolved mutation postimage before publication: {error}"),
         })?;
         match self.publish_atomically(
-            &workspace,
-            &target_parent,
-            &target_name,
-            target_parent_identity,
-            &staging_name,
+            MutationPublishTarget {
+                workspace: &workspace,
+                parent: &target_parent,
+                name: &target_name,
+                parent_identity: target_parent_identity,
+                staging_name: &staging_name,
+            },
             &postimage_bytes,
             staged_request,
         )? {
@@ -496,14 +498,17 @@ impl NativeWorkspaceMutationExecutor {
 
     fn publish_atomically(
         &self,
-        workspace: &AnchoredWorkspace,
-        target_parent: &cap_std::fs::Dir,
-        target_name: &OsStr,
-        target_parent_identity: FileIdentity,
-        staging_name: &OsStr,
+        target: MutationPublishTarget<'_>,
         postimage_bytes: &[u8],
         staged_request: &StagedWorkspaceMutationRequest,
     ) -> Result<PublishOutcome, PortFailure> {
+        let MutationPublishTarget {
+            workspace,
+            parent: target_parent,
+            name: target_name,
+            parent_identity: target_parent_identity,
+            staging_name,
+        } = target;
         let mut staging_file = match create_new_regular_file(target_parent, staging_name) {
             Ok(staging_file) => staging_file,
             Err(error) => {
@@ -665,6 +670,14 @@ impl NativeWorkspaceMutationExecutor {
         }
         Ok(PublishOutcome::Published)
     }
+}
+
+struct MutationPublishTarget<'a> {
+    workspace: &'a AnchoredWorkspace,
+    parent: &'a cap_std::fs::Dir,
+    name: &'a OsStr,
+    parent_identity: FileIdentity,
+    staging_name: &'a OsStr,
 }
 
 enum PublishOutcome {

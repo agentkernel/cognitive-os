@@ -2438,7 +2438,7 @@ fn workspace_search_enforces_visit_ceiling_while_enumerating_a_huge_directory() 
         Ok(DispatchOutcome::Executed { .. })
     ));
     assert!(
-        executor.enumerated_entry_count() <= bounds.maximum_visited_entries - 1,
+        executor.enumerated_entry_count() < bounds.maximum_visited_entries,
         "directory enumeration itself must stop at the remaining visit budget"
     );
 }
@@ -4617,9 +4617,6 @@ fn http_fetch_effect_protocol_restart_recovers_completed_key_bound_receipt() {
             &staged_fetch_request(&target, 512),
         )
         .expect("stage fetch");
-    let lost_response = UnknownAfterNativeHttpFetchExecutor {
-        native_executor: &first_executor,
-    };
     let clock = FixedEffectClock(fixture.admitted_at.clone());
     let identifiers = UuidV7Generator;
     let grant = effect_grant();
@@ -4646,16 +4643,21 @@ fn http_fetch_effect_protocol_restart_recovers_completed_key_bound_receipt() {
             &writer_lease,
         )
         .expect("authorize fetch");
-    let (dispatched, outcome) = first_protocol
-        .dispatch_effect(
-            &fixture.effect_object_id,
-            authorized.after_version,
-            &grant,
-            &governance_currency,
-            &lost_response,
-            &writer_lease,
-        )
-        .expect("dispatch through lost-response wrapper");
+    let (dispatched, outcome) = {
+        let lost_response = UnknownAfterNativeHttpFetchExecutor {
+            native_executor: &first_executor,
+        };
+        first_protocol
+            .dispatch_effect(
+                &fixture.effect_object_id,
+                authorized.after_version,
+                &grant,
+                &governance_currency,
+                &lost_response,
+                &writer_lease,
+            )
+            .expect("dispatch through lost-response wrapper")
+    };
     assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
     let unknown = first_protocol
         .record_outcome(
@@ -4666,7 +4668,6 @@ fn http_fetch_effect_protocol_restart_recovers_completed_key_bound_receipt() {
         )
         .expect("record unknown fetch");
     drop(first_protocol);
-    drop(lost_response);
     drop(first_executor);
 
     let restarted_executor = scripted_fetch_executor_at_epoch(Arc::clone(&transport), 1);

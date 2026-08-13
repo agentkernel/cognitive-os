@@ -611,3 +611,93 @@ preserving the no-write assertion. The negatives are retained, not weakened.
   already-documented fail-closed linked-parent refusal as `NotExecuted`;
   mapped capability semantics are unchanged.”
 - Disposition: record the same reason in the commit and PR.
+
+### V-CI-004 — Required Ubuntu/Windows matrix, checkpoint 46bb496
+
+- Instrument: GitHub Actions `CI`, run `31660187159`
+- Revision: `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `CI-UBUNTU-01` job `94323204232`;
+  `CI-WINDOWS-MSVC-01` job `94323204241`
+- Started/retained: 2/2 jobs
+- Outcome: `fail`
+- Measurement: Ubuntu passed workspace build and the complete Rust test step,
+  then failed Clippy on five branch-owned warnings. Windows passed workspace
+  build but retained one platform-specific Rust test failure after 8m56s;
+  downstream checks were skipped.
+- Disposition: repair the five mechanical Clippy findings and inspect the
+  retained Windows-only negative without weakening reparse protection.
+
+#### V-CI-004 diagnostic addendum
+
+Ubuntu's complete Rust test step passed, including every new executor and
+readiness negative. Its five Clippy findings are mechanical (`int_plus_one`,
+`too_many_arguments`, `needless_return`, `io_other_error`, and
+`drop_non_drop`). Windows' only test failure was the pre-existing
+`p1_t05_personal_readiness` 2-second bootstrap-secret startup race previously
+recorded by P2-T10; all branch-focused Windows tests passed. The next immutable
+revision carries only the Clippy repairs; if the unrelated startup flake
+repeats, its bounded wait will be repaired rather than ignored.
+
+### V-LOCAL-046 — Clippy repair formatting, first attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty recovery worktree after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `fail`
+- Measurement: rustfmt requested one indentation correction around
+  `io::Error::other`; exit 1.
+- Disposition: apply rustfmt and rerun.
+
+### V-LOCAL-047 — Clippy repair rustfmt
+
+- Instrument: `cargo fmt --all`
+- Revision: dirty recovery worktree after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: one indentation correction applied; exit 0.
+- Disposition: rerun the no-write check.
+
+### V-LOCAL-048 — Clippy repair formatting verification
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty recovery worktree after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: Clippy repairs are formatting-clean.
+
+### V-LOCAL-049 — Clippy repair consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty recovery worktree after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: complete consistency set passed; exit 0.
+- Disposition: no static drift.
+
+### V-LOCAL-050 — Clippy repair handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty recovery worktree after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: complete handbook check set passed; exit 0.
+- Disposition: documentation remains converged.
+
+### V-LOCAL-051 — Clippy repair docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged recovery candidate after `46bb4969e8d870d6bde0703e72420339bae8def7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full handbook/generated checks passed with the concrete reason:
+  “Clippy-only refactors group existing publish arguments and apply equivalent
+  standard-library idioms; runtime semantics and mapped handbook facts are
+  unchanged.”
+- Disposition: record the same reason in the commit and PR.

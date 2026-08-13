@@ -148,12 +148,9 @@ impl StateGuard<'_> {
             let cleanup = remove_regular_file(self.directory, OsStr::new(&temporary_name));
             return match cleanup {
                 Ok(_) => Err(error),
-                Err(cleanup_error) => Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!(
-                        "state publication failed ({error}); temporary cleanup also failed ({cleanup_error})"
-                    ),
-                )),
+                Err(cleanup_error) => Err(io::Error::other(format!(
+                    "state publication failed ({error}); temporary cleanup also failed ({cleanup_error})"
+                ))),
             };
         }
         Ok(())
