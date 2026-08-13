@@ -441,3 +441,88 @@ fn validate_consumption_record(
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
+mod tests {
+    use super::*;
+    use crate::{PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases};
+
+    #[test]
+    fn consumption_chain_survives_store_reopen_and_replays_latest_append() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path();
+        let layout = PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        );
+        prepare_personal_databases(&layout).unwrap();
+        let database_path = layout.authority_database_path();
+        let first = record(1, "conversation://tenant-a/one", None);
+
+        let store = SqliteAuthorityStore::open(&database_path).unwrap();
+        store.append_memory_skill_consumption(&first).unwrap();
+        drop(store);
+
+        let reopened = SqliteAuthorityStore::open(&database_path).unwrap();
+        assert_eq!(
+            reopened
+                .load_memory_skill_consumption(&first.consumption_id)
+                .unwrap(),
+            Some(first.clone())
+        );
+        let second = record(
+            2,
+            "conversation://tenant-a/two",
+            Some(first.consumption_id.clone()),
+        );
+        reopened.append_memory_skill_consumption(&second).unwrap();
+        drop(reopened);
+
+        let replayed = SqliteAuthorityStore::open(&database_path).unwrap();
+        assert_eq!(
+            replayed
+                .load_latest_memory_skill_consumption(
+                    &second.task_ref,
+                    second.contract_epoch,
+                    &second.context_request_id,
+                )
+                .unwrap(),
+            Some(second)
+        );
+    }
+
+    fn record(
+        serial: u64,
+        session_ref: &str,
+        reuse_of: Option<ObjectId>,
+    ) -> MemorySkillConsumptionRecord {
+        MemorySkillConsumptionRecord {
+            consumption_id: object_id(serial),
+            task_ref: "task://tenant-a/restart-replay".to_owned(),
+            contract_epoch: 1,
+            context_request_id: object_id(10),
+            context_request_digest: format!("sha256:{}", "c".repeat(64)),
+            session_ref: session_ref.to_owned(),
+            reuse_of,
+            memory: Vec::new(),
+            skill: Vec::new(),
+            canonical_json: json!({
+                "principal_ref": "principal://tenant-a/owner",
+                "tenant_id": "tenant-a",
+                "resource_scope": "workspace://tenant-a/project",
+                "purpose": "task_execution",
+                "memory": [],
+                "skill": [],
+            })
+            .to_string(),
+        }
+    }
+
+    fn object_id(serial: u64) -> ObjectId {
+        ObjectId::parse(&format!("00000000-0000-7000-9000-{serial:012x}")).unwrap()
+    }
+}

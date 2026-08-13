@@ -742,3 +742,97 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
 - Disposition: repair can be committed, pushed and rerun on Linux.
+
+### D02-NATIVE-02 — invalid revision checkout attempt
+
+- Instrument: detached exact-revision Linux Clippy setup.
+- Environment: `DEV-LINUX-NATIVE-01`, `~/p2-t19-msconsumer`.
+- Started/retained: 1/1 attempted setup.
+- Outcome: `not-run`；checkout used an incorrectly expanded short hash
+  `e6814fc266b3ed0de1b80c94d4cc53c384361877`, which is not a Git object.
+  No Rust command started and no product assertion executed.
+- Disposition: resolved the actual pushed full revision as
+  `e6814fc2d571d92c725c67be73ec408c21acdc0b` and retry exactly that object.
+
+### D02-NATIVE-03 — exact Linux Clippy retry
+
+- Instrument:
+  `cargo clippy -p kernel-server -p cognitive-store -p cognitive-kernel --all-targets --locked -- -D warnings`
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached
+  `~/p2-t19-msconsumer`, reused isolated target
+  `~/cos-p2t19-target-13b28036`.
+- Revision: `e6814fc2d571d92c725c67be73ec408c21acdc0b`
+- Started/retained: 1/1.
+- Outcome: `pass`；strict targeted Clippy completed with no diagnostics.
+- Disposition: native replay-boundary set now has 4/4 focused tests, 55/55
+  scheduler tests and strict Clippy pass across exact pushed revisions；
+  required CI `31733051182` remains in flight.
+
+### D02-NEG-02 — conflicting durable append failure-first
+
+- Instrument:
+  `conflicting_durable_record_is_not_accepted_as_idempotent_replay`.
+- Production break named before execution: `persist_consumption_record` currently
+  turns every store `Conflict` into success without proving that the durable row
+  equals the attempted exact binding.
+- Oracle: a competing session binding must return a distinguishable conflict；
+  only byte/field-identical durable state may be accepted as replay-safe.
+- Initial outcome: `not-run`；test authored before production repair and routed
+  to pushed exact-revision CI/native Linux.
+
+### D02-RESTART-01 — durable append/reopen/latest replay
+
+- Instrument:
+  `sqlite::memory_skill_consumption::tests::consumption_chain_survives_store_reopen_and_replays_latest_append`.
+- Oracle: session-1 append survives store close/reopen；session-2 appends with
+  `reuse_of` and a second reopen returns that last appended row rather than a
+  hash-sorted predecessor.
+- Initial outcome: `not-run`；local Windows GNU does not execute Rust tests.
+  This positive restart test is paired with the failure-first conflict negative.
+
+### D02-FMT-13 — conflict/restart test formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `e6814fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test-only checkpoint is formatted.
+
+### D02-DIFF-14 — conflict/restart test whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `e6814fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test and report patch has no whitespace defects.
+
+### D02-HANDBOOK-09 — conflict/restart test fingerprint refresh
+
+- Instruments: fingerprint filler, handbook check, generated-page byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `e6814fc2`
+- Started/retained: 3/3.
+- Outcome: exactly two mapped fingerprints refreshed；54×2 handbook and
+  generated 18/18 checks pass.
+- Disposition: failure-first checkpoint is docs-sync ready.
+
+### D02-DIFF-15 — complete conflict/restart test checkpoint
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted tests over `e6814fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: ready for staged gate and pushed red observation.
+
+### D02-DOCSYNC-09 — staged conflict/restart test gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged tests over `e6814fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；store and handbook mappings routed；54×2 handbook and
+  generated 18/18 checks pass.
+- Disposition: test-only checkpoint can be pushed without production repair.

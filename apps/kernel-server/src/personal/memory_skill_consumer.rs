@@ -611,6 +611,10 @@ mod tests {
         memory_pins: Vec<MemoryConsumptionPin>,
         skill_pins: Vec<SkillConsumptionPin>,
         prior: MemorySkillConsumptionRecord,
+        initial_prior: bool,
+        latest_reads: Cell<usize>,
+        append_conflict: bool,
+        append_attempts: Cell<usize>,
         skill_payload: (String, String),
         body_loads: Cell<usize>,
         skill_payload_loads: Cell<usize>,
@@ -704,6 +708,12 @@ mod tests {
             &self,
             record: &MemorySkillConsumptionRecord,
         ) -> Result<(), StorePortError> {
+            self.append_attempts.set(self.append_attempts.get() + 1);
+            if self.append_conflict {
+                return Err(StorePortError::Conflict {
+                    detail: "competing durable consumption binding".to_owned(),
+                });
+            }
             self.appended.borrow_mut().push(record.clone());
             Ok(())
         }
@@ -721,7 +731,9 @@ mod tests {
             _: i64,
             _: &ObjectId,
         ) -> Result<Option<MemorySkillConsumptionRecord>, StorePortError> {
-            Ok(Some(self.prior.clone()))
+            let read = self.latest_reads.get();
+            self.latest_reads.set(read + 1);
+            Ok((self.initial_prior || read > 0).then(|| self.prior.clone()))
         }
 
         fn load_skill_revision_payload(
@@ -854,6 +866,36 @@ mod tests {
         assert!(store.appended.borrow().is_empty());
     }
 
+    #[test]
+    fn conflicting_durable_record_is_not_accepted_as_idempotent_replay() {
+        let command = command("principal://tenant-a/owner");
+        let mut store = store_for(&command);
+        store.initial_prior = false;
+        store.append_conflict = true;
+        store.prior.consumption_id = object_id(98);
+        store.prior.session_ref = "conversation://tenant-a/competitor".to_owned();
+
+        let error = load_governed_memory_skill_candidates(
+            &store,
+            &command,
+            1,
+            &original_digest(),
+            "task_execution",
+        )
+        .expect_err("a competing durable record must not be reported as idempotent success");
+
+        assert!(
+            matches!(
+                error,
+                SchedulerAuthorityError::ContextResolution(ref detail)
+                    if detail.contains("conflict")
+            ),
+            "a competing append must have a distinguishable conflict: {error:?}"
+        );
+        assert_eq!(store.append_attempts.get(), 1);
+        assert!(store.appended.borrow().is_empty());
+    }
+
     fn store_for(command: &ContextResolutionCommand) -> ConsumerTestStore {
         let memory_pin = MemoryConsumptionPin {
             memory_id: object_id(2),
@@ -924,6 +966,10 @@ mod tests {
                 skill: vec![skill_pin.clone()],
                 canonical_json,
             },
+            initial_prior: true,
+            latest_reads: Cell::new(0),
+            append_conflict: false,
+            append_attempts: Cell::new(0),
             skill_payload: (
                 skill_pin.content_digest.clone(),
                 json!({
