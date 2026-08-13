@@ -2146,21 +2146,92 @@ fn persist_native_workspace_read_dispatch_fixture(
         .iter()
         .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceRead)
         .unwrap();
+    let issued_at = WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap();
+    let contract_id = object_id(1_501);
+    let context_request_id = object_id(1_510);
+    let context_request_digest = format!("sha256:{}", "6".repeat(64));
+    let contract_header = compose_governed_header(
+        &contract_id,
+        "TaskContract",
+        "cognitiveos.task-contract/0.4",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-native-dispatch-fixture",
+        &issued_at,
+    )
+    .unwrap();
+    let contract = TaskContract {
+        allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
+        allowed_tools: vec![descriptor.operation_id.clone()],
+        budget: Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: Some(1),
+            tool_calls: Some(2),
+            wall_time_ms: None,
+        },
+        budget_id: Some(authorization.budget_id.to_generated()),
+        conditions: vec![ContractCondition {
+            description: "independently verified read".to_owned(),
+            id: "accept-read".to_owned(),
+            kind: ContractConditionKind::Acceptance,
+            machine_expression: None,
+            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+        }],
+        context_request_ref: Some(strong_reference_to(
+            &context_request_id,
+            &context_request_digest,
+        )),
+        contract_epoch: authorization.contract_epoch,
+        deadline: Some("2026-08-14T08:00:00Z".to_owned()),
+        header: contract_header,
+        human_gates: None,
+        intent_acceptance_ref: strong_reference_to(
+            &object_id(1_511),
+            &format!("sha256:{}", "a".repeat(64)),
+        ),
+        intent_interpretation_ref: strong_reference_to(
+            &object_id(1_512),
+            &format!("sha256:{}", "b".repeat(64)),
+        ),
+        loop_object_id: Some(authorization.loop_object_id.to_generated()),
+        max_iterations: 2,
+        max_retries: 1,
+        objective: "read one governed workspace file".to_owned(),
+        scope: TaskScope {
+            in_scope: vec!["workspace read".to_owned()],
+            out_of_scope: vec!["mutation".to_owned()],
+        },
+        task_ref: authorization.task_ref.clone(),
+        user_intent_ref: strong_reference_to(
+            &object_id(1_513),
+            &format!("sha256:{}", "c".repeat(64)),
+        ),
+        worker_authorization_root_id: Some(
+            authorization.worker_authorization_root_id.to_generated(),
+        ),
+    };
+    let (contract_json, contract_digest) = seal_payload(serde_json::to_value(contract).unwrap());
     store
         .insert_task_contract(
             &TaskContractRow {
-                contract_id: object_id(1_501),
+                contract_id: contract_id.clone(),
                 task_ref: authorization.task_ref.clone(),
                 contract_epoch: authorization.contract_epoch,
-                user_intent_record_id: object_id(1_502),
-                interpretation_id: object_id(1_503),
+                user_intent_record_id: object_id(1_513),
+                interpretation_id: object_id(1_512),
                 accepted_by: "principal://personal/daemon".to_owned(),
-                contract_digest: format!("sha256:{}", "7".repeat(64)),
-                canonical_json: "{\"task_contract\":\"native-dispatch-fixture\"}".to_owned(),
+                contract_digest,
+                canonical_json: contract_json,
             },
             &EventDraft {
                 event_id: EventId::parse("00000000-0000-7000-a000-000000001501").unwrap(),
-                object_id: object_id(1_501),
+                object_id: contract_id,
                 domain: LifecycleDomain::Task,
                 object_version: Version::INITIAL,
                 event_type: "task-contract.minted".to_owned(),
@@ -2168,6 +2239,122 @@ fn persist_native_workspace_read_dispatch_fixture(
             },
             0,
         )
+        .unwrap();
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: authorization.task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+            context_request_id: context_request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": authorization.task_ref,
+                "contract_epoch": authorization.contract_epoch,
+                "context": {
+                    "request_id": context_request_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "tenant_id": "tenant-a",
+                    "resource_scope_prefix": "workspace://",
+                    "conversation_ref": null,
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": authorization.selected_candidate_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": context_governance().owner,
+                        "authority": context_governance().authority,
+                        "resource_scope": context_governance().resource_scope,
+                        "tenant_id": "tenant-a",
+                        "created_by": "principal://tenant-a/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/d04-fixture",
+                },
+            })
+            .to_string(),
+        })
+        .unwrap();
+    let principal = PrincipalFacts {
+        principal_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+        authenticated: true,
+        active: true,
+        tenant_id: Some("tenant-a".to_owned()),
+    };
+    let capability = CapabilityConstraints {
+        subject: principal.principal_ref.to_string(),
+        audience: "authority://personal/effect-authority".to_owned(),
+        resource: "workspace://".to_owned(),
+        purpose: "task_execution".to_owned(),
+        actions: ["read".to_owned()].into(),
+        parameter_bounds: BTreeMap::new(),
+        lease: LeaseWindow {
+            not_before: WallTimestamp::parse("2026-08-13T00:00:00Z").unwrap(),
+            expires: WallTimestamp::parse("2026-08-14T00:00:00Z").unwrap(),
+        },
+        depth_remaining: 1,
+        issued_epoch: 1,
+    };
+    let actor_chain = ActorChainFacts {
+        chain_digest: format!("sha256:{}", "d".repeat(64)),
+        resolved: true,
+    };
+    let membership = Some(MembershipFacts {
+        valid: true,
+        roles: ["owner".to_owned()].into(),
+    });
+    let facts_id = object_id(1_514);
+    let facts_header = compose_governed_header(
+        &facts_id,
+        "ContextAuthorizationFacts",
+        "cognitiveos.context-authorization-facts/0.1",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-native-dispatch-facts",
+        &issued_at,
+    )
+    .unwrap();
+    let (facts_json, _) = seal_payload(json!({
+        "header": facts_header,
+        "fact_set_id": facts_id,
+        "subject_ref": principal.principal_ref,
+        "tenant_id": "tenant-a",
+        "principal": principal,
+        "actor_chain": actor_chain,
+        "membership": membership,
+        "capability_links": [capability],
+        "explicit_denies": [],
+        "capability_set_version": 1,
+        "issued_revocation_epoch": 1,
+    }));
+    store
+        .append_context_authorization_facts(&ContextAuthorizationFactsRow {
+            fact_set_id: facts_id,
+            subject_ref: "principal://tenant-a/daemon".to_owned(),
+            tenant_id: "tenant-a".to_owned(),
+            principal,
+            actor_chain,
+            membership,
+            capability_links: vec![capability],
+            explicit_denies: Vec::new(),
+            capability_set_version: 1,
+            issued_revocation_epoch: 1,
+            canonical_json: facts_json,
+        })
+        .unwrap();
+    store
+        .append_context_revocation_fact(&context_revocation_fact(
+            &context_governance(),
+            object_id(1_515),
+            1,
+            &issued_at,
+        ))
         .unwrap();
     store
         .append_daemon_operation_descriptor(&DaemonOperationDescriptorRow {
@@ -2446,6 +2633,60 @@ fn production_native_caller_persists_executing_before_workspace_io() {
         "RECONCILED"
     );
 
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row(&authorization.task_ref))
+        .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &router,
+    )
+    .unwrap();
+
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Succeeded.as_str()
+    );
+    assert_eq!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .len(),
+        1
+    );
+
+    drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }

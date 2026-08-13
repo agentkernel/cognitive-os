@@ -147,7 +147,7 @@ where
         .ok_or_else(|| {
             SchedulerAuthorityError::LoopUnavailable(loop_object_id.as_str().to_owned())
         })?;
-    if !matches!(loop_object.state.as_str(), "START" | "CONTINUE") {
+    if !matches!(loop_object.state.as_str(), "START" | "ACT" | "CONTINUE") {
         return Err(SchedulerAuthorityError::LoopUnavailable(format!(
             "{} is {}",
             loop_object_id.as_str(),

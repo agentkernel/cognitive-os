@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:f65e1acbda88692e26e2fd68c6853b563b9bb3c3d758abf04f478d84069f1eec"
+fingerprint: "sha256:6c6f1cb68e9ac5487d966917fd84d6d842a7e7152a3ec481ab51bb9da66c0176"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---

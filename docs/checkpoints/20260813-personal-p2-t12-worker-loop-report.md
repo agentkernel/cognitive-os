@@ -1560,3 +1560,59 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 18:50 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 184 — exact native process-restart no-redispatch
+
+- Finished: 2026-08-13 18:53 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `f003740763fdc3ae96d8243188501e8c4522e0a6`
+- Result: **pass**; real periodic restart recovery 1/1.
+- One pre-crash read occurred, the restarted router performed zero I/O, the
+  lost in-memory receipt failed closed as Effect `NOT_EXECUTED`, and the exact
+  scheduler lease closed `failed`.
+
+### Unit 185 — exact native D04 full scheduler suite
+
+- Finished: 2026-08-13 18:55 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `f003740763fdc3ae96d8243188501e8c4522e0a6`
+- Results: scheduler authority **49/49 pass**; `kernel-server` all-target Clippy
+  with `-D warnings`: **pass**.
+
+### Unit 186 — current D04 required CI observation
+
+- Checked: 2026-08-13 19:00 +08:00
+- Exact revision/run:
+  `f003740763fdc3ae96d8243188501e8c4522e0a6` / `31685279102`
+- Result: Ubuntu job `94399834448` **pass**; Windows job `94399834284`
+  **in progress**.
+- Boundary: Windows is not inferred as pass; D05 acceptance review proceeds.
+
+### Unit 187 — D04 full production-tick integration proof
+
+- Finished: 2026-08-13 19:18 +08:00
+- Result: **test authored; execution pending**
+- Fixture now carries a schema-valid v0.4 TaskContract, scheduler policy,
+  current authorization/revocation facts, atomic candidate/WIA admission, and
+  the exact WorkspaceRead descriptor.
+- Property: one real private tick must accept Loop `ACT`, acquire/verify the
+  lease, consume WIA, re-authorize, persist `EXECUTING` before I/O, reconcile
+  the Effect, release scheduler `succeeded`, and retain exactly one consumption.
+
+### Unit 188 — full production-tick proof local checks
+
+- Finished: 2026-08-13 19:19 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on two
+  mechanical layouts.
+- Recovery: apply rustfmt only and checkpoint for exact native execution.
+
+### Unit 189 — full production-tick proof formatting rerun
+
+- Finished: 2026-08-13 19:20 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 190 — full tick proof fingerprint refresh
+
+- Finished: 2026-08-13 19:21 +08:00
+- Result: **pass**; generated references were regenerated and six mapped
+  bilingual fingerprints were refreshed.
