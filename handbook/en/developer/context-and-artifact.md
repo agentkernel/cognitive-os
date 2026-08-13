@@ -78,4 +78,7 @@ correctly. The Personal daemon now opens one process-lifetime instance at
 `data_dir()/artifacts` with an 8 MiB per-artifact ceiling; D01 composition alone
 does not mean a production verifier has run. A reconciled Effect can now be
 pinned with its verification request in the same authority transaction that
-publishes Loop `ACT -> VERIFY`; criteria and verifier selection are still D02.
+publishes Loop `ACT -> VERIFY`. Criteria now derive only from current
+TaskContract Acceptance conditions; the registered fixed-Effect verifier writes
+its immutable post-state observation into this CAS before a passed report can
+enter `VERIFY -> CONTINUE`.

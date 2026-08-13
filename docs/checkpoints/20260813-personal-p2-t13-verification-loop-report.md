@@ -197,3 +197,69 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 21:01 +08:00
 - Results: rustfmt **pass**; whitespace **pass**; generated pages stable; zero
   fingerprint changes.
+
+### Unit 024 — exact native D01 atomic verification start
+
+- Finished: 2026-08-13 21:04 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `dfa9859d5a25ef31ddc051a78a9b28534d1fb3ff`
+- Result: **pass**; successful atomic entry plus stale-Loop rollback proof 1/1.
+
+### Unit 025 — exact native D01 verification regression suite
+
+- Finished: 2026-08-13 21:07 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `dfa9859d5a25ef31ddc051a78a9b28534d1fb3ff`
+- Results: verification executor **11/11 pass**; all-target Clippy for
+  `cognitive-kernel`, `cognitive-store`, and `kernel-server`: **pass**.
+- D01 callable/composition exit is satisfied; D02 begins with contract-derived
+  criteria and the production verifier registry/caller.
+
+### Unit 026 — D02 production verifier implementation
+
+- Finished: 2026-08-13 21:22 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - derive request criteria only from current TaskContract `Acceptance`
+    conditions and require one registered verifier identity;
+  - register `verifier://personal/fixed-effect` v1 as an independent
+    deterministic verifier, distinct from worker/daemon execution identity;
+  - publish the fixed post-state canonical evidence into the daemon Artifact
+    CAS, persist the verifier report through the existing currentness checks,
+    and enter Loop `VERIFY -> CONTINUE` from that persisted passed report;
+  - retain Task state absent/uncompleted and create no acceptance transition.
+
+### Unit 027 — D02 verifier local static checks
+
+- Finished: 2026-08-13 21:23 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on seven
+  mechanical layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 028 — D02 verifier formatting rerun
+
+- Finished: 2026-08-13 21:24 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 029 — D02 verifier bilingual handbook sync
+
+- Finished: 2026-08-13 21:25 +08:00
+- Result: **authored; validation pending**
+- Both locales record contract-derived Acceptance criteria, the registered
+  fixed-Effect verifier, CAS-backed evidence, persisted report, and
+  `VERIFY -> CONTINUE` no-completion boundary.
+
+### Unit 030 — D02 verifier local gates
+
+- Finished: 2026-08-13 21:26 +08:00
+- Results: handbook **pass**; two fingerprints refreshed; consistency **pass**;
+  whitespace **pass**.
+
+### Unit 031 — D02 task-not-accepted derivation review
+
+- Finished: 2026-08-13 21:29 +08:00
+- Finding: treating every missing caller-supplied Task object ID as
+  `task_not_accepted` would weaken the existing kernel guard.
+- Fix: an existing governed Task must be non-`COMPLETED`; an absent object is
+  accepted only when its ID is the current TaskContract ID bound by the
+  persisted verification request. Arbitrary absent IDs remain fail-closed.

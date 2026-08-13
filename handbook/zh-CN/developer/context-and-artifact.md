@@ -67,4 +67,6 @@ staging 文件 + 原子 rename 发布前校验大小 + digest，`get` 读取时�
 无法持久化。Personal daemon 现在会在 `data_dir()/artifacts` 打开一个进程期唯一实例，
 逐 artifact 上限 8 MiB；D01 组合本身不表示生产 verifier 已运行。已对账 Effect 现在
 可与其 verification request 一起，在发布 Loop `ACT -> VERIFY` 的同一权威事务中固定；
-criteria 与 verifier 选择仍属 D02。
+criteria 现在只从当前 TaskContract Acceptance 条件推导；登记 fixed-Effect verifier
+先把不可变 post-state observation 写入该 CAS，passed report 才可进入
+`VERIFY -> CONTINUE`。

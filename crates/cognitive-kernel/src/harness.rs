@@ -891,6 +891,7 @@ where
         loop_id: &ObjectId,
         expected_version: Version,
         task_object_id: &ObjectId,
+        task_binding: &crate::ports::TaskBinding,
         verification_report_id: &ObjectId,
         verification_report_content: &str,
         budget_id: &BudgetId,
@@ -905,7 +906,15 @@ where
             .store
             .load_object(LifecycleDomain::Task, task_object_id)
             .map_err(store_rejection)?;
-        if task.is_some_and(|task| task.state.as_str() != "COMPLETED") {
+        let task_not_accepted = match task {
+            Some(task) => task.state.as_str() != "COMPLETED",
+            None => self
+                .store
+                .load_task_contract(&task_binding.task_ref, task_binding.contract_epoch)
+                .map_err(store_rejection)?
+                .is_some_and(|contract| contract.contract_id == *task_object_id),
+        };
+        if task_not_accepted {
             established.insert("task_not_accepted".to_owned());
         }
         let mut evidence = BTreeMap::new();
@@ -1016,6 +1025,7 @@ where
             loop_id,
             expected_version,
             task_object_id,
+            &request.task_binding,
             verification_report_id,
             &report.canonical_json,
             budget_id,
