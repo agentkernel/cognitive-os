@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     ffi::{OsStr, OsString},
+    hash::{DefaultHasher, Hash, Hasher},
     io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
@@ -294,7 +295,7 @@ impl NativeWorkspaceMutationExecutor {
             directory_identity(&target_parent).map_err(|error| PortFailure {
                 detail: format!("workspace target parent identity failed: {error}"),
             })?;
-        let target_lock_key = mutation_target_lock_key(target_parent_identity, &target_name);
+        let target_lock_key = mutation_target_lock_key(&target_parent_identity, &target_name);
         let _target_guard = match self
             .state_store
             .try_lock_key(MUTATION_TARGET_LOCK_NAMESPACE, &target_lock_key)
@@ -939,8 +940,11 @@ fn preimage_binding_token(preimage: &WorkspacePreimage) -> String {
     }
 }
 
-fn mutation_target_lock_key(parent_identity: FileIdentity, target_name: &OsStr) -> String {
-    format!("{parent_identity:?}\0{}", target_name.to_string_lossy())
+fn mutation_target_lock_key(parent_identity: &FileIdentity, target_name: &OsStr) -> String {
+    let mut hasher = DefaultHasher::new();
+    parent_identity.hash(&mut hasher);
+    target_name.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
 }
 
 fn staging_file_name(target_name: &OsStr, idempotency_key: &str) -> Result<OsString, PortFailure> {

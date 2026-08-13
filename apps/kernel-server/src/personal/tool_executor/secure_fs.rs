@@ -169,8 +169,7 @@ pub(crate) fn remove_regular_file(parent: &Dir, name: &OsStr) -> io::Result<bool
 }
 
 pub(crate) fn directory_identity(directory: &Dir) -> io::Result<FileIdentity> {
-    let metadata = directory.try_clone()?.into_std_file().metadata()?;
-    file_identity(&metadata)
+    same_file::Handle::from_file(directory.try_clone()?.into_std_file())
 }
 
 pub(crate) fn sync_directory(directory: &Dir) -> io::Result<()> {
@@ -185,49 +184,7 @@ pub(crate) fn sync_directory(directory: &Dir) -> io::Result<()> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct FileIdentity {
-    first: u64,
-    second: u64,
-}
-
-#[cfg(unix)]
-fn file_identity(metadata: &Metadata) -> io::Result<FileIdentity> {
-    use std::os::unix::fs::MetadataExt;
-    Ok(FileIdentity {
-        first: metadata.dev(),
-        second: metadata.ino(),
-    })
-}
-
-#[cfg(windows)]
-fn file_identity(metadata: &Metadata) -> io::Result<FileIdentity> {
-    use std::os::windows::fs::MetadataExt;
-    let volume = metadata.volume_serial_number().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::Unsupported,
-            "workspace handle has no volume identity",
-        )
-    })?;
-    let index = metadata.file_index().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::Unsupported,
-            "workspace handle has no file identity",
-        )
-    })?;
-    Ok(FileIdentity {
-        first: u64::from(volume),
-        second: index,
-    })
-}
-
-#[cfg(not(any(unix, windows)))]
-fn file_identity(_metadata: &Metadata) -> io::Result<FileIdentity> {
-    Err(io::Error::new(
-        io::ErrorKind::Unsupported,
-        "workspace handle identity is unsupported on this platform",
-    ))
-}
+pub(crate) type FileIdentity = same_file::Handle;
 
 #[cfg(windows)]
 fn is_windows_reparse(metadata: &Metadata) -> bool {

@@ -100,7 +100,7 @@ impl StateGuard<'_> {
             }
         };
         let mut bytes = Vec::new();
-        file.by_ref()
+        Read::by_ref(&mut file)
             .take(MAXIMUM_STATE_RECORD_BYTES + 1)
             .read_to_end(&mut bytes)?;
         if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > MAXIMUM_STATE_RECORD_BYTES {

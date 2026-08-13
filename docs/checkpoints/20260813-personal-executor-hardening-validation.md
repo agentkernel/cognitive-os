@@ -418,3 +418,105 @@ full dependency metadata under `--locked`, and push a new checkpoint.
 - Measurement: `Cargo.lock` plus this running report were correctly classified
   as documentation-neutral; exit 0.
 - Disposition: no mapped behavior source changed in this recovery checkpoint.
+
+### V-CI-002 — Required Ubuntu/Windows matrix, checkpoint fd88e20
+
+- Instrument: GitHub Actions `CI`, run `31658734870`
+- Revision: `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `CI-UBUNTU-01` job `94318829693`;
+  `CI-WINDOWS-MSVC-01` job `94318829664`
+- Started/retained: 2/2 jobs
+- Outcome: `fail`
+- Measurement: the lockfile gate was repaired and both jobs reached Rust
+  compilation; both then failed in `state.rs` at the same ambiguous
+  `by_ref` method resolution. Rust tests and downstream checks were skipped.
+- Disposition: disambiguate the standard `Read::by_ref` call, run local
+  non-linking guards, and push a new immutable checkpoint.
+
+#### V-CI-002 diagnostic addendum
+
+The complete Windows log exposed two additional errors at the same compile
+step: stable Rust rejects `MetadataExt::volume_serial_number/file_index` as
+`windows_by_handle`. The repair uses the safe cross-platform `same-file`
+handle identity abstraction; no unsafe block or platform claim is introduced.
+
+### V-LOCAL-033 — Safe handle-identity dependency resolution
+
+- Instrument: `cargo add same-file --package kernel-server`
+- Revision: dirty recovery worktree after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: added latest compatible `same-file` 1.0.6; exit 0.
+- Disposition: use its safe `Handle::from_file` equality/hash rather than
+  unstable Windows metadata or repository-forbidden unsafe Win32 calls.
+
+### V-LOCAL-034 — Compile-fix formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty recovery worktree after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: compile-fix Rust formatting is clean.
+
+### V-LOCAL-035 — Compile-fix locked metadata
+
+- Instrument: `cargo metadata --locked --format-version 1`
+- Revision: dirty recovery worktree after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full transitive graph resolved under `--locked`; exit 0.
+- Disposition: checkpoint may return to supported-CI compilation.
+
+### V-LOCAL-036 — Compile-fix repository consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty recovery worktree after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: all registered contract, plan, link, trace and lease checks
+  passed; exit 0.
+- Disposition: no static consistency regression from the compile repair.
+
+### V-LOCAL-037 — Compile-fix handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty recovery worktree after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: complete handbook check set passed; exit 0.
+- Disposition: mapped documentation remains synchronized.
+
+### V-LOCAL-038 — Compile-fix docs-sync gate, first attempt
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged recovery candidate after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `fail`
+- Measurement: the gate mapped three scheduler-execution paths and required
+  either another handbook edit or a concrete documentation-neutral
+  acknowledgement; exit 1.
+- Disposition: this delta only disambiguates a trait method and replaces
+  unstable Windows identity access with a safe equivalent already described
+  as handle identity. Rerun with that exact `DOCS_IMPACT_NONE` reason and
+  record it in the commit/PR.
+
+### V-LOCAL-039 — Compile-fix docs-sync gate with concrete acknowledgement
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged recovery candidate after `fd88e20520b292c34f86e49136165f1828a397a7`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: gate accepted the concrete reason: “Compile-only repair:
+  disambiguates `Read::by_ref` and replaces unstable Windows metadata calls
+  with the safe `same-file` handle identity already documented; runtime
+  semantics and mapped handbook facts are unchanged.” Full handbook and
+  generated-byte checks also passed; exit 0.
+- Disposition: record the identical reason in the commit and PR.
