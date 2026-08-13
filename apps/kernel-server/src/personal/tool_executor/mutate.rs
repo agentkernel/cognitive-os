@@ -280,17 +280,28 @@ impl NativeWorkspaceMutationExecutor {
                 reason: "dispatch does not match the daemon-staged workspace mutation".to_owned(),
             });
         }
-        let workspace =
-            AnchoredWorkspace::open(&staged_request.approved_workspace_root).map_err(|error| {
-                PortFailure {
-                    detail: format!("workspace root handle open failed: {error}"),
-                }
-            })?;
-        let (target_parent, target_name) = workspace
+        let workspace = match AnchoredWorkspace::open(&staged_request.approved_workspace_root) {
+            Ok(workspace) => workspace,
+            Err(error) => {
+                return Ok(DispatchOutcome::NotExecuted {
+                    reason: format!(
+                        "workspace mutation root is absent, linked, reparsed, or unusable: {error}"
+                    ),
+                });
+            }
+        };
+        let (target_parent, target_name) = match workspace
             .open_parent(&staged_request.relative_workspace_path)
-            .map_err(|error| PortFailure {
-                detail: format!("workspace target parent handle open failed: {error}"),
-            })?;
+        {
+            Ok(target) => target,
+            Err(error) => {
+                return Ok(DispatchOutcome::NotExecuted {
+                    reason: format!(
+                        "workspace mutation parent is absent, linked, reparsed, or unusable: {error}"
+                    ),
+                });
+            }
+        };
         let target_parent_identity =
             directory_identity(&target_parent).map_err(|error| PortFailure {
                 detail: format!("workspace target parent identity failed: {error}"),

@@ -1449,7 +1449,7 @@ fn durable_effect_fixture(
     let task_object_id = object_id(seed);
     let effect_object_id = object_id(seed + 1);
     let intent_object_id = object_id(seed + 2);
-    let admitted_at = WallTimestamp::parse("2026-08-13T00:00:00Z").expect("valid admission time");
+    let admitted_at = WallTimestamp::parse("2026-08-04T12:02:00Z").expect("valid admission time");
     for (object_id, domain, lifecycle_state, event_seed) in [
         (
             task_object_id.clone(),
@@ -1956,7 +1956,7 @@ fn unknown_native_workspace_read_reconciles_original_key_without_second_read() {
     assert_eq!(read_count.load(Ordering::SeqCst), 1);
     assert_eq!(
         native_executor.completed_output(idempotency_key),
-        Some(b"token=[REDACTED]".to_vec())
+        Some(b"token=[REDACTED] durable workspace output".to_vec())
     );
 
     let (_, reconciliation_result) = effect_protocol

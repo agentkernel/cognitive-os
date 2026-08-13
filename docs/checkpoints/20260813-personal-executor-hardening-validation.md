@@ -520,3 +520,94 @@ handle identity abstraction; no unsafe block or platform claim is introduced.
   semantics and mapped handbook facts are unchanged.” Full handbook and
   generated-byte checks also passed; exit 0.
 - Disposition: record the identical reason in the commit and PR.
+
+### V-CI-003 — Required Ubuntu/Windows matrix, checkpoint 49d9d45
+
+- Instrument: GitHub Actions `CI`, run `31659272508`
+- Revision: `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `CI-UBUNTU-01` job `94320455069`;
+  `CI-WINDOWS-MSVC-01` job `94320455104`
+- Started/retained: 2/2 jobs
+- Outcome: `fail`
+- Measurement: both jobs passed workspace compilation and failed during the
+  Rust workspace test step. Ubuntu stopped after 1m55s; Windows retained its
+  full 9m15s run before failing. Downstream Clippy/repository checks were
+  skipped.
+- Disposition: inspect both complete test logs and repair the branch-owned
+  cross-platform focused negatives without weakening them.
+
+#### V-CI-003 diagnostic addendum
+
+Both jobs reported the same four failures. Two new HTTP EffectProtocol restart
+fixtures used a timestamp after the existing authorization lease and were
+correctly rejected as stale; the fixture now uses the established grant time.
+One pre-existing workspace-read assertion still expected the former test-only
+16-byte descriptor drift and is corrected to the immutable catalog output.
+Finally, a linked parent failed closed as a `PortFailure`; mutation dispatch
+now classifies that non-I/O path refusal explicitly as `NotExecuted`, while
+preserving the no-write assertion. The negatives are retained, not weakened.
+
+### V-LOCAL-040 — Focused-test repair formatting, first attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty recovery worktree after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `fail`
+- Measurement: rustfmt requested one expression reflow in the linked-parent
+  refusal branch; exit 1.
+- Disposition: apply rustfmt and rerun.
+
+### V-LOCAL-041 — Focused-test repair rustfmt
+
+- Instrument: `cargo fmt --all`
+- Revision: dirty recovery worktree after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: one expression reflow applied; exit 0.
+- Disposition: rerun the no-write check.
+
+### V-LOCAL-042 — Focused-test repair formatting verification
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty recovery worktree after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: focused test repairs are formatting-clean.
+
+### V-LOCAL-043 — Focused-test repair consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty recovery worktree after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: complete repository consistency set passed; exit 0.
+- Disposition: no static contract/governance drift.
+
+### V-LOCAL-044 — Focused-test repair handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty recovery worktree after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: complete handbook check set passed; exit 0.
+- Disposition: existing mapped wording already describes the retained
+  fail-closed behavior.
+
+### V-LOCAL-045 — Focused-test repair docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged recovery candidate after `49d9d4552d28e8f8b6cd2de91557244e88c66e79`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full handbook/generated checks passed with the concrete reason:
+  “Focused CI repair aligns a stale fixture and assertion and classifies the
+  already-documented fail-closed linked-parent refusal as `NotExecuted`;
+  mapped capability semantics are unchanged.”
+- Disposition: record the same reason in the commit and PR.
