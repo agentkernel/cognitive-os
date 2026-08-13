@@ -2148,7 +2148,7 @@ fn persist_native_workspace_read_dispatch_fixture(
         .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceRead)
         .unwrap();
     let issued_at = WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap();
-    let contract_id = object_id(1_501);
+    let contract_id = authorization.worker_authorization_root_id.clone();
     let context_request_id = object_id(1_510);
     let context_request_digest = format!("sha256:{}", "6".repeat(64));
     let contract_header = compose_governed_header(
@@ -2823,10 +2823,10 @@ fn non_authority_completion_signals_cannot_complete_a_draft_task() {
         &WriterLease { epoch: 1 },
     )
     .expect_err("a missing report must not complete a Task");
-    assert!(matches!(
-        error,
-        super::TaskCompletionError::VerificationUnavailable
-    ));
+    assert!(
+        matches!(error, super::TaskCompletionError::TaskUnavailable),
+        "DRAFT is ineligible for candidate/acceptance; got {error:?}"
+    );
     let task = store
         .load_object(
             LifecycleDomain::Task,

@@ -217,5 +217,34 @@ public transition contract:
 - Results: all **pass** (consistency 275 requirements; handbook 54×2;
   generated 18 pages byte-identical; whitespace clean). Fingerprints refreshed
   for mapped store/execution-chain/operations pages. Rust compile/test remain
-  **not-run locally**. Native retest of the forthcoming pushed SHA is the next
-  unit.
+  **not-run locally**.
+
+### Unit 019 — native fetch of fixture-fix HEAD
+
+- Finished: 2026-08-14 00:40 +08:00
+- Target: `2872419fc13ceefdb7b7449f94cea69248839118`
+- Result: **fail** — worktree `git fetch /home/wuz/p2t11 personal/P2-T14-verified-completion`
+  could not find the branch ref because `p2t11` stored the GitHub fetch only
+  in `FETCH_HEAD`.
+- Recovery: fetch into `refs/heads/personal/P2-T14-verified-completion` first.
+
+### Unit 019b — native checkout of fixture-fix HEAD
+
+- Finished: 2026-08-14 00:41 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `2872419fc13ceefdb7b7449f94cea69248839118`
+- Result: **pass**. HEAD matched, worktree clean.
+
+### Unit 020 — exact native scheduler suite at `2872419f`
+
+- Finished: 2026-08-14 00:41 +08:00
+- Command: `cargo test -p kernel-server --locked personal::scheduler_authority::tests -- --test-threads=1`
+- Result: **fail** — 49 passed / 4 failed. The UNIQUE-constraint fixture defect
+  is gone. Remaining failures share one cause: the WorkspaceRead fixture minted
+  TaskContract `object_id(1_501)` while WIA `worker_authorization_root_id` stayed
+  `object_id(811)`, so `activate_task_for_worker_authorization` returned
+  `ExecutionBindingUnavailable` and skipped the row. The DRAFT-completion
+  negative also expected `VerificationUnavailable` instead of the honest
+  `TaskUnavailable` for a still-`DRAFT` Task.
+- Clippy and verification-executor were **not-run**.
+- Recovery: mint the fixture TaskContract under the WIA root identity.
