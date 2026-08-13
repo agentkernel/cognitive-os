@@ -1283,3 +1283,56 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 17:21 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 151 — exact native D04 production-caller expected red
+
+- Finished: 2026-08-13 17:24 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `fcdc1d3880f7fd7016662225b5628a2e71b13b48`
+- Result: **expected compile fail**; neither
+  `ProductionNativeToolExecutorRouter` nor `dispatch_native_worker_effect`
+  exists.
+- No test executed. The two missing symbols pin composition-root staging and
+  the durable Effect caller separately.
+
+### Unit 152 — D04 native router and Effect caller implementation
+
+- Finished: 2026-08-13 17:30 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - one composition-root router binds original idempotency keys to staged
+    WorkspaceRead requests under a daemon-owned workspace root;
+  - families without a separately governed parameter/preimage carrier fail
+    before Effect authorization rather than inventing input from a digest;
+  - the caller uses the existing `EffectProtocol` for
+    `PROPOSED -> AUTHORIZED -> EXECUTING -> outcome`, then reconciles successful
+    or unknown outcomes under the original key.
+- Boundary: this is still a callable seam; the periodic tick has not yet been
+  passed the router or current grant.
+
+### Unit 153 — native router/caller local static checks
+
+- Finished: 2026-08-13 17:31 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on two
+  mechanical router layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 154 — native router/caller formatting rerun
+
+- Finished: 2026-08-13 17:32 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 155 — native router/caller docs-sync routing
+
+- Finished: 2026-08-13 17:34 +08:00
+- Result: **fail** with a truthful no-production-caller acknowledgement because
+  the execution-chain and capability source fingerprints changed in both
+  locales.
+- Recovery: refresh those mapped fingerprints without changing their still
+  accurate "production caller unwired" semantics.
+
+### Unit 156 — native router/caller fingerprint refresh
+
+- Finished: 2026-08-13 17:35 +08:00
+- Result: **pass**; generated references remained source-derived and four
+  bilingual execution-chain/capability fingerprints were refreshed.

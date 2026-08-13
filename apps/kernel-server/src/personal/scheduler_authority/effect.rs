@@ -270,6 +270,111 @@ where
     })
 }
 
+/// Stage and drive one freshly consumed native WIA through the existing Effect
+/// protocol.
+///
+/// `EffectProtocol::dispatch_effect` commits `EXECUTING` before invoking the
+/// router. A receipt-confirmed execution is immediately reconciled under the
+/// original idempotency key; unknown and confirmed non-execution outcomes
+/// remain non-success and never become Task progress or completion.
+pub(crate) fn dispatch_native_worker_effect<S, C, G>(
+    effect_protocol: &cognitive_kernel::effects::EffectProtocol<'_, S, C, G>,
+    resolved: &ResolvedNativeWorkerDispatch,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    grant: &cognitive_kernel::authz::AuthorizationGrant,
+    governance_currency: &cognitive_kernel::effects::GovernanceCurrency,
+    writer_lease: &WriterLease,
+) -> Result<SchedulerEffectClosure, SchedulerAuthorityError>
+where
+    S: AuthorityStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    if resolved.effect_state != "PROPOSED" {
+        return Err(SchedulerAuthorityError::UnsupportedEffectState(
+            resolved.effect_state.clone(),
+        ));
+    }
+    executor_router
+        .stage_resolved(resolved)
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let authorized = effect_protocol.authorize_effect(
+        &resolved.authorization.effect_object_id,
+        resolved.effect_version,
+        grant,
+        governance_currency,
+        writer_lease,
+    )?;
+    let (executing, outcome) = effect_protocol.dispatch_effect(
+        &resolved.authorization.effect_object_id,
+        authorized.after_version,
+        grant,
+        governance_currency,
+        executor_router,
+        writer_lease,
+    )?;
+    let recorded = effect_protocol.record_outcome(
+        &resolved.authorization.effect_object_id,
+        executing.after_version,
+        &outcome,
+        writer_lease,
+    )?;
+    match outcome {
+        cognitive_kernel::executor::DispatchOutcome::Executed { .. } => {
+            let (_, query) = effect_protocol.reconcile(
+                &resolved.authorization.effect_object_id,
+                "EXECUTED",
+                recorded.after_version,
+                executor_router,
+                writer_lease,
+            )?;
+            if query != cognitive_kernel::executor::ExecutorQueryResult::ExecutedWithOriginalKey {
+                return Err(SchedulerAuthorityError::NativeExecution(
+                    "receipt-confirmed execution did not reconcile under its original key"
+                        .to_owned(),
+                ));
+            }
+            Ok(SchedulerEffectClosure::Closed)
+        }
+        cognitive_kernel::executor::DispatchOutcome::Unknown { .. } => {
+            let (reconciled, query) = effect_protocol.reconcile(
+                &resolved.authorization.effect_object_id,
+                "OUTCOME_UNKNOWN",
+                recorded.after_version,
+                executor_router,
+                writer_lease,
+            )?;
+            match query {
+                cognitive_kernel::executor::ExecutorQueryResult::ExecutedWithOriginalKey => {
+                    Ok(SchedulerEffectClosure::Closed)
+                }
+                cognitive_kernel::executor::ExecutorQueryResult::NotExecuted => {
+                    effect_protocol.close_not_executed(
+                        &resolved.authorization.effect_object_id,
+                        reconciled.after_version,
+                        writer_lease,
+                    )?;
+                    Ok(SchedulerEffectClosure::PendingReconciliation)
+                }
+                cognitive_kernel::executor::ExecutorQueryResult::Indeterminate => {
+                    effect_protocol.quarantine_still_unknown(
+                        &resolved.authorization.effect_object_id,
+                        reconciled.after_version,
+                        writer_lease,
+                    )?;
+                    Ok(SchedulerEffectClosure::PendingReconciliation)
+                }
+            }
+        }
+        cognitive_kernel::executor::DispatchOutcome::NotExecuted { .. } => {
+            Ok(SchedulerEffectClosure::PendingReconciliation)
+        }
+        cognitive_kernel::executor::DispatchOutcome::FencedStaleEpoch { .. } => {
+            unreachable!("record_outcome rejects a stale-sink dispatch")
+        }
+    }
+}
+
 /// Select exactly one immutable Intent and verify that its stored binding
 /// agrees with the reverse-index query used to find it.
 pub(crate) fn select_single_effect_intent<'intent>(
