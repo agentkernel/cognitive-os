@@ -137,3 +137,236 @@ Windows GNU linker host.
 - Commands: `git diff --cached --check`; `git status --short`
 - Result: **pass**; whitespace is clean and exactly the five task-owned
   checkpoint paths are staged.
+
+### Unit 016 — first native invocation transport check
+
+- Finished: 2026-08-13 13:11 +08:00
+- Revision: `280cf2619470675a92880807f114f505eebb328e`
+- Result: **not-run** as a test; the disposable clone and Rust build completed,
+  but PowerShell CRLF reached the remote test harness as `nocapture\r`, which
+  libtest rejected before executing any test.
+- Recovery: rerun the already-built exact detached revision with a direct
+  remote Bash command and no CRLF-bearing stdin script.
+
+### Unit 017 — D01 native failure-first execution
+
+- Finished: 2026-08-13 13:12 +08:00
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2`)
+- Exact revision: `280cf2619470675a92880807f114f505eebb328e`
+- Command: `cargo test -p cognitive-runtime --locked --test
+  p2_t01_task_application_service
+  admit_atomically_publishes_runnable_scheduler_work_and_authority_prerequisites
+  -- --exact`
+- Result: **expected fail**; 0 passed, 1 failed, 4 filtered.
+- Failure point:
+  `admission must publish runnable scheduler work` at the crash-reopened
+  scheduler-row assertion. This confirms a successful TaskContract admission
+  currently commits without runnable scheduler work; Loop and Budget checks
+  remain unreachable behind that first missing prerequisite.
+- Next: implement one SQLite authority transaction for TaskContract event,
+  current-epoch runnable scheduler row, contract-named Loop admission, and
+  contract-named Budget creation.
+
+### Unit 018 — failure-first native cleanup
+
+- Finished: 2026-08-13 13:13 +08:00
+- Result: **pass**; removed only the task-owned disposable clone
+  `/home/wuz/cos-p2t12-red-280cf261947` and verified the path is absent.
+
+### Unit 019 — D01 atomic admission publication implementation
+
+- Finished: 2026-08-13 13:31 +08:00
+- Result: **implemented; validation pending**
+- Change: the production Task application and runtime intent flow now use a
+  schedulable-contract mint. The kernel prepares the contract-named Loop from
+  the registered Loop table, derives the complete hard Budget from the
+  TaskContract, and passes both as one compound authority input. The SQLite
+  adapter repeats fencing and contract-epoch CAS inside one transaction, then
+  commits the TaskContract event, Loop `START` admission/event, Budget row, and
+  current-epoch `runnable` scheduler row together or rolls all of them back.
+- Boundary: this publishes no Intent/Effect, performs no I/O dispatch, advances
+  no Task lifecycle state, and creates no completion or Gate claim.
+
+### Unit 020 — D01 formatting check
+
+- Finished: 2026-08-13 13:33 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **fail**; rustfmt requested four mechanical line-wrap changes in
+  `crates/cognitive-store/src/sqlite/intent_chain.rs`.
+- Recovery: apply rustfmt without changing semantics, then rerun.
+
+### Unit 021 — D01 patch whitespace check
+
+- Finished: 2026-08-13 13:33 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 022 — D01 edited-file diagnostics
+
+- Finished: 2026-08-13 13:33 +08:00
+- Result: **pass**; no diagnostics reported across the six edited Rust source
+  files.
+
+### Unit 023 — D01 rustfmt repair
+
+- Finished: 2026-08-13 13:34 +08:00
+- Command: `cargo fmt --all`
+- Result: **fixed**; only rustfmt's requested mechanical wrapping changed.
+
+### Unit 024 — D01 formatting rerun
+
+- Finished: 2026-08-13 13:35 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**
+
+### Unit 025 — D01 whitespace rerun
+
+- Finished: 2026-08-13 13:35 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 026 — D01 atomicity and idempotency negatives
+
+- Finished: 2026-08-13 13:40 +08:00
+- Result: **tests authored; execution pending**
+- Coverage:
+  - an unadmitted Task has no scheduler row, Loop, or Budget;
+  - duplicate admission loses the epoch CAS and leaves exactly one runnable
+    scheduler publication;
+  - a late Loop conflict after the transaction has inserted the TaskContract
+    rolls back the contract, Budget, and scheduler row.
+- Boundary: these are additive failure-first negatives; no existing negative
+  or contract changed.
+
+### Unit 027 — expanded D01 formatting check
+
+- Finished: 2026-08-13 13:41 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **fail**; rustfmt requested two mechanical call-layout changes in the
+  new duplicate-admission test.
+- Recovery: apply rustfmt and rerun.
+
+### Unit 028 — expanded D01 whitespace check
+
+- Finished: 2026-08-13 13:41 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 029 — expanded D01 test diagnostics
+
+- Finished: 2026-08-13 13:41 +08:00
+- Result: **pass**; no diagnostics reported.
+
+### Unit 030 — expanded D01 rustfmt repair
+
+- Finished: 2026-08-13 13:42 +08:00
+- Command: `cargo fmt --all`
+- Result: **fixed**; only the requested call layout changed.
+
+### Unit 031 — D01 staged docs-sync routing
+
+- Finished: 2026-08-13 13:44 +08:00
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **expected fail**
+- Required mapped groups:
+  - `kernel-authority`: `dev.authority-kernel`, `dev.context-artifact`,
+    `ref.transitions`;
+  - `store`: `dev.store-migrations`, `dev.memory-skill`,
+    `user.operations-recovery`;
+  - `management`: `dev.management-plane`, `ref.cli-admin`, `ref.errors`.
+- Recovery: update every mapped page in both locales, update the execution
+  chain and its linked task/capability truth pages, regenerate generated pages,
+  refresh fingerprints, and run the full handbook gate. No
+  `DOCS_IMPACT_NONE` escape is valid because admission behavior changed.
+
+### Unit 032 — D01 bilingual handbook semantic sync
+
+- Finished: 2026-08-13 13:55 +08:00
+- Result: **authored; generation/fingerprint validation pending**
+- Updated in both locales:
+  - authority-kernel compound preparation and schedulable mint;
+  - store transaction atomicity and no-migration/no-parallel-scheduler boundary;
+  - management Task admission;
+  - user crash/reopen behavior and Task execution truth;
+  - capability matrix;
+  - execution-chain gap record (bootstrap closed; periodic tick, executor
+    caller, and verifier caller still open).
+- Non-claim: admission bootstrap alone does not make autonomous execution,
+  verification, Task completion, Gate, release, or Profile executable.
+
+### Unit 033 — handbook reference generation
+
+- Finished: 2026-08-13 13:56 +08:00
+- Command: `node tools/src/generate-handbook.mjs`
+- Result: **pass**; all 18 generated reference pages were regenerated from
+  unchanged machine sources. No generated page was hand-edited.
+
+### Unit 034 — handbook fingerprint refresh
+
+- Finished: 2026-08-13 13:57 +08:00
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass**; 16 bilingual authored pages received current source
+  fingerprints, including the two `task-pipeline` pages reached transitively by
+  the changed Task application source.
+- Scope reconciliation: added the exact bilingual `task-pipeline` paths to the
+  task lease immediately; no concurrent lease exists and no unrelated content
+  was modified.
+
+### Unit 035 — transitive task-pipeline semantic sync
+
+- Finished: 2026-08-13 13:59 +08:00
+- Result: **fixed**
+- Change: both `task-pipeline` locales now describe the compound
+  `mint_schedulable_task_contract` publication and retain the explicit boundary
+  that admission creates no candidate Intent/Effect and runs no Tool.
+
+### Unit 036 — final fingerprint refresh
+
+- Finished: 2026-08-13 14:00 +08:00
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass**; zero further updates were needed after the transitive page
+  edit because its source fingerprint was already current.
+
+### Unit 037 — final D01 formatting gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**
+
+### Unit 038 — bilingual handbook gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `pnpm run check:handbook`
+- Result: **pass**; 54 documents × 2 locales, nine generated families, coverage,
+  links, fingerprints, statuses, and secret checks verified.
+
+### Unit 039 — generated handbook byte gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass**; 18 generated pages byte-identical.
+
+### Unit 040 — D01 consistency gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `pnpm run check:consistency`
+- Result: **pass**; 275 requirements, 55 errors, 74 schemas, 89 vectors, task
+  state, slice state, and lease verified.
+
+### Unit 041 — D01 staged docs-sync gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **pass**; kernel-authority, store, management, and handbook-self
+  routes all resolved through the bilingual handbook checks. No escape used.
+
+### Unit 042 — D01 staged whitespace gate
+
+- Finished: 2026-08-13 14:02 +08:00
+- Command: `git diff --cached --check`
+- Result: **pass**
+
+### Unit 043 — final D01 edited-file diagnostics
+
+- Finished: 2026-08-13 14:02 +08:00
+- Result: **pass**; no diagnostics reported across all edited Rust files.

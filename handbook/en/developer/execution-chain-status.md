@@ -13,10 +13,15 @@ sources:
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
+  - path: crates/cognitive-management/src/task_application.rs
+    symbols: ["KernelTaskApplicationService"]
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:45eb8c4ea751d732c6b8fbc7196cc283cfdfb778bbc4f86a5c908a2ceebd6377"
+  - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
+fingerprint: "sha256:288693d9e894b2d2dab872aed713af5949aa871fa7d532cae1a197fa1f2e2403"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -34,6 +39,7 @@ verification → verified continuation or ceiling STOP.
 | Stage | Status | Evidence |
 |---|---|---|
 | Scheduler persistence, CAS leases, fencing, ceilings | implemented | store scheduler tests; `SchedulerService` ceiling tests |
+| Task-admission scheduler bootstrap | implemented | one fenced SQLite transaction publishes TaskContract + `START` Loop + hard Budget + current-epoch runnable row; crash/duplicate/rollback negatives |
 | Sealed ContextRequest/View before Pi, per-body reauthorization | implemented | kernel-server scheduler_authority tests over real SQLite |
 | Locked-down Pi candidate process over a one-shot private socket | implemented | pi-agent-adapter protocol/launch tests |
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
@@ -43,24 +49,24 @@ verification → verified continuation or ceiling STOP.
 | Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, test-called only | verifier module tests |
 | Recovery of consumed handoffs at startup | implemented | daemon startup path |
 
-## The four wiring gaps (verified at the baseline)
+## Remaining production wiring gaps
 
-1. **No bootstrap row**: Task admission persists contract + context + policy but
-   inserts no scheduler row. Rows are created by `ProtocolStore::insert_intent`
-   (same transaction as a task-bound Intent) — which is only reached from
-   candidate admission, which itself requires an existing leased row. Production
-   callers of `SchedulerRepository::upsert`: none (tests + benchmark only).
-2. **One tick, no loop**: the daemon executes
+The former bootstrap gap is closed in the admission path without adding a
+parallel scheduler: successful `TaskApplicationService::admit` atomically
+publishes the contract-named Loop and Budget beside the runnable scheduler row.
+The remaining gaps are:
+
+1. **One tick, no loop**: the daemon executes
    `run_private_scheduler_tick_with_store` once during startup; no periodic
    scheduler thread exists.
-3. **Executors unwired**: all six registered families now have an assembled
+2. **Executors unwired**: all six registered families now have an assembled
    sink (P2-T10), so `ASSEMBLED_EXECUTOR_FAMILIES` lists all six and the
    resource projection reports each as `execution_ready`. Read that fact
    narrowly: it means *this binary contains an executor for the family*, not
    that an Agent can reach one. No `dispatch_staged_*_effect` function has a
-   production caller — the sinks are reachable only from tests and, once gaps 1
-   and 2 close, from the daemon's own worker path.
-4. **Verifier unwired**: `record_independent_verification` and loop-continuation
+   production caller — the sinks remain reachable only from tests until the
+   periodic daemon worker dispatch is wired.
+3. **Verifier unwired**: `record_independent_verification` and loop-continuation
    entry are exercised by tests only; no production route advances verification
    or Task acceptance.
 

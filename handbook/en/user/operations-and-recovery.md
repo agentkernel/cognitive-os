@@ -14,10 +14,12 @@ sources:
     symbols: ["plan_personal_backup_inventory"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2c75d38146c714c98e1f1d6c9901ad16f604606547d3543d9435f42175451128"
+fingerprint: "sha256:3c066a965e9e8e7c3c0ddcf80f29fbd138dee3a4498b820557bfcec4f6ff0fc5"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -66,6 +68,13 @@ than resolve. Native HTTP attempts persist before egress and remain indeterminat
 after restart until a terminal receipt exists. Workspace mutations use durable
 original-key receipts; matching file bytes alone are not execution proof, and
 orphan staging is cleaned conservatively on restart.
+
+A successful Task admission is also crash-atomic inside the authority database:
+the contract, `START` Loop, hard Budget, and runnable scheduler row appear
+together. A failure before commit leaves none of those admission members, while
+a crash after the success response reopens the complete publication. This does
+not by itself mean the daemon's periodic worker loop or independent verifier is
+wired.
 
 ## Backup and restore — `unavailable` as a user feature
 

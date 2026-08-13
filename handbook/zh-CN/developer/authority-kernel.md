@@ -7,9 +7,9 @@ status: implemented
 generated: false
 sources:
   - path: crates/cognitive-kernel/src/engine.rs
-    symbols: ["TransitionEngine", "prepare_transition", "validate_registered_transition"]
+    symbols: ["TransitionEngine", "prepare_object_admission", "prepare_transition", "validate_registered_transition"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "admit_interpretation", "supersede_task_contract", "verify_task_binding_current"]
+    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "supersede_task_contract", "verify_task_binding_current"]
   - path: crates/cognitive-kernel/src/effects.rs
     symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
   - path: crates/cognitive-kernel/src/authz.rs
@@ -27,7 +27,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:c5fc4946fb9158ed24ac7cc5b3dc0addcfa167a7358015757afb313f2a3e5ec6"
+fingerprint: "sha256:086b7f0defcc339c14dc849aa78516d525aa0f9dc978e6fd140f152ce939b508"
 non_claims:
   - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
 ---
@@ -49,16 +49,21 @@ fencing epoch）。拒绝携带权威状态/版本与排序后的合法出口，
 （`STATE_CONFLICT`、`DIGEST_MISMATCH`、`STATE_STORE_UNAVAILABLE`、
 `RESOURCE_BUDGET_EXHAUSTED`，以及钉住的 `EFFECT_OUTCOME_UNKNOWN` 特例）。
 
-复合原子事务仅有两个受认可的旁路：纯校验器 `validate_registered_transition`（供
-candidate 准入）与 `PreparedTransition`（在 verified-continuation 消费内原样提
-交）。两者都保持精确的已校验提交。
+复合原子事务仅有三个受认可的准备接缝：纯校验器
+`validate_registered_transition`（供 candidate 准入）、`PreparedTransition`
+（在 verified-continuation 消费内原样提交），以及
+`TransitionEngine::prepare_object_admission`（把注册初态的对象准入原样放进不可
+分割的复合权威事务）。三者都保持精确的已校验提交。
 
 ## Intent chain
 
 `record_user_intent` 在解释前固定原文；解释候选以提案持久化，其状态**推导**得出
 （实质歧义 ⇒ `clarification_required`）；`admit_interpretation` 是 admitted 解释的唯
 一构造器（权威身份 + 精确 digest）；`mint_task_contract` 要求可判定的验收条件并在合
-同 epoch CAS 下铸造；`supersede_task_contract` fence 旧 epoch 工作（在 mint 与
+同 epoch CAS 下铸造。生产路径 `mint_schedulable_task_contract` 还会在同一个 fenced
+存储事务内发布合同事件、合同命名且处于 `START` 的 Loop、合同命名的硬 Budget，以及
+当前 epoch 的 runnable 调度行；成功准入不可能只暴露其中一部分。
+`supersede_task_contract` 使用同一可调度发布，fence 旧 epoch 工作（在 mint 与
 dispatch 两个 sink 上 `INTENT_VERSION_SUPERSEDED`）并对在途 Effect 分类以待对账。
 
 ## Effect：七性质、四 sink

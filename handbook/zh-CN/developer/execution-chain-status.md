@@ -13,10 +13,15 @@ sources:
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
+  - path: crates/cognitive-management/src/task_application.rs
+    symbols: ["KernelTaskApplicationService"]
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:45eb8c4ea751d732c6b8fbc7196cc283cfdfb778bbc4f86a5c908a2ceebd6377"
+  - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
+fingerprint: "sha256:288693d9e894b2d2dab872aed713af5949aa871fa7d532cae1a197fa1f2e2403"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -33,6 +38,7 @@ non_claims:
 | 环节 | 状态 | 证据 |
 |---|---|---|
 | 调度持久化、CAS lease、fencing、上限 | implemented | store 调度测试；`SchedulerService` 上限测试 |
+| Task 准入调度引导 | implemented | 单个 fenced SQLite 事务发布 TaskContract + `START` Loop + 硬 Budget + 当前 epoch runnable 行；含崩溃/重复/回滚负例 |
 | Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试 |
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
@@ -42,20 +48,20 @@ non_claims:
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动时恢复已消费交接 | implemented | daemon 启动路径 |
 
-## 四个接线缺口（基线上已核验）
+## 剩余生产接线缺口
 
-1. **无引导行**：Task 准入持久化合同 + context + 策略，但不插入调度行。行由
-   `ProtocolStore::insert_intent`（与 task 绑定 Intent 同事务）创建——而到达该处只能
-   经 candidate 准入，后者又要求已存在的 leased 行。`SchedulerRepository::upsert`
-   的生产调用者：无（仅测试与 benchmark）。
-2. **单 tick、无循环**：daemon 仅在启动时执行一次
+原先的引导缺口已在准入路径闭合，且未新增平行调度器：成功的
+`TaskApplicationService::admit` 会把合同命名的 Loop、Budget 与 runnable 调度行原子发
+布。剩余缺口为：
+
+1. **单 tick、无循环**：daemon 仅在启动时执行一次
    `run_private_scheduler_tick_with_store`；不存在周期调度线程。
-3. **执行器未接线**：六个已登记族现在都有已装配 sink（P2-T10），因此
+2. **执行器未接线**：六个已登记族现在都有已装配 sink（P2-T10），因此
    `ASSEMBLED_EXECUTOR_FAMILIES` 列出全部六族，资源投影把每一族报告为
    `execution_ready`。这一事实必须窄读：它表示*本二进制含有该族的执行器*，不表示
    Agent 能到达它。没有任何 `dispatch_staged_*_effect` 存在生产调用者——sink 目前只能
-   从测试到达；缺口 1 与 2 关闭后，才能从 daemon 自身的 worker 路径到达。
-4. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
+   从测试到达；周期 daemon worker 派发接线后才可从生产路径到达。
+3. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
    仅测试演练；没有生产路由推进验证或 Task 验收。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面

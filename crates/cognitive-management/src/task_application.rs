@@ -23,7 +23,7 @@ use cognitive_domain::{ObjectId, UriRef};
 use cognitive_kernel::effects::{EffectError, WriterLease};
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, GovernanceSeed, InterpretationCandidate, SupersedeCommand, SupersedeReport,
-    TaskContractCommand, UserIntentCommand, admit_interpretation, mint_task_contract,
+    TaskContractCommand, UserIntentCommand, admit_interpretation, mint_schedulable_task_contract,
     record_interpretation_candidate, record_user_intent, supersede_task_contract,
 };
 use cognitive_kernel::ports::{
@@ -208,7 +208,7 @@ where
         }
         let admitted =
             admit_interpretation(&self.store, acceptance).map_err(TaskApplicationError::Kernel)?;
-        mint_task_contract(
+        mint_schedulable_task_contract(
             &self.store,
             &self.clock,
             &self.ids,

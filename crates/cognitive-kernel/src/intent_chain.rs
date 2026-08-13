@@ -25,16 +25,19 @@
 //!   `INTENT_VERSION_SUPERSEDED` code (enforced in [`crate::effects`] at
 //!   both mint and dispatch, vector `intent-supersede-002` semantics).
 
+use crate::budget::BudgetState;
 use crate::effects::{
     EVIDENCE_DIGEST_DOMAIN, EffectError, ProtocolDenial, WriterLease, canonical_text,
     port_rejection, store_rejection,
 };
+use crate::engine::{AdmitCommand, TransitionEngine};
 use crate::error::{
     CONTEXT_AUTH_DENIED, INTENT_CLARIFICATION_REQUIRED, INTENT_VERSION_SUPERSEDED, STATE_CONFLICT,
 };
 use crate::ports::{
-    Clock, ContextStore, EventDraft, IdGenerator, IntentChainStore, InterpretationRow, PortFailure,
-    ProtocolStore, TaskContractRow, UserIntentRecordRow,
+    AuthorityStore, Clock, ContextStore, EventDraft, IdGenerator, IntentChainStore,
+    InterpretationRow, PortFailure, ProtocolStore, TaskContractRow, TaskExecutionBootstrap,
+    UserIntentRecordRow,
 };
 use cognitive_contracts::canonical;
 use cognitive_contracts::generated::common_defs::{
@@ -55,6 +58,7 @@ use cognitive_contracts::generated::task_contract::{
 use cognitive_contracts::generated::user_intent_record::UserIntentRecord;
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 
 // ---------------------------------------------------------------------
 // Governance header composition
@@ -875,7 +879,67 @@ pub fn mint_task_contract<S, C, G>(
     expected_current_epoch: i64,
 ) -> Result<TaskContractRow, EffectError>
 where
-    S: ProtocolStore + IntentChainStore + ContextStore,
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    mint_task_contract_internal(
+        store,
+        clock,
+        ids,
+        lease,
+        admitted,
+        cmd,
+        expected_current_epoch,
+        false,
+    )
+}
+
+/// Mint one production-schedulable TaskContract.
+///
+/// In addition to the immutable contract and provenance event, the same
+/// authority transaction publishes the contract-named Loop at its registered
+/// initial state, the contract-named hard Budget, and one current-epoch
+/// runnable scheduler row. No successful return can expose only a subset.
+pub fn mint_schedulable_task_contract<S, C, G>(
+    store: &S,
+    clock: &C,
+    ids: &G,
+    lease: &WriterLease,
+    admitted: &AdmittedInterpretation,
+    cmd: &TaskContractCommand,
+    expected_current_epoch: i64,
+) -> Result<TaskContractRow, EffectError>
+where
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    mint_task_contract_internal(
+        store,
+        clock,
+        ids,
+        lease,
+        admitted,
+        cmd,
+        expected_current_epoch,
+        true,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn mint_task_contract_internal<S, C, G>(
+    store: &S,
+    clock: &C,
+    ids: &G,
+    lease: &WriterLease,
+    admitted: &AdmittedInterpretation,
+    cmd: &TaskContractCommand,
+    expected_current_epoch: i64,
+    bootstrap_execution: bool,
+) -> Result<TaskContractRow, EffectError>
+where
+    S: AuthorityStore + ProtocolStore + IntentChainStore + ContextStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -1042,10 +1106,85 @@ where
         contract_digest,
         canonical_json,
     };
-    store
-        .insert_task_contract(&row, &event, expected_current_epoch)
-        .map_err(store_rejection)?;
+    if bootstrap_execution {
+        let daemon_actor = UriRef::parse("principal://personal/daemon")
+            .map_err(|error| denial(format!("daemon actor reference is invalid: {error}")))?;
+        let daemon_authority = UriRef::parse("authority://personal/daemon")
+            .map_err(|error| denial(format!("daemon authority reference is invalid: {error}")))?;
+        let loop_subject = UriRef::parse(&format!("loop://{}", cmd.loop_object_id))
+            .map_err(|error| denial(format!("Loop subject reference is invalid: {error}")))?;
+        let loop_admission = TransitionEngine::new(store, clock, ids)
+            .prepare_object_admission(&AdmitCommand {
+                object_id: cmd.loop_object_id.clone(),
+                domain: LifecycleDomain::Loop,
+                subject_ref: loop_subject,
+                body: json!({
+                    "schema_version": 1,
+                    "task_ref": cmd.task_ref.as_str(),
+                    "contract_epoch": contract_epoch,
+                    "task_contract_id": cmd.contract_id.as_str(),
+                    "task_contract_digest": row.contract_digest.as_str(),
+                    "budget_id": cmd.budget_id.as_str(),
+                }),
+                actor_ref: daemon_actor,
+                authority_ref: daemon_authority,
+                correlation_id: cmd.correlation_id.clone(),
+                outbox_destinations: Vec::new(),
+                fencing_epoch: Some(lease.epoch),
+            })
+            .map_err(EffectError::Rejected)?;
+        if loop_admission.object.state.as_str() != "START" {
+            return Err(denial(format!(
+                "registered Loop initial state is {}, expected START",
+                loop_admission.object.state
+            ))
+            .into());
+        }
+        let budget_state = initial_budget_state(&cmd.budget)?;
+        let budget_state_canonical_json = canonical_text(
+            &serde_json::to_value(&budget_state)
+                .map_err(|error| denial(format!("budget serialization failed: {error}")))?,
+        )
+        .map_err(EffectError::Denied)?;
+        store
+            .insert_task_contract_with_execution_bootstrap(
+                &row,
+                &event,
+                expected_current_epoch,
+                &TaskExecutionBootstrap {
+                    loop_admission,
+                    budget_id: cmd.budget_id.clone(),
+                    budget_state_canonical_json,
+                    budget_created_at: minted_at,
+                },
+            )
+            .map_err(store_rejection)?;
+    } else {
+        store
+            .insert_task_contract(&row, &event, expected_current_epoch)
+            .map_err(store_rejection)?;
+    }
     Ok(row)
+}
+
+fn initial_budget_state(budget: &Budget) -> Result<BudgetState, EffectError> {
+    let dimensions = [
+        ("attention_slots", budget.attention_slots),
+        ("context_bytes", budget.context_bytes),
+        ("egress_bytes", budget.egress_bytes),
+        ("input_tokens", budget.input_tokens),
+        ("money_microunits", budget.money_microunits),
+        ("output_tokens", budget.output_tokens),
+        ("semantic_calls", budget.semantic_calls),
+        ("tool_calls", budget.tool_calls),
+        ("wall_time_ms", budget.wall_time_ms),
+    ];
+    let remaining = dimensions
+        .into_iter()
+        .filter_map(|(name, amount)| amount.map(|amount| (name.to_owned(), amount)))
+        .collect::<BTreeMap<_, _>>();
+    BudgetState::new(remaining)
+        .map_err(|error| denial(format!("TaskContract budget is invalid: {error}")).into())
 }
 
 /// Deterministic epoch-currency check for one task binding: the fencing
@@ -1227,7 +1366,7 @@ where
     }
 
     // 3. Mint the superseding contract: epoch CAS advances N -> N+1.
-    let new_contract = mint_task_contract(
+    let new_contract = mint_schedulable_task_contract(
         store,
         clock,
         ids,

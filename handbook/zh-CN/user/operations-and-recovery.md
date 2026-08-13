@@ -14,10 +14,12 @@ sources:
     symbols: ["plan_personal_backup_inventory"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2c75d38146c714c98e1f1d6c9901ad16f604606547d3543d9435f42175451128"
+fingerprint: "sha256:3c066a965e9e8e7c3c0ddcf80f29fbd138dee3a4498b820557bfcec4f6ff0fc5"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -57,6 +59,10 @@ worker 交接，并原子地重新发布 endpoint。
 原生 HTTP attempt 在出站前持久化，重启后在终态 receipt 出现前保持 indeterminate。
 workspace 变更使用持久原键 receipt；相同文件字节本身不是执行证明，重启会保守清理
 orphan staging。
+
+成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`START` Loop、硬 Budget 与
+runnable 调度行一起出现。提交前失败不会留下这些准入成员；成功响应后崩溃重开会看到
+完整发布。这本身不表示 daemon 的周期 worker loop 或独立 verifier 已接线。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

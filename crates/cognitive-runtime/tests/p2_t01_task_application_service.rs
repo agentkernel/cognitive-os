@@ -18,6 +18,7 @@ use cognitive_contracts::generated::object_reference::{StrongReference, StrongRe
 use cognitive_contracts::generated::task_contract::ContractConditionKind;
 use cognitive_domain::{LifecycleDomain, ObjectId, UriRef, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
+use cognitive_kernel::engine::{AdmitCommand, TransitionEngine};
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
     SupersedeCommand, TaskContractCommand, UserIntentCommand, verify_task_binding_current,
@@ -55,6 +56,10 @@ struct SeqIds(AtomicU64);
 impl SeqIds {
     fn new() -> Self {
         Self(AtomicU64::new(1))
+    }
+
+    fn starting_at(value: u64) -> Self {
+        Self(AtomicU64::new(value))
     }
 }
 
@@ -498,4 +503,152 @@ fn admit_atomically_publishes_runnable_scheduler_work_and_authority_prerequisite
         .expect("load admitted Budget")
         .expect("admission must publish its contract-named Budget");
     assert_eq!(budget.state.remaining().get("tool_calls"), Some(&50));
+}
+
+#[test]
+fn unadmitted_task_has_no_scheduler_loop_or_budget_prerequisite() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = open_store(&dir);
+    let command = contract_cmd(8, "task://tenant-a/unadmitted");
+    let mut scheduler = SchedulerRepository::open(&dir.path().join("authority.db")).unwrap();
+
+    assert!(
+        scheduler
+            .load(&SchedulerWorkKey {
+                task_ref: command.task_ref.as_str().to_owned(),
+                contract_epoch: 1,
+            })
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        store
+            .load_object(LifecycleDomain::Loop, &command.loop_object_id)
+            .unwrap()
+            .is_none()
+    );
+    assert!(store.load_budget(&command.budget_id).unwrap().is_none());
+}
+
+#[test]
+fn duplicate_admit_does_not_duplicate_scheduler_publication() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut service = make_service(&dir);
+    let record = service
+        .propose(&lease(1), &intent_cmd(9, "read the governed workspace"))
+        .unwrap();
+    let interpretation = service
+        .clarify(
+            &lease(1),
+            &record.record_id,
+            &clean_candidate(9),
+            &seed(),
+            &uri("corr://tenant-a/p2-t12"),
+        )
+        .unwrap();
+    let command = contract_cmd(9, "task://tenant-a/duplicate-admit");
+    let preview = service.preview(&command).unwrap();
+    let acceptance = AcceptanceCommand {
+        interpretation_id: interpretation.interpretation_id,
+        accepted_by: uri("principal://tenant-a/user-1"),
+        accepted_digest: interpretation.interpretation_digest,
+    };
+    service
+        .admit(&lease(1), &preview.preview_digest, &acceptance, &command, 0)
+        .unwrap();
+    assert!(
+        service
+            .admit(&lease(1), &preview.preview_digest, &acceptance, &command, 0,)
+            .is_err(),
+        "duplicate admission must lose the contract-epoch CAS"
+    );
+
+    drop(service);
+    let mut scheduler = SchedulerRepository::open(&dir.path().join("authority.db")).unwrap();
+    let rows = scheduler.list_recoverable().unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].task_ref, command.task_ref.as_str());
+    assert_eq!(rows[0].contract_epoch, 1);
+    assert_eq!(rows[0].state, SchedulerState::Runnable.as_str());
+}
+
+#[test]
+fn bootstrap_conflict_rolls_back_contract_budget_and_scheduler_publication() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut service = make_service(&dir);
+    let record = service
+        .propose(&lease(1), &intent_cmd(10, "read the governed workspace"))
+        .unwrap();
+    let interpretation = service
+        .clarify(
+            &lease(1),
+            &record.record_id,
+            &clean_candidate(10),
+            &seed(),
+            &uri("corr://tenant-a/p2-t12"),
+        )
+        .unwrap();
+    let command = contract_cmd(10, "task://tenant-a/bootstrap-rollback");
+    let preview = service.preview(&command).unwrap();
+
+    // Force a late member conflict. The compound store transaction inserts
+    // the TaskContract/event first, then reaches this already-present Loop;
+    // rollback must erase the earlier members and never publish scheduler work.
+    TransitionEngine::new(
+        service.store(),
+        &FixedClock::new(),
+        &SeqIds::starting_at(9_000),
+    )
+    .admit_object(&AdmitCommand {
+        object_id: command.loop_object_id.clone(),
+        domain: LifecycleDomain::Loop,
+        subject_ref: uri(&format!("loop://{}", command.loop_object_id)),
+        body: serde_json::json!({"fixture": "late-bootstrap-conflict"}),
+        actor_ref: uri("principal://personal/daemon"),
+        authority_ref: uri("authority://personal/daemon"),
+        correlation_id: uri("corr://tenant-a/p2-t12"),
+        outbox_destinations: Vec::new(),
+        fencing_epoch: Some(1),
+    })
+    .unwrap();
+
+    let result = service.admit(
+        &lease(1),
+        &preview.preview_digest,
+        &AcceptanceCommand {
+            interpretation_id: interpretation.interpretation_id,
+            accepted_by: uri("principal://tenant-a/user-1"),
+            accepted_digest: interpretation.interpretation_digest,
+        },
+        &command,
+        0,
+    );
+    assert!(result.is_err(), "late bootstrap conflict must fail closed");
+    assert_eq!(
+        service
+            .store()
+            .current_contract_epoch(command.task_ref.as_str())
+            .unwrap(),
+        0,
+        "TaskContract inserted before the conflict must be rolled back"
+    );
+    assert!(
+        service
+            .store()
+            .load_budget(&command.budget_id)
+            .unwrap()
+            .is_none(),
+        "Budget must not survive a failed compound publication"
+    );
+    let mut scheduler = SchedulerRepository::open(&dir.path().join("authority.db")).unwrap();
+    assert!(
+        scheduler
+            .load(&SchedulerWorkKey {
+                task_ref: command.task_ref.as_str().to_owned(),
+                contract_epoch: 1,
+            })
+            .unwrap()
+            .is_none(),
+        "scheduler work must not survive a failed compound publication"
+    );
 }

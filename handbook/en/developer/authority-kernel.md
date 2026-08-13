@@ -7,9 +7,9 @@ status: implemented
 generated: false
 sources:
   - path: crates/cognitive-kernel/src/engine.rs
-    symbols: ["TransitionEngine", "prepare_transition", "validate_registered_transition"]
+    symbols: ["TransitionEngine", "prepare_object_admission", "prepare_transition", "validate_registered_transition"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "admit_interpretation", "supersede_task_contract", "verify_task_binding_current"]
+    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "supersede_task_contract", "verify_task_binding_current"]
   - path: crates/cognitive-kernel/src/effects.rs
     symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
   - path: crates/cognitive-kernel/src/authz.rs
@@ -27,7 +27,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:c5fc4946fb9158ed24ac7cc5b3dc0addcfa167a7358015757afb313f2a3e5ec6"
+fingerprint: "sha256:086b7f0defcc339c14dc849aa78516d525aa0f9dc978e6fd140f152ce939b508"
 non_claims:
   - Kernel correctness evidence is focused-test evidence; it is not a Gate, release, or Profile result.
 ---
@@ -51,10 +51,13 @@ state/version, sorted legal exits, and map deterministically onto registered err
 codes (`STATE_CONFLICT`, `DIGEST_MISMATCH`, `STATE_STORE_UNAVAILABLE`,
 `RESOURCE_BUDGET_EXHAUSTED`, and the pinned `EFFECT_OUTCOME_UNKNOWN` special case).
 
-Two sanctioned bypasses exist for compound atomic transactions only: the pure
-validator `validate_registered_transition` (used by candidate admission) and
-`PreparedTransition` (committed unchanged inside verified-continuation
-consumption). Both preserve the exact validated commit.
+Three sanctioned preparation seams exist for compound atomic transactions only:
+the pure validator `validate_registered_transition` (used by candidate
+admission), `PreparedTransition` (committed unchanged inside
+verified-continuation consumption), and
+`TransitionEngine::prepare_object_admission` (used to place an unchanged,
+registered-initial-state object admission beside inseparable authority rows).
+All preserve the exact validated commit.
 
 ## Intent chain
 
@@ -62,9 +65,14 @@ consumption). Both preserve the exact validated commit.
 candidates persist as proposals whose status is **derived** (material ambiguity ⇒
 `clarification_required`); `admit_interpretation` is the only constructor of an
 admitted interpretation (authority identity + exact digest); `mint_task_contract`
-requires a decidable acceptance condition and mints under contract-epoch CAS;
-`supersede_task_contract` fences old-epoch work (`INTENT_VERSION_SUPERSEDED` at
-both mint and dispatch sinks) and classifies pending Effects for reconciliation.
+requires a decidable acceptance condition and mints under contract-epoch CAS.
+The production `mint_schedulable_task_contract` path additionally publishes the
+contract event, contract-named Loop at `START`, contract-named hard Budget, and
+current-epoch runnable scheduler row in one fenced store transaction:
+successful admission cannot expose only a subset. `supersede_task_contract`
+uses the same schedulable publication, fences old-epoch work
+(`INTENT_VERSION_SUPERSEDED` at both mint and dispatch sinks), and classifies
+pending Effects for reconciliation.
 
 ## Effects: seven properties, four sinks
 

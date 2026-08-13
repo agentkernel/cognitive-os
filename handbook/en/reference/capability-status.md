@@ -12,7 +12,8 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-fingerprint: "sha256:0cf54ee0c9cc417dc26fa4aa3ecc9e5be9d134ca1465a57dcdfe477468a39806"
+  - path: crates/cognitive-management/src/task_application.rs
+fingerprint: "sha256:bada684e5f32bcb41cd7aa867c38898959ce3b7fe505f0387014d9626c404da5"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -35,7 +36,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | process-local event source |
 | Task control/query over HTTP | unavailable | service methods exist, no route |
-| Autonomous scheduler loop | partial | one startup tick; no bootstrap row from admission |
+| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; the only production tick still runs once before admissions |
 | Governed tool execution (all six registered families) | partial | every family now has an assembled executor, so the projection reports `execution_ready`; that means this binary has a sink, not that an Agent can reach one — the sinks are still test-called only |
 | Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
 | Independent verification loop | partial | verifier seam test-called only |
