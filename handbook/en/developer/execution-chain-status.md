@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:288693d9e894b2d2dab872aed713af5949aa871fa7d532cae1a197fa1f2e2403"
+fingerprint: "sha256:5ab033d2a72d760e8927064c7cfd9083711fd4406f9b79203bf4210ea9d9ccee"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -47,7 +47,7 @@ verification → verified continuation or ceiling STOP.
 | WorkspaceWrite / WorkspacePatch mutation executor | implemented, test-called only | handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, test-called only | verifier module tests |
-| Recovery of consumed handoffs at startup | implemented | daemon startup path |
+| Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
 

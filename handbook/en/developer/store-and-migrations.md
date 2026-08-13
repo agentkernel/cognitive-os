@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:9960f42feeb23c44275b31f72ecbb9b837932f7cb4424d284b74ca6bf6058870"
+fingerprint: "sha256:cecb8ff4b439b173c3d6c16bdd09f04ae364407b4632774335e5547c4f98fdc8"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -77,4 +77,7 @@ writer-fence and contract-epoch CAS inside one immediate authority transaction,
 then inserts the TaskContract event, registered `START` Loop admission/event,
 hard Budget, and `(task_ref, contract_epoch)` runnable scheduler row. A conflict
 in any late member rolls the earlier inserts back; a crash after a successful
-commit reopens all four prerequisites.
+commit reopens all four prerequisites. Startup recovery can idempotently repair
+an older current contract missing only Loop, Budget, or scheduler work in one
+fenced transaction. Existing rows are validated and never replaced or reset;
+stale contract epochs cannot be repaired.

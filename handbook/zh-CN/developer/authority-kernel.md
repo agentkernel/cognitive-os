@@ -9,7 +9,7 @@ sources:
   - path: crates/cognitive-kernel/src/engine.rs
     symbols: ["TransitionEngine", "prepare_object_admission", "prepare_transition", "validate_registered_transition"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "supersede_task_contract", "verify_task_binding_current"]
+    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "prepare_task_execution_bootstrap", "supersede_task_contract", "verify_task_binding_current"]
   - path: crates/cognitive-kernel/src/effects.rs
     symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
   - path: crates/cognitive-kernel/src/authz.rs
@@ -27,7 +27,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:086b7f0defcc339c14dc849aa78516d525aa0f9dc978e6fd140f152ce939b508"
+fingerprint: "sha256:aad3d4ce637b7acdf656e0fe83dd4674925b6b38dc58dcef92be54c6c5b8413b"
 non_claims:
   - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
 ---
@@ -65,6 +65,8 @@ fencing epoch）。拒绝携带权威状态/版本与排序后的合法出口，
 当前 epoch 的 runnable 调度行；成功准入不可能只暴露其中一部分。
 `supersede_task_contract` 使用同一可调度发布，fence 旧 epoch 工作（在 mint 与
 dispatch 两个 sink 上 `INTENT_VERSION_SUPERSEDED`）并对在途 Effect 分类以待对账。
+启动修复对当前不可变合同调用同一纯组合 `prepare_task_execution_bootstrap`；它可恢复
+缺失前置，但不能替换既有 Loop/Budget/调度权威。
 
 ## Effect：七性质、四 sink
 

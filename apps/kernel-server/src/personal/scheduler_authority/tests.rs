@@ -40,20 +40,21 @@ use cognitive_kernel::budget::BudgetState;
 use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::intent_chain::{
-    GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
-    strong_reference_to,
+    GovernanceSeed, compose_governed_header, prepare_task_execution_bootstrap,
+    seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
     EventDraft, IntentChainStore, IntentRow, ObjectAdmission, ObjectCas,
-    OperationCandidateProposalRow, ProgressFactRow, RecordDraft, SchedulerExecutionPolicyRow,
-    SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    OperationCandidateProposalRow, ProgressFactRow, ProtocolStore, RecordDraft,
+    SchedulerExecutionPolicyRow, SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow,
+    TaskExecutionBootstrap, TransitionCommit, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
 use cognitive_store::{
-    PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
+    PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, SystemClock, UuidV7Generator,
     prepare_personal_databases,
     scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
 };
@@ -1065,6 +1066,121 @@ fn temporary_scheduler_database_path() -> std::path::PathBuf {
         "cognitiveos-scheduler-authority-{}-{unique_suffix}.db",
         std::process::id()
     ))
+}
+
+fn persist_repairable_task_contract(
+    store: &SqliteAuthorityStore,
+    base: u64,
+    task_ref: &str,
+) -> (TaskContractRow, ObjectId, BudgetId) {
+    let issued_at = WallTimestamp::parse("2026-08-13T05:00:00Z").unwrap();
+    let contract_id = object_id(base);
+    let loop_object_id = object_id(base + 1);
+    let budget_id = BudgetId::parse(&format!("00000000-0000-7000-b000-{base:012x}")).unwrap();
+    let header = compose_governed_header(
+        &contract_id,
+        "TaskContract",
+        "cognitiveos.task-contract/0.3",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-startup-repair",
+        &issued_at,
+    )
+    .unwrap();
+    let contract = TaskContract {
+        allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
+        allowed_tools: vec!["operation://personal/filesystem/read".to_owned()],
+        budget: Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: Some(1),
+            tool_calls: Some(2),
+            wall_time_ms: None,
+        },
+        budget_id: Some(budget_id.to_generated()),
+        conditions: vec![ContractCondition {
+            description: "independently verified read".to_owned(),
+            id: "accept-read".to_owned(),
+            kind: ContractConditionKind::Acceptance,
+            machine_expression: None,
+            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+        }],
+        context_request_ref: None,
+        contract_epoch: 1,
+        deadline: Some("2026-08-14T05:00:00Z".to_owned()),
+        header,
+        human_gates: None,
+        intent_acceptance_ref: strong_reference_to(
+            &object_id(base + 2),
+            &format!("sha256:{}", "a".repeat(64)),
+        ),
+        intent_interpretation_ref: strong_reference_to(
+            &object_id(base + 3),
+            &format!("sha256:{}", "b".repeat(64)),
+        ),
+        loop_object_id: Some(loop_object_id.to_generated()),
+        max_iterations: 2,
+        max_retries: 1,
+        objective: "read one governed workspace file".to_owned(),
+        scope: TaskScope {
+            in_scope: vec!["workspace read".to_owned()],
+            out_of_scope: vec!["mutation".to_owned()],
+        },
+        task_ref: task_ref.to_owned(),
+        user_intent_ref: strong_reference_to(
+            &object_id(base + 4),
+            &format!("sha256:{}", "c".repeat(64)),
+        ),
+        worker_authorization_root_id: Some(contract_id.to_generated()),
+    };
+    let (canonical_json, contract_digest) = seal_payload(serde_json::to_value(contract).unwrap());
+    let row = TaskContractRow {
+        contract_id: contract_id.clone(),
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+        user_intent_record_id: object_id(base + 4),
+        interpretation_id: object_id(base + 3),
+        accepted_by: "principal://personal/owner".to_owned(),
+        contract_digest,
+        canonical_json,
+    };
+    store
+        .insert_task_contract(
+            &row,
+            &EventDraft {
+                event_id: EventId::parse(&format!("00000000-0000-7000-a000-{base:012x}")).unwrap(),
+                object_id: contract_id,
+                domain: LifecycleDomain::Task,
+                object_version: Version::INITIAL,
+                event_type: "task-contract.minted".to_owned(),
+                canonical_json: "{\"event\":\"p2-t12-repair-contract\"}".to_owned(),
+            },
+            0,
+        )
+        .unwrap();
+    (row, loop_object_id, budget_id)
+}
+
+fn prepared_repair_bootstrap(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractRow,
+) -> TaskExecutionBootstrap {
+    prepare_task_execution_bootstrap(
+        store,
+        &SystemClock,
+        &UuidV7Generator,
+        &WriterLease {
+            epoch: store.current_fencing_epoch().unwrap(),
+        },
+        contract,
+        &UriRef::parse("correlation://personal/p2-t12-repair-test").unwrap(),
+    )
+    .unwrap()
 }
 
 fn temporary_personal_layout() -> PersonalDataLayout {
@@ -2349,6 +2465,131 @@ fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
         classify_scheduler_effect_closure("UNRECOGNIZED"),
         Err(SchedulerAuthorityError::UnsupportedEffectState(state)) if state == "UNRECOGNIZED"
     ));
+}
+
+#[test]
+fn startup_recovery_repairs_only_missing_loop_without_duplicate_scheduler_work() {
+    let database_path = temporary_scheduler_database_path();
+    let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-repair-loop";
+    let (contract, loop_object_id, budget_id) =
+        persist_repairable_task_contract(&authority_store, 1_200, task_ref);
+    let budget_state = BudgetState::new(BTreeMap::from([
+        ("semantic_calls".to_owned(), 1),
+        ("tool_calls".to_owned(), 2),
+    ]))
+    .unwrap();
+    authority_store
+        .create_budget(
+            &budget_id,
+            &serde_json::to_string(&budget_state).unwrap(),
+            &WallTimestamp::parse("2026-08-13T05:00:00Z").unwrap(),
+        )
+        .unwrap();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+    assert!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .is_none()
+    );
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    let repaired_loop = authority_store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .unwrap()
+        .expect("startup recovery must repair the missing Loop");
+    assert_eq!(repaired_loop.state.as_str(), "START");
+    assert_eq!(
+        authority_store
+            .load_budget(&budget_id)
+            .unwrap()
+            .unwrap()
+            .state,
+        budget_state
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    // Restarting recovery is idempotent: existing Budget/scheduler authority
+    // is neither reset nor duplicated.
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+    assert_eq!(
+        authority_store
+            .load_task_contract(task_ref, 1)
+            .unwrap()
+            .unwrap(),
+        contract
+    );
+
+    drop(scheduler_repository);
+    drop(authority_store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn startup_recovery_repairs_only_missing_budget_without_replacing_loop() {
+    let database_path = temporary_scheduler_database_path();
+    let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-repair-budget";
+    let (contract, loop_object_id, budget_id) =
+        persist_repairable_task_contract(&authority_store, 1_300, task_ref);
+    let bootstrap = prepared_repair_bootstrap(&authority_store, &contract);
+    authority_store
+        .admit_object(&bootstrap.loop_admission)
+        .unwrap();
+    let loop_before = authority_store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .unwrap()
+        .unwrap();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+    assert!(authority_store.load_budget(&budget_id).unwrap().is_none());
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .unwrap(),
+        loop_before,
+        "startup repair must not replace an existing Loop"
+    );
+    let repaired_budget = authority_store
+        .load_budget(&budget_id)
+        .unwrap()
+        .expect("startup recovery must repair the missing Budget");
+    assert_eq!(
+        repaired_budget.state.remaining(),
+        &BTreeMap::from([
+            ("semantic_calls".to_owned(), 1),
+            ("tool_calls".to_owned(), 2)
+        ])
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .unwrap(),
+        loop_before
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    drop(scheduler_repository);
+    drop(authority_store);
+    std::fs::remove_file(database_path).unwrap();
 }
 
 #[test]

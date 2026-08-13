@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3c066a965e9e8e7c3c0ddcf80f29fbd138dee3a4498b820557bfcec4f6ff0fc5"
+fingerprint: "sha256:3c83d3fa228e5fb62fa0b55961777d1a3c5354bd83377c4a65a168085a5f44a3"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -47,7 +47,9 @@ non_claims:
 `cognitive daemon stop` signals the recorded PID and removes `daemon.lock` plus the
 endpoint document only after the process is confirmed gone; a live-looking lock is
 never deleted. On every start the daemon re-runs migrations idempotently, recovers
-consumed worker handoffs, and republishes the endpoint atomically.
+consumed worker handoffs, repairs only missing Loop/Budget/scheduler
+prerequisites for current admitted contracts without resetting existing rows,
+and republishes the endpoint atomically.
 
 ## Database safety — `implemented`
 

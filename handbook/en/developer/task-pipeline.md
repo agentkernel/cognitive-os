@@ -19,7 +19,7 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:051a1ca544d436227c476eb596c4f5846e6b4a438a9ea9dc969c4b02d9b8fb40"
+fingerprint: "sha256:aedb5d338acec8c1a8c0ed83ebab68a3b63e2705b04a62adf5071ebade227d26"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---
@@ -47,6 +47,9 @@ The admission publication is all-or-nothing in the authority SQLite file. A
 late Loop/Budget/scheduler conflict rolls back the contract and event; a crash
 after a successful response reopens every member. It does not create the
 candidate Intent/Effect or run a Tool—the periodic worker path remains separate.
+At daemon startup, the current immutable contract can reconstruct the same
+bootstrap and idempotently restore only a missing Loop, Budget, or scheduler
+row; existing authority is never reset.
 
 Implemented-but-unexposed: `control` (supersession/cancel via
 `supersede_task_contract`) and `query_intent` exist on the service trait with full

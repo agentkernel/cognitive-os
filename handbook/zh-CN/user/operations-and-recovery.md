@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3c066a965e9e8e7c3c0ddcf80f29fbd138dee3a4498b820557bfcec4f6ff0fc5"
+fingerprint: "sha256:3c83d3fa228e5fb62fa0b55961777d1a3c5354bd83377c4a65a168085a5f44a3"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -43,7 +43,8 @@ non_claims:
 
 `cognitive daemon stop` 向记录的 PID 发信号，仅在确认进程消失后移除 `daemon.lock`
 与 endpoint 文档；看似存活的锁绝不删除。每次启动 daemon 幂等地重跑迁移、恢复已消费的
-worker 交接，并原子地重新发布 endpoint。
+worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而不重置既有行，并原子地
+重新发布 endpoint。
 
 ## 数据库安全 —— `implemented`
 

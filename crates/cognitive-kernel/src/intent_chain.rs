@@ -1107,56 +1107,14 @@ where
         canonical_json,
     };
     if bootstrap_execution {
-        let daemon_actor = UriRef::parse("principal://personal/daemon")
-            .map_err(|error| denial(format!("daemon actor reference is invalid: {error}")))?;
-        let daemon_authority = UriRef::parse("authority://personal/daemon")
-            .map_err(|error| denial(format!("daemon authority reference is invalid: {error}")))?;
-        let loop_subject = UriRef::parse(&format!("loop://{}", cmd.loop_object_id))
-            .map_err(|error| denial(format!("Loop subject reference is invalid: {error}")))?;
-        let loop_admission = TransitionEngine::new(store, clock, ids)
-            .prepare_object_admission(&AdmitCommand {
-                object_id: cmd.loop_object_id.clone(),
-                domain: LifecycleDomain::Loop,
-                subject_ref: loop_subject,
-                body: json!({
-                    "schema_version": 1,
-                    "task_ref": cmd.task_ref.as_str(),
-                    "contract_epoch": contract_epoch,
-                    "task_contract_id": cmd.contract_id.as_str(),
-                    "task_contract_digest": row.contract_digest.as_str(),
-                    "budget_id": cmd.budget_id.as_str(),
-                }),
-                actor_ref: daemon_actor,
-                authority_ref: daemon_authority,
-                correlation_id: cmd.correlation_id.clone(),
-                outbox_destinations: Vec::new(),
-                fencing_epoch: Some(lease.epoch),
-            })
-            .map_err(EffectError::Rejected)?;
-        if loop_admission.object.state.as_str() != "START" {
-            return Err(denial(format!(
-                "registered Loop initial state is {}, expected START",
-                loop_admission.object.state
-            ))
-            .into());
-        }
-        let budget_state = initial_budget_state(&cmd.budget)?;
-        let budget_state_canonical_json = canonical_text(
-            &serde_json::to_value(&budget_state)
-                .map_err(|error| denial(format!("budget serialization failed: {error}")))?,
-        )
-        .map_err(EffectError::Denied)?;
+        let bootstrap =
+            prepare_task_execution_bootstrap(store, clock, ids, lease, &row, &cmd.correlation_id)?;
         store
             .insert_task_contract_with_execution_bootstrap(
                 &row,
                 &event,
                 expected_current_epoch,
-                &TaskExecutionBootstrap {
-                    loop_admission,
-                    budget_id: cmd.budget_id.clone(),
-                    budget_state_canonical_json,
-                    budget_created_at: minted_at,
-                },
+                &bootstrap,
             )
             .map_err(store_rejection)?;
     } else {
@@ -1165,6 +1123,98 @@ where
             .map_err(store_rejection)?;
     }
     Ok(row)
+}
+
+/// Reconstruct the exact contract-named execution prerequisites used by both
+/// admission and startup repair.
+///
+/// This function prepares authority inputs only. It performs no store write,
+/// lease acquisition, worker dispatch, or Task transition.
+pub fn prepare_task_execution_bootstrap<S, C, G>(
+    store: &S,
+    clock: &C,
+    ids: &G,
+    lease: &WriterLease,
+    contract_row: &TaskContractRow,
+    correlation_id: &UriRef,
+) -> Result<TaskExecutionBootstrap, EffectError>
+where
+    S: AuthorityStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let contract: TaskContract = serde_json::from_str(&contract_row.canonical_json)
+        .map_err(|error| denial(format!("TaskContract is not execution-bound JSON: {error}")))?;
+    if contract.task_ref != contract_row.task_ref
+        || contract.contract_epoch != contract_row.contract_epoch
+        || contract.header.id.0.as_str() != contract_row.contract_id.as_str()
+    {
+        return Err(
+            denial("TaskContract row and canonical execution identity differ".to_owned()).into(),
+        );
+    }
+    let loop_object_id = contract
+        .loop_object_id
+        .as_ref()
+        .ok_or_else(|| denial("TaskContract has no Loop identity".to_owned()))
+        .and_then(|identifier| {
+            ObjectId::parse(identifier.0.as_str())
+                .map_err(|error| denial(format!("TaskContract Loop identity is invalid: {error}")))
+        })?;
+    let budget_id = contract
+        .budget_id
+        .as_ref()
+        .ok_or_else(|| denial("TaskContract has no Budget identity".to_owned()))
+        .and_then(|identifier| {
+            BudgetId::parse(identifier.0.as_str()).map_err(|error| {
+                denial(format!("TaskContract Budget identity is invalid: {error}"))
+            })
+        })?;
+    let daemon_actor = UriRef::parse("principal://personal/daemon")
+        .map_err(|error| denial(format!("daemon actor reference is invalid: {error}")))?;
+    let daemon_authority = UriRef::parse("authority://personal/daemon")
+        .map_err(|error| denial(format!("daemon authority reference is invalid: {error}")))?;
+    let loop_subject = UriRef::parse(&format!("loop://{loop_object_id}"))
+        .map_err(|error| denial(format!("Loop subject reference is invalid: {error}")))?;
+    let loop_admission = TransitionEngine::new(store, clock, ids)
+        .prepare_object_admission(&AdmitCommand {
+            object_id: loop_object_id,
+            domain: LifecycleDomain::Loop,
+            subject_ref: loop_subject,
+            body: json!({
+                "schema_version": 1,
+                "task_ref": contract_row.task_ref.as_str(),
+                "contract_epoch": contract_row.contract_epoch,
+                "task_contract_id": contract_row.contract_id.as_str(),
+                "task_contract_digest": contract_row.contract_digest.as_str(),
+                "budget_id": budget_id.as_str(),
+            }),
+            actor_ref: daemon_actor,
+            authority_ref: daemon_authority,
+            correlation_id: correlation_id.clone(),
+            outbox_destinations: Vec::new(),
+            fencing_epoch: Some(lease.epoch),
+        })
+        .map_err(EffectError::Rejected)?;
+    if loop_admission.object.state.as_str() != "START" {
+        return Err(denial(format!(
+            "registered Loop initial state is {}, expected START",
+            loop_admission.object.state
+        ))
+        .into());
+    }
+    let budget_state = initial_budget_state(&contract.budget)?;
+    let budget_state_canonical_json = canonical_text(
+        &serde_json::to_value(&budget_state)
+            .map_err(|error| denial(format!("budget serialization failed: {error}")))?,
+    )
+    .map_err(EffectError::Denied)?;
+    Ok(TaskExecutionBootstrap {
+        budget_created_at: loop_admission.admitted_at.clone(),
+        loop_admission,
+        budget_id,
+        budget_state_canonical_json,
+    })
 }
 
 fn initial_budget_state(budget: &Budget) -> Result<BudgetState, EffectError> {

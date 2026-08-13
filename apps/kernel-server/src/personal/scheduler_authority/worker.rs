@@ -33,8 +33,8 @@ use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
 use cognitive_kernel::intent_chain::{
-    GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
-    strong_reference_to,
+    GovernanceSeed, compose_governed_header, prepare_task_execution_bootstrap,
+    seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::{
     ContextCacheEntry, ContextCacheKey, ContextCacheLookup, ContextSourceDigest, DerivedCacheKind,
@@ -49,8 +49,8 @@ use cognitive_kernel::{
         ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
         ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
         SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-        WorkerIterationAuthorizationRow,
+        StorePortError, TaskBinding, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     },
     resolve_persisted_native_descriptor,
 };
@@ -317,6 +317,71 @@ pub(crate) fn reconcile_scheduler_recovery_at_startup(
     reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
 }
 
+fn repair_admitted_task_execution_bootstraps<S>(
+    authority_store: &S,
+) -> Result<(), SchedulerAuthorityError>
+where
+    S: AuthorityStore + IntentChainStore + ProtocolStore,
+{
+    let current_contracts = authority_store
+        .list_current_task_contracts()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let writer_lease = WriterLease {
+        epoch: authority_store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
+    let clock = SystemClock;
+    let identifiers = UuidV7Generator;
+    let correlation_id = UriRef::parse("correlation://personal/startup-bootstrap-repair")
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+
+    for contract in current_contracts {
+        let bootstrap = match prepare_task_execution_bootstrap(
+            authority_store,
+            &clock,
+            &identifiers,
+            &writer_lease,
+            &contract,
+            &correlation_id,
+        ) {
+            Ok(bootstrap) => bootstrap,
+            Err(error) => {
+                eprintln!(
+                    "kernel-server personal scheduler recovery: skip non-execution-bound TaskContract {} at epoch {}: {error}",
+                    contract.task_ref, contract.contract_epoch
+                );
+                continue;
+            }
+        };
+        match authority_store.repair_task_execution_bootstrap(&contract, &bootstrap) {
+            Ok(repair)
+                if repair.loop_created || repair.budget_created || repair.scheduler_created =>
+            {
+                eprintln!(
+                    "kernel-server personal scheduler recovery: repaired Task bootstrap {} at epoch {} (loop={}, budget={}, scheduler={})",
+                    contract.task_ref,
+                    contract.contract_epoch,
+                    repair.loop_created,
+                    repair.budget_created,
+                    repair.scheduler_created
+                );
+            }
+            Ok(_) => {}
+            Err(StorePortError::Conflict { detail }) => {
+                eprintln!(
+                    "kernel-server personal scheduler recovery: skip conflicting Task bootstrap {} at epoch {}: {detail}",
+                    contract.task_ref, contract.contract_epoch
+                );
+            }
+            Err(error @ StorePortError::Unavailable { .. }) => {
+                return Err(SchedulerAuthorityError::Store(error.to_string()));
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Startup recovery against an already-open daemon-owned authority store.
 ///
 /// Personal daemon startup must open the authority store once and reuse that
@@ -334,6 +399,7 @@ where
         + WorkerAuthorizationStore
         + ContinuationAuthorityStore,
 {
+    repair_admitted_task_execution_bootstraps(authority_store)?;
     reconcile_recovered_worker_attempts(
         authority_store,
         scheduler_repository,

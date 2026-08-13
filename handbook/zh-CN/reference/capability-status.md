@@ -36,7 +36,7 @@ non_claims:
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | 进程本地事件源 |
 | HTTP 上的 Task control/query | unavailable | 服务方法存在、无路由 |
-| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；唯一生产 tick 仍只在准入前运行一次 |
+| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动会修复缺失引导成员，但唯一生产 tick 仍只在准入前运行一次 |
 | 受治理工具执行（全部六个已登记族） | partial | 六族现在都有已装配 executor，投影因此报告 `execution_ready`；这只表示本二进制含有 sink，不表示 Agent 能到达它——sink 仍仅测试调用 |
 | workspace search/write/patch 执行器 | partial | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界枚举/preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；无生产调用者 |
 | 独立验证循环 | partial | verifier 接缝仅测试调用 |

@@ -370,3 +370,133 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 14:02 +08:00
 - Result: **pass**; no diagnostics reported across all edited Rust files.
+
+### Unit 044 — exact native D01 admission suite
+
+- Finished: 2026-08-13 13:37 +08:00
+- Environment: `DEV-LINUX-NATIVE-01`
+- Exact pushed revision: `f8494c878e06920f7c9ffbc37b5dc05a577cadc4`
+- Command: `cargo test -p cognitive-runtime --locked --test
+  p2_t01_task_application_service`
+- Result: **pass**; 8 passed, 0 failed.
+- Covered: original raw-intent/preview/epoch/fencing behavior plus unadmitted
+  absence, crash-reopen complete publication, duplicate admission, and late
+  member rollback. The unchanged failure-first test that failed at
+  `280cf2619470675a92880807f114f505eebb328e` now passes.
+
+### Unit 045 — D01 native clone cleanup
+
+- Finished: 2026-08-13 13:39 +08:00
+- Result: **pass**; removed only `/home/wuz/cos-p2t12-f8494c8` and verified it
+  is absent.
+
+### Unit 046 — D01 startup bootstrap repair
+
+- Finished: 2026-08-13 14:18 +08:00
+- Result: **implemented; validation pending**
+- Change: startup recovery enumerates only each Task's current immutable
+  contract, reconstructs the same registered Loop/Budget bootstrap used at
+  admission, and idempotently inserts only missing Loop, Budget, or scheduler
+  authority in one fenced transaction. Existing rows are validated but never
+  reset or replaced; stale contract epochs cannot be repaired. Malformed
+  per-task contracts are isolated, while store unavailability remains fatal.
+
+### Unit 047 — D01 startup repair negatives
+
+- Finished: 2026-08-13 14:20 +08:00
+- Result: **tests authored; execution pending**
+- Coverage:
+  - missing Loop is repaired while existing Budget and scheduler work remain
+    unchanged;
+  - missing Budget is repaired while the existing Loop remains byte-for-byte
+    unchanged;
+  - a second startup recovery is idempotent and creates no duplicate scheduler
+    row.
+
+### Unit 048 — startup-repair formatting check
+
+- Finished: 2026-08-13 14:22 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **fail**; rustfmt requested mechanical import, call-layout, and
+  assertion wrapping only.
+- Recovery: apply rustfmt and rerun.
+
+### Unit 049 — startup-repair whitespace check
+
+- Finished: 2026-08-13 14:22 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 050 — startup-repair diagnostics
+
+- Finished: 2026-08-13 14:22 +08:00
+- Result: **pass**; no diagnostics reported for the five edited repair files.
+
+### Unit 051 — startup-repair rustfmt
+
+- Finished: 2026-08-13 14:23 +08:00
+- Command: `cargo fmt --all`
+- Result: **fixed**; only rustfmt's requested mechanical layout changed.
+
+### Unit 052 — startup-repair bilingual handbook sync
+
+- Finished: 2026-08-13 14:27 +08:00
+- Result: **authored; fingerprint validation pending**
+- Change: both locales now state that startup repair reconstructs the same
+  contract-named bootstrap, inserts only missing current-epoch members, never
+  resets existing authority, and does not close the periodic-tick or verifier
+  gaps.
+
+### Unit 053 — startup-repair fingerprint refresh
+
+- Finished: 2026-08-13 14:28 +08:00
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass**; 12 bilingual pages received current source fingerprints.
+
+### Unit 054 — startup-repair formatting gate
+
+- Finished: 2026-08-13 14:30 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**
+
+### Unit 055 — startup-repair handbook gate
+
+- Finished: 2026-08-13 14:30 +08:00
+- Command: `pnpm run check:handbook`
+- Result: **pass**; 54 documents × 2 locales and all handbook integrity checks.
+
+### Unit 056 — startup-repair generated-page gate
+
+- Finished: 2026-08-13 14:30 +08:00
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass**; 18 pages byte-identical.
+
+### Unit 057 — startup-repair consistency gate
+
+- Finished: 2026-08-13 14:30 +08:00
+- Command: `pnpm run check:consistency`
+- Result: **pass**
+
+### Unit 058 — startup-repair whitespace gate
+
+- Finished: 2026-08-13 14:30 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 059 — startup-repair edited-file diagnostics
+
+- Finished: 2026-08-13 14:30 +08:00
+- Result: **pass**; no diagnostics reported.
+
+### Unit 060 — startup-repair staged docs-sync gate
+
+- Finished: 2026-08-13 14:32 +08:00
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **pass**; scheduler-execution, kernel-authority, store, and handbook
+  routes resolved through the full bilingual checks. No escape used.
+
+### Unit 061 — startup-repair staged whitespace
+
+- Finished: 2026-08-13 14:32 +08:00
+- Command: `git diff --cached --check`
+- Result: **pass**

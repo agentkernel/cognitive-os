@@ -36,7 +36,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | process-local event source |
 | Task control/query over HTTP | unavailable | service methods exist, no route |
-| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; the only production tick still runs once before admissions |
+| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing bootstrap members, but the only production tick still runs once before admissions |
 | Governed tool execution (all six registered families) | partial | every family now has an assembled executor, so the projection reports `execution_ready`; that means this binary has a sink, not that an Agent can reach one — the sinks are still test-called only |
 | Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
 | Independent verification loop | partial | verifier seam test-called only |

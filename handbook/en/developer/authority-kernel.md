@@ -9,7 +9,7 @@ sources:
   - path: crates/cognitive-kernel/src/engine.rs
     symbols: ["TransitionEngine", "prepare_object_admission", "prepare_transition", "validate_registered_transition"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "supersede_task_contract", "verify_task_binding_current"]
+    symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "prepare_task_execution_bootstrap", "supersede_task_contract", "verify_task_binding_current"]
   - path: crates/cognitive-kernel/src/effects.rs
     symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
   - path: crates/cognitive-kernel/src/authz.rs
@@ -27,7 +27,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:086b7f0defcc339c14dc849aa78516d525aa0f9dc978e6fd140f152ce939b508"
+fingerprint: "sha256:aad3d4ce637b7acdf656e0fe83dd4674925b6b38dc58dcef92be54c6c5b8413b"
 non_claims:
   - Kernel correctness evidence is focused-test evidence; it is not a Gate, release, or Profile result.
 ---
@@ -72,7 +72,10 @@ current-epoch runnable scheduler row in one fenced store transaction:
 successful admission cannot expose only a subset. `supersede_task_contract`
 uses the same schedulable publication, fences old-epoch work
 (`INTENT_VERSION_SUPERSEDED` at both mint and dispatch sinks), and classifies
-pending Effects for reconciliation.
+pending Effects for reconciliation. Startup repair calls the same pure
+`prepare_task_execution_bootstrap` composition for the current immutable
+contract; it can restore missing prerequisites but cannot replace existing
+Loop/Budget/scheduler authority.
 
 ## Effects: seven properties, four sinks
 

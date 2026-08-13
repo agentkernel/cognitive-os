@@ -19,7 +19,7 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:051a1ca544d436227c476eb596c4f5846e6b4a438a9ea9dc969c4b02d9b8fb40"
+fingerprint: "sha256:aedb5d338acec8c1a8c0ed83ebab68a3b63e2705b04a62adf5071ebade227d26"
 non_claims:
   - 准入不会启动自主执行；该缺口记录于执行链状态页。
 ---
@@ -45,6 +45,8 @@ chain → SQLite，线上使用生成的 request/result DTO。
 准入发布在 authority SQLite 文件内全有或全无。靠后的 Loop/Budget/调度冲突会回滚合同
 与事件；成功响应后崩溃重开会看到全部成员。它不创建 candidate Intent/Effect，也不运行
 Tool——周期 worker 路径仍是独立接线。
+daemon 启动时可从当前不可变合同重构同一引导，并幂等恢复所缺 Loop、Budget 或调度行；
+既有权威绝不重置。
 
 已实现未暴露：`control`（经 `supersede_task_contract` 的更正/取消）与
 `query_intent` 存在于服务 trait 且测试完整，但 Personal HTTP 尚无路由调用。因此经
