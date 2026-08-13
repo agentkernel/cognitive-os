@@ -832,3 +832,46 @@ Windows GNU linker host.
   documented D02 row-isolation behavior; production code and handbook guidance
   are unchanged."`
 - Staged whitespace also passed.
+
+### Unit 102 — reconciled D02 exact Git bundle
+
+- Finished: 2026-08-13 14:50 +08:00
+- Result: **pass**; ignored bundle verified with exact tip
+  `01ef6c831186a0c815a06f498f2bf348508a25a9` and prerequisite
+  `f7ae87c932622c57d478b54e2753acb8f5f46227`.
+
+### Unit 103 — reconciled D02 exact native suite
+
+- Finished: 2026-08-13 14:50 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `01ef6c831186a0c815a06f498f2bf348508a25a9`
+- Results:
+  - scheduler-authority suite **43/43 pass** with one test thread;
+  - `kernel-server` all-target Clippy with `-D warnings`: **pass**.
+- Covered: zero-Intent candidate admission, same-pass WIA non-consumption,
+  per-row failure isolation, and the reconciled unreadable-contract negative.
+
+### Unit 104 — current D02 required CI observation
+
+- Checked: 2026-08-13 14:54 +08:00
+- Exact revision/run:
+  `01ef6c831186a0c815a06f498f2bf348508a25a9` / `31675250046`
+- Result: Ubuntu **pass** (job `94368307611`); Windows remains
+  **in progress** (job `94368307608`).
+- Boundary: the unfinished Windows job is not inferred as pass. D03 may proceed
+  while it runs; final P2-T12 acceptance still requires its actual result.
+
+### Unit 105 — owner-directed quiet-session takeover
+
+- Finished: 2026-08-13 14:54 +08:00
+- Result: **pass**; one bounded check found the expected report-only worktree
+  change, no Git index lock, synchronized branch/upstream, and all prior
+  task-owned remote commands terminated.
+- Coordination: retained the single existing
+  `lease/personal/P2-T12/worker-loop-production-chain`; its owner label already
+  identifies this Cursor/model/date session, so no duplicate lease or
+  ownership-only rewrite was needed.
+- Acceptance map: D01 atomic admission publication/startup repair is complete;
+  D02 zero-Intent admission and row isolation is implemented and exact-native
+  clean with Windows CI still running. The unique next unimplemented item is
+  D03's bounded, non-reentrant, cancellable production periodic tick.
