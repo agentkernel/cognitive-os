@@ -1154,3 +1154,48 @@
   and generated 18/18 checks pass.
 - Disposition: implementation and bilingual/generated documentation can be
   committed for exact-revision native validation.
+
+### D04-NATIVE-01 — first lifecycle implementation run
+
+- Instrument: full `p4_t05_resource_api` integration then targeted Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `d7871ddbc601f6b9e02cc488c84fd5b553543777`.
+- Started/retained: integration 1/1；Clippy `not-run` because the first unit did
+  not terminate normally.
+- Outcome: `partial`；the Memory source+candidate remember, review and forget
+  assertions all passed. Its restart subprocess then correctly refused the
+  stale `daemon.lock` left by test SIGKILL, while the client helper waited for a
+  listener that would never exist. The test process was terminated after
+  diagnosis；no installed daemon was touched.
+- Disposition: this is a test process-manager cleanup issue, not a Memory
+  lifecycle failure. After stopping a test daemon, remove only that test root's
+  stale lock before restart；RAII still cleans every assertion failure.
+
+### D04-FMT-07 — restart cleanup formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted test repair over `d7871ddb`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test-only restart cleanup is formatted.
+
+### D04-DIFF-04 — restart cleanup whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted test repair over `d7871ddb`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair and report have no whitespace defects.
+
+### D04-DOCSYNC-03 — staged restart cleanup gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged test repair over `d7871ddb`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Test-only daemon lock cleanup makes restart assertions terminate without changing shipped behavior"`
+  must remain in the commit record.

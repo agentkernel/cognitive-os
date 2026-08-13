@@ -75,6 +75,12 @@ fn spawn_personal(port: u16, runtime_root: &std::path::Path) -> PersonalProcess 
     )
 }
 
+fn stop_for_restart(process: &mut PersonalProcess, runtime_root: &std::path::Path) {
+    process.kill().unwrap();
+    process.wait().unwrap();
+    let _ = std::fs::remove_file(runtime_root.join("cognitiveos").join("daemon.lock"));
+}
+
 fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
     let path = runtime_root
         .join("cognitiveos")
@@ -460,8 +466,7 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
     assert!(forget.contains("HTTP/1.1 201 "), "{forget}");
     assert_eq!(response_json(&forget)["status"], "forgotten");
 
-    daemon.kill().unwrap();
-    daemon.wait().unwrap();
+    stop_for_restart(&mut daemon, &runtime_root);
     let restarted_port = free_port();
     let mut restarted = spawn_personal(restarted_port, &runtime_root);
     let restarted_secret = bootstrap_secret(&runtime_root);
@@ -607,8 +612,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
         "owner revoked lifecycle binding"
     );
 
-    daemon.kill().unwrap();
-    daemon.wait().unwrap();
+    stop_for_restart(&mut daemon, &runtime_root);
     let restarted_port = free_port();
     let mut restarted = spawn_personal(restarted_port, &runtime_root);
     let restarted_secret = bootstrap_secret(&runtime_root);
