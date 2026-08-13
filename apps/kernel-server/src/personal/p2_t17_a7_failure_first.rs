@@ -6,7 +6,8 @@
 use super::campaign_observation::{
     CampaignAuthorization, CampaignExternalStateFixture, CampaignFaultPoint,
     CampaignMutationObservationService, CampaignMutationRequest, CampaignObservationError,
-    CampaignOutcomeClass, FixtureBounds, FixtureQueryFault, PreparedCampaignMutation,
+    CampaignOutcomeClass, FixtureBounds, FixtureMutationFault, FixtureQueryFault,
+    PreparedCampaignMutation,
 };
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -97,6 +98,7 @@ fn mutation_success_before_receipt_persistence_reconciles_once_after_restart() {
         CampaignObservationError::InjectedCrash(CampaignFaultPoint::MutationAfterReceiptBefore)
     );
     assert_eq!(fixture.mutation_count().unwrap(), 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 1);
     drop(service);
 
     let restarted = CampaignMutationObservationService::open(
@@ -117,6 +119,7 @@ fn mutation_success_before_receipt_persistence_reconciles_once_after_restart() {
     assert_eq!(observation.idempotency_key_digest, original_key_digest);
     assert_eq!(observation.mutation_count, 1);
     assert_eq!(fixture.mutation_count().unwrap(), 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 1);
     assert_eq!(fixture.query_count().unwrap(), 1);
     assert_eq!(
         fixture.last_query_key_digest().unwrap(),
@@ -124,6 +127,70 @@ fn mutation_success_before_receipt_persistence_reconciles_once_after_restart() {
     );
     assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
     assert_eq!(observation.effect_ref, prepared.effect_ref);
+    assert!(observation.verification_report_ref.is_some());
+    assert_eq!(observation.acceptance_ref, None);
+
+    fixture.cleanup().unwrap();
+    assert!(!fixture_root.exists());
+    cleanup_tree(&root);
+}
+
+#[test]
+fn lost_mutation_response_reconciles_by_original_key_without_redispatch() {
+    let root = unique_test_root("lost-response");
+    let fixture_root = root.join("fixture");
+    let authority_root = root.join("authority");
+    let fixture = open_fixture(&fixture_root);
+    let authorization =
+        CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-020").unwrap();
+    let service = CampaignMutationObservationService::open(
+        &authority_root,
+        fixture.endpoint(),
+        authorization.clone(),
+        16,
+    )
+    .unwrap();
+    let prepared = persist_increment(&service, "a7-020", 20);
+    let original_key_digest = prepared.idempotency_key_digest.clone();
+    fixture
+        .set_mutation_fault(FixtureMutationFault::DropResponseAfterCommit)
+        .unwrap();
+
+    assert_eq!(
+        service
+            .dispatch_without_fault(&prepared.run_ref, 20)
+            .unwrap_err(),
+        CampaignObservationError::Indeterminate
+    );
+    assert_eq!(fixture.mutation_count().unwrap(), 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 1);
+    drop(service);
+
+    let restarted = CampaignMutationObservationService::open(
+        &authority_root,
+        fixture.endpoint(),
+        authorization,
+        16,
+    )
+    .unwrap();
+    let observation = restarted
+        .reconcile_after_restart(&prepared.run_ref, 20)
+        .unwrap();
+
+    assert_eq!(
+        observation.outcome_class,
+        CampaignOutcomeClass::ReconciledExecuted
+    );
+    assert_eq!(observation.idempotency_key_digest, original_key_digest);
+    assert_eq!(observation.mutation_count, 1);
+    assert_eq!(fixture.mutation_count().unwrap(), 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 1);
+    assert_eq!(fixture.query_count().unwrap(), 1);
+    assert_eq!(
+        fixture.last_query_key_digest().unwrap(),
+        Some(original_key_digest)
+    );
+    assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
     assert!(observation.verification_report_ref.is_some());
     assert_eq!(observation.acceptance_ref, None);
 
@@ -156,12 +223,14 @@ fn restart_replays_only_the_original_key_and_keeps_mutation_count_one() {
         .reconcile_after_restart(&prepared.run_ref, 12)
         .unwrap();
     assert_eq!(observation.mutation_count, 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 1);
     assert_eq!(
         fixture.replay_first_recorded_key().unwrap(),
         200,
         "原键重放必须幂等命中已有记录"
     );
     assert_eq!(fixture.mutation_count().unwrap(), 1);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 2);
     assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
     assert_eq!(observation.acceptance_ref, None);
     fixture.cleanup().unwrap();
@@ -208,6 +277,73 @@ fn duplicate_dispatch_does_not_mutate_twice() {
 }
 
 #[test]
+fn post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance() {
+    for (case_ref, case_suffix, fault, expected_queries) in [
+        (
+            "A7-021",
+            "a7-021",
+            CampaignFaultPoint::ReceiptAfterEffectCloseBefore,
+            1,
+        ),
+        (
+            "A7-022",
+            "a7-022",
+            CampaignFaultPoint::VerificationBefore,
+            2,
+        ),
+    ] {
+        let root = unique_test_root(case_suffix);
+        let fixture = open_fixture(&root.join("fixture"));
+        let authority_root = root.join("authority");
+        let authorization =
+            CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", case_ref).unwrap();
+        let service = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization.clone(),
+            17,
+        )
+        .unwrap();
+        let prepared = persist_increment(&service, case_suffix, 21);
+
+        assert_eq!(
+            service.dispatch(&prepared.run_ref, fault, 21).unwrap_err(),
+            CampaignObservationError::InjectedCrash(fault)
+        );
+        let pending = service.observation(&prepared.run_ref).unwrap();
+        assert_eq!(pending.verification_report_ref, None);
+        assert_eq!(pending.acceptance_ref, None);
+        assert_eq!(fixture.mutation_count().unwrap(), 1);
+        assert_eq!(fixture.mutation_request_count().unwrap(), 1);
+        drop(service);
+
+        let restarted = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization,
+            17,
+        )
+        .unwrap();
+        let observation = restarted
+            .reconcile_after_restart(&prepared.run_ref, 21)
+            .unwrap();
+        assert_eq!(
+            observation.outcome_class,
+            CampaignOutcomeClass::ReconciledExecuted
+        );
+        assert_eq!(observation.mutation_count, 1);
+        assert_eq!(fixture.mutation_count().unwrap(), 1);
+        assert_eq!(fixture.mutation_request_count().unwrap(), 1);
+        assert_eq!(fixture.query_count().unwrap(), expected_queries);
+        assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
+        assert!(observation.verification_report_ref.is_some());
+        assert_eq!(observation.acceptance_ref, None);
+        fixture.cleanup().unwrap();
+        cleanup_tree(&root);
+    }
+}
+
+#[test]
 fn crash_before_dispatch_leaves_fixture_untouched_and_restart_indeterminate() {
     let root = unique_test_root("dispatch-before");
     let fixture = open_fixture(&root.join("fixture"));
@@ -229,6 +365,7 @@ fn crash_before_dispatch_leaves_fixture_untouched_and_restart_indeterminate() {
         CampaignObservationError::InjectedCrash(CampaignFaultPoint::DispatchBefore)
     );
     assert_eq!(fixture.mutation_count().unwrap(), 0);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 0);
     drop(service);
     let restarted = CampaignMutationObservationService::open(
         &root.join("authority"),
@@ -245,6 +382,8 @@ fn crash_before_dispatch_leaves_fixture_untouched_and_restart_indeterminate() {
         CampaignOutcomeClass::Indeterminate
     );
     assert_eq!(fixture.mutation_count().unwrap(), 0);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 0);
+    assert_eq!(fixture.query_count().unwrap(), 0);
     assert_eq!(observation.acceptance_ref, None);
     fixture.cleanup().unwrap();
     cleanup_tree(&root);
@@ -326,46 +465,53 @@ fn stale_lease_and_unauthorized_fault_fail_before_external_mutation() {
 
 #[test]
 fn ambiguous_and_timeout_queries_remain_indeterminate() {
-    let root = unique_test_root("indeterminate-query");
-    let fixture = open_fixture(&root.join("fixture"));
-    let authorization =
-        CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-017").unwrap();
-    let service = CampaignMutationObservationService::open(
-        &root.join("authority"),
-        fixture.endpoint(),
-        authorization.clone(),
-        13,
-    )
-    .unwrap();
-    let prepared = persist_increment(&service, "a7-017", 17);
-    service
-        .dispatch(
-            &prepared.run_ref,
-            CampaignFaultPoint::MutationAfterReceiptBefore,
-            17,
+    for (case_ref, case_suffix, query_fault) in [
+        ("A7-023", "ambiguous-query", FixtureQueryFault::Ambiguous),
+        ("A7-024", "timeout-query", FixtureQueryFault::Timeout),
+    ] {
+        let root = unique_test_root(case_suffix);
+        let fixture = open_fixture(&root.join("fixture"));
+        let authorization =
+            CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", case_ref).unwrap();
+        let service = CampaignMutationObservationService::open(
+            &root.join("authority"),
+            fixture.endpoint(),
+            authorization.clone(),
+            18,
         )
-        .unwrap_err();
-    drop(service);
-    fixture
-        .set_query_fault(FixtureQueryFault::Ambiguous)
         .unwrap();
-    let restarted = CampaignMutationObservationService::open(
-        &root.join("authority"),
-        fixture.endpoint(),
-        authorization,
-        13,
-    )
-    .unwrap();
-    let observation = restarted
-        .reconcile_after_restart(&prepared.run_ref, 17)
+        let prepared = persist_increment(&service, case_suffix, 22);
+        service
+            .dispatch(
+                &prepared.run_ref,
+                CampaignFaultPoint::MutationAfterReceiptBefore,
+                22,
+            )
+            .unwrap_err();
+        drop(service);
+        fixture.set_query_fault(query_fault).unwrap();
+        let restarted = CampaignMutationObservationService::open(
+            &root.join("authority"),
+            fixture.endpoint(),
+            authorization,
+            18,
+        )
         .unwrap();
-    assert_eq!(
-        observation.outcome_class,
-        CampaignOutcomeClass::Indeterminate
-    );
-    assert_eq!(observation.acceptance_ref, None);
-    fixture.cleanup().unwrap();
-    cleanup_tree(&root);
+        let observation = restarted
+            .reconcile_after_restart(&prepared.run_ref, 22)
+            .unwrap();
+        assert_eq!(
+            observation.outcome_class,
+            CampaignOutcomeClass::Indeterminate
+        );
+        assert_eq!(fixture.mutation_count().unwrap(), 1);
+        assert_eq!(fixture.mutation_request_count().unwrap(), 1);
+        assert_eq!(fixture.query_count().unwrap(), 1);
+        assert_eq!(observation.verification_report_ref, None);
+        assert_eq!(observation.acceptance_ref, None);
+        fixture.cleanup().unwrap();
+        cleanup_tree(&root);
+    }
 }
 
 #[test]
@@ -422,6 +568,125 @@ fn tampered_post_state_digest_is_receipt_mismatch() {
             .unwrap_err(),
         CampaignObservationError::ReceiptMismatch
     );
+    let observation = restarted.observation(&prepared.run_ref).unwrap();
+    assert_eq!(observation.verification_report_ref, None);
+    assert_eq!(observation.acceptance_ref, None);
+    fixture.cleanup().unwrap();
+    cleanup_tree(&root);
+}
+
+#[test]
+fn tampered_receipt_reference_is_rejected_before_verification() {
+    let root = unique_test_root("receipt-reference-mismatch");
+    let fixture = open_fixture(&root.join("fixture"));
+    let authorization =
+        CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-025").unwrap();
+    let service = CampaignMutationObservationService::open(
+        &root.join("authority"),
+        fixture.endpoint(),
+        authorization.clone(),
+        19,
+    )
+    .unwrap();
+    let prepared = persist_increment(&service, "a7-025", 23);
+    service
+        .dispatch(
+            &prepared.run_ref,
+            CampaignFaultPoint::MutationAfterReceiptBefore,
+            23,
+        )
+        .unwrap_err();
+    drop(service);
+    fixture
+        .set_query_fault(FixtureQueryFault::TamperedReceiptRef)
+        .unwrap();
+    let restarted = CampaignMutationObservationService::open(
+        &root.join("authority"),
+        fixture.endpoint(),
+        authorization,
+        19,
+    )
+    .unwrap();
+
+    assert_eq!(
+        restarted
+            .reconcile_after_restart(&prepared.run_ref, 23)
+            .unwrap_err(),
+        CampaignObservationError::ReceiptMismatch
+    );
+    let observation = restarted.observation(&prepared.run_ref).unwrap();
+    assert_eq!(observation.verification_report_ref, None);
+    assert_eq!(observation.acceptance_ref, None);
+    fixture.cleanup().unwrap();
+    cleanup_tree(&root);
+}
+
+#[test]
+fn duplicate_mutation_count_is_rejected_before_verification() {
+    let root = unique_test_root("duplicate-mutation-count");
+    let fixture = open_fixture(&root.join("fixture"));
+    let authorization =
+        CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-026").unwrap();
+    let service = CampaignMutationObservationService::open(
+        &root.join("authority"),
+        fixture.endpoint(),
+        authorization.clone(),
+        20,
+    )
+    .unwrap();
+    let prepared = persist_increment(&service, "a7-026", 24);
+    service
+        .dispatch(
+            &prepared.run_ref,
+            CampaignFaultPoint::MutationAfterReceiptBefore,
+            24,
+        )
+        .unwrap_err();
+    drop(service);
+    fixture
+        .set_query_fault(FixtureQueryFault::DuplicateMutationCount)
+        .unwrap();
+    let restarted = CampaignMutationObservationService::open(
+        &root.join("authority"),
+        fixture.endpoint(),
+        authorization,
+        20,
+    )
+    .unwrap();
+
+    assert_eq!(
+        restarted
+            .reconcile_after_restart(&prepared.run_ref, 24)
+            .unwrap_err(),
+        CampaignObservationError::DuplicateMutation
+    );
+    let observation = restarted.observation(&prepared.run_ref).unwrap();
+    assert_eq!(observation.verification_report_ref, None);
+    assert_eq!(observation.acceptance_ref, None);
+    fixture.cleanup().unwrap();
+    cleanup_tree(&root);
+}
+
+#[test]
+fn stale_writer_epoch_cannot_reopen_authority_or_mutate_fixture() {
+    let root = unique_test_root("stale-writer-epoch");
+    let fixture = open_fixture(&root.join("fixture"));
+    let authority_root = root.join("authority");
+    let current = open_service(&authority_root, &fixture, "A7-027", 21);
+    drop(current);
+
+    assert_eq!(
+        CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-027").unwrap(),
+            20,
+        )
+        .unwrap_err(),
+        CampaignObservationError::StaleEpoch
+    );
+    assert_eq!(fixture.mutation_count().unwrap(), 0);
+    assert_eq!(fixture.mutation_request_count().unwrap(), 0);
     fixture.cleanup().unwrap();
     cleanup_tree(&root);
 }

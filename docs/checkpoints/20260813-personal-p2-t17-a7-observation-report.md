@@ -352,4 +352,54 @@
 - Measurement: the four-path checkpoint contains the conditional import, incremental report, and bilingual fingerprint refresh; the hook revalidated handbook 54 × 2 and 18 generated pages
 - Safety: no force, amend, unrelated path, or root-worktree change
 
+### V034 — Windows compile correction remote visibility
+
+- Instrument: `git push`; local/upstream/`git ls-remote` hash comparison
+- Exact revision: `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: GitHub Draft PR #212
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: local HEAD, remote-tracking ref, and advertised remote branch all equal the exact checkpoint revision
+- Safety: ordinary fast-forward push only; no force or history rewrite
+
+### V035 — expanded failure-first matrix formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: uncommitted failure-first expansion over `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted command)
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the response-loss, post-dispatch fault, timeout, receipt-tamper, duplicate-count, stale-epoch, no-redispatch, and absent-acceptance assertions are rustfmt-clean
+- Safety: no production implementation for the newly named fixture fault/counters exists yet; no local Rust linking ran
+
+### V036 — expanded failure-first matrix whitespace check
+
+- Instrument: `git diff --check`
+- Exact revision: uncommitted failure-first expansion over `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: no whitespace errors
+- Safety: no fixture process or external mutation started
+
+### V037 — failure-first source fingerprint check
+
+- Instrument: `node tools/src/fill-handbook-fingerprints.mjs`
+- Exact revision: uncommitted failure-first expansion over `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `2 / 2` mapped locale pages
+- Outcome: `pass`
+- Measurement: both recorded fingerprints were already current; the filler changed zero pages
+- Safety: no handbook prose or generated page was edited
+
+### V038 — expanded failure-first staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged failure-first expansion over `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the test source routed to `dev.execution-chain-status`; the gate accepted the explicit missing-behavior checkpoint reason, verified handbook 54 × 2, and verified 18 generated pages byte-identical
+- Safety: the checkpoint contains assertions and evidence only; production behavior remains intentionally absent
+
 <!-- Append each completed validation unit below before starting the next one. -->
