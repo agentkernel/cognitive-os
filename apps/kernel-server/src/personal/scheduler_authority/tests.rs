@@ -576,7 +576,7 @@ fn admitted_task_context_consumes_authorized_memory_and_exact_skill_pin() {
     layout.ensure_directories().unwrap();
     prepare_personal_databases(&layout).unwrap();
     let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
-    let task_ref = "task://tenant-a/p2-t16-governed-memory-skill";
+    let task_ref = "task://tenant-a/p2-t19-governed-memory-skill";
     let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
     assert_eq!(store.current_contract_epoch(task_ref).unwrap(), 1);
 
@@ -592,7 +592,7 @@ fn admitted_task_context_consumes_authorized_memory_and_exact_skill_pin() {
         &context_governance(),
         Vec::new(),
         Vec::new(),
-        "p2-t16-failure-first-memory",
+        "p2-t19-failure-first-memory",
         &WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap(),
     )
     .unwrap();
@@ -648,8 +648,8 @@ fn admitted_task_context_consumes_authorized_memory_and_exact_skill_pin() {
             &SkillPackageRow {
                 package_id: package_id.clone(),
                 workspace_scope: context_command.resource_scope_prefix.clone(),
-                local_source_path: "skills/p2-t16/SKILL.md".to_owned(),
-                provenance_ref: "file://workspace/skills/p2-t16/SKILL.md".to_owned(),
+                local_source_path: "skills/p2-t19/SKILL.md".to_owned(),
+                provenance_ref: "file://workspace/skills/p2-t19/SKILL.md".to_owned(),
                 manifest_digest: manifest_digest.clone(),
                 canonical_json: json!({
                     "manifest_digest": manifest_digest,

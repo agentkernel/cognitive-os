@@ -1,9 +1,10 @@
-# P2-T16 Memory/Skill Agent consumer — running validation report
+# P2-T19 Memory/Skill Agent consumer — running validation report
 
-- Task: `P2-T16`
-- Branch: `personal/P2-T16-memory-skill-consumer`
-- Base: unmerged P2-T13 head `b514d278ef4a3daafe9cceeb62ced2dc649d186b`
-- Lease: `lease/personal/P2-T16/memory-skill-agent-consumer`
+- Task: `P2-T19`
+- Branch: `personal/P2-T19-memory-skill-consumer`
+- Base: P2-T13 head `b514d278ef4a3daafe9cceeb62ced2dc649d186b`; PR #210 was
+  unmerged when the sibling worktree was created and merged afterward
+- Lease: `lease/personal/P2-T19/memory-skill-agent-consumer`
 - Change class: `implementation-only` unless an explicit public contract change
   is later required
 - Claim ceiling: implementation evidence only; no Gate, release, Profile, B08,
@@ -65,7 +66,7 @@
 - Environment: `DEV-WIN-GNU-01`
 - Revision: uncommitted D01 worktree based on `b514d278ef4a3daafe9cceeb62ced2dc649d186b`
 - Started/retained: 1/1
-- Outcome: `fail`；检查器执行并报告 10 项任务登记问题：全局汇总未增加 P2-T16、
+- Outcome: `fail`；检查器执行并报告 10 项任务登记问题：当时的 P2-T16 全局汇总未更新、
   `PROGRESS.md` 未登记 D01–D05 状态、lease 日期格式不合约定，并因该格式误判 lease
   非 active/current。
 - Disposition: 均为本任务可修复的登记缺口；在下一验证单元前修复并重跑，不弱化检查器。
@@ -110,3 +111,52 @@
   诚实声明本 checkpoint 尚无已交付行为。双语 handbook 54×2 检查与 18 个生成页
   byte gate 同时通过。
 - Disposition: 该理由必须进入 commit/PR；实现行为落地时必须真正同步双语页面与指纹。
+
+### D01-ID-01 — concurrent task-id collision supersession
+
+- Observation revision: pushed checkpoint
+  `9ead35a30f6fa491d1f164250f601e85b7b11b59`
+- Outcome: `partial`；该 checkpoint 诚实记录了当时无冲突的 P2-T16 allocation，但在
+  Draft PR 创建前发现并行 sibling branches 已登记 P2-T16、P2-T17 与 P2-T18。
+- Superseding disposition: 不改写已推送历史；当前任务、lease、branch、slice 与本报告
+  统一改为下一非冲突 ID `P2-T19`。旧 P2-T16 branch 不用于 PR 或后续实现。
+
+### D01-CONSISTENCY-05 — consistency after P2-T19 supersession
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted P2-T19 supersession over
+  `9ead35a30f6fa491d1f164250f601e85b7b11b59`
+- Started/retained: 1/1
+- Outcome: `pass`；275 requirements、55 errors、74 schemas、89 vectors，以及
+  task/slice/lease/current-snapshot 关系全部通过。
+- Disposition: P2-T19 是当前唯一操作 ID；继续使用同一 failure-first 行为测试。
+
+### D01-FMT-02 — formatting after P2-T19 supersession
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted P2-T19 supersession over
+  `9ead35a30f6fa491d1f164250f601e85b7b11b59`
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 格式通过，不替代 Rust build/test。
+
+### D01-DIFF-03 — P2-T19 supersession patch whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted P2-T19 supersession over
+  `9ead35a30f6fa491d1f164250f601e85b7b11b59`
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 重编号补丁没有 Git 空白错误。
+
+### D01-DOCSYNC-02 — P2-T19 supersession staged gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged P2-T19 supersession over
+  `9ead35a30f6fa491d1f164250f601e85b7b11b59`
+- Outcome: `pass`；双语 handbook 54×2 与 18 个生成页检查通过；以
+  `DOCS_IMPACT_NONE="Concurrent task-ID supersession changes identifiers only; shipped behavior and public documentation remain unchanged"`
+  记录纯协调更正。
+- Disposition: 实现行为提交仍必须同步实际受影响的双语 handbook 与指纹。
