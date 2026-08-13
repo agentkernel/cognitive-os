@@ -17,7 +17,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:88e38bb7bef16ef56fc45a825c514fd5edc0008fe65ef8d408f410b58a9120d8"
+fingerprint: "sha256:2c75d38146c714c98e1f1d6c9901ad16f604606547d3543d9435f42175451128"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -30,7 +30,8 @@ non_claims:
   provider、daemon、pi），级别为 `blocked | degraded | ready`，另有
   `first_conversation_ready`。`provider` 组件会真实解析配置中的 `secret_ref`：若已存
   的密钥被移除，它报 `provider_secret_unresolvable` 并阻塞，而不会谎称 ready——重新执行
-  `cognitive init` 即可再次存入密钥。doctor 追加脱敏的六资源、headless vault 与可运维性
+  `cognitive init` 即可再次存入密钥。一次评估对 provider、model/digest 与 secret 解析
+  使用同一份已加载配置快照，因此原子替换配置不会混用两个版本的事实。doctor 追加脱敏的六资源、headless vault 与可运维性
   小节（当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
 - `GET /personal/health`（免认证）仅是存活探测——安装器与服务控制器使用它；不要把
   readiness 读进去。
@@ -53,6 +54,9 @@ worker 交接，并原子地重新发布 endpoint。
 恢复遵循固定八步序（fence 旧写者 → 重放历史 → 用**原**幂等键对账每个在途 Effect →
 重授权 → 重建 context → 恢复或隔离）。确定性管理回退（`admin-cli reconcile`）不依赖
 任何模型驱动同一序列——未配置执行器时，仍未知的结果会隔离（fail-safe）而非强行了结。
+原生 HTTP attempt 在出站前持久化，重启后在终态 receipt 出现前保持 indeterminate。
+workspace 变更使用持久原键 receipt；相同文件字节本身不是执行证明，重启会保守清理
+orphan staging。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

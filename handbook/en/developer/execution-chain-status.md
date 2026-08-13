@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:8f94f4031710d5d6e3e7a5e5a1a4076a2293f281514fef017d48856ce85f0137"
+fingerprint: "sha256:45eb8c4ea751d732c6b8fbc7196cc283cfdfb778bbc4f86a5c908a2ceebd6377"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -37,9 +37,9 @@ verification → verified continuation or ceiling STOP.
 | Sealed ContextRequest/View before Pi, per-body reauthorization | implemented | kernel-server scheduler_authority tests over real SQLite |
 | Locked-down Pi candidate process over a one-shot private socket | implemented | pi-agent-adapter protocol/launch tests |
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
-| WorkspaceRead / WorkspaceSearch / ProcessCheck executors with persist-before-dispatch and original-key reconciliation | implemented, test-called only | `tool_executor/tests.rs` |
-| WorkspaceWrite / WorkspacePatch mutation executor: expected-preimage compare-and-swap, staging-file plus rename publish, reconciliation by re-reading the target | implemented, test-called only | `tool_executor/tests.rs` |
-| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | `tool_executor/tests.rs`; loopback TLS proof in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| WorkspaceRead / WorkspaceSearch / ProcessCheck executors with persist-before-dispatch and original-key reconciliation | implemented, test-called only | immutable catalog equality is rechecked at every sink; search uses handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
+| WorkspaceWrite / WorkspacePatch mutation executor | implemented, test-called only | handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts and orphan cleanup |
+| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts reconcile `Indeterminate` while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, test-called only | verifier module tests |
 | Recovery of consumed handoffs at startup | implemented | daemon startup path |
 

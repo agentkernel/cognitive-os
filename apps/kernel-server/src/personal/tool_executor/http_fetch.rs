@@ -16,6 +16,7 @@ use cognitive_kernel::{
 use cognitive_provider_transport::{
     ReadOnlyFetchError, ReadOnlyFetchMethod, ReadOnlyFetchRequest, ReadOnlyFetchTransport,
 };
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     sync::{Arc, Mutex},
@@ -32,8 +33,56 @@ struct StagedHttpFetchRequest {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CompletedHttpFetch {
-    receipt_ref: String,
     redacted_output: Vec<u8>,
+}
+
+const HTTP_FETCH_STATE_NAMESPACE: &str = "http-fetch";
+const HTTP_FETCH_STATE_SCHEMA: &str = "native-http-fetch-state/0.1";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum HttpFetchAttemptStatus {
+    Staged,
+    Attempted,
+    NotExecuted,
+    Completed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct HttpFetchStateRecord {
+    schema: String,
+    idempotency_key: String,
+    parameters_digest: String,
+    target: String,
+    output_limit_bytes: usize,
+    status: HttpFetchAttemptStatus,
+    receipt_ref: Option<String>,
+}
+
+impl HttpFetchStateRecord {
+    fn staged(idempotency_key: &str, request: &StagedHttpFetchRequest) -> Self {
+        Self {
+            schema: HTTP_FETCH_STATE_SCHEMA.to_owned(),
+            idempotency_key: idempotency_key.to_owned(),
+            parameters_digest: request.parameters_digest.clone(),
+            target: request.target.clone(),
+            output_limit_bytes: request.output_limit_bytes,
+            status: HttpFetchAttemptStatus::Staged,
+            receipt_ref: None,
+        }
+    }
+}
+
+fn http_state_matches(
+    record: &HttpFetchStateRecord,
+    idempotency_key: &str,
+    request: &StagedHttpFetchRequest,
+) -> bool {
+    record.schema == HTTP_FETCH_STATE_SCHEMA
+        && record.idempotency_key == idempotency_key
+        && record.parameters_digest == request.parameters_digest
+        && record.target == request.target
+        && record.output_limit_bytes == request.output_limit_bytes
 }
 
 /// Daemon-private read-only HTTP fetch sink.
@@ -57,6 +106,7 @@ pub(crate) struct NativeHttpFetchReadOnlyExecutor<T> {
     timeout_ms: u32,
     staged_requests: Mutex<BTreeMap<String, StagedHttpFetchRequest>>,
     completed_fetches: Mutex<BTreeMap<String, CompletedHttpFetch>>,
+    state_store: Arc<DurableExecutorStateStore>,
     #[cfg(test)]
     fetch_count: std::sync::atomic::AtomicUsize,
 }
@@ -70,6 +120,7 @@ where
         transport: Arc<T>,
         allowed_origins: Vec<String>,
         timeout_ms: u32,
+        state_store: Arc<DurableExecutorStateStore>,
     ) -> Self {
         Self {
             trusted_fencing_epoch,
@@ -78,6 +129,7 @@ where
             timeout_ms,
             staged_requests: Mutex::new(BTreeMap::new()),
             completed_fetches: Mutex::new(BTreeMap::new()),
+            state_store,
             #[cfg(test)]
             fetch_count: std::sync::atomic::AtomicUsize::new(0),
         }
@@ -89,6 +141,7 @@ where
         parameters_digest: String,
         request: &ValidatedNativeToolRequest,
     ) -> Result<(), NativeToolExecutionError> {
+        validate_descriptor(&request.descriptor)?;
         if request.descriptor.family != NativeOperationFamily::HttpFetchReadOnly {
             return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
         }
@@ -114,6 +167,36 @@ where
             target: request.target.clone(),
             output_limit_bytes: request.descriptor.output_limit_bytes,
         };
+        let state_guard = self
+            .state_store
+            .lock_key(HTTP_FETCH_STATE_NAMESPACE, &idempotency_key)
+            .map_err(|error| {
+                NativeToolExecutionError::ExecutorUnavailable(format!(
+                    "durable fetch state lock failed: {error}"
+                ))
+            })?;
+        match state_guard
+            .read::<HttpFetchStateRecord>()
+            .map_err(|error| {
+                NativeToolExecutionError::ExecutorUnavailable(format!(
+                    "durable fetch state read failed: {error}"
+                ))
+            })? {
+            Some(existing) if !http_state_matches(&existing, &idempotency_key, &staged_request) => {
+                return Err(NativeToolExecutionError::IdempotencyBindingConflict);
+            }
+            Some(_) => {}
+            None => state_guard
+                .write(&HttpFetchStateRecord::staged(
+                    &idempotency_key,
+                    &staged_request,
+                ))
+                .map_err(|error| {
+                    NativeToolExecutionError::ExecutorUnavailable(format!(
+                        "durable fetch state write failed: {error}"
+                    ))
+                })?,
+        }
         let mut staged_requests = self.staged_requests.lock().map_err(|_| {
             NativeToolExecutionError::ExecutorUnavailable(
                 "staged fetch store is poisoned".to_owned(),
@@ -156,14 +239,53 @@ where
                 reason: "dispatch does not match the daemon-staged read-only fetch".to_owned(),
             });
         }
-        let mut completed_fetches = self.completed_fetches.lock().map_err(|_| PortFailure {
-            detail: "completed fetch store is poisoned".to_owned(),
-        })?;
-        if let Some(existing_fetch) = completed_fetches.get(&call.idempotency_key) {
-            return Ok(DispatchOutcome::Executed {
-                receipt_ref: existing_fetch.receipt_ref.clone(),
+        let state_guard = self
+            .state_store
+            .lock_key(HTTP_FETCH_STATE_NAMESPACE, &call.idempotency_key)
+            .map_err(|error| PortFailure {
+                detail: format!("durable fetch state lock failed: {error}"),
+            })?;
+        let Some(mut state) = state_guard
+            .read::<HttpFetchStateRecord>()
+            .map_err(|error| PortFailure {
+                detail: format!("durable fetch state read failed: {error}"),
+            })?
+        else {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "no durable daemon-staged fetch for idempotency key".to_owned(),
+            });
+        };
+        if !http_state_matches(&state, &call.idempotency_key, staged_request) {
+            return Ok(DispatchOutcome::NotExecuted {
+                reason: "durable fetch binding does not match dispatch".to_owned(),
             });
         }
+        match state.status {
+            HttpFetchAttemptStatus::Completed => {
+                let Some(receipt_ref) = state.receipt_ref else {
+                    return Ok(DispatchOutcome::Unknown {
+                        detail: "completed fetch state has no key-bound receipt".to_owned(),
+                    });
+                };
+                if receipt_ref != format!("tool-receipt://http-fetch/{}", call.idempotency_key) {
+                    return Ok(DispatchOutcome::Unknown {
+                        detail: "completed fetch receipt is bound to a different key".to_owned(),
+                    });
+                }
+                return Ok(DispatchOutcome::Executed { receipt_ref });
+            }
+            HttpFetchAttemptStatus::Attempted => {
+                return Ok(DispatchOutcome::Unknown {
+                    detail: "a prior fetch attempt has no durable terminal receipt".to_owned(),
+                });
+            }
+            HttpFetchAttemptStatus::Staged | HttpFetchAttemptStatus::NotExecuted => {}
+        }
+        state.status = HttpFetchAttemptStatus::Attempted;
+        state.receipt_ref = None;
+        state_guard.write(&state).map_err(|error| PortFailure {
+            detail: format!("persist fetch attempt before egress: {error}"),
+        })?;
         #[cfg(test)]
         self.fetch_count
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -177,6 +299,14 @@ where
             // A policy refusal happens before egress, so non-execution is a
             // fact rather than an inference.
             Err(ReadOnlyFetchError::Policy { detail }) => {
+                state.status = HttpFetchAttemptStatus::NotExecuted;
+                if let Err(error) = state_guard.write(&state) {
+                    return Ok(DispatchOutcome::Unknown {
+                        detail: format!(
+                            "fetch was refused before egress but durable disposition failed: {error}"
+                        ),
+                    });
+                }
                 return Ok(DispatchOutcome::NotExecuted {
                     reason: format!("read-only fetch refused before egress: {detail}"),
                 });
@@ -185,6 +315,14 @@ where
             // changed and nothing was retained, so this Effect executed no
             // observable work.
             Err(ReadOnlyFetchError::ResponseTooLarge) => {
+                state.status = HttpFetchAttemptStatus::NotExecuted;
+                if let Err(error) = state_guard.write(&state) {
+                    return Ok(DispatchOutcome::Unknown {
+                        detail: format!(
+                            "oversize fetch retained nothing but durable disposition failed: {error}"
+                        ),
+                    });
+                }
                 return Ok(DispatchOutcome::NotExecuted {
                     reason: "read-only fetch response exceeded the registered output bound; nothing retained"
                         .to_owned(),
@@ -208,21 +346,44 @@ where
             response.status,
             String::from_utf8_lossy(&response.body)
         );
-        let redacted_output = redact_sensitive_output(&rendered_response)
-            .into_bytes()
-            .into_iter()
-            .take(staged_request.output_limit_bytes)
-            .collect::<Vec<_>>();
+        let redacted_response = redact_sensitive_output(&rendered_response);
+        let redacted_output =
+            truncate_utf8_to_bytes(&redacted_response, staged_request.output_limit_bytes)
+                .to_owned();
         let receipt_ref = format!("tool-receipt://http-fetch/{}", call.idempotency_key);
-        completed_fetches.insert(
-            call.idempotency_key.clone(),
-            CompletedHttpFetch {
-                receipt_ref: receipt_ref.clone(),
-                redacted_output,
-            },
-        );
+        state.status = HttpFetchAttemptStatus::Completed;
+        state.receipt_ref = Some(receipt_ref.clone());
+        if let Err(error) = state_guard.write(&state) {
+            return Ok(DispatchOutcome::Unknown {
+                detail: format!(
+                    "fetch completed but its key-bound durable receipt could not be stored: {error}"
+                ),
+            });
+        }
+        self.completed_fetches
+            .lock()
+            .map_err(|_| PortFailure {
+                detail: "completed fetch store is poisoned".to_owned(),
+            })?
+            .insert(
+                call.idempotency_key.clone(),
+                CompletedHttpFetch {
+                    redacted_output: redacted_output.into_bytes(),
+                },
+            );
         Ok(DispatchOutcome::Executed { receipt_ref })
     }
+}
+
+fn truncate_utf8_to_bytes(value: &str, maximum_bytes: usize) -> &str {
+    if value.len() <= maximum_bytes {
+        return value;
+    }
+    let mut boundary = maximum_bytes;
+    while boundary > 0 && !value.is_char_boundary(boundary) {
+        boundary -= 1;
+    }
+    value.get(..boundary).unwrap_or_default()
 }
 
 impl<T> EffectExecutor for NativeHttpFetchReadOnlyExecutor<T>
@@ -259,13 +420,36 @@ where
     }
 
     fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
-        let completed_fetches = self.completed_fetches.lock().map_err(|_| PortFailure {
-            detail: "completed fetch store is poisoned".to_owned(),
-        })?;
-        Ok(if completed_fetches.contains_key(idempotency_key) {
-            ExecutorQueryResult::ExecutedWithOriginalKey
-        } else {
-            ExecutorQueryResult::NotExecuted
+        let state_guard = self
+            .state_store
+            .lock_key(HTTP_FETCH_STATE_NAMESPACE, idempotency_key)
+            .map_err(|error| PortFailure {
+                detail: format!("durable fetch state lock failed: {error}"),
+            })?;
+        let state = state_guard
+            .read::<HttpFetchStateRecord>()
+            .map_err(|error| PortFailure {
+                detail: format!("durable fetch state read failed: {error}"),
+            })?;
+        let Some(state) = state else {
+            return Ok(ExecutorQueryResult::NotExecuted);
+        };
+        if state.schema != HTTP_FETCH_STATE_SCHEMA || state.idempotency_key != idempotency_key {
+            return Ok(ExecutorQueryResult::Indeterminate);
+        }
+        let expected_receipt = format!("tool-receipt://http-fetch/{idempotency_key}");
+        Ok(match state.status {
+            HttpFetchAttemptStatus::Completed
+                if state.receipt_ref.as_deref() == Some(expected_receipt.as_str()) =>
+            {
+                ExecutorQueryResult::ExecutedWithOriginalKey
+            }
+            HttpFetchAttemptStatus::Completed | HttpFetchAttemptStatus::Attempted => {
+                ExecutorQueryResult::Indeterminate
+            }
+            HttpFetchAttemptStatus::Staged | HttpFetchAttemptStatus::NotExecuted => {
+                ExecutorQueryResult::NotExecuted
+            }
         })
     }
 }

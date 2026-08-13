@@ -17,7 +17,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:88e38bb7bef16ef56fc45a825c514fd5edc0008fe65ef8d408f410b58a9120d8"
+fingerprint: "sha256:2c75d38146c714c98e1f1d6c9901ad16f604606547d3543d9435f42175451128"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -31,7 +31,9 @@ non_claims:
   `first_conversation_ready`. The `provider` component resolves the configured
   `secret_ref`, so a Provider whose stored key was removed reports
   `provider_secret_unresolvable` and blocks rather than claiming ready; re-run
-  `cognitive init` to store the key again. Doctor adds redacted six-resource,
+  `cognitive init` to store the key again. One evaluation uses one loaded config
+  snapshot for provider, model/digest and secret resolution, so an atomic config
+  replacement cannot mix facts from two versions. Doctor adds redacted six-resource,
   headless-vault, and operability sections (currently static
   `not_run`/`not_configured` reports — redaction validators more than live probes).
 - `GET /personal/health` (no auth) is liveness only — the installer and service
@@ -60,7 +62,10 @@ reconcile every in-flight Effect with its **original** idempotency key → reaut
 → rebuild context → resume or quarantine). The deterministic management fallback
 (`admin-cli reconcile`) drives the same sequence without any model dependency —
 with no executor configured, still-unknown outcomes quarantine (fail-safe) rather
-than resolve.
+than resolve. Native HTTP attempts persist before egress and remain indeterminate
+after restart until a terminal receipt exists. Workspace mutations use durable
+original-key receipts; matching file bytes alone are not execution proof, and
+orphan staging is cleaned conservatively on restart.
 
 ## Backup and restore — `unavailable` as a user feature
 

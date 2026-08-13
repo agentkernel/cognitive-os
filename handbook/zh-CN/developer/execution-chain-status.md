@@ -16,7 +16,7 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
-fingerprint: "sha256:8f94f4031710d5d6e3e7a5e5a1a4076a2293f281514fef017d48856ce85f0137"
+fingerprint: "sha256:45eb8c4ea751d732c6b8fbc7196cc283cfdfb778bbc4f86a5c908a2ceebd6377"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -36,9 +36,9 @@ non_claims:
 | Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试 |
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
-| WorkspaceRead / WorkspaceSearch / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | `tool_executor/tests.rs` |
-| WorkspaceWrite / WorkspacePatch 变更执行器：expected-preimage 比较交换、staging 文件加 rename 发布、通过重读目标对账 | implemented，仅测试调用 | `tool_executor/tests.rs` |
-| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | `tool_executor/tests.rs`；回环 TLS 证明见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| WorkspaceRead / WorkspaceSearch / ProcessCheck 执行器（persist-before-dispatch、原键对账） | implemented，仅测试调用 | 每个 sink 都重查不可变目录完全相等；search 使用句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
+| WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、持久原键 attempt/receipt 与 orphan 清理 |
+| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动时恢复已消费交接 | implemented | daemon 启动路径 |
 

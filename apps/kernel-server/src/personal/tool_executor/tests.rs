@@ -44,16 +44,9 @@ struct TestWorkspace {
 
 impl TestWorkspace {
     fn new(test_name: &str) -> Self {
-        let timestamp_nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("system time after Unix epoch")
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!(
-            "cognitiveos-tool-executor-{test_name}-{}-{timestamp_nanos}",
-            std::process::id()
-        ));
-        std::fs::create_dir_all(&path).expect("create temporary workspace");
-        Self { path }
+        Self {
+            path: temporary_workspace_path(test_name),
+        }
     }
 }
 
@@ -61,6 +54,56 @@ impl Drop for TestWorkspace {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.path);
     }
+}
+
+fn temporary_workspace_path(test_name: &str) -> PathBuf {
+    let timestamp_nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time after Unix epoch")
+        .as_nanos();
+    let path = std::env::temp_dir().join(format!(
+        "cognitiveos-tool-executor-{test_name}-{}-{timestamp_nanos}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&path).expect("create temporary workspace");
+    path
+}
+
+fn durable_state_store(root: &std::path::Path) -> Arc<DurableExecutorStateStore> {
+    Arc::new(
+        DurableExecutorStateStore::open(&root.join(".executor-state"))
+            .expect("open durable executor state"),
+    )
+}
+
+fn mutation_executor(
+    trusted_fencing_epoch: i64,
+    workspace: &TestWorkspace,
+) -> NativeWorkspaceMutationExecutor {
+    NativeWorkspaceMutationExecutor::new(
+        trusted_fencing_epoch,
+        durable_state_store(&workspace.path),
+    )
+}
+
+#[cfg(unix)]
+fn create_test_file_link(source: &std::path::Path, target: &std::path::Path) {
+    std::os::unix::fs::symlink(source, target).expect("create test file symlink");
+}
+
+#[cfg(windows)]
+fn create_test_file_link(source: &std::path::Path, target: &std::path::Path) {
+    std::os::windows::fs::symlink_file(source, target).expect("create test file reparse point");
+}
+
+#[cfg(unix)]
+fn create_test_directory_link(source: &std::path::Path, target: &std::path::Path) {
+    std::os::unix::fs::symlink(source, target).expect("create test directory symlink");
+}
+
+#[cfg(windows)]
+fn create_test_directory_link(source: &std::path::Path, target: &std::path::Path) {
+    std::os::windows::fs::symlink_dir(source, target).expect("create test directory reparse point");
 }
 
 fn request_for(family: NativeOperationFamily) -> NativeToolExecutionRequest {
@@ -108,7 +151,7 @@ fn process_check_call(
 }
 
 fn staged_process_executor(
-    output_limit_bytes: usize,
+    _output_limit_bytes: usize,
 ) -> (
     Arc<BoundedProcessCheckSupervisor>,
     NativeProcessCheckExecutor<BoundedProcessCheckSupervisor>,
@@ -119,8 +162,7 @@ fn staged_process_executor(
         b"state=ready token=secret output-that-is-too-long",
         Duration::from_millis(1),
     );
-    let mut request = process_check_request();
-    request.descriptor.output_limit_bytes = output_limit_bytes;
+    let request = process_check_request();
     let validated_request = validate_native_tool_request(&request).expect("valid process check");
     let executor =
         NativeProcessCheckExecutor::new(7, Arc::clone(&supervisor), Duration::from_secs(1));
@@ -390,7 +432,10 @@ fn process_check_redacts_and_bounds_output_before_queryable_storage() {
     let output = executor
         .completed_output("process-key")
         .expect("stored output");
-    assert!(output.len() <= 20);
+    assert_eq!(
+        output,
+        b"state=ready token=[REDACTED] output-that-is-too-long".to_vec()
+    );
     assert!(!String::from_utf8_lossy(&output).contains("secret"));
     assert_eq!(
         executor.query_outcome("process-key"),
@@ -553,8 +598,7 @@ fn durable_process_check_dispatch_records_executing_before_supervisor_access_wit
         )
         .expect("persist durable intent");
 
-    let mut request = process_check_request();
-    request.descriptor.output_limit_bytes = 32;
+    let request = process_check_request();
     let validated_request =
         validate_native_tool_request(&request).expect("valid process check request");
     let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
@@ -628,9 +672,8 @@ fn durable_process_check_dispatch_records_executing_before_supervisor_access_wit
         .expect("process check retains output under original key");
     assert_eq!(
         completed_output,
-        b"state=ready token=[REDACTED] pro".to_vec()
+        b"state=ready token=[REDACTED] process output that is too long".to_vec()
     );
-    assert_eq!(completed_output.len(), 32);
     assert!(!String::from_utf8_lossy(&completed_output).contains("secret"));
     assert_eq!(supervisor_accesses.load(Ordering::SeqCst), 1);
     assert_eq!(
@@ -743,8 +786,7 @@ fn unknown_process_check_dispatch_reconciles_original_key_without_advancing_task
         )
         .expect("persist durable intent");
 
-    let mut request = process_check_request();
-    request.descriptor.output_limit_bytes = 32;
+    let request = process_check_request();
     let validated_request =
         validate_native_tool_request(&request).expect("valid process check request");
     let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
@@ -856,9 +898,8 @@ fn unknown_process_check_dispatch_reconciles_original_key_without_advancing_task
         .expect("process check retains output under original key");
     assert_eq!(
         completed_output,
-        b"state=ready token=[REDACTED] pro".to_vec()
+        b"state=ready token=[REDACTED] process output that is too long".to_vec()
     );
-    assert_eq!(completed_output.len(), 32);
     assert!(!String::from_utf8_lossy(&completed_output).contains("secret"));
     assert_eq!(
         executor.query_outcome(idempotency_key),
@@ -958,8 +999,7 @@ fn runtime_spine_outcome_unknown_reconciles_original_key_and_rejects_blind_retry
         )
         .expect("persist durable intent");
 
-    let mut request = process_check_request();
-    request.descriptor.output_limit_bytes = 32;
+    let request = process_check_request();
     let validated_request =
         validate_native_tool_request(&request).expect("valid process check request");
     let supervisor = Arc::new(BoundedProcessCheckSupervisor::new(Duration::from_secs(2)));
@@ -1106,6 +1146,79 @@ fn disabled_descriptor_fails_before_execution() {
         validate_native_tool_request(&request),
         Err(NativeToolExecutionError::InvalidDescriptor(_))
     ));
+}
+
+#[test]
+fn every_immutable_descriptor_field_is_catalog_bound_for_every_family() {
+    for catalog_descriptor in BUILTIN_TOOL_CATALOG.iter() {
+        let mut request = request_for(catalog_descriptor.family);
+        match catalog_descriptor.family {
+            NativeOperationFamily::ProcessCheck => request = process_check_request(),
+            NativeOperationFamily::HttpFetchReadOnly => {
+                request.target = format!("{FETCH_ORIGIN}/data");
+                request.input.clear();
+                request.workspace_root = None;
+            }
+            _ => {}
+        }
+        validate_native_tool_request(&request).expect("catalog descriptor must validate");
+
+        let mut drifted_descriptors = Vec::new();
+        let mut drifted = catalog_descriptor.clone();
+        drifted.operation_id.push_str(".drift");
+        drifted_descriptors.push(("operation_id", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.action.push_str("-drift");
+        drifted_descriptors.push(("action", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.descriptor_version += 1;
+        drifted_descriptors.push(("descriptor_version", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.descriptor_digest = format!("sha256:{}", "0".repeat(64));
+        drifted_descriptors.push(("descriptor_digest", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.risk = if catalog_descriptor.risk == ToolRisk::ReadOnly {
+            ToolRisk::NetworkRead
+        } else {
+            ToolRisk::ReadOnly
+        };
+        drifted_descriptors.push(("risk", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.executor.push_str(".drift");
+        drifted_descriptors.push(("executor", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.required_capability.push_str(".drift");
+        drifted_descriptors.push(("required_capability", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.family = if catalog_descriptor.family == NativeOperationFamily::WorkspaceRead {
+            NativeOperationFamily::WorkspaceSearch
+        } else {
+            NativeOperationFamily::WorkspaceRead
+        };
+        drifted_descriptors.push(("family", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.availability = ToolAvailability::Disabled;
+        drifted_descriptors.push(("availability", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.input_limit_bytes = drifted.input_limit_bytes.saturating_add(1);
+        drifted_descriptors.push(("input_limit_bytes", drifted));
+        let mut drifted = catalog_descriptor.clone();
+        drifted.output_limit_bytes = drifted.output_limit_bytes.saturating_add(1);
+        drifted_descriptors.push(("output_limit_bytes", drifted));
+
+        for (field, descriptor) in drifted_descriptors {
+            let mut drifted_request = request.clone();
+            drifted_request.descriptor = descriptor;
+            assert!(
+                matches!(
+                    validate_native_tool_request(&drifted_request),
+                    Err(NativeToolExecutionError::InvalidDescriptor(_))
+                ),
+                "{field} drift must fail for {:?}",
+                catalog_descriptor.family
+            );
+        }
+    }
 }
 
 #[test]
@@ -1315,6 +1428,101 @@ fn temporary_authority_database_path() -> PathBuf {
     ))
 }
 
+struct DurableEffectFixture {
+    database_path: PathBuf,
+    store: Arc<SqliteAuthorityStore>,
+    task_object_id: ObjectId,
+    effect_object_id: ObjectId,
+    admitted_at: WallTimestamp,
+}
+
+fn durable_effect_fixture(
+    seed: u64,
+    action: &str,
+    target: &str,
+    idempotency_key: &str,
+    parameters_digest: &str,
+    label: &str,
+) -> DurableEffectFixture {
+    let database_path = temporary_authority_database_path();
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).expect("open authority store"));
+    let task_object_id = object_id(seed);
+    let effect_object_id = object_id(seed + 1);
+    let intent_object_id = object_id(seed + 2);
+    let admitted_at = WallTimestamp::parse("2026-08-13T00:00:00Z").expect("valid admission time");
+    for (object_id, domain, lifecycle_state, event_seed) in [
+        (
+            task_object_id.clone(),
+            LifecycleDomain::Task,
+            "RUNNING",
+            seed,
+        ),
+        (
+            effect_object_id.clone(),
+            LifecycleDomain::Effect,
+            "PROPOSED",
+            seed + 1,
+        ),
+    ] {
+        store
+            .admit_object(&ObjectAdmission {
+                object: StoredObject {
+                    object_id: object_id.clone(),
+                    domain,
+                    state: state(lifecycle_state),
+                    version: Version::INITIAL,
+                    body: json!({"fixture": label}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse(&format!("00000000-0000-7000-a000-{event_seed:012x}"))
+                        .expect("valid event identifier"),
+                    object_id,
+                    domain,
+                    object_version: Version::INITIAL,
+                    event_type: "fixture.admitted".to_owned(),
+                    canonical_json: "{\"fixture\":true}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            })
+            .expect("admit durable fixture object");
+    }
+    store
+        .insert_intent(
+            &IntentRow {
+                intent_id: intent_object_id.clone(),
+                idempotency_key: idempotency_key.to_owned(),
+                parameters_digest: parameters_digest.to_owned(),
+                action: action.to_owned(),
+                target: target.to_owned(),
+                effect_object_id: effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: None,
+                canonical_json: format!("{{\"fixture\":\"{label}\"}}"),
+            },
+            &EventDraft {
+                event_id: EventId::parse(&format!("00000000-0000-7000-a000-{:012x}", seed + 2))
+                    .expect("valid intent event identifier"),
+                object_id: intent_object_id,
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"intent\":\"fixture\"}".to_owned(),
+            },
+        )
+        .expect("persist durable intent");
+    DurableEffectFixture {
+        database_path,
+        store,
+        task_object_id,
+        effect_object_id,
+        admitted_at,
+    }
+}
+
 #[test]
 fn workspace_read_requires_a_staged_digest_bound_request_before_io() {
     let temporary_workspace = TestWorkspace::new("digest-binding");
@@ -1386,7 +1594,6 @@ fn workspace_read_bounds_redacts_and_idempotently_queries_output() {
     let mut request = request_for(NativeOperationFamily::WorkspaceRead);
     request.target = "workspace://notes.txt".to_owned();
     request.workspace_root = Some(temporary_workspace.path.clone());
-    request.descriptor.output_limit_bytes = 16;
     let validated_request = validate_native_tool_request(&request).expect("valid request");
     let executor = NativeWorkspaceReadExecutor::new(7);
     executor
@@ -1403,7 +1610,7 @@ fn workspace_read_bounds_redacts_and_idempotently_queries_output() {
     assert_eq!(first_outcome, second_outcome);
     assert_eq!(
         executor.completed_output("read-key-2"),
-        Some(b"token=[REDACTED]".to_vec())
+        Some(b"token=[REDACTED] 123456789".to_vec())
     );
     assert_eq!(
         executor.query_outcome("read-key-2"),
@@ -1493,7 +1700,6 @@ fn durable_workspace_read_dispatch_records_executing_before_io_without_advancing
     let mut request = request_for(NativeOperationFamily::WorkspaceRead);
     request.target = "workspace://notes.txt".to_owned();
     request.workspace_root = Some(temporary_workspace.path.clone());
-    request.descriptor.output_limit_bytes = 16;
     let validated_request = validate_native_tool_request(&request).expect("valid workspace read");
     let executor = NativeWorkspaceReadExecutor::new(1);
     executor
@@ -1555,8 +1761,7 @@ fn durable_workspace_read_dispatch_records_executing_before_io_without_advancing
     let completed_output = executor
         .completed_output(idempotency_key)
         .expect("workspace read retains output under original key");
-    assert_eq!(completed_output, b"token=[REDACTED]".to_vec());
-    assert_eq!(completed_output.len(), 16);
+    assert_eq!(completed_output, b"token=[REDACTED] 123456789".to_vec());
     assert_eq!(
         executor.query_outcome(idempotency_key),
         Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
@@ -1674,7 +1879,6 @@ fn unknown_native_workspace_read_reconciles_original_key_without_second_read() {
     let mut request = request_for(NativeOperationFamily::WorkspaceRead);
     request.target = "workspace://notes.txt".to_owned();
     request.workspace_root = Some(temporary_workspace.path.clone());
-    request.descriptor.output_limit_bytes = 16;
     let validated_request = validate_native_tool_request(&request).expect("valid workspace read");
     let native_executor = NativeWorkspaceReadExecutor::new(1);
     native_executor
@@ -2048,6 +2252,98 @@ fn workspace_search_never_leaves_the_approved_root_through_a_symlink() {
     assert_eq!(executor.completed_output("search-escape"), None);
 }
 
+#[cfg(any(unix, windows))]
+#[test]
+fn workspace_search_rejects_active_file_swap_to_a_link_or_reparse_point() {
+    let temporary_workspace = TestWorkspace::new("search-active-file-swap");
+    let tree = temporary_workspace.path.join("tree");
+    let outside = temporary_workspace.path.join("outside");
+    std::fs::create_dir_all(&tree).expect("create search tree");
+    std::fs::create_dir_all(&outside).expect("create outside tree");
+    let victim = tree.join("victim.txt");
+    let outside_file = outside.join("secret.txt");
+    std::fs::write(&victim, "needle safe\n").expect("write victim");
+    std::fs::write(&outside_file, "needle outside\n").expect("write outside");
+    let request = staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+    executor
+        .stage_request(
+            "search-active-file".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage search");
+    executor.install_before_entry_open_hook(move |relative_path| {
+        if relative_path.ends_with("victim.txt") {
+            std::fs::remove_file(&victim).expect("remove victim before swap");
+            create_test_file_link(&outside_file, &victim);
+        }
+    });
+
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-active-file",
+            "digest-1",
+            "workspace://tree",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    let output = String::from_utf8(
+        executor
+            .completed_output("search-active-file")
+            .expect("search output"),
+    )
+    .expect("utf8");
+    assert!(!output.contains("outside"));
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn workspace_search_rejects_active_directory_swap_to_a_link_or_reparse_point() {
+    let temporary_workspace = TestWorkspace::new("search-active-directory-swap");
+    let tree = temporary_workspace.path.join("tree");
+    let victim = tree.join("victim");
+    let moved_victim = tree.join("victim-original");
+    let outside = temporary_workspace.path.join("outside");
+    std::fs::create_dir_all(&victim).expect("create victim directory");
+    std::fs::create_dir_all(&outside).expect("create outside directory");
+    std::fs::write(victim.join("inside.txt"), "needle safe\n").expect("write safe file");
+    std::fs::write(outside.join("secret.txt"), "needle outside\n").expect("write outside file");
+    let request = staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let executor = NativeWorkspaceSearchExecutor::new(7);
+    executor
+        .stage_request(
+            "search-active-directory".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage search");
+    executor.install_before_entry_open_hook(move |relative_path| {
+        if relative_path.ends_with("victim") {
+            std::fs::rename(&victim, &moved_victim).expect("move victim directory");
+            create_test_directory_link(&outside, &victim);
+        }
+    });
+
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-active-directory",
+            "digest-1",
+            "workspace://tree",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    let output = String::from_utf8(
+        executor
+            .completed_output("search-active-directory")
+            .expect("search output"),
+    )
+    .expect("utf8");
+    assert!(!output.contains("outside"));
+}
+
 #[test]
 fn workspace_search_bounds_matches_and_redacts_before_retention() {
     let temporary_workspace = TestWorkspace::new("search-bounds");
@@ -2105,6 +2401,45 @@ fn workspace_search_bounds_matches_and_redacts_before_retention() {
     assert!(
         !output.contains("big.txt"),
         "a file over the size ceiling must be skipped, not read: {output}"
+    );
+}
+
+#[test]
+fn workspace_search_enforces_visit_ceiling_while_enumerating_a_huge_directory() {
+    let temporary_workspace = TestWorkspace::new("search-enumeration-bound");
+    let tree = temporary_workspace.path.join("tree");
+    std::fs::create_dir_all(&tree).expect("create search tree");
+    for index in 0..512 {
+        std::fs::write(tree.join(format!("{index:04}.txt")), "no match\n")
+            .expect("write oversized directory fixture");
+    }
+    let request = staged_search_request(&temporary_workspace.path, "workspace://tree", b"needle");
+    let bounds = WorkspaceSearchBounds {
+        maximum_visited_entries: 5,
+        maximum_matches: 5,
+        maximum_file_bytes: 64,
+        maximum_line_bytes: 64,
+    };
+    let executor = NativeWorkspaceSearchExecutor::with_bounds(7, bounds);
+    executor
+        .stage_request(
+            "search-enumeration-bound".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage search");
+    assert!(matches!(
+        executor.dispatch(&workspace_search_call(
+            "search-enumeration-bound",
+            "digest-1",
+            "workspace://tree",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert!(
+        executor.enumerated_entry_count() <= bounds.maximum_visited_entries - 1,
+        "directory enumeration itself must stop at the remaining visit budget"
     );
 }
 
@@ -2522,6 +2857,7 @@ fn directory_entry_names(directory: &std::path::Path) -> Vec<String> {
                 .to_string_lossy()
                 .into_owned()
         })
+        .filter(|name| name != ".executor-state")
         .collect::<Vec<_>>();
     names.sort();
     names
@@ -2578,7 +2914,7 @@ fn workspace_write_refuses_a_preimage_mismatch_without_touching_the_target() {
         b"replacement content\n",
         WorkspacePreimage::Digest(image_digest(b"a different preimage\n")),
     );
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-mismatch".to_owned(),
@@ -2623,7 +2959,7 @@ fn workspace_write_publishes_atomically_and_leaves_no_staging_residue() {
         b"after\n",
         WorkspacePreimage::Digest(image_digest(b"before\n")),
     );
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-atomic".to_owned(),
@@ -2695,7 +3031,7 @@ fn workspace_mutation_refuses_a_target_that_changed_before_publication() {
         b"after\n",
         WorkspacePreimage::Digest(image_digest(b"before\n")),
     );
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-race".to_owned(),
@@ -2730,11 +3066,179 @@ fn workspace_mutation_refuses_a_target_that_changed_before_publication() {
     );
 }
 
+#[test]
+fn workspace_mutation_target_lock_closes_the_final_check_to_rename_window() {
+    let temporary_workspace = TestWorkspace::new("write-final-cas-window");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let primary_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"primary\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let competitor_request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"competitor\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let primary = mutation_executor(7, &temporary_workspace);
+    primary
+        .stage_request(
+            "write-primary".to_owned(),
+            "digest-primary".to_owned(),
+            &primary_request,
+        )
+        .expect("stage primary");
+    let competitor = mutation_executor(7, &temporary_workspace);
+    competitor
+        .stage_request(
+            "write-competitor".to_owned(),
+            "digest-competitor".to_owned(),
+            &competitor_request,
+        )
+        .expect("stage competitor");
+    let competitor_outcome = Arc::new(Mutex::new(None));
+    let observed_outcome = Arc::clone(&competitor_outcome);
+    primary.install_after_final_preimage_check_hook(move || {
+        let outcome = competitor
+            .dispatch(&workspace_mutation_call(
+                "write",
+                "write-competitor",
+                "digest-competitor",
+                "workspace://notes.txt",
+                7,
+            ))
+            .expect("competitor lock result");
+        *observed_outcome.lock().expect("outcome lock") = Some(outcome);
+    });
+
+    assert!(matches!(
+        primary.dispatch(&workspace_mutation_call(
+            "write",
+            "write-primary",
+            "digest-primary",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert!(matches!(
+        competitor_outcome.lock().expect("outcome lock").as_ref(),
+        Some(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(target_path).expect("target readable"),
+        "primary\n",
+        "the losing mutation must not overwrite after the winner's final CAS check"
+    );
+}
+
+#[test]
+fn workspace_mutation_rechecks_an_uncooperative_write_in_the_final_rename_window() {
+    let temporary_workspace = TestWorkspace::new("write-final-window-recheck");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "write-final-window".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage mutation");
+    let competing_target = target_path.clone();
+    executor.install_after_final_preimage_check_hook(move || {
+        std::fs::write(&competing_target, "uncooperative writer\n")
+            .expect("write in final CAS window");
+    });
+
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-final-window",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::read_to_string(target_path).expect("target readable"),
+        "uncooperative writer\n"
+    );
+    assert_eq!(executor.publish_count(), 0);
+}
+
 #[cfg(unix)]
 #[test]
-fn workspace_mutation_refuses_a_symlinked_target_and_an_escaping_parent() {
-    use std::os::unix::fs::symlink;
+fn workspace_mutation_anchors_parent_against_an_active_directory_swap() {
+    let temporary_workspace = TestWorkspace::new("write-active-parent-swap");
+    let approved_root = temporary_workspace.path.join("root");
+    let target_parent = approved_root.join("work");
+    let moved_parent = approved_root.join("work-original");
+    let outside = temporary_workspace.path.join("outside");
+    std::fs::create_dir_all(&target_parent).expect("create target parent");
+    std::fs::create_dir_all(&outside).expect("create outside directory");
+    std::fs::write(target_parent.join("notes.txt"), "before\n").expect("write target");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &approved_root,
+        "workspace://work/notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "write-parent-swap".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage mutation");
+    executor.install_after_staging_write_hook(move |_target, _staging| {
+        std::fs::rename(&target_parent, &moved_parent).expect("swap target parent");
+        create_test_directory_link(&outside, &target_parent);
+    });
 
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-parent-swap",
+            "digest-1",
+            "workspace://work/notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert!(
+        !temporary_workspace.path.join("outside/notes.txt").exists(),
+        "a swapped pathname must never redirect handle-relative publication"
+    );
+    assert_eq!(
+        std::fs::read_to_string(
+            temporary_workspace
+                .path
+                .join("root/work-original/notes.txt")
+        )
+        .expect("original target remains"),
+        "before\n"
+    );
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn workspace_mutation_refuses_a_symlinked_target_and_an_escaping_parent() {
     let temporary_workspace = TestWorkspace::new("write-symlink-refusal");
     let approved_root = temporary_workspace.path.join("root");
     std::fs::create_dir_all(&approved_root).expect("create approved root");
@@ -2744,18 +3248,16 @@ fn workspace_mutation_refuses_a_symlinked_target_and_an_escaping_parent() {
         "outside content\n",
     )
     .expect("write outside fixture");
-    symlink(
-        temporary_workspace.path.join("outside/secret.txt"),
-        approved_root.join("linked.txt"),
-    )
-    .expect("plant a symlinked target");
-    symlink(
-        temporary_workspace.path.join("outside"),
-        approved_root.join("escape"),
-    )
-    .expect("plant an escaping parent");
+    create_test_file_link(
+        &temporary_workspace.path.join("outside/secret.txt"),
+        &approved_root.join("linked.txt"),
+    );
+    create_test_directory_link(
+        &temporary_workspace.path.join("outside"),
+        &approved_root.join("escape"),
+    );
 
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     let linked_request = staged_mutation_request(
         NativeOperationFamily::WorkspaceWrite,
         &approved_root,
@@ -2834,7 +3336,7 @@ fn duplicate_workspace_write_dispatch_publishes_exactly_once() {
         b"created\n",
         WorkspacePreimage::Absent,
     );
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-once".to_owned(),
@@ -2874,7 +3376,7 @@ fn workspace_patch_applies_only_when_every_context_line_matches() {
     let target_path = temporary_workspace.path.join("notes.txt");
     std::fs::write(&target_path, "alpha\nbeta\ngamma\n").expect("write fixture");
     let preimage_digest = image_digest(b"alpha\nbeta\ngamma\n");
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
 
     // A patch whose context does not match the preimage must fail closed.
     let drifted_request = staged_mutation_request(
@@ -2974,6 +3476,115 @@ fn workspace_patch_applies_only_when_every_context_line_matches() {
 }
 
 #[test]
+fn workspace_patch_honors_old_and_new_no_newline_markers() {
+    assert_eq!(
+        apply_unified_patch(
+            "final line",
+            "@@ -1 +1 @@\n-final line\n\\ No newline at end of file\n+final line\n",
+        ),
+        Ok("final line\n".to_owned()),
+        "an old-side marker permits adding the final newline"
+    );
+    assert_eq!(
+        apply_unified_patch(
+            "final line\n",
+            "@@ -1 +1 @@\n-final line\n+final line\n\\ No newline at end of file\n",
+        ),
+        Ok("final line".to_owned()),
+        "a new-side marker removes the final newline"
+    );
+    assert!(
+        apply_unified_patch(
+            "final line\n",
+            "@@ -1 +1 @@\n-final line\n\\ No newline at end of file\n+changed\n",
+        )
+        .is_err(),
+        "an old-side marker that contradicts the preimage must fail closed"
+    );
+}
+
+#[test]
+fn workspace_patch_rejects_sparse_preimages_over_the_explicit_ceiling() {
+    let temporary_workspace = TestWorkspace::new("patch-preimage-ceiling");
+    let target_path = temporary_workspace.path.join("sparse.txt");
+    let target = std::fs::File::create(&target_path).expect("create sparse fixture");
+    target
+        .set_len(MAXIMUM_WORKSPACE_PATCH_PREIMAGE_BYTES + 1)
+        .expect("extend sparse fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspacePatch,
+        &temporary_workspace.path,
+        "workspace://sparse.txt",
+        b"@@ -1 +1 @@\n-\n+\n",
+        WorkspacePreimage::Digest(image_digest(b"")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "patch-over-limit".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage patch");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "patch",
+            "patch-over-limit",
+            "digest-1",
+            "workspace://sparse.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::metadata(target_path)
+            .expect("sparse metadata")
+            .len(),
+        MAXIMUM_WORKSPACE_PATCH_PREIMAGE_BYTES + 1
+    );
+}
+
+#[test]
+fn workspace_write_streams_a_large_sparse_preimage_without_retaining_it() {
+    let temporary_workspace = TestWorkspace::new("write-streamed-preimage");
+    let target_path = temporary_workspace.path.join("sparse.txt");
+    let target = std::fs::File::create(&target_path).expect("create sparse fixture");
+    let sparse_size = MAXIMUM_WORKSPACE_PATCH_PREIMAGE_BYTES * 2;
+    target.set_len(sparse_size).expect("extend sparse fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://sparse.txt",
+        b"replacement\n",
+        WorkspacePreimage::Digest(image_digest(b"not-the-sparse-file")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "write-streamed-preimage".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage write");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-streamed-preimage",
+            "digest-1",
+            "workspace://sparse.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(
+        std::fs::metadata(target_path)
+            .expect("sparse metadata")
+            .len(),
+        sparse_size
+    );
+}
+
+#[test]
 fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
     let temporary_workspace = TestWorkspace::new("write-durable-query");
     let target_path = temporary_workspace.path.join("notes.txt");
@@ -2990,7 +3601,7 @@ fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
 
     // Before the mutation runs, a restarted daemon that re-stages the same
     // Intent must read `NotExecuted` from the filesystem alone.
-    let restarted_before = NativeWorkspaceMutationExecutor::new(7);
+    let restarted_before = mutation_executor(7, &temporary_workspace);
     restarted_before
         .stage_request(
             "write-durable".to_owned(),
@@ -3008,7 +3619,7 @@ fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
         Ok(ExecutorQueryResult::Indeterminate)
     );
 
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-durable".to_owned(),
@@ -3030,7 +3641,7 @@ fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
     // After the mutation, a fresh executor with an empty completed ledger --
     // the state a restarted daemon is in -- still resolves the original key
     // from the durable target.
-    let restarted_after = NativeWorkspaceMutationExecutor::new(7);
+    let restarted_after = mutation_executor(7, &temporary_workspace);
     restarted_after
         .stage_request(
             "write-durable".to_owned(),
@@ -3046,6 +3657,207 @@ fn workspace_mutation_query_outcome_reconciles_from_durable_target_state() {
 }
 
 #[test]
+fn workspace_mutation_never_attributes_a_competitors_same_postimage_to_the_original_key() {
+    let temporary_workspace = TestWorkspace::new("write-same-postimage-competitor");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "write-original-key".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage original key");
+    std::fs::write(&target_path, "after\n").expect("competitor writes same postimage");
+
+    assert_eq!(
+        executor.query_outcome("write-original-key"),
+        Ok(ExecutorQueryResult::Indeterminate),
+        "matching bytes without a completed key-bound receipt prove nothing"
+    );
+}
+
+#[test]
+fn workspace_mutation_receipt_survives_restart_and_post_execution_reversion() {
+    let temporary_workspace = TestWorkspace::new("write-reverted-after-execution");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request("write-reverted".to_owned(), "digest-1".to_owned(), &request)
+        .expect("stage mutation");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-reverted",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    std::fs::write(&target_path, "before\n").expect("revert target after execution");
+
+    let restarted = mutation_executor(7, &temporary_workspace);
+    restarted
+        .stage_request("write-reverted".to_owned(), "digest-1".to_owned(), &request)
+        .expect("restage durable intent");
+    assert_eq!(
+        restarted.query_outcome("write-reverted"),
+        Ok(ExecutorQueryResult::ExecutedWithOriginalKey),
+        "the durable receipt proves execution even when later state differs"
+    );
+}
+
+#[test]
+fn workspace_mutation_restart_cleans_a_durable_orphan_staging_file() {
+    let temporary_workspace = TestWorkspace::new("write-orphan-recovery");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let crashing = mutation_executor(7, &temporary_workspace);
+    crashing
+        .stage_request("write-orphan".to_owned(), "digest-1".to_owned(), &request)
+        .expect("stage mutation");
+    let staging_path = Arc::new(Mutex::new(None::<PathBuf>));
+    let observed_staging = Arc::clone(&staging_path);
+    crashing.install_after_staging_write_hook(move |_target, staging| {
+        *observed_staging.lock().expect("staging path lock") = Some(staging.to_path_buf());
+        panic!("simulated crash after durable staging write");
+    });
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = crashing.dispatch(&workspace_mutation_call(
+                "write",
+                "write-orphan",
+                "digest-1",
+                "workspace://notes.txt",
+                7,
+            ));
+        }))
+        .is_err()
+    );
+    let staging_path = staging_path
+        .lock()
+        .expect("staging path lock")
+        .clone()
+        .expect("staging path observed");
+    assert!(staging_path.is_file(), "crash must leave a real orphan");
+
+    let restarted = mutation_executor(7, &temporary_workspace);
+    restarted
+        .stage_request("write-orphan".to_owned(), "digest-1".to_owned(), &request)
+        .expect("restage durable intent");
+    assert!(matches!(
+        restarted.dispatch(&workspace_mutation_call(
+            "write",
+            "write-orphan",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Unknown { .. })
+    ));
+    assert!(!staging_path.exists(), "restart must clean the orphan");
+    assert_eq!(
+        restarted.query_outcome("write-orphan"),
+        Ok(ExecutorQueryResult::Indeterminate)
+    );
+}
+
+#[test]
+fn workspace_mutation_cleanup_failure_stays_unknown_and_indeterminate() {
+    let temporary_workspace = TestWorkspace::new("write-orphan-cleanup-failure");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let crashing = mutation_executor(7, &temporary_workspace);
+    crashing
+        .stage_request(
+            "write-cleanup-failure".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage mutation");
+    let staging_path = Arc::new(Mutex::new(None::<PathBuf>));
+    let observed_staging = Arc::clone(&staging_path);
+    crashing.install_after_staging_write_hook(move |_target, staging| {
+        std::fs::remove_file(staging).expect("replace staging file");
+        std::fs::create_dir(staging).expect("plant unremovable staging directory");
+        *observed_staging.lock().expect("staging path lock") = Some(staging.to_path_buf());
+        panic!("simulated crash with hostile staging residue");
+    });
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = crashing.dispatch(&workspace_mutation_call(
+                "write",
+                "write-cleanup-failure",
+                "digest-1",
+                "workspace://notes.txt",
+                7,
+            ));
+        }))
+        .is_err()
+    );
+    let staging_path = staging_path
+        .lock()
+        .expect("staging path lock")
+        .clone()
+        .expect("staging path observed");
+
+    let restarted = mutation_executor(7, &temporary_workspace);
+    restarted
+        .stage_request(
+            "write-cleanup-failure".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("restage durable intent");
+    assert!(matches!(
+        restarted.dispatch(&workspace_mutation_call(
+            "write",
+            "write-cleanup-failure",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Unknown { .. })
+    ));
+    assert!(staging_path.is_dir(), "failed cleanup must not be hidden");
+    assert_eq!(
+        restarted.query_outcome("write-cleanup-failure"),
+        Ok(ExecutorQueryResult::Indeterminate)
+    );
+}
+
+#[test]
 fn workspace_mutation_sink_rejects_stale_fencing_before_any_write() {
     let temporary_workspace = TestWorkspace::new("write-stale-fencing");
     let validated_request = staged_mutation_request(
@@ -3055,7 +3867,7 @@ fn workspace_mutation_sink_rejects_stale_fencing_before_any_write() {
         b"created\n",
         WorkspacePreimage::Absent,
     );
-    let executor = NativeWorkspaceMutationExecutor::new(7);
+    let executor = mutation_executor(7, &temporary_workspace);
     executor
         .stage_request(
             "write-fenced".to_owned(),
@@ -3164,7 +3976,7 @@ fn durable_workspace_write_records_executing_before_mutation_and_reconciles_once
         b"after\n",
         WorkspacePreimage::Digest(image_digest(b"before\n")),
     );
-    let native_executor = NativeWorkspaceMutationExecutor::new(1);
+    let native_executor = mutation_executor(1, &temporary_workspace);
     native_executor
         .stage_request(
             idempotency_key.to_owned(),
@@ -3309,6 +4121,7 @@ const FETCH_ORIGIN: &str = "https://registered.example";
 struct ScriptedFetchTransport {
     result: Mutex<Result<ReadOnlyFetchResponse, ReadOnlyFetchError>>,
     observed_urls: Mutex<Vec<String>>,
+    state_path: PathBuf,
 }
 
 impl ScriptedFetchTransport {
@@ -3319,6 +4132,7 @@ impl ScriptedFetchTransport {
                 body: body.to_vec(),
             })),
             observed_urls: Mutex::new(Vec::new()),
+            state_path: temporary_workspace_path("http-fetch-state"),
         }
     }
 
@@ -3326,6 +4140,7 @@ impl ScriptedFetchTransport {
         Self {
             result: Mutex::new(Err(error)),
             observed_urls: Mutex::new(Vec::new()),
+            state_path: temporary_workspace_path("http-fetch-state"),
         }
     }
 
@@ -3334,6 +4149,12 @@ impl ScriptedFetchTransport {
             .lock()
             .map(|urls| urls.clone())
             .unwrap_or_default()
+    }
+}
+
+impl Drop for ScriptedFetchTransport {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.state_path);
     }
 }
 
@@ -3375,19 +4196,52 @@ fn http_fetch_call(
     }
 }
 
-fn staged_fetch_request(target: &str, output_limit_bytes: usize) -> ValidatedNativeToolRequest {
+fn staged_fetch_request(target: &str, _output_limit_bytes: usize) -> ValidatedNativeToolRequest {
     let mut request = request_for(NativeOperationFamily::HttpFetchReadOnly);
     request.target = target.to_owned();
     request.input.clear();
     request.workspace_root = None;
-    request.descriptor.output_limit_bytes = output_limit_bytes;
     validate_native_tool_request(&request).expect("valid read-only fetch")
 }
 
 fn scripted_fetch_executor(
     transport: Arc<ScriptedFetchTransport>,
 ) -> NativeHttpFetchReadOnlyExecutor<ScriptedFetchTransport> {
-    NativeHttpFetchReadOnlyExecutor::new(7, transport, vec![FETCH_ORIGIN.to_owned()], 5_000)
+    scripted_fetch_executor_at_epoch(transport, 7)
+}
+
+fn scripted_fetch_executor_at_epoch(
+    transport: Arc<ScriptedFetchTransport>,
+    trusted_fencing_epoch: i64,
+) -> NativeHttpFetchReadOnlyExecutor<ScriptedFetchTransport> {
+    NativeHttpFetchReadOnlyExecutor::new(
+        trusted_fencing_epoch,
+        Arc::clone(&transport),
+        vec![FETCH_ORIGIN.to_owned()],
+        5_000,
+        durable_state_store(&transport.state_path),
+    )
+}
+
+struct UnknownAfterNativeHttpFetchExecutor<'executor> {
+    native_executor: &'executor NativeHttpFetchReadOnlyExecutor<ScriptedFetchTransport>,
+}
+
+impl EffectExecutor for UnknownAfterNativeHttpFetchExecutor<'_> {
+    fn capabilities(&self) -> ExecutorCapabilities {
+        self.native_executor.capabilities()
+    }
+
+    fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
+        self.native_executor.dispatch(call)?;
+        Ok(DispatchOutcome::Unknown {
+            detail: "simulated lost post-fetch response".to_owned(),
+        })
+    }
+
+    fn query_outcome(&self, idempotency_key: &str) -> Result<ExecutorQueryResult, PortFailure> {
+        self.native_executor.query_outcome(idempotency_key)
+    }
 }
 
 #[test]
@@ -3496,7 +4350,12 @@ fn http_fetch_bounds_and_redacts_the_retained_response() {
     let retained = executor
         .completed_output("fetch-bounds")
         .expect("fetch retains bounded output");
-    assert!(retained.len() <= 24);
+    let registered_limit = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        .expect("fetch descriptor")
+        .output_limit_bytes;
+    assert!(retained.len() <= registered_limit);
     let retained_text = String::from_utf8_lossy(&retained).into_owned();
     assert!(retained_text.starts_with("200\n"));
     assert!(
@@ -3527,6 +4386,318 @@ fn duplicate_http_fetch_dispatch_performs_exactly_one_request() {
         executor.query_outcome("fetch-once"),
         Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
     );
+}
+
+#[test]
+fn http_fetch_unresolved_attempt_reconciles_indeterminate_after_restart() {
+    let transport = Arc::new(ScriptedFetchTransport::failing(ReadOnlyFetchError::Timeout));
+    let target = format!("{FETCH_ORIGIN}/data");
+    let first = scripted_fetch_executor(Arc::clone(&transport));
+    first
+        .stage_request(
+            "fetch-restart-unknown".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage fetch");
+    assert!(matches!(
+        first.dispatch(&http_fetch_call(
+            "fetch-restart-unknown",
+            "digest-1",
+            &target,
+            7,
+        )),
+        Ok(DispatchOutcome::Unknown { .. })
+    ));
+    assert_eq!(transport.observed_urls().len(), 1);
+
+    let restarted = scripted_fetch_executor(Arc::clone(&transport));
+    restarted
+        .stage_request(
+            "fetch-restart-unknown".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("restage durable intent");
+    assert_eq!(
+        restarted.query_outcome("fetch-restart-unknown"),
+        Ok(ExecutorQueryResult::Indeterminate)
+    );
+    assert!(matches!(
+        restarted.dispatch(&http_fetch_call(
+            "fetch-restart-unknown",
+            "digest-1",
+            &target,
+            7,
+        )),
+        Ok(DispatchOutcome::Unknown { .. })
+    ));
+    assert_eq!(
+        transport.observed_urls().len(),
+        1,
+        "restart must not blindly repeat an unresolved original-key attempt"
+    );
+}
+
+#[test]
+fn http_fetch_completed_receipt_survives_restart_without_second_request() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let target = format!("{FETCH_ORIGIN}/data");
+    let first = scripted_fetch_executor(Arc::clone(&transport));
+    first
+        .stage_request(
+            "fetch-restart-complete".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage fetch");
+    assert!(matches!(
+        first.dispatch(&http_fetch_call(
+            "fetch-restart-complete",
+            "digest-1",
+            &target,
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+
+    let restarted = scripted_fetch_executor(Arc::clone(&transport));
+    restarted
+        .stage_request(
+            "fetch-restart-complete".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("restage durable intent");
+    assert_eq!(
+        restarted.query_outcome("fetch-restart-complete"),
+        Ok(ExecutorQueryResult::ExecutedWithOriginalKey)
+    );
+    assert!(matches!(
+        restarted.dispatch(&http_fetch_call(
+            "fetch-restart-complete",
+            "digest-1",
+            &target,
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(transport.observed_urls().len(), 1);
+}
+
+#[test]
+fn http_fetch_effect_protocol_restart_keeps_unresolved_attempt_indeterminate() {
+    let target = format!("{FETCH_ORIGIN}/data");
+    let idempotency_key = "fetch-effect-restart-unknown";
+    let parameters_digest = "sha256:fetch-effect-restart-unknown";
+    let fixture = durable_effect_fixture(
+        701,
+        "fetch",
+        &target,
+        idempotency_key,
+        parameters_digest,
+        "http-fetch-restart-unknown",
+    );
+    let transport = Arc::new(ScriptedFetchTransport::failing(ReadOnlyFetchError::Timeout));
+    let first_executor = scripted_fetch_executor_at_epoch(Arc::clone(&transport), 1);
+    first_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage fetch");
+    let clock = FixedEffectClock(fixture.admitted_at.clone());
+    let identifiers = UuidV7Generator;
+    let grant = effect_grant();
+    let governance_currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let writer_lease = WriterLease { epoch: 1 };
+    let first_protocol = EffectProtocol::new(
+        fixture.store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/http-fetch-restart-unknown")
+            .expect("valid correlation reference"),
+    );
+    let authorized = first_protocol
+        .authorize_effect(
+            &fixture.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &writer_lease,
+        )
+        .expect("authorize fetch");
+    let (dispatched, outcome) = first_protocol
+        .dispatch_effect(
+            &fixture.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &governance_currency,
+            &first_executor,
+            &writer_lease,
+        )
+        .expect("dispatch fetch");
+    assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+    let unknown = first_protocol
+        .record_outcome(
+            &fixture.effect_object_id,
+            dispatched.after_version,
+            &outcome,
+            &writer_lease,
+        )
+        .expect("record unknown fetch");
+    drop(first_protocol);
+    drop(first_executor);
+
+    let restarted_executor = scripted_fetch_executor_at_epoch(Arc::clone(&transport), 1);
+    restarted_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("restage durable intent");
+    let restarted_protocol = EffectProtocol::new(
+        fixture.store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/http-fetch-restart-unknown")
+            .expect("valid correlation reference"),
+    );
+    let (_, query) = restarted_protocol
+        .reconcile(
+            &fixture.effect_object_id,
+            "OUTCOME_UNKNOWN",
+            unknown.after_version,
+            &restarted_executor,
+            &writer_lease,
+        )
+        .expect("reconcile after restart");
+    assert_eq!(query, ExecutorQueryResult::Indeterminate);
+    assert_eq!(transport.observed_urls().len(), 1);
+    assert_eq!(
+        fixture
+            .store
+            .load_object(LifecycleDomain::Task, &fixture.task_object_id)
+            .expect("load task")
+            .expect("task exists")
+            .version,
+        Version::INITIAL
+    );
+    std::fs::remove_file(fixture.database_path).unwrap_or(());
+}
+
+#[test]
+fn http_fetch_effect_protocol_restart_recovers_completed_key_bound_receipt() {
+    let target = format!("{FETCH_ORIGIN}/data");
+    let idempotency_key = "fetch-effect-restart-complete";
+    let parameters_digest = "sha256:fetch-effect-restart-complete";
+    let fixture = durable_effect_fixture(
+        711,
+        "fetch",
+        &target,
+        idempotency_key,
+        parameters_digest,
+        "http-fetch-restart-complete",
+    );
+    let transport = Arc::new(ScriptedFetchTransport::responding(200, b"body"));
+    let first_executor = scripted_fetch_executor_at_epoch(Arc::clone(&transport), 1);
+    first_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage fetch");
+    let lost_response = UnknownAfterNativeHttpFetchExecutor {
+        native_executor: &first_executor,
+    };
+    let clock = FixedEffectClock(fixture.admitted_at.clone());
+    let identifiers = UuidV7Generator;
+    let grant = effect_grant();
+    let governance_currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let writer_lease = WriterLease { epoch: 1 };
+    let first_protocol = EffectProtocol::new(
+        fixture.store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/http-fetch-restart-complete")
+            .expect("valid correlation reference"),
+    );
+    let authorized = first_protocol
+        .authorize_effect(
+            &fixture.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &governance_currency,
+            &writer_lease,
+        )
+        .expect("authorize fetch");
+    let (dispatched, outcome) = first_protocol
+        .dispatch_effect(
+            &fixture.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &governance_currency,
+            &lost_response,
+            &writer_lease,
+        )
+        .expect("dispatch through lost-response wrapper");
+    assert!(matches!(outcome, DispatchOutcome::Unknown { .. }));
+    let unknown = first_protocol
+        .record_outcome(
+            &fixture.effect_object_id,
+            dispatched.after_version,
+            &outcome,
+            &writer_lease,
+        )
+        .expect("record unknown fetch");
+    drop(first_protocol);
+    drop(lost_response);
+    drop(first_executor);
+
+    let restarted_executor = scripted_fetch_executor_at_epoch(Arc::clone(&transport), 1);
+    restarted_executor
+        .stage_request(
+            idempotency_key.to_owned(),
+            parameters_digest.to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("restage durable intent");
+    let restarted_protocol = EffectProtocol::new(
+        fixture.store.as_ref(),
+        &clock,
+        &identifiers,
+        UriRef::parse("actor://personal/daemon").expect("valid actor reference"),
+        UriRef::parse("authority://personal/effect-authority").expect("valid authority reference"),
+        UriRef::parse("correlation://personal/http-fetch-restart-complete")
+            .expect("valid correlation reference"),
+    );
+    let (_, query) = restarted_protocol
+        .reconcile(
+            &fixture.effect_object_id,
+            "OUTCOME_UNKNOWN",
+            unknown.after_version,
+            &restarted_executor,
+            &writer_lease,
+        )
+        .expect("reconcile completed fetch after restart");
+    assert_eq!(query, ExecutorQueryResult::ExecutedWithOriginalKey);
+    assert_eq!(transport.observed_urls().len(), 1);
+    std::fs::remove_file(fixture.database_path).unwrap_or(());
 }
 
 #[test]
@@ -3575,7 +4746,11 @@ fn http_fetch_classifies_transport_failures_without_inventing_a_result() {
         assert_eq!(executor.completed_output("fetch-failure"), None);
         assert_eq!(
             executor.query_outcome("fetch-failure"),
-            Ok(ExecutorQueryResult::NotExecuted)
+            Ok(if expects_unknown {
+                ExecutorQueryResult::Indeterminate
+            } else {
+                ExecutorQueryResult::NotExecuted
+            })
         );
     }
 }
@@ -3641,11 +4816,8 @@ fn stage_family_through_its_executor(
                 b"content\n",
                 WorkspacePreimage::Absent,
             );
-            NativeWorkspaceMutationExecutor::new(1).stage_request(
-                idempotency_key,
-                parameters_digest,
-                &validated,
-            )
+            NativeWorkspaceMutationExecutor::new(1, durable_state_store(workspace_root))
+                .stage_request(idempotency_key, parameters_digest, &validated)
         }
         NativeOperationFamily::WorkspacePatch => {
             let validated = staged_mutation_request(
@@ -3655,11 +4827,8 @@ fn stage_family_through_its_executor(
                 b"@@ -1 +1 @@\n-old\n+new\n",
                 WorkspacePreimage::Absent,
             );
-            NativeWorkspaceMutationExecutor::new(1).stage_request(
-                idempotency_key,
-                parameters_digest,
-                &validated,
-            )
+            NativeWorkspaceMutationExecutor::new(1, durable_state_store(workspace_root))
+                .stage_request(idempotency_key, parameters_digest, &validated)
         }
         NativeOperationFamily::ProcessCheck => {
             let validated = validate_native_tool_request(&process_check_request())?;

@@ -1054,6 +1054,7 @@ fn handle_readiness_route(
                 secret_probe_override: None,
                 provider_config_path_override: None,
                 provider_secret_resolution_override: None,
+                provider_secret_store_override: None,
                 pi_observation_override: None,
             });
             let body = if surface == "doctor" {
