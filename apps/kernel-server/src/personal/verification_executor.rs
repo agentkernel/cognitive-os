@@ -177,6 +177,7 @@ where
     Ok(verification_request)
 }
 
+#[allow(clippy::too_many_arguments)] // Every authority binding remains explicit at this edge.
 pub(crate) fn begin_verification_from_current_task_contract<S, C, G>(
     store: &S,
     clock: &C,

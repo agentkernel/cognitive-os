@@ -310,3 +310,21 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 21:48 +08:00
 - Results: rustfmt **pass**; handbook **pass**; twelve fingerprints refreshed;
   consistency **pass**; whitespace **pass**.
+
+### Unit 038 — exact native D02 scheduler-verifier path
+
+- Finished: 2026-08-13 21:52 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `20fa23459d36684ca143c24f499b2efca1701c2b`
+- Results:
+  - full private tick through independent report/Loop `CONTINUE`: **pass** 1/1;
+  - verification executor: **pass** 12/12;
+  - three-package Clippy: **fail** only on the production helper's eight
+    explicit authority arguments.
+- Recovery: add the repository-standard documented `too_many_arguments`
+  allowance to that one authority boundary and rerun Clippy unchanged.
+
+### Unit 039 — D02 Clippy repair local checks
+
+- Finished: 2026-08-13 21:53 +08:00
+- Results: rustfmt **pass**; whitespace **pass**.

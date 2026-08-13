@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0cc31ba468a67fb610b45733d7d7f4d8288097e34b918b6616fdfdbd1a054597"
+fingerprint: "sha256:e2ad9386879f69924568eafd0ef2f4ef0602ac618ad290d6e211d5fe4a6e524b"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
