@@ -676,3 +676,69 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；handbook 54×2 and generated 18/18 checks pass.
 - Disposition: compatibility repair can be committed and pushed.
+
+### D02-NATIVE-01 — exact Linux replay-boundary verification
+
+- Instruments:
+  `cargo test -p kernel-server --locked personal::memory_skill_consumer::tests`,
+  `cargo test -p kernel-server --locked scheduler_authority::tests`,
+  targeted kernel/store/server Clippy with `-D warnings`.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached
+  `~/p2-t19-msconsumer`, isolated target
+  `~/cos-p2t19-target-13b28036`.
+- Revision: `13b28036a59f055960d52ed170e443c069e32a67`
+- Started/retained: 3/3.
+- Outcome: consumer negatives `pass` 4/4；scheduler authority `pass` 55/55，
+  including session-2, forget/revoke and forged-digest regressions. Clippy
+  `fail` only on four test-only `.err().expect()` calls (`clippy::err_expect`);
+  no production diagnostic.
+- Disposition: replace those four calls with `expect_err` and rerun；不得添加
+  lint allow。行为 green evidence is retained but the validation set remains fail.
+
+### D02-FMT-12 — test-only Clippy repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `13b28036`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: four `expect_err` replacements are formatted.
+
+### D02-DIFF-12 — test-only Clippy repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `13b28036`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: patch and running report have no whitespace defects.
+
+### D02-HANDBOOK-08 — test-only Clippy fingerprint refresh
+
+- Instruments: `node tools/src/fill-handbook-fingerprints.mjs`,
+  `node tools/src/check-handbook.mjs`,
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `13b28036`
+- Started/retained: 3/3.
+- Outcome: exactly two mapped fingerprints refreshed；54×2 handbook and
+  18/18 generated checks pass.
+- Disposition: candidate is ready for staged gate and exact Linux Clippy rerun.
+
+### D02-DIFF-13 — complete test-only Clippy candidate
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted repair over `13b28036`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: no whitespace defects remain.
+
+### D02-DOCSYNC-08 — staged test-only Clippy gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `13b28036`
+- Started/retained: 1/1.
+- Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
+- Disposition: repair can be committed, pushed and rerun on Linux.

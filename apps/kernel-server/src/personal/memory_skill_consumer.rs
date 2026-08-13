@@ -747,8 +747,7 @@ mod tests {
             &digest('1'),
             "task_execution",
         )
-        .err()
-        .expect("a stale request digest must fail closed");
+        .expect_err("a stale request digest must fail closed");
 
         assert!(
             matches!(
@@ -776,8 +775,7 @@ mod tests {
             &original_digest(),
             "task_execution",
         )
-        .err()
-        .expect("a durable record from another principal must fail closed");
+        .expect_err("a durable record from another principal must fail closed");
 
         assert!(
             matches!(
@@ -809,8 +807,7 @@ mod tests {
             &original_digest(),
             "task_execution",
         )
-        .err()
-        .expect("a forged durable identity must fail closed");
+        .expect_err("a forged durable identity must fail closed");
 
         assert!(
             matches!(
@@ -838,8 +835,7 @@ mod tests {
             &original_digest(),
             "task_execution",
         )
-        .err()
-        .expect("a mismatched Memory scope must fail closed");
+        .expect_err("a mismatched Memory scope must fail closed");
 
         assert!(
             matches!(
