@@ -2,9 +2,8 @@ const AUTH_SOURCE: &str = include_str!("../src/personal/auth.rs");
 
 fn production_auth_source() -> &'static str {
     AUTH_SOURCE
-        .split("mod tests {")
-        .next()
-        .expect("auth source must contain production code")
+        .split_once("mod tests {")
+        .map_or(AUTH_SOURCE, |(production, _tests)| production)
 }
 
 #[test]

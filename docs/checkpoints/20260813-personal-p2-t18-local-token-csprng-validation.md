@@ -215,3 +215,102 @@
 - Result: 54 × 2 handbook、6 个最终 source fingerprint 与 18 个 generated 页面全部通过；
   无 docs-sync escape。
 - Disposition: commit/push immutable candidate 并转入 supported Rust validation。
+
+### V18 — exact Linux production-source guard
+
+- Revision: `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: `DEV-LINUX-NATIVE-01`；
+  `/home/wuz/cos-p2t18-fail-bc415f094d6` clean detached clone；
+  `cargo test -p kernel-server --locked --test p2_t18_local_token_csprng`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: production source guard 1/1；OS CSPRNG marker present，PID/time/DefaultHasher/
+  handcrafted fallback 均被静态拒绝；输出无 token material。
+- Disposition: 运行 auth 私有 seam 与既有 channel/expiry/revoke unit matrix。
+
+### V19 — auth unit matrix 首次调用
+
+- Revision: intended `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: Windows PowerShell → `DEV-LINUX-NATIVE-01` SSH
+- Started/retained denominator: 0/auth unit tests
+- Outcome: `instrument_error`
+- Result: 本地 PowerShell 对嵌套 revision-check 引号进行了错误展开，远端 bash 在 Cargo
+  启动前报 unmatched quote；不是产品测试失败。
+- Disposition: clone 已由 V18 证明 exact HEAD；重试采用无嵌套 substitution 的远端命令，
+  先打印 HEAD 再启动同一 test filter。
+
+### V20 — exact Linux auth unit matrix
+
+- Revision: `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` clean detached clone；
+  `cargo test -p kernel-server --locked personal::auth::tests -- --test-threads=1`
+- Started/retained denominator: 12/12 auth unit tests
+- Outcome: `pass`
+- Result: 12/12：failure/zero/short/repeated entropy 无文件，session entropy failure 无
+  session，跨调用固定熵重复 token 被拒，128 个 bounded OS-RNG 样本形状/唯一性通过（无统计
+  claim），Unix 0600、wrong channel、management boundary、idle expiry、revoke、bootstrap
+  mismatch 与 Debug/log serialization redaction 全通过。输出无 token material。
+- Disposition: D01/D02 focused matrix 通过；运行完整 kernel-server regressions。
+
+### V21 — exact Linux 完整 kernel-server regressions
+
+- Revision: `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` clean detached clone；
+  `cargo test -p kernel-server --locked -- --test-threads=1`
+- Started/retained denominator: 220/220 tests（203 unit + 17 integration）
+- Outcome: `pass`
+- Result: 220/220；P1-T04 real front-door auth/restart、P2-T02 channels/API、readiness、
+  Provider、scheduler/Tool/verifier 与新增 P2-T18 guard 全通过。daemon 日志只记录 private
+  bootstrap 路径，不记录 token bytes。
+- Disposition: 运行 kernel-server all-target Clippy。
+
+### V22 — exact Linux all-target Clippy 首轮
+
+- Revision: `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` clean detached clone；
+  `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Started/retained denominator: 1/1 Clippy run
+- Outcome: `fail`
+- Result: 唯一诊断是新增 integration source guard 的 `.expect(...)` 违反 workspace
+  `clippy::expect_used`；生产实现无诊断。
+- Disposition: 用 marker 缺失时保持 fail-closed 的 non-panicking `split_once(...).map_or(...)`
+  修复测试 helper，重新 fmt/commit/push 后在新 exact revision 重跑全部 required validation。
+
+### V23 — Clippy 修复后本地格式
+
+- Revision: working tree after `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: `DEV-WIN-GNU-01`；`cargo fmt --all -- --check`
+- Started/retained denominator: 1/1 formatting unit
+- Outcome: `pass`
+- Result: source-guard helper 改为 non-panicking fallback 后格式通过；未在 Windows GNU
+  编译/链接。
+- Disposition: 刷新因 test source 变化而受影响的 handbook fingerprints。
+
+### V24 — Clippy 修复后 fingerprint 核对
+
+- Revision: working tree after `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: Windows Node；`fill-handbook-fingerprints.mjs`
+- Started/retained denominator: 6/6 mapped locale pages checked
+- Outcome: `pass`
+- Result: 0 页需更新；fingerprint 算法追踪声明的 source digest，test-helper-only 改动不改变
+  当前 source fingerprints。
+- Disposition: 本地 consistency/docs-sync 后提交修复。
+
+### V25 — Clippy 修复后 consistency
+
+- Revision: working tree after `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:consistency`
+- Started/retained denominator: 1/1 consistency run
+- Outcome: `pass`
+- Result: requirements/errors/schemas/vectors/trace/plan/slice/lease 全部一致。
+- Disposition: stage test/report 并运行 docs-sync gate。
+
+### V26 — Clippy 修复 staged docs-sync
+
+- Revision: staged test/report correction after
+  `72ca18c6164d03df553eaf4aa109b83f036bcdf7`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged change set
+- Outcome: `pass`
+- Result: 2 个路径均不改变已交付文档语义；先前同步的 mapped source/handbook 仍保持有效。
+- Disposition: commit/push 新 exact candidate。
