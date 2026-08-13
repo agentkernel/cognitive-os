@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P9-T05/daemon-readiness-wait` | P9-T05/D01-D03 daemon integration-test readiness wait: the copied fixed 2 s bootstrap-secret budget fails a healthy Windows start that takes ~2.2 s and keeps red-lighting required CI on every in-flight branch. Test-harness paths only — no product code, contract, negative, or assertion | Lane-RUN | `personal/P9-T05-ci-readiness-wait` | `apps/kernel-server/tests/**`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/**` | personal-agent | 2026-08-13 / 2026-08-13 | active |
+| `lease/personal/P9-T05/daemon-readiness-wait` | P9-T05/D02 (of D01-D03) daemon integration-test readiness wait: the copied fixed 2 s bootstrap-secret budget fails a healthy Windows start that takes ~2.2 s and keeps red-lighting required CI on every in-flight branch. Test-harness paths only — no product code, contract, negative, or assertion | Lane-RUN | `personal/P9-T05-ci-readiness-wait` | `apps/kernel-server/tests/**`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PROGRESS.md`, `docs/checkpoints/**` | personal-agent | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

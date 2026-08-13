@@ -11,6 +11,7 @@
 mod common;
 
 use std::net::TcpListener;
+use std::process::Command;
 use std::time::{Duration, Instant};
 
 /// Longer than the 2 s budget the copied waits used and than the ~2.2 s start
@@ -95,5 +96,38 @@ fn readiness_wait_fails_closed_with_a_diagnostic_when_the_secret_never_appears()
         waited.as_millis(),
         budget.as_millis()
     );
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// A generous ceiling must not turn a dead daemon into a slow one. `--serve`
+/// refuses a non-loopback bind before it does any work, so this child is gone
+/// immediately and can never publish anything.
+#[test]
+fn readiness_wait_reports_an_exited_daemon_instead_of_consuming_the_ceiling() {
+    let root = runtime_root("exited-daemon");
+    let mut daemon = Command::new(env!("CARGO_BIN_EXE_kernel-server"))
+        .args(["--serve", "--bind", "203.0.113.1:9"])
+        .spawn()
+        .unwrap();
+
+    let started = Instant::now();
+    let outcome =
+        common::try_wait_for_bootstrap_secret_from(&mut daemon, &root, common::READY_TIMEOUT);
+    let waited = started.elapsed();
+
+    let diagnostic = outcome.expect_err("a daemon that exited must fail the wait");
+    assert!(
+        diagnostic.contains("the daemon exited with"),
+        "{diagnostic}"
+    );
+    assert!(
+        waited < common::READY_TIMEOUT / 4,
+        "the wait spent {} ms of a {} ms ceiling on a daemon that was already gone",
+        waited.as_millis(),
+        common::READY_TIMEOUT.as_millis()
+    );
+
+    let _ = daemon.kill();
+    let _ = daemon.wait();
     let _ = std::fs::remove_dir_all(&root);
 }

@@ -102,3 +102,24 @@ needed — the escape is only for changes that do hit mapped sources.
 `RUST-LINK-DEV-WIN-GNU-01`: this host is a registered unsupported
 `x86_64-pc-windows-gnu` link host. The D01 proof is executed on required
 Ubuntu/Windows CI, where the failing case is the evidence.
+
+### 5. Required CI run `31717595506` at `54a0668` — **failed as designed** (D01)
+
+This is the failure-first proof. Both required jobs failed, on the intended
+case and only on it. Draft PR
+[#213](https://github.com/agentkernel/cognitive-os/pull/213).
+
+| Job | Result | Detail |
+|---|---|---|
+| `verify (ubuntu-latest)` | **fail (expected)** | `readiness_wait_tolerates_a_start_slower_than_two_seconds` panicked at `common/mod.rs`: "bootstrap secret at `/tmp/cos-p9t05-slow-start-.../local-bootstrap.secret` did not become ready within 2000 ms (101 probes over 2000 ms)" |
+| `verify (windows-latest)` | **fail (expected)** | same case, same wait: "did not become ready within 2000 ms (99 probes over 2000 ms)" |
+
+The `p9_t05_daemon_readiness_wait` target reports `FAILED. 1 passed; 1 failed`
+on both platforms: the fail-closed case already passes, so the wait was not
+broken into failing — the 2 s budget genuinely cannot survive a healthy start
+that takes 2.5 s. Every other test target in the run passed on both platforms,
+so extracting the wait changed nothing else.
+
+The observed Windows failure was at 2.33 s of wall time for a 2.5 s publication,
+which reproduces the reported production symptom (a ~2.2 s start against a 2 s
+budget) deterministically rather than by chance.
