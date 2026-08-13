@@ -51,11 +51,12 @@ use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
     ContinuationAuthorityStore, DaemonOperationDescriptorRow, EventDraft, IntentChainStore,
-    IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProgressFactRow,
-    ProtocolStore, RecordDraft, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TaskExecutionBootstrap,
-    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
-    WorkspaceContextSourceRow,
+    IntentRow, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemoryStore,
+    ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProgressFactRow, ProtocolStore,
+    RecordDraft, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+    SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore, StoredObject, TaskBinding,
+    TaskContractRow, TaskExecutionBootstrap, TransitionCommit, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, NativeOperationFamily};
 use cognitive_kernel::{EffectClass, OperationDescriptor};
@@ -564,6 +565,142 @@ fn task_context_builder_requires_daemon_system_and_task_fragments() {
     assert!(resolved_context.loaded.iter().any(|item| {
         item.object_ref == working_fragment_ref && item.role == LoadedContextItemRole::Working
     }));
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn admitted_task_context_consumes_authorized_memory_and_exact_skill_pin() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+    let task_ref = "task://tenant-a/p2-t16-governed-memory-skill";
+    let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+    assert_eq!(store.current_contract_epoch(task_ref).unwrap(), 1);
+
+    let source = store
+        .load_workspace_context_source_body(&object_id(921))
+        .unwrap()
+        .unwrap();
+    let candidate_id = object_id(980);
+    let candidate_header = compose_governed_header(
+        &candidate_id,
+        "MemoryCandidate",
+        "cognitiveos.memory/0.1",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t16-failure-first-memory",
+        &WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap(),
+    )
+    .unwrap();
+    let (candidate_json, candidate_digest) = seal_payload(json!({
+        "header": candidate_header,
+        "memory_kind": "working",
+        "governance_scope": context_command.resource_scope_prefix.clone(),
+        "purpose": "task_execution",
+        "content_ref": source.source_id.clone(),
+    }));
+    let decision_id = object_id(981);
+    let memory_id = object_id(982);
+    store
+        .append_memory_admission(
+            &MemoryCandidateRow {
+                candidate_id: candidate_id.clone(),
+                candidate_digest: candidate_digest.clone(),
+                source_id: source.source_id.clone(),
+                source_digest: source.source_digest.clone(),
+                source_provenance_ref: source.provenance_ref.clone(),
+                governance_scope: context_command.resource_scope_prefix.clone(),
+                target_scope: task_ref.to_owned(),
+                purpose: "task_execution".to_owned(),
+                retention_expires_at_unix_seconds: i64::MAX,
+                observed_at_unix_seconds: 1,
+                canonical_json: candidate_json,
+            },
+            &MemoryAdmissionDecisionRow {
+                decision_id: decision_id.clone(),
+                candidate_id,
+                candidate_digest,
+                decision: "admit".to_owned(),
+                policy_version: 1,
+                reason_codes_json: "[\"MEMORY_ADMISSION_ACCEPTED\"]".to_owned(),
+                canonical_json: "{}".to_owned(),
+            },
+            Some(&MemoryObjectRow {
+                memory_id: memory_id.clone(),
+                candidate_id: object_id(980),
+                decision_id,
+                canonical_json: "{}".to_owned(),
+            }),
+        )
+        .unwrap();
+
+    let package_id = object_id(983);
+    let revision_id = object_id(984);
+    let binding_id = object_id(985);
+    let manifest_digest = format!("sha256:{}", "4".repeat(64));
+    let content_digest = format!("sha256:{}", "5".repeat(64));
+    store
+        .append_skill_import(
+            &SkillPackageRow {
+                package_id: package_id.clone(),
+                workspace_scope: context_command.resource_scope_prefix.clone(),
+                local_source_path: "skills/p2-t16/SKILL.md".to_owned(),
+                provenance_ref: "file://workspace/skills/p2-t16/SKILL.md".to_owned(),
+                manifest_digest: manifest_digest.clone(),
+                canonical_json: json!({
+                    "manifest_digest": manifest_digest,
+                    "instructions": "只能使用守护进程批准的技能内容"
+                })
+                .to_string(),
+            },
+            &SkillRevisionRow {
+                revision_id: revision_id.clone(),
+                package_id,
+                content_digest: content_digest.clone(),
+                compatibility: "compatible".to_owned(),
+                canonical_json: json!({
+                    "content_digest": content_digest,
+                    "instructions": "只能使用守护进程批准的技能内容"
+                })
+                .to_string(),
+            },
+        )
+        .unwrap();
+    store
+        .append_skill_binding(&SkillBindingRow {
+            binding_id: binding_id.clone(),
+            revision_id,
+            workspace_scope: context_command.resource_scope_prefix.clone(),
+            target_kind: "task".to_owned(),
+            target_ref: task_ref.to_owned(),
+            status: "active".to_owned(),
+            canonical_json: "{}".to_owned(),
+        })
+        .unwrap();
+
+    let resolved_context =
+        super::resolve_authorized_task_context(&store, &context_command).unwrap();
+
+    // 该断言在基线实现上必须失败：现有路径只返回普通 Context 源，
+    // 尚未把已准入 Memory 与精确 Skill pin 作为受治理片段交给 Pi。
+    assert!(
+        resolved_context
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == memory_id.to_string()),
+        "已准入且获授权的 Memory 必须经受治理 Context 路径消费"
+    );
+    assert!(
+        resolved_context
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == binding_id.to_string()),
+        "精确 Skill binding 必须经受治理 Context 路径消费"
+    );
 
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
