@@ -21,7 +21,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-client.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:ae285615388e49d57facc84ba1b7015f10f3ca1d3bd650e7729238bd11516347"
+fingerprint: "sha256:5d609a18bac212d6a70d5b72da196bda5bb56211b2a2378ad1113bc7a452c32d"
 non_claims:
   - 全部 TypeScript 表面都是 candidate/observation 客户端；任何一个都不能持有权威或完成 Task。
 ---
@@ -57,6 +57,13 @@ loopback 等待内、由回显 correlation id 连接的两个 daemon 域阶段�
 权威面（持久 sink 是注入端口，指向 Personal 根内的 sink 一律拒绝），发布内容只有标签、
 不透明 id、时长与计数。扩展注册的 provider 桥与工具策略见
 [Pi 对话壳](../user/pi-shell.md)。
+
+记录还携带 `requestMode`、`outcome`、`terminalStage` 与固定的无内容
+`failureClass`。成功请求必须具备全部五个 Pi 阶段；取消/错误请求只保留实际测得的精确
+前缀。Provider 路径固定非流式（`stream:false`）；`stream:true` 在解析 secret 前即以
+稳定错误拒绝。实测 usage 带有仅由已认证 daemon 响应解析器创建的进程内来源标记，因此
+嵌入式 runner 不能发布自行断言的计数。这阻止 instrumentation 侧伪造，但不对上游
+Provider 的计数作密码学背书。
 
 ## `apps/agent-shell` —— 会话库
 

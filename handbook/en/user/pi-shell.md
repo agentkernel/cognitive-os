@@ -17,7 +17,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:101496c330fb9fe846099b4f53bf8599d4a24715180cdc42717faaed358cdd11"
+fingerprint: "sha256:ce01507f7dc813366807ac4ca16018c613f5682dba2b144f453d7f660685ba57"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -63,11 +63,25 @@ An ordinary session measures nothing. Set both
 `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>` before launching Pi.
 The daemon process must see the same enable variable, otherwise the two nested
 daemon stages stay `not_available` rather than being joined. Each request then
-additionally publishes one in-memory observation: the seven stages
-of the route (request preparation, extension dispatch, loopback wait, daemon
-preflight, Provider network, response parse, event delivery) as monotonic
-durations, joined to the daemon side by one opaque correlation id, plus the same
-Provider usage described above.
+publishes one in-memory observation. A completed request contains all seven route
+stages (request preparation, extension dispatch, loopback wait, daemon preflight,
+Provider network, response parse, event delivery); a cancelled or failed request
+retains the measured Pi-stage prefix instead of disappearing from the sample
+denominator. Every record states `requestMode=non_streaming`, a terminal outcome,
+the last measured Pi stage, and a content-free failure class such as
+`provider_unavailable` or `protocol_error`. The product rejects an upstream
+`stream:true` request before secret resolution, so it is not represented as a
+successful streaming observation.
+
+Pi stages use Node's monotonic clock and daemon stages use Rust `Instant`.
+Wall-clock timestamps are not part of the observation, and stages from the two
+clock domains must never be subtracted. The opaque correlation id only joins the
+same request; concurrent requests receive different ids. Token counters become
+`measured` only when the authenticated daemon-response parser saw a complete,
+internally consistent Provider usage object. A caller cannot publish hand-built
+counters as measured evidence; missing or inconsistent usage remains
+`not_available`. This is provenance inside the product path, not a
+cryptographic attestation that an upstream Provider counted correctly.
 
 An observation carries durations and counters only — never a prompt, a response,
 a header, a bearer or a Provider key — and the shell writes nothing to disk for

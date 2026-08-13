@@ -34,6 +34,7 @@ import {
   createPiRouteCorrelationId,
   openPiRouteObservationSession,
   parseDaemonReportedNanos,
+  providerUsageFromDaemonResponse,
   type DaemonReportedStages,
   type PiRouteObservationSession,
   type PiRouteObservationSessionOptions,
@@ -569,7 +570,7 @@ export function parseBoundedCompletion(
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
     providerNetworkElapsedNanos: daemonReported.providerNetworkElapsedNanos,
     daemonReported,
-    providerUsage: parseProviderUsage(record["usage"]),
+    providerUsage: providerUsageFromDaemonResponse(record["usage"], correlationId),
   };
 }
 
@@ -601,34 +602,6 @@ function readDaemonReportedStages(response: Response): DaemonReportedStages {
 
 function elapsedMonotonicNanos(startedAt: number): number {
   return Math.max(1, Math.round((performance.now() - startedAt) * 1_000_000));
-}
-
-function parseProviderUsage(value: unknown): ProviderUsage {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return { availability: "not_available" };
-  }
-  const usage = value as Record<string, unknown>;
-  const promptTokens = usage["prompt_tokens"];
-  const completionTokens = usage["completion_tokens"];
-  const totalTokens = usage["total_tokens"];
-  if (
-    !isNonnegativeSafeInteger(promptTokens)
-    || !isNonnegativeSafeInteger(completionTokens)
-    || !isNonnegativeSafeInteger(totalTokens)
-    || promptTokens + completionTokens !== totalTokens
-  ) {
-    return { availability: "not_available" };
-  }
-  return {
-    availability: "measured",
-    promptTokens,
-    completionTokens,
-    totalTokens,
-  };
-}
-
-function isNonnegativeSafeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function parseJsonRecord(bodyText: string, label: string): Record<string, unknown> {

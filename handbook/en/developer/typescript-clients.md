@@ -21,7 +21,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-client.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:ae285615388e49d57facc84ba1b7015f10f3ca1d3bd650e7729238bd11516347"
+fingerprint: "sha256:5d609a18bac212d6a70d5b72da196bda5bb56211b2a2378ad1113bc7a452c32d"
 non_claims:
   - All TypeScript surfaces are candidate/observation clients; none can hold authority or complete Tasks.
 ---
@@ -66,6 +66,15 @@ a sink inside a Personal root is refused), and publishes nothing that is not a
 label, an opaque id, a duration or a counter. The extension registers the
 provider bridge and tool policy documented in
 [the Pi shell](../user/pi-shell.md).
+
+The record also carries `requestMode`, `outcome`, `terminalStage` and a fixed
+content-free `failureClass`. Completed requests require all five Pi stages;
+cancelled/error requests retain only the exact measured prefix. The Provider
+route is non-streaming (`stream:false`); `stream:true` is a stable refusal before
+secret resolution. Measured usage has an in-process provenance marker created
+only by the authenticated daemon-response parser, so an embedding runner cannot
+publish self-asserted counters. That prevents instrumentation-side fabrication;
+it does not cryptographically attest an upstream Provider's accounting.
 
 ## `apps/agent-shell` — session library
 

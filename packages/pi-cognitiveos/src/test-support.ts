@@ -185,6 +185,8 @@ export interface FakeDaemonOptions {
    */
   readonly unauthorizedStatusResponses?: number;
   readonly selectedModelBody?: string;
+  /** HTTP status returned by the completion route; defaults to 200. */
+  readonly completionStatus?: number;
   readonly completionBody?: string;
   readonly providerNetworkElapsedNanos?: string;
   /** Nested daemon preflight/SecretStore duration reported next to the network stage. */
@@ -340,7 +342,7 @@ export async function startFakeDaemon(options: FakeDaemonOptions): Promise<FakeD
         }
         respond(
           response,
-          200,
+          options.completionStatus ?? 200,
           options.completionBody ?? boundedCompletionBody(),
           observationResponseHeaders(options, headers["x-cognitiveos-correlation-id"]),
         );

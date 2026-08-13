@@ -82,6 +82,7 @@ export {
   type PiDomainStage,
   type PiRouteDaemonStageAvailability,
   type PiRouteDaemonStageUnavailableReason,
+  type PiRouteFailureClass,
   type PiRouteObservation,
   type PiRouteObservationAuthorization,
   type PiRouteObservationDenialReason,
@@ -89,9 +90,12 @@ export {
   type PiRouteObservationInput,
   type PiRouteObservationSession,
   type PiRouteObservationSessionOptions,
+  type PiRouteOutcome,
+  type PiRouteRequestMode,
   type PiRouteStage,
   type PiRouteStageDomain,
   type PiRouteStageTiming,
+  type PiRouteTerminalStage,
 } from "./pi-route-observation.js";
 
 export {

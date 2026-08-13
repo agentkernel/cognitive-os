@@ -91,6 +91,10 @@ function observationWith(
     schema: PI_ROUTE_OBSERVATION_SCHEMA,
     campaignId: CAMPAIGN_ID,
     correlationId: createPiRouteCorrelationId(),
+    requestMode: "non_streaming",
+    outcome: "completed",
+    failureClass: "none",
+    terminalStage: "pi_event_delivery",
     stages: piStages(),
     daemonStages: "not_available",
     daemonStagesUnavailableReason: "not_reported",
@@ -221,7 +225,7 @@ test("nested daemon stages that outlast their loopback wait are dropped, never t
       ...narrowWait.slice(3),
     ],
     daemonStages: "joined",
-    daemonStagesUnavailableReason: undefined,
+    daemonStagesUnavailableReason: null,
   });
   assert.equal(
     refusalCode(() => validatePiRouteObservation(fabricated)),
@@ -242,6 +246,33 @@ test("only one of the two daemon stages is not a joined daemon domain", () => {
     providerUsage: { availability: "not_available" },
   });
   assert.equal(observation.daemonStagesUnavailableReason, "incomplete_stage_group");
+});
+
+test("an unknown daemon-stage availability label cannot masquerade as joined", () => {
+  const forged = observationWith({
+    stages: [
+      ...piStages().slice(0, 3),
+      { stage: "daemon_preflight", domain: "daemon", elapsedNanos: 1_000 },
+      { stage: "provider_network", domain: "daemon", elapsedNanos: 4_000 },
+      ...piStages().slice(3),
+    ],
+    daemonStages: "estimated" as never,
+    daemonStagesUnavailableReason: null,
+  });
+  assert.equal(
+    refusalCode(() => validatePiRouteObservation(forged)),
+    "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT",
+  );
+});
+
+test("an unknown daemon-stage unavailability reason is refused", () => {
+  const forged = observationWith({
+    daemonStagesUnavailableReason: "estimated" as never,
+  });
+  assert.equal(
+    refusalCode(() => validatePiRouteObservation(forged)),
+    "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT",
+  );
 });
 
 test("a duplicated, unknown, misattributed or out-of-order stage is refused", () => {
@@ -336,6 +367,137 @@ test("usage counters that do not add up are refused rather than reported as meas
       refusalCode(() => validatePiRouteObservation(observationWith({}, usage))),
       "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_INCONSISTENT",
     );
+  }
+});
+
+test("an unknown usage availability label cannot bypass measured-usage provenance", () => {
+  const forgedUsage = {
+    availability: "estimated",
+    promptTokens: 7,
+    completionTokens: 3,
+    totalTokens: 10,
+  } as unknown as ProviderUsage;
+  const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+  assert.ok(session !== undefined);
+  assert.equal(
+    refusalCode(() => session.publish(observationWith({}, forgedUsage))),
+    "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_INCONSISTENT",
+  );
+  assert.equal(session.observations.length, 0);
+});
+
+test("self-asserted measured usage cannot be assembled or published as Provider evidence", () => {
+  const forgedUsage: ProviderUsage = {
+    availability: "measured",
+    promptTokens: 7,
+    completionTokens: 3,
+    totalTokens: 10,
+  };
+  assert.equal(
+    refusalCode(() =>
+      assemblePiRouteObservation({
+        campaignId: CAMPAIGN_ID,
+        correlationId: "campaign-0123456789abcdef0123456789abcdef",
+        piStages: piStages(),
+        daemonReported: {
+          echoedCorrelationId: undefined,
+          preflightElapsedNanos: undefined,
+          providerNetworkElapsedNanos: undefined,
+        },
+        providerUsage: forgedUsage,
+      }),
+    ),
+    "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED",
+  );
+
+  const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+  assert.ok(session !== undefined);
+  assert.equal(
+    refusalCode(() => session.publish(observationWith({}, forgedUsage))),
+    "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED",
+  );
+  assert.equal(session.observations.length, 0);
+});
+
+test("published measured usage and stage timings are immutable to the campaign runner", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionBody: JSON.stringify({
+      choices: [{ message: { content: "daemon text" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+    }),
+  });
+  try {
+    const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(session !== undefined);
+    await runOneCompletion(daemon.endpoint, session);
+    const observation = session.observations[0]!;
+    const measuredUsage = observation.providerUsage as {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+    const firstStage = observation.stages[0] as { elapsedNanos: number };
+
+    assert.throws(() => {
+      measuredUsage.totalTokens = 999;
+    }, TypeError);
+    assert.throws(() => {
+      firstStage.elapsedNanos = 999;
+    }, TypeError);
+    assert.deepEqual(observation.providerUsage, {
+      availability: "measured",
+      promptTokens: 7,
+      completionTokens: 3,
+      totalTokens: 10,
+    });
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("measured usage cannot be replayed under another request or campaign session", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionBody: JSON.stringify({
+      choices: [{ message: { content: "daemon text" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+    }),
+  });
+  try {
+    const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(session !== undefined);
+    await runOneCompletion(daemon.endpoint, session);
+    const measuredUsage = session.observations[0]!.providerUsage;
+
+    assert.equal(
+      refusalCode(() =>
+        assemblePiRouteObservation({
+          campaignId: CAMPAIGN_ID,
+          correlationId: createPiRouteCorrelationId(),
+          piStages: piStages(),
+          daemonReported: {
+            echoedCorrelationId: undefined,
+            preflightElapsedNanos: undefined,
+            providerNetworkElapsedNanos: undefined,
+          },
+          providerUsage: measuredUsage,
+        }),
+      ),
+      "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED",
+    );
+
+    const secondSession = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(secondSession !== undefined);
+    assert.equal(
+      refusalCode(() => secondSession.publish(session.observations[0]!)),
+      "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED",
+    );
+    assert.equal(secondSession.observations.length, 0);
+  } finally {
+    await daemon.close();
   }
 });
 
@@ -447,9 +609,13 @@ test("a published observation carries no prompt, response, header or bearer mate
       "correlationId",
       "daemonStages",
       "daemonStagesUnavailableReason",
+      "failureClass",
+      "outcome",
       "providerUsage",
+      "requestMode",
       "schema",
       "stages",
+      "terminalStage",
     ]);
     for (const stage of observation.stages) {
       assert.deepEqual(Object.keys(stage).sort(), ["domain", "elapsedNanos", "stage"]);
@@ -458,6 +624,35 @@ test("a published observation carries no prompt, response, header or bearer mate
   } finally {
     await daemon.close();
   }
+});
+
+test("a runner cannot smuggle an extra prompt or credential field into the sink schema", () => {
+  const writes: string[] = [];
+  const sinkPath = path.join(path.sep, "tmp", "campaign", "observations.ndjson");
+  const session = openPiRouteObservationSession(
+    {
+      ...AUTHORIZED_ENVIRONMENT,
+      COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK: sinkPath,
+    },
+    {
+      sinkWriter: {
+        appendLine: (_target, line) => writes.push(line),
+      },
+    },
+  );
+  assert.ok(session !== undefined);
+  const smuggled = {
+    ...observationWith(),
+    prompt: PROMPT_SENTINEL,
+    authorization: "Bearer should-never-enter-an-observation",
+  } as PiRouteObservation;
+
+  assert.equal(
+    refusalCode(() => session.publish(smuggled)),
+    "PI_ROUTE_OBSERVATION_SCHEMA_INVALID",
+  );
+  assert.deepEqual(writes, []);
+  assert.equal(session.observations.length, 0);
 });
 
 test("a record that outgrew the content-free ceiling is refused rather than retained", () => {

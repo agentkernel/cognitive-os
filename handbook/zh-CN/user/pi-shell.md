@@ -17,7 +17,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:101496c330fb9fe846099b4f53bf8599d4a24715180cdc42717faaed358cdd11"
+fingerprint: "sha256:ce01507f7dc813366807ac4ca16018c613f5682dba2b144f453d7f660685ba57"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -57,10 +57,19 @@ non_claims:
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 与
 `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>`。daemon 进程也必须看到
 同一个启用变量，否则两个嵌套 daemon 阶段保持 `not_available` 而不会被 join。每次
-请求会额外发布一条
-内存中的观测：路由的七个阶段（请求准备、扩展派发、loopback 等待、daemon preflight、
-Provider 网络、响应解析、事件投递）以单调时长记录，并由一个不透明 correlation id 与
-daemon 侧连接，同时带上上文所述的 Provider 用量。
+请求都会发布一条内存观测。成功请求包含路由的全部七个阶段（请求准备、扩展派发、
+loopback 等待、daemon preflight、Provider 网络、响应解析、事件投递）；取消或失败的
+请求保留已经测得的 Pi 阶段前缀，而不会从样本分母中消失。每条记录都明确
+`requestMode=non_streaming`、终态、最后测得的 Pi 阶段，以及
+`provider_unavailable`、`protocol_error` 等无内容失败类别。产品在解析 secret 前就拒
+绝上游 `stream:true` 请求，因此它不会被记成成功的流式观测。
+
+Pi 阶段使用 Node 单调时钟，daemon 阶段使用 Rust `Instant`。观测不含 wall-clock
+时间戳，两个时钟域的阶段不得相减。不透明 correlation id 只连接同一请求；并发请求使
+用不同 id。只有经过认证的 daemon 响应解析器读到完整且内部一致的 Provider usage
+对象，token 计数才会成为 `measured`；调用方自行构造的计数不能作为实测证据发布，缺失
+或不一致时保持 `not_available`。这只是产品路径内的来源约束，并非对上游 Provider
+计数正确性的密码学证明。
 
 一条观测只含时长与计数——绝不含 prompt、响应、header、bearer 或 Provider key——且
 shell 不为它向磁盘写入任何内容。`COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` 可为嵌入该扩展

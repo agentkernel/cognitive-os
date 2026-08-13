@@ -104,3 +104,412 @@ stating so explicitly.
   appear on the error path; the refused value and session/bootstrap secrets
   never appear in the response; the runtime root gains no observation or
   campaign file. Local `DEV-WIN-GNU-01` remains **not-run**.
+
+### U06 — failure-first: terminal outcomes and Provider-usage provenance
+
+- Unit: `packages/pi-cognitiveos` targeted observation/provider suites
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation.test.js" "dist/pi-route-observation-negatives.test.js" "dist/daemon-provider.test.js"`
+- Result: **fail (expected)** — 31/35 pass, with four discriminating contract
+  failures:
+  - a pre-dispatch cancellation produced 0 records instead of retaining one
+    `cancelled` sample;
+  - a no-Provider refusal produced 0 records instead of retaining one `error`
+    sample;
+  - self-asserted, internally consistent counters were accepted as measured
+    Provider usage rather than refused for missing response provenance;
+  - a successful record did not state the fixed `non_streaming` request mode or
+    terminal outcome.
+- Concurrent request correlation already passed in the same red run: two
+  overlapping Pi requests produced two distinct ids whose set exactly matched
+  the two daemon request headers. That protects an existing property; it is not
+  counted as a newly implemented behavior.
+- Non-claim: fixture-only failure-first evidence; no Provider, benchmark, Gate,
+  release, Profile, B01 or overhead-attribution result.
+
+### U07 — terminal outcomes, concurrent correlation and usage provenance
+
+- Unit: `packages/pi-cognitiveos` targeted observation/provider suites
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation.test.js" "dist/pi-route-observation-negatives.test.js" "dist/daemon-provider.test.js"`
+- Result: **pass** — 35/35.
+- Evidence:
+  - every authorized started attempt publishes one content-free terminal record:
+    success is `completed`, pre-dispatch abort is `cancelled`, and a
+    `PERSONAL_PROVIDER_NOT_CONFIGURED` refusal is `error`;
+  - each record states `requestMode=non_streaming` and the last measured Pi
+    stage (or `before_request`), so partial prefixes are explicit without
+    inventing missing durations;
+  - two overlapping requests retained two unique correlation ids, and their set
+    exactly matched the two ids observed by the daemon;
+  - internally consistent counters built by a caller were refused both at
+    assembly and publication; measured counters are accepted only when the
+    authenticated daemon-response parser created the in-process provenance
+    marker. Missing or inconsistent counters remain `not_available`.
+- Clock boundary: all Pi durations remain on Node's monotonic clock, daemon
+  durations remain on Rust `Instant`, and validation performs no cross-domain
+  subtraction; only nested elapsed-duration containment is checked.
+- Non-claim: loopback fixtures only; this is no Provider, benchmark, Gate,
+  release, Profile, B01 or overhead-attribution result.
+
+### U08 — failure-first: terminal failure classification
+
+- Unit: `packages/pi-cognitiveos` success/cancellation/error route contracts
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation.test.js" "dist/daemon-provider.test.js"`
+- Result: **fail (expected)** — 4/8 pass. Completed, pre-dispatch-cancelled,
+  no-Provider and malformed-Provider-response records all lacked the required
+  content-free `failureClass` label.
+- Required distinction: `none`, `cancelled`, `provider_unavailable` and
+  `protocol_error`; no response body, message, status text or credential may be
+  copied into the observation.
+
+### U09 — terminal failure classification
+
+- Unit: `packages/pi-cognitiveos` targeted observation/provider suites
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation.test.js" "dist/pi-route-observation-negatives.test.js" "dist/daemon-provider.test.js"`
+- Result: **pass** — 35/35.
+- Evidence: completed, cancelled, no-Provider and malformed-response samples
+  carry respectively `none`, `cancelled`, `provider_unavailable` and
+  `protocol_error`. Classification derives only from typed local/daemon error
+  codes; no raw error text or body enters the observation.
+
+### U10 — complete Pi package regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 84/84.
+- Evidence boundary: includes the existing non-streaming request-body contract
+  (`stream:false`), default-disabled behavior, Provider/no-Provider and protocol
+  error paths, pre-dispatch cancellation, complete/partial usage, concurrent
+  correlation, content exclusion, no filesystem writer, and no extra request.
+  Rust's existing `stream:true` rejection remains a separate supported-CI unit;
+  this Node result does not stand in for it.
+
+### U11 — handbook check before generated-page refresh
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **fail** — four expected synchronization violations, all on the
+  generated `reference/http-api.md` pair: HB008 fingerprint drift plus HB010
+  generated-byte drift after the daemon route source changed.
+- Recovery: run the registered generator, never hand-edit generated pages, then
+  rerun the check. This is a docs synchronization failure, not a product-test
+  result.
+
+### U12 — generated handbook refresh
+
+- Unit: registered handbook generator
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs`
+- Result: **pass**. Generated reference families were rebuilt from canonical
+  sources; the following check determines byte/fingerprint equality.
+
+### U13 — handbook machine gate
+
+- Unit: bilingual handbook machine model after regeneration
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families, with
+  coverage/link/fingerprint/status/secret checks verified.
+
+### U14 — generated handbook byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U43 — accepted consistency gate
+
+- Unit: repository static consistency
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  links, traceability, Personal plan/Gates, environment routing,
+  task/checkpoint delivery and leases verified.
+
+### U44 — staged docs-sync gate
+
+- Unit: exact staged checkpoint change set
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **pass**. Eight Pi-source paths mapped to `user.pi-shell`,
+  `dev.agent-pi-lifecycle` and generated environment-variable reference;
+  eight handbook paths mapped to the handbook-owning pages. The nested
+  handbook and generator checks both passed.
+
+### U31 — final repository consistency
+
+- Unit: repository static consistency
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  links, traceability, Personal plan/Gates, environment routing,
+  task/checkpoint delivery and leases verified.
+
+### U32 — local instrumentation-only cost probe
+
+- Unit: 1,000 in-memory records, each including correlation-id minting, ten
+  monotonic clock reads, five stage closures, schema validation, freezing,
+  serialization and bounded-session retention
+- Environment: `DEV-WIN-GNU-01`, Node fixture only; no daemon or Provider
+- Result: **pass for the narrow “not obviously self-dominating” check** —
+  p50 `80.0 µs`, p95 `327.4 µs`, max `5.1812 ms` (runtime/GC outlier), 1,000/1,000
+  retained.
+- Non-claim: this is not a benchmark, production latency result, Gate, B01 or
+  overhead-attribution cell. It only excludes an instrumentation implementation
+  that mechanically adds milliseconds at the median before any real route work;
+  `EVAL-003` would still need its own frozen paired design.
+
+### U33 — failure-first: unknown usage availability label
+
+- Unit: `packages/pi-cognitiveos` usage discriminator negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 30/31 pass. A counter object labelled
+  `availability=estimated` bypassed the measured-usage provenance branch.
+- Required behavior: only the exact `not_available` and `measured`
+  discriminators exist; every other label is inconsistent and refused.
+
+### U34 — strict usage discriminator
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 31/31. Any availability label other than exact
+  `not_available`/`measured` is refused before provenance or retention.
+
+### U35 — failure-first: unknown daemon-stage availability
+
+- Unit: `packages/pi-cognitiveos` daemon-domain discriminator negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 31/32 pass. A complete nested pair labelled
+  `daemonStages=estimated` was treated as joined.
+- Required behavior: only exact `joined`/`not_available` labels exist; unknown
+  availability cannot bypass domain validation.
+
+### U36 — strict daemon-stage discriminator
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 32/32. Unknown daemon-stage availability labels are
+  refused before they can be interpreted as a joined nested pair.
+
+### U37 — failure-first: unknown daemon-stage reason
+
+- Unit: `packages/pi-cognitiveos` daemon-domain reason negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 32/33 pass. An unregistered
+  `daemonStagesUnavailableReason` value was accepted.
+- Required behavior: every unavailable nested pair carries one exact registered
+  reason; unknown reasons cannot become report strata.
+
+### U38 — registered daemon-stage reasons
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 33/33. Unavailable nested stages accept only the six
+  registered reason labels; unknown values are refused.
+
+### U39 — accepted complete Pi package regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 90/90. This supersedes U25 as the final local Node
+  acceptance result.
+
+### U40 — accepted source fingerprint refresh
+
+- Unit: handbook source fingerprints
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass** — six affected bilingual pages refreshed from accepted
+  implementation sources.
+
+### U41 — accepted handbook machine gate
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U42 — accepted generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U15 — repository consistency
+
+- Unit: repository static consistency
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  links, traceability, Personal plan/Gates, environment routing,
+  task/checkpoint-delivery and active-lease checks verified.
+
+### U16 — Rust formatting gate
+
+- Unit: workspace Rust formatting
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlist)
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**. No Rust build/test/Clippy was attempted locally.
+
+### U17 — failure-first: retained observation immutability
+
+- Unit: `packages/pi-cognitiveos` usage/stage mutation negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 27/28 pass. A runner holding the in-memory
+  record could mutate a measured usage counter and a stage duration after
+  publication.
+- Required behavior: freeze the published record and its nested stages/usage so
+  post-publication mutation cannot turn authentic counters into different
+  evidence.
+
+### U18 — retained observation immutability
+
+- Unit: `packages/pi-cognitiveos` usage/stage mutation negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 28/28. Published observations, stage objects/array and
+  usage object are frozen before entering the retained session view or injected
+  sink, so runner-side mutation throws and leaves the measured values unchanged.
+
+### U19 — failure-first: exact content-free schema
+
+- Unit: `packages/pi-cognitiveos` extra-field injection negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 28/29 pass. A structurally valid record carrying
+  extra `prompt` and `authorization` fields reached the injected sink.
+- Required behavior: validate the exact top-level, stage and usage key sets
+  before serialization; unknown fields are schema failures, not tolerated
+  extensions.
+
+### U20 — exact content-free schema
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 29/29. Exact top-level, stage and usage key sets are
+  validated before retention/serialization; extra prompt/authorization fields
+  are refused and produce zero sink writes. Joined daemon-stage absence is
+  represented as explicit JSON `null`, not an omitted field.
+
+### U21 — failure-first: usage/request binding
+
+- Unit: `packages/pi-cognitiveos` usage replay negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 29/30 pass. A genuinely parsed measured-usage
+  object could be replayed under a second correlation id.
+- Required behavior: bind the in-process usage provenance marker to the exact
+  request correlation id; session duplicate-id refusal then prevents both
+  replay directions.
+
+### U22 — usage/request binding
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 30/30. The measured-usage provenance marker is bound to
+  the exact request correlation id; replay under another id is refused, while a
+  second publication under the original id is already blocked by id uniqueness.
+
+### U23 — failure-first: cross-session usage replay
+
+- Unit: `packages/pi-cognitiveos` usage replay negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 29/30 pass. Reopening a campaign session allowed
+  the already-published measured-usage object to be retained again under its
+  original correlation id.
+- Required behavior: measured usage is single-publication evidence across all
+  in-process sessions, not merely unique inside one session.
+
+### U24 — single-publication usage evidence
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 30/30. Measured usage is correlation-bound, immutable and
+  consumable by exactly one publication across in-process campaign sessions.
+
+### U25 — final complete Pi package regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 87/87, including all added terminal-schema, concurrency,
+  exact-field, immutability and usage-provenance negatives.
+
+### U26 — final handwritten-page fingerprint refresh
+
+- Unit: handbook source fingerprints
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass** — the six affected bilingual Pi/client/lifecycle pages were
+  refreshed from the final implementation sources.
+
+### U27 — generated page detects final client-source drift
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **fail** — four HB008/HB010 violations on the generated HTTP reference
+  pair after the final `daemon-client.ts` usage-binding change.
+- Recovery: regenerate again from the final source revision, then rerun both
+  handbook gates. No generated page is hand-edited.
+
+### U28 — final generated handbook refresh
+
+- Unit: registered handbook generator
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs`
+- Result: **pass**. Generated reference bytes/fingerprints now consume the final
+  client source; following gates verify equality.
+
+### U29 — final handbook machine gate
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U30 — final generated handbook byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.

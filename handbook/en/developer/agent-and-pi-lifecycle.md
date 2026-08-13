@@ -12,6 +12,7 @@ sources:
     symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
@@ -19,8 +20,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
-fingerprint: "sha256:664c75ea6bac850eb570260e8c7fb323172c990e7cebf49330d812eee496ae14"
+fingerprint: "sha256:7a7779b2efeeb721ec9273d33f581fa405fcd5e65ef1133573bd3bd8a9e97107"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -55,6 +57,14 @@ health. Upgrade/uninstall fence old epochs; recover/orphan negatives are tested.
 components all ready, sandbox adapter present, `pi.json` paths absolute and
 existing, version exactly `0.81.1`, and model egress bound to the registered
 HTTPS proxy endpoint. It passes only `--extension <absolute-path>`.
+
+The shell-host Provider route has an opt-in, non-authority campaign observer.
+One opaque id correlates each concurrent Pi request with two daemon-measured
+stages; Node and Rust monotonic durations remain separate clock domains.
+Completed, cancelled and failed attempts have explicit terminal records, while a
+disabled session emits none. The route is non-streaming; `stream:true` remains a
+stable pre-secret-resolution refusal. Provider usage is never estimated or
+accepted from a runner-built object.
 
 ## Candidate production role
 

@@ -22,6 +22,7 @@ import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
 import { createDaemonProvider } from "./daemon-provider.js";
 import type { ProviderConfig } from "./pi-api.js";
+import { openPiRouteObservationSession } from "./pi-route-observation.js";
 import { startFakeDaemon } from "./test-support.js";
 
 const BOOTSTRAP_SECRET = "boot-0123456789abcdef-fedcba9876543210";
@@ -111,6 +112,14 @@ test("one Pi run yields joined per-stage timings and runner-readable Provider us
 
       assert.equal(session.observations.length, 1, "one run must publish exactly one observation");
       const observation = session.observations[0]!;
+      assert.equal(
+        observation["requestMode"],
+        "non_streaming",
+        "the schema must state that the Provider request was non-streaming",
+      );
+      assert.equal(observation["outcome"], "completed");
+      assert.equal(observation["failureClass"], "none");
+      assert.equal(observation["terminalStage"], "pi_event_delivery");
       const stages = observation["stages"] as readonly Record<string, unknown>[];
       assert.deepEqual(
         stages.map((stage) => stage["stage"]),
@@ -143,6 +152,53 @@ test("one Pi run yields joined per-stage timings and runner-readable Provider us
     } finally {
       session.close();
     }
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("concurrent Pi requests keep distinct correlation ids joined to their own daemon request", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionBody: JSON.stringify({
+      choices: [{ message: { content: "daemon text" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+    }),
+    providerNetworkElapsedNanos: "4000",
+    daemonPreflightElapsedNanos: "1000",
+    echoCorrelationId: true,
+  });
+  try {
+    const session = openPiRouteObservationSession({
+      COGNITIVEOS_PI_ROUTE_OBSERVATION: "enabled",
+      COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN: "PERSONAL-PERF-EVAL-003",
+    });
+    assert.ok(session !== undefined);
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint), { session });
+    const run = async (content: string): Promise<void> => {
+      const stream = provider.streamSimple(provider.models[0]!, {
+        messages: [{ role: "user", content }],
+      });
+      for await (const _event of stream) {
+        // Drain both streams concurrently so the request correlation boundary is real.
+      }
+      await stream.result();
+    };
+
+    await Promise.all([run("first"), run("second")]);
+
+    assert.equal(session.observations.length, 2);
+    const observationIds = session.observations.map((observation) => observation.correlationId);
+    assert.equal(new Set(observationIds).size, 2, "each request must mint one unique correlation id");
+    const requestIds = daemon.requests
+      .filter((request) => request.url === "/provider/v1/chat/completions")
+      .map((request) => request.headers["x-cognitiveos-correlation-id"]);
+    assert.deepEqual(
+      [...requestIds].sort(),
+      [...observationIds].sort(),
+      "no concurrent request may consume another request's daemon correlation echo",
+    );
   } finally {
     await daemon.close();
   }

@@ -102,6 +102,24 @@ export interface PiRouteStageTiming {
   readonly elapsedNanos: number;
 }
 
+/** The product route currently makes exactly one bounded non-streaming request. */
+export type PiRouteRequestMode = "non_streaming";
+
+/** Terminal disposition of one started, authorized Pi route sample. */
+export type PiRouteOutcome = "completed" | "cancelled" | "error";
+
+/** Content-free terminal class; never copies an exception or response body. */
+export type PiRouteFailureClass =
+  | "none"
+  | "cancelled"
+  | "provider_unavailable"
+  | "daemon_unavailable"
+  | "protocol_error"
+  | "extension_error";
+
+/** Last Pi-domain stage reached, or a cancellation before preparation began. */
+export type PiRouteTerminalStage = PiDomainStage | "before_request";
+
 /** Why the daemon-side nested stages are absent from an observation. */
 export type PiRouteDaemonStageUnavailableReason =
   | "not_reported"
@@ -121,9 +139,13 @@ export interface PiRouteObservation {
   readonly schema: typeof PI_ROUTE_OBSERVATION_SCHEMA;
   readonly campaignId: string;
   readonly correlationId: string;
+  readonly requestMode: PiRouteRequestMode;
+  readonly outcome: PiRouteOutcome;
+  readonly failureClass: PiRouteFailureClass;
+  readonly terminalStage: PiRouteTerminalStage;
   readonly stages: readonly PiRouteStageTiming[];
   readonly daemonStages: PiRouteDaemonStageAvailability;
-  readonly daemonStagesUnavailableReason: PiRouteDaemonStageUnavailableReason | undefined;
+  readonly daemonStagesUnavailableReason: PiRouteDaemonStageUnavailableReason | null;
   readonly providerUsage: ProviderUsage;
 }
 
@@ -142,6 +164,8 @@ export type PiRouteObservationErrorCode =
   | "PI_ROUTE_OBSERVATION_NESTED_STAGES_EXCEED_PARENT"
   | "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT"
   | "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_INCONSISTENT"
+  | "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED"
+  | "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT"
   | "PI_ROUTE_OBSERVATION_SCHEMA_INVALID"
   | "PI_ROUTE_OBSERVATION_CAMPAIGN_ID_INVALID"
   | "PI_ROUTE_OBSERVATION_SECRET_SHAPED_VALUE"
@@ -182,6 +206,16 @@ const SECRET_SHAPED_PATTERNS: readonly RegExp[] = [
   /[0-9a-f]{32,}/i,
   /[A-Za-z0-9+/]{32,}={0,2}/,
 ];
+
+/**
+ * Runtime provenance for measured usage objects parsed from the authenticated
+ * daemon response, bound to that request's correlation id. The marker is
+ * deliberately not serialized: a runner can read counters, but cannot feed a
+ * hand-built or replayed "measured" object back into the producer and have it
+ * accepted as Provider evidence for another request.
+ */
+const VERIFIED_MEASURED_PROVIDER_USAGES = new WeakMap<object, string>();
+const PUBLISHED_MEASURED_PROVIDER_USAGES = new WeakSet<object>();
 
 /** Mint one opaque correlation id for a single request. */
 export function createPiRouteCorrelationId(): string {
@@ -329,6 +363,14 @@ export interface DaemonReportedStages {
 export interface PiRouteObservationInput {
   readonly campaignId: string;
   readonly correlationId: string;
+  /** Defaults to the product's only supported Provider request mode. */
+  readonly requestMode?: PiRouteRequestMode;
+  /** Defaults to `completed` for the success-path assembly API. */
+  readonly outcome?: PiRouteOutcome;
+  /** Defaults to the last measured Pi stage (event delivery for success). */
+  readonly terminalStage?: PiRouteTerminalStage;
+  /** Defaults from outcome: none/cancelled/extension_error. */
+  readonly failureClass?: PiRouteFailureClass;
   readonly piStages: readonly PiRouteStageTiming[];
   readonly daemonReported: DaemonReportedStages;
   readonly providerUsage: ProviderUsage;
@@ -337,38 +379,60 @@ export interface PiRouteObservationInput {
 /**
  * Assemble one observation from what was actually measured.
  *
- * The Pi-domain stages must be complete; a run that did not measure them is a
- * programming error, not a degraded sample. The daemon domain is optional and
- * degrades to `not_available` with a reason whenever it cannot be joined or
- * cannot be contained by the observed loopback wait, because an unjoined or
- * impossible nested duration is worse than a missing one.
+ * A completed request must carry every Pi-domain stage. A cancelled/error
+ * request carries the exact measured prefix ending at `terminalStage`, so a
+ * started sample is not lost merely because the route did not finish. The
+ * daemon domain is optional and degrades to `not_available` with a reason
+ * whenever it cannot be joined or contained by the observed loopback wait.
  */
 export function assemblePiRouteObservation(input: PiRouteObservationInput): PiRouteObservation {
   const correlationId = parsePiRouteCorrelationId(input.correlationId);
   const campaignId = parsePiRouteCampaignId(input.campaignId);
-  const piStages = orderedPiStages(input.piStages);
+  const requestMode = input.requestMode ?? "non_streaming";
+  const outcome = input.outcome ?? "completed";
+  const piStages = orderStages(input.piStages);
+  const terminalStage =
+    input.terminalStage ??
+    (outcome === "completed"
+      ? "pi_event_delivery"
+      : (lastPiStage(piStages)?.stage ?? "before_request"));
+  const failureClass =
+    input.failureClass ??
+    (outcome === "completed"
+      ? "none"
+      : outcome === "cancelled"
+        ? "cancelled"
+        : "extension_error");
   const loopbackWaitNanos = piStages.find((timing) => timing.stage === "loopback_wait")?.elapsedNanos;
-  if (loopbackWaitNanos === undefined) {
+  if (loopbackWaitNanos === undefined && outcome === "completed") {
     throw new PiRouteObservationError(
       "PI_ROUTE_OBSERVATION_STAGE_MISSING",
       "an observation cannot be assembled without the loopback_wait stage that contains the daemon stages",
     );
   }
 
-  const daemonOutcome = resolveDaemonStages(input.daemonReported, correlationId, loopbackWaitNanos);
+  const daemonOutcome =
+    loopbackWaitNanos === undefined
+      ? ({ availability: "not_available", reason: "not_reported" } as const)
+      : resolveDaemonStages(input.daemonReported, correlationId, loopbackWaitNanos);
   const stages =
     daemonOutcome.availability === "joined"
       ? insertDaemonStages(piStages, daemonOutcome.stages)
       : piStages;
 
+  assertProviderUsageVerified(input.providerUsage, correlationId);
   const observation: PiRouteObservation = {
     schema: PI_ROUTE_OBSERVATION_SCHEMA,
     campaignId,
     correlationId,
+    requestMode,
+    outcome,
+    failureClass,
+    terminalStage,
     stages,
     daemonStages: daemonOutcome.availability,
     daemonStagesUnavailableReason:
-      daemonOutcome.availability === "joined" ? undefined : daemonOutcome.reason,
+      daemonOutcome.availability === "joined" ? null : daemonOutcome.reason,
     providerUsage: input.providerUsage,
   };
   validatePiRouteObservation(observation);
@@ -428,18 +492,6 @@ function insertDaemonStages(
   return orderStages([...piStages, ...daemonStages]);
 }
 
-function orderedPiStages(piStages: readonly PiRouteStageTiming[]): readonly PiRouteStageTiming[] {
-  for (const stage of PI_DOMAIN_STAGES) {
-    if (!piStages.some((timing) => timing.stage === stage)) {
-      throw new PiRouteObservationError(
-        "PI_ROUTE_OBSERVATION_STAGE_MISSING",
-        `the Pi-measured stage ${stage} is missing from the observation`,
-      );
-    }
-  }
-  return orderStages(piStages);
-}
-
 function orderStages(timings: readonly PiRouteStageTiming[]): readonly PiRouteStageTiming[] {
   const canonicalIndex = new Map<PiRouteStage, number>(
     PI_ROUTE_STAGES.map((stage, index) => [stage, index]),
@@ -447,6 +499,17 @@ function orderStages(timings: readonly PiRouteStageTiming[]): readonly PiRouteSt
   return [...timings].sort(
     (left, right) => (canonicalIndex.get(left.stage) ?? 0) - (canonicalIndex.get(right.stage) ?? 0),
   );
+}
+
+function lastPiStage(
+  timings: readonly PiRouteStageTiming[],
+): PiRouteStageTiming & { readonly stage: PiDomainStage } | undefined {
+  const piTimings = timings.filter(
+    (timing): timing is PiRouteStageTiming & { readonly stage: PiDomainStage } =>
+      timing.domain === "pi" &&
+      (PI_DOMAIN_STAGES as readonly PiRouteStage[]).includes(timing.stage),
+  );
+  return piTimings.at(-1);
 }
 
 /**
@@ -457,10 +520,39 @@ function orderStages(timings: readonly PiRouteStageTiming[]): readonly PiRouteSt
  * contained and internally consistent without re-deriving those properties.
  */
 export function validatePiRouteObservation(observation: PiRouteObservation): void {
+  assertExactKeys(
+    observation,
+    [
+      "campaignId",
+      "correlationId",
+      "daemonStages",
+      "daemonStagesUnavailableReason",
+      "failureClass",
+      "outcome",
+      "providerUsage",
+      "requestMode",
+      "schema",
+      "stages",
+      "terminalStage",
+    ],
+    "observation",
+  );
   if (observation.schema !== PI_ROUTE_OBSERVATION_SCHEMA) {
     throw new PiRouteObservationError(
       "PI_ROUTE_OBSERVATION_SCHEMA_INVALID",
       `a Pi route observation must declare schema ${PI_ROUTE_OBSERVATION_SCHEMA}`,
+    );
+  }
+  if (observation.requestMode !== "non_streaming") {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_SCHEMA_INVALID",
+      "the current Pi route observation schema accepts only the bounded non_streaming Provider mode",
+    );
+  }
+  if (!["completed", "cancelled", "error"].includes(observation.outcome)) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT",
+      "a Pi route observation must carry a registered terminal outcome",
     );
   }
   parsePiRouteCampaignId(observation.campaignId);
@@ -469,6 +561,7 @@ export function validatePiRouteObservation(observation: PiRouteObservation): voi
   const seenStages = new Set<PiRouteStage>();
   let previousCanonicalIndex = -1;
   for (const timing of observation.stages) {
+    assertExactKeys(timing, ["domain", "elapsedNanos", "stage"], "stage timing");
     const canonicalIndex = (PI_ROUTE_STAGES as readonly string[]).indexOf(timing.stage);
     if (canonicalIndex === -1) {
       throw new PiRouteObservationError(
@@ -504,17 +597,69 @@ export function validatePiRouteObservation(observation: PiRouteObservation): voi
     previousCanonicalIndex = canonicalIndex;
   }
 
-  for (const stage of PI_DOMAIN_STAGES) {
-    if (!seenStages.has(stage)) {
-      throw new PiRouteObservationError(
-        "PI_ROUTE_OBSERVATION_STAGE_MISSING",
-        `the Pi-measured stage ${stage} is missing from the observation`,
-      );
-    }
-  }
-
+  validateTerminalOutcome(observation, seenStages);
   validateDaemonDomain(observation, seenStages);
   validateProviderUsage(observation.providerUsage);
+}
+
+function validateTerminalOutcome(
+  observation: PiRouteObservation,
+  seenStages: ReadonlySet<PiRouteStage>,
+): void {
+  const terminalStage = observation.terminalStage;
+  const expectedPiStages =
+    terminalStage === "before_request"
+      ? []
+      : (PI_DOMAIN_STAGES as readonly PiDomainStage[]).slice(
+          0,
+          (PI_DOMAIN_STAGES as readonly PiDomainStage[]).indexOf(terminalStage) + 1,
+        );
+  if (
+    terminalStage !== "before_request" &&
+    !(PI_DOMAIN_STAGES as readonly string[]).includes(terminalStage)
+  ) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT",
+      "the terminal stage must be before_request or one registered Pi-domain stage",
+    );
+  }
+  const actualPiStages = PI_DOMAIN_STAGES.filter((stage) => seenStages.has(stage));
+  if (
+    expectedPiStages.length !== actualPiStages.length ||
+    expectedPiStages.some((stage, index) => actualPiStages[index] !== stage)
+  ) {
+    throw new PiRouteObservationError(
+      observation.outcome === "completed"
+        ? "PI_ROUTE_OBSERVATION_STAGE_MISSING"
+        : "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT",
+      "the measured Pi stages must be the exact route prefix ending at terminalStage",
+    );
+  }
+  if (
+    observation.outcome === "completed" &&
+    terminalStage !== "pi_event_delivery"
+  ) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT",
+      "a completed Pi request must terminate after pi_event_delivery",
+    );
+  }
+  if (
+    (observation.outcome === "completed" && observation.failureClass !== "none") ||
+    (observation.outcome === "cancelled" && observation.failureClass !== "cancelled") ||
+    (observation.outcome === "error" &&
+      ![
+        "provider_unavailable",
+        "daemon_unavailable",
+        "protocol_error",
+        "extension_error",
+      ].includes(observation.failureClass))
+  ) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_OUTCOME_INCOHERENT",
+      "the content-free failure class must agree with the terminal outcome",
+    );
+  }
 }
 
 function validateDaemonDomain(
@@ -522,8 +667,25 @@ function validateDaemonDomain(
   seenStages: ReadonlySet<PiRouteStage>,
 ): void {
   const joinedDaemonStages = DAEMON_DOMAIN_STAGES.filter((stage) => seenStages.has(stage));
+  if (observation.daemonStages !== "joined" && observation.daemonStages !== "not_available") {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT",
+      "daemon stage availability must be exactly joined or not_available",
+    );
+  }
   if (observation.daemonStages === "not_available") {
-    if (joinedDaemonStages.length > 0 || observation.daemonStagesUnavailableReason === undefined) {
+    if (
+      joinedDaemonStages.length > 0 ||
+      observation.daemonStagesUnavailableReason === null ||
+      ![
+        "not_reported",
+        "correlation_not_echoed",
+        "correlation_mismatch",
+        "incomplete_stage_group",
+        "invalid_duration",
+        "exceeds_loopback_wait",
+      ].includes(observation.daemonStagesUnavailableReason)
+    ) {
       throw new PiRouteObservationError(
         "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT",
         "an observation without joined daemon stages must carry a reason and no daemon stage",
@@ -533,7 +695,7 @@ function validateDaemonDomain(
   }
   if (
     joinedDaemonStages.length !== DAEMON_DOMAIN_STAGES.length ||
-    observation.daemonStagesUnavailableReason !== undefined
+    observation.daemonStagesUnavailableReason !== null
   ) {
     throw new PiRouteObservationError(
       "PI_ROUTE_OBSERVATION_DAEMON_AVAILABILITY_INCOHERENT",
@@ -553,7 +715,21 @@ function validateDaemonDomain(
 }
 
 function validateProviderUsage(providerUsage: ProviderUsage): void {
-  if (providerUsage.availability === "not_available") return;
+  if (providerUsage.availability === "not_available") {
+    assertExactKeys(providerUsage, ["availability"], "unavailable Provider usage");
+    return;
+  }
+  if (providerUsage.availability !== "measured") {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_INCONSISTENT",
+      "Provider usage availability must be exactly not_available or measured",
+    );
+  }
+  assertExactKeys(
+    providerUsage,
+    ["availability", "completionTokens", "promptTokens", "totalTokens"],
+    "measured Provider usage",
+  );
   const { promptTokens, completionTokens, totalTokens } = providerUsage;
   if (
     !isNonnegativeSafeInteger(promptTokens) ||
@@ -566,6 +742,88 @@ function validateProviderUsage(providerUsage: ProviderUsage): void {
       "measured Provider usage must carry complete, non-negative, internally consistent counters",
     );
   }
+}
+
+function assertExactKeys(
+  value: object,
+  expectedKeys: readonly string[],
+  label: string,
+): void {
+  const actualKeys = Object.keys(value).sort();
+  const expected = [...expectedKeys].sort();
+  if (
+    actualKeys.length !== expected.length ||
+    actualKeys.some((key, index) => key !== expected[index])
+  ) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_SCHEMA_INVALID",
+      `the ${label} must carry exactly the registered content-free fields`,
+    );
+  }
+}
+
+/**
+ * Parse Provider usage exactly once at the authenticated daemon-response
+ * boundary. Missing, partial, fractional, negative or inconsistent values are
+ * unavailable; the instrumentation never estimates or fills a zero.
+ */
+export function providerUsageFromDaemonResponse(
+  value: unknown,
+  correlationId: string,
+): ProviderUsage {
+  const parsedCorrelationId = parsePiRouteCorrelationId(correlationId);
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { availability: "not_available" };
+  }
+  const usage = value as Record<string, unknown>;
+  const promptTokens = usage["prompt_tokens"];
+  const completionTokens = usage["completion_tokens"];
+  const totalTokens = usage["total_tokens"];
+  if (
+    !isNonnegativeSafeInteger(promptTokens) ||
+    !isNonnegativeSafeInteger(completionTokens) ||
+    !isNonnegativeSafeInteger(totalTokens) ||
+    promptTokens + completionTokens !== totalTokens
+  ) {
+    return { availability: "not_available" };
+  }
+  const measured: ProviderUsage = {
+    availability: "measured",
+    promptTokens,
+    completionTokens,
+    totalTokens,
+  };
+  VERIFIED_MEASURED_PROVIDER_USAGES.set(measured, parsedCorrelationId);
+  return measured;
+}
+
+function assertProviderUsageVerified(
+  providerUsage: ProviderUsage,
+  correlationId: string,
+): void {
+  if (
+    providerUsage.availability === "measured" &&
+    (VERIFIED_MEASURED_PROVIDER_USAGES.get(providerUsage) !== correlationId ||
+      PUBLISHED_MEASURED_PROVIDER_USAGES.has(providerUsage))
+  ) {
+    throw new PiRouteObservationError(
+      "PI_ROUTE_OBSERVATION_PROVIDER_USAGE_UNVERIFIED",
+      "measured Provider usage must originate at the authenticated daemon-response parser, remain request-bound, and be published once",
+    );
+  }
+}
+
+function markProviderUsagePublished(providerUsage: ProviderUsage): void {
+  if (providerUsage.availability === "measured") {
+    PUBLISHED_MEASURED_PROVIDER_USAGES.add(providerUsage);
+  }
+}
+
+function freezePublishedObservation(observation: PiRouteObservation): PiRouteObservation {
+  for (const stage of observation.stages) Object.freeze(stage);
+  Object.freeze(observation.stages);
+  Object.freeze(observation.providerUsage);
+  return Object.freeze(observation);
 }
 
 function elapsedNanosOf(observation: PiRouteObservation, stage: PiRouteStage): number {
@@ -583,8 +841,8 @@ function isPositiveDurationNanos(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
-function isNonnegativeSafeInteger(value: number): boolean {
-  return Number.isSafeInteger(value) && value >= 0;
+function isNonnegativeSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function assertPiDomainStage(stage: PiDomainStage): void {
@@ -750,7 +1008,7 @@ class BoundedObservationSession implements PiRouteObservationSession {
   }
 
   get observations(): readonly PiRouteObservation[] {
-    return this.retained;
+    return Object.freeze([...this.retained]);
   }
 
   get droppedObservations(): number {
@@ -775,25 +1033,28 @@ class BoundedObservationSession implements PiRouteObservationSession {
       );
     }
     validatePiRouteObservation(observation);
+    assertProviderUsageVerified(observation.providerUsage, observation.correlationId);
     if (this.seenCorrelationIds.has(observation.correlationId)) {
       throw new PiRouteObservationError(
         "PI_ROUTE_OBSERVATION_CORRELATION_ID_DUPLICATE",
         "one correlation id identifies exactly one request and cannot be published twice",
       );
     }
-    const line = JSON.stringify(observation);
+    const retainedObservation = freezePublishedObservation(observation);
+    const line = JSON.stringify(retainedObservation);
     if (Buffer.byteLength(line, "utf8") > PI_ROUTE_OBSERVATION_MAX_RECORD_BYTES) {
       throw new PiRouteObservationError(
         "PI_ROUTE_OBSERVATION_RECORD_TOO_LARGE",
         "a content-free observation cannot exceed the record ceiling; the record was refused",
       );
     }
+    markProviderUsagePublished(retainedObservation.providerUsage);
     this.seenCorrelationIds.add(observation.correlationId);
     if (this.retained.length >= PI_ROUTE_OBSERVATION_MAX_RECORDS) {
       this.dropped += 1;
       return;
     }
-    this.retained.push(observation);
+    this.retained.push(retainedObservation);
     if (this.sinkPath !== undefined && this.sinkWriter !== undefined) {
       this.sinkWriter.appendLine(this.sinkPath, line);
     }
