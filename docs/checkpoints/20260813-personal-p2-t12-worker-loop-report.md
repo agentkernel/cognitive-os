@@ -1250,3 +1250,36 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 17:11 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 147 — exact native D04 durable resolver
+
+- Finished: 2026-08-13 17:14 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `c0191010483be7b8dff2c1d55d4598162b9cc775`
+- Result: **pass**; persisted-descriptor reload 1/1 and unassembled-family
+  fail-before-authorization 1/1.
+- The failure-first missing symbol at `ed5a29e` is now implemented, and the
+  unsupported-family negative leaves the durable Effect at `PROPOSED`.
+
+### Unit 148 — D04 production-caller failure-first negative
+
+- Finished: 2026-08-13 17:19 +08:00
+- Result: **test authored; execution pending**
+- Property: the composition-root native router stages the exact resolved
+  WorkspaceRead request, and the real `EffectProtocol` must expose durable
+  `EXECUTING` to an I/O-boundary hook before reading the file, then reconcile
+  the Effect through the original key without treating it as Task completion.
+- Current expected failure: neither `ProductionNativeToolExecutorRouter` nor
+  `dispatch_native_worker_effect` exists.
+
+### Unit 149 — production-caller proof local static checks
+
+- Finished: 2026-08-13 17:20 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on one
+  mechanical import layout.
+- Recovery: apply rustfmt only and checkpoint the expected red.
+
+### Unit 150 — production-caller proof formatting rerun
+
+- Finished: 2026-08-13 17:21 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.

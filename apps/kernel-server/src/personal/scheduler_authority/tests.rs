@@ -8,11 +8,11 @@ use super::{
     SchedulerWorkerAttempt, UntrustedPiCandidate, WorkerAuthorizationHandoff,
     candidate_admission_command_from_policy, classify_scheduler_effect_closure,
     complete_resolved_effect_and_release, complete_scheduler_admission,
-    complete_scheduler_worker_attempt, ensure_current_contract_epoch,
-    parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
-    release_closed_effect_dispatch, release_closed_recovered_attempt,
-    resolve_native_worker_dispatch_with_families, resolve_scheduler_work_for_task,
-    select_single_effect_intent, validate_untrusted_pi_candidate,
+    complete_scheduler_worker_attempt, dispatch_native_worker_effect,
+    ensure_current_contract_epoch, parse_execution_bound_contract,
+    propose_persist_and_admit_candidate_after_metadata, release_closed_effect_dispatch,
+    release_closed_recovered_attempt, resolve_native_worker_dispatch_with_families,
+    resolve_scheduler_work_for_task, select_single_effect_intent, validate_untrusted_pi_candidate,
     validate_worker_authorization_evidence,
 };
 use cognitive_contracts::{
@@ -68,10 +68,16 @@ use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::net::TcpStream;
-use std::sync::mpsc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+    mpsc,
+};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::personal::tool_executor::ASSEMBLED_EXECUTOR_FAMILIES;
+use crate::personal::tool_executor::{
+    ASSEMBLED_EXECUTOR_FAMILIES, ProductionNativeToolExecutorRouter,
+};
 
 fn scheduler_row(task_ref: &str) -> SchedulerRow {
     SchedulerRow {
@@ -2303,6 +2309,74 @@ fn unassembled_persisted_family_fails_before_effect_authorization() {
 
     drop(store);
     std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn production_native_caller_persists_executing_before_workspace_io() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).unwrap());
+    let resolved = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let executing_observed = Arc::new(AtomicBool::new(false));
+    let executing_observed_at_io = Arc::clone(&executing_observed);
+    let store_at_io = Arc::clone(&store);
+    let effect_id_at_io = authorization.effect_object_id.clone();
+    router.install_workspace_read_before_io_hook(move || {
+        let effect = store_at_io
+            .load_object(LifecycleDomain::Effect, &effect_id_at_io)
+            .unwrap()
+            .unwrap();
+        executing_observed_at_io.store(effect.state.as_str() == "EXECUTING", Ordering::SeqCst);
+    });
+    let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let ids = UuidV7Generator;
+    let protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04").unwrap(),
+    );
+
+    let closure = dispatch_native_worker_effect(
+        &protocol,
+        &resolved,
+        &router,
+        &recovery_effect_grant(),
+        &GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        },
+        &WriterLease { epoch: 1 },
+    )
+    .unwrap();
+
+    assert_eq!(closure, SchedulerEffectClosure::Closed);
+    assert!(executing_observed.load(Ordering::SeqCst));
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
 #[test]
