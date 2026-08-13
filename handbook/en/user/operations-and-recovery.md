@@ -77,8 +77,12 @@ A successful Task admission is also crash-atomic inside the authority database:
 the contract, `START` Loop, hard Budget, and runnable scheduler row appear
 together. A failure before commit leaves none of those admission members, while
 a crash after the success response reopens the complete publication. The
-post-bind periodic worker is now wired, but this does not by itself mean a Tool
-Effect is production-dispatched or independently verified.
+post-bind periodic worker and WorkspaceRead Effect dispatch are wired, but this
+does not by itself mean the result is independently verified.
+
+When verification starts, the closed Effect pin, verification request, and Loop
+`ACT -> VERIFY` publication are one crash-atomic authority transaction. A stale
+writer or Loop leaves none of those new members.
 
 ## Backup and restore — `unavailable` as a user feature
 

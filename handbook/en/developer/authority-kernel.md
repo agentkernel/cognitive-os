@@ -87,7 +87,9 @@ reloads (`intent_durably_persisted`, `capability_and_revocation_current`,
 `verification_still_current`); dispatch commits EXECUTING **before** the external
 call; unknown outcomes reconcile with the original key or quarantine. All four
 commit sinks (executor, authority commit, admission+outbox, checkpoint) re-check
-the writer fencing epoch inside the store transaction.
+the writer fencing epoch inside the store transaction. Verification entry is
+also one compound authority commit: a current closed Effect pin, its request,
+and Loop `ACT -> VERIFY` either all persist or all roll back.
 
 ## Authorization and budgets
 

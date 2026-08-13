@@ -97,3 +97,88 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 20:26 +08:00
 - Results: generated references **pass**; ten mapped fingerprints refreshed;
   rustfmt **pass**; handbook **pass**; whitespace **pass**.
+
+### Unit 011 — exact native D01 ArtifactStore composition
+
+- Finished: 2026-08-13 20:30 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `10022c4eead527e637e811d635830b00f32f5755`
+- Result: **pass**; the failure-first composition proof passed 1/1.
+
+### Unit 012 — D01 atomic verification-start implementation
+
+- Finished: 2026-08-13 20:41 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - a new private `VerificationStartCommit` binds fixed post-state, request, and
+    Loop transition;
+  - the SQLite authority port rechecks fencing, current contract, current
+    closed Effect, row bindings, and `ACT -> VERIFY` CAS before committing all
+    three members in one transaction;
+  - `LoopDriver` derives the registered guard/evidence and exposes one atomic
+    verification-entry method;
+  - the daemon helper pins the exact reconciled Effect version and returns the
+    persisted request without changing Task state.
+
+### Unit 013 — D01 verification-start local static checks
+
+- Finished: 2026-08-13 20:42 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on three
+  mechanical layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 014 — D01 verification-start formatting rerun
+
+- Finished: 2026-08-13 20:43 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 015 — D01 verification-start handbook sync
+
+- Finished: 2026-08-13 20:44 +08:00
+- Result: **authored; fingerprint validation pending**
+- Both locales record the atomic publication seam and retain the explicit
+  no-production-caller / D02 criteria-verifier boundary.
+
+### Unit 016 — D01 verification-start local gates
+
+- Finished: 2026-08-13 20:45 +08:00
+- Results: handbook **pass**; two fingerprints refreshed; consistency **pass**;
+  whitespace **pass**.
+
+### Unit 017 — D01 mapped authority/store/recovery sync
+
+- Finished: 2026-08-13 20:49 +08:00
+- Result: **authored; validation pending**
+- Both locales now record the fenced compound authority commit, no-migration
+  SQLite transaction, Artifact/request binding, and crash-atomic recovery
+  boundary. A stale P2-T12 operations sentence was also corrected to acknowledge
+  production WorkspaceRead while retaining independent verification as absent.
+
+### Unit 018 — D01 atomic verification-start final local gates
+
+- Finished: 2026-08-13 20:51 +08:00
+- Results: rustfmt **pass**; handbook **pass**; generated pages **pass**;
+  consistency **pass**; whitespace **pass**.
+- Added negative: a late stale Loop state rolls back both fixed post-state and
+  verification request.
+
+### Unit 019 — D01 version-overflow self-review
+
+- Finished: 2026-08-13 20:53 +08:00
+- Finding: canonical request JSON recomputed the post-transition Loop version
+  with unchecked integer addition after the typed `Version::next` call.
+- Fix: derive the typed next version once and reuse it for both the row and
+  canonical evidence.
+
+### Unit 020 — post-review docs-sync rerun
+
+- Finished: 2026-08-13 20:55 +08:00
+- Result: **fail** only on the two verification-source fingerprints changed by
+  Unit 019.
+- Recovery: refresh those fingerprints and rerun the unchanged gate.
+
+### Unit 021 — post-review docs-sync pass
+
+- Finished: 2026-08-13 20:56 +08:00
+- Result: **pass**; two fingerprints refreshed, docs-sync and staged whitespace
+  clean.

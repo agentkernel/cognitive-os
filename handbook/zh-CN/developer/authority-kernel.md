@@ -76,7 +76,8 @@ PROPOSED→AUTHORIZED→EXECUTING→…→COMMITTED，守卫只从持久重载�
 （`intent_durably_persisted`、`capability_and_revocation_current`、
 `verification_still_current`）；dispatch 在外部调用**之前**先提交 EXECUTING；未知结
 果用原键对账或隔离。四个提交 sink（executor、权威提交、准入+outbox、checkpoint）都
-在存储事务内复核写者 fencing epoch。
+在存储事务内复核写者 fencing epoch。验证入口同样是复合权威提交：当前闭合 Effect
+pin、其 verification request 与 Loop `ACT -> VERIFY` 要么一起持久化，要么一起回滚。
 
 ## 授权与预算
 

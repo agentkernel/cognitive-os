@@ -64,8 +64,11 @@ orphan staging。
 
 成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`START` Loop、硬 Budget 与
 runnable 调度行一起出现。提交前失败不会留下这些准入成员；成功响应后崩溃重开会看到
-完整发布。绑定后的周期 worker 现已接线，但这本身不表示 Tool Effect 已从生产派发或得
-到独立验证。
+完整发布。绑定后的周期 worker 与 WorkspaceRead Effect 生产派发已接线，但这本身不表
+示结果已得到独立验证。
+
+验证启动时，闭合 Effect pin、verification request 与 Loop `ACT -> VERIFY` 发布属于同
+一崩溃原子权威事务；过期 writer 或 Loop 不会留下其中任何新成员。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

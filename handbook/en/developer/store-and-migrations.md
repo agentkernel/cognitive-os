@@ -81,3 +81,9 @@ commit reopens all four prerequisites. Startup recovery can idempotently repair
 an older current contract missing only Loop, Budget, or scheduler work in one
 fenced transaction. Existing rows are validated and never replaced or reset;
 stale contract epochs cannot be repaired.
+
+Verification start reuses the existing fixed-post-state/request tables and adds
+no migration. One immediate transaction verifies the writer, current contract,
+closed Effect version, shared row bindings, and Loop CAS, then inserts both
+append-only rows and commits `ACT -> VERIFY`; any late conflict rolls everything
+back.

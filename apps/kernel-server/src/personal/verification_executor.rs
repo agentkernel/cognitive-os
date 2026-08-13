@@ -8,12 +8,14 @@
 
 #![allow(dead_code)] // Runtime composition follows this daemon-private boundary.
 
-use cognitive_domain::{ObjectId, WallTimestamp};
+use cognitive_domain::{LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
 use cognitive_kernel::{
     effects::WriterLease,
+    harness::LoopDriver,
     ports::{
-        AuthorityStore, Clock, ContinuationAuthorityStore, FixedPostStateRow, IdGenerator,
-        ProtocolStore, VerificationReportRow, VerificationRequestRow,
+        AuthorityStore, Clock, ContinuationAuthorityStore, FixedPostStateRow, HarnessStore,
+        IdGenerator, IntentChainStore, ProtocolStore, TaskBinding, VerificationReportRow,
+        VerificationRequestRow,
     },
 };
 use cognitive_store::{ArtifactStore, PersonalDataLayout};
@@ -31,6 +33,155 @@ pub(crate) fn open_daemon_artifact_store(
     ArtifactStore::open(
         layout.data_dir().join("artifacts"),
         DAEMON_ARTIFACT_MAXIMUM_BYTES,
+    )
+    .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))
+}
+
+/// Daemon-owned inputs for publishing one verification start.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct VerificationStartCommand {
+    pub task_binding: TaskBinding,
+    pub loop_object_id: ObjectId,
+    pub expected_loop_version: Version,
+    pub effect_object_id: ObjectId,
+    pub verifier_ref: String,
+    pub verifier_version: String,
+    pub criteria_canonical_json: String,
+}
+
+/// Pin a reconciled Effect and atomically publish its verification request with
+/// Loop `ACT -> VERIFY`.
+///
+/// D01 accepts criteria and verifier identity only from the daemon caller; D02
+/// replaces that caller input with values derived from the current
+/// TaskContract. The store still rechecks fencing, contract currentness,
+/// subject version/state, row bindings, and Loop CAS in one transaction.
+pub(crate) fn begin_production_verification<S, C, G>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    command: &VerificationStartCommand,
+    writer_lease: &WriterLease,
+) -> Result<VerificationRequestRow, VerificationExecutorError>
+where
+    S: AuthorityStore
+        + ContinuationAuthorityStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let current_epoch = store
+        .current_contract_epoch(&command.task_binding.task_ref)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    if current_epoch != command.task_binding.contract_epoch {
+        return Err(VerificationExecutorError::BindingMismatch);
+    }
+    let current_fencing_epoch = store
+        .current_fencing_epoch()
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    if writer_lease.epoch != current_fencing_epoch {
+        return Err(VerificationExecutorError::WriterFenced);
+    }
+    let effect = store
+        .load_object(LifecycleDomain::Effect, &command.effect_object_id)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
+        .ok_or(VerificationExecutorError::FixedPostStateUnavailable)?;
+    if !matches!(
+        effect.state.as_str(),
+        "RECONCILED" | "VERIFIED" | "VERIFY_FAILED"
+    ) {
+        return Err(VerificationExecutorError::FixedPostStateUnavailable);
+    }
+    if command.verifier_ref.trim().is_empty()
+        || command.verifier_version.trim().is_empty()
+        || serde_json::from_str::<serde_json::Value>(&command.criteria_canonical_json).is_err()
+    {
+        return Err(VerificationExecutorError::RequestUnavailable);
+    }
+    let fixed_post_state_id = next_verification_object_id(identifiers)?;
+    let verification_request_id = next_verification_object_id(identifiers)?;
+    let fixed_post_state = FixedPostStateRow {
+        fixed_post_state_id: fixed_post_state_id.clone(),
+        task_binding: command.task_binding.clone(),
+        loop_object_id: command.loop_object_id.clone(),
+        subject_domain: LifecycleDomain::Effect,
+        subject_object_id: effect.object_id,
+        subject_version: effect.version,
+        recorded_fencing_epoch: writer_lease.epoch,
+        canonical_json: json!({
+            "fixed_post_state_id": fixed_post_state_id.as_str(),
+            "task_ref": command.task_binding.task_ref,
+            "contract_epoch": command.task_binding.contract_epoch,
+            "loop_object_id": command.loop_object_id.as_str(),
+            "subject_domain": "effect",
+            "subject_object_id": command.effect_object_id.as_str(),
+            "subject_version": effect.version.get(),
+            "recorded_fencing_epoch": writer_lease.epoch,
+        })
+        .to_string(),
+    };
+    let verify_loop_version = command.expected_loop_version.next().map_err(|error| {
+        VerificationExecutorError::Infrastructure(format!(
+            "verification Loop version overflow: {error}"
+        ))
+    })?;
+    let verification_request = VerificationRequestRow {
+        verification_request_id: verification_request_id.clone(),
+        fixed_post_state_id,
+        task_binding: command.task_binding.clone(),
+        loop_object_id: command.loop_object_id.clone(),
+        expected_loop_version: verify_loop_version,
+        verifier_ref: command.verifier_ref.clone(),
+        verifier_version: command.verifier_version.clone(),
+        criteria_canonical_json: command.criteria_canonical_json.clone(),
+        issued_fencing_epoch: writer_lease.epoch,
+        canonical_json: json!({
+            "verification_request_id": verification_request_id.as_str(),
+            "fixed_post_state_id": fixed_post_state.fixed_post_state_id.as_str(),
+            "task_ref": command.task_binding.task_ref,
+            "contract_epoch": command.task_binding.contract_epoch,
+            "loop_object_id": command.loop_object_id.as_str(),
+            "expected_loop_version": verify_loop_version.get(),
+            "verifier_ref": command.verifier_ref,
+            "verifier_version": command.verifier_version,
+            "criteria": serde_json::from_str::<serde_json::Value>(
+                &command.criteria_canonical_json
+            ).map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
+            "issued_fencing_epoch": writer_lease.epoch,
+        })
+        .to_string(),
+    };
+    let driver = LoopDriver::new(
+        store,
+        clock,
+        identifiers,
+        UriRef::parse("principal://personal/daemon")
+            .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
+        UriRef::parse("authority://personal/verification")
+            .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
+        UriRef::parse("correlation://personal/verification-start")
+            .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
+    );
+    driver
+        .begin_verification_atomically(
+            &fixed_post_state,
+            &verification_request,
+            command.expected_loop_version,
+            writer_lease,
+        )
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    Ok(verification_request)
+}
+
+fn next_verification_object_id<G: IdGenerator>(
+    identifiers: &G,
+) -> Result<ObjectId, VerificationExecutorError> {
+    ObjectId::parse(
+        &identifiers
+            .next_uuid_v7()
+            .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
     )
     .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))
 }
@@ -289,7 +440,9 @@ fn canonical_report_json(
 mod tests {
     use super::*;
     use cognitive_domain::{EventId, LifecycleDomain, StateName, Version};
-    use cognitive_kernel::ports::{EventDraft, ObjectAdmission, StoredObject, TaskBinding};
+    use cognitive_kernel::ports::{
+        EventDraft, IntentChainStore, ObjectAdmission, StoredObject, TaskBinding, TaskContractRow,
+    };
     use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
     use std::{
         sync::atomic::{AtomicU64, Ordering},
@@ -440,6 +593,156 @@ mod tests {
 
         assert!(layout.data_dir().join("artifacts").join(digest).is_file());
         std::fs::remove_dir_all(root).expect("remove artifact fixture");
+    }
+
+    #[test]
+    fn production_verification_start_atomically_pins_request_and_enters_verify() {
+        let database_path = temporary_database_path();
+        let store = SqliteAuthorityStore::open(&database_path).expect("open authority store");
+        let task_binding = TaskBinding {
+            task_ref: "task://personal/p2-t13-d01".to_owned(),
+            contract_epoch: 1,
+        };
+        let loop_object_id = object_id(101);
+        let effect_object_id = object_id(102);
+        store
+            .insert_task_contract(
+                &TaskContractRow {
+                    contract_id: object_id(100),
+                    task_ref: task_binding.task_ref.clone(),
+                    contract_epoch: task_binding.contract_epoch,
+                    user_intent_record_id: object_id(103),
+                    interpretation_id: object_id(104),
+                    accepted_by: "principal://personal/owner".to_owned(),
+                    contract_digest: format!("sha256:{}", "a".repeat(64)),
+                    canonical_json: "{\"task_contract\":\"p2-t13-d01\"}".to_owned(),
+                },
+                &EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000000100")
+                        .expect("contract event"),
+                    object_id: object_id(100),
+                    domain: LifecycleDomain::Task,
+                    object_version: Version::INITIAL,
+                    event_type: "task-contract.minted".to_owned(),
+                    canonical_json: "{}".to_owned(),
+                },
+                0,
+            )
+            .expect("persist current contract");
+        for (object_id, domain, state, event_sequence) in [
+            (loop_object_id.clone(), LifecycleDomain::Loop, "ACT", 101),
+            (
+                effect_object_id.clone(),
+                LifecycleDomain::Effect,
+                "RECONCILED",
+                102,
+            ),
+        ] {
+            store
+                .admit_object(&ObjectAdmission {
+                    object: StoredObject {
+                        object_id: object_id.clone(),
+                        domain,
+                        state: StateName::parse(state).expect("fixture state"),
+                        version: Version::INITIAL,
+                        body: json!({"fixture": "p2-t13-d01"}),
+                    },
+                    admitted_at: WallTimestamp::parse("2026-08-08T04:00:00Z")
+                        .expect("fixture timestamp"),
+                    event: EventDraft {
+                        event_id: EventId::parse(&format!(
+                            "00000000-0000-7000-a000-{event_sequence:012x}"
+                        ))
+                        .expect("fixture event"),
+                        object_id,
+                        domain,
+                        object_version: Version::INITIAL,
+                        event_type: "fixture.admitted".to_owned(),
+                        canonical_json: "{}".to_owned(),
+                    },
+                    outbox: Vec::new(),
+                    fencing_epoch: Some(1),
+                })
+                .expect("admit fixture object");
+        }
+        let request = begin_production_verification(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(110),
+            &VerificationStartCommand {
+                task_binding: task_binding.clone(),
+                loop_object_id: loop_object_id.clone(),
+                expected_loop_version: Version::INITIAL,
+                effect_object_id: effect_object_id.clone(),
+                verifier_ref: "verifier://personal/fixed-effect".to_owned(),
+                verifier_version: "v1".to_owned(),
+                criteria_canonical_json: "[\"effect-is-reconciled\"]".to_owned(),
+            },
+            &WriterLease { epoch: 1 },
+        )
+        .expect("begin production verification");
+
+        assert_eq!(
+            store
+                .load_verification_request(&request.verification_request_id)
+                .expect("load request"),
+            Some(request.clone())
+        );
+        assert!(
+            store
+                .load_fixed_post_state(&request.fixed_post_state_id)
+                .expect("load fixed post-state")
+                .is_some()
+        );
+        let loop_object = store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .expect("load loop")
+            .expect("loop exists");
+        assert_eq!(loop_object.state.as_str(), "VERIFY");
+        assert_eq!(
+            loop_object.version,
+            Version::new(2).expect("verify version")
+        );
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Effect, &effect_object_id)
+                .expect("load Effect")
+                .expect("Effect exists")
+                .state
+                .as_str(),
+            "RECONCILED"
+        );
+
+        let stale_result = begin_production_verification(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(120),
+            &VerificationStartCommand {
+                task_binding,
+                loop_object_id,
+                expected_loop_version: Version::new(2).expect("stale expected version"),
+                effect_object_id,
+                verifier_ref: "verifier://personal/fixed-effect".to_owned(),
+                verifier_version: "v1".to_owned(),
+                criteria_canonical_json: "[\"effect-is-reconciled\"]".to_owned(),
+            },
+            &WriterLease { epoch: 1 },
+        );
+        assert!(stale_result.is_err());
+        assert_eq!(
+            store
+                .load_fixed_post_state(&object_id(120))
+                .expect("read rolled-back fixed post-state"),
+            None
+        );
+        assert_eq!(
+            store
+                .load_verification_request(&object_id(121))
+                .expect("read rolled-back verification request"),
+            None
+        );
+
+        std::fs::remove_file(database_path).expect("remove authority fixture");
     }
 
     fn admit_task_fixture(store: &SqliteAuthorityStore, task_object_id: &ObjectId) {

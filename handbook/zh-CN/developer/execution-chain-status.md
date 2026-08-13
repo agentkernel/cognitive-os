@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0adb3e9959e0861956f73df37a4bb5382d663ac3c02397f2dadd4209a3d823f5"
+fingerprint: "sha256:ddb872a94d49f5dd5c85daeb9f15ddb3c88535307d05fd711e5b4f49b9689abc"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -49,6 +49,7 @@ non_claims:
 | WorkspaceSearch / ProcessCheck 执行器 | implemented，仅测试调用 | 每个 sink 都重查不可变目录完全相等；search 使用句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
 | WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，尚无生产调用 | 一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交；caller criteria/verifier 身份仍属 D02 |
 | 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，仅测试调用 | verifier 模块测试 |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 

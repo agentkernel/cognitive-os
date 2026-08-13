@@ -51,6 +51,76 @@ use std::sync::{Mutex, MutexGuard};
 use super::*;
 
 impl ContinuationAuthorityStore for SqliteAuthorityStore {
+    fn begin_verification_atomically(
+        &self,
+        commit: &VerificationStartCommit,
+    ) -> Result<CommitReceipt, StorePortError> {
+        let fixed = &commit.fixed_post_state;
+        let request = &commit.verification_request;
+        let transition = &commit.loop_transition;
+        let bindings_match = request.fixed_post_state_id == fixed.fixed_post_state_id
+            && request.task_binding == fixed.task_binding
+            && request.loop_object_id == fixed.loop_object_id
+            && transition.cas.object_id == fixed.loop_object_id
+            && transition.cas.domain == LifecycleDomain::Loop
+            && transition.cas.from_state.as_str() == "ACT"
+            && transition.cas.to_state.as_str() == "VERIFY"
+            && request.expected_loop_version == transition.cas.next_version
+            && fixed.recorded_fencing_epoch == request.issued_fencing_epoch
+            && transition.fencing_epoch == Some(fixed.recorded_fencing_epoch);
+        if !bindings_match {
+            return Err(StorePortError::Conflict {
+                detail: "verification start members do not share one authority binding".to_owned(),
+            });
+        }
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin verification start"))?;
+        verify_fencing_in_tx(&transaction, Some(fixed.recorded_fencing_epoch))?;
+        let current_contract_epoch: i64 = transaction
+            .query_row(
+                "SELECT COALESCE(MAX(contract_epoch), 0) FROM task_contracts WHERE task_ref=?1",
+                (fixed.task_binding.task_ref.as_str(),),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("read verification contract epoch"))?;
+        if current_contract_epoch != fixed.task_binding.contract_epoch {
+            return Err(StorePortError::Conflict {
+                detail: "verification start TaskContract epoch is stale".to_owned(),
+            });
+        }
+        let subject_is_current_and_closed: bool = transaction
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM governed_objects WHERE object_id=?1 AND domain=?2 AND version=?3 AND state IN ('RECONCILED','VERIFIED','VERIFY_FAILED'))",
+                (
+                    fixed.subject_object_id.as_str(),
+                    fixed.subject_domain.as_str(),
+                    fixed.subject_version.get(),
+                ),
+                |row| row.get(0),
+            )
+            .map_err(unavailable("read verification fixed subject"))?;
+        if fixed.subject_domain != LifecycleDomain::Effect || !subject_is_current_and_closed {
+            return Err(StorePortError::Conflict {
+                detail: "verification start requires a current closed Effect post-state".to_owned(),
+            });
+        }
+        transaction.execute(
+            "INSERT INTO fixed_post_states (fixed_post_state_id, task_ref, contract_epoch, loop_object_id, subject_domain, subject_object_id, subject_version, recorded_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            (fixed.fixed_post_state_id.as_str(), fixed.task_binding.task_ref.as_str(), fixed.task_binding.contract_epoch, fixed.loop_object_id.as_str(), fixed.subject_domain.as_str(), fixed.subject_object_id.as_str(), fixed.subject_version.get(), fixed.recorded_fencing_epoch, fixed.canonical_json.as_str()),
+        ).map_err(unavailable("insert verification fixed post-state"))?;
+        transaction.execute(
+            "INSERT INTO verification_requests (verification_request_id, fixed_post_state_id, task_ref, contract_epoch, loop_object_id, expected_loop_version, verifier_ref, verifier_version, criteria_json, issued_fencing_epoch, canonical_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            (request.verification_request_id.as_str(), request.fixed_post_state_id.as_str(), request.task_binding.task_ref.as_str(), request.task_binding.contract_epoch, request.loop_object_id.as_str(), request.expected_loop_version.get(), request.verifier_ref.as_str(), request.verifier_version.as_str(), request.criteria_canonical_json.as_str(), request.issued_fencing_epoch, request.canonical_json.as_str()),
+        ).map_err(unavailable("insert verification request"))?;
+        let receipt = commit_transition_in_transaction(&transaction, transition)?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit verification start"))?;
+        Ok(receipt)
+    }
+
     fn append_fixed_post_state(&self, row: &FixedPostStateRow) -> Result<(), StorePortError> {
         let mut connection = self.lock()?;
         let transaction = connection

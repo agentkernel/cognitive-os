@@ -962,6 +962,18 @@ pub struct VerificationRequestRow {
     pub canonical_json: String,
 }
 
+/// One all-or-nothing production entry into Loop `VERIFY`.
+///
+/// The fixed post-state and verification request are append-only evidence, and
+/// the Loop transition is their authority publication point. A stale loop,
+/// contract, subject, or writer must roll back all three members.
+#[derive(Debug, Clone, PartialEq)]
+pub struct VerificationStartCommit {
+    pub fixed_post_state: FixedPostStateRow,
+    pub verification_request: VerificationRequestRow,
+    pub loop_transition: TransitionCommit,
+}
+
 /// Immutable verifier result that the daemon reloads before it may continue a
 /// loop. A stored `passed` status alone never accepts or completes a Task.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1020,6 +1032,11 @@ pub struct BoundContinuationAuthorizationConsumption {
 /// Implementations must keep every row append-only and recheck declared
 /// fencing epochs inside the transaction that writes it.
 pub trait ContinuationAuthorityStore {
+    fn begin_verification_atomically(
+        &self,
+        commit: &VerificationStartCommit,
+    ) -> Result<CommitReceipt, StorePortError>;
+
     fn append_fixed_post_state(&self, row: &FixedPostStateRow) -> Result<(), StorePortError>;
 
     fn load_fixed_post_state(

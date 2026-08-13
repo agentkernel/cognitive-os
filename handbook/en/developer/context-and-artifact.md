@@ -76,4 +76,6 @@ abandoned staging files are ever cleaned. The verifier consumes evidence through
 this store, so a report cannot persist unless its evidence bytes exist and hash
 correctly. The Personal daemon now opens one process-lifetime instance at
 `data_dir()/artifacts` with an 8 MiB per-artifact ceiling; D01 composition alone
-does not mean a production verifier has run.
+does not mean a production verifier has run. A reconciled Effect can now be
+pinned with its verification request in the same authority transaction that
+publishes Loop `ACT -> VERIFY`; criteria and verifier selection are still D02.
