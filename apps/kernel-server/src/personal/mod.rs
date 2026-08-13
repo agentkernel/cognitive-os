@@ -12,6 +12,7 @@ mod operability_doctor;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
+mod registered_check;
 mod resource_api;
 mod scheduler_authority;
 mod server;

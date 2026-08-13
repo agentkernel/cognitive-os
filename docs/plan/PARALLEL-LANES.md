@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T16/registered-check-run` | P2-T16/D01-D04 registered deterministic check execution | Lane-P2 | `personal/P2-T16-registered-check-run` | `apps/kernel-server/Cargo.toml`; `apps/kernel-server/src/personal/mod.rs`; `apps/kernel-server/src/personal/registered_check/**`; `apps/kernel-server/src/personal/scheduler_authority/{dispatch.rs,effect.rs,error.rs,tests.rs,types.rs,worker.rs}`; `apps/kernel-server/src/personal/tool_executor/{mod.rs,process.rs,router.rs,state.rs,tests.rs,types.rs,validate.rs}`; `crates/cognitive-kernel/src/{lib.rs,tool_registry.rs}`; `tests/fixtures/p2_t16_registered_check/**`; `docs/plan/{PERSONAL-DEVELOPMENT-PLAN.md,PROGRESS.md}`; `docs/checkpoints/20260813-personal-p2-t16-registered-check-validation-report.md`; `handbook/{en,zh-CN}/developer/execution-chain-status.md`; `handbook/_meta/fingerprints.json` | cursor-p2t16-checkrun-20260813 | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
