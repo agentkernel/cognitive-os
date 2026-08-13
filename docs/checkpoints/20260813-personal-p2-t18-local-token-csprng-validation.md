@@ -905,3 +905,84 @@
 - Result: mapped source、双语语义页与 fingerprints、54×2 handbook、18 generated pages
   全部通过；未使用 escape。
 - Disposition: commit/push exact candidate 后重跑 native focused/full/Clippy 与 required CI。
+
+### V77 — persisted bootstrap fix immutable revision
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: isolated Windows worktree；Git commit/push；pre-commit/pre-push
+  docs-sync hooks
+- Started/retained denominator: 1/1 commit；1/1 push；2/2 hooks
+- Outcome: `pass`
+- Result: fail-closed load validation、双语 upgrade recovery 与 V67–V76 增量证据已推送；
+  hooks 全通过。
+- Disposition: exact native Linux fetch/checkout 后依次运行 persisted-bootstrap focused、
+  auth matrix、source guard、完整 kernel-server 与 Clippy。
+
+### V78 — exact Linux persisted bootstrap fail-closed
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: `DEV-LINUX-NATIVE-01`；
+  `/home/wuz/cos-p2t18-red-9e35d588` clean detached clone；
+  `cargo test -p kernel-server --locked
+  personal::auth::tests::load_existing_rejects_non_csprng_bootstrap_material -- --exact
+  --test-threads=1`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: empty与旧可预测 persisted bootstrap 均在 authority construction 前 fail closed；
+  输出无 token material。
+- Disposition: 运行完整 auth unit matrix。
+
+### V79 — exact Linux 最终 auth unit matrix
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked personal::auth::tests -- --test-threads=1`
+- Started/retained denominator: 15/15 auth unit tests
+- Outcome: `pass`
+- Result: 15/15；生成、熵故障、persisted legacy/empty、重复、无文件/无 session、
+  0600、channel/expiry/revoke 与全部 Debug redaction 通过；输出无 token material。
+- Disposition: 运行 production-source fallback guard。
+
+### V80 — exact Linux 最终 production-source guard
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked --test p2_t18_local_token_csprng`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: OS CSPRNG required marker 存在，PID/time/hash/handcrafted fallback markers 为零。
+- Disposition: 运行完整 kernel-server regressions。
+
+### V81 — exact Linux 最终 kernel-server regressions
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked -- --test-threads=1`
+- Started/retained denominator: 222/222 tests（206 unit + 16 integration）
+- Outcome: `pass`
+- Result: 222/222；restart 仍接受 current CSPRNG bootstrap，旧/畸形值 fail closed；真实
+  front door 日志只含路径/endpoint，不含 token bytes。
+- Disposition: 运行 all-target Clippy。
+
+### V82 — exact Linux 最终 all-target Clippy
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Started/retained denominator: 1/1 Clippy run
+- Outcome: `pass`
+- Result: all targets 无 warning/error。
+- Disposition: 持续 required GitHub Ubuntu/Windows CI 到终态。
+
+### V83 — required CI dispatch / moving-main check
+
+- Revision: `58c6577d71be9fc33961711ef3f1b483757ae6a2`
+- Environment/instrument: GitHub PR #215 status rollup；fresh `origin/main`
+- Started/retained denominator: 0/2 required CI jobs
+- Outcome: `not-run`
+- Result: PR 在 push 后未创建新 check run，因为 `origin/main` 已由独立 P9-T05 PR #213
+  前进到 `d24f7d00`，PR #215 变为 `CONFLICTING/DIRTY`。新增主线只涉及 P9-T05 daemon
+  readiness 与共享测试 helper；未包含 P2-T13/P2-T14 产品路径。
+- Disposition: 先提交本 running report，再以普通 merge（不 rebase/force）引入
+  `origin/main@d24f7d00`；只解决 P2-T18/P9-T05 交叉文件，保留所有 sibling 事实，重新生成
+  exact candidate 后触发 required CI。
