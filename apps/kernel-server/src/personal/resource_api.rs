@@ -404,7 +404,7 @@ impl ResourceApi {
                 ),
                 Ok(None) => error(
                     404,
-                    "RESOURCE_SKILL_REVISION_NOT_FOUND",
+                    "RESOURCE_SKILL_NOT_ELIGIBLE",
                     "Skill revision not found",
                 ),
                 Err(_) => error(
@@ -490,14 +490,14 @@ impl ResourceApi {
         let Some(header) = governed_header(document) else {
             return Err(error(
                 400,
-                "RESOURCE_CONTEXT_SOURCE_HEADER_INVALID",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "Context source requires a valid governed header",
             ));
         };
         let Ok(source_id) = ObjectId::parse(&header.id.0) else {
             return Err(error(
                 400,
-                "RESOURCE_CONTEXT_SOURCE_ID_INVALID",
+                "RESOURCE_MEMORY_ID_INVALID",
                 "Context source header id is invalid",
             ));
         };
@@ -523,7 +523,7 @@ impl ResourceApi {
         else {
             return Err(error(
                 400,
-                "RESOURCE_CONTEXT_SOURCE_METADATA_INVALID",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "Context source metadata is incomplete or invalid",
             ));
         };
@@ -552,19 +552,19 @@ impl ResourceApi {
                     Ok(Some(existing)) if existing == source => Ok(source),
                     Ok(_) => Err(error(
                         409,
-                        "RESOURCE_CONTEXT_SOURCE_CONFLICT",
+                        "RESOURCE_MEMORY_CONFLICT",
                         "Context source conflicts with existing authority facts",
                     )),
                     Err(_) => Err(error(
                         503,
-                        "RESOURCE_CONTEXT_SOURCE_UNAVAILABLE",
+                        "RESOURCE_MEMORY_UNAVAILABLE",
                         "Context authority store is unavailable",
                     )),
                 }
             }
             Err(StorePortError::Unavailable { .. }) => Err(error(
                 503,
-                "RESOURCE_CONTEXT_SOURCE_UNAVAILABLE",
+                "RESOURCE_MEMORY_UNAVAILABLE",
                 "Context authority store is unavailable",
             )),
         }
@@ -583,7 +583,7 @@ impl ResourceApi {
         else {
             return error(
                 400,
-                "RESOURCE_MEMORY_PRECONDITION_INVALID",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "Memory remember requires sealed source and candidate members",
             );
         };
@@ -592,7 +592,7 @@ impl ResourceApi {
         }) else {
             return error(
                 400,
-                "RESOURCE_MEMORY_HEADER_INVALID",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "Memory remember requires a sealed MemoryCandidate",
             );
         };
@@ -625,7 +625,7 @@ impl ResourceApi {
         else {
             return error(
                 400,
-                "RESOURCE_MEMORY_PRECONDITION_INVALID",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "MemoryCandidate source, scope, purpose, and retention bindings are required",
             );
         };
@@ -785,7 +785,7 @@ impl ResourceApi {
         let Some(content_digest) = string_field(document, "content_digest") else {
             return error(
                 400,
-                "RESOURCE_SKILL_DIGEST_REQUIRED",
+                "RESOURCE_SKILL_PAYLOAD_INVALID",
                 "replacement content_digest is required",
             );
         };
@@ -1174,7 +1174,7 @@ fn new_resource_object_id() -> Result<ObjectId, ResourceApiResponse> {
         .ok_or_else(|| {
             error(
                 503,
-                "RESOURCE_ID_GENERATION_FAILED",
+                "RESOURCE_MEMORY_UNAVAILABLE",
                 "daemon could not mint a lifecycle identity",
             )
         })

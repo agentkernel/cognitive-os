@@ -1483,3 +1483,70 @@
 - Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
   18/18 checks pass.
 - Disposition: repair can be committed and pushed.
+
+### D05-NATIVE-01 — full task-owned native regression
+
+- Instruments: full kernel-server tests, full cognitive-store tests, targeted
+  kernel/store/server strict Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `1d3fc215a98ffe6730c171fee81c0d4db6b6fdf0`.
+- Started/retained: 3/3.
+- Outcome: kernel-server `pass` 207 unit + 20 integration；cognitive-store
+  `pass` 24 unit + 101 integration；strict Clippy `pass`.
+- Disposition: all task-owned behavior and adjacent server/store regressions
+  are green at the exact pushed head. Required cross-platform CI for this head
+  remains in flight.
+
+### D05-REVIEW-01 — defect-first self-review
+
+- Scope: P2-T19 production/store/API changes and tests against D01-D05
+  acceptance, without reading History or touching P2-T14-owned paths.
+- Repaired finding: the first lifecycle implementation introduced private
+  error-code strings not present on the existing Resource surface. The final
+  implementation reuses established Memory/Skill payload/id/conflict/
+  unavailable codes, avoiding an undeclared contract extension.
+- Confirmed boundaries: daemon/store remain the only writers；Pi receives only
+  sealed Context candidates；task bearer cannot mutate management lifecycle；
+  exact source replay is field-equal only；forget/revoke/current digest/epoch/
+  principal/scope/package checks precede replay.
+- Remaining structural acceptance gap: v24 consumption is still appended by
+  the resolver before the persisted `ContextView` exists, so a later resolver
+  failure can leave a request-bound selection record that is not yet bound to
+  the final view. Moving the append to the post-view, pre-Pi production seam
+  and adding the corresponding crash/restart test require
+  `scheduler_authority/{context,candidate,tests}.rs`, which the owner explicitly
+  reserved from this workflow while P2-T14 is active.
+- Independent review: `not-run` in this worker because workspace rules prohibit
+  launching a reviewer subagent without explicit user request. Parent/owner
+  review remains a D05 prerequisite.
+
+### D05-STATIC-01 — post-review local gates
+
+- Instruments: `cargo fmt --all -- --check`, `git diff --check`,
+  `pnpm run check:consistency`.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted review repair over `1d3fc215`
+- Started/retained: 3/3.
+- Outcome: all `pass`；registered counts remain 275/55/74/89.
+- Disposition: review repair is ready for docs generation and exact validation.
+
+### D05-HANDBOOK-01 — post-review docs generation
+
+- Instruments: handbook generator, fingerprint filler, handbook check,
+  generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted review repair over `1d3fc215`
+- Started/retained: 4/4.
+- Outcome: generated 18 pages, refreshed two Memory/Skill fingerprints；
+  final 54×2 handbook and 18/18 checks pass.
+- Disposition: review repair is docs-sync ready.
+
+### D05-DOCSYNC-01 — staged review-repair gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged review repair over `1d3fc215`
+- Started/retained: 1/1.
+- Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
+  18/18 checks pass.
+- Disposition: review repair can be committed and pushed.

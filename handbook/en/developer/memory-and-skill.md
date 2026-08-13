@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:e4955d39b89a1ffb7f0f72a4bbe08cb6b5e5e638264e4afa30da08b8fa3a3d96"
+fingerprint: "sha256:8a84aac67582960df0d276142a86f3a238746a68581a5705481382633ba69773"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
