@@ -755,3 +755,80 @@ Windows GNU linker host.
 - Finished: 2026-08-13 14:41 +08:00
 - Command: `git diff --cached --check`
 - Result: **pass**
+
+### Unit 094 — first exact D02 native fetch
+
+- Finished: 2026-08-13 14:35 +08:00
+- Result: **not-run**; the task-owned disposable clone's GitHub fetch timed out
+  after 60 seconds below 1000 bytes/s, before checkout or any test command.
+- Recovery: retry the same exact pushed revision; no source or evidence
+  substitution.
+
+### Unit 095 — second exact D02 native fetch
+
+- Finished: 2026-08-13 14:38 +08:00
+- Result: **not-run**; the retry hit the same GitHub low-speed timeout before
+  checkout or tests.
+- Recovery: transfer a secret-free Git bundle containing only the already
+  pushed `808f55e..f7ae87c` commit delta over the qualified LAN SSH path, fetch
+  that commit into the existing disposable clone, and verify its full SHA
+  before testing. No working-tree snapshot is copied.
+
+### Unit 096 — exact pushed-revision recovery bundle
+
+- Finished: 2026-08-13 14:42 +08:00
+- Result: **pass**
+- Bundle: ignored `artifacts/p2-t12-d02-f7ae87c.bundle`
+- Contents: branch ref exactly
+  `f7ae87c932622c57d478b54e2753acb8f5f46227`; prerequisite exactly
+  `808f55e88e9977aeb27890a1ec77f6a3a7751f37`; `git bundle verify` passed.
+- Boundary: Git objects only from the already pushed branch; no uncommitted
+  files, configuration, environment, credential, or evidence payload.
+
+### Unit 097 — bundled revision checkout check
+
+- Finished: 2026-08-13 14:41 +08:00
+- Result: **not-run** as tests. Remote `git bundle verify` and fetch passed,
+  checkout reached exact `f7ae87c932622c57d478b54e2753acb8f5f46227`,
+  then a quoted `test -z "$(git status ...)"` check was parsed incorrectly
+  before Cargo.
+- Recovery: verify tracked cleanliness with exit-status-only `git diff --quiet`
+  commands, then run the unchanged tests.
+
+### Unit 098 — exact native D02 scheduler suite
+
+- Finished: 2026-08-13 14:43 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `f7ae87c932622c57d478b54e2753acb8f5f46227`
+- Result: **fail**; 42 passed, 1 failed.
+- The new zero-Intent and row-isolation tests passed. The sole failure was the
+  pre-existing unreadable-contract negative, which still expected the entire
+  tick to return `Err`; production correctly logged/skipped that row and
+  returned `Ok` under D02's required isolation.
+- Recovery: preserve the negative's no-WIA/no-lease assertions but update its
+  pass-level expectation and name to distinguish row failure from whole-pass
+  failure.
+
+### Unit 099 — unreadable-row negative reconciliation
+
+- Finished: 2026-08-13 14:45 +08:00
+- Result: **fixed**
+- Change: the existing negative now expects whole-pass availability while
+  retaining its stronger row-level assertions: no WIA consumption, scheduler
+  state remains `runnable`, attempt count remains zero, and no lease owner is
+  installed.
+
+### Unit 100 — reconciled-negative local checks
+
+- Finished: 2026-08-13 14:46 +08:00
+- Results: rustfmt **pass**; whitespace **pass**; diagnostics **not-run** after
+  the 10-second request timeout.
+
+### Unit 101 — reconciled-negative docs-sync gate
+
+- Finished: 2026-08-13 14:47 +08:00
+- Result: **pass** with
+  `DOCS_IMPACT_NONE="This checkpoint updates one test expectation to the
+  documented D02 row-isolation behavior; production code and handbook guidance
+  are unchanged."`
+- Staged whitespace also passed.

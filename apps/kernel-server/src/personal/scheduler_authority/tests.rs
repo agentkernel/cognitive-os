@@ -1851,7 +1851,7 @@ fn server_startup_recovery_stale_contract_does_not_publish_endpoint() {
 }
 
 #[test]
-fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff() {
+fn private_scheduler_tick_isolates_unreadable_contract_without_wia_handoff() {
     let database_path = temporary_scheduler_database_path();
     let (_, scheduler_work_key) = persist_pending_bound_handoff(&database_path, false);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
@@ -1880,9 +1880,10 @@ fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff
         .unwrap();
     drop(store);
 
-    // The scheduler fails closed before the handoff. The exact rejected
-    // authority read is deliberately not part of this safety boundary.
-    assert!(super::run_private_scheduler_tick(&database_path).is_err());
+    // This row fails closed before the handoff, while the bounded pass remains
+    // available to later rows. The exact rejected authority read is
+    // deliberately not part of this safety boundary.
+    assert!(super::run_private_scheduler_tick(&database_path).is_ok());
 
     let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
     assert!(
