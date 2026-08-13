@@ -12,13 +12,15 @@ sources:
     symbols: ["execute_sqlite_migration_plan"]
   - path: crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
   - path: crates/cognitive-store/src/scheduler.rs
     symbols: ["SchedulerRepository", "acquire_eligible_lease"]
 tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:be0b8ab807fc1890b60d2e3782bd85f7a72eb640274cb7898b17e3ed2b0e7dd7"
+fingerprint: "sha256:cecb8ff4b439b173c3d6c16bdd09f04ae364407b4632774335e5547c4f98fdc8"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -63,3 +65,11 @@ non_claims:
 度 lease 是事务化 CAS：可得性要求 `runnable` 且过 `next_eligible`，或以严格更高
 epoch 回收过期 lease；释放要求精确 `(owner, epoch)`；WIA/continuation 授权的消费在
 同一事务内绑定到精确的活动 leased 行。
+
+Task 准入复用既有 v1–v3 表，不新增迁移或平行调度器。
+`insert_task_contract_with_execution_bootstrap` 在单个 immediate 权威事务内重查写
+者 fence 与合同 epoch CAS，再插入 TaskContract 事件、注册初态 `START` 的 Loop 准
+入/事件、硬 Budget，以及 `(task_ref, contract_epoch)` runnable 调度行。任何靠后的成
+员冲突都会回滚先前插入；成功提交后崩溃重开则四项前置全部存在。
+启动恢复还可在一个 fenced 事务内幂等修复旧的当前合同所缺 Loop、Budget 或调度工作。
+既有行只校验，绝不替换或重置；过期合同 epoch 不可修复。

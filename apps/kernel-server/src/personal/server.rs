@@ -8,10 +8,12 @@ use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
+    ProtocolStore,
 };
 use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
@@ -38,8 +40,10 @@ use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
 use super::task_api::TaskApi;
+use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
+const SCHEDULER_TICK_INTERVAL: Duration = Duration::from_millis(250);
 static ENDPOINT_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Configuration for the Personal loopback daemon surface.
@@ -89,6 +93,103 @@ impl std::fmt::Display for PersonalDaemonError {
 
 impl std::error::Error for PersonalDaemonError {}
 
+#[derive(Debug, PartialEq, Eq)]
+enum SchedulerTickRun<T> {
+    Executed(T),
+    AlreadyRunning,
+}
+
+struct SchedulerTickActiveGuard<'a> {
+    active: &'a AtomicBool,
+}
+
+impl Drop for SchedulerTickActiveGuard<'_> {
+    fn drop(&mut self) {
+        self.active.store(false, Ordering::Release);
+    }
+}
+
+fn run_scheduler_tick_non_reentrant<T>(
+    active: &AtomicBool,
+    tick: impl FnOnce() -> T,
+) -> SchedulerTickRun<T> {
+    if active
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return SchedulerTickRun::AlreadyRunning;
+    }
+    let _active_guard = SchedulerTickActiveGuard { active };
+    SchedulerTickRun::Executed(tick())
+}
+
+struct PeriodicSchedulerWorker {
+    cancellation_requested: Arc<AtomicBool>,
+    worker_thread: Option<JoinHandle<()>>,
+}
+
+impl PeriodicSchedulerWorker {
+    fn spawn<Tick, Error>(interval: Duration, mut tick: Tick) -> Result<Self, std::io::Error>
+    where
+        Tick: FnMut() -> Result<(), Error> + Send + 'static,
+        Error: std::fmt::Display,
+    {
+        if interval.is_zero() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "scheduler tick interval must be non-zero",
+            ));
+        }
+        let cancellation_requested = Arc::new(AtomicBool::new(false));
+        let worker_cancellation = Arc::clone(&cancellation_requested);
+        let tick_active = AtomicBool::new(false);
+        let worker_thread = std::thread::Builder::new()
+            .name("personal-scheduler-tick".to_owned())
+            .spawn(move || {
+                while !worker_cancellation.load(Ordering::Acquire) {
+                    match run_scheduler_tick_non_reentrant(&tick_active, &mut tick) {
+                        SchedulerTickRun::Executed(Ok(())) => {}
+                        SchedulerTickRun::Executed(Err(error)) => {
+                            eprintln!(
+                                "kernel-server personal scheduler tick: pass failed and will retry: {error}"
+                            );
+                        }
+                        SchedulerTickRun::AlreadyRunning => {
+                            eprintln!(
+                                "kernel-server personal scheduler tick: skipped reentrant pass"
+                            );
+                        }
+                    }
+                    if worker_cancellation.load(Ordering::Acquire) {
+                        break;
+                    }
+                    std::thread::park_timeout(interval);
+                }
+            })?;
+        Ok(Self {
+            cancellation_requested,
+            worker_thread: Some(worker_thread),
+        })
+    }
+
+    fn shutdown(&mut self) -> Result<(), String> {
+        self.cancellation_requested.store(true, Ordering::Release);
+        let Some(worker_thread) = self.worker_thread.take() else {
+            return Ok(());
+        };
+        worker_thread.thread().unpark();
+        worker_thread
+            .join()
+            .map_err(|_| "personal scheduler worker panicked during shutdown".to_owned())
+    }
+}
+
+impl Drop for PeriodicSchedulerWorker {
+    fn drop(&mut self) {
+        let _ = self.shutdown();
+    }
+}
+
 /// Serve Personal loopback HTTP with auth, bounds, and single-instance lock.
 pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), PersonalDaemonError> {
     ensure_loopback_bind(&config.bind_address)?;
@@ -108,8 +209,8 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         lock.path().display()
     );
     // Open the authority store once for the daemon process and reuse the
-    // single-writer handle for startup recovery, the private scheduler tick,
-    // and personal request-path handlers (P9-T03/D01-D02).
+    // single-writer handle for startup recovery, periodic scheduler ticks, and
+    // personal request-path handlers (P9-T03/D01-D02).
     let authority_store = SqliteAuthorityStore::open(&config.layout.authority_database_path())
         .map_err(|error| PersonalDaemonError::Io {
             detail: format!("open Personal authority store for daemon startup: {error}"),
@@ -125,19 +226,28 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("reconcile durable scheduler recovery before startup: {error}"),
         },
     )?;
-    run_private_scheduler_tick_with_store(
-        &authority_store,
-        &mut scheduler_repository,
-        config.layout.config_dir(),
-    )
-    .map_err(|error| PersonalDaemonError::Io {
-        detail: format!("run private scheduler tick before startup: {error}"),
-    })?;
-    drop(scheduler_repository);
     // Retain the single-writer authority store for the daemon accept loop
-    // (P9-T03/D02). Request handlers must reuse this handle instead of opening
-    // a second connection per call.
+    // and scheduler worker (P9-T03/D02). Request handlers must reuse this
+    // handle instead of opening a second connection per call.
     let authority_store = Arc::new(authority_store);
+    ensure_builtin_native_descriptors(authority_store.as_ref()).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("publish immutable native Tool descriptors: {error}"),
+        }
+    })?;
+    let executor_router = Arc::new(
+        ProductionNativeToolExecutorRouter::open(
+            authority_store
+                .current_fencing_epoch()
+                .map_err(|error| PersonalDaemonError::Io {
+                    detail: format!("load native Tool executor fencing epoch: {error}"),
+                })?,
+            config.layout.data_dir().join("workspace"),
+        )
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: format!("assemble native Tool executor router: {error}"),
+        })?,
+    );
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
@@ -169,6 +279,20 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         })?;
     let _endpoint_publication = publish_endpoint(&config.layout, local_address.to_string())?;
     eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
+    let scheduler_authority_store = Arc::clone(&authority_store);
+    let scheduler_executor_router = Arc::clone(&executor_router);
+    let scheduler_config_dir = config.layout.config_dir().to_path_buf();
+    let mut scheduler_worker = PeriodicSchedulerWorker::spawn(SCHEDULER_TICK_INTERVAL, move || {
+        run_private_scheduler_tick_with_store(
+            scheduler_authority_store.as_ref(),
+            &mut scheduler_repository,
+            &scheduler_config_dir,
+            scheduler_executor_router.as_ref(),
+        )
+    })
+    .map_err(|error| PersonalDaemonError::Io {
+        detail: format!("start periodic Personal scheduler worker: {error}"),
+    })?;
 
     if config.once {
         let (stream, _) = listener.accept().map_err(|error| PersonalDaemonError::Io {
@@ -189,6 +313,9 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             guard.revoke_all();
         }
         shutting_down.store(true, Ordering::SeqCst);
+        scheduler_worker
+            .shutdown()
+            .map_err(|detail| PersonalDaemonError::Io { detail })?;
         return Ok(());
     }
 
@@ -225,6 +352,10 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             }
         }
     }
+    shutting_down.store(true, Ordering::SeqCst);
+    scheduler_worker
+        .shutdown()
+        .map_err(|detail| PersonalDaemonError::Io { detail })?;
     Ok(())
 }
 
@@ -1359,15 +1490,16 @@ fn find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 mod tests {
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::{Arc, Mutex};
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex, mpsc};
     use std::time::Duration;
 
     use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
 
     use super::{
-        LocalSessionAuthority, LoopbackTransportStage, PersonalResourceBounds,
-        ensure_loopback_bind, handle_connection, loopback_transport,
+        LocalSessionAuthority, LoopbackTransportStage, PeriodicSchedulerWorker,
+        PersonalResourceBounds, SchedulerTickRun, ensure_loopback_bind, handle_connection,
+        loopback_transport, run_scheduler_tick_non_reentrant,
     };
     use cognitive_runtime::loopback_transport::validate_loopback_transport_observation;
 
@@ -1427,6 +1559,66 @@ mod tests {
     fn non_loopback_bind_is_rejected() {
         assert!(ensure_loopback_bind("0.0.0.0:8080").is_err());
         assert!(ensure_loopback_bind("127.0.0.1:0").is_ok());
+    }
+
+    #[test]
+    fn scheduler_tick_gate_rejects_self_reentry() {
+        let active = AtomicBool::new(false);
+        let nested_tick_called = AtomicBool::new(false);
+
+        let outer = run_scheduler_tick_non_reentrant(&active, || {
+            let nested = run_scheduler_tick_non_reentrant(&active, || {
+                nested_tick_called.store(true, Ordering::SeqCst);
+                Ok::<(), String>(())
+            });
+            assert!(matches!(nested, SchedulerTickRun::AlreadyRunning));
+            Ok::<(), String>(())
+        });
+
+        assert!(matches!(outer, SchedulerTickRun::Executed(Ok(()))));
+        assert!(!nested_tick_called.load(Ordering::SeqCst));
+        assert!(!active.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn periodic_scheduler_worker_survives_tick_error_and_cancels_cleanly() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let active = Arc::new(AtomicUsize::new(0));
+        let maximum_active = Arc::new(AtomicUsize::new(0));
+        let (call_sender, call_receiver) = mpsc::channel();
+        let mut worker = PeriodicSchedulerWorker::spawn(Duration::from_millis(10), {
+            let calls = Arc::clone(&calls);
+            let active = Arc::clone(&active);
+            let maximum_active = Arc::clone(&maximum_active);
+            move || {
+                let current_active = active.fetch_add(1, Ordering::SeqCst) + 1;
+                maximum_active.fetch_max(current_active, Ordering::SeqCst);
+                let call = calls.fetch_add(1, Ordering::SeqCst) + 1;
+                call_sender.send(call).unwrap();
+                active.fetch_sub(1, Ordering::SeqCst);
+                if call == 1 {
+                    Err("injected row-independent tick failure".to_owned())
+                } else {
+                    Ok(())
+                }
+            }
+        })
+        .unwrap();
+
+        assert_eq!(
+            call_receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
+            1
+        );
+        assert_eq!(
+            call_receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
+            2,
+            "a failed pass must not terminate the periodic worker"
+        );
+        worker.shutdown().unwrap();
+        assert_eq!(maximum_active.load(Ordering::SeqCst), 1);
+        let stopped_at = calls.load(Ordering::SeqCst);
+        std::thread::sleep(Duration::from_millis(40));
+        assert_eq!(calls.load(Ordering::SeqCst), stopped_at);
     }
 
     /// P9-T04/D02: one real loopback request must produce disjoint transport

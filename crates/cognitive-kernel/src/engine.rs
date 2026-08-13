@@ -380,9 +380,16 @@ where
         })
     }
 
-    /// Admit a new governed object at its table's initial state, version 1,
-    /// atomically with its admission event.
-    pub fn admit_object(&self, cmd: &AdmitCommand) -> Result<AdmittedObject, TransitionRejection> {
+    /// Prepare a new governed object at its registered initial state without
+    /// writing it.
+    ///
+    /// Compound daemon authority transactions may commit this exact
+    /// [`ObjectAdmission`] beside other inseparable authority rows. Callers
+    /// must not alter any member after preparation.
+    pub fn prepare_object_admission(
+        &self,
+        cmd: &AdmitCommand,
+    ) -> Result<ObjectAdmission, TransitionRejection> {
         let loaded = load_table(cmd.domain)?;
         let initial_state = StateName::parse(&loaded.table.initial_state).map_err(|err| {
             reject(
@@ -440,13 +447,20 @@ where
                 .collect(),
             fencing_epoch: cmd.fencing_epoch,
         };
+        Ok(admission)
+    }
+
+    /// Admit a new governed object at its table's initial state, version 1,
+    /// atomically with its admission event.
+    pub fn admit_object(&self, cmd: &AdmitCommand) -> Result<AdmittedObject, TransitionRejection> {
+        let admission = self.prepare_object_admission(cmd)?;
         let receipt: CommitReceipt = self.store.admit_object(&admission).map_err(store_error)?;
         Ok(AdmittedObject {
-            event_id,
+            event_id: admission.event.event_id.clone(),
             event_sequence: receipt.event_sequence,
-            initial_state,
+            initial_state: admission.object.state.clone(),
             version: Version::INITIAL,
-            admitted_at,
+            admitted_at: admission.admitted_at,
         })
     }
 

@@ -11,13 +11,13 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "mint_task_contract"]
+    symbols: ["record_user_intent", "mint_schedulable_task_contract"]
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick"]
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:676c5492e30ef088f59b6e8f9ec12ff38715895eaf31a84817e2ceb67d580800"
+fingerprint: "sha256:bc72f0022ac1af30b8a9760119b0b3cde6df028af48f94c70bf9f71aff308d97"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -36,9 +36,11 @@ durable paper trail:
    as truth.
 3. **Preview** — the daemon issues a canonical, digest-bound contract preview
    (objectives, scope, budgets, deadline, allowed tools, acceptance conditions).
-4. **Admit** — you accept exactly that digest; the daemon mints the TaskContract
-   under an epoch CAS. Changing your mind later supersedes to a new epoch and
-   fences everything bound to the old one.
+4. **Admit** — you accept exactly that digest; under one fenced epoch-CAS
+   transaction the daemon mints the TaskContract and publishes its named
+   `START` Loop, hard Budget, and current-epoch runnable scheduler row. Changing
+   your mind later supersedes to a new epoch and fences everything bound to the
+   old one.
 
 This admission pipeline is `implemented` and is the only human approval point on
 the default path. `GET /task/watch` gives a bounded, snapshot-first event stream.
@@ -50,13 +52,19 @@ daemon admits it as Intent + Effect + a one-time Worker Iteration Authorization 
 governed tool execution (persist-before-dispatch) → independent verification →
 loop continuation or STOP.
 
-Today each stage exists with focused tests (lease CAS and fencing, sealed
-ContextViews, candidate admission bundles, WorkspaceRead/ProcessCheck executors with
-unknown-outcome reconciliation, an independent verifier seam), **but the daemon does
-not yet drive the chain autonomously**: admission does not enqueue scheduler work,
-the daemon runs only one scheduler pass at startup, and production code does not yet
-call the tool executors or verifier. So: admitted Tasks are durable and watchable;
-autonomous execution is `partial`. Details for developers:
+Today admission durably enqueues its complete scheduler bootstrap, and each later
+stage exists with focused tests (lease CAS and fencing, sealed ContextViews,
+candidate admission bundles, six assembled Tool executors with unknown-outcome
+reconciliation, an independent verifier seam). Zero-Intent work now reaches
+candidate admission and leaves its new worker authorization for a later pass.
+One non-reentrant periodic worker starts after the daemon is listening, so later
+passes can observe Tasks admitted by the running process; pass errors do not
+stop the listener, and orderly shutdown cancels and joins the worker.
+**The daemon still does not drive the full chain autonomously**: production
+code now dispatches parameter-free WorkspaceRead through the durable Effect
+protocol, but the other Tool request carriers and the verifier are not wired.
+So admitted Tasks are durable, watchable, and runnable in authority state;
+autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
 
 ## What can never happen, by construction

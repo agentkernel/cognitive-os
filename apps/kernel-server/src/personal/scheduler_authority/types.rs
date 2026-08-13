@@ -387,8 +387,25 @@ pub(crate) struct RecoveredWorkerAttempt {
 /// rows and is never copied from a worker-local queue.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ResolvedSchedulerWork {
-    pub authority_binding: SchedulerAuthorityBinding,
+    /// Absent only for the first pre-admission pass, before any candidate
+    /// Intent/Effect binding exists. Every worker-authority path requires it.
+    pub authority_binding: Option<SchedulerAuthorityBinding>,
     pub task_binding: TaskBinding,
+}
+
+/// Durable native execution facts reloaded after one WIA handoff.
+///
+/// Every field comes from the authority store and is cross-checked against the
+/// sealed WIA before a concrete executor may stage input. This value grants no
+/// authority and performs no Effect transition or external I/O.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct ResolvedNativeWorkerDispatch {
+    pub authorization: WorkerIterationAuthorizationRow,
+    pub candidate: cognitive_kernel::ports::OperationCandidateProposalRow,
+    pub intent: cognitive_kernel::ports::IntentRow,
+    pub native_tool: cognitive_kernel::tool_registry::ResolvedNativeTool,
+    pub effect_version: Version,
+    pub effect_state: String,
 }
 
 /// One daemon-owned scheduler admission result.

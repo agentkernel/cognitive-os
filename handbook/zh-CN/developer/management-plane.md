@@ -14,11 +14,13 @@ sources:
     symbols: ["ApprovalGate"]
   - path: crates/cognitive-management/src/audit.rs
     symbols: ["FileManagementAuditLog", "ResultReleaseGate"]
+  - path: crates/cognitive-management/src/task_application.rs
+    symbols: ["KernelTaskApplicationService"]
   - path: apps/admin-cli/src/main.rs
 tests:
   - crates/cognitive-management/tests/m5_session_approval.rs
   - apps/admin-cli/tests/m5_deterministic_fallback.rs
-fingerprint: "sha256:fda01e641c44f694e5f05359d8a63dda027b116563071a981b5417d11cdf7f73"
+fingerprint: "sha256:a8c2ba8584756ff637925fa73f2e6cb2dad84949673d1d45b9407ca0be5a539a"
 non_claims:
   - R0/R2/R3 审批流与治理台账的 daemon 生产接线未实现；只存在此处列出的部分。
 ---
@@ -52,6 +54,13 @@ non_claims:
 agent-recover/agent-health/uninstall` 调用
 [Agent 与 Pi 生命周期](./agent-and-pi-lifecycle.md)所述运行时生命周期，全部会话把
 门。
+
+## Task 准入
+
+`KernelTaskApplicationService::admit` 仍是确定性的 digest/权威/epoch 门。其生产
+铸造现在只有在同一权威事务已发布 TaskContract、合同命名的 `START` Loop、硬
+Budget 与当前 epoch 的 runnable 调度行后才返回成功。这只是调度引导：不创建 worker
+Intent/Effect，不执行 Tool I/O，也不能完成 Task。
 
 诚实缺口：usage 文本漏写 official install 的 `--package-id`；治理台账
 （`revocation_epoch`/`capability_set_version` 持久化）有文件实现并被测试消费，

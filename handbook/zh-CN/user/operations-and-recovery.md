@@ -14,10 +14,12 @@ sources:
     symbols: ["plan_personal_backup_inventory"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2c75d38146c714c98e1f1d6c9901ad16f604606547d3543d9435f42175451128"
+fingerprint: "sha256:3c83d3fa228e5fb62fa0b55961777d1a3c5354bd83377c4a65a168085a5f44a3"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -41,7 +43,9 @@ non_claims:
 
 `cognitive daemon stop` 向记录的 PID 发信号，仅在确认进程消失后移除 `daemon.lock`
 与 endpoint 文档；看似存活的锁绝不删除。每次启动 daemon 幂等地重跑迁移、恢复已消费的
-worker 交接，并原子地重新发布 endpoint。
+worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而不重置既有行，并原子地
+重新发布 endpoint。随后才启动唯一周期调度 worker；顺序退出会在释放 daemon 状态前取
+消、唤醒并 join 它。
 
 ## 数据库安全 —— `implemented`
 
@@ -57,6 +61,11 @@ worker 交接，并原子地重新发布 endpoint。
 原生 HTTP attempt 在出站前持久化，重启后在终态 receipt 出现前保持 indeterminate。
 workspace 变更使用持久原键 receipt；相同文件字节本身不是执行证明，重启会保守清理
 orphan staging。
+
+成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`START` Loop、硬 Budget 与
+runnable 调度行一起出现。提交前失败不会留下这些准入成员；成功响应后崩溃重开会看到
+完整发布。绑定后的周期 worker 现已接线，但这本身不表示 Tool Effect 已从生产派发或得
+到独立验证。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

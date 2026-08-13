@@ -7,8 +7,8 @@ use cognitive_kernel::effects::{EffectError, WriterLease};
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AdmittedInterpretation, GovernanceSeed, InterpretationCandidate,
     SupersedeCommand, SupersedeReport, TaskContractCommand, UserIntentCommand,
-    admit_interpretation, mint_task_contract, record_interpretation_candidate, record_user_intent,
-    supersede_task_contract,
+    admit_interpretation, mint_schedulable_task_contract, record_interpretation_candidate,
+    record_user_intent, supersede_task_contract,
 };
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, ContextStore, IdGenerator, IntentChainStore, InterpretationRow,
@@ -46,7 +46,7 @@ where
         &intent.correlation_id,
     )?;
     let admitted: AdmittedInterpretation = admit_interpretation(store, acceptance)?;
-    let task = mint_task_contract(
+    let task = mint_schedulable_task_contract(
         store,
         clock,
         ids,

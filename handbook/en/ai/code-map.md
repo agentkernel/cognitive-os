@@ -42,7 +42,7 @@ core (`cognitive-kernel`) has no HTTP, SQLite, or model SDK dependency by design
 Key real call chains (details in the [developer guide](../developer/README.md)):
 
 - CLI init: `cognitive init` → `prepare_personal_databases` → `SecretStore` → `ProviderDiscoveryService` → snapshot persistence.
-- Daemon start: `serve_personal_loopback` → migrations → recovery → one private scheduler tick → bind → endpoint publication.
+- Daemon start: `serve_personal_loopback` → migrations → recovery → bind → endpoint publication → one cancellable periodic scheduler worker.
 - Task admission: `POST /task/*` → `TaskApi` → `KernelTaskApplicationService` → `cognitive_kernel::intent_chain` → SQLite.
 - Pi conversation: Pi extension → `POST /provider/v1/chat/completions` → daemon-owned SecretStore + `RustlsProviderTransport`.
 - Install: `deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate (single-service transaction).

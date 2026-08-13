@@ -147,7 +147,7 @@ where
         .ok_or_else(|| {
             SchedulerAuthorityError::LoopUnavailable(loop_object_id.as_str().to_owned())
         })?;
-    if !matches!(loop_object.state.as_str(), "START" | "CONTINUE") {
+    if !matches!(loop_object.state.as_str(), "START" | "ACT" | "CONTINUE") {
         return Err(SchedulerAuthorityError::LoopUnavailable(format!(
             "{} is {}",
             loop_object_id.as_str(),
@@ -317,6 +317,37 @@ where
     complete_resolved_effect_and_release(worker_attempt, scheduler_repository, released_at)
 }
 
+/// Re-read the scheduler lease immediately before Effect authorization.
+///
+/// WIA consumption verifies the same binding transactionally, but a lease may
+/// be replaced after that commit. The external sink therefore gets one final
+/// owner/epoch/state check; a stale dispatch cannot authorize an Effect or
+/// reach I/O.
+pub(crate) fn verify_scheduler_dispatch_current(
+    scheduler_repository: &mut SchedulerRepository,
+    dispatch: &SchedulerDispatch,
+) -> Result<(), SchedulerAuthorityError> {
+    let row = scheduler_repository
+        .load(&SchedulerWorkKey {
+            task_ref: dispatch.task_ref.clone(),
+            contract_epoch: dispatch.contract_epoch,
+        })?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::DispatchBindingMismatch(
+                "leased scheduler row disappeared before Effect dispatch".to_owned(),
+            )
+        })?;
+    if row.state != SchedulerState::Leased.as_str()
+        || row.lease_owner.as_deref() != Some(dispatch.lease_owner.as_str())
+        || row.lease_epoch != dispatch.lease_epoch
+    {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "scheduler lease was replaced before Effect dispatch".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
 /// Consume one candidate-admission WIA after fresh scheduler admission.
 ///
 /// A candidate WIA authorizes the prior atomic `DECIDE -> ACT` admission. It
@@ -336,6 +367,8 @@ pub(crate) fn run_bounded_scheduler_attempt<S, C, G>(
     observed_wall_time: &str,
     candidate_authorization_id: Option<&ObjectId>,
     continuation_authorization: Option<&ContinuationAuthorizationRow>,
+    context_execution_policy: Option<&SchedulerExecutionPolicyRow>,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
     worker_attempt_id: ObjectId,
     released_at: &str,
 ) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
@@ -345,7 +378,8 @@ where
         + HarnessStore
         + IntentChainStore
         + ProtocolStore
-        + WorkerAuthorizationStore,
+        + WorkerAuthorizationStore
+        + ContextAuthorizationFactStore,
     C: Clock,
     G: IdGenerator,
 {
@@ -446,18 +480,69 @@ where
         return Ok(SchedulerWorkerAttempt::ContinuationStarted(transition));
     }
 
-    consume_worker_authorization_for_attempt(
+    verify_scheduler_dispatch_current(scheduler_repository, &dispatch)?;
+    let authorization = candidate_authorization.as_ref().ok_or_else(|| {
+        SchedulerAuthorityError::CandidateUnavailable(
+            "candidate WIA was absent after continuation selection".to_owned(),
+        )
+    })?;
+    let resolved = resolve_native_worker_dispatch_with_families(
+        authority_store,
+        authorization,
+        &crate::personal::tool_executor::ASSEMBLED_EXECUTOR_FAMILIES,
+    )?;
+    let context_execution_policy = context_execution_policy.ok_or_else(|| {
+        SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+            "native execution has no durable scheduler policy".to_owned(),
+        )
+    })?;
+    let execution_clock = FixedSchedulerClock::parse(observed_wall_time)?;
+    let observed_at = execution_clock
+        .now()
+        .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let (grant, governance_currency) = derive_current_native_execution_authorization(
+        authority_store,
+        context_execution_policy,
+        &resolved,
+        observed_at,
+    )?;
+    executor_router
+        .stage_resolved(&resolved)
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let handoff = consume_worker_authorization_for_attempt(
         authority_store,
         // The LoopDriver clock is unavailable here; use the scheduler's
         // trusted observation time only after parsing it as a wall timestamp.
-        &FixedSchedulerClock::parse(observed_wall_time)?,
-        candidate_authorization_id.ok_or_else(|| {
-            SchedulerAuthorityError::CandidateUnavailable(
-                "candidate WIA was absent after continuation selection".to_owned(),
-            )
-        })?,
+        &execution_clock,
+        &authorization.authorization_id,
         worker_attempt_id,
         &dispatch,
+    )?;
+    if handoff.authorization != resolved.authorization {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "consumed WIA differs from the pre-dispatch durable reload".to_owned(),
+        ));
+    }
+    verify_scheduler_dispatch_current(scheduler_repository, &dispatch)?;
+    let execution_ids = UuidV7Generator;
+    let effect_protocol = cognitive_kernel::effects::EffectProtocol::new(
+        authority_store,
+        &execution_clock,
+        &execution_ids,
+        UriRef::parse("principal://personal/daemon")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+        UriRef::parse("authority://personal/effect-authority")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+        UriRef::parse("correlation://personal/native-tool-dispatch")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+    );
+    dispatch_native_worker_effect(
+        &effect_protocol,
+        &resolved,
+        executor_router,
+        &grant,
+        &governance_currency,
+        &writer_lease,
     )?;
     let worker_attempt = complete_durable_scheduler_effect_closure(
         SchedulerDispatchAdmission::Leased(dispatch),
@@ -468,6 +553,128 @@ where
     )?;
 
     Ok(worker_attempt)
+}
+
+/// Run row-local scheduler work without letting one malformed Task abort the
+/// rest of the bounded pass.
+///
+/// The callback still owns every authority check and may fail closed. This
+/// helper changes only pass control flow: it records the failure count and
+/// continues deterministically in repository order.
+pub(crate) fn process_scheduler_rows_isolated(
+    scheduler_rows: Vec<cognitive_store::scheduler::SchedulerRow>,
+    mut process_row: impl FnMut(
+        &cognitive_store::scheduler::SchedulerRow,
+    ) -> Result<(), SchedulerAuthorityError>,
+) -> usize {
+    let mut failure_count = 0usize;
+    for scheduler_row in scheduler_rows {
+        if let Err(error) = process_row(&scheduler_row) {
+            failure_count = failure_count.saturating_add(1);
+            eprintln!(
+                "kernel-server personal scheduler tick: skip row {} at epoch {}: {error}",
+                scheduler_row.task_ref, scheduler_row.contract_epoch
+            );
+        }
+    }
+    failure_count
+}
+
+fn reconcile_leased_native_scheduler_row(
+    authority_store: &SqliteAuthorityStore,
+    scheduler_repository: &mut SchedulerRepository,
+    scheduler_row: &cognitive_store::scheduler::SchedulerRow,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+) -> Result<(), SchedulerAuthorityError> {
+    let lease_owner = scheduler_row.lease_owner.as_deref().ok_or_else(|| {
+        SchedulerAuthorityError::DispatchBindingMismatch(
+            "leased scheduler row has no owner".to_owned(),
+        )
+    })?;
+    let consumed = authority_store
+        .list_consumed_worker_iteration_authorizations()
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let mut matching = consumed.into_iter().filter(|consumed| {
+        consumed.authorization.task_ref == scheduler_row.task_ref
+            && consumed.authorization.contract_epoch == scheduler_row.contract_epoch
+            && consumed.scheduler_lease.as_ref().is_some_and(|lease| {
+                lease.task_ref == scheduler_row.task_ref
+                    && lease.contract_epoch == scheduler_row.contract_epoch
+                    && lease.lease_owner == lease_owner
+                    && lease.lease_epoch == scheduler_row.lease_epoch
+            })
+    });
+    let consumed = matching.next().ok_or_else(|| {
+        SchedulerAuthorityError::CandidateUnavailable(
+            "leased scheduler row has no exact consumed WIA".to_owned(),
+        )
+    })?;
+    if matching.next().is_some() {
+        return Err(SchedulerAuthorityError::CandidateUnavailable(
+            "leased scheduler row has multiple consumed WIAs".to_owned(),
+        ));
+    }
+    let resolved = resolve_native_worker_dispatch_with_families(
+        authority_store,
+        &consumed.authorization,
+        &crate::personal::tool_executor::ASSEMBLED_EXECUTOR_FAMILIES,
+    )?;
+    let writer_lease = WriterLease {
+        epoch: authority_store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+    };
+    let clock = SystemClock;
+    let ids = UuidV7Generator;
+    let effect_protocol = cognitive_kernel::effects::EffectProtocol::new(
+        authority_store,
+        &clock,
+        &ids,
+        UriRef::parse("principal://personal/daemon")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+        UriRef::parse("authority://personal/effect-authority")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+        UriRef::parse("correlation://personal/native-tool-recovery")
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
+    );
+    reconcile_interrupted_native_worker_effect(
+        &effect_protocol,
+        &resolved,
+        executor_router,
+        &writer_lease,
+    )?;
+    let effect = authority_store
+        .load_object(
+            LifecycleDomain::Effect,
+            &consumed.authorization.effect_object_id,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffect(
+                consumed.authorization.effect_object_id.to_string(),
+            )
+        })?;
+    let final_scheduler_state = match effect.state.as_str() {
+        "RECONCILED" | "VERIFIED" | "VERIFY_FAILED" => Some(SchedulerState::Succeeded),
+        "NOT_EXECUTED" | "QUARANTINED" => Some(SchedulerState::Failed),
+        _ => None,
+    };
+    if let Some(final_scheduler_state) = final_scheduler_state {
+        let released_at = clock
+            .now()
+            .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+        scheduler_repository.release_lease(
+            &SchedulerWorkKey {
+                task_ref: scheduler_row.task_ref.clone(),
+                contract_epoch: scheduler_row.contract_epoch,
+            },
+            lease_owner,
+            scheduler_row.lease_epoch,
+            final_scheduler_state,
+            released_at.as_str(),
+        )?;
+    }
+    Ok(())
 }
 
 /// Run one daemon-private scheduler pass over durable runnable work.
@@ -496,10 +703,23 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
     let authority_store = SqliteAuthorityStore::open(authority_database_path)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
+    crate::personal::tool_executor::ensure_builtin_native_descriptors(&authority_store)
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let executor_router = crate::personal::tool_executor::ProductionNativeToolExecutorRouter::open(
+        authority_store
+            .current_fencing_epoch()
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+        authority_database_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join("workspace"),
+    )
+    .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     run_private_scheduler_tick_with_store(
         &authority_store,
         &mut scheduler_repository,
         provider_config_dir,
+        &executor_router,
     )
 }
 
@@ -511,17 +731,27 @@ pub(crate) fn run_private_scheduler_tick_with_store(
     authority_store: &SqliteAuthorityStore,
     scheduler_repository: &mut SchedulerRepository,
     provider_config_dir: &Path,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
 ) -> Result<(), SchedulerAuthorityError> {
     let clock = SystemClock;
     let identifiers = UuidV7Generator;
     let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
     let scheduler_rows = scheduler_repository.list_recoverable()?;
 
-    for scheduler_row in scheduler_rows {
-        if scheduler_row.state != SchedulerState::Runnable.as_str()
-            || scheduler_row.cancel_requested
-        {
-            continue;
+    process_scheduler_rows_isolated(scheduler_rows, |scheduler_row| {
+        if scheduler_row.cancel_requested {
+            return Ok(());
+        }
+        if scheduler_row.state == SchedulerState::Leased.as_str() {
+            return reconcile_leased_native_scheduler_row(
+                authority_store,
+                scheduler_repository,
+                scheduler_row,
+                executor_router,
+            );
+        }
+        if scheduler_row.state != SchedulerState::Runnable.as_str() {
+            return Ok(());
         }
         let resolved_work =
             resolve_scheduler_work_for_task(authority_store, &scheduler_row.task_ref)?;
@@ -580,8 +810,14 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             // the newly issued WIA durable and unconsumed for a later normal
             // scheduler recovery/dispatch pass; Pi invocation must never
             // borrow or immediately consume worker authority.
-            continue;
+            return Ok(());
         }
+        let authority_binding = resolved_work.authority_binding.as_ref().ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffectBinding {
+                task_ref: resolved_work.task_binding.task_ref.clone(),
+                contract_epoch: resolved_work.task_binding.contract_epoch,
+            }
+        })?;
         let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
             SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
         })?;
@@ -605,7 +841,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             scheduler_repository,
             &mut scheduler_service,
             &driver,
-            &resolved_work.authority_binding,
+            authority_binding,
             &resolved_work.task_binding,
             scheduler_lease_epoch,
             observed_wall_time.as_str(),
@@ -613,10 +849,13 @@ pub(crate) fn run_private_scheduler_tick_with_store(
                 .as_ref()
                 .map(|authorization| &authorization.authorization_id),
             continuation_authorization.as_ref(),
+            context_execution_policy.as_ref(),
+            executor_router,
             worker_attempt_id,
             observed_wall_time.as_str(),
         )?;
-    }
+        Ok(())
+    });
 
     Ok(())
 }

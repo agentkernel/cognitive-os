@@ -146,12 +146,30 @@ pub(crate) fn build_required_task_fragments(
         resource_scope,
         conversation_ref: command.conversation_ref.clone(),
     };
+    let native_tool_descriptors = contract
+        .allowed_tools
+        .iter()
+        .filter(|operation_id| operation_id.starts_with("native."))
+        .map(|operation_id| {
+            crate::personal::tool_executor::builtin_native_descriptor_id(operation_id)
+                .map(|descriptor_id| {
+                    json!({
+                        "operation_id": operation_id,
+                        "operation_descriptor_id": descriptor_id.as_str(),
+                    })
+                })
+                .map_err(|error| {
+                    SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     let system_body = json!({
         "fragment": "system",
         "task_ref": command.task_ref,
         "purpose": context_request.purpose,
         "context_budget": context_request.budget,
         "authority": "daemon_observational_only",
+        "native_tool_descriptors": native_tool_descriptors,
     });
     let task_body = json!({
         "fragment": "task",

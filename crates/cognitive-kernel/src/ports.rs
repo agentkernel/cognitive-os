@@ -487,6 +487,37 @@ pub struct TaskContractRow {
     pub canonical_json: String,
 }
 
+/// The execution prerequisites published atomically with one admitted
+/// TaskContract.
+///
+/// This is a compound authority commit input, not a second scheduler or
+/// lifecycle model. The Loop admission follows the registered Loop table, the
+/// Budget uses the contract-named ledger identity, and the store derives the
+/// scheduler key from the TaskContract row itself.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskExecutionBootstrap {
+    /// Contract-named Loop object prepared at the registered initial state.
+    pub loop_admission: ObjectAdmission,
+    /// Contract-named hard-budget identity.
+    pub budget_id: BudgetId,
+    /// Canonical initial [`BudgetState`] JSON.
+    pub budget_state_canonical_json: String,
+    /// Budget creation timestamp.
+    pub budget_created_at: WallTimestamp,
+}
+
+/// Result of idempotently repairing an already-admitted current TaskContract's
+/// execution prerequisites.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct TaskExecutionBootstrapRepair {
+    /// A missing contract-named Loop was admitted.
+    pub loop_created: bool,
+    /// A missing contract-named Budget was created.
+    pub budget_created: bool,
+    /// A missing current-epoch scheduler row was created.
+    pub scheduler_created: bool,
+}
+
 /// One daemon-issued immutable ContextRequest. The request is the durable
 /// Context input that a TaskContract v0.4 pins with a strong reference;
 /// individual ContextViews remain request-linked resolution artifacts.
@@ -1269,12 +1300,39 @@ pub trait IntentChainStore {
         expected_current_epoch: i64,
     ) -> Result<CommitReceipt, StorePortError>;
 
+    /// Insert a TaskContract, its event, the contract-named Loop and Budget,
+    /// and one current-epoch runnable scheduler row in ONE transaction.
+    ///
+    /// The adapter MUST repeat the contract-epoch CAS and writer-fencing
+    /// checks inside the transaction. A duplicate, mismatched binding, or
+    /// failure at any point commits none of the members.
+    fn insert_task_contract_with_execution_bootstrap(
+        &self,
+        contract: &TaskContractRow,
+        event: &EventDraft,
+        expected_current_epoch: i64,
+        bootstrap: &TaskExecutionBootstrap,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// Idempotently repair missing execution prerequisites for an existing,
+    /// current TaskContract in ONE transaction. Existing Loop/Budget/scheduler
+    /// authority is never replaced or reset.
+    fn repair_task_execution_bootstrap(
+        &self,
+        contract: &TaskContractRow,
+        bootstrap: &TaskExecutionBootstrap,
+    ) -> Result<TaskExecutionBootstrapRepair, StorePortError>;
+
     /// Load one contract by task and epoch.
     fn load_task_contract(
         &self,
         task_ref: &str,
         contract_epoch: i64,
     ) -> Result<Option<TaskContractRow>, StorePortError>;
+
+    /// List exactly the latest immutable TaskContract row for every task in
+    /// deterministic task-reference order.
+    fn list_current_task_contracts(&self) -> Result<Vec<TaskContractRow>, StorePortError>;
 
     /// Enumerate persisted intents bound to one task (supersede
     /// classification input), in insertion order.

@@ -8,10 +8,13 @@ use super::{
     SchedulerWorkerAttempt, UntrustedPiCandidate, WorkerAuthorizationHandoff,
     candidate_admission_command_from_policy, classify_scheduler_effect_closure,
     complete_resolved_effect_and_release, complete_scheduler_admission,
-    complete_scheduler_worker_attempt, ensure_current_contract_epoch,
-    parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
-    release_closed_effect_dispatch, release_closed_recovered_attempt, select_single_effect_intent,
-    validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
+    complete_scheduler_worker_attempt, dispatch_native_worker_effect,
+    ensure_current_contract_epoch, parse_execution_bound_contract,
+    propose_persist_and_admit_candidate_after_metadata, reconcile_interrupted_native_worker_effect,
+    release_closed_effect_dispatch, release_closed_recovered_attempt,
+    resolve_native_worker_dispatch_with_families, resolve_scheduler_work_for_task,
+    select_single_effect_intent, validate_untrusted_pi_candidate,
+    validate_worker_authorization_evidence, verify_scheduler_dispatch_current,
 };
 use cognitive_contracts::{
     canonical,
@@ -39,21 +42,25 @@ use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::budget::BudgetState;
 use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
 use cognitive_kernel::engine::CommittedTransition;
+use cognitive_kernel::executor::ExecutorCapabilities;
 use cognitive_kernel::intent_chain::{
-    GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
-    strong_reference_to,
+    GovernanceSeed, compose_governed_header, prepare_task_execution_bootstrap,
+    seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
-    EventDraft, IntentChainStore, IntentRow, ObjectAdmission, ObjectCas,
-    OperationCandidateProposalRow, ProgressFactRow, RecordDraft, SchedulerExecutionPolicyRow,
-    SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
+    DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
+    ObjectCas, OperationCandidateProposalRow, ProgressFactRow, ProtocolStore, RecordDraft,
+    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+    StoredObject, TaskBinding, TaskContractRow, TaskExecutionBootstrap, TransitionCommit,
     WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
+use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, NativeOperationFamily};
+use cognitive_kernel::{EffectClass, OperationDescriptor};
 use cognitive_runtime::{SchedulerCeilingDispatch, SchedulerDispatch};
 use cognitive_store::{
-    PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, UuidV7Generator,
+    PersonalDataLayout, ScriptedExecutor, SqliteAuthorityStore, SystemClock, UuidV7Generator,
     prepare_personal_databases,
     scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
 };
@@ -62,8 +69,16 @@ use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::net::TcpStream;
-use std::sync::mpsc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+    mpsc,
+};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::personal::tool_executor::{
+    ASSEMBLED_EXECUTOR_FAMILIES, ProductionNativeToolExecutorRouter,
+};
 
 fn scheduler_row(task_ref: &str) -> SchedulerRow {
     SchedulerRow {
@@ -1067,6 +1082,121 @@ fn temporary_scheduler_database_path() -> std::path::PathBuf {
     ))
 }
 
+fn persist_repairable_task_contract(
+    store: &SqliteAuthorityStore,
+    base: u64,
+    task_ref: &str,
+) -> (TaskContractRow, ObjectId, BudgetId) {
+    let issued_at = WallTimestamp::parse("2026-08-13T05:00:00Z").unwrap();
+    let contract_id = object_id(base);
+    let loop_object_id = object_id(base + 1);
+    let budget_id = BudgetId::parse(&format!("00000000-0000-7000-b000-{base:012x}")).unwrap();
+    let header = compose_governed_header(
+        &contract_id,
+        "TaskContract",
+        "cognitiveos.task-contract/0.3",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-startup-repair",
+        &issued_at,
+    )
+    .unwrap();
+    let contract = TaskContract {
+        allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
+        allowed_tools: vec!["operation://personal/filesystem/read".to_owned()],
+        budget: Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: Some(1),
+            tool_calls: Some(2),
+            wall_time_ms: None,
+        },
+        budget_id: Some(budget_id.to_generated()),
+        conditions: vec![ContractCondition {
+            description: "independently verified read".to_owned(),
+            id: "accept-read".to_owned(),
+            kind: ContractConditionKind::Acceptance,
+            machine_expression: None,
+            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+        }],
+        context_request_ref: None,
+        contract_epoch: 1,
+        deadline: Some("2026-08-14T05:00:00Z".to_owned()),
+        header,
+        human_gates: None,
+        intent_acceptance_ref: strong_reference_to(
+            &object_id(base + 2),
+            &format!("sha256:{}", "a".repeat(64)),
+        ),
+        intent_interpretation_ref: strong_reference_to(
+            &object_id(base + 3),
+            &format!("sha256:{}", "b".repeat(64)),
+        ),
+        loop_object_id: Some(loop_object_id.to_generated()),
+        max_iterations: 2,
+        max_retries: 1,
+        objective: "read one governed workspace file".to_owned(),
+        scope: TaskScope {
+            in_scope: vec!["workspace read".to_owned()],
+            out_of_scope: vec!["mutation".to_owned()],
+        },
+        task_ref: task_ref.to_owned(),
+        user_intent_ref: strong_reference_to(
+            &object_id(base + 4),
+            &format!("sha256:{}", "c".repeat(64)),
+        ),
+        worker_authorization_root_id: Some(contract_id.to_generated()),
+    };
+    let (canonical_json, contract_digest) = seal_payload(serde_json::to_value(contract).unwrap());
+    let row = TaskContractRow {
+        contract_id: contract_id.clone(),
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+        user_intent_record_id: object_id(base + 4),
+        interpretation_id: object_id(base + 3),
+        accepted_by: "principal://personal/owner".to_owned(),
+        contract_digest,
+        canonical_json,
+    };
+    store
+        .insert_task_contract(
+            &row,
+            &EventDraft {
+                event_id: EventId::parse(&format!("00000000-0000-7000-a000-{base:012x}")).unwrap(),
+                object_id: contract_id,
+                domain: LifecycleDomain::Task,
+                object_version: Version::INITIAL,
+                event_type: "task-contract.minted".to_owned(),
+                canonical_json: "{\"event\":\"p2-t12-repair-contract\"}".to_owned(),
+            },
+            0,
+        )
+        .unwrap();
+    (row, loop_object_id, budget_id)
+}
+
+fn prepared_repair_bootstrap(
+    store: &SqliteAuthorityStore,
+    contract: &TaskContractRow,
+) -> TaskExecutionBootstrap {
+    prepare_task_execution_bootstrap(
+        store,
+        &SystemClock,
+        &UuidV7Generator,
+        &WriterLease {
+            epoch: store.current_fencing_epoch().unwrap(),
+        },
+        contract,
+        &UriRef::parse("correlation://personal/p2-t12-repair-test").unwrap(),
+    )
+    .unwrap()
+}
+
 fn temporary_personal_layout() -> PersonalDataLayout {
     let unique_suffix = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -1734,7 +1864,7 @@ fn server_startup_recovery_stale_contract_does_not_publish_endpoint() {
 }
 
 #[test]
-fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff() {
+fn private_scheduler_tick_isolates_unreadable_contract_without_wia_handoff() {
     let database_path = temporary_scheduler_database_path();
     let (_, scheduler_work_key) = persist_pending_bound_handoff(&database_path, false);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
@@ -1763,9 +1893,10 @@ fn private_scheduler_tick_rejects_unreadable_current_contract_before_wia_handoff
         .unwrap();
     drop(store);
 
-    // The scheduler fails closed before the handoff. The exact rejected
-    // authority read is deliberately not part of this safety boundary.
-    assert!(super::run_private_scheduler_tick(&database_path).is_err());
+    // This row fails closed before the handoff, while the bounded pass remains
+    // available to later rows. The exact rejected authority read is
+    // deliberately not part of this safety boundary.
+    assert!(super::run_private_scheduler_tick(&database_path).is_ok());
 
     let reopened_store = SqliteAuthorityStore::open(&database_path).unwrap();
     assert!(
@@ -1929,6 +2060,896 @@ fn effect_resolution_rejects_missing_ambiguous_and_inconsistent_bindings() {
         select_single_effect_intent(&binding, &[inconsistent_intent]),
         Err(SchedulerAuthorityError::InconsistentEffectBinding(_))
     ));
+}
+
+#[test]
+fn fresh_zero_intent_task_resolves_to_pre_admission_without_leasing_worker_authority() {
+    let database_path = temporary_scheduler_database_path();
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-zero-intent";
+    persist_repairable_task_contract(&store, 1_400, task_ref);
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+
+    let resolved = resolve_scheduler_work_for_task(&store, task_ref).unwrap();
+    assert_eq!(resolved.task_binding.task_ref, task_ref);
+    assert_eq!(resolved.task_binding.contract_epoch, 1);
+    assert!(
+        resolved.authority_binding.is_none(),
+        "zero Intent is the pre-admission case, not a missing-Effect error"
+    );
+    let scheduler_row = scheduler_repository
+        .load(&scheduler_work_key(task_ref))
+        .unwrap()
+        .unwrap();
+    assert_eq!(scheduler_row.state, SchedulerState::Runnable.as_str());
+    assert_eq!(scheduler_row.attempt_count, 0);
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .is_empty(),
+        "pre-admission resolution cannot consume worker authority"
+    );
+
+    drop(scheduler_repository);
+    drop(store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn scheduler_row_processing_isolates_one_failure_and_reaches_the_next_row() {
+    let database_path = temporary_scheduler_database_path();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row("task://personal/a-malformed"))
+        .unwrap();
+    repository
+        .upsert(&scheduler_row("task://personal/b-healthy"))
+        .unwrap();
+    let rows = repository.list_recoverable().unwrap();
+    let mut visited = Vec::new();
+
+    let failures = super::process_scheduler_rows_isolated(rows, |row| {
+        visited.push(row.task_ref.clone());
+        if row.task_ref.ends_with("a-malformed") {
+            Err(SchedulerAuthorityError::MalformedContract(
+                "injected row-local failure".to_owned(),
+            ))
+        } else {
+            Ok(())
+        }
+    });
+
+    assert_eq!(failures, 1);
+    assert_eq!(
+        visited,
+        vec![
+            "task://personal/a-malformed".to_owned(),
+            "task://personal/b-healthy".to_owned()
+        ]
+    );
+
+    drop(repository);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+fn persist_native_workspace_read_dispatch_fixture(
+    database_path: &std::path::Path,
+) -> WorkerIterationAuthorizationRow {
+    let store = SqliteAuthorityStore::open(database_path).unwrap();
+    let authorization = sealed_worker_authorization_row();
+    let descriptor_id = object_id(1_500);
+    let descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceRead)
+        .unwrap();
+    let issued_at = WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap();
+    let contract_id = object_id(1_501);
+    let context_request_id = object_id(1_510);
+    let context_request_digest = format!("sha256:{}", "6".repeat(64));
+    let contract_header = compose_governed_header(
+        &contract_id,
+        "TaskContract",
+        "cognitiveos.task-contract/0.4",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-native-dispatch-fixture",
+        &issued_at,
+    )
+    .unwrap();
+    let contract = TaskContract {
+        allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
+        allowed_tools: vec![descriptor.operation_id.clone()],
+        budget: Budget {
+            attention_slots: None,
+            context_bytes: None,
+            egress_bytes: None,
+            input_tokens: None,
+            money_microunits: None,
+            output_tokens: None,
+            semantic_calls: Some(1),
+            tool_calls: Some(2),
+            wall_time_ms: None,
+        },
+        budget_id: Some(authorization.budget_id.to_generated()),
+        conditions: vec![ContractCondition {
+            description: "independently verified read".to_owned(),
+            id: "accept-read".to_owned(),
+            kind: ContractConditionKind::Acceptance,
+            machine_expression: None,
+            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+        }],
+        context_request_ref: Some(strong_reference_to(
+            &context_request_id,
+            &context_request_digest,
+        )),
+        contract_epoch: authorization.contract_epoch,
+        deadline: Some("2026-08-14T08:00:00Z".to_owned()),
+        header: contract_header,
+        human_gates: None,
+        intent_acceptance_ref: strong_reference_to(
+            &object_id(1_511),
+            &format!("sha256:{}", "a".repeat(64)),
+        ),
+        intent_interpretation_ref: strong_reference_to(
+            &object_id(1_512),
+            &format!("sha256:{}", "b".repeat(64)),
+        ),
+        loop_object_id: Some(authorization.loop_object_id.to_generated()),
+        max_iterations: 2,
+        max_retries: 1,
+        objective: "read one governed workspace file".to_owned(),
+        scope: TaskScope {
+            in_scope: vec!["workspace read".to_owned()],
+            out_of_scope: vec!["mutation".to_owned()],
+        },
+        task_ref: authorization.task_ref.clone(),
+        user_intent_ref: strong_reference_to(
+            &object_id(1_513),
+            &format!("sha256:{}", "c".repeat(64)),
+        ),
+        worker_authorization_root_id: Some(
+            authorization.worker_authorization_root_id.to_generated(),
+        ),
+    };
+    let (contract_json, contract_digest) = seal_payload(serde_json::to_value(contract).unwrap());
+    store
+        .insert_task_contract(
+            &TaskContractRow {
+                contract_id: contract_id.clone(),
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+                user_intent_record_id: object_id(1_513),
+                interpretation_id: object_id(1_512),
+                accepted_by: "principal://personal/daemon".to_owned(),
+                contract_digest,
+                canonical_json: contract_json,
+            },
+            &EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000001501").unwrap(),
+                object_id: contract_id,
+                domain: LifecycleDomain::Task,
+                object_version: Version::INITIAL,
+                event_type: "task-contract.minted".to_owned(),
+                canonical_json: "{\"event\":\"task-contract\"}".to_owned(),
+            },
+            0,
+        )
+        .unwrap();
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: authorization.task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+            context_request_id: context_request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": authorization.task_ref,
+                "contract_epoch": authorization.contract_epoch,
+                "context": {
+                    "request_id": context_request_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "tenant_id": "tenant-a",
+                    "resource_scope_prefix": "workspace://",
+                    "conversation_ref": null,
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": authorization.selected_candidate_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": context_governance().owner,
+                        "authority": context_governance().authority,
+                        "resource_scope": context_governance().resource_scope,
+                        "tenant_id": "tenant-a",
+                        "created_by": "principal://tenant-a/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/d04-fixture",
+                },
+            })
+            .to_string(),
+        })
+        .unwrap();
+    let principal = PrincipalFacts {
+        principal_ref: UriRef::parse("principal://tenant-a/daemon").unwrap(),
+        authenticated: true,
+        active: true,
+        tenant_id: Some("tenant-a".to_owned()),
+    };
+    let capability = CapabilityConstraints {
+        subject: principal.principal_ref.to_string(),
+        audience: "authority://personal/effect-authority".to_owned(),
+        resource: "workspace://input.txt".to_owned(),
+        purpose: "task_execution".to_owned(),
+        actions: ["read".to_owned()].into(),
+        parameter_bounds: BTreeMap::new(),
+        lease: LeaseWindow {
+            not_before: WallTimestamp::parse("2026-08-13T00:00:00Z").unwrap(),
+            expires: WallTimestamp::parse("2026-08-14T00:00:00Z").unwrap(),
+        },
+        depth_remaining: 1,
+        issued_epoch: 1,
+    };
+    let actor_chain = ActorChainFacts {
+        chain_digest: format!("sha256:{}", "d".repeat(64)),
+        resolved: true,
+    };
+    let membership = Some(MembershipFacts {
+        valid: true,
+        roles: ["owner".to_owned()].into(),
+    });
+    let facts_id = object_id(1_514);
+    let facts_header = compose_governed_header(
+        &facts_id,
+        "ContextAuthorizationFacts",
+        "cognitiveos.context-authorization-facts/0.1",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t12-native-dispatch-facts",
+        &issued_at,
+    )
+    .unwrap();
+    let (facts_json, _) = seal_payload(json!({
+        "header": facts_header,
+        "fact_set_id": facts_id,
+        "subject_ref": principal.principal_ref,
+        "tenant_id": "tenant-a",
+        "principal": principal,
+        "actor_chain": actor_chain,
+        "membership": membership,
+        "capability_links": [capability],
+        "explicit_denies": [],
+        "capability_set_version": 1,
+        "issued_revocation_epoch": 1,
+    }));
+    store
+        .append_context_authorization_facts(&ContextAuthorizationFactsRow {
+            fact_set_id: facts_id,
+            subject_ref: "principal://tenant-a/daemon".to_owned(),
+            tenant_id: "tenant-a".to_owned(),
+            principal,
+            actor_chain,
+            membership,
+            capability_links: vec![capability],
+            explicit_denies: Vec::new(),
+            capability_set_version: 1,
+            issued_revocation_epoch: 1,
+            canonical_json: facts_json,
+        })
+        .unwrap();
+    store
+        .append_context_revocation_fact(&context_revocation_fact(
+            &context_governance(),
+            object_id(1_515),
+            1,
+            &issued_at,
+        ))
+        .unwrap();
+    store
+        .append_daemon_operation_descriptor(&DaemonOperationDescriptorRow {
+            descriptor_id: descriptor_id.clone(),
+            descriptor: OperationDescriptor {
+                operation_id: descriptor.operation_id.clone(),
+                action: descriptor.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: descriptor.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: descriptor.descriptor_version,
+            },
+            canonical_json: "{\"descriptor\":\"native.workspace.read\"}".to_owned(),
+        })
+        .unwrap();
+    let parameters_digest = format!("sha256:{}", "8".repeat(64));
+    store
+        .append_operation_candidate_proposal(&OperationCandidateProposalRow {
+            candidate_id: authorization.selected_candidate_id.clone(),
+            task_ref: authorization.task_ref.clone(),
+            contract_epoch: authorization.contract_epoch,
+            candidate_source_ref: "observation://personal/d04-failure-first".to_owned(),
+            tool_ref: descriptor.operation_id.clone(),
+            action: descriptor.action.clone(),
+            target: "workspace://input.txt".to_owned(),
+            parameters_digest: parameters_digest.clone(),
+            expected_state_version: Version::INITIAL.get(),
+            operation_descriptor_ref: descriptor_id,
+            canonical_json: "{\"candidate\":\"native.workspace.read\"}".to_owned(),
+        })
+        .unwrap();
+    let admitted_at = WallTimestamp::parse("2026-08-13T08:00:00Z").unwrap();
+    store
+        .admit_object(&ObjectAdmission {
+            object: StoredObject {
+                object_id: authorization.loop_object_id.clone(),
+                domain: LifecycleDomain::Loop,
+                state: state("DECIDE"),
+                version: Version::INITIAL,
+                body: json!({"loop": "native.workspace.read"}),
+            },
+            admitted_at: admitted_at.clone(),
+            event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000001505").unwrap(),
+                object_id: authorization.loop_object_id.clone(),
+                domain: LifecycleDomain::Loop,
+                object_version: Version::INITIAL,
+                event_type: "loop.admitted".to_owned(),
+                canonical_json: "{\"event\":\"loop\"}".to_owned(),
+            },
+            outbox: Vec::new(),
+            fencing_epoch: Some(1),
+        })
+        .unwrap();
+    let initial_budget = BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 2)])).unwrap();
+    store
+        .create_budget(
+            &authorization.budget_id,
+            &serde_json::to_string(&initial_budget).unwrap(),
+            &admitted_at,
+        )
+        .unwrap();
+    store
+        .commit_candidate_admission(&CandidateAdmissionCommit {
+            selected_candidate_id: authorization.selected_candidate_id.clone(),
+            intent: IntentRow {
+                intent_id: authorization.intent_id.clone(),
+                idempotency_key: "p2-t12-d04-workspace-read".to_owned(),
+                parameters_digest,
+                action: descriptor.action.clone(),
+                target: "workspace://input.txt".to_owned(),
+                effect_object_id: authorization.effect_object_id.clone(),
+                expected_state_version: Version::INITIAL,
+                grant_epoch: 1,
+                capability_set_version: 1,
+                task_binding: Some(TaskBinding {
+                    task_ref: authorization.task_ref.clone(),
+                    contract_epoch: authorization.contract_epoch,
+                }),
+                canonical_json: "{\"intent\":\"native.workspace.read\"}".to_owned(),
+            },
+            intent_event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000001504").unwrap(),
+                object_id: authorization.intent_id.clone(),
+                domain: LifecycleDomain::Effect,
+                object_version: Version::INITIAL,
+                event_type: "intent.minted".to_owned(),
+                canonical_json: "{\"event\":\"intent\",\"event_time\":\"2026-08-13T08:00:00Z\"}"
+                    .to_owned(),
+            },
+            effect_admission: ObjectAdmission {
+                object: StoredObject {
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    state: state("PROPOSED"),
+                    version: Version::INITIAL,
+                    body: json!({"effect": "native.workspace.read"}),
+                },
+                admitted_at: admitted_at.clone(),
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000001506").unwrap(),
+                    object_id: authorization.effect_object_id.clone(),
+                    domain: LifecycleDomain::Effect,
+                    object_version: Version::INITIAL,
+                    event_type: "effect.admitted".to_owned(),
+                    canonical_json: "{\"event\":\"effect\"}".to_owned(),
+                },
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            },
+            worker_authorization: authorization.clone(),
+            loop_transition: TransitionCommit {
+                cas: ObjectCas {
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    from_state: state("DECIDE"),
+                    to_state: state("ACT"),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    committed_at: admitted_at.clone(),
+                },
+                event: EventDraft {
+                    event_id: EventId::parse("00000000-0000-7000-a000-000000001507").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: Version::INITIAL.next().unwrap(),
+                    event_type: "loop.operation-admitted".to_owned(),
+                    canonical_json: "{\"event\":\"loop\"}".to_owned(),
+                },
+                record: RecordDraft {
+                    record_id: RecordId::parse("00000000-0000-7000-8000-000000001508").unwrap(),
+                    object_id: authorization.loop_object_id.clone(),
+                    domain: LifecycleDomain::Loop,
+                    object_version: Version::INITIAL.next().unwrap(),
+                    canonical_json: "{\"record\":\"loop\"}".to_owned(),
+                },
+                budget: Some(BudgetCas {
+                    budget_id: authorization.budget_id.clone(),
+                    expected_version: Version::INITIAL,
+                    next_version: Version::INITIAL.next().unwrap(),
+                    charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                    next_state_canonical_json: serde_json::to_string(
+                        &BudgetState::new(BTreeMap::from([("tool_calls".to_owned(), 1)])).unwrap(),
+                    )
+                    .unwrap(),
+                }),
+                outbox: Vec::new(),
+                fencing_epoch: Some(1),
+            },
+            fencing_epoch: 1,
+        })
+        .unwrap();
+    authorization
+}
+
+#[test]
+fn native_worker_dispatch_reloads_the_selected_persisted_descriptor() {
+    let database_path = temporary_scheduler_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    assert_eq!(
+        resolved.native_tool.descriptor.family,
+        NativeOperationFamily::WorkspaceRead
+    );
+    assert_eq!(
+        resolved.candidate.candidate_id,
+        authorization.selected_candidate_id
+    );
+    assert_eq!(resolved.intent.intent_id, authorization.intent_id);
+    assert_eq!(
+        resolved.intent.effect_object_id,
+        authorization.effect_object_id
+    );
+
+    drop(store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn unassembled_persisted_family_fails_before_effect_authorization() {
+    let database_path = temporary_scheduler_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+
+    assert!(matches!(
+        resolve_native_worker_dispatch_with_families(&store, &authorization, &[]),
+        Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(_))
+    ));
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "PROPOSED",
+        "unsupported execution must fail before Effect authorization or I/O"
+    );
+
+    drop(store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn production_native_caller_persists_executing_before_workspace_io() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).unwrap());
+    let resolved = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let executing_observed = Arc::new(AtomicBool::new(false));
+    let executing_observed_at_io = Arc::clone(&executing_observed);
+    let store_at_io = Arc::clone(&store);
+    let effect_id_at_io = authorization.effect_object_id.clone();
+    router.install_workspace_read_before_io_hook(move || {
+        let effect = store_at_io
+            .load_object(LifecycleDomain::Effect, &effect_id_at_io)
+            .unwrap()
+            .unwrap();
+        executing_observed_at_io.store(effect.state.as_str() == "EXECUTING", Ordering::SeqCst);
+    });
+    let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let ids = UuidV7Generator;
+    let protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04").unwrap(),
+    );
+
+    let closure = dispatch_native_worker_effect(
+        &protocol,
+        &resolved,
+        &router,
+        &recovery_effect_grant(),
+        &GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        },
+        &WriterLease { epoch: 1 },
+    )
+    .unwrap();
+
+    assert_eq!(closure, SchedulerEffectClosure::Closed);
+    assert!(executing_observed.load(Ordering::SeqCst));
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row(&authorization.task_ref))
+        .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &router,
+    )
+    .unwrap();
+
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Succeeded.as_str()
+    );
+    assert_eq!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .len(),
+        1
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).unwrap());
+    let resolved = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    router.stage_resolved(&resolved).unwrap();
+    let io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let io_count_at_read = Arc::clone(&io_count);
+    router.install_workspace_read_before_io_hook(move || {
+        io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let ids = UuidV7Generator;
+    let protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04-crash").unwrap(),
+    );
+    let grant = recovery_effect_grant();
+    let currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let lease = WriterLease { epoch: 1 };
+    let authorized = protocol
+        .authorize_effect(
+            &authorization.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &currency,
+            &lease,
+        )
+        .unwrap();
+    let (_, outcome) = protocol
+        .dispatch_effect(
+            &authorization.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &currency,
+            &router,
+            &lease,
+        )
+        .unwrap();
+    assert!(matches!(
+        outcome,
+        cognitive_kernel::executor::DispatchOutcome::Executed { .. }
+    ));
+    assert_eq!(io_count.load(Ordering::SeqCst), 1);
+    let interrupted = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    assert_eq!(interrupted.effect_state, "EXECUTING");
+
+    assert_eq!(
+        reconcile_interrupted_native_worker_effect(&protocol, &interrupted, &router, &lease)
+            .unwrap(),
+        SchedulerEffectClosure::Closed
+    );
+    assert_eq!(io_count.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row(&authorization.task_ref))
+        .unwrap();
+    let leased = repository
+        .acquire_lease(
+            &scheduler_work_key(&authorization.task_ref),
+            "personal-daemon-scheduler",
+            51,
+            "2026-08-13T08:05:00Z",
+        )
+        .unwrap();
+    let dispatch = SchedulerDispatch {
+        task_ref: authorization.task_ref.clone(),
+        contract_epoch: authorization.contract_epoch,
+        lease_owner: leased.lease_owner.unwrap(),
+        lease_epoch: leased.lease_epoch,
+        lease_expires: leased.lease_expires.unwrap(),
+        attempt_count: leased.attempt_count,
+    };
+    super::consume_worker_authorization_for_attempt(
+        &store,
+        &super::FixedSchedulerClock::parse("2026-08-13T08:01:00Z").unwrap(),
+        &authorization.authorization_id,
+        object_id(1_509),
+        &dispatch,
+    )
+    .unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let first_router = ProductionNativeToolExecutorRouter::open(1, workspace_root.clone()).unwrap();
+    first_router.stage_resolved(&resolved).unwrap();
+    let first_io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let first_io_count_at_read = Arc::clone(&first_io_count);
+    first_router.install_workspace_read_before_io_hook(move || {
+        first_io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    let crash_clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let crash_ids = UuidV7Generator;
+    let crash_protocol = EffectProtocol::new(
+        &store,
+        &crash_clock,
+        &crash_ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04-restart").unwrap(),
+    );
+    let grant = recovery_effect_grant();
+    let currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let lease = WriterLease { epoch: 1 };
+    let authorized = crash_protocol
+        .authorize_effect(
+            &authorization.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &currency,
+            &lease,
+        )
+        .unwrap();
+    crash_protocol
+        .dispatch_effect(
+            &authorization.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &currency,
+            &first_router,
+            &lease,
+        )
+        .unwrap();
+    assert_eq!(first_io_count.load(Ordering::SeqCst), 1);
+    drop(first_router);
+
+    let restarted_router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let restarted_io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let restarted_io_count_at_read = Arc::clone(&restarted_io_count);
+    restarted_router.install_workspace_read_before_io_hook(move || {
+        restarted_io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &restarted_router,
+    )
+    .unwrap();
+
+    assert_eq!(first_io_count.load(Ordering::SeqCst), 1);
+    assert_eq!(restarted_io_count.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "NOT_EXECUTED"
+    );
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Failed.as_str()
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn replaced_scheduler_lease_is_rejected_before_native_effect_dispatch() {
+    let database_path = temporary_scheduler_database_path();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    let task_ref = "task://personal/d04-stale-dispatch";
+    repository.upsert(&scheduler_row(task_ref)).unwrap();
+    repository
+        .acquire_eligible_lease(
+            &scheduler_work_key(task_ref),
+            "personal-daemon-scheduler",
+            41,
+            "2026-08-13T08:00:00Z",
+            "2026-08-13T08:00:30Z",
+        )
+        .unwrap();
+    repository
+        .acquire_eligible_lease(
+            &scheduler_work_key(task_ref),
+            "personal-daemon-scheduler",
+            42,
+            "2026-08-13T08:00:30Z",
+            "2026-08-13T08:01:30Z",
+        )
+        .unwrap();
+    let stale_dispatch = SchedulerDispatch {
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+        lease_owner: "personal-daemon-scheduler".to_owned(),
+        lease_epoch: 41,
+        lease_expires: "2026-08-13T08:01:00Z".to_owned(),
+        attempt_count: 1,
+    };
+
+    assert!(matches!(
+        verify_scheduler_dispatch_current(&mut repository, &stale_dispatch),
+        Err(SchedulerAuthorityError::DispatchBindingMismatch(_))
+    ));
+
+    drop(repository);
+    std::fs::remove_file(database_path).unwrap();
 }
 
 #[test]
@@ -2345,10 +3366,136 @@ fn only_durable_terminal_effect_states_close_a_scheduler_attempt() {
         classify_scheduler_effect_closure("EXECUTING").unwrap(),
         SchedulerEffectClosure::PendingReconciliation
     );
+    assert_eq!(
+        classify_scheduler_effect_closure("NOT_EXECUTED").unwrap(),
+        SchedulerEffectClosure::PendingReconciliation
+    );
     assert!(matches!(
         classify_scheduler_effect_closure("UNRECOGNIZED"),
         Err(SchedulerAuthorityError::UnsupportedEffectState(state)) if state == "UNRECOGNIZED"
     ));
+}
+
+#[test]
+fn startup_recovery_repairs_only_missing_loop_without_duplicate_scheduler_work() {
+    let database_path = temporary_scheduler_database_path();
+    let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-repair-loop";
+    let (contract, loop_object_id, budget_id) =
+        persist_repairable_task_contract(&authority_store, 1_200, task_ref);
+    let budget_state = BudgetState::new(BTreeMap::from([
+        ("semantic_calls".to_owned(), 1),
+        ("tool_calls".to_owned(), 2),
+    ]))
+    .unwrap();
+    authority_store
+        .create_budget(
+            &budget_id,
+            &serde_json::to_string(&budget_state).unwrap(),
+            &WallTimestamp::parse("2026-08-13T05:00:00Z").unwrap(),
+        )
+        .unwrap();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+    assert!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .is_none()
+    );
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    let repaired_loop = authority_store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(repaired_loop.state.as_str(), "START");
+    assert_eq!(
+        authority_store
+            .load_budget(&budget_id)
+            .unwrap()
+            .unwrap()
+            .state,
+        budget_state
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    // Restarting recovery is idempotent: existing Budget/scheduler authority
+    // is neither reset nor duplicated.
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+    assert_eq!(
+        authority_store
+            .load_task_contract(task_ref, 1)
+            .unwrap()
+            .unwrap(),
+        contract
+    );
+
+    drop(scheduler_repository);
+    drop(authority_store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn startup_recovery_repairs_only_missing_budget_without_replacing_loop() {
+    let database_path = temporary_scheduler_database_path();
+    let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-repair-budget";
+    let (contract, loop_object_id, budget_id) =
+        persist_repairable_task_contract(&authority_store, 1_300, task_ref);
+    let bootstrap = prepared_repair_bootstrap(&authority_store, &contract);
+    authority_store
+        .admit_object(&bootstrap.loop_admission)
+        .unwrap();
+    let loop_before = authority_store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .unwrap()
+        .unwrap();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+    assert!(authority_store.load_budget(&budget_id).unwrap().is_none());
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .unwrap(),
+        loop_before,
+        "startup repair must not replace an existing Loop"
+    );
+    let repaired_budget = authority_store.load_budget(&budget_id).unwrap().unwrap();
+    assert_eq!(
+        repaired_budget.state.remaining(),
+        &BTreeMap::from([
+            ("semantic_calls".to_owned(), 1),
+            ("tool_calls".to_owned(), 2)
+        ])
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
+        .unwrap();
+    assert_eq!(
+        authority_store
+            .load_object(LifecycleDomain::Loop, &loop_object_id)
+            .unwrap()
+            .unwrap(),
+        loop_before
+    );
+    assert_eq!(scheduler_repository.list_recoverable().unwrap().len(), 1);
+
+    drop(scheduler_repository);
+    drop(authority_store);
+    std::fs::remove_file(database_path).unwrap();
 }
 
 #[test]
@@ -2359,6 +3506,8 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
     let database_path = layout.authority_database_path();
     let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
     let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    let executor_router =
+        ProductionNativeToolExecutorRouter::open(1, layout.data_dir().join("workspace")).unwrap();
 
     super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
         .unwrap();
@@ -2366,6 +3515,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &authority_store,
         &mut scheduler_repository,
         layout.config_dir(),
+        &executor_router,
     )
     .unwrap();
 
@@ -2377,6 +3527,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &authority_store,
         &mut scheduler_repository,
         layout.config_dir(),
+        &executor_router,
     )
     .unwrap();
 }

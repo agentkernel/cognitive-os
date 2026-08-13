@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:c7c0782eeab12da612428b20db20c890975ec7d5aca888004f781d22757f99f7"
+fingerprint: "sha256:3728cd3f20bfd4ce33c2a91856e890a2dcfce05d93cc0449c3dbe5c5cd1c975f"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -29,10 +29,12 @@ non_claims:
 
 `serve_personal_loopback`：词法 loopback 检查 → XDG 布局 → 数据库准备/迁移 →
 `daemon.lock` 获取 → 打开一个 `SqliteAuthorityStore`（另有同文件的独立
-`SchedulerRepository` 连接）→ 恢复已消费 worker 交接 → **一次**私有调度 tick →
-bootstrap secret 加载/创建 → TCP 绑定 → 原子发布 `daemon-endpoint.json` → 每连接一
-线程服务。恢复与单次 tick 发生在 endpoint 出现之前；调度错误会直接阻止监听。没有
-shutdown 路由，也没有常驻调度线程（见[执行链状态](./execution-chain-status.md)）。
+`SchedulerRepository` 连接）→ 恢复已消费 worker 交接 → bootstrap secret 加载/创建
+→ TCP 绑定 → 原子发布 `daemon-endpoint.json` → 启动唯一周期调度 worker → 每连接一
+线程服务。监听器与 endpoint 出现前不执行调度 pass，因此本进程随后接纳的 Task 可被后
+续 pass 观察。该 worker 独占调度连接，在非重入门后按固定延迟 250 ms 串行运行；pass
+级错误只记录并重试，逐行错误仍在单趟内隔离。顺序退出时会显式取消、唤醒并 join
+worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain-status.md)）。
 
 ## 认证
 

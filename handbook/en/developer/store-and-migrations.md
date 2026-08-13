@@ -12,13 +12,15 @@ sources:
     symbols: ["execute_sqlite_migration_plan"]
   - path: crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
+  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+    symbols: ["insert_task_contract_with_execution_bootstrap"]
   - path: crates/cognitive-store/src/scheduler.rs
     symbols: ["SchedulerRepository", "acquire_eligible_lease"]
 tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:be0b8ab807fc1890b60d2e3782bd85f7a72eb640274cb7898b17e3ed2b0e7dd7"
+fingerprint: "sha256:cecb8ff4b439b173c3d6c16bdd09f04ae364407b4632774335e5547c4f98fdc8"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -68,3 +70,14 @@ transactional CAS: eligibility requires `runnable` past `next_eligible` or an
 expired lease reclaimed at a strictly higher epoch; release demands the exact
 `(owner, epoch)`; consumption of WIA/continuation authority is bound to the exact
 active leased row in the same transaction.
+
+Task admission reuses those existing v1–v3 tables; it adds no migration or
+parallel scheduler. `insert_task_contract_with_execution_bootstrap` repeats the
+writer-fence and contract-epoch CAS inside one immediate authority transaction,
+then inserts the TaskContract event, registered `START` Loop admission/event,
+hard Budget, and `(task_ref, contract_epoch)` runnable scheduler row. A conflict
+in any late member rolls the earlier inserts back; a crash after a successful
+commit reopens all four prerequisites. Startup recovery can idempotently repair
+an older current contract missing only Loop, Budget, or scheduler work in one
+fenced transaction. Existing rows are validated and never replaced or reset;
+stale contract epochs cannot be repaired.

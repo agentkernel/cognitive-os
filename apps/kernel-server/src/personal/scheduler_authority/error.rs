@@ -148,6 +148,8 @@ pub(crate) enum SchedulerAuthorityError {
     MissingEffect(String),
     #[error("scheduler durable Effect state is unsupported: {0}")]
     UnsupportedEffectState(String),
+    #[error("scheduler native Tool execution failed closed: {0}")]
+    NativeExecution(String),
     #[error("scheduler dispatch does not match the resolved TaskContract binding: {0}")]
     DispatchBindingMismatch(String),
     #[error("scheduler lease release time is invalid: {0}")]

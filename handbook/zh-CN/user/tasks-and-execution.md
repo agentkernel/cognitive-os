@@ -11,13 +11,13 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
-    symbols: ["record_user_intent", "mint_task_contract"]
+    symbols: ["record_user_intent", "mint_schedulable_task_contract"]
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick"]
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:676c5492e30ef088f59b6e8f9ec12ff38715895eaf31a84817e2ceb67d580800"
+fingerprint: "sha256:bc72f0022ac1af30b8a9760119b0b3cde6df028af48f94c70bf9f71aff308d97"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
@@ -33,8 +33,9 @@ Task 不是"agent 说它做了什么"，而是带持久证据链的受治理对�
    持久化为 candidate，绝非真相。
 3. **Preview** —— daemon 签发 canonical、digest 绑定的合同预览（目标、范围、预算、
    截止、允许工具、验收条件）。
-4. **Admit** —— 你接受的正是那个 digest；daemon 在 epoch CAS 下铸造 TaskContract。
-   之后改主意会 supersede 到新 epoch，并 fence 一切绑定旧 epoch 的事物。
+4. **Admit** —— 你接受的正是那个 digest；daemon 在一个 fenced epoch-CAS 事务内铸
+   造 TaskContract，并发布其命名的 `START` Loop、硬 Budget 与当前 epoch 的 runnable
+   调度行。之后改主意会 supersede 到新 epoch，并 fence 一切绑定旧 epoch 的事物。
 
 该准入流水线为 `implemented`，也是默认路径上唯一的人工确认点。`GET /task/watch`
 提供有界、快照先行的事件流。
@@ -45,11 +46,16 @@ Task 不是"agent 说它做了什么"，而是带持久证据链的受治理对�
 Intent + Effect + 一次性 Worker Iteration Authorization → 受治理工具执行
 （persist-before-dispatch）→ 独立验证 → 循环继续或 STOP。
 
-今天每个环节都存在且有聚焦测试（lease CAS 与 fencing、封存 ContextView、candidate
-准入捆绑、带未知结果对账的 WorkspaceRead/ProcessCheck 执行器、独立 verifier 接缝），
-**但 daemon 尚未自主驱动整条链**：准入不入列调度、daemon 仅在启动时跑一次调度、生产
-代码尚未调用工具执行器与 verifier。因此：已接纳 Task 是持久且可观察的；自主执行为
-`partial`。开发者细节见[执行链状态](../developer/execution-chain-status.md)。
+今天准入会持久入列完整的调度引导，后续每个环节也存在且有聚焦测试（lease CAS 与
+fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的六族已装配 Tool 执行
+器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
+留给后续 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
+到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**但 daemon
+尚未自主驱动完整链路**：生产代码现在会把无参数 WorkspaceRead 经持久 Effect 协议派
+发，但其他 Tool 请求载体与 verifier 仍未接线。因此已接纳 Task 在权威状态中持久、可
+观察且 runnable；自主执行仍为
+`partial`。开发者细节见
+[执行链状态](../developer/execution-chain-status.md)。
 
 ## 构造上绝不可能发生的事
 

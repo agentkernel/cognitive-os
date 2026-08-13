@@ -14,11 +14,13 @@ sources:
     symbols: ["ApprovalGate"]
   - path: crates/cognitive-management/src/audit.rs
     symbols: ["FileManagementAuditLog", "ResultReleaseGate"]
+  - path: crates/cognitive-management/src/task_application.rs
+    symbols: ["KernelTaskApplicationService"]
   - path: apps/admin-cli/src/main.rs
 tests:
   - crates/cognitive-management/tests/m5_session_approval.rs
   - apps/admin-cli/tests/m5_deterministic_fallback.rs
-fingerprint: "sha256:fda01e641c44f694e5f05359d8a63dda027b116563071a981b5417d11cdf7f73"
+fingerprint: "sha256:a8c2ba8584756ff637925fa73f2e6cb2dad84949673d1d45b9407ca0be5a539a"
 non_claims:
   - R0/R2/R3 approval flows and a durable governance-ledger production path are not implemented; only what is listed here exists.
 ---
@@ -58,6 +60,15 @@ are not implemented — hence `partial`.
 `admin-cli install/register/activate/agent-pause/agent-resume/agent-stop/
 agent-recover/agent-health/uninstall` call the runtime lifecycle described in
 [Agent and Pi lifecycle](./agent-and-pi-lifecycle.md), all session-gated.
+
+## Task admission
+
+`KernelTaskApplicationService::admit` remains the deterministic
+digest/authority/epoch gate. Its production mint now returns success only after
+the same authority transaction has published the TaskContract plus its
+contract-named `START` Loop, hard Budget, and current-epoch runnable scheduler
+row. This is scheduler bootstrap only: it creates no worker Intent/Effect,
+performs no Tool I/O, and cannot complete a Task.
 
 Honest gaps: the usage text omits `--package-id` for official installs; the
 governance ledger (`revocation_epoch`/`capability_set_version` persistence) has a
