@@ -66,5 +66,6 @@ fail indeterminate），workspace 变更完成则要求批准 workspace 外的�
 字节提升为 Task 完成。P2-T14 保留该边界：公共 C1 WorkspaceRead 只能由当前已闭合
 Effects、精确 fixed post-state、最新独立 passed report、可检索 Artifact CAS evidence
 与 daemon-private acceptance principal 完成。缺报告时 Task 保持 `DRAFT`；`COMPLETED`
-后的第二次 acceptance 被拒绝。夹具修复后的 exact native 重测仍待运行，因此尚非已验收
-能力。
+后的第二次 acceptance 被拒绝。exact native `22c3f502` 已证明公共 C1 路径。open
+Effect、被取代 report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放，因此
+尚非完整已验收 D02 矩阵。

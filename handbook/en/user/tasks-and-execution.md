@@ -60,13 +60,13 @@ candidate admission and leaves its new worker authorization for a later pass.
 One non-reentrant periodic worker starts after the daemon is listening, so later
 passes can observe Tasks admitted by the running process; pass errors do not
 stop the listener, and orderly shutdown cancels and joins the worker.
-**The daemon's public C1 completion implementation is validation-pending**:
+**The daemon's public C1 completion implementation is native-proven**:
 production dispatches parameter-free WorkspaceRead, independently verifies its
 fixed reconciled Effect, then derives candidate and final acceptance only from
-current CAS-backed authority facts. A first native run found a fixture event
-collision; that is repaired, and missing-report plus duplicate-acceptance
-negatives are written, but exact native retest is still pending. Other Tool
-request carriers remain unwired.
+current CAS-backed authority facts. Exact native `22c3f502` reached `COMPLETED`.
+Open-Effect, superseded-report and missing-CAS negatives are written; a stale
+fixed post-state negative is still open. Other Tool request carriers remain
+unwired.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).

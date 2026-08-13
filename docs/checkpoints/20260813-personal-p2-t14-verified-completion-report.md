@@ -276,3 +276,39 @@ public transition contract:
 - Result: **fail** — `clippy::expect_used` on five new test assertions
   (`expect` / `expect_err`). The module already allows `unwrap_used`.
 - Recovery: replace those calls with `unwrap` / `err().unwrap()`.
+
+### Unit 025 — native checkout of Clippy-fix HEAD
+
+- Finished: 2026-08-14 00:50 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `22c3f5024da82d2c81425b55c467981688a15c16`
+- Result: **pass**. HEAD matched, worktree clean.
+
+### Unit 026 — exact native scheduler suite at `22c3f502`
+
+- Finished: 2026-08-14 00:50 +08:00
+- Command: `cargo test -p kernel-server --locked personal::scheduler_authority::tests -- --test-threads=1`
+- Result: **pass** — 53 passed / 0 failed.
+
+### Unit 027 — exact native verification executor at `22c3f502`
+
+- Finished: 2026-08-14 00:50 +08:00
+- Command: `cargo test -p kernel-server --locked personal::verification_executor -- --test-threads=1`
+- Result: **pass** — 12 passed / 0 failed.
+
+### Unit 028 — Clippy at `22c3f502`
+
+- Finished: 2026-08-14 00:50 +08:00
+- Command: `cargo clippy -p cognitive-kernel -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings`
+- Result: **pass**. A trailing CR on the SSH helper script produced bash
+  `$'\r'` after `CLIPPY_OK`; that is not a Clippy failure.
+
+### Unit 029 — remaining D02 negatives authored
+
+- Finished: 2026-08-14 00:55 +08:00
+- Result: **authored; native execution pending**
+- Added an extra open task-bound Effect fixture plus three failure-first
+  proofs: open Effect blocks `CANDIDATE_COMPLETE` (`EffectsOpen`); a later
+  report for the same request blocks the superseded report id
+  (`VerificationUnavailable`); deleting Artifact CAS bytes blocks acceptance
+  (`EvidenceUnavailable`). Stale fixed post-state remains unwritten.

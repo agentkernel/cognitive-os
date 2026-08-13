@@ -51,10 +51,10 @@ fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的
 器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
 留给后续 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
 到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**daemon
-的公共 C1 completion 实现仍为 validation pending**：生产会派发无参数 WorkspaceRead、
+的公共 C1 completion 实现已 native 证明**：生产会派发无参数 WorkspaceRead、
 独立验证其固定的已对账 Effect，再只从当前 CAS-backed authority facts 推导 candidate
-与最终 acceptance。首次 native 运行发现夹具事件冲突，该缺陷已修，并写入缺报告与重复
-acceptance 负例，但 exact native 重测仍待运行。其他 Tool 请求载体仍未接线。因此已接纳
+与最终 acceptance。exact native `22c3f502` 到达 `COMPLETED`。open Effect、被取代
+report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。其他 Tool 请求载体仍未接线。因此已接纳
 Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 

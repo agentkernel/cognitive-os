@@ -24,11 +24,11 @@ current fact of the code.
 - **Autonomous execution is not wired end-to-end**: Task admission does enqueue
   its complete scheduler bootstrap and a post-bind periodic worker reaches
   candidate admission. Parameter-free WorkspaceRead has a durable production
-  Effect caller, independent verifier, and a written evidence-bound Task
-  acceptance caller; a first native run found a fixture event collision, and
-  missing-report plus duplicate-acceptance negatives are written. Exact native
-  retest of the public C1 completion is still pending. The other Tool request
-  carriers remain unwired.
+  Effect caller, independent verifier, and an evidence-bound Task acceptance
+  caller. Exact native `22c3f502` reached public C1 `COMPLETED`. Open-Effect,
+  superseded-report and missing-CAS negatives are written; a stale fixed
+  post-state negative is still open. The other Tool request carriers remain
+  unwired.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet.

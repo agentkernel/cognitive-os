@@ -76,5 +76,6 @@ WorkspaceRead can complete only from current closed Effects, the exact fixed
 post-state, the newest independent passed report, retrievable Artifact CAS
 evidence, and a daemon-private acceptance principal. A missing report leaves
 the Task `DRAFT`; a second acceptance after `COMPLETED` is rejected. Exact
-native retest of that fixture repair is still pending, so this is not yet an
-accepted capability.
+native `22c3f502` proved the public C1 path. Open-Effect, superseded-report and
+missing-CAS negatives are written; stale fixed post-state remains open, so this
+is not yet a fully accepted D02 matrix.
