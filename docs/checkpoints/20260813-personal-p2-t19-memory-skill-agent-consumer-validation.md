@@ -896,3 +896,92 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
 - Disposition: repair can be committed and pushed.
+
+### D02-NATIVE-04 — conflict/restart green verification
+
+- Instruments: focused competing-record negative, store reopen/latest test,
+  targeted kernel/store/server strict Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached
+  `~/p2-t19-msconsumer`, exact
+  `0460b9627a021f8b295beb81ce532e574d67cfe2`.
+- Started/retained: 3/3.
+- Outcome: conflict negative `pass` 1/1；restart persistence `pass` 1/1；
+  strict Clippy `pass`.
+- Disposition: competing durable rows no longer become false idempotent
+  success；append/reopen/latest replay remains green.
+
+### D04-NEG-01 — production HTTP lifecycle failure-first suite
+
+- Instruments:
+  `management_resource_lifecycle_preconditions_are_discoverable`,
+  `management_memory_lifecycle_uses_canonical_source_and_survives_restart`,
+  `management_skill_lifecycle_imports_inspects_supersedes_and_revokes`.
+- Production breaks named before execution: no discoverable lifecycle contract；
+  no management route for a schema-validated Context source；Memory remember
+  requires an impossible self-referential raw digest DTO and caller-authored
+  decision；no Skill revision inspect or supersede route.
+- Oracle: management bearer completes source→remember→review→forget and
+  import→inspect→bind→supersede→revoke entirely over the daemon HTTP surface；
+  restart retains the audit/read state. Existing task-bearer mutation negative
+  remains unchanged.
+- Initial outcome: `not-run`；tests are authored before resource API repair and
+  route to pushed exact-revision Linux/CI.
+
+### D04-FMT-01 — HTTP lifecycle test formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `0460b962`
+- Started/retained: 1/1.
+- Outcome: `fail`；one Skill revision inspect URL requires rustfmt line collapse.
+- Disposition: apply mechanical formatting and rerun before commit.
+
+### D04-FMT-02 — HTTP lifecycle test formatting recheck
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted tests over `0460b962`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: failure-first HTTP tests are formatted.
+
+### D04-DIFF-01 — HTTP lifecycle test whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted tests over `0460b962`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test and report patch has no whitespace defects.
+
+### D04-HANDBOOK-01 — HTTP lifecycle test documentation gates
+
+- Instruments: fingerprint filler, handbook check, generated-page byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `0460b962`
+- Started/retained: 3/3.
+- Outcome: fingerprint filler correctly updated 0 pages；54×2 handbook and
+  generated 18/18 checks pass.
+- Disposition: tests alone add no shipped lifecycle claim；implementation must
+  update the bilingual behavior text.
+
+### D04-CONSISTENCY-01 — HTTP lifecycle test consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `0460b962`
+- Started/retained: 1/1.
+- Outcome: `pass`；275 requirements、55 errors、74 schemas、89 vectors and all
+  task/slice/lease links pass.
+- Disposition: failure-first checkpoint is ready for staged gate and push.
+
+### D04-DOCSYNC-01 — staged HTTP lifecycle failure-first gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged tests over `0460b962`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes before production behavior.
+- Disposition:
+  `DOCS_IMPACT_NONE="Failure-first HTTP lifecycle tests add no shipped behavior before the production routes exist"`
+  must be retained in the commit record.
