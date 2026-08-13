@@ -1636,3 +1636,20 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 19:26 +08:00
 - Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 194 — exact native full-tick authorization fixture
+
+- Finished: 2026-08-13 19:28 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `2a05f351f3dd6b88c1d620d4076a5bcac693a01e`
+- Result: **fail** at current re-authorization before Effect mutation/I/O. The
+  fixture capability used the ambiguous root `workspace://`, which the
+  scope-purpose gate does not treat as covering `workspace://input.txt`.
+- Recovery: narrow the fixture capability to that exact target and rerun. The
+  fail-before-effect behavior is correct and remains asserted by the observed
+  `PROPOSED` state.
+
+### Unit 195 — exact-target authorization fixture checks
+
+- Finished: 2026-08-13 19:29 +08:00
+- Results: rustfmt **pass**; whitespace **pass**.

@@ -2289,7 +2289,7 @@ fn persist_native_workspace_read_dispatch_fixture(
     let capability = CapabilityConstraints {
         subject: principal.principal_ref.to_string(),
         audience: "authority://personal/effect-authority".to_owned(),
-        resource: "workspace://".to_owned(),
+        resource: "workspace://input.txt".to_owned(),
         purpose: "task_execution".to_owned(),
         actions: ["read".to_owned()].into(),
         parameter_bounds: BTreeMap::new(),
