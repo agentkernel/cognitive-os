@@ -1199,3 +1199,69 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Test-only daemon lock cleanup makes restart assertions terminate without changing shipped behavior"`
   must remain in the commit record.
+
+### D04-NATIVE-02 — complete HTTP lifecycle and restart verification
+
+- Instruments: full `p4_t05_resource_api` integration and targeted
+  kernel/store/server strict Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `a24e79b00e1ab1a21984a73dedf77377b1925257`.
+- Started/retained: 2/2.
+- Outcome: HTTP integration `pass` 4/4；strict Clippy `pass`. Memory sealed
+  source→remember→review→forget survived daemon restart；Skill
+  import→inspect→bind→supersede→revoke and revocation explanation survived
+  restart；preconditions were discoverable；existing task-bearer mutation and
+  route-shadowing negatives remained green.
+- Disposition: D04 production lifecycle behavior is native-proven at the exact
+  pushed revision；required cross-platform CI and independent review remain.
+
+### D02-NEG-03 — epoch and full Skill-pin failure-first
+
+- Instruments:
+  `durable_record_from_stale_contract_epoch_fails_before_replay`,
+  `durable_skill_package_pin_must_match_the_current_binding`.
+- Production breaks named before execution: revalidation compares Task/request
+  but omits the record's contract epoch；Skill replay compares binding,
+  revision and digest but omits package identity.
+- Oracle: stale epoch and package drift each produce a distinct
+  authorization-unavailable error before Memory body, Skill payload or record
+  append.
+- Initial outcome: `not-run`；tests authored before repair and routed to pushed
+  exact-revision native Linux/CI.
+
+### D02-FMT-15 — epoch/package negative formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `a24e79b0`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test checkpoint is formatted.
+
+### D02-DIFF-18 — epoch/package negative whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `a24e79b0`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test and report patch has no whitespace defects.
+
+### D02-HANDBOOK-11 — epoch/package test fingerprint refresh
+
+- Instruments: fingerprint filler, handbook check, generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted tests over `a24e79b0`
+- Started/retained: 3/3.
+- Outcome: exactly two Memory/Skill page fingerprints refreshed；54×2
+  handbook and generated 18/18 checks pass.
+- Disposition: failure-first checkpoint is ready for staged gate and push.
+
+### D02-DOCSYNC-11 — staged epoch/package negative gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged tests over `a24e79b0`
+- Started/retained: 1/1.
+- Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
+- Disposition: test-only checkpoint can be pushed before production repair.

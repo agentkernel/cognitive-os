@@ -909,6 +909,67 @@ mod tests {
         assert!(store.appended.borrow().is_empty());
     }
 
+    #[test]
+    fn durable_record_from_stale_contract_epoch_fails_before_replay() {
+        let command = command("principal://tenant-a/owner");
+        let store = store_for(&command);
+
+        let error = load_governed_memory_skill_candidates(
+            &store,
+            &command,
+            2,
+            &original_digest(),
+            "task_execution",
+        )
+        .expect_err("a prior contract epoch must not replay into the current epoch");
+
+        assert!(
+            matches!(
+                error,
+                SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail)
+                    if detail.contains("epoch")
+            ),
+            "epoch drift must have a distinguishable error: {error:?}"
+        );
+        assert_eq!(store.body_loads.get(), 0);
+        assert_eq!(store.skill_payload_loads.get(), 0);
+        assert_eq!(store.append_attempts.get(), 0);
+    }
+
+    #[test]
+    fn durable_skill_package_pin_must_match_the_current_binding() {
+        let command = command("principal://tenant-a/owner");
+        let mut store = store_for(&command);
+        store.prior.skill[0].package_id = object_id(77);
+        let mut canonical: Value =
+            serde_json::from_str(&store.prior.canonical_json).expect("test canonical record");
+        canonical["skill"][0]["package_id"] = json!(object_id(77).to_string());
+        store.prior.canonical_json = canonical.to_string();
+        store.prior.consumption_id =
+            ObjectId::parse("008abdc3-d503-7000-9000-aeca6f1eeb53").unwrap();
+
+        let error = load_governed_memory_skill_candidates(
+            &store,
+            &command,
+            1,
+            &original_digest(),
+            "task_execution",
+        )
+        .expect_err("a forged Skill package pin must not replay");
+
+        assert!(
+            matches!(
+                error,
+                SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail)
+                    if detail.contains("package")
+            ),
+            "Skill package drift must have a distinguishable error: {error:?}"
+        );
+        assert_eq!(store.body_loads.get(), 0);
+        assert_eq!(store.skill_payload_loads.get(), 0);
+        assert_eq!(store.append_attempts.get(), 0);
+    }
+
     fn store_for(command: &ContextResolutionCommand) -> ConsumerTestStore {
         let memory_pin = MemoryConsumptionPin {
             memory_id: object_id(2),
