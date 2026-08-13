@@ -961,3 +961,27 @@ not hidden as implementation claims.
   candidate revision.
 - No Gate, release, Profile, B01, benchmark-performance or Agent-benefit claim
   is made.
+
+## Campaign-closure continuation
+
+Canonical `origin/main@2bae86954938ce389188d8eed196ecb8d1a9a5ec`
+records `PERSONAL-PERF-EVAL-002` recovery closed, `B5` 8 h complete and the
+evaluation lease archived. The owner's original conditional delivery
+instruction therefore resumes P2-T15 closure. The branch merged those
+campaign-only main commits without conflict, registered formal task P2-T15,
+and claimed `lease/personal/P2-T15/executor-hardening-review-repair`; no guest,
+campaign root or evaluation report path entered the writable set.
+
+### V-LOCAL-066 — P2-T15 task/lease registration consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty governance-registration worktree after
+  `5da160b553e380d4ef8e601b79031046988c26c3`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: formal task/slice counts, unique in-progress D03, active lease,
+  project/plan links, trace and all existing registry/schema/vector invariants
+  verified; exit 0.
+- Disposition: push this immutable registration checkpoint before native Linux
+  validation.
