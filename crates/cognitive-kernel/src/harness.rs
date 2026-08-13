@@ -38,7 +38,8 @@ use crate::engine::{
 use crate::error::{RESOURCE_BUDGET_EXHAUSTED, STATE_CONFLICT};
 use crate::ports::{
     AuthorityStore, BoundContinuationAuthorizationConsumption, Clock, ContinuationAuthorityStore,
-    HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow, ProtocolStore,
+    FixedPostStateRow, HarnessStore, IdGenerator, IntentChainStore, ProgressFactRow, ProtocolStore,
+    VerificationRequestRow, VerificationStartCommit,
 };
 use cognitive_contracts::generated::object_reference::StrongReference;
 use cognitive_contracts::generated::task_contract::TaskContract;
@@ -492,6 +493,86 @@ where
         Ok(self.engine().commit_prepared_transition(&prepared)?)
     }
 
+    /// Atomically pin one closed Effect post-state, persist its verification
+    /// request, and enter Loop `ACT -> VERIFY`.
+    ///
+    /// The two append-only rows are the required transition evidence. The
+    /// SQLite port commits all three members together, so a stale Loop or
+    /// writer cannot leave a request that was never authoritatively published.
+    pub fn begin_verification_atomically(
+        &self,
+        fixed_post_state: &FixedPostStateRow,
+        verification_request: &VerificationRequestRow,
+        expected_loop_version: Version,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError>
+    where
+        S: ContinuationAuthorityStore,
+    {
+        self.verify_lease(lease)?;
+        let verify_loop_version = expected_loop_version.next().map_err(|error| {
+            denial(
+                STATE_CONFLICT,
+                format!("verification Loop version overflow: {error}"),
+            )
+        })?;
+        if verification_request.expected_loop_version != verify_loop_version {
+            return Err(denial(
+                STATE_CONFLICT,
+                "verification request does not bind the post-transition Loop version".to_owned(),
+            )
+            .into());
+        }
+        let mut established = BTreeSet::new();
+        established.insert("fixed_post_state_available".to_owned());
+        let mut evidence = BTreeMap::new();
+        evidence.insert(
+            "fixed_post_state".to_owned(),
+            strong_ref(
+                &fixed_post_state.fixed_post_state_id,
+                1,
+                &fixed_post_state.canonical_json,
+            )
+            .map_err(EffectError::Denied)?,
+        );
+        evidence.insert(
+            "verification_request".to_owned(),
+            strong_ref(
+                &verification_request.verification_request_id,
+                1,
+                &verification_request.canonical_json,
+            )
+            .map_err(EffectError::Denied)?,
+        );
+        let command = self.command(
+            &fixed_post_state.loop_object_id,
+            "ACT",
+            "VERIFY",
+            "PROGRESS_CLAIMED",
+            established,
+            evidence,
+            expected_loop_version,
+            None,
+            lease,
+        )?;
+        let prepared = self.engine().prepare_transition(&command)?;
+        let receipt = self
+            .store
+            .begin_verification_atomically(&VerificationStartCommit {
+                fixed_post_state: fixed_post_state.clone(),
+                verification_request: verification_request.clone(),
+                loop_transition: prepared.commit.clone(),
+            })
+            .map_err(store_rejection)?;
+        Ok(CommittedTransition {
+            record_id: prepared.record_id,
+            event_id: prepared.event_id,
+            event_sequence: receipt.event_sequence,
+            after_version: prepared.after_version,
+            committed_at: prepared.committed_at,
+        })
+    }
+
     /// Atomically consume daemon-private verified continuation authority,
     /// bind the exact scheduler lease, and enter `CONTINUE -> OBSERVE` with
     /// its fresh budget debit. Candidate WIA is deliberately not an input to
@@ -810,6 +891,7 @@ where
         loop_id: &ObjectId,
         expected_version: Version,
         task_object_id: &ObjectId,
+        task_binding: &crate::ports::TaskBinding,
         verification_report_id: &ObjectId,
         verification_report_content: &str,
         budget_id: &BudgetId,
@@ -824,7 +906,15 @@ where
             .store
             .load_object(LifecycleDomain::Task, task_object_id)
             .map_err(store_rejection)?;
-        if task.is_some_and(|task| task.state.as_str() != "COMPLETED") {
+        let task_not_accepted = match task {
+            Some(task) => task.state.as_str() != "COMPLETED",
+            None => self
+                .store
+                .load_task_contract(&task_binding.task_ref, task_binding.contract_epoch)
+                .map_err(store_rejection)?
+                .is_some_and(|contract| contract.contract_id == *task_object_id),
+        };
+        if task_not_accepted {
             established.insert("task_not_accepted".to_owned());
         }
         let mut evidence = BTreeMap::new();
@@ -935,6 +1025,7 @@ where
             loop_id,
             expected_version,
             task_object_id,
+            &request.task_binding,
             verification_report_id,
             &report.canonical_json,
             budget_id,

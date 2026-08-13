@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:2fcec4a237ef51b255321f17868f450a067047220a7a7d9eedf7a8dfbe6c5f81"
+fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -24,8 +24,9 @@ current fact of the code.
 - **Autonomous execution is not wired end-to-end**: Task admission does enqueue
   its complete scheduler bootstrap and a post-bind periodic worker reaches
   candidate admission. Parameter-free WorkspaceRead has a durable production
-  Effect caller; the other Tool request carriers and the independent verifier
-  remain unwired.
+  Effect caller and independent verifier through checkpoint-backed Loop
+  `OBSERVE`; the other Tool request carriers and Task completion remain
+  unwired.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet.
