@@ -1311,6 +1311,7 @@ mod tests {
             None
         );
 
+        drop(store);
         std::fs::remove_file(database_path).expect("remove authority fixture");
         std::fs::remove_dir_all(artifact_directory).expect("remove artifact fixture");
     }

@@ -422,3 +422,48 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 
 - Finished: 2026-08-13 22:30 +08:00
 - Results: rustfmt **pass**; whitespace **pass**.
+
+### Unit 051 — exact native D03 final suites
+
+- Finished: 2026-08-13 22:34 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `53fce5de1492ca885eb9d0b4277c599596edc43e`
+- Results:
+  - scheduler authority **50/50 pass**;
+  - verification executor **12/12 pass**;
+  - `m5_harness` **7/7 pass**;
+  - all-target Clippy for kernel/store/server **pass**.
+- Full production WorkspaceRead now reaches independent verified Loop
+  `OBSERVE`; Task state remains absent/uncompleted.
+
+### Unit 052 — D04 formal acceptance mapping
+
+- Finished: 2026-08-13 22:38 +08:00
+- Result: **complete pending required CI**
+- Mapping:
+  1. daemon ArtifactStore composition: D01 Units 002–011;
+  2. fixed post-state/request plus atomic `ACT -> VERIFY`: D01 Units 012–025;
+  3. current Acceptance criteria, registered independent verifier, CAS evidence,
+     report, and `VERIFY -> CONTINUE`: D02 Units 026–040;
+  4. progress/checkpoint/one-time authority and `CONTINUE -> OBSERVE`: D03
+     Units 041–051.
+- Negatives: unclosed Effect; stale writer/Loop rollback; missing/tampered CAS
+  evidence; unknown/mismatched verifier; fixed-state/request/report mismatch;
+  missing checkpoint; issue/requeue crash recovery; and false completion.
+- Non-claim: zero Tasks complete; P2-T14 acceptance authority remains separate.
+
+### Unit 053 — required Windows CI fixture cleanup failure
+
+- Finished: 2026-08-13 21:43 +08:00; diagnosed 22:42 +08:00
+- Revision/run: `53fce5de1492ca885eb9d0b4277c599596edc43e` /
+  `31705870584`
+- Result: Ubuntu **pass**; Windows **fail** after every assertion passed because
+  the D01 test tried to delete its SQLite file before dropping the open store
+  handle (`os error 32`).
+- Recovery: drop the fixture store before deletion and rerun required CI; no
+  product behavior changes.
+
+### Unit 054 — Windows fixture cleanup repair checks
+
+- Finished: 2026-08-13 22:44 +08:00
+- Results: rustfmt **pass**; whitespace **pass**.

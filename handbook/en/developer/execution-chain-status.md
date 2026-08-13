@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:d188f63e801ae1590d9d3d46da0d399bd5b3ce183318a4b1ee094c3f82cf287b"
+fingerprint: "sha256:f9d423414bea79f386105e776268ce2090762183e8b2dc50ef49318a9d466516"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
