@@ -227,222 +227,6 @@ stating so explicitly.
 - Command: `node tools/src/generate-handbook.mjs --check`
 - Result: **pass** — 18 generated pages byte-identical.
 
-### U51 — consistency rejects self-owned lease ledger
-
-- Unit: corrected P9-T07 task/lease state
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:consistency`
-- Result: **fail** — one precise violation: an active lease must not list
-  `PARALLEL-LANES.md` as its own writable path.
-- Recovery: remove the ledger itself from the exact-path set; the lease row
-  remains the authority granting the other paths.
-
-### U52 — corrected task/lease consistency
-
-- Unit: P9-T07 task, slices, counts and active exact-path lease
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:consistency`
-- Result: **pass** — requirements/errors/schemas/vectors, Personal task counts,
-  delivery slices, environment routing and leases verified.
-
-### U53 — pre-merge handbook machine gate
-
-- Unit: bilingual handbook machine model after canonical task reconciliation
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:handbook`
-- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
-  links, fingerprints, statuses and secret checks verified.
-
-### U54 — pre-merge generated-page byte gate
-
-- Unit: generated handbook reproducibility
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/generate-handbook.mjs --check`
-- Result: **pass** — 18 generated pages byte-identical.
-
-### U43 — accepted consistency gate
-
-- Unit: repository static consistency
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:consistency`
-- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
-  links, traceability, Personal plan/Gates, environment routing,
-  task/checkpoint delivery and leases verified.
-
-### U44 — staged docs-sync gate
-
-- Unit: exact staged checkpoint change set
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/docs-sync-gate.mjs --staged`
-- Result: **pass**. Eight Pi-source paths mapped to `user.pi-shell`,
-  `dev.agent-pi-lifecycle` and generated environment-variable reference;
-  eight handbook paths mapped to the handbook-owning pages. The nested
-  handbook and generator checks both passed.
-
-### U45 — canonical task-id reconciliation
-
-- Unit: merge `origin/main@d24f7d00` after PR #213
-- Result: **corrective renumber, no product change**. Main had already assigned
-  P9-T05 to the merged daemon readiness-wait repair, while the piinstrument
-  branch had independently registered the same id. P9-T06 is also assigned to
-  the separate readiness/SecretStore workflow, so this task, lease, slices,
-  test/report paths and current facts are corrected to the next unused
-  `P9-T07`. Draft PR #216 and its legacy-named branch are retained to avoid
-  rewriting pushed history.
-- Boundary: only task identity/evidence names changed; implementation semantics,
-  frozen test results and all non-claims are unchanged.
-
-### U46 — post-merge Rust format gate
-
-- Unit: merged workspace Rust formatting
-- Environment: `DEV-WIN-GNU-01` (non-linking allowlist)
-- Command: `cargo fmt --all -- --check`
-- Result: **pass**. No local Rust build/test/Clippy was attempted.
-
-### U47 — post-merge Pi regression
-
-- Unit: `packages/pi-cognitiveos` full Node suite after `origin/main` merge
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run build; pnpm test`
-- Result: **pass** — 90/90.
-
-### U48 — post-merge fingerprint refresh
-
-- Unit: handbook source fingerprints after test/report task renumber
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/fill-handbook-fingerprints.mjs`
-- Result: **pass** — ten affected bilingual lifecycle/daemon/client/Pi/Provider
-  pages refreshed from reconciled sources.
-
-### U49 — post-merge handbook machine gate
-
-- Unit: bilingual handbook machine model
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:handbook`
-- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
-  links, fingerprints, statuses and secret checks verified.
-
-### U50 — post-merge generated-page byte gate
-
-- Unit: generated handbook reproducibility
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/generate-handbook.mjs --check`
-- Result: **pass** — 18 generated pages byte-identical.
-
-### U31 — final repository consistency
-
-- Unit: repository static consistency
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:consistency`
-- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
-  links, traceability, Personal plan/Gates, environment routing,
-  task/checkpoint delivery and leases verified.
-
-### U32 — local instrumentation-only cost probe
-
-- Unit: 1,000 in-memory records, each including correlation-id minting, ten
-  monotonic clock reads, five stage closures, schema validation, freezing,
-  serialization and bounded-session retention
-- Environment: `DEV-WIN-GNU-01`, Node fixture only; no daemon or Provider
-- Result: **pass for the narrow “not obviously self-dominating” check** —
-  p50 `80.0 µs`, p95 `327.4 µs`, max `5.1812 ms` (runtime/GC outlier), 1,000/1,000
-  retained.
-- Non-claim: this is not a benchmark, production latency result, Gate, B01 or
-  overhead-attribution cell. It only excludes an instrumentation implementation
-  that mechanically adds milliseconds at the median before any real route work;
-  `EVAL-003` would still need its own frozen paired design.
-
-### U33 — failure-first: unknown usage availability label
-
-- Unit: `packages/pi-cognitiveos` usage discriminator negative
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **fail (expected)** — 30/31 pass. A counter object labelled
-  `availability=estimated` bypassed the measured-usage provenance branch.
-- Required behavior: only the exact `not_available` and `measured`
-  discriminators exist; every other label is inconsistent and refused.
-
-### U34 — strict usage discriminator
-
-- Unit: `packages/pi-cognitiveos` observation negative suite
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **pass** — 31/31. Any availability label other than exact
-  `not_available`/`measured` is refused before provenance or retention.
-
-### U35 — failure-first: unknown daemon-stage availability
-
-- Unit: `packages/pi-cognitiveos` daemon-domain discriminator negative
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **fail (expected)** — 31/32 pass. A complete nested pair labelled
-  `daemonStages=estimated` was treated as joined.
-- Required behavior: only exact `joined`/`not_available` labels exist; unknown
-  availability cannot bypass domain validation.
-
-### U36 — strict daemon-stage discriminator
-
-- Unit: `packages/pi-cognitiveos` observation negative suite
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **pass** — 32/32. Unknown daemon-stage availability labels are
-  refused before they can be interpreted as a joined nested pair.
-
-### U37 — failure-first: unknown daemon-stage reason
-
-- Unit: `packages/pi-cognitiveos` daemon-domain reason negative
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **fail (expected)** — 32/33 pass. An unregistered
-  `daemonStagesUnavailableReason` value was accepted.
-- Required behavior: every unavailable nested pair carries one exact registered
-  reason; unknown reasons cannot become report strata.
-
-### U38 — registered daemon-stage reasons
-
-- Unit: `packages/pi-cognitiveos` observation negative suite
-- Environment: `DEV-WIN-GNU-01`
-- Command:
-  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
-- Result: **pass** — 33/33. Unavailable nested stages accept only the six
-  registered reason labels; unknown values are refused.
-
-### U39 — accepted complete Pi package regression
-
-- Unit: `packages/pi-cognitiveos` full Node suite
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run build; pnpm test`
-- Result: **pass** — 90/90. This supersedes U25 as the final local Node
-  acceptance result.
-
-### U40 — accepted source fingerprint refresh
-
-- Unit: handbook source fingerprints
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/fill-handbook-fingerprints.mjs`
-- Result: **pass** — six affected bilingual pages refreshed from accepted
-  implementation sources.
-
-### U41 — accepted handbook machine gate
-
-- Unit: bilingual handbook machine model
-- Environment: `DEV-WIN-GNU-01`
-- Command: `pnpm run check:handbook`
-- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
-  links, fingerprints, statuses and secret checks verified.
-
-### U42 — accepted generated-page byte gate
-
-- Unit: generated handbook reproducibility
-- Environment: `DEV-WIN-GNU-01`
-- Command: `node tools/src/generate-handbook.mjs --check`
-- Result: **pass** — 18 generated pages byte-identical.
-
 ### U15 — repository consistency
 
 - Unit: repository static consistency
@@ -596,3 +380,268 @@ stating so explicitly.
 - Environment: `DEV-WIN-GNU-01`
 - Command: `node tools/src/generate-handbook.mjs --check`
 - Result: **pass** — 18 generated pages byte-identical.
+
+### U31 — final repository consistency
+
+- Unit: repository static consistency
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  links, traceability, Personal plan/Gates, environment routing,
+  task/checkpoint delivery and leases verified.
+
+### U32 — local instrumentation-only cost probe
+
+- Unit: 1,000 in-memory records, each including correlation-id minting, ten
+  monotonic clock reads, five stage closures, schema validation, freezing,
+  serialization and bounded-session retention
+- Environment: `DEV-WIN-GNU-01`, Node fixture only; no daemon or Provider
+- Result: **pass for the narrow “not obviously self-dominating” check** —
+  p50 `80.0 µs`, p95 `327.4 µs`, max `5.1812 ms` (runtime/GC outlier), 1,000/1,000
+  retained.
+- Non-claim: this is not a benchmark, production latency result, Gate, B01 or
+  overhead-attribution cell. It only excludes an instrumentation implementation
+  that mechanically adds milliseconds at the median before any real route work;
+  `EVAL-003` would still need its own frozen paired design.
+
+### U33 — failure-first: unknown usage availability label
+
+- Unit: `packages/pi-cognitiveos` usage discriminator negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 30/31 pass. A counter object labelled
+  `availability=estimated` bypassed the measured-usage provenance branch.
+- Required behavior: only the exact `not_available` and `measured`
+  discriminators exist; every other label is inconsistent and refused.
+
+### U34 — strict usage discriminator
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 31/31. Any availability label other than exact
+  `not_available`/`measured` is refused before provenance or retention.
+
+### U35 — failure-first: unknown daemon-stage availability
+
+- Unit: `packages/pi-cognitiveos` daemon-domain discriminator negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 31/32 pass. A complete nested pair labelled
+  `daemonStages=estimated` was treated as joined.
+- Required behavior: only exact `joined`/`not_available` labels exist; unknown
+  availability cannot bypass domain validation.
+
+### U36 — strict daemon-stage discriminator
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 32/32. Unknown daemon-stage availability labels are
+  refused before they can be interpreted as a joined nested pair.
+
+### U37 — failure-first: unknown daemon-stage reason
+
+- Unit: `packages/pi-cognitiveos` daemon-domain reason negative
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **fail (expected)** — 32/33 pass. An unregistered
+  `daemonStagesUnavailableReason` value was accepted.
+- Required behavior: every unavailable nested pair carries one exact registered
+  reason; unknown reasons cannot become report strata.
+
+### U38 — registered daemon-stage reasons
+
+- Unit: `packages/pi-cognitiveos` observation negative suite
+- Environment: `DEV-WIN-GNU-01`
+- Command:
+  `pnpm run build; node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 33/33. Unavailable nested stages accept only the six
+  registered reason labels; unknown values are refused.
+
+### U39 — accepted complete Pi package regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 90/90. This supersedes U25 as the final local Node
+  acceptance result.
+
+### U40 — accepted source fingerprint refresh
+
+- Unit: handbook source fingerprints
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass** — six affected bilingual pages refreshed from accepted
+  implementation sources.
+
+### U41 — accepted handbook machine gate
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U42 — accepted generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U43 — accepted consistency gate
+
+- Unit: repository static consistency
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — 275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  links, traceability, Personal plan/Gates, environment routing,
+  task/checkpoint delivery and leases verified.
+
+### U44 — staged docs-sync gate
+
+- Unit: exact staged checkpoint change set
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/docs-sync-gate.mjs --staged`
+- Result: **pass**. Eight Pi-source paths mapped to `user.pi-shell`,
+  `dev.agent-pi-lifecycle` and generated environment-variable reference;
+  eight handbook paths mapped to the handbook-owning pages. The nested
+  handbook and generator checks both passed.
+
+### U45 — canonical task-id reconciliation
+
+- Unit: merge `origin/main@d24f7d00` after PR #213
+- Result: **corrective renumber, no product change**. Main had already assigned
+  P9-T05 to the merged daemon readiness-wait repair, while the piinstrument
+  branch had independently registered the same id. P9-T06 is also assigned to
+  the separate readiness/SecretStore workflow, so this task, lease, slices,
+  test/report paths and current facts are corrected to the next unused
+  `P9-T07`. Draft PR #216 and its legacy-named branch are retained to avoid
+  rewriting pushed history.
+- Boundary: only task identity/evidence names changed; implementation semantics,
+  frozen test results and all non-claims are unchanged.
+
+### U46 — post-merge Rust format gate
+
+- Unit: merged workspace Rust formatting
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlist)
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**. No local Rust build/test/Clippy was attempted.
+
+### U47 — post-merge Pi regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite after `origin/main` merge
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 90/90.
+
+### U48 — post-merge fingerprint refresh
+
+- Unit: handbook source fingerprints after test/report task renumber
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass** — ten affected bilingual lifecycle/daemon/client/Pi/Provider
+  pages refreshed from reconciled sources.
+
+### U49 — post-merge handbook machine gate
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U50 — post-merge generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U51 — consistency rejects self-owned lease ledger
+
+- Unit: corrected P9-T07 task/lease state
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **fail** — one precise violation: an active lease must not list
+  `PARALLEL-LANES.md` as its own writable path.
+- Recovery: remove the ledger itself from the exact-path set; the lease row
+  remains the authority granting the other paths.
+
+### U52 — corrected task/lease consistency
+
+- Unit: P9-T07 task, slices, counts and active exact-path lease
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — requirements/errors/schemas/vectors, Personal task counts,
+  delivery slices, environment routing and leases verified.
+
+### U53 — pre-merge handbook machine gate
+
+- Unit: bilingual handbook machine model after canonical task reconciliation
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U54 — pre-merge generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U55 — required CI on main-reconciled implementation head
+
+- Unit: required Ubuntu and Windows jobs
+- Environment: `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`
+- Exact revision: `20f2636ea34619e3d01d870326dc8ac5e8678265`
+- Run: [31732673976](https://github.com/agentkernel/cognitive-os/actions/runs/31732673976)
+- Result: **pass** — Ubuntu `2m39s`, Windows `10m45s`. Both jobs passed
+  TypeScript build/tests, Rust workspace build/tests, Clippy, rustfmt, codegen
+  drift, consistency/traceability/handbook gates, conformance, report honesty,
+  wrong-implementation self-check and cross-language golden comparison.
+- Annotation: GitHub's Node-20 action deprecation warning is workflow
+  infrastructure metadata, not a failing check or product result.
+
+### U56 — formal acceptance and lease closure mapping
+
+- Result: **pass**. P9-T07 acceptance maps to D01-D04 implementation,
+  failure-first negatives, native daemon proof, required CI and documentation
+  gates in the closure record. The corrective P9-T07 lease moved out of the
+  active table into recent closed history; the formal task and D04 are `done`.
+- `EVAL-003/PI-NESTED`: **not-run**, not failed — no owner-registered frozen
+  campaign plan, runner or report exists, and no B01 state was touched.
+
+### U57 — formal closure consistency
+
+- Unit: P9-T07 done status, D04 closure, task counts and released lease
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — all formal task, slice, count and lease invariants verified.
+
+### U58 — closure handbook machine gate
+
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — bilingual documents, source coverage, links, fingerprints,
+  statuses and secret checks verified with the new closure report tracked.
+
+### U59 — closure generated-page byte gate
+
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
+### U60 — running-report order integrity
+
+- Result: **corrective pass**. U01–U59 content was preserved byte-for-byte per
+  unit and mechanically reordered by unit number after append patches had
+  inserted later units beside repeated command-result anchors. No result,
+  denominator, claim or disposition changed.
