@@ -231,3 +231,15 @@
 - Outcome: `fail`；三个负例 `matches!` 模式把 `detail` 移出后再在断言消息里借用
   `forgotten`/`revoked`/`mismatched`，触发 `E0382`。不是产品语义失败。
 - Disposition: 已改为 `ref detail`；该红灯不得写成消费行为回归。
+
+### D02-RUST-03 — native focused scheduler_authority tests at `627885cd`
+
+- Instrument: `cargo test -p kernel-server --locked scheduler_authority::tests`
+- Environment: `DEV-LINUX-NATIVE-01` disposable worktree `~/p2-t19-msconsumer`
+- Revision: `627885cd428bce62770c4683a6653f3b4ae49ec3`
+- Started/retained: 1/1
+- Outcome: `fail`；52 passed, 3 failed. Skill revoke and forged-digest negatives
+  passed. D01/session-2/forget first-resolve failed because Memory shared the
+  workspace source digest+body and was omitted as `DUPLICATE_CONTENT_DIGEST`.
+- Disposition: 受治理钉必须替换相同正文的普通源并进入 required 集；不是削弱
+  去重不变量。
