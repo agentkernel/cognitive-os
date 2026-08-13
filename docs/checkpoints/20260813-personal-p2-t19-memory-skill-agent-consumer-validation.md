@@ -371,3 +371,100 @@
 - Outcome: `pass`；门禁判定本次两个路径均无 documentation-relevant change。
 - Disposition: 结构重排不改变已同步行为；commit 仍记录具体
   `DOCS_IMPACT_NONE` 原因以便 PR 审计。
+
+### D02-NEG-01 — discriminating consumer-boundary safety negatives
+
+- Instruments:
+  `durable_request_digest_mismatch_fails_before_any_body_access`,
+  `durable_record_cannot_cross_an_authenticated_principal`,
+  `forged_durable_record_identity_fails_before_replay`,
+  `mismatched_memory_scope_is_rejected_before_body_materialization`.
+- Production breaks named before execution: omission of current request-digest equality；record
+  reuse without principal binding；acceptance of an arbitrary consumption identity；scope checking
+  only after body materialization.
+- Oracle: each case must return a distinct request-digest/principal/identity/scope error before
+  Memory or Skill body access and before any append-only record write.
+- Initial outcome: `not-run`；本地 `DEV-WIN-GNU-01` 禁止 Rust linking。测试先于修复写入，
+  将在 pushed exact-revision CI 观察预期红灯。
+
+### D02-FMT-06 — new safety-negative formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted negatives over `f3a3402d`
+- Started/retained: 1/1.
+- Outcome: `fail`；仅 `object_id` 测试辅助函数需按 rustfmt 合并为单行。
+- Disposition: 应用机械格式后重跑；不得将此格式红灯写成行为负例结果。
+
+### D02-FMT-07 — new safety-negative formatting recheck
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted negatives over `f3a3402d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 四条 failure-first 负例已满足格式门禁，仍等待 pushed CI 观察行为红灯。
+
+### D02-DIFF-04 — new safety-negative whitespace validation
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted negatives over `f3a3402d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 负例与增量报告没有 Git 空白错误。
+
+### D02-CI-UBUNTU-03 — strict gates after both Clippy repairs
+
+- Instrument: GitHub CI run `31729407643`, Ubuntu job `94545748121`
+- Revision: `f3a3402d495e78b847de4e2dc220a85baa1bd11f`
+- Started/retained: 1/1.
+- Outcome: `partial`；workspace build/tests、strict Clippy、rustfmt、codegen、
+  consistency 与 trace 均 `pass`。随后 handbook gate `fail`，因此后续 CI 单元 skipped。
+- Disposition: 两项原 Clippy 缺陷在 exact revision 已闭合；CI 整体仍非 pass，
+  必须刷新 `memory-and-skill` 双语页的 source fingerprint。
+
+### D02-HANDBOOK-02 — reproduce mapped-source fingerprint drift
+
+- Instruments: `node tools/src/check-handbook.mjs` and
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted safety negatives over `f3a3402d`
+- Started/retained: 2/2.
+- Outcome: checker `fail` with exactly two `HB008` violations on
+  `handbook/{en,zh-CN}/developer/memory-and-skill.md`；generated-page byte gate
+  `pass`（18/18）。
+- Disposition: 生产源与新测试都改变了该页的映射源集合指纹；使用仓库生成器刷新双语
+  fingerprint，不手改生成页或伪造 docs-neutral。
+
+### D02-HANDBOOK-03 — generated fingerprint refresh and recheck
+
+- Instruments: `node tools/src/fill-handbook-fingerprints.mjs`,
+  `node tools/src/check-handbook.mjs`,
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted safety negatives over `f3a3402d`
+- Started/retained: 3/3.
+- Outcome: fingerprint generator updated exactly the en/zh-CN
+  `developer/memory-and-skill.md` pages；54×2 handbook check 与 18 个生成页 byte
+  gate 均 `pass`。
+- Disposition: 双语页面正文未手改；本 failure-first checkpoint 携带真实 source
+  fingerprint，避免在行为红灯之后被无关 handbook 漂移遮蔽。
+
+### D02-DIFF-05 — safety negatives plus fingerprint whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted failure-first checkpoint over `f3a3402d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 可进入 staged docs-sync 与 failure-first commit。
+
+### D02-DOCSYNC-05 — staged failure-first negative gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged failure-first checkpoint over `f3a3402d`
+- Started/retained: 1/1.
+- Outcome: `pass`；双语 handbook 54×2 与 18 个生成页检查通过。
+- Disposition: 负例 checkpoint 可提交并推送观察 red；不得同时加入生产修复。
