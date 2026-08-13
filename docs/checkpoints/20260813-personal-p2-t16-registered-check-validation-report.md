@@ -182,3 +182,31 @@
   54 × 2 documents and its generator check passed all 18 generated pages.
 - Disposition: create an immutable compile/test checkpoint for required
   Ubuntu/Windows CI.
+
+## 2026-08-13 — CI-GREEN-001 first implementation attempt
+
+- Exact revision: `c620a630e8724b9c27705360cf8a28cf8947c426`.
+- Instrument: required CI run
+  [31719604296](https://github.com/agentkernel/cognitive-os/actions/runs/31719604296).
+- Started/retained denominator: Ubuntu 1/1 job; Windows 1/1 job.
+- Outcome: **fail** on both platforms at `cargo build --workspace --locked`.
+  `error[E0433]`: `DurableExecutorStateStore` is used by
+  `ProductionNativeToolExecutorRouter::open_with_artifact_store` in
+  `apps/kernel-server/src/personal/tool_executor/router.rs` but is not in
+  scope. Tests never started.
+- Disposition: add the missing `super::DurableExecutorStateStore` import.
+  No executor, registry, negative, or handbook behavior change.
+- Non-claims: this compile failure is not a check, Effect, Evidence,
+  verification, Task, Gate, release, or Profile result.
+
+## 2026-08-14 — LOCAL-011 import-only compile fix
+
+- Instrument: source review of the CI `E0433` site; linking remains `not-run`
+  on `DEV-WIN-GNU-01`.
+- Change: `tool_executor/router.rs` now imports
+  `DurableExecutorStateStore` from the sibling `state` façade.
+- Outcome: **pass** for the scoped review. Required Ubuntu/Windows CI is the
+  next compile/test evidence.
+- `DOCS_IMPACT_NONE="import-only compile fix; no documented behavior change"`
+  because the mapped handbook pages already describe RegisteredCheckRun and
+  this commit does not alter that surface.

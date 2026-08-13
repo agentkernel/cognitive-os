@@ -22,8 +22,8 @@ use crate::personal::registered_check::{
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
-    NativeToolExecutionError, NativeToolExecutionRequest, NativeWorkspaceReadExecutor,
-    validate_native_tool_request,
+    DurableExecutorStateStore, NativeToolExecutionError, NativeToolExecutionRequest,
+    NativeWorkspaceReadExecutor, validate_native_tool_request,
 };
 
 const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 7] = [
