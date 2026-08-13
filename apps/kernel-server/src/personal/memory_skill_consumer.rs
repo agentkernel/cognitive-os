@@ -146,7 +146,7 @@ where
         ));
     }
     if record.context_request_digest != context_request_digest {
-        return Err(SchedulerAuthorityError::ContextResolution(
+        return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
             "durable Memory/Skill consumption request digest differs from the current request"
                 .to_owned(),
         ));
@@ -753,7 +753,7 @@ mod tests {
         assert!(
             matches!(
                 error,
-                SchedulerAuthorityError::ContextResolution(ref detail)
+                SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail)
                     if detail.contains("request digest")
             ),
             "request-digest drift must have a distinguishable error: {error:?}"

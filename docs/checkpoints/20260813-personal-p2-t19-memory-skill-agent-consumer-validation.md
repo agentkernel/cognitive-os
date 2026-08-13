@@ -611,3 +611,68 @@
 - Outcome: `pass`；kernel/store/handbook mappings routed successfully；
   handbook 54×2 与 generated 18/18 checks 通过。
 - Disposition: 语义与双语 Memory/Skill 说明及 source fingerprints 同步，可提交验证。
+
+### D02-CI-GREEN-01 — first replay-boundary green attempt
+
+- Instrument: manually dispatched GitHub CI run `31731574968`, Ubuntu job
+  `94553082061`, exact pushed revision
+  `8c7e0d19df9cb128b5c9918723b8cec65742a88f`.
+- Started/retained: 1/1 Ubuntu job；Windows still running.
+- Outcome: `fail` with 203 passed / 1 failed. All four new discriminating
+  negatives are green. The sole failure is the pre-existing
+  `digest_mismatch_on_durable_consumption_record_fails_closed`: production now
+  fails closed with the correct `request digest` detail but uses
+  `ContextResolution` instead of that regression's registered
+  `ContextAuthorizationUnavailable` class.
+- Disposition: preserve the earlier authorization-unavailable contract for
+  durable digest drift and align the new negative to it；不改动 P2-T14-owned
+  scheduler test path。
+
+### D02-FMT-11 — digest error-class repair
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `8c7e0d19`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: error-class compatibility repair is formatted；Rust behavior
+  remains routed to exact-revision CI.
+
+### D02-DIFF-10 — digest error-class whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `8c7e0d19`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: patch and report have no whitespace defects.
+
+### D02-HANDBOOK-07 — digest error-class fingerprint refresh
+
+- Instruments: `node tools/src/fill-handbook-fingerprints.mjs`,
+  `node tools/src/check-handbook.mjs`,
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `8c7e0d19`
+- Started/retained: 3/3.
+- Outcome: exactly two mapped fingerprints refreshed；54×2 handbook and
+  18/18 generated checks pass.
+- Disposition: source fingerprint matches the compatibility repair.
+
+### D02-DIFF-11 — digest error-class final candidate
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted repair over `8c7e0d19`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: ready for staged docs-sync and exact-revision rerun.
+
+### D02-DOCSYNC-07 — staged digest error-class gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `8c7e0d19`
+- Started/retained: 1/1.
+- Outcome: `pass`；handbook 54×2 and generated 18/18 checks pass.
+- Disposition: compatibility repair can be committed and pushed.
