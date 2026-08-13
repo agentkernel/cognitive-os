@@ -331,3 +331,43 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Internal SQLite row decoding refactor fixes Clippy without changing behavior or public documentation"`
   必须进入 commit/PR 记录；该结构修复不改变已同步的消费行为。
+
+### D02-CI-CLIPPY-02 — next latent strict-Clippy diagnostics
+
+- Instrument: GitHub CI run `31728756005`, Ubuntu
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`.
+- Revision: `de1043a2d3bbe7ce2f6aea3978f2c63c840b8f0f`
+- Started/retained: Ubuntu 1/1 completed；Windows job 尚在运行，未推断结果。
+- Outcome: `fail`；修复 store 解码器后，严格 Clippy 继续到
+  `apps/kernel-server/src/personal/memory_skill_consumer.rs`，报告
+  `persist_consumption_record` 为 8/7 参数以及其幂等分支可折叠；无产品行为测试失败证据。
+- Disposition: 同一根因类别的潜伏结构门禁；聚合消费写入输入并按 Clippy 建议合并条件，
+  不添加 `allow`，随后在新 exact revision 重跑。
+
+### D02-FMT-05 — consumer Clippy repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `de1043a2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 消费写入参数聚合与幂等条件折叠符合标准格式；不替代 supported Clippy。
+
+### D02-DIFF-03 — consumer Clippy repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `de1043a2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 第二轮门禁修复与增量报告没有 Git 空白错误。
+
+### D02-DOCSYNC-04 — staged consumer Clippy repair gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `de1043a2`
+- Started/retained: 1/1.
+- Outcome: `pass`；门禁判定本次两个路径均无 documentation-relevant change。
+- Disposition: 结构重排不改变已同步行为；commit 仍记录具体
+  `DOCS_IMPACT_NONE` 原因以便 PR 审计。

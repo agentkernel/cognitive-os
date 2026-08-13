@@ -18,6 +18,16 @@ use cognitive_kernel::ports::{ContextStore, StorePortError, WorkspaceContextSour
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+struct ConsumptionRecordInput<'a> {
+    command: &'a ContextResolutionCommand,
+    contract_epoch: i64,
+    context_request_digest: &'a str,
+    session_ref: &'a str,
+    reuse_of: Option<ObjectId>,
+    memory: &'a [MemoryConsumptionPin],
+    skill: &'a [SkillConsumptionPin],
+}
+
 /// 从当前权威事实装载可进入 Context 的 Memory/Skill 片段，并写入只追加消费记录。
 pub(crate) fn load_governed_memory_skill_candidates<S>(
     store: &S,
@@ -72,13 +82,15 @@ where
     if !memory_pins.is_empty() || !skill_pins.is_empty() {
         persist_consumption_record(
             store,
-            command,
-            contract_epoch,
-            context_request_digest,
-            &session_ref,
-            reuse_of,
-            &memory_pins,
-            &skill_pins,
+            ConsumptionRecordInput {
+                command,
+                contract_epoch,
+                context_request_digest,
+                session_ref: &session_ref,
+                reuse_of,
+                memory: &memory_pins,
+                skill: &skill_pins,
+            },
         )?;
     }
     Ok(candidates)
@@ -233,40 +245,33 @@ where
 
 fn persist_consumption_record<S>(
     store: &S,
-    command: &ContextResolutionCommand,
-    contract_epoch: i64,
-    context_request_digest: &str,
-    session_ref: &str,
-    reuse_of: Option<ObjectId>,
-    memory: &[MemoryConsumptionPin],
-    skill: &[SkillConsumptionPin],
+    input: ConsumptionRecordInput<'_>,
 ) -> Result<(), SchedulerAuthorityError>
 where
     S: MemorySkillConsumptionStore,
 {
     let existing = store
         .load_latest_memory_skill_consumption(
-            &command.task_ref,
-            contract_epoch,
-            &command.request_id,
+            &input.command.task_ref,
+            input.contract_epoch,
+            &input.command.request_id,
         )
         .map_err(consumption_store_error)?;
-    if let Some(record) = existing {
-        if record.session_ref == session_ref
-            && record.memory == memory
-            && record.skill == skill
-            && record.context_request_digest == context_request_digest
-        {
-            return Ok(());
-        }
+    if let Some(record) = existing
+        && record.session_ref == input.session_ref
+        && record.memory == input.memory
+        && record.skill == input.skill
+        && record.context_request_digest == input.context_request_digest
+    {
+        return Ok(());
     }
     let canonical = json!({
-        "memory": memory.iter().map(|pin| json!({
+        "memory": input.memory.iter().map(|pin| json!({
             "memory_id": pin.memory_id.to_string(),
             "source_id": pin.source_id.to_string(),
             "source_digest": pin.source_digest,
         })).collect::<Vec<_>>(),
-        "skill": skill.iter().map(|pin| json!({
+        "skill": input.skill.iter().map(|pin| json!({
             "binding_id": pin.binding_id.to_string(),
             "revision_id": pin.revision_id.to_string(),
             "package_id": pin.package_id.to_string(),
@@ -275,19 +280,19 @@ where
     });
     let record = MemorySkillConsumptionRecord {
         consumption_id: consumption_identity(
-            command,
-            contract_epoch,
-            session_ref,
-            reuse_of.as_ref(),
+            input.command,
+            input.contract_epoch,
+            input.session_ref,
+            input.reuse_of.as_ref(),
         )?,
-        task_ref: command.task_ref.clone(),
-        contract_epoch,
-        context_request_id: command.request_id.clone(),
-        context_request_digest: context_request_digest.to_owned(),
-        session_ref: session_ref.to_owned(),
-        reuse_of,
-        memory: memory.to_vec(),
-        skill: skill.to_vec(),
+        task_ref: input.command.task_ref.clone(),
+        contract_epoch: input.contract_epoch,
+        context_request_id: input.command.request_id.clone(),
+        context_request_digest: input.context_request_digest.to_owned(),
+        session_ref: input.session_ref.to_owned(),
+        reuse_of: input.reuse_of,
+        memory: input.memory.to_vec(),
+        skill: input.skill.to_vec(),
         canonical_json: canonical.to_string(),
     };
     match store.append_memory_skill_consumption(&record) {
