@@ -468,3 +468,146 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；双语 handbook 54×2 与 18 个生成页检查通过。
 - Disposition: 负例 checkpoint 可提交并推送观察 red；不得同时加入生产修复。
+
+### D02-CI-RED-01 — discriminating replay-boundary red observation
+
+- Instrument: GitHub CI run `31730126061`, Ubuntu job `94548278070`,
+  workspace Rust tests.
+- Revision: `1f9e276d99bf41617ed91434a765a53ebb8388ba`
+- Started/retained: 1/1 Ubuntu job；Windows 同 revision 仍运行，未推断。
+- Outcome: expected `fail`；kernel-server 200 passed / exactly 4 new failed.
+  Request-digest、cross-principal 与 forged-identity cases all reached their
+  `expect` because production returned success；scope case returned only a
+  post-body `ContextBodyUnavailable`, proving it was neither pre-body nor
+  distinguishable as authorization denial.
+- Disposition: 红灯逐项命中预登记的四个生产缺口，不是编译、fixture 或环境错误。
+  现可开始最小修复：current digest equality、deterministic record identity、以及
+  metadata-only Memory authority binding before body access。
+
+### D02-FMT-08 — fail-closed repair formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `fail`；rustfmt 仅要求五处换行/折行机械调整。
+- Disposition: 应用标准格式后重跑；不改变刚加入的 digest、identity 或 metadata
+  失败闭合语义。
+
+### D02-FMT-09 — fail-closed repair formatting recheck
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 修复满足本地允许的 Rust 格式门禁，行为仍需 exact-revision CI。
+
+### D02-DIFF-06 — fail-closed repair whitespace validation
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 当前修复与增量报告没有 Git 空白错误。
+
+### D02-HANDBOOK-04 — fail-closed source fingerprint check
+
+- Instruments: `node tools/src/check-handbook.mjs` and
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `1f9e276d`
+- Started/retained: 2/2.
+- Outcome: checker expected `fail` with exactly two `HB008` entries for the
+  mapped en/zh-CN Memory/Skill page；18 generated pages remain byte-identical.
+- Disposition: 用 fingerprint generator 同步三个受治理消费源的真实新摘要，再重跑。
+
+### D02-CONSISTENCY-02 — fail-closed repository consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；275 requirements、55 errors、74 schemas、89 vectors 以及
+  Personal task/slice/lease links 全部通过。
+- Disposition: 结构与治理登记一致；不替代 Rust behavior/Clippy。
+
+### D02-HANDBOOK-05 — fail-closed fingerprint refresh and recheck
+
+- Instruments: `node tools/src/fill-handbook-fingerprints.mjs`,
+  `node tools/src/check-handbook.mjs`,
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `1f9e276d`
+- Started/retained: 3/3.
+- Outcome: generator updated exactly the two Memory/Skill developer pages；
+  handbook 54×2 and generated 18/18 checks `pass`.
+- Disposition: 双语正文仍描述同一安全边界，生成器只刷新受修复源的指纹。
+
+### D02-DIFF-07 — complete fail-closed candidate whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 可进入 staged docs-sync、commit、push 与 exact-revision green 验证。
+
+### D02-REVIEW-01 — principal binding refinement before checkpoint
+
+- Observation: 将 Memory source `owner_ref` 与当前 principal 强制相等会错误拒绝经
+  capability 授权的共享来源；它不是正确的 cross-principal record boundary。
+- Repair: 消费记录 canonical payload 与 deterministic identity 现在显式绑定
+  principal、tenant、resource scope 与 purpose；复用先比较这些 daemon-derived fields。
+  Source owner 仍作为 metadata/body 一致性钉验证，但不冒充授权策略。
+- Disposition: 该更正保持测试 oracle 不变，同时避免以所有权相等替代正式 authorization。
+
+### D02-FMT-10 — governance-bound identity formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 治理绑定 refinement 符合标准格式。
+
+### D02-DIFF-08 — governance-bound identity whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: refined candidate 无 Git 空白错误。
+
+### D02-HANDBOOK-06 — final governance-binding fingerprint check
+
+- Instruments: `node tools/src/fill-handbook-fingerprints.mjs`,
+  `node tools/src/check-handbook.mjs`,
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted repair over `1f9e276d`
+- Started/retained: 3/3.
+- Outcome: exactly two mapped fingerprints refreshed；handbook 54×2 and generated
+  18/18 checks `pass`.
+- Disposition: 当前 refined green candidate 的 source fingerprints 已同步。
+
+### D02-DIFF-09 — final green-candidate whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted repair over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 可提交 pushed exact revision 验证。
+
+### D02-DOCSYNC-06 — staged replay-boundary green gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged green candidate over `1f9e276d`
+- Started/retained: 1/1.
+- Outcome: `pass`；kernel/store/handbook mappings routed successfully；
+  handbook 54×2 与 generated 18/18 checks 通过。
+- Disposition: 语义与双语 Memory/Skill 说明及 source fingerprints 同步，可提交验证。

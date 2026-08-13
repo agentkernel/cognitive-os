@@ -3,8 +3,8 @@
 use super::{is_constraint_violation, unavailable};
 use cognitive_domain::ObjectId;
 use cognitive_kernel::memory_skill_consumption::{
-    MemoryConsumptionPin, MemorySkillConsumptionRecord, MemorySkillConsumptionStore,
-    SkillConsumptionPin,
+    EligibleMemoryConsumption, MemoryConsumptionPin, MemorySkillConsumptionRecord,
+    MemorySkillConsumptionStore, SkillConsumptionPin,
 };
 use cognitive_kernel::ports::StorePortError;
 use rusqlite::OptionalExtension;
@@ -25,18 +25,27 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
     fn list_eligible_memory_pins(
         &self,
         governance_scope: &str,
+        task_ref: &str,
         purpose: &str,
         observed_at_unix_seconds: i64,
-    ) -> Result<Vec<MemoryConsumptionPin>, StorePortError> {
-        if governance_scope.trim().is_empty() || purpose.trim().is_empty() {
+    ) -> Result<Vec<EligibleMemoryConsumption>, StorePortError> {
+        if governance_scope.trim().is_empty()
+            || task_ref.trim().is_empty()
+            || purpose.trim().is_empty()
+        {
             return Err(StorePortError::Unavailable {
-                detail: "Memory consumption scope or purpose is missing".to_owned(),
+                detail: "Memory consumption scope, Task, or purpose is missing".to_owned(),
             });
         }
         let connection = self.lock()?;
         let mut statement = connection
             .prepare(
-                "SELECT memory_objects.memory_id, memory_candidates.source_id, memory_candidates.source_digest
+                "SELECT memory_objects.memory_id, memory_candidates.source_id,
+                        memory_candidates.source_digest, workspace_context_sources.tenant_id,
+                        workspace_context_sources.owner_ref,
+                        workspace_context_sources.resource_scope,
+                        memory_candidates.target_scope, memory_candidates.purpose,
+                        memory_candidates.source_provenance_ref
                  FROM memory_objects
                  JOIN memory_candidates ON memory_candidates.candidate_id = memory_objects.candidate_id
                  JOIN memory_admission_decisions ON memory_admission_decisions.decision_id = memory_objects.decision_id
@@ -53,19 +62,33 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
                          memory_candidates.governance_scope = ?1
                          OR memory_candidates.governance_scope LIKE ?1 || '/%'
                      )
-                     AND memory_candidates.purpose = ?2
-                     AND memory_candidates.retention_expires_at_unix_seconds > ?3
+                     AND memory_candidates.target_scope = ?2
+                     AND memory_candidates.purpose = ?3
+                     AND memory_candidates.retention_expires_at_unix_seconds > ?4
                  ORDER BY memory_objects.memory_id",
             )
             .map_err(unavailable("prepare eligible Memory pins"))?;
         let rows = statement
             .query_map(
-                rusqlite::params![governance_scope, purpose, observed_at_unix_seconds],
+                rusqlite::params![
+                    governance_scope,
+                    task_ref,
+                    purpose,
+                    observed_at_unix_seconds
+                ],
                 |row| {
-                    Ok(MemoryConsumptionPin {
-                        memory_id: parse_object_id(row.get::<_, String>(0)?, 0)?,
-                        source_id: parse_object_id(row.get::<_, String>(1)?, 1)?,
-                        source_digest: row.get(2)?,
+                    Ok(EligibleMemoryConsumption {
+                        pin: MemoryConsumptionPin {
+                            memory_id: parse_object_id(row.get::<_, String>(0)?, 0)?,
+                            source_id: parse_object_id(row.get::<_, String>(1)?, 1)?,
+                            source_digest: row.get(2)?,
+                        },
+                        tenant_id: row.get(3)?,
+                        owner_ref: row.get(4)?,
+                        resource_scope: row.get(5)?,
+                        target_scope: row.get(6)?,
+                        purpose: row.get(7)?,
+                        source_provenance_ref: row.get(8)?,
                     })
                 },
             )

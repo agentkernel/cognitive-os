@@ -13,6 +13,20 @@ pub struct MemoryConsumptionPin {
     pub source_digest: String,
 }
 
+/// 一个仍满足当前 Task、scope、purpose 与 source 治理绑定的 Memory 元数据候选。
+///
+/// 该值不含正文，消费方必须先验证这些字段，再调用 `ContextStore` 读取 body。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EligibleMemoryConsumption {
+    pub pin: MemoryConsumptionPin,
+    pub tenant_id: String,
+    pub owner_ref: String,
+    pub resource_scope: String,
+    pub target_scope: String,
+    pub purpose: String,
+    pub source_provenance_ref: String,
+}
+
 /// 一次受治理消费要装入 Context 的 Skill 精确钉。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SkillConsumptionPin {
@@ -44,9 +58,10 @@ pub trait MemorySkillConsumptionStore {
     fn list_eligible_memory_pins(
         &self,
         governance_scope: &str,
+        task_ref: &str,
         purpose: &str,
         observed_at_unix_seconds: i64,
-    ) -> Result<Vec<MemoryConsumptionPin>, StorePortError>;
+    ) -> Result<Vec<EligibleMemoryConsumption>, StorePortError>;
 
     /// 列出对当前 Task/workspace 仍有效的 Skill 精确钉。
     /// 已撤销或范围不匹配的绑定必须缺席。
