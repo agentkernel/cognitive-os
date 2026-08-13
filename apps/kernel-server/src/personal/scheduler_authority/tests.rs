@@ -10,10 +10,11 @@ use super::{
     complete_resolved_effect_and_release, complete_scheduler_admission,
     complete_scheduler_worker_attempt, dispatch_native_worker_effect,
     ensure_current_contract_epoch, parse_execution_bound_contract,
-    propose_persist_and_admit_candidate_after_metadata, release_closed_effect_dispatch,
-    release_closed_recovered_attempt, resolve_native_worker_dispatch_with_families,
-    resolve_scheduler_work_for_task, select_single_effect_intent, validate_untrusted_pi_candidate,
-    validate_worker_authorization_evidence,
+    propose_persist_and_admit_candidate_after_metadata, reconcile_interrupted_native_worker_effect,
+    release_closed_effect_dispatch, release_closed_recovered_attempt,
+    resolve_native_worker_dispatch_with_families, resolve_scheduler_work_for_task,
+    select_single_effect_intent, validate_untrusted_pi_candidate,
+    validate_worker_authorization_evidence, verify_scheduler_dispatch_current,
 };
 use cognitive_contracts::{
     canonical,
@@ -2377,6 +2378,139 @@ fn production_native_caller_persists_executing_before_workspace_io() {
 
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = Arc::new(SqliteAuthorityStore::open(&database_path).unwrap());
+    let resolved = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    router.stage_resolved(&resolved).unwrap();
+    let io_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let io_count_at_read = Arc::clone(&io_count);
+    router.install_workspace_read_before_io_hook(move || {
+        io_count_at_read.fetch_add(1, Ordering::SeqCst);
+    });
+    let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
+    let ids = UuidV7Generator;
+    let protocol = EffectProtocol::new(
+        store.as_ref(),
+        &clock,
+        &ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t12-d04-crash").unwrap(),
+    );
+    let grant = recovery_effect_grant();
+    let currency = GovernanceCurrency {
+        revocation_epoch: 1,
+        capability_set_version: 1,
+    };
+    let lease = WriterLease { epoch: 1 };
+    let authorized = protocol
+        .authorize_effect(
+            &authorization.effect_object_id,
+            Version::INITIAL,
+            &grant,
+            &currency,
+            &lease,
+        )
+        .unwrap();
+    let (_, outcome) = protocol
+        .dispatch_effect(
+            &authorization.effect_object_id,
+            authorized.after_version,
+            &grant,
+            &currency,
+            &router,
+            &lease,
+        )
+        .unwrap();
+    assert!(matches!(
+        outcome,
+        cognitive_kernel::executor::DispatchOutcome::Executed { .. }
+    ));
+    assert_eq!(io_count.load(Ordering::SeqCst), 1);
+    let interrupted = resolve_native_worker_dispatch_with_families(
+        store.as_ref(),
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    assert_eq!(interrupted.effect_state, "EXECUTING");
+
+    assert_eq!(
+        reconcile_interrupted_native_worker_effect(&protocol, &interrupted, &router, &lease)
+            .unwrap(),
+        SchedulerEffectClosure::Closed
+    );
+    assert_eq!(io_count.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn replaced_scheduler_lease_is_rejected_before_native_effect_dispatch() {
+    let database_path = temporary_scheduler_database_path();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    let task_ref = "task://personal/d04-stale-dispatch";
+    repository.upsert(&scheduler_row(task_ref)).unwrap();
+    repository
+        .acquire_eligible_lease(
+            &scheduler_work_key(task_ref),
+            "personal-daemon-scheduler",
+            41,
+            "2026-08-13T08:00:00Z",
+            "2026-08-13T08:00:30Z",
+        )
+        .unwrap();
+    repository
+        .acquire_eligible_lease(
+            &scheduler_work_key(task_ref),
+            "personal-daemon-scheduler",
+            42,
+            "2026-08-13T08:00:30Z",
+            "2026-08-13T08:01:30Z",
+        )
+        .unwrap();
+    let stale_dispatch = SchedulerDispatch {
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+        lease_owner: "personal-daemon-scheduler".to_owned(),
+        lease_epoch: 41,
+        lease_expires: "2026-08-13T08:01:00Z".to_owned(),
+        attempt_count: 1,
+    };
+
+    assert!(matches!(
+        verify_scheduler_dispatch_current(&mut repository, &stale_dispatch),
+        Err(SchedulerAuthorityError::DispatchBindingMismatch(_))
+    ));
+
+    drop(repository);
+    std::fs::remove_file(database_path).unwrap();
 }
 
 #[test]

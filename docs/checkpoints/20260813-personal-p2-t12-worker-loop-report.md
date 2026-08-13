@@ -1436,3 +1436,46 @@ Windows GNU linker host.
 - Finished: 2026-08-13 18:07 +08:00
 - Results: docs-sync **pass**; consistency **pass**; staged whitespace
   **pass**. No docs-impact escape was used.
+
+### Unit 169 — exact native WorkspaceRead production-chain compile
+
+- Finished: 2026-08-13 18:11 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `9ea43932d34e89c3534cc27dcc869a3b90108f0f`
+- Result: **pass**; the production-caller `EXECUTING`-before-I/O proof passed
+  1/1 after compiling the full periodic wiring, descriptor publication, and
+  current-authorization path.
+
+### Unit 170 — exact native D04 regression suites
+
+- Finished: 2026-08-13 18:12 +08:00
+- Environment/revision:
+  `DEV-LINUX-NATIVE-01` / `9ea43932d34e89c3534cc27dcc869a3b90108f0f`
+- Results:
+  - scheduler authority **46/46 pass**;
+  - server module **9/9 pass**;
+  - `kernel-server` all-target Clippy with `-D warnings`: **pass**.
+
+### Unit 171 — D04 crash and replaced-lease negatives
+
+- Finished: 2026-08-13 18:18 +08:00
+- Result: **tests authored; execution pending**
+- Coverage:
+  - a crash after durable `EXECUTING` and actual read but before outcome
+    recording must query the original key, reach `RECONCILED`, and keep the I/O
+    count at one;
+  - a replaced scheduler lease epoch is rejected by the final pre-I/O check.
+- Current expected failure:
+  `reconcile_interrupted_native_worker_effect` does not exist.
+
+### Unit 172 — crash/replaced-lease proof local checks
+
+- Finished: 2026-08-13 18:19 +08:00
+- Results: whitespace **pass**; diagnostics **not-run** after the bounded IDE
+  timeout; rustfmt **fail** on one mechanical import layout.
+- Recovery: apply rustfmt only, then checkpoint the expected red.
+
+### Unit 173 — crash/replaced-lease proof formatting rerun
+
+- Finished: 2026-08-13 18:20 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
