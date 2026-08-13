@@ -1122,7 +1122,7 @@ fn persist_repairable_task_contract(
             id: "accept-read".to_owned(),
             kind: ContractConditionKind::Acceptance,
             machine_expression: None,
-            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+            verifier_ref: Some("verifier://personal/fixed-effect".to_owned()),
         }],
         context_request_ref: None,
         contract_epoch: 1,
@@ -2181,7 +2181,7 @@ fn persist_native_workspace_read_dispatch_fixture(
             id: "accept-read".to_owned(),
             kind: ContractConditionKind::Acceptance,
             machine_expression: None,
-            verifier_ref: Some("verifier://personal/read-result".to_owned()),
+            verifier_ref: Some("verifier://personal/fixed-effect".to_owned()),
         }],
         context_request_ref: Some(strong_reference_to(
             &context_request_id,
@@ -2632,7 +2632,6 @@ fn production_native_caller_persists_executing_before_workspace_io() {
             .as_str(),
         "RECONCILED"
     );
-
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -2652,12 +2651,16 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
         .upsert(&scheduler_row(&authorization.task_ref))
         .unwrap();
     let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
 
     super::run_private_scheduler_tick_with_store(
         &store,
         &mut repository,
         layout.config_dir(),
         &router,
+        &artifact_store,
     )
     .unwrap();
 
@@ -2669,6 +2672,21 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
             .state
             .as_str(),
         "RECONCILED"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Loop, &authorization.loop_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "CONTINUE"
+    );
+    assert!(
+        std::fs::read_dir(layout.data_dir().join("artifacts"))
+            .unwrap()
+            .next()
+            .is_some()
     );
     assert_eq!(
         repository
@@ -2877,11 +2895,15 @@ fn restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read() {
     restarted_router.install_workspace_read_before_io_hook(move || {
         restarted_io_count_at_read.fetch_add(1, Ordering::SeqCst);
     });
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
     super::run_private_scheduler_tick_with_store(
         &store,
         &mut repository,
         layout.config_dir(),
         &restarted_router,
+        &artifact_store,
     )
     .unwrap();
 
@@ -3508,6 +3530,9 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
     let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
     let executor_router =
         ProductionNativeToolExecutorRouter::open(1, layout.data_dir().join("workspace")).unwrap();
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
 
     super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
         .unwrap();
@@ -3516,6 +3541,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &mut scheduler_repository,
         layout.config_dir(),
         &executor_router,
+        &artifact_store,
     )
     .unwrap();
 
@@ -3528,6 +3554,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &mut scheduler_repository,
         layout.config_dir(),
         &executor_router,
+        &artifact_store,
     )
     .unwrap();
 }

@@ -369,6 +369,7 @@ pub(crate) fn run_bounded_scheduler_attempt<S, C, G>(
     continuation_authorization: Option<&ContinuationAuthorizationRow>,
     context_execution_policy: Option<&SchedulerExecutionPolicyRow>,
     executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    artifact_store: &cognitive_store::ArtifactStore,
     worker_attempt_id: ObjectId,
     released_at: &str,
 ) -> Result<SchedulerWorkerAttempt, SchedulerAuthorityError>
@@ -544,6 +545,44 @@ where
         &governance_currency,
         &writer_lease,
     )?;
+    let current_loop = authority_store
+        .load_object(
+            LifecycleDomain::Loop,
+            &resolved.authorization.loop_object_id,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| {
+            SchedulerAuthorityError::LoopUnavailable(
+                resolved.authorization.loop_object_id.to_string(),
+            )
+        })?;
+    if current_loop.state.as_str() != "ACT" {
+        return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+            "{} is {} before verification",
+            resolved.authorization.loop_object_id, current_loop.state
+        )));
+    }
+    let verification_request =
+        crate::personal::verification_executor::begin_verification_from_current_task_contract(
+            authority_store,
+            &execution_clock,
+            &execution_ids,
+            task_binding,
+            &resolved.authorization.loop_object_id,
+            current_loop.version,
+            &resolved.authorization.effect_object_id,
+            &writer_lease,
+        )
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    crate::personal::verification_executor::run_production_independent_verification(
+        authority_store,
+        artifact_store,
+        &execution_clock,
+        &execution_ids,
+        &verification_request.verification_request_id,
+        &writer_lease,
+    )
+    .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     let worker_attempt = complete_durable_scheduler_effect_closure(
         SchedulerDispatchAdmission::Leased(dispatch),
         authority_store,
@@ -715,11 +754,20 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
             .join("workspace"),
     )
     .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let artifact_store = cognitive_store::ArtifactStore::open(
+        authority_database_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join("artifacts"),
+        8 * 1024 * 1024,
+    )
+    .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     run_private_scheduler_tick_with_store(
         &authority_store,
         &mut scheduler_repository,
         provider_config_dir,
         &executor_router,
+        &artifact_store,
     )
 }
 
@@ -732,6 +780,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
     scheduler_repository: &mut SchedulerRepository,
     provider_config_dir: &Path,
     executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    artifact_store: &cognitive_store::ArtifactStore,
 ) -> Result<(), SchedulerAuthorityError> {
     let clock = SystemClock;
     let identifiers = UuidV7Generator;
@@ -851,6 +900,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             continuation_authorization.as_ref(),
             context_execution_policy.as_ref(),
             executor_router,
+            artifact_store,
             worker_attempt_id,
             observed_wall_time.as_str(),
         )?;

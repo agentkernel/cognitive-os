@@ -263,3 +263,50 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Fix: an existing governed Task must be non-`COMPLETED`; an absent object is
   accepted only when its ID is the current TaskContract ID bound by the
   persisted verification request. Arbitrary absent IDs remain fail-closed.
+
+### Unit 032 — exact native D02 verifier path
+
+- Finished: 2026-08-13 21:33 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `2ad41687018cb38e12388fc60841f3545d83dceb`
+- Result: **pass**
+  - contract Acceptance criteria + registered-verifier negative: 1/1;
+  - atomic start + CAS evidence + passed report + `VERIFY -> CONTINUE` +
+    stale rollback/no Task completion: 1/1.
+
+### Unit 033 — D02 periodic production caller wiring
+
+- Finished: 2026-08-13 21:42 +08:00
+- Result: **implemented; validation pending**
+- Change: the daemon passes its process-lifetime ArtifactStore into each tick;
+  after WorkspaceRead reconciliation, the same bounded attempt derives the
+  current TaskContract verifier spec, atomically enters `VERIFY`, runs the
+  registered verifier, persists CAS-backed report evidence, enters `CONTINUE`,
+  and only then releases the exact scheduler lease.
+- Boundary: no Task acceptance/completion transition is called.
+
+### Unit 034 — D02 periodic caller local static checks
+
+- Finished: 2026-08-13 21:43 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on one
+  mechanical server composition layout.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 035 — D02 periodic caller formatting rerun
+
+- Finished: 2026-08-13 21:44 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 036 — D02 production-caller handbook truth
+
+- Finished: 2026-08-13 21:47 +08:00
+- Result: **authored; validation pending**
+- Execution-chain, Task, capability, and limitation pages in both locales now
+  record production verification through Loop `CONTINUE`, with checkpoint and
+  continuation-authority emission as the remaining D03 gap.
+
+### Unit 037 — D02 production-caller local gates
+
+- Finished: 2026-08-13 21:48 +08:00
+- Results: rustfmt **pass**; handbook **pass**; twelve fingerprints refreshed;
+  consistency **pass**; whitespace **pass**.

@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:d4d6a7a1df7b820146eac0862e1d5278e8d770a08919abc740f5ed74a071ee78"
+fingerprint: "sha256:0cc31ba468a67fb610b45733d7d7f4d8288097e34b918b6616fdfdbd1a054597"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -50,8 +50,8 @@ verification → verified continuation or ceiling STOP.
 | WorkspaceSearch / ProcessCheck executors | implemented, test-called only | immutable catalog equality is rechecked at every sink; search uses handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
 | WorkspaceWrite / WorkspacePatch mutation executor | implemented, test-called only | handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
-| Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, not production-called | one fenced SQLite transaction validates a current closed Effect and commits both append-only rows with the registered Loop transition; caller criteria/verifier identity remain D02 work |
-| Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, production-callable; scheduler caller pending | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, and enters `VERIFY -> CONTINUE` without Task completion |
+| Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
+| Independent verifier seam (fixed post-state, append-only reports, CAS-backed evidence) | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, and enters `VERIFY -> CONTINUE` without Task completion |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
@@ -75,9 +75,10 @@ The remaining gaps are:
    Effect authorization because production has no separately governed
    payload/preimage, supervised-process, or registered-origin carrier for them;
    their sinks remain test-called only.
-2. **Verifier unwired**: `record_independent_verification` and loop-continuation
-   entry are exercised by tests only; no production route advances verification
-   or Task acceptance.
+2. **Continuation authority emission remains**: production now reaches a
+   persisted independent report and Loop `CONTINUE`, but it does not yet append
+   the required checkpoint or issue the one-time continuation authorization.
+   Task acceptance remains separate P2-T14 scope.
 
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them

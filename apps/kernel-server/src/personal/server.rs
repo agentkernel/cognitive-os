@@ -249,12 +249,11 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("assemble native Tool executor router: {error}"),
         })?,
     );
-    let _artifact_store =
-        Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
-            PersonalDaemonError::Io {
-                detail: format!("assemble daemon ArtifactStore: {error}"),
-            }
-        })?);
+    let artifact_store = Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("assemble daemon ArtifactStore: {error}"),
+        }
+    })?);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
@@ -288,6 +287,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
     let scheduler_authority_store = Arc::clone(&authority_store);
     let scheduler_executor_router = Arc::clone(&executor_router);
+    let scheduler_artifact_store = Arc::clone(&artifact_store);
     let scheduler_config_dir = config.layout.config_dir().to_path_buf();
     let mut scheduler_worker = PeriodicSchedulerWorker::spawn(SCHEDULER_TICK_INTERVAL, move || {
         run_private_scheduler_tick_with_store(
@@ -295,6 +295,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             &mut scheduler_repository,
             &scheduler_config_dir,
             scheduler_executor_router.as_ref(),
+            scheduler_artifact_store.as_ref(),
         )
     })
     .map_err(|error| PersonalDaemonError::Io {

@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:98aca1010467bc9ce987d858562a6d8debd630be23feb3ceb6b4211d04b305b7"
+fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -21,8 +21,9 @@ non_claims:
 ## 功能
 
 - **自主执行未端到端接线**：Task 准入会入列完整调度引导，绑定后的周期 worker 可到
-  candidate 准入。无参数 WorkspaceRead 现有持久生产 Effect 调用者；其余 Tool 请求载
-  体与独立 verifier 仍未接线。
+  candidate 准入。无参数 WorkspaceRead 现有持久生产 Effect 调用者和到 Loop
+  `CONTINUE` 的独立 verifier；其余 Tool 请求载体与 checkpoint 背书 continuation
+  authority 仍未接线。
 - **无备份/恢复命令**；仅有规划 API（secret 恒排除）。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
   UX。

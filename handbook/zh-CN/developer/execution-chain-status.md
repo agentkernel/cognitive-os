@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:d4d6a7a1df7b820146eac0862e1d5278e8d770a08919abc740f5ed74a071ee78"
+fingerprint: "sha256:0cc31ba468a67fb610b45733d7d7f4d8288097e34b918b6616fdfdbd1a054597"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -49,8 +49,8 @@ non_claims:
 | WorkspaceSearch / ProcessCheck 执行器 | implemented，仅测试调用 | 每个 sink 都重查不可变目录完全相等；search 使用句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
 | WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
-| 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，尚无生产调用 | 一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交；caller criteria/verifier 身份仍属 D02 |
-| 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，可供生产调用；scheduler caller 待接 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，不完成 Task |
+| 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
+| 独立 verifier 接缝（fixed post-state、追加式报告、CAS 背书证据） | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，不完成 Task |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口
@@ -69,8 +69,9 @@ non_claims:
    WorkspaceWrite/Patch、ProcessCheck 与 HttpFetchReadOnly 在生产尚无独立治理的
    payload/preimage、受监督进程或已登记 origin 载体，因此在 Effect 授权前失败；这些
    sink 仍仅测试调用。
-2. **verifier 未接线**：`record_independent_verification` 与 loop continuation 入口
-   仅测试演练；没有生产路由推进验证或 Task 验收。
+2. **continuation authority 签发仍缺**：生产现在可到达持久独立报告与 Loop
+   `CONTINUE`，但尚未追加必需 checkpoint 或签发一次性 continuation authorization。
+   Task 验收仍是独立 P2-T14 范围。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。
