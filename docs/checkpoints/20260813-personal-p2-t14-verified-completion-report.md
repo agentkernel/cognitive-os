@@ -248,3 +248,31 @@ public transition contract:
   `TaskUnavailable` for a still-`DRAFT` Task.
 - Clippy and verification-executor were **not-run**.
 - Recovery: mint the fixture TaskContract under the WIA root identity.
+
+### Unit 021 — native checkout of WIA-aligned fixture
+
+- Finished: 2026-08-14 00:45 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `a38a27a0a5cf952f16b6ef74250d8281ddfadc5f`
+- Result: **pass**. HEAD matched, worktree clean.
+
+### Unit 022 — exact native scheduler suite at `a38a27a0`
+
+- Finished: 2026-08-14 00:45 +08:00
+- Command: `cargo test -p kernel-server --locked personal::scheduler_authority::tests -- --test-threads=1`
+- Result: **pass** — 53 passed / 0 failed, including public C1
+  `COMPLETED` and the DRAFT/duplicate-acceptance negatives.
+
+### Unit 023 — exact native verification executor at `a38a27a0`
+
+- Finished: 2026-08-14 00:45 +08:00
+- Command: `cargo test -p kernel-server --locked personal::verification_executor -- --test-threads=1`
+- Result: **pass** — 12 passed / 0 failed.
+
+### Unit 024 — Clippy at `a38a27a0`
+
+- Finished: 2026-08-14 00:46 +08:00
+- Command: `cargo clippy -p cognitive-kernel -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings`
+- Result: **fail** — `clippy::expect_used` on five new test assertions
+  (`expect` / `expect_err`). The module already allows `unwrap_used`.
+- Recovery: replace those calls with `unwrap` / `err().unwrap()`.

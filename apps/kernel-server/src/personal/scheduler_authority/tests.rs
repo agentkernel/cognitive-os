@@ -2769,7 +2769,7 @@ fn public_c1_workspace_read_reaches_independent_verified_task_completion() {
             &authorization.worker_authorization_root_id,
         )
         .unwrap()
-        .expect("production admission must materialize the governed Task");
+        .unwrap();
     assert_eq!(task.state.as_str(), "COMPLETED");
     assert_eq!(
         repository
@@ -2822,7 +2822,8 @@ fn non_authority_completion_signals_cannot_complete_a_draft_task() {
         &object_id(9_999),
         &WriterLease { epoch: 1 },
     )
-    .expect_err("a missing report must not complete a Task");
+    .err()
+    .unwrap();
     assert!(
         matches!(error, super::TaskCompletionError::TaskUnavailable),
         "DRAFT is ineligible for candidate/acceptance; got {error:?}"
@@ -2833,7 +2834,7 @@ fn non_authority_completion_signals_cannot_complete_a_draft_task() {
             &authorization.worker_authorization_root_id,
         )
         .unwrap()
-        .expect("fixture must materialize the governed Task");
+        .unwrap();
     assert_eq!(task.state.as_str(), "DRAFT");
     assert_eq!(
         store
@@ -2884,7 +2885,7 @@ fn duplicate_acceptance_is_rejected_after_verified_completion() {
     let report = store
         .load_latest_verification_report_for_task_binding(&task_binding)
         .unwrap()
-        .expect("verified completion must persist a current report");
+        .unwrap();
     let error = super::complete_task_from_persisted_verification(
         &store,
         &artifact_store,
@@ -2894,7 +2895,8 @@ fn duplicate_acceptance_is_rejected_after_verified_completion() {
         &report.verification_report_id,
         &WriterLease { epoch: 1 },
     )
-    .expect_err("duplicate acceptance must fail closed");
+    .err()
+    .unwrap();
     assert!(matches!(
         error,
         super::TaskCompletionError::DuplicateAcceptance
