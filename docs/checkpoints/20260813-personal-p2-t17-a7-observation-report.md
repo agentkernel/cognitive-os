@@ -155,4 +155,65 @@
 - Measurement: three governance/report paths checked; no mapped product behavior changed
 - Safety: the explicit reason is limited to count/lease-reference correction
 
+### V015 — consistency-repair push docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --push`
+- Exact revision: `51daaa4` (full hash follows after remote visibility)
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: three governance/report paths checked against the remote branch
+- Safety: no production source or handbook behavior changed
+
+### V016 — repaired failure-first checkpoint remote visibility
+
+- Instrument: `git push`
+- Exact revision: `51daaa4aeb6b3e4d9e93c3764cbc6e6de0412222`
+- Environment: GitHub Draft PR #212
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the consistency repair is visible on the task branch and triggered required CI
+- Safety: failure-first source remains unresolved and the PR remains Draft
+
+### V017 — retained supported-CI failure-first proof
+
+- Instrument: GitHub Actions run `31718485768`
+- Exact revision: `51daaa4aeb6b3e4d9e93c3764cbc6e6de0412222`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `fail` (expected failure-first)
+- Measurement: both platforms reached Rust workspace compilation and failed only at `p2_t17_a7_failure_first.rs:3` with `E0432`, unresolved `super::campaign_observation`. This directly proves the production campaign observation capability did not exist before P2-T17 implementation.
+- Disposition: implement the smallest production module that satisfies the pinned restart/exactly-once test without weakening its assertions
+- Safety: no bypass, assertion relaxation, fixture execution, Gate, or campaign claim
+
+### V018 — implementation formatting check
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: uncommitted D01-D03 implementation over `51daaa4aeb6b3e4d9e93c3764cbc6e6de0412222`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted command)
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: rustfmt reported no diff after formatting the observation module, focused negatives, and module wiring
+- Safety: no Rust linking; no Gate/release/Profile/EVAL-003 claim
+
+### V019 — staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged D01-D03 implementation over `51daaa4aeb6b3e4d9e93c3764cbc6e6de0412222`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: a7-campaign-observation routes only to `dev.execution-chain-status`; check-handbook 54×2 and generator `--check` 18 pages byte-identical
+- Safety: no `DOCS_IMPACT_NONE`; no Gate/release/Profile claim
+
+### V020 — consistency after single-slice repair
+
+- Instrument: `pnpm run check:consistency`
+- Exact revision: staged D01-D03 implementation over `51daaa4aeb6b3e4d9e93c3764cbc6e6de0412222`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: 275 requirements, 55 error codes, 74 schemas, 89 vectors, links, traceability, Personal plan/Gates and active leases verified. One in-progress slice (`P2-T17/D01`) is the only open Delivery Slice.
+- Safety: no external mutation and no campaign execution
+
 <!-- Append each completed validation unit below before starting the next one. -->

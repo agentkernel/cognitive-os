@@ -13,6 +13,8 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: apps/kernel-server/src/personal/verification_executor.rs
+  - path: apps/kernel-server/src/personal/campaign_observation.rs
+    symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -20,12 +22,14 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
 tests:
+  - apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:f9d423414bea79f386105e776268ce2090762183e8b2dc50ef49318a9d466516"
+fingerprint: "sha256:325865c0bb7c551cb018bca16546a234b91cf8818ee286d195832794c4e7fbbe"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
+  - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
 ---
 
 # Execution-chain status
@@ -52,6 +56,7 @@ verification → verified continuation or ceiling STOP.
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
+| A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup; persist-before-dispatch Effect; default-off authorized fault points; restart queries only the original key and reconciles exactly once; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
@@ -77,8 +82,10 @@ The remaining gaps are:
    their sinks remain test-called only.
 2. **Task completion remains separate**: production now closes
    `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and one-time
-   continuation authority. No report, checkpoint, or continuation completes a
-   Task; acceptance remains P2-T14 scope.
+   continuation authority. No report, checkpoint, continuation, or A7
+   campaign observation completes a Task; acceptance remains P2-T14 scope.
+   A7 fixture/local evidence must not be promoted to Gate, release, Profile,
+   B01, or EVAL-003 campaign results.
 
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them
