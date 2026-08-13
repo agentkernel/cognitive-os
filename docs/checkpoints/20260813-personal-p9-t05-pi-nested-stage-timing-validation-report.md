@@ -81,26 +81,26 @@ stating so explicitly.
 
 - Unit: `apps/kernel-server` → `personal::route_observation` plus
   `provider_proxy` timing split
-- Environment: `DEV-WIN-GNU-01` **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed
-  to exact-revision `DEV-LINUX-NATIVE-01` / required CI
-- Result: **not-run** locally. The tests are written: malformed/duplicate/absent
-  correlation ids are refused rather than echoed; an unauthorized daemon emits
-  an empty header block; a zero-duration stage is dropped; an authorized joined
-  request emits only the correlation echo and preflight header (no body, no
-  `\r\n\r\n`, no secret-shaped material); authorized vs unauthorized header
-  blocks leave identical body bytes; `forward_chat_completion_with_timing`
-  returns a positive preflight and a positive network duration with the
-  transport body unchanged.
+- Environment: `DEV-LINUX-NATIVE-01` at exact
+  `554c6cf9f69af836032af207eeb04a800ac55063`
+- Result: **pass** on `DEV-LINUX-NATIVE-01` at exact
+  `554c6cf9f69af836032af207eeb04a800ac55063`.
+  `cargo test -p kernel-server route_observation` **9/9**;
+  `timed_forward_splits_preflight` **1/1**;
+  `cargo fmt --all -- --check` **pass**;
+  `cargo clippy -p kernel-server --all-targets -- -D warnings` **pass**.
+  Local `DEV-WIN-GNU-01` remains **not-run** (`RUST-LINK-DEV-WIN-GNU-01`).
 
 ### U05 — front-door header-only effect
 
 - Unit: `apps/kernel-server/tests/p9_t05_route_observation.rs`
-- Environment: `DEV-WIN-GNU-01` **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed
-  to exact-revision `DEV-LINUX-NATIVE-01` / required CI
-- Result: **not-run** locally. The tests are written: with and without daemon
-  observation authorization, a missing Provider config still returns
-  `PERSONAL_PROVIDER_NOT_CONFIGURED`; absent, well-formed, malformed (including
-  secret-shaped) and duplicated correlation headers produce the identical error
-  body; no observation headers appear on the error path; the refused value and
-  session/bootstrap secrets never appear in the response; the runtime root gains
-  no observation or campaign file.
+- Environment: `DEV-LINUX-NATIVE-01` at exact
+  `554c6cf9f69af836032af207eeb04a800ac55063`
+- Command: `cargo test -p kernel-server --test p9_t05_route_observation`
+- Result: **pass** — 2/2. With and without daemon observation authorization, a
+  missing Provider config still returns `PERSONAL_PROVIDER_NOT_CONFIGURED`;
+  absent, well-formed, malformed (including secret-shaped) and duplicated
+  correlation headers produce the identical error body; no observation headers
+  appear on the error path; the refused value and session/bootstrap secrets
+  never appear in the response; the runtime root gains no observation or
+  campaign file. Local `DEV-WIN-GNU-01` remains **not-run**.
