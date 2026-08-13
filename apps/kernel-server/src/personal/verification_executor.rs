@@ -275,7 +275,7 @@ mod tests {
     use super::*;
     use cognitive_domain::{EventId, LifecycleDomain, StateName, Version};
     use cognitive_kernel::ports::{EventDraft, ObjectAdmission, StoredObject, TaskBinding};
-    use cognitive_store::SqliteAuthorityStore;
+    use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore};
     use std::{
         sync::atomic::{AtomicU64, Ordering},
         time::{SystemTime, UNIX_EPOCH},
@@ -393,6 +393,38 @@ mod tests {
             artifact_store,
             format!("artifact://sha256/{digest}"),
         )
+    }
+
+    #[test]
+    fn daemon_artifact_store_is_composed_under_the_personal_data_layout() {
+        let timestamp_nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time after Unix epoch")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "cognitiveos-p2-t13-artifact-composition-{}-{timestamp_nanos}",
+            std::process::id()
+        ));
+        let layout = PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        );
+        layout.ensure_directories().expect("personal directories");
+
+        let artifact_store =
+            open_daemon_artifact_store(&layout).expect("compose daemon ArtifactStore");
+        let reference = artifact_store
+            .put(b"p2-t13-evidence")
+            .expect("put evidence");
+        let digest = reference
+            .strip_prefix("sha256:")
+            .expect("storage reference digest");
+
+        assert!(layout.data_dir().join("artifacts").join(digest).is_file());
+        std::fs::remove_dir_all(root).expect("remove artifact fixture");
     }
 
     fn admit_task_fixture(store: &SqliteAuthorityStore, task_object_id: &ObjectId) {
