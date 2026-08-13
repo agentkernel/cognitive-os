@@ -921,3 +921,43 @@ restage, and prove no second dispatch/non-execution claim.
   documented rule that missing durable state reconciles `Indeterminate`;
   mapped handbook facts are unchanged.”
 - Disposition: record the same reason in the commit and PR.
+
+### V-CI-007 — Required Ubuntu/Windows matrix, checkpoint 4b17762
+
+- Instrument: GitHub Actions `CI`, run `31663843253`
+- Revision: `4b17762dfc97baf27ba8a7572a6ed76127000658`
+- Environment: `CI-UBUNTU-01` job `94334138189`;
+  `CI-WINDOWS-MSVC-01` job `94334138165`
+- Started/retained: 2/2 jobs
+- Outcome: `pass`
+- Measurement: both jobs passed the complete required matrix, including all
+  final state-loss/reparse negatives, workspace build/tests, Clippy
+  deny-warnings, rustfmt, codegen, consistency, traceability, handbook,
+  conformance honesty/self-checks and cross-language digest. Ubuntu completed
+  in 2m50s; Windows completed in 9m29s.
+- Disposition: final candidate is `tested-supported-ci`; no promotion claim.
+
+## Final defect-first review disposition
+
+Review target: `origin/main...4b17762dfc97baf27ba8a7572a6ed76127000658`,
+including every call site, focused negative, bilingual mapped page and all CI
+repairs. **No findings.** Material residual limitations are recorded below,
+not hidden as implementation claims.
+
+## Residual limitations and non-claims
+
+- The sinks still have no production worker caller; this repair does not close
+  the separately registered scheduler/verifier wiring tasks.
+- The cross-process target lock serializes CognitiveOS mutation writers. An
+  unrelated process that intentionally ignores the lock is detected by the
+  final handle-relative preimage recheck used by the deterministic race
+  negative, but no portable filesystem API can make advisory locks mandatory
+  for arbitrary third-party writers.
+- Durable state storage is caller-supplied and is now rejected if it is inside
+  the approved workspace; future production composition must place it in the
+  daemon-private state layout and share it across executor instances.
+- Exact native Linux focused/full rerun is `not-run` while the benchmark/campaign
+  lease remains active. Required Ubuntu and Windows CI are green at the exact
+  candidate revision.
+- No Gate, release, Profile, B01, benchmark-performance or Agent-benefit claim
+  is made.
