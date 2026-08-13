@@ -1,7 +1,12 @@
 /** Complete pinned-Pi provider whose only model transport is the local daemon. */
 
 import { PersonalDaemonClient } from "./daemon-client.js";
-import type { ProviderUsage } from "./daemon-client.js";
+import type { BoundedCompletion, ProviderUsage } from "./daemon-client.js";
+import {
+  assemblePiRouteObservation,
+  type PiRouteObservationSession,
+  type PiRouteStageRecorder,
+} from "./pi-route-observation.js";
 import type {
   AssistantMessageEventStream,
   PiAssistantMessage,
@@ -17,8 +22,20 @@ const PROVIDER_ID = "cognitiveos";
 const PROVIDER_API = "openai-completions";
 const PI_AVAILABILITY_MARKER = "cognitiveos-local-daemon";
 
+export interface DaemonProviderOptions {
+  /**
+   * Authorized campaign measurement session. Absent — the default — means the
+   * route is not instrumented at all: no correlation id is minted for
+   * measurement, no stage is timed and nothing is published.
+   */
+  readonly session?: PiRouteObservationSession;
+}
+
 /** Load one daemon-selected model and configure Pi's custom stream transport. */
-export async function createDaemonProvider(client: PersonalDaemonClient): Promise<ProviderConfig> {
+export async function createDaemonProvider(
+  client: PersonalDaemonClient,
+  options: DaemonProviderOptions = {},
+): Promise<ProviderConfig> {
   const projection = await client.fetchSelectedModel();
   const loopbackBaseUrl = `http://${client.readLoopbackEndpoint()}/provider/v1`;
   const model: PiModel = {
@@ -39,7 +56,8 @@ export async function createDaemonProvider(client: PersonalDaemonClient): Promis
     apiKey: PI_AVAILABILITY_MARKER,
     api: PROVIDER_API,
     models: [model],
-    streamSimple: (requestedModel, context, options) => streamCompletion(client, requestedModel, context, options),
+    streamSimple: (requestedModel, context, streamOptions) =>
+      streamCompletion(client, requestedModel, context, streamOptions, options.session),
   };
 }
 
@@ -48,9 +66,10 @@ function streamCompletion(
   model: PiModel,
   context: PiCompletionContext,
   options?: PiStreamOptions,
+  session?: PiRouteObservationSession,
 ): AssistantMessageEventStream {
   const stream = new LocalAssistantMessageEventStream();
-  void dispatchCompletion(client, stream, model, context, options?.signal);
+  void dispatchCompletion(client, stream, model, context, options?.signal, session);
   return stream;
 }
 
@@ -60,14 +79,24 @@ async function dispatchCompletion(
   model: PiModel,
   context: PiCompletionContext,
   signal?: AbortSignal,
+  session?: PiRouteObservationSession,
 ): Promise<void> {
   const timestamp = Date.now();
   if (signal?.aborted) return endFailure(stream, model, timestamp, "aborted", "completion cancelled before dispatch");
+  const recorder = session?.openRequest();
   const partial = assistantMessage(model, [], "stop", timestamp, { availability: "not_available" });
   stream.push({ type: "start", partial });
   try {
-    const completion = await client.completeChat(model.id, toDaemonMessages(context), signal);
+    recorder?.begin("pi_request_preparation");
+    let daemonMessages: readonly { role: "system" | "user" | "assistant"; content: string }[];
+    try {
+      daemonMessages = toDaemonMessages(context);
+    } finally {
+      recorder?.complete("pi_request_preparation");
+    }
+    const completion = await client.completeChat(model.id, daemonMessages, signal, recorder);
     if (signal?.aborted) return endFailure(stream, model, timestamp, "aborted", "completion cancelled while waiting");
+    recorder?.begin("pi_event_delivery");
     const content: PiTextContent = { type: "text", text: completion.content };
     stream.push({ type: "text_start", contentIndex: 0, partial: content });
     stream.push({ type: "text_delta", contentIndex: 0, delta: content.text });
@@ -75,8 +104,38 @@ async function dispatchCompletion(
     const message = assistantMessage(model, [content], "stop", timestamp, completion.providerUsage);
     stream.push({ type: "done", message });
     stream.end(message);
+    recorder?.complete("pi_event_delivery");
+    publishObservation(session, recorder, completion);
   } catch (error) {
     endFailure(stream, model, timestamp, signal?.aborted ? "aborted" : "error", safeErrorMessage(error));
+  }
+}
+
+/**
+ * Publish one observation for a completed run.
+ *
+ * Measurement must never change what Pi returns, so a refusal from the
+ * observation surface is contained here: the completion has already been
+ * delivered, and a partial or invalid sample is dropped rather than retained.
+ */
+function publishObservation(
+  session: PiRouteObservationSession | undefined,
+  recorder: PiRouteStageRecorder | undefined,
+  completion: BoundedCompletion,
+): void {
+  if (session === undefined || recorder === undefined) return;
+  try {
+    session.publish(
+      assemblePiRouteObservation({
+        campaignId: session.campaignId,
+        correlationId: recorder.readCorrelationId(),
+        piStages: recorder.readPiStages(),
+        daemonReported: completion.daemonReported,
+        providerUsage: completion.providerUsage,
+      }),
+    );
+  } catch {
+    // A sample that cannot satisfy the observation rules is not a sample.
   }
 }
 

@@ -15,7 +15,7 @@ tests:
   - packages/pi-cognitiveos/src/extension.test.ts
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:30bf86c0626cfa1b6dca27afa73cb3725fda1682ec19ff930a1621e01c8973e6"
+fingerprint: "sha256:eeb94b66886c6d42ae623c362e334abd8ec9563e7ffd9d001757f2f44f391213"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -45,7 +45,24 @@ non_claims:
   无法触碰你的文件或执行命令。
 - Pi 内尚无资源浏览、任务提交或 watch UI：这些客户端方法存在于
   `PersonalDaemonClient` 与 CLI（`cognitive resource|task`），但未接入 shell UX。
-- 模型参数由 daemon 的 selected model 固定；Pi 中的用量/费用显示为零（客户端不计量）。
+- 模型参数由 daemon 的 selected model 固定。只有 Provider 返回完整且内部一致的计数
+  时才显示 token 用量，否则保持不可用而不做估算；费用永不显示，因为 shell 没有绑定
+  任何计价来源。
+
+## Campaign 测量默认关闭
+
+普通会话不做任何测量。启动 Pi 前同时设置
+`COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 与
+`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>` 后，每次请求会额外发布一条
+内存中的观测：路由的七个阶段（请求准备、扩展派发、loopback 等待、daemon preflight、
+Provider 网络、响应解析、事件投递）以单调时长记录，并由一个不透明 correlation id 与
+daemon 侧连接，同时带上上文所述的 Provider 用量。
+
+一条观测只含时长与计数——绝不含 prompt、响应、header、bearer 或 Provider key——且
+shell 不为它向磁盘写入任何内容。`COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` 可为嵌入该扩展
+的 campaign harness 指定一个绝对 `.ndjson` 路径；shell 自身绝不打开它，且位于
+CognitiveOS state/runtime/config 目录内的路径一律拒绝。阶段计时只是测量，不是性能结论：
+不支持任何收益、Gate、release 或 Profile 声明。
 
 ## Pi 的另一重角色
 

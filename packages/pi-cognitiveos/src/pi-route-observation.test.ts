@@ -69,8 +69,8 @@ test("one Pi run yields joined per-stage timings and runner-readable Provider us
       choices: [{ message: { content: "daemon text" }, finish_reason: "stop" }],
       usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
     }),
-    providerNetworkElapsedNanos: "4000000",
-    daemonPreflightElapsedNanos: "1000000",
+    providerNetworkElapsedNanos: "4000",
+    daemonPreflightElapsedNanos: "1000",
     echoCorrelationId: true,
   });
   try {

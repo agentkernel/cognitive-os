@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:e1142d252ba4c8bebc6066334ac1861a4cd57f9dcf4b606a5c2b1769c26e49be"
+fingerprint: "sha256:988b833f0bf78de2ac4536f592a2b2939c908ba1b025c0eb05467f6cbe5a13d1"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -20,15 +20,18 @@ Environment variables read by non-test first-party code (Rust and TypeScript). S
 
 | Variable | Consumer | Meaning |
 |---|---|---|
-| `XDG_RUNTIME_DIR` | daemon, Pi extension | Runtime root; hosts the bootstrap secret and daemon lock. No fallback: absence fails closed. |
-| `XDG_STATE_HOME` | daemon, CLI, Pi extension | State root for databases, backups, and the published daemon endpoint document. |
-| `XDG_DATA_HOME` | daemon, installer | Data root; also hosts the product deployment root for the Linux bundle installer. |
-| `XDG_CONFIG_HOME` | daemon, CLI | Config root for non-secret provider/model/Pi configuration files. |
-| `HOME` | daemon, CLI, Pi extension | Fallback base for the XDG roots when the specific variables are absent. |
-| `USERPROFILE` | daemon, CLI, Pi extension (Windows) | Windows stand-in for HOME when resolving the XDG-style layout. |
-| `DBUS_SESSION_BUS_ADDRESS` | SecretStore backend selection | Signals a session bus for the Linux Secret Service backend probe. |
 | `COGNITIVE_KERNEL_SERVER` | cognitive daemon start | Overrides the kernel-server executable path used to spawn the daemon. |
-| `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | Path of the daemon-created one-shot private completion socket handed to the Pi candidate process. |
 | `COGNITIVEOS_BENCHMARK_SAMPLES` | p7_t04_module_benchmark | Sample count for the deterministic module benchmark (hypothesis-only output). |
+| `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos | Set to enabled to request Pi route stage measurement. Anything else, including absence, leaves the route uninstrumented. |
+| `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN` | pi-cognitiveos | Campaign identifier the measurement session is authorized for. Required alongside the enable variable; credential-shaped values are refused. |
+| `COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` | pi-cognitiveos | Optional absolute .ndjson path an embedding campaign harness may write. The Extension never opens it, and any path inside a Personal state, runtime or config root is refused. |
+| `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | Path of the daemon-created one-shot private completion socket handed to the Pi candidate process. |
+| `DBUS_SESSION_BUS_ADDRESS` | SecretStore backend selection | Signals a session bus for the Linux Secret Service backend probe. |
+| `HOME` | daemon, CLI, Pi extension | Fallback base for the XDG roots when the specific variables are absent. |
 | `P9_T01_RUNS` | p9_t01_async_decision_gate | Run count for the async-migration decision observation. |
 | `P9_T01_SAMPLES` | p9_t01_async_decision_gate | Per-run sample count for the async-migration decision observation. |
+| `USERPROFILE` | daemon, CLI, Pi extension (Windows) | Windows stand-in for HOME when resolving the XDG-style layout. |
+| `XDG_CONFIG_HOME` | daemon, CLI | Config root for non-secret provider/model/Pi configuration files. |
+| `XDG_DATA_HOME` | daemon, installer | Data root; also hosts the product deployment root for the Linux bundle installer. |
+| `XDG_RUNTIME_DIR` | daemon, Pi extension | Runtime root; hosts the bootstrap secret and daemon lock. No fallback: absence fails closed. |
+| `XDG_STATE_HOME` | daemon, CLI, Pi extension | State root for databases, backups, and the published daemon endpoint document. |

@@ -10,6 +10,7 @@ export {
   PROJECT_TRUST_DECISION,
   type CognitiveOsExtensionOptions,
 } from "./extension.js";
+export { createDaemonProvider, type DaemonProviderOptions } from "./daemon-provider.js";
 export { default } from "./extension.js";
 
 export {
@@ -51,6 +52,47 @@ export {
   isDaemonUnavailable,
   type DaemonClientErrorCode,
 } from "./errors.js";
+
+export {
+  PI_ROUTE_OBSERVATION_CAMPAIGN_VARIABLE,
+  PI_ROUTE_OBSERVATION_ENABLED_VALUE,
+  PI_ROUTE_OBSERVATION_ENABLE_VARIABLE,
+  PI_ROUTE_OBSERVATION_MAX_RECORDS,
+  PI_ROUTE_OBSERVATION_MAX_RECORD_BYTES,
+  PI_ROUTE_OBSERVATION_SCHEMA,
+  PI_ROUTE_OBSERVATION_SINK_VARIABLE,
+  PI_ROUTE_STAGES,
+  PiRouteObservationError,
+  PiRouteStageRecorder,
+  assemblePiRouteObservation,
+  assertNotSecretShaped,
+  createPiRouteCorrelationId,
+  openPiRouteObservationSession,
+  parseDaemonReportedNanos,
+  parsePiRouteCampaignId,
+  parsePiRouteCorrelationId,
+  personalAuthorityRoots,
+  resolvePiRouteObservationAuthorization,
+  stageDomain,
+  validatePiRouteObservation,
+  validateSinkPath,
+  type DaemonDomainStage,
+  type DaemonReportedStages,
+  type ObservationSinkWriter,
+  type PiDomainStage,
+  type PiRouteDaemonStageAvailability,
+  type PiRouteDaemonStageUnavailableReason,
+  type PiRouteObservation,
+  type PiRouteObservationAuthorization,
+  type PiRouteObservationDenialReason,
+  type PiRouteObservationErrorCode,
+  type PiRouteObservationInput,
+  type PiRouteObservationSession,
+  type PiRouteObservationSessionOptions,
+  type PiRouteStage,
+  type PiRouteStageDomain,
+  type PiRouteStageTiming,
+} from "./pi-route-observation.js";
 
 export {
   COGNITIVEOS_STATUS_COMMAND,

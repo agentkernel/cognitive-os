@@ -18,7 +18,7 @@ tests:
   - packages/sdk-ts/src/client.test.ts
   - packages/pi-cognitiveos/src/daemon-client.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:f43c186f4add0d27d98de529de9be44b526aa1cc8ab23b3b9313038b33ceaa79"
+fingerprint: "sha256:41a723570f3a32eac12c6d11744309cfba4431a5a5bcccf7fc2d66df6b8ef709"
 non_claims:
   - 全部 TypeScript 表面都是 candidate/observation 客户端；任何一个都不能持有权威或完成 Task。
 ---
@@ -40,9 +40,17 @@ fake 加 loopback HTTP。
 `PersonalDaemonClient` 负责发现（`daemon-endpoint.json` + bootstrap secret）、分离
 的 management/task 会话铸造、health/status/doctor 读取、provider chat completion、
 资源投影/watch 与 task watch——均带有界超时/大小与类型化 `PERSONAL_*`/
-`PI_EXTENSION_*` 错误。每次 completion 派发附带不透明的 `campaign-…` 关联 id 头
-（daemon 忽略的客户端侧元数据），并报告实测 loopback 与 daemon 提供的 Provider 网络
-耗时及真实 token 用量——或 `not_available`；绝不伪造零值。扩展注册的 provider 桥与工具策略见
+`PI_EXTENSION_*` 错误。每次 completion 派发附带不透明的 `campaign-…` 关联 id 头，并
+报告实测 loopback 耗时、daemon 上报的嵌套耗时与真实 token 用量——或
+`not_available`；绝不伪造零值。
+
+在显式 campaign 授权下，同一次派发还会发布一条 `personal-pi-route-observation/1`
+记录：五个由「同一时刻只能打开一个阶段」的记录器产出的 Pi 域顺序阶段，加上嵌套在
+loopback 等待内、由回显 correlation id 连接的两个 daemon 域阶段。两个时钟域之间绝不
+相加或相减，跨域只断言包含关系。未上报、未回显、不匹配、只报一半，或大于包含它的等待
+时长的 daemon 阶段，一律带原因丢弃，而不是裁剪或估算。插桩默认拒绝，不持有文件系统或
+权威面（持久 sink 是注入端口，指向 Personal 根内的 sink 一律拒绝），发布内容只有标签、
+不透明 id、时长与计数。扩展注册的 provider 桥与工具策略见
 [Pi 对话壳](../user/pi-shell.md)。
 
 ## `apps/agent-shell` —— 会话库

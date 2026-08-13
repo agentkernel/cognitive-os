@@ -37,3 +37,42 @@ stating so explicitly.
 - Reading: today a single Pi run publishes no joined, monotonic per-stage
   timing and exposes no runner-readable Provider usage. This is the capability
   gap `P9-T05` must close; it is not a defect claim about any measured latency.
+
+### U02 — `packages/pi-cognitiveos` full Node suite with the observation core wired
+
+- Unit: `packages/pi-cognitiveos` → `dist/*.test.js`
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build ; node --test "dist/*.test.js"`
+- Result: **pass** — 81/81.
+- Evidence: U01's failure-first test now passes end to end over a real
+  loopback socket: one run publishes exactly one observation whose seven
+  stages appear in route order with positive monotonic durations, whose
+  `campaign-<32 hex>` correlation id is the same value the daemon received,
+  and whose Provider usage reads `measured` 7/3/10. The pre-existing
+  source-level safety suite passes unchanged — the observation module is
+  registered under the same guards and required two design corrections to
+  satisfy them: the package writes nothing to the filesystem (a durable sink
+  is an injected port owned by the embedding harness), and `process.env` is
+  still read in exactly one place, so the authorization decision moved behind
+  `PersonalDaemonClient.openCampaignObservationSession`.
+- Non-claim: the suite proves the measurement capability exists and refuses
+  bad input. It measures no real Provider traffic and attributes no share of
+  the campaign's +1828.5 ms overhead to any stage.
+
+### U03 — required negatives, Pi side
+
+- Unit: `packages/pi-cognitiveos` → `dist/pi-route-observation-negatives.test.js`
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node --test "dist/pi-route-observation-negatives.test.js"`
+- Result: **pass** — 20/20, covering all eight required families.
+
+| Required negative | Covered by |
+|---|---|
+| malformed or duplicate correlation id | ten malformed forms refused; a second publish of one id refused; a mismatched daemon echo degrades the daemon domain to `correlation_mismatch` instead of joining |
+| missing or overlapping stages | a second stage cannot open while one is open; each of the five Pi stages refused when omitted; nested daemon total above the loopback wait dropped as `exceeds_loopback_wait` and refused by the validator; duplicate, unknown, misattributed and out-of-order stages refused; a half-reported daemon group refused as `incomplete_stage_group` |
+| zero or negative duration | `0`, `-1`, `-0.5`, `1.5`, `NaN` and above-safe-integer refused; non-integer, empty, padded, hex and out-of-range daemon headers not read; a backwards clock refused; a sub-resolution stage floored at 1 ns, never zero |
+| internally inconsistent usage counters | mismatched, negative and fractional counters refused; a real run with `total_tokens` but no `completion_tokens` stays `not_available` |
+| secret-shaped observation | five credential-shaped campaign ids denied authorization; a refusal message and stack never echo the refused value |
+| raw body/header capture | a published record contains none of the prompt, response, bootstrap secret, bearer, `authorization`, session token, endpoint or route strings; its key set and each stage's key set are exactly the schema's; an oversized record is refused |
+| instrumentation enabled without authorization | seven default and partial environments denied with a distinct reason each; an unauthorized run emits the same five Pi events, the same text and the same three daemon requests as before; a closed session and a foreign campaign id are refused |
+| instrumentation writing authority state | a sink inside any of the three Personal roots refused, including nested paths; relative and non-NDJSON targets refused; a named sink with no injected writer performs zero writes; an instrumented run issues no request beyond the three the operator asked for |
