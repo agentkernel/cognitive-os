@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T18/local-token-csprng` | P2-T18/D01-D02 local bootstrap/session token CSPRNG corrective | Lane-RUN | `personal/P2-T18-local-token-csprng` | `Cargo.lock`; `apps/kernel-server/Cargo.toml`; `apps/kernel-server/src/personal/auth.rs`; `apps/kernel-server/tests/p2_t18_local_token_csprng.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260813-personal-p2-t18-local-token-csprng-validation.md`; `handbook/en/user/security-boundaries.md`; `handbook/zh-CN/user/security-boundaries.md`; `handbook/en/user/known-limitations.md`; `handbook/zh-CN/user/known-limitations.md`; `handbook/_meta/source-set.json` | Cursor authrng corrective session | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
