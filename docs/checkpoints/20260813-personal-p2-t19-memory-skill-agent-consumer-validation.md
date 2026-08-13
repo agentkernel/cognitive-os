@@ -1574,3 +1574,57 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Append-only exact-revision validation evidence changes no shipped behavior or handbook claims"`
   must remain in the commit record.
+
+### D05-CI-01 — final-head cross-platform attempt
+
+- Instrument: manually dispatched CI run `31740559492` at exact
+  `d79c7fc2fc8abf66eac9f9fdf5107d7b7ff4c38a`.
+- Started/retained: Ubuntu/Windows 2/2.
+- Outcome: Ubuntu full job `pass`. Windows built successfully and ran the full
+  Rust workspace until the final `p4_t05_resource_api` test, where the
+  test-only `issue_token` helper unwrapped an absent token marker immediately
+  after daemon startup；the preceding four lifecycle tests, including two
+  restart cycles, passed.
+- Root cause: the helper retries TCP connection but not a transient
+  startup/session response without a token, so one Windows startup window
+  panics without preserving the response.
+- Disposition: make session issuance bounded-retry with a diagnostic final
+  response；no production auth or lifecycle behavior changes.
+
+### D05-FMT-01 — Windows session-retry formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted test repair over `d79c7fc2`
+- Started/retained: 1/1.
+- Outcome: `fail`；rustfmt requires one chained marker lookup to wrap.
+- Disposition: apply mechanical formatting and rerun.
+
+### D05-FMT-02 — Windows session-retry formatting recheck
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted test repair over `d79c7fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair is formatted.
+
+### D05-DIFF-01 — Windows session-retry whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: formatted test repair over `d79c7fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test and report have no whitespace defects.
+
+### D05-DOCSYNC-03 — staged Windows session-retry gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged test repair over `d79c7fc2`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Test-only bounded session retry removes a Windows startup race without changing production behavior"`
+  must remain in the commit record.

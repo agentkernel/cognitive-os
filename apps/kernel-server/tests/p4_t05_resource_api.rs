@@ -98,17 +98,26 @@ fn issue_token(port: u16, secret: &str, channel: &str) -> String {
     let body = format!(
         "{{\"channel\":\"{channel}\",\"principal_id\":\"principal://local/owner\",\"bootstrap_secret\":\"{secret}\"}}"
     );
-    let response = request(
-        port,
-        &format!(
-            "POST /local/session HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-            body.len()
-        ),
-    );
     let marker = "\"token\":\"";
-    let start = response.find(marker).unwrap() + marker.len();
-    let end = start + response[start..].find('"').unwrap();
-    response[start..end].to_owned()
+    let mut last_response = String::new();
+    for _ in 0..100 {
+        last_response = request(
+            port,
+            &format!(
+                "POST /local/session HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            ),
+        );
+        if let Some(start) = last_response
+            .find(marker)
+            .map(|offset| offset + marker.len())
+            && let Some(length) = last_response[start..].find('"')
+        {
+            return last_response[start..start + length].to_owned();
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    panic!("personal daemon did not issue a {channel} token; last response: {last_response}")
 }
 
 fn send_json(port: u16, method: &str, path: &str, token: &str, body: &Value) -> String {
