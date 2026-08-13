@@ -314,3 +314,54 @@
 - Outcome: `pass`
 - Result: 2 个路径均不改变已交付文档语义；先前同步的 mapped source/handbook 仍保持有效。
 - Disposition: commit/push 新 exact candidate。
+
+### V27 — Clippy helper 已提交但未推送
+
+- Revision: `0535d3186cd4adb025c12d0e1c8a58c20174f241`
+- Environment/instrument: isolated Windows worktree；Git status
+- Started/retained denominator: 1/1 commit
+- Outcome: `pass`（本地提交）
+- Result: Clippy 修复 commit 存在于 `personal/P2-T18-local-token-csprng`，当时相对
+  `origin/personal/P2-T18-local-token-csprng` ahead 1，尚未 push。Draft PR #215 仍指向
+  `72ca18c6`，required CI 两端 Clippy 失败。
+- Disposition: 在推送前补上验收要求的全长零熵块负例，避免再发一个只修 lint 的候选。
+
+### V28 — 全长零熵块负例（本地静态）
+
+- Revision: working tree after `0535d3186cd4adb025c12d0e1c8a58c20174f241`
+- Environment/instrument: `DEV-WIN-GNU-01` source inspection；`cargo fmt --all -- --check`
+- Started/retained denominator: 1/1 formatting unit plus 3 seam cases authored
+- Outcome: `pass`（格式）；Rust 行为 `not-run`
+- Result: 新增 `ZeroBlockEntropy` 覆盖全零、仅 token 半区为零、仅 probe 半区为零；三者均在
+  创建 bootstrap 文件/目录前 fail closed。本地 GNU 不链接。
+- Disposition: 刷新因 `auth.rs` 变化而漂移的 handbook fingerprints。
+
+### V29 — 零熵负例后 fingerprint
+
+- Revision: working tree after `0535d3186cd4adb025c12d0e1c8a58c20174f241`
+- Environment/instrument: Windows Node；`fill-handbook-fingerprints.mjs`
+- Started/retained denominator: 6/6 mapped locale pages
+- Outcome: `pass`
+- Result: 6 页 source fingerprint 已刷新（en/zh-CN daemon、安全边界、已知限制）；无 token
+  material 写入文档。
+- Disposition: 运行 handbook/consistency/generated 门禁。
+
+### V30 — 零熵负例后 handbook / consistency / generated
+
+- Revision: working tree after `0535d3186cd4adb025c12d0e1c8a58c20174f241`
+- Environment/instrument: Windows Node/pnpm
+- Started/retained denominator: 54×2 handbook + 1 consistency + 18 generated pages
+- Outcome: `pass`
+- Result: `check:handbook` OK；`check:consistency` OK（含 P2-T18 lease/slice）；
+  `generate-handbook --check` 18/18 byte-identical。
+- Disposition: stage 精确路径并运行 docs-sync gate，随后 commit/push。
+
+### V31 — 零熵负例 staged docs-sync
+
+- Revision: staged working tree after `0535d3186cd4adb025c12d0e1c8a58c20174f241`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged change set
+- Outcome: `pass`
+- Result: `auth.rs` 命中 `daemon-http`；6 页 handbook 已与刷新后的 fingerprints 同批暂存；
+  54×2 handbook 与 18 generated 页面通过；无 `DOCS_IMPACT_NONE` 逃逸。
+- Disposition: commit/push 后在 exact native Linux 重跑 focused tests 与 Clippy。

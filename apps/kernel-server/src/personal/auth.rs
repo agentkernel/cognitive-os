@@ -501,6 +501,27 @@ mod tests {
         }
     }
 
+    /// 全长样本，但指定半区填零，用于证明零块在写文件前被拒绝。
+    struct ZeroBlockEntropy {
+        zero_token_half: bool,
+        zero_probe_half: bool,
+    }
+
+    impl TokenEntropy for ZeroBlockEntropy {
+        fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            for (index, byte) in destination.iter_mut().enumerate() {
+                *byte = (index as u8).saturating_add(1);
+            }
+            if self.zero_token_half {
+                destination[..TOKEN_ENTROPY_BYTES].fill(0);
+            }
+            if self.zero_probe_half {
+                destination[TOKEN_ENTROPY_BYTES..].fill(0);
+            }
+            Ok(destination.len())
+        }
+    }
+
     #[test]
     fn issue_and_authorize_same_channel() {
         let temp = std::env::temp_dir().join(format!("cos-auth-{}", std::process::id()));
@@ -690,6 +711,34 @@ mod tests {
             assert!(matches!(result, Err(LocalAuthError::Io { .. })));
             assert!(!secret_path.exists(), "短熵不得创建 bootstrap 文件");
             assert!(!temp.exists(), "短熵不得创建 runtime 目录");
+        }
+    }
+
+    #[test]
+    fn zero_entropy_block_creates_no_bootstrap_file() {
+        for (zero_token_half, zero_probe_half) in [(true, true), (true, false), (false, true)] {
+            let temp = std::env::temp_dir().join(format!(
+                "cos-auth-entropy-zero-{}-{}-{}",
+                std::process::id(),
+                u8::from(zero_token_half),
+                u8::from(zero_probe_half)
+            ));
+            let _ = fs::remove_dir_all(&temp);
+            let secret_path = temp.join("local-bootstrap.secret");
+            let mut entropy = ZeroBlockEntropy {
+                zero_token_half,
+                zero_probe_half,
+            };
+
+            let result = LocalSessionAuthority::initialize_with_entropy(
+                &secret_path,
+                PersonalResourceBounds::personal_v1_baseline(),
+                &mut entropy,
+            );
+
+            assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+            assert!(!secret_path.exists(), "零熵块不得创建 bootstrap 文件");
+            assert!(!temp.exists(), "零熵块不得创建 runtime 目录");
         }
     }
 
