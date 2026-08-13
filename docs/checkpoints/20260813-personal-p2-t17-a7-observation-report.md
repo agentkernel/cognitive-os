@@ -761,4 +761,29 @@
 - Disposition: superseded by the oracle-corrected `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`, whose exact native focused/full/Clippy/verifier validation passes
 - Safety: the failure is retained and not reclassified as product behavior failure; no retry or assertion weakening
 
+### V074 — interruption recovery and dependency-bound gap review
+
+- Instrument: worktree/branch/upstream/process inspection; canonical active-lease read; Draft PR inspection; `git merge-tree`; line-by-line P2-T17 acceptance review
+- Exact revision: `35a387ec429e179dbff4ea834bd77d2ce6601b69`
+- Environment: clean dedicated `D:\agent-kernel-a7obs` worktree and GitHub
+- Started / retained: `1 / 1`
+- Outcome: `blocked`
+- Measurement:
+  - A7 worktree is clean and its local/upstream heads match. Root-worktree user changes remain untouched. No A7 process or duplicate owner exists.
+  - Canonical `main@d24f7d00` still grants the overlapping shared-plan lease to P2-T14; Draft PR #217 is open and conflicting. Draft PR #212 is therefore also conflicting and GitHub schedules no checks for the corrected head.
+  - Read-only merge simulation reports exactly two current textual conflicts: `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` and `docs/plan/PROGRESS.md`. Resolving them now would overwrite or duplicate P2-T14/P9-T05-owned current facts.
+- Review findings:
+  1. `CampaignAuthorization::authorized` sets `faults_enabled=true`, while the formal D02 acceptance and handbook claim default-off fault points. The alternate `authorized_faults_disabled` path proves opt-out, not a default-off constructor.
+  2. `CampaignMutationObservation.cleanup` is initialized to `{fixture_removed:false,residue_count:0}` and never updated. Fixture cleanup/residue behavior is tested, but the bounded published observation cannot truthfully report successful cleanup.
+  3. The corrected source/test head has exact native focused/full/verifier/Clippy/fmt evidence, but required Ubuntu/Windows CI has not run at that head because the PR is conflicting.
+  4. Branch-local plan/snapshot evidence is stale (`10/10`, `b122cce1`) and cannot be reconciled while P2-T14 owns those exact files.
+- Dependency-release patch scope:
+  - `apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs`: add failure-first default-off and cleanup-observation assertions; use an explicitly named test-only fault-enablement constructor for fault cases.
+  - `apps/kernel-server/src/personal/campaign_observation.rs`: make ordinary campaign authorization fault-disabled; expose explicit test-only fault enablement; add daemon-owned `cleanup_fixture_and_observe` that verifies fixture/run binding, performs cleanup, persists `{true,0}`, and never accepts caller-supplied cleanup facts.
+  - `handbook/{en,zh-CN}/developer/execution-chain-status.md`: state explicit test-only fault enablement and daemon-recorded cleanup; refresh fingerprints.
+  - After P2-T14 merges and closes its lease, merge (never rebase/force) `origin/main`; preserve canonical P2-T14/P9-T05 facts while reapplying only the P2-T17 task/slice/count/current-lease rows in `PERSONAL-DEVELOPMENT-PLAN.md` and `PROGRESS.md`. `PARALLEL-LANES.md` currently auto-merges but must be rechecked against the post-P2-T14 active table.
+  - Rerun consistency/docs-sync, exact native A7/verifier/full/Clippy/fmt, then required Ubuntu/Windows CI on the exact conflict-resolved head before ready/merge.
+- Unique next action: wait for PR #217 to merge and `lease/personal/P2-T14/verified-task-completion` to leave the canonical active table; then perform the scoped merge-and-fix sequence above.
+- Safety: no P2-T14 path, shared plan file, root-worktree change, prepared EVAL-003 asset, or unrelated process was modified during the review
+
 <!-- Append each completed validation unit below before starting the next one. -->
