@@ -985,3 +985,207 @@ campaign root or evaluation report path entered the writable set.
   verified; exit 0.
 - Disposition: push this immutable registration checkpoint before native Linux
   validation.
+
+### V-NATIVE-001 — Native Linux qualification, first attempt
+
+- Instrument: non-interactive SSH environment probe
+- Revision target: `580c0a0` (pushed)
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2`)
+- Started/retained: 0/0 validation commands
+- Outcome: `not-run`
+- Measurement: local PowerShell quoting produced an unmatched quote in the
+  remote shell before any probe or filesystem action executed.
+- Disposition: retry with an absolute, quote-free remote path. No campaign
+  guest/root or host worktree was touched.
+
+### V-NATIVE-002 — Native Linux qualification
+
+- Instrument: non-interactive SSH environment/process probe
+- Revision target: `580c0a0` (pushed)
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2`)
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: Git 2.34.1, Rust/Cargo 1.97.1; dedicated path
+  `/home/wuz/cos-p2t15-native` absent; no cargo build/test/Clippy process
+  active (only the probe shell matched `cargo`).
+- Disposition: create a clean disposable worktree at the pushed exact revision,
+  outside every campaign root.
+
+### V-NATIVE-003 — Host repository discovery, first attempt
+
+- Instrument: non-interactive SSH repository probe
+- Revision target: `580c0a0`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 0/0 validation commands
+- Outcome: `not-run`
+- Measurement: nested PowerShell/remote-shell quoting failed before the loop
+  executed; no remote filesystem mutation occurred.
+- Disposition: send the probe as a CR-stripped stdin script.
+
+### V-NATIVE-004 — Host repository discovery
+
+- Instrument: CR-stripped non-interactive SSH script
+- Revision target: `580c0a0`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: multiple CognitiveOS Git worktrees were found; isolated source
+  repository `/home/wuz/p2t11` has the expected origin. No campaign path was
+  enumerated or touched.
+- Disposition: fetch through `/home/wuz/p2t11`, then create the dedicated
+  `/home/wuz/cos-p2t15-native` worktree.
+
+### V-NATIVE-005 — Exact native worktree staging
+
+- Instrument: `git fetch` + detached `git worktree add`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: fetched branch head equals the declared revision; dedicated
+  `/home/wuz/cos-p2t15-native` was absent before creation, is detached at the
+  exact revision, and has an empty porcelain status.
+- Disposition: run each focused/native validation unit here and append its
+  result before starting the next.
+
+### V-NATIVE-006 — Focused native Tool executor suite
+
+- Instrument: `cargo test -p kernel-server tool_executor --locked -- --test-threads=1`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 76/76 focused tests
+- Outcome: `pass`
+- Measurement: 76 passed, 0 failed/ignored; 103 unrelated unit tests filtered;
+  elapsed 63.825 s including the cold dependency build.
+- Disposition: all P2-T15 workspace/search/mutation/HTTP/catalog/restart/state
+  negatives pass natively.
+
+### V-NATIVE-007 — Focused native readiness suite
+
+- Instrument: `cargo test -p kernel-server personal::readiness --locked -- --test-threads=1`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 11/11 focused tests
+- Outcome: `pass`
+- Measurement: 11 passed, 0 failed/ignored; includes the deterministic loaded
+  config snapshot/fake-SecretStore swap negative; 168 unrelated unit tests
+  filtered.
+- Disposition: P2-T15 readiness acceptance passes natively.
+
+### V-NATIVE-008 — Full native kernel-server package
+
+- Instrument: `cargo test -p kernel-server --locked -- --test-threads=1`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: complete package unit and integration suites
+- Outcome: `pass`
+- Measurement: 179/179 unit tests passed; all package integration binaries
+  (HTTP/SSE, daemon/auth/readiness/Pi/Provider/resource/Task/API) completed with
+  exit 0; elapsed 31.567 s.
+- Disposition: full native package regression is green.
+
+### V-NATIVE-009 — Native kernel-server Clippy
+
+- Instrument: `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: all kernel-server targets
+- Outcome: `pass`
+- Measurement: exit 0 with warnings denied; elapsed 40.157 s.
+- Disposition: native lint gate is green.
+
+### V-NATIVE-010 — Native rustfmt verification
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: exact-revision native formatting is green.
+
+### V-NATIVE-011 — Full native workspace Rust suite
+
+- Instrument: `cargo test --workspace --locked -- --test-threads=1`
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: every workspace unit/integration/doc-test binary
+- Outcome: `pass`
+- Measurement: all executed tests passed across the complete Rust workspace;
+  one pre-existing runtime test remained explicitly ignored; exit 0; elapsed
+  312.688 s.
+- Disposition: P2-T15/D03 exact native focused/full validation is complete.
+
+### V-NATIVE-012 — Native validation cleanup
+
+- Instrument: exact-revision/status assertion + `git worktree remove`/prune
+- Revision: `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started/retained: 1/1 cleanup transaction
+- Outcome: `pass`
+- Measurement: remote worktree remained clean and exact before removal;
+  `/home/wuz/cos-p2t15-native` no longer exists.
+- Disposition: native validation left no task worktree or campaign interaction.
+
+### V-LOCAL-067 — P2-T15 closure consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty closure-reconciliation worktree after
+  `580c0a06d39ee3d6fb460e23be9c7ac0939a4b63`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: P2-T15 `done`, D01-D03 `done`, formal totals, archived lease,
+  no-active-lease snapshot, closure links and every pre-existing
+  registry/schema/vector/governance invariant verified; exit 0.
+- Disposition: run final docs/format/diff guards and checkpoint closure.
+
+### V-LOCAL-068 — Closure rustfmt gate
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty closure-reconciliation worktree after `580c0a0`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: no Rust formatting drift.
+
+### V-LOCAL-069 — Closure handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty closure-reconciliation worktree after `580c0a0`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: coverage/link/fingerprint/status/secret checks verified; exit 0.
+- Disposition: bilingual handbook remains synchronized.
+
+### V-LOCAL-070 — Closure generated-page equality
+
+- Instrument: `node tools/src/generate-handbook.mjs --check`
+- Revision: dirty closure-reconciliation worktree after `580c0a0`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 18/18 pages
+- Outcome: `pass`
+- Measurement: byte-identical; exit 0.
+- Disposition: generated references are converged.
+
+### V-LOCAL-071 — Closure diff check
+
+- Instrument: `git diff --check`
+- Revision: dirty closure-reconciliation worktree after `580c0a0`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: closure candidate has no whitespace errors.
+
+### V-LOCAL-072 — Staged closure docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged closure candidate after `580c0a0`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 6/6 closure/governance paths
+- Outcome: `pass`
+- Measurement: correctly classified documentation-neutral; exit 0.
+- Disposition: commit and push the accepted closure candidate.
