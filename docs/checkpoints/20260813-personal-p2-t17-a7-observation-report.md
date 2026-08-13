@@ -342,4 +342,14 @@
 - Measurement: check-handbook verified 54 documents × 2 locales and generator `--check` verified 18 byte-identical generated pages
 - Safety: the recorded docs-impact reason is limited to conditional compilation of a Unix-only import
 
+### V033 — Windows compile correction checkpoint
+
+- Instrument: scoped `git commit` with repository pre-commit docs-sync hook
+- Exact revision: `b638f79249d6263d18e76ff3857377b80d7363e2`
+- Environment: task branch `personal/P2-T17-a7-unknown-outcome-observation`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the four-path checkpoint contains the conditional import, incremental report, and bilingual fingerprint refresh; the hook revalidated handbook 54 × 2 and 18 generated pages
+- Safety: no force, amend, unrelated path, or root-worktree change
+
 <!-- Append each completed validation unit below before starting the next one. -->
