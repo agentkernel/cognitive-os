@@ -12,13 +12,16 @@ sources:
   - path: packages/sdk-ts/src/watch.ts
   - path: packages/pi-cognitiveos/src/daemon-client.ts
     symbols: ["PersonalDaemonClient"]
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+    symbols: ["assemblePiRouteObservation"]
   - path: apps/agent-shell/src/session.ts
     symbols: ["ShellSession"]
 tests:
   - packages/sdk-ts/src/client.test.ts
   - packages/pi-cognitiveos/src/daemon-client.test.ts
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:41a723570f3a32eac12c6d11744309cfba4431a5a5bcccf7fc2d66df6b8ef709"
+fingerprint: "sha256:ae285615388e49d57facc84ba1b7015f10f3ca1d3bd650e7729238bd11516347"
 non_claims:
   - All TypeScript surfaces are candidate/observation clients; none can hold authority or complete Tasks.
 ---
@@ -50,7 +53,10 @@ real token usage — or `not_available`; zeros are never fabricated.
 Under an explicit campaign authorization the same dispatch also publishes one
 `personal-pi-route-observation/1` record: five sequential Pi-domain stages from a
 recorder that cannot open two stages at once, plus the two daemon-domain stages
-nested inside the loopback wait and joined by the echoed correlation id. The two
+nested inside the loopback wait and joined by the echoed correlation id. The
+daemon echoes that id and reports preflight only when its own environment also
+has `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled`; otherwise the nested pair degrades
+to `not_available`. The two
 clock domains are never added or subtracted; the only relation asserted across
 them is containment. Daemon stages that are unreported, unechoed, mismatched,
 half-reported or larger than the wait that contains them are dropped with a

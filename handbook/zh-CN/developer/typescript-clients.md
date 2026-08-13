@@ -12,13 +12,16 @@ sources:
   - path: packages/sdk-ts/src/watch.ts
   - path: packages/pi-cognitiveos/src/daemon-client.ts
     symbols: ["PersonalDaemonClient"]
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+    symbols: ["assemblePiRouteObservation"]
   - path: apps/agent-shell/src/session.ts
     symbols: ["ShellSession"]
 tests:
   - packages/sdk-ts/src/client.test.ts
   - packages/pi-cognitiveos/src/daemon-client.test.ts
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:41a723570f3a32eac12c6d11744309cfba4431a5a5bcccf7fc2d66df6b8ef709"
+fingerprint: "sha256:ae285615388e49d57facc84ba1b7015f10f3ca1d3bd650e7729238bd11516347"
 non_claims:
   - 全部 TypeScript 表面都是 candidate/observation 客户端；任何一个都不能持有权威或完成 Task。
 ---
@@ -46,7 +49,9 @@ fake 加 loopback HTTP。
 
 在显式 campaign 授权下，同一次派发还会发布一条 `personal-pi-route-observation/1`
 记录：五个由「同一时刻只能打开一个阶段」的记录器产出的 Pi 域顺序阶段，加上嵌套在
-loopback 等待内、由回显 correlation id 连接的两个 daemon 域阶段。两个时钟域之间绝不
+loopback 等待内、由回显 correlation id 连接的两个 daemon 域阶段。daemon 仅在自身环境
+也设置了 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 时才回显该 id 并报告 preflight，
+否则嵌套一对降级为 `not_available`。两个时钟域之间绝不
 相加或相减，跨域只断言包含关系。未上报、未回显、不匹配、只报一半，或大于包含它的等待
 时长的 daemon 阶段，一律带原因丢弃，而不是裁剪或估算。插桩默认拒绝，不持有文件系统或
 权威面（持久 sink 是注入端口，指向 Personal 根内的 sink 一律拒绝），发布内容只有标签、

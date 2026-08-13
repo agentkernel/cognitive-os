@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:988b833f0bf78de2ac4536f592a2b2939c908ba1b025c0eb05467f6cbe5a13d1"
+fingerprint: "sha256:429c2171cd68347d852d06027abdecc5d20b08f6652ced7138a1b07bd17b4734"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -22,7 +22,7 @@ non_claims:
 |---|---|---|
 | `COGNITIVE_KERNEL_SERVER` | cognitive daemon start | 覆盖用于启动 daemon 的 kernel-server 可执行文件路径。 |
 | `COGNITIVEOS_BENCHMARK_SAMPLES` | p7_t04_module_benchmark | 确定性模块基准的采样数（输出仅为 hypothesis）。 |
-| `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos | 设为 enabled 才请求 Pi route stage 测量；其他值（含缺省）一律不启用插桩。 |
+| `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos, kernel-server | 设为 enabled 才请求 Pi 侧 route stage 测量以及 daemon 侧 nested preflight/correlation 回显；其他值（含缺省）两侧均不启用插桩。 |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN` | pi-cognitiveos | 该测量会话被授权的 campaign 标识；必须与启用变量同时提供，凭据形状的值一律拒绝。 |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` | pi-cognitiveos | 可选的绝对 .ndjson 路径，供嵌入的 campaign harness 写入；Extension 自身绝不打开它，且位于 Personal state/runtime/config 根内的路径一律拒绝。 |
 | `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | daemon 创建并交给 Pi candidate 进程的一次性私有 completion socket 路径。 |

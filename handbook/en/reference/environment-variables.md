@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:988b833f0bf78de2ac4536f592a2b2939c908ba1b025c0eb05467f6cbe5a13d1"
+fingerprint: "sha256:429c2171cd68347d852d06027abdecc5d20b08f6652ced7138a1b07bd17b4734"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -22,7 +22,7 @@ Environment variables read by non-test first-party code (Rust and TypeScript). S
 |---|---|---|
 | `COGNITIVE_KERNEL_SERVER` | cognitive daemon start | Overrides the kernel-server executable path used to spawn the daemon. |
 | `COGNITIVEOS_BENCHMARK_SAMPLES` | p7_t04_module_benchmark | Sample count for the deterministic module benchmark (hypothesis-only output). |
-| `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos | Set to enabled to request Pi route stage measurement. Anything else, including absence, leaves the route uninstrumented. |
+| `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos, kernel-server | Set to enabled to request Pi route stage measurement on the Pi client and nested preflight/correlation echo on the daemon. Anything else, including absence, leaves both sides uninstrumented. |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN` | pi-cognitiveos | Campaign identifier the measurement session is authorized for. Required alongside the enable variable; credential-shaped values are refused. |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` | pi-cognitiveos | Optional absolute .ndjson path an embedding campaign harness may write. The Extension never opens it, and any path inside a Personal state, runtime or config root is refused. |
 | `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | Path of the daemon-created one-shot private completion socket handed to the Pi candidate process. |

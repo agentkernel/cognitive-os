@@ -18,7 +18,8 @@ tests:
   - crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:444eac6bfc507c208cf35852ad059a2a1290b9cca6f4c112c420ac0c0b1dc7c9"
+  - apps/kernel-server/tests/p9_t05_route_observation.rs
+fingerprint: "sha256:d46a620728e3213a9eabf0c8f871552f3bb501f29f7b461730a9f57228e6d2e3"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -53,9 +54,14 @@ Clients never talk to the Provider. The daemon owns egress:
 3. `RustlsProviderTransport` enforces HTTPS-only, no redirects, no URL user-info,
    header CR/LF rejection, a 1 MiB response cap, and a caller timeout.
 4. Successful proxy responses carry an `X-CognitiveOS-Provider-Network-Nanos`
-   header (daemon-measured Provider network time only). Clients may send an
-   opaque `x-cognitiveos-correlation-id` request header for their own
-   measurement records; the daemon ignores it and never persists it.
+   header (daemon-measured Provider network time only). Clients may send one
+   opaque `campaign-<32 lowercase hex>` `x-cognitiveos-correlation-id` request
+   header. The daemon never persists it. When
+   `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and that header is well-formed, the
+   success response also echoes the id and reports
+   `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore,
+   disjoint from the network exchange). Malformed or duplicate correlation
+   headers are ignored and the product body is unchanged.
 
 Discovery (`cognitive init`) probes `GET /models` plus a chat/stream/tool/cancel
 campaign and persists a non-secret capability snapshot with an identity digest; the

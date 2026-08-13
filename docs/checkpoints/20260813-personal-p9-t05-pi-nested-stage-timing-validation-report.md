@@ -76,3 +76,31 @@ stating so explicitly.
 | raw body/header capture | a published record contains none of the prompt, response, bootstrap secret, bearer, `authorization`, session token, endpoint or route strings; its key set and each stage's key set are exactly the schema's; an oversized record is refused |
 | instrumentation enabled without authorization | seven default and partial environments denied with a distinct reason each; an unauthorized run emits the same five Pi events, the same text and the same three daemon requests as before; a closed session and a foreign campaign id are refused |
 | instrumentation writing authority state | a sink inside any of the three Personal roots refused, including nested paths; relative and non-NDJSON targets refused; a named sink with no injected writer performs zero writes; an instrumented run issues no request beyond the three the operator asked for |
+
+### U04 — daemon nested stage headers (unit)
+
+- Unit: `apps/kernel-server` → `personal::route_observation` plus
+  `provider_proxy` timing split
+- Environment: `DEV-WIN-GNU-01` **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed
+  to exact-revision `DEV-LINUX-NATIVE-01` / required CI
+- Result: **not-run** locally. The tests are written: malformed/duplicate/absent
+  correlation ids are refused rather than echoed; an unauthorized daemon emits
+  an empty header block; a zero-duration stage is dropped; an authorized joined
+  request emits only the correlation echo and preflight header (no body, no
+  `\r\n\r\n`, no secret-shaped material); authorized vs unauthorized header
+  blocks leave identical body bytes; `forward_chat_completion_with_timing`
+  returns a positive preflight and a positive network duration with the
+  transport body unchanged.
+
+### U05 — front-door header-only effect
+
+- Unit: `apps/kernel-server/tests/p9_t05_route_observation.rs`
+- Environment: `DEV-WIN-GNU-01` **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed
+  to exact-revision `DEV-LINUX-NATIVE-01` / required CI
+- Result: **not-run** locally. The tests are written: with and without daemon
+  observation authorization, a missing Provider config still returns
+  `PERSONAL_PROVIDER_NOT_CONFIGURED`; absent, well-formed, malformed (including
+  secret-shaped) and duplicated correlation headers produce the identical error
+  body; no observation headers appear on the error path; the refused value and
+  session/bootstrap secrets never appear in the response; the runtime root gains
+  no observation or campaign file.

@@ -9,13 +9,15 @@ sources:
   - path: packages/pi-cognitiveos/src/extension.ts
     symbols: ["registerCognitiveOsExtension"]
   - path: packages/pi-cognitiveos/src/daemon-provider.ts
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: packages/pi-cognitiveos/src/tool-policy.ts
   - path: apps/admin-cli/src/personal_cli/pi.rs
 tests:
   - packages/pi-cognitiveos/src/extension.test.ts
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:eeb94b66886c6d42ae623c362e334abd8ec9563e7ffd9d001757f2f44f391213"
+fingerprint: "sha256:101496c330fb9fe846099b4f53bf8599d4a24715180cdc42717faaed358cdd11"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -53,7 +55,9 @@ non_claims:
 
 普通会话不做任何测量。启动 Pi 前同时设置
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 与
-`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>` 后，每次请求会额外发布一条
+`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>`。daemon 进程也必须看到
+同一个启用变量，否则两个嵌套 daemon 阶段保持 `not_available` 而不会被 join。每次
+请求会额外发布一条
 内存中的观测：路由的七个阶段（请求准备、扩展派发、loopback 等待、daemon preflight、
 Provider 网络、响应解析、事件投递）以单调时长记录，并由一个不透明 correlation id 与
 daemon 侧连接，同时带上上文所述的 Provider 用量。

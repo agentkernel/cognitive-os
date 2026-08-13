@@ -9,13 +9,15 @@ sources:
   - path: packages/pi-cognitiveos/src/extension.ts
     symbols: ["registerCognitiveOsExtension"]
   - path: packages/pi-cognitiveos/src/daemon-provider.ts
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: packages/pi-cognitiveos/src/tool-policy.ts
   - path: apps/admin-cli/src/personal_cli/pi.rs
 tests:
   - packages/pi-cognitiveos/src/extension.test.ts
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:eeb94b66886c6d42ae623c362e334abd8ec9563e7ffd9d001757f2f44f391213"
+fingerprint: "sha256:101496c330fb9fe846099b4f53bf8599d4a24715180cdc42717faaed358cdd11"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -58,8 +60,10 @@ extension emits it as a single block (text only; images/tool-calls are rejected)
 
 An ordinary session measures nothing. Set both
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and
-`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>` before launching Pi and
-each request additionally publishes one in-memory observation: the seven stages
+`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>` before launching Pi.
+The daemon process must see the same enable variable, otherwise the two nested
+daemon stages stay `not_available` rather than being joined. Each request then
+additionally publishes one in-memory observation: the seven stages
 of the route (request preparation, extension dispatch, loopback wait, daemon
 preflight, Provider network, response parse, event delivery) as monotonic
 durations, joined to the daemon side by one opaque correlation id, plus the same

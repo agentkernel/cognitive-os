@@ -16,9 +16,9 @@
     },
     {
       "name": "COGNITIVEOS_PI_ROUTE_OBSERVATION",
-      "consumer": "pi-cognitiveos",
-      "description_en": "Set to enabled to request Pi route stage measurement. Anything else, including absence, leaves the route uninstrumented.",
-      "description_zh": "设为 enabled 才请求 Pi route stage 测量；其他值（含缺省）一律不启用插桩。"
+      "consumer": "pi-cognitiveos, kernel-server",
+      "description_en": "Set to enabled to request Pi route stage measurement on the Pi client and nested preflight/correlation echo on the daemon. Anything else, including absence, leaves both sides uninstrumented.",
+      "description_zh": "设为 enabled 才请求 Pi 侧 route stage 测量以及 daemon 侧 nested preflight/correlation 回显；其他值（含缺省）两侧均不启用插桩。"
     },
     {
       "name": "COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN",

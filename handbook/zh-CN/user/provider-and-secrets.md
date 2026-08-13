@@ -18,7 +18,8 @@ tests:
   - crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:444eac6bfc507c208cf35852ad059a2a1290b9cca6f4c112c420ac0c0b1dc7c9"
+  - apps/kernel-server/tests/p9_t05_route_observation.rs
+fingerprint: "sha256:d46a620728e3213a9eabf0c8f871552f3bb501f29f7b461730a9f57228e6d2e3"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
@@ -49,8 +50,12 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
 3. `RustlsProviderTransport` 强制 HTTPS-only、禁跳转、禁 URL user-info、拒绝头部
    CR/LF、1 MiB 响应上限与调用方超时。
 4. 成功的代理响应携带 `X-CognitiveOS-Provider-Network-Nanos` 头（仅 daemon 测得的
-   Provider 网络耗时）。客户端可为自身测量记录发送不透明的
-   `x-cognitiveos-correlation-id` 请求头；daemon 忽略且绝不持久化它。
+   Provider 网络耗时）。客户端可发送一条不透明的 `campaign-<32 位小写 hex>`
+   `x-cognitiveos-correlation-id` 请求头；daemon 绝不持久化它。当
+   `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且该头形态正确时，成功响应还会回显
+   该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/
+   SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略，产品 body
+   不变。
 
 发现流程（`cognitive init`）探测 `GET /models` 及 chat/stream/tool/cancel 战役，持久
 化带身份 digest 的非 secret 能力快照；selected model 必须匹配该快照。
