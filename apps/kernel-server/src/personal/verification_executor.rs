@@ -659,9 +659,8 @@ where
 
 /// Persist the recovery checkpoint required by the verified continuation and
 /// issue its one-time daemon authority.
-pub(crate) fn issue_production_continuation_authority<S, C, G>(
+pub(crate) fn issue_production_continuation_authority<S, G>(
     store: &S,
-    clock: &C,
     identifiers: &G,
     outcome: &ProductionVerificationOutcome,
     budget_id: &BudgetId,
@@ -670,7 +669,6 @@ pub(crate) fn issue_production_continuation_authority<S, C, G>(
 ) -> Result<ContinuationAuthorizationRow, VerificationExecutorError>
 where
     S: AuthorityStore + ContinuationAuthorityStore + ProtocolStore,
-    C: Clock,
     G: IdGenerator,
 {
     if outcome.report.status != "passed" {
@@ -1293,7 +1291,6 @@ mod tests {
         assert!(missing_checkpoint.is_err());
         let continuation_authorization = issue_production_continuation_authority(
             &store,
-            &FixedClock,
             &SequentialIdentifiers::new(140),
             &outcome,
             &budget_id,

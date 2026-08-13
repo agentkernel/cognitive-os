@@ -596,7 +596,6 @@ where
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     crate::personal::verification_executor::issue_production_continuation_authority(
         authority_store,
-        &execution_clock,
         &execution_ids,
         &verification_outcome,
         &resolved.authorization.budget_id,

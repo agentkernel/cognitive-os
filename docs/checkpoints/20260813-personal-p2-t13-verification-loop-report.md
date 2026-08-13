@@ -404,3 +404,21 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 - Finished: 2026-08-13 22:24 +08:00
 - Results: rustfmt **pass**; handbook **pass**; six fingerprints refreshed;
   consistency **pass**; whitespace **pass**; diagnostics **pass**.
+
+### Unit 049 — exact native D03 continuation suites
+
+- Finished: 2026-08-13 22:29 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `c10dd7d38ffa34cccbaadfc6253106da925b61aa`
+- Results:
+  - scheduler authority **50/50 pass**;
+  - verification executor **12/12 pass**;
+  - `m5_harness` **7/7 pass**;
+  - Clippy **fail** only because the continuation-issuance helper retained an
+    unused clock parameter.
+- Recovery: remove that unnecessary parameter and rerun exact Clippy.
+
+### Unit 050 — D03 Clippy repair local checks
+
+- Finished: 2026-08-13 22:30 +08:00
+- Results: rustfmt **pass**; whitespace **pass**.
