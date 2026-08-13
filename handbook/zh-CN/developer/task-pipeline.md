@@ -63,4 +63,7 @@ HTTP 的更正不可用；fencing 机制（`INTENT_VERSION_SUPERSEDED`）在 ker
 仍归 Effect 所有：不确定 HTTP attempt 跨重启后保持 indeterminate（持久状态缺失同样
 fail indeterminate），workspace 变更完成则要求批准 workspace 外的状态存储中存在绑定
 原始幂等键的持久 receipt。这些执行器保证都不会把准入、Tool receipt 或相同 workspace
-字节提升为 Task 完成。
+字节提升为 Task 完成。P2-T14 保留该边界并已加入 failure-first 公共 C1 证明：只有当前
+已闭合 Effects、精确 fixed post-state、最新匹配的独立 passed report、可检索的 Artifact
+CAS evidence 与 daemon-private acceptance principal 才可推导已登记 candidate/acceptance
+guards；本 checkpoint 尚未实现 acceptance caller。

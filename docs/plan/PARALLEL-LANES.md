@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T14/verified-task-completion` | P2-T14/D01-D02 acceptance authority and verified Task completion | Lane-RUN | `personal/P2-T14-verified-completion` | `crates/cognitive-kernel/src/{intent_chain.rs,ports.rs}`; `crates/cognitive-store/src/sqlite/{continuation.rs,intent_chain.rs}`; `apps/kernel-server/src/personal/verification_executor.rs`; `apps/kernel-server/src/personal/scheduler_authority/{dispatch.rs,error.rs,mod.rs,task_completion.rs,tests.rs,types.rs,worker.rs}`; `handbook/{en,zh-CN}/developer/{authority-kernel,context-and-artifact,execution-chain-status,store-and-migrations,task-pipeline}.md`; `handbook/{en,zh-CN}/reference/{capability-status,state-transitions}.md`; `handbook/{en,zh-CN}/user/{known-limitations,operations-and-recovery,tasks-and-execution}.md`; `docs/checkpoints/20260813-personal-p2-t14-verified-completion-report.md`; `docs/plan/{PARALLEL-LANES.md,PARALLEL-LANES-CLOSED.md,PERSONAL-DEVELOPMENT-PLAN.md,PROGRESS.md}` | `cursor-gpt-5.6-sol-20260813` | 2026-08-13 / 2026-08-13 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

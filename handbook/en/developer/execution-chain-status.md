@@ -52,6 +52,7 @@ verification → verified continuation or ceiling STOP.
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
+| Task candidate + acceptance authority | unavailable; failure-first proof registered | the owner selected the existing transition evidence slots, CAS-backed canonical acceptance-decision bytes, and a distinct daemon-private acceptance principal; the production scheduler still leaves the governed Task uncompleted until P2-T14 implements and validates the derived guards |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
@@ -75,10 +76,15 @@ The remaining gaps are:
    Effect authorization because production has no separately governed
    payload/preimage, supervised-process, or registered-origin carrier for them;
    their sinks remain test-called only.
-2. **Task completion remains separate**: production now closes
-   `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and one-time
-   continuation authority. No report, checkpoint, or continuation completes a
-   Task; acceptance remains P2-T14 scope.
+2. **Task completion remains separate and is failure-first**: production now
+   closes `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and
+   one-time continuation authority. The P2-T14 owner decision reuses the
+   registered `completion_claim` / `fixed_post_state` / `verification_report` /
+   `acceptance_decision` slots; canonical decision bytes live in Artifact CAS
+   and a daemon-private acceptance principal is distinct from worker and
+   verifier identities. The expected-red public C1 proof requires
+   `COMPLETED`, but no report, checkpoint, continuation, or raw success signal
+   completes a Task before that implementation lands.
 
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them

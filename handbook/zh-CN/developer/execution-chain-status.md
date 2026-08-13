@@ -51,6 +51,7 @@ non_claims:
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
+| Task candidate + acceptance authority | unavailable；已登记 failure-first 证明 | owner 已选择既有 transition evidence 槽位、CAS 背书 canonical acceptance-decision bytes 与独立 daemon-private acceptance principal；在 P2-T14 实现并验证真实 guard 推导前，生产调度仍不完成 governed Task |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口
@@ -69,9 +70,13 @@ non_claims:
    WorkspaceWrite/Patch、ProcessCheck 与 HttpFetchReadOnly 在生产尚无独立治理的
    payload/preimage、受监督进程或已登记 origin 载体，因此在 Effect 授权前失败；这些
    sink 仍仅测试调用。
-2. **Task 完成仍是独立范围**：生产现在闭合
+2. **Task 完成仍是独立且 failure-first 的范围**：生产现在闭合
    `ACT -> VERIFY -> CONTINUE -> OBSERVE`，包含 checkpoint 与一次性 continuation
-   authority。报告、checkpoint 或 continuation 都不完成 Task；验收仍属 P2-T14。
+   authority。P2-T14 owner 决定沿用已登记的 `completion_claim` /
+   `fixed_post_state` / `verification_report` / `acceptance_decision` 槽位；
+   canonical decision bytes 位于 Artifact CAS，daemon-private acceptance principal
+   与 worker/verifier 身份分离。expected-red 公共 C1 证明要求 `COMPLETED`，但在实现
+   落地前，report、checkpoint、continuation 或任何原始 success signal 都不完成 Task。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。

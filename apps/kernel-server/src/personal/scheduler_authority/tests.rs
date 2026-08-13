@@ -2789,6 +2789,66 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
 }
 
 #[test]
+fn public_c1_workspace_read_reaches_independent_verified_task_completion() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row(&authorization.task_ref))
+        .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
+
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &router,
+        &artifact_store,
+    )
+    .unwrap();
+
+    let task = store
+        .load_object(
+            LifecycleDomain::Task,
+            &authorization.worker_authorization_root_id,
+        )
+        .unwrap()
+        .expect("production admission must materialize the governed Task");
+    assert_eq!(task.state.as_str(), "COMPLETED");
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Succeeded.as_str()
+    );
+    assert!(
+        store
+            .load_unconsumed_continuation_authorization(&TaskBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+            })
+            .unwrap()
+            .is_none(),
+        "terminal Task acceptance must not issue continuation authority"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
 fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
     let layout = temporary_personal_layout();
     layout.ensure_directories().unwrap();
