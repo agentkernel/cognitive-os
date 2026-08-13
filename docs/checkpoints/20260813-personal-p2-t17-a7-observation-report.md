@@ -83,4 +83,76 @@
 - Measurement: local Rust linking is prohibited on the registered unsupported Windows GNU host
 - Expected supported-CI failure: unresolved `crate::personal::campaign_observation` proves the production observation capability is absent; retain that failure on the pushed immutable checkpoint before implementation
 
+### V008 — first checkpoint push docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --push`
+- Exact revision: `3e3bf90` (full hash to be recorded after remote visibility)
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: six checkpoint paths checked; explicit test-only/task-registration documentation-neutral reason accepted
+- Safety: no implementation claim and no handbook behavior statement added before behavior exists
+
+### V009 — failure-first checkpoint remote visibility
+
+- Instrument: `git push -u origin HEAD`
+- Exact revision: `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: GitHub remote branch `personal/P2-T17-a7-unknown-outcome-observation`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: immutable failure-first checkpoint is remotely visible and tracks its task branch
+- Safety: branch is not merged; P2-T13/P2-T14/carrier dependencies remain explicit Draft boundaries
+
+### V010 — first Draft PR creation attempt
+
+- Instrument: `gh pr create --draft` with stacked base `personal/P2-T13-verification-loop`
+- Exact revision: `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: GitHub
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: GitHub GraphQL reported blank head/base SHA and no commits between refs immediately after the new branch push
+- Disposition: verify both remote refs, then retry the same non-destructive Draft creation through GitHub's REST endpoint if the refs are present
+- Safety: no PR was created and no branch/history was rewritten
+
+### V011 — dependent Draft PR creation
+
+- Instrument: `gh pr create --draft`
+- Exact revision: `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: GitHub
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: Draft PR [#212](https://github.com/agentkernel/cognitive-os/pull/212) opened against `main`; its body records ancestry/dependency on P2-T13 PR #210 plus P2-T14 and any required mutation carrier. The P2-T13 remote branch ref was no longer advertised as a valid PR base, so stacking is represented by commit ancestry and the explicit Draft dependency.
+- Safety: Draft only; no merge, rebase, force push, or claim promotion
+
+### V012 — first required Ubuntu/Windows CI run
+
+- Instrument: GitHub Actions run `31717414422`
+- Exact revision: `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `fail`
+- Measurement: both jobs stopped in TypeScript package tests before Rust compilation. The consistency checker found the unchanged global plan summary (`72/64/0/1/7`) did not match the newly registered task rows (`73/64/1/1/7`) and required the active P2-T17 lease to be referenced by the Current snapshot's canonical lease row. Windows additionally hit the already known daemon-startup timing flake in `pi-cognitiveos`.
+- Disposition: repair only the two task-registration consistency facts, push a second failure-first checkpoint, and retain the unresolved `campaign_observation` compile failure on supported CI before implementation
+- Safety: this run is failure-first implementation evidence only; no fixture started and no mutation occurred
+
+### V013 — repaired task-registration consistency
+
+- Instrument: `pnpm run check:consistency`
+- Exact revision: uncommitted consistency repair over `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: `DEV-WIN-GNU-01`, pinned lockfile dependencies
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: 275 requirements, 55 error codes, 74 schemas, 89 vectors, links, traceability, Personal plan/Gates and active leases verified
+- Safety: only the P2-T17 global count and canonical active-lease reference were corrected; the failure-first product API remains absent
+
+### V014 — consistency-repair staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged repair over `3e3bf90222109a34bb7abacca014cf39bf386a49`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: three governance/report paths checked; no mapped product behavior changed
+- Safety: the explicit reason is limited to count/lease-reference correction
+
 <!-- Append each completed validation unit below before starting the next one. -->
