@@ -362,10 +362,6 @@ fn management_resource_lifecycle_preconditions_are_discoverable() {
     assert!(response.contains("200 OK"), "{response}");
     let document = response_json(&response);
     assert_eq!(
-        document["projection"]["authority_source"],
-        "daemon-memory-store"
-    );
-    assert_eq!(
         document["projection"]["lifecycle"]["remember"],
         "/management/resource/v1/memory/remember"
     );

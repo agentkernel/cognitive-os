@@ -1418,3 +1418,68 @@
 - Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
   18/18 checks pass.
 - Disposition: repair can be committed and pushed.
+
+### D04-NATIVE-03 — lifecycle plus retry-residue green set
+
+- Instruments: full `p4_t05_resource_api` integration and targeted strict
+  Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `518d1cfe75a73d08393350041cc0847cad7c1aad`.
+- Started/retained: 2/2.
+- Outcome: HTTP lifecycle/restart/retry suite `pass` 5/5；strict Clippy `pass`.
+- Disposition: exact sealed-source retry is idempotent, same-id drift remains
+  conflicting, and all management/task-channel lifecycle assertions remain
+  green.
+
+### D04-CI-01 — lifecycle cross-workspace regression
+
+- Instrument: manually dispatched required CI run `31737254525` at
+  `a24e79b00e1ab1a21984a73dedf77377b1925257`.
+- Started/retained: Ubuntu/Windows 2/2.
+- Outcome: both jobs built successfully then failed the same pre-existing
+  admin-cli parity assertion: Memory Resource projection must retain
+  `"availability":"not-backed"`. The new projection correctly carried
+  lifecycle preconditions but changed that independent projection-readiness
+  field to `available`.
+- Disposition: lifecycle discoverability does not promote the separate dynamic
+  resource projection. Restore its existing not-backed status while retaining
+  the lifecycle subdocument；do not edit the admin-cli-owned regression path.
+
+### D04-FMT-10 — projection parity repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `518d1cfe`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair is formatted.
+
+### D04-DIFF-07 — projection parity repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `518d1cfe`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair and report have no whitespace defects.
+
+### D04-HANDBOOK-07 — projection parity docs and generation
+
+- Instruments: handbook generator, fingerprint filler, handbook check,
+  generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `518d1cfe`
+- Started/retained: 4/4.
+- Outcome: generated 18 pages, refreshed two Memory/Skill fingerprints；
+  final 54×2 handbook and 18/18 checks pass.
+- Disposition: parity-preserving candidate is docs-sync ready.
+
+### D04-DOCSYNC-06 — staged projection parity gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `518d1cfe`
+- Started/retained: 1/1.
+- Outcome: `pass`；daemon HTTP/handbook mappings, 54×2 handbook and generated
+  18/18 checks pass.
+- Disposition: repair can be committed and pushed.

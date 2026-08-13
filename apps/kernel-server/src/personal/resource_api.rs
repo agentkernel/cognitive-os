@@ -1191,8 +1191,8 @@ fn family_projection(family: &str) -> Value {
     if family == "memory" {
         return json!({
             "family": family,
-            "availability": "available",
-            "authority_source": "daemon-memory-store",
+            "availability": "not-backed",
+            "authority_source": "authority-service-not-yet-implemented",
             "lifecycle": {
                 "remember": "/management/resource/v1/memory/remember",
                 "remember_input": "sealed source + sealed candidate envelope",
@@ -1206,8 +1206,8 @@ fn family_projection(family: &str) -> Value {
     if family == "skill" {
         return json!({
             "family": family,
-            "availability": "available",
-            "authority_source": "daemon-skill-store",
+            "availability": "not-backed",
+            "authority_source": "authority-service-not-yet-implemented",
             "lifecycle": {
                 "import": "/management/resource/v1/skill/import",
                 "inspect": "/management/resource/v1/skill/binding/explain?kind=revision&id={revision_id}",
