@@ -650,4 +650,115 @@
 - Measurement: test source routed to `dev.execution-chain-status`; explicit behavior-neutral reason accepted; handbook 54 × 2 and 18 generated pages verified
 - Safety: no handbook prose or production behavior changed
 
+### V063 — corrected query oracle checkpoint
+
+- Instrument: scoped `git commit` with repository pre-commit docs-sync hook
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: task branch `personal/P2-T17-a7-unknown-outcome-observation`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the checkpoint retains the failed native unit/root cause, corrects only the query-count literal, and adds the original-key digest assertion
+- Safety: no production behavior, handbook claim, history rewrite, or unrelated path
+
+### V064 — corrected query oracle remote visibility
+
+- Instrument: `git push`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: GitHub Draft PR #212
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: ordinary fast-forward push made the corrected oracle revision available to CI and native retest
+- Safety: pre-push docs-sync passed with the recorded behavior-neutral reason; no force or rewrite
+
+### V065 — corrected revision bundle verification
+
+- Instrument: `git bundle create`; `git bundle verify`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-WIN-GNU-01` Git-only preparation
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the secret-free complete-history bundle resolves its P2-T17 ref exactly to the pushed corrected revision
+- Safety: system-temporary transport artifact only; not tracked and no secret/runtime payload
+
+### V066 — native corrected-revision checkout
+
+- Instrument: SCP; bundle fetch; detached checkout; HEAD/status verification
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` clone `/home/wuz/cos-p2t17-61e8d7b`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: clean detached worktree and reusable isolated target now point exactly to the pushed oracle-corrected revision
+- Safety: no other clone, branch, process, or target directory changed
+
+### V067 — expanded native A7 suite
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7 -- --test-threads=1`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clone/target
+- Started / retained: `15 / 15`
+- Outcome: `pass`
+- Measurement: 15/15 focused tests passed. The matrix mechanically covers dispatch-before, post-send/pre-receipt persistence, real post-commit response loss, receipt-persisted/pre-reconcile, verification-before, restart, original-key replay, no second POST, mutation count one, timeout/ambiguity, stale lease/writer, unauthorized fault, duplicate Effect/worker/count, receipt/post-state tamper, fixture bounds/reset/residue, P2-T13 report presence, and absent `acceptance_ref`.
+- Safety: fixture/native implementation evidence only; no Gate/release/Profile/B01/EVAL-003 claim
+
+### V068 — native kernel-server Clippy
+
+- Instrument: `cargo clippy -p kernel-server --all-targets -- -D warnings`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clone/target
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: kernel-server all-target Clippy completed with warnings denied
+- Safety: no claim promotion or non-task path
+
+### V069 — native rustfmt check
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clean clone
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: workspace Rust formatting is byte-clean at the tested revision
+- Safety: formatting evidence only
+
+### V070 — native P2-T13 verifier regression
+
+- Instrument: `cargo test -p kernel-server verification_executor -- --test-threads=1`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clone/target
+- Started / retained: `12 / 12`
+- Outcome: `pass`
+- Measurement: 12/12 independent-verifier tests passed, including missing artifact rejection before report persistence, passed-without-evidence rejection, content-address and uniqueness checks, current fixed post-state binding, fenced/unknown verifier rejection, and false-completion self-check
+- Safety: confirms the inherited P2-T13 boundary; P2-T17 still emits no Task acceptance
+
+### V071 — native full kernel-server regression
+
+- Instrument: `cargo test -p kernel-server -- --test-threads=1`
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` isolated clone/target
+- Started / retained: full package unit and integration suite
+- Outcome: `pass`
+- Measurement: all kernel-server unit and integration tests passed, including 210/210 binary unit tests plus the real loopback daemon/SSE/readiness/Provider/resource integration executables
+- Safety: exact pushed implementation revision; no campaign/Gate/release/Profile promotion
+
+### V072 — native validation cleanup
+
+- Instrument: clean-worktree/process probe; scoped removal; absence assertions
+- Exact revision: `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`
+- Environment: `DEV-LINUX-NATIVE-01` and local system temporary directory
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the validation worktree was clean and no P2-T17 Cargo/rustc process was active; the isolated clone, target directory, two remote bundles, and two local temporary bundles were removed and verified absent
+- Safety: only P2-T17-owned disposable paths were removed; P2-T14 and the unrelated P2-T05 process/path were untouched
+
+### V073 — first implementation-head required CI
+
+- Instrument: GitHub Actions run `31730624829`
+- Exact revision: `61e8d7b7f81975e427e8ea631592edc6305b7c94`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `fail`
+- Measurement: both platforms built the Rust workspace and reached workspace tests; both failed only at the same retained `VerificationBefore` query-count oracle (`actual=1`, `expected=2`) diagnosed by V059. Later steps were correctly skipped.
+- Disposition: superseded by the oracle-corrected `c1d6d8f276d4e65f0041c2c79ee65f68363fb180`, whose exact native focused/full/Clippy/verifier validation passes
+- Safety: the failure is retained and not reclassified as product behavior failure; no retry or assertion weakening
+
 <!-- Append each completed validation unit below before starting the next one. -->
