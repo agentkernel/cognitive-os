@@ -67,3 +67,118 @@
   registration.
 - Disposition: retain FF-001 unchanged and create the requested red checkpoint
   commit.
+
+## 2026-08-13 — CI-RED-001 failure-first checkpoint
+
+- Exact revision: `31c089aa99bd54ff7dca20f41b61e3817ea73c49`.
+- Instrument: required CI run
+  [31716967382](https://github.com/agentkernel/cognitive-os/actions/runs/31716967382),
+  `cargo test --workspace --locked -- --test-threads=1`.
+- Started/retained denominator: Ubuntu 1/1 job; Windows 1/1 job.
+- Outcome: **expected fail** on both platforms at the same boundary. Rust
+  `E0432` reports that `RegisteredCheckRegistry` and
+  `RegisteredCheckRunRequest` do not exist in
+  `personal::registered_check`; each job exits 101 during the Rust test step.
+- Control observation: both jobs completed dependency setup, TypeScript
+  build/tests and the Rust workspace build before the retained failure.
+- Disposition: failure-first condition is now observed on both supported CI
+  platforms. Implement the two production symbols and the immutable descriptor
+  boundary without changing the test expectation.
+- Non-claims: the expected red run is not implementation evidence and does not
+  validate dispatch, Effect recovery, Evidence, verification, or completion.
+
+## 2026-08-13 — LOCAL-005 implementation parse/format diagnostics
+
+- Instruments: `cargo fmt --all`; editor diagnostics over all edited Rust
+  implementation and test files.
+- Worktree parent: exact red checkpoint
+  `31c089aa99bd54ff7dca20f41b61e3817ea73c49`.
+- Outcome: **pass**. Rustfmt parsed and formatted the new module graph; editor
+  diagnostics reported no findings.
+- Scope: non-linking local evidence only. Rust behavior remains pending
+  supported CI.
+
+## 2026-08-13 — LOCAL-006 post-integration formatting
+
+- Instrument: `cargo fmt --all -- --check`.
+- Outcome: **pass** after registry, executor, router, helper, CAS verifier and
+  focused-negative integration.
+- Scope: formatting/parse only on `DEV-WIN-GNU-01`; no local Rust behavior
+  claim.
+
+## 2026-08-13 — LOCAL-007 implementation consistency
+
+- Instrument: `pnpm run check:consistency`.
+- Outcome: **pass**; 275 requirements, 55 errors, 74 schemas, 89 vectors,
+  traceability, task counts, slices and active lease were consistent.
+- Scope: static repository consistency; supported Rust CI remains required.
+
+## 2026-08-13 — DOC-001 generated bilingual references
+
+- Instrument: `node tools/src/generate-handbook.mjs`.
+- Outcome: **pass**. All 18 generated pages were regenerated; the native Tool
+  catalog now derives its count and includes `native.registered-check.run` in
+  both locales, while the HTTP reference reflects the unchanged route set and
+  refreshed server-source fingerprint.
+- Non-claim: generated presence does not promote support, Gate, release or
+  Profile status.
+
+## 2026-08-13 — DOC-002 authored-page fingerprints
+
+- Instrument: `node tools/src/fill-handbook-fingerprints.mjs`.
+- Outcome: **pass**. Sixteen source-dependent authored pages across both
+  locales received refreshed fingerprints after the registry/router/verifier
+  changes.
+- Disposition: run byte-identical generator and handbook consistency checks
+  after all authored content is finalized.
+
+## 2026-08-13 — DOC-003 generated-page byte gate
+
+- Instrument: `node tools/src/generate-handbook.mjs --check`.
+- Outcome: **pass**; all 18 generated pages are byte-identical to generator
+  output.
+
+## 2026-08-13 — DOC-004 handbook check first attempt
+
+- Instrument: `node tools/src/check-handbook.mjs`.
+- Outcome: **fail** with two `HB006` findings, one per locale. Both point to the
+  new integration-test path because the checker intentionally accepts only
+  Git-tracked test references and the new file was still untracked.
+- Disposition: stage that task-owned test path, then rerun the unchanged
+  handbook checker.
+
+## 2026-08-13 — DOC-005 handbook check rerun
+
+- Instrument: unchanged `node tools/src/check-handbook.mjs` after staging the
+  new task-owned integration test.
+- Outcome: **pass**; 54 documents × 2 locales, nine generated families,
+  coverage, links, fingerprints, statuses and secret checks verified.
+
+## 2026-08-13 — LOCAL-008 post-doc consistency
+
+- Instrument: `pnpm run check:consistency`.
+- Outcome: **pass** after generated pages, authored bilingual updates,
+  fingerprints and expanded exact-path lease.
+
+## 2026-08-13 — LOCAL-009 repository tools
+
+- Instrument: `pnpm --filter @cognitiveos/repo-tools test`.
+- Outcome: **pass**, 58/58. This includes consistency failure injection,
+  docs-sync routing negatives, handbook HB001-HB015 checks and generated-page
+  drift detection.
+
+## 2026-08-13 — LOCAL-010 diff and diagnostics
+
+- Instruments: unstaged/staged `git diff --check`; editor diagnostics over the
+  changed Rust app/kernel and handbook generator paths.
+- Outcome: **pass**; no whitespace error and no editor diagnostic.
+- Scope: static/non-linking only.
+
+## 2026-08-13 — DOC-006 staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`.
+- Outcome: **pass**. The gate routed daemon, scheduler, kernel-authority,
+  conformance-tool and handbook changes; its nested handbook check passed
+  54 × 2 documents and its generator check passed all 18 generated pages.
+- Disposition: create an immutable compile/test checkpoint for required
+  Ubuntu/Windows CI.

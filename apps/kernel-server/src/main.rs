@@ -29,6 +29,39 @@ fn readiness_grades() -> [&'static str; 3] {
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+    if let Some(worker_index) = args
+        .iter()
+        .position(|arg| arg == "--personal-registered-check-worker")
+    {
+        if worker_index != 1 || args.len() != 3 {
+            eprintln!("kernel-server registered check: 固定 helper 参数不匹配");
+            std::process::exit(2);
+        }
+        let workspace_root = match std::env::current_dir() {
+            Ok(workspace_root) => workspace_root,
+            Err(error) => {
+                eprintln!("kernel-server registered check: 无法解析固定 cwd: {error}");
+                std::process::exit(2);
+            }
+        };
+        match personal::run_registered_check_worker(&args[2], &workspace_root) {
+            Ok(outcome) => {
+                if let Err(error) = std::io::stdout().write_all(&outcome.bytes) {
+                    eprintln!("kernel-server registered check: 无法写出有界结果: {error}");
+                    std::process::exit(2);
+                }
+                if !outcome.passed {
+                    std::process::exit(1);
+                }
+            }
+            Err(error) => {
+                eprintln!("kernel-server registered check: {error}");
+                std::process::exit(2);
+            }
+        }
+        return;
+    }
+
     if args.iter().any(|arg| arg == "--personal") {
         let bind = args
             .iter()

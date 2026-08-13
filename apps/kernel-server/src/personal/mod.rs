@@ -23,4 +23,5 @@ mod tool_executor;
 mod verification_executor;
 
 pub use bounds::PersonalResourceBounds;
+pub(crate) use registered_check::run_registered_check_worker;
 pub use server::{PersonalDaemonConfig, serve_personal_loopback};

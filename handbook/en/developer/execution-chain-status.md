@@ -12,6 +12,7 @@ sources:
     symbols: ["run_private_scheduler_tick_with_store"]
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
+  - path: apps/kernel-server/src/personal/registered_check/mod.rs
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
@@ -22,8 +23,9 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
+  - apps/kernel-server/tests/p2_t16_registered_check.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:f9d423414bea79f386105e776268ce2090762183e8b2dc50ef49318a9d466516"
+fingerprint: "sha256:2150181de4bf99383a82d8a81acfcbe72402e56c2faeb07d778864cbd7b57e27"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -48,10 +50,11 @@ verification → verified continuation or ceiling STOP.
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead executor with persist-before-dispatch and original-key reconciliation | implemented, production-called | the periodic worker reloads WIA/candidate/Intent/persisted descriptor, rechecks its exact scheduler lease and current authorization, stages under the daemon data workspace, and enters the existing Effect protocol; interrupted leased rows query the original key and never re-dispatch |
 | WorkspaceSearch / ProcessCheck executors | implemented, test-called only | immutable catalog equality is rechecked at every sink; search uses handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
+| RegisteredCheckRun executor | implemented, production-called | caller payload is exactly `check_id`; an immutable daemon registry fixes the current-binary helper, argv, workspace-root cwd, empty environment, timeout, output/process/write/network bounds and descriptor digest. Intent/Effect reaches durable `EXECUTING` before spawn, original-key state survives restart, and bounded output becomes CAS Evidence for the registered independent verifier |
 | WorkspaceWrite / WorkspacePatch mutation executor | implemented, test-called only | handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
-| Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
+| Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; fixed-Effect and RegisteredCheck verifiers accept only their registered identity. RegisteredCheck revalidates exact descriptor/file digests and every safety observation from CAS Evidence; a passed report enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
@@ -67,14 +70,15 @@ non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.
 The remaining gaps are:
 
-1. **Executor wiring is partial**: all six registered families have an
-   assembled sink (P2-T10), so `execution_ready` still means that the binary
+1. **Executor wiring is partial**: all seven registered families have an
+   assembled sink (the original six in P2-T10 and RegisteredCheckRun in P2-T16),
+   so `execution_ready` still means that the binary
    contains one. The periodic worker now production-dispatches parameter-free
-   WorkspaceRead through the durable Effect protocol. WorkspaceSearch,
-   WorkspaceWrite/Patch, ProcessCheck, and HttpFetchReadOnly still fail before
-   Effect authorization because production has no separately governed
-   payload/preimage, supervised-process, or registered-origin carrier for them;
-   their sinks remain test-called only.
+   WorkspaceRead and `check_id`-only RegisteredCheckRun through the durable
+   Effect protocol. WorkspaceSearch, WorkspaceWrite/Patch, ProcessCheck, and
+   HttpFetchReadOnly still fail before Effect authorization because production
+   has no separately governed payload/preimage, supervised-process, or
+   registered-origin carrier for them; their sinks remain test-called only.
 2. **Task completion remains separate**: production now closes
    `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and one-time
    continuation authority. No report, checkpoint, or continuation completes a

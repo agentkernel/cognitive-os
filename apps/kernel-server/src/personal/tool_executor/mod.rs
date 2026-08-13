@@ -38,22 +38,26 @@ pub(crate) use workspace::*;
 /// staging with `UnsupportedExecutionFamily`, so the projection must derive
 /// readiness from this list rather than from availability.
 ///
-/// P2-T10/D04: all six registered families now have a sink, and
-/// `every_assembled_family_has_a_sink_that_accepts_it` fails if this list ever
-/// names a family no executor will stage.
+/// P2-T10/D04：原有六个登记 family 均已有 sink；
+/// `every_assembled_family_has_a_sink_that_accepts_it` 会在列表出现无 sink
+/// family 时失败。
+///
+/// P2-T16 增加窄化的 `RegisteredCheckRun` sink。调用载荷只含
+/// `check_id`，不会把 `ProcessCheck` 扩张成通用进程执行。
 ///
 /// This says one thing only: **this binary contains an executor for the
 /// family**. It is not a claim that an Agent can reach it. The production call
 /// chain from an admitted Task to one of these sinks does not exist yet — see
 /// gaps 1, 2 and 4 on `handbook/*/developer/execution-chain-status.md` — and
 /// `execution_ready` must not be read as "an Agent can use this tool".
-pub const ASSEMBLED_EXECUTOR_FAMILIES: [cognitive_kernel::tool_registry::NativeOperationFamily; 6] = [
+pub const ASSEMBLED_EXECUTOR_FAMILIES: [cognitive_kernel::tool_registry::NativeOperationFamily; 7] = [
     cognitive_kernel::tool_registry::NativeOperationFamily::WorkspaceRead,
     cognitive_kernel::tool_registry::NativeOperationFamily::WorkspaceSearch,
     cognitive_kernel::tool_registry::NativeOperationFamily::WorkspaceWrite,
     cognitive_kernel::tool_registry::NativeOperationFamily::WorkspacePatch,
     cognitive_kernel::tool_registry::NativeOperationFamily::ProcessCheck,
     cognitive_kernel::tool_registry::NativeOperationFamily::HttpFetchReadOnly,
+    cognitive_kernel::tool_registry::NativeOperationFamily::RegisteredCheckRun,
 ];
 
 #[cfg(test)]

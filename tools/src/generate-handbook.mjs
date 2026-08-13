@@ -167,15 +167,15 @@ function buildToolCatalog(readSource) {
   const source = "crates/cognitive-kernel/src/tool_registry.rs";
   const annotationPath = "handbook/_meta/annotations/tool-catalog.json";
   const text = readSource(source);
-  const extracted = [...new Set([...text.matchAll(/"(native\.[a-z]+\.[a-z]+)"/g)].map((m) => m[1]))].sort();
+  const extracted = [...new Set([...text.matchAll(/"(native\.[a-z-]+\.[a-z-]+)"/g)].map((m) => m[1]))].sort();
   const annotations = JSON.parse(readSource(annotationPath));
   assertBidirectional(extracted, annotations.tools.map((t) => t.id), "tool-catalog");
   const rows = (locale) =>
     annotations.tools
       .map((t) => `| \`${t.id}\` | ${t.risk} | \`${t.executor}\` | ${locale === "en" ? t.description_en : t.description_zh} |`)
       .join("\n");
-  const en = `# Native Tool catalog\n\nThe static six-entry native Tool catalog owned by the daemon (\`BUILTIN_TOOL_CATALOG\`). There is no runtime registration API: unknown, descriptor-drifted, disabled, or quarantined tools have dispatch count zero. Pre-executor validators bound paths, payload sizes, executables, origins, and timeouts before any I/O.\n\n| Tool id | Risk | Executor | Description |\n|---|---|---|---|\n${rows("en")}\n`;
-  const zh = `# 原生 Tool 目录\n\ndaemon 拥有的静态六项原生 Tool 目录（\`BUILTIN_TOOL_CATALOG\`）。没有运行时注册 API：未知、描述漂移、禁用或隔离的 Tool 分发次数为零。预执行校验器在任何 I/O 之前约束路径、载荷大小、可执行文件、来源与超时。\n\n| Tool id | 风险 | 执行器 | 描述 |\n|---|---|---|---|\n${rows("zh")}\n`;
+  const en = `# Native Tool catalog\n\nThe static ${annotations.tools.length}-entry native Tool catalog owned by the daemon (\`BUILTIN_TOOL_CATALOG\`). There is no runtime registration API: unknown, descriptor-drifted, disabled, or quarantined tools have dispatch count zero. Pre-executor validators bound paths, payload sizes, executables, origins, and timeouts before any I/O.\n\n| Tool id | Risk | Executor | Description |\n|---|---|---|---|\n${rows("en")}\n`;
+  const zh = `# 原生 Tool 目录\n\ndaemon 拥有的静态 ${annotations.tools.length} 项原生 Tool 目录（\`BUILTIN_TOOL_CATALOG\`）。没有运行时注册 API：未知、描述漂移、禁用或隔离的 Tool 分发次数为零。预执行校验器在任何 I/O 之前约束路径、载荷大小、可执行文件、来源与超时。\n\n| Tool id | 风险 | 执行器 | 描述 |\n|---|---|---|---|\n${rows("zh")}\n`;
   return { sources: [source, annotationPath], bodies: { en, "zh-CN": zh } };
 }
 

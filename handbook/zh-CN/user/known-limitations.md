@@ -9,7 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/server.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
+fingerprint: "sha256:f011a57de5acab08c2fe8ce5402b2c194984a03345edcd97f6da4b0621d5dc30"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---

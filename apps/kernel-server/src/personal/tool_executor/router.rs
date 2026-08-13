@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use cognitive_domain::ObjectId;
 use cognitive_kernel::effects::{EffectClass, OperationDescriptor};
@@ -13,7 +13,12 @@ use cognitive_kernel::ports::{
 use cognitive_kernel::tool_registry::{
     BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolRisk,
 };
+use cognitive_store::ArtifactStore;
 
+use crate::personal::registered_check::{
+    NativeRegisteredCheckExecutor, RegisteredCheckRegistry, RegisteredCheckRunRequest,
+    SystemRegisteredCheckRunner,
+};
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
@@ -21,7 +26,7 @@ use super::{
     validate_native_tool_request,
 };
 
-const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
+const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 7] = [
     (
         "native.workspace.read",
         "00000000-0000-7000-8000-000000002001",
@@ -43,6 +48,10 @@ const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
         "00000000-0000-7000-8000-000000002005",
     ),
     ("native.http.fetch", "00000000-0000-7000-8000-000000002006"),
+    (
+        "native.registered-check.run",
+        "00000000-0000-7000-8000-000000002007",
+    ),
 ];
 
 pub(crate) fn builtin_native_descriptor_id(
@@ -139,6 +148,7 @@ where
 pub(crate) struct ProductionNativeToolExecutorRouter {
     workspace_root: PathBuf,
     workspace_read: NativeWorkspaceReadExecutor,
+    registered_check: NativeRegisteredCheckExecutor,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
 }
 
@@ -147,14 +157,52 @@ impl ProductionNativeToolExecutorRouter {
         trusted_fencing_epoch: i64,
         workspace_root: PathBuf,
     ) -> Result<Self, NativeToolExecutionError> {
+        let artifact_root = workspace_root
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join("artifacts");
+        let artifact_store =
+            ArtifactStore::open(artifact_root, 8 * 1024 * 1024).map_err(|error| {
+                NativeToolExecutionError::ExecutorUnavailable(format!(
+                    "open registered-check ArtifactStore: {error}"
+                ))
+            })?;
+        Self::open_with_artifact_store(trusted_fencing_epoch, workspace_root, artifact_store)
+    }
+
+    pub(crate) fn open_with_artifact_store(
+        trusted_fencing_epoch: i64,
+        workspace_root: PathBuf,
+        artifact_store: ArtifactStore,
+    ) -> Result<Self, NativeToolExecutionError> {
         std::fs::create_dir_all(&workspace_root).map_err(|error| {
             NativeToolExecutionError::ExecutorUnavailable(format!(
                 "create daemon-approved workspace root: {error}"
             ))
         })?;
+        let state_root = workspace_root
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join("native-executor-state");
+        let state_store = Arc::new(DurableExecutorStateStore::open(&state_root).map_err(
+            |error| {
+                NativeToolExecutionError::ExecutorUnavailable(format!(
+                    "open durable native executor state: {error}"
+                ))
+            },
+        )?);
+        let registered_check = NativeRegisteredCheckExecutor::new(
+            trusted_fencing_epoch,
+            workspace_root.clone(),
+            state_store,
+            artifact_store,
+            Arc::new(SystemRegisteredCheckRunner),
+        )
+        .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))?;
         Ok(Self {
             workspace_root,
             workspace_read: NativeWorkspaceReadExecutor::new(trusted_fencing_epoch),
+            registered_check,
             staged_families: Mutex::new(BTreeMap::new()),
         })
     }
@@ -164,21 +212,47 @@ impl ProductionNativeToolExecutorRouter {
         resolved: &ResolvedNativeWorkerDispatch,
     ) -> Result<(), NativeToolExecutionError> {
         let family = resolved.native_tool.descriptor.family;
-        if family != NativeOperationFamily::WorkspaceRead {
-            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
+        match family {
+            NativeOperationFamily::WorkspaceRead => {
+                let request = validate_native_tool_request(&NativeToolExecutionRequest {
+                    descriptor: resolved.native_tool.descriptor.clone(),
+                    target: resolved.candidate.target.clone(),
+                    input: Vec::new(),
+                    workspace_root: Some(self.workspace_root.clone()),
+                    expected_preimage: None,
+                })?;
+                self.workspace_read.stage_request(
+                    resolved.intent.idempotency_key.clone(),
+                    resolved.intent.parameters_digest.clone(),
+                    &request,
+                )?;
+            }
+            NativeOperationFamily::RegisteredCheckRun => {
+                validate_native_tool_request(&NativeToolExecutionRequest {
+                    descriptor: resolved.native_tool.descriptor.clone(),
+                    target: resolved.candidate.target.clone(),
+                    input: Vec::new(),
+                    workspace_root: Some(self.workspace_root.clone()),
+                    expected_preimage: None,
+                })?;
+                let descriptor = RegisteredCheckRegistry::production()
+                    .resolve_target(&resolved.candidate.target)
+                    .map_err(|error| {
+                        NativeToolExecutionError::InvalidDescriptor(error.to_string())
+                    })?;
+                self.registered_check
+                    .stage_request(
+                        resolved.intent.idempotency_key.clone(),
+                        resolved.intent.parameters_digest.clone(),
+                        &resolved.native_tool.descriptor,
+                        &RegisteredCheckRunRequest::new(descriptor.check_id()),
+                    )
+                    .map_err(|error| {
+                        NativeToolExecutionError::ExecutorUnavailable(error.to_string())
+                    })?;
+            }
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
         }
-        let request = validate_native_tool_request(&NativeToolExecutionRequest {
-            descriptor: resolved.native_tool.descriptor.clone(),
-            target: resolved.candidate.target.clone(),
-            input: Vec::new(),
-            workspace_root: Some(self.workspace_root.clone()),
-            expected_preimage: None,
-        })?;
-        self.workspace_read.stage_request(
-            resolved.intent.idempotency_key.clone(),
-            resolved.intent.parameters_digest.clone(),
-            &request,
-        )?;
         let mut staged_families = self.staged_families.lock().map_err(|_| {
             NativeToolExecutionError::ExecutorUnavailable(
                 "native executor routing table is poisoned".to_owned(),
@@ -210,6 +284,15 @@ impl ProductionNativeToolExecutorRouter {
     pub(crate) fn install_workspace_read_before_io_hook(&self, hook: impl Fn() + Send + 'static) {
         self.workspace_read.install_before_read_hook(hook);
     }
+
+    pub(crate) fn registered_check_artifact_uri(
+        &self,
+        idempotency_key: &str,
+    ) -> Result<Option<String>, NativeToolExecutionError> {
+        self.registered_check
+            .artifact_uri(idempotency_key)
+            .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))
+    }
 }
 
 impl EffectExecutor for ProductionNativeToolExecutorRouter {
@@ -223,6 +306,7 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
     fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
         match self.staged_family(&call.idempotency_key)? {
             Some(NativeOperationFamily::WorkspaceRead) => self.workspace_read.dispatch(call),
+            Some(NativeOperationFamily::RegisteredCheckRun) => self.registered_check.dispatch(call),
             Some(_) => Ok(DispatchOutcome::NotExecuted {
                 reason: "native family has no production request carrier".to_owned(),
             }),
@@ -236,6 +320,9 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
         match self.staged_family(idempotency_key)? {
             Some(NativeOperationFamily::WorkspaceRead) => {
                 self.workspace_read.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::RegisteredCheckRun) => {
+                self.registered_check.query_outcome(idempotency_key)
             }
             Some(_) | None => Ok(ExecutorQueryResult::NotExecuted),
         }

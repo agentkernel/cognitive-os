@@ -62,5 +62,7 @@ HTTP 的更正不可用；fencing 机制（`INTENT_VERSION_SUPERSEDED`）在 ker
 下游原生工具 staging 只接受与 daemon 不可变目录条目完全相等的 descriptor。执行 attempt
 仍归 Effect 所有：不确定 HTTP attempt 跨重启后保持 indeterminate（持久状态缺失同样
 fail indeterminate），workspace 变更完成则要求批准 workspace 外的状态存储中存在绑定
-原始幂等键的持久 receipt。这些执行器保证都不会把准入、Tool receipt 或相同 workspace
-字节提升为 Task 完成。
+原始幂等键的持久 receipt。RegisteredCheckRun 新增一个生产载体，其载荷只有
+`check_id`；独立的不可变目录固定可执行文件、argv、cwd、空环境以及全部
+进程/输出/写入/网络边界。结果只形成 CAS Evidence，仍须登记的独立 verifier。
+这些执行器保证都不会把准入、Tool receipt 或相同 workspace 字节提升为 Task 完成。

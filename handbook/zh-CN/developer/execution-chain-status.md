@@ -12,6 +12,7 @@ sources:
     symbols: ["run_private_scheduler_tick_with_store"]
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
+  - path: apps/kernel-server/src/personal/registered_check/mod.rs
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
@@ -22,8 +23,9 @@ sources:
 tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
+  - apps/kernel-server/tests/p2_t16_registered_check.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:f9d423414bea79f386105e776268ce2090762183e8b2dc50ef49318a9d466516"
+fingerprint: "sha256:2150181de4bf99383a82d8a81acfcbe72402e56c2faeb07d778864cbd7b57e27"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -47,10 +49,11 @@ non_claims:
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead 执行器（persist-before-dispatch、原键对账） | implemented，生产调用 | 周期 worker 重载 WIA/candidate/Intent/持久 descriptor，重查精确调度 lease 与当前授权，在 daemon 数据 workspace 下 staging，并进入既有 Effect 协议；中断后的 leased 行只查询原键且绝不重复派发 |
 | WorkspaceSearch / ProcessCheck 执行器 | implemented，仅测试调用 | 每个 sink 都重查不可变目录完全相等；search 使用句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
+| RegisteredCheckRun 执行器 | implemented，生产调用 | 调用载荷严格只有 `check_id`；daemon 不可变目录固定当前二进制 helper、argv、workspace-root cwd、空环境、超时、输出/进程/写入/网络边界与 descriptor digest。Intent/Effect 在 spawn 前进入持久 `EXECUTING`，原键状态跨重启保留，有界输出进入 CAS Evidence 并由登记的独立 verifier 校验 |
 | WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，仅测试调用 | 句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
-| 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
+| 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；fixed-Effect 与 RegisteredCheck verifier 只接受各自登记身份。RegisteredCheck 从 CAS Evidence 重校验精确 descriptor/file digest 和全部安全观察；通过的报告进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口
@@ -63,9 +66,10 @@ non_claims:
 后启动唯一、非重入且可取消的周期 worker；pass 级失败会重试，不能阻止监听。剩余缺口
 为：
 
-1. **执行器接线仍为 partial**：六个已登记族都有已装配 sink（P2-T10），所以
-   `execution_ready` 仍只表示本二进制包含它。周期 worker 现在会把无参数
-   WorkspaceRead 经持久 Effect 协议从生产派发。WorkspaceSearch、
+1. **执行器接线仍为 partial**：七个已登记族都有已装配 sink（P2-T10 的原六族加
+   P2-T16 的 RegisteredCheckRun），所以 `execution_ready` 仍只表示本二进制包含它。
+   周期 worker 现在会把无参数 WorkspaceRead 与仅含 `check_id` 的
+   RegisteredCheckRun 经持久 Effect 协议从生产派发。WorkspaceSearch、
    WorkspaceWrite/Patch、ProcessCheck 与 HttpFetchReadOnly 在生产尚无独立治理的
    payload/preimage、受监督进程或已登记 origin 载体，因此在 Effect 授权前失败；这些
    sink 仍仅测试调用。

@@ -16,7 +16,7 @@ tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:5a2adfa40bc6089745bf16a9eef176218ae9ba6a5b98887ea83ed63867b88a54"
+fingerprint: "sha256:e8b0a6c4ce53f21118d2e6507af4dee52216b1e2e96660d201cbc288ba85d27c"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---

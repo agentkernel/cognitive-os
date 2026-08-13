@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:2d8db6e79276263c7bb164845497531ebe8afbadd575a77e5480c7ca241c6502"
+fingerprint: "sha256:2ff1a369fa8f364b569bf1847d6eec89af60a01bad27ff841ced1dc4df6de3b3"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -36,10 +36,10 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | process-local event source |
 | Task control/query over HTTP | unavailable | service methods exist, no route |
-| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches candidate admission and production-dispatches WorkspaceRead, but the other families and verification remain unwired |
-| Governed tool execution (all six registered families) | partial | every family has an assembled executor, so the projection reports `execution_ready`; WorkspaceRead now has the periodic production caller, while the other five still lack a production request carrier and remain test-called only |
+| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches candidate admission and production-dispatches WorkspaceRead plus RegisteredCheckRun, while the remaining parameter-bearing families stay unwired |
+| Governed tool execution (all seven registered families) | partial | every family has an assembled executor, so the projection reports `execution_ready`; WorkspaceRead and the `check_id`-only RegisteredCheckRun have periodic production callers, while WorkspaceSearch/Write/Patch, ProcessCheck and HttpFetchReadOnly remain test-called only |
 | Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
-| Independent verification loop | implemented | production WorkspaceRead reaches a CAS-backed independent passed report, checkpoint, one-time continuation authority, and Loop `OBSERVE`; this does not complete the Task |
+| Independent verification loop | implemented | production WorkspaceRead and RegisteredCheckRun reach registered independent verifiers; RegisteredCheck requires exact CAS Evidence, descriptor/file digests and clean safety observations before a passed report, checkpoint, one-time continuation authority and Loop `OBSERVE`; this does not complete the Task |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |
 | Context request/view + caches | implemented | — |

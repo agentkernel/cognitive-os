@@ -325,6 +325,9 @@ pub(crate) fn derive_production_verification_spec(
     }
     let verifier_version = match verifier_ref {
         FIXED_EFFECT_VERIFIER_REF => FIXED_EFFECT_VERIFIER_VERSION,
+        crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF => {
+            crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_VERSION
+        }
         _ => return Err(VerificationExecutorError::VerifierIdentityMismatch),
     };
     let criteria = acceptance_conditions
@@ -383,15 +386,73 @@ impl IndependentVerifier for FixedEffectIndependentVerifier {
     }
 }
 
+struct RegisteredCheckIndependentVerifier {
+    artifact_store: ArtifactStore,
+    artifact_evidence_ref: String,
+}
+
+impl IndependentVerifier for RegisteredCheckIndependentVerifier {
+    fn verifier_ref(&self) -> &str {
+        crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF
+    }
+
+    fn verifier_version(&self) -> &str {
+        crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_VERSION
+    }
+
+    fn evaluate(
+        &self,
+        request: &VerificationRequestRow,
+        fixed_post_state: &FixedPostStateRow,
+    ) -> Result<IndependentVerificationResult, VerificationExecutorError> {
+        let criteria: serde_json::Value = serde_json::from_str(&request.criteria_canonical_json)
+            .map_err(|_| VerificationExecutorError::RequestUnavailable)?;
+        if fixed_post_state.subject_domain != LifecycleDomain::Effect
+            || !criteria
+                .as_array()
+                .is_some_and(|criteria| !criteria.is_empty())
+        {
+            return Ok(IndependentVerificationResult {
+                disposition: VerificationDisposition::Indeterminate,
+                artifact_evidence_refs: vec![self.artifact_evidence_ref.clone()],
+            });
+        }
+        let passed = crate::personal::registered_check::verify_registered_check_artifact(
+            &self.artifact_store,
+            &self.artifact_evidence_ref,
+        )
+        .map_err(|error| {
+            VerificationExecutorError::ArtifactEvidenceUnavailable(error.to_string())
+        })?;
+        Ok(IndependentVerificationResult {
+            disposition: if passed {
+                VerificationDisposition::Passed
+            } else {
+                VerificationDisposition::Failed
+            },
+            artifact_evidence_refs: vec![self.artifact_evidence_ref.clone()],
+        })
+    }
+}
+
 fn resolve_production_verifier(
     verifier_ref: &str,
     verifier_version: &str,
     artifact_evidence_ref: String,
+    artifact_store: &ArtifactStore,
 ) -> Result<Box<dyn IndependentVerifier>, VerificationExecutorError> {
     if verifier_ref == FIXED_EFFECT_VERIFIER_REF
         && verifier_version == FIXED_EFFECT_VERIFIER_VERSION
     {
         return Ok(Box::new(FixedEffectIndependentVerifier {
+            artifact_evidence_ref,
+        }));
+    }
+    if verifier_ref == crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF
+        && verifier_version == crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_VERSION
+    {
+        return Ok(Box::new(RegisteredCheckIndependentVerifier {
+            artifact_store: artifact_store.clone(),
             artifact_evidence_ref,
         }));
     }
@@ -544,6 +605,37 @@ where
     C: Clock,
     G: IdGenerator,
 {
+    run_production_independent_verification_with_artifact(
+        store,
+        artifact_store,
+        clock,
+        identifiers,
+        verification_request_id,
+        None,
+        writer_lease,
+    )
+}
+
+/// 对登记检查，只有 executor 已写入同一 daemon CAS 的 evidence 才能进入独立 verifier。
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn run_production_independent_verification_with_artifact<S, C, G>(
+    store: &S,
+    artifact_store: &ArtifactStore,
+    clock: &C,
+    identifiers: &G,
+    verification_request_id: &ObjectId,
+    registered_check_artifact_uri: Option<&str>,
+    writer_lease: &WriterLease,
+) -> Result<ProductionVerificationOutcome, VerificationExecutorError>
+where
+    S: AuthorityStore
+        + ContinuationAuthorityStore
+        + HarnessStore
+        + IntentChainStore
+        + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
     let request = store
         .load_verification_request(verification_request_id)
         .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
@@ -552,26 +644,37 @@ where
         .load_fixed_post_state(&request.fixed_post_state_id)
         .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
         .ok_or(VerificationExecutorError::FixedPostStateUnavailable)?;
-    let storage_reference = artifact_store
-        .put_with_metadata(
-            &format!(
-                "sha256:{:x}",
-                sha2::Sha256::digest(fixed_post_state.canonical_json.as_bytes())
-            ),
-            fixed_post_state.canonical_json.as_bytes(),
-            "application/vnd.cognitiveos.fixed-post-state+json",
-        )
-        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
-        .reference;
-    let digest = storage_reference.strip_prefix("sha256:").ok_or_else(|| {
-        VerificationExecutorError::Infrastructure(
-            "ArtifactStore returned a malformed storage reference".to_owned(),
-        )
-    })?;
+    let artifact_evidence_ref = if request.verifier_ref
+        == crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF
+    {
+        registered_check_artifact_uri
+            .filter(|reference| !reference.trim().is_empty())
+            .ok_or(VerificationExecutorError::PassedWithoutArtifactEvidence)?
+            .to_owned()
+    } else {
+        let storage_reference = artifact_store
+            .put_with_metadata(
+                &format!(
+                    "sha256:{:x}",
+                    sha2::Sha256::digest(fixed_post_state.canonical_json.as_bytes())
+                ),
+                fixed_post_state.canonical_json.as_bytes(),
+                "application/vnd.cognitiveos.fixed-post-state+json",
+            )
+            .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
+            .reference;
+        let digest = storage_reference.strip_prefix("sha256:").ok_or_else(|| {
+            VerificationExecutorError::Infrastructure(
+                "ArtifactStore returned a malformed storage reference".to_owned(),
+            )
+        })?;
+        format!("artifact://sha256/{digest}")
+    };
     let verifier = resolve_production_verifier(
         &request.verifier_ref,
         &request.verifier_version,
-        format!("artifact://sha256/{digest}"),
+        artifact_evidence_ref,
+        artifact_store,
     )?;
     let report = record_independent_verification(
         store,
@@ -1412,6 +1515,27 @@ mod tests {
             derive_production_verification_spec(&unknown_verifier),
             Err(VerificationExecutorError::VerifierIdentityMismatch)
         ));
+    }
+
+    #[test]
+    fn registered_check_uses_only_its_independent_verifier_identity() {
+        let (_, mut contract) = production_contract(
+            "task://personal/registered-check-spec",
+            object_id(823),
+            object_id(824),
+            BudgetId::parse("00000000-0000-7000-b000-000000000825").expect("budget id"),
+        );
+        contract.conditions[0].verifier_ref =
+            Some(crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF.to_owned());
+        let spec = derive_production_verification_spec(&contract).expect("derive check spec");
+        assert_eq!(
+            spec.verifier_ref,
+            crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF
+        );
+        assert_eq!(
+            spec.verifier_version,
+            crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_VERSION
+        );
     }
 
     #[test]
