@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - packages/pi-cognitiveos/src/safety.test.ts
   - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:47c49ff631e43c9fc7da9aee69fd77e8602f095c1d7f844d4604da8b3fca809a"
+fingerprint: "sha256:755b81d1ee43627c2d4313209a241ca6b5d786bba10572780b3104bb86a7add7"
 non_claims:
   - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
 ---

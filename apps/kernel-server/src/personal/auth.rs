@@ -106,11 +106,22 @@ impl fmt::Debug for SessionTokenView {
 }
 
 /// Request to mint a channel-scoped session after bootstrap proof.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SessionIssueRequest {
     pub channel: ChannelClass,
     pub principal_id: String,
     pub bootstrap_secret: String,
+}
+
+impl fmt::Debug for SessionIssueRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SessionIssueRequest")
+            .field("channel", &self.channel)
+            .field("principal_id", &self.principal_id)
+            .field("bootstrap_secret", &"[REDACTED]")
+            .finish()
+    }
 }
 
 struct SessionRecord {
@@ -903,15 +914,16 @@ mod tests {
 
     #[test]
     fn session_issue_request_debug_redacts_bootstrap_secret() {
+        let bootstrap_secret = ["fixture-bootstrap-", "material-never-log"].concat();
         let request = SessionIssueRequest {
             channel: ChannelClass::Management,
             principal_id: "principal://local/owner".to_owned(),
-            bootstrap_secret: "fixture-bootstrap-material-never-log".to_owned(),
+            bootstrap_secret: bootstrap_secret.clone(),
         };
 
         let debug = format!("{request:?}");
 
-        assert!(!debug.contains("fixture-bootstrap-material-never-log"));
+        assert!(!debug.contains(&bootstrap_secret));
         assert!(debug.contains("[REDACTED]"));
     }
 
