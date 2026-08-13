@@ -216,4 +216,15 @@
 - Measurement: 275 requirements, 55 error codes, 74 schemas, 89 vectors, links, traceability, Personal plan/Gates and active leases verified. One in-progress slice (`P2-T17/D01`) is the only open Delivery Slice.
 - Safety: no external mutation and no campaign execution
 
+### V021 — first exact-revision native compile
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7` on `DEV-LINUX-NATIVE-01`
+- Exact revision: `57f10bea82d41a5a64e9491bc9e8d7b92ef08c4a`
+- Environment: `personal-linux-native-01` disposable worktree `/home/wuz/cos-p2t17-57f10bea`
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: compilation stopped on unused `SystemTime`/`UNIX_EPOCH` imports and `DeniedAccess` lacking `Display` at the authorization map
+- Disposition: map the denial with debug formatting, drop unused imports, refresh execution-chain-status fingerprints, and re-run the same focused suite at the next immutable revision
+- Safety: no assertion was relaxed; no Gate/release/Profile/EVAL-003 claim
+
 <!-- Append each completed validation unit below before starting the next one. -->

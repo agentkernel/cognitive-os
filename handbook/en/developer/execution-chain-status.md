@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:325865c0bb7c551cb018bca16546a234b91cf8818ee286d195832794c4e7fbbe"
+fingerprint: "sha256:bc0ff3a2c81a23c05d5c5090c237c7958efc7b4f0d0be6b986fbcd7ee906b8c3"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.

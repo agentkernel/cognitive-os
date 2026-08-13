@@ -46,7 +46,7 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     thread::JoinHandle,
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant},
 };
 use thiserror::Error;
 
@@ -1848,7 +1848,11 @@ fn effect_grant(clock: &SystemClock) -> Result<AuthorizationGrant, CampaignObser
             purpose: "task_execution".to_owned(),
         },
     )
-    .map_err(|error| infrastructure("authorize campaign external mutation", error))
+    .map_err(|error| {
+        CampaignObservationError::Infrastructure(format!(
+            "authorize campaign external mutation: {error:?}"
+        ))
+    })
 }
 
 fn build_campaign_contract(
