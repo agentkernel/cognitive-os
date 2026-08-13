@@ -66,6 +66,9 @@ pub struct ProviderProxyService<'transport, T: ProviderTransport + ?Sized> {
 /// response, credential, or authority data.
 pub struct TimedProviderResponse {
     pub response: ProviderHttpResponse,
+    /// Config load, selected-model load and SecretStore resolution, measured
+    /// separately so the Pi client's loopback wait is not read as network cost.
+    pub preflight_elapsed_nanos: u128,
     pub provider_network_elapsed_nanos: u128,
 }
 
@@ -123,6 +126,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         requested_model: String,
         request_body: &[u8],
     ) -> Result<TimedProviderResponse, ProviderProxyError> {
+        let preflight_started_at = Instant::now();
         let provider_key_service =
             ProviderKeyService::new(self.secret_store, self.config_repository.clone());
         let provider_config = provider_key_service
@@ -158,6 +162,9 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
             timeout_ms: 60_000,
             cancel_requested: false,
         };
+        // Preflight ends where the credential is bound to a built request, so
+        // the two stages are disjoint and neither absorbs the other.
+        let preflight_elapsed_nanos = preflight_started_at.elapsed().as_nanos().max(1);
         let provider_network_started_at = Instant::now();
         let response = self
             .transport
@@ -165,6 +172,7 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
             .map_err(map_transport_error)?;
         Ok(TimedProviderResponse {
             response,
+            preflight_elapsed_nanos,
             // Campaign evidence refuses zero-duration stages.
             provider_network_elapsed_nanos: provider_network_started_at.elapsed().as_nanos().max(1),
         })
@@ -395,6 +403,56 @@ mod tests {
                 ("Content-Type".to_owned(), "application/json".to_owned()),
             ]
         );
+
+        std::fs::remove_dir_all(
+            config_path
+                .parent()
+                .expect("temporary config parent directory"),
+        )
+        .expect("temporary config cleanup");
+    }
+
+    #[test]
+    fn timed_forward_splits_preflight_from_the_provider_network_without_changing_the_body() {
+        // preflight 覆盖配置/selected-model/SecretStore；网络阶段只覆盖 transport
+        // exchange。两者都必须为正，且完成 body 必须与 transport 返回值逐字节相同。
+        let config_path = temporary_provider_config_path();
+        let config_repository = ProviderConfigRepository::from_file_path(&config_path);
+        let secret_store = EphemeralSecretStore::default();
+        let provider_key_service =
+            ProviderKeyService::new(&secret_store, config_repository.clone());
+        provider_key_service
+            .configure_provider(
+                "deepseek",
+                "https://provider.example.invalid/v1",
+                SecretMaterial::from_bytes(b"synthetic-provider-key-p9-t07".to_vec())
+                    .expect("synthetic material"),
+                None,
+            )
+            .expect("provider configuration");
+        provider_key_service
+            .selected_model_repository()
+            .store(&SelectedModel::new("test-model", "fnv1a64:test", true).expect("selected model"))
+            .expect("selected model store");
+        let transport = CapturingTransport::default();
+        let proxy = ProviderProxyService::new(&secret_store, config_repository, &transport);
+        let request_body = br#"{"model":"test-model","stream":false,"messages":[]}"#;
+
+        let timed = proxy
+            .forward_chat_completion_with_timing(request_body)
+            .expect("timed daemon-owned provider forwarding");
+
+        assert_eq!(timed.response.status, 200);
+        assert_eq!(timed.response.body, br#"{"id":"synthetic-completion"}"#);
+        assert!(
+            timed.preflight_elapsed_nanos >= 1,
+            "preflight must not report zero"
+        );
+        assert!(
+            timed.provider_network_elapsed_nanos >= 1,
+            "provider network must not report zero"
+        );
+        assert_eq!(transport.requests().len(), 1);
 
         std::fs::remove_dir_all(
             config_path
