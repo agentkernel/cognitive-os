@@ -58,7 +58,6 @@ const POST_STATE_DIGEST_DOMAIN: &str = "personal-a7-external-post-state/0.1";
 const MAXIMUM_HTTP_BYTES: usize = 16 * 1024;
 const ARTIFACT_MAXIMUM_BYTES: usize = 8 * 1024 * 1024;
 const FIXED_EFFECT_VERIFIER_REF: &str = "verifier://personal/fixed-effect";
-const FIXED_EFFECT_VERIFIER_VERSION: &str = "v1";
 static TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_RUNS: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
 
@@ -642,7 +641,6 @@ enum RunStage {
 
 /// Daemon 私有 A7 观察服务：先持久化 Intent/Effect，再派发；重启只查询原键。
 pub(crate) struct CampaignMutationObservationService {
-    authority_root: PathBuf,
     runs_root: PathBuf,
     store: Arc<SqliteAuthorityStore>,
     artifact_store: Arc<ArtifactStore>,
@@ -683,7 +681,6 @@ impl CampaignMutationObservationService {
                 .map_err(|error| infrastructure("open campaign ArtifactStore", error))?,
         );
         Ok(Self {
-            authority_root: authority_root.to_path_buf(),
             runs_root,
             store,
             artifact_store,
@@ -757,6 +754,7 @@ impl CampaignMutationObservationService {
                     &contract_id,
                     LifecycleDomain::Task,
                     "task-contract.minted",
+                    &admitted_at,
                 )?,
                 0,
             )
@@ -780,6 +778,7 @@ impl CampaignMutationObservationService {
                     &loop_object_id,
                     LifecycleDomain::Loop,
                     "campaign-loop.admitted",
+                    &admitted_at,
                 )?,
                 outbox: Vec::new(),
                 fencing_epoch: Some(self.writer_fencing_epoch),
@@ -808,6 +807,7 @@ impl CampaignMutationObservationService {
                     &effect_object_id,
                     LifecycleDomain::Effect,
                     "campaign-effect.admitted",
+                    &admitted_at,
                 )?,
                 outbox: Vec::new(),
                 fencing_epoch: Some(self.writer_fencing_epoch),
@@ -842,6 +842,7 @@ impl CampaignMutationObservationService {
                     &intent_object_id,
                     LifecycleDomain::Effect,
                     "campaign-intent.persisted",
+                    &admitted_at,
                 )?,
             )
             .map_err(duplicate_or_infrastructure("persist campaign Intent"))?;
@@ -1237,6 +1238,7 @@ impl CampaignMutationObservationService {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn observation(
         &self,
         run_ref: &str,
@@ -1276,6 +1278,10 @@ impl CampaignMutationObservationService {
                 )
             })?;
         let identifiers = UuidV7Generator;
+        let clock = SystemClock;
+        let recorded_at = clock
+            .now()
+            .map_err(|error| infrastructure("read duplicate-intent clock", error))?;
         let mut duplicate = intent;
         duplicate.intent_id = next_object_id(&identifiers)?;
         self.store
@@ -1286,6 +1292,7 @@ impl CampaignMutationObservationService {
                     &duplicate.intent_id,
                     LifecycleDomain::Effect,
                     "campaign-intent.duplicate-rejected",
+                    &recorded_at,
                 )?,
             )
             .map_err(duplicate_or_infrastructure(
@@ -1969,6 +1976,7 @@ fn event(
     object_id: &ObjectId,
     domain: LifecycleDomain,
     event_type: &str,
+    event_time: &WallTimestamp,
 ) -> Result<EventDraft, CampaignObservationError> {
     Ok(EventDraft {
         event_id: next_event_id(identifiers)?,
@@ -1979,6 +1987,7 @@ fn event(
         canonical_json: json!({
             "event_type": event_type,
             "object_id": object_id.as_str(),
+            "event_time": event_time.as_str(),
         })
         .to_string(),
     })

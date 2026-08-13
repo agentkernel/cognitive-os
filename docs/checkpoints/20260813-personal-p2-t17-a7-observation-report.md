@@ -227,4 +227,15 @@
 - Disposition: map the denial with debug formatting, drop unused imports, refresh execution-chain-status fingerprints, and re-run the same focused suite at the next immutable revision
 - Safety: no assertion was relaxed; no Gate/release/Profile/EVAL-003 claim
 
+### V022 — persist-before-dispatch event_time native failure
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7` on `DEV-LINUX-NATIVE-01`
+- Exact revision: `1025bac61b01705171e49afad966b161fc9e7b73`
+- Environment: `personal-linux-native-01` disposable worktree `/home/wuz/cos-p2t17-57f10bea`
+- Started / retained: `10 / 10`
+- Outcome: `fail` (1 pass / 9 fail)
+- Measurement: fixture duplicate/conflict/bounds/reset/residue passed. All persist-before-dispatch cells failed closed with `scheduler registration event has no event_time` because Intent events lacked `event_time` required by scheduler registration.
+- Disposition: stamp `event_time` on campaign events, then re-run the same focused suite
+- Safety: no assertion relaxation; no Gate/release/Profile/EVAL-003 claim
+
 <!-- Append each completed validation unit below before starting the next one. -->
