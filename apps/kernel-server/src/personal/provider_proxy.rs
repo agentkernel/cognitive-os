@@ -425,7 +425,7 @@ mod tests {
             .configure_provider(
                 "deepseek",
                 "https://provider.example.invalid/v1",
-                SecretMaterial::from_bytes(b"synthetic-provider-key-p9-t05".to_vec())
+                SecretMaterial::from_bytes(b"synthetic-provider-key-p9-t07".to_vec())
                     .expect("synthetic material"),
                 None,
             )

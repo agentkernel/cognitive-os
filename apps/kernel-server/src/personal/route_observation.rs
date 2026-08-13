@@ -1,4 +1,4 @@
-//! Daemon-side nested stage observation for the Pi Provider route (P9-T05).
+//! Daemon-side nested stage observation for the Pi Provider route (P9-T07).
 //!
 //! The Pi client measures the loopback wait it observes; only the daemon can
 //! separate the preflight/SecretStore work inside that wait from the outbound

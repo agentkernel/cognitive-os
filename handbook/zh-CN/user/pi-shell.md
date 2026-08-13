@@ -17,7 +17,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:ce01507f7dc813366807ac4ca16018c613f5682dba2b144f453d7f660685ba57"
+fingerprint: "sha256:f90e20bd87ff8cbe19ab80ed90a9bbc6932ee4fdf54c205e7e58d811c982d2c6"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---

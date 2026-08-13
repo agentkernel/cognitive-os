@@ -1,14 +1,14 @@
-# P9-T05 running validation report — Pi route nested stage timing
+# P9-T07 running validation report — Pi route nested stage timing
 
-Single running report for `P9-T05` under Operating Model `TEST-REPORT-INCREMENTAL-01`.
+Single running report for `P9-T07` under Operating Model `TEST-REPORT-INCREMENTAL-01`.
 Every finished validation unit is appended here immediately, before the next unit
 starts. Entries are append-only; a later entry may supersede an earlier one only by
 stating so explicitly.
 
-- Task: `P9-T05` — Pi route nested per-request stage timing and Provider usage exposure
+- Task: `P9-T07` — Pi route nested per-request stage timing and Provider usage exposure
 - Branch: `personal/P9-T05-pi-nested-stage-timing`
 - Base: `origin/main@326f97728ab6aaaacceaedd2156d953231b32e01`
-- Lease: `lease/personal/P9-T05/pi-nested-stage-timing`
+- Lease: `lease/personal/P9-T07/pi-nested-stage-timing`
 - Claim ceiling: measurement capability only. Nothing here is a Gate, release,
   Profile, B01, benchmark or overhead-attribution claim.
 
@@ -36,7 +36,7 @@ stating so explicitly.
   Provider usage readable by a campaign runner — are therefore unreached.
 - Reading: today a single Pi run publishes no joined, monotonic per-stage
   timing and exposes no runner-readable Provider usage. This is the capability
-  gap `P9-T05` must close; it is not a defect claim about any measured latency.
+  gap `P9-T07` must close; it is not a defect claim about any measured latency.
 
 ### U02 — `packages/pi-cognitiveos` full Node suite with the observation core wired
 
@@ -93,10 +93,10 @@ stating so explicitly.
 
 ### U05 — front-door header-only effect
 
-- Unit: `apps/kernel-server/tests/p9_t05_route_observation.rs`
+- Unit: `apps/kernel-server/tests/p9_t07_route_observation.rs`
 - Environment: `DEV-LINUX-NATIVE-01` at exact
   `554c6cf9f69af836032af207eeb04a800ac55063`
-- Command: `cargo test -p kernel-server --test p9_t05_route_observation`
+- Command: `cargo test -p kernel-server --test p9_t07_route_observation`
 - Result: **pass** — 2/2. With and without daemon observation authorization, a
   missing Provider config still returns `PERSONAL_PROVIDER_NOT_CONFIGURED`;
   absent, well-formed, malformed (including secret-shaped) and duplicated
@@ -227,6 +227,39 @@ stating so explicitly.
 - Command: `node tools/src/generate-handbook.mjs --check`
 - Result: **pass** — 18 generated pages byte-identical.
 
+### U51 — consistency rejects self-owned lease ledger
+
+- Unit: corrected P9-T07 task/lease state
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **fail** — one precise violation: an active lease must not list
+  `PARALLEL-LANES.md` as its own writable path.
+- Recovery: remove the ledger itself from the exact-path set; the lease row
+  remains the authority granting the other paths.
+
+### U52 — corrected task/lease consistency
+
+- Unit: P9-T07 task, slices, counts and active exact-path lease
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:consistency`
+- Result: **pass** — requirements/errors/schemas/vectors, Personal task counts,
+  delivery slices, environment routing and leases verified.
+
+### U53 — pre-merge handbook machine gate
+
+- Unit: bilingual handbook machine model after canonical task reconciliation
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U54 — pre-merge generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
+
 ### U43 — accepted consistency gate
 
 - Unit: repository static consistency
@@ -245,6 +278,56 @@ stating so explicitly.
   `dev.agent-pi-lifecycle` and generated environment-variable reference;
   eight handbook paths mapped to the handbook-owning pages. The nested
   handbook and generator checks both passed.
+
+### U45 — canonical task-id reconciliation
+
+- Unit: merge `origin/main@d24f7d00` after PR #213
+- Result: **corrective renumber, no product change**. Main had already assigned
+  P9-T05 to the merged daemon readiness-wait repair, while the piinstrument
+  branch had independently registered the same id. P9-T06 is also assigned to
+  the separate readiness/SecretStore workflow, so this task, lease, slices,
+  test/report paths and current facts are corrected to the next unused
+  `P9-T07`. Draft PR #216 and its legacy-named branch are retained to avoid
+  rewriting pushed history.
+- Boundary: only task identity/evidence names changed; implementation semantics,
+  frozen test results and all non-claims are unchanged.
+
+### U46 — post-merge Rust format gate
+
+- Unit: merged workspace Rust formatting
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlist)
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**. No local Rust build/test/Clippy was attempted.
+
+### U47 — post-merge Pi regression
+
+- Unit: `packages/pi-cognitiveos` full Node suite after `origin/main` merge
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run build; pnpm test`
+- Result: **pass** — 90/90.
+
+### U48 — post-merge fingerprint refresh
+
+- Unit: handbook source fingerprints after test/report task renumber
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass** — ten affected bilingual lifecycle/daemon/client/Pi/Provider
+  pages refreshed from reconciled sources.
+
+### U49 — post-merge handbook machine gate
+
+- Unit: bilingual handbook machine model
+- Environment: `DEV-WIN-GNU-01`
+- Command: `pnpm run check:handbook`
+- Result: **pass** — 54 documents × 2 locales, 9 generated families; coverage,
+  links, fingerprints, statuses and secret checks verified.
+
+### U50 — post-merge generated-page byte gate
+
+- Unit: generated handbook reproducibility
+- Environment: `DEV-WIN-GNU-01`
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass** — 18 generated pages byte-identical.
 
 ### U31 — final repository consistency
 

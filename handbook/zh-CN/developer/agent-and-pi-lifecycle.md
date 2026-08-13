@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
-fingerprint: "sha256:7a7779b2efeeb721ec9273d33f581fa405fcd5e65ef1133573bd3bd8a9e97107"
+fingerprint: "sha256:7bbdc94de9827419f0e5eda1346fd3201b584fca07881ebae26fa6d818be347b"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---

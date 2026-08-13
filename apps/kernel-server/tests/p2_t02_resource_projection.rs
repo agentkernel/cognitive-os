@@ -1,11 +1,12 @@
 //! P2-T02/D02 process evidence for private resource projections.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
-use std::time::Duration;
 
 static RESOURCE_PROJECTION_PROCESS_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
@@ -18,12 +19,7 @@ fn free_port() -> u16 {
 }
 
 fn request(port: u16, wire: &str) -> String {
-    let mut stream = loop {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            break stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
+    let mut stream = common::connect_when_ready(port);
     stream.write_all(wire.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut response = String::new();
@@ -61,19 +57,6 @@ fn issue_token(port: u16, secret: &str, channel: &str) -> String {
     response[start..end].to_owned()
 }
 
-fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    let path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    for _ in 0..100 {
-        if let Ok(secret) = std::fs::read_to_string(&path) {
-            return secret.trim().to_owned();
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not create its bootstrap secret")
-}
-
 #[test]
 fn resource_projection_is_private_versioned_and_management_channel_bound() {
     let _guard = RESOURCE_PROJECTION_PROCESS_LOCK.lock().unwrap();
@@ -85,7 +68,7 @@ fn resource_projection_is_private_versioned_and_management_channel_bound() {
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
     let management_token = issue_token(port, &secret, "management");
     let task_token = issue_token(port, &secret, "task");
 

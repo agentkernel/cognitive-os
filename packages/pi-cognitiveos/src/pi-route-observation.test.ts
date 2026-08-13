@@ -1,5 +1,5 @@
 /**
- * P9-T05 failure-first proof.
+ * P9-T07 failure-first proof.
  *
  * `PERSONAL-PERF-EVAL-002` measured a +1828.5 ms median OS-arm overhead whose
  * stage is still only inferred. This test states the missing capability as an

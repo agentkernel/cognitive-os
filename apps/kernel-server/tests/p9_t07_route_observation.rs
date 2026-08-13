@@ -1,4 +1,4 @@
-//! P9-T05 daemon 侧 nested observation：相关头只影响响应头，不改产品 body，
+//! P9-T07 daemon 侧 nested observation：相关头只影响响应头，不改产品 body，
 //! 也不写入权威库。本文件只走未配置 Provider 的拒绝路径，因此观测头不会出现在
 //! 成功响应上——那正是「失败仍保持 header-only、授权开关不能改写错误 body」的证明。
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
