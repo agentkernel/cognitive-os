@@ -1339,3 +1339,55 @@
 - Result: daemon-http、pi-shell、conformance-tools 与 handbook-self combined routes 全通过；
   P9-T07 与 P2-T18 双方文档均保留，无 escape。
 - Disposition: 完成 non-force merge commit。
+
+### V117 — second reconciled exact transport recovery
+
+- Revision: `6ad5122ae500c2237bb79dc34c131f5c00df903d`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` fetch；local full Git bundle fallback
+- Started/retained denominator: 2/2 GitHub fetch attempts；1/1 bundle
+- Outcome: fetches `instrument_error`（low-speed timeout / connect timeout）；bundle `pass`
+- Result: 两次网络传输都在 checkout/Cargo 前退出。由已 push exact HEAD 创建并验证
+  complete-history bundle，经 SCP 导入 clean clone，remote HEAD 精确等于 `6ad5122a`；不复制
+  未提交源码。
+- Disposition: 在 bundle-proven exact checkout 运行 required native units。
+
+### V118 — second reconciled exact native aggregate
+
+- Revision: `6ad5122ae500c2237bb79dc34c131f5c00df903d`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` clean detached clone；auth matrix、source
+  guard、full kernel-server、all-target Clippy
+- Started/retained denominator: auth 15/15；guard 1/1；kernel-server 238/238
+  （216 unit + 22 integration）；Clippy 1/1
+- Outcome: `pass`
+- Result: P9-T07 route-observation composition 与 P2-T18 auth 全通过；logs 仍无 token bytes，
+  all-target Clippy 无 warning/error。
+- Disposition: 持续 required CI 到终态。
+
+### V119 — second reconciled required CI Ubuntu
+
+- Revision: `6ad5122ae500c2237bb79dc34c131f5c00df903d`
+- Environment/instrument: GitHub Actions run `31736095193`；Ubuntu job `94567972351`
+- Started/retained denominator: 1/1 required Ubuntu job
+- Outcome: `pass`
+- Result: Ubuntu SUCCESS；PR mergeable，Windows job `94567972570` 仍 `IN_PROGRESS`。
+- Disposition: 持续 Windows 到终态。
+
+### V120 — second reconciled required CI Windows / aggregate
+
+- Revision: `6ad5122ae500c2237bb79dc34c131f5c00df903d`
+- Environment/instrument: GitHub Actions run `31736095193`；Windows job `94567972570`；
+  PR #215 rollup
+- Started/retained denominator: 1/1 Windows；2/2 aggregate
+- Outcome: `pass`
+- Result: Windows SUCCESS；Ubuntu/Windows 2/2 同一 exact HEAD 通过。PR
+  `MERGEABLE/CLEAN`，仍 Draft。
+- Disposition: 提交/push V117–V120 evidence；final docs-only CI 后标记 ready。
+
+### V121 — second reconciliation evidence gate
+
+- Revision: staged report after `6ad5122ae500c2237bb79dc34c131f5c00df903d`
+- Environment/instrument: `git diff --check`；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 diff；1/1 docs-sync
+- Outcome: `pass`
+- Result: V117–V120 report-only evidence 无 whitespace 或 documentation drift。
+- Disposition: commit/push report。
