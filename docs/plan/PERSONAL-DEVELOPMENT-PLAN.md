@@ -4,7 +4,7 @@
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
 > **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；Profile / Windows B01-W 未声明）**
-> **最后更新：2026-08-11**
+> **最后更新：2026-08-14**
 > **计划追踪 ID：** `P0-T01` 至 `P7-T08` 是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
@@ -158,8 +158,8 @@
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 1 | 2 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 8 | 8 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
-| Phase 9 - 性能与结构演进 | 4 | 4 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **72** | **64** | **0** | **1** | **7** | — |
+| Phase 9 - 性能与结构演进 | 5 | 4 | 1 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
+| **合计** | **73** | **64** | **1** | **1** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -730,6 +730,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P9-T04/D07` | P9-T04 | executable `L3` Provider-route policy: zero retry budget, every started request retained as a classified outcome, no TTFT without real streaming timestamps, no measured usage on a failed request, and no cost without a preregistered pricing snapshot | `P9-T04/D06` offline execution and the D01 Provider usage envelope | failure-first discarded-failure, retried-completion, fabricated-TTFT, fabricated-cost, network-time-without-dispatch, implausible-complete-response, usage-on-failure, and self-promoted-claim negatives; exact-revision Linux focused tests, Clippy, and required CI; the policy admits no Provider traffic by itself |
 | `P9-T04/D06` | P9-T04 | offline L0–L2 campaign execution on a registered non-Gate environment that emits one policy-validated evidence report with `L3`–`L5` recorded as `not_run`; the runner refuses to label its own output with the sole active B01 campaign guest | `P9-T04/D02-D05` | failure-first B01-environment, unregistered-environment, and missing-environment negatives plus a real exact-revision execution on `DEV-LINUX-NATIVE-01`; exact-revision Linux focused tests, Clippy, and required CI; the result is `hypothesis`/`tested-local` at most and is not B01, Gate, release, Profile, or Agent-benefit evidence |
 | `P9-T04/D05` | P9-T04 | executable ADR-0051 campaign report policy: full L0–L5 layer coverage, every started sample retained in the denominator, hard safety accounting, cleanup facts, independent-verifier disposition, and a claim ceiling that cannot exceed the evidence | `P9-T04/D02-D04` measurement surfaces and the ADR-0051 preregistration | failure-first dropped-sample, safety-failure-with-claim, unverified/uncleaned promotion, benefit-claim-without-L5, evidence-without-execution, empty-completed-layer, missing-layer, and missing-non-claim negatives; exact-revision Linux focused tests, Clippy, and required CI; an incomplete campaign must still produce a complete non-claim report |
+| `P9-T06/D01` | P9-T06 | bind one SecretStore per readiness evaluation so secret probe and provider resolve share it, skip get when probe already proved the backend cannot answer, drop material immediately, and re-evaluate every request with no stale-ready TTL | completed P2-T11 honest resolve and P2-T15 one-snapshot config | failure-first counting store proving probe/get once per evaluation, two evaluations pay twice, unavailable probe skips get, and material never enters status/doctor JSON; required Ubuntu/Windows CI; no Gate/release/Profile claim |
 
 ### Phase 6 - Multi-Agent
 
@@ -782,6 +783,7 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 | P9-T02 | 权威路径结构债拆分 | — | 拆分 `scheduler_authority.rs`、`sqlite.rs`、`tool_executor.rs` 超大模块并外移内嵌测试；行为不变，以既有 focused tests 与回归地板做前后对照 | done | 2026-08-11；`lease/personal/P9-T02/structure-debt` on `personal/P9-T02-structure-debt` / PR #192. D01–D04 closed. Linux evidence through `a11d0bd`; required CI `31470278984`. Closure: `docs/checkpoints/20260811-personal-p9-t02-structure-debt-closure.md`. No Gate/release/Profile claim. |
 | P9-T03 | 存储访问与组合根优化 | P9-T02 | 消除每请求 `SqliteAuthorityStore::open` 的长生命周期 store（保持单写者与 fail-closed 语义）；Personal 垂直逻辑从 `kernel-server` 组合根下沉；以 stage 计时对照验证 | done | 2026-08-11；`lease/personal/P9-T03/store-composition` on `personal/P9-T03-store-composition` / PR #193. D01–D04 closed. Linux evidence through `648e69f`; required CI `31476761080` on `64f89cd`. Closure: `docs/checkpoints/20260811-personal-p9-t03-store-composition-closure.md`. No Gate/release/Profile claim. |
 | P9-T04 | 全面性能与真实 Task campaign | P7-T04, P8-T05, P9-T01, P9-T03 | measurement-only correlation/timing/usage/transport/resource/evidence runner；在单一 preregistered B01 campaign 中完整执行 L1--L5，保留完整分母、独立 verifier、报告和 cleanup。不得建立第二 authority writer、伪造 TTFT 或 Provider usage；L5 不达标也必须完成 non-claim report 和收口 | done | 2026-08-12；D01–D09 完成，`L0`–`L3` 全部执行，`L4` `T1` admission 部分执行，`L5` 经 owner disposition 关闭为 `not-run`。closure/final report：`docs/checkpoints/20260812-personal-p9-t04-performance-campaign-closure.md`；preregistration 记录全部 cell digest。全部安全计数为 0，claim 上限 `hypothesis`，`verifier=not_reviewed`，无 Gate/release/Profile/B01/Agent-benefit claim。 |
+| P9-T06 | readiness SecretStore 一次评估内合并 | P2-T11, P2-T15 | 一次 `status`/`doctor` 评估只绑定一次 SecretStore：secret 探针与 provider `secret_ref` 解析共用该后端，探针已证明不可答时不再 `get`，材料立即丢弃，且不跨请求缓存就绪（无 stale-ready TTL）。不得缓存 secret 材料。不改变公开错误码与 fact 词汇 | in-progress | 2026-08-14 owner-directed corrective：评测实测 status/doctor 在 P2-T11 真实解析后约 1.8 s，根因是一次评估内重复 `select`/`probe`/`get`。lease `lease/personal/P9-T06/readiness-secretstore-coalesce`。无 Gate/release/Profile claim。 |
 
 ## 5. Gate 与证据要求
 

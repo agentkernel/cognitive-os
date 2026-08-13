@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P9-T06/readiness-secretstore-coalesce` | P9-T06/D01 readiness SecretStore coalesce: one status/doctor evaluation binds one SecretStore (probe + resolve), skips get when probe already proved the backend cannot answer, drops material immediately, and does not cache ready across requests | Lane-RUN | `personal/P9-T06-readiness-secretstore-coalesce` | `apps/kernel-server/src/personal/readiness.rs`; `handbook/{en,zh-CN}/developer/daemon-and-http.md`; `handbook/{en,zh-CN}/user/operations-and-recovery.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260814-personal-p9-t06-readiness-secretstore-coalesce.md` | `cursor-grok-4.6-20260814` | 2026-08-14 / 2026-08-14 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

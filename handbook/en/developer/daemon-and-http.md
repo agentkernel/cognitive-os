@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:ff5eba81b9e30287dd02a194f895540c4221fa746d1152f85dcea2d9dc0abbc3"
+fingerprint: "sha256:3d6ed78e49e1582d7af886f9778780970e0aacae4f8b7c1962067c0959e82680"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -73,7 +73,11 @@ blocks with `provider_secret_unresolvable`, and a backend that cannot answer
 blocks with `provider_secret_store_unavailable`. Resolved material is dropped
 immediately and never enters a fact. Resolution uses the already-loaded
 Provider config snapshot; it never reloads `provider.json` and combine a newer
-secret reference with the older provider/model/digest facts. Doctor adds redacted
+secret reference with the older provider/model/digest facts. One status or
+doctor evaluation binds one SecretStore: the secret probe and the provider
+`secret_ref` resolve share that backend, skip `get` when the probe already
+proved the backend cannot answer, drop material immediately, and do not cache
+readiness across requests (no stale-ready TTL). Doctor adds redacted
 six-resource/vault/operability sections. The Provider
 proxy validates config + selected model, resolves the secret in memory, and
 forwards via the bounded Rustls transport; the private one-shot Unix socket
