@@ -438,3 +438,80 @@
   `e65cb0d7` 的 native Linux + 两端 CI 为准。
 - Disposition: 保持 Draft；不合并，以免覆盖 sibling P2-T14 lease/PROGRESS。无
   Gate/release/Profile/B01 声明。
+
+### V38 — defect-first redaction review 与 failure-first 测试
+
+- Revision: working tree after `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: 全部 `LocalSessionAuthority` bootstrap/session 生成调用点、HTTP
+  front door、stderr 路径与 secret-bearing `Debug` implementation 定向审查；
+  `cargo fmt --all -- --check`
+- Started/retained denominator: 1/1 review unit；1/1 formatting unit
+- Outcome: review `fail`（预期的 defect-first finding）；formatting `pass`；新增 Rust 行为
+  test `not-run`
+- Result: bootstrap 与 session 生产生成均已集中到同一 `getrandom::fill` adapter，HTTP
+  transport 只记录请求/响应 byte count，stderr 只记录 bootstrap 文件路径；但
+  `SessionIssueRequest` 仍派生默认 `Debug`，会包含 `bootstrap_secret`。已先加入
+  `session_issue_request_debug_redacts_bootstrap_secret`，断言失败时不打印 secret bytes；
+  尚未修改生产 `Debug`。
+- Disposition: 将 failure-first test 作为独立 immutable revision 推送，在
+  `DEV-LINUX-NATIVE-01` 精确观察预期失败后，再实现 redacted `Debug`。
+
+### V39 — failure-first staged docs-sync 首轮
+
+- Revision: staged failure-first change after
+  `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged gate
+- Outcome: `fail`
+- Result: gate 将 `auth.rs` 的 test-module-only 变更保守映射到 `daemon-http`，因本次提交
+  未重复暂存已在分支中同步的 handbook 页面而拒绝；生产行为、公开合同及已同步文档语义均
+  未改变。
+- Disposition: 以
+  `DOCS_IMPACT_NONE="Failure-first test only; production behavior and documented auth contract unchanged"`
+  明确记录本提交的文档中性原因，重新暂存 report 后重跑同一 gate。
+
+### V40 — failure-first staged docs-sync 文档中性重试
+
+- Revision: staged failure-first change after
+  `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: Windows Node；带 V39 精确 `DOCS_IMPACT_NONE` 原因重跑
+  `docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged gate
+- Outcome: `fail`
+- Result: 文档中性声明被接受，但 handbook byte gate 仍发现 6 个 HB008 fingerprint drift；
+  `auth.rs` 的新增 test module 会改变映射源 digest。受影响范围仅为已在 lease 中的
+  en/zh-CN daemon、安全边界与已知限制页面；页面语义无需改写。
+- Disposition: 运行 `fill-handbook-fingerprints.mjs` 刷新 6 页来源指纹，暂存精确页面并重跑
+  handbook/docs-sync；提交说明继续保留 V39 的文档中性原因。
+
+### V41 — failure-first handbook fingerprint 刷新
+
+- Revision: working tree after `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: Windows Node；`fill-handbook-fingerprints.mjs`
+- Started/retained denominator: 6/6 mapped locale pages
+- Outcome: `pass`
+- Result: en/zh-CN 的 daemon、安全边界与已知限制页面来源指纹全部刷新；没有改写页面语义，
+  没有写入 token material。
+- Disposition: 精确暂存 6 页和 running report，重跑 handbook 与 staged docs-sync gate。
+
+### V42 — failure-first handbook 全门禁
+
+- Revision: working tree after `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:handbook`
+- Started/retained denominator: 54 documents × 2 locales；9 generated families
+- Outcome: `pass`
+- Result: coverage、link、fingerprint、status 与 secret checks 全部通过。
+- Disposition: 暂存精确变更并以 V39 的文档中性理由重跑 staged docs-sync gate。
+
+### V43 — failure-first staged docs-sync 恢复
+
+- Revision: staged failure-first change after
+  `f0f05d9e20891a13e77db5b01b33d28824ffa40f`
+- Environment/instrument: Windows Node；带 V39 精确文档中性理由的
+  `docs-sync-gate.mjs --staged`
+- Started/retained denominator: 1/1 staged gate
+- Outcome: `pass`
+- Result: mapped `daemon-http` source、6 个 handbook fingerprints、54×2 handbook 与
+  18 个 generated 页面全部通过；无语义性 handbook 改写。
+- Disposition: 提交并推送 failure-first immutable revision，在 exact native Linux 只运行
+  新 redaction test 以观察预期失败。

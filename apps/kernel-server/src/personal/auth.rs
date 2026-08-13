@@ -901,6 +901,20 @@ mod tests {
         let _ = fs::remove_dir_all(&temp);
     }
 
+    #[test]
+    fn session_issue_request_debug_redacts_bootstrap_secret() {
+        let request = SessionIssueRequest {
+            channel: ChannelClass::Management,
+            principal_id: "principal://local/owner".to_owned(),
+            bootstrap_secret: "fixture-bootstrap-material-never-log".to_owned(),
+        };
+
+        let debug = format!("{request:?}");
+
+        assert!(!debug.contains("fixture-bootstrap-material-never-log"));
+        assert!(debug.contains("[REDACTED]"));
+    }
+
     #[cfg(unix)]
     #[test]
     fn bootstrap_file_keeps_private_mode() {
