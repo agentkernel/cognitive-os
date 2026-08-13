@@ -484,6 +484,99 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
 }
 
 #[test]
+fn rejected_memory_candidate_leaves_exact_source_retryable_without_partial_memory() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p2t19-memory-retry-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = bootstrap_secret(&runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+    let scope = "workspace://personal/project/retry";
+    let provenance = "file://workspace/facts/retry.txt";
+    let source_id = object_id(300);
+    let (source, source_digest) = sealed_object(
+        &source_id,
+        "WorkspaceContextSource",
+        "cognitiveos.workspace-context-source/0.1",
+        json!({
+            "tenant_id": "personal",
+            "owner_ref": "principal://local/owner",
+            "resource_scope": scope,
+            "conversation_ref": null,
+            "role": "working",
+            "trust_level": "verified",
+            "representation": "text",
+            "provenance_ref": provenance,
+            "content_bytes": 14,
+            "content_tokens": 3,
+            "body": {"text": "retryable fact"},
+        }),
+    );
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let (invalid_candidate, _) = sealed_object(
+        &object_id(301),
+        "MemoryCandidate",
+        "cognitiveos.memory/0.1",
+        json!({
+            "source_id": source_id.to_string(),
+            "source_digest": source_digest,
+            "source_provenance_ref": provenance,
+            "governance_scope": scope,
+            "target_scope": "workspace://personal/promoted",
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": now + 3_600,
+            "observed_at_unix_seconds": now,
+        }),
+    );
+    let rejected = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/memory/remember",
+        &management_token,
+        &json!({"source": source, "candidate": invalid_candidate}),
+    );
+    assert!(rejected.contains("409 Conflict"), "{rejected}");
+
+    let (valid_candidate, _) = sealed_object(
+        &object_id(302),
+        "MemoryCandidate",
+        "cognitiveos.memory/0.1",
+        json!({
+            "source_id": source_id.to_string(),
+            "source_digest": source_digest,
+            "source_provenance_ref": provenance,
+            "governance_scope": scope,
+            "target_scope": scope,
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": now + 3_600,
+            "observed_at_unix_seconds": now,
+        }),
+    );
+    let retried = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/memory/remember",
+        &management_token,
+        &json!({"source": source, "candidate": valid_candidate}),
+    );
+    assert!(
+        retried.contains("HTTP/1.1 201 "),
+        "an exact source may be retried after candidate rejection without raw cleanup: {retried}"
+    );
+
+    daemon.kill().unwrap();
+    daemon.wait().unwrap();
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
 fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
     let runtime_root = std::env::temp_dir().join(format!(
         "cos-p2t19-skill-lifecycle-{}-{}",

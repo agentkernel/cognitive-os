@@ -1313,3 +1313,57 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
 - Disposition: repair can be committed and pushed.
+
+### D02-NATIVE-05 — complete replay-negative green set
+
+- Instruments: all `personal::memory_skill_consumer::tests` and targeted
+  kernel/store/server strict Clippy.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `80407fc37fe4815551153b73971a025081042d34`.
+- Started/retained: 2/2.
+- Outcome: replay negatives `pass` 7/7；strict Clippy `pass`.
+- Disposition: request digest, principal, scope, identity, competing record,
+  contract epoch and full Skill package pin now fail closed before body/payload
+  or durable append.
+
+### D04-NEG-02 — rejected-candidate retry residue negative
+
+- Instrument:
+  `rejected_memory_candidate_leaves_exact_source_retryable_without_partial_memory`.
+- Production break named before execution: source admission succeeds before a
+  rejected Memory candidate, then the next exact retry treats that immutable
+  source as a competing conflict and requires raw cleanup.
+- Oracle: rejected candidate returns 409；a corrected candidate with the exact
+  same sealed source succeeds without deleting or rewriting authority state.
+  A different source under the same identity must remain a conflict.
+- Initial outcome: `not-run`；test authored before repair and routed to exact
+  native Linux.
+
+### D04-FMT-08 — Memory retry negative formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted test over `80407fc3`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test is formatted.
+
+### D04-DIFF-05 — Memory retry negative whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted test over `80407fc3`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: test and report have no whitespace defects.
+
+### D04-DOCSYNC-04 — staged Memory retry negative gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged test over `80407fc3`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Failure-first retry-residue test adds no shipped behavior before exact-source replay is repaired"`
+  must remain in the commit record.
