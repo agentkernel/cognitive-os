@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0e7bb67afe1f76ab1d0f1e902cee5a0f538bc359af7fc15a610d3cebb618a361"
+fingerprint: "sha256:1140f048eb95df3167d928fbbff36c1d53398c521ba5c103098f8fbae4107a72"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -55,7 +55,7 @@ non_claims:
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
-| A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup）；persist-before-dispatch Effect；默认关闭的授权故障点；重启只查询原键并恰好对账一次；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
+| A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup 与持久请求/查询计数）；persist-before-dispatch Effect；默认关闭的授权故障点；持久变更后丢失应答时，重启只查询原键，以一次实际变更、零第二次 POST 完成对账；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口

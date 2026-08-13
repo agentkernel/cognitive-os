@@ -83,11 +83,19 @@ pub(crate) enum CampaignFaultPoint {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+pub(crate) enum FixtureMutationFault {
+    Normal,
+    DropResponseAfterCommit,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub(crate) enum FixtureQueryFault {
     Normal,
     Timeout,
     Ambiguous,
     TamperedPostStateDigest,
+    TamperedReceiptRef,
     DuplicateMutationCount,
 }
 
@@ -234,6 +242,8 @@ struct FixtureState {
     value: i64,
     records: BTreeMap<String, FixtureMutationRecord>,
     mutation_count: u64,
+    #[serde(default)]
+    mutation_request_count: u64,
     query_count: u64,
     last_query_key_digest: Option<String>,
 }
@@ -246,6 +256,7 @@ impl FixtureState {
             value: 0,
             records: BTreeMap::new(),
             mutation_count: 0,
+            mutation_request_count: 0,
             query_count: 0,
             last_query_key_digest: None,
         }
@@ -263,6 +274,7 @@ struct FixtureRuntime {
     root: PathBuf,
     bounds: FixtureBounds,
     state: Mutex<FixtureState>,
+    mutation_fault: Mutex<FixtureMutationFault>,
     query_fault: Mutex<FixtureQueryFault>,
     stop: AtomicBool,
 }
@@ -313,6 +325,7 @@ impl CampaignExternalStateFixture {
             root: root.to_path_buf(),
             bounds,
             state: Mutex::new(state),
+            mutation_fault: Mutex::new(FixtureMutationFault::Normal),
             query_fault: Mutex::new(FixtureQueryFault::Normal),
             stop: AtomicBool::new(false),
         });
@@ -334,6 +347,10 @@ impl CampaignExternalStateFixture {
         Ok(lock(&self.runtime.state, "fixture state")?.mutation_count)
     }
 
+    pub(crate) fn mutation_request_count(&self) -> Result<u64, CampaignObservationError> {
+        Ok(lock(&self.runtime.state, "fixture state")?.mutation_request_count)
+    }
+
     pub(crate) fn query_count(&self) -> Result<u64, CampaignObservationError> {
         Ok(lock(&self.runtime.state, "fixture state")?.query_count)
     }
@@ -342,6 +359,14 @@ impl CampaignExternalStateFixture {
         Ok(lock(&self.runtime.state, "fixture state")?
             .last_query_key_digest
             .clone())
+    }
+
+    pub(crate) fn set_mutation_fault(
+        &self,
+        fault: FixtureMutationFault,
+    ) -> Result<(), CampaignObservationError> {
+        *lock(&self.runtime.mutation_fault, "fixture mutation fault")? = fault;
+        Ok(())
     }
 
     pub(crate) fn set_query_fault(
@@ -365,6 +390,8 @@ impl CampaignExternalStateFixture {
         let reset = FixtureState::empty();
         write_json_durable(&self.root.join("state.json"), &reset)?;
         *state = reset;
+        *lock(&self.runtime.mutation_fault, "fixture mutation fault")? =
+            FixtureMutationFault::Normal;
         *lock(&self.runtime.query_fault, "fixture query fault")? = FixtureQueryFault::Normal;
         Ok(())
     }
@@ -504,7 +531,16 @@ fn handle_fixture_connection(
                 "decode fixture mutation payload: {error}"
             ))
         })?;
+        let mutation_fault = {
+            let mut fault = lock(&runtime.mutation_fault, "fixture mutation fault")?;
+            let configured = *fault;
+            *fault = FixtureMutationFault::Normal;
+            configured
+        };
         let (status, response) = mutate_fixture(runtime, key, &payload)?;
+        if mutation_fault == FixtureMutationFault::DropResponseAfterCommit && status == 201 {
+            return Ok(());
+        }
         return write_http_json(&mut stream, status, &response);
     }
     if let Some(key) = request_line
@@ -512,6 +548,7 @@ fn handle_fixture_connection(
         .and_then(|value| value.strip_suffix(" HTTP/1.1"))
         .filter(|key| valid_idempotency_key(key))
     {
+        record_fixture_query_attempt(runtime, key)?;
         let fault = *lock(&runtime.query_fault, "fixture query fault")?;
         if fault == FixtureQueryFault::Timeout {
             std::thread::sleep(Duration::from_millis(700));
@@ -532,19 +569,29 @@ fn mutate_fixture(
     payload: &FixtureMutationBody,
 ) -> Result<(u16, serde_json::Value), CampaignObservationError> {
     let mut state = lock(&runtime.state, "fixture state")?;
-    if let Some(existing) = state.records.get(key) {
+    state.mutation_request_count =
+        state.mutation_request_count.checked_add(1).ok_or_else(|| {
+            CampaignObservationError::Infrastructure(
+                "fixture mutation request counter overflow".to_owned(),
+            )
+        })?;
+    if let Some(existing) = state.records.get(key).cloned() {
+        write_json_durable(&runtime.root.join("state.json"), &*state)?;
         if existing.parameters_digest != payload.parameters_digest {
             return Ok((409, json!({"code": "idempotency_conflict"})));
         }
-        return Ok((200, serde_json::to_value(existing).map_err(json_error)?));
+        return Ok((200, serde_json::to_value(&existing).map_err(json_error)?));
     }
     if state.records.len() >= runtime.bounds.maximum_records {
+        write_json_durable(&runtime.root.join("state.json"), &*state)?;
         return Ok((409, json!({"code": "record_bound"})));
     }
     if payload.expected_version != state.version {
+        write_json_durable(&runtime.root.join("state.json"), &*state)?;
         return Ok((409, json!({"code": "expected_version_mismatch"})));
     }
     if payload.delta == 0 || payload.delta.abs() > runtime.bounds.maximum_absolute_delta {
+        write_json_durable(&runtime.root.join("state.json"), &*state)?;
         return Ok((409, json!({"code": "delta_out_of_bounds"})));
     }
     let mut next = state.clone();
@@ -574,15 +621,15 @@ fn query_fixture(
     key: &str,
     fault: FixtureQueryFault,
 ) -> Result<(u16, serde_json::Value), CampaignObservationError> {
-    let mut state = lock(&runtime.state, "fixture state")?;
-    let mut next = state.clone();
-    next.query_count += 1;
-    next.last_query_key_digest = Some(digest_text(key, "personal-a7-idempotency-key/0.1")?);
-    let mut record = next.records.get(key).cloned();
+    let state = lock(&runtime.state, "fixture state")?;
+    let mut record = state.records.get(key).cloned();
     if let Some(record) = record.as_mut() {
         match fault {
             FixtureQueryFault::TamperedPostStateDigest => {
                 record.post_state_digest = format!("sha256:{}", "0".repeat(64));
+            }
+            FixtureQueryFault::TamperedReceiptRef => {
+                record.receipt_ref = format!("fixture-receipt://sha256:{}", "0".repeat(64));
             }
             FixtureQueryFault::DuplicateMutationCount => {
                 record.mutation_count = 2;
@@ -592,12 +639,22 @@ fn query_fixture(
             | FixtureQueryFault::Ambiguous => {}
         }
     }
-    write_json_durable(&runtime.root.join("state.json"), &next)?;
-    *state = next;
     match record {
         Some(record) => Ok((200, serde_json::to_value(record).map_err(json_error)?)),
         None => Ok((404, json!({"code": "not_found"}))),
     }
+}
+
+fn record_fixture_query_attempt(
+    runtime: &FixtureRuntime,
+    key: &str,
+) -> Result<(), CampaignObservationError> {
+    let mut state = lock(&runtime.state, "fixture state")?;
+    state.query_count = state.query_count.checked_add(1).ok_or_else(|| {
+        CampaignObservationError::Infrastructure("fixture query counter overflow".to_owned())
+    })?;
+    state.last_query_key_digest = Some(digest_text(key, "personal-a7-idempotency-key/0.1")?);
+    write_json_durable(&runtime.root.join("state.json"), &*state)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1382,9 +1439,11 @@ impl CampaignMutationObservationService {
         state: &RunState,
         record: &FixtureMutationRecord,
     ) -> Result<(), CampaignObservationError> {
+        let expected_receipt_ref = format!("fixture-receipt://{}", state.idempotency_key_digest);
         if record.idempotency_key_digest != state.idempotency_key_digest
             || record.parameters_digest != state.parameters_digest
             || record.post_state_digest != post_state_digest(record.version, record.value)?
+            || record.receipt_ref != expected_receipt_ref
         {
             return Err(CampaignObservationError::ReceiptMismatch);
         }

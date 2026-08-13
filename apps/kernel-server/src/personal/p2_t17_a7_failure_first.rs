@@ -675,16 +675,15 @@ fn stale_writer_epoch_cannot_reopen_authority_or_mutate_fixture() {
     let current = open_service(&authority_root, &fixture, "A7-027", 21);
     drop(current);
 
-    assert_eq!(
+    assert!(matches!(
         CampaignMutationObservationService::open(
             &authority_root,
             fixture.endpoint(),
             CampaignAuthorization::authorized("PERSONAL-PERF-EVAL-003", "A7-027").unwrap(),
             20,
-        )
-        .unwrap_err(),
-        CampaignObservationError::StaleEpoch
-    );
+        ),
+        Err(CampaignObservationError::StaleEpoch)
+    ));
     assert_eq!(fixture.mutation_count().unwrap(), 0);
     assert_eq!(fixture.mutation_request_count().unwrap(), 0);
     fixture.cleanup().unwrap();

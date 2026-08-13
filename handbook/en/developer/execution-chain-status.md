@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0e7bb67afe1f76ab1d0f1e902cee5a0f538bc359af7fc15a610d3cebb618a361"
+fingerprint: "sha256:1140f048eb95df3167d928fbbff36c1d53398c521ba5c103098f8fbae4107a72"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -56,7 +56,7 @@ verification → verified continuation or ceiling STOP.
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
-| A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup; persist-before-dispatch Effect; default-off authorized fault points; restart queries only the original key and reconciles exactly once; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
+| A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps

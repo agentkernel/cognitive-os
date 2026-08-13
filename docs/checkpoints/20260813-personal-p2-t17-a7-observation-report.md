@@ -422,4 +422,96 @@
 - Measurement: both required jobs completed the full TypeScript/Rust build, workspace tests, Clippy `-D warnings`, rustfmt, codegen, consistency, traceability, handbook, conformance, honesty, self-check, digest, and evidence-upload sequence. Ubuntu completed in 2m59s; Windows completed in 10m39s, proving the conditional-import correction on MSVC.
 - Safety: ordinary CI implementation evidence only; the Node action-runtime deprecation annotation is unrelated and creates no Gate/release/Profile/EVAL-003 claim
 
+### V041 — expanded failure-first remote visibility
+
+- Instrument: `git push` plus GitHub Actions dispatch lookup
+- Exact revision: `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: GitHub Draft PR #212
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the ordinary fast-forward push made the expanded failure-first matrix immutable and started required run `31729960198`
+- Safety: no implementation for the newly required fixture fault/counters was included; no force or history rewrite
+
+### V042 — expanded matrix supported failure-first proof
+
+- Instrument: GitHub Actions run `31729960198` plus failed-job logs
+- Exact revision: `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `fail` (expected failure-first)
+- Measurement: both platforms built the production workspace, then failed while compiling the test binary with the same missing behavior: unresolved `FixtureMutationFault`, absent `set_mutation_fault`, absent durable `mutation_request_count`, and absent `TamperedReceiptRef`. Each job retained 16 compile errors rooted only in the new assertions.
+- Disposition: add the smallest fixture response-loss seam, durable request/query attempt counters, and receipt-reference validation; do not relax any assertion
+- Safety: no test executed past compilation, no external mutation occurred, and this expected red checkpoint remains Draft-only
+
+### V043 — response-loss implementation formatting attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted command)
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: rustfmt requested three line-wrap normalizations in counter and receipt-reference expressions; no semantic defect was reported
+- Disposition: apply rustfmt and rerun the same check
+- Safety: no local Rust build/test/Clippy or fixture process ran
+
+### V044 — response-loss implementation whitespace check
+
+- Instrument: `git diff --check`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: no whitespace errors
+- Safety: no external mutation or authority process started
+
+### V045 — response-loss implementation formatting recheck
+
+- Instrument: `cargo fmt --all`; `cargo fmt --all -- --check`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01` (non-linking allowlisted commands)
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: rustfmt applied only the three requested wraps and the immediate byte-drift recheck passed
+- Safety: local Rust build/test/Clippy remained `not-run`
+
+### V046 — response-loss handbook synchronization
+
+- Instrument: bilingual `dev.execution-chain-status` update; `node tools/src/fill-handbook-fingerprints.mjs`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `2 / 2` mapped locale pages
+- Outcome: `pass`
+- Measurement: both locales now state the bounded durable request/query counters and the narrow response-loss result: one applied mutation, original-key query, and no second POST. Both source fingerprints refreshed.
+- Safety: wording remains `implemented, test-called only` and retains every Gate/release/Profile/B01/EVAL-003 non-claim
+
+### V047 — response-loss implementation consistency check
+
+- Instrument: `pnpm run check:consistency`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: 275 requirements, 55 error codes, 74 schemas, 89 vectors, links, traceability, Personal plan/Gates, design sources, command/environment routing, checkpoint delivery, task-atomic delivery, prompt boundary, and leases verified
+- Safety: static consistency does not substitute for supported Rust execution
+
+### V048 — response-loss implementation final whitespace check
+
+- Instrument: `git diff --check`
+- Exact revision: uncommitted implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: no whitespace errors across the five task-owned changed paths
+- Safety: no local Rust linking or fixture execution
+
+### V049 — response-loss implementation staged docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Exact revision: staged implementation over `2678252d297f522986c53403820e018fca0d7da2`
+- Environment: `DEV-WIN-GNU-01`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: both mapped source paths and both synchronized handbook locales passed check-handbook 54 × 2 and generator `--check` 18 byte-identical pages
+- Safety: no docs-impact escape was used for the behavior change
+
 <!-- Append each completed validation unit below before starting the next one. -->
