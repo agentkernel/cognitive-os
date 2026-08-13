@@ -82,7 +82,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         ]
     );
     assert_eq!(
@@ -216,7 +216,7 @@ fn reapply_prepare_is_replay_safe() {
     assert_eq!(
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         ]
     );
 }
