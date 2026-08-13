@@ -243,3 +243,16 @@
   workspace source digest+body and was omitted as `DUPLICATE_CONTENT_DIGEST`.
 - Disposition: 受治理钉必须替换相同正文的普通源并进入 required 集；不是削弱
   去重不变量。
+
+### D02-RUST-04 — native retest after identity preservation at `cebf64fe`
+
+- Instrument: `cargo test -p kernel-server --locked scheduler_authority::tests`
+- Environment: `DEV-LINUX-NATIVE-01` `~/p2-t19-msconsumer`
+- Revision: `cebf64fe9250dacd482e3bb61385161b565aca96`
+- Started/retained: 1/1
+- Outcome: `fail`；D01、forget/revoke 与 digest-mismatch 已绿。仅
+  `session_two_reuses_durable_pins_without_restating_memory_or_skill` 失败：
+  第二会话 `CONTEXT_INCOMPLETE`，因为 Memory 候选仍绑定第一会话
+  `conversation_ref`，预过滤后 required 集无法闭合。
+- Disposition: 复用路径按当前会话重写 Memory governance conversation，不改钉或
+  digest。

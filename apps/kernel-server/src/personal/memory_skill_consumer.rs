@@ -170,11 +170,15 @@ where
             "Memory source payload has no body".to_owned(),
         )
     })?;
+    let mut governance = source.governance;
+    governance.object_ref = pin.memory_id.to_string();
+    // 跨会话复用只重放精确钉；当前会话 conversation 不得把已准入 Memory 卡在旧会话上。
+    governance.conversation_ref = command.conversation_ref.clone();
     Ok(CandidateObject {
         object_ref: pin.memory_id.to_string(),
         object_version: 1,
         content_digest: pin.source_digest.clone(),
-        governance: source.governance,
+        governance,
         role: LoadedContextItemRole::Working,
         trust_level: LoadedContextItemTrustLevel::Verified,
         representation: LoadedContextItemRepresentation::Text,
