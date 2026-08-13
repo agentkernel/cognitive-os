@@ -298,7 +298,9 @@ fn validate_memory_metadata(
             "Memory scope differs from the current authorized scope".to_owned(),
         ));
     }
-    if eligible.target_scope != command.task_ref || eligible.purpose != purpose {
+    let target_matches = eligible.target_scope == command.task_ref
+        || eligible.target_scope == eligible.resource_scope;
+    if !target_matches || eligible.purpose != purpose {
         return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
             "Memory Task target or purpose differs from the current request".to_owned(),
         ));

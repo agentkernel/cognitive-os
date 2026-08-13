@@ -61,7 +61,9 @@ mode, 0600). Every migration apply first writes a timestamped backup under
 rebuildable from authority rows; forgetting a Memory can never be undone by an
 index rebuild. Authority migrations now include v24 append-only Memory/Skill
 consumption records; a later session may reuse exact pins, but forget, revoke,
-or digest drift fail closed instead of resurrecting forgotten facts.
+digest drift, or a competing record fail closed instead of resurrecting
+forgotten facts. Management Memory/Skill lifecycle rows and Skill revision
+lineage remain inspectable after daemon restart.
 
 ## Crash and unknown-outcome recovery — `implemented` at the engine level
 

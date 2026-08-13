@@ -985,3 +985,172 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Failure-first HTTP lifecycle tests add no shipped behavior before the production routes exist"`
   must be retained in the commit record.
+
+### D04-NATIVE-RED-01 — HTTP lifecycle red observation
+
+- Instrument:
+  `cargo test -p kernel-server --locked --test p4_t05_resource_api -- --test-threads=1`
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached
+  `~/p2-t19-msconsumer`, exact
+  `e748dbab7f22006e73d82f32c21d24a71b851ad2`.
+- Started/retained: 1/1 suite, four tests.
+- Outcome: expected `fail`；existing channel-boundary test passed 1/1 and all
+  three new lifecycle tests failed. Preconditions and Context-source admission
+  both fell through to `RESOURCE_OBJECT_ID_REQUIRED`; Skill import persisted
+  successfully but the HTTP writer rendered status 201 as reason phrase
+  `Error`, exposing a separate deterministic transport defect before inspect.
+- Cleanup: three assertions exited before their explicit cleanup and left
+  test-owned daemons; exact PIDs bound to the three `/tmp/cos-p2t19-*` roots
+  were terminated. The unrelated installed daemon on fixed port 48181 was not
+  touched.
+- Disposition: add test-process RAII cleanup, register the lifecycle routes,
+  and render HTTP 201 as `Created`; then advance each test to the next missing
+  production boundary.
+
+### D04-FMT-03 — first HTTP lifecycle implementation check
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `fail`；one MemoryCandidate header predicate requires rustfmt line
+  collapse.
+- Disposition: apply mechanical formatting before staged/native validation.
+
+### D04-FMT-04 — workspace-target refinement formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `fail`；the secure current-Task-or-exact-workspace target predicate
+  requires one rustfmt line break.
+- Disposition: apply mechanical formatting and rerun.
+
+### D04-CONSISTENCY-02 — HTTP lifecycle implementation consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；275 requirements、55 errors、74 schemas、89 vectors and all
+  Personal task/slice/lease relations pass.
+- Disposition: static governance registration remains coherent；Rust behavior
+  still requires exact-revision execution.
+
+### D04-HANDBOOK-02 — new-route annotation gate
+
+- Instrument: `node tools/src/generate-handbook.mjs`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: first uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `fail` before generation；four newly invented path literals lacked
+  bidirectional HTTP annotations.
+- Disposition: the active exact-path lease does not include shared route
+  annotation metadata and P2-T14 owns the concurrent shared-plan path. Preserve
+  the lifecycle semantics on already annotated routes instead of hiding
+  unregistered paths: lifecycle preconditions in Resource projection；
+  source+candidate envelope on `memory/remember`；revision inspect as a mode of
+  binding explain；supersede as a mode of Skill import。
+
+### D04-FMT-05 — annotated-route lifecycle formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: existing-route refinement is formatted.
+
+### D04-HANDBOOK-03 — lifecycle docs, generation and fingerprints
+
+- Instruments: handbook generator, fingerprint filler, handbook check,
+  generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted implementation over `e748dbab`
+- Started/retained: 4/4.
+- Outcome: generated 18 pages, refreshed 12 mapped bilingual fingerprints；
+  final 54×2 handbook and 18/18 byte checks pass.
+- Disposition: authored bilingual lifecycle behavior and generated HTTP
+  reference are synchronized without editing shared annotation metadata.
+
+### D04-DIFF-02 — complete lifecycle candidate whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: complete uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: candidate is ready for staged docs-sync and exact native test.
+
+### D04-REVIEW-01 — exact-path route refinement
+
+- Observation: shared HTTP annotation metadata and four user pages mapped only
+  through `server.rs` are outside this task's exact lease while P2-T14 owns the
+  concurrent shared-plan path.
+- Refinement: keep the unchanged lifecycle oracles on already registered
+  routes—projection for preconditions, source+candidate envelope for remember,
+  revision mode on binding explain, supersede mode on Skill import—and assert
+  HTTP status 201 without expanding into the unrelated reason-phrase defect.
+- Disposition: no lifecycle capability was removed；the refinement preserves
+  exact-path ownership and generated-reference bidirectionality.
+
+### D04-HANDBOOK-04 — post-refinement generated-page check
+
+- Instruments: handbook check and generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted implementation over `e748dbab`
+- Started/retained: 2/2.
+- Outcome: `fail` only on the two generated HTTP pages: their recorded source
+  fingerprint and bytes predate the final existing-route refinement.
+- Disposition: rerun generator, then fingerprint filler, then both checks in
+  that order.
+
+### D04-CONSISTENCY-03 — refined lifecycle consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: refined uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；full registered counts and Personal links pass.
+- Disposition: no task/contract/lease drift.
+
+### D04-HANDBOOK-05 — final lifecycle generation and docs
+
+- Instruments: handbook generator, fingerprint filler, handbook check,
+  generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: final uncommitted implementation over `e748dbab`
+- Started/retained: 4/4.
+- Outcome: generator completed；filler required 0 further updates；54×2
+  handbook and generated 18/18 checks pass.
+- Disposition: final authored and generated documentation is synchronized.
+
+### D04-FMT-06 — final lifecycle formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: final uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: candidate is formatted.
+
+### D04-DIFF-03 — final lifecycle whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: final uncommitted implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: candidate is ready for staged docs-sync and pushed native test.
+
+### D04-DOCSYNC-02 — staged lifecycle implementation gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged implementation over `e748dbab`
+- Started/retained: 1/1.
+- Outcome: `pass`；daemon HTTP/store/handbook mappings routed；54×2 handbook
+  and generated 18/18 checks pass.
+- Disposition: implementation and bilingual/generated documentation can be
+  committed for exact-revision native validation.

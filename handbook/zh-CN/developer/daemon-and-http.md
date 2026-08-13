@@ -54,6 +54,11 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`（生成的
 [HTTP 参考](../reference/http-api.md)枚举完整表与通道）。
 
+management Resource 表面提供只读生命周期前置条件、封存 Context source 准入、
+Memory remember/review/forget，以及 Skill import/inspect/bind/supersede/revoke。
+变更必须持有 management bearer；task bearer 在进入 handler 前失败。创建成功使用
+HTTP 状态 `201`，持久行在重启后仍可检查。
+
 ## 投影
 
 readiness 从文件系统/配置事实评估六组件（`blocked | degraded | ready` +

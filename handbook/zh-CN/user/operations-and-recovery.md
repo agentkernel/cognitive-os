@@ -53,7 +53,8 @@ worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而
 每次迁移 apply 都先在 `state/backups/` 写带时间戳的备份（不自动清理）。派生数据
 （Memory FTS 索引）可从权威行重建；被遗忘的 Memory 绝不会因索引重建而复活。权威库
 迁移现含 v24 只追加 Memory/Skill 消费记录；后续会话可复用精确钉，但遗忘、撤销或
-digest 漂移会失败闭合，而不是让已遗忘事实复活。
+digest 漂移或竞争记录会失败闭合，而不是让已遗忘事实复活。management Memory/Skill
+生命周期行与 Skill revision 谱系在 daemon 重启后仍可检查。
 
 ## 崩溃与未知结果恢复 —— 引擎层 `implemented`
 

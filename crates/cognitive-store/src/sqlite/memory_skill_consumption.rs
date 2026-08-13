@@ -62,7 +62,10 @@ impl MemorySkillConsumptionStore for super::SqliteAuthorityStore {
                          memory_candidates.governance_scope = ?1
                          OR memory_candidates.governance_scope LIKE ?1 || '/%'
                      )
-                     AND memory_candidates.target_scope = ?2
+                     AND (
+                         memory_candidates.target_scope = ?2
+                         OR memory_candidates.target_scope = memory_candidates.governance_scope
+                     )
                      AND memory_candidates.purpose = ?3
                      AND memory_candidates.retention_expires_at_unix_seconds > ?4
                  ORDER BY memory_objects.memory_id",

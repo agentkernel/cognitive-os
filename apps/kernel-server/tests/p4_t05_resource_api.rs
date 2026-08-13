@@ -3,6 +3,7 @@
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::ops::{Deref, DerefMut};
 use std::process::{Child, Command};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -36,17 +37,42 @@ fn request(port: u16, wire: &str) -> String {
     response
 }
 
-fn spawn_personal(port: u16, runtime_root: &std::path::Path) -> Child {
-    Command::new(env!("CARGO_BIN_EXE_kernel-server"))
-        .args([
-            "--personal",
-            "--bind",
-            &format!("127.0.0.1:{port}"),
-            "--runtime-root",
-            runtime_root.to_str().unwrap(),
-        ])
-        .spawn()
-        .unwrap()
+struct PersonalProcess(Child);
+
+impl Deref for PersonalProcess {
+    type Target = Child;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for PersonalProcess {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for PersonalProcess {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+fn spawn_personal(port: u16, runtime_root: &std::path::Path) -> PersonalProcess {
+    PersonalProcess(
+        Command::new(env!("CARGO_BIN_EXE_kernel-server"))
+            .args([
+                "--personal",
+                "--bind",
+                &format!("127.0.0.1:{port}"),
+                "--runtime-root",
+                runtime_root.to_str().unwrap(),
+            ])
+            .spawn()
+            .unwrap(),
+    )
 }
 
 fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
@@ -323,20 +349,23 @@ fn management_resource_lifecycle_preconditions_are_discoverable() {
 
     let response = get(
         port,
-        "/management/resource/v1/lifecycle/preconditions",
+        "/resource/v1/projection?family=memory&version=1",
         &management_token,
     );
 
     assert!(response.contains("200 OK"), "{response}");
     let document = response_json(&response);
-    assert_eq!(document["authority_source"], "daemon-resource-lifecycle");
     assert_eq!(
-        document["memory"]["source_admission"],
-        "/management/resource/v1/context/source"
+        document["projection"]["authority_source"],
+        "daemon-memory-store"
     );
     assert_eq!(
-        document["skill"]["supersede"],
-        "/management/resource/v1/skill/revision/supersede"
+        document["projection"]["lifecycle"]["remember"],
+        "/management/resource/v1/memory/remember"
+    );
+    assert_eq!(
+        document["projection"]["lifecycle"]["forget"],
+        "/management/resource/v1/memory/forget"
     );
 
     daemon.kill().unwrap();
@@ -377,15 +406,6 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
             "body": {"text": "durable owner fact"},
         }),
     );
-    let source_response = send_json(
-        port,
-        "POST",
-        "/management/resource/v1/context/source",
-        &management_token,
-        &source,
-    );
-    assert!(source_response.contains("201 Created"), "{source_response}");
-
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -411,10 +431,10 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
         "POST",
         "/management/resource/v1/memory/remember",
         &management_token,
-        &candidate,
+        &json!({"source": source, "candidate": candidate}),
     );
     assert!(
-        remember_response.contains("201 Created"),
+        remember_response.contains("HTTP/1.1 201 "),
         "{remember_response}"
     );
     let memory_id = response_json(&remember_response)["memory_id"]
@@ -437,7 +457,7 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
         &management_token,
         &json!({"memory_id": memory_id, "reason": "owner lifecycle test"}),
     );
-    assert!(forget.contains("201 Created"), "{forget}");
+    assert!(forget.contains("HTTP/1.1 201 "), "{forget}");
     assert_eq!(response_json(&forget)["status"], "forgotten");
 
     daemon.kill().unwrap();
@@ -492,11 +512,14 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
             "instructions": "use only the reviewed lifecycle skill",
         }),
     );
-    assert!(import.contains("201 Created"), "{import}");
+    assert!(import.contains("HTTP/1.1 201 "), "{import}");
 
     let inspect = get(
         port,
-        &format!("/management/resource/v1/skill/revision?id={}", revision_id),
+        &format!(
+            "/management/resource/v1/skill/binding/explain?kind=revision&id={}",
+            revision_id
+        ),
         &management_token,
     );
     assert!(inspect.contains("200 OK"), "{inspect}");
@@ -518,7 +541,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
             "target_ref": "task://personal/lifecycle",
         }),
     );
-    assert!(bind.contains("201 Created"), "{bind}");
+    assert!(bind.contains("HTTP/1.1 201 "), "{bind}");
     let explain = get(
         port,
         &format!(
@@ -532,7 +555,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
     let supersede = send_json(
         port,
         "POST",
-        "/management/resource/v1/skill/revision/supersede",
+        "/management/resource/v1/skill/import",
         &management_token,
         &json!({
             "previous_revision_id": revision_id.to_string(),
@@ -543,11 +566,11 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
             "instructions": "replacement remains an exact opt-in revision",
         }),
     );
-    assert!(supersede.contains("201 Created"), "{supersede}");
+    assert!(supersede.contains("HTTP/1.1 201 "), "{supersede}");
     let replacement = get(
         port,
         &format!(
-            "/management/resource/v1/skill/revision?id={}",
+            "/management/resource/v1/skill/binding/explain?kind=revision&id={}",
             replacement_id
         ),
         &management_token,
@@ -569,7 +592,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
             "reason": "owner revoked lifecycle binding",
         }),
     );
-    assert!(revoke.contains("201 Created"), "{revoke}");
+    assert!(revoke.contains("HTTP/1.1 201 "), "{revoke}");
     let revoked = get(
         port,
         &format!(
