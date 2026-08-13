@@ -1,11 +1,12 @@
 //! P2-T02/D01 process evidence for the authenticated daemon Task API.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
-use std::time::Duration;
 
 static TASK_API_PROCESS_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
@@ -25,12 +26,7 @@ fn runtime_root() -> std::path::PathBuf {
 }
 
 fn request(port: u16, wire: &str) -> String {
-    let mut stream = loop {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            break stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
+    let mut stream = common::connect_when_ready(port);
     stream.write_all(wire.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut response = String::new();
@@ -49,19 +45,6 @@ fn spawn_personal(port: u16, runtime_root: &std::path::Path) -> Child {
         ])
         .spawn()
         .unwrap()
-}
-
-fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    let secret_path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    for _ in 0..100 {
-        if let Ok(secret) = std::fs::read_to_string(&secret_path) {
-            return secret.trim().to_owned();
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not create its bootstrap secret")
 }
 
 fn issue_task_token(port: u16, secret: &str) -> String {
@@ -87,7 +70,10 @@ fn task_record_requires_task_auth_persists_daemon_root_and_watch_is_snapshot_fir
     let port = free_port();
     let root = runtime_root();
     let mut daemon = spawn_personal(port, &root);
-    let token = issue_task_token(port, &bootstrap_secret(&root));
+    let token = issue_task_token(
+        port,
+        &common::wait_for_bootstrap_secret_from(&mut daemon, &root),
+    );
     let body = "{\"conversation_or_scope_ref\":\"conversation://local/thread-1\",\"raw_expression\":\"prepare a governed task\",\"schema_version\":\"cognitiveos.task-intent-record-request/0.1\"}";
 
     let unauthenticated = request(

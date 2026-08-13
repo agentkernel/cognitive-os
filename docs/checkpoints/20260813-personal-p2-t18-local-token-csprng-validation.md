@@ -986,3 +986,56 @@
 - Disposition: 先提交本 running report，再以普通 merge（不 rebase/force）引入
   `origin/main@d24f7d00`；只解决 P2-T18/P9-T05 交叉文件，保留所有 sibling 事实，重新生成
   exact candidate 后触发 required CI。
+
+### V84 — moving-main merge conflict resolution
+
+- Revision: merge in progress，parents `8b1177d3` + `origin/main@d24f7d00`
+- Environment/instrument: isolated authrng worktree；`git merge --no-edit origin/main`；
+  conflict-marker scan；`git diff --check`
+- Started/retained denominator: 2/2 conflict files；1/1 marker scan；1/1 diff check
+- Outcome: `pass`
+- Result: 仅 `PERSONAL-DEVELOPMENT-PLAN.md` 与 `PROGRESS.md` 冲突。解决保留 P9-T05
+  `done` 与全部 main-side test-helper 事实，同时保留 P2-T18 active lease/task；组合计数为
+  total 74 / done 65 / in-progress 1 / blocked 1 / not-started 7。无冲突 marker 或 whitespace
+  error，未编辑 P2-T13/P2-T14 产品路径。
+- Disposition: 运行 repository consistency 验证组合 task/slice/lease 账本。
+
+### V85 — moving-main repository consistency
+
+- Revision: merge in progress，parents `8b1177d3` + `origin/main@d24f7d00`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:consistency`
+- Started/retained denominator: 1/1 consistency run
+- Outcome: `pass`
+- Result: requirements/errors/schemas/vectors、合并后的 P2-T18/P9-T05 task/slice/lease 与环境
+  路由全部一致。
+- Disposition: 刷新因 main-side shared test helper 与 authrng source 组合而变化的 handbook
+  fingerprints，再运行 handbook/docs-sync。
+
+### V86 — moving-main fingerprint check
+
+- Revision: merge in progress，parents `8b1177d3` + `origin/main@d24f7d00`
+- Environment/instrument: Windows Node；`fill-handbook-fingerprints.mjs`
+- Started/retained denominator: 6/6 P2-T18 mapped locale pages checked
+- Outcome: `pass`
+- Result: 0 页需更新；main-side P9-T05 helper 未改变 P2-T18 映射 source digest，现有
+  fingerprints 已匹配组合树。
+- Disposition: 运行 handbook 全门禁。
+
+### V87 — moving-main handbook gate
+
+- Revision: merge in progress，parents `8b1177d3` + `origin/main@d24f7d00`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:handbook`
+- Started/retained denominator: 54 documents × 2 locales；9 generated families
+- Outcome: `pass`
+- Result: coverage、link、fingerprint、status 与 secret checks 全通过。
+- Disposition: stage merge resolution 与 running report，运行 staged docs-sync gate。
+
+### V88 — moving-main staged docs-sync
+
+- Revision: staged merge，parents `8b1177d3` + `origin/main@d24f7d00`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 15/15 merge-index paths
+- Outcome: `pass`
+- Result: main-side P9-T05 changes已在其父提交完成文档同步，P2-T18 映射文档保持匹配；
+  gate 判定本 merge resolution 无新的 documentation-relevant drift。
+- Disposition: 完成非 force merge commit，push 后在合并 HEAD 重新运行 local/native/CI。
