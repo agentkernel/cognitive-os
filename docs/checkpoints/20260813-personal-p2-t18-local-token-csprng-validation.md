@@ -1096,3 +1096,181 @@
 - Result: running report 无新 documentation-relevant change；此前 merge 与 mapped handbook
   gates 保持通过。
 - Disposition: commit/push report，随后在 pushed merge HEAD 重跑 exact native Rust 与 CI。
+
+### V95 — reconciled pushed HEAD
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Git push；pre-push docs-sync hook
+- Started/retained denominator: 1/1 push；1/1 hook
+- Outcome: `pass`
+- Result: 同一 P2-T18 branch/PR 以普通 fast-forward push 前进到含
+  `origin/main@d24f7d00` 的 merge HEAD；15 merge-index paths 通过 pre-push gate，无
+  force push。
+- Disposition: 在 native Linux fetch/checkout 该 exact pushed HEAD，运行 auth/source/full/
+  Clippy；同时持续新 CI 到终态。
+
+### V96 — reconciled exact Linux auth matrix
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: `DEV-LINUX-NATIVE-01`；
+  `/home/wuz/cos-p2t18-red-9e35d588` clean detached clone；
+  `cargo test -p kernel-server --locked personal::auth::tests -- --test-threads=1`
+- Started/retained denominator: 15/15 auth unit tests
+- Outcome: `pass`
+- Result: merged P9-T05 shared test helper 未改变 auth semantics；OS CSPRNG、熵故障、
+  legacy/empty、duplicate、atomic no-file/no-session 与 Debug redaction 15/15 通过，输出无
+  token material。
+- Disposition: 运行 source fallback guard。
+
+### V97 — reconciled exact Linux source guard
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked --test p2_t18_local_token_csprng`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: production auth source 只含 OS CSPRNG required marker；已知可预测 fallback markers
+  均为零。
+- Disposition: 运行完整 kernel-server regressions（含新 P9-T05 integration target）。
+
+### V98 — reconciled exact Linux kernel-server regressions
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo test -p kernel-server --locked -- --test-threads=1`
+- Started/retained denominator: 226/226 tests（206 unit + 20 integration）
+- Outcome: `pass`
+- Result: 226/226；P2-T18 auth 与合入的 P9-T05 四个 readiness cases 全通过。front-door
+  stderr 仍只包含 runtime 路径/endpoint 与非 secret 诊断，没有 token bytes。
+- Disposition: 运行 all-target Clippy。
+
+### V99 — reconciled exact Linux all-target Clippy
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 clean detached clone；
+  `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Started/retained denominator: 1/1 Clippy run
+- Outcome: `pass`
+- Result: all targets 无 warning/error。
+- Disposition: 核对并持续 required GitHub CI 到终态。
+
+### V100 — reconciled required CI Ubuntu
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: GitHub Actions run `31732398077`；
+  `verify (ubuntu-latest)` job `94555752800`
+- Started/retained denominator: 1/1 required Ubuntu job
+- Outcome: `pass`
+- Result: Ubuntu SUCCESS；PR 已恢复 `MERGEABLE`，Windows 仍 `IN_PROGRESS`。
+- Disposition: 持续 Windows job `94555752853` 到终态。
+
+### V101 — reconciled required CI Windows / aggregate
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: GitHub Actions run `31732398077`；
+  `verify (windows-latest)` job `94555752853`；PR #215 rollup
+- Started/retained denominator: 1/1 Windows job；2/2 aggregate jobs
+- Outcome: `pass`
+- Result: Windows SUCCESS；Ubuntu/Windows 2/2 required jobs 同一 exact HEAD 通过。PR
+  `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`，仍为 Draft。
+- Disposition: 完成 final acceptance/current-ledger sync 与无遗漏 call-site review；提交并
+  推送证据后把 PR 标为 ready，保持不合并。
+
+### V102 — final call-site / secret-output review
+
+- Revision: `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: branch diff path audit；all `LocalSessionAuthority` production
+  initialize/load/issue callers；token generator/fallback markers；secret-bearing `Debug`；
+  personal stderr/error/front-door paths
+- Started/retained denominator: 2/2 production generation call sites；1/1 persisted-load path；
+  3/3 secret-bearing views/requests/authority Debug surfaces；all personal stderr macros
+- Outcome: `pass`；high-confidence findings 0 after fixes
+- Result: bootstrap 与 session bearer 是 `generate_opaque_token` 的唯一生产调用点并共用
+  `getrandom::fill`；load path 拒绝空/旧/畸形；RNG seam 只在私有模块与 `cfg(test)` 使用。
+  `SessionIssueRequest`、`SessionTokenView`、`LocalSessionAuthority` 均 redacted；transport
+  只记录 byte count，stderr/errors不含 body/header/token。branch diff 仅含 P2-T18 exact
+  lease paths；无 P2-T13/P2-T14 产品路径。
+- Disposition: 把 formal task/D02 标为 acceptance `done`，记录 exact evidence 与 ready PR
+  下一动作；lease 保持 active 到合并收口。
+
+### V103 — acceptance ledger consistency 首轮
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:consistency`
+- Started/retained denominator: 1/1 consistency run
+- Outcome: `fail`
+- Result: 唯一 violation 为 `CURRENT_SNAPSHOT_LEASE_MISMATCH`：active task lease
+  `P2-T18/D02` 必须保持 current `in-progress`，直到正常 merge 后关闭 lease；因此在 ready
+  PR 阶段提前把 task/slice 状态写 `done` 不符合仓库 closure state machine。代码、合同、
+  counts 以外无 violation。
+- Disposition: 保留“acceptance complete / merge-ready”证据，但将 formal task、D02 与计数
+  恢复为 `in-progress`；只有 merge 后 lease closure ledger 才改 `done`。
+
+### V104 — merge-ready status annotation consistency
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node/pnpm；second `pnpm run check:consistency`
+- Started/retained denominator: 1/1 consistency run
+- Outcome: `fail`
+- Result: 状态已恢复为 in-progress，但把“acceptance complete; merge-ready”附加在 D02
+  status cell 后使 parser 将整串视为 unknown，并连带触发 lease mismatch；没有其他
+  violation。
+- Disposition: status cell 保持精确 canonical `in-progress`，把 readiness 注释放到 evidence
+  cell，再重跑。
+
+### V105 — canonical merge-ready ledger consistency
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node/pnpm；third `pnpm run check:consistency`
+- Started/retained denominator: 1/1 consistency run
+- Outcome: `pass`
+- Result: canonical status cell 保持 `in-progress`，evidence 明确 acceptance complete /
+  merge-ready；74 tasks、active lease、D02 与所有 requirements/errors/schemas/vectors 一致。
+- Disposition: 运行 final handbook/generated/diff/docs-sync，提交 ledger。
+
+### V106 — final acceptance handbook gate
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node/pnpm；`pnpm run check:handbook`
+- Started/retained denominator: 54 documents × 2 locales；9 generated families
+- Outcome: `pass`
+- Result: coverage、link、fingerprint、status 与 secret checks 全通过。
+- Disposition: 运行 generated byte gate。
+
+### V107 — final acceptance generated byte gate
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node；`generate-handbook.mjs --check`
+- Started/retained denominator: 18/18 generated pages
+- Outcome: `pass`
+- Result: 18 页 byte-identical。
+- Disposition: 运行 diff whitespace。
+
+### V108 — final acceptance diff whitespace
+
+- Revision: working tree after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Git；`git diff --check`
+- Started/retained denominator: 1/1 working diff
+- Outcome: `pass`
+- Result: 无 whitespace error。
+- Disposition: 精确暂存 plan/progress/report，运行 staged docs-sync。
+
+### V109 — final acceptance staged docs-sync
+
+- Revision: staged ledger after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: Windows Node；`docs-sync-gate.mjs --staged`
+- Started/retained denominator: 3/3 staged paths
+- Outcome: `pass`
+- Result: plan/progress/current report 不映射新的 handbook source；现有双语 CSPRNG 与
+  upgrade recovery 文档保持通过。
+- Disposition: commit/push acceptance ledger，持续 docs-only CI 到终态后标记 PR ready。
+
+### V110 — ordered final report docs-sync
+
+- Revision: staged ledger after `1e579c842585a3afc167769229870492109201b9`
+- Environment/instrument: V80–V109 chronological heading audit；`git diff --check`；
+  `docs-sync-gate.mjs --staged`
+- Started/retained denominator: 30/30 ordered headings；1/1 diff；1/1 docs-sync
+- Outcome: `pass`
+- Result: running report entries 严格按 V80→V109 递增，无 whitespace 或 docs-sync drift。
+- Disposition: commit/push acceptance ledger。
