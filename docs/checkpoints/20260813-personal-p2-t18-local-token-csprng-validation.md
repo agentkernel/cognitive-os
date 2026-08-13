@@ -365,3 +365,51 @@
 - Result: `auth.rs` 命中 `daemon-http`；6 页 handbook 已与刷新后的 fingerprints 同批暂存；
   54×2 handbook 与 18 generated 页面通过；无 `DOCS_IMPACT_NONE` 逃逸。
 - Disposition: commit/push 后在 exact native Linux 重跑 focused tests 与 Clippy。
+
+### V32 — exact Linux production-source guard（Clippy/zero-block 候选）
+
+- Revision: `e65cb0d70ef878d4a92fdc40e3d33656b66cf03b`
+- Environment/instrument: `DEV-LINUX-NATIVE-01`；
+  `/home/wuz/cos-p2t18-e65cb0d7` disposable clone via local bundle
+  (GitHub fetch on the host was too slow); `cargo test -p kernel-server --locked
+  --test p2_t18_local_token_csprng`
+- Started/retained denominator: 1/1 test
+- Outcome: `pass`
+- Result: production source guard 1/1；OS CSPRNG marker present，PID/time/DefaultHasher/
+  handcrafted fallback 均被静态拒绝；输出无 token material。
+- Disposition: 运行含新零熵块负例的 auth unit matrix。
+
+### V33 — exact Linux auth unit matrix（含零熵块）
+
+- Revision: `e65cb0d70ef878d4a92fdc40e3d33656b66cf03b`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 detached clone；
+  `cargo test -p kernel-server --locked personal::auth::tests -- --test-threads=1`
+- Started/retained denominator: 13/13 auth unit tests（先前 12，新增
+  `zero_entropy_block_creates_no_bootstrap_file`）
+- Outcome: `pass`
+- Result: 13/13：failure/short/repeated/zero-block（全零、token 半区、probe 半区）无文件，
+  session entropy failure 无 session，跨调用重复 token 被拒，128 个 bounded OS-RNG 样本
+  形状/唯一性通过（无统计 claim），Unix 0600、wrong channel、management boundary、idle
+  expiry、revoke、bootstrap mismatch 与 Debug/log redaction 全通过。输出无 token material。
+- Disposition: 运行 kernel-server all-target Clippy。
+
+### V34 — exact Linux all-target Clippy（修复后）
+
+- Revision: `e65cb0d70ef878d4a92fdc40e3d33656b66cf03b`
+- Environment/instrument: `DEV-LINUX-NATIVE-01` 同一 detached clone；
+  `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+- Started/retained denominator: 1/1 Clippy run
+- Outcome: `pass`
+- Result: Finished `dev` profile in 30.64s；无 warning/error，包括先前失败的 integration
+  source guard。
+- Disposition: 等待 required GitHub Ubuntu/Windows CI。
+
+### V35 — required CI Ubuntu
+
+- Revision: `e65cb0d70ef878d4a92fdc40e3d33656b66cf03b`
+- Environment/instrument: GitHub Actions `verify (ubuntu-latest)` run
+  `31721293941` job `94518641191`
+- Started/retained denominator: 1/1 required Ubuntu job
+- Outcome: `pass`
+- Result: Ubuntu required check SUCCESS on the Clippy/zero-block candidate.
+- Disposition: Windows job still `IN_PROGRESS`；完成后追加。
