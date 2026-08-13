@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:c0f73bc96bfde4c9b58db577e4a157b41418c709840eda4fec069abfaa387b70"
+fingerprint: "sha256:00c02ea6c421fde54f1199ccee9614081dcd465f470b7df7afb0d110b9a4f5f0"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -75,7 +75,8 @@ Task admission reuses those existing v1–v3 tables; it adds no migration or
 parallel scheduler. `insert_task_contract_with_execution_bootstrap` repeats the
 writer-fence and contract-epoch CAS inside one immediate authority transaction,
 then inserts the TaskContract event, registered `START` Loop admission/event,
-its governed Task projection at registered `DRAFT`, hard Budget, and
+its governed Task projection at registered `DRAFT` without a second
+`(object_id, INITIAL)` event, hard Budget, and
 `(task_ref, contract_epoch)` runnable scheduler row. A conflict in any late
 member rolls the earlier inserts back; a crash after a successful commit
 reopens all five prerequisites. Startup recovery can idempotently repair an

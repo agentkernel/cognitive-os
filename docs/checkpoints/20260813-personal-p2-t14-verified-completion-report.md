@@ -161,3 +161,61 @@ public transition contract:
   - whitespace: **pass**.
 - Mapped scheduler/kernel/store and user pages now describe the written
   implementation as validation-pending; no completion claim is made yet.
+
+### Unit 014 — initial implementation native fetch
+
+- Finished: 2026-08-14 00:37 +08:00
+- Target revision: `14e71824`
+- Result: **not-run** — remote Git fetch failed before checkout/compile with a
+  transient HTTP/2 framing error (`curl 16`, expected flush after ref listing).
+- Recovery: retry the same fetch once; if transport remains unstable, transfer
+  a Git bundle containing the exact committed revision.
+
+### Unit 015 — native fetch retry via local SSH remote
+
+- Finished: 2026-08-14 00:24 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `14e718247dc82b421a8ea7cab15dbec152d1c0ec`
+- Result: **pass** for checkout. HTTPS was skipped; `git fetch` through
+  `/home/wuz/p2t11` (`git@github.com:agentkernel/cognitive-os.git`) then a
+  local fetch into `/home/wuz/cos-p2t14-108b0cb` placed HEAD on the exact
+  pushed revision with a clean worktree.
+
+### Unit 016 — exact native scheduler suite at `14e71824`
+
+- Finished: 2026-08-14 00:25 +08:00
+- Command: `cargo test -p kernel-server --locked personal::scheduler_authority::tests -- --test-threads=1`
+- Result: **fail** — 44 passed / 7 failed. Every failure is the same fixture
+  defect at `persist_native_workspace_read_dispatch_fixture`: `admit_object`
+  tries to write a second `(object_id, INITIAL)` event after
+  `insert_task_contract` already minted that identity, so SQLite raises
+  `UNIQUE constraint failed: events.object_id, events.object_version`.
+- Clippy and the verification-executor suite were **not-run** because the
+  scheduler filter stopped the script.
+- Recovery: materialize the DRAFT Task projection without a second admission
+  event, matching production bootstrap.
+
+### Unit 017 — DRAFT projection helper and first D01 negatives
+
+- Finished: 2026-08-14 00:32 +08:00
+- Result: **authored; native execution pending**
+- `insert_task_contract_with_execution_bootstrap` / startup repair now share
+  `insert_draft_task_projection_in_tx`. The native WorkspaceRead fixture calls
+  `materialize_draft_task_projection` instead of `admit_object`.
+- Added failure-first proofs: a missing report / non-authority signal leaves
+  the Task `DRAFT` and the Effect `PROPOSED`; a second acceptance after a
+  verified `COMPLETED` Task is `DuplicateAcceptance`.
+- Local `cargo fmt --all -- --check` follows this unit. Rust execution remains
+  **not-run locally** under `RUST-LINK-DEV-WIN-GNU-01`.
+
+### Unit 018 — fixture-fix local eligible checks
+
+- Finished: 2026-08-14 00:40 +08:00
+- Commands: `cargo fmt --all -- --check`; `pnpm run check:consistency`;
+  `pnpm run check:handbook`; `node tools/src/generate-handbook.mjs --check`;
+  `git diff --check`; `node tools/src/fill-handbook-fingerprints.mjs`
+- Results: all **pass** (consistency 275 requirements; handbook 54×2;
+  generated 18 pages byte-identical; whitespace clean). Fingerprints refreshed
+  for mapped store/execution-chain/operations pages. Rust compile/test remain
+  **not-run locally**. Native retest of the forthcoming pushed SHA is the next
+  unit.

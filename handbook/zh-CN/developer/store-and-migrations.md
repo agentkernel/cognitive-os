@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:c0f73bc96bfde4c9b58db577e4a157b41418c709840eda4fec069abfaa387b70"
+fingerprint: "sha256:00c02ea6c421fde54f1199ccee9614081dcd465f470b7df7afb0d110b9a4f5f0"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -69,7 +69,7 @@ epoch 回收过期 lease；释放要求精确 `(owner, epoch)`；WIA/continuatio
 Task 准入复用既有 v1–v3 表，不新增迁移或平行调度器。
 `insert_task_contract_with_execution_bootstrap` 在单个 immediate 权威事务内重查写
 者 fence 与合同 epoch CAS，再插入 TaskContract 事件、注册初态 `START` 的 Loop 准
-入/事件、注册初态 `DRAFT` 的 governed Task 投影、硬 Budget，以及
+入/事件、注册初态 `DRAFT` 的 governed Task 投影（不写第二条 `(object_id, INITIAL)` 事件）、硬 Budget，以及
 `(task_ref, contract_epoch)` runnable 调度行。任何靠后的成员冲突都会回滚先前插入；
 成功提交后崩溃重开则五项前置全部存在。启动恢复还可在一个 fenced 事务内幂等修复旧的
 当前合同所缺 Task、Loop、Budget 或调度工作。

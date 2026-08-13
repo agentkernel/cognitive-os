@@ -22,8 +22,9 @@ non_claims:
 
 - **自主执行未端到端接线**：Task 准入会入列完整调度引导，绑定后的周期 worker 可到
   candidate 准入。无参数 WorkspaceRead 现有持久生产 Effect 调用者、independent
-  verifier 与已写入的 evidence-bound Task acceptance caller；最终公共 C1 completion
-  及其 negatives 仍待 exact native validation。其余 Tool 请求载体仍未接线。
+  verifier 与已写入的 evidence-bound Task acceptance caller；首次 native 运行发现
+  夹具事件冲突，缺报告与重复 acceptance 负例已写入，最终公共 C1 completion 仍待
+  exact native 重测。其余 Tool 请求载体仍未接线。
 - **无备份/恢复命令**；仅有规划 API（secret 恒排除）。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
   UX。

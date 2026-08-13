@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:74c17982c3fa4ba94a4ea265daa697bb3e6b9bea544a4862e5bde3e0c9e8214b"
+fingerprint: "sha256:2880238ccd413148b14291f6ebc76e54ac27bbb7812ee6fa52fd6950a05e1d6b"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -51,7 +51,7 @@ non_claims:
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，仅测试调用 | attempted/completed 状态跨重启保留；timeout/network attempt 与持久状态缺失均对账为 `Indeterminate`，完整原键 receipt 对账为已执行；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
-| Task candidate + acceptance authority | implemented；exact native validation pending | scheduler materialize/activate governed Task；随后只有最新当前 independent passed report、可重读 CAS evidence、未变 fixed state、闭合 Effect 集合与独立 daemon acceptance principal 才可提交两条登记 Task transition |
+| Task candidate + acceptance authority | implemented；exact native validation pending | scheduler materialize/activate governed Task；随后只有最新当前 independent passed report、可重读 CAS evidence、未变 fixed state、闭合 Effect 集合与独立 daemon acceptance principal 才可提交两条登记 Task transition；缺报告与重复 acceptance 均 fail closed |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Task/Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口
@@ -74,8 +74,9 @@ non_claims:
    `fixed_post_state` / `verification_report` / `acceptance_decision` 槽位；
    canonical decision bytes 位于 Artifact CAS，daemon-private acceptance principal
    与 worker/verifier 身份分离；SQLite 在两条 transition 事务内都重查 currentness 与
-   完整 Effect 集合。exact native 公共 C1 expected-red 已记录；该行须等该测试及完整
-   negative matrix 通过后才可离开 validation pending。
+   完整 Effect 集合。exact native `14e71824` 因夹具 UNIQUE 约束失败；DRAFT 投影现在
+   不再写第二条 INITIAL 事件，且已写入缺报告与重复 acceptance 负例。该行须等重测及
+   其余 currentness/CAS 负例通过后才可离开 validation pending。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。

@@ -3,7 +3,7 @@ use cognitive_contracts::generated::{
     object_reference::{StrongReference, StrongReferenceKind},
     task_contract::{ContractConditionKind, TaskContract},
 };
-use cognitive_domain::{LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef, Version};
+use cognitive_domain::{LifecycleDomain, ObjectId, ReasonCode, StateName, UriRef};
 use cognitive_kernel::{
     Causation, CommittedTransition, Reason, TablePin, TransitionCommand, TransitionEngine,
     effects::{WriterLease, strong_reference_for_content},

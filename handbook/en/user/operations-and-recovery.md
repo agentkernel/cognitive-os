@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:9e2931b9660026ae5fdf97ba59d5ab95dd08e63d5037b869f2b45c22e318dbb1"
+fingerprint: "sha256:2ad11a749e4a2487866ff8a4edf2f54e015c2c7262c011f1a9ad2552efff05f7"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---

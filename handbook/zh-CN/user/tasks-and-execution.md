@@ -53,10 +53,9 @@ fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的
 到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**daemon
 的公共 C1 completion 实现仍为 validation pending**：生产会派发无参数 WorkspaceRead、
 独立验证其固定的已对账 Effect，再只从当前 CAS-backed authority facts 推导 candidate
-与最终 acceptance。其他 Tool 请求载体仍未接线；公共 C1 路径须等 exact native
-validation 与完整 negative matrix 通过后才是已验收能力。因此已接纳 Task 在权威状态中持久、可
-观察且 runnable；自主执行仍为
-`partial`。开发者细节见
+与最终 acceptance。首次 native 运行发现夹具事件冲突，该缺陷已修，并写入缺报告与重复
+acceptance 负例，但 exact native 重测仍待运行。其他 Tool 请求载体仍未接线。因此已接纳
+Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 
 ## 构造上绝不可能发生的事

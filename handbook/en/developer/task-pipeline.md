@@ -71,9 +71,10 @@ HTTP attempts survive restart as indeterminate (missing durable state also fails
 indeterminate), and workspace mutation completion requires a durable receipt bound
 to the original idempotency key in a state store outside the approved workspace.
 None of these executor guarantees turns admission, a Tool receipt, or matching
-workspace bytes into Task completion. P2-T14 keeps that boundary and now has a
-failure-first public C1 proof plus an implementation pending exact native
-validation: only current closed Effects, the exact fixed post-state, the newest
-matching independent passed report, retrievable Artifact CAS evidence, and a
-daemon-private acceptance principal derive the registered candidate/acceptance
-guards. Raw completion signals are not accepted by this API.
+workspace bytes into Task completion. P2-T14 keeps that boundary: a public C1
+WorkspaceRead can complete only from current closed Effects, the exact fixed
+post-state, the newest independent passed report, retrievable Artifact CAS
+evidence, and a daemon-private acceptance principal. A missing report leaves
+the Task `DRAFT`; a second acceptance after `COMPLETED` is rejected. Exact
+native retest of that fixture repair is still pending, so this is not yet an
+accepted capability.
