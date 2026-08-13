@@ -141,6 +141,7 @@ execution-ready.
 | `B3` faults, restart, cleanup | frozen runner + public surface | 40 / 40 | partial |
 | `B4` concurrency and overload | public surface | 832 / 832 | **pass** |
 | `B5` 1 h soak | public surface | 1620 / 1620 | **pass** |
+| **Phase 3** `B5` 8 h soak | durable minute/block/restart records | running; 414/480 minutes last owner-observed | **running**; final result not claimed |
 | `O-LAUNCH` (phase 1; Pi launch to failure) | frozen route smoke | 10 / 10 + 20 spawn | **pass** as a launch observation |
 | **Phase 2** credential import | product stdin path | 1 | **pass** |
 | **Phase 2** `D1` / `D2` re-run, live Provider | frozen route runner | 80 / 80 | **pass** |
@@ -177,6 +178,9 @@ runs, 10 phase-3 deadline requests, 20 broker-fault runs, 10 Pi-kill runs, and
 UJ3 surface, three before the `O1` cell, two before each paired batch) were
 discarded before their cells began and are not counted; no started sample was
 discarded anywhere.
+
+The running B5 8 h rows are intentionally excluded from this total until
+`B5_8H_DONE` freezes the complete 480-minute / 48-pair / 8-restart denominator.
 
 `O-LAUNCH` was **added during phase 1** and is disclosed as such: the
 preregistered `O` cell was unrunnable without a credential, so a fixed-N
@@ -571,6 +575,11 @@ task block every 5 minutes and no Provider arm exists.
 
 `B5` 8 h and 24 h are **`not-run`**: the plan promotes to 8 h only after a clean
 1 h exit, and 24 h is conditional on an unresolved 8 h slope plus owner budget.
+
+That sentence is the phase-2 publication-time disposition. Phase 3 has now
+started the eligible 8 h cell; it remains **`running`**, last owner-observed at
+minute 414/480 with `local_rc=0`. No final slope or 24 h trigger is claimed
+before `B5_8H_DONE`.
 
 ## 13. Safety hard conditions (plan §11.12, §6.8)
 

@@ -1493,3 +1493,21 @@ records are separate B5 evidence, not retroactive UJ2 samples.
 **Unique next action:** continue the active `B5` 8 h denominator to 480/480
 minute records, append its result immediately, and run no 24 h cell unless an
 actual unresolved 8 h slope triggers the plan condition.
+
+### 12.14 `B5` 8 h incremental checkpoint — `running`
+
+The 1 h promotion gate passed, so the preregistered 8 h soak is independently
+running at exact post-P2-T11 revision
+`158e9276e49573db84aeb6ab55012d314368a76c`. Durable minute, paired-block, and
+restart records are written on the guest as each unit finishes. The last
+owner-observed progress for this checkpoint is minute **414 / 480** with
+`local_rc=0`.
+
+This is an in-progress durability checkpoint, **not** a B5 result. No 8 h
+pass/fail, slope, cleanup, safety, or 24 h-trigger conclusion is claimed, and
+none of the running denominator is added to the assessment total yet.
+
+**Single resume trigger and next action:** after `B5_8H_DONE`, analyze exactly
+480 minute rows, 48 paired blocks, and 8 restart rows; append the complete B5
+result; disposition the conditional 24 h cell; then clean up, reconcile
+digests/locator and reports, and close the evaluation lease and campaign.
