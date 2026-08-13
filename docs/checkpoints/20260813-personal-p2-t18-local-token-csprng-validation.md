@@ -413,3 +413,28 @@
 - Outcome: `pass`
 - Result: Ubuntu required check SUCCESS on the Clippy/zero-block candidate.
 - Disposition: Windows job still `IN_PROGRESS`；完成后追加。
+
+### V36 — required CI Windows（实现候选）
+
+- Revision: `e65cb0d70ef878d4a92fdc40e3d33656b66cf03b`
+- Environment/instrument: GitHub Actions `verify (windows-latest)` run
+  `31721293941` job `94518641261`
+- Started/retained denominator: 1/1 required Windows job
+- Outcome: `pass`
+- Result: Windows required check SUCCESS，含 Clippy `-D warnings`、workspace tests 与
+  handbook/consistency。该 revision 的 Ubuntu 已在 V35 通过，因此实现候选两端 required
+  CI 均为 pass。
+- Disposition: docs-only ledger commit `68f0f1b0` 触发的后继 run 另记。
+
+### V37 — required CI Ubuntu+Windows（ledger HEAD）
+
+- Revision: `68f0f1b0b944eeabe1ffa2beac764577aa24ff53`
+- Environment/instrument: GitHub Actions run `31722030482`
+  (`verify (ubuntu-latest)` job `94521093964`；`verify (windows-latest)` job
+  `94521093962`)
+- Started/retained denominator: 2/2 required jobs
+- Outcome: `pass`
+- Result: Draft PR #215 HEAD 两端 SUCCESS。ledger commit 不改变产品代码；实现行为以
+  `e65cb0d7` 的 native Linux + 两端 CI 为准。
+- Disposition: 保持 Draft；不合并，以免覆盖 sibling P2-T14 lease/PROGRESS。无
+  Gate/release/Profile/B01 声明。
