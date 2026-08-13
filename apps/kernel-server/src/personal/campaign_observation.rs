@@ -68,6 +68,8 @@ pub(crate) struct FixtureBounds {
 }
 
 /// 评测授权的故障注入点。默认关闭；未授权请求不得触达外部变更。
+/// 变体名保留 plan 中的 before 阶段后缀，避免与验收矩阵用词漂移。
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum CampaignFaultPoint {
@@ -1717,9 +1719,9 @@ fn read_http_message(stream: &mut TcpStream) -> Result<Vec<u8>, CampaignObservat
     Ok(bytes)
 }
 
-fn split_http_request(
-    bytes: &[u8],
-) -> Result<(&str, BTreeMap<String, String>, &[u8]), CampaignObservationError> {
+type FixtureHttpParts<'a> = (&'a str, BTreeMap<String, String>, &'a [u8]);
+
+fn split_http_request(bytes: &[u8]) -> Result<FixtureHttpParts<'_>, CampaignObservationError> {
     let header_end = find_header_end(bytes).ok_or_else(|| {
         CampaignObservationError::Infrastructure("fixture request is incomplete".to_owned())
     })?;
@@ -1741,7 +1743,7 @@ fn split_http_request(
 }
 
 fn parse_content_length(headers: &str) -> Result<usize, CampaignObservationError> {
-    headers
+    Ok(headers
         .lines()
         .find_map(|line| {
             let (name, value) = line.split_once(':')?;
@@ -1749,9 +1751,7 @@ fn parse_content_length(headers: &str) -> Result<usize, CampaignObservationError
                 .then(|| value.trim().parse::<usize>().ok())
                 .flatten()
         })
-        .unwrap_or(0)
-        .try_into()
-        .map_err(|_| CampaignObservationError::Infrastructure("invalid content length".to_owned()))
+        .unwrap_or(0))
 }
 
 fn write_http_json(

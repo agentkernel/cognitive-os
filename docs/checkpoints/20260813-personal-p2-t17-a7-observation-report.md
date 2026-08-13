@@ -238,4 +238,25 @@
 - Disposition: stamp `event_time` on campaign events, then re-run the same focused suite
 - Safety: no assertion relaxation; no Gate/release/Profile/EVAL-003 claim
 
+### V023 — focused native A7 suite
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7` on `DEV-LINUX-NATIVE-01`
+- Exact revision: `0f9395d5792ffad69ab555024ffdc115bddce2c2`
+- Environment: `personal-linux-native-01` disposable worktree `/home/wuz/cos-p2t17-57f10bea`
+- Started / retained: `10 / 10`
+- Outcome: `pass`
+- Measurement: 10/10 focused negatives passed, including crash mid-mutation original-key restart, original-key replay with mutation_count=1, duplicate Effect rejection, duplicate dispatch, stale lease, unauthorized fault, ambiguous query, receipt mismatch, duplicate restart worker, and fixture conflict/bounds/residue. `acceptance_ref` remains absent.
+- Safety: local/fixture evidence; no Gate/release/Profile/B01/EVAL-003 claim
+
+### V024 — kernel-server Clippy at the passing test revision
+
+- Instrument: `cargo clippy -p kernel-server --all-targets -- -D warnings`
+- Exact revision: `0f9395d5792ffad69ab555024ffdc115bddce2c2`
+- Environment: `DEV-LINUX-NATIVE-01`
+- Started / retained: `1 / 1`
+- Outcome: `fail`
+- Measurement: three lints: enum variant postfix `Before`, HTTP split return type complexity, and useless `usize` conversion
+- Disposition: allow the frozen fault-point names, alias the HTTP parts type, and drop the identity conversion, then re-run Clippy and the focused suite
+- Safety: no assertion change
+
 <!-- Append each completed validation unit below before starting the next one. -->
