@@ -10,8 +10,9 @@ use super::{
     complete_resolved_effect_and_release, complete_scheduler_admission,
     complete_scheduler_worker_attempt, ensure_current_contract_epoch,
     parse_execution_bound_contract, propose_persist_and_admit_candidate_after_metadata,
-    release_closed_effect_dispatch, release_closed_recovered_attempt, select_single_effect_intent,
-    validate_untrusted_pi_candidate, validate_worker_authorization_evidence,
+    release_closed_effect_dispatch, release_closed_recovered_attempt,
+    resolve_scheduler_work_for_task, select_single_effect_intent, validate_untrusted_pi_candidate,
+    validate_worker_authorization_evidence,
 };
 use cognitive_contracts::{
     canonical,
@@ -2045,6 +2046,80 @@ fn effect_resolution_rejects_missing_ambiguous_and_inconsistent_bindings() {
         select_single_effect_intent(&binding, &[inconsistent_intent]),
         Err(SchedulerAuthorityError::InconsistentEffectBinding(_))
     ));
+}
+
+#[test]
+fn fresh_zero_intent_task_resolves_to_pre_admission_without_leasing_worker_authority() {
+    let database_path = temporary_scheduler_database_path();
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://personal/p2-t12-zero-intent";
+    persist_repairable_task_contract(&store, 1_400, task_ref);
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    scheduler_repository
+        .upsert(&scheduler_row(task_ref))
+        .unwrap();
+
+    let resolved = resolve_scheduler_work_for_task(&store, task_ref).unwrap();
+    assert_eq!(resolved.task_binding.task_ref, task_ref);
+    assert_eq!(resolved.task_binding.contract_epoch, 1);
+    assert!(
+        resolved.authority_binding.is_none(),
+        "zero Intent is the pre-admission case, not a missing-Effect error"
+    );
+    let scheduler_row = scheduler_repository
+        .load(&scheduler_work_key(task_ref))
+        .unwrap()
+        .unwrap();
+    assert_eq!(scheduler_row.state, SchedulerState::Runnable.as_str());
+    assert_eq!(scheduler_row.attempt_count, 0);
+    assert!(
+        store
+            .list_consumed_worker_iteration_authorizations()
+            .unwrap()
+            .is_empty(),
+        "pre-admission resolution cannot consume worker authority"
+    );
+
+    drop(scheduler_repository);
+    drop(store);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn scheduler_row_processing_isolates_one_failure_and_reaches_the_next_row() {
+    let database_path = temporary_scheduler_database_path();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository
+        .upsert(&scheduler_row("task://personal/a-malformed"))
+        .unwrap();
+    repository
+        .upsert(&scheduler_row("task://personal/b-healthy"))
+        .unwrap();
+    let rows = repository.list_recoverable().unwrap();
+    let mut visited = Vec::new();
+
+    let failures = super::process_scheduler_rows_isolated(rows, |row| {
+        visited.push(row.task_ref.clone());
+        if row.task_ref.ends_with("a-malformed") {
+            Err(SchedulerAuthorityError::MalformedContract(
+                "injected row-local failure".to_owned(),
+            ))
+        } else {
+            Ok(())
+        }
+    });
+
+    assert_eq!(failures, 1);
+    assert_eq!(
+        visited,
+        vec![
+            "task://personal/a-malformed".to_owned(),
+            "task://personal/b-healthy".to_owned()
+        ]
+    );
+
+    drop(repository);
+    std::fs::remove_file(database_path).unwrap();
 }
 
 #[test]

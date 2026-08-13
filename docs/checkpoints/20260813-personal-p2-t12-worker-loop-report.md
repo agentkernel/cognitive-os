@@ -588,3 +588,77 @@ Windows GNU linker host.
 - Finished: 2026-08-13 14:01 +08:00
 - Command: `pnpm run check:consistency`
 - Result: **pass**
+
+### Unit 073 — exact native D01 rerun and Clippy
+
+- Finished: 2026-08-13 14:02 +08:00
+- Environment: `DEV-LINUX-NATIVE-01`
+- Exact pushed revision: `0e7c76b933c46a5d9dc649bd616cecc04b4b6d58`
+- Results:
+  - admission suite **8/8 pass**;
+  - startup-repair focused suite **2/2 pass**;
+  - Clippy for `cognitive-kernel`, `cognitive-store`,
+    `cognitive-management`, `cognitive-runtime`, and `kernel-server`, all
+    targets with `-D warnings`: **pass**.
+
+### Unit 074 — completed D01 native cleanup
+
+- Finished: 2026-08-13 14:04 +08:00
+- Result: **pass**; removed only `/home/wuz/cos-p2t12-eeaec3a` and verified it
+  is absent.
+
+### Unit 075 — D01 required Ubuntu/Windows CI
+
+- Finished: 2026-08-13 14:11 +08:00
+- Exact revision: `0e7c76b933c46a5d9dc649bd616cecc04b4b6d58`
+- Run: `31672335888`
+- Result: **pass**
+  - Ubuntu job `94359417464`: success;
+  - Windows job `94359417315`: success.
+- Both jobs passed workspace build/test, Clippy, rustfmt, codegen drift,
+  consistency, handbook, conformance, honesty, and digest gates.
+- D01 exit: satisfied. A schedulable Task is still neither executed nor
+  completed; D02 begins immediately.
+
+### Unit 076 — D02 failure-first zero-Intent and row-isolation tests
+
+- Finished: 2026-08-13 14:19 +08:00
+- Result: **tests authored; exact native expected-red pending**
+- Properties:
+  - a real-SQLite current TaskContract with zero Intents resolves as
+    pre-admission work, remains runnable/unleased, and consumes no worker
+    authority;
+  - processing two real scheduler rows records one injected row-local failure
+    yet still reaches the second row.
+- Expected current failure: `ResolvedSchedulerWork.authority_binding` is not
+  optional and zero Intents returns `MissingEffectBinding`; the isolated row
+  processor does not yet exist.
+
+### Unit 077 — D02 failure-first local static checks
+
+- Finished: 2026-08-13 14:20 +08:00
+- Results:
+  - `cargo fmt --all -- --check`: **pass**;
+  - `git diff --check`: **pass**;
+  - edited-file diagnostics: **not-run** because the diagnostics request timed
+    out after 10 seconds; this is not recorded as a code failure.
+
+### Unit 078 — D02 failure-first docs-sync gate
+
+- Finished: 2026-08-13 14:22 +08:00
+- Result: **pass** with
+  `DOCS_IMPACT_NONE="This checkpoint adds failure-first tests plus task and
+  lease accounting; it changes no production behavior or handbook guidance."`
+- Full handbook and generated-page checks passed.
+
+### Unit 079 — D02 failure-first consistency
+
+- Finished: 2026-08-13 14:22 +08:00
+- Command: `pnpm run check:consistency`
+- Result: **pass**
+
+### Unit 080 — D02 failure-first staged whitespace
+
+- Finished: 2026-08-13 14:22 +08:00
+- Command: `git diff --cached --check`
+- Result: **pass**
