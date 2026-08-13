@@ -52,9 +52,9 @@ use cognitive_kernel::ports::{
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
     DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
     ObjectCas, OperationCandidateProposalRow, ProgressFactRow, ProtocolStore, RecordDraft,
-    SchedulerExecutionPolicyRow, SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow,
-    TaskExecutionBootstrap, TransitionCommit, WorkerAuthorizationStore,
-    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
+    StoredObject, TaskBinding, TaskContractRow, TaskExecutionBootstrap, TransitionCommit,
+    WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, NativeOperationFamily};
 use cognitive_kernel::{EffectClass, OperationDescriptor};

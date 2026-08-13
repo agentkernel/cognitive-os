@@ -1616,3 +1616,23 @@ Windows GNU linker host.
 - Finished: 2026-08-13 19:21 +08:00
 - Result: **pass**; generated references were regenerated and six mapped
   bilingual fingerprints were refreshed.
+
+### Unit 191 — exact native full-tick fixture compile
+
+- Finished: 2026-08-13 19:24 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `fa6d28be089915349ab470f7d1e879f224c41bfe`
+- Result: **fail** before test execution; the strengthened fixture omitted the
+  `SchedulerExecutionPolicyStore` trait import needed for its append call.
+- Recovery: add only the missing test import and rerun the same proof.
+
+### Unit 192 — full-tick fixture import local checks
+
+- Finished: 2026-08-13 19:25 +08:00
+- Results: whitespace **pass**; rustfmt **fail** on one mechanical import wrap.
+- Recovery: apply rustfmt only.
+
+### Unit 193 — full-tick fixture import formatting rerun
+
+- Finished: 2026-08-13 19:26 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
