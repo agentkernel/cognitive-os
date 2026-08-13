@@ -42,6 +42,8 @@ git diff --check
 ```bash
 cargo build --workspace --locked
 cargo test --workspace --locked -- --test-threads=1
+cargo test -p kernel-server tool_executor --locked -- --test-threads=1
+cargo test -p kernel-server readiness --locked -- --test-threads=1
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo run -p cognitive-conformance --bin conformance-runner
 cargo run -p cognitive-contracts --bin contracts-codegen   # then git diff generated trees

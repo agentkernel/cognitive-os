@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-fingerprint: "sha256:7b8f88bd9038bb615518a0713a5e9aebb996cd179312a6360480273c502db910"
+fingerprint: "sha256:0cf54ee0c9cc417dc26fa4aa3ecc9e5be9d134ca1465a57dcdfe477468a39806"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -37,7 +37,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task control/query over HTTP | unavailable | service methods exist, no route |
 | Autonomous scheduler loop | partial | one startup tick; no bootstrap row from admission |
 | Governed tool execution (all six registered families) | partial | every family now has an assembled executor, so the projection reports `execution_ready`; that means this binary has a sink, not that an Agent can reach one — the sinks are still test-called only |
-| Workspace write/patch executors | partial | expected-preimage compare-and-swap plus atomic publish; no production caller |
+| Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
 | Independent verification loop | partial | verifier seam test-called only |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |

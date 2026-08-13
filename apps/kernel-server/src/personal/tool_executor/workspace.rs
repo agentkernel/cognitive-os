@@ -71,6 +71,7 @@ impl NativeWorkspaceReadExecutor {
         parameters_digest: String,
         request: &ValidatedNativeToolRequest,
     ) -> Result<(), NativeToolExecutionError> {
+        validate_descriptor(&request.descriptor)?;
         if request.descriptor.family != NativeOperationFamily::WorkspaceRead {
             return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
         }

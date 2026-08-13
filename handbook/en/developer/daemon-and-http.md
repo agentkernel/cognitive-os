@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:ed767badff54fbd7ebaf1369ce10ac3651e9db40bd9ead175bbeeeb07cf88daa"
+fingerprint: "sha256:c7c0782eeab12da612428b20db20c890975ec7d5aca888004f781d22757f99f7"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -67,7 +67,9 @@ because a reachable backend does not mean the reference still points at a
 stored item: a dangling reference reports `secret_ref_resolves: false` and
 blocks with `provider_secret_unresolvable`, and a backend that cannot answer
 blocks with `provider_secret_store_unavailable`. Resolved material is dropped
-immediately and never enters a fact. Doctor adds redacted
+immediately and never enters a fact. Resolution uses the already-loaded
+Provider config snapshot; it never reloads `provider.json` and combine a newer
+secret reference with the older provider/model/digest facts. Doctor adds redacted
 six-resource/vault/operability sections. The Provider
 proxy validates config + selected model, resolves the secret in memory, and
 forwards via the bounded Rustls transport; the private one-shot Unix socket

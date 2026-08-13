@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c4adfe3c92f9ea1eb6fe64a2bfa0bd81f244d2219da0d03f9f11fbfd791b5160"
+fingerprint: "sha256:eb94c96d64421c10f5fb0dedf215c4a9f88a702bbf996d8c6f457e0dc78335f1"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -27,9 +27,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 |---|---|---|---|
 | `POST` | `/local/session` | none | Mint a channel-bound local bearer (management or task) from the bootstrap secret proof. |
 | `GET` | `/personal/health` | none | Unauthenticated bounded liveness probe; deliberately not a readiness claim. |
-| `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi). |
-| `GET` | `/personal/readiness` | management | Alias of the status projection. |
-| `GET` | `/personal/doctor` | management | Redacted diagnostic projection including six-resource, headless-vault, and operability sections. |
+| `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi); Provider facts and SecretStore resolution use one loaded config snapshot. |
+| `GET` | `/personal/readiness` | management | Alias of the snapshot-consistent status projection. |
+| `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |
 | `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. Success responses carry the `X-CognitiveOS-Provider-Network-Nanos` timing header; a client-sent `x-cognitiveos-correlation-id` request header is tolerated but never read or persisted by the daemon. |
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |

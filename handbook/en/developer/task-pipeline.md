@@ -52,3 +52,11 @@ fully tested at the kernel/store level.
 Also honest: `POST /task/*` unknown paths return 200 with a "no Task API operation
 matched" note (not 404), and the watch event source is process-local — no durable
 event outbox is consumed by this surface yet.
+
+Downstream native-tool staging accepts only a descriptor exactly equal to the
+immutable daemon catalog entry. Executor attempts remain Effect-owned: uncertain
+HTTP attempts survive restart as indeterminate (missing durable state also fails
+indeterminate), and workspace mutation completion requires a durable receipt bound
+to the original idempotency key in a state store outside the approved workspace.
+None of these executor guarantees turns admission, a Tool receipt, or matching
+workspace bytes into Task completion.

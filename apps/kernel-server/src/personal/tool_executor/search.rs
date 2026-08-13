@@ -15,6 +15,7 @@ use cognitive_kernel::{
 };
 use std::{
     collections::BTreeMap,
+    io::Read,
     path::{Path, PathBuf},
     sync::Mutex,
 };
@@ -52,7 +53,7 @@ struct StagedWorkspaceSearchRequest {
     parameters_digest: String,
     target: String,
     approved_workspace_root: PathBuf,
-    resolved_workspace_path: PathBuf,
+    relative_workspace_path: PathBuf,
     query: String,
     output_limit_bytes: usize,
 }
@@ -72,11 +73,10 @@ struct CompletedWorkspaceSearch {
 /// no Task, progress, evidence, or completion input, so a search result can
 /// never be mistaken for a Task outcome.
 ///
-/// Containment is enforced twice. The staged search root is canonicalized and
-/// must remain under the canonicalized approved root, and every entry reached
-/// during the walk is inspected with `symlink_metadata` and skipped when it is
-/// a symbolic link. The scan therefore cannot leave the approved root through
-/// a link planted inside it.
+/// The approved root is held as a directory capability. Every descendant is
+/// opened relative to its already-open parent with no-follow semantics and its
+/// type is verified from the opened handle, including Windows reparse-point
+/// rejection. A file or directory swap cannot redirect the later read.
 pub(crate) struct NativeWorkspaceSearchExecutor {
     trusted_fencing_epoch: i64,
     bounds: WorkspaceSearchBounds,
@@ -85,8 +85,15 @@ pub(crate) struct NativeWorkspaceSearchExecutor {
     #[cfg(test)]
     scan_count: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
+    enumerated_entry_count: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
     before_search_hook: Mutex<Option<Box<dyn Fn() + Send>>>,
+    #[cfg(test)]
+    before_entry_open_hook: Mutex<Option<BeforeEntryOpenHook>>,
 }
+
+#[cfg(test)]
+type BeforeEntryOpenHook = Box<dyn Fn(&Path) + Send>;
 
 impl NativeWorkspaceSearchExecutor {
     pub(crate) fn new(trusted_fencing_epoch: i64) -> Self {
@@ -102,7 +109,11 @@ impl NativeWorkspaceSearchExecutor {
             #[cfg(test)]
             scan_count: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
+            enumerated_entry_count: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
             before_search_hook: Mutex::new(None),
+            #[cfg(test)]
+            before_entry_open_hook: Mutex::new(None),
         }
     }
 
@@ -115,11 +126,12 @@ impl NativeWorkspaceSearchExecutor {
         parameters_digest: String,
         request: &ValidatedNativeToolRequest,
     ) -> Result<(), NativeToolExecutionError> {
+        validate_descriptor(&request.descriptor)?;
         if request.descriptor.family != NativeOperationFamily::WorkspaceSearch {
             return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
         }
-        let resolved_workspace_path = request
-            .resolved_workspace_path
+        let relative_workspace_path = request
+            .relative_workspace_path
             .as_ref()
             .ok_or(NativeToolExecutionError::WorkspaceTargetRequired)?;
         let approved_workspace_root = request
@@ -147,7 +159,7 @@ impl NativeWorkspaceSearchExecutor {
             parameters_digest,
             target: request.target.clone(),
             approved_workspace_root: approved_workspace_root.clone(),
-            resolved_workspace_path: resolved_workspace_path.clone(),
+            relative_workspace_path: relative_workspace_path.clone(),
             query,
             output_limit_bytes: request.descriptor.output_limit_bytes,
         };
@@ -181,12 +193,27 @@ impl NativeWorkspaceSearchExecutor {
     }
 
     #[cfg(test)]
+    pub(crate) fn enumerated_entry_count(&self) -> usize {
+        self.enumerated_entry_count
+            .load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    #[cfg(test)]
     pub(crate) fn install_before_search_hook(&self, hook: impl Fn() + Send + 'static) {
         let mut before_search_hook = match self.before_search_hook.lock() {
             Ok(before_search_hook) => before_search_hook,
             Err(poisoned_before_search_hook) => poisoned_before_search_hook.into_inner(),
         };
         *before_search_hook = Some(Box::new(hook));
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_before_entry_open_hook(&self, hook: impl Fn(&Path) + Send + 'static) {
+        let mut before_entry_open_hook = match self.before_entry_open_hook.lock() {
+            Ok(before_entry_open_hook) => before_entry_open_hook,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        *before_entry_open_hook = Some(Box::new(hook));
     }
 
     fn search_staged_workspace_tree(
@@ -200,22 +227,6 @@ impl NativeWorkspaceSearchExecutor {
         {
             return Ok(DispatchOutcome::NotExecuted {
                 reason: "dispatch does not match the daemon-staged workspace search".to_owned(),
-            });
-        }
-        let canonical_workspace_root =
-            std::fs::canonicalize(&staged_request.approved_workspace_root).map_err(|error| {
-                PortFailure {
-                    detail: format!("workspace root resolution failed: {error}"),
-                }
-            })?;
-        let canonical_search_root = std::fs::canonicalize(&staged_request.resolved_workspace_path)
-            .map_err(|error| PortFailure {
-                detail: format!("workspace search root resolution failed: {error}"),
-            })?;
-        if !canonical_search_root.starts_with(&canonical_workspace_root) {
-            return Ok(DispatchOutcome::NotExecuted {
-                reason: "workspace search root escaped the approved root after resolution"
-                    .to_owned(),
             });
         }
         // Hold the completed-result ledger lock across the scan so concurrent
@@ -243,14 +254,49 @@ impl NativeWorkspaceSearchExecutor {
         #[cfg(test)]
         self.scan_count
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        let rendered_matches = scan_contained_workspace_tree(
-            &canonical_workspace_root,
-            &canonical_search_root,
+        let workspace =
+            AnchoredWorkspace::open(&staged_request.approved_workspace_root).map_err(|error| {
+                PortFailure {
+                    detail: format!("workspace root handle open failed: {error}"),
+                }
+            })?;
+        let search_root = match workspace
+            .open_entry(&staged_request.relative_workspace_path)
+            .map_err(|error| PortFailure {
+                detail: format!("workspace search root handle open failed: {error}"),
+            })? {
+            SecureEntry::File(file) => SecureEntry::File(file),
+            SecureEntry::Directory(directory) => SecureEntry::Directory(directory),
+            SecureEntry::Absent | SecureEntry::Rejected => {
+                return Ok(DispatchOutcome::NotExecuted {
+                    reason:
+                        "workspace search root is absent, linked, reparsed, or not a regular entry"
+                            .to_owned(),
+                });
+            }
+        };
+        let mut hooks = WorkspaceSearchHooks {
+            #[cfg(test)]
+            before_entry_open: self
+                .before_entry_open_hook
+                .lock()
+                .map_err(|_| PortFailure {
+                    detail: "before-entry-open hook store is poisoned".to_owned(),
+                })?
+                .take(),
+        };
+        let scan = scan_contained_workspace_tree(
+            search_root,
+            &staged_request.relative_workspace_path,
             &staged_request.query,
             &self.bounds,
             staged_request.output_limit_bytes,
+            &mut hooks,
         )?;
-        let redacted_output = redact_sensitive_output(&rendered_matches)
+        #[cfg(test)]
+        self.enumerated_entry_count
+            .store(scan.enumerated_entries, std::sync::atomic::Ordering::SeqCst);
+        let redacted_output = redact_sensitive_output(&scan.rendered_matches)
             .into_bytes()
             .into_iter()
             .take(staged_request.output_limit_bytes)
@@ -309,87 +355,171 @@ impl EffectExecutor for NativeWorkspaceSearchExecutor {
     }
 }
 
-/// Walk a canonicalized subtree in a deterministic order and render bounded
-/// matches. Symbolic links are never traversed and never opened, so the walk
-/// cannot leave `canonical_workspace_root`.
+/// Walk a subtree through opened directory handles and render bounded matches.
+///
+/// Enumeration itself consumes the visit budget: a huge directory is never
+/// collected in full merely so it can later be truncated. Every child is
+/// opened no-follow relative to its already-open parent and its type is checked
+/// from the resulting handle before reading or descending.
 fn scan_contained_workspace_tree(
-    canonical_workspace_root: &Path,
-    canonical_search_root: &Path,
+    search_root: SecureEntry,
+    relative_search_root: &Path,
     query: &str,
     bounds: &WorkspaceSearchBounds,
     output_limit_bytes: usize,
-) -> Result<String, PortFailure> {
-    let mut pending_entries = vec![canonical_search_root.to_path_buf()];
-    let mut visited_entries = 0usize;
-    let mut retained_matches = 0usize;
-    let mut rendered_matches = String::new();
+    hooks: &mut WorkspaceSearchHooks,
+) -> Result<WorkspaceScanResult, PortFailure> {
+    let mut state = WorkspaceScanState {
+        query,
+        bounds,
+        output_limit_bytes,
+        visited_entries: 0,
+        enumerated_entries: 0,
+        retained_matches: 0,
+        rendered_matches: String::new(),
+        hooks,
+    };
+    scan_secure_entry(search_root, relative_search_root, true, &mut state)?;
+    Ok(WorkspaceScanResult {
+        rendered_matches: state.rendered_matches,
+        enumerated_entries: state.enumerated_entries,
+    })
+}
 
-    while let Some(current_entry) = pending_entries.pop() {
-        if visited_entries >= bounds.maximum_visited_entries
-            || retained_matches >= bounds.maximum_matches
-            || rendered_matches.len() >= output_limit_bytes
-        {
+struct WorkspaceSearchHooks {
+    #[cfg(test)]
+    before_entry_open: Option<BeforeEntryOpenHook>,
+}
+
+impl WorkspaceSearchHooks {
+    fn before_entry_open(&mut self, relative_path: &Path) {
+        #[cfg(test)]
+        if let Some(hook) = self.before_entry_open.take() {
+            hook(relative_path);
+        }
+        #[cfg(not(test))]
+        let _ = relative_path;
+    }
+}
+
+struct WorkspaceScanState<'a> {
+    query: &'a str,
+    bounds: &'a WorkspaceSearchBounds,
+    output_limit_bytes: usize,
+    visited_entries: usize,
+    enumerated_entries: usize,
+    retained_matches: usize,
+    rendered_matches: String,
+    hooks: &'a mut WorkspaceSearchHooks,
+}
+
+struct WorkspaceScanResult {
+    rendered_matches: String,
+    enumerated_entries: usize,
+}
+
+fn scan_secure_entry(
+    entry: SecureEntry,
+    relative_path: &Path,
+    count_visit: bool,
+    state: &mut WorkspaceScanState<'_>,
+) -> Result<(), PortFailure> {
+    if scan_is_complete(state)
+        || (count_visit && state.visited_entries >= state.bounds.maximum_visited_entries)
+    {
+        return Ok(());
+    }
+    if count_visit {
+        state.visited_entries += 1;
+    }
+    match entry {
+        SecureEntry::Absent | SecureEntry::Rejected => Ok(()),
+        SecureEntry::File(mut file) => {
+            let metadata = file.metadata().map_err(|error| PortFailure {
+                detail: format!("workspace search file metadata failed: {error}"),
+            })?;
+            if metadata.len() > state.bounds.maximum_file_bytes {
+                return Ok(());
+            }
+            let mut file_bytes = Vec::new();
+            file.by_ref()
+                .take(state.bounds.maximum_file_bytes.saturating_add(1))
+                .read_to_end(&mut file_bytes)
+                .map_err(|error| PortFailure {
+                    detail: format!("workspace search file read failed: {error}"),
+                })?;
+            if u64::try_from(file_bytes.len()).unwrap_or(u64::MAX) > state.bounds.maximum_file_bytes
+            {
+                return Ok(());
+            }
+            let rendered_path = relative_path.to_string_lossy().replace('\\', "/");
+            for (line_index, line) in String::from_utf8_lossy(&file_bytes).lines().enumerate() {
+                if scan_is_complete(state) {
+                    break;
+                }
+                if !line.contains(state.query) {
+                    continue;
+                }
+                state.retained_matches += 1;
+                state.rendered_matches.push_str(&format!(
+                    "{rendered_path}:{}:{}\n",
+                    line_index + 1,
+                    bounded_prefix(line, state.bounds.maximum_line_bytes)
+                ));
+            }
+            Ok(())
+        }
+        SecureEntry::Directory(directory) => scan_secure_directory(directory, relative_path, state),
+    }
+}
+
+fn scan_secure_directory(
+    directory: cap_std::fs::Dir,
+    relative_path: &Path,
+    state: &mut WorkspaceScanState<'_>,
+) -> Result<(), PortFailure> {
+    let initial_remaining = state
+        .bounds
+        .maximum_visited_entries
+        .saturating_sub(state.visited_entries);
+    if initial_remaining == 0 || scan_is_complete(state) {
+        return Ok(());
+    }
+    let mut names = Vec::with_capacity(initial_remaining.min(256));
+    let mut entries = match directory.entries() {
+        Ok(entries) => entries,
+        Err(_) => return Ok(()),
+    };
+    while state.visited_entries < state.bounds.maximum_visited_entries {
+        let Some(next_entry) = entries.next() else {
+            break;
+        };
+        state.enumerated_entries += 1;
+        state.visited_entries += 1;
+        let Ok(next_entry) = next_entry else {
+            continue;
+        };
+        names.push(next_entry.file_name());
+    }
+    names.sort();
+    for name in names {
+        if scan_is_complete(state) {
             break;
         }
-        visited_entries += 1;
-        let entry_metadata = match std::fs::symlink_metadata(&current_entry) {
-            Ok(entry_metadata) => entry_metadata,
-            // A concurrently removed entry is not a search failure; the scan
-            // reports what it could actually read.
+        let child_path = relative_path.join(&name);
+        state.hooks.before_entry_open(&child_path);
+        let child = match open_entry_at(&directory, &name) {
+            Ok(child) => child,
             Err(_) => continue,
         };
-        if entry_metadata.file_type().is_symlink() {
-            continue;
-        }
-        if entry_metadata.is_dir() {
-            let mut child_entries = Vec::new();
-            let read_directory = match std::fs::read_dir(&current_entry) {
-                Ok(read_directory) => read_directory,
-                Err(_) => continue,
-            };
-            for child_entry in read_directory {
-                let Ok(child_entry) = child_entry else {
-                    continue;
-                };
-                child_entries.push(child_entry.path());
-            }
-            // Sort ascending, then reverse: the stack pops from the end, so
-            // this yields a stable lexicographic visit order.
-            child_entries.sort();
-            child_entries.reverse();
-            pending_entries.extend(child_entries);
-            continue;
-        }
-        if !entry_metadata.is_file() || entry_metadata.len() > bounds.maximum_file_bytes {
-            continue;
-        }
-        let Ok(file_bytes) = std::fs::read(&current_entry) else {
-            continue;
-        };
-        let relative_entry = current_entry
-            .strip_prefix(canonical_workspace_root)
-            .unwrap_or(&current_entry)
-            .to_string_lossy()
-            .replace('\\', "/");
-        for (line_index, line) in String::from_utf8_lossy(&file_bytes).lines().enumerate() {
-            if retained_matches >= bounds.maximum_matches
-                || rendered_matches.len() >= output_limit_bytes
-            {
-                break;
-            }
-            if !line.contains(query) {
-                continue;
-            }
-            retained_matches += 1;
-            rendered_matches.push_str(&format!(
-                "{relative_entry}:{}:{}\n",
-                line_index + 1,
-                bounded_prefix(line, bounds.maximum_line_bytes)
-            ));
-        }
+        scan_secure_entry(child, &child_path, false, state)?;
     }
+    Ok(())
+}
 
-    Ok(rendered_matches)
+fn scan_is_complete(state: &WorkspaceScanState<'_>) -> bool {
+    state.retained_matches >= state.bounds.maximum_matches
+        || state.rendered_matches.len() >= state.output_limit_bytes
 }
 
 /// Truncate to at most `maximum_bytes`, never splitting a UTF-8 character.

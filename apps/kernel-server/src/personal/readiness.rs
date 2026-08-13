@@ -8,11 +8,12 @@
 //! Ownership: lives in the Personal composition root (`kernel-server`) so
 //! Personal does not take Lane-RUN ownership of `cognitive-management`.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_secret::{
-    ProviderConfigError, ProviderConfigRepository, ProviderKeyService, ProviderKeyServiceError,
+    ProviderConfig, ProviderConfigError, ProviderConfigRepository, SecretError, SecretStore,
     SecretStoreAvailability, SecretStoreClass, SelectedModelRepository,
     select_production_secret_store,
 };
@@ -109,7 +110,7 @@ pub struct ReadinessReport {
 }
 
 /// Inputs collected by the daemon or by hermetic tests.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ReadinessEvaluationContext {
     pub layout: PersonalDataLayout,
     pub daemon_listening: bool,
@@ -121,6 +122,9 @@ pub struct ReadinessEvaluationContext {
     /// Optional override for the Provider secret-ref resolution observation
     /// (tests inject; production None).
     pub provider_secret_resolution_override: Option<ProviderSecretResolution>,
+    /// Optional SecretStore used to exercise the production resolution path
+    /// against the exact config snapshot already loaded above.
+    pub provider_secret_store_override: Option<Arc<dyn SecretStore + Send + Sync>>,
     /// Optional override for the Pi runtime observation (tests inject; production None).
     pub pi_observation_override: Option<PiRuntimeObservation>,
 }
@@ -558,7 +562,12 @@ fn check_provider(
         Ok(config) => {
             let resolution = context
                 .provider_secret_resolution_override
-                .unwrap_or_else(|| resolve_production_provider_secret(&config_path));
+                .unwrap_or_else(|| {
+                    context.provider_secret_store_override.as_ref().map_or_else(
+                        || resolve_production_provider_secret(&config),
+                        |store| resolve_provider_secret_from_snapshot(&config, store.as_ref()),
+                    )
+                });
             let selected_snapshot_digest = config.selected_snapshot_digest();
             let digest_present = selected_snapshot_digest.is_some();
             let mut facts = vec![
@@ -836,13 +845,18 @@ fn probe_production_secret_store() -> SecretProbeObservation {
 /// Attempt to resolve the configured Provider secret ref against the production
 /// SecretStore. The resolved material is dropped immediately and never enters a
 /// fact, a log, or the report; only the three-way outcome is retained.
-fn resolve_production_provider_secret(config_path: &Path) -> ProviderSecretResolution {
-    let repository = ProviderConfigRepository::from_file_path(config_path);
+fn resolve_production_provider_secret(config: &ProviderConfig) -> ProviderSecretResolution {
     let backend = select_production_secret_store();
-    let service = ProviderKeyService::new(backend.as_secret_store(), repository);
-    match service.resolve_provider_material() {
+    resolve_provider_secret_from_snapshot(config, backend.as_secret_store())
+}
+
+fn resolve_provider_secret_from_snapshot<S: SecretStore + ?Sized>(
+    config: &ProviderConfig,
+    store: &S,
+) -> ProviderSecretResolution {
+    match store.get(config.secret_ref()) {
         Ok(_material) => ProviderSecretResolution::Resolves,
-        Err(ProviderKeyServiceError::SecretMissing) => ProviderSecretResolution::Missing,
+        Err(SecretError::NotFound) => ProviderSecretResolution::Missing,
         Err(_) => ProviderSecretResolution::Unavailable,
     }
 }
@@ -898,8 +912,65 @@ fn unix_now_ms() -> u64 {
 #[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
-    use cognitive_secret::{ProviderConfig, SecretRef, SelectedModel, SelectedModelRepository};
+    use cognitive_secret::{
+        ProviderConfig, SecretAttributes, SecretLabel, SecretMaterial, SecretRef, SelectedModel,
+        SelectedModelRepository,
+    };
     use std::fs;
+    use std::sync::Mutex;
+
+    struct ConfigSwappingSecretStore {
+        config_path: PathBuf,
+        replacement: ProviderConfig,
+        expected_ref: SecretRef,
+        observed_refs: Mutex<Vec<String>>,
+    }
+
+    impl SecretStore for ConfigSwappingSecretStore {
+        fn class(&self) -> SecretStoreClass {
+            SecretStoreClass::EphemeralTestDouble
+        }
+
+        fn probe(&self) -> Result<SecretStoreAvailability, SecretError> {
+            Ok(SecretStoreAvailability::Available)
+        }
+
+        fn put(
+            &self,
+            _label: &SecretLabel,
+            _attributes: &SecretAttributes,
+            _material: SecretMaterial,
+        ) -> Result<SecretRef, SecretError> {
+            Err(SecretError::Backend {
+                detail: "test store is read-only",
+            })
+        }
+
+        fn get(&self, secret_ref: &SecretRef) -> Result<SecretMaterial, SecretError> {
+            self.observed_refs
+                .lock()
+                .map_err(|_| SecretError::Backend {
+                    detail: "test observation lock poisoned",
+                })?
+                .push(secret_ref.as_str().to_owned());
+            ProviderConfigRepository::from_file_path(&self.config_path)
+                .store(&self.replacement)
+                .map_err(|_| SecretError::Backend {
+                    detail: "test config swap failed",
+                })?;
+            if secret_ref == &self.expected_ref {
+                SecretMaterial::from_bytes(b"snapshot-a-material".to_vec())
+            } else {
+                Err(SecretError::NotFound)
+            }
+        }
+
+        fn delete(&self, _secret_ref: &SecretRef) -> Result<(), SecretError> {
+            Err(SecretError::Backend {
+                detail: "test store is read-only",
+            })
+        }
+    }
 
     fn touch_personal_database_files(layout: &PersonalDataLayout) -> std::io::Result<()> {
         touch_file(&layout.authority_database_path())?;
@@ -976,6 +1047,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
@@ -1005,6 +1077,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: None,
         });
         // daemon lock/bootstrap may be missing → degraded or blocked; force
@@ -1038,6 +1111,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(missing_selected_model.overall, OverallReadiness::Blocked);
@@ -1061,6 +1135,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(mismatched_selected_model.overall, OverallReadiness::Blocked);
@@ -1096,6 +1171,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Missing),
+            provider_secret_store_override: None,
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         let provider = report
@@ -1134,6 +1210,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Unavailable),
+            provider_secret_store_override: None,
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         let provider = report
@@ -1155,6 +1232,84 @@ mod tests {
     }
 
     #[test]
+    fn provider_secret_resolution_uses_the_already_loaded_config_snapshot() {
+        let layout = temp_layout("provider-snapshot");
+        touch_personal_database_files(&layout).unwrap();
+        let config_path = layout
+            .config_dir()
+            .join(cognitive_secret::PROVIDER_CONFIG_FILE_NAME);
+        let ref_a = SecretRef::from_opaque("secretref:snapshot-a").expect("snapshot A ref");
+        let config_a = ProviderConfig::new(
+            "provider-a",
+            "https://provider-a.example/v1",
+            ref_a.clone(),
+            Some("fnv1a64:aaaaaaaaaaaaaaaa".to_owned()),
+        )
+        .expect("snapshot A");
+        ProviderConfigRepository::from_file_path(&config_path)
+            .store(&config_a)
+            .expect("store snapshot A");
+        write_selected_model(&layout, "fnv1a64:aaaaaaaaaaaaaaaa");
+        let config_b = ProviderConfig::new(
+            "provider-b",
+            "https://provider-b.example/v1",
+            SecretRef::from_opaque("secretref:snapshot-b").expect("snapshot B ref"),
+            Some("fnv1a64:bbbbbbbbbbbbbbbb".to_owned()),
+        )
+        .expect("snapshot B");
+        let store = Arc::new(ConfigSwappingSecretStore {
+            config_path: config_path.clone(),
+            replacement: config_b,
+            expected_ref: ref_a.clone(),
+            observed_refs: Mutex::new(Vec::new()),
+        });
+        let report = evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 0,
+            secret_probe_override: Some(available_secret_probe()),
+            provider_config_path_override: Some(config_path.clone()),
+            provider_secret_resolution_override: None,
+            provider_secret_store_override: Some(store.clone()),
+            pi_observation_override: None,
+        });
+        let provider = report
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider component");
+        assert_eq!(provider.status, ComponentStatus::Ready);
+        assert!(
+            provider
+                .facts
+                .iter()
+                .any(|fact| fact.key == "provider_id" && fact.value == "provider-a")
+        );
+        assert!(
+            provider
+                .facts
+                .iter()
+                .any(|fact| fact.key == "secret_ref_resolves" && fact.value == "true")
+        );
+        assert_eq!(
+            store
+                .observed_refs
+                .lock()
+                .expect("observed refs")
+                .as_slice(),
+            &[ref_a.as_str().to_owned()]
+        );
+        assert_eq!(
+            ProviderConfigRepository::from_file_path(&config_path)
+                .load()
+                .expect("load swapped snapshot")
+                .provider_id(),
+            "provider-b",
+            "the fake store must swap the file during resolution"
+        );
+    }
+
+    #[test]
     fn full_runtime_facts_yield_ready_overall_but_first_conversation_blocked_without_pi() {
         let layout = temp_layout("ready");
         touch_personal_database_files(&layout).unwrap();
@@ -1170,6 +1325,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Ready);
@@ -1234,6 +1390,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: Some(PiRuntimeObservation::Ready),
         });
         assert_eq!(report.overall, OverallReadiness::Ready);
@@ -1307,6 +1464,7 @@ mod tests {
                 secret_probe_override: Some(available_secret_probe()),
                 provider_config_path_override: None,
                 provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+                provider_secret_store_override: None,
                 pi_observation_override: Some(observation),
             });
             // `pi` is optional, so a broken Pi never rewrites the required-set
@@ -1345,6 +1503,7 @@ mod tests {
             }),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: None,
         });
         assert_eq!(report.overall, OverallReadiness::Blocked);
@@ -1378,6 +1537,7 @@ mod tests {
             secret_probe_override: Some(available_secret_probe()),
             provider_config_path_override: None,
             provider_secret_resolution_override: Some(ProviderSecretResolution::Resolves),
+            provider_secret_store_override: None,
             pi_observation_override: None,
         });
         let doctor_text = doctor_projection_json(&report).to_string();

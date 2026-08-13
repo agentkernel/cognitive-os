@@ -63,6 +63,10 @@ pub(crate) struct ValidatedNativeToolRequest {
     pub input: Vec<u8>,
     pub approved_workspace_root: Option<PathBuf>,
     pub resolved_workspace_path: Option<PathBuf>,
+    /// Lexical path below the approved root. Filesystem sinks resolve this
+    /// through a held directory capability instead of reopening the ambient
+    /// absolute path after validation.
+    pub relative_workspace_path: Option<PathBuf>,
     pub expected_preimage: Option<WorkspacePreimage>,
 }
 
