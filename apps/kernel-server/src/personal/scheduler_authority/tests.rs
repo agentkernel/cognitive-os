@@ -2919,6 +2919,86 @@ fn duplicate_acceptance_is_rejected_after_verified_completion() {
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
+fn persist_verified_workspace_read_before_acceptance(
+    layout: &PersonalDataLayout,
+    store: &SqliteAuthorityStore,
+    authorization: &WorkerIterationAuthorizationRow,
+) -> (cognitive_store::ArtifactStore, ObjectId) {
+    let workspace_root = layout.data_dir().join("workspace");
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
+    let writer_lease = WriterLease { epoch: 1 };
+    let clock = super::FixedSchedulerClock::parse("2026-08-13T08:02:00Z").unwrap();
+    let ids = UuidV7Generator;
+    super::activate_task_for_worker_authorization(
+        store,
+        &clock,
+        &ids,
+        authorization,
+        &writer_lease,
+    )
+    .unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        store,
+        authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+    router.stage_resolved(&resolved).unwrap();
+    let protocol = EffectProtocol::new(
+        store,
+        &clock,
+        &ids,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t14-before-acceptance").unwrap(),
+    );
+    dispatch_native_worker_effect(
+        &protocol,
+        &resolved,
+        &router,
+        &recovery_effect_grant(),
+        &GovernanceCurrency {
+            revocation_epoch: 1,
+            capability_set_version: 1,
+        },
+        &writer_lease,
+    )
+    .unwrap();
+    let current_loop = store
+        .load_object(LifecycleDomain::Loop, &authorization.loop_object_id)
+        .unwrap()
+        .unwrap();
+    let task_binding = TaskBinding {
+        task_ref: authorization.task_ref.clone(),
+        contract_epoch: authorization.contract_epoch,
+    };
+    let request =
+        crate::personal::verification_executor::begin_verification_from_current_task_contract(
+            store,
+            &clock,
+            &ids,
+            &task_binding,
+            &authorization.loop_object_id,
+            current_loop.version,
+            &authorization.effect_object_id,
+            &writer_lease,
+        )
+        .unwrap();
+    let outcome = crate::personal::verification_executor::run_production_independent_verification(
+        store,
+        &artifact_store,
+        &clock,
+        &ids,
+        &request.verification_request_id,
+        &writer_lease,
+    )
+    .unwrap();
+    (artifact_store, outcome.report.verification_report_id)
+}
+
 fn persist_extra_open_task_effect(
     store: &SqliteAuthorityStore,
     authorization: &WorkerIterationAuthorizationRow,
@@ -2990,39 +3070,21 @@ fn open_effect_blocks_candidate_complete() {
     let database_path = layout.authority_database_path();
     let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let (artifact_store, report_id) =
+        persist_verified_workspace_read_before_acceptance(&layout, &store, &authorization);
     let extra_effect_id = persist_extra_open_task_effect(&store, &authorization);
-    let mut repository = SchedulerRepository::open(&database_path).unwrap();
-    repository
-        .upsert(&scheduler_row(&authorization.task_ref))
-        .unwrap();
-    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
-    let artifact_store =
-        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
-            .unwrap();
     let task_binding = TaskBinding {
         task_ref: authorization.task_ref.clone(),
         contract_epoch: authorization.contract_epoch,
     };
 
-    super::run_private_scheduler_tick_with_store(
-        &store,
-        &mut repository,
-        layout.config_dir(),
-        &router,
-        &artifact_store,
-    )
-    .unwrap();
-    let report = store
-        .load_latest_verification_report_for_task_binding(&task_binding)
-        .unwrap()
-        .unwrap();
     let error = super::complete_task_from_persisted_verification(
         &store,
         &artifact_store,
         &SystemClock,
         &UuidV7Generator,
         &task_binding,
-        &report.verification_report_id,
+        &report_id,
         &WriterLease { epoch: 1 },
     )
     .err()
@@ -3050,7 +3112,6 @@ fn open_effect_blocks_candidate_complete() {
         "PROPOSED"
     );
 
-    drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -3065,36 +3126,20 @@ fn superseded_verification_report_cannot_complete_a_task() {
     let database_path = layout.authority_database_path();
     let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
-    persist_extra_open_task_effect(&store, &authorization);
-    let mut repository = SchedulerRepository::open(&database_path).unwrap();
-    repository
-        .upsert(&scheduler_row(&authorization.task_ref))
-        .unwrap();
-    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
-    let artifact_store =
-        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
-            .unwrap();
+    let (artifact_store, original_report_id) =
+        persist_verified_workspace_read_before_acceptance(&layout, &store, &authorization);
     let task_binding = TaskBinding {
         task_ref: authorization.task_ref.clone(),
         contract_epoch: authorization.contract_epoch,
     };
-
-    super::run_private_scheduler_tick_with_store(
-        &store,
-        &mut repository,
-        layout.config_dir(),
-        &router,
-        &artifact_store,
-    )
-    .unwrap();
     let original = store
-        .load_latest_verification_report_for_task_binding(&task_binding)
+        .load_verification_report(&original_report_id)
         .unwrap()
         .unwrap();
     let mut successor = original.clone();
     successor.verification_report_id = object_id(9_990);
     successor.verifier_version = "v1-superseding".to_owned();
-    successor.completed_at = WallTimestamp::parse("2026-08-13T08:02:00Z").unwrap();
+    successor.completed_at = WallTimestamp::parse("2026-08-13T08:03:00Z").unwrap();
     store.append_verification_report(&successor).unwrap();
     let error = super::complete_task_from_persisted_verification(
         &store,
@@ -3102,7 +3147,7 @@ fn superseded_verification_report_cannot_complete_a_task() {
         &SystemClock,
         &UuidV7Generator,
         &task_binding,
-        &original.verification_report_id,
+        &original_report_id,
         &WriterLease { epoch: 1 },
     )
     .err()
@@ -3124,7 +3169,6 @@ fn superseded_verification_report_cannot_complete_a_task() {
         "COMPLETED"
     );
 
-    drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -3139,32 +3183,13 @@ fn missing_cas_evidence_cannot_complete_a_task() {
     let database_path = layout.authority_database_path();
     let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
-    persist_extra_open_task_effect(&store, &authorization);
-    let mut repository = SchedulerRepository::open(&database_path).unwrap();
-    repository
-        .upsert(&scheduler_row(&authorization.task_ref))
-        .unwrap();
-    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    let (artifact_store, report_id) =
+        persist_verified_workspace_read_before_acceptance(&layout, &store, &authorization);
     let artifacts_root = layout.data_dir().join("artifacts");
-    let artifact_store =
-        cognitive_store::ArtifactStore::open(&artifacts_root, 1024 * 1024).unwrap();
     let task_binding = TaskBinding {
         task_ref: authorization.task_ref.clone(),
         contract_epoch: authorization.contract_epoch,
     };
-
-    super::run_private_scheduler_tick_with_store(
-        &store,
-        &mut repository,
-        layout.config_dir(),
-        &router,
-        &artifact_store,
-    )
-    .unwrap();
-    let report = store
-        .load_latest_verification_report_for_task_binding(&task_binding)
-        .unwrap()
-        .unwrap();
     for entry in std::fs::read_dir(&artifacts_root).unwrap() {
         let path = entry.unwrap().path();
         if path.is_file() {
@@ -3177,7 +3202,7 @@ fn missing_cas_evidence_cannot_complete_a_task() {
         &SystemClock,
         &UuidV7Generator,
         &task_binding,
-        &report.verification_report_id,
+        &report_id,
         &WriterLease { epoch: 1 },
     )
     .err()
@@ -3199,7 +3224,6 @@ fn missing_cas_evidence_cannot_complete_a_task() {
         "COMPLETED"
     );
 
-    drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }

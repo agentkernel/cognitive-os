@@ -312,3 +312,13 @@ public transition contract:
   report for the same request blocks the superseded report id
   (`VerificationUnavailable`); deleting Artifact CAS bytes blocks acceptance
   (`EvidenceUnavailable`). Stale fixed post-state remains unwritten.
+
+### Unit 031 — exact native scheduler suite at `4b046d36`
+
+- Finished: 2026-08-14 01:00 +08:00
+- Command: `cargo test -p kernel-server --locked personal::scheduler_authority::tests -- --test-threads=1`
+- Result: **fail** — 53 passed / 3 failed. Inserting the extra open Effect
+  *before* the production tick made `select_single_effect_intent` raise
+  `ambiguous durable Effect bindings`, so verification never ran.
+- Recovery: verify WorkspaceRead through the production Effect/verifier
+  helpers first, then inject the extra Effect or CAS/report mutation.
