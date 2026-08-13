@@ -1336,3 +1336,103 @@ Windows GNU linker host.
 - Finished: 2026-08-13 17:35 +08:00
 - Result: **pass**; generated references remained source-derived and four
   bilingual execution-chain/capability fingerprints were refreshed.
+
+### Unit 157 — exact native D04 callable Effect path
+
+- Finished: 2026-08-13 17:39 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `991188bbf37322a08012151888ef89b4d6c2a326`
+- Result: **pass**; production-caller proof 1/1.
+- The real WorkspaceRead I/O hook observed durable Effect `EXECUTING`; the
+  caller then recorded the receipt and reconciled the same Effect under its
+  original idempotency key to `RECONCILED`.
+- Boundary: the periodic tick still does not own/pass this router.
+
+### Unit 158 — D04 periodic production-caller wiring
+
+- Finished: 2026-08-13 17:47 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - daemon startup assembles one fenced native router rooted at its dedicated
+    data workspace and passes it to every periodic pass;
+  - after WIA consumption, the worker rechecks the exact scheduler owner/epoch,
+    reloads the native dispatch, and re-authorizes target/action/purpose from
+    current durable Context facts;
+  - only then does the existing Effect caller stage and dispatch I/O; ceiling
+    STOP and budget admission remain before lease acquisition.
+- Boundary: unsupported parameter-bearing families fail closed because no
+  immutable payload carrier exists; no input is reconstructed from a digest.
+
+### Unit 159 — periodic production-caller local static checks
+
+- Finished: 2026-08-13 17:48 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on three
+  mechanical URI error-map layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 160 — periodic production-caller formatting rerun
+
+- Finished: 2026-08-13 17:49 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 161 — D04 production-caller bilingual handbook sync
+
+- Finished: 2026-08-13 17:54 +08:00
+- Result: **authored; generation/fingerprint validation pending**
+- Change: both locales now distinguish the production WorkspaceRead caller from
+  the five assembled but still test-called families and retain autonomous
+  execution as `partial`.
+- Non-claim: no parameter/preimage carrier, verifier, Task acceptance, or Task
+  completion is inferred.
+
+### Unit 162 — production-caller handbook generation
+
+- Finished: 2026-08-13 17:55 +08:00
+- Result: **pass**; generated references were regenerated and twelve mapped
+  bilingual pages received current fingerprints.
+
+### Unit 163 — production-caller local gates
+
+- Finished: 2026-08-13 17:56 +08:00
+- Results: rustfmt **pass**; handbook **pass**; generated-page byte check
+  **pass**; consistency **pass**; whitespace **pass**; diagnostics **pass**.
+
+### Unit 164 — native descriptor and current-authorization publication
+
+- Finished: 2026-08-13 18:03 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - daemon startup idempotently publishes stable identities for the six
+    immutable native catalog descriptors and refuses any conflicting row;
+  - required System Context tells Pi only the stable IDs for native tools the
+    TaskContract allows;
+  - candidate admission requires that exact daemon-published ID, re-authorizes
+    the candidate target/action/purpose from current Context facts, and persists
+    the resulting immutable authorization snapshot before candidate/WIA
+    admission.
+- Boundary: descriptor publication grants nothing; missing current
+  authorization still fails before Intent/Effect/WIA creation.
+
+### Unit 165 — descriptor/authorization local static checks
+
+- Finished: 2026-08-13 18:04 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on four
+  mechanical layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 166 — descriptor/authorization formatting rerun
+
+- Finished: 2026-08-13 18:05 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 167 — final production-chain fingerprint refresh
+
+- Finished: 2026-08-13 18:06 +08:00
+- Result: **pass**; generated references were regenerated and twelve mapped
+  bilingual pages received fingerprints for the complete current source set.
+
+### Unit 168 — complete production-chain staged gates
+
+- Finished: 2026-08-13 18:07 +08:00
+- Results: docs-sync **pass**; consistency **pass**; staged whitespace
+  **pass**. No docs-impact escape was used.

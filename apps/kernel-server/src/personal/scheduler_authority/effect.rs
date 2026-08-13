@@ -29,7 +29,7 @@ use cognitive_kernel::context::{
     ArrivalOrderRanker, CandidateObject, ContextBudget, LossEntry, RejectedCandidate, RenderSpec,
     RequiredItem, ResolutionRequest, ResolvedContextView, resolve,
 };
-use cognitive_kernel::effects::{WriterLease, admit_operation};
+use cognitive_kernel::effects::{GovernanceCurrency, WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::harness::LoopDriver;
 use cognitive_kernel::intent_chain::{
@@ -373,6 +373,67 @@ where
             unreachable!("record_outcome rejects a stale-sink dispatch")
         }
     }
+}
+
+/// Re-authorize one resolved native dispatch from current daemon facts.
+///
+/// The immutable candidate-admission snapshot is evidence of the earlier WIA
+/// decision, not reusable authority for I/O. This edge reconstructs the
+/// current Context authorization snapshot and evaluates the exact candidate
+/// target/action/purpose again immediately before Effect authorization.
+pub(crate) fn derive_current_native_execution_authorization<S>(
+    store: &S,
+    policy: &SchedulerExecutionPolicyRow,
+    resolved: &ResolvedNativeWorkerDispatch,
+    observed_at: WallTimestamp,
+) -> Result<
+    (
+        cognitive_kernel::authz::AuthorizationGrant,
+        cognitive_kernel::effects::GovernanceCurrency,
+    ),
+    SchedulerAuthorityError,
+>
+where
+    S: ContextAuthorizationFactStore + IntentChainStore,
+{
+    let context_command = context_resolution_command_from_policy(policy, observed_at)?;
+    if context_command.task_ref != resolved.authorization.task_ref {
+        return Err(SchedulerAuthorityError::DispatchBindingMismatch(
+            "scheduler policy and native dispatch name different Tasks".to_owned(),
+        ));
+    }
+    let admission_command = candidate_admission_command_from_policy(policy)?;
+    if admission_command.authorization_subject_ref != context_command.authorization_subject_ref {
+        return Err(SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+            "scheduler policy authorization subjects disagree".to_owned(),
+        ));
+    }
+    let snapshot = load_current_context_authorization_snapshot(store, &context_command)?;
+    let governance = ObjectGovernance {
+        object_ref: resolved.candidate.target.clone(),
+        tenant_id: Some(context_command.tenant_id),
+        owner_ref: admission_command.authorization_subject_ref,
+        resource_scope: resolved.candidate.target.clone(),
+        conversation_ref: context_command.conversation_ref,
+    };
+    let grant = authorize(
+        &snapshot,
+        &governance,
+        &AccessRequest {
+            action: resolved.candidate.action.clone(),
+            purpose: admission_command.authorization_purpose,
+        },
+    )
+    .map_err(|error| {
+        SchedulerAuthorityError::CandidateAuthorizationUnavailable(format!(
+            "current native execution authorization denied: {error:?}"
+        ))
+    })?;
+    let currency = GovernanceCurrency {
+        revocation_epoch: snapshot.revocation_epoch,
+        capability_set_version: snapshot.capability_set_version,
+    };
+    Ok((grant, currency))
 }
 
 /// Select exactly one immutable Intent and verify that its stored binding

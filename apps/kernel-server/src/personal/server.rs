@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
+    ProtocolStore,
 };
 use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
@@ -39,6 +40,7 @@ use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
 use super::task_api::TaskApi;
+use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
 const SCHEDULER_TICK_INTERVAL: Duration = Duration::from_millis(250);
@@ -228,6 +230,24 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     // and scheduler worker (P9-T03/D02). Request handlers must reuse this
     // handle instead of opening a second connection per call.
     let authority_store = Arc::new(authority_store);
+    ensure_builtin_native_descriptors(authority_store.as_ref()).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("publish immutable native Tool descriptors: {error}"),
+        }
+    })?;
+    let executor_router = Arc::new(
+        ProductionNativeToolExecutorRouter::open(
+            authority_store
+                .current_fencing_epoch()
+                .map_err(|error| PersonalDaemonError::Io {
+                    detail: format!("load native Tool executor fencing epoch: {error}"),
+                })?,
+            config.layout.data_dir().join("workspace"),
+        )
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: format!("assemble native Tool executor router: {error}"),
+        })?,
+    );
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)
@@ -260,12 +280,14 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     let _endpoint_publication = publish_endpoint(&config.layout, local_address.to_string())?;
     eprintln!("kernel-server personal: listening on {local_address} (loopback auth enabled)");
     let scheduler_authority_store = Arc::clone(&authority_store);
+    let scheduler_executor_router = Arc::clone(&executor_router);
     let scheduler_config_dir = config.layout.config_dir().to_path_buf();
     let mut scheduler_worker = PeriodicSchedulerWorker::spawn(SCHEDULER_TICK_INTERVAL, move || {
         run_private_scheduler_tick_with_store(
             scheduler_authority_store.as_ref(),
             &mut scheduler_repository,
             &scheduler_config_dir,
+            scheduler_executor_router.as_ref(),
         )
     })
     .map_err(|error| PersonalDaemonError::Io {

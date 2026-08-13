@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:0d4e0d018155f9d0803792ad238d52f8cb46e99043fb3e8f1889edcb2fcb9fd3"
+fingerprint: "sha256:3728cd3f20bfd4ce33c2a91856e890a2dcfce05d93cc0449c3dbe5c5cd1c975f"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

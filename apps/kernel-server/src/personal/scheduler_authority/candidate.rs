@@ -219,6 +219,17 @@ where
             )
         })?;
     if proposed_candidate.tool_ref.starts_with("native.") {
+        let expected_descriptor_id = crate::personal::tool_executor::builtin_native_descriptor_id(
+            &proposed_candidate.tool_ref,
+        )
+        .map_err(|error| {
+            SchedulerAuthorityError::CandidateDescriptorUnavailable(error.to_string())
+        })?;
+        if proposed_candidate.operation_descriptor_id != expected_descriptor_id {
+            return Err(SchedulerAuthorityError::CandidateDescriptorUnavailable(
+                "native candidate did not use the daemon-published descriptor identity".to_owned(),
+            ));
+        }
         resolve_persisted_native_descriptor(&descriptor.descriptor).map_err(|error| {
             SchedulerAuthorityError::CandidateDescriptorUnavailable(format!(
                 "native Tool registry rejected {}: {error:?}",
@@ -239,6 +250,58 @@ where
     let proposed_at = clock
         .now()
         .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+    let mut execution_context_command = context_command.clone();
+    execution_context_command.decided_at = proposed_at.clone();
+    let authorization_snapshot =
+        load_current_context_authorization_snapshot(store, &execution_context_command)?;
+    let authorization_grant = authorize(
+        &authorization_snapshot,
+        &ObjectGovernance {
+            object_ref: proposed_candidate.target.clone(),
+            tenant_id: Some(execution_context_command.tenant_id.clone()),
+            owner_ref: admission_command.authorization_subject_ref.clone(),
+            resource_scope: proposed_candidate.target.clone(),
+            conversation_ref: execution_context_command.conversation_ref.clone(),
+        },
+        &AccessRequest {
+            action: proposed_candidate.action.clone(),
+            purpose: admission_command.authorization_purpose.clone(),
+        },
+    )
+    .map_err(|error| {
+        SchedulerAuthorityError::CandidateAuthorizationUnavailable(format!(
+            "current candidate authorization denied: {error:?}"
+        ))
+    })?;
+    let snapshot_id = next_object_id(identifiers)?;
+    let authorization_canonical_json = json!({
+        "snapshot_id": snapshot_id.as_str(),
+        "subject_ref": admission_command.authorization_subject_ref,
+        "target_ref": proposed_candidate.target,
+        "action": proposed_candidate.action,
+        "purpose": admission_command.authorization_purpose,
+        "grant_epoch": authorization_grant.decided_at_epoch,
+        "capability_set_version": authorization_grant.capability_set_version,
+        "revocation_epoch": authorization_snapshot.revocation_epoch,
+        "observed_at": proposed_at.as_str(),
+    })
+    .to_string();
+    store
+        .append_daemon_authorization_snapshot(
+            &cognitive_kernel::ports::DaemonAuthorizationSnapshotRow {
+                snapshot_id,
+                subject_ref: admission_command.authorization_subject_ref.clone(),
+                target_ref: proposed_candidate.target.clone(),
+                action: proposed_candidate.action.clone(),
+                purpose: admission_command.authorization_purpose.clone(),
+                grant_epoch: authorization_grant.decided_at_epoch,
+                capability_set_version: authorization_grant.capability_set_version,
+                revocation_epoch: authorization_snapshot.revocation_epoch,
+                observed_at: proposed_at.clone(),
+                canonical_json: authorization_canonical_json,
+            },
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
     let candidate_header = compose_governed_header(
         &admission_command.candidate_id,
         "OperationCandidateProposal",

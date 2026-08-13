@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:99302ba441e8567d8f8d0e2cad3c7c85734189724241982f2452d19bb1f2a2d6"
+fingerprint: "sha256:792e881bf97fa825139623373078382d0062b9822c10a9f796379885e5c72ef1"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -36,8 +36,8 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | process-local event source |
 | Task control/query over HTTP | unavailable | service methods exist, no route |
-| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches zero-Intent candidate admission and later passes, but durable Tool Effect dispatch is not yet production-wired |
-| Governed tool execution (all six registered families) | partial | every family now has an assembled executor, so the projection reports `execution_ready`; that means this binary has a sink, not that an Agent can reach one — the sinks are still test-called only |
+| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches candidate admission and production-dispatches WorkspaceRead, but the other families and verification remain unwired |
+| Governed tool execution (all six registered families) | partial | every family has an assembled executor, so the projection reports `execution_ready`; WorkspaceRead now has the periodic production caller, while the other five still lack a production request carrier and remain test-called only |
 | Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
 | Independent verification loop | partial | verifier seam test-called only |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |

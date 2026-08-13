@@ -2,11 +2,17 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use cognitive_domain::ObjectId;
+use cognitive_kernel::effects::{EffectClass, OperationDescriptor};
 use cognitive_kernel::executor::{
     DispatchOutcome, EffectExecutor, ExecutorCall, ExecutorCapabilities, ExecutorQueryResult,
 };
-use cognitive_kernel::ports::PortFailure;
-use cognitive_kernel::tool_registry::NativeOperationFamily;
+use cognitive_kernel::ports::{
+    DaemonOperationDescriptorRow, PortFailure, WorkerAuthorizationStore,
+};
+use cognitive_kernel::tool_registry::{
+    BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolRisk,
+};
 
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
@@ -14,6 +20,115 @@ use super::{
     NativeToolExecutionError, NativeToolExecutionRequest, NativeWorkspaceReadExecutor,
     validate_native_tool_request,
 };
+
+const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
+    (
+        "native.workspace.read",
+        "00000000-0000-7000-8000-000000002001",
+    ),
+    (
+        "native.workspace.search",
+        "00000000-0000-7000-8000-000000002002",
+    ),
+    (
+        "native.workspace.write",
+        "00000000-0000-7000-8000-000000002003",
+    ),
+    (
+        "native.workspace.patch",
+        "00000000-0000-7000-8000-000000002004",
+    ),
+    (
+        "native.process.check",
+        "00000000-0000-7000-8000-000000002005",
+    ),
+    ("native.http.fetch", "00000000-0000-7000-8000-000000002006"),
+];
+
+pub(crate) fn builtin_native_descriptor_id(
+    operation_id: &str,
+) -> Result<ObjectId, NativeToolExecutionError> {
+    let raw_id = NATIVE_DESCRIPTOR_IDS
+        .iter()
+        .find_map(|(candidate, identifier)| (*candidate == operation_id).then_some(*identifier))
+        .ok_or_else(|| {
+            NativeToolExecutionError::InvalidDescriptor(format!(
+                "native operation is not in the immutable descriptor identity map: {operation_id}"
+            ))
+        })?;
+    ObjectId::parse(raw_id)
+        .map_err(|error| NativeToolExecutionError::InvalidDescriptor(error.to_string()))
+}
+
+fn persisted_operation_descriptor(descriptor: &NativeToolDescriptor) -> OperationDescriptor {
+    let effect_class = match descriptor.risk {
+        ToolRisk::ReadOnly | ToolRisk::NetworkRead => EffectClass::Pure,
+        ToolRisk::WorkspaceMutation => EffectClass::GovernedExternal,
+        ToolRisk::ProcessExecution => EffectClass::LocalEphemeral,
+    };
+    OperationDescriptor {
+        operation_id: descriptor.operation_id.clone(),
+        action: descriptor.action.clone(),
+        effect_class,
+        executor: descriptor.executor.clone(),
+        capabilities: ExecutorCapabilities {
+            queryable: true,
+            idempotent: true,
+        },
+        descriptor_version: descriptor.descriptor_version,
+    }
+}
+
+pub(crate) fn ensure_builtin_native_descriptors<S>(
+    store: &S,
+) -> Result<(), NativeToolExecutionError>
+where
+    S: WorkerAuthorizationStore,
+{
+    for descriptor in BUILTIN_TOOL_CATALOG.iter() {
+        let descriptor_id = builtin_native_descriptor_id(&descriptor.operation_id)?;
+        let persisted = persisted_operation_descriptor(descriptor);
+        let canonical_json = serde_json::json!({
+            "descriptor_id": descriptor_id.as_str(),
+            "operation_id": persisted.operation_id,
+            "action": persisted.action,
+            "effect_class": match persisted.effect_class {
+                EffectClass::Pure => "pure",
+                EffectClass::LocalEphemeral => "local_ephemeral",
+                EffectClass::GovernedExternal => "governed_external",
+                EffectClass::EmergencySafety => "emergency_safety",
+            },
+            "executor": persisted.executor,
+            "queryable": persisted.capabilities.queryable,
+            "idempotent": persisted.capabilities.idempotent,
+            "descriptor_version": persisted.descriptor_version,
+        })
+        .to_string();
+        let row = DaemonOperationDescriptorRow {
+            descriptor_id: descriptor_id.clone(),
+            descriptor: persisted,
+            canonical_json,
+        };
+        match store
+            .load_daemon_operation_descriptor(&descriptor_id)
+            .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))?
+        {
+            Some(existing) if existing == row => {}
+            Some(_) => {
+                return Err(NativeToolExecutionError::InvalidDescriptor(format!(
+                    "persisted native descriptor identity conflicts with catalog: {}",
+                    descriptor.operation_id
+                )));
+            }
+            None => store
+                .append_daemon_operation_descriptor(&row)
+                .map_err(|error| {
+                    NativeToolExecutionError::ExecutorUnavailable(error.to_string())
+                })?,
+        }
+    }
+    Ok(())
+}
 
 /// Composition-root router for daemon-staged native Tool requests.
 ///

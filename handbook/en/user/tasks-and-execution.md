@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:a208b3ba8e781ec8c8b72a8a75a4c5255de60ef528d499f9e298cc500cac15fa"
+fingerprint: "sha256:67748aeba08ebb18f149a5e51f42926929a11e6766c8c266fab7127a63db941b"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -61,8 +61,8 @@ One non-reentrant periodic worker starts after the daemon is listening, so later
 passes can observe Tasks admitted by the running process; pass errors do not
 stop the listener, and orderly shutdown cancels and joins the worker.
 **The daemon still does not drive the full chain autonomously**: production
-code does not yet dispatch the durable Effect through a Tool executor or call
-the verifier.
+code now dispatches parameter-free WorkspaceRead through the durable Effect
+protocol, but the other Tool request carriers and the verifier are not wired.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).

@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:99302ba441e8567d8f8d0e2cad3c7c85734189724241982f2452d19bb1f2a2d6"
+fingerprint: "sha256:792e881bf97fa825139623373078382d0062b9822c10a9f796379885e5c72ef1"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -36,8 +36,8 @@ non_claims:
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | 进程本地事件源 |
 | HTTP 上的 Task control/query | unavailable | 服务方法存在、无路由 |
-| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动修复缺失成员；唯一绑定后非重入周期 worker 可到达零 Intent candidate 准入及后续 pass，但持久 Tool Effect 派发尚未接入生产 |
-| 受治理工具执行（全部六个已登记族） | partial | 六族现在都有已装配 executor，投影因此报告 `execution_ready`；这只表示本二进制含有 sink，不表示 Agent 能到达它——sink 仍仅测试调用 |
+| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动修复缺失成员；唯一绑定后非重入周期 worker 可到达 candidate 准入并从生产派发 WorkspaceRead，但其余族与验证仍未接线 |
+| 受治理工具执行（全部六个已登记族） | partial | 六族都有已装配 executor，投影因此报告 `execution_ready`；WorkspaceRead 现有周期生产调用者，其余五族仍缺生产请求载体且仅测试调用 |
 | workspace search/write/patch 执行器 | partial | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界枚举/preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；无生产调用者 |
 | 独立验证循环 | partial | verifier 接缝仅测试调用 |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |

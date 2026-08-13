@@ -2929,6 +2929,8 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
     let database_path = layout.authority_database_path();
     let authority_store = SqliteAuthorityStore::open(&database_path).unwrap();
     let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    let executor_router =
+        ProductionNativeToolExecutorRouter::open(1, layout.data_dir().join("workspace")).unwrap();
 
     super::reconcile_scheduler_recovery_with_store(&authority_store, &mut scheduler_repository)
         .unwrap();
@@ -2936,6 +2938,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &authority_store,
         &mut scheduler_repository,
         layout.config_dir(),
+        &executor_router,
     )
     .unwrap();
 
@@ -2947,6 +2950,7 @@ fn shared_authority_store_drives_startup_recovery_and_private_tick() {
         &authority_store,
         &mut scheduler_repository,
         layout.config_dir(),
+        &executor_router,
     )
     .unwrap();
 }
