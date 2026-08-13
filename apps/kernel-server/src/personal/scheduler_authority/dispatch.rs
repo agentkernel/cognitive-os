@@ -506,6 +506,9 @@ where
         &resolved,
         observed_at,
     )?;
+    executor_router
+        .stage_resolved(&resolved)
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     let handoff = consume_worker_authorization_for_attempt(
         authority_store,
         // The LoopDriver clock is unavailable here; use the scheduler's

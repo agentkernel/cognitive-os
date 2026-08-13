@@ -1653,3 +1653,43 @@ Windows GNU linker host.
 
 - Finished: 2026-08-13 19:29 +08:00
 - Results: rustfmt **pass**; whitespace **pass**.
+
+### Unit 196 — exact native full private-tick production path
+
+- Finished: 2026-08-13 19:33 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `f5b07736f9548f7b507f554e3ba28c392873ec84`
+- Result: **pass**; full tick integration 1/1.
+- One schema-valid admitted WorkspaceRead crossed scheduler ceiling/lease,
+  current authorization, WIA consumption, durable `EXECUTING`, native I/O,
+  original-key reconciliation, and exact scheduler release to `succeeded`;
+  exactly one WIA consumption persisted.
+
+### Unit 197 — final exact native P2-T12 suites
+
+- Finished: 2026-08-13 19:34 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `f5b07736f9548f7b507f554e3ba28c392873ec84`
+- Results:
+  - scheduler authority **50/50 pass**;
+  - server module **9/9 pass**;
+  - `kernel-server` all-target Clippy with `-D warnings`: **pass**.
+
+### Unit 198 — final P2-T12 required CI observation
+
+- Checked: 2026-08-13 19:35 +08:00
+- Exact revision/run:
+  `f5b07736f9548f7b507f554e3ba28c392873ec84` / `31687000040`
+- Result: Ubuntu job `94405352703` and Windows job `94405352763` are both
+  **in progress**. Neither is inferred as pass.
+
+### Unit 199 — D04 self-review pre-consumption correction
+
+- Finished: 2026-08-13 19:37 +08:00
+- Finding: assembled-family resolution and current authorization were already
+  before WIA consumption, but concrete router staging still followed it. A
+  family with no production request carrier could therefore consume WIA before
+  failing closed.
+- Fix: stage the validated, I/O-free request before the atomic WIA handoff;
+  dispatch remains after consumption. Unsupported families now preserve the
+  unconsumed WIA and untouched Effect.
