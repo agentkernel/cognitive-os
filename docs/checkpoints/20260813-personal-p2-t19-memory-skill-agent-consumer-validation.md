@@ -1265,3 +1265,51 @@
 - Started/retained: 1/1.
 - Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
 - Disposition: test-only checkpoint can be pushed before production repair.
+
+### D02-NATIVE-RED-03 — epoch and package-pin red observation
+
+- Instruments: two focused kernel-server negatives.
+- Environment: `DEV-LINUX-NATIVE-01`, clean detached exact
+  `41d41770705295b086eab59c4038a7d42dcbd4bf`.
+- Started/retained: 2/2.
+- Outcome: expected `fail` 0/1 + 0/1；both cases returned loaded Memory/Skill
+  candidates, proving current replay omitted contract epoch and package identity.
+- Disposition: compare the record epoch before identity/body access and compare
+  the live binding's package id after exact binding/revision/digest selection.
+
+### D02-FMT-16 — epoch/package repair formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `41d41770`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair is formatted.
+
+### D02-DIFF-19 — epoch/package repair whitespace
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `41d41770`
+- Started/retained: 1/1.
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: repair and report have no whitespace defects.
+
+### D02-HANDBOOK-12 — epoch/package repair fingerprint refresh
+
+- Instruments: fingerprint filler, handbook check, generator byte check.
+- Environment: `DEV-WIN-GNU-01`
+- Revision: uncommitted repair over `41d41770`
+- Started/retained: 3/3.
+- Outcome: exactly two Memory/Skill fingerprints refreshed；54×2 handbook and
+  generated 18/18 checks pass.
+- Disposition: repair is docs-sync ready.
+
+### D02-DOCSYNC-12 — staged epoch/package repair gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged repair over `41d41770`
+- Started/retained: 1/1.
+- Outcome: `pass`；54×2 handbook and generated 18/18 checks pass.
+- Disposition: repair can be committed and pushed.

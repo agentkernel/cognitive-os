@@ -74,8 +74,14 @@ where
         )
         .map_err(consumption_store_error)?;
     let (eligible_memory, skill_pins, reuse_of) = if let Some(record) = prior {
-        let eligible_memory =
-            revalidate_consumption_pins(store, &record, command, context_request_digest, purpose)?;
+        let eligible_memory = revalidate_consumption_pins(
+            store,
+            &record,
+            command,
+            contract_epoch,
+            context_request_digest,
+            purpose,
+        )?;
         (
             eligible_memory,
             record.skill.clone(),
@@ -133,6 +139,7 @@ fn revalidate_consumption_pins<S>(
     store: &S,
     record: &MemorySkillConsumptionRecord,
     command: &ContextResolutionCommand,
+    contract_epoch: i64,
     context_request_digest: &str,
     purpose: &str,
 ) -> Result<Vec<EligibleMemoryConsumption>, SchedulerAuthorityError>
@@ -142,6 +149,12 @@ where
     if record.task_ref != command.task_ref || record.context_request_id != command.request_id {
         return Err(SchedulerAuthorityError::ContextResolution(
             "durable Memory/Skill consumption no longer matches the current Task request"
+                .to_owned(),
+        ));
+    }
+    if record.contract_epoch != contract_epoch {
+        return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
+            "durable Memory/Skill consumption contract epoch differs from the current Task"
                 .to_owned(),
         ));
     }
@@ -212,13 +225,18 @@ where
         .list_eligible_skill_pins(&command.resource_scope_prefix, &command.task_ref)
         .map_err(consumption_store_error)?;
     for pin in &record.skill {
-        if !live_skill.iter().any(|live| {
+        let Some(live) = live_skill.iter().find(|live| {
             live.binding_id == pin.binding_id
                 && live.revision_id == pin.revision_id
                 && live.content_digest == pin.content_digest
-        }) {
+        }) else {
             return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
                 "revoked or digest-drifted Skill cannot be reused".to_owned(),
+            ));
+        };
+        if live.package_id != pin.package_id {
+            return Err(SchedulerAuthorityError::ContextAuthorizationUnavailable(
+                "Skill package pin differs from the current exact binding".to_owned(),
             ));
         }
     }
