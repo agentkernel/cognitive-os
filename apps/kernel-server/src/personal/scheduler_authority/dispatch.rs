@@ -478,6 +478,16 @@ where
             &budget_charge,
             &writer_lease,
         )?;
+        scheduler_repository.release_lease(
+            &SchedulerWorkKey {
+                task_ref: dispatch.task_ref,
+                contract_epoch: dispatch.contract_epoch,
+            },
+            &dispatch.lease_owner,
+            dispatch.lease_epoch,
+            SchedulerState::Succeeded,
+            observed_wall_time,
+        )?;
         return Ok(SchedulerWorkerAttempt::ContinuationStarted(transition));
     }
 
@@ -574,24 +584,44 @@ where
             &writer_lease,
         )
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    crate::personal::verification_executor::run_production_independent_verification(
+    let verification_outcome =
+        crate::personal::verification_executor::run_production_independent_verification(
+            authority_store,
+            artifact_store,
+            &execution_clock,
+            &execution_ids,
+            &verification_request.verification_request_id,
+            &writer_lease,
+        )
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    crate::personal::verification_executor::issue_production_continuation_authority(
         authority_store,
-        artifact_store,
         &execution_clock,
         &execution_ids,
-        &verification_request.verification_request_id,
+        &verification_outcome,
+        &resolved.authorization.budget_id,
+        &resolved.authorization.budget_charge_canonical_json,
         &writer_lease,
     )
     .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    let worker_attempt = complete_durable_scheduler_effect_closure(
-        SchedulerDispatchAdmission::Leased(dispatch),
-        authority_store,
-        task_binding,
-        scheduler_repository,
+    if resolve_scheduler_effect_for_task_binding(authority_store, task_binding)?.closure
+        != SchedulerEffectClosure::Closed
+    {
+        return Err(SchedulerAuthorityError::NativeExecution(
+            "verified continuation cannot requeue an unclosed Effect".to_owned(),
+        ));
+    }
+    scheduler_repository.release_lease(
+        &SchedulerWorkKey {
+            task_ref: dispatch.task_ref.clone(),
+            contract_epoch: dispatch.contract_epoch,
+        },
+        &dispatch.lease_owner,
+        dispatch.lease_epoch,
+        SchedulerState::Runnable,
         released_at,
     )?;
-
-    Ok(worker_attempt)
+    Ok(SchedulerWorkerAttempt::EffectClosed(dispatch))
 }
 
 /// Run row-local scheduler work without letting one malformed Task abort the
@@ -630,6 +660,37 @@ fn reconcile_leased_native_scheduler_row(
             "leased scheduler row has no owner".to_owned(),
         )
     })?;
+    let task_binding = TaskBinding {
+        task_ref: scheduler_row.task_ref.clone(),
+        contract_epoch: scheduler_row.contract_epoch,
+    };
+    if let Some(continuation_authorization) = authority_store
+        .load_unconsumed_continuation_authorization(&task_binding)
+        .map_err(|error| SchedulerAuthorityError::ContinuationUnavailable(error.to_string()))?
+    {
+        let loop_object = authority_store
+            .load_object(
+                LifecycleDomain::Loop,
+                &continuation_authorization.loop_object_id,
+            )
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+        if loop_object.is_some_and(|loop_object| loop_object.state.as_str() == "CONTINUE") {
+            let released_at = SystemClock
+                .now()
+                .map_err(|error| SchedulerAuthorityError::Store(error.detail))?;
+            scheduler_repository.release_lease(
+                &SchedulerWorkKey {
+                    task_ref: scheduler_row.task_ref.clone(),
+                    contract_epoch: scheduler_row.contract_epoch,
+                },
+                lease_owner,
+                scheduler_row.lease_epoch,
+                SchedulerState::Runnable,
+                released_at.as_str(),
+            )?;
+            return Ok(());
+        }
+    }
     let consumed = authority_store
         .list_consumed_worker_iteration_authorizations()
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;

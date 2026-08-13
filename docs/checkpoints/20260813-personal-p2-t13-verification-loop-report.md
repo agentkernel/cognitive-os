@@ -328,3 +328,79 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 
 - Finished: 2026-08-13 21:53 +08:00
 - Results: rustfmt **pass**; whitespace **pass**.
+
+### Unit 040 — exact native D02 final suites
+
+- Finished: 2026-08-13 21:57 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `4c8cd12f857268f03e90e5980f4bbe5679362ab3`
+- Results:
+  - scheduler authority **50/50 pass**;
+  - verification executor **12/12 pass**;
+  - all-target Clippy for kernel/store/server: **pass**.
+- Production WorkspaceRead now reaches independent report and Loop `CONTINUE`;
+  no Task completion occurs.
+
+### Unit 041 — D03 checkpoint and continuation-authority implementation
+
+- Finished: 2026-08-13 22:08 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - passed verification records a typed `advanced` progress fact;
+  - daemon appends a fenced checkpoint at the `VERIFY -> CONTINUE` event
+    watermark and issues one continuation authorization bound to the report,
+    Loop version, next iteration, original budget/charge, and checkpoint;
+  - the first tick requeues the exact scheduler row; the next tick consumes the
+    continuation through the existing atomic path, enters `CONTINUE -> OBSERVE`,
+    and releases the exact lease;
+  - missing checkpoint authorization is explicitly rejected.
+
+### Unit 042 — D03 continuation local static checks
+
+- Finished: 2026-08-13 22:09 +08:00
+- Results: whitespace **pass**; diagnostics **pass**; rustfmt **fail** on five
+  mechanical layouts.
+- Recovery: apply rustfmt only and rerun.
+
+### Unit 043 — D03 continuation formatting rerun
+
+- Finished: 2026-08-13 22:10 +08:00
+- Result: **pass**; rustfmt and whitespace are clean.
+
+### Unit 044 — D03 continuation local gates
+
+- Finished: 2026-08-13 22:11 +08:00
+- Results: handbook **pass**; six fingerprints refreshed; consistency **pass**;
+  whitespace **pass**.
+
+### Unit 045 — D03 end-to-end handbook truth
+
+- Finished: 2026-08-13 22:15 +08:00
+- Result: **authored; validation pending**
+- Both locales now record the production
+  `ACT -> VERIFY -> CONTINUE -> OBSERVE` loop, checkpoint and one-time authority,
+  while retaining other Tool carriers and Task completion as separate gaps.
+
+### Unit 046 — D03 end-to-end local gates
+
+- Finished: 2026-08-13 22:16 +08:00
+- Results: rustfmt **pass**; handbook **pass**; generated pages **pass**;
+  consistency **pass**; whitespace **pass**.
+
+### Unit 047 — D03 continuation crash-recovery review
+
+- Finished: 2026-08-13 22:22 +08:00
+- Finding: a crash after continuation authority issuance but before scheduler
+  requeue could leave the exact row leased and make the authority unreachable.
+- Fix: leased-row recovery now detects an unconsumed authority on current Loop
+  `CONTINUE`, requeues the exact lease without consuming it, and lets the next
+  periodic pass use the existing atomic consumption path. The full tick test
+  injects this crash shape before `CONTINUE -> OBSERVE`.
+- Additional fix: progress/continuation iteration increments use checked
+  arithmetic only.
+
+### Unit 048 — D03 crash-recovery local gates
+
+- Finished: 2026-08-13 22:24 +08:00
+- Results: rustfmt **pass**; handbook **pass**; six fingerprints refreshed;
+  consistency **pass**; whitespace **pass**; diagnostics **pass**.

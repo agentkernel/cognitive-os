@@ -11,11 +11,13 @@
 use cognitive_contracts::generated::task_contract::{ContractConditionKind, TaskContract};
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, UriRef, Version, WallTimestamp};
 use cognitive_kernel::{
+    CommittedTransition,
     effects::WriterLease,
-    harness::LoopDriver,
+    harness::{LoopDriver, ProgressStatus},
     ports::{
-        AuthorityStore, Clock, ContinuationAuthorityStore, FixedPostStateRow, HarnessStore,
-        IdGenerator, IntentChainStore, ProtocolStore, TaskBinding, VerificationReportRow,
+        AuthorityStore, CheckpointRow, Clock, ContinuationAuthorityStore,
+        ContinuationAuthorizationRow, FixedPostStateRow, HarnessStore, IdGenerator,
+        IntentChainStore, ProgressFactRow, ProtocolStore, TaskBinding, VerificationReportRow,
         VerificationRequestRow,
     },
 };
@@ -290,6 +292,13 @@ pub(crate) struct ProductionVerificationSpec {
     pub criteria_canonical_json: String,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct ProductionVerificationOutcome {
+    pub report: VerificationReportRow,
+    pub progress: ProgressFactRow,
+    pub continuation: CommittedTransition,
+}
+
 /// Derive the production verification request solely from the current
 /// TaskContract's Acceptance conditions.
 pub(crate) fn derive_production_verification_spec(
@@ -525,7 +534,7 @@ pub(crate) fn run_production_independent_verification<S, C, G>(
     identifiers: &G,
     verification_request_id: &ObjectId,
     writer_lease: &WriterLease,
-) -> Result<VerificationReportRow, VerificationExecutorError>
+) -> Result<ProductionVerificationOutcome, VerificationExecutorError>
 where
     S: AuthorityStore
         + ContinuationAuthorityStore
@@ -574,7 +583,9 @@ where
         writer_lease,
     )?;
     if report.status != "passed" {
-        return Ok(report);
+        return Err(VerificationExecutorError::Infrastructure(
+            "production verifier did not pass".to_owned(),
+        ));
     }
     let contract_row = store
         .load_task_contract(
@@ -603,7 +614,33 @@ where
         UriRef::parse("correlation://personal/verification-result")
             .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
     );
-    driver
+    let last_iteration = store
+        .list_progress_facts(&request.loop_object_id)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
+        .last()
+        .map(|fact| fact.iteration);
+    let next_iteration = match last_iteration {
+        Some(last_iteration) => last_iteration.checked_add(1).ok_or_else(|| {
+            VerificationExecutorError::Infrastructure(
+                "verification progress iteration overflow".to_owned(),
+            )
+        })?,
+        None => 1,
+    };
+    let progress = driver
+        .record_progress(
+            &request.loop_object_id,
+            next_iteration,
+            ProgressStatus::Advanced,
+            &format!("verified-effect:{}", fixed_post_state.subject_object_id),
+            &[format!(
+                "verification-report://{}",
+                report.verification_report_id
+            )],
+            writer_lease,
+        )
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    let continuation = driver
         .end_iteration_from_persisted_report(
             &request.loop_object_id,
             request.expected_loop_version,
@@ -613,7 +650,101 @@ where
             writer_lease,
         )
         .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
-    Ok(report)
+    Ok(ProductionVerificationOutcome {
+        report,
+        progress,
+        continuation,
+    })
+}
+
+/// Persist the recovery checkpoint required by the verified continuation and
+/// issue its one-time daemon authority.
+pub(crate) fn issue_production_continuation_authority<S, C, G>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    outcome: &ProductionVerificationOutcome,
+    budget_id: &BudgetId,
+    budget_charge_canonical_json: &str,
+    writer_lease: &WriterLease,
+) -> Result<ContinuationAuthorizationRow, VerificationExecutorError>
+where
+    S: AuthorityStore + ContinuationAuthorityStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    if outcome.report.status != "passed" {
+        return Err(VerificationExecutorError::RequestUnavailable);
+    }
+    let request = store
+        .load_verification_request(&outcome.report.verification_request_id)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
+        .ok_or(VerificationExecutorError::RequestUnavailable)?;
+    let current_loop = store
+        .load_object(LifecycleDomain::Loop, &request.loop_object_id)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?
+        .ok_or(VerificationExecutorError::BindingMismatch)?;
+    if current_loop.state.as_str() != "CONTINUE"
+        || current_loop.version != outcome.continuation.after_version
+    {
+        return Err(VerificationExecutorError::BindingMismatch);
+    }
+    let checkpoint_id = next_verification_object_id(identifiers)?;
+    let checkpoint = CheckpointRow {
+        checkpoint_id: checkpoint_id.clone(),
+        loop_object_id: request.loop_object_id.clone(),
+        event_high_watermark: outcome.continuation.event_sequence,
+        fencing_epoch: writer_lease.epoch,
+        canonical_json: json!({
+            "checkpoint_id": checkpoint_id.as_str(),
+            "loop_object_id": request.loop_object_id.as_str(),
+            "loop_version": current_loop.version.get(),
+            "event_high_watermark": outcome.continuation.event_sequence,
+            "fencing_epoch": writer_lease.epoch,
+            "pending_effects": [],
+            "verification_report_id": outcome.report.verification_report_id.as_str(),
+        })
+        .to_string(),
+    };
+    store
+        .append_checkpoint(&checkpoint)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    let continuation_authorization_id = next_verification_object_id(identifiers)?;
+    let iteration = outcome.progress.iteration.checked_add(1).ok_or_else(|| {
+        VerificationExecutorError::Infrastructure("continuation iteration overflow".to_owned())
+    })?;
+    let authorization = ContinuationAuthorizationRow {
+        continuation_authorization_id: continuation_authorization_id.clone(),
+        task_binding: request.task_binding.clone(),
+        loop_object_id: request.loop_object_id.clone(),
+        iteration,
+        expected_loop_version: current_loop.version,
+        checkpoint_id,
+        budget_id: budget_id.clone(),
+        budget_charge_canonical_json: budget_charge_canonical_json.to_owned(),
+        verification_report_id: outcome.report.verification_report_id.clone(),
+        issued_fencing_epoch: writer_lease.epoch,
+        canonical_json: json!({
+            "continuation_authorization_id": continuation_authorization_id.as_str(),
+            "task_ref": request.task_binding.task_ref,
+            "contract_epoch": request.task_binding.contract_epoch,
+            "loop_object_id": request.loop_object_id.as_str(),
+            "iteration": iteration,
+            "expected_loop_version": current_loop.version.get(),
+            "checkpoint_id": checkpoint.checkpoint_id.as_str(),
+            "budget_id": budget_id.as_str(),
+            "budget_charge": serde_json::from_str::<serde_json::Value>(
+                budget_charge_canonical_json
+            ).map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?,
+            "verification_report_id": outcome.report.verification_report_id.as_str(),
+            "issued_fencing_epoch": writer_lease.epoch,
+        })
+        .to_string(),
+    };
+    store
+        .issue_continuation_authorization(&authorization)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    Ok(authorization)
 }
 
 fn validate_artifact_evidence_refs(
@@ -1134,7 +1265,7 @@ mod tests {
         );
 
         let (artifact_directory, artifact_store, _) = artifact_store_with_evidence();
-        let report = run_production_independent_verification(
+        let outcome = run_production_independent_verification(
             &store,
             &artifact_store,
             &FixedClock,
@@ -1143,7 +1274,34 @@ mod tests {
             &WriterLease { epoch: 1 },
         )
         .expect("run production independent verifier");
-        assert_eq!(report.status, "passed");
+        assert_eq!(outcome.report.status, "passed");
+        assert_eq!(outcome.progress.iteration, 1);
+        let missing_checkpoint =
+            store.issue_continuation_authorization(&ContinuationAuthorizationRow {
+                continuation_authorization_id: object_id(139),
+                task_binding: task_binding.clone(),
+                loop_object_id: loop_object_id.clone(),
+                iteration: 2,
+                expected_loop_version: outcome.continuation.after_version,
+                checkpoint_id: object_id(999),
+                budget_id: budget_id.clone(),
+                budget_charge_canonical_json: "{\"tool_calls\":1}".to_owned(),
+                verification_report_id: outcome.report.verification_report_id.clone(),
+                issued_fencing_epoch: 1,
+                canonical_json: "{\"continuation\":\"missing-checkpoint\"}".to_owned(),
+            });
+        assert!(missing_checkpoint.is_err());
+        let continuation_authorization = issue_production_continuation_authority(
+            &store,
+            &FixedClock,
+            &SequentialIdentifiers::new(140),
+            &outcome,
+            &budget_id,
+            "{\"tool_calls\":1}",
+            &WriterLease { epoch: 1 },
+        )
+        .expect("issue production continuation authority");
+        assert_eq!(continuation_authorization.iteration, 2);
         let continued_loop = store
             .load_object(LifecycleDomain::Loop, &loop_object_id)
             .expect("load continued loop")

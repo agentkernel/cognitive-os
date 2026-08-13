@@ -50,11 +50,12 @@ use cognitive_kernel::intent_chain::{
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
-    DaemonOperationDescriptorRow, EventDraft, IntentChainStore, IntentRow, ObjectAdmission,
-    ObjectCas, OperationCandidateProposalRow, ProgressFactRow, ProtocolStore, RecordDraft,
-    SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-    StoredObject, TaskBinding, TaskContractRow, TaskExecutionBootstrap, TransitionCommit,
-    WorkerAuthorizationStore, WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    ContinuationAuthorityStore, DaemonOperationDescriptorRow, EventDraft, IntentChainStore,
+    IntentRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProgressFactRow,
+    ProtocolStore, RecordDraft, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    SchedulerLeaseBinding, StoredObject, TaskBinding, TaskContractRow, TaskExecutionBootstrap,
+    TransitionCommit, WorkerAuthorizationStore, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, NativeOperationFamily};
 use cognitive_kernel::{EffectClass, OperationDescriptor};
@@ -2694,7 +2695,85 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
             .unwrap()
             .unwrap()
             .state,
+        SchedulerState::Runnable.as_str()
+    );
+    assert!(
+        store
+            .load_unconsumed_continuation_authorization(&TaskBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+            })
+            .unwrap()
+            .is_some()
+    );
+
+    repository
+        .acquire_lease(
+            &scheduler_work_key(&authorization.task_ref),
+            "personal-daemon-scheduler",
+            77,
+            "2026-08-13T08:10:00Z",
+        )
+        .unwrap();
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &router,
+        &artifact_store,
+    )
+    .unwrap();
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
+        SchedulerState::Runnable.as_str()
+    );
+    assert!(
+        store
+            .load_unconsumed_continuation_authorization(&TaskBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+            })
+            .unwrap()
+            .is_some()
+    );
+
+    super::run_private_scheduler_tick_with_store(
+        &store,
+        &mut repository,
+        layout.config_dir(),
+        &router,
+        &artifact_store,
+    )
+    .unwrap();
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Loop, &authorization.loop_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "OBSERVE"
+    );
+    assert_eq!(
+        repository
+            .load(&scheduler_work_key(&authorization.task_ref))
+            .unwrap()
+            .unwrap()
+            .state,
         SchedulerState::Succeeded.as_str()
+    );
+    assert!(
+        store
+            .load_unconsumed_continuation_authorization(&TaskBinding {
+                task_ref: authorization.task_ref.clone(),
+                contract_epoch: authorization.contract_epoch,
+            })
+            .unwrap()
+            .is_none()
     );
     assert_eq!(
         store

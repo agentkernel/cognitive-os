@@ -24,8 +24,8 @@ current fact of the code.
 - **Autonomous execution is not wired end-to-end**: Task admission does enqueue
   its complete scheduler bootstrap and a post-bind periodic worker reaches
   candidate admission. Parameter-free WorkspaceRead has a durable production
-  Effect caller and independent verifier through Loop `CONTINUE`; the other
-  Tool request carriers and checkpoint-backed continuation authority remain
+  Effect caller and independent verifier through checkpoint-backed Loop
+  `OBSERVE`; the other Tool request carriers and Task completion remain
   unwired.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the

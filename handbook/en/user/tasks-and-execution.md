@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:91285105746d11c0cbce54417a0109c72b4fb63b3fea0420fb803e6bdd2f8fbf"
+fingerprint: "sha256:c7878084599ed0ad45b09a55549ed0a8f1498deec159d6a23c9795e139c87645"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -62,9 +62,9 @@ passes can observe Tasks admitted by the running process; pass errors do not
 stop the listener, and orderly shutdown cancels and joins the worker.
 **The daemon still does not drive the full chain autonomously**: production
 now dispatches parameter-free WorkspaceRead, independently verifies its fixed
-reconciled Effect, and reaches Loop `CONTINUE`; checkpoint-backed continuation
-authority is not yet emitted, other Tool request carriers remain unwired, and
-no Task completes.
+reconciled Effect, and consumes checkpoint-backed continuation authority through
+Loop `OBSERVE`; other Tool request carriers remain unwired, and no Task
+completes.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
