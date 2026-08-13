@@ -15,11 +15,12 @@ sources:
   - path: docs/governance/AXIOMS.md
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - packages/pi-cognitiveos/src/safety.test.ts
   - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:dc3a553d159650e6ff1ac848e59207cd74679d7ef52f750fb6b42087c9dccee4"
+fingerprint: "sha256:0293026bae28ace7a58d76419572b02016919531a1fdb773153eed309b67c426"
 non_claims:
-  - 本地 bearer 使用非密码学随机源，且缺少 Windows 文件 ACL 加固——本页陈述边界现状，而非加固保证。
+  - Windows 本地 runtime 文件仍缺少显式 ACL 加固——OS CSPRNG 令牌生成不构成 ACL 声明。
 ---
 
 # 安全边界
@@ -36,7 +37,9 @@ Provider egress 仅 HTTPS 且禁跳转。
 0600）换取**通道绑定**的 bearer：management 令牌永远不能调用 task 路由，反之亦然。
 会话会过期（绝对 12 小时 / 空闲 30 分钟），并随 daemon 进程消亡。
 
-诚实的限制：bearer 生成使用非密码学哈希源；能读 bootstrap 文件者可自命任意
+bootstrap 与 session opaque token 各自携带 OS CSPRNG 生成的 256 bit。OS 熵不可用、
+输出过短、零 block 或独立探针 block 重复时，初始化/会话签发会在创建文件、session 或
+token 前 fail closed，绝无 PID/时间/hash fallback。能读 bootstrap 文件者仍可自命任意
 principal；按 OS 用户的隔离依赖文件权限（无 Windows ACL 加固）。
 
 ## Agent 遏制

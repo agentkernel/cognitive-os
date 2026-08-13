@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:ff5eba81b9e30287dd02a194f895540c4221fa746d1152f85dcea2d9dc0abbc3"
+fingerprint: "sha256:11fe79ffde5380310afb8acdb73c3e43a4d6de1a6170aaec0cc4fda60e0f8b08"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -43,7 +43,9 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 
 - **本地通道 bearer**（本表面）：`POST /local/session` 用每次启动的 bootstrap
   secret 换取 `management` 或 `task` 令牌；每个认证路由先检查通道绑定。进程本地、
-  12 小时/30 分钟过期、无逐操作 scope。
+  12 小时/30 分钟过期、无逐操作 scope。bootstrap 与 session token 各自使用 OS CSPRNG
+  的 256 bit；熵失败或无效/重复探针会在创建文件/session 前 fail closed，绝无
+  PID/时间/hash fallback。
 - **特权管理会话**（`admin-cli`）：由 `cognitive-management` 校验的 JSON 文档——独立
   平面，与本地 bearer 不可互换。
 

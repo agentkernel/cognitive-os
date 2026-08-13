@@ -7,9 +7,12 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/server.rs
+  - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
+tests:
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+fingerprint: "sha256:1b8b3e428a228141de25b481d58e7919266e80997f337546aa94d1dc21c426fc"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -56,3 +59,5 @@ current fact of the code.
 - Windows: daemon/CLI compile in CI and a Credential Manager backend plus
   installer/scheduled-task templates exist, but the B01-W install campaign has
   not run — no installable Windows product, and no ACL hardening on local files.
+  Local bootstrap/session tokens do use the OS CSPRNG; that correction does not
+  strengthen Windows file ACLs.
