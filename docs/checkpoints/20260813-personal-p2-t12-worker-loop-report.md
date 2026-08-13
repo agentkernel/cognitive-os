@@ -5,7 +5,7 @@
 - Lease: `lease/personal/P2-T12/worker-loop-production-chain`
 - Base: `028b245c492aa6d62f0d680489dc39abf3f84574`
 - Change class: `implementation-only`
-- Status: `in-progress`
+- Status: `done`
 - Claim ceiling: implementation evidence only; no Gate, release, Profile, B01,
   benchmark, or Task-completion claim
 
@@ -1693,3 +1693,82 @@ Windows GNU linker host.
 - Fix: stage the validated, I/O-free request before the atomic WIA handoff;
   dispatch remains after consumption. Unsupported families now preserve the
   unconsumed WIA and untouched Effect.
+
+### Unit 200 — post-review exact native P2-T12 suites
+
+- Finished: 2026-08-13 19:42 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `06c6a6f2cff96a33b8ac9e9f1be5c8a7a58f0758`
+- Results:
+  - scheduler authority **50/50 pass**;
+  - server module **9/9 pass**;
+  - `kernel-server` all-target Clippy with `-D warnings`: **pass**.
+- The self-review correction preserves the full successful tick and every
+  crash/stale/unsupported negative.
+
+### Unit 201 — D05 formal acceptance mapping
+
+- Finished: 2026-08-13 19:48 +08:00
+- Result: **complete pending final Windows CI only**
+- Mapping:
+  1. atomic admission publication, duplicate/unadmitted rollback, and
+     crash-reopen: D01, Units 017–075;
+  2. startup missing-member repair without authority replacement: D01,
+     Units 046–075;
+  3. zero-Intent candidate admission and per-row isolation: D02,
+     Units 076–103;
+  4. post-bind bounded non-reentrant periodic lifecycle: D03,
+     Units 106–126;
+  5. persisted descriptor/current authorization/WIA/Effect/native dispatch and
+     exact release: D04, Units 128–200.
+- Registered negatives are covered: unadmitted/duplicate/rollback; malformed
+  row isolation; tick reentry/cancellation; STOP and budget before lease;
+  unsupported family before WIA; stale/replaced lease; `EXECUTING` before I/O;
+  same-process and process-restart original-key no-redispatch.
+- Non-claim: P2-T12 advances no Task lifecycle state and creates no
+  verification, acceptance, completion, Gate, release, Profile, or B01 claim.
+
+### Unit 202 — post-review required Ubuntu/Windows CI
+
+- Finished: 2026-08-13 19:48 +08:00
+- Exact revision/run:
+  `06c6a6f2cff96a33b8ac9e9f1be5c8a7a58f0758` / `31687579721`
+- Result: **pass**
+  - Ubuntu job `94407212501`: success;
+  - Windows job `94407212435`: success.
+- Both jobs passed workspace build/test, Clippy, rustfmt, codegen, consistency,
+  handbook, conformance, honesty, and digest gates.
+
+### Unit 203 — P2-T12 acceptance closure
+
+- Finished: 2026-08-13 19:51 +08:00
+- Result: **accepted**
+- Accepted implementation/native revision:
+  `06c6a6f2cff96a33b8ac9e9f1be5c8a7a58f0758`
+- Accepted CI: run `31687579721`, Ubuntu and Windows pass.
+- Slices: D01 atomic bootstrap/startup repair; D02 zero-Intent/row isolation;
+  D03 periodic worker lifecycle; D04 production durable WorkspaceRead dispatch
+  and recovery; D05 acceptance/docs/lease closure.
+- Independent self-review: one pre-consumption staging gap found and fixed at
+  `06c6a6f`; post-fix native and CI are clean, with no remaining finding.
+- Lease moved to the closed archive. PR #209 may become ready and merge.
+- Remaining campaign work is P2-T13 independent verification, then the separate
+  P2-T14 acceptance-authority task; no Task-completion claim is made here.
+
+### Unit 204 — P2-T12 canonical closure consistency
+
+- Finished: 2026-08-13 19:55 +08:00
+- Initial result: five derived-count/lease-format findings after moving the
+  task and lease to closed state.
+- Recovery: updated Phase 2 to 15/13/0/0/2, total formal progress to
+  72/63/0/1/8 with 9 remaining, used canonical `` `none` `` active-lease
+  syntax, removed the closed lease reference from that row, and refreshed the
+  Project focus to name P2-T13 as the next blocker.
+- Final consistency result: **pass**; 275 requirements and all task/slice/lease
+  relationships verified.
+
+### Unit 205 — final P2-T12 closure gates
+
+- Finished: 2026-08-13 19:57 +08:00
+- Results: rustfmt **pass**; handbook **pass**; generated-page byte check
+  **pass**; consistency **pass**; whitespace **pass**; diagnostics **pass**.
