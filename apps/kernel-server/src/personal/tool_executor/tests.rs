@@ -3779,6 +3779,57 @@ fn workspace_mutation_receipt_survives_restart_and_post_execution_reversion() {
 }
 
 #[test]
+fn workspace_mutation_missing_seen_state_cannot_be_recreated_as_not_executed() {
+    let temporary_workspace = TestWorkspace::new("write-missing-seen-state");
+    let target_path = temporary_workspace.path.join("notes.txt");
+    std::fs::write(&target_path, "before\n").expect("write fixture");
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspaceWrite,
+        &temporary_workspace.path,
+        "workspace://notes.txt",
+        b"after\n",
+        WorkspacePreimage::Digest(image_digest(b"before\n")),
+    );
+    let executor = mutation_executor(7, &temporary_workspace);
+    executor
+        .stage_request(
+            "write-missing-state".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        )
+        .expect("stage mutation");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "write",
+            "write-missing-state",
+            "digest-1",
+            "workspace://notes.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert!(
+        executor
+            .remove_durable_state("write-missing-state")
+            .expect("remove test state")
+    );
+
+    let restarted = mutation_executor(7, &temporary_workspace);
+    assert!(matches!(
+        restarted.stage_request(
+            "write-missing-state".to_owned(),
+            "digest-1".to_owned(),
+            &request,
+        ),
+        Err(NativeToolExecutionError::ExecutorUnavailable(_))
+    ));
+    assert_eq!(
+        restarted.query_outcome("write-missing-state"),
+        Ok(ExecutorQueryResult::Indeterminate)
+    );
+}
+
+#[test]
 fn workspace_mutation_restart_cleans_a_durable_orphan_staging_file() {
     let temporary_workspace = TestWorkspace::new("write-orphan-recovery");
     let target_path = temporary_workspace.path.join("notes.txt");
@@ -4523,6 +4574,14 @@ fn http_fetch_missing_durable_attempt_record_fails_closed_after_restart() {
     );
 
     let restarted = scripted_fetch_executor(Arc::clone(&transport));
+    assert!(matches!(
+        restarted.stage_request(
+            "fetch-missing-state".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        ),
+        Err(NativeToolExecutionError::ExecutorUnavailable(_))
+    ));
     assert_eq!(
         restarted.query_outcome("fetch-missing-state"),
         Ok(ExecutorQueryResult::Indeterminate),

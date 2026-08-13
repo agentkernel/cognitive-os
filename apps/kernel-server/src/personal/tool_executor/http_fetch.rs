@@ -186,16 +186,23 @@ where
                 return Err(NativeToolExecutionError::IdempotencyBindingConflict);
             }
             Some(_) => {}
-            None => state_guard
-                .write(&HttpFetchStateRecord::staged(
-                    &idempotency_key,
-                    &staged_request,
-                ))
-                .map_err(|error| {
-                    NativeToolExecutionError::ExecutorUnavailable(format!(
-                        "durable fetch state write failed: {error}"
+            None => {
+                if state_guard.key_previously_seen() {
+                    return Err(NativeToolExecutionError::ExecutorUnavailable(
+                        "durable fetch state is missing for a previously seen key".to_owned(),
+                    ));
+                }
+                state_guard
+                    .write(&HttpFetchStateRecord::staged(
+                        &idempotency_key,
+                        &staged_request,
                     ))
-                })?,
+                    .map_err(|error| {
+                        NativeToolExecutionError::ExecutorUnavailable(format!(
+                            "durable fetch state write failed: {error}"
+                        ))
+                    })?
+            }
         }
         let mut staged_requests = self.staged_requests.lock().map_err(|_| {
             NativeToolExecutionError::ExecutorUnavailable(

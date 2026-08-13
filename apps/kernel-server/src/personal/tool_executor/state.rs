@@ -52,13 +52,14 @@ impl DurableExecutorStateStore {
     }
 
     pub(crate) fn lock_key(&self, namespace: &str, key: &str) -> io::Result<StateGuard<'_>> {
-        let mut lock_file = self.open_lock_file(namespace, key)?;
+        let (mut lock_file, key_previously_seen) = self.open_lock_file(namespace, key)?;
         lock_file.lock()?;
         lock_file.seek(SeekFrom::Start(0))?;
         Ok(StateGuard {
             directory: &self.directory,
             lock_file,
             record_name: record_name(namespace, key)?,
+            key_previously_seen,
         })
     }
 
@@ -67,7 +68,7 @@ impl DurableExecutorStateStore {
         namespace: &str,
         key: &str,
     ) -> Result<StateGuard<'_>, StateLockError> {
-        let mut lock_file = self
+        let (mut lock_file, key_previously_seen) = self
             .open_lock_file(namespace, key)
             .map_err(StateLockError::Io)?;
         match lock_file.try_lock() {
@@ -82,12 +83,25 @@ impl DurableExecutorStateStore {
             directory: &self.directory,
             lock_file,
             record_name: record_name(namespace, key).map_err(StateLockError::Io)?,
+            key_previously_seen,
         })
     }
 
-    fn open_lock_file(&self, namespace: &str, key: &str) -> io::Result<File> {
+    fn open_lock_file(&self, namespace: &str, key: &str) -> io::Result<(File, bool)> {
         let lock_name = lock_name(namespace, key)?;
+        let key_previously_seen = match self.directory.symlink_metadata(&lock_name) {
+            Ok(metadata) if metadata.is_file() && !metadata.is_symlink() => true,
+            Ok(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "durable executor lock entry is not a regular file",
+                ));
+            }
+            Err(error) if error.kind() == io::ErrorKind::NotFound => false,
+            Err(error) => return Err(error),
+        };
         open_or_create_regular_file(&self.directory, &lock_name)
+            .map(|file| (file, key_previously_seen))
     }
 }
 
@@ -100,9 +114,14 @@ pub(crate) struct StateGuard<'a> {
     directory: &'a Dir,
     lock_file: File,
     record_name: OsString,
+    key_previously_seen: bool,
 }
 
 impl StateGuard<'_> {
+    pub(crate) fn key_previously_seen(&self) -> bool {
+        self.key_previously_seen
+    }
+
     pub(crate) fn read<T: DeserializeOwned>(&self) -> io::Result<Option<T>> {
         let mut file = match open_entry_at(self.directory, &self.record_name)? {
             SecureEntry::Absent => return Ok(None),

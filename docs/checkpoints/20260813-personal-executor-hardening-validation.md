@@ -826,3 +826,98 @@ placement.
   paths routed correctly; full handbook and generated-byte checks passed;
   exit 0.
 - Disposition: no docs-impact escape was used.
+
+### V-CI-006 — Required Ubuntu/Windows matrix, checkpoint 868959d
+
+- Instrument: GitHub Actions `CI`, run `31662914498`
+- Revision: `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `CI-UBUNTU-01` job `94331300976`;
+  `CI-WINDOWS-MSVC-01` job `94331300911`
+- Started/retained: 2/2 jobs
+- Outcome: `pass`
+- Measurement: both jobs passed the complete required matrix: TypeScript,
+  Rust workspace build/tests, Clippy deny-warnings, rustfmt, codegen,
+  consistency, traceability, bilingual handbook/generated drift, conformance
+  honesty/self-checks, cross-language digest and artifacts. Ubuntu completed
+  in 3m12s; Windows completed in 8m38s.
+- Disposition: the post-CI self-review repairs are `tested-supported-ci`.
+  Ordinary CI creates no Gate/release/Profile/B01/benchmark claim.
+
+### Final-review follow-up
+
+The second defect-first pass found one remaining state-loss path: restaging a
+previously seen key after its record disappeared could recreate `Staged` and
+launder an unknown/completed attempt into `NotExecuted`. Stable per-key lock
+files now act as an independent seen-key witness. If a seen key has no record,
+HTTP and mutation staging refuse to recreate it and reconciliation remains
+`Indeterminate`. Focused negatives remove a record, restart, attempt to
+restage, and prove no second dispatch/non-execution claim.
+
+### V-LOCAL-060 — Final-review follow-up formatting, first attempt
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty final-review worktree after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `fail`
+- Measurement: rustfmt requested two closure-indentation corrections; exit 1.
+- Disposition: apply rustfmt and rerun.
+
+### V-LOCAL-061 — Final-review follow-up rustfmt
+
+- Instrument: `cargo fmt --all`
+- Revision: dirty final-review worktree after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: two closure-indentation corrections applied; exit 0.
+- Disposition: rerun the no-write check.
+
+### V-LOCAL-062 — Final-review follow-up formatting verification
+
+- Instrument: `cargo fmt --all -- --check`
+- Revision: dirty final-review worktree after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: exit 0.
+- Disposition: final-review follow-up is formatting-clean.
+
+### V-LOCAL-063 — Final-review follow-up consistency
+
+- Instrument: `pnpm run check:consistency`
+- Revision: dirty final-review worktree after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: complete repository consistency set passed; exit 0.
+- Disposition: no static drift.
+
+### V-LOCAL-064 — Final-review follow-up handbook integrity
+
+- Instrument: `node tools/src/check-handbook.mjs`
+- Revision: dirty final-review worktree after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 54 documents × 2 locales; 9 generated families
+- Outcome: `pass`
+- Measurement: complete handbook check set passed; exit 0.
+- Disposition: mapped state-loss wording remains synchronized.
+
+### V-LOCAL-065 — Final-review follow-up docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged final-review candidate after
+  `868959d6d27c76b44d6dd8f481b6563e376a4409`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full handbook/generated checks passed with the concrete reason:
+  “Seen-key witness closes state-loss restaging while preserving the already
+  documented rule that missing durable state reconciles `Indeterminate`;
+  mapped handbook facts are unchanged.”
+- Disposition: record the same reason in the commit and PR.
