@@ -402,4 +402,24 @@
 - Measurement: the test source routed to `dev.execution-chain-status`; the gate accepted the explicit missing-behavior checkpoint reason, verified handbook 54 × 2, and verified 18 generated pages byte-identical
 - Safety: the checkpoint contains assertions and evidence only; production behavior remains intentionally absent
 
+### V039 — expanded failure-first checkpoint
+
+- Instrument: scoped `git commit` with repository pre-commit docs-sync hook
+- Exact revision: `2f16f90251ba254d7145fef7bb6bdd4ef8651016`
+- Environment: task branch `personal/P2-T17-a7-unknown-outcome-observation`
+- Started / retained: `1 / 1`
+- Outcome: `pass`
+- Measurement: the immutable checkpoint pins the missing `FixtureMutationFault`, durable request counters, receipt-binding validation, full registered fault matrix, timeout/ambiguity query accounting, stale writer, and absent-completion expectations
+- Safety: this commit contains tests/report only and is intentionally not mergeable until its supported failure is retained and implementation follows
+
+### V040 — corrected implementation-head required CI
+
+- Instrument: GitHub Actions run `31728954515`
+- Exact revision: `54ad812d99ba7309ab90d8cea647954e3b1ae325`
+- Environment: `ubuntu-latest`, `windows-latest`
+- Started / retained: `2 / 2`
+- Outcome: `pass`
+- Measurement: both required jobs completed the full TypeScript/Rust build, workspace tests, Clippy `-D warnings`, rustfmt, codegen, consistency, traceability, handbook, conformance, honesty, self-check, digest, and evidence-upload sequence. Ubuntu completed in 2m59s; Windows completed in 10m39s, proving the conditional-import correction on MSVC.
+- Safety: ordinary CI implementation evidence only; the Node action-runtime deprecation annotation is unrelated and creates no Gate/release/Profile/EVAL-003 claim
+
 <!-- Append each completed validation unit below before starting the next one. -->
