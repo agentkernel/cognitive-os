@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:5ab033d2a72d760e8927064c7cfd9083711fd4406f9b79203bf4210ea9d9ccee"
+fingerprint: "sha256:5d507773e83524453a3b6952ea9cdc563f9aea09cfc03d058ba99bbea946f4a0"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -54,6 +54,10 @@ verification → verified continuation or ceiling STOP.
 The former bootstrap gap is closed in the admission path without adding a
 parallel scheduler: successful `TaskApplicationService::admit` atomically
 publishes the contract-named Loop and Budget beside the runnable scheduler row.
+A zero-Intent row now enters the pre-admission candidate branch instead of
+raising `MissingEffectBinding`; that pass returns after issuing the WIA, so it
+cannot consume its own worker authority. Row-local failures are isolated and do
+not abort later rows in the bounded pass.
 The remaining gaps are:
 
 1. **One tick, no loop**: the daemon executes

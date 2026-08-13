@@ -662,3 +662,96 @@ Windows GNU linker host.
 - Finished: 2026-08-13 14:22 +08:00
 - Command: `git diff --cached --check`
 - Result: **pass**
+
+### Unit 081 — exact native D02 expected red
+
+- Finished: 2026-08-13 14:23 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `808f55e88e9977aeb27890a1ec77f6a3a7751f37`
+- Result: **expected compile fail**
+  - `process_scheduler_rows_isolated` does not exist;
+  - `ResolvedSchedulerWork.authority_binding` is mandatory and has no
+    `is_none`.
+- No test executed. The two compiler errors pin exactly the row-isolation seam
+  and circular zero-Intent precondition D02 must add.
+
+### Unit 082 — D02 zero-Intent and row-isolation implementation
+
+- Finished: 2026-08-13 14:31 +08:00
+- Result: **implemented; validation pending**
+- Change:
+  - `ResolvedSchedulerWork` carries no Effect authority binding only for the
+    zero-Intent pre-admission pass; ambiguous/inconsistent bindings still fail;
+  - the worker-authority path requires the binding before lease acquisition;
+  - scheduler rows execute through a deterministic isolation helper, so one
+    row-local error is logged/skipped and later rows still run.
+- Boundary: the pre-admission pass returns after candidate admission and cannot
+  consume the newly issued WIA in the same pass.
+
+### Unit 083 — D02 implementation local static checks
+
+- Finished: 2026-08-13 14:33 +08:00
+- Results: rustfmt **pass**; `git diff --check` **pass**; edited-file
+  diagnostics **pass**.
+
+### Unit 084 — D02 bilingual handbook sync
+
+- Finished: 2026-08-13 14:36 +08:00
+- Result: **authored; fingerprint validation pending**
+- Change: both locales record that zero-Intent work reaches candidate
+  admission, same-pass WIA consumption remains forbidden, and row-local
+  failures no longer abort later rows. The periodic-tick, executor-caller, and
+  verifier-caller gaps remain explicit.
+
+### Unit 085 — D02 fingerprint refresh
+
+- Finished: 2026-08-13 14:37 +08:00
+- Command: `node tools/src/fill-handbook-fingerprints.mjs`
+- Result: **pass**; six source-bound bilingual pages updated.
+
+### Unit 086 — D02 final formatting
+
+- Finished: 2026-08-13 14:39 +08:00
+- Command: `cargo fmt --all -- --check`
+- Result: **pass**
+
+### Unit 087 — D02 handbook gate
+
+- Finished: 2026-08-13 14:39 +08:00
+- Command: `pnpm run check:handbook`
+- Result: **pass**
+
+### Unit 088 — D02 generated-page gate
+
+- Finished: 2026-08-13 14:39 +08:00
+- Command: `node tools/src/generate-handbook.mjs --check`
+- Result: **pass**; 18 pages byte-identical.
+
+### Unit 089 — D02 consistency gate
+
+- Finished: 2026-08-13 14:39 +08:00
+- Command: `pnpm run check:consistency`
+- Result: **pass**
+
+### Unit 090 — D02 whitespace gate
+
+- Finished: 2026-08-13 14:39 +08:00
+- Command: `git diff --check`
+- Result: **pass**
+
+### Unit 091 — D02 edited-file diagnostics
+
+- Finished: 2026-08-13 14:39 +08:00
+- Result: **pass**; no diagnostics reported.
+
+### Unit 092 — D02 staged docs-sync gate
+
+- Finished: 2026-08-13 14:41 +08:00
+- Result: **pass**; scheduler-execution and handbook-self routes resolved
+  through full bilingual checks. No escape used.
+
+### Unit 093 — D02 staged whitespace
+
+- Finished: 2026-08-13 14:41 +08:00
+- Command: `git diff --cached --check`
+- Result: **pass**

@@ -50,6 +50,10 @@ candidate Intent/Effect or run a Tool—the periodic worker path remains separat
 At daemon startup, the current immutable contract can reconstruct the same
 bootstrap and idempotently restore only a missing Loop, Budget, or scheduler
 row; existing authority is never reset.
+When a scheduler pass first observes that row with zero Intents, it selects the
+pre-admission candidate path rather than treating the absent Effect binding as
+corruption. Candidate admission may issue one WIA, but the same pass returns
+without consuming it; a later pass must reload it under the scheduler lease.
 
 Implemented-but-unexposed: `control` (supersession/cancel via
 `supersede_task_contract`) and `query_intent` exist on the service trait with full

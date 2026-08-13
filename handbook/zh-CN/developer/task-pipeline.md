@@ -47,6 +47,9 @@ chain → SQLite，线上使用生成的 request/result DTO。
 Tool——周期 worker 路径仍是独立接线。
 daemon 启动时可从当前不可变合同重构同一引导，并幂等恢复所缺 Loop、Budget 或调度行；
 既有权威绝不重置。
+调度 pass 首次看到零 Intent 行时，会选择 pre-admission candidate 路径，而非把 Effect
+绑定缺失当作损坏。candidate 准入可签发一份 WIA，但同一 pass 会返回且不消费它；后续
+pass 必须在调度 lease 下重新加载。
 
 已实现未暴露：`control`（经 `supersede_task_contract` 的更正/取消）与
 `query_intent` 存在于服务 trait 且测试完整，但 Personal HTTP 尚无路由调用。因此经

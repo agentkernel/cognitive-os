@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:2ec5fea8eb73e58d1d7584453dca2c7ee2ccd3eb358f000e93f2f6818e9acafb"
+fingerprint: "sha256:a208b3ba8e781ec8c8b72a8a75a4c5255de60ef528d499f9e298cc500cac15fa"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -55,9 +55,11 @@ loop continuation or STOP.
 Today admission durably enqueues its complete scheduler bootstrap, and each later
 stage exists with focused tests (lease CAS and fencing, sealed ContextViews,
 candidate admission bundles, six assembled Tool executors with unknown-outcome
-reconciliation, an independent verifier seam). **The daemon still does not drive
-the chain autonomously**: it runs only one scheduler pass before accepting Task
-admissions, and production code does not yet call the Tool executors or verifier.
+reconciliation, an independent verifier seam). Zero-Intent work now reaches
+candidate admission and leaves its new worker authorization for a later pass.
+**The daemon still does not drive the chain autonomously**: it runs only one
+scheduler pass before accepting Task admissions, and production code does not
+yet call the Tool executors or verifier.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).

@@ -387,7 +387,9 @@ pub(crate) struct RecoveredWorkerAttempt {
 /// rows and is never copied from a worker-local queue.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ResolvedSchedulerWork {
-    pub authority_binding: SchedulerAuthorityBinding,
+    /// Absent only for the first pre-admission pass, before any candidate
+    /// Intent/Effect binding exists. Every worker-authority path requires it.
+    pub authority_binding: Option<SchedulerAuthorityBinding>,
     pub task_binding: TaskBinding,
 }
 

@@ -470,6 +470,31 @@ where
     Ok(worker_attempt)
 }
 
+/// Run row-local scheduler work without letting one malformed Task abort the
+/// rest of the bounded pass.
+///
+/// The callback still owns every authority check and may fail closed. This
+/// helper changes only pass control flow: it records the failure count and
+/// continues deterministically in repository order.
+pub(crate) fn process_scheduler_rows_isolated(
+    scheduler_rows: Vec<cognitive_store::scheduler::SchedulerRow>,
+    mut process_row: impl FnMut(
+        &cognitive_store::scheduler::SchedulerRow,
+    ) -> Result<(), SchedulerAuthorityError>,
+) -> usize {
+    let mut failure_count = 0usize;
+    for scheduler_row in scheduler_rows {
+        if let Err(error) = process_row(&scheduler_row) {
+            failure_count = failure_count.saturating_add(1);
+            eprintln!(
+                "kernel-server personal scheduler tick: skip row {} at epoch {}: {error}",
+                scheduler_row.task_ref, scheduler_row.contract_epoch
+            );
+        }
+    }
+    failure_count
+}
+
 /// Run one daemon-private scheduler pass over durable runnable work.
 ///
 /// This private tick chooses either candidate-WIA reconciliation or a
@@ -517,11 +542,11 @@ pub(crate) fn run_private_scheduler_tick_with_store(
     let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
     let scheduler_rows = scheduler_repository.list_recoverable()?;
 
-    for scheduler_row in scheduler_rows {
+    process_scheduler_rows_isolated(scheduler_rows, |scheduler_row| {
         if scheduler_row.state != SchedulerState::Runnable.as_str()
             || scheduler_row.cancel_requested
         {
-            continue;
+            return Ok(());
         }
         let resolved_work =
             resolve_scheduler_work_for_task(authority_store, &scheduler_row.task_ref)?;
@@ -580,8 +605,14 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             // the newly issued WIA durable and unconsumed for a later normal
             // scheduler recovery/dispatch pass; Pi invocation must never
             // borrow or immediately consume worker authority.
-            continue;
+            return Ok(());
         }
+        let authority_binding = resolved_work.authority_binding.as_ref().ok_or_else(|| {
+            SchedulerAuthorityError::MissingEffectBinding {
+                task_ref: resolved_work.task_binding.task_ref.clone(),
+                contract_epoch: resolved_work.task_binding.contract_epoch,
+            }
+        })?;
         let scheduler_lease_epoch = scheduler_row.lease_epoch.checked_add(1).ok_or_else(|| {
             SchedulerAuthorityError::Store("scheduler lease epoch overflow".to_owned())
         })?;
@@ -605,7 +636,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             scheduler_repository,
             &mut scheduler_service,
             &driver,
-            &resolved_work.authority_binding,
+            authority_binding,
             &resolved_work.task_binding,
             scheduler_lease_epoch,
             observed_wall_time.as_str(),
@@ -616,7 +647,8 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             worker_attempt_id,
             observed_wall_time.as_str(),
         )?;
-    }
+        Ok(())
+    });
 
     Ok(())
 }

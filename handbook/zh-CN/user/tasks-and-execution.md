@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:2ec5fea8eb73e58d1d7584453dca2c7ee2ccd3eb358f000e93f2f6818e9acafb"
+fingerprint: "sha256:a208b3ba8e781ec8c8b72a8a75a4c5255de60ef528d499f9e298cc500cac15fa"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
@@ -48,8 +48,9 @@ Intent + Effect + 一次性 Worker Iteration Authorization → 受治理工具�
 
 今天准入会持久入列完整的调度引导，后续每个环节也存在且有聚焦测试（lease CAS 与
 fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的六族已装配 Tool 执行
-器、独立 verifier 接缝）。**但 daemon 尚未自主驱动整条链**：它只在接受 Task 准入前
-跑一次调度，生产代码尚未调用 Tool 执行器与 verifier。因此已接纳 Task 在权威状态中
+器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
+留给后续 pass。**但 daemon 尚未自主驱动整条链**：它只在接受 Task 准入前跑一次调度，
+生产代码尚未调用 Tool 执行器与 verifier。因此已接纳 Task 在权威状态中
 持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 

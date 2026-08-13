@@ -119,9 +119,10 @@ where
 ///
 /// A scheduler row does not carry a mutable copy of contract or action
 /// identity. Each worker tick instead reads the current immutable contract
-/// epoch and requires exactly one matching persisted Intent. Missing,
-/// ambiguous, or internally inconsistent binding rows fail before lease
-/// acquisition, so recovery cannot guess which Effect a task should drive.
+/// epoch. Zero matching Intents is the first pre-admission pass; exactly one
+/// reconstructs the durable Effect binding. Ambiguous or internally
+/// inconsistent rows fail before lease acquisition, so recovery cannot guess
+/// which Effect a task should drive.
 pub(crate) fn resolve_scheduler_work_for_task<S>(
     store: &S,
     task_ref: &str,
@@ -147,14 +148,19 @@ where
     let intent_rows = store
         .list_intents_for_task_binding(&task_binding)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
-    let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
-    let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
-    Ok(ResolvedSchedulerWork {
-        authority_binding: SchedulerAuthorityBinding {
+    let authority_binding = if intent_rows.is_empty() {
+        None
+    } else {
+        let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
+        let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
+        Some(SchedulerAuthorityBinding {
             task_ref: task_ref.to_owned(),
             contract_epoch,
             action_fingerprint,
-        },
+        })
+    };
+    Ok(ResolvedSchedulerWork {
+        authority_binding,
         task_binding,
     })
 }

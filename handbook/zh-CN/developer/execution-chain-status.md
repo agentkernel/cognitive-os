@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:5ab033d2a72d760e8927064c7cfd9083711fd4406f9b79203bf4210ea9d9ccee"
+fingerprint: "sha256:5d507773e83524453a3b6952ea9cdc563f9aea09cfc03d058ba99bbea946f4a0"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
 ---
@@ -52,7 +52,9 @@ non_claims:
 
 原先的引导缺口已在准入路径闭合，且未新增平行调度器：成功的
 `TaskApplicationService::admit` 会把合同命名的 Loop、Budget 与 runnable 调度行原子发
-布。剩余缺口为：
+布。零 Intent 行现在进入 pre-admission candidate 分支，而非抛出
+`MissingEffectBinding`；该趟签发 WIA 后立即返回，不能消费自己刚产生的 worker 权威。
+逐行失败彼此隔离，不会中止有界 pass 中的后续行。剩余缺口为：
 
 1. **单 tick、无循环**：daemon 仅在启动时执行一次
    `run_private_scheduler_tick_with_store`；不存在周期调度线程。

@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:bada684e5f32bcb41cd7aa867c38898959ce3b7fe505f0387014d9626c404da5"
+fingerprint: "sha256:dbe9a8565034e70f9a2a23cb8054b3a59e15f765ad65aeee54ad7d2c3a9f52d8"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -36,7 +36,7 @@ non_claims:
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | 进程本地事件源 |
 | HTTP 上的 Task control/query | unavailable | 服务方法存在、无路由 |
-| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动会修复缺失引导成员，但唯一生产 tick 仍只在准入前运行一次 |
+| 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动修复缺失引导成员，零 Intent 工作可到 candidate 准入，但唯一生产 tick 仍只在准入前运行一次 |
 | 受治理工具执行（全部六个已登记族） | partial | 六族现在都有已装配 executor，投影因此报告 `execution_ready`；这只表示本二进制含有 sink，不表示 Agent 能到达它——sink 仍仅测试调用 |
 | workspace search/write/patch 执行器 | partial | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界枚举/preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；无生产调用者 |
 | 独立验证循环 | partial | verifier 接缝仅测试调用 |
