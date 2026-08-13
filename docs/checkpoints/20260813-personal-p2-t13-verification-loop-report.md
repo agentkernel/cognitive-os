@@ -5,7 +5,7 @@
 - Lease: `lease/personal/P2-T13/production-verification-loop`
 - Base: `8918ee1182d09585f07aa81be8bb5bb23d62158a`
 - Change class: `implementation-only`
-- Status: `in-progress`
+- Status: `done`
 - Claim ceiling: implementation evidence only; no Task completion, Gate,
   release, Profile, B01, benchmark, or P2-T14 acceptance-authority claim
 
@@ -467,3 +467,36 @@ starts. Rust execution is never attempted on the unsupported Windows GNU host.
 
 - Finished: 2026-08-13 22:44 +08:00
 - Results: rustfmt **pass**; whitespace **pass**.
+
+### Unit 055 — post-cleanup exact native verification
+
+- Finished: 2026-08-13 22:47 +08:00
+- Environment/revision: `DEV-LINUX-NATIVE-01` /
+  `dab38cdf86c8e3486a913d85660593b6671bf114`
+- Results: verification executor **12/12 pass**; all-target Clippy for
+  kernel/store/server **pass**.
+
+### Unit 056 — repaired required Ubuntu/Windows CI
+
+- Finished: 2026-08-13 22:02 +08:00
+- Exact revision/run:
+  `dab38cdf86c8e3486a913d85660593b6671bf114` / `31707250244`
+- Result: **pass**
+  - Ubuntu job `94470801103`: success;
+  - Windows job `94470801023`: success.
+- The prior Windows-only open-handle cleanup failure is closed on the same
+  implementation with the fixture repair.
+
+### Unit 057 — P2-T13 acceptance closure
+
+- Finished: 2026-08-13 22:48 +08:00
+- Result: **accepted**
+- Accepted implementation/native revision:
+  `dab38cdf86c8e3486a913d85660593b6671bf114`
+- Slices: D01 ArtifactStore + atomic verification start; D02 contract criteria +
+  independent verifier/report; D03 checkpointed continuation authority through
+  Loop `OBSERVE`; D04 acceptance/docs/lease closure.
+- Independent self-review corrections: typed Loop version reuse, contract-bound
+  absent-Task guard, checked iteration arithmetic, and issue/requeue crash
+  recovery. Final native and required CI are clean.
+- Zero Tasks complete. P2-T14 remains a separate normative/implementation task.
