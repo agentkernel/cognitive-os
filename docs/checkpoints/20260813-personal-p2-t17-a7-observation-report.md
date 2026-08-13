@@ -259,4 +259,14 @@
 - Disposition: allow the frozen fault-point names, alias the HTTP parts type, and drop the identity conversion, then re-run Clippy and the focused suite
 - Safety: no assertion change
 
+### V025 — Clippy-clean exact revision native retest
+
+- Instrument: `cargo test -p kernel-server p2_t17_a7`; `cargo clippy -p kernel-server --all-targets -- -D warnings`; `cargo fmt --all -- --check`
+- Exact revision: `b122cce1375825155dcd87d33911ff48533cc21a`
+- Environment: `DEV-LINUX-NATIVE-01` disposable worktree `/home/wuz/cos-p2t17-57f10bea`
+- Started / retained: `10 / 10` tests plus Clippy and rustfmt
+- Outcome: `pass`
+- Measurement: focused suite 10/10; kernel-server all-target Clippy clean; rustfmt check clean. Crash mid-mutation original-key restart, original-key replay, and duplicate Effect rejection all remain green. `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result.
+- Safety: disposable worktree only; no B01 guest or campaign root touched
+
 <!-- Append each completed validation unit below before starting the next one. -->
