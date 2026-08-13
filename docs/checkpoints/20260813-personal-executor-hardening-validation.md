@@ -362,3 +362,59 @@ erase it.
   handbook-itself (19 paths) routed to the required documents; complete
   handbook and 18-page generated-byte checks passed; exit 0.
 - Disposition: no `DOCS_IMPACT_NONE` escape was used.
+
+### V-CI-001 — Required Ubuntu/Windows matrix, checkpoint 0313f05
+
+- Instrument: GitHub Actions `CI`, run `31658405942`
+- Revision: `0313f053c71522bd657136a30d4b9156ac840768`
+- Environment: `CI-UBUNTU-01` job `94317836782`;
+  `CI-WINDOWS-MSVC-01` job `94317836566`
+- Started/retained: 2/2 jobs
+- Outcome: `fail`
+- Measurement: Ubuntu failed at `Build Rust workspace`; downstream Rust and
+  repository checks were skipped. Windows was retained and also failed at
+  `Build Rust workspace`. No job or failure was discarded or rerun yet.
+- Disposition: inspect both failed build logs, repair only branch-owned
+  compile defects, then push a new immutable checkpoint. This run is not
+  implementation-pass evidence.
+
+#### V-CI-001 diagnostic addendum
+
+Both jobs failed before compilation with the same Cargo error: `Cargo.lock`
+would need an update while `--locked` was active (exit 101). The run therefore
+contains no Rust type/test result. The branch added `cap-std`/`cap-fs-ext`; the
+recovery action is to regenerate the lockfile with the pinned toolchain, verify
+full dependency metadata under `--locked`, and push a new checkpoint.
+
+### V-LOCAL-030 — Full Cargo metadata regeneration
+
+- Instrument: `cargo metadata --format-version 1`
+- Revision: dirty recovery worktree after `0313f053c71522bd657136a30d4b9156ac840768`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full transitive metadata resolved and the lockfile was updated;
+  exit 0. No crate compilation or linking occurred.
+- Disposition: verify the regenerated graph with `--locked`.
+
+### V-LOCAL-031 — Full locked Cargo metadata verification
+
+- Instrument: `cargo metadata --locked --format-version 1`
+- Revision: dirty recovery worktree after `0313f053c71522bd657136a30d4b9156ac840768`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 1/1
+- Outcome: `pass`
+- Measurement: full transitive graph resolved under `--locked`; exit 0. No
+  compilation or linking occurred.
+- Disposition: the matrix's pre-compilation lockfile failure is repaired.
+
+### V-LOCAL-032 — Lockfile-recovery docs-sync gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Revision: staged recovery candidate after `0313f053c71522bd657136a30d4b9156ac840768`
+- Environment: `DEV-WIN-GNU-01`
+- Started/retained: 2/2 changed paths
+- Outcome: `pass`
+- Measurement: `Cargo.lock` plus this running report were correctly classified
+  as documentation-neutral; exit 0.
+- Disposition: no mapped behavior source changed in this recovery checkpoint.
