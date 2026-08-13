@@ -1650,3 +1650,43 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Append-only native validation evidence changes no shipped behavior or handbook claims"`
   must remain in the commit record.
+
+### D05-CI-02 — final cross-platform green candidate
+
+- Instrument: manually dispatched required CI run
+  [`31741960080`](https://github.com/agentkernel/cognitive-os/actions/runs/31741960080).
+- Revision: `b653f74c6921c268529b7e6c04e536473e44b3f9`
+- Started/retained: Ubuntu/Windows 2/2.
+- Outcome: `pass` on both platforms. Each completed TypeScript build/tests,
+  Rust workspace build/tests, strict Clippy, rustfmt, codegen diff,
+  consistency, trace, handbook/generator, conformance/report honesty,
+  corruption self-check, cross-language golden digests and evidence upload.
+- Disposition: current unrebased code/evidence candidate has full required CI.
+
+### D05-BLOCK-01 — dependency and structural handoff
+
+- Branch: `personal/P2-T19-memory-skill-consumer`
+- CI-proven code/evidence head: `b653f74c6921c268529b7e6c04e536473e44b3f9`
+- Draft PR: [#214](https://github.com/agentkernel/cognitive-os/pull/214), currently
+  conflicting with the 33-commit-newer `main`.
+- Active external dependency: P2-T14 Draft PR
+  [#217](https://github.com/agentkernel/cognitive-os/pull/217) is still open；
+  its active lease owns overlapping scheduler tests, plan and handbook paths.
+- Remaining acceptance: after P2-T14 merges, rebase onto current main；move
+  consumption append from resolver selection to the persisted-ContextView,
+  pre-Pi seam；add the failure-after-selection/no-record and production
+  process-restart replay tests；synchronize D02-D05/task/lease status；obtain
+  independent review；rerun exact native and required CI.
+- Unique next action: wait for P2-T14 to merge, then perform that rebase and
+  post-view append slice. No ready/merge/lease closure is allowed before it.
+
+### D05-DOCSYNC-05 — final handoff evidence gate
+
+- Instrument: `node tools/src/docs-sync-gate.mjs --staged`
+- Environment: `DEV-WIN-GNU-01`
+- Revision: staged final report over `b653f74c`
+- Started/retained: 1/1.
+- Outcome: `pass`；no documentation-relevant changes.
+- Disposition:
+  `DOCS_IMPACT_NONE="Final CI and dependency handoff evidence changes no shipped behavior or handbook claims"`
+  must remain in the commit record.
