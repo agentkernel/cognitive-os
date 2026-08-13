@@ -36,6 +36,9 @@ non_claims:
 
 `cognitive-kernel` is the deterministic core: no HTTP, no SQLite, no model SDKs.
 Adapters implement its port traits; the reference adapter is `cognitive-store`.
+The daemon-private `MemorySkillConsumptionStore` port records exact Memory/Skill
+pins for Context loading; it does not grant client write authority or complete a
+Task.
 
 ## The ten-step transition gate
 

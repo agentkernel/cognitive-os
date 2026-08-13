@@ -13,12 +13,16 @@ sources:
     symbols: ["decide_memory_admission"]
   - path: crates/cognitive-store/src/sqlite/harness_skill.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/memory_skill_consumer.rs
+    symbols: ["load_governed_memory_skill_candidates"]
+  - path: crates/cognitive-store/src/memory_skill_consumption.rs
+    symbols: ["memory_skill_consumption_migration_entry"]
 tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
+fingerprint: "sha256:e35fda38455012bc6e8eb3061d032fde77bc8b436c77939774c4bec485f74c59"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -59,7 +63,11 @@ bindings keep their exact pins — they never drift to a successor.
 
 Management channel: remember/forget, skill import/bind/revoke, object/explain
 reads. `skill/binding/revoke` is matched before `skill/bind`, since the shorter
-route is a prefix of the longer one and would otherwise handle every revoke. Task channel: task-bound projection/watch plus consumption records that
-bind selected Memory/Skill provenance to current TaskContract/ContextRequest
-facts (revoked/forgotten/expired items are excluded by the same authority reads).
+route is a prefix of the longer one and would otherwise handle every revoke. Task channel: task-bound projection/watch plus a production governed consumer.
+`resolve_authorized_task_context` loads eligible Memory/Skill only after
+metadata-first eligibility, exact scope/pin/digest checks, and current
+forget/revoke revalidation. The resulting fragments enter the sealed
+ContextView; an append-only v24 consumption record keyed by Task, epoch,
+ContextRequest and session supports cross-session reuse. Reuse reloads current
+authority facts and fails closed on forget, revoke, or digest mismatch.
 Task bearers are rejected before any management mutation.

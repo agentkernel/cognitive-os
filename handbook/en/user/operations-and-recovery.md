@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3c83d3fa228e5fb62fa0b55961777d1a3c5354bd83377c4a65a168085a5f44a3"
+fingerprint: "sha256:293c012d442978896c1c93bcba3224434558c5c619d2219694939e7770c63474"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -59,7 +59,9 @@ Databases live under XDG state (`authority.sqlite`, `installation.sqlite`, WAL
 mode, 0600). Every migration apply first writes a timestamped backup under
 `state/backups/` (never pruned automatically). Derived data (Memory FTS index) is
 rebuildable from authority rows; forgetting a Memory can never be undone by an
-index rebuild.
+index rebuild. Authority migrations now include v24 append-only Memory/Skill
+consumption records; a later session may reuse exact pins, but forget, revoke,
+or digest drift fail closed instead of resurrecting forgotten facts.
 
 ## Crash and unknown-outcome recovery — `implemented` at the engine level
 

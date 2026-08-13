@@ -28,6 +28,7 @@ mod continuation;
 mod harness_skill;
 mod intent_chain;
 mod memory;
+mod memory_skill_consumption;
 mod protocol;
 mod schema;
 mod store;

@@ -13,12 +13,16 @@ sources:
     symbols: ["decide_memory_admission"]
   - path: crates/cognitive-store/src/sqlite/harness_skill.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/memory_skill_consumer.rs
+    symbols: ["load_governed_memory_skill_candidates"]
+  - path: crates/cognitive-store/src/memory_skill_consumption.rs
+    symbols: ["memory_skill_consumption_migration_entry"]
 tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
+fingerprint: "sha256:e35fda38455012bc6e8eb3061d032fde77bc8b436c77939774c4bec485f74c59"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -54,6 +58,9 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 management 通道：remember/forget、skill import/bind/revoke、object/explain 读取。
 `skill/binding/revoke` 必须先于 `skill/bind` 匹配：后者是前者的前缀，否则每次撤销都
 会落到 bind handler。
-task 通道：task 绑定的投影/watch，以及把选中 Memory/Skill 来源绑定到当前
-TaskContract/ContextRequest 事实的消费记录（被撤销/遗忘/过期项由同一权威读取排
-除）。task bearer 在任何管理变更前即被拒绝。
+task 通道：task 绑定的投影/watch，以及生产受治理消费方。
+`resolve_authorized_task_context` 只在元数据资格、精确 scope/pin/digest 复核和
+当前 forget/revoke 重验之后装载 Memory/Skill，并把片段写入封存 ContextView。
+v24 只追加消费记录按 Task、epoch、ContextRequest 与 session 绑定，供跨会话复用；
+复用必须重读当前权威事实，遗忘、撤销或 digest 漂移一律失败闭合。
+task bearer 在任何管理变更前即被拒绝。

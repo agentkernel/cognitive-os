@@ -47,6 +47,9 @@ chain → SQLite，线上使用生成的 request/result DTO。
 Tool——周期 worker 路径仍是独立接线。
 daemon 启动时可从当前不可变合同重构同一引导，并幂等恢复所缺 Loop、Budget 或调度行；
 既有权威绝不重置。
+该已准入 Task 之后解析 Context 时，daemon 会把当前合格 Memory 与精确 Skill pin
+装入封存视图并写入只追加消费记录；后续会话无需聊天重述即可复用这些钉，遗忘、撤销
+或 digest 漂移一律失败闭合。这不完成 Task。
 调度 pass 首次看到零 Intent 行时，会选择 pre-admission candidate 路径，而非把 Effect
 绑定缺失当作损坏。candidate 准入可签发一份 WIA，但同一 pass 会返回且不消费它；后续
 pass 必须在调度 lease 下重新加载。

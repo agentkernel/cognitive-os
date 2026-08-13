@@ -42,15 +42,16 @@ use cognitive_kernel::{
 };
 use cognitive_kernel::{
     authz::{AccessRequest, authorize},
+    memory_skill_consumption::MemorySkillConsumptionStore,
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
         BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
         ContextAuthorizationFactStore, ContextCandidateQuery, ContextRequestRow, ContextStore,
         ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
-        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
-        SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-        WorkerIterationAuthorizationRow,
+        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, MemoryStore,
+        ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+        SchedulerLeaseBinding, SkillStore, TaskBinding, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     },
     resolve_persisted_native_descriptor,
 };
@@ -307,7 +308,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
 {
     resolve_authorized_task_context_after_metadata(store, command, || Ok(()))
 }
@@ -328,7 +332,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
 {
     let initial_contract_epoch = store
         .current_contract_epoch(&command.task_ref)
@@ -476,7 +483,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
     F: FnOnce() -> Result<(), SchedulerAuthorityError>,
 {
     let current_contract_epoch = store
@@ -674,6 +684,15 @@ where
             "Context source was denied before body materialization".to_owned(),
         ));
     }
+    authorized_candidates.extend(
+        crate::personal::memory_skill_consumer::load_governed_memory_skill_candidates(
+            store,
+            command,
+            current_contract_epoch,
+            &request_row.request_digest,
+            &context_request.purpose,
+        )?,
+    );
 
     let resolution_request = ResolutionRequest {
         snapshot: authorization_snapshot,

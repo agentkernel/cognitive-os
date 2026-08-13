@@ -160,3 +160,64 @@
   `DOCS_IMPACT_NONE="Concurrent task-ID supersession changes identifiers only; shipped behavior and public documentation remain unchanged"`
   记录纯协调更正。
 - Disposition: 实现行为提交仍必须同步实际受影响的双语 handbook 与指纹。
+
+### D01-CI-UBUNTU-01 — failure-first Ubuntu observation
+
+- Instrument: GitHub CI `verify (ubuntu-latest)`, run `31718358206`, job
+  `94508750827`
+- Revision: `19767e363e0eda5c1bd7d851d1340151a5180a68`
+- Started/retained: 1/1
+- Outcome: `fail`；job 在 1m55s 后完成失败，满足 failure-first 必须先观察红灯的边界。
+  workflow 尚在等待 Windows job，GitHub 暂不提供失败日志，因此具体断言将在 run 完成后
+  以追加条目分类。
+- Disposition: 不将红灯写成实现回归或 pass；等待同一 run 完成并确认失败来自新增
+  governed-consumption oracle，再开始 D02。
+
+### D01-CI-UBUNTU-02 — failure-first observation retained
+
+- Instrument: GitHub CI run `31718358206` at `19767e36`
+- Outcome: `fail` retained as the D01 oracle. D01 is closed as the observed
+  missing-consumer baseline; implementation continues in D02.
+- Disposition: 该红灯不得改写为 pass。
+
+### D02-FMT-01 — local Rust formatting
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 仅为格式证据，不是 Rust build/test。
+
+### D02-DIFF-01 — patch whitespace validation
+
+- Instrument: `git diff --check`
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `pass`；无输出，退出码 0。
+- Disposition: 当前 D02 补丁没有 Git 空白错误。
+
+### D02-HANDBOOK-01 — bilingual handbook and fingerprints
+
+- Instrument: `node tools/src/fill-handbook-fingerprints.mjs` then
+  `node tools/src/check-handbook.mjs` and `node tools/src/generate-handbook.mjs --check`
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `pass`；54×2 handbook 检查通过，18 个生成页 byte-identical。
+- Disposition: 已同步受治理消费行为与 v24 迁移说明；不得使用 `DOCS_IMPACT_NONE`。
+
+### D02-CONSISTENCY-01 — repository consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `pass`；275 requirements、55 errors、74 schemas、89 vectors，以及
+  task/slice/lease/current-snapshot 关系全部通过。
+- Disposition: 登记一致性已闭合；Rust 行为仍等待 exact-revision Linux/CI。
+
+### D02-RUST-01 — focused governed-consumer tests
+
+- Instrument:
+  `admitted_task_context_consumes_authorized_memory_and_exact_skill_pin`,
+  `forgotten_memory_and_revoked_skill_fail_closed_on_reuse`,
+  `revoked_skill_and_digest_mismatch_fail_closed`,
+  `digest_mismatch_on_durable_consumption_record_fails_closed`,
+  `session_two_reuses_durable_pins_without_restating_memory_or_skill`
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `not-run`；`RUST-LINK-DEV-WIN-GNU-01` 禁止本机 GNU 链接。
+- Disposition: 推送后在 exact-revision `DEV-LINUX-NATIVE-01` 与 required CI 观察。

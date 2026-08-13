@@ -42,6 +42,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Independent verification loop | implemented | production WorkspaceRead reaches a CAS-backed independent passed report, checkpoint, one-time continuation authority, and Loop `OBSERVE`; this does not complete the Task |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |
+| Governed Memory/Skill Context consumption | implemented | exact scope/pin/digest load, durable v24 records, session-2 reuse, and forget/revoke fail-closed; public HTTP lifecycle cycles remain separate |
 | Context request/view + caches | implemented | — |
 | Artifact CAS | implemented | GC deferred (abandoned staging only) |
 | Six-family resource projection/watch | implemented | management+task channels only |

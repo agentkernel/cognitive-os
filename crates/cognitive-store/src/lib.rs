@@ -23,6 +23,7 @@ pub mod ids;
 pub mod installation;
 pub mod layout;
 pub mod memory_admission;
+pub mod memory_skill_consumption;
 pub mod memory_store;
 pub mod migration;
 pub mod personal_backup;

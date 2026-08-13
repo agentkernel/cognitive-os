@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:cecb8ff4b439b173c3d6c16bdd09f04ae364407b4632774335e5547c4f98fdc8"
+fingerprint: "sha256:38a59e1aba121f9c4304efe2bc2b137733b72ba9aa3fae67fb42f8ea292e692e"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -28,11 +28,11 @@ non_claims:
 # Store and migrations
 
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
-Two databases under XDG state: **authority** (migrations v1–v23) and
+Two databases under XDG state: **authority** (migrations v1–v24) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v23)
+## Authority migration map (v1–v24)
 
 | Versions | Adds |
 |---|---|
@@ -43,13 +43,14 @@ orders authority first and names the backup path on a second-phase failure.
 | v12–v15 | context requests/views, workspace context sources (role/trust CHECKs), authorization/revocation fact sets, scheduler execution policies |
 | v16–v20 | Memory candidates/decisions/objects, FTS5 derived index, tombstones (forget → +expire → +supersede), version lineage |
 | v21–v23 | Skill packages/revisions/bindings, binding revocations, revision lineage |
+| v24 | append-only Memory/Skill consumption records keyed by Task/epoch/request/session |
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; the only derived table is `memory_search_fts` (rebuildable; searches
 run an authority-filter CTE before `MATCH`).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v23 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v24 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

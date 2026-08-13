@@ -42,7 +42,7 @@ non_claims:
 | 调度持久化、CAS lease、fencing、上限 | implemented | store 调度测试；`SchedulerService` 上限测试 |
 | Task 准入调度引导 | implemented | 单个 fenced SQLite 事务发布 TaskContract + `START` Loop + 硬 Budget + 当前 epoch runnable 行；含崩溃/重复/回滚负例 |
 | daemon 周期调度 worker | implemented | 仅在绑定/发布 endpoint 后启动；唯一固定延迟串行 worker 拒绝重入、在 pass 错误后继续，顺序退出时取消并 join |
-| Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试 |
+| Pi 之前封存 ContextRequest/View、逐 body 重授权 | implemented | kernel-server scheduler_authority 真 SQLite 测试；生产路径还会在当前 forget/revoke 与 digest 重验后装入合格 Memory/Skill 钉 |
 | 一次性私有 socket 上的受限 Pi candidate 进程 | implemented | pi-agent-adapter 协议/启动测试 |
 | candidate 准入捆绑（Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT，全或无） | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead 执行器（persist-before-dispatch、原键对账） | implemented，生产调用 | 周期 worker 重载 WIA/candidate/Intent/持久 descriptor，重查精确调度 lease 与当前授权，在 daemon 数据 workspace 下 staging，并进入既有 Effect 协议；中断后的 leased 行只查询原键且绝不重复派发 |

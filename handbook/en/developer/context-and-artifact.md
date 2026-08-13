@@ -54,7 +54,10 @@ constraints; discovery is metadata-first with separate body loads;
 authorization/revocation fact sets reconstruct `AuthzSnapshot`s at the **current**
 revocation epoch. On the real scheduler path the daemon reloads
 authorization/revocation immediately before every body load and seals the view
-before any Pi transport.
+before any Pi transport. Eligible Memory/Skill fragments are loaded only after
+exact scope/pin/digest checks and current forget/revoke revalidation; the
+resulting pins are sealed into the view and recorded in an append-only v24
+consumption row so a later session can reuse them without restating the facts.
 
 ## Caches that cannot serve stale authority
 

@@ -50,6 +50,12 @@ candidate Intent/Effect or run a Tool—the periodic worker path remains separat
 At daemon startup, the current immutable contract can reconstruct the same
 bootstrap and idempotently restore only a missing Loop, Budget, or scheduler
 row; existing authority is never reset.
+When that admitted Task later resolves Context, the daemon loads currently
+eligible Memory objects and exact Skill pins into the sealed view and writes an
+append-only consumption record; a later session reuses those pins without
+chat restatement, and forget/revoke/digest drift fail closed. This does not
+complete the Task.
+
 When a scheduler pass first observes that row with zero Intents, it selects the
 pre-admission candidate path rather than treating the absent Effect binding as
 corruption. Candidate admission may issue one WIA, but the same pass returns
