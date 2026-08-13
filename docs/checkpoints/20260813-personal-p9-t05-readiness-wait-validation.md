@@ -173,3 +173,61 @@ The recovered acceptance edit has no whitespace errors.
 
 The gate found no handbook-routed source change among the two exact staged
 paths. No `DOCS_IMPACT_NONE` escape was needed or used.
+
+### 12. Required CI run `31728481070` at `543f3f49e39b982dc1a98d440933064d05b93286` — **pass**
+
+Both required jobs passed at the exact recovered-acceptance revision:
+
+| Job | Result | Evidence |
+|---|---|---|
+| `verify (ubuntu-latest)` | **pass** | job `94542713365`; Rust workspace tests, Clippy, fmt and all repository gates passed |
+| `verify (windows-latest)` | **pass** | job `94542713469`; the Rust workspace test step passed after 8 m 52 s, including the Windows-specific readiness evidence |
+
+The four readiness cases now pass together: slow healthy publication,
+never-published secret, never-listening port, and early child exit. Every
+shared caller uses the same 60 s deadline and 20 ms interval. No wait is
+unbounded, and an exited child is reported before the deadline instead of
+being rewritten as a startup timeout.
+
+### 13. First closure consistency check — **fail, repaired next**
+
+The first `node tools/src/check-consistency.mjs` run after moving P9-T05 to
+`done` found exactly two closure-accounting errors: the `PROGRESS.md` Layer 1
+totals still said 64 done / 1 in progress, and the new `Active task lease`
+evidence text still quoted the now-closed lease ID, which the checker correctly
+refused as an active reference. No implementation or test failure occurred.
+
+### 14. Closure consistency re-check — **pass**
+
+After correcting the two reported accounting fields, the checker verified 275
+requirements, 55 error codes, 74 schemas, 89 vectors, all Personal task counts,
+delivery slices, links, environment routing and leases.
+
+### 15. Closure `git diff --check` — **pass**
+
+The closure accounting and report update have no whitespace errors.
+
+### 16. Closure `node tools/src/docs-sync-gate.mjs --staged` — **pass**
+
+The gate found no handbook-routed source among the four exact closure-document
+paths. No `DOCS_IMPACT_NONE` escape was needed or used.
+
+## Acceptance mapping
+
+- Fixed 2 s allowance removed: every affected daemon integration test now uses
+  `common::READY_TIMEOUT` (60 s) through the shared poll.
+- Deterministic bounded behavior: one 20 ms interval and a deadline based on
+  `Instant`; no unbounded connection or bootstrap-secret loop remains.
+- Slow healthy startup: the 2.5 s publication passes on Ubuntu and Windows.
+- Early process exit: the child-aware wait reports the real exit status before
+  consuming the ceiling.
+- Port or publication never ready: each fails within its explicit test budget
+  and names the missing subject.
+- Existing semantics: all required workspace tests, assertions, Clippy, fmt,
+  consistency, handbook and conformance gates passed at the exact code head.
+- Evidence boundary: test-harness reliability only; no product behavior,
+  benchmark improvement, Gate, release, Profile or B01 claim.
+
+P9-T05 D01-D03 are complete. The lease is closed in `PARALLEL-LANES.md`; PR
+#213 remains the sole delivery vehicle and can be made ready after the
+closure-document head passes required checks.
