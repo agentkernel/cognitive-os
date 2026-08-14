@@ -80,7 +80,7 @@ use std::sync::{
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::personal::tool_executor::{
-    ASSEMBLED_EXECUTOR_FAMILIES, ProductionNativeToolExecutorRouter,
+    ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
 };
 
 fn scheduler_row(task_ref: &str) -> SchedulerRow {
@@ -2578,6 +2578,146 @@ fn unassembled_persisted_family_fails_before_effect_authorization() {
 
     drop(store);
     std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
+fn production_router_stages_process_check_and_http_fetch_carriers() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+
+    // ProcessCheck: the production router now carries the bounded process check.
+    let mut process_resolved = resolved.clone();
+    process_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::ProcessCheck)
+        .unwrap()
+        .clone();
+    process_resolved.candidate.target = "process://123".to_owned();
+    router.stage_resolved(&process_resolved).unwrap();
+
+    // HttpFetchReadOnly: the carrier is wired but fails closed before dispatch
+    // because no origin is registered (empty allowlist) — not because the family
+    // has no carrier.
+    let mut http_resolved = resolved.clone();
+    http_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        .unwrap()
+        .clone();
+    http_resolved.candidate.target = "https://example.com/data".to_owned();
+    assert!(matches!(
+        router.stage_resolved(&http_resolved),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_router_stages_workspace_search_with_persisted_query() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let mut search_resolved = resolved.clone();
+    search_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceSearch)
+        .unwrap()
+        .clone();
+    search_resolved.intent.canonical_json = json!({
+        "parameters": {"query": "durable input"}
+    })
+    .to_string();
+
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    // The production router now carries WorkspaceSearch: it stages the governed
+    // query into the search sink instead of failing closed.
+    router.stage_resolved(&search_resolved).unwrap();
+
+    // A missing or unparseable query still fails closed before any staging.
+    let mut missing_query = search_resolved.clone();
+    missing_query.intent.canonical_json = "{}".to_owned();
+    assert!(matches!(
+        router.stage_resolved(&missing_query),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_router_stages_workspace_write_with_persisted_preimage() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let mut write_resolved = resolved.clone();
+    write_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceWrite)
+        .unwrap()
+        .clone();
+    // "ZHVyYWJsZSBpbnB1dA==" is the standard base64 of "durable input".
+    write_resolved.intent.canonical_json = json!({
+        "parameters": {
+            "input_b64": "ZHVyYWJsZSBpbnB1dA==",
+            "preimage": "absent"
+        }
+    })
+    .to_string();
+
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    // The production router now carries WorkspaceWrite: it stages the governed
+    // payload + expected preimage into the mutation sink.
+    router.stage_resolved(&write_resolved).unwrap();
+
+    // A mutation without a declared preimage still fails closed before staging.
+    let mut missing_preimage = write_resolved.clone();
+    missing_preimage.intent.canonical_json =
+        json!({"parameters": {"input_b64": "ZHVyYWJsZSBpbnB1dA=="}}).to_string();
+    assert!(matches!(
+        router.stage_resolved(&missing_preimage),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
 #[test]
