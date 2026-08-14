@@ -2590,7 +2590,8 @@ fn production_router_rejects_parameter_bearing_families_before_effect_authorizat
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
 
     // Every family has an assembled sink, so resolution succeeds against the
-    // full assembled set — but only WorkspaceRead has a production carrier.
+    // full assembled set — but only WorkspaceRead and WorkspaceSearch have a
+    // production carrier.
     let resolved = resolve_native_worker_dispatch_with_families(
         &store,
         &authorization,
@@ -2604,7 +2605,6 @@ fn production_router_rejects_parameter_bearing_families_before_effect_authorizat
 
     let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
     for family in [
-        NativeOperationFamily::WorkspaceSearch,
         NativeOperationFamily::WorkspaceWrite,
         NativeOperationFamily::WorkspacePatch,
         NativeOperationFamily::ProcessCheck,
@@ -2632,6 +2632,46 @@ fn production_router_rejects_parameter_bearing_families_before_effect_authorizat
             .as_str(),
         "PROPOSED"
     );
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_router_stages_workspace_search_with_persisted_query() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let mut search_resolved = resolved.clone();
+    search_resolved.native_tool.descriptor.family = NativeOperationFamily::WorkspaceSearch;
+    search_resolved.intent.canonical_json = json!({
+        "parameters": {"query": "durable input"}
+    })
+    .to_string();
+
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    // The production router now carries WorkspaceSearch: it stages the governed
+    // query into the search sink instead of failing closed.
+    router.stage_resolved(&search_resolved).unwrap();
+
+    // A missing or unparseable query still fails closed before any staging.
+    let mut missing_query = search_resolved.clone();
+    missing_query.intent.canonical_json = "{}".to_owned();
+    assert!(matches!(
+        router.stage_resolved(&missing_query),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
 
     drop(store);
     drop(router);

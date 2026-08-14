@@ -18,7 +18,7 @@ use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
     NativeToolExecutionError, NativeToolExecutionRequest, NativeWorkspaceReadExecutor,
-    validate_native_tool_request,
+    NativeWorkspaceSearchExecutor, validate_native_tool_request,
 };
 
 const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
@@ -139,6 +139,7 @@ where
 pub(crate) struct ProductionNativeToolExecutorRouter {
     workspace_root: PathBuf,
     workspace_read: NativeWorkspaceReadExecutor,
+    workspace_search: NativeWorkspaceSearchExecutor,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
 }
 
@@ -155,6 +156,7 @@ impl ProductionNativeToolExecutorRouter {
         Ok(Self {
             workspace_root,
             workspace_read: NativeWorkspaceReadExecutor::new(trusted_fencing_epoch),
+            workspace_search: NativeWorkspaceSearchExecutor::new(trusted_fencing_epoch),
             staged_families: Mutex::new(BTreeMap::new()),
         })
     }
@@ -164,21 +166,33 @@ impl ProductionNativeToolExecutorRouter {
         resolved: &ResolvedNativeWorkerDispatch,
     ) -> Result<(), NativeToolExecutionError> {
         let family = resolved.native_tool.descriptor.family;
-        if family != NativeOperationFamily::WorkspaceRead {
-            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
-        }
+        let input = match family {
+            NativeOperationFamily::WorkspaceRead => Vec::new(),
+            NativeOperationFamily::WorkspaceSearch => {
+                workspace_search_query(&resolved.intent.canonical_json)?
+            }
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        };
         let request = validate_native_tool_request(&NativeToolExecutionRequest {
             descriptor: resolved.native_tool.descriptor.clone(),
             target: resolved.candidate.target.clone(),
-            input: Vec::new(),
+            input,
             workspace_root: Some(self.workspace_root.clone()),
             expected_preimage: None,
         })?;
-        self.workspace_read.stage_request(
-            resolved.intent.idempotency_key.clone(),
-            resolved.intent.parameters_digest.clone(),
-            &request,
-        )?;
+        match family {
+            NativeOperationFamily::WorkspaceRead => self.workspace_read.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            NativeOperationFamily::WorkspaceSearch => self.workspace_search.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        }
         let mut staged_families = self.staged_families.lock().map_err(|_| {
             NativeToolExecutionError::ExecutorUnavailable(
                 "native executor routing table is poisoned".to_owned(),
@@ -223,6 +237,7 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
     fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
         match self.staged_family(&call.idempotency_key)? {
             Some(NativeOperationFamily::WorkspaceRead) => self.workspace_read.dispatch(call),
+            Some(NativeOperationFamily::WorkspaceSearch) => self.workspace_search.dispatch(call),
             Some(_) => Ok(DispatchOutcome::NotExecuted {
                 reason: "native family has no production request carrier".to_owned(),
             }),
@@ -237,7 +252,32 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
             Some(NativeOperationFamily::WorkspaceRead) => {
                 self.workspace_read.query_outcome(idempotency_key)
             }
+            Some(NativeOperationFamily::WorkspaceSearch) => {
+                self.workspace_search.query_outcome(idempotency_key)
+            }
             Some(_) | None => Ok(ExecutorQueryResult::NotExecuted),
         }
     }
+}
+
+/// Extract the governed search query from a persisted intent's canonical JSON.
+///
+/// The query is the `parameters.query` string of the intent value. A missing,
+/// non-string, or unparseable query fails closed before any executor staging.
+fn workspace_search_query(canonical_json: &str) -> Result<Vec<u8>, NativeToolExecutionError> {
+    let value: serde_json::Value = serde_json::from_str(canonical_json).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "intent canonical JSON is not parseable: {error}"
+        ))
+    })?;
+    let query = value
+        .get("parameters")
+        .and_then(|parameters| parameters.get("query"))
+        .and_then(|query| query.as_str())
+        .ok_or_else(|| {
+            NativeToolExecutionError::InvalidDescriptor(
+                "workspace search query is missing from the governed intent parameters".to_owned(),
+            )
+        })?;
+    Ok(query.as_bytes().to_vec())
 }
