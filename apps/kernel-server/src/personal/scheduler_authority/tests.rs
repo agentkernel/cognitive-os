@@ -1570,7 +1570,7 @@ fn persist_repairable_task_contract(
         }],
         context_request_ref: None,
         contract_epoch: 1,
-        deadline: Some("2026-08-14T05:00:00Z".to_owned()),
+        deadline: Some("2027-12-31T00:00:00Z".to_owned()),
         header,
         human_gates: None,
         intent_acceptance_ref: strong_reference_to(
@@ -2632,7 +2632,7 @@ fn persist_native_workspace_read_dispatch_fixture(
             &context_request_digest,
         )),
         contract_epoch: authorization.contract_epoch,
-        deadline: Some("2026-08-14T08:00:00Z".to_owned()),
+        deadline: Some("2027-12-31T00:00:00Z".to_owned()),
         header: contract_header,
         human_gates: None,
         intent_acceptance_ref: strong_reference_to(
