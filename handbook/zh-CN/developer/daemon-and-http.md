@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:cf0fbb80a19ffdad4796a616d246b44d82f1627b6f220f9fe531dc7619238b7a"
+fingerprint: "sha256:99648a9b7c58df9ecbdfa4ade291739da4362d513ab583e39736454e9de6dcbc"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -69,7 +69,10 @@ readiness 从文件系统/配置事实评估六组件（`blocked | degraded | re
 悬空引用报 `secret_ref_resolves: false` 并以 `provider_secret_unresolvable` 阻塞，
 后端无法作答则以 `provider_secret_store_unavailable` 阻塞。解析出的材料立即丢弃，
 绝不进入任何 fact。解析只使用已加载的 Provider 配置快照；绝不重载 `provider.json`
-后把较新的 secret 引用与较旧的 provider/model/digest 事实混合。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
+后把较新的 secret 引用与较旧的 provider/model/digest 事实混合。一次 status/doctor
+评估只绑定一次 SecretStore：secret 探针与 provider 的 `secret_ref` 解析共用该后端，
+探针已证明后端无法作答时不再发起 `get`，材料立即丢弃，也不跨请求缓存就绪结果
+（没有 stale-ready TTL）。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
 Rustls 传输转发。成功的代理响应始终携带 `X-CognitiveOS-Provider-Network-Nanos`。
 嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明

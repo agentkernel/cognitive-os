@@ -127,3 +127,4 @@ block new leases, or override PROGRESS.md Current snapshot.
 | `lease/personal/P1-T09/linux-environment-qualification` | Linux-native Pi environment qualification | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | SSH qualification recorded; exact Pi availability remains `not-run` |
 
 Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
+| `lease/personal/P9-T06/readiness-secretstore-coalesce` | readiness SecretStore coalesce: one status/doctor evaluation binds one SecretStore (probe + resolve), skips get when the probe already proved the backend cannot answer, drops material immediately, and does not cache ready across requests | `personal/P9-T06-readiness-secretstore-coalesce` | 2026-08-14 | Merged PR #218 at `main@56e5b2d6` with required Ubuntu/Windows CI green. No Gate/release/Profile claim. |
