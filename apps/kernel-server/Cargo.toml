@@ -23,6 +23,7 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 sha2 = { workspace = true }
 thiserror = { workspace = true }
+base64 = { workspace = true }
 cap-std = "4.0.2"
 cap-fs-ext = "4.0.2"
 same-file = "1.0.6"

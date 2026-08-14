@@ -1250,6 +1250,7 @@ dependencies = [
 name = "kernel-server"
 version = "0.0.1"
 dependencies = [
+ "base64 0.23.0",
  "cap-fs-ext",
  "cap-std",
  "cognitive-akp",

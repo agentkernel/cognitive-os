@@ -47,9 +47,10 @@ verification → verified continuation or ceiling STOP.
 | Locked-down Pi candidate process over a one-shot private socket | implemented | pi-agent-adapter protocol/launch tests |
 | Candidate admission bundle (Intent + Effect@PROPOSED + WIA + loop DECIDE→ACT, all-or-nothing) | implemented | `p2_t03_worker_authorization.rs` |
 | WorkspaceRead executor with persist-before-dispatch and original-key reconciliation | implemented, production-called | the periodic worker reloads WIA/candidate/Intent/persisted descriptor, rechecks its exact scheduler lease and current authorization, stages under the daemon data workspace, and enters the existing Effect protocol; interrupted leased rows query the original key and never re-dispatch |
-| WorkspaceSearch / ProcessCheck executors | implemented, test-called only | immutable catalog equality is rechecked at every sink; search uses handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
-| WorkspaceWrite / WorkspacePatch mutation executor | implemented, test-called only | handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
-| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| WorkspaceSearch executor | implemented, production-called | the production router carries the governed query from the persisted Intent and stages it into the search sink; handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
+| ProcessCheck executor | implemented, production-called | the production router stages the bounded process check; dispatch fails closed until the daemon supervised-process registry is wired (no ambient process observation) |
+| WorkspaceWrite / WorkspacePatch mutation executor | implemented, production-called | the production router carries the governed payload + expected preimage from the persisted Intent and stages it into the mutation sink; handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
+| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, production-called | the production router stages the pinned HTTPS target; the registered-origin allowlist is empty by default so staging fails closed until an origin is registered; attempted/completed state survives restart; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
 | Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report, missing CAS evidence, and stale fixed post-state fail closed |
@@ -68,14 +69,16 @@ non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.
 The remaining gaps are:
 
-1. **Executor wiring is partial**: all six registered families have an
-   assembled sink (P2-T10), so `execution_ready` still means that the binary
-   contains one. The periodic worker now production-dispatches parameter-free
-   WorkspaceRead through the durable Effect protocol. WorkspaceSearch,
-   WorkspaceWrite/Patch, ProcessCheck, and HttpFetchReadOnly still fail before
-   Effect authorization because production has no separately governed
-   payload/preimage, supervised-process, or registered-origin carrier for them;
-   their sinks remain test-called only.
+1. **Executor wiring is complete, with two fail-closed execution boundaries**:
+   all six registered families now have a production request carrier. The
+   periodic worker production-dispatches parameter-free WorkspaceRead,
+   query-bearing WorkspaceSearch, preimage-bearing WorkspaceWrite/Patch (query,
+   payload, and expected preimage carried in the persisted Intent), bounded
+   ProcessCheck, and origin-gated HttpFetchReadOnly through the durable Effect
+   protocol. ProcessCheck dispatch fails closed until the daemon
+   supervised-process registry is wired, and HttpFetchReadOnly staging fails
+   closed until an origin is registered — neither fabricates input or bypasses
+   the Effect protocol.
 2. **Task completion is implemented and public C1 is native-proven**: the
    P2-T14 code reuses the registered `completion_claim` / `fixed_post_state` /
    `verification_report` / `acceptance_decision` slots; canonical decision

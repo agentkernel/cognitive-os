@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_domain::ObjectId;
 use cognitive_kernel::effects::{EffectClass, OperationDescriptor};
 use cognitive_kernel::executor::{
@@ -13,12 +15,15 @@ use cognitive_kernel::ports::{
 use cognitive_kernel::tool_registry::{
     BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolRisk,
 };
+use cognitive_provider_transport::RustlsReadOnlyFetchTransport;
 
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
-    NativeToolExecutionError, NativeToolExecutionRequest, NativeWorkspaceReadExecutor,
-    validate_native_tool_request,
+    DaemonProcessSupervisor, DurableExecutorStateStore, FailClosedProcessObservationSource,
+    NativeHttpFetchReadOnlyExecutor, NativeProcessCheckExecutor, NativeToolExecutionError,
+    NativeToolExecutionRequest, NativeWorkspaceMutationExecutor, NativeWorkspaceReadExecutor,
+    NativeWorkspaceSearchExecutor, WorkspacePreimage, validate_native_tool_request,
 };
 
 const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
@@ -132,13 +137,19 @@ where
 
 /// Composition-root router for daemon-staged native Tool requests.
 ///
-/// The first production caller supports the parameter-free WorkspaceRead
-/// family. Families that need a separately governed payload or preimage remain
-/// fail-closed until such an immutable carrier exists; the router never invents
-/// input from a digest.
+/// The production callers support WorkspaceRead, WorkspaceSearch,
+/// WorkspaceWrite/Patch, ProcessCheck, and HttpFetchReadOnly. ProcessCheck and
+/// HttpFetchReadOnly dispatch through fail-closed carriers until the daemon's
+/// supervised-process registry or a registered origin set is wired; the router
+/// never invents input from a digest.
 pub(crate) struct ProductionNativeToolExecutorRouter {
     workspace_root: PathBuf,
     workspace_read: NativeWorkspaceReadExecutor,
+    workspace_search: NativeWorkspaceSearchExecutor,
+    workspace_mutation: NativeWorkspaceMutationExecutor,
+    process_check:
+        NativeProcessCheckExecutor<DaemonProcessSupervisor<FailClosedProcessObservationSource>>,
+    http_fetch: NativeHttpFetchReadOnlyExecutor<RustlsReadOnlyFetchTransport>,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
 }
 
@@ -152,9 +163,40 @@ impl ProductionNativeToolExecutorRouter {
                 "create daemon-approved workspace root: {error}"
             ))
         })?;
+        let mutation_state_store = Arc::new(
+            DurableExecutorStateStore::open(&executor_state_path(&workspace_root)).map_err(
+                |error| {
+                    NativeToolExecutionError::ExecutorUnavailable(format!(
+                        "open durable executor state store: {error}"
+                    ))
+                },
+            )?,
+        );
+        let process_supervisor = Arc::new(DaemonProcessSupervisor::fail_closed(
+            trusted_fencing_epoch,
+            Duration::from_secs(30),
+            1024 * 1024,
+        ));
         Ok(Self {
             workspace_root,
             workspace_read: NativeWorkspaceReadExecutor::new(trusted_fencing_epoch),
+            workspace_search: NativeWorkspaceSearchExecutor::new(trusted_fencing_epoch),
+            workspace_mutation: NativeWorkspaceMutationExecutor::new(
+                trusted_fencing_epoch,
+                mutation_state_store.clone(),
+            ),
+            process_check: NativeProcessCheckExecutor::new(
+                trusted_fencing_epoch,
+                process_supervisor,
+                Duration::from_secs(30),
+            ),
+            http_fetch: NativeHttpFetchReadOnlyExecutor::new(
+                trusted_fencing_epoch,
+                Arc::new(RustlsReadOnlyFetchTransport::default()),
+                Vec::new(),
+                30_000,
+                mutation_state_store,
+            ),
             staged_families: Mutex::new(BTreeMap::new()),
         })
     }
@@ -164,21 +206,66 @@ impl ProductionNativeToolExecutorRouter {
         resolved: &ResolvedNativeWorkerDispatch,
     ) -> Result<(), NativeToolExecutionError> {
         let family = resolved.native_tool.descriptor.family;
-        if family != NativeOperationFamily::WorkspaceRead {
-            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
-        }
+        let (input, expected_preimage) = match family {
+            NativeOperationFamily::WorkspaceRead
+            | NativeOperationFamily::ProcessCheck
+            | NativeOperationFamily::HttpFetchReadOnly => (Vec::new(), None),
+            NativeOperationFamily::WorkspaceSearch => (
+                workspace_search_query(&resolved.intent.canonical_json)?,
+                None,
+            ),
+            NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch => {
+                let (payload, preimage) =
+                    workspace_mutation_parameters(&resolved.intent.canonical_json)?;
+                (payload, Some(preimage))
+            }
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        };
+        let workspace_root = match family {
+            NativeOperationFamily::WorkspaceRead
+            | NativeOperationFamily::WorkspaceSearch
+            | NativeOperationFamily::WorkspaceWrite
+            | NativeOperationFamily::WorkspacePatch => Some(self.workspace_root.clone()),
+            NativeOperationFamily::ProcessCheck | NativeOperationFamily::HttpFetchReadOnly => None,
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        };
         let request = validate_native_tool_request(&NativeToolExecutionRequest {
             descriptor: resolved.native_tool.descriptor.clone(),
             target: resolved.candidate.target.clone(),
-            input: Vec::new(),
-            workspace_root: Some(self.workspace_root.clone()),
-            expected_preimage: None,
+            input,
+            workspace_root,
+            expected_preimage,
         })?;
-        self.workspace_read.stage_request(
-            resolved.intent.idempotency_key.clone(),
-            resolved.intent.parameters_digest.clone(),
-            &request,
-        )?;
+        match family {
+            NativeOperationFamily::WorkspaceRead => self.workspace_read.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            NativeOperationFamily::WorkspaceSearch => self.workspace_search.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch => {
+                self.workspace_mutation.stage_request(
+                    resolved.intent.idempotency_key.clone(),
+                    resolved.intent.parameters_digest.clone(),
+                    &request,
+                )?
+            }
+            NativeOperationFamily::ProcessCheck => self.process_check.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            NativeOperationFamily::HttpFetchReadOnly => self.http_fetch.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        }
         let mut staged_families = self.staged_families.lock().map_err(|_| {
             NativeToolExecutionError::ExecutorUnavailable(
                 "native executor routing table is poisoned".to_owned(),
@@ -223,6 +310,12 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
     fn dispatch(&self, call: &ExecutorCall) -> Result<DispatchOutcome, PortFailure> {
         match self.staged_family(&call.idempotency_key)? {
             Some(NativeOperationFamily::WorkspaceRead) => self.workspace_read.dispatch(call),
+            Some(NativeOperationFamily::WorkspaceSearch) => self.workspace_search.dispatch(call),
+            Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
+                self.workspace_mutation.dispatch(call)
+            }
+            Some(NativeOperationFamily::ProcessCheck) => self.process_check.dispatch(call),
+            Some(NativeOperationFamily::HttpFetchReadOnly) => self.http_fetch.dispatch(call),
             Some(_) => Ok(DispatchOutcome::NotExecuted {
                 reason: "native family has no production request carrier".to_owned(),
             }),
@@ -237,7 +330,102 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
             Some(NativeOperationFamily::WorkspaceRead) => {
                 self.workspace_read.query_outcome(idempotency_key)
             }
+            Some(NativeOperationFamily::WorkspaceSearch) => {
+                self.workspace_search.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
+                self.workspace_mutation.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::ProcessCheck) => {
+                self.process_check.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::HttpFetchReadOnly) => {
+                self.http_fetch.query_outcome(idempotency_key)
+            }
             Some(_) | None => Ok(ExecutorQueryResult::NotExecuted),
         }
     }
+}
+
+/// Extract the governed search query from a persisted intent's canonical JSON.
+///
+/// The query is the `parameters.query` string of the intent value. A missing,
+/// non-string, or unparseable query fails closed before any executor staging.
+fn workspace_search_query(canonical_json: &str) -> Result<Vec<u8>, NativeToolExecutionError> {
+    let value: serde_json::Value = serde_json::from_str(canonical_json).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "intent canonical JSON is not parseable: {error}"
+        ))
+    })?;
+    let query = value
+        .get("parameters")
+        .and_then(|parameters| parameters.get("query"))
+        .and_then(|query| query.as_str())
+        .ok_or_else(|| {
+            NativeToolExecutionError::InvalidDescriptor(
+                "workspace search query is missing from the governed intent parameters".to_owned(),
+            )
+        })?;
+    Ok(query.as_bytes().to_vec())
+}
+
+/// Extract the governed mutation payload and preimage from a persisted intent's
+/// canonical JSON.
+///
+/// The payload is `parameters.input_b64` (standard base64) and the preimage is
+/// `parameters.preimage`, either `absent` or `digest:<sha256>`. Missing,
+/// malformed, or unparseable parameters fail closed before any executor staging.
+fn workspace_mutation_parameters(
+    canonical_json: &str,
+) -> Result<(Vec<u8>, WorkspacePreimage), NativeToolExecutionError> {
+    let value: serde_json::Value = serde_json::from_str(canonical_json).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "intent canonical JSON is not parseable: {error}"
+        ))
+    })?;
+    let parameters = value.get("parameters").ok_or_else(|| {
+        NativeToolExecutionError::InvalidDescriptor(
+            "workspace mutation parameters are missing from the governed intent".to_owned(),
+        )
+    })?;
+    let input_b64 = parameters
+        .get("input_b64")
+        .and_then(|input| input.as_str())
+        .ok_or_else(|| {
+            NativeToolExecutionError::InvalidDescriptor(
+                "workspace mutation payload is missing from the governed intent parameters"
+                    .to_owned(),
+            )
+        })?;
+    let input = STANDARD.decode(input_b64).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "workspace mutation payload is not valid base64: {error}"
+        ))
+    })?;
+    let preimage = match parameters
+        .get("preimage")
+        .and_then(|preimage| preimage.as_str())
+    {
+        Some("absent") => WorkspacePreimage::Absent,
+        Some(digest) if let Some(rest) = digest.strip_prefix("digest:") => {
+            WorkspacePreimage::Digest(rest.to_owned())
+        }
+        _ => {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "workspace mutation preimage must be `absent` or `digest:<sha256>`".to_owned(),
+            ));
+        }
+    };
+    Ok((input, preimage))
+}
+
+/// Durable executor state lives outside the approved workspace so a mutation can
+/// never write over its own attempt/receipt store.
+fn executor_state_path(workspace_root: &Path) -> PathBuf {
+    let parent = workspace_root.parent().unwrap_or_else(|| Path::new("."));
+    let name = workspace_root
+        .file_name()
+        .unwrap_or_else(|| std::ffi::OsStr::new("workspace"))
+        .to_string_lossy();
+    parent.join(format!(".{name}-executor-state"))
 }
