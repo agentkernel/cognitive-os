@@ -2581,55 +2581,46 @@ fn unassembled_persisted_family_fails_before_effect_authorization() {
 }
 
 #[test]
-fn production_router_rejects_parameter_bearing_families_before_effect_authorization() {
+fn production_router_stages_process_check_and_http_fetch_carriers() {
     let layout = temporary_personal_layout();
     layout.ensure_directories().unwrap();
     let workspace_root = layout.data_dir().join("workspace");
     let database_path = layout.authority_database_path();
     let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
-
-    // Every family has an assembled sink, so resolution succeeds against the
-    // full assembled set — but only WorkspaceRead, WorkspaceSearch,
-    // WorkspaceWrite, and WorkspacePatch have a production carrier.
     let resolved = resolve_native_worker_dispatch_with_families(
         &store,
         &authorization,
         &ASSEMBLED_EXECUTOR_FAMILIES,
     )
     .unwrap();
-    assert_eq!(
-        resolved.native_tool.descriptor.family,
-        NativeOperationFamily::WorkspaceRead
-    );
 
     let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
-    for family in [
-        NativeOperationFamily::ProcessCheck,
-        NativeOperationFamily::HttpFetchReadOnly,
-    ] {
-        let mut parameterized = resolved.clone();
-        parameterized.native_tool.descriptor.family = family;
-        assert!(
-            matches!(
-                router.stage_resolved(&parameterized),
-                Err(NativeToolExecutionError::UnsupportedExecutionFamily)
-            ),
-            "{family:?} must fail closed before Effect authorization: no production carrier"
-        );
-    }
 
-    // Rejection happens before any Effect transition or executor I/O: the
-    // durable Effect stays PROPOSED for every parameter-bearing family.
-    assert_eq!(
-        store
-            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
-            .unwrap()
-            .unwrap()
-            .state
-            .as_str(),
-        "PROPOSED"
-    );
+    // ProcessCheck: the production router now carries the bounded process check.
+    let mut process_resolved = resolved.clone();
+    process_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::ProcessCheck)
+        .unwrap()
+        .clone();
+    process_resolved.candidate.target = "process://123".to_owned();
+    router.stage_resolved(&process_resolved).unwrap();
+
+    // HttpFetchReadOnly: the carrier is wired but fails closed before dispatch
+    // because no origin is registered (empty allowlist) — not because the family
+    // has no carrier.
+    let mut http_resolved = resolved.clone();
+    http_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        .unwrap()
+        .clone();
+    http_resolved.candidate.target = "https://example.com/data".to_owned();
+    assert!(matches!(
+        router.stage_resolved(&http_resolved),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
 
     drop(store);
     drop(router);

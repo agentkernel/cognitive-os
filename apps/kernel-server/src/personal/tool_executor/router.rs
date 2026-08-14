@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_domain::ObjectId;
@@ -14,13 +15,15 @@ use cognitive_kernel::ports::{
 use cognitive_kernel::tool_registry::{
     BUILTIN_TOOL_CATALOG, NativeOperationFamily, NativeToolDescriptor, ToolRisk,
 };
+use cognitive_provider_transport::RustlsReadOnlyFetchTransport;
 
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
-    DurableExecutorStateStore, NativeToolExecutionError, NativeToolExecutionRequest,
-    NativeWorkspaceMutationExecutor, NativeWorkspaceReadExecutor, NativeWorkspaceSearchExecutor,
-    WorkspacePreimage, validate_native_tool_request,
+    DaemonProcessSupervisor, DurableExecutorStateStore, FailClosedProcessObservationSource,
+    NativeHttpFetchReadOnlyExecutor, NativeProcessCheckExecutor, NativeToolExecutionError,
+    NativeToolExecutionRequest, NativeWorkspaceMutationExecutor, NativeWorkspaceReadExecutor,
+    NativeWorkspaceSearchExecutor, WorkspacePreimage, validate_native_tool_request,
 };
 
 const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
@@ -134,15 +137,19 @@ where
 
 /// Composition-root router for daemon-staged native Tool requests.
 ///
-/// The first production caller supports the parameter-free WorkspaceRead
-/// family. Families that need a separately governed payload or preimage remain
-/// fail-closed until such an immutable carrier exists; the router never invents
-/// input from a digest.
+/// The production callers support WorkspaceRead, WorkspaceSearch,
+/// WorkspaceWrite/Patch, ProcessCheck, and HttpFetchReadOnly. ProcessCheck and
+/// HttpFetchReadOnly dispatch through fail-closed carriers until the daemon's
+/// supervised-process registry or a registered origin set is wired; the router
+/// never invents input from a digest.
 pub(crate) struct ProductionNativeToolExecutorRouter {
     workspace_root: PathBuf,
     workspace_read: NativeWorkspaceReadExecutor,
     workspace_search: NativeWorkspaceSearchExecutor,
     workspace_mutation: NativeWorkspaceMutationExecutor,
+    process_check:
+        NativeProcessCheckExecutor<DaemonProcessSupervisor<FailClosedProcessObservationSource>>,
+    http_fetch: NativeHttpFetchReadOnlyExecutor<RustlsReadOnlyFetchTransport>,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
 }
 
@@ -165,12 +172,29 @@ impl ProductionNativeToolExecutorRouter {
                 },
             )?,
         );
+        let process_supervisor = Arc::new(DaemonProcessSupervisor::fail_closed(
+            trusted_fencing_epoch,
+            Duration::from_secs(30),
+            1024 * 1024,
+        ));
         Ok(Self {
             workspace_root,
             workspace_read: NativeWorkspaceReadExecutor::new(trusted_fencing_epoch),
             workspace_search: NativeWorkspaceSearchExecutor::new(trusted_fencing_epoch),
             workspace_mutation: NativeWorkspaceMutationExecutor::new(
                 trusted_fencing_epoch,
+                mutation_state_store.clone(),
+            ),
+            process_check: NativeProcessCheckExecutor::new(
+                trusted_fencing_epoch,
+                process_supervisor,
+                Duration::from_secs(30),
+            ),
+            http_fetch: NativeHttpFetchReadOnlyExecutor::new(
+                trusted_fencing_epoch,
+                Arc::new(RustlsReadOnlyFetchTransport::default()),
+                Vec::new(),
+                30_000,
                 mutation_state_store,
             ),
             staged_families: Mutex::new(BTreeMap::new()),
@@ -183,7 +207,9 @@ impl ProductionNativeToolExecutorRouter {
     ) -> Result<(), NativeToolExecutionError> {
         let family = resolved.native_tool.descriptor.family;
         let (input, expected_preimage) = match family {
-            NativeOperationFamily::WorkspaceRead => (Vec::new(), None),
+            NativeOperationFamily::WorkspaceRead
+            | NativeOperationFamily::ProcessCheck
+            | NativeOperationFamily::HttpFetchReadOnly => (Vec::new(), None),
             NativeOperationFamily::WorkspaceSearch => (
                 workspace_search_query(&resolved.intent.canonical_json)?,
                 None,
@@ -195,11 +221,19 @@ impl ProductionNativeToolExecutorRouter {
             }
             _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
         };
+        let workspace_root = match family {
+            NativeOperationFamily::WorkspaceRead
+            | NativeOperationFamily::WorkspaceSearch
+            | NativeOperationFamily::WorkspaceWrite
+            | NativeOperationFamily::WorkspacePatch => Some(self.workspace_root.clone()),
+            NativeOperationFamily::ProcessCheck | NativeOperationFamily::HttpFetchReadOnly => None,
+            _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
+        };
         let request = validate_native_tool_request(&NativeToolExecutionRequest {
             descriptor: resolved.native_tool.descriptor.clone(),
             target: resolved.candidate.target.clone(),
             input,
-            workspace_root: Some(self.workspace_root.clone()),
+            workspace_root,
             expected_preimage,
         })?;
         match family {
@@ -220,6 +254,16 @@ impl ProductionNativeToolExecutorRouter {
                     &request,
                 )?
             }
+            NativeOperationFamily::ProcessCheck => self.process_check.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
+            NativeOperationFamily::HttpFetchReadOnly => self.http_fetch.stage_request(
+                resolved.intent.idempotency_key.clone(),
+                resolved.intent.parameters_digest.clone(),
+                &request,
+            )?,
             _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
         }
         let mut staged_families = self.staged_families.lock().map_err(|_| {
@@ -270,6 +314,8 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
             Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
                 self.workspace_mutation.dispatch(call)
             }
+            Some(NativeOperationFamily::ProcessCheck) => self.process_check.dispatch(call),
+            Some(NativeOperationFamily::HttpFetchReadOnly) => self.http_fetch.dispatch(call),
             Some(_) => Ok(DispatchOutcome::NotExecuted {
                 reason: "native family has no production request carrier".to_owned(),
             }),
@@ -289,6 +335,12 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
             }
             Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
                 self.workspace_mutation.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::ProcessCheck) => {
+                self.process_check.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::HttpFetchReadOnly) => {
+                self.http_fetch.query_outcome(idempotency_key)
             }
             Some(_) | None => Ok(ExecutorQueryResult::NotExecuted),
         }
