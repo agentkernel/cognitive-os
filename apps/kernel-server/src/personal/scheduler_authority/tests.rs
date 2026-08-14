@@ -40,7 +40,9 @@ use cognitive_kernel::authz::{
 };
 use cognitive_kernel::budget::BudgetCharge;
 use cognitive_kernel::budget::BudgetState;
-use cognitive_kernel::effects::{EffectProtocol, GovernanceCurrency, WriterLease};
+use cognitive_kernel::effects::{
+    EffectProtocol, GovernanceCurrency, VerificationRecord, VerificationStatus, WriterLease,
+};
 use cognitive_kernel::engine::CommittedTransition;
 use cognitive_kernel::executor::ExecutorCapabilities;
 use cognitive_kernel::intent_chain::{
@@ -3213,6 +3215,93 @@ fn missing_cas_evidence_cannot_complete_a_task() {
     assert!(matches!(
         error,
         super::TaskCompletionError::EvidenceUnavailable(_)
+    ));
+    assert_ne!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED"
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn stale_fixed_post_state_cannot_complete_a_task() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("input.txt"), b"durable input").unwrap();
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let (artifact_store, report_id) =
+        persist_verified_workspace_read_before_acceptance(&layout, &store, &authorization);
+
+    // The production path leaves the verified Effect at RECONCILED@V with
+    // fixed_post_state.subject_version = V (they match, so a normal
+    // completion would proceed). Advance the Effect RECONCILED -> VERIFIED
+    // through the sanctioned verify_effect boundary so its durable version
+    // becomes V+1 while the pinned fixed_post_state still references V; the
+    // pinned state is now stale relative to the authoritative Effect.
+    let effect_id = authorization.effect_object_id.clone();
+    let fixed_version = store
+        .load_object(LifecycleDomain::Effect, &effect_id)
+        .unwrap()
+        .unwrap()
+        .version;
+    let verify_clock = super::FixedSchedulerClock::parse("2026-08-04T12:03:00Z").unwrap();
+    let protocol = EffectProtocol::new(
+        &store,
+        &verify_clock,
+        &UuidV7Generator,
+        UriRef::parse("actor://personal/daemon").unwrap(),
+        UriRef::parse("authority://personal/effect-authority").unwrap(),
+        UriRef::parse("correlation://personal/p2-t14-stale-fixed-post-state").unwrap(),
+    );
+    let record = VerificationRecord {
+        verification_object_id: report_id.clone(),
+        report_id: report_id.clone(),
+        status: VerificationStatus::Passed,
+        subject_domain: LifecycleDomain::Effect,
+        subject_object_id: effect_id.clone(),
+        fixed_post_state_version: fixed_version,
+    };
+    protocol
+        .verify_effect(
+            &effect_id,
+            fixed_version,
+            &record,
+            &WriterLease { epoch: 1 },
+        )
+        .unwrap();
+
+    let task_binding = TaskBinding {
+        task_ref: authorization.task_ref.clone(),
+        contract_epoch: authorization.contract_epoch,
+    };
+    let error = super::complete_task_from_persisted_verification(
+        &store,
+        &artifact_store,
+        &SystemClock,
+        &UuidV7Generator,
+        &task_binding,
+        &report_id,
+        &WriterLease { epoch: 1 },
+    )
+    .err()
+    .unwrap();
+    assert!(matches!(
+        error,
+        super::TaskCompletionError::VerificationUnavailable
     ));
     assert_ne!(
         store
