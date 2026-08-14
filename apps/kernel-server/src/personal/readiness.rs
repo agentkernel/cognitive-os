@@ -13,8 +13,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_secret::{
-    ProviderConfig, ProviderConfigError, ProviderConfigRepository, SecretError, SecretStore,
-    SecretStoreAvailability, SecretStoreClass, SelectedModelRepository,
+    ProductionSecretBackend, ProviderConfig, ProviderConfigError, ProviderConfigRepository,
+    SecretError, SecretStore, SecretStoreAvailability, SecretStoreClass, SelectedModelRepository,
     select_production_secret_store,
 };
 use cognitive_store::PersonalDataLayout;
@@ -153,14 +153,22 @@ pub enum ProviderSecretResolution {
     Unavailable,
 }
 
+/// 一次 readiness 评估内绑定的 SecretStore。不跨请求缓存，不保留 secret 材料。
+struct EvaluationSecretBinding {
+    probe: SecretProbeObservation,
+    production_backend: Option<ProductionSecretBackend>,
+}
+
 /// Evaluate Personal readiness from filesystem and probe facts.
 pub fn evaluate_personal_readiness(context: &ReadinessEvaluationContext) -> ReadinessReport {
     let evaluated_at_unix_ms = unix_now_ms();
+    // 一次评估只绑定一次 SecretStore：probe 与 resolve 共用同一后端。
+    let secret_binding = bind_evaluation_secret(context);
     let components = vec![
         check_system(&context.layout, evaluated_at_unix_ms),
         check_database(&context.layout, evaluated_at_unix_ms),
-        check_secret(context, evaluated_at_unix_ms),
-        check_provider(context, evaluated_at_unix_ms),
+        check_secret(&secret_binding, evaluated_at_unix_ms),
+        check_provider(context, &secret_binding, evaluated_at_unix_ms),
         check_daemon(context, evaluated_at_unix_ms),
         check_pi(context, evaluated_at_unix_ms),
     ];
@@ -493,11 +501,9 @@ fn check_database(layout: &PersonalDataLayout, observed_at_unix_ms: u64) -> Comp
     }
 }
 
-fn check_secret(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) -> ComponentCheck {
+fn check_secret(binding: &EvaluationSecretBinding, observed_at_unix_ms: u64) -> ComponentCheck {
     let started = Instant::now();
-    let observation = context
-        .secret_probe_override
-        .unwrap_or_else(probe_production_secret_store);
+    let observation = binding.probe;
     let mut facts = vec![
         ReadinessFact {
             key: "backend_class",
@@ -545,6 +551,7 @@ fn check_secret(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) 
 
 fn check_provider(
     context: &ReadinessEvaluationContext,
+    binding: &EvaluationSecretBinding,
     observed_at_unix_ms: u64,
 ) -> ComponentCheck {
     let started = Instant::now();
@@ -560,14 +567,7 @@ fn check_provider(
     let repository = ProviderConfigRepository::from_file_path(&config_path);
     match repository.load() {
         Ok(config) => {
-            let resolution = context
-                .provider_secret_resolution_override
-                .unwrap_or_else(|| {
-                    context.provider_secret_store_override.as_ref().map_or_else(
-                        || resolve_production_provider_secret(&config),
-                        |store| resolve_provider_secret_from_snapshot(&config, store.as_ref()),
-                    )
-                });
+            let resolution = resolve_bound_provider_secret(context, binding, &config);
             let selected_snapshot_digest = config.selected_snapshot_digest();
             let digest_present = selected_snapshot_digest.is_some();
             let mut facts = vec![
@@ -830,24 +830,69 @@ fn check_pi(context: &ReadinessEvaluationContext, observed_at_unix_ms: u64) -> C
     }
 }
 
-fn probe_production_secret_store() -> SecretProbeObservation {
-    let backend = select_production_secret_store();
-    let class = backend.class();
-    let availability = backend
-        .probe()
-        .unwrap_or(SecretStoreAvailability::Unavailable);
-    SecretProbeObservation {
-        class,
-        availability,
+/// 一次评估只选择/探测一次 SecretStore。覆盖项仍优先生效；生产路径不跨请求复用。
+fn bind_evaluation_secret(context: &ReadinessEvaluationContext) -> EvaluationSecretBinding {
+    if let Some(probe) = context.secret_probe_override {
+        return EvaluationSecretBinding {
+            probe,
+            production_backend: None,
+        };
+    }
+    if let Some(store) = context.provider_secret_store_override.as_ref() {
+        let availability = store
+            .probe()
+            .unwrap_or(SecretStoreAvailability::Unavailable);
+        return EvaluationSecretBinding {
+            probe: SecretProbeObservation {
+                class: store.class(),
+                availability,
+            },
+            production_backend: None,
+        };
+    }
+    let production_backend = select_production_secret_store();
+    EvaluationSecretBinding {
+        probe: observation_from_selected_backend(&production_backend),
+        production_backend: Some(production_backend),
     }
 }
 
-/// Attempt to resolve the configured Provider secret ref against the production
-/// SecretStore. The resolved material is dropped immediately and never enters a
-/// fact, a log, or the report; only the three-way outcome is retained.
-fn resolve_production_provider_secret(config: &ProviderConfig) -> ProviderSecretResolution {
-    let backend = select_production_secret_store();
-    resolve_provider_secret_from_snapshot(config, backend.as_secret_store())
+fn observation_from_selected_backend(backend: &ProductionSecretBackend) -> SecretProbeObservation {
+    match backend {
+        ProductionSecretBackend::LinuxSecretTool(_)
+        | ProductionSecretBackend::WindowsCredentialManager(_) => SecretProbeObservation {
+            class: SecretStoreClass::Native,
+            availability: SecretStoreAvailability::Available,
+        },
+        ProductionSecretBackend::Unavailable(_) => SecretProbeObservation {
+            class: backend.class(),
+            availability: SecretStoreAvailability::Unavailable,
+        },
+    }
+}
+
+/// 解析配置中的 secret_ref。材料立即丢弃；探针已证明不可答时不再发起 get。
+fn resolve_bound_provider_secret(
+    context: &ReadinessEvaluationContext,
+    binding: &EvaluationSecretBinding,
+    config: &ProviderConfig,
+) -> ProviderSecretResolution {
+    if let Some(resolution) = context.provider_secret_resolution_override {
+        return resolution;
+    }
+    if !matches!(
+        binding.probe.availability,
+        SecretStoreAvailability::Available
+    ) {
+        return ProviderSecretResolution::Unavailable;
+    }
+    if let Some(store) = context.provider_secret_store_override.as_ref() {
+        return resolve_provider_secret_from_snapshot(config, store.as_ref());
+    }
+    if let Some(backend) = binding.production_backend.as_ref() {
+        return resolve_provider_secret_from_snapshot(config, backend.as_secret_store());
+    }
+    ProviderSecretResolution::Unavailable
 }
 
 fn resolve_provider_secret_from_snapshot<S: SecretStore + ?Sized>(
@@ -918,6 +963,7 @@ mod tests {
     };
     use std::fs;
     use std::sync::Mutex;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     struct ConfigSwappingSecretStore {
         config_path: PathBuf,
@@ -962,6 +1008,60 @@ mod tests {
                 SecretMaterial::from_bytes(b"snapshot-a-material".to_vec())
             } else {
                 Err(SecretError::NotFound)
+            }
+        }
+
+        fn delete(&self, _secret_ref: &SecretRef) -> Result<(), SecretError> {
+            Err(SecretError::Backend {
+                detail: "test store is read-only",
+            })
+        }
+    }
+
+    /// 计数替身：证明一次评估只 probe/get 各一次，且连续评估不会复用上次结果。
+    struct CountingSecretStore {
+        probe_count: AtomicUsize,
+        get_count: AtomicUsize,
+        availability: SecretStoreAvailability,
+        get_outcome: ProviderSecretResolution,
+        expected_ref: SecretRef,
+        material_marker: &'static str,
+    }
+
+    impl SecretStore for CountingSecretStore {
+        fn class(&self) -> SecretStoreClass {
+            SecretStoreClass::EphemeralTestDouble
+        }
+
+        fn probe(&self) -> Result<SecretStoreAvailability, SecretError> {
+            self.probe_count.fetch_add(1, Ordering::SeqCst);
+            Ok(self.availability)
+        }
+
+        fn put(
+            &self,
+            _label: &SecretLabel,
+            _attributes: &SecretAttributes,
+            _material: SecretMaterial,
+        ) -> Result<SecretRef, SecretError> {
+            Err(SecretError::Backend {
+                detail: "test store is read-only",
+            })
+        }
+
+        fn get(&self, secret_ref: &SecretRef) -> Result<SecretMaterial, SecretError> {
+            self.get_count.fetch_add(1, Ordering::SeqCst);
+            if secret_ref != &self.expected_ref {
+                return Err(SecretError::NotFound);
+            }
+            match self.get_outcome {
+                ProviderSecretResolution::Resolves => {
+                    SecretMaterial::from_bytes(self.material_marker.as_bytes().to_vec())
+                }
+                ProviderSecretResolution::Missing => Err(SecretError::NotFound),
+                ProviderSecretResolution::Unavailable => Err(SecretError::Unavailable {
+                    reason: "test store refused get",
+                }),
             }
         }
 
@@ -1229,6 +1329,122 @@ mod tests {
                 .iter()
                 .any(|fact| fact.key == "secret_ref_resolves" && fact.value == "unknown")
         );
+    }
+
+    fn counting_store(
+        availability: SecretStoreAvailability,
+        get_outcome: ProviderSecretResolution,
+        expected_ref: SecretRef,
+    ) -> CountingSecretStore {
+        CountingSecretStore {
+            probe_count: AtomicUsize::new(0),
+            get_count: AtomicUsize::new(0),
+            availability,
+            get_outcome,
+            expected_ref,
+            material_marker: "p9t06-secret-material-must-not-leak",
+        }
+    }
+
+    fn evaluate_with_counting_store(
+        layout: PersonalDataLayout,
+        store: Arc<CountingSecretStore>,
+    ) -> ReadinessReport {
+        let store: Arc<dyn SecretStore + Send + Sync> = store;
+        evaluate_personal_readiness(&ReadinessEvaluationContext {
+            layout,
+            daemon_listening: true,
+            session_count: 0,
+            secret_probe_override: None,
+            provider_config_path_override: None,
+            provider_secret_resolution_override: None,
+            provider_secret_store_override: Some(store),
+            pi_observation_override: None,
+        })
+    }
+
+    #[test]
+    fn one_evaluation_probes_and_resolves_the_secret_store_once() {
+        let layout = temp_layout("coalesce-once");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
+        let expected_ref = SecretRef::from_opaque("secretref:test-provider-p1t05").expect("ref");
+        let store = Arc::new(counting_store(
+            SecretStoreAvailability::Available,
+            ProviderSecretResolution::Resolves,
+            expected_ref,
+        ));
+        let report = evaluate_with_counting_store(layout, store.clone());
+        let provider = report
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider");
+        assert_eq!(provider.status, ComponentStatus::Ready);
+        assert_eq!(store.probe_count.load(Ordering::SeqCst), 1);
+        assert_eq!(store.get_count.load(Ordering::SeqCst), 1);
+        let doctor_text = doctor_projection_json(&report).to_string();
+        let status_text = status_projection_json(&report).to_string();
+        assert!(
+            !doctor_text.contains("p9t06-secret-material-must-not-leak"),
+            "doctor must not retain secret material"
+        );
+        assert!(
+            !status_text.contains("p9t06-secret-material-must-not-leak"),
+            "status must not retain secret material"
+        );
+    }
+
+    #[test]
+    fn successive_evaluations_do_not_reuse_a_stale_ready_probe() {
+        let layout = temp_layout("coalesce-no-ttl");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
+        let expected_ref = SecretRef::from_opaque("secretref:test-provider-p1t05").expect("ref");
+        let store = Arc::new(counting_store(
+            SecretStoreAvailability::Available,
+            ProviderSecretResolution::Resolves,
+            expected_ref,
+        ));
+        let _first = evaluate_with_counting_store(layout.clone(), store.clone());
+        let _second = evaluate_with_counting_store(layout, store.clone());
+        assert_eq!(store.probe_count.load(Ordering::SeqCst), 2);
+        assert_eq!(store.get_count.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn unavailable_probe_skips_get_instead_of_paying_a_second_roundtrip() {
+        let layout = temp_layout("coalesce-skip-get");
+        touch_personal_database_files(&layout).unwrap();
+        write_provider_config(&layout, true);
+        write_selected_model(&layout, "fnv1a64:0123456789abcdef");
+        let expected_ref = SecretRef::from_opaque("secretref:test-provider-p1t05").expect("ref");
+        let store = Arc::new(counting_store(
+            SecretStoreAvailability::Unavailable,
+            ProviderSecretResolution::Resolves,
+            expected_ref,
+        ));
+        let report = evaluate_with_counting_store(layout, store.clone());
+        let secret = report
+            .components
+            .iter()
+            .find(|component| component.component == "secret")
+            .expect("secret");
+        let provider = report
+            .components
+            .iter()
+            .find(|component| component.component == "provider")
+            .expect("provider");
+        assert_eq!(secret.status, ComponentStatus::Blocked);
+        assert_eq!(provider.status, ComponentStatus::Blocked);
+        assert_eq!(
+            provider.error_class,
+            Some("provider_secret_store_unavailable")
+        );
+        assert_eq!(store.probe_count.load(Ordering::SeqCst), 1);
+        assert_eq!(store.get_count.load(Ordering::SeqCst), 0);
     }
 
     #[test]
