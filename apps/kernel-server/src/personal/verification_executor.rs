@@ -802,6 +802,71 @@ fn validate_artifact_evidence_availability(
     Ok(())
 }
 
+/// 在独立 acceptance authority 消费前重新校验持久报告。
+///
+/// flat columns、canonical bytes、Artifact URI 语法与 CAS 内容都会重查；
+/// 单独存储的 `passed` token 不足以建立 acceptance。
+pub(crate) fn validate_persisted_report_artifacts(
+    report: &VerificationReportRow,
+    artifact_store: &ArtifactStore,
+) -> Result<Vec<String>, VerificationExecutorError> {
+    let artifact_evidence_refs: Vec<String> =
+        serde_json::from_str(&report.evidence_refs_canonical_json)
+            .map_err(|_| VerificationExecutorError::RequestUnavailable)?;
+    let disposition = match report.status.as_str() {
+        "passed" => VerificationDisposition::Passed,
+        "failed" => VerificationDisposition::Failed,
+        "indeterminate" => VerificationDisposition::Indeterminate,
+        _ => return Err(VerificationExecutorError::RequestUnavailable),
+    };
+    let canonical: serde_json::Value = serde_json::from_str(&report.canonical_json)
+        .map_err(|_| VerificationExecutorError::RequestUnavailable)?;
+    let expected_evidence_refs = serde_json::to_value(&artifact_evidence_refs)
+        .map_err(|error| VerificationExecutorError::Infrastructure(error.to_string()))?;
+    if canonical
+        .get("verification_report_id")
+        .and_then(serde_json::Value::as_str)
+        != Some(report.verification_report_id.as_str())
+        || canonical
+            .get("verification_request_id")
+            .and_then(serde_json::Value::as_str)
+            != Some(report.verification_request_id.as_str())
+        || canonical
+            .get("fixed_post_state_id")
+            .and_then(serde_json::Value::as_str)
+            != Some(report.fixed_post_state_id.as_str())
+        || canonical
+            .get("verifier_ref")
+            .and_then(serde_json::Value::as_str)
+            != Some(report.verifier_ref.as_str())
+        || canonical
+            .get("verifier_version")
+            .and_then(serde_json::Value::as_str)
+            != Some(report.verifier_version.as_str())
+        || canonical
+            .get("disposition")
+            .and_then(serde_json::Value::as_str)
+            != Some(report.status.as_str())
+        || canonical
+            .get("recorded_fencing_epoch")
+            .and_then(serde_json::Value::as_i64)
+            != Some(report.recorded_fencing_epoch)
+        || canonical
+            .get("artifact_evidence_refs")
+            .and_then(serde_json::Value::as_array)
+            != expected_evidence_refs.as_array()
+    {
+        return Err(VerificationExecutorError::BindingMismatch);
+    }
+    let result = IndependentVerificationResult {
+        disposition,
+        artifact_evidence_refs: artifact_evidence_refs.clone(),
+    };
+    validate_artifact_evidence_refs(&result)?;
+    validate_artifact_evidence_availability(&result, artifact_store)?;
+    Ok(artifact_evidence_refs)
+}
+
 fn canonical_report_json(
     verification_report_id: &ObjectId,
     request: &VerificationRequestRow,

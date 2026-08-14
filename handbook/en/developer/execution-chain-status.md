@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:c756adf44288e11dc9c8ea6aa026aee390c3504ea41879b7bb629eb615861abe"
+fingerprint: "sha256:a24fbe111ac9ef29f335d79e1bb81044d831205bad2f6666fa04777ba099d940"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
 ---
@@ -52,7 +52,8 @@ verification → verified continuation or ceiling STOP.
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, test-called only | attempted/completed state survives restart; timeout/network attempts and missing durable state reconcile `Indeterminate`, while completed key-bound receipts reconcile executed; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
-| Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
+| Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report and missing CAS evidence fail closed |
+| Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Task/Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
 
@@ -75,10 +76,16 @@ The remaining gaps are:
    Effect authorization because production has no separately governed
    payload/preimage, supervised-process, or registered-origin carrier for them;
    their sinks remain test-called only.
-2. **Task completion remains separate**: production now closes
-   `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and one-time
-   continuation authority. No report, checkpoint, or continuation completes a
-   Task; acceptance remains P2-T14 scope.
+2. **Task completion is implemented and public C1 is native-proven**: the
+   P2-T14 code reuses the registered `completion_claim` / `fixed_post_state` /
+   `verification_report` / `acceptance_decision` slots; canonical decision
+   bytes live in Artifact CAS and a daemon-private acceptance principal is
+   distinct from worker and verifier identities. SQLite rechecks currentness
+   and the complete Effect set in both transition transactions. Exact native
+   `22c3f502` passed scheduler authority 53/53, verification executor 12/12
+   and Clippy. Remaining D02 negatives for open Effect, superseded report and
+   missing CAS are written; stale fixed post-state is still open. Other Tool
+   request carriers remain unwired.
 
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them
