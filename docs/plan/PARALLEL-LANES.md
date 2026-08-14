@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T20/mutation-carriers` | P2-T20/D01 parameter-bearing mutation request carriers (C2) | Lane-RUN | `personal/P2-T20-mutation-carriers` | `apps/kernel-server/src/personal/scheduler_authority/`; `apps/kernel-server/src/personal/tool_executor/`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260814-personal-p2-t20-mutation-carriers.md` | `workbuddy-20260814` | 2026-08-14 / 2026-08-14 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
