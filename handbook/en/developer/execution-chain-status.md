@@ -13,6 +13,8 @@ sources:
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: apps/kernel-server/src/personal/verification_executor.rs
+  - path: apps/kernel-server/src/personal/campaign_observation.rs
+    symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -20,12 +22,14 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
 tests:
+  - apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:a24fbe111ac9ef29f335d79e1bb81044d831205bad2f6666fa04777ba099d940"
+fingerprint: "sha256:db39fab5d7a1202ae3d166d12b8d7f3b43fe7c37105c193a0c85445c8d8c5b21"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
+  - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
 ---
 
 # Execution-chain status
@@ -53,6 +57,7 @@ verification → verified continuation or ceiling STOP.
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, production-called | the production router stages the pinned HTTPS target; the registered-origin allowlist is empty by default so staging fails closed until an origin is registered; attempted/completed state survives restart; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
+| A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
 | Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report, missing CAS evidence, and stale fixed post-state fail closed |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Task/Loop/Budget/scheduler prerequisites without replacing existing authority |
 
@@ -89,6 +94,7 @@ The remaining gaps are:
    verification executor 12/12 and Clippy. All D02 negatives pass: missing
    report/non-authority, duplicate acceptance, open Effect, superseded report,
    missing CAS, and stale fixed post-state. Other Tool request carriers remain
+   A7 fixture/local evidence must not be promoted to Gate, release, Profile,
    unwired.
 
 Additional cross-module nuance: scheduler closure treats

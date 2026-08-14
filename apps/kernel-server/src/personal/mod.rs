@@ -6,9 +6,13 @@
 
 mod auth;
 mod bounds;
+#[cfg_attr(not(test), allow(dead_code))]
+mod campaign_observation;
 mod headless_vault_doctor;
 mod lifecycle;
 mod operability_doctor;
+#[cfg(test)]
+mod p2_t17_a7_failure_first;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
