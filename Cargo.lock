@@ -1261,6 +1261,7 @@ dependencies = [
  "cognitive-runtime",
  "cognitive-secret",
  "cognitive-store",
+ "getrandom 0.4.3",
  "same-file",
  "serde",
  "serde_json",

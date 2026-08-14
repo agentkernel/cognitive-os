@@ -1,11 +1,12 @@
 //! P1-T04 Personal bounded daemon auth/bounds/lifecycle evidence.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
-use std::time::Duration;
 
 static PERSONAL_PROCESS_TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
@@ -44,43 +45,14 @@ fn spawn_personal(port: u16, runtime_root: &std::path::Path, once: bool) -> Chil
     command.spawn().unwrap()
 }
 
-fn wait_connect(port: u16) -> TcpStream {
-    for _ in 0..100 {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            return stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not accept connections on {port}");
-}
-
 fn http_exchange(port: u16, wire: &str) -> String {
-    let mut stream = wait_connect(port);
+    let mut stream = common::connect_when_ready(port);
     // Oversized requests may reset mid-write; treat partial write/reset as a closed door.
     let _ = stream.write_all(wire.as_bytes());
     let _ = stream.shutdown(std::net::Shutdown::Write);
     let mut out = String::new();
     let _ = stream.read_to_string(&mut out);
     out
-}
-
-fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    // from_xdg_roots appends cognitiveos under the provided runtime root.
-    let path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    // Windows CI can delay visibility of a just-created private file while
-    // concurrent workspace tests are starting daemon children.
-    for _ in 0..300 {
-        if let Ok(contents) = std::fs::read_to_string(&path) {
-            let trimmed = contents.trim().to_owned();
-            if !trimmed.is_empty() {
-                return trimmed;
-            }
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("bootstrap secret not found at {}", path.display());
 }
 
 fn issue_token(port: u16, secret: &str, channel: &str) -> String {
@@ -107,7 +79,7 @@ fn bad_auth_and_wrong_channel_fail_closed() {
     let port = free_port();
     let root = runtime_root("auth");
     let mut child = spawn_personal(port, &root, false);
-    let secret = bootstrap_secret(&root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut child, &root);
     let management_token = issue_token(port, &secret, "management");
 
     let unauth = http_exchange(
@@ -144,7 +116,7 @@ fn oversized_body_is_rejected() {
     let port = free_port();
     let root = runtime_root("body");
     let mut child = spawn_personal(port, &root, false);
-    let _ = bootstrap_secret(&root);
+    let _ = common::wait_for_bootstrap_secret_from(&mut child, &root);
     let body = "x".repeat((1024 * 1024) + 1);
     let wire = format!(
         "POST /local/session HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -169,7 +141,7 @@ fn cookie_auth_and_bad_host_are_rejected() {
     let port = free_port();
     let root = runtime_root("csrf");
     let mut child = spawn_personal(port, &root, false);
-    let _ = bootstrap_secret(&root);
+    let _ = common::wait_for_bootstrap_secret_from(&mut child, &root);
     let cookie = http_exchange(
         port,
         "GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1\r\nCookie: session=1\r\nConnection: close\r\n\r\n",
@@ -219,7 +191,7 @@ fn second_instance_lock_and_restart() {
     let port_b = free_port();
     let root = runtime_root("lock");
     let mut first = spawn_personal(port_a, &root, false);
-    let _ = bootstrap_secret(&root);
+    let _ = common::wait_for_bootstrap_secret_from(&mut first, &root);
     // Second process same runtime root must fail on daemon.lock.
     let mut second = spawn_personal(port_b, &root, false);
     let status = second.wait().unwrap();
@@ -232,7 +204,7 @@ fn second_instance_lock_and_restart() {
     let _ = std::fs::remove_file(&stale_lock);
     // Restart after forced stop + stale-lock cleanup should succeed.
     let mut third = spawn_personal(port_a, &root, false);
-    let secret = bootstrap_secret(&root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut third, &root);
     let token = issue_token(port_a, &secret, "task");
     let ok = format!(
         "POST /task/noop HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {token}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
@@ -265,30 +237,24 @@ fn production_xdg_daemon_publishes_its_bound_loopback_endpoint() {
         .join("state")
         .join("cognitiveos")
         .join("daemon-endpoint.json");
-    for _ in 0..100 {
-        if let Ok(document) = std::fs::read_to_string(&endpoint_path) {
-            assert!(document.contains("\"schema_version\": 1"), "{document}");
-            assert!(
-                document.contains(&format!("\"endpoint\": \"127.0.0.1:{port}\"")),
-                "{document}"
-            );
-            assert!(
-                document.contains("\"surface\": \"personal-daemon-endpoint\""),
-                "{document}"
-            );
-            child.kill().unwrap();
-            child.wait().unwrap();
-            let _ = std::fs::remove_dir_all(&root);
-            return;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
+    let published = common::poll_until(
+        &format!("daemon endpoint at {}", endpoint_path.display()),
+        common::READY_TIMEOUT,
+        || std::fs::read_to_string(&endpoint_path).ok(),
+    );
 
     child.kill().unwrap();
     child.wait().unwrap();
     let _ = std::fs::remove_dir_all(&root);
-    panic!(
-        "daemon endpoint was not published at {}",
-        endpoint_path.display()
+
+    let document = published.unwrap_or_else(|diagnostic| panic!("{diagnostic}"));
+    assert!(document.contains("\"schema_version\": 1"), "{document}");
+    assert!(
+        document.contains(&format!("\"endpoint\": \"127.0.0.1:{port}\"")),
+        "{document}"
+    );
+    assert!(
+        document.contains("\"surface\": \"personal-daemon-endpoint\""),
+        "{document}"
     );
 }

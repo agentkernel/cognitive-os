@@ -15,11 +15,12 @@ sources:
   - path: docs/governance/AXIOMS.md
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - packages/pi-cognitiveos/src/safety.test.ts
   - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:dc3a553d159650e6ff1ac848e59207cd74679d7ef52f750fb6b42087c9dccee4"
+fingerprint: "sha256:d14b04a56a471a6dfba7ee302d6c4efd6850d4fdd2ee10118b7daca3a8303bf8"
 non_claims:
-  - Local bearers use a non-cryptographic RNG and Windows file ACL hardening is absent — this page states the boundary as it is, not as a hardening guarantee.
+  - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
 ---
 
 # Security boundaries
@@ -38,9 +39,15 @@ Provider egress is HTTPS-only with redirects disabled.
 never call task routes and vice versa. Sessions expire (12 h absolute / 30 min
 idle) and die with the daemon process.
 
-Honest limits: bearer generation uses a non-cryptographic hash source; whoever can
-read the bootstrap file can name any principal; per-OS-user isolation relies on
-file permissions (no Windows ACL hardening).
+Bootstrap and session opaque tokens each carry 256 bits produced by the operating
+system CSPRNG. If OS entropy is unavailable, short, zero, or repeats its independent
+probe block, initialization/session issuance fails before creating a file, session,
+or token; there is no PID/time/hash fallback. A persisted bootstrap with the legacy
+predictable shape or any malformed non-empty shape is not grandfathered: startup
+fails closed. With the daemon stopped, remove only that runtime credential to let
+the next start mint a CSPRNG replacement. Whoever can read the bootstrap file can
+still name any principal, and per-OS-user isolation relies on file permissions (no
+Windows ACL hardening).
 
 ## Agent containment
 

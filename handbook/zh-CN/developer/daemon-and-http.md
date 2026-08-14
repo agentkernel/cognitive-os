@@ -14,11 +14,14 @@ sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
   - path: apps/kernel-server/src/personal/provider_proxy.rs
+  - path: apps/kernel-server/src/personal/route_observation.rs
+    symbols: ["observation_response_headers"]
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-fingerprint: "sha256:ff5eba81b9e30287dd02a194f895540c4221fa746d1152f85dcea2d9dc0abbc3"
+  - apps/kernel-server/tests/p9_t07_route_observation.rs
+fingerprint: "sha256:6c9bf2f4b93939532733c2aea2dc10e98b37536c3b6413d941e2e67e8810d3dd"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -43,7 +46,10 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 
 - **本地通道 bearer**（本表面）：`POST /local/session` 用每次启动的 bootstrap
   secret 换取 `management` 或 `task` 令牌；每个认证路由先检查通道绑定。进程本地、
-  12 小时/30 分钟过期、无逐操作 scope。
+  12 小时/30 分钟过期、无逐操作 scope。bootstrap 与 session token 各自使用 OS CSPRNG
+  的 256 bit；熵失败或无效/重复探针会在创建文件/session 前 fail closed，绝无
+  PID/时间/hash fallback。bootstrap 重载只接受当前 lowercase
+  `boot-32hex-32hex` 形状；旧版可预测或畸形非空凭据会阻止启动，不会被兼容接受。
 - **特权管理会话**（`admin-cli`）：由 `cognitive-management` 校验的 JSON 文档——独立
   平面，与本地 bearer 不可互换。
 
@@ -63,7 +69,11 @@ readiness 从文件系统/配置事实评估六组件（`blocked | degraded | re
 后端无法作答则以 `provider_secret_store_unavailable` 阻塞。解析出的材料立即丢弃，
 绝不进入任何 fact。解析只使用已加载的 Provider 配置快照；绝不重载 `provider.json`
 后把较新的 secret 引用与较旧的 provider/model/digest 事实混合。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
-Rustls 传输转发；一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启
+Rustls 传输转发。成功的代理响应始终携带 `X-CognitiveOS-Provider-Network-Nanos`。
+嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
+`COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明
+correlation id 时才发出；畸形或重复的 id 被忽略，产品 body 不变，观测器不写任何
+东西。一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启
 动的 Pi candidate 进程且禁止 Authorization 头。
 
 ## 非 Personal 骨架

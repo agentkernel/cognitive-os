@@ -7,9 +7,12 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/server.rs
+  - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
+tests:
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+fingerprint: "sha256:826bc25b9db9e67ca78c8dc6410ffb6c19a63c79c54642cf43d3576f8399b338"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -50,4 +53,8 @@ non_claims:
 - headless 加密 vault 运行已设计但今天不可选。
 - Windows：daemon/CLI 在 CI 可编译，Credential Manager 后端与安装器/scheduled-task
   模板已存在，但 B01-W 安装战役未执行——没有可安装的 Windows 产品，本地文件也无
-  ACL 加固。
+  ACL 加固。本地 bootstrap/session token 已使用 OS CSPRNG；该修正不增强 Windows 文件
+  ACL。
+- 升级后若 runtime 仍留有 CSPRNG 修正前的 bootstrap 形状，daemon 会有意拒绝启动。
+  停止 daemon，并只删除其私有 runtime 目录中的 `local-bootstrap.secret`，下次启动即可
+  签发替代凭据。
