@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:56615713c3503e445038a59c7a118b135f612b0808160bdd9f4b4204adbf8f44"
+fingerprint: "sha256:3e70c0b3c2a7100feaef146d706bd112e457dbd2e9bd4f7e0363a6679cec8b97"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -60,19 +60,23 @@ candidate admission and leaves its new worker authorization for a later pass.
 One non-reentrant periodic worker starts after the daemon is listening, so later
 passes can observe Tasks admitted by the running process; pass errors do not
 stop the listener, and orderly shutdown cancels and joins the worker.
-**The daemon still does not drive the full chain autonomously**: production
-now dispatches parameter-free WorkspaceRead, independently verifies its fixed
-reconciled Effect, and consumes checkpoint-backed continuation authority through
-Loop `OBSERVE`; other Tool request carriers remain unwired, and no Task
-completes.
+**The daemon's public C1 completion implementation is native-proven**:
+production dispatches parameter-free WorkspaceRead, independently verifies its
+fixed reconciled Effect, then derives candidate and final acceptance only from
+current CAS-backed authority facts. Exact native `22c3f502` reached `COMPLETED`.
+Open-Effect, superseded-report and missing-CAS negatives are written; a stale
+fixed post-state negative is still open. Other Tool request carriers remain
+unwired.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
 
 ## What can never happen, by construction
 
-- A Provider reply, Pi `agent_end`, tool exit 0, or process exit is never Task
-  completion (independent verification is required).
+- A Provider reply, Pi `agent_end`, tool exit 0, process exit, worker self-report,
+  or stale verifier report is never Task completion. Current independent
+  verification, unchanged fixed state, closed Effects, retrievable evidence and
+  the separate daemon acceptance authority are all required.
 - An unknown external outcome is never blindly retried under a new identity —
   reconciliation reuses the original idempotency key.
 - Budgets and deadlines are inclusive hard rails checked before dispatch.

@@ -1,8 +1,10 @@
 //! P1-T07 daemon-owned Provider proxy boundaries.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
@@ -41,18 +43,8 @@ fn spawn_personal_daemon(port: u16, runtime_root: &std::path::Path) -> Child {
         .unwrap()
 }
 
-fn wait_for_connection(port: u16) -> TcpStream {
-    for _ in 0..100 {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            return stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not accept connections on {port}");
-}
-
 fn exchange_http_request(port: u16, request: &str) -> String {
-    let mut stream = wait_for_connection(port);
+    let mut stream = common::connect_when_ready(port);
     // A daemon regression must fail this integration test instead of leaving a
     // Windows CI worker blocked forever while waiting for connection closure.
     stream
@@ -63,24 +55,6 @@ fn exchange_http_request(port: u16, request: &str) -> String {
     let mut response = String::new();
     stream.read_to_string(&mut response).unwrap();
     response
-}
-
-fn read_bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    let path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    // Windows hosted runners can delay a newly spawned process's first file
-    // write long enough to exceed the former two-second polling budget.
-    for _ in 0..500 {
-        if let Ok(contents) = std::fs::read_to_string(&path) {
-            let secret = contents.trim();
-            if !secret.is_empty() {
-                return secret.to_owned();
-            }
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("bootstrap secret not found at {}", path.display());
 }
 
 fn issue_management_token(port: u16, bootstrap_secret: &str) -> String {
@@ -107,7 +81,7 @@ fn provider_proxy_requires_management_auth_and_fails_closed_without_provider_con
     let port = free_port();
     let runtime_root = create_runtime_root();
     let mut daemon = spawn_personal_daemon(port, &runtime_root);
-    let bootstrap_secret = read_bootstrap_secret(&runtime_root);
+    let bootstrap_secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
     let management_token = issue_management_token(port, &bootstrap_secret);
     let request_body = "{\"model\":\"test-model\",\"stream\":false,\"messages\":[]}";
 
@@ -155,7 +129,7 @@ fn selected_model_projection_requires_management_auth_without_secret_resolution(
     )
     .unwrap();
     let mut daemon = spawn_personal_daemon(port, &runtime_root);
-    let bootstrap_secret = read_bootstrap_secret(&runtime_root);
+    let bootstrap_secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
     let management_token = issue_management_token(port, &bootstrap_secret);
 
     let unauthorized_request =

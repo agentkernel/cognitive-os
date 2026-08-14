@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:cecb8ff4b439b173c3d6c16bdd09f04ae364407b4632774335e5547c4f98fdc8"
+fingerprint: "sha256:00c02ea6c421fde54f1199ccee9614081dcd465f470b7df7afb0d110b9a4f5f0"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -75,10 +75,12 @@ Task admission reuses those existing v1–v3 tables; it adds no migration or
 parallel scheduler. `insert_task_contract_with_execution_bootstrap` repeats the
 writer-fence and contract-epoch CAS inside one immediate authority transaction,
 then inserts the TaskContract event, registered `START` Loop admission/event,
-hard Budget, and `(task_ref, contract_epoch)` runnable scheduler row. A conflict
-in any late member rolls the earlier inserts back; a crash after a successful
-commit reopens all four prerequisites. Startup recovery can idempotently repair
-an older current contract missing only Loop, Budget, or scheduler work in one
+its governed Task projection at registered `DRAFT` without a second
+`(object_id, INITIAL)` event, hard Budget, and
+`(task_ref, contract_epoch)` runnable scheduler row. A conflict in any late
+member rolls the earlier inserts back; a crash after a successful commit
+reopens all five prerequisites. Startup recovery can idempotently repair an
+older current contract missing only Task, Loop, Budget, or scheduler work in one
 fenced transaction. Existing rows are validated and never replaced or reset;
 stale contract epochs cannot be repaired.
 
@@ -87,3 +89,9 @@ no migration. One immediate transaction verifies the writer, current contract,
 closed Effect version, shared row bindings, and Loop CAS, then inserts both
 append-only rows and commits `ACT -> VERIFY`; any late conflict rolls everything
 back.
+
+Verified Task completion adds no migration or dedicated acceptance table.
+Canonical decision bytes live in Artifact CAS. Two immediate transactions reuse
+the existing governed-object/event/transition-record tables and recheck current
+contract, exact fixed state, newest report, complete closed Effect set, and
+fencing before the candidate and final acceptance CAS updates.

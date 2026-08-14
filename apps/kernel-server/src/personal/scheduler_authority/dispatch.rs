@@ -502,6 +502,14 @@ where
         authorization,
         &crate::personal::tool_executor::ASSEMBLED_EXECUTOR_FAMILIES,
     )?;
+    activate_task_for_worker_authorization(
+        authority_store,
+        &FixedSchedulerClock::parse(observed_wall_time)?,
+        &UuidV7Generator,
+        authorization,
+        &writer_lease,
+    )
+    .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     let context_execution_policy = context_execution_policy.ok_or_else(|| {
         SchedulerAuthorityError::CandidateAuthorizationUnavailable(
             "native execution has no durable scheduler policy".to_owned(),
@@ -619,22 +627,16 @@ where
             &writer_lease,
         )
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    crate::personal::verification_executor::issue_production_continuation_authority(
+    complete_task_from_persisted_verification(
         authority_store,
+        artifact_store,
+        &execution_clock,
         &execution_ids,
-        &verification_outcome,
-        &resolved.authorization.budget_id,
-        &resolved.authorization.budget_charge_canonical_json,
+        task_binding,
+        &verification_outcome.report.verification_report_id,
         &writer_lease,
     )
     .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    if resolve_scheduler_effect_for_task_binding(authority_store, task_binding)?.closure
-        != SchedulerEffectClosure::Closed
-    {
-        return Err(SchedulerAuthorityError::NativeExecution(
-            "verified continuation cannot requeue an unclosed Effect".to_owned(),
-        ));
-    }
     scheduler_repository.release_lease(
         &SchedulerWorkKey {
             task_ref: dispatch.task_ref.clone(),
@@ -642,7 +644,7 @@ where
         },
         &dispatch.lease_owner,
         dispatch.lease_epoch,
-        SchedulerState::Runnable,
+        SchedulerState::Succeeded,
         released_at,
     )?;
     Ok(SchedulerWorkerAttempt::EffectClosed(dispatch))

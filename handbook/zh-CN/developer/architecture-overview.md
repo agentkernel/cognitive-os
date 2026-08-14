@@ -10,7 +10,7 @@ sources:
   - path: apps/kernel-server/src/personal/mod.rs
   - path: crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:e2d52b2af561db52ce62f0758190abf12e9fe50d044aa80ca4b3924cbc1711d5"
+fingerprint: "sha256:e09621b38e8fc4ce67e8ca54e553307c1fe0823ad0e80f05f73f3ff2de763ce0"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---

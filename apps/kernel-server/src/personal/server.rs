@@ -36,6 +36,7 @@ use super::readiness::{
     status_projection_json,
 };
 use super::resource_api::ResourceApi;
+use super::route_observation;
 use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
@@ -1090,12 +1091,24 @@ fn handle_provider_proxy_route(
         ProviderConfigRepository::under_config_dir(layout.config_dir()),
         &transport,
     );
+    // Measurement is resolved from the request headers and the daemon's own
+    // authorization only. It cannot change which request is forwarded.
+    let correlation_id = route_observation::extract_correlation_id(headers);
+    let observation_authorized = route_observation::route_observation_authorized();
     match service.forward_chat_completion_with_timing(request_body) {
         Ok(timed_response) => write_provider_response(
             stream,
             timed_response.response.status,
             &timed_response.response.body,
             timed_response.provider_network_elapsed_nanos,
+            &route_observation::observation_response_headers(
+                observation_authorized,
+                correlation_id.as_deref().map_err(|refusal| *refusal),
+                route_observation::NestedProviderStages {
+                    preflight_elapsed_nanos: timed_response.preflight_elapsed_nanos,
+                    provider_network_elapsed_nanos: timed_response.provider_network_elapsed_nanos,
+                },
+            ),
         ),
         Err(error) => write_error_response(
             stream,
@@ -1424,6 +1437,7 @@ fn write_provider_response(
     status: u16,
     body: &[u8],
     provider_network_elapsed_nanos: u128,
+    observation_headers: &str,
 ) -> Result<(), String> {
     let reason = match status {
         200 => "OK",
@@ -1438,7 +1452,7 @@ fn write_provider_response(
         _ => "Error",
     };
     let header = format!(
-        "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nX-CognitiveOS-Provider-Network-Nanos: {provider_network_elapsed_nanos}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nX-CognitiveOS-Provider-Network-Nanos: {provider_network_elapsed_nanos}\r\n{observation_headers}Content-Length: {}\r\nConnection: close\r\n\r\n",
         body.len()
     );
     write_timed(stream, &header, body)

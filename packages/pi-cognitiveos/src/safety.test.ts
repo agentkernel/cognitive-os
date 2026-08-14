@@ -66,6 +66,7 @@ test("the runtime sources are exactly the modules under guard", () => {
       "extension.ts",
       "index.ts",
       "pi-api.ts",
+      "pi-route-observation.ts",
       "pin.ts",
       "status.ts",
       "tool-policy.ts",

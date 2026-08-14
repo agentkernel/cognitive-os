@@ -75,4 +75,11 @@ its separate immutable registry fixes executable, argv, cwd, empty environment a
 all process/output/write/network bounds. The result is CAS Evidence and still
 requires the registered independent verifier.
 None of these executor guarantees turns admission, a Tool receipt, or matching
-workspace bytes into Task completion.
+workspace bytes into Task completion. P2-T14 keeps that boundary: a public C1
+WorkspaceRead can complete only from current closed Effects, the exact fixed
+post-state, the newest independent passed report, retrievable Artifact CAS
+evidence, and a daemon-private acceptance principal. A missing report leaves
+the Task `DRAFT`; a second acceptance after `COMPLETED` is rejected. Exact
+native `22c3f502` proved the public C1 path. Open-Effect, superseded-report and
+missing-CAS negatives are written; stale fixed post-state remains open, so this
+is not yet a fully accepted D02 matrix.

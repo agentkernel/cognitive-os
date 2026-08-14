@@ -9,13 +9,15 @@ sources:
   - path: packages/pi-cognitiveos/src/extension.ts
     symbols: ["registerCognitiveOsExtension"]
   - path: packages/pi-cognitiveos/src/daemon-provider.ts
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: packages/pi-cognitiveos/src/tool-policy.ts
   - path: apps/admin-cli/src/personal_cli/pi.rs
 tests:
   - packages/pi-cognitiveos/src/extension.test.ts
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:30bf86c0626cfa1b6dca27afa73cb3725fda1682ec19ff930a1621e01c8973e6"
+fingerprint: "sha256:f90e20bd87ff8cbe19ab80ed90a9bbc6932ee4fdf54c205e7e58d811c982d2c6"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -45,7 +47,35 @@ non_claims:
   无法触碰你的文件或执行命令。
 - Pi 内尚无资源浏览、任务提交或 watch UI：这些客户端方法存在于
   `PersonalDaemonClient` 与 CLI（`cognitive resource|task`），但未接入 shell UX。
-- 模型参数由 daemon 的 selected model 固定；Pi 中的用量/费用显示为零（客户端不计量）。
+- 模型参数由 daemon 的 selected model 固定。只有 Provider 返回完整且内部一致的计数
+  时才显示 token 用量，否则保持不可用而不做估算；费用永不显示，因为 shell 没有绑定
+  任何计价来源。
+
+## Campaign 测量默认关闭
+
+普通会话不做任何测量。启动 Pi 前同时设置
+`COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 与
+`COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN=<campaign id>`。daemon 进程也必须看到
+同一个启用变量，否则两个嵌套 daemon 阶段保持 `not_available` 而不会被 join。每次
+请求都会发布一条内存观测。成功请求包含路由的全部七个阶段（请求准备、扩展派发、
+loopback 等待、daemon preflight、Provider 网络、响应解析、事件投递）；取消或失败的
+请求保留已经测得的 Pi 阶段前缀，而不会从样本分母中消失。每条记录都明确
+`requestMode=non_streaming`、终态、最后测得的 Pi 阶段，以及
+`provider_unavailable`、`protocol_error` 等无内容失败类别。产品在解析 secret 前就拒
+绝上游 `stream:true` 请求，因此它不会被记成成功的流式观测。
+
+Pi 阶段使用 Node 单调时钟，daemon 阶段使用 Rust `Instant`。观测不含 wall-clock
+时间戳，两个时钟域的阶段不得相减。不透明 correlation id 只连接同一请求；并发请求使
+用不同 id。只有经过认证的 daemon 响应解析器读到完整且内部一致的 Provider usage
+对象，token 计数才会成为 `measured`；调用方自行构造的计数不能作为实测证据发布，缺失
+或不一致时保持 `not_available`。这只是产品路径内的来源约束，并非对上游 Provider
+计数正确性的密码学证明。
+
+一条观测只含时长与计数——绝不含 prompt、响应、header、bearer 或 Provider key——且
+shell 不为它向磁盘写入任何内容。`COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` 可为嵌入该扩展
+的 campaign harness 指定一个绝对 `.ndjson` 路径；shell 自身绝不打开它，且位于
+CognitiveOS state/runtime/config 目录内的路径一律拒绝。阶段计时只是测量，不是性能结论：
+不支持任何收益、Gate、release 或 Profile 声明。
 
 ## Pi 的另一重角色
 

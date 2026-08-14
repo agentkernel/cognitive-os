@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:56615713c3503e445038a59c7a118b135f612b0808160bdd9f4b4204adbf8f44"
+fingerprint: "sha256:3e70c0b3c2a7100feaef146d706bd112e457dbd2e9bd4f7e0363a6679cec8b97"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
@@ -50,17 +50,18 @@ Intent + Effect + 一次性 Worker Iteration Authorization → 受治理工具�
 fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的六族已装配 Tool 执行
 器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
 留给后续 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
-到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**但 daemon
-尚未自主驱动完整链路**：生产现在会派发无参数 WorkspaceRead、独立验证其固定的已对账
-Effect，并消费 checkpoint 背书的 continuation authority 到 Loop `OBSERVE`；其他 Tool
-请求载体仍未接线，且没有 Task 完成。因此已接纳 Task 在权威状态中持久、可
-观察且 runnable；自主执行仍为
-`partial`。开发者细节见
+到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**daemon
+的公共 C1 completion 实现已 native 证明**：生产会派发无参数 WorkspaceRead、
+独立验证其固定的已对账 Effect，再只从当前 CAS-backed authority facts 推导 candidate
+与最终 acceptance。exact native `22c3f502` 到达 `COMPLETED`。open Effect、被取代
+report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。其他 Tool 请求载体仍未接线。因此已接纳
+Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 
 ## 构造上绝不可能发生的事
 
-- Provider 回复、Pi `agent_end`、工具退出 0 或进程退出永远不是 Task 完成（要求独立
-  验证）。
+- Provider 回复、Pi `agent_end`、工具退出 0、进程退出、worker self-report 或 stale
+  verifier report 永远不是 Task 完成。必须同时具备当前独立验证、未变 fixed state、
+  闭合 Effects、可重读 evidence 与独立 daemon acceptance authority。
 - 未知的外部结果绝不换新身份盲重试——对账复用原幂等键。
 - 预算与截止是派发前检查的**含端点**硬轨。

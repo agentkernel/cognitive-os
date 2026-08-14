@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:2ff1a369fa8f364b569bf1847d6eec89af60a01bad27ff841ced1dc4df6de3b3"
+fingerprint: "sha256:9c42166220e444404fa7c7c82d9f33bec6ed7b0d308f9d1487e4c4555dc3ed09"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -39,7 +39,7 @@ non_claims:
 | 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动修复缺失成员；唯一绑定后非重入周期 worker 可到达 candidate 准入并从生产派发 WorkspaceRead 与 RegisteredCheckRun，其余参数化族仍未接线 |
 | 受治理工具执行（全部七个已登记族） | partial | 七族都有已装配 executor，投影因此报告 `execution_ready`；WorkspaceRead 与仅含 `check_id` 的 RegisteredCheckRun 有周期生产调用者，WorkspaceSearch/Write/Patch、ProcessCheck 与 HttpFetchReadOnly 仍仅测试调用 |
 | workspace search/write/patch 执行器 | partial | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界枚举/preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；无生产调用者 |
-| 独立验证循环 | implemented | 生产 WorkspaceRead 与 RegisteredCheckRun 可到达登记的独立 verifier；RegisteredCheck 只有在 CAS Evidence、精确 descriptor/file digest 与全部安全观察通过后才产生 passed report、checkpoint、一次性 continuation authority 与 Loop `OBSERVE`；这不完成 Task |
+| 独立验证与 Task 验收 | implemented；公共 C1 native-proven | 生产 WorkspaceRead 与 RegisteredCheckRun 可到达登记的独立 verifier；RegisteredCheck 只有在 CAS Evidence、精确 descriptor/file digest 与全部安全观察通过后才产生 passed report、checkpoint、一次性 continuation authority 与 Loop `OBSERVE`；WorkspaceRead 再经独立 daemon acceptance authority 完成 evidence-bound `COMPLETED` |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |
 | Context request/view + 缓存 | implemented | — |

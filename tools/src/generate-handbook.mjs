@@ -247,6 +247,9 @@ function buildEnvVars(readSource, trackedPaths) {
     /process\.env\.([A-Z][A-Z0-9_]+)/g,
     /environment\["([A-Z][A-Z0-9_]+)"\]/g,
     /parse_positive_setting\(\s*"([A-Z][A-Z0-9_]+)"/g,
+    // Code that reads the environment through an exported `*_VARIABLE`
+    // constant instead of a literal index; the declaration is the read.
+    /_VARIABLE\s*=\s*"([A-Z][A-Z0-9_]+)"/g,
   ];
   for (const scanPath of scanPaths) {
     const text = readSource(scanPath);
