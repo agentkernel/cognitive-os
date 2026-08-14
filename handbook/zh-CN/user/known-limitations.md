@@ -7,9 +7,12 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/server.rs
+  - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
+tests:
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+fingerprint: "sha256:826bc25b9db9e67ca78c8dc6410ffb6c19a63c79c54642cf43d3576f8399b338"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -21,9 +24,10 @@ non_claims:
 ## 功能
 
 - **自主执行未端到端接线**：Task 准入会入列完整调度引导，绑定后的周期 worker 可到
-  candidate 准入。无参数 WorkspaceRead 现有持久生产 Effect 调用者和到 Loop
-  `OBSERVE` 的 checkpoint 背书独立 verifier；其余 Tool 请求载体与 Task 完成仍未接
-  线。
+  candidate 准入。无参数 WorkspaceRead 现有持久生产 Effect 调用者、independent
+  verifier 与 evidence-bound Task acceptance caller。exact native `22c3f502`
+  到达公共 C1 `COMPLETED`。open Effect、被取代 report 与缺失 CAS 负例已写入；
+  stale fixed post-state 仍开放。其余 Tool 请求载体仍未接线。
 - **无备份/恢复命令**；仅有规划 API（secret 恒排除）。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
   UX。
@@ -49,4 +53,8 @@ non_claims:
 - headless 加密 vault 运行已设计但今天不可选。
 - Windows：daemon/CLI 在 CI 可编译，Credential Manager 后端与安装器/scheduled-task
   模板已存在，但 B01-W 安装战役未执行——没有可安装的 Windows 产品，本地文件也无
-  ACL 加固。
+  ACL 加固。本地 bootstrap/session token 已使用 OS CSPRNG；该修正不增强 Windows 文件
+  ACL。
+- 升级后若 runtime 仍留有 CSPRNG 修正前的 bootstrap 形状，daemon 会有意拒绝启动。
+  停止 daemon，并只删除其私有 runtime 目录中的 `local-bootstrap.secret`，下次启动即可
+  签发替代凭据。

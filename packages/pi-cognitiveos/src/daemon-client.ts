@@ -30,7 +30,16 @@ import {
   type PersonalDaemonPaths,
 } from "./daemon-discovery.js";
 import { DaemonClientError } from "./errors.js";
-import { randomBytes } from "node:crypto";
+import {
+  createPiRouteCorrelationId,
+  openPiRouteObservationSession,
+  parseDaemonReportedNanos,
+  providerUsageFromDaemonResponse,
+  type DaemonReportedStages,
+  type PiRouteObservationSession,
+  type PiRouteObservationSessionOptions,
+  type PiRouteStageRecorder,
+} from "./pi-route-observation.js";
 
 /** Principal the Personal CLI uses for the local owner session. */
 export const LOCAL_OWNER_PRINCIPAL = "principal://local/owner";
@@ -96,6 +105,13 @@ export interface BoundedCompletion {
    */
   readonly providerNetworkElapsedNanos: number | undefined;
   /**
+   * Daemon-reported nested facts exactly as read from the response headers,
+   * with no adjustment. An authorized daemon reports its preflight/SecretStore
+   * stage and echoes the correlation id; an unauthorized or older daemon
+   * reports neither, and the observation degrades rather than fabricating them.
+   */
+  readonly daemonReported: DaemonReportedStages;
+  /**
    * Numeric usage is retained only when the Provider supplied a complete,
    * internally consistent OpenAI-compatible `usage` object. This is campaign
    * telemetry, not a fallback token estimate.
@@ -149,6 +165,20 @@ export class PersonalDaemonClient {
   /** Read the daemon's validated loopback endpoint for Pi's in-memory model metadata. */
   readLoopbackEndpoint(): string {
     return readDaemonEndpoint(resolvePersonalDaemonPaths(this.environment), this.files);
+  }
+
+  /**
+   * Open a campaign measurement session from this client's environment slice,
+   * or return `undefined` when no campaign authorization is present.
+   *
+   * The client owns the only ambient-environment read in this package, so the
+   * authorization decision is resolved here rather than at the Extension entry
+   * point. Instrumentation stays denied by default.
+   */
+  openCampaignObservationSession(
+    options: PiRouteObservationSessionOptions = {},
+  ): PiRouteObservationSession | undefined {
+    return openPiRouteObservationSession(this.environment, options);
   }
 
   /**
@@ -207,34 +237,66 @@ export class PersonalDaemonClient {
     model: string,
     messages: readonly { readonly role: "system" | "user" | "assistant"; readonly content: string }[],
     signal?: AbortSignal,
+    recorder?: PiRouteStageRecorder,
   ): Promise<BoundedCompletion> {
     if (signal?.aborted) throw abortedRequestError();
-    const paths = resolvePersonalDaemonPaths(this.environment);
-    const endpoint = readDaemonEndpoint(paths, this.files);
-    const token = this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
-    const correlationId = createCampaignCorrelationId();
-    const loopbackRequestStartedAt = performance.now();
-    const response = await this.send(endpoint, "/provider/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-        "x-cognitiveos-correlation-id": correlationId,
-      },
-      body: JSON.stringify({ model, messages, stream: false }),
-      ...(signal === undefined ? {} : { signal }),
-    });
-    const loopbackHttpElapsedNanos = elapsedMonotonicNanos(loopbackRequestStartedAt);
-    const providerNetworkElapsedNanos = parsePositiveDurationHeader(
-      response.headers.get("x-cognitiveos-provider-network-nanos"),
-    );
-    const bodyText = await readBodyText(response);
-    if (response.status !== 200) {
-      if (response.status === 401) this.managementSessionToken = undefined;
-      throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
+    const correlationId = recorder?.readCorrelationId() ?? createPiRouteCorrelationId();
+
+    // Dispatch covers everything the Extension does between a prepared request
+    // and handing the first byte to the socket, including the one-time session
+    // mint when no management bearer is cached yet.
+    recorder?.begin("extension_dispatch");
+    let requestInit: RequestInit;
+    let endpoint: string;
+    let token: string;
+    try {
+      const paths = resolvePersonalDaemonPaths(this.environment);
+      endpoint = readDaemonEndpoint(paths, this.files);
+      token =
+        this.managementSessionToken ?? (await this.issueSession(endpoint, paths, MANAGEMENT_CHANNEL));
+      requestInit = {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+          "x-cognitiveos-correlation-id": correlationId,
+        },
+        body: JSON.stringify({ model, messages, stream: false }),
+        ...(signal === undefined ? {} : { signal }),
+      };
+    } finally {
+      recorder?.complete("extension_dispatch");
     }
-    this.managementSessionToken = token;
-    return parseBoundedCompletion(bodyText, loopbackHttpElapsedNanos, providerNetworkElapsedNanos, correlationId);
+
+    const loopbackRequestStartedAt = performance.now();
+    recorder?.begin("loopback_wait");
+    let response: Response;
+    try {
+      response = await this.send(endpoint, "/provider/v1/chat/completions", requestInit);
+    } finally {
+      recorder?.complete("loopback_wait");
+    }
+    const loopbackHttpElapsedNanos =
+      recorder?.readStage("loopback_wait") ?? elapsedMonotonicNanos(loopbackRequestStartedAt);
+    const daemonReported = readDaemonReportedStages(response);
+
+    recorder?.begin("response_parse");
+    try {
+      const bodyText = await readBodyText(response);
+      if (response.status !== 200) {
+        if (response.status === 401) this.managementSessionToken = undefined;
+        throw authOrProtocolError(response.status, bodyText, "POST /provider/v1/chat/completions");
+      }
+      this.managementSessionToken = token;
+      return parseBoundedCompletion(
+        bodyText,
+        loopbackHttpElapsedNanos,
+        daemonReported,
+        correlationId,
+      );
+    } finally {
+      recorder?.complete("response_parse");
+    }
   }
 
   /** Read one private resource projection through the management channel. */
@@ -485,8 +547,8 @@ export function parseResourceProjection(
 export function parseBoundedCompletion(
   bodyText: string,
   loopbackHttpElapsedNanos: number = 1,
-  providerNetworkElapsedNanos: number | undefined = undefined,
-  correlationId: string = createCampaignCorrelationId(),
+  daemonReported: DaemonReportedStages = UNREPORTED_DAEMON_STAGES,
+  correlationId: string = createPiRouteCorrelationId(),
 ): BoundedCompletion {
   const record = parseJsonRecord(bodyText, "completion response");
   const choices = record["choices"];
@@ -506,51 +568,40 @@ export function parseBoundedCompletion(
     finishReason: "stop",
     correlationId,
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
-    providerNetworkElapsedNanos,
-    providerUsage: parseProviderUsage(record["usage"]),
+    providerNetworkElapsedNanos: daemonReported.providerNetworkElapsedNanos,
+    daemonReported,
+    providerUsage: providerUsageFromDaemonResponse(record["usage"], correlationId),
   };
 }
 
-function createCampaignCorrelationId(): string {
-  return `campaign-${randomBytes(16).toString("hex")}`;
-}
+/** What an unauthorized, unreachable or older daemon reports: nothing. */
+const UNREPORTED_DAEMON_STAGES: DaemonReportedStages = {
+  echoedCorrelationId: undefined,
+  preflightElapsedNanos: undefined,
+  providerNetworkElapsedNanos: undefined,
+};
 
-function parsePositiveDurationHeader(value: string | null): number | undefined {
-  if (value === null || !/^\d+$/.test(value)) return undefined;
-  const elapsedNanos = Number(value);
-  return Number.isSafeInteger(elapsedNanos) && elapsedNanos > 0 ? elapsedNanos : undefined;
+/**
+ * Read the daemon's nested observation headers verbatim.
+ *
+ * Only these three response headers are read, and only as an opaque id and two
+ * durations. No other header is inspected, retained or forwarded.
+ */
+function readDaemonReportedStages(response: Response): DaemonReportedStages {
+  const echoedCorrelationId = response.headers.get("x-cognitiveos-correlation-id");
+  return {
+    echoedCorrelationId: echoedCorrelationId === null ? undefined : echoedCorrelationId,
+    preflightElapsedNanos: parseDaemonReportedNanos(
+      response.headers.get("x-cognitiveos-daemon-preflight-nanos"),
+    ),
+    providerNetworkElapsedNanos: parseDaemonReportedNanos(
+      response.headers.get("x-cognitiveos-provider-network-nanos"),
+    ),
+  };
 }
 
 function elapsedMonotonicNanos(startedAt: number): number {
   return Math.max(1, Math.round((performance.now() - startedAt) * 1_000_000));
-}
-
-function parseProviderUsage(value: unknown): ProviderUsage {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return { availability: "not_available" };
-  }
-  const usage = value as Record<string, unknown>;
-  const promptTokens = usage["prompt_tokens"];
-  const completionTokens = usage["completion_tokens"];
-  const totalTokens = usage["total_tokens"];
-  if (
-    !isNonnegativeSafeInteger(promptTokens)
-    || !isNonnegativeSafeInteger(completionTokens)
-    || !isNonnegativeSafeInteger(totalTokens)
-    || promptTokens + completionTokens !== totalTokens
-  ) {
-    return { availability: "not_available" };
-  }
-  return {
-    availability: "measured",
-    promptTokens,
-    completionTokens,
-    totalTokens,
-  };
-}
-
-function isNonnegativeSafeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function parseJsonRecord(bodyText: string, label: string): Record<string, unknown> {

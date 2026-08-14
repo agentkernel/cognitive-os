@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:1140f048eb95df3167d928fbbff36c1d53398c521ba5c103098f8fbae4107a72"
+fingerprint: "sha256:db39fab5d7a1202ae3d166d12b8d7f3b43fe7c37105c193a0c85445c8d8c5b21"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -56,6 +56,7 @@ non_claims:
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；登记 fixed-Effect verifier 生成 CAS 背书证据、持久报告并进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task |
 | A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup 与持久请求/查询计数）；persist-before-dispatch Effect；默认关闭的授权故障点；持久变更后丢失应答时，重启只查询原键，以一次实际变更、零第二次 POST 完成对账；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
+| Task candidate + acceptance authority | implemented；公共 C1 native-proven | scheduler materialize/activate governed Task；随后只有最新当前 independent passed report、可重读 CAS evidence、未变 fixed state、闭合 Effect 集合与独立 daemon acceptance principal 才可提交两条登记 Task transition；缺报告、重复 acceptance、open Effect、被取代 report、缺失 CAS evidence 与 stale fixed post-state 均 fail closed |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
 ## 剩余生产接线缺口
@@ -74,11 +75,17 @@ non_claims:
    WorkspaceWrite/Patch、ProcessCheck 与 HttpFetchReadOnly 在生产尚无独立治理的
    payload/preimage、受监督进程或已登记 origin 载体，因此在 Effect 授权前失败；这些
    sink 仍仅测试调用。
-2. **Task 完成仍是独立范围**：生产现在闭合
-   `ACT -> VERIFY -> CONTINUE -> OBSERVE`，包含 checkpoint 与一次性 continuation
+2. **Task 完成已实现且公共 C1 已经 native 证明**：P2-T14 代码沿用已登记的
+   `completion_claim` / `fixed_post_state` / `verification_report` /
+   `acceptance_decision` 槽位；canonical decision bytes 位于 Artifact CAS，
+   daemon-private acceptance principal 与 worker/verifier 身份分离；SQLite 在
+   两条 transition 事务内都重查 currentness 与完整 Effect 集合。exact native
+   `95f402d3`（已合并 `main@b30386be`）通过 scheduler authority 57/57、
+   verification executor 12/12 与 Clippy。全部 D02 负例通过：缺报告/非权威、
+   重复 acceptance、open Effect、被取代 report、缺失 CAS 与 stale fixed
    authority。报告、checkpoint、continuation 或 A7 评测观察都不完成 Task；验收仍属
    P2-T14。A7 fixture/本地证据不得升格为 Gate、release、Profile、B01 或 EVAL-003
-   评测结果。
+   post-state。其他 Tool 请求载体仍未接线。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。

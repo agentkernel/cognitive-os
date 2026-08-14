@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:1140f048eb95df3167d928fbbff36c1d53398c521ba5c103098f8fbae4107a72"
+fingerprint: "sha256:db39fab5d7a1202ae3d166d12b8d7f3b43fe7c37105c193a0c85445c8d8c5b21"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -57,7 +57,8 @@ verification → verified continuation or ceiling STOP.
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
 | A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
-| Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Loop/Budget/scheduler prerequisites without replacing existing authority |
+| Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report, missing CAS evidence, and stale fixed post-state fail closed |
+| Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Task/Loop/Budget/scheduler prerequisites without replacing existing authority |
 
 ## Remaining production wiring gaps
 
@@ -80,12 +81,18 @@ The remaining gaps are:
    Effect authorization because production has no separately governed
    payload/preimage, supervised-process, or registered-origin carrier for them;
    their sinks remain test-called only.
-2. **Task completion remains separate**: production now closes
-   `ACT -> VERIFY -> CONTINUE -> OBSERVE`, including checkpoint and one-time
-   continuation authority. No report, checkpoint, continuation, or A7
-   campaign observation completes a Task; acceptance remains P2-T14 scope.
+2. **Task completion is implemented and public C1 is native-proven**: the
+   P2-T14 code reuses the registered `completion_claim` / `fixed_post_state` /
+   `verification_report` / `acceptance_decision` slots; canonical decision
+   bytes live in Artifact CAS and a daemon-private acceptance principal is
+   distinct from worker and verifier identities. SQLite rechecks currentness
+   and the complete Effect set in both transition transactions. Exact native
+   `95f402d3` (merged `main@b30386be`) passed scheduler authority 57/57,
+   verification executor 12/12 and Clippy. All D02 negatives pass: missing
+   report/non-authority, duplicate acceptance, open Effect, superseded report,
+   missing CAS, and stale fixed post-state. Other Tool request carriers remain
    A7 fixture/local evidence must not be promoted to Gate, release, Profile,
-   B01, or EVAL-003 campaign results.
+   unwired.
 
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them

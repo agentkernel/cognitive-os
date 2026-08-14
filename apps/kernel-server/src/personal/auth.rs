@@ -106,11 +106,22 @@ impl fmt::Debug for SessionTokenView {
 }
 
 /// Request to mint a channel-scoped session after bootstrap proof.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SessionIssueRequest {
     pub channel: ChannelClass,
     pub principal_id: String,
     pub bootstrap_secret: String,
+}
+
+impl fmt::Debug for SessionIssueRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SessionIssueRequest")
+            .field("channel", &self.channel)
+            .field("principal_id", &self.principal_id)
+            .field("bootstrap_secret", &"[REDACTED]")
+            .finish()
+    }
 }
 
 struct SessionRecord {
@@ -121,6 +132,24 @@ struct SessionRecord {
     absolute_lifetime: Duration,
     idle_lifetime: Duration,
     epoch: u64,
+}
+
+const TOKEN_ENTROPY_BYTES: usize = 32;
+const ENTROPY_PROBE_BYTES: usize = TOKEN_ENTROPY_BYTES * 2;
+
+trait TokenEntropy {
+    fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError>;
+}
+
+struct OsTokenEntropy;
+
+impl TokenEntropy for OsTokenEntropy {
+    fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+        getrandom::fill(destination).map_err(|_| LocalAuthError::Io {
+            detail: "operating system entropy unavailable",
+        })?;
+        Ok(destination.len())
+    }
 }
 
 /// In-process local session authority with private bootstrap secret file.
@@ -150,7 +179,17 @@ impl LocalSessionAuthority {
         bootstrap_secret_path: impl Into<PathBuf>,
         bounds: PersonalResourceBounds,
     ) -> Result<Self, LocalAuthError> {
+        let mut entropy = OsTokenEntropy;
+        Self::initialize_with_entropy(bootstrap_secret_path, bounds, &mut entropy)
+    }
+
+    fn initialize_with_entropy(
+        bootstrap_secret_path: impl Into<PathBuf>,
+        bounds: PersonalResourceBounds,
+        entropy: &mut dyn TokenEntropy,
+    ) -> Result<Self, LocalAuthError> {
         let bootstrap_secret_path = bootstrap_secret_path.into();
+        let bootstrap_secret = generate_opaque_token("boot", entropy)?;
         if let Some(parent) = bootstrap_secret_path.parent() {
             fs::create_dir_all(parent).map_err(|_| LocalAuthError::Io {
                 detail: "failed to create bootstrap parent directory",
@@ -158,7 +197,6 @@ impl LocalSessionAuthority {
             #[cfg(unix)]
             restrict_private_directory(parent)?;
         }
-        let bootstrap_secret = generate_opaque_token("boot");
         write_private_file(&bootstrap_secret_path, bootstrap_secret.as_bytes())?;
         Ok(Self {
             bootstrap_secret_path,
@@ -189,6 +227,11 @@ impl LocalSessionAuthority {
         if bootstrap_secret.is_empty() {
             return Err(LocalAuthError::BootstrapMissing);
         }
+        if !has_current_opaque_token_shape(&bootstrap_secret, "boot") {
+            return Err(LocalAuthError::InvalidRequest {
+                detail: "persisted bootstrap secret does not have the current CSPRNG token shape",
+            });
+        }
         Ok(Self {
             bootstrap_secret_path,
             bootstrap_secret,
@@ -215,6 +258,16 @@ impl LocalSessionAuthority {
         request: SessionIssueRequest,
         now: Instant,
     ) -> Result<SessionTokenView, LocalAuthError> {
+        let mut entropy = OsTokenEntropy;
+        self.issue_session_with_entropy(request, now, &mut entropy)
+    }
+
+    fn issue_session_with_entropy(
+        &mut self,
+        request: SessionIssueRequest,
+        now: Instant,
+        entropy: &mut dyn TokenEntropy,
+    ) -> Result<SessionTokenView, LocalAuthError> {
         if request.principal_id.is_empty() || request.principal_id.len() > 128 {
             return Err(LocalAuthError::InvalidRequest {
                 detail: "principal_id length out of range",
@@ -226,7 +279,12 @@ impl LocalSessionAuthority {
         ) {
             return Err(LocalAuthError::BootstrapMismatch);
         }
-        let token = generate_opaque_token("sess");
+        let token = generate_opaque_token("sess", entropy)?;
+        if self.sessions.contains_key(&token) {
+            return Err(LocalAuthError::Io {
+                detail: "entropy source repeated an existing session token",
+            });
+        }
         let session_id = format!("sess-{}-{}", self.epoch, self.next_session_serial);
         self.next_session_serial = self.next_session_serial.saturating_add(1);
         let absolute_lifetime = Duration::from_secs(self.bounds.session_absolute_lifetime_secs);
@@ -320,23 +378,70 @@ impl LocalSessionAuthority {
         self.sessions.len()
     }
 }
-fn generate_opaque_token(prefix: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
-    prefix.hash(&mut hasher);
-    Instant::now().hash(&mut hasher);
-    std::process::id().hash(&mut hasher);
-    format!("{prefix}-{:016x}-{:016x}", hasher.finish(), random_u64())
+fn generate_opaque_token(
+    prefix: &str,
+    entropy: &mut dyn TokenEntropy,
+) -> Result<String, LocalAuthError> {
+    let mut sample = [0u8; ENTROPY_PROBE_BYTES];
+    let written = match entropy.fill(&mut sample) {
+        Ok(written) => written,
+        Err(error) => {
+            sample.fill(0);
+            return Err(error);
+        }
+    };
+    if written != sample.len() {
+        sample.fill(0);
+        return Err(LocalAuthError::Io {
+            detail: "entropy source returned a short sample",
+        });
+    }
+
+    let (token_bytes, independent_probe) = sample.split_at(TOKEN_ENTROPY_BYTES);
+    let has_zero_block = token_bytes.iter().all(|byte| *byte == 0)
+        || independent_probe.iter().all(|byte| *byte == 0);
+    if has_zero_block || constant_time_eq(token_bytes, independent_probe) {
+        sample.fill(0);
+        return Err(LocalAuthError::Io {
+            detail: "entropy source returned a zero or repeated block",
+        });
+    }
+
+    let encoded = encode_lower_hex(token_bytes);
+    sample.fill(0);
+    let midpoint = encoded.len() / 2;
+    Ok(format!(
+        "{prefix}-{}-{}",
+        &encoded[..midpoint],
+        &encoded[midpoint..]
+    ))
 }
 
-fn random_u64() -> u64 {
-    let mut value = std::process::id() as u64;
-    value ^= Instant::now().elapsed().as_nanos() as u64;
-    value = value
-        .wrapping_mul(0x9E37_79B9_7F4A_7C15)
-        .wrapping_add(0xA24B_AED4_96E9_05C3);
-    value
+fn encode_lower_hex(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(HEX[(byte >> 4) as usize] as char);
+        encoded.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    encoded
+}
+
+fn has_current_opaque_token_shape(value: &str, expected_prefix: &str) -> bool {
+    let mut parts = value.split('-');
+    let (Some(prefix), Some(first_group), Some(second_group)) =
+        (parts.next(), parts.next(), parts.next())
+    else {
+        return false;
+    };
+    prefix == expected_prefix
+        && first_group.len() == TOKEN_ENTROPY_BYTES
+        && second_group.len() == TOKEN_ENTROPY_BYTES
+        && first_group
+            .bytes()
+            .chain(second_group.bytes())
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+        && parts.next().is_none()
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
@@ -384,7 +489,71 @@ fn restrict_private_file(path: &Path) -> Result<(), LocalAuthError> {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use std::time::Duration;
+    use std::{collections::HashSet, time::Duration};
+
+    struct FailingEntropy;
+
+    impl TokenEntropy for FailingEntropy {
+        fn fill(&mut self, _destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            Err(LocalAuthError::Io {
+                detail: "injected entropy failure",
+            })
+        }
+    }
+
+    struct ShortEntropy {
+        written: usize,
+    }
+
+    impl TokenEntropy for ShortEntropy {
+        fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            destination.fill(0xa5);
+            Ok(self.written)
+        }
+    }
+
+    struct RepeatedBlockEntropy;
+
+    impl TokenEntropy for RepeatedBlockEntropy {
+        fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            for (index, byte) in destination.iter_mut().enumerate() {
+                *byte = (index % TOKEN_ENTROPY_BYTES) as u8;
+            }
+            Ok(destination.len())
+        }
+    }
+
+    struct DistinctBlockEntropy;
+
+    impl TokenEntropy for DistinctBlockEntropy {
+        fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            for (index, byte) in destination.iter_mut().enumerate() {
+                *byte = index as u8;
+            }
+            Ok(destination.len())
+        }
+    }
+
+    /// 全长样本，但指定半区填零，用于证明零块在写文件前被拒绝。
+    struct ZeroBlockEntropy {
+        zero_token_half: bool,
+        zero_probe_half: bool,
+    }
+
+    impl TokenEntropy for ZeroBlockEntropy {
+        fn fill(&mut self, destination: &mut [u8]) -> Result<usize, LocalAuthError> {
+            for (index, byte) in destination.iter_mut().enumerate() {
+                *byte = (index as u8).saturating_add(1);
+            }
+            if self.zero_token_half {
+                destination[..TOKEN_ENTROPY_BYTES].fill(0);
+            }
+            if self.zero_probe_half {
+                destination[TOKEN_ENTROPY_BYTES..].fill(0);
+            }
+            Ok(destination.len())
+        }
+    }
 
     #[test]
     fn issue_and_authorize_same_channel() {
@@ -528,6 +697,304 @@ mod tests {
             authority.authorize(&view2.token, ChannelClass::Task, Instant::now()),
             Err(LocalAuthError::Unauthorized)
         ));
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn entropy_failure_creates_no_bootstrap_file() {
+        let temp =
+            std::env::temp_dir().join(format!("cos-auth-entropy-fail-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut entropy = FailingEntropy;
+
+        let result = LocalSessionAuthority::initialize_with_entropy(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+            &mut entropy,
+        );
+
+        assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+        assert!(!secret_path.exists(), "熵失败不得创建 bootstrap 文件");
+        assert!(!temp.exists(), "熵失败不得创建 runtime 目录");
+    }
+
+    #[test]
+    fn zero_and_short_entropy_create_no_bootstrap_file() {
+        for written in [
+            0,
+            TOKEN_ENTROPY_BYTES - 1,
+            TOKEN_ENTROPY_BYTES,
+            ENTROPY_PROBE_BYTES - 1,
+        ] {
+            let temp = std::env::temp_dir().join(format!(
+                "cos-auth-entropy-short-{}-{written}",
+                std::process::id()
+            ));
+            let _ = fs::remove_dir_all(&temp);
+            let secret_path = temp.join("local-bootstrap.secret");
+            let mut entropy = ShortEntropy { written };
+
+            let result = LocalSessionAuthority::initialize_with_entropy(
+                &secret_path,
+                PersonalResourceBounds::personal_v1_baseline(),
+                &mut entropy,
+            );
+
+            assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+            assert!(!secret_path.exists(), "短熵不得创建 bootstrap 文件");
+            assert!(!temp.exists(), "短熵不得创建 runtime 目录");
+        }
+    }
+
+    #[test]
+    fn zero_entropy_block_creates_no_bootstrap_file() {
+        for (zero_token_half, zero_probe_half) in [(true, true), (true, false), (false, true)] {
+            let temp = std::env::temp_dir().join(format!(
+                "cos-auth-entropy-zero-{}-{}-{}",
+                std::process::id(),
+                u8::from(zero_token_half),
+                u8::from(zero_probe_half)
+            ));
+            let _ = fs::remove_dir_all(&temp);
+            let secret_path = temp.join("local-bootstrap.secret");
+            let mut entropy = ZeroBlockEntropy {
+                zero_token_half,
+                zero_probe_half,
+            };
+
+            let result = LocalSessionAuthority::initialize_with_entropy(
+                &secret_path,
+                PersonalResourceBounds::personal_v1_baseline(),
+                &mut entropy,
+            );
+
+            assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+            assert!(!secret_path.exists(), "零熵块不得创建 bootstrap 文件");
+            assert!(!temp.exists(), "零熵块不得创建 runtime 目录");
+        }
+    }
+
+    #[test]
+    fn repeated_entropy_block_is_rejected_before_bootstrap_creation() {
+        let temp =
+            std::env::temp_dir().join(format!("cos-auth-entropy-repeat-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut entropy = RepeatedBlockEntropy;
+
+        let result = LocalSessionAuthority::initialize_with_entropy(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+            &mut entropy,
+        );
+
+        assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+        assert!(!secret_path.exists(), "重复熵不得创建 bootstrap 文件");
+        assert!(!temp.exists(), "重复熵不得创建 runtime 目录");
+    }
+
+    #[test]
+    fn session_entropy_failure_creates_no_session_or_token_view() {
+        let temp =
+            std::env::temp_dir().join(format!("cos-auth-session-fail-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut bootstrap_entropy = DistinctBlockEntropy;
+        let mut authority = LocalSessionAuthority::initialize_with_entropy(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+            &mut bootstrap_entropy,
+        )
+        .unwrap();
+        let bootstrap_secret = authority.bootstrap_secret_for_tests().to_owned();
+        let mut session_entropy = FailingEntropy;
+
+        let result = authority.issue_session_with_entropy(
+            SessionIssueRequest {
+                channel: ChannelClass::Task,
+                principal_id: "principal://local/owner".to_owned(),
+                bootstrap_secret,
+            },
+            Instant::now(),
+            &mut session_entropy,
+        );
+
+        assert!(matches!(result, Err(LocalAuthError::Io { .. })));
+        assert_eq!(authority.session_count(), 0);
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn deterministic_session_entropy_cannot_repeat_a_token() {
+        let temp =
+            std::env::temp_dir().join(format!("cos-auth-session-repeat-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut bootstrap_entropy = DistinctBlockEntropy;
+        let mut authority = LocalSessionAuthority::initialize_with_entropy(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+            &mut bootstrap_entropy,
+        )
+        .unwrap();
+        let bootstrap_secret = authority.bootstrap_secret_for_tests().to_owned();
+        let mut session_entropy = DistinctBlockEntropy;
+        let request = || SessionIssueRequest {
+            channel: ChannelClass::Task,
+            principal_id: "principal://local/owner".to_owned(),
+            bootstrap_secret: bootstrap_secret.clone(),
+        };
+
+        let first =
+            authority.issue_session_with_entropy(request(), Instant::now(), &mut session_entropy);
+        let second =
+            authority.issue_session_with_entropy(request(), Instant::now(), &mut session_entropy);
+
+        assert!(first.is_ok());
+        assert!(matches!(second, Err(LocalAuthError::Io { .. })));
+        assert_eq!(authority.session_count(), 1);
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn bounded_os_rng_sample_produces_unique_opaque_token_shapes() {
+        let temp = std::env::temp_dir().join(format!("cos-auth-unique-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut authority = LocalSessionAuthority::initialize(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+        )
+        .unwrap();
+        let bootstrap_secret = authority.bootstrap_secret_for_tests().to_owned();
+        let mut observed = HashSet::new();
+
+        for _ in 0..128 {
+            let view = authority
+                .issue_session(
+                    SessionIssueRequest {
+                        channel: ChannelClass::Task,
+                        principal_id: "principal://local/owner".to_owned(),
+                        bootstrap_secret: bootstrap_secret.clone(),
+                    },
+                    Instant::now(),
+                )
+                .unwrap();
+            let parts = view.token.split('-').collect::<Vec<_>>();
+            assert!(
+                parts.len() == 3
+                    && parts[0] == "sess"
+                    && parts[1].len() == TOKEN_ENTROPY_BYTES
+                    && parts[2].len() == TOKEN_ENTROPY_BYTES
+                    && parts[1..]
+                        .iter()
+                        .all(|part| part.bytes().all(|byte| byte.is_ascii_hexdigit())),
+                "令牌必须保留 prefix-group-group opaque 形状"
+            );
+            assert!(
+                observed.insert(view.token),
+                "有界样本不得产生重复令牌；此断言不构成统计随机性声明"
+            );
+        }
+
+        assert_eq!(observed.len(), 128);
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn debug_and_log_serialization_redact_token_material() {
+        let temp = std::env::temp_dir().join(format!("cos-auth-redaction-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let mut authority = LocalSessionAuthority::initialize(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+        )
+        .unwrap();
+        let bootstrap_secret = authority.bootstrap_secret_for_tests().to_owned();
+        let view = authority
+            .issue_session(
+                SessionIssueRequest {
+                    channel: ChannelClass::Management,
+                    principal_id: "principal://local/owner".to_owned(),
+                    bootstrap_secret,
+                },
+                Instant::now(),
+            )
+            .unwrap();
+        let token = view.token.clone();
+        let debug = format!("{view:?}");
+        let serialized_log = serde_json::json!({ "session": debug }).to_string();
+
+        assert!(!serialized_log.contains(&token));
+        assert!(serialized_log.contains("REDACTED"));
+        let authority_debug = format!("{authority:?}");
+        assert!(!authority_debug.contains(authority.bootstrap_secret_for_tests()));
+        let _ = fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn session_issue_request_debug_redacts_bootstrap_secret() {
+        let bootstrap_secret = ["fixture-bootstrap-", "material-never-log"].concat();
+        let request = SessionIssueRequest {
+            channel: ChannelClass::Management,
+            principal_id: "principal://local/owner".to_owned(),
+            bootstrap_secret: bootstrap_secret.clone(),
+        };
+
+        let debug = format!("{request:?}");
+
+        assert!(!debug.contains(&bootstrap_secret));
+        assert!(debug.contains("[REDACTED]"));
+    }
+
+    #[test]
+    fn load_existing_rejects_non_csprng_bootstrap_material() {
+        let cases = [
+            ("empty", "", "LOCAL_BOOTSTRAP_MISSING"),
+            (
+                "legacy-predictable",
+                "boot-0123456789abcdef-fedcba9876543210",
+                "LOCAL_AUTH_INVALID_REQUEST",
+            ),
+        ];
+
+        for (label, material, expected_code) in cases {
+            let temp = std::env::temp_dir()
+                .join(format!("cos-auth-existing-{label}-{}", std::process::id()));
+            let _ = fs::remove_dir_all(&temp);
+            fs::create_dir_all(&temp).unwrap();
+            let secret_path = temp.join("local-bootstrap.secret");
+            write_private_file(&secret_path, material.as_bytes()).unwrap();
+
+            let error = LocalSessionAuthority::load_existing(
+                &secret_path,
+                PersonalResourceBounds::personal_v1_baseline(),
+            )
+            .unwrap_err();
+
+            assert_eq!(error.code(), expected_code);
+            let _ = fs::remove_dir_all(&temp);
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn bootstrap_file_keeps_private_mode() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = std::env::temp_dir().join(format!("cos-auth-mode-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&temp);
+        let secret_path = temp.join("local-bootstrap.secret");
+        let _authority = LocalSessionAuthority::initialize(
+            &secret_path,
+            PersonalResourceBounds::personal_v1_baseline(),
+        )
+        .unwrap();
+
+        let mode = fs::metadata(&secret_path).unwrap().permissions().mode() & 0o777;
+        assert!(mode == 0o600, "bootstrap 文件必须保持 0600");
         let _ = fs::remove_dir_all(&temp);
     }
 }
