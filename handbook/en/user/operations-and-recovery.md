@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:c16df7d232adc685b1f68beff4fbc52f3e423cbf85b87bb5ea3eaaf8f4e32532"
+fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -35,7 +35,10 @@ non_claims:
   `provider_secret_unresolvable` and blocks rather than claiming ready; re-run
   `cognitive init` to store the key again. One evaluation uses one loaded config
   snapshot for provider, model/digest and secret resolution, so an atomic config
-  replacement cannot mix facts from two versions. Doctor adds redacted six-resource,
+  replacement cannot mix facts from two versions. One status/doctor evaluation
+  also binds one SecretStore for the secret probe and the provider resolve —
+  no secret material is retained, and a later request is evaluated again
+  rather than served from a stale-ready TTL. Doctor adds redacted six-resource,
   headless-vault, and operability sections (currently static
   `not_run`/`not_configured` reports — redaction validators more than live probes).
 - `GET /personal/health` (no auth) is liveness only — the installer and service

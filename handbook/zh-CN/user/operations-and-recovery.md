@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:c16df7d232adc685b1f68beff4fbc52f3e423cbf85b87bb5ea3eaaf8f4e32532"
+fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -33,7 +33,9 @@ non_claims:
   `first_conversation_ready`。`provider` 组件会真实解析配置中的 `secret_ref`：若已存
   的密钥被移除，它报 `provider_secret_unresolvable` 并阻塞，而不会谎称 ready——重新执行
   `cognitive init` 即可再次存入密钥。一次评估对 provider、model/digest 与 secret 解析
-  使用同一份已加载配置快照，因此原子替换配置不会混用两个版本的事实。doctor 追加脱敏的六资源、headless vault 与可运维性
+  使用同一份已加载配置快照，因此原子替换配置不会混用两个版本的事实。一次
+  status/doctor 评估还只绑定一次 SecretStore 做 secret 探针与 provider 解析——
+  不保留 secret 材料，后续请求重新评估而不是靠 stale-ready TTL。doctor 追加脱敏的六资源、headless vault 与可运维性
   小节（当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
 - `GET /personal/health`（免认证）仅是存活探测——安装器与服务控制器使用它；不要把
   readiness 读进去。
