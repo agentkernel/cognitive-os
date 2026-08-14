@@ -2299,8 +2299,12 @@ fn persist_native_workspace_read_dispatch_fixture(
         actions: ["read".to_owned()].into(),
         parameter_bounds: BTreeMap::new(),
         lease: LeaseWindow {
-            not_before: WallTimestamp::parse("2026-08-13T00:00:00Z").unwrap(),
-            expires: WallTimestamp::parse("2026-08-14T00:00:00Z").unwrap(),
+            // 生产 tick (`run_private_scheduler_tick_with_store`) 用 SystemClock
+            // 校验 capability 租约；固定 2026-08-14T00:00Z 的过期点会随真实时间跨过
+            // UTC 午夜而触发 AUTH_CAPABILITY_EXPIRED。改为覆盖整个项目时间线的宽
+            // 窗口，使 fixture 不再时间脆弱（tests-only；不改变生产校验语义）。
+            not_before: WallTimestamp::parse("2026-01-01T00:00:00Z").unwrap(),
+            expires: WallTimestamp::parse("2027-12-31T00:00:00Z").unwrap(),
         },
         depth_remaining: 1,
         issued_epoch: 1,
@@ -2930,7 +2934,7 @@ fn persist_verified_workspace_read_before_acceptance(
         cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
             .unwrap();
     let writer_lease = WriterLease { epoch: 1 };
-    let clock = super::FixedSchedulerClock::parse("2026-08-13T08:02:00Z").unwrap();
+    let clock = super::FixedSchedulerClock::parse("2026-08-04T12:02:00Z").unwrap();
     let ids = UuidV7Generator;
     super::activate_task_for_worker_authorization(
         store,
@@ -2946,7 +2950,6 @@ fn persist_verified_workspace_read_before_acceptance(
         &ASSEMBLED_EXECUTOR_FAMILIES,
     )
     .unwrap();
-    router.stage_resolved(&resolved).unwrap();
     let protocol = EffectProtocol::new(
         store,
         &clock,
