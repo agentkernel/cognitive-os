@@ -55,6 +55,17 @@ pub(crate) fn validate_native_tool_request(
             validate_network_target(&request.target)?;
             (None, None)
         }
+        NativeOperationFamily::RegisteredCheckRun => {
+            let check_id = request.target.strip_prefix("check://").ok_or_else(|| {
+                NativeToolExecutionError::InvalidDescriptor(
+                    "registered check target must be check://<check_id>".to_owned(),
+                )
+            })?;
+            if check_id.is_empty() || request.workspace_root.is_none() {
+                return Err(NativeToolExecutionError::WorkspaceTargetRequired);
+            }
+            (None, None)
+        }
     };
 
     // A mutation that cannot name the state it replaces has no compare-and-swap

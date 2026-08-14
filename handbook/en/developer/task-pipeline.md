@@ -76,6 +76,10 @@ immutable daemon catalog entry. Executor attempts remain Effect-owned: uncertain
 HTTP attempts survive restart as indeterminate (missing durable state also fails
 indeterminate), and workspace mutation completion requires a durable receipt bound
 to the original idempotency key in a state store outside the approved workspace.
+RegisteredCheckRun adds one production carrier whose payload is only `check_id`;
+its separate immutable registry fixes executable, argv, cwd, empty environment and
+all process/output/write/network bounds. The result is CAS Evidence and still
+requires the registered independent verifier.
 None of these executor guarantees turns admission, a Tool receipt, or matching
 workspace bytes into Task completion. P2-T14 keeps that boundary: a public C1
 WorkspaceRead can complete only from current closed Effects, the exact fixed

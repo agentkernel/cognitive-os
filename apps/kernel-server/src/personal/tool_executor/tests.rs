@@ -1169,6 +1169,10 @@ fn every_immutable_descriptor_field_is_catalog_bound_for_every_family() {
                 request.input.clear();
                 request.workspace_root = None;
             }
+            NativeOperationFamily::RegisteredCheckRun => {
+                request.target = "check://c2a.repair.typescript".to_owned();
+                request.input.clear();
+            }
             _ => {}
         }
         validate_native_tool_request(&request).expect("catalog descriptor must validate");
@@ -4994,6 +4998,35 @@ fn stage_family_through_its_executor(
             let validated = staged_fetch_request(&format!("{FETCH_ORIGIN}/data"), 512);
             scripted_fetch_executor(Arc::new(ScriptedFetchTransport::responding(200, b"body")))
                 .stage_request(idempotency_key, parameters_digest, &validated)
+        }
+        NativeOperationFamily::RegisteredCheckRun => {
+            let native_descriptor = BUILTIN_TOOL_CATALOG
+                .iter()
+                .find(|descriptor| descriptor.family == family)
+                .expect("registered check native descriptor");
+            let artifact_store = cognitive_store::ArtifactStore::open(
+                durable_state_path(workspace_root).with_extension("artifacts"),
+                1024 * 1024,
+            )
+            .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))?;
+            let executor = crate::personal::registered_check::NativeRegisteredCheckExecutor::new(
+                1,
+                workspace_root.to_path_buf(),
+                durable_state_store(workspace_root),
+                artifact_store,
+                Arc::new(crate::personal::registered_check::SystemRegisteredCheckRunner),
+            )
+            .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))?;
+            executor
+                .stage_request(
+                    idempotency_key,
+                    parameters_digest,
+                    native_descriptor,
+                    &crate::personal::registered_check::RegisteredCheckRunRequest::new(
+                        "c2a.repair.typescript",
+                    ),
+                )
+                .map_err(|error| NativeToolExecutionError::ExecutorUnavailable(error.to_string()))
         }
     }
 }

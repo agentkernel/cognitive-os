@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:0f49e86326c757de8385c1f1ddfa89da21a21f3b4d073718fd6d537695209303"
+fingerprint: "sha256:9c42166220e444404fa7c7c82d9f33bec6ed7b0d308f9d1487e4c4555dc3ed09"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -36,10 +36,10 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Task record/interpret/preview/admit | implemented | — |
 | Task watch | implemented | process-local event source |
 | Task control/query over HTTP | unavailable | service methods exist, no route |
-| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches candidate admission and production-dispatches WorkspaceRead, but the other families and verification remain unwired |
-| Governed tool execution (all six registered families) | partial | every family has an assembled executor, so the projection reports `execution_ready`; WorkspaceRead now has the periodic production caller, while the other five still lack a production request carrier and remain test-called only |
-| Workspace search/write/patch executors | partial | handle-relative no-follow traversal/publication, bounded enumeration/preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery are tested on Linux/Windows; no production caller |
-| Independent verification and Task acceptance | implemented; public C1 native-proven | production WorkspaceRead reaches CAS-backed independent passed report and evidence-bound `COMPLETED` through the distinct daemon acceptance authority at exact native `22c3f502`; remaining D02 stale-fixed-post-state negative is still open |
+| Autonomous scheduler loop | partial | admission atomically publishes the current-epoch runnable row, `START` Loop, and hard Budget; startup repairs missing members; one post-bind non-reentrant periodic worker reaches candidate admission and production-dispatches WorkspaceRead, WorkspaceSearch, WorkspaceWrite/Patch, ProcessCheck, HttpFetchReadOnly, and `check_id`-only RegisteredCheckRun through the durable Effect protocol |
+| Governed tool execution (all seven registered families) | partial | all seven families have a production request carrier; WorkspaceRead, WorkspaceSearch, and WorkspaceWrite/Patch dispatch through the periodic caller, ProcessCheck and HttpFetchReadOnly stage through fail-closed carriers (no supervised-process registry / empty origin allowlist), and RegisteredCheckRun dispatches `check_id`-only through the immutable registry |
+| Workspace write/patch executors | implemented, production-called | handle-relative no-follow traversal/publication, bounded preimages, target-locked CAS, workspace-external durable key-bound receipts and restart orphan recovery; payload + expected preimage carried from the persisted Intent |
+| Independent verification and Task acceptance | implemented; public C1 native-proven | production WorkspaceRead and RegisteredCheckRun reach registered independent verifiers; RegisteredCheck requires exact CAS Evidence, descriptor/file digests and clean safety observations before a passed report, checkpoint, one-time continuation authority and Loop `OBSERVE`; WorkspaceRead reaches a CAS-backed passed report and evidence-bound `COMPLETED` through the distinct daemon acceptance authority |
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |
 | Governed Memory/Skill Context consumption | implemented | exact scope/pin/digest load, durable v24 records, session-2 reuse, and forget/revoke fail-closed; public HTTP lifecycle cycles remain separate |

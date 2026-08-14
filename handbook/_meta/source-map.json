@@ -27,6 +27,12 @@
       "note": "execution wiring status is the most drift-sensitive handbook claim"
     },
     {
+      "id": "a7-campaign-observation",
+      "sources": ["apps/kernel-server/src/personal/campaign_observation.rs", "apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs"],
+      "docs": ["dev.execution-chain-status"],
+      "note": "A7 campaign loopback fixture and original-key observation; local/fixture evidence is not Gate/release/Profile"
+    },
+    {
       "id": "kernel-authority",
       "sources": ["crates/cognitive-kernel/**", "crates/cognitive-domain/**"],
       "docs": ["dev.authority-kernel", "dev.context-artifact", "ref.transitions"],
