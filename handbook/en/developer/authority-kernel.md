@@ -70,15 +70,17 @@ candidates persist as proposals whose status is **derived** (material ambiguity 
 admitted interpretation (authority identity + exact digest); `mint_task_contract`
 requires a decidable acceptance condition and mints under contract-epoch CAS.
 The production `mint_schedulable_task_contract` path additionally publishes the
-contract event, contract-named Loop at `START`, contract-named hard Budget, and
-current-epoch runnable scheduler row in one fenced store transaction:
+contract event plus its governed Task at `DRAFT`, contract-named Loop at
+`START`, contract-named hard Budget, and current-epoch runnable scheduler row in
+one fenced store transaction:
 successful admission cannot expose only a subset. `supersede_task_contract`
 uses the same schedulable publication, fences old-epoch work
 (`INTENT_VERSION_SUPERSEDED` at both mint and dispatch sinks), and classifies
 pending Effects for reconciliation. Startup repair calls the same pure
 `prepare_task_execution_bootstrap` composition for the current immutable
 contract; it can restore missing prerequisites but cannot replace existing
-Loop/Budget/scheduler authority.
+Task/Loop/Budget/scheduler authority. A current daemon-issued WIA then derives
+the registered `DRAFT -> READY -> ACTIVE` Task guards before Tool I/O.
 
 ## Effects: seven properties, four sinks
 
@@ -93,6 +95,11 @@ commit sinks (executor, authority commit, admission+outbox, checkpoint) re-check
 the writer fencing epoch inside the store transaction. Verification entry is
 also one compound authority commit: a current closed Effect pin, its request,
 and Loop `ACT -> VERIFY` either all persist or all roll back.
+Task acceptance remains a separate authority: candidate and final acceptance
+transitions are prepared by the same deterministic engine, then SQLite
+transactionally rechecks current contract epoch, the complete closed Effect set,
+fixed post-state, latest passed report, and fencing. The final principal is the
+daemon-private acceptance authority, never the worker or verifier.
 
 ## Authorization and budgets
 

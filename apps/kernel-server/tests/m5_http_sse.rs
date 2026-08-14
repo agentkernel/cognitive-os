@@ -1,13 +1,14 @@
 //! True TCP process-level M5 HTTP JSON + SSE evidence (ADR-0003).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+mod common;
+
 use cognitive_contracts::generated::akp_request_envelope::SCHEMA_DIGEST;
 use serde_json::json;
 use std::{
     io::{Read, Write},
-    net::{TcpListener, TcpStream},
+    net::TcpListener,
     process::Command,
     sync::{LazyLock, Mutex},
-    time::Duration,
 };
 
 // Each case starts a real child process that owns a TCP listener. Keep this
@@ -22,12 +23,7 @@ fn port() -> u16 {
         .port()
 }
 fn request(port: u16, wire: &str) -> String {
-    let mut stream = loop {
-        match TcpStream::connect(("127.0.0.1", port)) {
-            Ok(s) => break s,
-            Err(_) => std::thread::sleep(Duration::from_millis(20)),
-        }
-    };
+    let mut stream = common::connect_when_ready(port);
     stream.write_all(wire.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut out = String::new();
@@ -48,28 +44,14 @@ fn spawn_serve(port: u16) -> std::process::Child {
         .unwrap()
 }
 
-fn request_with_timeout(port: u16, wire: &str) -> String {
-    for _ in 0..50 {
-        if let Ok(mut stream) = TcpStream::connect(("127.0.0.1", port)) {
-            stream.write_all(wire.as_bytes()).unwrap();
-            stream.shutdown(std::net::Shutdown::Write).unwrap();
-            let mut out = String::new();
-            stream.read_to_string(&mut out).unwrap();
-            return out;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("server did not accept a connection");
-}
-
 #[test]
 fn serve_mode_accepts_multiple_loopback_requests_without_claiming_operational() {
     let _guard = HTTP_PROCESS_TEST_LOCK.lock().unwrap();
     let p = port();
     let mut child = spawn_serve(p);
-    let request = "GET /unknown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    let first = request_with_timeout(p, request);
-    let second = request_with_timeout(p, request);
+    let wire = "GET /unknown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    let first = request(p, wire);
+    let second = request(p, wire);
     assert!(first.contains("SCHEMA_MISMATCH"));
     assert!(second.contains("SCHEMA_MISMATCH"));
     assert!(child.try_wait().unwrap().is_none());

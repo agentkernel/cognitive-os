@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:38a59e1aba121f9c4304efe2bc2b137733b72ba9aa3fae67fb42f8ea292e692e"
+fingerprint: "sha256:234e4fe38aa4f5e5bf0fc41bb5e414e4e84ecf1abb63258b189f374ac1b46adc"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -70,11 +70,17 @@ epoch 回收过期 lease；释放要求精确 `(owner, epoch)`；WIA/continuatio
 Task 准入复用既有 v1–v3 表，不新增迁移或平行调度器。
 `insert_task_contract_with_execution_bootstrap` 在单个 immediate 权威事务内重查写
 者 fence 与合同 epoch CAS，再插入 TaskContract 事件、注册初态 `START` 的 Loop 准
-入/事件、硬 Budget，以及 `(task_ref, contract_epoch)` runnable 调度行。任何靠后的成
-员冲突都会回滚先前插入；成功提交后崩溃重开则四项前置全部存在。
-启动恢复还可在一个 fenced 事务内幂等修复旧的当前合同所缺 Loop、Budget 或调度工作。
+入/事件、注册初态 `DRAFT` 的 governed Task 投影（不写第二条 `(object_id, INITIAL)` 事件）、硬 Budget，以及
+`(task_ref, contract_epoch)` runnable 调度行。任何靠后的成员冲突都会回滚先前插入；
+成功提交后崩溃重开则五项前置全部存在。启动恢复还可在一个 fenced 事务内幂等修复旧的
+当前合同所缺 Task、Loop、Budget 或调度工作。
 既有行只校验，绝不替换或重置；过期合同 epoch 不可修复。
 
 验证启动复用既有 fixed-post-state/request 表，不新增迁移。一个 immediate 事务校验写
 者、当前合同、闭合 Effect 版本、共享行绑定与 Loop CAS，再插入两个追加式行并提交
 `ACT -> VERIFY`；任何靠后冲突都会整体回滚。
+
+verified Task completion 不新增 migration 或专用 acceptance 表。canonical decision
+bytes 位于 Artifact CAS；两个 immediate 事务复用既有 governed-object/event/transition
+record 表，并在 candidate 与最终 acceptance CAS 更新前重查当前合同、精确 fixed state、
+最新 report、完整闭合 Effect 集合与 fencing。

@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:8a28f217b544ec16040a544e723f101b07eca01fd0258c402a2102cd774b8e41"
+fingerprint: "sha256:5100da0d995d3ad3e7e75c39f0dd2078fc698426b3144f1d53a064cbea258651"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -30,7 +30,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi); Provider facts and SecretStore resolution use one loaded config snapshot. |
 | `GET` | `/personal/readiness` | management | Alias of the snapshot-consistent status projection. |
 | `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |
-| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. Success responses carry the `X-CognitiveOS-Provider-Network-Nanos` timing header; a client-sent `x-cognitiveos-correlation-id` request header is tolerated but never read or persisted by the daemon. |
+| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. Success responses always carry `X-CognitiveOS-Provider-Network-Nanos`. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |
 | `GET` | `/resource/v1/watch` | management | Family-scoped resource watch with optional resume_from cursor. |

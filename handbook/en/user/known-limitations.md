@@ -7,9 +7,12 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/server.rs
+  - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef17744040924c6739e764dfab118a7904fd1183fb5a06f13b3ebc84a08fe562"
+tests:
+  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+fingerprint: "sha256:826bc25b9db9e67ca78c8dc6410ffb6c19a63c79c54642cf43d3576f8399b338"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -24,8 +27,10 @@ current fact of the code.
 - **Autonomous execution is not wired end-to-end**: Task admission does enqueue
   its complete scheduler bootstrap and a post-bind periodic worker reaches
   candidate admission. Parameter-free WorkspaceRead has a durable production
-  Effect caller and independent verifier through checkpoint-backed Loop
-  `OBSERVE`; the other Tool request carriers and Task completion remain
+  Effect caller, independent verifier, and an evidence-bound Task acceptance
+  caller. Exact native `22c3f502` reached public C1 `COMPLETED`. Open-Effect,
+  superseded-report and missing-CAS negatives are written; a stale fixed
+  post-state negative is still open. The other Tool request carriers remain
   unwired.
 - **No backup/restore command**; planning APIs only (secrets always excluded).
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
@@ -56,3 +61,8 @@ current fact of the code.
 - Windows: daemon/CLI compile in CI and a Credential Manager backend plus
   installer/scheduled-task templates exist, but the B01-W install campaign has
   not run — no installable Windows product, and no ACL hardening on local files.
+  Local bootstrap/session tokens do use the OS CSPRNG; that correction does not
+  strengthen Windows file ACLs.
+- A runtime left with the pre-CSPRNG bootstrap shape intentionally fails daemon
+  startup after upgrade. Stop the daemon and remove only `local-bootstrap.secret`
+  from its private runtime directory so the next start can mint a replacement.

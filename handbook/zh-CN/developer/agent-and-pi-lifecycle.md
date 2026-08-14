@@ -12,6 +12,7 @@ sources:
     symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
+  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
@@ -19,8 +20,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
-fingerprint: "sha256:664c75ea6bac850eb570260e8c7fb323172c990e7cebf49330d812eee496ae14"
+fingerprint: "sha256:7bbdc94de9827419f0e5eda1346fd3201b584fca07881ebae26fa6d818be347b"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -52,6 +54,12 @@ epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
 Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径绝对且存在、版本
 精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。只传
 `--extension <绝对路径>`。
+
+shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi
+请求用独立不透明 id 与 daemon 测得的两个阶段关联；Node 与 Rust 单调时长始终属于分离
+时钟域。成功、取消和失败尝试都有明确终态记录，禁用会话则不产生任何记录。路径固定非流
+式；`stream:true` 仍在解析 secret 前以稳定错误拒绝。Provider usage 绝不估算，也不接
+受 runner 自行构造的对象。
 
 ## candidate 生产角色
 

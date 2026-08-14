@@ -1,11 +1,12 @@
 //! P1-T05 Personal readiness / status / doctor evidence.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
-use std::time::Duration;
 
 static PERSONAL_PROCESS_TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
@@ -42,39 +43,13 @@ fn spawn_personal(port: u16, runtime_root: &std::path::Path) -> Child {
         .unwrap()
 }
 
-fn wait_connect(port: u16) -> TcpStream {
-    for _ in 0..100 {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            return stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not accept connections on {port}");
-}
-
 fn http_exchange(port: u16, wire: &str) -> String {
-    let mut stream = wait_connect(port);
+    let mut stream = common::connect_when_ready(port);
     let _ = stream.write_all(wire.as_bytes());
     let _ = stream.shutdown(std::net::Shutdown::Write);
     let mut out = String::new();
     let _ = stream.read_to_string(&mut out);
     out
-}
-
-fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    let path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    for _ in 0..100 {
-        if let Ok(contents) = std::fs::read_to_string(&path) {
-            let trimmed = contents.trim().to_owned();
-            if !trimmed.is_empty() {
-                return trimmed;
-            }
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("bootstrap secret not found at {}", path.display());
 }
 
 fn issue_token(port: u16, secret: &str, channel: &str) -> String {
@@ -101,7 +76,7 @@ fn status_and_doctor_require_management_channel_and_report_blocked() {
     let port = free_port();
     let root = runtime_root("auth-status");
     let mut child = spawn_personal(port, &root);
-    let secret = bootstrap_secret(&root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut child, &root);
     let management_token = issue_token(port, &secret, "management");
     let task_token = issue_token(port, &secret, "task");
 

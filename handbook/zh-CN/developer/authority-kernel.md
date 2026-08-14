@@ -63,12 +63,13 @@ fencing epoch）。拒绝携带权威状态/版本与排序后的合法出口，
 （实质歧义 ⇒ `clarification_required`）；`admit_interpretation` 是 admitted 解释的唯
 一构造器（权威身份 + 精确 digest）；`mint_task_contract` 要求可判定的验收条件并在合
 同 epoch CAS 下铸造。生产路径 `mint_schedulable_task_contract` 还会在同一个 fenced
-存储事务内发布合同事件、合同命名且处于 `START` 的 Loop、合同命名的硬 Budget，以及
-当前 epoch 的 runnable 调度行；成功准入不可能只暴露其中一部分。
+存储事务内发布合同事件及其 `DRAFT` governed Task、合同命名且处于 `START` 的 Loop、
+合同命名的硬 Budget，以及当前 epoch 的 runnable 调度行；成功准入不可能只暴露其中一部分。
 `supersede_task_contract` 使用同一可调度发布，fence 旧 epoch 工作（在 mint 与
 dispatch 两个 sink 上 `INTENT_VERSION_SUPERSEDED`）并对在途 Effect 分类以待对账。
 启动修复对当前不可变合同调用同一纯组合 `prepare_task_execution_bootstrap`；它可恢复
-缺失前置，但不能替换既有 Loop/Budget/调度权威。
+缺失前置，但不能替换既有 Task/Loop/Budget/调度权威。当前 daemon-issued WIA 会在 Tool
+I/O 前真实推导登记的 `DRAFT -> READY -> ACTIVE` Task guards。
 
 ## Effect：七性质、四 sink
 
@@ -80,6 +81,10 @@ PROPOSED→AUTHORIZED→EXECUTING→…→COMMITTED，守卫只从持久重载�
 果用原键对账或隔离。四个提交 sink（executor、权威提交、准入+outbox、checkpoint）都
 在存储事务内复核写者 fencing epoch。验证入口同样是复合权威提交：当前闭合 Effect
 pin、其 verification request 与 Loop `ACT -> VERIFY` 要么一起持久化，要么一起回滚。
+Task 验收属于独立权威：candidate 与最终 acceptance transition 都先经同一 deterministic
+engine 准备，再由 SQLite 在事务内重查当前合同 epoch、完整闭合 Effect 集合、fixed
+post-state、最新 passed report 与 fencing；最终 principal 是 daemon-private acceptance
+authority，绝不是 worker 或 verifier。
 
 ## 授权与预算
 

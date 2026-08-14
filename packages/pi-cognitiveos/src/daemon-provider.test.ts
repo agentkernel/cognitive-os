@@ -6,6 +6,7 @@ import { PersonalDaemonClient } from "./daemon-client.js";
 import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
 import { createDaemonProvider } from "./daemon-provider.js";
+import { openPiRouteObservationSession } from "./pi-route-observation.js";
 import { boundedCompletionBody, selectedModelProjectionBody, startFakeDaemon } from "./test-support.js";
 
 const BOOTSTRAP_SECRET = "boot-0123456789abcdef-fedcba9876543210";
@@ -13,15 +14,23 @@ const ENVIRONMENT: EnvironmentSlice = {
   HOME: path.join(path.sep, "home", "owner"),
   XDG_RUNTIME_DIR: path.join(path.sep, "run", "user", "1000"),
 };
+const AUTHORIZED_ENVIRONMENT: EnvironmentSlice = {
+  ...ENVIRONMENT,
+  COGNITIVEOS_PI_ROUTE_OBSERVATION: "enabled",
+  COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN: "PERSONAL-PERF-EVAL-003",
+};
 
-function clientFor(endpoint: string): PersonalDaemonClient {
-  const paths = resolvePersonalDaemonPaths(ENVIRONMENT);
+function clientFor(
+  endpoint: string,
+  environment: EnvironmentSlice = ENVIRONMENT,
+): PersonalDaemonClient {
+  const paths = resolvePersonalDaemonPaths(environment);
   const contents: Record<string, string> = {
     [paths.endpointFile]: JSON.stringify({ schema_version: 1, endpoint, surface: "personal-daemon-endpoint" }),
     [paths.bootstrapSecretFile]: `${BOOTSTRAP_SECRET}\n`,
   };
   const files: FileReader = { readTextFile: (filePath) => contents[filePath] ?? (() => { throw new Error(`ENOENT: ${filePath}`); })() };
-  return new PersonalDaemonClient({ environment: ENVIRONMENT, files, requestTimeoutMs: 2_000 });
+  return new PersonalDaemonClient({ environment, files, requestTimeoutMs: 2_000 });
 }
 
 test("custom Pi provider configuration registers one projected model and emits bounded text events", async () => {
@@ -87,13 +96,21 @@ test("unsupported tool output produces one terminal error without tool events", 
     completionBody: JSON.stringify({ choices: [{ message: { content: "text", tool_calls: [] }, finish_reason: "stop" }] }),
   });
   try {
-    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(session !== undefined);
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint, AUTHORIZED_ENVIRONMENT), {
+      session,
+    });
     const model = provider.models[0]!;
     const stream = provider.streamSimple(model, { messages: [{ role: "user", content: "hello" }] });
     const events = [];
     for await (const event of stream) events.push(event.type);
     assert.deepEqual(events, ["start", "error"]);
     assert.equal((await stream.result()).stopReason, "error");
+    assert.equal(session.observations.length, 1);
+    const observation = session.observations[0] as unknown as Record<string, unknown>;
+    assert.equal(observation["outcome"], "error");
+    assert.equal(observation["failureClass"], "protocol_error");
   } finally {
     await daemon.close();
   }
@@ -102,7 +119,11 @@ test("unsupported tool output produces one terminal error without tool events", 
 test("pre-dispatch abort creates no completion request", async () => {
   const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}", completionBody: boundedCompletionBody() });
   try {
-    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(session !== undefined);
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint, AUTHORIZED_ENVIRONMENT), {
+      session,
+    });
     const controller = new AbortController();
     controller.abort();
     const stream = provider.streamSimple(provider.models[0]!, { messages: [] }, { signal: controller.signal });
@@ -110,6 +131,60 @@ test("pre-dispatch abort creates no completion request", async () => {
     for await (const event of stream) events.push(event.type);
     assert.deepEqual(events, ["error"]);
     assert.equal(daemon.requests.filter((request) => request.url === "/provider/v1/chat/completions").length, 0);
+    assert.equal(session.observations.length, 1, "a started instrumented sample must not disappear");
+    const observation = session.observations[0] as unknown as Record<string, unknown>;
+    assert.equal(observation["requestMode"], "non_streaming");
+    assert.equal(observation["outcome"], "cancelled");
+    assert.equal(observation["failureClass"], "cancelled");
+    assert.equal(observation["terminalStage"], "before_request");
+    assert.deepEqual(observation["stages"], []);
+    assert.deepEqual(observation["providerUsage"], { availability: "not_available" });
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("a no-Provider daemon refusal retains one content-free error observation", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionStatus: 503,
+    completionBody: JSON.stringify({
+      status: "error",
+      error: {
+        code: "PERSONAL_PROVIDER_NOT_CONFIGURED",
+        message: "provider proxy request was not completed",
+        category: "protocol",
+        retryable: false,
+        stage: "personal-front-door",
+      },
+    }),
+  });
+  try {
+    const session = openPiRouteObservationSession(AUTHORIZED_ENVIRONMENT);
+    assert.ok(session !== undefined);
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint, AUTHORIZED_ENVIRONMENT), {
+      session,
+    });
+    const stream = provider.streamSimple(provider.models[0]!, {
+      messages: [{ role: "user", content: "hello" }],
+    });
+    const events = [];
+    for await (const event of stream) events.push(event.type);
+    assert.deepEqual(events, ["start", "error"]);
+    assert.equal((await stream.result()).stopReason, "error");
+
+    assert.equal(session.observations.length, 1, "error samples must remain in the denominator");
+    const observation = session.observations[0] as unknown as Record<string, unknown>;
+    assert.equal(observation["requestMode"], "non_streaming");
+    assert.equal(observation["outcome"], "error");
+    assert.equal(observation["failureClass"], "provider_unavailable");
+    assert.equal(observation["terminalStage"], "response_parse");
+    assert.deepEqual(observation["providerUsage"], { availability: "not_available" });
+    assert.deepEqual(
+      (observation["stages"] as readonly Record<string, unknown>[]).map((stage) => stage["stage"]),
+      ["pi_request_preparation", "extension_dispatch", "loopback_wait", "response_parse"],
+    );
   } finally {
     await daemon.close();
   }

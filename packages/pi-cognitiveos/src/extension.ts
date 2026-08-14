@@ -80,7 +80,13 @@ export async function registerCognitiveOsExtension(
 
   // Initial extension loading queues providers until Pi binds its session
   // context. The session_start hook activates this model after that binding.
-  const daemonProvider = await createDaemonProvider(client);
+  // Absent an explicit campaign authorization this is `undefined`, and the
+  // route is registered exactly as it was before it could be measured.
+  const session = client.openCampaignObservationSession();
+  const daemonProvider = await createDaemonProvider(
+    client,
+    session === undefined ? {} : { session },
+  );
   daemonSelectedModel = daemonProvider.models[0];
   if (daemonSelectedModel === undefined) {
     throw new Error("the daemon provider registered no selectable model");

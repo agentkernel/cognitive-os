@@ -1,6 +1,8 @@
 //! P4-T05/D01 failure-first coverage for task-bound resource projection.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::ops::{Deref, DerefMut};
@@ -24,12 +26,7 @@ fn free_port() -> u16 {
 }
 
 fn request(port: u16, wire: &str) -> String {
-    let mut stream = loop {
-        if let Ok(stream) = TcpStream::connect(("127.0.0.1", port)) {
-            break stream;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
+    let mut stream = common::connect_when_ready(port);
     stream.write_all(wire.as_bytes()).unwrap();
     stream.shutdown(std::net::Shutdown::Write).unwrap();
     let mut response = String::new();
@@ -79,19 +76,6 @@ fn stop_for_restart(process: &mut PersonalProcess, runtime_root: &std::path::Pat
     process.kill().unwrap();
     process.wait().unwrap();
     let _ = std::fs::remove_file(runtime_root.join("cognitiveos").join("daemon.lock"));
-}
-
-fn bootstrap_secret(runtime_root: &std::path::Path) -> String {
-    let path = runtime_root
-        .join("cognitiveos")
-        .join("local-bootstrap.secret");
-    for _ in 0..100 {
-        if let Ok(secret) = std::fs::read_to_string(&path) {
-            return secret.trim().to_owned();
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    panic!("personal daemon did not create its bootstrap secret")
 }
 
 fn issue_token(port: u16, secret: &str, channel: &str) -> String {
@@ -199,7 +183,7 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
     let task_token = issue_token(port, &secret, "task");
     let management_token = issue_token(port, &secret, "management");
 

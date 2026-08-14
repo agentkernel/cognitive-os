@@ -51,6 +51,65 @@ use std::sync::{Mutex, MutexGuard};
 
 use super::*;
 
+/// 合同 mint 事件已经占用 `(contract_id, INITIAL)`，因此 DRAFT Task 投影
+/// 只插入 `governed_objects`，不再写第二条 admission 事件。
+fn insert_draft_task_projection_in_tx(
+    transaction: &Transaction<'_>,
+    contract: &TaskContractRow,
+    admitted_at: &str,
+) -> Result<(), StorePortError> {
+    let task_body_json = serde_json::to_string(&serde_json::json!({
+        "contract_epoch": contract.contract_epoch,
+        "task_contract_digest": contract.contract_digest,
+        "task_contract_id": contract.contract_id.as_str(),
+        "task_ref": contract.task_ref,
+    }))
+    .map_err(|error| corrupt("Task lifecycle body", error))?;
+    transaction
+        .execute(
+            "INSERT INTO governed_objects
+               (object_id, domain, state, version, body_json, created_at, updated_at)
+             VALUES (?1, 'task', 'DRAFT', 1, ?2, ?3, ?3)",
+            (
+                contract.contract_id.as_str(),
+                task_body_json.as_str(),
+                admitted_at,
+            ),
+        )
+        .map_err(|error| {
+            if is_constraint_violation(&error) {
+                StorePortError::Conflict {
+                    detail: format!(
+                        "Task lifecycle object {} already exists",
+                        contract.contract_id
+                    ),
+                }
+            } else {
+                unavailable("insert Task lifecycle object")(error)
+            }
+        })?;
+    Ok(())
+}
+
+impl SqliteAuthorityStore {
+    /// 为已 mint 的当前 TaskContract 补上共享 identity 的 DRAFT Task 投影。
+    pub fn materialize_draft_task_projection(
+        &self,
+        contract: &TaskContractRow,
+        admitted_at: &WallTimestamp,
+    ) -> Result<(), StorePortError> {
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Task lifecycle projection"))?;
+        insert_draft_task_projection_in_tx(&transaction, contract, admitted_at.as_str())?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit Task lifecycle projection"))?;
+        Ok(())
+    }
+}
+
 impl GovernanceObjectStore for SqliteAuthorityStore {
     fn load_governed_object_header(
         &self,
@@ -404,6 +463,11 @@ impl IntentChainStore for SqliteAuthorityStore {
         validate_execution_bootstrap(contract, bootstrap)?;
         insert_task_contract_row_in_transaction(&transaction, contract, expected_current_epoch)?;
         let contract_event_sequence = append_event_in_tx(&transaction, event)?;
+        insert_draft_task_projection_in_tx(
+            &transaction,
+            contract,
+            bootstrap.loop_admission.admitted_at.as_str(),
+        )?;
 
         let loop_object = &bootstrap.loop_admission.object;
         let loop_body_json = serde_json::to_string(&loop_object.body)
@@ -546,6 +610,43 @@ impl IntentChainStore for SqliteAuthorityStore {
             });
         }
 
+        let task_body = serde_json::json!({
+            "contract_epoch": contract.contract_epoch,
+            "task_contract_digest": contract.contract_digest,
+            "task_contract_id": contract.contract_id.as_str(),
+            "task_ref": contract.task_ref,
+        });
+        let existing_task: Option<(String, String, i64, String)> = transaction
+            .query_row(
+                "SELECT domain, state, version, body_json
+                 FROM governed_objects WHERE object_id=?1",
+                (contract.contract_id.as_str(),),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .optional()
+            .map_err(unavailable("read Task lifecycle projection"))?;
+        let task_created = if let Some((domain, _state, version, body_json)) = existing_task {
+            let body: Value = serde_json::from_str(&body_json)
+                .map_err(|error| corrupt("existing Task lifecycle projection", error))?;
+            if domain != LifecycleDomain::Task.as_str()
+                || version < Version::INITIAL.get()
+                || body != task_body
+            {
+                return Err(StorePortError::Conflict {
+                    detail: "existing Task lifecycle projection has a different authority binding"
+                        .to_owned(),
+                });
+            }
+            false
+        } else {
+            insert_draft_task_projection_in_tx(
+                &transaction,
+                contract,
+                bootstrap.budget_created_at.as_str(),
+            )?;
+            true
+        };
+
         let loop_object = &bootstrap.loop_admission.object;
         let existing_loop: Option<(String, String, i64, String)> = transaction
             .query_row(
@@ -666,6 +767,7 @@ impl IntentChainStore for SqliteAuthorityStore {
             .commit()
             .map_err(unavailable("commit Task execution bootstrap repair"))?;
         Ok(TaskExecutionBootstrapRepair {
+            task_created,
             loop_created,
             budget_created,
             scheduler_created,

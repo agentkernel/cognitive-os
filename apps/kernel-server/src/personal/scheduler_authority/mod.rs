@@ -15,6 +15,7 @@ mod dispatch;
 mod effect;
 mod error;
 mod policy;
+mod task_completion;
 mod types;
 mod worker;
 
@@ -24,6 +25,7 @@ pub(crate) use dispatch::*;
 pub(crate) use effect::*;
 pub(crate) use error::*;
 pub(crate) use policy::*;
+pub(crate) use task_completion::*;
 pub(crate) use types::*;
 pub(crate) use worker::*;
 
