@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_domain::ObjectId;
 use cognitive_kernel::effects::{EffectClass, OperationDescriptor};
 use cognitive_kernel::executor::{
@@ -17,8 +18,9 @@ use cognitive_kernel::tool_registry::{
 use crate::personal::scheduler_authority::ResolvedNativeWorkerDispatch;
 
 use super::{
-    NativeToolExecutionError, NativeToolExecutionRequest, NativeWorkspaceReadExecutor,
-    NativeWorkspaceSearchExecutor, validate_native_tool_request,
+    DurableExecutorStateStore, NativeToolExecutionError, NativeToolExecutionRequest,
+    NativeWorkspaceMutationExecutor, NativeWorkspaceReadExecutor, NativeWorkspaceSearchExecutor,
+    WorkspacePreimage, validate_native_tool_request,
 };
 
 const NATIVE_DESCRIPTOR_IDS: [(&str, &str); 6] = [
@@ -140,6 +142,7 @@ pub(crate) struct ProductionNativeToolExecutorRouter {
     workspace_root: PathBuf,
     workspace_read: NativeWorkspaceReadExecutor,
     workspace_search: NativeWorkspaceSearchExecutor,
+    workspace_mutation: NativeWorkspaceMutationExecutor,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
 }
 
@@ -153,10 +156,23 @@ impl ProductionNativeToolExecutorRouter {
                 "create daemon-approved workspace root: {error}"
             ))
         })?;
+        let mutation_state_store = Arc::new(
+            DurableExecutorStateStore::open(&executor_state_path(&workspace_root)).map_err(
+                |error| {
+                    NativeToolExecutionError::ExecutorUnavailable(format!(
+                        "open durable executor state store: {error}"
+                    ))
+                },
+            )?,
+        );
         Ok(Self {
             workspace_root,
             workspace_read: NativeWorkspaceReadExecutor::new(trusted_fencing_epoch),
             workspace_search: NativeWorkspaceSearchExecutor::new(trusted_fencing_epoch),
+            workspace_mutation: NativeWorkspaceMutationExecutor::new(
+                trusted_fencing_epoch,
+                mutation_state_store,
+            ),
             staged_families: Mutex::new(BTreeMap::new()),
         })
     }
@@ -166,10 +182,16 @@ impl ProductionNativeToolExecutorRouter {
         resolved: &ResolvedNativeWorkerDispatch,
     ) -> Result<(), NativeToolExecutionError> {
         let family = resolved.native_tool.descriptor.family;
-        let input = match family {
-            NativeOperationFamily::WorkspaceRead => Vec::new(),
-            NativeOperationFamily::WorkspaceSearch => {
-                workspace_search_query(&resolved.intent.canonical_json)?
+        let (input, expected_preimage) = match family {
+            NativeOperationFamily::WorkspaceRead => (Vec::new(), None),
+            NativeOperationFamily::WorkspaceSearch => (
+                workspace_search_query(&resolved.intent.canonical_json)?,
+                None,
+            ),
+            NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch => {
+                let (payload, preimage) =
+                    workspace_mutation_parameters(&resolved.intent.canonical_json)?;
+                (payload, Some(preimage))
             }
             _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
         };
@@ -178,7 +200,7 @@ impl ProductionNativeToolExecutorRouter {
             target: resolved.candidate.target.clone(),
             input,
             workspace_root: Some(self.workspace_root.clone()),
-            expected_preimage: None,
+            expected_preimage,
         })?;
         match family {
             NativeOperationFamily::WorkspaceRead => self.workspace_read.stage_request(
@@ -191,6 +213,13 @@ impl ProductionNativeToolExecutorRouter {
                 resolved.intent.parameters_digest.clone(),
                 &request,
             )?,
+            NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch => {
+                self.workspace_mutation.stage_request(
+                    resolved.intent.idempotency_key.clone(),
+                    resolved.intent.parameters_digest.clone(),
+                    &request,
+                )?
+            }
             _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
         }
         let mut staged_families = self.staged_families.lock().map_err(|_| {
@@ -238,6 +267,9 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
         match self.staged_family(&call.idempotency_key)? {
             Some(NativeOperationFamily::WorkspaceRead) => self.workspace_read.dispatch(call),
             Some(NativeOperationFamily::WorkspaceSearch) => self.workspace_search.dispatch(call),
+            Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
+                self.workspace_mutation.dispatch(call)
+            }
             Some(_) => Ok(DispatchOutcome::NotExecuted {
                 reason: "native family has no production request carrier".to_owned(),
             }),
@@ -254,6 +286,9 @@ impl EffectExecutor for ProductionNativeToolExecutorRouter {
             }
             Some(NativeOperationFamily::WorkspaceSearch) => {
                 self.workspace_search.query_outcome(idempotency_key)
+            }
+            Some(NativeOperationFamily::WorkspaceWrite | NativeOperationFamily::WorkspacePatch) => {
+                self.workspace_mutation.query_outcome(idempotency_key)
             }
             Some(_) | None => Ok(ExecutorQueryResult::NotExecuted),
         }
@@ -280,4 +315,65 @@ fn workspace_search_query(canonical_json: &str) -> Result<Vec<u8>, NativeToolExe
             )
         })?;
     Ok(query.as_bytes().to_vec())
+}
+
+/// Extract the governed mutation payload and preimage from a persisted intent's
+/// canonical JSON.
+///
+/// The payload is `parameters.input_b64` (standard base64) and the preimage is
+/// `parameters.preimage`, either `absent` or `digest:<sha256>`. Missing,
+/// malformed, or unparseable parameters fail closed before any executor staging.
+fn workspace_mutation_parameters(
+    canonical_json: &str,
+) -> Result<(Vec<u8>, WorkspacePreimage), NativeToolExecutionError> {
+    let value: serde_json::Value = serde_json::from_str(canonical_json).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "intent canonical JSON is not parseable: {error}"
+        ))
+    })?;
+    let parameters = value.get("parameters").ok_or_else(|| {
+        NativeToolExecutionError::InvalidDescriptor(
+            "workspace mutation parameters are missing from the governed intent".to_owned(),
+        )
+    })?;
+    let input_b64 = parameters
+        .get("input_b64")
+        .and_then(|input| input.as_str())
+        .ok_or_else(|| {
+            NativeToolExecutionError::InvalidDescriptor(
+                "workspace mutation payload is missing from the governed intent parameters"
+                    .to_owned(),
+            )
+        })?;
+    let input = STANDARD.decode(input_b64).map_err(|error| {
+        NativeToolExecutionError::InvalidDescriptor(format!(
+            "workspace mutation payload is not valid base64: {error}"
+        ))
+    })?;
+    let preimage = match parameters
+        .get("preimage")
+        .and_then(|preimage| preimage.as_str())
+    {
+        Some("absent") => WorkspacePreimage::Absent,
+        Some(digest) if let Some(rest) = digest.strip_prefix("digest:") => {
+            WorkspacePreimage::Digest(rest.to_owned())
+        }
+        _ => {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "workspace mutation preimage must be `absent` or `digest:<sha256>`".to_owned(),
+            ));
+        }
+    };
+    Ok((input, preimage))
+}
+
+/// Durable executor state lives outside the approved workspace so a mutation can
+/// never write over its own attempt/receipt store.
+fn executor_state_path(workspace_root: &Path) -> PathBuf {
+    let parent = workspace_root.parent().unwrap_or_else(|| Path::new("."));
+    let name = workspace_root
+        .file_name()
+        .unwrap_or_else(|| std::ffi::OsStr::new("workspace"))
+        .to_string_lossy();
+    parent.join(format!(".{name}-executor-state"))
 }

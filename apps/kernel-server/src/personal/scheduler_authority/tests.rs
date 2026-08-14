@@ -2590,8 +2590,8 @@ fn production_router_rejects_parameter_bearing_families_before_effect_authorizat
     let store = SqliteAuthorityStore::open(&database_path).unwrap();
 
     // Every family has an assembled sink, so resolution succeeds against the
-    // full assembled set — but only WorkspaceRead and WorkspaceSearch have a
-    // production carrier.
+    // full assembled set — but only WorkspaceRead, WorkspaceSearch,
+    // WorkspaceWrite, and WorkspacePatch have a production carrier.
     let resolved = resolve_native_worker_dispatch_with_families(
         &store,
         &authorization,
@@ -2605,8 +2605,6 @@ fn production_router_rejects_parameter_bearing_families_before_effect_authorizat
 
     let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
     for family in [
-        NativeOperationFamily::WorkspaceWrite,
-        NativeOperationFamily::WorkspacePatch,
         NativeOperationFamily::ProcessCheck,
         NativeOperationFamily::HttpFetchReadOnly,
     ] {
@@ -2674,6 +2672,55 @@ fn production_router_stages_workspace_search_with_persisted_query() {
     missing_query.intent.canonical_json = "{}".to_owned();
     assert!(matches!(
         router.stage_resolved(&missing_query),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_router_stages_workspace_write_with_persisted_preimage() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let mut write_resolved = resolved.clone();
+    write_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceWrite)
+        .unwrap()
+        .clone();
+    // "ZHVyYWJsZSBpbnB1dA==" is the standard base64 of "durable input".
+    write_resolved.intent.canonical_json = json!({
+        "parameters": {
+            "input_b64": "ZHVyYWJsZSBpbnB1dA==",
+            "preimage": "absent"
+        }
+    })
+    .to_string();
+
+    let router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    // The production router now carries WorkspaceWrite: it stages the governed
+    // payload + expected preimage into the mutation sink.
+    router.stage_resolved(&write_resolved).unwrap();
+
+    // A mutation without a declared preimage still fails closed before staging.
+    let mut missing_preimage = write_resolved.clone();
+    missing_preimage.intent.canonical_json =
+        json!({"parameters": {"input_b64": "ZHVyYWJsZSBpbnB1dA=="}}).to_string();
+    assert!(matches!(
+        router.stage_resolved(&missing_preimage),
         Err(NativeToolExecutionError::InvalidDescriptor(_))
     ));
 
