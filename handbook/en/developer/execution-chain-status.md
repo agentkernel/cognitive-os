@@ -12,6 +12,7 @@ sources:
     symbols: ["run_private_scheduler_tick_with_store"]
   - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
+  - path: apps/kernel-server/src/personal/registered_check/mod.rs
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: apps/kernel-server/src/personal/campaign_observation.rs
     symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
@@ -25,8 +26,9 @@ tests:
   - apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
+  - apps/kernel-server/tests/p2_t16_registered_check.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:db39fab5d7a1202ae3d166d12b8d7f3b43fe7c37105c193a0c85445c8d8c5b21"
+fingerprint: "sha256:6bfb23da5f684e4d7edd392d3603a0f4a6156bdb9f66539baba0006257758a32"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -53,10 +55,11 @@ verification → verified continuation or ceiling STOP.
 | WorkspaceRead executor with persist-before-dispatch and original-key reconciliation | implemented, production-called | the periodic worker reloads WIA/candidate/Intent/persisted descriptor, rechecks its exact scheduler lease and current authorization, stages under the daemon data workspace, and enters the existing Effect protocol; interrupted leased rows query the original key and never re-dispatch |
 | WorkspaceSearch executor | implemented, production-called | the production router carries the governed query from the persisted Intent and stages it into the search sink; handle-relative no-follow opens, post-open type/reparse verification, and enumeration-time visit ceilings |
 | ProcessCheck executor | implemented, production-called | the production router stages the bounded process check; dispatch fails closed until the daemon supervised-process registry is wired (no ambient process observation) |
+| RegisteredCheckRun executor | implemented, production-called | caller payload is exactly `check_id`; an immutable daemon registry fixes the current-binary helper, argv, workspace-root cwd, empty environment, timeout, output/process/write/network bounds and descriptor digest. Intent/Effect reaches durable `EXECUTING` before spawn, original-key state survives restart, and bounded output becomes CAS Evidence for the registered independent verifier |
 | WorkspaceWrite / WorkspacePatch mutation executor | implemented, production-called | the production router carries the governed payload + expected preimage from the persisted Intent and stages it into the mutation sink; handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
 | HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, production-called | the production router stages the pinned HTTPS target; the registered-origin allowlist is empty by default so staging fails closed until an origin is registered; attempted/completed state survives restart; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
-| Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; the registered fixed-Effect verifier emits CAS-backed evidence, persists the report, enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
+| Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; fixed-Effect and RegisteredCheck verifiers accept only their registered identity. RegisteredCheck revalidates exact descriptor/file digests and every safety observation from CAS Evidence; a passed report enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion |
 | A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
 | Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report, missing CAS evidence, and stale fixed post-state fail closed |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Task/Loop/Budget/scheduler prerequisites without replacing existing authority |
@@ -74,16 +77,16 @@ non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.
 The remaining gaps are:
 
-1. **Executor wiring is complete, with two fail-closed execution boundaries**:
-   all six registered families now have a production request carrier. The
-   periodic worker production-dispatches parameter-free WorkspaceRead,
-   query-bearing WorkspaceSearch, preimage-bearing WorkspaceWrite/Patch (query,
-   payload, and expected preimage carried in the persisted Intent), bounded
-   ProcessCheck, and origin-gated HttpFetchReadOnly through the durable Effect
-   protocol. ProcessCheck dispatch fails closed until the daemon
-   supervised-process registry is wired, and HttpFetchReadOnly staging fails
-   closed until an origin is registered — neither fabricates input or bypasses
-   the Effect protocol.
+1. **Executor wiring is complete across all seven registered families**: the six
+   original families (P2-T10) plus RegisteredCheckRun (P2-T16) all have a
+   production request carrier. The periodic worker production-dispatches
+   parameter-free WorkspaceRead, query-bearing WorkspaceSearch, preimage-bearing
+   WorkspaceWrite/Patch (query, payload, and expected preimage carried in the
+   persisted Intent), bounded ProcessCheck, origin-gated HttpFetchReadOnly, and
+   `check_id`-only RegisteredCheckRun through the durable Effect protocol.
+   ProcessCheck dispatch fails closed until the daemon supervised-process registry
+   is wired, and HttpFetchReadOnly staging fails closed until an origin is
+   registered — neither fabricates input or bypasses the Effect protocol.
 2. **Task completion is implemented and public C1 is native-proven**: the
    P2-T14 code reuses the registered `completion_claim` / `fixed_post_state` /
    `verification_report` / `acceptance_decision` slots; canonical decision

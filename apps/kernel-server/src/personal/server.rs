@@ -237,24 +237,25 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("publish immutable native Tool descriptors: {error}"),
         }
     })?;
+    let artifact_store = Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
+        PersonalDaemonError::Io {
+            detail: format!("assemble daemon ArtifactStore: {error}"),
+        }
+    })?);
     let executor_router = Arc::new(
-        ProductionNativeToolExecutorRouter::open(
+        ProductionNativeToolExecutorRouter::open_with_artifact_store(
             authority_store
                 .current_fencing_epoch()
                 .map_err(|error| PersonalDaemonError::Io {
                     detail: format!("load native Tool executor fencing epoch: {error}"),
                 })?,
             config.layout.data_dir().join("workspace"),
+            artifact_store.as_ref().clone(),
         )
         .map_err(|error| PersonalDaemonError::Io {
             detail: format!("assemble native Tool executor router: {error}"),
         })?,
     );
-    let artifact_store = Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
-        PersonalDaemonError::Io {
-            detail: format!("assemble daemon ArtifactStore: {error}"),
-        }
-    })?);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
         LocalSessionAuthority::load_existing(&bootstrap_path, config.bounds)

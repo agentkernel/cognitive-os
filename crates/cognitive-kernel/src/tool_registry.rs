@@ -58,6 +58,7 @@ pub enum NativeOperationFamily {
     WorkspacePatch,
     ProcessCheck,
     HttpFetchReadOnly,
+    RegisteredCheckRun,
 }
 
 /// Immutable daemon-owned descriptor for one native Tool operation.
@@ -203,6 +204,19 @@ pub static BUILTIN_TOOL_CATALOG: LazyLock<Vec<NativeToolDescriptor>> = LazyLock:
             availability: ToolAvailability::Enabled,
             input_limit_bytes: 32 * 1024,
             output_limit_bytes: 512 * 1024,
+        },
+        NativeToolDescriptor {
+            operation_id: "native.registered-check.run".to_owned(),
+            action: "run".to_owned(),
+            descriptor_version: 1,
+            descriptor_digest: "".to_owned(),
+            risk: ToolRisk::ProcessExecution,
+            executor: "daemon.registered-check".to_owned(),
+            required_capability: "tool.registered-check.run".to_owned(),
+            family: NativeOperationFamily::RegisteredCheckRun,
+            availability: ToolAvailability::Enabled,
+            input_limit_bytes: 0,
+            output_limit_bytes: 64 * 1024,
         },
     ];
     for descriptor in &mut catalog {
@@ -469,7 +483,9 @@ pub fn validate_workspace_operation(
                 return Err("workspace patch payload is not a bounded patch".to_owned());
             }
         }
-        NativeOperationFamily::ProcessCheck | NativeOperationFamily::HttpFetchReadOnly => {
+        NativeOperationFamily::ProcessCheck
+        | NativeOperationFamily::HttpFetchReadOnly
+        | NativeOperationFamily::RegisteredCheckRun => {
             return Err("workspace validator received a non-workspace family".to_owned());
         }
     }
@@ -637,7 +653,7 @@ mod tests {
 
     #[test]
     fn catalog_contains_every_required_native_operation_family() {
-        assert_eq!(BUILTIN_TOOL_CATALOG.len(), 6);
+        assert_eq!(BUILTIN_TOOL_CATALOG.len(), 7);
         assert!(
             BUILTIN_TOOL_CATALOG
                 .iter()
@@ -667,6 +683,11 @@ mod tests {
             BUILTIN_TOOL_CATALOG
                 .iter()
                 .any(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG.iter().any(|descriptor| {
+                descriptor.family == NativeOperationFamily::RegisteredCheckRun
+            })
         );
     }
 

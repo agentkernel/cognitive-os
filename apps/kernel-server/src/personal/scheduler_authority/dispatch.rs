@@ -563,6 +563,22 @@ where
         &governance_currency,
         &writer_lease,
     )?;
+    let registered_check_artifact_uri = if resolved.native_tool.descriptor.family
+        == cognitive_kernel::tool_registry::NativeOperationFamily::RegisteredCheckRun
+    {
+        Some(
+            executor_router
+                .registered_check_artifact_uri(&resolved.intent.idempotency_key)
+                .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?
+                .ok_or_else(|| {
+                    SchedulerAuthorityError::NativeExecution(
+                        "registered check closed without CAS evidence".to_owned(),
+                    )
+                })?,
+        )
+    } else {
+        None
+    };
     let current_loop = authority_store
         .load_object(
             LifecycleDomain::Loop,
@@ -592,13 +608,22 @@ where
             &writer_lease,
         )
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    if registered_check_artifact_uri.is_some()
+        && verification_request.verifier_ref
+            != crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF
+    {
+        return Err(SchedulerAuthorityError::NativeExecution(
+            "registered check requires its independent verifier".to_owned(),
+        ));
+    }
     let verification_outcome =
-        crate::personal::verification_executor::run_production_independent_verification(
+        crate::personal::verification_executor::run_production_independent_verification_with_artifact(
             authority_store,
             artifact_store,
             &execution_clock,
             &execution_ids,
             &verification_request.verification_request_id,
+            registered_check_artifact_uri.as_deref(),
             &writer_lease,
         )
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
@@ -806,16 +831,6 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
     let mut scheduler_repository = SchedulerRepository::open(authority_database_path)?;
     crate::personal::tool_executor::ensure_builtin_native_descriptors(&authority_store)
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    let executor_router = crate::personal::tool_executor::ProductionNativeToolExecutorRouter::open(
-        authority_store
-            .current_fencing_epoch()
-            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
-        authority_database_path
-            .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .join("workspace"),
-    )
-    .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     let artifact_store = cognitive_store::ArtifactStore::open(
         authority_database_path
             .parent()
@@ -824,6 +839,18 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
         8 * 1024 * 1024,
     )
     .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    let executor_router =
+        crate::personal::tool_executor::ProductionNativeToolExecutorRouter::open_with_artifact_store(
+            authority_store
+                .current_fencing_epoch()
+                .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?,
+            authority_database_path
+                .parent()
+                .unwrap_or_else(|| Path::new("."))
+                .join("workspace"),
+            artifact_store.clone(),
+        )
+        .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     run_private_scheduler_tick_with_store(
         &authority_store,
         &mut scheduler_repository,

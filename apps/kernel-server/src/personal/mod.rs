@@ -16,6 +16,7 @@ mod p2_t17_a7_failure_first;
 mod pi_runtime;
 mod provider_proxy;
 mod readiness;
+mod registered_check;
 mod resource_api;
 mod route_observation;
 mod scheduler_authority;
@@ -27,4 +28,5 @@ mod tool_executor;
 mod verification_executor;
 
 pub use bounds::PersonalResourceBounds;
+pub(crate) use registered_check::run_registered_check_worker;
 pub use server::{PersonalDaemonConfig, serve_personal_loopback};
