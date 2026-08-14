@@ -19,8 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:e2a8fce8f9e815cdd8b7eb08c86adb8dc40bde1c01af56420ec50448c03d6807"
-fingerprint: "sha256:2ad11a749e4a2487866ff8a4edf2f54e015c2c7262c011f1a9ad2552efff05f7"
+fingerprint: "sha256:7cd76e9ce7f2e319a58d62a5eab5c93ebc3c9cc3c0c090e906b227eaa8026cb5"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---

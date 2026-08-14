@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:3d6ed78e49e1582d7af886f9778780970e0aacae4f8b7c1962067c0959e82680"
+fingerprint: "sha256:de97afa8e3633671ba1c63fc3c41b2df3b09dd36631add2312e6d938eb996c2c"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
