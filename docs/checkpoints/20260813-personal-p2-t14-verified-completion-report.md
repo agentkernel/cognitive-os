@@ -322,3 +322,41 @@ public transition contract:
   `ambiguous durable Effect bindings`, so verification never ran.
 - Recovery: verify WorkspaceRead through the production Effect/verifier
   helpers first, then inject the extra Effect or CAS/report mutation.
+
+### Unit 032 — production helper fix + time-brittle capability lease (2026-08-14)
+
+- Finished: 2026-08-14 12:20 +08:00
+- Commit: `06b025b6`
+- Result: **pass** — removed the redundant `router.stage_resolved` call
+  (already staged inside `dispatch_native_worker_effect`) and widened the
+  fixture capability `LeaseWindow` so `run_private_scheduler_tick_with_store`
+  no longer rejects with `AUTH_CAPABILITY_EXPIRED` once real time crosses the
+  pinned UTC expiry. Exact native scheduler authority 56/0, verification
+  executor 12/12, Clippy clean.
+
+### Unit 033 — stale-fixed-post-state D02 negative (2026-08-14)
+
+- Finished: 2026-08-14 12:25 +08:00
+- Commit: `95f402d3`
+- Result: **pass** — authored `stale_fixed_post_state_cannot_complete_a_task`:
+  after the production path leaves the verified Effect at `RECONCILED@V`, the
+  test advances it `RECONCILED -> VERIFIED` through the sanctioned
+  `verify_effect` boundary so the pinned `fixed_post_state.subject_version`
+  (still `V`) is stale relative to the authoritative Effect (`V+1`), and
+  asserts `complete_task_from_persisted_verification` returns
+  `VerificationUnavailable` without completing the Task. Exact native scheduler
+  authority 57/0, Clippy clean. D02 is now complete.
+
+### Unit 034 — merge main, required CI, acceptance (2026-08-14)
+
+- Finished: 2026-08-14 13:00 +08:00
+- Commit: merge `64bb4779` (main into P2-T14); closure commit follows.
+- Result: **pass** — merged main (P2-T18/P9-T05/P9-T07) with fingerprint-only
+  handbook conflicts regenerated and PROGRESS/PLAN status reconciled. Required
+  CI `31771090880` passed both Ubuntu and Windows (the earlier Windows
+  `p1_t07_pi_readiness` failure was flaky bootstrap-secret timing and passed on
+  re-run). Formal acceptance is met: D01 production caller + genuinely-derived
+  acceptance guards, D02 failure-first negatives (missing report/non-authority,
+  duplicate acceptance, open Effect, superseded report, missing CAS, stale
+  fixed-post-state), exact native 57/0, Clippy, required CI green on both
+  platforms. Task `done`; PR #217 merged; lease closed.
