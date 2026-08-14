@@ -2654,7 +2654,11 @@ fn production_router_stages_workspace_search_with_persisted_query() {
     .unwrap();
 
     let mut search_resolved = resolved.clone();
-    search_resolved.native_tool.descriptor.family = NativeOperationFamily::WorkspaceSearch;
+    search_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::WorkspaceSearch)
+        .unwrap()
+        .clone();
     search_resolved.intent.canonical_json = json!({
         "parameters": {"query": "durable input"}
     })
