@@ -2783,6 +2783,7 @@ fn production_native_caller_persists_executing_before_workspace_io() {
             .as_str(),
         "RECONCILED"
     );
+    drop(router);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -2876,6 +2877,7 @@ fn private_tick_dispatches_admitted_workspace_read_through_production_router() {
         1
     );
 
+    drop(router);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
@@ -2936,6 +2938,7 @@ fn public_c1_workspace_read_reaches_independent_verified_task_completion() {
         "terminal Task acceptance must not issue continuation authority"
     );
 
+    drop(router);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
@@ -3060,6 +3063,7 @@ fn duplicate_acceptance_is_rejected_after_verified_completion() {
         "COMPLETED"
     );
 
+    drop(router);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
@@ -3547,6 +3551,7 @@ fn interrupted_native_dispatch_reconciles_original_key_without_second_io() {
         "RECONCILED"
     );
 
+    drop(router);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
@@ -3678,6 +3683,7 @@ fn restarted_periodic_recovery_never_repeats_an_unrecorded_workspace_read() {
         SchedulerState::Failed.as_str()
     );
 
+    drop(restarted_router);
     drop(repository);
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
