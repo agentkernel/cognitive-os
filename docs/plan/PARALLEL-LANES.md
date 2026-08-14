@@ -85,7 +85,6 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T17/a7-unknown-outcome-observation` | P2-T17/D01-D04 A7 external-mutation unknown-outcome production observation | Lane-RUN | `personal/P2-T17-a7-unknown-outcome-observation` | `apps/kernel-server/src/personal/campaign_observation.rs`; `apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs`; `apps/kernel-server/src/personal/mod.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260813-personal-p2-t17-a7-observation-report.md`; `handbook/{en,zh-CN}/developer/{execution-chain-status,architecture-overview}.md`; `handbook/{en,zh-CN}/ai/docs-impact.md`; `handbook/_meta/source-map.json`; `handbook/_meta/source-set.json` | cursor-subagent-a7obs | 2026-08-13 / 2026-08-14 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
