@@ -343,7 +343,7 @@ fn management_resource_lifecycle_preconditions_are_discoverable() {
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
     let management_token = issue_token(port, &secret, "management");
 
     let response = get(
@@ -378,7 +378,7 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
     let management_token = issue_token(port, &secret, "management");
     let scope = "workspace://personal/project/lifecycle";
     let provenance = "file://workspace/facts/lifecycle.txt";
@@ -458,7 +458,7 @@ fn management_memory_lifecycle_uses_canonical_source_and_survives_restart() {
     stop_for_restart(&mut daemon, &runtime_root);
     let restarted_port = free_port();
     let mut restarted = spawn_personal(restarted_port, &runtime_root);
-    let restarted_secret = bootstrap_secret(&runtime_root);
+    let restarted_secret = common::wait_for_bootstrap_secret(&runtime_root);
     let restarted_token = issue_token(restarted_port, &restarted_secret, "management");
     let after_restart = get(
         restarted_port,
@@ -482,7 +482,7 @@ fn rejected_memory_candidate_leaves_exact_source_retryable_without_partial_memor
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
     let management_token = issue_token(port, &secret, "management");
     let scope = "workspace://personal/project/retry";
     let provenance = "file://workspace/facts/retry.txt";
@@ -575,7 +575,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
     std::fs::create_dir_all(&runtime_root).unwrap();
     let port = free_port();
     let mut daemon = spawn_personal(port, &runtime_root);
-    let secret = bootstrap_secret(&runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
     let management_token = issue_token(port, &secret, "management");
     let package_id = object_id(200);
     let revision_id = object_id(201);
@@ -697,7 +697,7 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
     stop_for_restart(&mut daemon, &runtime_root);
     let restarted_port = free_port();
     let mut restarted = spawn_personal(restarted_port, &runtime_root);
-    let restarted_secret = bootstrap_secret(&runtime_root);
+    let restarted_secret = common::wait_for_bootstrap_secret(&runtime_root);
     let restarted_token = issue_token(restarted_port, &restarted_secret, "management");
     let after_restart = get(
         restarted_port,
