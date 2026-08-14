@@ -13,6 +13,7 @@ mod pi_runtime;
 mod provider_proxy;
 mod readiness;
 mod resource_api;
+mod route_observation;
 mod scheduler_authority;
 mod server;
 mod six_resource_doctor;

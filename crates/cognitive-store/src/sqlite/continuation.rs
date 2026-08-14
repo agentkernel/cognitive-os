@@ -36,10 +36,11 @@ use cognitive_kernel::ports::{
     ProgressFactRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
     SchedulerLeaseBinding, SkillBindingExplanationRow, SkillBindingRevocationRow, SkillBindingRow,
     SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
-    StoredBudget, StoredObject, TaskBinding, TaskContractRow, TransitionCommit,
-    UserIntentRecordRow, VerificationReportRow, VerificationRequestRow, VerificationStartCommit,
-    WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-    WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
+    StoredBudget, StoredObject, TaskAcceptanceCommit, TaskBinding, TaskCompletionClaimCommit,
+    TaskContractRow, TransitionCommit, UserIntentRecordRow, VerificationReportRow,
+    VerificationRequestRow, VerificationStartCommit, WorkerAuthorizationStore,
+    WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
+    WorkspaceContextSourceRow,
 };
 use cognitive_kernel::{BudgetState, EffectClass, ExecutorCapabilities, OperationDescriptor};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior};
@@ -300,6 +301,246 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
         }
     }
 
+    fn load_latest_verification_report_for_request(
+        &self,
+        verification_request_id: &ObjectId,
+    ) -> Result<Option<VerificationReportRow>, StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.query_row(
+            "SELECT verification_report_id, fixed_post_state_id, verifier_ref, verifier_version,
+                    status, evidence_refs_json, completed_at, recorded_fencing_epoch,
+                    canonical_json
+             FROM verification_reports
+             WHERE verification_request_id=?1
+             ORDER BY completed_at DESC, verification_report_id DESC
+             LIMIT 1",
+            (verification_request_id.as_str(),),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, i64>(7)?,
+                    row.get::<_, String>(8)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                verification_report_id,
+                fixed_post_state_id,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at,
+                recorded_fencing_epoch,
+                canonical_json,
+            )) => Ok(Some(VerificationReportRow {
+                verification_report_id: ObjectId::parse(&verification_report_id)
+                    .map_err(|error| corrupt("latest verification report id", error))?,
+                verification_request_id: verification_request_id.clone(),
+                fixed_post_state_id: ObjectId::parse(&fixed_post_state_id)
+                    .map_err(|error| corrupt("latest report fixed post-state id", error))?,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at: WallTimestamp::parse(&completed_at)
+                    .map_err(|error| corrupt("latest report completion time", error))?,
+                recorded_fencing_epoch,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query latest verification report")(error)),
+        }
+    }
+
+    fn load_latest_verification_report_for_task_binding(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Option<VerificationReportRow>, StorePortError> {
+        let connection = self.lock()?;
+        let result = connection.query_row(
+            "SELECT report.verification_report_id, report.verification_request_id,
+                    report.fixed_post_state_id, report.verifier_ref, report.verifier_version,
+                    report.status, report.evidence_refs_json, report.completed_at,
+                    report.recorded_fencing_epoch, report.canonical_json
+             FROM verification_reports AS report
+             JOIN verification_requests AS request
+               ON request.verification_request_id=report.verification_request_id
+             WHERE request.task_ref=?1 AND request.contract_epoch=?2
+             ORDER BY report.completed_at DESC, report.verification_report_id DESC
+             LIMIT 1",
+            (task_binding.task_ref.as_str(), task_binding.contract_epoch),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, String>(7)?,
+                    row.get::<_, i64>(8)?,
+                    row.get::<_, String>(9)?,
+                ))
+            },
+        );
+        match result {
+            Ok((
+                verification_report_id,
+                verification_request_id,
+                fixed_post_state_id,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at,
+                recorded_fencing_epoch,
+                canonical_json,
+            )) => Ok(Some(VerificationReportRow {
+                verification_report_id: ObjectId::parse(&verification_report_id)
+                    .map_err(|error| corrupt("task verification report id", error))?,
+                verification_request_id: ObjectId::parse(&verification_request_id)
+                    .map_err(|error| corrupt("task verification request id", error))?,
+                fixed_post_state_id: ObjectId::parse(&fixed_post_state_id)
+                    .map_err(|error| corrupt("task report fixed post-state id", error))?,
+                verifier_ref,
+                verifier_version,
+                status,
+                evidence_refs_canonical_json,
+                completed_at: WallTimestamp::parse(&completed_at)
+                    .map_err(|error| corrupt("task report completion time", error))?,
+                recorded_fencing_epoch,
+                canonical_json,
+            })),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(unavailable("query latest task verification report")(error)),
+        }
+    }
+
+    fn claim_task_completion_atomically(
+        &self,
+        commit: &TaskCompletionClaimCommit,
+    ) -> Result<CommitReceipt, StorePortError> {
+        validate_task_transition_shape(
+            &commit.transition,
+            &commit.task_contract_id,
+            "ACTIVE",
+            "CANDIDATE_COMPLETE",
+            commit.fencing_epoch,
+        )?;
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Task completion claim"))?;
+        verify_fencing_in_tx(&transaction, Some(commit.fencing_epoch))?;
+        validate_current_task_contract_in_tx(
+            &transaction,
+            &commit.task_binding,
+            &commit.task_contract_id,
+        )?;
+        let verification = load_completion_verification_binding_in_tx(
+            &transaction,
+            &commit.fixed_post_state_id,
+            Some(&commit.verification_request_id),
+            None,
+        )?;
+        validate_completion_verification_binding(
+            &verification,
+            &commit.task_binding,
+            commit.fencing_epoch,
+            false,
+        )?;
+        validate_closed_task_effects_in_tx(
+            &transaction,
+            &commit.task_binding,
+            &commit.effect_object_ids,
+            &verification.subject_object_id,
+            verification.subject_version,
+        )?;
+        let receipt = commit_transition_in_transaction(&transaction, &commit.transition)?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit Task completion claim"))?;
+        Ok(receipt)
+    }
+
+    fn accept_task_completion_atomically(
+        &self,
+        commit: &TaskAcceptanceCommit,
+    ) -> Result<CommitReceipt, StorePortError> {
+        validate_task_transition_shape(
+            &commit.transition,
+            &commit.task_contract_id,
+            "CANDIDATE_COMPLETE",
+            "COMPLETED",
+            commit.fencing_epoch,
+        )?;
+        if !is_artifact_uri(&commit.acceptance_decision_artifact_ref) {
+            return Err(StorePortError::Conflict {
+                detail: "Task acceptance decision does not name Artifact CAS bytes".to_owned(),
+            });
+        }
+        let mut connection = self.lock()?;
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(unavailable("begin Task acceptance"))?;
+        verify_fencing_in_tx(&transaction, Some(commit.fencing_epoch))?;
+        validate_current_task_contract_in_tx(
+            &transaction,
+            &commit.task_binding,
+            &commit.task_contract_id,
+        )?;
+        let verification = load_completion_verification_binding_in_tx(
+            &transaction,
+            &commit.fixed_post_state_id,
+            None,
+            Some(&commit.verification_report_id),
+        )?;
+        validate_completion_verification_binding(
+            &verification,
+            &commit.task_binding,
+            commit.fencing_epoch,
+            true,
+        )?;
+        let latest_report_id: Option<String> = transaction
+            .query_row(
+                "SELECT verification_report_id
+                 FROM verification_reports
+                 WHERE verification_request_id=?1
+                 ORDER BY completed_at DESC, verification_report_id DESC
+                 LIMIT 1",
+                (verification.verification_request_id.as_str(),),
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(unavailable("read current verification report"))?;
+        if latest_report_id.as_deref() != Some(commit.verification_report_id.as_str()) {
+            return Err(StorePortError::Conflict {
+                detail: "Task acceptance report has been replaced by a newer report".to_owned(),
+            });
+        }
+        validate_closed_task_effects_in_tx(
+            &transaction,
+            &commit.task_binding,
+            &commit.effect_object_ids,
+            &verification.subject_object_id,
+            verification.subject_version,
+        )?;
+        let receipt = commit_transition_in_transaction(&transaction, &commit.transition)?;
+        transaction
+            .commit()
+            .map_err(unavailable("commit Task acceptance"))?;
+        Ok(receipt)
+    }
+
     fn issue_continuation_authorization(
         &self,
         row: &ContinuationAuthorizationRow,
@@ -537,4 +778,328 @@ impl ContinuationAuthorityStore for SqliteAuthorityStore {
             canonical_json,
         }))
     }
+}
+
+#[derive(Debug)]
+struct CompletionVerificationBinding {
+    verification_request_id: ObjectId,
+    task_binding: TaskBinding,
+    request_fixed_post_state_id: ObjectId,
+    request_verifier_ref: String,
+    request_verifier_version: String,
+    request_fencing_epoch: i64,
+    subject_domain: LifecycleDomain,
+    subject_object_id: ObjectId,
+    subject_version: Version,
+    fixed_fencing_epoch: i64,
+    report_fixed_post_state_id: Option<ObjectId>,
+    report_verifier_ref: Option<String>,
+    report_verifier_version: Option<String>,
+    report_status: Option<String>,
+    report_fencing_epoch: Option<i64>,
+}
+
+fn validate_task_transition_shape(
+    transition: &TransitionCommit,
+    task_contract_id: &ObjectId,
+    from: &str,
+    to: &str,
+    fencing_epoch: i64,
+) -> Result<(), StorePortError> {
+    if transition.cas.domain != LifecycleDomain::Task
+        || transition.cas.object_id != *task_contract_id
+        || transition.cas.from_state.as_str() != from
+        || transition.cas.to_state.as_str() != to
+        || transition.fencing_epoch != Some(fencing_epoch)
+        || transition.budget.is_some()
+    {
+        return Err(StorePortError::Conflict {
+            detail: format!("Task authority commit is not the registered {from} -> {to} edge"),
+        });
+    }
+    Ok(())
+}
+
+fn validate_current_task_contract_in_tx(
+    transaction: &Transaction<'_>,
+    task_binding: &TaskBinding,
+    task_contract_id: &ObjectId,
+) -> Result<(), StorePortError> {
+    let current_contract: Option<String> = transaction
+        .query_row(
+            "SELECT contract_id
+             FROM task_contracts
+             WHERE task_ref=?1 AND contract_epoch=?2
+               AND contract_epoch=(SELECT MAX(contract_epoch) FROM task_contracts WHERE task_ref=?1)",
+            (task_binding.task_ref.as_str(), task_binding.contract_epoch),
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(unavailable("read current Task completion contract"))?;
+    if current_contract.as_deref() != Some(task_contract_id.as_str()) {
+        return Err(StorePortError::Conflict {
+            detail: "Task completion binding is not the current TaskContract".to_owned(),
+        });
+    }
+    Ok(())
+}
+
+fn load_completion_verification_binding_in_tx(
+    transaction: &Transaction<'_>,
+    fixed_post_state_id: &ObjectId,
+    verification_request_id: Option<&ObjectId>,
+    verification_report_id: Option<&ObjectId>,
+) -> Result<CompletionVerificationBinding, StorePortError> {
+    match (verification_request_id, verification_report_id) {
+        (Some(request_id), None) => {
+            let row = transaction
+                .query_row(
+                    "SELECT request.task_ref, request.contract_epoch,
+                            request.fixed_post_state_id, request.verifier_ref,
+                            request.verifier_version, request.issued_fencing_epoch,
+                            fixed_state.subject_domain, fixed_state.subject_object_id,
+                            fixed_state.subject_version, fixed_state.recorded_fencing_epoch
+                     FROM verification_requests AS request
+                     JOIN fixed_post_states AS fixed_state
+                       ON fixed_state.fixed_post_state_id=request.fixed_post_state_id
+                      AND fixed_state.task_ref=request.task_ref
+                      AND fixed_state.contract_epoch=request.contract_epoch
+                     WHERE request.verification_request_id=?1
+                       AND fixed_state.fixed_post_state_id=?2",
+                    (request_id.as_str(), fixed_post_state_id.as_str()),
+                    |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, i64>(1)?,
+                            row.get::<_, String>(2)?,
+                            row.get::<_, String>(3)?,
+                            row.get::<_, String>(4)?,
+                            row.get::<_, i64>(5)?,
+                            row.get::<_, String>(6)?,
+                            row.get::<_, String>(7)?,
+                            row.get::<_, i64>(8)?,
+                            row.get::<_, i64>(9)?,
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(unavailable("read Task completion verification request"))?
+                .ok_or_else(|| StorePortError::Conflict {
+                    detail: "Task completion verification request is unavailable".to_owned(),
+                })?;
+            Ok(CompletionVerificationBinding {
+                verification_request_id: request_id.clone(),
+                task_binding: TaskBinding {
+                    task_ref: row.0,
+                    contract_epoch: row.1,
+                },
+                request_fixed_post_state_id: ObjectId::parse(&row.2)
+                    .map_err(|error| corrupt("completion request fixed state", error))?,
+                request_verifier_ref: row.3,
+                request_verifier_version: row.4,
+                request_fencing_epoch: row.5,
+                subject_domain: LifecycleDomain::parse(&row.6)
+                    .map_err(|error| corrupt("completion fixed subject domain", error))?,
+                subject_object_id: ObjectId::parse(&row.7)
+                    .map_err(|error| corrupt("completion fixed subject id", error))?,
+                subject_version: Version::new(row.8)
+                    .map_err(|error| corrupt("completion fixed subject version", error))?,
+                fixed_fencing_epoch: row.9,
+                report_fixed_post_state_id: None,
+                report_verifier_ref: None,
+                report_verifier_version: None,
+                report_status: None,
+                report_fencing_epoch: None,
+            })
+        }
+        (None, Some(report_id)) => {
+            let row = transaction
+                .query_row(
+                    "SELECT request.verification_request_id, request.task_ref,
+                            request.contract_epoch, request.fixed_post_state_id,
+                            request.verifier_ref, request.verifier_version,
+                            request.issued_fencing_epoch, fixed_state.subject_domain,
+                            fixed_state.subject_object_id, fixed_state.subject_version,
+                            fixed_state.recorded_fencing_epoch, report.fixed_post_state_id,
+                            report.verifier_ref, report.verifier_version, report.status,
+                            report.recorded_fencing_epoch
+                     FROM verification_reports AS report
+                     JOIN verification_requests AS request
+                       ON request.verification_request_id=report.verification_request_id
+                     JOIN fixed_post_states AS fixed_state
+                       ON fixed_state.fixed_post_state_id=request.fixed_post_state_id
+                      AND fixed_state.task_ref=request.task_ref
+                      AND fixed_state.contract_epoch=request.contract_epoch
+                     WHERE report.verification_report_id=?1
+                       AND fixed_state.fixed_post_state_id=?2",
+                    (report_id.as_str(), fixed_post_state_id.as_str()),
+                    |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, i64>(2)?,
+                            row.get::<_, String>(3)?,
+                            row.get::<_, String>(4)?,
+                            row.get::<_, String>(5)?,
+                            row.get::<_, i64>(6)?,
+                            row.get::<_, String>(7)?,
+                            row.get::<_, String>(8)?,
+                            row.get::<_, i64>(9)?,
+                            row.get::<_, i64>(10)?,
+                            row.get::<_, String>(11)?,
+                            row.get::<_, String>(12)?,
+                            row.get::<_, String>(13)?,
+                            row.get::<_, String>(14)?,
+                            row.get::<_, i64>(15)?,
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(unavailable("read Task acceptance verification report"))?
+                .ok_or_else(|| StorePortError::Conflict {
+                    detail: "Task acceptance verification report is unavailable".to_owned(),
+                })?;
+            Ok(CompletionVerificationBinding {
+                verification_request_id: ObjectId::parse(&row.0)
+                    .map_err(|error| corrupt("completion verification request id", error))?,
+                task_binding: TaskBinding {
+                    task_ref: row.1,
+                    contract_epoch: row.2,
+                },
+                request_fixed_post_state_id: ObjectId::parse(&row.3)
+                    .map_err(|error| corrupt("acceptance request fixed state", error))?,
+                request_verifier_ref: row.4,
+                request_verifier_version: row.5,
+                request_fencing_epoch: row.6,
+                subject_domain: LifecycleDomain::parse(&row.7)
+                    .map_err(|error| corrupt("acceptance fixed subject domain", error))?,
+                subject_object_id: ObjectId::parse(&row.8)
+                    .map_err(|error| corrupt("acceptance fixed subject id", error))?,
+                subject_version: Version::new(row.9)
+                    .map_err(|error| corrupt("acceptance fixed subject version", error))?,
+                fixed_fencing_epoch: row.10,
+                report_fixed_post_state_id: Some(
+                    ObjectId::parse(&row.11)
+                        .map_err(|error| corrupt("acceptance report fixed state", error))?,
+                ),
+                report_verifier_ref: Some(row.12),
+                report_verifier_version: Some(row.13),
+                report_status: Some(row.14),
+                report_fencing_epoch: Some(row.15),
+            })
+        }
+        _ => Err(StorePortError::Conflict {
+            detail: "Task completion must name exactly one request or report".to_owned(),
+        }),
+    }
+}
+
+fn validate_completion_verification_binding(
+    binding: &CompletionVerificationBinding,
+    task_binding: &TaskBinding,
+    fencing_epoch: i64,
+    require_passed_report: bool,
+) -> Result<(), StorePortError> {
+    let report_matches = !require_passed_report
+        || (binding.report_fixed_post_state_id.as_ref()
+            == Some(&binding.request_fixed_post_state_id)
+            && binding.report_verifier_ref.as_deref()
+                == Some(binding.request_verifier_ref.as_str())
+            && binding.report_verifier_version.as_deref()
+                == Some(binding.request_verifier_version.as_str())
+            && binding.report_status.as_deref() == Some("passed")
+            && binding.report_fencing_epoch == Some(fencing_epoch));
+    if &binding.task_binding != task_binding
+        || binding.subject_domain != LifecycleDomain::Effect
+        || binding.request_fencing_epoch != fencing_epoch
+        || binding.fixed_fencing_epoch != fencing_epoch
+        || !report_matches
+    {
+        return Err(StorePortError::Conflict {
+            detail: "Task completion verification facts are stale or mismatched".to_owned(),
+        });
+    }
+    Ok(())
+}
+
+fn validate_closed_task_effects_in_tx(
+    transaction: &Transaction<'_>,
+    task_binding: &TaskBinding,
+    expected_effect_ids: &[ObjectId],
+    fixed_subject_id: &ObjectId,
+    fixed_subject_version: Version,
+) -> Result<(), StorePortError> {
+    let mut expected = expected_effect_ids
+        .iter()
+        .map(|identifier| identifier.as_str().to_owned())
+        .collect::<Vec<_>>();
+    expected.sort();
+    if expected.is_empty() || expected.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(StorePortError::Conflict {
+            detail: "Task completion requires a non-empty unique Effect set".to_owned(),
+        });
+    }
+    let mut statement = transaction
+        .prepare(
+            "SELECT effect_object_id
+             FROM intents
+             WHERE task_ref=?1 AND contract_epoch=?2
+             ORDER BY effect_object_id",
+        )
+        .map_err(unavailable("prepare Task completion Effect set"))?;
+    let durable = statement
+        .query_map(
+            (task_binding.task_ref.as_str(), task_binding.contract_epoch),
+            |row| row.get::<_, String>(0),
+        )
+        .map_err(unavailable("query Task completion Effect set"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(unavailable("read Task completion Effect set"))?;
+    if durable != expected {
+        return Err(StorePortError::Conflict {
+            detail: "Task completion Effect set is incomplete or stale".to_owned(),
+        });
+    }
+    let mut fixed_subject_is_current = false;
+    for effect_id in expected {
+        let effect: Option<(String, String, i64)> = transaction
+            .query_row(
+                "SELECT domain, state, version
+                 FROM governed_objects
+                 WHERE object_id=?1",
+                (effect_id.as_str(),),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(unavailable("read Task completion Effect"))?;
+        let Some((domain, state, version)) = effect else {
+            return Err(StorePortError::Conflict {
+                detail: "Task completion Effect is unavailable".to_owned(),
+            });
+        };
+        if domain != LifecycleDomain::Effect.as_str()
+            || !matches!(state.as_str(), "RECONCILED" | "VERIFIED" | "VERIFY_FAILED")
+        {
+            return Err(StorePortError::Conflict {
+                detail: "Task completion requires every Effect to be closed".to_owned(),
+            });
+        }
+        if effect_id == fixed_subject_id.as_str() {
+            fixed_subject_is_current = version == fixed_subject_version.get();
+        }
+    }
+    if !fixed_subject_is_current {
+        return Err(StorePortError::Conflict {
+            detail: "Task completion fixed post-state is no longer current".to_owned(),
+        });
+    }
+    Ok(())
+}
+
+fn is_artifact_uri(reference: &str) -> bool {
+    reference
+        .strip_prefix("artifact://sha256/")
+        .is_some_and(|digest| {
+            digest.len() == 64 && digest.bytes().all(|byte| byte.is_ascii_hexdigit())
+        })
 }

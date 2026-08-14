@@ -510,6 +510,8 @@ pub struct TaskExecutionBootstrap {
 /// execution prerequisites.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct TaskExecutionBootstrapRepair {
+    /// 已按合同恢复缺失的 `DRAFT` governed Task 投影。
+    pub task_created: bool,
     /// A missing contract-named Loop was admitted.
     pub loop_created: bool,
     /// A missing contract-named Budget was created.
@@ -990,6 +992,52 @@ pub struct VerificationReportRow {
     pub canonical_json: String,
 }
 
+/// 单个全有或全无的 Task `ACTIVE -> CANDIDATE_COMPLETE` 权威提交。
+///
+/// 调用方推导 transition evidence；store 在事务内重查当前 TaskContract、精确
+/// verification request/fixed state、完整 task-bound Effect 集合、Effect 闭合与 fencing。
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskCompletionClaimCommit {
+    /// 当前 TaskContract 绑定。
+    pub task_binding: TaskBinding,
+    /// governed Task 与 TaskContract 共用的对象标识。
+    pub task_contract_id: ObjectId,
+    /// candidate claim 绑定的固定 post-state。
+    pub fixed_post_state_id: ObjectId,
+    /// 已为该固定状态持久化的 verification request。
+    pub verification_request_id: ObjectId,
+    /// 事务必须重查的完整 task-bound Effect 集合。
+    pub effect_object_ids: Vec<ObjectId>,
+    /// 已经 deterministic engine 校验的 Task transition。
+    pub transition: TransitionCommit,
+    /// 事务内必须保持当前的 writer fencing epoch。
+    pub fencing_epoch: i64,
+}
+
+/// 单个全有或全无的 acceptance-authority Task 完成提交。
+///
+/// SQLite 在提交 `CANDIDATE_COMPLETE -> COMPLETED` 前重查：报告是精确 fixed
+/// post-state 的最新当前 affirmative report，且每个 task-bound Effect 仍已闭合。
+#[derive(Debug, Clone, PartialEq)]
+pub struct TaskAcceptanceCommit {
+    /// 当前 TaskContract 绑定。
+    pub task_binding: TaskBinding,
+    /// governed Task 与 TaskContract 共用的对象标识。
+    pub task_contract_id: ObjectId,
+    /// acceptance 所绑定的固定 post-state。
+    pub fixed_post_state_id: ObjectId,
+    /// 必须保持最新且通过的 independent verification report。
+    pub verification_report_id: ObjectId,
+    /// 事务必须重查的完整 task-bound Effect 集合。
+    pub effect_object_ids: Vec<ObjectId>,
+    /// daemon 写入并在调用前重读校验的 Artifact CAS decision URI。
+    pub acceptance_decision_artifact_ref: String,
+    /// 已经 deterministic engine 校验的 Task transition。
+    pub transition: TransitionCommit,
+    /// 事务内必须保持当前的 writer fencing epoch。
+    pub fencing_epoch: i64,
+}
+
 /// Private one-time authority to begin the next iteration after a verified
 /// continuation. This is intentionally distinct from the public WIA, which
 /// remains immutable pre-dispatch authority for `DECIDE -> ACT`.
@@ -1061,6 +1109,30 @@ pub trait ContinuationAuthorityStore {
         &self,
         verification_report_id: &ObjectId,
     ) -> Result<Option<VerificationReportRow>, StorePortError>;
+
+    /// 加载一个 verification request 的最新持久报告。
+    fn load_latest_verification_report_for_request(
+        &self,
+        verification_request_id: &ObjectId,
+    ) -> Result<Option<VerificationReportRow>, StorePortError>;
+
+    /// 加载一个精确 TaskContract epoch 的最新持久报告。
+    fn load_latest_verification_report_for_task_binding(
+        &self,
+        task_binding: &TaskBinding,
+    ) -> Result<Option<VerificationReportRow>, StorePortError>;
+
+    /// 事务内重查 candidate guards 并提交 Task completion claim。
+    fn claim_task_completion_atomically(
+        &self,
+        commit: &TaskCompletionClaimCommit,
+    ) -> Result<CommitReceipt, StorePortError>;
+
+    /// 事务内重查 acceptance guards 并提交最终 Task completion。
+    fn accept_task_completion_atomically(
+        &self,
+        commit: &TaskAcceptanceCommit,
+    ) -> Result<CommitReceipt, StorePortError>;
 
     /// Issue one continuation authorization only after the adapter has
     /// revalidated current contract, verified report, checkpoint, exact loop

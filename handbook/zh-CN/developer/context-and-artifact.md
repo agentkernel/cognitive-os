@@ -69,4 +69,7 @@ staging 文件 + 原子 rename 发布前校验大小 + digest，`get` 读取时�
 可与其 verification request 一起，在发布 Loop `ACT -> VERIFY` 的同一权威事务中固定；
 criteria 现在只从当前 TaskContract Acceptance 条件推导；登记 fixed-Effect verifier
 先把不可变 post-state observation 写入该 CAS，passed report 才可进入
-`VERIFY -> CONTINUE`。
+`VERIFY -> CONTINUE`。P2-T14 会在 acceptance 前重读每个 report Artifact URI。daemon
+生成的 completion claim 与 affirmative `acceptance_decision` 是 canonical CAS bytes，
+经既有 transition `StrongReference` 引用；字节缺失或 digest 不符会在 Task transition
+前 fail closed。

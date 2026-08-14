@@ -20,6 +20,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
 fingerprint: "sha256:e2a8fce8f9e815cdd8b7eb08c86adb8dc40bde1c01af56420ec50448c03d6807"
+fingerprint: "sha256:2ad11a749e4a2487866ff8a4edf2f54e015c2c7262c011f1a9ad2552efff05f7"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -77,15 +78,22 @@ original-key receipts; matching file bytes alone are not execution proof, and
 orphan staging is cleaned conservatively on restart.
 
 A successful Task admission is also crash-atomic inside the authority database:
-the contract, `START` Loop, hard Budget, and runnable scheduler row appear
-together. A failure before commit leaves none of those admission members, while
-a crash after the success response reopens the complete publication. The
-post-bind periodic worker and WorkspaceRead Effect dispatch are wired, but this
-does not by itself mean the result is independently verified.
+the contract, `DRAFT` governed Task, `START` Loop, hard Budget, and runnable
+scheduler row appear together. A failure before commit leaves none of those
+admission members, while a crash after the success response reopens the complete
+publication. Startup can repair a missing legacy Task projection without
+resetting any existing lifecycle state.
 
 When verification starts, the closed Effect pin, verification request, and Loop
 `ACT -> VERIFY` publication are one crash-atomic authority transaction. A stale
 writer or Loop leaves none of those new members.
+
+Task completion is a later authority boundary. The daemon rechecks the latest
+independent passed report and every referenced CAS artifact, then SQLite
+rechecks the fixed Effect version, complete closed Effect set, current epoch and
+Task CAS in each candidate/acceptance transaction. A crash between the two
+transitions leaves `CANDIDATE_COMPLETE` for the same evidence-bound acceptance
+retry; duplicate acceptance cannot write a second completion.
 
 ## Backup and restore — `unavailable` as a user feature
 

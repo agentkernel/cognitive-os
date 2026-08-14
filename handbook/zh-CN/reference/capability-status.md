@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:2d8db6e79276263c7bb164845497531ebe8afbadd575a77e5480c7ca241c6502"
+fingerprint: "sha256:0f49e86326c757de8385c1f1ddfa89da21a21f3b4d073718fd6d537695209303"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -39,7 +39,7 @@ non_claims:
 | 自主调度循环 | partial | 准入原子发布当前 epoch 的 runnable 行、`START` Loop 与硬 Budget；启动修复缺失成员；唯一绑定后非重入周期 worker 可到达 candidate 准入并从生产派发 WorkspaceRead，但其余族与验证仍未接线 |
 | 受治理工具执行（全部六个已登记族） | partial | 六族都有已装配 executor，投影因此报告 `execution_ready`；WorkspaceRead 现有周期生产调用者，其余五族仍缺生产请求载体且仅测试调用 |
 | workspace search/write/patch 执行器 | partial | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界枚举/preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；无生产调用者 |
-| 独立验证循环 | implemented | 生产 WorkspaceRead 可到达 CAS 背书的独立 passed report、checkpoint、一次性 continuation authority 与 Loop `OBSERVE`；这不完成 Task |
+| 独立验证与 Task 验收 | implemented；公共 C1 native-proven | 生产 WorkspaceRead 可到达 CAS 背书的 independent passed report，并在 exact native `22c3f502` 经独立 daemon acceptance authority 完成 evidence-bound `COMPLETED`；D02 的 stale fixed post-state 负例仍开放 |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |
 | Context request/view + 缓存 | implemented | — |

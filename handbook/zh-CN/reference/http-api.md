@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:58072c3fb2cecdcddb1bf2135588660dcab04ca90492858c56f880493f91ba25"
+fingerprint: "sha256:311e7f31237a7548fa2b3d32346f6ae1650ea46897f2d48e69a691f21a9489ea"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -30,7 +30,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/personal/status` | management | 组件状态投影（system、database、secret、provider、daemon、pi）；Provider 事实与 SecretStore 解析使用同一份已加载配置快照。 |
 | `GET` | `/personal/readiness` | management | 快照一致 status 投影的别名。 |
 | `GET` | `/personal/doctor` | management | 快照一致的脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |
-| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；非流式、绑定 selected model；secret 仅在服务端解析。成功响应携带 `X-CognitiveOS-Provider-Network-Nanos` 计时头；客户端发送的 `x-cognitiveos-correlation-id` 请求头被容忍但 daemon 绝不读取或持久化。 |
+| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；非流式、绑定 selected model；secret 仅在服务端解析。成功响应始终携带 `X-CognitiveOS-Provider-Network-Nanos`。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
 | `GET` | `/provider/v1/selected-model` | management | 非 secret 的 selected-model 投影。 |
 | `GET` | `/resource/v1/projection` | management | 私有版本化六资源族投影（family + version 查询参数）。 |
 | `GET` | `/resource/v1/watch` | management | 按资源族的 watch，支持可选 resume_from 游标。 |
