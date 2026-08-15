@@ -60,8 +60,7 @@ pub struct WorkspacePatchParameters {
     pub preimage: String,
 }
 
-/// Strictly bounded parameter variants. No generic tool parameter object is
-/// permitted.
+/// Strictly bounded parameter variants. No generic tool parameter object is permitted.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CandidateParameters {
@@ -81,6 +80,7 @@ pub struct OperationCandidateProposal {
     pub expected_state_version: i64,
     pub header: crate::generated::governed_object_header::GovernedObjectHeader,
     pub operation_descriptor_ref: crate::generated::object_reference::StrongReference,
+    /// Bounded untrusted candidate data for the only parameterized workspace families. The daemon canonicalizes this value, recomputes parameters_digest, validates the selected descriptor/action, and binds the verified bytes to the governed Intent. This field cannot carry authority, lifecycle, budget, fencing, Effect, idempotency, verifier, acceptance, process, or network capability data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameters: Option<CandidateParameters>,
     pub parameters_digest: String,
