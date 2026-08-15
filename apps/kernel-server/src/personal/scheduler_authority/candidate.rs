@@ -470,7 +470,11 @@ fn validate_canonical_mutation_parameters(
     input_b64: &str,
     preimage: &str,
 ) -> Result<(), SchedulerAuthorityError> {
-    if !is_sha256_digest(preimage) {
+    let preimage_is_valid = preimage == "absent"
+        || preimage
+            .strip_prefix("digest:")
+            .is_some_and(is_sha256_digest);
+    if !preimage_is_valid {
         return Err(SchedulerAuthorityError::PrivatePiProposal(
             "candidate mutation preimage is invalid".to_owned(),
         ));

@@ -78,7 +78,7 @@
       "properties": {
         "family": { "const": "WorkspaceWrite" },
         "input_b64": { "type": "string", "minLength": 4, "maxLength": 87384, "pattern": "^[A-Za-z0-9+/]*={0,2}$" },
-        "preimage": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        "preimage": { "type": "string", "pattern": "^(absent|digest:sha256:[0-9a-f]{64})$" }
       },
       "additionalProperties": false
     },
@@ -88,7 +88,7 @@
       "properties": {
         "family": { "const": "WorkspacePatch" },
         "input_b64": { "type": "string", "minLength": 4, "maxLength": 87384, "pattern": "^[A-Za-z0-9+/]*={0,2}$" },
-        "preimage": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        "preimage": { "type": "string", "pattern": "^(absent|digest:sha256:[0-9a-f]{64})$" }
       },
       "additionalProperties": false
     }

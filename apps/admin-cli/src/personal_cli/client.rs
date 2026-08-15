@@ -106,6 +106,12 @@ impl PersonalDaemonClient {
         self.get_task_authorized(&format!("/task/watch{resume_query}"))
     }
 
+    /// Reconstruct bounded terminal evidence from daemon-owned durable stores.
+    pub fn get_task_evidence(&self, task_ref: &str) -> Result<String, PersonalDaemonClientError> {
+        let encoded_task_ref = percent_encode_query_component(task_ref);
+        self.get_task_authorized(&format!("/task/evidence?task_ref={encoded_task_ref}"))
+    }
+
     fn get_authorized(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
         self.get_with_token(path, &self.management_token, "management")
     }
@@ -248,6 +254,19 @@ fn host_header_value(endpoint: &str) -> String {
         .to_owned()
 }
 
+fn percent_encode_query_component(value: &str) -> String {
+    let mut encoded = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+            encoded.push(char::from(byte));
+        } else {
+            use std::fmt::Write as _;
+            let _ = write!(encoded, "%{byte:02X}");
+        }
+    }
+    encoded
+}
+
 fn resolve_socket_address(
     endpoint: &str,
 ) -> Result<std::net::SocketAddr, PersonalDaemonClientError> {
@@ -261,4 +280,17 @@ fn resolve_socket_address(
         .ok_or_else(|| PersonalDaemonClientError::Connect {
             detail: format!("endpoint `{endpoint}` resolved to zero addresses"),
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::percent_encode_query_component;
+
+    #[test]
+    fn task_reference_is_encoded_as_one_query_value() {
+        assert_eq!(
+            percent_encode_query_component("task://personal/example?secret=never&x=1"),
+            "task%3A%2F%2Fpersonal%2Fexample%3Fsecret%3Dnever%26x%3D1"
+        );
+    }
 }

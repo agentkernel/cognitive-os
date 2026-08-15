@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:1e5b13240d2d63f28d39e4f92da0b0efd9706496a7a6313dee53026fe91fb120"
+fingerprint: "sha256:42d4802cd40de0295a26a77ccf8fa4d4428509da7861aaef487df9f9af00e5c5"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -36,6 +36,10 @@ USAGE:
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>]
+  cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
+                       [--resume-from <cursor>]
+  cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
+                          --task-ref <task-uri>
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence

@@ -19,7 +19,7 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:aedb5d338acec8c1a8c0ed83ebab68a3b63e2705b04a62adf5071ebade227d26"
+fingerprint: "sha256:e106b2474b75ac382e8648047a95cd9cb53dcf8b95a7c1c41fe986b16130d4ec"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---
@@ -35,6 +35,7 @@ chain → SQLite, with generated request/result DTOs at the wire.
 | `clarify` | `POST /task/intent.interpret` | `record_interpretation_candidate` — status derived, never chosen |
 | `preview` | `POST /task/preview` | local canonical digest over the typed draft (`cognitiveos.personal.task-contract-preview` domain); persists nothing |
 | `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
+| evidence | `GET /task/evidence?task_ref=...` | reconstruct a bounded redacted lifecycle, Effect reconciliation class, current verification/Artifact availability, acceptance transition, and durable event cursor from SQLite authority plus Artifact CAS |
 | watch | `GET /task/watch` | snapshot-first bounded stream (process-local 128-event replay; stale `resume_from` → `TASK_WATCH_RESUME_STALE`) |
 
 Contract versioning: minting with a `context_request_ref` produces schema
@@ -68,8 +69,9 @@ therefore not available; the fencing machinery (`INTENT_VERSION_SUPERSEDED`) is
 fully tested at the kernel/store level.
 
 Also honest: `POST /task/*` unknown paths return 200 with a "no Task API operation
-matched" note (not 404), and the watch event source is process-local — no durable
-event outbox is consumed by this surface yet.
+matched" note (not 404), and the watch event source remains process-local. The
+separate evidence query is restart-durable and read-only; it does not return
+candidate parameters, workspace bytes, receipts, Provider/Pi content, or secrets.
 
 Downstream native-tool staging accepts only a descriptor exactly equal to the
 immutable daemon catalog entry. Executor attempts remain Effect-owned: uncertain

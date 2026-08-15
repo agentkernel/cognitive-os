@@ -12,7 +12,7 @@ sources:
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t02_cli_parity.rs
-fingerprint: "sha256:1a6ec60d8017f7702296d27c726cd5c50cd8a2772f02b6dcd262ed05494eb9e2"
+fingerprint: "sha256:26d0fc061a54ff710c01e830821b8d6967524ab0658c3321004e2f101ea2afad"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -36,6 +36,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive pi launch` | fail-closed Pi launch after full doctor readiness and exact version check |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
+| `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |
 
 Two honest quirks (also flagged in the generated
 [CLI reference](../reference/cli-cognitive.md)): the built-in usage text does not yet

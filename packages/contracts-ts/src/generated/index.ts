@@ -94,7 +94,7 @@ export const SCHEMA_DIGESTS = {
   "management-approval-decision.schema.json": "sha256:bcc1972d7d53d15fd0bb98132bf6c2c528c790786a5f4d7d4bd7832f189ae864",
   "management-approval-request.schema.json": "sha256:92c34b321b6179fd9f6968deca9460553b392d27ba837b391f35d7757c93eb4e",
   "object-reference.schema.json": "sha256:1e1910c8e829a9beee36d7c86aabbbb7f5d0fefb1abc3f80629f4302754424a5",
-  "operation-candidate-proposal.schema.json": "sha256:ffc210232c9f9c9aa552a65cdf3719b454424fde5fdd92623150d02f33a60ec1",
+  "operation-candidate-proposal.schema.json": "sha256:b807eb54e6f2ad981e06ef4441348393cd00350948b30cf631a602e95e30904f",
   "operation-summary.schema.json": "sha256:ec322a43cd0d24cd81bb2a8f2b3d4e8292e986bae2cc7d972eb7da1df0697f8f",
   "performance-report.schema.json": "sha256:558e100166417da952cb320713cd90ace47e1e3b7378eb0f9ef795d087101268",
   "principal.schema.json": "sha256:950418b61f82bd1ef26fe5ff1005bca5068ec864ebdbb126aad72e387bbbc3c4",

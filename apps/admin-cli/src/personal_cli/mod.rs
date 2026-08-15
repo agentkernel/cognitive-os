@@ -82,6 +82,7 @@ pub enum ResourceCommand {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskCommand {
     Watch(TaskWatchOptions),
+    Evidence(TaskEvidenceOptions),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,6 +96,12 @@ pub struct ResourceOptions {
 pub struct TaskWatchOptions {
     pub status: StatusOptions,
     pub resume_from: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskEvidenceOptions {
+    pub status: StatusOptions,
+    pub task_ref: String,
 }
 
 /// Options for `cognitive daemon start`.
@@ -222,6 +229,7 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             fetch_resource_projection(&options, true)
         }
         CognitiveCommand::Task(TaskCommand::Watch(options)) => fetch_task_watch(&options),
+        CognitiveCommand::Task(TaskCommand::Evidence(options)) => fetch_task_evidence(&options),
         CognitiveCommand::Daemon(DaemonCommand::Start(options)) => match daemon::start(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -283,19 +291,35 @@ fn parse_resource_command(arguments: &[String]) -> Result<CognitiveCommand, Stri
 
 fn parse_task_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
     let Some((subcommand, remaining_arguments)) = arguments.split_first() else {
-        return Err("task requires subcommand watch".to_owned());
+        return Err("task requires subcommand watch|evidence".to_owned());
     };
-    if subcommand != "watch" {
-        return Err("task requires subcommand watch".to_owned());
-    }
     let flags = parse_flags(remaining_arguments)?;
-    reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "resume-from"])?;
-    Ok(CognitiveCommand::Task(TaskCommand::Watch(
-        TaskWatchOptions {
-            status: parse_status_options(&flags)?,
-            resume_from: parse_optional_cursor(&flags)?,
-        },
-    )))
+    match subcommand.as_str() {
+        "watch" => {
+            reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "resume-from"])?;
+            Ok(CognitiveCommand::Task(TaskCommand::Watch(
+                TaskWatchOptions {
+                    status: parse_status_options(&flags)?,
+                    resume_from: parse_optional_cursor(&flags)?,
+                },
+            )))
+        }
+        "evidence" => {
+            reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "task-ref"])?;
+            let task_ref = flags
+                .get("task-ref")
+                .filter(|value| !value.trim().is_empty())
+                .cloned()
+                .ok_or_else(|| "task evidence requires --task-ref <task-uri>".to_owned())?;
+            Ok(CognitiveCommand::Task(TaskCommand::Evidence(
+                TaskEvidenceOptions {
+                    status: parse_status_options(&flags)?,
+                    task_ref,
+                },
+            )))
+        }
+        _ => Err("task requires subcommand watch|evidence".to_owned()),
+    }
 }
 
 fn parse_optional_cursor(flags: &BTreeMap<String, String>) -> Result<Option<u64>, String> {
@@ -350,6 +374,28 @@ fn fetch_task_watch(options: &TaskWatchOptions) -> i32 {
         Err(error) => return print_operational_error(&error.to_string()),
     };
     match client.watch_task(options.resume_from) {
+        Ok(body) => {
+            println!("{body}");
+            EXIT_SUCCESS
+        }
+        Err(error) => print_operational_error(&error.to_string()),
+    }
+}
+
+fn fetch_task_evidence(options: &TaskEvidenceOptions) -> i32 {
+    let layout = match layout::build_layout(&options.status.layout_roots) {
+        Ok(layout) => layout,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    let endpoint = match resolve_endpoint(&options.status, &layout) {
+        Ok(endpoint) => endpoint,
+        Err(error) => return print_operational_error(&error),
+    };
+    let client = match client::PersonalDaemonClient::connect(&endpoint, &layout) {
+        Ok(client) => client,
+        Err(error) => return print_operational_error(&error.to_string()),
+    };
+    match client.get_task_evidence(&options.task_ref) {
         Ok(body) => {
             println!("{body}");
             EXIT_SUCCESS
@@ -550,6 +596,10 @@ USAGE:
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>]
+  cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
+                       [--resume-from <cursor>]
+  cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
+                          --task-ref <task-uri>
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
@@ -659,5 +709,44 @@ mod tests {
         .expect_err("Pi launch must reject Provider secret flags");
 
         assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn task_evidence_requires_one_task_reference_and_accepts_endpoint_options() {
+        let command = parse_cognitive_args(&[
+            "task".to_owned(),
+            "evidence".to_owned(),
+            "--task-ref".to_owned(),
+            "task://personal/example".to_owned(),
+            "--endpoint".to_owned(),
+            "127.0.0.1:48181".to_owned(),
+        ])
+        .expect("parse task evidence command");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Task(TaskCommand::Evidence(TaskEvidenceOptions {
+                status: StatusOptions {
+                    layout_roots: LayoutRoots { runtime_root: None },
+                    endpoint_override: Some("127.0.0.1:48181".to_owned()),
+                },
+                task_ref: "task://personal/example".to_owned(),
+            }))
+        );
+
+        let missing_reference = parse_cognitive_args(&["task".to_owned(), "evidence".to_owned()])
+            .expect_err("task evidence must require a Task reference");
+        assert!(missing_reference.contains("--task-ref"));
+
+        let rejected_secret_flag = parse_cognitive_args(&[
+            "task".to_owned(),
+            "evidence".to_owned(),
+            "--task-ref".to_owned(),
+            "task://personal/example".to_owned(),
+            "--api-key-file".to_owned(),
+            "secret.txt".to_owned(),
+        ])
+        .expect_err("task evidence must reject secret-bearing flags");
+        assert!(rejected_secret_flag.contains("not accepted"));
     }
 }

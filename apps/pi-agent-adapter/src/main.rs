@@ -182,7 +182,7 @@ fn read_daemon_candidate_request() -> Result<DaemonCandidateRequest, String> {
 
 fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
     format!(
-        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters_digest (string), expected_state_version (integer >= 1), and operation_descriptor_id (string). Do not invoke tools. Context follows:\n{}",
+        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters (object when required, otherwise omit), parameters_digest (sha256 digest of the canonical parameters object), expected_state_version (integer >= 1), and operation_descriptor_id (string). The only parameter objects are {{\"family\":\"WorkspaceSearch\",\"query\":string}}, {{\"family\":\"WorkspaceWrite\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}, and {{\"family\":\"WorkspacePatch\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}. Do not invoke tools. Context follows:\n{}",
         request.rendered_context
     )
 }
@@ -529,12 +529,21 @@ mod tests {
             "tool_ref",
             "action",
             "target",
+            "parameters",
             "parameters_digest",
             "expected_state_version",
             "operation_descriptor_id",
         ] {
             assert!(prompt.contains(field), "prompt must name {field}");
         }
+        for parameter_family in ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"] {
+            assert!(
+                prompt.contains(parameter_family),
+                "prompt must name {parameter_family}"
+            );
+        }
+        assert!(prompt.contains("digest:sha256:<64 lowercase hex>"));
+        assert!(prompt.contains("\"absent\""));
         assert!(prompt.contains("untrusted Context text"));
         assert!(!prompt.contains("wia"));
         assert!(!prompt.contains("effect"));

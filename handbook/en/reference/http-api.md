@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:fbf7f9e1041ec23cbc2701ab56981a469b8ebefa00604c760e9e9657e7acaf70"
+fingerprint: "sha256:9379a29398aa8ad5b78777488f737dc1f4a2c95922ce828975f0e17abf6fa123"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -47,6 +47,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/intent.interpret` | task | Persist a probabilistic interpretation candidate; material ambiguity forces clarification_required. |
 | `POST` | `/task/preview` | task | Server-issued digest-bound contract preview; persists nothing. |
 | `POST` | `/task/admit` | task | Admit the exact preview digest and mint the TaskContract under epoch CAS. |
+| `GET` | `/task/evidence` | task | Reconstruct bounded redacted lifecycle, Effect reconciliation, verification, acceptance, and durable cursor evidence for one task_ref from authority and Artifact CAS. |
 | `GET` | `/task/watch` | task | Snapshot-first bounded Task watch with optional resume_from. |
 | `GET` | `/task/resource/v1/projection` | task | Task-bound Memory/Skill resource projection (requires task_ref); served through the `/task/resource/` prefix rewrite onto the shared resource handler. |
 | `GET` | `/task/resource/v1/watch` | task | Task-bound resource watch, served through the same prefix rewrite. |
