@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/EVAL-20260815/full-os-only-assessment` | `PERSONAL-PERF-EVAL-004` full OS-only measurement | Lane-CFR | `main` | `AGENTS.md`; `docs/evaluation/personal-c1-c2-benchmark-execution-plan.md`; `docs/evaluation/personal-performance-benchmark-full-os-only-addendum.md`; `docs/evaluation/personal-performance-assessment-20260815-full-os-only.md`; `docs/checkpoints/20260815-personal-perf-eval-004-c1-c2-preregistration.md`; `docs/plan/PERSONAL-TEST-ENVIRONMENTS.md`; `docs/plan/PROGRESS.md` | Cursor evaluation session | 2026-08-15 / 2026-08-15 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

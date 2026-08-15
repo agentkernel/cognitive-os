@@ -244,6 +244,15 @@ user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PA
 SSH 仅使用非交互、无 secret 探针，例如：
 `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
+### Registered B01 campaign route
+
+For the active `PERSONAL-PERF-EVAL-004` campaign, the verified target route is
+host `wuz@192.168.1.2` (libvirt host `hal9000`) followed by ProxyJump to
+`hal9001@192.168.123.160` (`B01-Desktop-Linux-002`). Use the explicit system
+libvirt URI on the host: `virsh -c qemu:///system`. This route is limited to
+the preregistered B01 campaign lease; it does not authorize access to or
+changes on `B01-Clean-Linux-001`.
+
 ### Standing operator authorization
 
 仓库 owner 已授予代理持续的自主操作授权。对于推进已领取 Personal task 所必需的

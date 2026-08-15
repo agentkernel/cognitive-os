@@ -138,6 +138,11 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
   without per-operation confirmation; secret values remain prohibited from SSH
   arguments/output, ordinary configuration, SQLite, logs, CI, tests, and
   evidence.
+- **Registered B01 route (verified 2026-08-15):** connect to the libvirt host
+  as `wuz@192.168.1.2` (host identity `hal9000`), then use SSH ProxyJump to
+  `hal9001@192.168.123.160` (guest identity `hal9001-Standard-PC-Q35-ICH9-2009`).
+  The guest is `B01-Desktop-Linux-002`; host-side libvirt operations must use
+  `virsh -c qemu:///system`.
 - **Recorded platform:** Linux x86_64, non-WSL, native user-systemd/user D-Bus,
   glibc 2.35.
 - **Recorded tools:** Rust 1.97.1, Node 22.19.0; exact Pi 0.81.1 must be

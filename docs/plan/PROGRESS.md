@@ -10,6 +10,24 @@ project. CognitiveOS design, specifications, conformance assets, and reusable
 kernel code are the architecture/contract foundation for Personal, not a
 second product backlog. See [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md).
 
+EVAL-004 scope amendment (2026-08-15): the owner expanded the active campaign
+under `lease/personal/EVAL-20260815/full-os-only-assessment`; the authoritative
+scope and B0 capability dispositions are in
+[personal-performance-benchmark-full-os-only-addendum.md](../evaluation/personal-performance-benchmark-full-os-only-addendum.md).
+This preserves closed EVAL-002. B0 target control is now route-qualified:
+`wuz@192.168.1.2` (system libvirt) -> ProxyJump ->
+`hal9001@192.168.123.160`; guest identity/environment was read only, with no
+sample access. The isolated root, exact-source
+daemon/CLI, pinned local Pi, extension, and owner-operated SecretStore entry
+are B0-qualified; public doctor reports Provider/Pi ready and
+`first_conversation_ready: true`. B0 then found a product gap: private
+candidate carriers persist only a parameter digest, not the schema-bound
+Search/Write/Patch parameters required by the production router. EVAL-004 is
+paused before B1; affected C1/C2 cells need a separate product task and a new
+frozen revision. O2/O3/O14 are `not_available`, O4 is capability `partial`
+without compliant fairness observation, and positive T6/T7 remain outside
+supported scope.
+
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | owner-directed blocker removal has completed P2-T10 executor parity, P2-T11 public correctness, P2-T12 admitted-Task execution, P2-T13 production independent verification, P2-T14 verified Task completion, P2-T18 token hardening, and P2-T19 governed Memory/Skill consumption. A `C1` WorkspaceRead now reaches a CAS-backed independent passed report and Loop `OBSERVE`; P2-T14 now supplies the acceptance-authority and Task-completion boundary. `C2` parameter-bearing mutation request carriers are complete through P2-T20, while governed mutation completion remains a separate capability-evidence task. P8-T08 is closed and P7-T07 remains blocked on B01-W prerequisites |
