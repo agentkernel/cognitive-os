@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:e82efffb63383b49238a5622c59ce60f863d2aff1af750813f96e950510c66df"
+fingerprint: "sha256:94fd259adb972d0019527b0c8d2e4cc7f994234160fd8948f9a34971942c590e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -47,6 +47,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/intent.interpret` | task | 持久化概率性解释候选；实质歧义强制 clarification_required。 |
 | `POST` | `/task/preview` | task | 服务端签发的 digest 绑定合同预览；不持久化。 |
 | `POST` | `/task/admit` | task | 接纳精确 preview digest 并在 epoch CAS 下铸造 TaskContract。 |
+| `GET` | `/task/evidence` | task | 从 authority 与 Artifact CAS 为一个 task_ref 重建有界脱敏的生命周期、Effect 对账、verification、acceptance 与持久游标证据。 |
 | `GET` | `/task/watch` | task | 快照优先的有界 Task watch，支持可选 resume_from。 |
 | `GET` | `/task/resource/v1/projection` | task | Task 绑定的 Memory/Skill 资源投影（需要 task_ref）；经 `/task/resource/` 前缀重写复用共享 resource 处理器。 |
 | `GET` | `/task/resource/v1/watch` | task | Task 绑定的资源 watch，经同一前缀重写提供。 |

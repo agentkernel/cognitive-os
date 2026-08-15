@@ -65,7 +65,7 @@ use cognitive_store::{
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 use crate::personal::pi_runtime::{
@@ -871,6 +871,52 @@ pub(crate) fn run_private_scheduler_tick_with_store(
     executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
     artifact_store: &cognitive_store::ArtifactStore,
 ) -> Result<(), SchedulerAuthorityError> {
+    // Pi is needed only when a runnable Task still requires candidate
+    // admission. Already-admitted WIA/continuation work must remain
+    // dispatchable during recovery even when the optional Pi configuration is
+    // absent from a hermetic runtime or test fixture.
+    let proposer = LazyConfiguredPrivatePiCandidateProposer {
+        provider_config_dir: provider_config_dir.to_path_buf(),
+    };
+    run_private_scheduler_tick_with_store_and_proposer(
+        authority_store,
+        scheduler_repository,
+        executor_router,
+        artifact_store,
+        &proposer,
+    )
+}
+
+struct LazyConfiguredPrivatePiCandidateProposer {
+    provider_config_dir: PathBuf,
+}
+
+impl PrivatePiCandidateProposer for LazyConfiguredPrivatePiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        resolved_context: &super::ResolvedContextView,
+        task_ref: &str,
+        contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        let pi_config = load_pi_config(&self.provider_config_dir)
+            .map_err(|_| "daemon-private Pi candidate transport is not configured".to_owned())?;
+        let proposer = ConfiguredPrivatePiCandidateProposer::new(
+            PrivatePiCandidateProcess::from_config(&pi_config, &self.provider_config_dir),
+        );
+        proposer.propose_candidate(resolved_context, task_ref, contract_epoch)
+    }
+}
+
+/// Run the same production scheduler path with a daemon-owned proposer port.
+/// Tests use this only to replace the external Pi process; admission, WIA,
+/// scheduler lease, Effect protocol, and router remain the production path.
+pub(crate) fn run_private_scheduler_tick_with_store_and_proposer(
+    authority_store: &SqliteAuthorityStore,
+    scheduler_repository: &mut SchedulerRepository,
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    artifact_store: &cognitive_store::ArtifactStore,
+    proposer: &dyn PrivatePiCandidateProposer,
+) -> Result<(), SchedulerAuthorityError> {
     let clock = SystemClock;
     let identifiers = UuidV7Generator;
     let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
@@ -928,20 +974,12 @@ pub(crate) fn run_private_scheduler_tick_with_store(
             let context_command =
                 context_resolution_command_from_policy(policy, observed_wall_time.clone())?;
             let admission_command = candidate_admission_command_from_policy(policy)?;
-            let pi_config = load_pi_config(provider_config_dir).map_err(|_| {
-                SchedulerAuthorityError::CandidateUnavailable(
-                    "daemon-private Pi candidate transport is not configured".to_owned(),
-                )
-            })?;
-            let proposer = ConfiguredPrivatePiCandidateProposer::new(
-                PrivatePiCandidateProcess::from_config(&pi_config, provider_config_dir),
-            );
             propose_persist_and_admit_candidate(
                 authority_store,
                 &clock,
                 &identifiers,
                 &context_command,
-                &proposer,
+                proposer,
                 &admission_command,
             )?;
             // Admission is the only outcome of the Pi proposal pass. Leave

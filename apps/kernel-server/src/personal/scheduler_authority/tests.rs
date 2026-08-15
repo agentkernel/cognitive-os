@@ -16,9 +16,15 @@ use super::{
     select_single_effect_intent, validate_untrusted_pi_candidate,
     validate_worker_authorization_evidence, verify_scheduler_dispatch_current,
 };
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_contracts::{
     canonical,
     generated::governed_object_header::GovernedObjectHeaderSensitivity,
+    generated::operation_candidate_proposal::{
+        CandidateParameters, WorkspacePatchParameters, WorkspacePatchParametersFamily,
+        WorkspaceSearchParameters, WorkspaceSearchParametersFamily, WorkspaceWriteParameters,
+        WorkspaceWriteParametersFamily,
+    },
     generated::{
         common_defs::Budget,
         context_view::{
@@ -83,6 +89,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::personal::tool_executor::{
     ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
+    workspace_image_digest,
 };
 
 fn scheduler_row(task_ref: &str) -> SchedulerRow {
@@ -214,7 +221,13 @@ fn append_context_race_fixture(
     task_ref: &str,
     required_context_ref: Option<&str>,
 ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
-    append_context_race_fixture_with_budget(store, task_ref, required_context_ref, json!({}))
+    append_context_fixture(
+        store,
+        task_ref,
+        required_context_ref,
+        json!({}),
+        &ContextFixtureExecutionOptions::default(),
+    )
 }
 
 fn append_context_race_fixture_with_budget(
@@ -222,6 +235,36 @@ fn append_context_race_fixture_with_budget(
     task_ref: &str,
     required_context_ref: Option<&str>,
     context_budget: serde_json::Value,
+) -> (ContextResolutionCommand, ContextRevocationFactRow) {
+    append_context_fixture(
+        store,
+        task_ref,
+        required_context_ref,
+        context_budget,
+        &ContextFixtureExecutionOptions::default(),
+    )
+}
+
+#[derive(Default)]
+struct ContextFixtureExecutionOptions {
+    allowed_tools: Vec<String>,
+    candidate_actions: Vec<String>,
+    semantic_calls: Option<i64>,
+    verifier_ref: Option<String>,
+    system_clock_lease: bool,
+    /// Optional override for `TaskContract.max_iterations`; defaults to 1
+    /// so existing tests keep the tight per-attempt ceiling they rely on.
+    max_iterations: Option<i64>,
+    /// Optional override for `TaskContract.max_retries`; defaults to 0.
+    max_retries: Option<i64>,
+}
+
+fn append_context_fixture(
+    store: &SqliteAuthorityStore,
+    task_ref: &str,
+    required_context_ref: Option<&str>,
+    context_budget: serde_json::Value,
+    execution_options: &ContextFixtureExecutionOptions,
 ) -> (ContextResolutionCommand, ContextRevocationFactRow) {
     let governance = context_governance();
     let issued_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
@@ -316,16 +359,36 @@ fn append_context_race_fixture_with_budget(
         tenant_id: Some("tenant-a".to_owned()),
     };
     let facts_id = object_id(922);
+    let capability_actions = std::iter::once("read_body".to_owned())
+        .chain(execution_options.candidate_actions.iter().cloned())
+        .collect();
     let capability = CapabilityConstraints {
         subject: principal.principal_ref.to_string(),
         audience: "daemon://tenant-a/context".to_owned(),
-        resource: "workspace://tenant-a/project".to_owned(),
+        resource: if execution_options.candidate_actions.is_empty() {
+            "workspace://tenant-a/project".to_owned()
+        } else {
+            // `workspace:` is the scheme prefix; `resource_within` uses
+            // `starts_with(&format!("{parent}/"))`, so this covers every
+            // `workspace://<path>` the production chain admits.
+            "workspace:".to_owned()
+        },
         purpose: "task_execution".to_owned(),
-        actions: ["read_body".to_owned()].into(),
+        actions: capability_actions,
         parameter_bounds: BTreeMap::new(),
         lease: LeaseWindow {
-            not_before: WallTimestamp::parse("2026-08-06T00:00:00Z").unwrap(),
-            expires: WallTimestamp::parse("2026-08-08T00:00:00Z").unwrap(),
+            not_before: WallTimestamp::parse(if execution_options.system_clock_lease {
+                "2026-01-01T00:00:00Z"
+            } else {
+                "2026-08-06T00:00:00Z"
+            })
+            .unwrap(),
+            expires: WallTimestamp::parse(if execution_options.system_clock_lease {
+                "2027-12-31T00:00:00Z"
+            } else {
+                "2026-08-08T00:00:00Z"
+            })
+            .unwrap(),
         },
         depth_remaining: 1,
         issued_epoch: 1,
@@ -398,7 +461,7 @@ fn append_context_race_fixture_with_budget(
     .unwrap();
     let contract = TaskContract {
         allowed_state_domains: vec!["task".to_owned(), "effect".to_owned()],
-        allowed_tools: Vec::new(),
+        allowed_tools: execution_options.allowed_tools.clone(),
         budget: Budget {
             attention_slots: None,
             context_bytes: None,
@@ -406,7 +469,7 @@ fn append_context_race_fixture_with_budget(
             input_tokens: None,
             money_microunits: None,
             output_tokens: None,
-            semantic_calls: None,
+            semantic_calls: execution_options.semantic_calls,
             tool_calls: Some(1),
             wall_time_ms: None,
         },
@@ -420,11 +483,14 @@ fn append_context_race_fixture_with_budget(
             id: "accept".to_owned(),
             kind: ContractConditionKind::Acceptance,
             machine_expression: None,
-            verifier_ref: None,
+            verifier_ref: execution_options.verifier_ref.clone(),
         }],
         context_request_ref: Some(strong_reference_to(&request_id, &request_digest)),
         contract_epoch: 1,
-        deadline: None,
+        // Fixture deadline covers the production scheduler snapshot path;
+        // callers that only exercise pre-dispatch stages are unaffected by
+        // the exact value.
+        deadline: Some("2027-12-31T00:00:00Z".to_owned()),
         header: contract_header,
         human_gates: None,
         intent_acceptance_ref: strong_reference_to(
@@ -436,8 +502,8 @@ fn append_context_race_fixture_with_budget(
             &format!("sha256:{}", "f".repeat(64)),
         ),
         loop_object_id: Some(object_id(929).to_generated()),
-        max_iterations: 1,
-        max_retries: 0,
+        max_iterations: execution_options.max_iterations.unwrap_or(1),
+        max_retries: execution_options.max_retries.unwrap_or(0),
         objective: "race regression".to_owned(),
         scope: TaskScope {
             in_scope: vec!["test".to_owned()],
@@ -2410,6 +2476,7 @@ fn private_pi_candidate_rejects_invalid_non_authority_fields() {
         tool_ref: "operation://personal/filesystem/read".to_owned(),
         action: "filesystem.read".to_owned(),
         target: "file:///workspace/input.txt".to_owned(),
+        parameters: None,
         parameters_digest: "not-a-digest".to_owned(),
         expected_state_version: 1,
         operation_descriptor_id: object_id(990),
@@ -2426,6 +2493,198 @@ fn private_pi_candidate_rejects_invalid_non_authority_fields() {
     };
     assert!(matches!(
         validate_untrusted_pi_candidate(&invalid_version_candidate),
+        Err(SchedulerAuthorityError::PrivatePiProposal(_))
+    ));
+}
+
+#[test]
+fn candidate_parameter_digest_is_recomputed_from_daemon_canonical_bytes() {
+    let parameters = CandidateParameters::WorkspaceSearchParameters(WorkspaceSearchParameters {
+        family: WorkspaceSearchParametersFamily::WorkspaceSearch,
+        query: "needle".to_owned(),
+    });
+    let canonical_bytes =
+        canonical::canonical_bytes_of_value(&serde_json::to_value(&parameters).unwrap()).unwrap();
+    let digest = canonical::digest(
+        &canonical_bytes,
+        "cognitiveos.personal.candidate-parameters/0.1",
+    )
+    .unwrap();
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(991),
+        descriptor: BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|candidate| candidate.operation_id == "native.workspace.search")
+            .map(|candidate| OperationDescriptor {
+                operation_id: candidate.operation_id.clone(),
+                action: candidate.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: candidate.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: candidate.descriptor_version,
+            })
+            .unwrap(),
+        canonical_json: "{}".to_owned(),
+    };
+    let candidate = UntrustedPiCandidate {
+        tool_ref: "native.workspace.search".to_owned(),
+        action: "search".to_owned(),
+        target: "workspace://tenant-a/project/alpha".to_owned(),
+        parameters: Some(serde_json::to_value(&parameters).unwrap()),
+        parameters_digest: digest,
+        expected_state_version: 1,
+        operation_descriptor_id: object_id(991),
+    };
+
+    let verified = super::canonicalize_candidate_parameters(&candidate, &descriptor).unwrap();
+
+    assert_eq!(verified, Some(parameters));
+}
+
+#[test]
+fn candidate_mutation_preimages_match_the_production_router_contract() {
+    for (operation_id, parameters) in [
+        (
+            "native.workspace.write",
+            CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+                family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+                input_b64: "ZHVyYWJsZSBpbnB1dA==".to_owned(),
+                preimage: "absent".to_owned(),
+            }),
+        ),
+        (
+            "native.workspace.patch",
+            CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+                family: WorkspacePatchParametersFamily::WorkspacePatch,
+                input_b64: "ZHVyYWJsZSBpbnB1dA==".to_owned(),
+                preimage: format!("digest:sha256:{}", "a".repeat(64)),
+            }),
+        ),
+    ] {
+        let canonical_value = serde_json::to_value(&parameters).unwrap();
+        let canonical_bytes = canonical::canonical_bytes_of_value(&canonical_value).unwrap();
+        let digest = canonical::digest(
+            &canonical_bytes,
+            "cognitiveos.personal.candidate-parameters/0.1",
+        )
+        .unwrap();
+        let descriptor = DaemonOperationDescriptorRow {
+            descriptor_id: object_id(993),
+            descriptor: BUILTIN_TOOL_CATALOG
+                .iter()
+                .find(|candidate| candidate.operation_id == operation_id)
+                .map(|candidate| OperationDescriptor {
+                    operation_id: candidate.operation_id.clone(),
+                    action: candidate.action.clone(),
+                    effect_class: EffectClass::Pure,
+                    executor: candidate.executor.clone(),
+                    capabilities: ExecutorCapabilities {
+                        queryable: true,
+                        idempotent: true,
+                    },
+                    descriptor_version: candidate.descriptor_version,
+                })
+                .unwrap(),
+            canonical_json: "{}".to_owned(),
+        };
+        let candidate = UntrustedPiCandidate {
+            tool_ref: operation_id.to_owned(),
+            action: descriptor.descriptor.action.clone(),
+            target: "workspace://tenant-a/project/output.txt".to_owned(),
+            parameters: Some(canonical_value),
+            parameters_digest: digest,
+            expected_state_version: 1,
+            operation_descriptor_id: descriptor.descriptor_id.clone(),
+        };
+
+        assert_eq!(
+            super::canonicalize_candidate_parameters(&candidate, &descriptor).unwrap(),
+            Some(parameters)
+        );
+    }
+}
+
+#[test]
+fn candidate_mutation_rejects_router_incompatible_raw_digest_preimage() {
+    let parameters = CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+        family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+        input_b64: "ZHVyYWJsZSBpbnB1dA==".to_owned(),
+        preimage: format!("sha256:{}", "b".repeat(64)),
+    });
+    let canonical_value = serde_json::to_value(&parameters).unwrap();
+    let canonical_bytes = canonical::canonical_bytes_of_value(&canonical_value).unwrap();
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(994),
+        descriptor: BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|candidate| candidate.operation_id == "native.workspace.write")
+            .map(|candidate| OperationDescriptor {
+                operation_id: candidate.operation_id.clone(),
+                action: candidate.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: candidate.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: candidate.descriptor_version,
+            })
+            .unwrap(),
+        canonical_json: "{}".to_owned(),
+    };
+    let candidate = UntrustedPiCandidate {
+        tool_ref: descriptor.descriptor.operation_id.clone(),
+        action: descriptor.descriptor.action.clone(),
+        target: "workspace://tenant-a/project/output.txt".to_owned(),
+        parameters: Some(canonical_value),
+        parameters_digest: canonical::digest(
+            &canonical_bytes,
+            "cognitiveos.personal.candidate-parameters/0.1",
+        )
+        .unwrap(),
+        expected_state_version: 1,
+        operation_descriptor_id: descriptor.descriptor_id.clone(),
+    };
+
+    assert!(matches!(
+        super::canonicalize_candidate_parameters(&candidate, &descriptor),
+        Err(SchedulerAuthorityError::PrivatePiProposal(detail))
+            if detail.contains("preimage")
+    ));
+}
+
+#[test]
+fn candidate_parameter_digest_mismatch_denies_before_candidate_persistence() {
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(992),
+        descriptor: OperationDescriptor {
+            operation_id: "native.workspace.search".to_owned(),
+            action: "search".to_owned(),
+            effect_class: EffectClass::Pure,
+            executor: "daemon.workspace".to_owned(),
+            capabilities: ExecutorCapabilities {
+                queryable: true,
+                idempotent: true,
+            },
+            descriptor_version: 1,
+        },
+        canonical_json: "{}".to_owned(),
+    };
+    let candidate = UntrustedPiCandidate {
+        tool_ref: "native.workspace.search".to_owned(),
+        action: "search".to_owned(),
+        target: "workspace://tenant-a/project/alpha".to_owned(),
+        parameters: Some(json!({"family": "WorkspaceSearch", "query": "needle"})),
+        parameters_digest: format!("sha256:{}", "0".repeat(64)),
+        expected_state_version: 1,
+        operation_descriptor_id: object_id(992),
+    };
+
+    assert!(matches!(
+        super::canonicalize_candidate_parameters(&candidate, &descriptor),
         Err(SchedulerAuthorityError::PrivatePiProposal(_))
     ));
 }
@@ -3019,6 +3278,438 @@ fn unassembled_persisted_family_fails_before_effect_authorization() {
 
     drop(store);
     std::fs::remove_file(database_path).unwrap();
+}
+
+struct DeterministicProductionChainProposer {
+    candidate: UntrustedPiCandidate,
+    calls: Cell<usize>,
+}
+
+impl super::PrivatePiCandidateProposer for DeterministicProductionChainProposer {
+    fn propose_candidate(
+        &self,
+        _resolved_context: &super::ResolvedContextView,
+        _task_ref: &str,
+        _contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        self.calls.set(self.calls.get() + 1);
+        Ok(self.candidate.clone())
+    }
+}
+
+fn production_chain_candidate(
+    family: NativeOperationFamily,
+    target: &str,
+    parameters: CandidateParameters,
+) -> UntrustedPiCandidate {
+    let descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == family)
+        .unwrap();
+    let parameter_value = serde_json::to_value(parameters).unwrap();
+    let canonical_bytes = canonical::canonical_bytes_of_value(&parameter_value).unwrap();
+    UntrustedPiCandidate {
+        tool_ref: descriptor.operation_id.clone(),
+        action: descriptor.action.clone(),
+        target: target.to_owned(),
+        parameters: Some(parameter_value),
+        parameters_digest: canonical::digest(
+            &canonical_bytes,
+            "cognitiveos.personal.candidate-parameters/0.1",
+        )
+        .unwrap(),
+        expected_state_version: Version::INITIAL.get(),
+        operation_descriptor_id: crate::personal::tool_executor::builtin_native_descriptor_id(
+            &descriptor.operation_id,
+        )
+        .unwrap(),
+    }
+}
+
+fn prepare_public_admission_equivalent_production_chain(
+    layout: &PersonalDataLayout,
+    candidate: &UntrustedPiCandidate,
+) -> (SqliteAuthorityStore, SchedulerRepository) {
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(layout).unwrap();
+    let database_path = layout.authority_database_path();
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = format!("task://tenant-a/p2-t21-d02/{}", candidate.tool_ref);
+    let execution_options = ContextFixtureExecutionOptions {
+        allowed_tools: vec![candidate.tool_ref.clone()],
+        candidate_actions: vec![candidate.action.clone()],
+        semantic_calls: Some(1),
+        // Task acceptance stays behind an independent verifier; the shared
+        // fixed-effect verifier lets DRAFT admit into READY without letting
+        // router success alone complete the Task.
+        verifier_ref: Some("verifier://personal/fixed-effect".to_owned()),
+        system_clock_lease: true,
+        // Tick 1 admits the candidate (one progress step). Tick 2 must
+        // still be below `step_ceiling` when the scheduler snapshot loads,
+        // otherwise `stop_before_dispatch_when_ceiling_reached` fires
+        // before any executor runs. `retry_count >= retry_ceiling` also
+        // trips the same ceiling boundary when both are 0, so both bounds
+        // are raised above the single production attempt.
+        max_iterations: Some(4),
+        max_retries: Some(4),
+    };
+    let (context_command, _) =
+        append_context_fixture(&store, &task_ref, None, json!({}), &execution_options);
+    let contract = store.load_task_contract(&task_ref, 1).unwrap().unwrap();
+    let admitted_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
+    store
+        .materialize_draft_task_projection(&contract, &admitted_at)
+        .unwrap();
+
+    // The public API atomically publishes these same durable prerequisites.
+    // This focused module test starts at DECIDE because the requested seam is
+    // candidate admission and later dispatch, not the earlier Loop phase walk.
+    store
+        .admit_object(&ObjectAdmission {
+            object: StoredObject {
+                object_id: object_id(929),
+                domain: LifecycleDomain::Loop,
+                state: state("DECIDE"),
+                version: Version::INITIAL,
+                body: json!({
+                    "task_ref": task_ref,
+                    "contract_epoch": 1,
+                    "fixture": "public-admission-equivalent"
+                }),
+            },
+            admitted_at: admitted_at.clone(),
+            event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000929").unwrap(),
+                object_id: object_id(929),
+                domain: LifecycleDomain::Loop,
+                object_version: Version::INITIAL,
+                event_type: "loop.fixture-decide".to_owned(),
+                canonical_json: "{\"event\":\"loop.fixture-decide\"}".to_owned(),
+            },
+            outbox: Vec::new(),
+            fencing_epoch: Some(1),
+        })
+        .unwrap();
+    let initial_budget = BudgetState::new(BTreeMap::from([
+        ("semantic_calls".to_owned(), 1),
+        ("tool_calls".to_owned(), 1),
+    ]))
+    .unwrap();
+    store
+        .create_budget(
+            &BudgetId::parse("00000000-0000-7000-b000-000000000926").unwrap(),
+            &serde_json::to_string(&initial_budget).unwrap(),
+            &admitted_at,
+        )
+        .unwrap();
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: task_ref.clone(),
+            contract_epoch: 1,
+            context_request_id: context_command.request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": task_ref,
+                "contract_epoch": 1,
+                "context": {
+                    "request_id": context_command.request_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "tenant_id": "tenant-a",
+                    "resource_scope_prefix": "workspace://tenant-a/project",
+                    "conversation_ref": "conversation://tenant-a/one",
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": object_id(940).as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": context_governance().owner,
+                        "authority": context_governance().authority,
+                        "resource_scope": context_governance().resource_scope,
+                        "tenant_id": "tenant-a",
+                        "created_by": "principal://tenant-a/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/p2-t21-d02",
+                },
+            })
+            .to_string(),
+        })
+        .unwrap();
+    crate::personal::tool_executor::ensure_builtin_native_descriptors(&store).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository.upsert(&scheduler_row(&task_ref)).unwrap();
+    (store, repository)
+}
+
+fn run_production_chain_tick(
+    layout: &PersonalDataLayout,
+    store: &SqliteAuthorityStore,
+    repository: &mut SchedulerRepository,
+    proposer: &DeterministicProductionChainProposer,
+) {
+    let artifact_store =
+        cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
+            .unwrap();
+    let router = ProductionNativeToolExecutorRouter::open_with_artifact_store(
+        1,
+        layout.data_dir().join("workspace"),
+        artifact_store.clone(),
+    )
+    .unwrap();
+    super::run_private_scheduler_tick_with_store_and_proposer(
+        store,
+        repository,
+        &router,
+        &artifact_store,
+        proposer,
+    )
+    .unwrap();
+}
+
+fn assert_pi_admission_does_not_complete_task(
+    store: &SqliteAuthorityStore,
+    proposer: &DeterministicProductionChainProposer,
+) -> WorkerIterationAuthorizationRow {
+    assert_eq!(proposer.calls.get(), 1);
+    let authorization = store
+        .load_unconsumed_worker_iteration_authorization_for_task_binding(
+            &format!("task://tenant-a/p2-t21-d02/{}", proposer.candidate.tool_ref),
+            1,
+        )
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "DRAFT",
+        "bounded Pi output and candidate admission cannot complete the Task"
+    );
+    authorization
+}
+
+#[test]
+fn admitted_search_write_and_patch_reach_production_sinks_on_later_ticks() {
+    let patch_preimage = b"before\n";
+    let cases = [
+        (
+            NativeOperationFamily::WorkspaceSearch,
+            "workspace://",
+            CandidateParameters::WorkspaceSearchParameters(WorkspaceSearchParameters {
+                family: WorkspaceSearchParametersFamily::WorkspaceSearch,
+                query: "needle".to_owned(),
+            }),
+        ),
+        (
+            NativeOperationFamily::WorkspaceWrite,
+            "workspace://written.txt",
+            CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+                family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+                input_b64: STANDARD.encode(b"written by production sink\n"),
+                preimage: "absent".to_owned(),
+            }),
+        ),
+        (
+            NativeOperationFamily::WorkspacePatch,
+            "workspace://patched.txt",
+            CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+                family: WorkspacePatchParametersFamily::WorkspacePatch,
+                input_b64: STANDARD.encode(b"@@ -1 +1 @@\n-before\n+after\n"),
+                preimage: format!("digest:{}", workspace_image_digest(patch_preimage).unwrap()),
+            }),
+        ),
+    ];
+
+    for (family, target, parameters) in cases {
+        let layout = temporary_personal_layout();
+        let candidate = production_chain_candidate(family, target, parameters);
+        let proposer = DeterministicProductionChainProposer {
+            candidate,
+            calls: Cell::new(0),
+        };
+        let (store, mut repository) =
+            prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+        let workspace_root = layout.data_dir().join("workspace");
+        std::fs::create_dir_all(&workspace_root).unwrap();
+        std::fs::write(workspace_root.join("search.txt"), b"contains needle\n").unwrap();
+        if family == NativeOperationFamily::WorkspacePatch {
+            std::fs::write(workspace_root.join("patched.txt"), patch_preimage).unwrap();
+        }
+
+        run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+        let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+        run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+        assert_eq!(
+            proposer.calls.get(),
+            1,
+            "later ticks must consume durable WIA"
+        );
+        assert_eq!(
+            store
+                .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+                .unwrap()
+                .unwrap()
+                .state
+                .as_str(),
+            "RECONCILED"
+        );
+        match family {
+            NativeOperationFamily::WorkspaceSearch => assert!(
+                std::fs::read_dir(layout.data_dir().join("artifacts"))
+                    .unwrap()
+                    .next()
+                    .is_some(),
+                "the production search sink must persist its governed output"
+            ),
+            NativeOperationFamily::WorkspaceWrite => assert_eq!(
+                std::fs::read(workspace_root.join("written.txt")).unwrap(),
+                b"written by production sink\n"
+            ),
+            NativeOperationFamily::WorkspacePatch => assert_eq!(
+                std::fs::read(workspace_root.join("patched.txt")).unwrap(),
+                b"after\n"
+            ),
+            _ => unreachable!(),
+        }
+        assert_ne!(
+            store
+                .load_object(
+                    LifecycleDomain::Task,
+                    &authorization.worker_authorization_root_id,
+                )
+                .unwrap()
+                .unwrap()
+                .state
+                .as_str(),
+            "COMPLETED",
+            "router success alone cannot satisfy Task acceptance without a verifier"
+        );
+
+        drop(repository);
+        drop(store);
+        std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+    }
+}
+
+#[test]
+fn candidate_digest_mismatch_fails_before_effect_or_workspace_io() {
+    let layout = temporary_personal_layout();
+    let mut candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspaceWrite,
+        "workspace://must-not-exist.txt",
+        CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: STANDARD.encode(b"must not be written"),
+            preimage: "absent".to_owned(),
+        }),
+    );
+    candidate.parameters_digest = format!("sha256:{}", "0".repeat(64));
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(proposer.calls.get(), 1);
+    assert!(
+        store
+            .load_operation_candidate_proposal(&object_id(940))
+            .unwrap()
+            .is_none(),
+        "digest mismatch must fail before candidate admission creates an Effect"
+    );
+    assert!(
+        !layout
+            .data_dir()
+            .join("workspace/must-not-exist.txt")
+            .exists()
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Task, &object_id(925))
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "DRAFT"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn patch_preimage_drift_fails_closed_before_workspace_publication() {
+    let layout = temporary_personal_layout();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspacePatch,
+        "workspace://drifted.txt",
+        CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+            family: WorkspacePatchParametersFamily::WorkspacePatch,
+            input_b64: STANDARD.encode(b"@@ -1 +1 @@\n-before\n+after\n"),
+            preimage: format!("digest:{}", workspace_image_digest(b"before\n").unwrap()),
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+    let target_path = layout.data_dir().join("workspace/drifted.txt");
+    std::fs::create_dir_all(target_path.parent().unwrap()).unwrap();
+    std::fs::write(&target_path, b"before\n").unwrap();
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    std::fs::write(&target_path, b"concurrent drift\n").unwrap();
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(std::fs::read(&target_path).unwrap(), b"concurrent drift\n");
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "NOT_EXECUTED",
+        "preimage drift must produce authoritative non-execution, not a mutation receipt"
+    );
+    assert_ne!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
 #[test]

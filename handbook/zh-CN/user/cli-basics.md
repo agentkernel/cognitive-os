@@ -12,7 +12,7 @@ sources:
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t02_cli_parity.rs
-fingerprint: "sha256:1a6ec60d8017f7702296d27c726cd5c50cd8a2772f02b6dcd262ed05494eb9e2"
+fingerprint: "sha256:26d0fc061a54ff710c01e830821b8d6967524ab0658c3321004e2f101ea2afad"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -35,6 +35,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive pi launch` | doctor 全就绪且版本精确匹配后 fail-closed 启动 Pi |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
+| `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
 
 两个诚实的怪癖（生成的 [CLI 参考](../reference/cli-cognitive.md)中同样标注）：内置
 usage 文本尚未列出 `resource`/`task`；所有动词都接受的 `--runtime-root <dir>` 是密封

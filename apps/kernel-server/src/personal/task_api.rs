@@ -35,7 +35,7 @@ use cognitive_contracts::generated::task_preview_request::{
 use cognitive_contracts::generated::task_preview_result::{
     TaskPreviewResult, TaskPreviewResultSchemaVersion,
 };
-use cognitive_domain::{BudgetId, ObjectId, UriRef, WallTimestamp};
+use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, UriRef, WallTimestamp};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
@@ -43,16 +43,82 @@ use cognitive_kernel::intent_chain::{
     seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::ports::{
-    ContextRequestRow, ContextStore, ProtocolStore, SchedulerExecutionPolicyRow,
-    SchedulerExecutionPolicyStore,
+    AuthorityStore, ContextRequestRow, ContextStore, ContinuationAuthorityStore, IntentChainStore,
+    ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, TaskBinding,
 };
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
-use cognitive_store::{PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator};
+use cognitive_store::{
+    ArtifactStore, PersonalDataLayout, SqliteAuthorityStore, SystemClock, UuidV7Generator,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use sha2::{Digest as Sha2Digest, Sha256};
 
 const MAX_WATCH_EVENTS: usize = 128;
+const MAX_EVIDENCE_EVENTS_SCANNED: usize = 4096;
+const EVIDENCE_EVENT_BATCH_SIZE: usize = 256;
+const MAX_LIFECYCLE_TRANSITIONS: usize = 16;
+const MAX_OPAQUE_OPERATION_REFS: usize = 64;
+const MAX_ARTIFACT_BYTES: usize = 8 * 1024 * 1024;
 const GOVERNANCE_ROOT_FILE_NAME: &str = "personal-governance-root.json";
+
+#[derive(Debug, Serialize)]
+struct TerminalTaskEvidence {
+    schema_version: u8,
+    task_ref: String,
+    contract_epoch: i64,
+    lifecycle: TaskLifecycleEvidence,
+    intent_refs: Vec<String>,
+    effect_refs: Vec<String>,
+    reconcile_class: String,
+    latest_verification: Option<VerificationEvidence>,
+    latest_acceptance: Option<AcceptanceEvidence>,
+    durable_cursor: DurableTaskCursor,
+}
+
+#[derive(Debug, Serialize)]
+struct TaskLifecycleEvidence {
+    current_state: String,
+    current_version: i64,
+    transitions: Vec<RedactedLifecycleTransition>,
+    transitions_truncated: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct RedactedLifecycleTransition {
+    sequence: i64,
+    event_ref: String,
+    event_type: String,
+    after_state: Option<String>,
+    after_version: i64,
+    reason_code: Option<String>,
+    event_time: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct VerificationEvidence {
+    report_ref: String,
+    report_digest: String,
+    status: String,
+    completed_at: String,
+    current: bool,
+    artifact_refs: Vec<String>,
+    artifacts_current: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct AcceptanceEvidence {
+    terminal_transition_ref: String,
+    terminal_transition_digest: String,
+    current: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct DurableTaskCursor {
+    event_sequence: i64,
+    task_version: i64,
+    terminal_transition_sequence: Option<i64>,
+}
 
 /// Durable, daemon-issued local governance root. The authenticated principal
 /// is deliberately persisted beside the anchors so a later principal cannot
@@ -68,6 +134,7 @@ struct PersistedGovernanceRoot {
 }
 
 /// A response ready for the loopback HTTP transport.
+#[derive(Debug)]
 pub(crate) struct TaskApiResponse {
     pub status: u16,
     pub body: String,
@@ -109,6 +176,12 @@ impl TaskApi {
             }
             "POST" if method_path.starts_with("POST /task/admit ") => {
                 self.admit(body, authenticated_principal)
+            }
+            "GET"
+                if method_path.starts_with("GET /task/evidence?")
+                    || method_path.starts_with("GET /task/evidence ") =>
+            {
+                self.evidence(method_path)
             }
             "GET" if method_path.starts_with("GET /task/watch") => self.watch(method_path),
             _ => TaskApiResponse {
@@ -466,6 +539,39 @@ impl TaskApi {
         }
     }
 
+    fn evidence(&self, method_path: &str) -> TaskApiResponse {
+        let task_ref = match required_query_parameter(method_path, "task_ref") {
+            Ok(task_ref) if UriRef::parse(&task_ref).is_ok() => task_ref,
+            Ok(_) => {
+                return error(
+                    400,
+                    "TASK_EVIDENCE_INVALID_TASK_REF",
+                    "task_ref must be a canonical URI",
+                );
+            }
+            Err(response) => return response,
+        };
+        let store = match SqliteAuthorityStore::open(&self.layout.authority_database_path()) {
+            Ok(store) => store,
+            Err(_) => {
+                return error(
+                    503,
+                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
+                    "durable authority store is unavailable",
+                );
+            }
+        };
+        match reconstruct_terminal_task_evidence(&store, &self.layout, &task_ref) {
+            Ok(Some(evidence)) => ok(evidence),
+            Ok(None) => error(
+                404,
+                "TASK_EVIDENCE_NOT_FOUND",
+                "no durable TaskContract exists for task_ref",
+            ),
+            Err(response) => response,
+        }
+    }
+
     fn service(
         &self,
     ) -> Result<
@@ -688,6 +794,415 @@ fn load_scheduler_policy_context_request(
         &request.request_id,
         &request.request_digest,
     )))
+}
+
+fn reconstruct_terminal_task_evidence(
+    store: &SqliteAuthorityStore,
+    layout: &PersonalDataLayout,
+    task_ref: &str,
+) -> Result<Option<TerminalTaskEvidence>, TaskApiResponse> {
+    let contract_epoch = store.current_contract_epoch(task_ref).map_err(|_| {
+        error(
+            503,
+            "TASK_EVIDENCE_READ_FAILED",
+            "current TaskContract epoch could not be read",
+        )
+    })?;
+    if contract_epoch == 0 {
+        return Ok(None);
+    }
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    };
+    let contract = store
+        .load_task_contract(task_ref, contract_epoch)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "current TaskContract could not be read",
+            )
+        })?
+        .ok_or_else(|| {
+            error(
+                503,
+                "TASK_EVIDENCE_INCONSISTENT",
+                "current TaskContract epoch has no durable row",
+            )
+        })?;
+    let task = store
+        .load_object(LifecycleDomain::Task, &contract.contract_id)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "governed Task lifecycle could not be read",
+            )
+        })?
+        .ok_or_else(|| {
+            error(
+                503,
+                "TASK_EVIDENCE_INCONSISTENT",
+                "TaskContract has no governed Task lifecycle row",
+            )
+        })?;
+
+    let intents = store
+        .list_intents_for_task_binding(&task_binding)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "durable Intent bindings could not be read",
+            )
+        })?;
+    let mut intent_refs = Vec::new();
+    let mut effect_refs = Vec::new();
+    let mut effect_states = Vec::new();
+    for intent in &intents {
+        if intent_refs.len() < MAX_OPAQUE_OPERATION_REFS {
+            intent_refs.push(format!("intent://{}", intent.intent_id));
+            effect_refs.push(format!("effect://{}", intent.effect_object_id));
+        }
+        let effect_state = store
+            .load_object(LifecycleDomain::Effect, &intent.effect_object_id)
+            .map_err(|_| {
+                error(
+                    503,
+                    "TASK_EVIDENCE_READ_FAILED",
+                    "durable Effect lifecycle could not be read",
+                )
+            })?
+            .map(|effect| effect.state.as_str().to_owned())
+            .unwrap_or_else(|| "MISSING".to_owned());
+        effect_states.push(effect_state);
+    }
+
+    let (transitions, event_sequence, scan_was_bounded) =
+        read_redacted_task_transitions(store, &contract.contract_id)?;
+    let terminal_transition = transitions
+        .iter()
+        .rev()
+        .find(|transition| transition.after_state.as_deref() == Some("COMPLETED"));
+    let terminal_transition_sequence = terminal_transition.map(|transition| transition.sequence);
+    let latest_acceptance = terminal_transition.map(|transition| AcceptanceEvidence {
+        terminal_transition_ref: transition.event_ref.clone(),
+        terminal_transition_digest: transition_digest_for_reference(store, transition)
+            .unwrap_or_else(|| "unavailable".to_owned()),
+        current: task.state.as_str() == "COMPLETED"
+            && transition.after_version == task.version.get(),
+    });
+
+    let latest_verification = store
+        .load_latest_verification_report_for_task_binding(&task_binding)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "latest verification report could not be read",
+            )
+        })?
+        .map(|report| build_verification_evidence(store, layout, &task_binding, report))
+        .transpose()?;
+    let transitions_truncated = scan_was_bounded || transitions.len() > MAX_LIFECYCLE_TRANSITIONS;
+    let visible_transitions = transitions
+        .into_iter()
+        .rev()
+        .take(MAX_LIFECYCLE_TRANSITIONS)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
+
+    Ok(Some(TerminalTaskEvidence {
+        schema_version: 1,
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+        lifecycle: TaskLifecycleEvidence {
+            current_state: task.state.as_str().to_owned(),
+            current_version: task.version.get(),
+            transitions: visible_transitions,
+            transitions_truncated,
+        },
+        intent_refs,
+        effect_refs,
+        reconcile_class: classify_reconcile_state(&effect_states).to_owned(),
+        latest_verification,
+        latest_acceptance,
+        durable_cursor: DurableTaskCursor {
+            event_sequence,
+            task_version: task.version.get(),
+            terminal_transition_sequence,
+        },
+    }))
+}
+
+fn read_redacted_task_transitions(
+    store: &SqliteAuthorityStore,
+    task_id: &ObjectId,
+) -> Result<(Vec<RedactedLifecycleTransition>, i64, bool), TaskApiResponse> {
+    let mut after_sequence = 0;
+    let mut scanned_event_count = 0;
+    let mut task_transitions = Vec::new();
+    loop {
+        let remaining_capacity = MAX_EVIDENCE_EVENTS_SCANNED.saturating_sub(scanned_event_count);
+        if remaining_capacity == 0 {
+            return Ok((task_transitions, after_sequence, true));
+        }
+        let batch_limit = remaining_capacity.min(EVIDENCE_EVENT_BATCH_SIZE);
+        let events = store
+            .read_events(after_sequence, batch_limit)
+            .map_err(|_| {
+                error(
+                    503,
+                    "TASK_EVIDENCE_READ_FAILED",
+                    "durable Task event cursor could not be read",
+                )
+            })?;
+        if events.is_empty() {
+            return Ok((task_transitions, after_sequence, false));
+        }
+        scanned_event_count += events.len();
+        for event in &events {
+            after_sequence = event.sequence;
+            if event.domain != LifecycleDomain::Task || event.object_id != *task_id {
+                continue;
+            }
+            let value = serde_json::from_str::<Value>(&event.canonical_json).unwrap_or(Value::Null);
+            task_transitions.push(RedactedLifecycleTransition {
+                sequence: event.sequence,
+                event_ref: format!("event://{}", event.event_id),
+                event_type: event.event_type.clone(),
+                after_state: value
+                    .get("after_state")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+                after_version: event.object_version.get(),
+                reason_code: value
+                    .pointer("/reason/code")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+                event_time: value
+                    .get("event_time")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+            });
+        }
+        if events.len() < batch_limit {
+            return Ok((task_transitions, after_sequence, false));
+        }
+    }
+}
+
+fn transition_digest_for_reference(
+    store: &SqliteAuthorityStore,
+    transition: &RedactedLifecycleTransition,
+) -> Option<String> {
+    let event = store
+        .read_events(transition.sequence.saturating_sub(1), 1)
+        .ok()?
+        .into_iter()
+        .next()?;
+    if event.sequence != transition.sequence {
+        return None;
+    }
+    Some(sha256_digest(event.canonical_json.as_bytes()))
+}
+
+fn build_verification_evidence(
+    store: &SqliteAuthorityStore,
+    layout: &PersonalDataLayout,
+    task_binding: &TaskBinding,
+    report: cognitive_kernel::ports::VerificationReportRow,
+) -> Result<VerificationEvidence, TaskApiResponse> {
+    let artifact_refs: Vec<String> = serde_json::from_str(&report.evidence_refs_canonical_json)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_INCONSISTENT",
+                "verification artifact references are malformed",
+            )
+        })?;
+    let artifact_root = layout.data_dir().join("artifacts");
+    let artifacts_current = if artifact_root.is_dir() {
+        let artifact_store =
+            ArtifactStore::open(&artifact_root, MAX_ARTIFACT_BYTES).map_err(|_| {
+                error(
+                    503,
+                    "TASK_ARTIFACT_STORE_UNAVAILABLE",
+                    "Artifact CAS is unavailable",
+                )
+            })?;
+        artifact_refs.iter().all(|artifact_ref| {
+            artifact_store
+                .contains_artifact_uri(artifact_ref)
+                .unwrap_or(false)
+        })
+    } else {
+        artifact_refs.is_empty()
+    };
+    let request = store
+        .load_verification_request(&report.verification_request_id)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "verification request currentness could not be read",
+            )
+        })?;
+    let fixed_post_state = store
+        .load_fixed_post_state(&report.fixed_post_state_id)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EVIDENCE_READ_FAILED",
+                "verification fixed post-state currentness could not be read",
+            )
+        })?;
+    let binding_is_current = match (request, fixed_post_state) {
+        (Some(request), Some(fixed_post_state)) => {
+            let subject_is_current = store
+                .load_object(
+                    fixed_post_state.subject_domain,
+                    &fixed_post_state.subject_object_id,
+                )
+                .map_err(|_| {
+                    error(
+                        503,
+                        "TASK_EVIDENCE_READ_FAILED",
+                        "verification subject currentness could not be read",
+                    )
+                })?
+                .is_some_and(|subject| {
+                    subject.version == fixed_post_state.subject_version
+                        && matches!(
+                            subject.state.as_str(),
+                            "RECONCILED" | "VERIFIED" | "VERIFY_FAILED"
+                        )
+                });
+            request.task_binding == *task_binding
+                && fixed_post_state.task_binding == *task_binding
+                && fixed_post_state.subject_domain == LifecycleDomain::Effect
+                && request.fixed_post_state_id == fixed_post_state.fixed_post_state_id
+                && report.fixed_post_state_id == fixed_post_state.fixed_post_state_id
+                && report.verification_request_id == request.verification_request_id
+                && report.verifier_ref == request.verifier_ref
+                && report.verifier_version == request.verifier_version
+                && subject_is_current
+        }
+        _ => false,
+    };
+    Ok(VerificationEvidence {
+        report_ref: format!("verification-report://{}", report.verification_report_id),
+        report_digest: sha256_digest(report.canonical_json.as_bytes()),
+        status: report.status,
+        completed_at: report.completed_at.as_str().to_owned(),
+        current: binding_is_current && artifacts_current,
+        artifact_refs: artifact_refs
+            .into_iter()
+            .take(MAX_OPAQUE_OPERATION_REFS)
+            .collect(),
+        artifacts_current,
+    })
+}
+
+fn classify_reconcile_state(effect_states: &[String]) -> &'static str {
+    if effect_states.is_empty() {
+        return "not_applicable";
+    }
+    let is_durable = |state: &str| matches!(state, "RECONCILED" | "VERIFIED" | "VERIFY_FAILED");
+    let all_durable = effect_states.iter().all(|state| is_durable(state));
+    if all_durable {
+        return "closed";
+    }
+    let any_durable = effect_states.iter().any(|state| is_durable(state));
+    if any_durable {
+        return "pending_reconciliation";
+    }
+    "must_reconcile"
+}
+
+fn sha256_digest(bytes: &[u8]) -> String {
+    format!("sha256:{:x}", Sha256::digest(bytes))
+}
+
+fn required_query_parameter(
+    method_path: &str,
+    parameter_name: &str,
+) -> Result<String, TaskApiResponse> {
+    let query = method_path
+        .split_whitespace()
+        .nth(1)
+        .and_then(|path| path.split_once('?').map(|(_, query)| query))
+        .ok_or_else(|| {
+            error(
+                400,
+                "TASK_EVIDENCE_TASK_REF_REQUIRED",
+                "task_ref query parameter is required",
+            )
+        })?;
+    let matching_values = query
+        .split('&')
+        .filter_map(|pair| pair.split_once('='))
+        .filter(|(name, _)| *name == parameter_name)
+        .map(|(_, value)| percent_decode(value))
+        .collect::<Result<Vec<_>, _>>()?;
+    match matching_values.as_slice() {
+        [value] if !value.trim().is_empty() => Ok(value.clone()),
+        _ => Err(error(
+            400,
+            "TASK_EVIDENCE_TASK_REF_REQUIRED",
+            "exactly one non-empty task_ref query parameter is required",
+        )),
+    }
+}
+
+fn percent_decode(value: &str) -> Result<String, TaskApiResponse> {
+    let bytes = value.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' {
+            if index + 2 >= bytes.len() {
+                return Err(error(
+                    400,
+                    "TASK_EVIDENCE_INVALID_TASK_REF",
+                    "task_ref contains invalid percent encoding",
+                ));
+            }
+            let high = hex_value(bytes[index + 1]);
+            let low = hex_value(bytes[index + 2]);
+            let (Some(high), Some(low)) = (high, low) else {
+                return Err(error(
+                    400,
+                    "TASK_EVIDENCE_INVALID_TASK_REF",
+                    "task_ref contains invalid percent encoding",
+                ));
+            };
+            decoded.push((high << 4) | low);
+            index += 3;
+        } else {
+            decoded.push(bytes[index]);
+            index += 1;
+        }
+    }
+    String::from_utf8(decoded).map_err(|_| {
+        error(
+            400,
+            "TASK_EVIDENCE_INVALID_TASK_REF",
+            "task_ref must be UTF-8",
+        )
+    })
+}
+
+fn hex_value(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
 }
 
 fn decode<T: serde::de::DeserializeOwned>(body: &[u8]) -> Result<T, TaskApiResponse> {
@@ -1020,4 +1535,86 @@ fn persist_governance_root(
             "governance root cannot be committed",
         )
     })
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic)]
+mod evidence_tests {
+    use super::*;
+
+    #[test]
+    fn evidence_query_decodes_one_canonical_task_reference() {
+        let task_ref = required_query_parameter(
+            "GET /task/evidence?task_ref=task%3A%2F%2Fpersonal%2Fexample HTTP/1.1",
+            "task_ref",
+        )
+        .expect("decode Task reference");
+
+        assert_eq!(task_ref, "task://personal/example");
+    }
+
+    #[test]
+    fn evidence_query_rejects_missing_duplicate_and_malformed_values() {
+        for method_path in [
+            "GET /task/evidence HTTP/1.1",
+            "GET /task/evidence?task_ref=task%3A%2F%2Fa&task_ref=task%3A%2F%2Fb HTTP/1.1",
+            "GET /task/evidence?task_ref=task%ZZ HTTP/1.1",
+        ] {
+            let response = required_query_parameter(method_path, "task_ref")
+                .expect_err("invalid query must fail closed");
+            assert_eq!(response.status, 400);
+        }
+    }
+
+    #[test]
+    fn reconcile_class_uses_only_durable_effect_states() {
+        assert_eq!(classify_reconcile_state(&[]), "not_applicable");
+        assert_eq!(
+            classify_reconcile_state(&["RECONCILED".to_owned(), "VERIFIED".to_owned()]),
+            "closed"
+        );
+        assert_eq!(
+            classify_reconcile_state(&["RECONCILED".to_owned(), "OUTCOME_UNKNOWN".to_owned()]),
+            "pending_reconciliation"
+        );
+    }
+
+    #[test]
+    fn serialized_evidence_contains_only_redacted_projection_fields() {
+        let evidence = TerminalTaskEvidence {
+            schema_version: 1,
+            task_ref: "task://personal/example".to_owned(),
+            contract_epoch: 2,
+            lifecycle: TaskLifecycleEvidence {
+                current_state: "COMPLETED".to_owned(),
+                current_version: 5,
+                transitions: Vec::new(),
+                transitions_truncated: false,
+            },
+            intent_refs: vec!["intent://00000000-0000-7000-8000-000000000001".to_owned()],
+            effect_refs: vec!["effect://00000000-0000-7000-8000-000000000002".to_owned()],
+            reconcile_class: "closed".to_owned(),
+            latest_verification: None,
+            latest_acceptance: None,
+            durable_cursor: DurableTaskCursor {
+                event_sequence: 9,
+                task_version: 5,
+                terminal_transition_sequence: Some(9),
+            },
+        };
+
+        let serialized = serde_json::to_string(&evidence).expect("serialize evidence projection");
+        for forbidden_field in [
+            "parameters",
+            "workspace",
+            "path_bytes",
+            "provider_body",
+            "receipt",
+            "secret",
+            "bearer",
+            "sqlite",
+        ] {
+            assert!(!serialized.to_ascii_lowercase().contains(forbidden_field));
+        }
+    }
 }

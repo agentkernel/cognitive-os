@@ -28,12 +28,14 @@ pub struct DaemonCandidateRequest {
 }
 
 /// The only response shape that the daemon-private adapter may emit.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct DaemonCandidateResponse {
     pub tool_ref: String,
     pub action: String,
     pub target: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameters: Option<Value>,
     pub parameters_digest: String,
     pub expected_state_version: i64,
     pub operation_descriptor_id: String,

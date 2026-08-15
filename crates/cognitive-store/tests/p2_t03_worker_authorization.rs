@@ -339,6 +339,7 @@ fn schema_valid_admission_inputs(
             &descriptor_id,
             &format!("sha256:{}", "1".repeat(64)),
         ),
+        parameters: None,
         parameters_digest: format!("sha256:{}", "2".repeat(64)),
         target: "file:///workspace/input.txt".to_owned(),
         task_contract_ref: strong_reference_to(

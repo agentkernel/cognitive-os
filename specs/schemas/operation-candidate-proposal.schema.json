@@ -46,8 +46,51 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
+    "parameters": {
+      "$ref": "#/$defs/candidateParameters",
+      "description": "Bounded untrusted candidate data for the only parameterized workspace families. The daemon canonicalizes this value, recomputes parameters_digest, validates the selected descriptor/action, and binds the verified bytes to the governed Intent. This field cannot carry authority, lifecycle, budget, fencing, Effect, idempotency, verifier, acceptance, process, or network capability data."
+    },
     "expected_state_version": { "type": "integer", "minimum": 1 },
     "operation_descriptor_ref": { "$ref": "object-reference.schema.json#/$defs/strongReference" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "candidateParameters": {
+      "description": "Strictly bounded parameter variants. No generic tool parameter object is permitted.",
+      "oneOf": [
+        { "$ref": "#/$defs/workspaceSearchParameters" },
+        { "$ref": "#/$defs/workspaceWriteParameters" },
+        { "$ref": "#/$defs/workspacePatchParameters" }
+      ]
+    },
+    "workspaceSearchParameters": {
+      "type": "object",
+      "required": ["family", "query"],
+      "properties": {
+        "family": { "const": "WorkspaceSearch" },
+        "query": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      },
+      "additionalProperties": false
+    },
+    "workspaceWriteParameters": {
+      "type": "object",
+      "required": ["family", "input_b64", "preimage"],
+      "properties": {
+        "family": { "const": "WorkspaceWrite" },
+        "input_b64": { "type": "string", "minLength": 4, "maxLength": 87384, "pattern": "^[A-Za-z0-9+/]*={0,2}$" },
+        "preimage": { "type": "string", "pattern": "^(absent|digest:sha256:[0-9a-f]{64})$" }
+      },
+      "additionalProperties": false
+    },
+    "workspacePatchParameters": {
+      "type": "object",
+      "required": ["family", "input_b64", "preimage"],
+      "properties": {
+        "family": { "const": "WorkspacePatch" },
+        "input_b64": { "type": "string", "minLength": 4, "maxLength": 87384, "pattern": "^[A-Za-z0-9+/]*={0,2}$" },
+        "preimage": { "type": "string", "pattern": "^(absent|digest:sha256:[0-9a-f]{64})$" }
+      },
+      "additionalProperties": false
+    }
+  }
 }

@@ -21,6 +21,7 @@ fn valid_response_json() -> Vec<u8> {
         tool_ref: "tool://personal/example".to_owned(),
         action: "observe".to_owned(),
         target: "workspace://personal/example".to_owned(),
+        parameters: None,
         parameters_digest: "sha256:parameters".to_owned(),
         expected_state_version: 1,
         operation_descriptor_id: "0190f5c0-0000-7000-8000-000000000001".to_owned(),

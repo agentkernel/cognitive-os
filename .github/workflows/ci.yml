@@ -1,5 +1,6 @@
 # CI gate for the CognitiveOS reference implementation.
-# Definition of Done requires this workflow green on BOTH OSes (AGENTS.md).
+# Most tasks run on both supported CI hosts. The owner-directed benchmark
+# readiness train uses Ubuntu CI plus exact-revision linux-002 validation.
 name: CI
 
 on:
@@ -13,12 +14,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  resolve-validation-route:
+    name: resolve validation route
+    runs-on: ubuntu-latest
+    outputs:
+      operating-systems: ${{ steps.route.outputs.operating-systems }}
+      disposition: ${{ steps.route.outputs.disposition }}
+    steps:
+      - name: Resolve task validation route
+        id: route
+        shell: bash
+        env:
+          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          case "$SOURCE_BRANCH" in
+            personal/P2-T21-*|personal/P2-T22-*|personal/P2-T23-*|personal/P2-T24-*|personal/P2-T25-*|personal/P2-T26-*|personal/P2-T27-*|personal/P2-T28-*)
+              echo 'operating-systems=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+              echo 'disposition=ubuntu-supporting-ci-plus-exact-revision-linux-002' >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo 'operating-systems=["ubuntu-latest","windows-latest"]' >> "$GITHUB_OUTPUT"
+              echo 'disposition=dual-platform-supported-ci' >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
   verify:
+    needs: resolve-validation-route
     name: verify (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: ${{ fromJSON(needs.resolve-validation-route.outputs.operating-systems) }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -173,3 +199,20 @@ jobs:
           name: evidence-${{ matrix.os }}
           path: artifacts/evidence/
           retention-days: 14
+
+  required-ci:
+    name: required-ci
+    if: ${{ always() }}
+    needs: [resolve-validation-route, verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce resolved validation route
+        shell: bash
+        env:
+          ROUTE_RESULT: ${{ needs.resolve-validation-route.result }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          ROUTE_DISPOSITION: ${{ needs.resolve-validation-route.outputs.disposition }}
+        run: |
+          test "$ROUTE_RESULT" = "success"
+          test "$VERIFY_RESULT" = "success"
+          echo "validation_route=$ROUTE_DISPOSITION"

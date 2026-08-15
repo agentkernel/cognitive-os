@@ -169,7 +169,7 @@ pub const SCHEMA_DIGESTS: [(&str, &str); 53] = [
     ),
     (
         "operation-candidate-proposal.schema.json",
-        "sha256:45ca2c1c4b437e9c3f7458c5bb7ffced95e4ef60f94be7da4374f04e37c36699",
+        "sha256:b807eb54e6f2ad981e06ef4441348393cd00350948b30cf631a602e95e30904f",
     ),
     (
         "operation-summary.schema.json",

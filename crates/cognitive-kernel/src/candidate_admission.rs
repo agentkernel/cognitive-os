@@ -269,13 +269,19 @@ pub fn compose_candidate_admission(
         &contract_payload.header.content_digest.0,
     );
     let parameters_digest = Digest(inputs.candidate.parameters_digest.clone());
+    let verified_parameters = candidate_payload
+        .parameters
+        .as_ref()
+        .map(serde_json::to_value)
+        .transpose()
+        .map_err(|error| malformed(error.to_string()))?;
     let action_fingerprint = action_fingerprint(&inputs.candidate, &inputs.descriptor.descriptor)?;
     let budget_charge = canonical_budget(&inputs.budget_charge);
     let budget_charge_value =
         serde_json::to_value(&budget_charge).map_err(|error| malformed(error.to_string()))?;
     let budget_charge_canonical_json = canonical_string(&budget_charge_value)?;
 
-    let intent_value = json!({
+    let mut intent_value = json!({
         "action": inputs.candidate.action,
         "capability_set_version": inputs.authorization.capability_set_version,
         "contract_epoch": inputs.task_contract.contract_epoch,
@@ -294,6 +300,9 @@ pub fn compose_candidate_admission(
         "target": inputs.candidate.target,
         "task_ref": inputs.task_contract.task_ref,
     });
+    if let Some(parameters) = verified_parameters {
+        intent_value["parameters"] = parameters;
+    }
     let intent_canonical_json = canonical_string(&intent_value)?;
     let intent_reference = strong_reference_for_content(
         &inputs.identities.intent_id,
@@ -609,6 +618,9 @@ mod tests {
     use crate::executor::ExecutorCapabilities;
     use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
     use cognitive_contracts::generated::object_reference::UuidV7;
+    use cognitive_contracts::generated::operation_candidate_proposal::{
+        CandidateParameters, WorkspaceSearchParameters, WorkspaceSearchParametersFamily,
+    };
     use cognitive_contracts::generated::task_contract::{
         ContractCondition, ContractConditionKind, TaskScope,
     };
@@ -760,6 +772,7 @@ mod tests {
                 &descriptor_id,
                 &format!("sha256:{}", "1".repeat(64)),
             ),
+            parameters: None,
             parameters_digest: format!("sha256:{}", "2".repeat(64)),
             target: "file:///workspace/input.txt".to_owned(),
             task_contract_ref: strong_reference_to(
@@ -874,6 +887,69 @@ mod tests {
             "/header/content_digest",
         )
         .expect("WIA content digest must bind the complete payload");
+    }
+
+    #[test]
+    fn composer_binds_verified_search_parameters_into_the_governed_intent() {
+        let mut inputs = valid_inputs();
+        let parameters =
+            CandidateParameters::WorkspaceSearchParameters(WorkspaceSearchParameters {
+                family: WorkspaceSearchParametersFamily::WorkspaceSearch,
+                query: "needle".to_owned(),
+            });
+        let parameter_value = serde_json::to_value(&parameters).unwrap();
+        let parameter_bytes = canonical::canonical_bytes_of_value(&parameter_value).unwrap();
+        let parameter_digest = canonical::digest(
+            &parameter_bytes,
+            "cognitiveos.personal.candidate-parameters/0.1",
+        )
+        .unwrap();
+
+        let mut contract_value: Value =
+            serde_json::from_str(&inputs.task_contract.canonical_json).unwrap();
+        contract_value["allowed_tools"] = json!(["native.workspace.search"]);
+        inputs.task_contract.canonical_json = sealed_canonical(contract_value).0;
+        let contract: TaskContract =
+            serde_json::from_str(&inputs.task_contract.canonical_json).unwrap();
+
+        let candidate: OperationCandidateProposal =
+            serde_json::from_str(&inputs.candidate.canonical_json).unwrap();
+        let candidate = OperationCandidateProposal {
+            action: "search".to_owned(),
+            candidate_source_ref: candidate.candidate_source_ref,
+            contract_epoch: candidate.contract_epoch,
+            expected_state_version: candidate.expected_state_version,
+            header: candidate.header,
+            operation_descriptor_ref: strong_reference_to(
+                &inputs.candidate.operation_descriptor_ref,
+                &format!("sha256:{}", "3".repeat(64)),
+            ),
+            parameters: Some(parameters),
+            parameters_digest: parameter_digest.clone(),
+            target: candidate.target,
+            task_contract_ref: strong_reference_to(
+                &inputs.task_contract.contract_id,
+                &contract.header.content_digest.0,
+            ),
+            tool_ref: "native.workspace.search".to_owned(),
+        };
+        inputs.candidate.canonical_json =
+            sealed_canonical(serde_json::to_value(&candidate).unwrap()).0;
+        inputs.candidate.tool_ref = "native.workspace.search".to_owned();
+        inputs.candidate.action = "search".to_owned();
+        inputs.candidate.parameters_digest = parameter_digest;
+        inputs.descriptor.descriptor.operation_id = "native.workspace.search".to_owned();
+        inputs.descriptor.descriptor.action = "search".to_owned();
+        inputs.authorization.action = "search".to_owned();
+
+        let commit = compose_candidate_admission(&inputs).unwrap();
+        let intent_value: Value = serde_json::from_str(&commit.intent.canonical_json).unwrap();
+
+        assert_eq!(intent_value["parameters"], parameter_value);
+        assert_eq!(
+            commit.intent.parameters_digest,
+            inputs.candidate.parameters_digest
+        );
     }
 
     #[test]
