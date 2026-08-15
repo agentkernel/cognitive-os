@@ -13,12 +13,16 @@ sources:
     symbols: ["decide_memory_admission"]
   - path: crates/cognitive-store/src/sqlite/harness_skill.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/memory_skill_consumer.rs
+    symbols: ["load_governed_memory_skill_candidates"]
+  - path: crates/cognitive-store/src/memory_skill_consumption.rs
+    symbols: ["memory_skill_consumption_migration_entry"]
 tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
+fingerprint: "sha256:8a84aac67582960df0d276142a86f3a238746a68581a5705481382633ba69773"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -51,9 +55,20 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 
 ## HTTP 可及面
 
-management 通道：remember/forget、skill import/bind/revoke、object/explain 读取。
+management 通道发布生命周期前置条件，准入封存的 `WorkspaceContextSource`，并在不
+直连 SQLite 的情况下完成 Memory remember/review/forget 与 Skill
+import/revision-inspect/bind/supersede/revoke。Memory 准入只接受封存
+`MemoryCandidate`，decision 与 Memory 身份由 daemon 推导。
 `skill/binding/revoke` 必须先于 `skill/bind` 匹配：后者是前者的前缀，否则每次撤销都
-会落到 bind handler。
-task 通道：task 绑定的投影/watch，以及把选中 Memory/Skill 来源绑定到当前
-TaskContract/ContextRequest 事实的消费记录（被撤销/遗忘/过期项由同一权威读取排
-除）。task bearer 在任何管理变更前即被拒绝。
+会落到 bind handler。所有变更行与 revision 谱系在 daemon 重启后仍可读取。被策略
+拒绝的 Memory candidate 可直接重试字段完全相同的封存 source，无需原始清理；相同 id
+但字段不同的 source 仍冲突。
+task 通道：task 绑定的投影/watch，以及生产受治理消费方。
+`resolve_authorized_task_context` 只在元数据资格、精确当前 Task 或 workspace
+scope/pin/digest 复核和当前 forget/revoke 重验之后装载 Memory/Skill，并把片段写入
+封存 ContextView。
+v24 只追加消费记录按 Task、epoch、ContextRequest 与 session 绑定，供跨会话复用；
+最近一条是最后追加的行，而不是哈希身份字典序最大的行。
+复用必须重读当前权威事实；确定性记录身份绑定 principal/tenant/scope/purpose、
+request digest 与精确钉，遗忘、撤销、digest 漂移或竞争持久记录一律失败闭合。
+task bearer 在任何管理变更前即被拒绝。

@@ -29,6 +29,7 @@ pub mod executor;
 pub mod harness;
 pub mod intent_chain;
 pub mod memory_admission;
+pub mod memory_skill_consumption;
 pub mod ports;
 pub mod recovery;
 pub mod replay;

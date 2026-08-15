@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:00c02ea6c421fde54f1199ccee9614081dcd465f470b7df7afb0d110b9a4f5f0"
+fingerprint: "sha256:234e4fe38aa4f5e5bf0fc41bb5e414e4e84ecf1abb63258b189f374ac1b46adc"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -28,10 +28,10 @@ non_claims:
 # 存储与迁移
 
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。XDG state 下两个数
-据库：**authority**（迁移 v1–v23）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v24）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v23）
+## 权威库迁移图（v1–v24）
 
 | 版本 | 新增 |
 |---|---|
@@ -42,11 +42,12 @@ non_claims:
 | v12–v15 | context request/view、workspace context source（role/trust CHECK）、授权/撤销事实集、调度执行策略 |
 | v16–v20 | Memory candidate/decision/object、FTS5 派生索引、tombstone（forget → +expire → +supersede）、版本谱系 |
 | v21–v23 | Skill package/revision/binding、binding 撤销、revision 谱系 |
+| v24 | 按 Task/epoch/request/session 绑定的只追加 Memory/Skill 消费记录 |
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v23 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v24 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

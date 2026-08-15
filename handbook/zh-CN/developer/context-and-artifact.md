@@ -48,7 +48,9 @@ authoritative_state → evidence → working → untrusted_input；前缀稳定�
 `request_ref` 对照**已持久化**请求 digest 校验（而非调用方输入）。workspace source
 带 role/trust CHECK 约束；发现是元数据先行、body 单独加载；授权/撤销事实集在**当前**
 撤销 epoch 重建 `AuthzSnapshot`。真实调度路径上，daemon 在每次 body 加载前即时重载授
-权/撤销，并在任何 Pi 传输前封存视图。
+权/撤销，并在任何 Pi 传输前封存视图。合格 Memory/Skill 片段只在精确
+scope/pin/digest 复核和当前 forget/revoke 重验之后装入；钉会被封进视图，并写入
+v24 只追加消费行，供后续会话在不重述事实的情况下复用。
 
 ## 无法提供过期权威的缓存
 

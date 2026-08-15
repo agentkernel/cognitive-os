@@ -42,15 +42,16 @@ use cognitive_kernel::{
 };
 use cognitive_kernel::{
     authz::{AccessRequest, authorize},
+    memory_skill_consumption::MemorySkillConsumptionStore,
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
         BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
         ContextAuthorizationFactStore, ContextCandidateQuery, ContextRequestRow, ContextStore,
         ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
-        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
-        SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-        WorkerIterationAuthorizationRow,
+        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, MemoryStore,
+        ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+        SchedulerLeaseBinding, SkillStore, TaskBinding, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     },
     resolve_persisted_native_descriptor,
 };
@@ -94,7 +95,10 @@ where
         + ContextAuthorizationFactStore
         + HarnessStore
         + IntentChainStore
+        + MemoryStore
+        + MemorySkillConsumptionStore
         + ProtocolStore
+        + SkillStore
         + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,
@@ -128,7 +132,10 @@ where
         + ContextAuthorizationFactStore
         + HarnessStore
         + IntentChainStore
+        + MemoryStore
+        + MemorySkillConsumptionStore
         + ProtocolStore
+        + SkillStore
         + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,

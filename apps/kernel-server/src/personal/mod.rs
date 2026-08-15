@@ -10,6 +10,7 @@ mod bounds;
 mod campaign_observation;
 mod headless_vault_doctor;
 mod lifecycle;
+mod memory_skill_consumer;
 mod operability_doctor;
 #[cfg(test)]
 mod p2_t17_a7_failure_first;

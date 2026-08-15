@@ -21,7 +21,7 @@ Orientation:
 The authority core:
 
 5. [Authority kernel](./authority-kernel.md) — transition gate, intent chain, budgets, recovery
-6. [Store and migrations](./store-and-migrations.md) — SQLite layout v1–v23
+6. [Store and migrations](./store-and-migrations.md) — SQLite layout v1–v24
 7. [Task pipeline](./task-pipeline.md) — record → interpret → preview → admit → watch
 8. [Execution-chain status](./execution-chain-status.md) — what is wired, what is not
 

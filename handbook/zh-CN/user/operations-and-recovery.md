@@ -19,7 +19,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:7cd76e9ce7f2e319a58d62a5eab5c93ebc3c9cc3c0c090e906b227eaa8026cb5"
+fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -53,7 +53,10 @@ worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而
 
 数据库位于 XDG state（`authority.sqlite`、`installation.sqlite`，WAL 模式、0600）。
 每次迁移 apply 都先在 `state/backups/` 写带时间戳的备份（不自动清理）。派生数据
-（Memory FTS 索引）可从权威行重建；被遗忘的 Memory 绝不会因索引重建而复活。
+（Memory FTS 索引）可从权威行重建；被遗忘的 Memory 绝不会因索引重建而复活。权威库
+迁移现含 v24 只追加 Memory/Skill 消费记录；后续会话可复用精确钉，但遗忘、撤销或
+digest 漂移或竞争记录会失败闭合，而不是让已遗忘事实复活。management Memory/Skill
+生命周期行与 Skill revision 谱系在 daemon 重启后仍可检查。
 
 ## 崩溃与未知结果恢复 —— 引擎层 `implemented`
 

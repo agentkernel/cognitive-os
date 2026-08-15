@@ -42,6 +42,7 @@ non_claims:
 | 独立验证与 Task 验收 | implemented；公共 C1 native-proven | 生产 WorkspaceRead 与 RegisteredCheckRun 可到达登记的独立 verifier；RegisteredCheck 只有在 CAS Evidence、精确 descriptor/file digest 与全部安全观察通过后才产生 passed report、checkpoint、一次性 continuation authority 与 Loop `OBSERVE`；WorkspaceRead 再经独立 daemon acceptance authority 完成 evidence-bound `COMPLETED` |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |
+| 受治理 Memory/Skill Context 消费 | implemented | 精确 scope/pin/digest 装载、v24 持久记录、第二会话复用，以及 forget/revoke 失败闭合；公开 HTTP 生命周期循环仍单独交付 |
 | Context request/view + 缓存 | implemented | — |
 | Artifact CAS | implemented | GC 推迟（仅清理遗弃 staging） |
 | 六族资源投影/watch | implemented | 仅 management+task 通道 |

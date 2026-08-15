@@ -42,15 +42,16 @@ use cognitive_kernel::{
 };
 use cognitive_kernel::{
     authz::{AccessRequest, authorize},
+    memory_skill_consumption::MemorySkillConsumptionStore,
     ports::{
         AuthorityStore, BoundContinuationAuthorizationConsumption,
         BoundWorkerAuthorizationConsumption, CandidateAdmissionReceipt, Clock,
         ContextAuthorizationFactStore, ContextCandidateQuery, ContextRequestRow, ContextStore,
         ContextViewRow, ContinuationAuthorityStore, ContinuationAuthorizationConsumptionRow,
-        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
-        SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, SchedulerLeaseBinding,
-        TaskBinding, WorkerAuthorizationStore, WorkerIterationAuthorizationConsumptionRow,
-        WorkerIterationAuthorizationRow,
+        ContinuationAuthorizationRow, HarnessStore, IdGenerator, IntentChainStore, MemoryStore,
+        ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+        SchedulerLeaseBinding, SkillStore, TaskBinding, WorkerAuthorizationStore,
+        WorkerIterationAuthorizationConsumptionRow, WorkerIterationAuthorizationRow,
     },
     resolve_persisted_native_descriptor,
 };
@@ -64,7 +65,7 @@ use cognitive_store::{
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use thiserror::Error;
 
@@ -307,7 +308,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
 {
     resolve_authorized_task_context_after_metadata(store, command, || Ok(()))
 }
@@ -328,7 +332,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
 {
     let initial_contract_epoch = store
         .current_contract_epoch(&command.task_ref)
@@ -476,7 +483,10 @@ where
         + ContextStore
         + ContextAuthorizationFactStore
         + IntentChainStore
-        + ProtocolStore,
+        + MemoryStore
+        + MemorySkillConsumptionStore
+        + ProtocolStore
+        + SkillStore,
     F: FnOnce() -> Result<(), SchedulerAuthorityError>,
 {
     let current_contract_epoch = store
@@ -674,6 +684,26 @@ where
             "Context source was denied before body materialization".to_owned(),
         ));
     }
+    let governed_candidates =
+        crate::personal::memory_skill_consumer::load_governed_memory_skill_candidates(
+            store,
+            command,
+            current_contract_epoch,
+            &request_row.request_digest,
+            &context_request.purpose,
+        )?;
+    // 已作为 Memory/Skill 装入的精确钉取代相同正文的普通 workspace 源，避免
+    // 内核按 digest+body 去重后丢掉受治理对象身份。
+    let governed_digests = governed_candidates
+        .iter()
+        .map(|candidate| candidate.content_digest.clone())
+        .collect::<BTreeSet<_>>();
+    let governed_refs = governed_candidates
+        .iter()
+        .map(|candidate| candidate.object_ref.clone())
+        .collect::<Vec<_>>();
+    authorized_candidates.retain(|candidate| !governed_digests.contains(&candidate.content_digest));
+    authorized_candidates.extend(governed_candidates);
 
     let resolution_request = ResolutionRequest {
         snapshot: authorization_snapshot,
@@ -687,6 +717,7 @@ where
                     .into_iter()
                     .map(|required| required.r#ref),
             )
+            .chain(governed_refs)
             .map(|object_ref| RequiredItem { object_ref })
             .collect(),
         allow_partial: context_request.allow_partial,

@@ -13,6 +13,7 @@ use crate::installation::{
     INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
 };
 use crate::layout::{PersonalDataLayout, PersonalLayoutError, restrict_private_file};
+use crate::memory_skill_consumption::memory_skill_consumption_migration_entry;
 use crate::memory_store::{
     memory_admission_migration_entry, memory_expiry_migration_entry,
     memory_lifecycle_migration_entry, memory_search_migration_entry,
@@ -80,7 +81,8 @@ impl PersonalDatabasePrepareReport {
 /// WIA-to-scheduler lease binding records, v10 = private verified-continuation
 /// evidence, v11 = private continuation-to-scheduler handoff bindings, and
 /// v12 = durable immutable Context request/view records, and v13 =
-/// daemon-admitted append-only workspace Context sources.
+/// daemon-admitted append-only workspace Context sources, and v24 =
+/// append-only Memory/Skill consumption records keyed by Task/epoch/request/session.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -106,6 +108,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         skill_package_migration_entry(),
         skill_binding_revocation_migration_entry(),
         skill_revision_lineage_migration_entry(),
+        memory_skill_consumption_migration_entry(),
     ]
 }
 

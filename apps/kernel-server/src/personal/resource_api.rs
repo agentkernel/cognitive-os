@@ -7,16 +7,23 @@
 use std::collections::VecDeque;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use cognitive_contracts::generated::context_view::{
+    LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
+};
+use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
 use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
+use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
+use cognitive_kernel::memory_skill_consumption::MemorySkillConsumptionStore;
 use cognitive_kernel::ports::{
     ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
     MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
     SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillStore, StorePortError,
+    SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    WorkspaceContextSourceRow,
 };
-use cognitive_store::{SqliteAuthorityStore, admit_memory_candidate};
+use cognitive_store::{SqliteAuthorityStore, UuidV7Generator, admit_memory_candidate};
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";
@@ -378,6 +385,35 @@ impl ResourceApi {
                 ),
             };
         }
+        if method_path.starts_with("GET /management/resource/v1/skill/binding/explain")
+            && query_parameter(query, "kind") == Some("revision")
+        {
+            return match store.load_skill_revision_payload(&object_id) {
+                Ok(Some((content_digest, canonical_json))) => json_response(
+                    200,
+                    json!({
+                        "kind": "skill.revision.inspect",
+                        "authority_source": "daemon-skill-store",
+                        "revision": {
+                            "revision_id": object_id.to_string(),
+                            "content_digest": content_digest,
+                            "canonical_json": canonical_json,
+                        },
+                        "authority_side_effects": false,
+                    }),
+                ),
+                Ok(None) => error(
+                    404,
+                    "RESOURCE_SKILL_NOT_ELIGIBLE",
+                    "Skill revision not found",
+                ),
+                Err(_) => error(
+                    503,
+                    "RESOURCE_SKILL_UNAVAILABLE",
+                    "Skill authority store is unavailable",
+                ),
+            };
+        }
         if method_path.starts_with("GET /management/resource/v1/skill/binding/explain") {
             return match store.explain_skill_binding(&object_id) {
                 Ok(Some(explanation)) => json_response(
@@ -446,96 +482,221 @@ impl ResourceApi {
         self.handle_authority(method_path, store)
     }
 
+    fn admit_context_source(
+        &self,
+        document: &Value,
+        store: &SqliteAuthorityStore,
+    ) -> Result<WorkspaceContextSourceRow, ResourceApiResponse> {
+        let Some(header) = governed_header(document) else {
+            return Err(error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Context source requires a valid governed header",
+            ));
+        };
+        let Ok(source_id) = ObjectId::parse(&header.id.0) else {
+            return Err(error(
+                400,
+                "RESOURCE_MEMORY_ID_INVALID",
+                "Context source header id is invalid",
+            ));
+        };
+        let (
+            Some(tenant_id),
+            Some(owner_ref),
+            Some(resource_scope),
+            Some(provenance_ref),
+            Some(role),
+            Some(trust_level),
+            Some(representation),
+            Some(content_bytes),
+        ) = (
+            string_field(document, "tenant_id"),
+            string_field(document, "owner_ref"),
+            string_field(document, "resource_scope"),
+            string_field(document, "provenance_ref"),
+            context_role(document),
+            context_trust_level(document),
+            context_representation(document),
+            integer_field(document, "content_bytes"),
+        )
+        else {
+            return Err(error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Context source metadata is incomplete or invalid",
+            ));
+        };
+        let source = WorkspaceContextSourceRow {
+            source_id: source_id.clone(),
+            source_digest: header.content_digest.0,
+            governance: ObjectGovernance {
+                object_ref: source_id.to_string(),
+                tenant_id: Some(tenant_id),
+                owner_ref,
+                resource_scope,
+                conversation_ref: string_field(document, "conversation_ref"),
+            },
+            role,
+            trust_level,
+            representation,
+            provenance_ref,
+            content_bytes,
+            content_tokens: integer_field(document, "content_tokens"),
+            canonical_json: document.to_string(),
+        };
+        match store.append_workspace_context_source(&source) {
+            Ok(()) => Ok(source),
+            Err(StorePortError::Conflict { .. }) => {
+                match store.load_workspace_context_source_body(&source.source_id) {
+                    Ok(Some(existing)) if existing == source => Ok(source),
+                    Ok(_) => Err(error(
+                        409,
+                        "RESOURCE_MEMORY_CONFLICT",
+                        "Context source conflicts with existing authority facts",
+                    )),
+                    Err(_) => Err(error(
+                        503,
+                        "RESOURCE_MEMORY_UNAVAILABLE",
+                        "Context authority store is unavailable",
+                    )),
+                }
+            }
+            Err(StorePortError::Unavailable { .. }) => Err(error(
+                503,
+                "RESOURCE_MEMORY_UNAVAILABLE",
+                "Context authority store is unavailable",
+            )),
+        }
+    }
+
     fn remember_memory(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
-        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+        let Ok(envelope) = serde_json::from_slice::<Value>(body) else {
             return error(
                 400,
                 "RESOURCE_MEMORY_PAYLOAD_INVALID",
                 "Memory remember payload is invalid",
             );
         };
-        let required_identifier = |name: &str| object_id_field(&document, name);
-        let (Some(candidate_id), Some(source_id), Some(decision_id), Some(memory_id)) = (
-            required_identifier("candidate_id"),
-            required_identifier("source_id"),
-            required_identifier("decision_id"),
-            required_identifier("memory_id"),
-        ) else {
+        let (Some(source_document), Some(document)) =
+            (envelope.get("source"), envelope.get("candidate").cloned())
+        else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory remember requires sealed source and candidate members",
+            );
+        };
+        let Some(header) = governed_header(&document).filter(|header| {
+            header.r#type == "MemoryCandidate" && header.schema_version == "cognitiveos.memory/0.1"
+        }) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory remember requires a sealed MemoryCandidate",
+            );
+        };
+        let Ok(candidate_id) = ObjectId::parse(&header.id.0) else {
             return error(
                 400,
                 "RESOURCE_MEMORY_ID_INVALID",
-                "candidate_id, source_id, decision_id, and memory_id are required",
+                "MemoryCandidate header id is invalid",
             );
         };
-        let Some(candidate_digest) = string_field(&document, "candidate_digest") else {
+        let (
+            Some(source_id),
+            Some(source_digest),
+            Some(source_provenance_ref),
+            Some(governance_scope),
+            Some(target_scope),
+            Some(purpose),
+            Some(retention_expires_at_unix_seconds),
+            Some(observed_at_unix_seconds),
+        ) = (
+            object_id_field(&document, "source_id"),
+            string_field(&document, "source_digest"),
+            string_field(&document, "source_provenance_ref"),
+            string_field(&document, "governance_scope"),
+            string_field(&document, "target_scope"),
+            string_field(&document, "purpose"),
+            integer_field(&document, "retention_expires_at_unix_seconds"),
+            integer_field(&document, "observed_at_unix_seconds"),
+        )
+        else {
             return error(
                 400,
-                "RESOURCE_MEMORY_DIGEST_REQUIRED",
-                "candidate_digest is required",
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "MemoryCandidate source, scope, purpose, and retention bindings are required",
             );
         };
-        let Some(governance_scope) = string_field(&document, "governance_scope") else {
-            return error(
-                400,
-                "RESOURCE_MEMORY_SCOPE_REQUIRED",
-                "governance_scope is required",
-            );
+        let decision_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
         };
-        let Some(purpose) = string_field(&document, "purpose") else {
-            return error(
-                400,
-                "RESOURCE_MEMORY_PURPOSE_REQUIRED",
-                "purpose is required",
-            );
+        let memory_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
         };
         let candidate = MemoryCandidateRow {
             candidate_id: candidate_id.clone(),
-            candidate_digest: candidate_digest.clone(),
+            candidate_digest: header.content_digest.0.clone(),
             source_id,
-            source_digest: string_field(&document, "source_digest").unwrap_or_default(),
-            source_provenance_ref: string_field(&document, "source_provenance_ref")
-                .unwrap_or_default(),
+            source_digest,
+            source_provenance_ref,
             governance_scope,
-            target_scope: string_field(&document, "target_scope").unwrap_or_default(),
+            target_scope,
             purpose,
-            retention_expires_at_unix_seconds: integer_field(
-                &document,
-                "retention_expires_at_unix_seconds",
-            )
-            .unwrap_or_default(),
-            observed_at_unix_seconds: integer_field(&document, "observed_at_unix_seconds")
-                .unwrap_or_default(),
+            retention_expires_at_unix_seconds,
+            observed_at_unix_seconds,
             canonical_json: document.to_string(),
         };
         let decision = MemoryAdmissionDecisionRow {
-            decision_id,
+            decision_id: decision_id.clone(),
             candidate_id: candidate.candidate_id.clone(),
-            candidate_digest,
-            decision: string_field(&document, "decision").unwrap_or_else(|| "admit".to_owned()),
-            policy_version: integer_field(&document, "policy_version").unwrap_or(1),
-            reason_codes_json: string_field(&document, "reason_codes_json")
-                .unwrap_or_else(|| "[]".to_owned()),
-            canonical_json: document.to_string(),
+            candidate_digest: candidate.candidate_digest.clone(),
+            decision: "admit".to_owned(),
+            policy_version: 1,
+            reason_codes_json: "[\"MEMORY_ADMISSION_ACCEPTED\"]".to_owned(),
+            canonical_json: json!({
+                "decision_id": decision_id.to_string(),
+                "candidate_id": candidate.candidate_id.to_string(),
+                "candidate_digest": candidate.candidate_digest,
+                "decision": "admit",
+                "policy_version": 1,
+                "reason_codes": ["MEMORY_ADMISSION_ACCEPTED"],
+            })
+            .to_string(),
         };
         let object = MemoryObjectRow {
-            memory_id,
+            memory_id: memory_id.clone(),
             candidate_id: candidate.candidate_id.clone(),
             decision_id: decision.decision_id.clone(),
-            canonical_json: document.to_string(),
+            canonical_json: json!({
+                "memory_id": memory_id.to_string(),
+                "candidate_id": candidate.candidate_id.to_string(),
+                "decision_id": decision.decision_id.to_string(),
+            })
+            .to_string(),
         };
-        let now_unix_seconds = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_secs() as i64)
-            .unwrap_or_default();
+        if let Err(response) = self.admit_context_source(source_document, store) {
+            return response;
+        }
         let policy = MemoryAdmissionPolicy {
-            policy_version: decision.policy_version,
-            now_unix_seconds,
+            policy_version: 1,
+            now_unix_seconds: now_unix_seconds(),
             maximum_retention_seconds: 31_536_000,
         };
         match admit_memory_candidate(store, &candidate, &decision, Some(&object), &policy) {
             Ok(outcome) => json_response(
                 201,
-                json!({"status":"remembered", "outcome": format!("{outcome:?}").to_lowercase(), "memory_id": object.memory_id.to_string()}),
+                json!({
+                    "status": "remembered",
+                    "outcome": format!("{outcome:?}").to_lowercase(),
+                    "candidate_id": candidate.candidate_id.to_string(),
+                    "decision_id": decision.decision_id.to_string(),
+                    "memory_id": object.memory_id.to_string(),
+                    "source_id": candidate.source_id.to_string(),
+                }),
             ),
             Err(StorePortError::Conflict { .. }) => error(
                 409,
@@ -558,6 +719,9 @@ impl ResourceApi {
                 "Skill import payload is invalid",
             );
         };
+        if document.get("previous_revision_id").is_some() {
+            return self.supersede_skill_revision(&document, store);
+        }
         let (Some(package_id), Some(revision_id)) = (
             object_id_field(&document, "package_id"),
             object_id_field(&document, "revision_id"),
@@ -593,6 +757,64 @@ impl ResourceApi {
                 409,
                 "RESOURCE_SKILL_CONFLICT",
                 "Skill import conflicts with existing authority facts",
+            ),
+            Err(StorePortError::Unavailable { .. }) => error(
+                503,
+                "RESOURCE_SKILL_UNAVAILABLE",
+                "Skill authority store is unavailable",
+            ),
+        }
+    }
+
+    fn supersede_skill_revision(
+        &self,
+        document: &Value,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let (Some(previous_revision_id), Some(revision_id), Some(package_id)) = (
+            object_id_field(document, "previous_revision_id"),
+            object_id_field(document, "revision_id"),
+            object_id_field(document, "package_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_SKILL_ID_INVALID",
+                "previous_revision_id, revision_id, and package_id are required",
+            );
+        };
+        let Some(content_digest) = string_field(document, "content_digest") else {
+            return error(
+                400,
+                "RESOURCE_SKILL_PAYLOAD_INVALID",
+                "replacement content_digest is required",
+            );
+        };
+        let replacement = SkillRevisionRow {
+            revision_id: revision_id.clone(),
+            package_id,
+            content_digest,
+            compatibility: string_field(document, "compatibility")
+                .unwrap_or_else(|| "compatible".to_owned()),
+            canonical_json: document.to_string(),
+        };
+        let supersede = SkillRevisionSupersedeRequest {
+            previous_revision_id,
+            replacement,
+            canonical_json: document.to_string(),
+        };
+        match store.append_skill_revision_supersede(&supersede) {
+            Ok(()) => json_response(
+                201,
+                json!({
+                    "status": "superseded",
+                    "revision_id": revision_id.to_string(),
+                    "supersedes_revision_id": supersede.previous_revision_id.to_string(),
+                }),
+            ),
+            Err(StorePortError::Conflict { .. }) => error(
+                409,
+                "RESOURCE_SKILL_CONFLICT",
+                "Skill revision supersede conflicts with authority facts",
             ),
             Err(StorePortError::Unavailable { .. }) => error(
                 503,
@@ -666,12 +888,12 @@ impl ResourceApi {
                 "memory_id is required and invalid",
             );
         };
-        let Some(lifecycle_id) = object_id_field(&document, "lifecycle_id") else {
-            return error(
-                400,
-                "RESOURCE_MEMORY_LIFECYCLE_ID_INVALID",
-                "lifecycle_id is required and invalid",
-            );
+        let lifecycle_id = match object_id_field(&document, "lifecycle_id") {
+            Some(identifier) => identifier,
+            None => match new_resource_object_id() {
+                Ok(identifier) => identifier,
+                Err(response) => return response,
+            },
         };
         let Some(reason) = document
             .get("reason")
@@ -687,18 +909,19 @@ impl ResourceApi {
         let occurred_at = document
             .get("occurred_at_unix_seconds")
             .and_then(Value::as_i64)
-            .unwrap_or(0);
+            .unwrap_or_else(now_unix_seconds);
         let canonical_json = document
             .get("canonical_json")
             .and_then(Value::as_str)
-            .unwrap_or("{}");
+            .map(str::to_owned)
+            .unwrap_or_else(|| document.to_string());
         let tombstone = MemoryTombstoneRow {
             lifecycle_id,
             memory_id,
             action: "forget".to_owned(),
             occurred_at_unix_seconds: occurred_at,
             reason: reason.to_owned(),
-            canonical_json: canonical_json.to_owned(),
+            canonical_json,
         };
         match store.append_memory_tombstone(&tombstone) {
             Ok(()) => json_response(
@@ -907,7 +1130,95 @@ fn snapshot(family: &str, latest_sequence: u64, task_reference: Option<&str>) ->
     })
 }
 
+fn governed_header(document: &Value) -> Option<GovernedObjectHeader> {
+    document
+        .get("header")
+        .cloned()
+        .and_then(|header| serde_json::from_value(header).ok())
+}
+
+fn context_role(document: &Value) -> Option<LoadedContextItemRole> {
+    match document.get("role").and_then(Value::as_str)? {
+        "control" => Some(LoadedContextItemRole::Control),
+        "authoritative_state" => Some(LoadedContextItemRole::AuthoritativeState),
+        "evidence" => Some(LoadedContextItemRole::Evidence),
+        "working" => Some(LoadedContextItemRole::Working),
+        "untrusted_input" => Some(LoadedContextItemRole::UntrustedInput),
+        _ => None,
+    }
+}
+
+fn context_trust_level(document: &Value) -> Option<LoadedContextItemTrustLevel> {
+    match document.get("trust_level").and_then(Value::as_str)? {
+        "control" => Some(LoadedContextItemTrustLevel::Control),
+        "authoritative" => Some(LoadedContextItemTrustLevel::Authoritative),
+        "verified" => Some(LoadedContextItemTrustLevel::Verified),
+        "untrusted" => Some(LoadedContextItemTrustLevel::Untrusted),
+        _ => None,
+    }
+}
+
+fn context_representation(document: &Value) -> Option<LoadedContextItemRepresentation> {
+    match document.get("representation").and_then(Value::as_str)? {
+        "structured" => Some(LoadedContextItemRepresentation::Structured),
+        "text" => Some(LoadedContextItemRepresentation::Text),
+        "binary_ref" => Some(LoadedContextItemRepresentation::BinaryRef),
+        _ => None,
+    }
+}
+
+fn new_resource_object_id() -> Result<ObjectId, ResourceApiResponse> {
+    cognitive_kernel::ports::IdGenerator::next_uuid_v7(&UuidV7Generator)
+        .ok()
+        .and_then(|value| ObjectId::parse(&value).ok())
+        .ok_or_else(|| {
+            error(
+                503,
+                "RESOURCE_MEMORY_UNAVAILABLE",
+                "daemon could not mint a lifecycle identity",
+            )
+        })
+}
+
+fn now_unix_seconds() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| i64::try_from(duration.as_secs()).unwrap_or(i64::MAX))
+        .unwrap_or_default()
+}
+
 fn family_projection(family: &str) -> Value {
+    if family == "memory" {
+        return json!({
+            "family": family,
+            "availability": "not-backed",
+            "authority_source": "authority-service-not-yet-implemented",
+            "lifecycle": {
+                "remember": "/management/resource/v1/memory/remember",
+                "remember_input": "sealed source + sealed candidate envelope",
+                "review": "/management/resource/v1/memory/object?id={memory_id}",
+                "forget": "/management/resource/v1/memory/forget",
+            },
+            "resources": [],
+            "authority_side_effects": false,
+        });
+    }
+    if family == "skill" {
+        return json!({
+            "family": family,
+            "availability": "not-backed",
+            "authority_source": "authority-service-not-yet-implemented",
+            "lifecycle": {
+                "import": "/management/resource/v1/skill/import",
+                "inspect": "/management/resource/v1/skill/binding/explain?kind=revision&id={revision_id}",
+                "bind": "/management/resource/v1/skill/bind",
+                "supersede": "/management/resource/v1/skill/import",
+                "revoke": "/management/resource/v1/skill/binding/revoke",
+            },
+            "resources": [],
+            "authority_side_effects": false,
+        });
+    }
     if family == "tool" {
         let resources = BUILTIN_TOOL_CATALOG
             .iter()

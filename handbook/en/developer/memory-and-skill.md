@@ -13,12 +13,16 @@ sources:
     symbols: ["decide_memory_admission"]
   - path: crates/cognitive-store/src/sqlite/harness_skill.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/memory_skill_consumer.rs
+    symbols: ["load_governed_memory_skill_candidates"]
+  - path: crates/cognitive-store/src/memory_skill_consumption.rs
+    symbols: ["memory_skill_consumption_migration_entry"]
 tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:da7e18f21cc19068a5308a5e65067d90feee2bd932a3a570ef34ab33fd63711b"
+fingerprint: "sha256:8a84aac67582960df0d276142a86f3a238746a68581a5705481382633ba69773"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -57,9 +61,25 @@ bindings keep their exact pins — they never drift to a successor.
 
 ## HTTP reach
 
-Management channel: remember/forget, skill import/bind/revoke, object/explain
-reads. `skill/binding/revoke` is matched before `skill/bind`, since the shorter
-route is a prefix of the longer one and would otherwise handle every revoke. Task channel: task-bound projection/watch plus consumption records that
-bind selected Memory/Skill provenance to current TaskContract/ContextRequest
-facts (revoked/forgotten/expired items are excluded by the same authority reads).
+The management channel publishes lifecycle preconditions, admits a sealed
+`WorkspaceContextSource`, and completes Memory remember/review/forget plus
+Skill import/revision-inspect/bind/supersede/revoke without direct SQLite
+access. Memory admission accepts a sealed `MemoryCandidate`; the daemon derives
+the decision and Memory identities. `skill/binding/revoke` is matched before
+`skill/bind`, since the shorter route is a prefix of the longer one and would
+otherwise handle every revoke. All mutation rows and revision lineage remain
+available after daemon restart. A policy-rejected Memory candidate may retry
+the exact same sealed source without raw cleanup; a same-id source with
+different fields remains a conflict. Task channel: task-bound projection/watch
+plus a production governed consumer.
+`resolve_authorized_task_context` loads eligible Memory/Skill only after
+metadata-first eligibility, exact Task-or-workspace scope/pin/digest checks,
+and current
+forget/revoke revalidation. The resulting fragments enter the sealed
+ContextView; an append-only v24 consumption record keyed by Task, epoch,
+ContextRequest and session supports cross-session reuse. The latest row is the
+last appended record, not the lexicographically greatest hashed identity.
+Reuse reloads current authority facts, binds its deterministic record identity
+to principal/tenant/scope/purpose/request digest and exact pins, and fails
+closed on forget, revoke, digest mismatch, or a competing durable record.
 Task bearers are rejected before any management mutation.
