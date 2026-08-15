@@ -104,7 +104,7 @@ where
         + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,
-    P: PrivatePiCandidateProposer,
+    P: PrivatePiCandidateProposer + ?Sized,
 {
     propose_persist_and_admit_candidate_after_metadata(
         store,
@@ -141,7 +141,7 @@ where
         + WorkerAuthorizationStore,
     C: Clock,
     G: IdGenerator,
-    P: PrivatePiCandidateProposer,
+    P: PrivatePiCandidateProposer + ?Sized,
     F: FnOnce() -> Result<(), SchedulerAuthorityError>,
 {
     // Candidate identity is daemon-owned and stable across a scheduler retry.
