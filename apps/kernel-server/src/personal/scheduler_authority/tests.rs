@@ -252,6 +252,9 @@ struct ContextFixtureExecutionOptions {
     semantic_calls: Option<i64>,
     verifier_ref: Option<String>,
     system_clock_lease: bool,
+    /// Optional override for `TaskContract.max_iterations`; defaults to 1
+    /// so existing tests keep the tight per-attempt ceiling they rely on.
+    max_iterations: Option<i64>,
 }
 
 fn append_context_fixture(
@@ -497,7 +500,7 @@ fn append_context_fixture(
             &format!("sha256:{}", "f".repeat(64)),
         ),
         loop_object_id: Some(object_id(929).to_generated()),
-        max_iterations: 1,
+        max_iterations: execution_options.max_iterations.unwrap_or(1),
         max_retries: 0,
         objective: "race regression".to_owned(),
         scope: TaskScope {
@@ -3336,6 +3339,11 @@ fn prepare_public_admission_equivalent_production_chain(
         semantic_calls: Some(1),
         verifier_ref: None,
         system_clock_lease: true,
+        // Tick 1 admits the candidate (one progress step). Tick 2 must
+        // still be below `step_ceiling` when the scheduler snapshot loads,
+        // otherwise `stop_before_dispatch_when_ceiling_reached` fires
+        // before any executor runs.
+        max_iterations: Some(4),
     };
     let (context_command, _) =
         append_context_fixture(&store, &task_ref, None, json!({}), &execution_options);
