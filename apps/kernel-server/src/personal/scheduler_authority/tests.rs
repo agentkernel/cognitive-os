@@ -2568,7 +2568,7 @@ fn candidate_mutation_preimages_match_the_production_router_contract() {
                 .map(|candidate| OperationDescriptor {
                     operation_id: candidate.operation_id.clone(),
                     action: candidate.action.clone(),
-                    effect_class: candidate.effect_class,
+                    effect_class: EffectClass::Pure,
                     executor: candidate.executor.clone(),
                     capabilities: ExecutorCapabilities {
                         queryable: true,
@@ -2613,7 +2613,7 @@ fn candidate_mutation_rejects_router_incompatible_raw_digest_preimage() {
             .map(|candidate| OperationDescriptor {
                 operation_id: candidate.operation_id.clone(),
                 action: candidate.action.clone(),
-                effect_class: candidate.effect_class,
+                effect_class: EffectClass::Pure,
                 executor: candidate.executor.clone(),
                 capabilities: ExecutorCapabilities {
                     queryable: true,
