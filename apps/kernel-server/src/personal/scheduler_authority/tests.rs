@@ -255,6 +255,8 @@ struct ContextFixtureExecutionOptions {
     /// Optional override for `TaskContract.max_iterations`; defaults to 1
     /// so existing tests keep the tight per-attempt ceiling they rely on.
     max_iterations: Option<i64>,
+    /// Optional override for `TaskContract.max_retries`; defaults to 0.
+    max_retries: Option<i64>,
 }
 
 fn append_context_fixture(
@@ -501,7 +503,7 @@ fn append_context_fixture(
         ),
         loop_object_id: Some(object_id(929).to_generated()),
         max_iterations: execution_options.max_iterations.unwrap_or(1),
-        max_retries: 0,
+        max_retries: execution_options.max_retries.unwrap_or(0),
         objective: "race regression".to_owned(),
         scope: TaskScope {
             in_scope: vec!["test".to_owned()],
@@ -3342,8 +3344,11 @@ fn prepare_public_admission_equivalent_production_chain(
         // Tick 1 admits the candidate (one progress step). Tick 2 must
         // still be below `step_ceiling` when the scheduler snapshot loads,
         // otherwise `stop_before_dispatch_when_ceiling_reached` fires
-        // before any executor runs.
+        // before any executor runs. `retry_count >= retry_ceiling` also
+        // trips the same ceiling boundary when both are 0, so both bounds
+        // are raised above the single production attempt.
         max_iterations: Some(4),
+        max_retries: Some(4),
     };
     let (context_command, _) =
         append_context_fixture(&store, &task_ref, None, json!({}), &execution_options);
