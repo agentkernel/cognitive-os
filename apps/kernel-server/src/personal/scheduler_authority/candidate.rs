@@ -393,7 +393,7 @@ pub(crate) fn validate_untrusted_pi_candidate(
 /// Canonicalize only the parameter variants whose native production router
 /// consumes persisted Intent data. This is deliberately daemon-side: a Pi
 /// candidate's JSON serialization is never treated as canonical or trusted.
-fn canonicalize_candidate_parameters(
+pub(crate) fn canonicalize_candidate_parameters(
     candidate: &UntrustedPiCandidate,
     descriptor: &cognitive_kernel::ports::DaemonOperationDescriptorRow,
 ) -> Result<Option<CandidateParameters>, SchedulerAuthorityError> {
