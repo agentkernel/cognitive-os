@@ -1538,6 +1538,7 @@ fn persist_governance_root(
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod evidence_tests {
     use super::*;
 

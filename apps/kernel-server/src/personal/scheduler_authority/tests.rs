@@ -3339,7 +3339,10 @@ fn prepare_public_admission_equivalent_production_chain(
         allowed_tools: vec![candidate.tool_ref.clone()],
         candidate_actions: vec![candidate.action.clone()],
         semantic_calls: Some(1),
-        verifier_ref: None,
+        // Task acceptance stays behind an independent verifier; the shared
+        // fixed-effect verifier lets DRAFT admit into READY without letting
+        // router success alone complete the Task.
+        verifier_ref: Some("verifier://personal/fixed-effect".to_owned()),
         system_clock_lease: true,
         // Tick 1 admits the candidate (one progress step). Tick 2 must
         // still be below `step_ceiling` when the scheduler snapshot loads,
