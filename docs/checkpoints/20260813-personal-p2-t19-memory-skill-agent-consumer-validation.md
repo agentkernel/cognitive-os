@@ -1690,3 +1690,21 @@
 - Disposition:
   `DOCS_IMPACT_NONE="Final CI and dependency handoff evidence changes no shipped behavior or handbook claims"`
   must remain in the commit record.
+
+### D05-SUPERSEDING-01 — post-P2-T14 rebase and acceptance closure
+
+- Revision: `410ef70f06b01dbbb17929cd6fabab36d8778319` on the task branch after
+  P2-T14 was merged to `main`.
+- Production scope: governed Memory/Skill consumption is now connected to the
+  daemon Context path with metadata-first eligibility, exact scope/epoch/request
+  and digest binding, append-only v24 records, session-2 reuse, lifecycle
+  remember/review/forget and import/inspect/bind/supersede/revoke HTTP paths,
+  and fail-closed replay/conflict/revocation/forget/digest negatives.
+- Required CI: run `31823947722` passed Ubuntu and Windows, including the Rust
+  workspace build/tests, strict Clippy, rustfmt, codegen, consistency,
+  traceability, bilingual handbook, conformance and evidence-honesty gates.
+- Outcome: **pass** for P2-T19 implementation acceptance. The prior D05
+  dependency handoff is superseded by this entry; no Gate, release, Profile,
+  B08, EVAL or Agent-benefit claim is created.
+- Closure action: update `PROGRESS.md`, move the lease to the closed archive,
+  and close PR #214 only after this acceptance record is committed.
