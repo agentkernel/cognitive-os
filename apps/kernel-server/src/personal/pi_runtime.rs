@@ -103,12 +103,14 @@ pub(crate) struct PrivatePiCandidateRequest {
 /// The only response shape accepted from the private Pi transport. The
 /// scheduler converts this into its own untrusted candidate type and performs
 /// all descriptor, contract, authorization, sealing, and admission checks.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct PrivatePiCandidateResponse {
     pub tool_ref: String,
     pub action: String,
     pub target: String,
+    #[serde(default)]
+    pub parameters: Option<Value>,
     pub parameters_digest: String,
     pub expected_state_version: i64,
     pub operation_descriptor_id: String,

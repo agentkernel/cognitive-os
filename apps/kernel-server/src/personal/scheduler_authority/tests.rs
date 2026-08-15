@@ -19,6 +19,9 @@ use super::{
 use cognitive_contracts::{
     canonical,
     generated::governed_object_header::GovernedObjectHeaderSensitivity,
+    generated::operation_candidate_proposal::{
+        CandidateParameters, WorkspaceSearchParameters, WorkspaceSearchParametersFamily,
+    },
     generated::{
         common_defs::Budget,
         context_view::{
@@ -2410,6 +2413,7 @@ fn private_pi_candidate_rejects_invalid_non_authority_fields() {
         tool_ref: "operation://personal/filesystem/read".to_owned(),
         action: "filesystem.read".to_owned(),
         target: "file:///workspace/input.txt".to_owned(),
+        parameters: None,
         parameters_digest: "not-a-digest".to_owned(),
         expected_state_version: 1,
         operation_descriptor_id: object_id(990),
@@ -2426,6 +2430,86 @@ fn private_pi_candidate_rejects_invalid_non_authority_fields() {
     };
     assert!(matches!(
         validate_untrusted_pi_candidate(&invalid_version_candidate),
+        Err(SchedulerAuthorityError::PrivatePiProposal(_))
+    ));
+}
+
+#[test]
+fn candidate_parameter_digest_is_recomputed_from_daemon_canonical_bytes() {
+    let parameters = CandidateParameters::WorkspaceSearchParameters(WorkspaceSearchParameters {
+        family: WorkspaceSearchParametersFamily::WorkspaceSearch,
+        query: "needle".to_owned(),
+    });
+    let canonical_bytes =
+        canonical::canonical_bytes_of_value(&serde_json::to_value(&parameters).unwrap()).unwrap();
+    let digest = canonical::digest(
+        &canonical_bytes,
+        "cognitiveos.personal.candidate-parameters/0.1",
+    )
+    .unwrap();
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(991),
+        descriptor: BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|candidate| candidate.operation_id == "native.workspace.search")
+            .map(|candidate| OperationDescriptor {
+                operation_id: candidate.operation_id.clone(),
+                action: candidate.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: candidate.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: candidate.descriptor_version,
+            })
+            .unwrap(),
+        canonical_json: "{}".to_owned(),
+    };
+    let candidate = UntrustedPiCandidate {
+        tool_ref: "native.workspace.search".to_owned(),
+        action: "search".to_owned(),
+        target: "workspace://tenant-a/project/alpha".to_owned(),
+        parameters: Some(serde_json::to_value(&parameters).unwrap()),
+        parameters_digest: digest,
+        expected_state_version: 1,
+        operation_descriptor_id: object_id(991),
+    };
+
+    let verified = super::canonicalize_candidate_parameters(&candidate, &descriptor).unwrap();
+
+    assert_eq!(verified, Some(parameters));
+}
+
+#[test]
+fn candidate_parameter_digest_mismatch_denies_before_candidate_persistence() {
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(992),
+        descriptor: OperationDescriptor {
+            operation_id: "native.workspace.search".to_owned(),
+            action: "search".to_owned(),
+            effect_class: EffectClass::Pure,
+            executor: "daemon.workspace".to_owned(),
+            capabilities: ExecutorCapabilities {
+                queryable: true,
+                idempotent: true,
+            },
+            descriptor_version: 1,
+        },
+        canonical_json: "{}".to_owned(),
+    };
+    let candidate = UntrustedPiCandidate {
+        tool_ref: "native.workspace.search".to_owned(),
+        action: "search".to_owned(),
+        target: "workspace://tenant-a/project/alpha".to_owned(),
+        parameters: Some(json!({"family": "WorkspaceSearch", "query": "needle"})),
+        parameters_digest: format!("sha256:{}", "0".repeat(64)),
+        expected_state_version: 1,
+        operation_descriptor_id: object_id(992),
+    };
+
+    assert!(matches!(
+        super::canonicalize_candidate_parameters(&candidate, &descriptor),
         Err(SchedulerAuthorityError::PrivatePiProposal(_))
     ));
 }

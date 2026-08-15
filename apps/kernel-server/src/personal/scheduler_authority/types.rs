@@ -285,6 +285,9 @@ pub(crate) struct UntrustedPiCandidate {
     pub tool_ref: String,
     pub action: String,
     pub target: String,
+    /// Bounded candidate data only. The scheduler canonicalizes and validates
+    /// it against the daemon-owned descriptor before it is persisted.
+    pub parameters: Option<Value>,
     pub parameters_digest: String,
     pub expected_state_version: i64,
     pub operation_descriptor_id: ObjectId,
@@ -338,6 +341,7 @@ impl PrivatePiCandidateProposer for ConfiguredPrivatePiCandidateProposer {
             tool_ref: response.tool_ref,
             action: response.action,
             target: response.target,
+            parameters: response.parameters,
             parameters_digest: response.parameters_digest,
             expected_state_version: response.expected_state_version,
             operation_descriptor_id,

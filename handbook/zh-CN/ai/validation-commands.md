@@ -11,7 +11,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:416656a35feaf294a2aac3e6a5113f25a22cfd7427206722844857619e716263"
+fingerprint: "sha256:3e069713e8f585151fd7a54f5fa9bbe7efcf3313970529f63ec634cd795941fd"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---

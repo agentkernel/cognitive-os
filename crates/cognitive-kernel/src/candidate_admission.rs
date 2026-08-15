@@ -269,13 +269,19 @@ pub fn compose_candidate_admission(
         &contract_payload.header.content_digest.0,
     );
     let parameters_digest = Digest(inputs.candidate.parameters_digest.clone());
+    let verified_parameters = candidate_payload
+        .parameters
+        .as_ref()
+        .map(serde_json::to_value)
+        .transpose()
+        .map_err(|error| malformed(error.to_string()))?;
     let action_fingerprint = action_fingerprint(&inputs.candidate, &inputs.descriptor.descriptor)?;
     let budget_charge = canonical_budget(&inputs.budget_charge);
     let budget_charge_value =
         serde_json::to_value(&budget_charge).map_err(|error| malformed(error.to_string()))?;
     let budget_charge_canonical_json = canonical_string(&budget_charge_value)?;
 
-    let intent_value = json!({
+    let mut intent_value = json!({
         "action": inputs.candidate.action,
         "capability_set_version": inputs.authorization.capability_set_version,
         "contract_epoch": inputs.task_contract.contract_epoch,
@@ -294,6 +300,9 @@ pub fn compose_candidate_admission(
         "target": inputs.candidate.target,
         "task_ref": inputs.task_contract.task_ref,
     });
+    if let Some(parameters) = verified_parameters {
+        intent_value["parameters"] = parameters;
+    }
     let intent_canonical_json = canonical_string(&intent_value)?;
     let intent_reference = strong_reference_for_content(
         &inputs.identities.intent_id,
@@ -760,6 +769,7 @@ mod tests {
                 &descriptor_id,
                 &format!("sha256:{}", "1".repeat(64)),
             ),
+            parameters: None,
             parameters_digest: format!("sha256:{}", "2".repeat(64)),
             target: "file:///workspace/input.txt".to_owned(),
             task_contract_ref: strong_reference_to(

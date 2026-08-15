@@ -1,8 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use cognitive_contracts::{
     canonical,
     generated::governed_object_header::GovernedObjectHeaderSensitivity,
+    generated::operation_candidate_proposal::CandidateParameters,
     generated::worker_iteration_authorization::WorkerIterationAuthorization,
     generated::{
         context_request::ContextRequest,
@@ -252,6 +254,7 @@ where
             proposed_candidate.operation_descriptor_id.to_string(),
         ));
     }
+    let verified_parameters = canonicalize_candidate_parameters(&proposed_candidate, &descriptor)?;
     let descriptor_reference_digest =
         canonical_descriptor_reference_digest(&descriptor.canonical_json)?;
     let proposed_at = clock
@@ -330,6 +333,7 @@ where
             &descriptor.descriptor_id,
             &descriptor_reference_digest,
         ),
+        parameters: verified_parameters.clone(),
         parameters_digest: proposed_candidate.parameters_digest.clone(),
         target: proposed_candidate.target.clone(),
         task_contract_ref: strong_reference_to(
@@ -381,6 +385,106 @@ pub(crate) fn validate_untrusted_pi_candidate(
     if !fields_are_present || !is_sha256_digest(&candidate.parameters_digest) {
         return Err(SchedulerAuthorityError::PrivatePiProposal(
             "candidate has missing fields or an invalid parameters digest".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+/// Canonicalize only the parameter variants whose native production router
+/// consumes persisted Intent data. This is deliberately daemon-side: a Pi
+/// candidate's JSON serialization is never treated as canonical or trusted.
+fn canonicalize_candidate_parameters(
+    candidate: &UntrustedPiCandidate,
+    descriptor: &cognitive_kernel::ports::DaemonOperationDescriptorRow,
+) -> Result<Option<CandidateParameters>, SchedulerAuthorityError> {
+    let requires_parameters = matches!(
+        descriptor.descriptor.operation_id.as_str(),
+        "native.workspace.search" | "native.workspace.write" | "native.workspace.patch"
+    );
+    let Some(untrusted_parameters) = candidate.parameters.clone() else {
+        return if requires_parameters {
+            Err(SchedulerAuthorityError::PrivatePiProposal(
+                "candidate parameters are required for the selected workspace operation".to_owned(),
+            ))
+        } else {
+            Ok(None)
+        };
+    };
+    let parameters: CandidateParameters =
+        serde_json::from_value(untrusted_parameters).map_err(|_| {
+            SchedulerAuthorityError::PrivatePiProposal(
+                "candidate parameters are not a registered bounded variant".to_owned(),
+            )
+        })?;
+    let expected_operation_id = match &parameters {
+        CandidateParameters::WorkspaceSearchParameters(search) => {
+            if search.query.as_bytes().len()
+                > cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES
+            {
+                return Err(SchedulerAuthorityError::PrivatePiProposal(
+                    "candidate workspace search query exceeds the registered bound".to_owned(),
+                ));
+            }
+            "native.workspace.search"
+        }
+        CandidateParameters::WorkspaceWriteParameters(write) => {
+            validate_canonical_mutation_parameters(&write.input_b64, &write.preimage)?;
+            "native.workspace.write"
+        }
+        CandidateParameters::WorkspacePatchParameters(patch) => {
+            validate_canonical_mutation_parameters(&patch.input_b64, &patch.preimage)?;
+            "native.workspace.patch"
+        }
+    };
+    if descriptor.descriptor.operation_id != expected_operation_id {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate parameter family does not match the daemon-owned descriptor".to_owned(),
+        ));
+    }
+    let canonical_value = serde_json::to_value(&parameters).map_err(|error| {
+        SchedulerAuthorityError::PrivatePiProposal(format!(
+            "candidate parameters cannot be canonicalized: {error}"
+        ))
+    })?;
+    let canonical_bytes =
+        canonical::canonical_bytes_of_value(&canonical_value).map_err(|error| {
+            SchedulerAuthorityError::PrivatePiProposal(format!(
+                "candidate parameters are not canonicalizable: {error}"
+            ))
+        })?;
+    let recomputed_digest = canonical::digest(
+        &canonical_bytes,
+        "cognitiveos.personal.candidate-parameters/0.1",
+    )
+    .map_err(|error| SchedulerAuthorityError::PrivatePiProposal(error.to_string()))?;
+    if recomputed_digest != candidate.parameters_digest {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate parameters digest does not match daemon-canonical bytes".to_owned(),
+        ));
+    }
+    Ok(Some(parameters))
+}
+
+fn validate_canonical_mutation_parameters(
+    input_b64: &str,
+    preimage: &str,
+) -> Result<(), SchedulerAuthorityError> {
+    if !is_sha256_digest(preimage) {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate mutation preimage is invalid".to_owned(),
+        ));
+    }
+    let payload = STANDARD.decode(input_b64).map_err(|_| {
+        SchedulerAuthorityError::PrivatePiProposal(
+            "candidate mutation payload is not base64".to_owned(),
+        )
+    })?;
+    if payload.is_empty()
+        || payload.len() > cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_MUTATION_PAYLOAD_BYTES
+        || STANDARD.encode(payload) != input_b64
+    {
+        return Err(SchedulerAuthorityError::PrivatePiProposal(
+            "candidate mutation payload is empty, oversized, or non-canonical".to_owned(),
         ));
     }
     Ok(())

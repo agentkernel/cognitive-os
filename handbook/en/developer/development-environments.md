@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:f8ddc74106b682817debad87f9953c745f3c5936d09a9870892b2443da92e3ca"
+fingerprint: "sha256:2cf220d9d836c5b7751c394165f5e3a8a5117eb41fe510c63255f0729339ea0b"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
