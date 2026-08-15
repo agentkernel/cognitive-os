@@ -418,8 +418,9 @@ fn canonicalize_candidate_parameters(
         })?;
     let expected_operation_id = match &parameters {
         CandidateParameters::WorkspaceSearchParameters(search) => {
-            if search.query.as_bytes().len()
-                > cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES
+            if search.query.is_empty()
+                || search.query.as_bytes().len()
+                    > cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES
             {
                 return Err(SchedulerAuthorityError::PrivatePiProposal(
                     "candidate workspace search query exceeds the registered bound".to_owned(),
@@ -494,7 +495,10 @@ pub(crate) fn is_sha256_digest(value: &str) -> bool {
     let Some(hexadecimal) = value.strip_prefix("sha256:") else {
         return false;
     };
-    hexadecimal.len() == 64 && hexadecimal.bytes().all(|byte| byte.is_ascii_hexdigit())
+    hexadecimal.len() == 64
+        && hexadecimal
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 pub(crate) fn canonical_descriptor_reference_digest(

@@ -20,25 +20,31 @@ export const SCHEMA_ID = "operation-candidate-proposal.schema.json";
  */
 export const SCHEMA_DIGEST = "sha256:ffc210232c9f9c9aa552a65cdf3719b454424fde5fdd92623150d02f33a60ec1";
 
-/** Strictly bounded parameter variants. No generic tool parameter object is permitted. */
-export type CandidateParameters = WorkspaceSearchParameters | WorkspaceWriteParameters | WorkspacePatchParameters;
+export type WorkspaceSearchParametersFamily = "WorkspaceSearch";
 
 export interface WorkspaceSearchParameters {
-  family: "WorkspaceSearch";
+  family: WorkspaceSearchParametersFamily;
   query: string;
 }
 
+export type WorkspaceWriteParametersFamily = "WorkspaceWrite";
+
 export interface WorkspaceWriteParameters {
-  family: "WorkspaceWrite";
+  family: WorkspaceWriteParametersFamily;
   input_b64: string;
   preimage: string;
 }
 
+export type WorkspacePatchParametersFamily = "WorkspacePatch";
+
 export interface WorkspacePatchParameters {
-  family: "WorkspacePatch";
+  family: WorkspacePatchParametersFamily;
   input_b64: string;
   preimage: string;
 }
+
+/** Strictly bounded parameter variants. No generic tool parameter object is permitted. */
+export type CandidateParameters = WorkspaceSearchParameters | WorkspaceWriteParameters | WorkspacePatchParameters;
 
 /** Immutable operation candidate observation. It is not an authorization, Intent, Effect, budget reservation, dispatch request, progress fact, receipt, or Task completion claim. Only the daemon may admit one candidate into a WorkerIterationAuthorization. */
 export interface OperationCandidateProposal {
