@@ -80,3 +80,52 @@
 - Environment: local `DEV-WIN-GNU-01`
 - Outcome: `pass` — `check-handbook` OK (54×2 locales); generator `--check` OK
   (18 pages byte-identical); docs-sync-gate OK without `DOCS_IMPACT_NONE`
+
+### D01-LINUX-01 — exact-revision native tests (`48fa7d0465cd8499f41c46aba41522711e3c8583`)
+
+- Instrument: `cargo test -p kernel-server --test p2_t16_registered_check --locked`
+  then `cargo test -p kernel-server --bin kernel-server --locked`
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`), worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t22-48fa7d0` at exact
+  `48fa7d0465cd8499f41c46aba41522711e3c8583`
+- Outcome: `pass` — `p2_t16_registered_check` 3/3 (including
+  `fixed_rust_worker_runs_without_shell_or_ambient_environment`); kernel-server
+  bin tests 290/290 including D01 freeze, hidden-test, and write-alone gap
+  proofs. `B01-Desktop-Linux-002` untouched.
+- Note: Windows PowerShell `|` in SSH `-- --test production_write` filters is
+  forbidden (pipe / zero matches); use a single substring or no filter.
+
+### D01-LINUX-02 — Clippy deny-warnings at `48fa7d04` (superseded)
+
+- Instrument: `cargo clippy --workspace --all-targets --locked -- -D warnings`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `48fa7d04`
+- Outcome: `fail` — `clippy::collapsible_if` in
+  `scheduler_authority/tests.rs` `artifact_dir_contains_schema` (nested
+  `if let Ok(bytes)` + inner `if`). Same defect as Ubuntu required CI.
+
+### D01-CI-01 — Ubuntu required CI at `48fa7d04` (superseded)
+
+- Instrument: GitHub Actions run
+  [31914724268](https://github.com/agentkernel/cognitive-os/actions/runs/31914724268)
+  / job `verify (ubuntu-latest)`
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `fail` — Clippy `-D warnings` on the same `collapsible_if` at
+  `scheduler_authority/tests.rs:3730`. Tests did not run. `required-ci`
+  failed because `VERIFY_RESULT=failure`. Windows is
+  `not-run by owner-directed Linux-only route`.
+
+### D01-IMPL-02 — collapse artifact-schema scan (Clippy)
+
+- Instrument: `apps/kernel-server/src/personal/scheduler_authority/tests.rs`
+  `artifact_dir_contains_schema`
+- Outcome: authored. Nested `if let` + inner `if` replaced with
+  `is_some_and` so `-D warnings` Clippy accepts the helper. Assertion
+  unchanged: write-alone must still prove no
+  `personal-registered-check-evidence/0.1` artifact.
+- Disposition: test-only; no product or handbook semantic change.
+
+### D01-LOCAL-04 — cargo fmt after Clippy flatten
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: local `DEV-WIN-GNU-01`
+- Outcome: `pass`

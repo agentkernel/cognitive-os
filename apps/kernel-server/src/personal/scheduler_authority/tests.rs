@@ -3723,17 +3723,15 @@ fn artifact_dir_contains_schema(root: &std::path::Path, schema: &str) -> bool {
         };
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                if walk(&path, schema) {
-                    return true;
-                }
-            } else if let Ok(bytes) = std::fs::read(&path) {
-                if bytes
+            if path.is_dir() && walk(&path, schema) {
+                return true;
+            }
+            if std::fs::read(&path).ok().is_some_and(|bytes| {
+                bytes
                     .windows(schema.len())
                     .any(|window| window == schema.as_bytes())
-                {
-                    return true;
-                }
+            }) {
+                return true;
             }
         }
         false
