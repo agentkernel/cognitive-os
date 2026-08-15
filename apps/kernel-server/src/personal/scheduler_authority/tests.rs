@@ -482,7 +482,10 @@ fn append_context_fixture(
         }],
         context_request_ref: Some(strong_reference_to(&request_id, &request_digest)),
         contract_epoch: 1,
-        deadline: None,
+        // Fixture deadline covers the production scheduler snapshot path;
+        // callers that only exercise pre-dispatch stages are unaffected by
+        // the exact value.
+        deadline: Some("2027-12-31T00:00:00Z".to_owned()),
         header: contract_header,
         human_gates: None,
         intent_acceptance_ref: strong_reference_to(
