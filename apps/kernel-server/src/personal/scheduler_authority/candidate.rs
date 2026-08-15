@@ -419,7 +419,7 @@ pub(crate) fn canonicalize_candidate_parameters(
     let expected_operation_id = match &parameters {
         CandidateParameters::WorkspaceSearchParameters(search) => {
             if search.query.is_empty()
-                || search.query.as_bytes().len()
+                || search.query.len()
                     > cognitive_kernel::tool_registry::MAXIMUM_WORKSPACE_SEARCH_QUERY_BYTES
             {
                 return Err(SchedulerAuthorityError::PrivatePiProposal(
