@@ -110,8 +110,8 @@ informative work-package ID：
 
 | Work package | Formal task | Initial status |
 |---|---|---|
-| BR-01 | P2-T21 | in-progress |
-| BR-02 | P2-T22 | not-started |
+| BR-01 | P2-T21 | done |
+| BR-02 | P2-T22 | in-progress |
 | BR-03 | P2-T23 | not-started |
 | BR-04 | P2-T24 | not-started |
 | BR-05 | P2-T25 | not-started |

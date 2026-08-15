@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T22/governed-software-repair` | P2-T22/D01 governed software-repair | Lane-RUN | `personal/P2-T22-governed-software-repair` | `apps/kernel-server/src/personal/registered_check/**` `apps/kernel-server/src/personal/scheduler_authority/tests.rs` `apps/kernel-server/tests/p2_t16_registered_check.rs` `tests/fixtures/p2_t16_registered_check/**` `docs/plan/PROGRESS.md` `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` `docs/checkpoints/20260816-personal-p2-t22-governed-software-repair-report.md` `docs/evaluation/personal-performance-benchmark-readiness-closure-plan.md` `handbook/en/developer/execution-chain-status.md` `handbook/zh-CN/developer/execution-chain-status.md` | cursor-agent / P2-T22 | 2026-08-16 / 2026-08-16 | active |
 
 
 Closed historical leases are archived in

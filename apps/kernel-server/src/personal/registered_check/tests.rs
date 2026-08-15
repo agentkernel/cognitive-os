@@ -37,10 +37,8 @@ impl TestLayout {
     }
 
     fn write_c2a_fixture(&self) {
-        std::fs::create_dir_all(self.workspace.join("src")).expect("创建 src");
-        std::fs::create_dir_all(self.workspace.join("tests")).expect("创建 tests");
-        std::fs::write(self.workspace.join(C2A_SOURCE_PATH), C2A_SOURCE).expect("写入修复源文件");
-        std::fs::write(self.workspace.join(C2A_TEST_PATH), C2A_TEST).expect("写入固定测试");
+        write_repaired_oracle_files(RepairCorpusFamily::TypeScript, &self.workspace)
+            .expect("写入 TypeScript 修复 oracle");
     }
 }
 
@@ -178,6 +176,10 @@ fn request_rejects_argv_env_cwd_credentials_and_network_injection() {
 
 #[test]
 fn unknown_and_shell_metacharacter_check_ids_fail_closed() {
+    let rust = RegisteredCheckRegistry::production()
+        .resolve(&RegisteredCheckRunRequest::new(C2A_RUST_CHECK_ID))
+        .expect("Rust repair check_id 必须解析");
+    assert_eq!(rust.check_id(), C2A_RUST_CHECK_ID);
     assert!(matches!(
         RegisteredCheckRegistry::production()
             .resolve(&RegisteredCheckRunRequest::new("unknown.check")),
@@ -485,4 +487,149 @@ fn tampered_or_missing_cas_evidence_never_verifies() {
         )
         .is_err()
     );
+}
+
+fn corpus_looks_secret_shaped(bytes: &[u8]) -> bool {
+    const NEEDLES: [&[u8]; 9] = [
+        b"sk-",
+        b"Bearer ",
+        b"AKIA",
+        b"ASIA",
+        b"ghp_",
+        b"xoxb-",
+        b"BEGIN PRIVATE",
+        b"aws_secret",
+        b"api_key",
+    ];
+    NEEDLES
+        .iter()
+        .any(|needle| bytes.windows(needle.len()).any(|window| window == *needle))
+}
+
+#[test]
+fn broken_reset_is_deterministic_for_typescript_and_rust() {
+    for family in [RepairCorpusFamily::TypeScript, RepairCorpusFamily::Rust] {
+        let layout = TestLayout::new(&format!("reset-{}", family.check_id()));
+        reset_broken_repair_corpus(family, &layout.workspace).expect("第一次 broken reset");
+        let first = corpus_snapshot_digest(&layout.workspace).expect("第一次 snapshot");
+        reset_broken_repair_corpus(family, &layout.workspace).expect("第二次 broken reset");
+        let second = corpus_snapshot_digest(&layout.workspace).expect("第二次 snapshot");
+        assert_eq!(
+            first,
+            second,
+            "{} broken reset must be deterministic",
+            family.check_id()
+        );
+        assert_eq!(
+            std::fs::read(layout.workspace.join(family.source_path())).expect("读 broken 源"),
+            broken_source_bytes(family)
+        );
+    }
+}
+
+#[test]
+fn repaired_corpus_worker_passes_and_broken_corpus_fails() {
+    for family in [RepairCorpusFamily::TypeScript, RepairCorpusFamily::Rust] {
+        let layout = TestLayout::new(&format!("oracle-{}", family.check_id()));
+        write_repaired_oracle_files(family, &layout.workspace).expect("写入 repaired oracle");
+        let passed = run_registered_check_worker(family.check_id(), &layout.workspace)
+            .expect("repaired worker");
+        assert!(
+            passed.passed,
+            "{} repaired corpus must pass the digest oracle",
+            family.check_id()
+        );
+
+        reset_broken_repair_corpus(family, &layout.workspace).expect("写入 broken 源");
+        let failed = run_registered_check_worker(family.check_id(), &layout.workspace)
+            .expect("broken worker");
+        assert!(
+            !failed.passed,
+            "{} broken corpus must fail the digest oracle",
+            family.check_id()
+        );
+    }
+}
+
+#[test]
+fn gutting_public_test_fails_even_when_source_repaired_and_hidden_intact() {
+    for family in [RepairCorpusFamily::TypeScript, RepairCorpusFamily::Rust] {
+        let layout = TestLayout::new(&format!("gut-public-{}", family.check_id()));
+        write_repaired_oracle_files(family, &layout.workspace).expect("写入 repaired oracle");
+        std::fs::write(
+            layout.workspace.join(family.public_test_path()),
+            b"// gutted public oracle\n",
+        )
+        .expect("削弱 public test");
+        let failed = run_registered_check_worker(family.check_id(), &layout.workspace)
+            .expect("gutted public worker");
+        assert!(
+            !failed.passed,
+            "{} public-test weakening must fail even with repaired source and hidden intact",
+            family.check_id()
+        );
+    }
+}
+
+#[test]
+fn gutting_hidden_test_fails_even_when_source_repaired_and_public_intact() {
+    for family in [RepairCorpusFamily::TypeScript, RepairCorpusFamily::Rust] {
+        let layout = TestLayout::new(&format!("gut-hidden-{}", family.check_id()));
+        write_repaired_oracle_files(family, &layout.workspace).expect("写入 repaired oracle");
+        std::fs::write(
+            layout.workspace.join(family.hidden_test_path()),
+            b"// gutted hidden oracle\n",
+        )
+        .expect("削弱 hidden test");
+        let failed = run_registered_check_worker(family.check_id(), &layout.workspace)
+            .expect("gutted hidden worker");
+        assert!(
+            !failed.passed,
+            "{} hidden-test weakening must fail even with repaired source and public intact",
+            family.check_id()
+        );
+    }
+}
+
+#[test]
+fn frozen_repair_corpora_contain_no_secret_shaped_bytes() {
+    for bytes in frozen_repair_corpus_bytes() {
+        assert!(
+            !corpus_looks_secret_shaped(bytes),
+            "frozen repair corpus bytes must not contain secret-shaped material"
+        );
+    }
+}
+
+#[test]
+fn rust_and_typescript_descriptors_share_deny_policy_and_exclude_broken_source() {
+    let registry = RegisteredCheckRegistry::production();
+    for family in [RepairCorpusFamily::TypeScript, RepairCorpusFamily::Rust] {
+        let descriptor = registry
+            .resolve(&RegisteredCheckRunRequest::new(family.check_id()))
+            .expect("解析 repair family");
+        assert_eq!(
+            descriptor.argv_template,
+            [
+                "--personal-registered-check-worker".to_owned(),
+                family.check_id().to_owned()
+            ]
+        );
+        assert!(descriptor.minimal_environment.is_empty());
+        assert_eq!(descriptor.network_policy, RegisteredNetworkPolicy::Denied);
+        assert!(descriptor.allowed_write_roots.is_empty());
+        assert!(
+            !descriptor
+                .expected_file_digests
+                .values()
+                .any(|digest| digest == &check_file_digest(broken_source_bytes(family)))
+        );
+        let repaired_digest = check_file_digest(repaired_source_bytes(family));
+        assert_eq!(
+            descriptor.expected_file_digests.get(family.source_path()),
+            Some(&repaired_digest)
+        );
+    }
+    let typescript = descriptor();
+    assert_eq!(typescript.descriptor_version, 2);
 }

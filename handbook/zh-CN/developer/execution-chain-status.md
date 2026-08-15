@@ -28,7 +28,7 @@ tests:
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - apps/kernel-server/tests/p2_t16_registered_check.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:87e6b12420c5efff6d55a9a43d1921efcf9db2678041059ac2c46d28514d9720"
+fingerprint: "sha256:bfb378a0d5244c1e0e02b1df23509a4e828fe65e1df746485af610551abb52a9"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -54,7 +54,7 @@ non_claims:
 | WorkspaceRead 执行器（persist-before-dispatch、原键对账） | implemented，生产调用 | 周期 worker 重载 WIA/candidate/Intent/持久 descriptor，重查精确调度 lease 与当前授权，在 daemon 数据 workspace 下 staging，并进入既有 Effect 协议；中断后的 leased 行只查询原键且绝不重复派发 |
 | WorkspaceSearch 执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 query 并 staging 进 search sink；句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
 | ProcessCheck 执行器 | implemented，生产调用 | 生产 router 会 staging 有界 process check；在 daemon 受监督进程 registry 接线前 dispatch 仍 fail closed（无环境进程观测） |
-| RegisteredCheckRun 执行器 | implemented，生产调用 | 调用载荷严格只有 `check_id`；daemon 不可变目录固定当前二进制 helper、argv、workspace-root cwd、空环境、超时、输出/进程/写入/网络边界与 descriptor digest。Intent/Effect 在 spawn 前进入持久 `EXECUTING`，原键状态跨重启保留，有界输出进入 CAS Evidence 并由登记的独立 verifier 校验 |
+| RegisteredCheckRun 执行器 | implemented，生产调用 | 调用载荷严格只有 `check_id`；daemon 不可变目录固定当前二进制 helper、argv、workspace-root cwd、空环境、超时、输出/进程/写入/网络边界与 descriptor digest。冻结目录绑定 `c2a.repair.typescript`（descriptor_version 2，含公开与 hidden 测试）与 `c2a.repair.rust`；oracle 是文件 digest 相等，因此削弱 hidden 测试即使源文件与公开测试完好也会失败。Intent/Effect 在 spawn 前进入持久 `EXECUTING`，原键状态跨重启保留，有界输出进入 CAS Evidence 并由登记的独立 verifier 校验 |
 | WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 payload + 期望 preimage 并 staging 进 mutation sink；句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，生产调用 | 生产 router 会 staging 钉住的 HTTPS target；已登记 origin 白名单默认为空，因此 origin 登记前 staging fail closed；attempted/completed 状态跨重启保留；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
@@ -91,6 +91,10 @@ non_claims:
    authority。报告、checkpoint、continuation 或 A7 评测观察都不完成 Task；验收仍属
    P2-T14。A7 fixture/本地证据不得升格为 Gate、release、Profile、B01 或 EVAL-003
    post-state。其他 Tool 请求载体仍未接线。
+3. **受治理软件修复 journey 还不是一条 Task（P2-T22）**：TypeScript 与 Rust repair
+   corpus 已冻结并钉住 hidden test；生产 WorkspaceWrite 修好源文件既不完成 Task，
+   也不发布 registered-check evidence。把 write/patch → RegisteredCheckRun →
+   独立 verification → acceptance 连成一条受治理 journey 仍未接线。
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。

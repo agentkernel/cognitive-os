@@ -40,3 +40,20 @@ fn fixed_worker_rejects_extra_argv_before_execution() {
 
     assert_eq!(output.status.code(), Some(2));
 }
+
+#[test]
+fn fixed_rust_worker_runs_without_shell_or_ambient_environment() {
+    let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .join("tests/fixtures/p2_t16_registered_check/c2a-repair-rust");
+    let output = Command::new(env!("CARGO_BIN_EXE_kernel-server"))
+        .args(["--personal-registered-check-worker", "c2a.repair.rust"])
+        .current_dir(fixture)
+        .env_clear()
+        .output()
+        .expect("执行 Rust 固定登记 helper");
+
+    assert!(output.status.success(), "{output:?}");
+    let stdout = String::from_utf8(output.stdout).expect("helper 输出 UTF-8");
+    assert!(stdout.contains("\"passed\":true"), "{stdout}");
+}

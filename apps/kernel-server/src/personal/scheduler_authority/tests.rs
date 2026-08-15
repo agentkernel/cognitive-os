@@ -87,6 +87,10 @@ use std::sync::{
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::personal::registered_check::{
+    CHECK_EVIDENCE_SCHEMA, RepairCorpusFamily, broken_source_bytes, repaired_source_bytes,
+    reset_broken_repair_corpus,
+};
 use crate::personal::tool_executor::{
     ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
     workspace_image_digest,
@@ -3705,6 +3709,88 @@ fn patch_preimage_drift_fails_closed_before_workspace_publication() {
             .state
             .as_str(),
         "COMPLETED"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+fn artifact_dir_contains_schema(root: &std::path::Path, schema: &str) -> bool {
+    fn walk(dir: &std::path::Path, schema: &str) -> bool {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return false;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if walk(&path, schema) {
+                    return true;
+                }
+            } else if let Ok(bytes) = std::fs::read(&path) {
+                if bytes
+                    .windows(schema.len())
+                    .any(|window| window == schema.as_bytes())
+                {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+    walk(root, schema)
+}
+
+#[test]
+fn production_write_of_repaired_typescript_does_not_complete_repair_journey() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspaceWrite,
+        "workspace://src/repair.ts",
+        CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: STANDARD.encode(repaired_source_bytes(family)),
+            preimage: format!(
+                "digest:{}",
+                workspace_image_digest(broken_source_bytes(family)).unwrap()
+            ),
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family),
+        "production WorkspaceWrite must publish the repaired TypeScript source"
+    );
+    assert_ne!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED",
+        "write-alone must not complete the governed repair journey"
+    );
+    assert!(
+        !artifact_dir_contains_schema(&layout.data_dir().join("artifacts"), CHECK_EVIDENCE_SCHEMA),
+        "write-alone must not publish registered-check evidence; that is the D02 gap"
     );
 
     drop(repository);
