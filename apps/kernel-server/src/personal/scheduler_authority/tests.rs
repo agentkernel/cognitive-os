@@ -363,7 +363,10 @@ fn append_context_fixture(
         resource: if execution_options.candidate_actions.is_empty() {
             "workspace://tenant-a/project".to_owned()
         } else {
-            "workspace://".to_owned()
+            // `workspace:` is the scheme prefix; `resource_within` uses
+            // `starts_with(&format!("{parent}/"))`, so this covers every
+            // `workspace://<path>` the production chain admits.
+            "workspace:".to_owned()
         },
         purpose: "task_execution".to_owned(),
         actions: capability_actions,

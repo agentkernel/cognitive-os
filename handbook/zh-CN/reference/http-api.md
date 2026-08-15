@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:9379a29398aa8ad5b78777488f737dc1f4a2c95922ce828975f0e17abf6fa123"
+fingerprint: "sha256:233274de17b91d78bb7fd3892f54785522d5adbfe780f83687dd3f73436c5e45"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

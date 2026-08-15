@@ -19,7 +19,7 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:e106b2474b75ac382e8648047a95cd9cb53dcf8b95a7c1c41fe986b16130d4ec"
+fingerprint: "sha256:173531587dd4aa266278b34b2fa79b7dd94de05ef8186f5c4f375f12bdfd29d8"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---

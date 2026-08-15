@@ -1111,19 +1111,16 @@ fn classify_reconcile_state(effect_states: &[String]) -> &'static str {
     if effect_states.is_empty() {
         return "not_applicable";
     }
-    if effect_states
-        .iter()
-        .any(|state| matches!(state.as_str(), "DISPATCHED" | "OUTCOME_UNKNOWN" | "MISSING"))
-    {
-        return "must_reconcile";
-    }
-    if effect_states
-        .iter()
-        .all(|state| matches!(state.as_str(), "RECONCILED" | "VERIFIED" | "VERIFY_FAILED"))
-    {
+    let is_durable = |state: &str| matches!(state, "RECONCILED" | "VERIFIED" | "VERIFY_FAILED");
+    let all_durable = effect_states.iter().all(|state| is_durable(state));
+    if all_durable {
         return "closed";
     }
-    "pending_dispatch"
+    let any_durable = effect_states.iter().any(|state| is_durable(state));
+    if any_durable {
+        return "pending_reconciliation";
+    }
+    "must_reconcile"
 }
 
 fn sha256_digest(bytes: &[u8]) -> String {
