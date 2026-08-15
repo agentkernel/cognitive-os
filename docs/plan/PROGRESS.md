@@ -105,7 +105,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 80 | 72 | 1 | 1 | 6 | 8 |
+| 81 | 73 | 1 | 1 | 6 | 8 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
@@ -119,6 +119,9 @@ synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P2-T21/D01` | `in-progress` | The bounded candidate-parameter contract and private transport now accept only Search/Write/Patch variants; the daemon canonicalizes and recomputes the candidate-parameter digest before persisting a sealed candidate, and the candidate-admission composer binds verified parameters into the governed Intent. Focused tests cover digest mismatch denial; required supported Rust validation remains pending | complete D01 negative coverage and supported validation, then wire D02 through the real scheduler caller |
+| `P2-T21/D02` | `ready` | No production caller reachability evidence yet; existing router support cannot substitute for public Task admission through a verified candidate | prove Search/Write/Patch reach their production sinks from the real admitted Task scheduler path while preserving Effect invariants |
+| `P2-T21/D03` | `ready` | No durable task-channel terminal outcome surface exists; current task watch remains process-local observation only | add authority/CAS-rehydrated redacted terminal evidence endpoint and task-token CLI caller |
 | `P2-T20/D01` | `done` | `production_router_rejects_parameter_bearing_families_before_effect_authorization` proves WorkspaceSearch/Write/Patch/ProcessCheck/HttpFetchReadOnly fail closed at the production router before Effect authorization (Effect stays PROPOSED); required Ubuntu/Windows CI green at `d5a18a22` | define and wire the first production request carrier (D02) per family |
 | `P2-T20/D02` | `done` | the production router now carries the governed query from the persisted Intent (`parameters.query` in the canonical JSON) and stages it into the WorkspaceSearch sink; missing/unparseable queries fail closed before Effect authorization. Required CI green at `2bde32ab` | wire the next production request carrier (D03) |
 | `P2-T20/D03` | `done` | WorkspaceWrite/Patch carrier: the production router carries the governed payload (`input_b64`) + expected preimage (`absent`/`digest:<sha256>`) from the persisted Intent and stages it into the mutation sink with durable executor state outside the workspace; missing/malformed payload or preimage fails closed. Required CI green at `4eae2d91` | wire the next production request carrier (D04) |
