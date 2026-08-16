@@ -179,19 +179,66 @@
 - Instrument: same as D01-LINUX-02.
 - Outcome: **pass** — already recorded. Ubuntu supporting CI `31934303018` **pass**.
 
-### D03-LINUX-02 — kernel-server bins
+### D03-LINUX-02 — kernel-server bins at `268cb4dc`
 
 - Instrument: `cargo test -p kernel-server --locked --bins` at `268cb4dc` on
   `DEV-LINUX-NATIVE-01`.
-- Outcome: **pass** — 328/328.
+- Outcome: **pass** — 328/328. Workspace tests at the same SHA **pass**
+  (0 failed).
 
 ### D03-IMPL-01 — overlay serialization and cross-task isolation
 
 - Instrument: `OVERLAY_LOCK` around overlay load/append/project, plus
   `cross_task_samples_stay_isolated_under_concurrent_records`.
-- Outcome: authored. Concurrent O2 records for two task refs are retained;
-  each query returns only its own samples and no capability/receipt/parameter
-  /prompt keys. Linux revalidation of this head is pending.
+- Outcome: authored on `e083b259`. Concurrent O2 records for two task refs
+  are retained; each query returns only its own samples and no
+  capability/receipt/parameter/prompt keys.
+
+### D03-LINUX-03 — overlay-lock head `e083b259`
+
+- Instrument: `DEV-LINUX-NATIVE-01` worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t25-4dfd4f89` at
+  `e083b259d25aeb938f8765179be2f0bb760daac8`.
+- Outcome: **pass** —
+  `--bin kernel-server` filter `observation` 27/27 (10/10
+  `personal::observation::tests`); HTTP `p2_t26_observation_plane` 1/1;
+  filter `p2_t17` 15/15; `--bins` 329/329; `cargo fmt --all -- --check`;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`.
+- Workspace re-run at this SHA: **pass** (0 failed). Isolated P2-T17 A7
+  15/15 also **pass** after one workspace attempt failed 2/15 under
+  package-parallel load (same tests, not weakened).
+- Cleanup: removed leftover `/tmp/cos-p2t26-*` hermetic roots and
+  `/tmp/p2-t26-*` LAN bundles/scripts. `B01-Desktop-Linux-002` was not used
+  (EVAL-004-only guest). Windows `not-run by owner-directed Linux-only
+  route`.
+- Windows: `not-run by owner-directed Linux-only route`.
+- `B01-Desktop-Linux-002` untouched (EVAL-004-only).
+
+### D03-CI-01 — Ubuntu supporting CI on overlay-lock head
+
+- Instrument: GitHub Actions run
+  [`31934786837`](https://github.com/agentkernel/cognitive-os/actions/runs/31934786837)
+  on Draft PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at
+  `e083b259`.
+- Outcome: **pass** — `verify (ubuntu-latest)` and `required-ci` green.
+
+### D03-ACCEPT-01 — formal acceptance mapping
+
+| Acceptance | Evidence |
+|---|---|
+| O2 redacted authorization receipts | D01 unit/HTTP: deny/grant, input digest, reason code; no capability/body |
+| O3 cache/compaction with named zeros | cache miss/revalidated; `compaction_not_invoked` when unused |
+| O4 scheduler/fence/budget; fairness named-missing | per-row `runnable_count=1`, `queue_wait` zero probe, `lease_acquired` on Leased, `budget_stop` on Stopped, `stale_fence_denial` on epoch mismatch; no fabricated fairness |
+| O5 Effect history reuse | `project_o5` redacted original-key digest/stage/outcome; no receipts/parameters |
+| O13 cursor/digest/gap/restart | stale cursor 409, digest break 409, restart-stable empty-window digest |
+| Empty windows are controlled zeros | HTTP 1/1 `observed_zero` + named `negative_control` |
+| Concurrency / cross-task isolation | `OVERLAY_LOCK` + `cross_task_samples_stay_isolated_under_concurrent_records` |
+| Redaction | HTTP and unit asserts omit capability/receipt/parameters/prompt |
+| Exact-revision linux-002 | this D03 matrix at `e083b259` |
+| Ubuntu supporting CI | run `31934786837` pass |
+| Windows | `not-run by owner-directed Linux-only route` |
+
+
 
 
 
