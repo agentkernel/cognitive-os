@@ -6,7 +6,7 @@
 - Frozen product source: `origin/main@93dde21da1635329bd11949b265f205ead46186b` (2026-08-15 freeze, historical)
 - Re-freeze product source: `origin/main@1e71344a7b2c4a443fd0581e7fd33f21e970efbd` (2026-08-16; archive `sha256:a871f5d32f2cdc818a696b7908d1fce2bc4bb63ebf47a4d36185c570146be7e8`)
 - Target: `B01-DESKTOP-002` / `B01-Desktop-Linux-002`
-- Status: **paused after B0 on the 2026-08-15 freeze; 2026-08-16 re-freeze started at `main@1e71344a` under a new lease. Do not reuse the old campaign root, port, or SecretStore.**
+- Status: **2026-08-16 re-freeze in B0** at `main@1e71344a` under `lease/personal/EVAL-20260816/full-os-only-refreeze`. SecretStore item `/12`, Pi `0.81.1`, broker `127.0.0.1:48386`, and C0 corpus/runner/redactor are pinned. C1/C2 fixtures `not-run`. Independent reviewer `not_reviewed`. Do not reuse `/home/hal9001/perfeval004`, `48284`, or the 2026-08-15 SecretStore item.
 - Claim ceiling: `hypothesis` / non-claim; independent reviewer: `not_reviewed`
 
 This owner-authorized amendment expands the existing EVAL-004 scope; it does
