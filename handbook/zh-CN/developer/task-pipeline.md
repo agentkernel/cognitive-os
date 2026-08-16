@@ -19,7 +19,8 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:5da158c5909edc797e4eb232a72bd98fc695b01db85b056df3880568f9f81e96"
+  - apps/kernel-server/tests/p2_t24_effect_fault.rs
+fingerprint: "sha256:7da9dca6a76c48aa1e4c02a04fe9a5604677c8549c66cb1acb157f544126f4df"
 non_claims:
   - 准入不会启动自主执行；该缺口记录于执行链状态页。
 ---
@@ -36,6 +37,7 @@ chain → SQLite，线上使用生成的 request/result DTO。
 | `preview` | `POST /task/preview` | 对类型化草稿做本地 canonical digest（域 `cognitiveos.personal.task-contract-preview`）；不持久化 |
 | `admit` | `POST /task/admit` | 重算 preview digest（漂移 → `PreviewDigestMismatch`）→ `admit_interpretation` → 一个 fenced 合同 epoch-CAS 事务发布 TaskContract + `START` Loop + 硬 Budget + runnable 调度行 |
 | evidence | `GET /task/evidence?task_ref=...` | 从 SQLite authority 与 Artifact CAS 重建有界脱敏的生命周期、Effect 对账类别、current verification/Artifact 可用性、acceptance transition 与持久事件游标 |
+| effects | `GET /task/effects?task_ref=...` | 重建有界 Effect 历史（不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省、report refs），不含 receipt 或原始参数 |
 | watch | `GET /task/watch` | 快照先行的有界流（进程本地 128 事件重放；过期 `resume_from` → `TASK_WATCH_RESUME_STALE`） |
 
 合同版本：携带 `context_request_ref` 的铸造在 `validate_context_request_binding`

@@ -29,6 +29,7 @@ use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIs
 use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
 };
+use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
 use super::readiness::{
@@ -645,6 +646,19 @@ fn dispatch_http_route(
             authority_store,
         );
     }
+    if method_path.starts_with("GET /management/resource/v1/fault-profile")
+        || method_path.starts_with("POST /management/resource/v1/fault-profile")
+    {
+        return handle_fault_profile_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+        );
+    }
     if method_path.starts_with("GET /management/resource/")
         || method_path.starts_with("POST /management/resource/")
     {
@@ -666,6 +680,13 @@ fn dispatch_http_route(
             authority,
             "management",
         );
+    }
+    if method_path.starts_with("GET /task/resource/v1/fault-profile")
+        || method_path.starts_with("POST /task/resource/v1/fault-profile")
+        || method_path.starts_with("POST /task/fault-profile")
+        || method_path.starts_with("GET /task/fault-profile")
+    {
+        return handle_task_fault_profile_forbidden(stream, headers, authority);
     }
     if method_path.starts_with("GET /task/resource/v1/consumption") {
         return handle_task_consumption_query_route(
@@ -1077,6 +1098,61 @@ fn handle_task_consumption_route(
         stream,
         response.status,
         response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_fault_profile_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = fault_profile::handle(method_path, body, layout, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_fault_profile_forbidden(
+    stream: &mut TcpStream,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = fault_profile::task_channel_forbidden();
+    write_response(
+        stream,
+        response.status,
+        "application/json",
         response.body.as_bytes(),
     )
 }

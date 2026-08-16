@@ -16,12 +16,17 @@ sources:
   - path: apps/kernel-server/src/personal/provider_proxy.rs
   - path: apps/kernel-server/src/personal/route_observation.rs
     symbols: ["observation_response_headers"]
+  - path: apps/kernel-server/src/personal/fault_profile.rs
+    symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/task_api.rs
+    symbols: ["TaskApi"]
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:3d8e78c2d0a1aeb0ec5881c93eb1268a3e99b335dd2f5077a6d3a661a0b57dad"
+  - apps/kernel-server/tests/p2_t24_effect_fault.rs
+fingerprint: "sha256:3e0c3640e6a20731be52fc158fa60b216ad4e7c0885167a9e040532b614de9d2"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -81,6 +86,14 @@ rejected as restatement. Forgotten, revoked, or digest-drifted pins fail
 closed before the response, and Memory/Skill bodies never appear. Session 2
 and post-restart GET read the same durable row; a caller `query_text` POST
 cannot replace those pins.
+
+Management `POST/GET /management/resource/v1/fault-profile` persists a
+default-off, campaign-authorized fixed fault profile for one `task_ref`.
+Ordinary task callers are denied (`RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`).
+The task channel reads bounded Effect history through
+`GET /task/effects?task_ref=…`: opaque original-key digest, stage,
+outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and
+report refs. Receipts, raw parameters, and extra query fields fail closed.
 
 ## Projections
 

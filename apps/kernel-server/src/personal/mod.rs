@@ -8,6 +8,7 @@ mod auth;
 mod bounds;
 #[cfg_attr(not(test), allow(dead_code))]
 mod campaign_observation;
+mod fault_profile;
 mod headless_vault_doctor;
 mod lifecycle;
 mod memory_skill_consumer;

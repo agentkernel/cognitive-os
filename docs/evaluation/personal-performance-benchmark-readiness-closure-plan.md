@@ -112,8 +112,8 @@ informative work-package ID：
 |---|---|---|
 | BR-01 | P2-T21 | done |
 | BR-02 | P2-T22 | done |
-| BR-03 | P2-T23 | in-progress (D01–D03 complete; ready/merge PR #222) |
-| BR-04 | P2-T24 | not-started |
+| BR-03 | P2-T23 | done |
+| BR-04 | P2-T24 | in-progress |
 | BR-05 | P2-T25 | not-started |
 | BR-06 | P2-T26 | not-started |
 | BR-07 | P2-T27 | not-started |
@@ -193,6 +193,11 @@ forgotten exposure=0；revoked reuse、digest drift、manual prompt forgery、pa
 restart recovery negatives 全通过。
 
 ### BR-04 — C2c Effect/reconcile 与 fault observation
+
+**Status (2026-08-16):** D01 authored on `personal/P2-T24-effect-fault-reconciliation`.
+Default-off management fault profiles and bounded `GET /task/effects` history
+are the unique in-progress slice. Ubuntu supporting CI pending. No
+EVAL/Gate/release/Profile claim.
 
 **实施：**
 
