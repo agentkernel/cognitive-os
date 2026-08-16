@@ -498,7 +498,7 @@ mod tests {
                 .as_nanos()
         ));
         std::fs::create_dir_all(&root).expect("temp layout");
-        PersonalDataLayout::from_xdg_roots(&root, &root, &root)
+        PersonalDataLayout::from_xdg_roots(&root, &root, &root, &root, &root)
     }
 
     #[test]

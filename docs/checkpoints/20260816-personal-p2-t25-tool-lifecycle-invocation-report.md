@@ -130,13 +130,16 @@
   restart query the original key.
 - Initial status: `not-run` locally.
 
-### D02-CI-01 — Ubuntu supporting CI at `4dfd4f89` (superseded)
+### D02-CI-01 — Ubuntu supporting CI at `de36ff59` (superseded)
 
 - Instrument: GitHub Actions run
   [31930110947](https://github.com/agentkernel/cognitive-os/actions/runs/31930110947)
-- Outcome: `fail` (compile). Same E0716 as D02-LINUX-01: temporary
-  `response_json(&exposure)["exposed"]` dropped while borrowed.
-- Disposition: bind `exposure_json` before indexing.
+  (PR head `de36ff59`, product tests identical to `4dfd4f89`)
+- Outcome: `fail` (compile):
+  1. E0716 temporary `response_json(&exposure)["exposed"]` dropped while borrowed;
+  2. E0061 `PersonalDataLayout::from_xdg_roots` in `pinned_https` tests still
+     passed 3 arguments after the 5-root layout API.
+- Disposition: bind `exposure_json` before indexing; pass five XDG roots.
 
 ### D02-LINUX-01 — exact-revision `DEV-LINUX-NATIVE-01` at `4dfd4f89` (superseded)
 
@@ -148,7 +151,7 @@
   (compile failed first). Windows `not-run by owner-directed Linux-only route`.
   `B01-Desktop-Linux-002` untouched.
 
-### D02-CI-02 — Ubuntu supporting CI after E0716 fix
+### D02-CI-02 — Ubuntu supporting CI after E0716/E0061 fixes
 
 - Instrument: pending after the compile-fix head is pushed.
 - Initial status: `not-run`.
