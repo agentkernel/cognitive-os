@@ -68,6 +68,7 @@ struct LifecycleFile {
     selections: Vec<SelectionRecord>,
 }
 
+#[derive(Debug)]
 pub(crate) struct ToolLifecycleResponse {
     pub status: u16,
     pub body: String,

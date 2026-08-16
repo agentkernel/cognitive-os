@@ -2,7 +2,7 @@
 
 - Task: `P2-T25`
 - Branch: `personal/P2-T25-tool-lifecycle-invocation`
-- PR: pending Draft PR
+- PR: https://github.com/agentkernel/cognitive-os/pull/224
 - Lease: `lease/personal/P2-T25/tool-lifecycle-invocation`
 - Change class: `implementation-only`
 - Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL, or
@@ -61,7 +61,16 @@
   is channel-forbidden. Management POST selection is channel-forbidden. Existing
   `GET /resource/v1/projection?family=tool` is unchanged.
 
-### D01-CI-01 — Ubuntu supporting CI
+### D01-CI-01 — Ubuntu supporting CI at `6da631ed` (superseded)
 
-- Instrument: pending after the D01 head is pushed.
+- Instrument: GitHub Actions run
+  [31928197414](https://github.com/agentkernel/cognitive-os/actions/runs/31928197414)
+- Outcome: `fail` — `kernel-server` did not compile under `-D warnings`:
+  `ToolLifecycleResponse` lacks `Debug`, so unit-test `.expect("file")` on
+  `load_file` is rejected.
+- Disposition: derive `Debug` on `ToolLifecycleResponse`.
+
+### D01-CI-02 — Ubuntu supporting CI after Debug derive
+
+- Instrument: pending after the compile-fix head is pushed.
 - Initial status: `not-run`.

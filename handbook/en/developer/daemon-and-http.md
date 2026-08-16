@@ -29,7 +29,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-fingerprint: "sha256:1ffc627dfa7517a333219c321f1d22e75e5eb5fdb0a93de1f396b7f698a11a52"
+fingerprint: "sha256:f7322a51f5cd84593b47366bca8c929c350e7d36edc87fe700d2fb9bdeb99bf2"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---

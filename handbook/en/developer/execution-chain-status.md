@@ -35,7 +35,7 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:f585b088390b977d779cca36b3d4de8fd345b9df1944bc8d12a2177feb636bc4"
+fingerprint: "sha256:5e8622c13b6545a71065267d132f52371bc9dcb2903627cc46607f78a159c265"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
