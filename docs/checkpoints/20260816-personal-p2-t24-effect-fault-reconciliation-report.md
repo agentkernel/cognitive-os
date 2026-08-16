@@ -123,3 +123,53 @@
 - Outcome: workspace tests **pass**; Clippy `-D warnings` **fail** on
   `clippy::question_mark` in `load_enabled_authorized_profile`.
 - Disposition: use `profile.fault_point?;` instead of an explicit `is_none` return.
+
+### D02-CI-02 — Ubuntu supporting CI at `8b7dea7a`
+
+- Instrument: GitHub Actions run
+  [31925698730](https://github.com/agentkernel/cognitive-os/actions/runs/31925698730)
+- Outcome: `pass` at exact `8b7dea7a227e41383818691d530358b705d6423f` (workspace
+  tests, Clippy `-D warnings`, handbook, consistency). Windows `not-run by
+  owner-directed Linux-only route`.
+
+## D03 — exact-revision linux-002 fault/restart/residue matrix
+
+### D03-LINUX-01 — focused P2-T24 fault/profile tests
+
+- Instrument: `cargo test -p kernel-server --locked --test p2_t24_effect_fault`;
+  `cargo test -p kernel-server --locked p2_t24_d02`;
+  `cargo test -p kernel-server --locked fault_profile`
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`), worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t22-48fa7d0` at exact
+  `8b7dea7a227e41383818691d530358b705d6423f`, `rustc 1.97.1`
+- Outcome: `pass` — HTTP `p2_t24_effect_fault` 1/1; `p2_t24_d02` 3/3 (missing
+  profile unauthorized; `dispatch_before` mutation 0 / Indeterminate;
+  persisted `mutation_after_receipt_before` original-key restart mutation
+  count 1); `fault_profile` 5/5 (missing/default-off never inject;
+  unauthorized campaign never injects; enabled authorized profile exposes
+  the pinned point).
+
+### D03-LINUX-02 — P2-T17 original-key regression
+
+- Instrument: `cargo test -p kernel-server --locked p2_t17`
+- Environment: same exact `8b7dea7a`
+- Outcome: `pass` — 15/15. `select_single_effect_intent` is unchanged.
+  Replacement-key, mismatched-point, and unauthorized-fault negatives remain
+  fail-closed.
+
+### D03-LINUX-03 — kernel-server bin, workspace, Clippy, fmt, residue
+
+- Instrument: `cargo test -p kernel-server --locked --bins`;
+  `cargo test --workspace --locked`;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`;
+  `cargo fmt --all -- --check`
+- Environment: same exact `8b7dea7a`
+- Outcome: `pass` — kernel-server bin 309/309; workspace tests 0-failed;
+  Clippy `-D warnings` green; fmt green.
+- Cleanup: removed leftover `/tmp/cos-p2t24-*` hermetic roots and
+  `/tmp/p2-t24-8b7dea7a.bundle`. `B01-Desktop-Linux-002` was not used
+  (EVAL-004-only guest). Windows `not-run by owner-directed Linux-only
+  route`.
+- Unique remaining D03 action: ready/merge of PR #223.
+- Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL,
+  or Agent-benefit promotion.

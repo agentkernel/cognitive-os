@@ -113,7 +113,7 @@ informative work-package ID：
 | BR-01 | P2-T21 | done |
 | BR-02 | P2-T22 | done |
 | BR-03 | P2-T23 | done |
-| BR-04 | P2-T24 | in-progress |
+| BR-04 | P2-T24 | in-progress (D01–D03 complete; ready/merge PR #223) |
 | BR-05 | P2-T25 | not-started |
 | BR-06 | P2-T26 | not-started |
 | BR-07 | P2-T27 | not-started |
@@ -194,10 +194,11 @@ restart recovery negatives 全通过。
 
 ### BR-04 — C2c Effect/reconcile 与 fault observation
 
-**Status (2026-08-16):** D02 in-progress on `personal/P2-T24-effect-fault-reconciliation`
-/ Draft PR #223. Persisted default-off profiles now authorize original-key
-restart reconcile; production native dispatch consults the four fixed points.
-No EVAL/Gate/release/Profile claim.
+**Status (2026-08-16):** D01–D03 complete at `8b7dea7a` / Draft PR #223.
+Ubuntu supporting CI run `31925698730` green; exact-revision `DEV-LINUX-NATIVE-01`
+kernel-server bin 309/309, `p2_t24_d02` 3/3, `fault_profile` 5/5, P2-T17 15/15,
+workspace tests 0-failed, Clippy `-D warnings`, fmt. Ready/merge remains. No
+EVAL/Gate/release/Profile claim.
 
 **实施：**
 
