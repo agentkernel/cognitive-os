@@ -223,6 +223,7 @@ pub fn validate_capability_truth_matrix(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
 
@@ -241,7 +242,10 @@ mod tests {
 
     #[test]
     fn frozen_register_validates() {
-        validate_capability_truth_matrix(FROZEN_UJ_CAPABILITY_TRUTH).expect("frozen register");
+        assert_eq!(
+            validate_capability_truth_matrix(FROZEN_UJ_CAPABILITY_TRUTH),
+            Ok(())
+        );
         assert!(
             FROZEN_UJ_CAPABILITY_TRUTH
                 .iter()
@@ -268,13 +272,13 @@ mod tests {
         let mut row = required_template();
         row.public_caller = "";
         assert_eq!(
-            validate_capability_truth_matrix(&[row]).unwrap_err(),
-            CapabilityTruthError::MissingCaller
+            validate_capability_truth_matrix(&[row]),
+            Err(CapabilityTruthError::MissingCaller)
         );
         row.public_caller = "scope-excluded";
         assert_eq!(
-            validate_capability_truth_matrix(&[row]).unwrap_err(),
-            CapabilityTruthError::MissingCaller
+            validate_capability_truth_matrix(&[row]),
+            Err(CapabilityTruthError::MissingCaller)
         );
     }
 
@@ -283,8 +287,8 @@ mod tests {
         let mut row = required_template();
         row.mechanical_oracle = "";
         assert_eq!(
-            validate_capability_truth_matrix(&[row]).unwrap_err(),
-            CapabilityTruthError::MissingOracle
+            validate_capability_truth_matrix(&[row]),
+            Err(CapabilityTruthError::MissingOracle)
         );
     }
 
@@ -301,8 +305,8 @@ mod tests {
             evidence_schema: "scope-excluded",
         };
         assert_eq!(
-            validate_capability_truth_matrix(&[excluded]).unwrap_err(),
-            CapabilityTruthError::MissingCaller
+            validate_capability_truth_matrix(&[excluded]),
+            Err(CapabilityTruthError::MissingCaller)
         );
     }
 
@@ -319,8 +323,8 @@ mod tests {
             evidence_schema: "scope-excluded",
         };
         assert_eq!(
-            validate_capability_truth_matrix(&[row]).unwrap_err(),
-            CapabilityTruthError::ExcludedRowMarkedRequired
+            validate_capability_truth_matrix(&[row]),
+            Err(CapabilityTruthError::ExcludedRowMarkedRequired)
         );
     }
 
@@ -328,16 +332,16 @@ mod tests {
     fn duplicate_id_is_rejected() {
         let row = required_template();
         assert_eq!(
-            validate_capability_truth_matrix(&[row, row]).unwrap_err(),
-            CapabilityTruthError::DuplicateId
+            validate_capability_truth_matrix(&[row, row]),
+            Err(CapabilityTruthError::DuplicateId)
         );
     }
 
     #[test]
     fn missing_family_is_rejected() {
         assert_eq!(
-            validate_capability_truth_matrix(&[required_template()]).unwrap_err(),
-            CapabilityTruthError::MissingFamily
+            validate_capability_truth_matrix(&[required_template()]),
+            Err(CapabilityTruthError::MissingFamily)
         );
     }
 }

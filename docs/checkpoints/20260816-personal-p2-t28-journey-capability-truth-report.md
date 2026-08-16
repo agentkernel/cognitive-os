@@ -81,3 +81,40 @@
 - Environment: local `DEV-WIN-GNU-01`
 - Outcome: **pass** (54 documents × 2 locales; 18 generated pages
   byte-identical)
+
+### D01-CI-01 — Ubuntu supporting CI
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31941480101`](https://github.com/agentkernel/cognitive-os/actions/runs/31941480101)
+  on Draft PR [#227](https://github.com/agentkernel/cognitive-os/pull/227) at
+  `aafe45a5`.
+- Outcome: **fail**. Clippy `-D warnings` rejected `expect` / `unwrap_err` in
+  `capability_truth` unit tests (`clippy::expect_used`, `clippy::unwrap_used`).
+  Fix follows on the same branch; Node freeze 6/6 is unchanged.
+
+### D01-CI-02 — Ubuntu supporting CI after Clippy fix
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` on Draft PR
+  [#227](https://github.com/agentkernel/cognitive-os/pull/227) after replacing
+  `expect`/`unwrap_err` with `assert_eq!(..., Ok(()) | Err(...))`.
+- Outcome: pending; recorded when the run finishes.
+
+## D02 — required public journeys
+
+### D02-IMPL-01 — hermetic public-caller smoke
+
+- Instrument: `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`.
+- Outcome: authored. One hermetic daemon exercises UJ1/UJ3 status+doctor,
+  UJ3 observation named zero, UJ4 missing-evidence fail closed, UJ5 Effect
+  history unknown-task/restatement, UJ6 consumption restatement denial, and
+  UJ6 backup `sqlite_copied=false` with secret exclusion. Runtime root is
+  removed. Nested Pi timing and managed Pi install→recover stay on their
+  named D01 oracles for the linux-002 aggregate. Web UI/Multi-Agent are not
+  called.
+
+### D02-LOCAL-01 — Windows GNU Rust tests
+
+- Instrument: local `cargo test -p kernel-server --test p2_t28_end_to_end_journey`.
+- Outcome: `not-run by owner-directed Linux-only route` /
+  `RUST-LINK-DEV-WIN-GNU-01`.
+
