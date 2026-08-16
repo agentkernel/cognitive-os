@@ -26,7 +26,7 @@ tests:
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:b8aa8c77f7a1014539c207f9dd7454cd70e48032ff1c15410da93473da542cda"
+fingerprint: "sha256:6b761c26e3c5322172dc2dca57abeff95bb814003745ec03e2d5b8ee2cd53cba"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

@@ -194,10 +194,10 @@ restart recovery negatives 全通过。
 
 ### BR-04 — C2c Effect/reconcile 与 fault observation
 
-**Status (2026-08-16):** D01 authored on `personal/P2-T24-effect-fault-reconciliation`.
-Default-off management fault profiles and bounded `GET /task/effects` history
-are the unique in-progress slice. Ubuntu supporting CI pending. No
-EVAL/Gate/release/Profile claim.
+**Status (2026-08-16):** D02 in-progress on `personal/P2-T24-effect-fault-reconciliation`
+/ Draft PR #223. Persisted default-off profiles now authorize original-key
+restart reconcile; production native dispatch consults the four fixed points.
+No EVAL/Gate/release/Profile claim.
 
 **实施：**
 

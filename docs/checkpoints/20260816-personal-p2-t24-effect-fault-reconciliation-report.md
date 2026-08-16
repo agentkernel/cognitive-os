@@ -2,7 +2,7 @@
 
 - Task: `P2-T24`
 - Branch: `personal/P2-T24-effect-fault-reconciliation`
-- PR: pending
+- PR: https://github.com/agentkernel/cognitive-os/pull/223
 - Lease: `lease/personal/P2-T24/effect-fault-reconciliation-observation`
 - Change class: `implementation-only`
 - Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL, or
@@ -62,3 +62,41 @@
   `IntentRow` / `StoredObject` imports because the history projector used
   fully-qualified paths.
 - Disposition: use the imported types in `project_effect_history_entry`.
+  Compile-fix commit `eaab6e3ec7a8587a5ea20f08e13f25be23172e09`.
+
+## D02 — original-key reconcile under persisted profiles
+
+### D02-TEST-01 — persisted profile original-key restart, mutation count 1
+
+- Instrument: `campaign_observation::p2_t24_d02_tests::persisted_profile_reconciles_original_key_once_after_restart`
+- Oracle: a D01 persisted `mutation_after_receipt_before` profile authorizes
+  injection; restart queries only the original key; mutation count is 1;
+  replacement-key Intent is `DuplicateEffect`; a mismatched fault point is
+  `FaultUnauthorized`; `acceptance_ref` stays absent.
+- Status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu supporting CI
+  is the first execution.
+
+### D02-TEST-02 — dispatch-before keeps mutation 0 and Indeterminate
+
+- Instrument: `campaign_observation::p2_t24_d02_tests::dispatch_before_profile_keeps_mutation_zero_and_indeterminate`
+- Oracle: mutation count stays 0; restart outcome is Indeterminate; dispatch
+  count stays 0; `acceptance_ref` stays absent.
+- Status: `not-run` locally.
+
+### D02-TEST-03 — missing/default-off/unauthorized files never inject
+
+- Instrument: `fault_profile::tests::{missing_and_default_off_profiles_never_inject,unauthorized_campaign_file_never_injects,authorized_enabled_profile_exposes_the_pinned_point}`
+  and `campaign_observation::p2_t24_d02_tests::missing_profile_cannot_authorize_injection`
+- Oracle: production consult returns `None` unless an authorized enabled
+  profile names one of the four fixed points.
+- Status: `not-run` locally.
+
+### D02-IMPL-01 — production native dispatch consults persisted profiles
+
+- Instrument: `tool_executor/router.rs` `bind_fault_profiles` /
+  `authorized_fault_point`; `scheduler_authority/effect.rs` and `dispatch.rs`
+  inject only at the four fixed points; `select_single_effect_intent` is
+  unchanged.
+- Outcome: authored. Missing, default-off, and unauthorized file content never
+  inject. P2-T17 test-only `CampaignAuthorization::authorized` remains
+  `cfg!(test)`.

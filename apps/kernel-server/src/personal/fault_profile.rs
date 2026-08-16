@@ -348,6 +348,91 @@ fn hex_value(byte: u8) -> Option<u8> {
     }
 }
 
+pub(crate) fn campaign_is_authorized(campaign_id: &str) -> bool {
+    valid_campaign_id(campaign_id)
+}
+
+pub(crate) fn case_ref_is_authorized(case_ref: &str) -> bool {
+    valid_case_ref(case_ref)
+}
+
+/// Production consult: missing, default-off, or unauthorized file content never
+/// injects. Enabled profiles must name one of the four fixed points.
+pub(crate) fn load_enabled_authorized_profile(
+    data_dir: &Path,
+    task_ref: &str,
+) -> Option<FaultProfileRecord> {
+    let path = data_dir.join(FAULT_PROFILE_FILE_NAME);
+    if !path.exists() {
+        return None;
+    }
+    let file = read_file(&path).ok()?;
+    let profile = file
+        .profiles
+        .into_iter()
+        .find(|profile| profile.task_ref == task_ref)?;
+    if !profile.faults_enabled {
+        return None;
+    }
+    if !valid_campaign_id(&profile.campaign_id) || !valid_case_ref(&profile.case_ref) {
+        return None;
+    }
+    if profile.fault_point.is_none() {
+        return None;
+    }
+    Some(profile)
+}
+
+pub(crate) fn authorized_injection_point(
+    data_dir: &Path,
+    task_ref: &str,
+) -> Option<AuthorizedFaultPoint> {
+    load_enabled_authorized_profile(data_dir, task_ref).and_then(|profile| profile.fault_point)
+}
+
+#[cfg(test)]
+pub(crate) fn write_profile_record(
+    data_dir: &Path,
+    record: FaultProfileRecord,
+) -> Result<(), String> {
+    fs::create_dir_all(data_dir).map_err(|error| error.to_string())?;
+    persist_profile_at(data_dir, record)
+        .map_err(|_| "fault profile could not be persisted for the D02 consult test".to_owned())
+}
+
+fn persist_profile_at(
+    data_dir: &Path,
+    record: FaultProfileRecord,
+) -> Result<(), FaultProfileResponse> {
+    let path = data_dir.join(FAULT_PROFILE_FILE_NAME);
+    let mut file = if path.exists() {
+        read_file(&path)?
+    } else {
+        FaultProfileFile {
+            schema: FAULT_PROFILE_SCHEMA.to_owned(),
+            profiles: Vec::new(),
+        }
+    };
+    if file.schema != FAULT_PROFILE_SCHEMA {
+        return Err(error(
+            503,
+            "RESOURCE_FAULT_PROFILE_STORE_UNAVAILABLE",
+            "fault profile schema is not current",
+        ));
+    }
+    file.profiles
+        .retain(|profile| profile.task_ref != record.task_ref);
+    if file.profiles.len() >= MAX_PROFILES {
+        return Err(error(
+            409,
+            "RESOURCE_FAULT_PROFILE_CAPACITY",
+            "bounded fault profile capacity would be exceeded",
+        ));
+    }
+    file.profiles.push(record);
+    write_file_atomically(&path, &file)
+}
+
 fn valid_campaign_id(campaign_id: &str) -> bool {
     if campaign_id.is_empty() || campaign_id.len() > MAX_CAMPAIGN_ID_CHARS {
         return false;
@@ -396,33 +481,7 @@ fn persist_profile(
             "fault profile directory is unavailable",
         )
     })?;
-    let path = profile_path(layout);
-    let mut file = if path.exists() {
-        read_file(&path)?
-    } else {
-        FaultProfileFile {
-            schema: FAULT_PROFILE_SCHEMA.to_owned(),
-            profiles: Vec::new(),
-        }
-    };
-    if file.schema != FAULT_PROFILE_SCHEMA {
-        return Err(error(
-            503,
-            "RESOURCE_FAULT_PROFILE_STORE_UNAVAILABLE",
-            "fault profile schema is not current",
-        ));
-    }
-    file.profiles
-        .retain(|profile| profile.task_ref != record.task_ref);
-    if file.profiles.len() >= MAX_PROFILES {
-        return Err(error(
-            409,
-            "RESOURCE_FAULT_PROFILE_CAPACITY",
-            "bounded fault profile capacity would be exceeded",
-        ));
-    }
-    file.profiles.push(record);
-    write_file_atomically(&path, &file)
+    persist_profile_at(layout.data_dir(), record)
 }
 
 fn read_file(path: &Path) -> Result<FaultProfileFile, FaultProfileResponse> {
@@ -522,5 +581,85 @@ mod tests {
             assert!(!serialized.to_ascii_lowercase().contains(forbidden));
         }
         assert!(serialized.contains("\"faults_enabled\":false"));
+    }
+
+    #[test]
+    fn missing_and_default_off_profiles_never_inject() {
+        let root = std::env::temp_dir().join(format!(
+            "cos-p2t24-consult-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).expect("temp data dir");
+        let task_ref = "task://personal/p2-t24/consult";
+        assert_eq!(authorized_injection_point(&root, task_ref), None);
+        write_profile_record(
+            &root,
+            FaultProfileRecord {
+                task_ref: task_ref.to_owned(),
+                campaign_id: "P2-T24".to_owned(),
+                case_ref: "BR-04-D02".to_owned(),
+                faults_enabled: false,
+                fault_point: None,
+            },
+        )
+        .expect("write default-off");
+        assert_eq!(authorized_injection_point(&root, task_ref), None);
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn unauthorized_campaign_file_never_injects() {
+        let root = std::env::temp_dir().join(format!(
+            "cos-p2t24-unauth-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).expect("temp data dir");
+        let task_ref = "task://personal/p2-t24/unauth";
+        let path = root.join(FAULT_PROFILE_FILE_NAME);
+        fs::write(
+            &path,
+            r#"{"schema":"cognitiveos.personal.fault-profile/0.1","profiles":[{"task_ref":"task://personal/p2-t24/unauth","campaign_id":"owner-local","case_ref":"spoof","faults_enabled":true,"fault_point":"dispatch_before"}]}"#,
+        )
+        .expect("write spoofed profile");
+        assert_eq!(authorized_injection_point(&root, task_ref), None);
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn authorized_enabled_profile_exposes_the_pinned_point() {
+        let root = std::env::temp_dir().join(format!(
+            "cos-p2t24-on-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).expect("temp data dir");
+        let task_ref = "task://personal/p2-t24/enabled";
+        write_profile_record(
+            &root,
+            FaultProfileRecord {
+                task_ref: task_ref.to_owned(),
+                campaign_id: "P2-T24".to_owned(),
+                case_ref: "BR-04-D02".to_owned(),
+                faults_enabled: true,
+                fault_point: Some(AuthorizedFaultPoint::MutationAfterReceiptBefore),
+            },
+        )
+        .expect("write enabled profile");
+        assert_eq!(
+            authorized_injection_point(&root, task_ref),
+            Some(AuthorizedFaultPoint::MutationAfterReceiptBefore)
+        );
+        fs::remove_dir_all(&root).ok();
     }
 }

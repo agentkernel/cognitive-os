@@ -666,6 +666,11 @@ where
             resolved.authorization.loop_object_id, current_loop.state
         )));
     }
+    inject_authorized_fault(
+        executor_router,
+        &dispatch.task_ref,
+        crate::personal::fault_profile::AuthorizedFaultPoint::VerificationBefore,
+    )?;
     let verification_request =
         crate::personal::verification_executor::begin_verification_from_current_task_contract(
             authority_store,
@@ -939,7 +944,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
         8 * 1024 * 1024,
     )
     .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
-    let executor_router =
+    let mut executor_router =
         crate::personal::tool_executor::ProductionNativeToolExecutorRouter::open_with_artifact_store(
             authority_store
                 .current_fencing_epoch()
@@ -951,6 +956,9 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
             artifact_store.clone(),
         )
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+    if let Some(data_dir) = authority_database_path.parent() {
+        executor_router.bind_fault_profiles(data_dir.to_path_buf());
+    }
     run_private_scheduler_tick_with_store(
         &authority_store,
         &mut scheduler_repository,
