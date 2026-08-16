@@ -3,7 +3,7 @@
 - Task: `P2-T26`
 - Branch: `personal/P2-T26-bounded-os-observation`
 - PR: [Draft PR #225](https://github.com/agentkernel/cognitive-os/pull/225)
-- HEAD: `36fcad8482258bbe48506fb61ee6a7995c858444`
+- HEAD: `268cb4dcb9d5c95f5129dc4121b9625e0cd26b81`
 - Lease: `lease/personal/P2-T26/bounded-os-observation`
 - Change class: `implementation-only`
 - Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL, or
@@ -34,8 +34,8 @@
   (`no_authorization_sample` / `no_cache_or_compaction_sample` /
   `no_scheduler_sample`). This is not a silent default-zero count and not a
   missing-route 404.
-- Initial status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu
-  supporting CI is the first execution.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D01-TEST-02 — channel, restatement, and leakage negatives
 
@@ -47,7 +47,8 @@
   `capability` query keys return 400 `TASK_OBSERVATION_QUERY_FORBIDDEN`.
   POST write is 403 `RESOURCE_OBSERVATION_WRITE_FORBIDDEN`. Projection JSON
   has no Context body or capability material.
-- Initial status: `not-run` locally.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D01-TEST-03 — deny, cache/compaction, and scheduler probes
 
@@ -58,7 +59,8 @@
   `reason_code`; cache miss/revalidated counts are non-default; missing
   compaction is `compaction_not_invoked`; a runnable probe with count 0 still
   has denominator 1 and names missing O4 counters (`no_budget_stop_sample`).
-- Initial status: `not-run` locally.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D01-IMPL-01 — public surfaces and production hooks
 
@@ -88,12 +90,30 @@
 
 ### D01-LINUX-01 — focused observation tests at `36fcad84`
 
-- Instrument: `DEV-LINUX-NATIVE-01` worktree
-  `/home/wuz/agent-kernel-worktrees/p2-t26-36fcad84`, rustc 1.97.1,
-  `CARGO_TARGET_DIR` reused from p2-t25 worktree.
-- Outcome: `pass` — `cargo test -p kernel-server --locked observation`:
-  lib observation units 9/9 plus related filters 26/26; HTTP
-  `p2_t26_observation_plane` 1/1. Clippy was not part of this command.
+- Instrument: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`, rustc 1.97.1)
+  worktree `/home/wuz/agent-kernel-worktrees/p2-t25-4dfd4f89` checked out
+  `36fcad84`. `kernel-server` is binary-only; the filter used
+  `cargo test -p kernel-server --bin kernel-server --locked observation`.
+- Outcome: **pass** — 26/26 filtered bin tests (includes 9/9
+  `personal::observation::tests`); HTTP `p2_t26_observation_plane` 1/1;
+  `cargo fmt --all -- --check` pass. Clippy at this SHA **fail** (see D01-CI-01).
+
+### D01-LINUX-02 — Clippy-fix revalidation at `268cb4dc`
+
+- Instrument: same worktree, exact `268cb4dcb9d5c95f5129dc4121b9625e0cd26b81`.
+- Outcome: **pass** — `--bin kernel-server` filter `observation` 26/26; HTTP
+  `p2_t26_observation_plane` 1/1; `cargo fmt --all -- --check` pass;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings` pass.
+
+### D01-CI-02 — Ubuntu supporting CI after Clippy fix
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31934303018`](https://github.com/agentkernel/cognitive-os/actions/runs/31934303018)
+  on Draft PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at
+  `268cb4dc`.
+- Outcome: **pass** — `verify (ubuntu-latest)` and `required-ci` green on
+  run [`31934303018`](https://github.com/agentkernel/cognitive-os/actions/runs/31934303018)
+  at `268cb4dc`.
 
 ## D02 — O5 Effect history and O13 audit cursor/replay
 
@@ -105,8 +125,8 @@
   without receipts or parameters. `family=o13` returns HTTP 200
   `no_audit_sample` with `chain_head_digest` and `high_watermark`. This is
   not a silent 0 and not `GET /task/effects` 404.
-- Initial status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu
-  supporting CI is the first execution.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D02-TEST-02 — stale cursor, digest break, and query isolation
 
@@ -116,14 +136,16 @@
   `TASK_OBSERVATION_DIGEST_BREAK`. `cursor` on `family=o2` is 400
   `TASK_OBSERVATION_QUERY_FORBIDDEN`. Invalid cursor is 400
   `TASK_OBSERVATION_CURSOR_INVALID`.
-- Initial status: `not-run` locally.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D02-TEST-03 — restart-stable replay digest
 
 - Instrument: `audit_replay_is_stable_across_store_reopen`.
 - Oracle: two successive `family=o13` reads of the same empty window return
   the same `chain_head_digest` and `high_watermark`.
-- Initial status: `not-run` locally.
+- Windows: `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+- `DEV-LINUX-NATIVE-01` at `36fcad84` and `268cb4dc`: **pass** (D01-LINUX-01 / D01-LINUX-02).
 
 ### D02-IMPL-01 — reuse Effect history; durable audit export
 
@@ -145,3 +167,22 @@
   `36fcad84`.
 - Outcome: `fail` — same Clippy duplicated-attribute / collapsible-if
   defects as D01-CI-01. Superseded by the Clippy-fix head.
+
+### D02-CI-02 — Ubuntu supporting CI after Clippy fix
+
+- Same run as D01-CI-02 (`31934303018` at `268cb4dc`): **pass**.
+
+## D03 — exact-revision linux-002 concurrency/restart/redaction/cleanup matrix
+
+### D03-LINUX-01 — focused observation, fmt, Clippy at `268cb4dc`
+
+- Instrument: same as D01-LINUX-02.
+- Outcome: **pass** — already recorded. Ubuntu supporting CI `31934303018` **pass**.
+
+### D03-LINUX-02 — kernel-server bins
+
+- Instrument: `cargo test -p kernel-server --locked --bins` at `268cb4dc` on
+  `DEV-LINUX-NATIVE-01`.
+- Initial status: started; 328 bin tests launched.
+
+
