@@ -163,5 +163,93 @@
 
 ### D02-CI-03 — Ubuntu supporting CI after Clippy test-module allow
 
-- Instrument: pending after the Clippy-allow head is pushed.
-- Initial status: `not-run`.
+- Instrument: GitHub Actions run
+  [31930697492](https://github.com/agentkernel/cognitive-os/actions/runs/31930697492)
+- Outcome: `pass` at exact `492f9e9f6bc626e864efb9b7564823c1b20c0b7f`
+  (workspace tests, Clippy `-D warnings`, rustfmt, handbook, consistency).
+  Windows `not-run by owner-directed Linux-only route`.
+
+### D02-LINUX-02 — exact-revision `DEV-LINUX-NATIVE-01` at `941a0a29` (superseded)
+
+- Instrument: worktree `/home/wuz/agent-kernel-worktrees/p2-t25-4dfd4f89`,
+  rustc 1.97.1
+- Outcome: `cargo test -p kernel-server --test p2_t25_tool_lifecycle --locked`
+  **2/2 pass**. The follow-on `cargo test -p kernel-server --lib --locked
+  pinned_https` was a command error (`kernel-server` is binary-only; no library
+  target). cognitive-kernel / fmt / Clippy `not-run` (command stopped).
+- Disposition: unit tests run as
+  `cargo test -p kernel-server --bin kernel-server --locked pinned_https`.
+
+### D02-LINUX-03 — exact-revision `DEV-LINUX-NATIVE-01` at `6ae64b50` (superseded)
+
+- Instrument: same worktree after LAN bundle fetch, rustc 1.97.1
+- Outcome: `p2_t25_tool_lifecycle` 2/2; `pinned_https` 5/5;
+  `production_router_stages_http_fetch_after_campaign_pin_and_rejects_drift` 1/1;
+  `http_fetch_refuses_redirect_status_without_following` 1/1; `cargo fmt --all
+  -- --check` pass. Filter `valid_https` matched 0 tests (the HTTPS validator
+  cases live in `workspace_process_and_http_validators_fail_closed`). Clippy
+  `-D warnings` failed on the same `expect_used` helpers as D02-CI-02.
+
+### D02-LINUX-04 — exact-revision `DEV-LINUX-NATIVE-01` at `492f9e9f`
+
+- Instrument: same worktree after LAN bundle fetch of `492f9e9f`, rustc 1.97.1
+- Outcome: `pass` — `workspace_process_and_http_validators_fail_closed` 1/1;
+  `cargo fmt --all -- --check` pass; `cargo clippy --workspace --all-targets
+  --locked -- -D warnings` pass. Windows `not-run by owner-directed Linux-only
+  route`. `B01-Desktop-Linux-002` untouched.
+
+## D03 — exact-revision linux-002 lifecycle/call/reconcile/cleanup matrix
+
+Product revision remains `492f9e9f6bc626e864efb9b7564823c1b20c0b7f`.
+
+### D03-LINUX-01 — lifecycle and call matrix
+
+- Instrument: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`), worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t25-4dfd4f89`, rustc 1.97.1, exact
+  `492f9e9f`
+- Outcome: `pass`
+  - `p2_t25_tool_lifecycle` 2/2
+  - `tool_lifecycle` units 3/3
+  - `pinned_https` 5/5
+  - `registered_check` 24/24 (includes production TypeScript/Rust repair
+    journeys; no ProcessRun; argv/env/cwd/credentials/network injection
+    fail closed)
+  - `production_router_stages_http_fetch_after_campaign_pin_and_rejects_drift` 1/1
+  - `http_fetch_refuses_redirect_status_without_following` 1/1
+  - `workspace_process_and_http_validators_fail_closed` 1/1 (HTTPS path,
+    `host:port`, credential URL, HEAD ok, POST refused)
+
+### D03-LINUX-02 — original-key reconcile regression
+
+- Instrument: `cargo test -p kernel-server --locked p2_t17` at the same SHA
+- Outcome: `pass` — 15/15. `select_single_effect_intent` is unchanged.
+
+### D03-LINUX-03 — kernel-server bin, workspace, Clippy, fmt, residue
+
+- Instrument: `cargo test -p kernel-server --locked --bins`;
+  `cargo test --workspace --locked`;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`;
+  `cargo fmt --all -- --check`
+- Outcome: `pass` — kernel-server bin 319/319; workspace tests 0-failed;
+  Clippy `-D warnings` green; fmt green.
+- Cleanup: removed leftover `/tmp/cos-p2t25-*` hermetic roots and
+  `/tmp/p2-t25-*.bundle` LAN bundles. `B01-Desktop-Linux-002` was not used
+  (EVAL-004-only guest). Windows `not-run by owner-directed Linux-only
+  route`.
+
+### D03-ACCEPT-01 — formal acceptance mapping
+
+| Acceptance | Evidence |
+|---|---|
+| Lifecycle to Agent exposure is atomic | D01 HTTP test + `tool_lifecycle` 3/3: disable drops `agent_exposed`; stale selection digest 409 |
+| Bounded selection receipt | matching digest + exposed `operation_id` records a receipt; prompt restatement 400 |
+| Immutable RegisteredCheckRun | `registered_check` 24/24; descriptor digest unchanged by overlay; no ProcessRun |
+| Campaign-scoped pinned HTTPS GET/HEAD | origin registry + production staging 1/1; validator HEAD ok / POST err |
+| Drift, redirect, credential URL, oversize, duplicate/restart | drift 1/1; 302 `NotExecuted`; credential origin 400; existing oversize/original-key tests in bin 319/319 |
+| Task cannot mutate lifecycle or pin origins | both HTTP tests 403 channel-forbidden |
+| Exact-revision linux-002 | this D03 matrix at `492f9e9f` |
+| Ubuntu supporting CI | run `31930697492` pass |
+
+Unique remaining D03 action: ready/merge of PR #224.
+Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL,
+or Agent-benefit promotion.
