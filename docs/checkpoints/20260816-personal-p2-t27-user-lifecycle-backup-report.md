@@ -174,14 +174,15 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Outcome: **pass**. `personal_backup` **23/23** (includes destroy→restore
   equality, residue cleanup, and bounded duration); `admin-cli`
   `p2_t27_backup_restore` **2/2**; `admin-cli` `p2_t27_pi_lifecycle` **1/1**;
-  `kernel-server` `p2_t27_backup_restore` **1/1**; `p5_t05_identity_recover`
-  **3/3**; `p5_t05_upgrade_fencing` **4/4**; `--bins` kernel-server **329/329**;
-  workspace tests **0 failed**; `cargo fmt --all -- --check` **pass**;
-  `cargo clippy --workspace --all-targets --locked -- -D warnings` **pass**.
-  Residue `/tmp/cos-p2t27-*` count **0**. Windows `not-run by owner-directed
-  Linux-only route`. `B01-Desktop-Linux-002` untouched. Cross-version
-  migration remains fail-closed (`SchemaIncompatible`). Restore wall time is
-  a hypothesis-only measurement, not an RTO SLO.
+  `kernel-server` `p2_t27_backup_restore` **1/1**;
+  `cognitive-runtime` `p5_t05_identity_recover` **3/3**;
+  `cognitive-runtime` `p5_t05_upgrade_fencing` **4/4**; kernel-server `--bins`
+  **329/329**; workspace tests **0 failed**; `cargo fmt --all -- --check`
+  **pass**; `cargo clippy --workspace --all-targets --locked -- -D warnings`
+  **pass**. Residue `/tmp/cos-p2t27-*` count **0**. Windows `not-run by
+  owner-directed Linux-only route`. `B01-Desktop-Linux-002` untouched.
+  Cross-version migration remains fail-closed (`SchemaIncompatible`). Restore
+  wall time is a hypothesis-only measurement, not an RTO SLO.
 
 ### D03-CI-01 — Ubuntu supporting CI
 
@@ -206,5 +207,6 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 | RTO | finite restore wall time on the hermetic fixture; **not** an SLO/Gate claim |
 | Managed Pi install→recover | D02 `p2_t27_pi_lifecycle` 1/1; `p5_t05_identity_recover` 3/3; `p5_t05_upgrade_fencing` 4/4 |
 | Exact-revision linux-002 | this D03 matrix at `5a561fbf` |
-| Ubuntu supporting CI | run `31939336791` pass |
+| Ubuntu supporting CI | runs `31939336791` (`5a561fbf`) and `31939577639` (`9468c3b2`) pass |
 | Windows | `not-run by owner-directed Linux-only route` |
+
