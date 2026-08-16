@@ -1,13 +1,13 @@
 # CognitiveOS Personal C1/C2 governed-task benchmark addendum
 
 - Campaign: `PERSONAL-PERF-EVAL-004`
-- Status: **preregistered; B0 blocked on target-environment access**
+- Status: **preregistered; 2026-08-16 re-freeze at `main@1e71344a`; B0 not started on the new freeze**
 - Full OS-only scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
 - Parent execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Scope: this document defines C1/C2 execution. The owner-authorized full
   OS-only amendment additionally governs the O2-O14, Tool, fault, concurrency,
   soak, and journey-register dispositions without creating a second campaign.
-- Source revision to freeze: `93dde21da1635329bd11949b265f205ead46186b`
+- Source revision to freeze: `1e71344a7b2c4a443fd0581e7fd33f21e970efbd`
 - Target: `B01-DESKTOP-002` / `B01-Desktop-Linux-002`
 - Claim ceiling: `hypothesis` / non-claim; no Gate, release, Profile, B01,
   or Agent-benefit promotion.

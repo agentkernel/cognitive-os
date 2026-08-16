@@ -117,7 +117,7 @@ informative work-package ID：
 | BR-05 | P2-T25 | done (merged PR #224 at `main@4b10db9a`) |
 | BR-06 | P2-T26 | done (merged PR #225 at `main@9e1404a1`) |
 | BR-07 | P2-T27 | done (merged PR [#226](https://github.com/agentkernel/cognitive-os/pull/226) at `main@70980131`) |
-| BR-08 | P2-T28 | in-progress (D03 linux-002 matrix at `c7d4c7f7`; ready/merge remaining) |
+| BR-08 | P2-T28 | done (merged PR [#227](https://github.com/agentkernel/cognitive-os/pull/227) at `main@1e71344a`) |
 
 CI route resolution is fail closed by task branch: P2-T21..P2-T28 run Ubuntu
 supporting CI and require an append-only report from the exact pushed revision

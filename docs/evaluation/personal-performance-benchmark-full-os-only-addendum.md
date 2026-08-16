@@ -5,7 +5,7 @@
 - Authorized lease: `lease/personal/EVAL-20260815/full-os-only-assessment`
 - Frozen product source: `origin/main@93dde21da1635329bd11949b265f205ead46186b`
 - Target: `B01-DESKTOP-002` / `B01-Desktop-Linux-002`
-- Status: **paused after B0: public parameter-carrier product gap blocks affected C1/C2 cells**
+- Status: **paused after B0 on the 2026-08-15 freeze; 2026-08-16 re-freeze started at `main@1e71344a` under a new lease. Do not reuse the old campaign root, port, or SecretStore.**
 - Claim ceiling: `hypothesis` / non-claim; independent reviewer: `not_reviewed`
 
 This owner-authorized amendment expands the existing EVAL-004 scope; it does

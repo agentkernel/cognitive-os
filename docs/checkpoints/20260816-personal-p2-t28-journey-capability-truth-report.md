@@ -192,3 +192,20 @@ slice cannot mismatch `CURRENT_SNAPSHOT_LEASE_MISMATCH`.
   18 generated pages byte-identical; diff check clean).
 - Note: Rust build/test/Clippy remain `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`).
 
+### D03-CI-02 — Ubuntu supporting CI on docs head
+
+- Instrument: GitHub Actions run
+  [`31943289974`](https://github.com/agentkernel/cognitive-os/actions/runs/31943289974)
+  at `d45a64be`.
+- Outcome: **pass** (`verify (ubuntu-latest)` + `required-ci` green).
+
+### D03-MERGE-01 — PR #227 merged; lease closed
+
+- Instrument: GitHub PR [#227](https://github.com/agentkernel/cognitive-os/pull/227)
+  merge to `main`.
+- Outcome: **merged** at `main@1e71344a7b2c4a443fd0581e7fd33f21e970efbd`.
+  Task lease `lease/personal/P2-T28/journey-capability-truth` closed 2026-08-16.
+  Remote task branch deleted. Claim ceiling `hypothesis`; no
+  Gate/release/Profile/B01/EVAL promotion. EVAL-004 re-freeze is a separate
+  measurement campaign under `lease/personal/EVAL-20260816/full-os-only-refreeze`.
+
