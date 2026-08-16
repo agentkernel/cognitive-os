@@ -190,6 +190,7 @@ function buildHttpApi(readSource, trackedPaths) {
     ...definitionSources,
     "apps/kernel-server/src/personal/server.rs",
     "apps/kernel-server/src/personal/pi_runtime.rs",
+    "apps/kernel-server/src/personal/tool_lifecycle.rs",
     "packages/pi-cognitiveos/src/daemon-client.ts",
   ];
   // Reverse check: every path-shaped literal in the definition files is annotated.

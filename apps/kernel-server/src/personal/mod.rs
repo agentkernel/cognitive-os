@@ -27,6 +27,7 @@ mod six_resource_doctor;
 mod skill_package;
 mod task_api;
 mod tool_executor;
+mod tool_lifecycle;
 mod verification_executor;
 
 pub use bounds::PersonalResourceBounds;

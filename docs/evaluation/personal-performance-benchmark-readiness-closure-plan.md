@@ -113,8 +113,8 @@ informative work-package ID：
 | BR-01 | P2-T21 | done |
 | BR-02 | P2-T22 | done |
 | BR-03 | P2-T23 | done |
-| BR-04 | P2-T24 | in-progress (D01–D03 complete; ready/merge PR #223) |
-| BR-05 | P2-T25 | not-started |
+| BR-04 | P2-T24 | done (merged PR #223 at `main@2b803e0f`) |
+| BR-05 | P2-T25 | in-progress (D01 public lifecycle/exposure/selection) |
 | BR-06 | P2-T26 | not-started |
 | BR-07 | P2-T27 | not-started |
 | BR-08 | P2-T28 | not-started |

@@ -10,11 +10,12 @@ sources:
   - path: conformance/README.md
   - path: tools/src/check-consistency.mjs
   - path: tools/src/gen-matrix.mjs
+  - path: tools/src/generate-handbook.mjs
   - path: tests/golden/README.md
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:1c75431a8cc006d7cea207bf2f29aaa97fb1c6b88349f4e8a41503035d24ae14"
+fingerprint: "sha256:9fe314519366c94d7644e18bb0b2274f75394d8bd642bb36beebd7feb9bec88a"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -48,7 +49,9 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 `tools/src/gen-matrix.mjs --check` 保持 `docs/traceability/matrix.yaml` 新鲜。两者
 在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见
-[`_meta/sync-policy.md`](../../_meta/sync-policy.md)。
+[`_meta/sync-policy.md`](../../_meta/sync-policy.md)。HTTP 路由生成还会读取
+`apps/kernel-server/src/personal/tool_lifecycle.rs`，使已标注的 Tool lifecycle
+路径无法腐烂。
 
 ## CI 矩阵
 

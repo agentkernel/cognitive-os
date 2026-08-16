@@ -10,11 +10,12 @@ sources:
   - path: conformance/README.md
   - path: tools/src/check-consistency.mjs
   - path: tools/src/gen-matrix.mjs
+  - path: tools/src/generate-handbook.mjs
   - path: tests/golden/README.md
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:1c75431a8cc006d7cea207bf2f29aaa97fb1c6b88349f4e8a41503035d24ae14"
+fingerprint: "sha256:9fe314519366c94d7644e18bb0b2274f75394d8bd642bb36beebd7feb9bec88a"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -53,7 +54,9 @@ and more. `tools/src/gen-matrix.mjs --check` keeps
 `docs/traceability/matrix.yaml` fresh. Both run in CI and locally
 (`pnpm run check:consistency`). The handbook adds its own checker
 (`check-handbook.mjs`) and generator drift gate — see
-[`_meta/sync-policy.md`](../../_meta/sync-policy.md).
+[`_meta/sync-policy.md`](../../_meta/sync-policy.md). HTTP route generation
+also reads `apps/kernel-server/src/personal/tool_lifecycle.rs` so annotated
+Tool lifecycle paths cannot rot.
 
 ## CI matrix
 

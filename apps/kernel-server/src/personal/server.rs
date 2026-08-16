@@ -43,6 +43,7 @@ use super::scheduler_authority::{
 };
 use super::task_api::TaskApi;
 use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
+use super::tool_lifecycle;
 use super::verification_executor::open_daemon_artifact_store;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
@@ -659,6 +660,18 @@ fn dispatch_http_route(
             authority_store,
         );
     }
+    if method_path.starts_with("GET /management/resource/v1/tool")
+        || method_path.starts_with("POST /management/resource/v1/tool/")
+    {
+        return handle_management_tool_lifecycle_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+        );
+    }
     if method_path.starts_with("GET /management/resource/")
         || method_path.starts_with("POST /management/resource/")
     {
@@ -687,6 +700,18 @@ fn dispatch_http_route(
         || method_path.starts_with("GET /task/fault-profile")
     {
         return handle_task_fault_profile_forbidden(stream, headers, authority);
+    }
+    if method_path.starts_with("GET /task/resource/v1/tool")
+        || method_path.starts_with("POST /task/resource/v1/tool/")
+    {
+        return handle_task_tool_lifecycle_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+        );
     }
     if method_path.starts_with("GET /task/resource/v1/consumption") {
         return handle_task_consumption_query_route(
@@ -1115,6 +1140,73 @@ fn handle_fault_profile_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let response = fault_profile::handle(method_path, body, layout, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_management_tool_lifecycle_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = tool_lifecycle::handle(
+        method_path,
+        body,
+        layout,
+        tool_lifecycle::ToolLifecycleChannel::Management,
+    );
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_tool_lifecycle_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = tool_lifecycle::handle(
+        method_path,
+        body,
+        layout,
+        tool_lifecycle::ToolLifecycleChannel::Task,
+    );
     write_response(
         stream,
         response.status,

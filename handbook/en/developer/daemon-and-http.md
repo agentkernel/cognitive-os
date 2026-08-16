@@ -18,6 +18,8 @@ sources:
     symbols: ["observation_response_headers"]
   - path: apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -26,7 +28,8 @@ tests:
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:8975d9ee42b7a4411a24a1ed653a23c41fbd07ce1b530b3955bc91d7ef327621"
+  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+fingerprint: "sha256:1ffc627dfa7517a333219c321f1d22e75e5eb5fdb0a93de1f396b7f698a11a52"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -94,6 +97,15 @@ The task channel reads bounded Effect history through
 `GET /task/effects?task_ref=…`: opaque original-key digest, stage,
 outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and
 report refs. Receipts, raw parameters, and extra query fields fail closed.
+
+Management `GET/POST /management/resource/v1/tool*` projects registered native
+Tools with an overlay lifecycle (`enabled` / `disabled` / `quarantined` /
+`revoked`), `execution_readiness`, and `agent_exposed`. Overlay state never
+enters the immutable descriptor digest. Task-channel callers cannot mutate
+lifecycle. `GET /task/resource/v1/tool/exposure` returns the least Agent
+exposure set and digest; `POST /task/resource/v1/tool/selection` records a
+receipt only when `candidate_set_digest` matches that digest and the selected
+operation is exposed. Prompt/body/receipt restatement fails closed.
 
 ## Projections
 

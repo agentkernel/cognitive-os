@@ -8,6 +8,8 @@ generated: false
 sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -19,7 +21,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
+fingerprint: "sha256:aec1a48ae6b28c57fde2d521fcb3ffdafb2258e01802f9e70579877f7745497b"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -80,6 +82,11 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 完整闭合 Effect 集合、当前 epoch 与 Task CAS。两条 transition 之间崩溃会保留
 `CANDIDATE_COMPLETE`，供同一 evidence-bound acceptance 重试；重复 acceptance 不能写
 第二次完成。
+
+已登记原生 Tool 默认启用。management 会话可按 `operation_id` disable、quarantine
+或 revoke；Agent 暴露立即跟随该 overlay，且永不改写不可变 descriptor。普通 Task
+调用方可读取当前最窄暴露集合并记录选择收据，但不能 enable、disable、quarantine
+或 revoke Tool。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

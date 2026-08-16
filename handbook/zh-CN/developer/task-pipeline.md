@@ -38,6 +38,8 @@ chain → SQLite，线上使用生成的 request/result DTO。
 | `admit` | `POST /task/admit` | 重算 preview digest（漂移 → `PreviewDigestMismatch`）→ `admit_interpretation` → 一个 fenced 合同 epoch-CAS 事务发布 TaskContract + `START` Loop + 硬 Budget + runnable 调度行 |
 | evidence | `GET /task/evidence?task_ref=...` | 从 SQLite authority 与 Artifact CAS 重建有界脱敏的生命周期、Effect 对账类别、current verification/Artifact 可用性、acceptance transition 与持久事件游标 |
 | effects | `GET /task/effects?task_ref=...` | 重建有界 Effect 历史（不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省、report refs），不含 receipt 或原始参数 |
+| tool exposure | `GET /task/resource/v1/tool/exposure?task_ref=...` | 当前最窄 Agent 暴露集合与 `exposure_digest`；额外 prompt/body/receipt 查询键失败闭合 |
+| tool selection | `POST /task/resource/v1/tool/selection` | 有界收据：candidate_set_digest 必须等于当前暴露，所选 operation_id 必须已被暴露，禁止 prompt/body 重述 |
 | watch | `GET /task/watch` | 快照先行的有界流（进程本地 128 事件重放；过期 `resume_from` → `TASK_WATCH_RESUME_STALE`） |
 
 合同版本：携带 `context_request_ref` 的铸造在 `validate_context_request_binding`

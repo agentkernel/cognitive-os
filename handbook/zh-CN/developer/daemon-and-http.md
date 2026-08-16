@@ -18,6 +18,8 @@ sources:
     symbols: ["observation_response_headers"]
   - path: apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -26,7 +28,8 @@ tests:
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:8975d9ee42b7a4411a24a1ed653a23c41fbd07ce1b530b3955bc91d7ef327621"
+  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+fingerprint: "sha256:1ffc627dfa7517a333219c321f1d22e75e5eb5fdb0a93de1f396b7f698a11a52"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -82,6 +85,14 @@ management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `GET /task/effects?task_ref=…` 读取有界 Effect 历史：不透明 original-key digest、
 stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及
 report refs。receipt、原始参数和额外查询字段失败闭合。
+
+management 的 `GET/POST /management/resource/v1/tool*` 投影已登记原生 Tool 的
+overlay lifecycle（`enabled` / `disabled` / `quarantined` / `revoked`）、
+`execution_readiness` 与 `agent_exposed`。overlay 状态永不进入不可变 descriptor
+digest。task 通道不能变更 lifecycle。`GET /task/resource/v1/tool/exposure`
+返回最窄 Agent 暴露集合与 digest；`POST /task/resource/v1/tool/selection` 仅在
+`candidate_set_digest` 匹配该 digest 且所选 operation 已被暴露时记录收据。
+prompt/body/receipt 重述失败闭合。
 
 ## 投影
 

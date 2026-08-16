@@ -18,6 +18,8 @@ sources:
     symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
   - path: apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -30,9 +32,10 @@ tests:
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - apps/kernel-server/tests/p2_t16_registered_check.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0a1329d057acf8b695cbe25e7e4d0a35f01483774a8ecfb24dd66518df94982e"
+fingerprint: "sha256:f585b088390b977d779cca36b3d4de8fd345b9df1944bc8d12a2177feb636bc4"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -66,6 +69,7 @@ verification → verified continuation or ceiling STOP.
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; fixed-Effect and RegisteredCheck verifiers accept only their registered identity. RegisteredCheck revalidates exact descriptor/file digests and every safety observation from CAS Evidence; a passed report enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion. WorkspaceRead with the fixed-Effect verifier still publishes `ACT -> VERIFY`. On a RegisteredCheck-terminated Task, a closed intermediate WorkspaceWrite/Patch/Search Effect instead walks `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` so a later tick can admit RegisteredCheckRun; only that check's independent verification may complete the Task |
 | A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
 | Public Effect history and default-off fault profiles | implemented, HTTP-called; production consult | task-channel `GET /task/effects` returns opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent, and report refs without receipts or parameters; management `POST/GET /management/resource/v1/fault-profile` is default-off and campaign-authorized; task callers are denied. Production native dispatch consults the persisted profile at the four fixed points; missing, default-off, and unauthorized file content never inject. Restart queries only the original idempotency key; a replacement key cannot bind a second Intent; Indeterminate/open Effects never complete a Task |
+| Public Tool lifecycle, Agent exposure, and selection receipts | implemented, HTTP-called | management `GET/POST /management/resource/v1/tool*` overlays enabled/disabled/quarantined/revoked without mutating descriptor digests; `agent_exposed` follows overlay plus assembled-executor readiness; task callers cannot mutate lifecycle. `GET /task/resource/v1/tool/exposure` returns the least exposure set and digest; `POST /task/resource/v1/tool/selection` records a receipt only for that digest and an exposed operation_id. Prompt/body/receipt restatement and stale/widened candidate digests fail closed |
 | Task candidate + acceptance authority | implemented; public C1 native-proven | the scheduler materializes/activates the governed Task, then only a latest current independent passed report, retrievable CAS evidence, unchanged fixed state, closed Effect set and the distinct daemon acceptance principal can commit the two registered Task transitions; missing report, duplicate acceptance, open Effect, superseded report, missing CAS evidence, and stale fixed post-state fail closed |
 | Startup recovery | implemented | consumed handoffs reconcile; current admitted contracts idempotently repair only missing Task/Loop/Budget/scheduler prerequisites without replacing existing authority |
 

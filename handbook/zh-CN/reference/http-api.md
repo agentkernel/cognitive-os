@@ -10,9 +10,10 @@ sources:
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:dc1f420e1cdb3c9529622c3be2af0ded2bae68a69437630be03debfdcb03a7b4"
+fingerprint: "sha256:c9b08ab81d79db21eb4f4a5c845c9c0d92e120758da3c455e47b28961165c02c"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -51,6 +52,16 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/effects` | task | 返回一个 task_ref 的有界 Effect 历史：不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及 report refs。拒绝 receipt、原始参数和额外查询字段。 |
 | `GET` | `/management/resource/v1/fault-profile` | management | 读取默认关闭的 task 范围授权 fault profile。缺失记录表示故障注入保持关闭。普通 task 调用方被拒绝。 |
 | `POST` | `/management/resource/v1/fault-profile` | management | 为一个 task_ref 持久化默认关闭或评测授权的固定 fault profile。未授权 campaign 与 task 通道调用方失败闭合。不存储原始参数或 receipt。 |
+| `GET` | `/management/resource/v1/tool` | management | 投影已登记原生 Tool 的 overlay lifecycle、execution_readiness，以及当前是否对 Agent 暴露。overlay 状态永不进入不可变 descriptor digest。 |
+| `GET` | `/management/resource/v1/tool/discover` | management | 已登记 Tool lifecycle 投影的别名；阻止先前 tool/discover 落入通用 authority 处理器。 |
+| `POST` | `/management/resource/v1/tool/enable` | management | 启用一个已登记 operation_id。被隔离或撤销的 Tool 失败闭合。task 通道调用方被拒绝。 |
+| `POST` | `/management/resource/v1/tool/disable` | management | 禁用一个已登记 operation_id。Agent 暴露随 overlay 原子更新。 |
+| `POST` | `/management/resource/v1/tool/quarantine` | management | 隔离一个已登记 operation_id。在本表面内 enable 保持阻断。 |
+| `POST` | `/management/resource/v1/tool/revoke` | management | 撤销一个已登记 operation_id。对本 overlay 而言撤销是终态。 |
+| `GET` | `/management/resource/v1/tool/exposure` | management | 读取一个 task_ref 当前最窄 Agent 暴露集合及其 digest。 |
+| `GET` | `/task/resource/v1/tool` | task | task 通道读取同一份已登记 Tool lifecycle 投影。 |
+| `GET` | `/task/resource/v1/tool/exposure` | task | 返回一个 task_ref 的最窄 Agent 暴露集合与 exposure_digest。额外的 prompt/body/receipt 查询键失败闭合。 |
+| `POST` | `/task/resource/v1/tool/selection` | task | 记录有界 Tool 选择收据：candidate_set_digest 必须等于当前暴露 digest，所选 operation_id 必须已被暴露，且拒绝 prompt/body/receipt 重述。 |
 | `GET` | `/task/watch` | task | 快照优先的有界 Task watch，支持可选 resume_from。 |
 | `GET` | `/task/resource/v1/projection` | task | Task 绑定的 Memory/Skill 资源投影（需要 task_ref）；经 `/task/resource/` 前缀重写复用共享 resource 处理器。 |
 | `GET` | `/task/resource/v1/watch` | task | Task 绑定的资源 watch，经同一前缀重写提供。 |

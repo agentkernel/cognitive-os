@@ -8,10 +8,11 @@ generated: false
 sources:
   - path: package.json
   - path: tools/package.json
+  - path: tools/src/generate-handbook.mjs
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:9e0d8ffd79c6c972772ce0459f6a6edda9287ea6cc239fb313cc6b78672dbb22"
+fingerprint: "sha256:de89648976f11217804f737f48a9d0d7e2c7b959acc66e3c3b9223b6f0026122"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---

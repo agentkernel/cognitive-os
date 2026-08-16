@@ -8,6 +8,8 @@ generated: false
 sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -19,7 +21,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
+fingerprint: "sha256:aec1a48ae6b28c57fde2d521fcb3ffdafb2258e01802f9e70579877f7745497b"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -97,6 +99,12 @@ rechecks the fixed Effect version, complete closed Effect set, current epoch and
 Task CAS in each candidate/acceptance transaction. A crash between the two
 transitions leaves `CANDIDATE_COMPLETE` for the same evidence-bound acceptance
 retry; duplicate acceptance cannot write a second completion.
+
+Registered native Tools start enabled. A management session can disable,
+quarantine, or revoke one by `operation_id`; Agent exposure follows that overlay
+immediately and never rewrites the immutable descriptor. Ordinary Task callers
+can read the current least exposure set and record a selection receipt, but they
+cannot enable, disable, quarantine, or revoke Tools.
 
 ## Backup and restore — `unavailable` as a user feature
 
