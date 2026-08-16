@@ -1240,8 +1240,8 @@ fn reconstruct_bounded_effect_history(
 }
 
 fn project_effect_history_entry(
-    intent: &cognitive_kernel::ports::IntentRow,
-    effect: Option<&cognitive_kernel::ports::StoredObject>,
+    intent: &IntentRow,
+    effect: Option<&StoredObject>,
 ) -> BoundedEffectHistoryEntry {
     let stage = effect
         .map(|row| row.state.as_str().to_owned())

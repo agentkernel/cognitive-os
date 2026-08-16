@@ -53,3 +53,12 @@
   campaign enum. Profiles are default-off and persist only after a management
   campaign/case grant. `GET /task/effects` reconstructs bounded history from
   durable Intent/Effect rows. `select_single_effect_intent` is unchanged.
+
+### D01-CI-01 — Ubuntu supporting CI at `1ef365a7` (superseded)
+
+- Instrument: GitHub Actions run
+  [31924285207](https://github.com/agentkernel/cognitive-os/actions/runs/31924285207)
+- Outcome: `fail` — `kernel-server` did not compile under `-D warnings`: unused
+  `IntentRow` / `StoredObject` imports because the history projector used
+  fully-qualified paths.
+- Disposition: use the imported types in `project_effect_history_entry`.

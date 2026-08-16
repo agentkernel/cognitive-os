@@ -20,7 +20,7 @@ tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:7da9dca6a76c48aa1e4c02a04fe9a5604677c8549c66cb1acb157f544126f4df"
+fingerprint: "sha256:6a655a2ac22cd6f5ff5e424bab8391b695ae324dcd6fd2ffdb245c1cb1a3f7d4"
 non_claims:
   - 准入不会启动自主执行；该缺口记录于执行链状态页。
 ---
