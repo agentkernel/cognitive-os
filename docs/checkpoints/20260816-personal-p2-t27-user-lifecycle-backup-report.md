@@ -146,3 +146,33 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Instrument: local `cargo test` on `DEV-WIN-GNU-01`.
 - Outcome: `not-run by owner-directed Linux-only route` /
   `RUST-LINK-DEV-WIN-GNU-01`.
+
+## D03 — linux-002 equality/migration/RTO/RPO/lifecycle/cleanup matrix
+
+### D03-IMPL-01 — destroy→restore equality, residue cleanup, bounded duration
+
+- Instrument: `d03_destroy_restore_equality_cleanup_and_bounded_duration` in
+  `crates/cognitive-store/src/personal_backup.rs`.
+- Outcome: authored. Fresh-root eligible files match the archive after
+  destroy→restore (RPO = archive parts). Restore duration is measured and
+  bounded for the hermetic fixture; this is not an RTO SLO or Gate claim.
+  Staging/snapshot trees are absent after success and after injected-fault
+  rollback. Tamper, missing-part, schema, secret/SQLite, and Pi lifecycle
+  cells reuse D01/D02 tests. Cross-version migration remains fail-closed
+  (`SchemaIncompatible` for archive format ≠ 1).
+
+### D03-LOCAL-01 — Windows GNU Rust tests
+
+- Instrument: local `cargo test` on `DEV-WIN-GNU-01`.
+- Outcome: `not-run by owner-directed Linux-only route` /
+  `RUST-LINK-DEV-WIN-GNU-01`.
+
+### D03-LINUX-01 — exact-revision matrix
+
+- Instrument: `DEV-LINUX-NATIVE-01` at a pushed revision.
+- Outcome: `not-run` (waiting for an immutable pushed head).
+
+### D03-CI-01 — Ubuntu supporting CI
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` on the Draft PR head.
+- Outcome: `not-run` (waiting for the D03 head).

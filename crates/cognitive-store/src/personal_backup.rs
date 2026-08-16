@@ -1737,4 +1737,80 @@ mod tests {
         .expect("daemon-owned restore ignores its own lock");
         let _ = fs::remove_dir_all(root);
     }
+
+    #[test]
+    fn d03_destroy_restore_equality_cleanup_and_bounded_duration() {
+        let (layout, root) = hermetic_layout();
+        fs::write(layout.config_dir().join("notes.txt"), b"keep-me").unwrap();
+        let backup = write_personal_backup_archive(&layout).expect("backup");
+        let original_ui = fs::read(layout.config_dir().join("ui.json")).unwrap();
+        let original_notes = fs::read(layout.config_dir().join("notes.txt")).unwrap();
+        fs::write(layout.config_dir().join("ui.json"), b"destroyed").unwrap();
+        fs::remove_file(layout.config_dir().join("notes.txt")).unwrap();
+
+        let started = std::time::Instant::now();
+        let restored =
+            restore_personal_backup_archive(&layout, &backup.archive_path).expect("restore");
+        let restore_duration = started.elapsed();
+        assert!(restored.live_applied);
+        assert_eq!(
+            fs::read(layout.config_dir().join("ui.json")).unwrap(),
+            original_ui
+        );
+        assert_eq!(
+            fs::read(layout.config_dir().join("notes.txt")).unwrap(),
+            original_notes
+        );
+        assert_eq!(
+            fs::read(backup.archive_path.join("parts/config/ui.json")).unwrap(),
+            original_ui
+        );
+        assert_eq!(
+            fs::read(backup.archive_path.join("parts/config/notes.txt")).unwrap(),
+            original_notes
+        );
+        assert!(
+            restore_duration.as_secs() < 10,
+            "bounded restore duration was {restore_duration:?} (measurement, not an RTO SLO)"
+        );
+        assert!(restore_duration.as_nanos() > 0);
+        assert_eq!(
+            fs::read(layout.authority_database_path()).unwrap(),
+            b"sqlite-bytes"
+        );
+        assert!(layout.config_dir().join("provider-config.json").exists());
+        assert!(!leftover_restore_trees(&layout));
+
+        fs::write(layout.config_dir().join("ui.json"), b"live-only").unwrap();
+        assert_eq!(
+            restore_personal_backup_archive_with_options(
+                &layout,
+                &backup.archive_path,
+                BackupRestoreOptions {
+                    apply_live: true,
+                    inject_fault_before_apply: true,
+                    refuse_if_daemon_lock: true,
+                },
+            )
+            .unwrap_err(),
+            PersonalBackupError::RestorePartialRefused
+        );
+        assert_eq!(
+            fs::read(layout.config_dir().join("ui.json")).unwrap(),
+            b"live-only"
+        );
+        assert!(!leftover_restore_trees(&layout));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    fn leftover_restore_trees(layout: &PersonalDataLayout) -> bool {
+        let Ok(entries) = fs::read_dir(layout.runtime_dir()) else {
+            return false;
+        };
+        entries.filter_map(Result::ok).any(|entry| {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            name.starts_with("restore-staging-") || name.starts_with("restore-snapshot-")
+        })
+    }
 }

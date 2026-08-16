@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:90cd5c704cacc38088c9a36259f33915f083fe9faa06433f4e4e0046119388c4"
+fingerprint: "sha256:a8d9975ca40bbc06887300162bc04ede6b654564d5267d5a9877de5b2c414706"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -105,5 +105,6 @@ fencing before the candidate and final acceptance CAS updates.
 digest-bound directory archive and writes a Memory/Skill export sidecar. It
 skips `authority.sqlite`, secret-named paths, and `provider-config.json`.
 Restore preflight checks schema, completeness, and part digests, then overlays
-live files from a staging tree with snapshot rollback. This is not a SQLite
-dump and does not claim Gate/RTO/RPO results.
+live files from a staging tree with snapshot rollback. Focused tests record
+byte-equal restored files and a finite restore wall time as hypothesis-only
+facts. This is not a SQLite dump and does not claim Gate/RTO/RPO results.

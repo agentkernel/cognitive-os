@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:b06c65303f6cadb1ac64c89398a915dd1bd02029bfde5e6e45f1286ffcf113ce"
+fingerprint: "sha256:2d8aee05329f7ebe5244f997dd7edf2980b60ede1859534ef701ba0a2485ea9c"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -136,5 +136,8 @@ preflight, then overlays live files from a staging tree; a failure rolls the
 snapshot back. `--preflight` verifies without mutation. The same operations are
 available on the management channel as `POST /management/resource/v1/backup` and
 `.../restore`. After restore, re-enter the Provider key with `cognitive init`
-if the Secret Store item is missing. Managed Pi install→recover is still a later
-slice; this page does not claim RTO/RPO or Gate results.
+if the Secret Store item is missing. Public `admin-cli` callers cover managed Pi
+install→activate-root→register→activate→pause/resume→upgrade/rollback→stop→
+recover→uninstall. Focused tests record byte-equal restore and a finite restore
+wall time as hypothesis-only facts; this page does not claim RTO/RPO or Gate
+results.

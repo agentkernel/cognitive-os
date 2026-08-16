@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:90cd5c704cacc38088c9a36259f33915f083fe9faa06433f4e4e0046119388c4"
+fingerprint: "sha256:a8d9975ca40bbc06887300162bc04ede6b654564d5267d5a9877de5b2c414706"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -92,5 +92,6 @@ record 表，并在 candidate 与最终 acceptance CAS 更新前重查当前合�
 `write_personal_backup_archive` 把 config/data/state/artifact 文件复制进 digest
 绑定的目录归档，并写入 Memory/Skill 导出 sidecar。它跳过 `authority.sqlite`、
 secret 命名路径和 `provider-config.json`。恢复预检查 schema、完整性与 part
-digest，再从 staging 覆盖 live 文件并在失败时回滚快照。这不是 SQLite dump，也
-不声明 Gate/RTO/RPO。
+digest，再从 staging 覆盖 live 文件并在失败时回滚快照。聚焦测试把恢复后字节
+相等和有限墙钟记为 hypothesis-only 事实。这不是 SQLite dump，也不声明
+Gate/RTO/RPO。

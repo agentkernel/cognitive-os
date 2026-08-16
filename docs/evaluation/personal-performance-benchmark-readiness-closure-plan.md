@@ -116,7 +116,7 @@ informative work-package ID：
 | BR-04 | P2-T24 | done (merged PR #223 at `main@2b803e0f`) |
 | BR-05 | P2-T25 | done (merged PR #224 at `main@4b10db9a`) |
 | BR-06 | P2-T26 | done (merged PR #225 at `main@9e1404a1`) |
-| BR-07 | P2-T27 | in-progress (D01 complete at `6eea42c4`; D02 public Pi lifecycle) |
+| BR-07 | P2-T27 | in-progress (D01 complete at `6eea42c4`; D02 complete at `cf7dd501`; D03 linux-002 matrix) |
 | BR-08 | P2-T28 | not-started |
 
 CI route resolution is fail closed by task branch: P2-T21..P2-T28 run Ubuntu

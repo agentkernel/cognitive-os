@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:b06c65303f6cadb1ac64c89398a915dd1bd02029bfde5e6e45f1286ffcf113ce"
+fingerprint: "sha256:2d8aee05329f7ebe5244f997dd7edf2980b60ede1859534ef701ba0a2485ea9c"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -113,5 +113,7 @@ artifacts 与 Memory/Skill 导出 sidecar）。永不复制 `authority.sqlite`�
 <dir>`（或 `--archive-id`）先做 schema/digest 预检，再从 staging 覆盖 live 文件；
 失败则回滚快照。`--preflight` 只校验不变更。management 通道提供相同操作：
 `POST /management/resource/v1/backup` 与 `.../restore`。恢复后若 Secret Store 中没有
-Provider key，需用 `cognitive init` 重新录入。managed Pi install→recover 仍是后续
-切片；本页不声明 RTO/RPO 或 Gate 结果。
+Provider key，需用 `cognitive init` 重新录入。公开 `admin-cli` 调用方覆盖 managed
+Pi install→activate-root→register→activate→pause/resume→upgrade/rollback→stop→
+recover→uninstall。聚焦测试把恢复后字节相等和有限墙钟记为 hypothesis-only
+事实；本页不声明 RTO/RPO 或 Gate 结果。
