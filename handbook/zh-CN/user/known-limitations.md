@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:2da9fd37a8d747fa12f8407ca5d37edcf281e09d18544a71bb5511ec07c7523f"
+fingerprint: "sha256:d41100c4da5604977c015edf1eb8e5b1d8cc31db73ac758017e4674cea465b75"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -28,7 +28,9 @@ non_claims:
   verifier 与 evidence-bound Task acceptance caller。exact native `22c3f502`
   到达公共 C1 `COMPLETED`。open Effect、被取代 report 与缺失 CAS 负例已写入；
   stale fixed post-state 仍开放。其余 Tool 请求载体仍未接线。
-- **无备份/恢复命令**；仅有规划 API（secret 恒排除）。
+- **备份/恢复排除 secret 与 authority SQLite**；`cognitive backup` / `restore` 与
+  management HTTP 路由写入 digest 绑定归档，并在预检后覆盖 live 文件。Provider
+  key 留在 Secret Store，换机后需重新录入。managed Pi recover 尚未接在这条路径上。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
   UX。
 - Pi 对话按次单发（无流式、仅文本、客户端固定 8192/1024 窗口常量）。

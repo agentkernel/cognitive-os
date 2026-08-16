@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:69bd31484a814ef8950e5507d12c8c58e752bfe0dae0545b701e33aff283de59"
+fingerprint: "sha256:b2ce891386fc93a42b7ee6aaa67f5b68100c17217588e3e728940135ec1e3622"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -76,4 +76,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/resource/v1/watch` | task | Task 绑定的资源 watch，经同一前缀重写提供。 |
 | `GET` | `/task/resource/v1/consumption` | task | 返回一个 task_ref 上最新的 daemon 写入脱敏 Memory/Skill 消费钉；query_text 与 skill_binding_id 视为重述并拒绝；遗忘、撤销或 digest 漂移的记录在返回钉之前失败闭合。 |
 | `POST` | `/task/resource/v1/consumption` | task | 记录绑定当前权威事实的 Task trace Memory/Skill 消费。 |
+| `POST` | `/management/resource/v1/backup` | management | 写入排除 secret 的 Personal 备份归档。永不复制 authority SQLite、bootstrap secret、bearer 或 provider-config。 |
+| `POST` | `/management/resource/v1/backup/preflight` | management | 校验一个 archive_id（schema、分片 digest、完整性、secret/SQLite 排除）且不改写 live layout。 |
+| `POST` | `/management/resource/v1/restore` | management | 预检后事务恢复一个 archive_id。失败则回滚 live 树；secret 与 SQLite 仍不被复制。 |
+| `POST` | `/task/resource/v1/backup` | task | 禁止：backup/restore 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/restore` | task | 禁止：backup/restore 仅限 management 通道。 |
+| `POST` | `/task/backup` | task | 禁止：management 备份写入器的 task 别名。 |
+| `POST` | `/task/restore` | task | 禁止：management 恢复写入器的 task 别名。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

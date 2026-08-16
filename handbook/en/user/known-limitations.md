@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:2da9fd37a8d747fa12f8407ca5d37edcf281e09d18544a71bb5511ec07c7523f"
+fingerprint: "sha256:d41100c4da5604977c015edf1eb8e5b1d8cc31db73ac758017e4674cea465b75"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -32,7 +32,11 @@ current fact of the code.
   superseded-report and missing-CAS negatives are written; a stale fixed
   post-state negative is still open. The other Tool request carriers remain
   unwired.
-- **No backup/restore command**; planning APIs only (secrets always excluded).
+- **Backup/restore excludes secrets and authority SQLite**; `cognitive backup` /
+  `restore` and the management HTTP routes write a digest-bound archive and
+  overlay live files after preflight. Provider keys stay in the Secret Store
+  and must be re-entered after a machine move. Managed Pi recover is not yet
+  wired on this path.
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet.
 - Pi conversations are one-shot per exchange (no streaming, text only, fixed

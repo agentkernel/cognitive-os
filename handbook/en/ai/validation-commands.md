@@ -58,6 +58,8 @@ P2-T25 focused HTTP coverage is `apps/kernel-server/tests/p2_t25_tool_lifecycle.
 P2-T26 focused HTTP coverage is `apps/kernel-server/tests/p2_t26_observation_plane.rs`
 (O2/O3/O4/O5/O13 observation plane, controlled zeros, audit cursor negatives,
 and channel negatives).
+P2-T27 focused HTTP coverage is `apps/kernel-server/tests/p2_t27_backup_restore.rs`
+(secret-excluding backup/restore, preflight, tamper, and task-channel denial).
 
 ## What CI enforces on every PR
 

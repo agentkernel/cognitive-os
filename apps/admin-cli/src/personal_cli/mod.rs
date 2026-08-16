@@ -6,6 +6,7 @@
 //! advance Task/Effect/Verification state, never logs secret material, and
 //! never claims G0 / B01-B12 / Profile conformance.
 
+mod backup;
 mod client;
 mod daemon;
 mod init;
@@ -33,6 +34,8 @@ pub enum CognitiveCommand {
     Pi(PiCommand),
     Resource(ResourceCommand),
     Task(TaskCommand),
+    Backup(backup::BackupOptions),
+    Restore(backup::RestoreOptions),
 }
 
 /// Options for `cognitive init`.
@@ -174,8 +177,10 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
         }
         "resource" => parse_resource_command(rest),
         "task" => parse_task_command(rest),
+        "backup" => parse_backup_command(rest),
+        "restore" => parse_restore_command(rest),
         other => Err(format!(
-            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|resource|task)"
+            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|resource|task|backup|restore)"
         )),
     }
 }
@@ -230,6 +235,20 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
         }
         CognitiveCommand::Task(TaskCommand::Watch(options)) => fetch_task_watch(&options),
         CognitiveCommand::Task(TaskCommand::Evidence(options)) => fetch_task_evidence(&options),
+        CognitiveCommand::Backup(options) => match backup::run_backup(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Restore(options) => match backup::run_restore(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
         CognitiveCommand::Daemon(DaemonCommand::Start(options)) => match daemon::start(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -287,6 +306,45 @@ fn parse_resource_command(arguments: &[String]) -> Result<CognitiveCommand, Stri
         "watch" => Ok(CognitiveCommand::Resource(ResourceCommand::Watch(options))),
         _ => Err("resource requires subcommand get|watch".to_owned()),
     }
+}
+
+fn parse_backup_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
+    let flags = parse_flags(arguments)?;
+    reject_unexpected_flags(&flags, &["runtime-root", "output", "endpoint"])?;
+    Ok(CognitiveCommand::Backup(backup::BackupOptions {
+        layout_roots: LayoutRoots::from_flags(&flags)?,
+        endpoint_override: flags.get("endpoint").cloned(),
+        output: flags.get("output").map(PathBuf::from),
+    }))
+}
+
+fn parse_restore_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
+    let flags = parse_flags(arguments)?;
+    reject_unexpected_flags(
+        &flags,
+        &[
+            "runtime-root",
+            "endpoint",
+            "archive",
+            "archive-id",
+            "preflight",
+        ],
+    )?;
+    let archive = flags.get("archive").map(PathBuf::from);
+    let archive_id = flags
+        .get("archive-id")
+        .filter(|value| !value.trim().is_empty())
+        .cloned();
+    if archive.is_none() && archive_id.is_none() {
+        return Err("restore requires --archive <dir> or --archive-id <id>".to_owned());
+    }
+    Ok(CognitiveCommand::Restore(backup::RestoreOptions {
+        layout_roots: LayoutRoots::from_flags(&flags)?,
+        endpoint_override: flags.get("endpoint").cloned(),
+        archive,
+        archive_id,
+        preflight_only: flag_bool(&flags, "preflight")?,
+    }))
 }
 
 fn parse_task_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
@@ -543,6 +601,15 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
             }
             continue;
         }
+        if flag == "--preflight" {
+            if flags
+                .insert("preflight".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --preflight given twice".to_owned());
+            }
+            continue;
+        }
         let Some(name) = flag.strip_prefix("--") else {
             return Err(format!("unexpected argument `{flag}`"));
         };
@@ -600,9 +667,13 @@ USAGE:
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
                           --task-ref <task-uri>
+  cognitive backup  [--runtime-root <dir>] [--endpoint <host:port>] [--output <dir>]
+  cognitive restore [--runtime-root <dir>] [--endpoint <host:port>]
+                    (--archive <dir> | --archive-id <id>) [--preflight]
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
+  - backup/restore never copy secret, bearer, provider-config, or authority SQLite
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state and passes only --extension
   - never advances Task/Effect/Verification authority state
@@ -748,5 +819,53 @@ mod tests {
         ])
         .expect_err("task evidence must reject secret-bearing flags");
         assert!(rejected_secret_flag.contains("not accepted"));
+    }
+
+    #[test]
+    fn backup_and_restore_parse_without_secret_flags() {
+        let backup = parse_cognitive_args(&[
+            "backup".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--output".to_owned(),
+            "/tmp/backup-out".to_owned(),
+        ])
+        .expect("parse backup");
+        assert_eq!(
+            backup,
+            CognitiveCommand::Backup(backup::BackupOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                endpoint_override: None,
+                output: Some(PathBuf::from("/tmp/backup-out")),
+            })
+        );
+
+        let restore = parse_cognitive_args(&[
+            "restore".to_owned(),
+            "--archive".to_owned(),
+            "/tmp/backup-out".to_owned(),
+            "--preflight".to_owned(),
+        ])
+        .expect("parse restore");
+        assert_eq!(
+            restore,
+            CognitiveCommand::Restore(backup::RestoreOptions {
+                layout_roots: LayoutRoots { runtime_root: None },
+                endpoint_override: None,
+                archive: Some(PathBuf::from("/tmp/backup-out")),
+                archive_id: None,
+                preflight_only: true,
+            })
+        );
+
+        let rejected = parse_cognitive_args(&[
+            "backup".to_owned(),
+            "--api-key-file".to_owned(),
+            "secret.txt".to_owned(),
+        ])
+        .expect_err("backup must reject secret flags");
+        assert!(rejected.contains("not accepted"), "{rejected}");
     }
 }

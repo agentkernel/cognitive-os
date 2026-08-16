@@ -77,3 +77,6 @@ chat）；带调用方 `query_text` 的 `POST /task/resource/v1/consumption` 不
 复用必须重读当前权威事实；确定性记录身份绑定 principal/tenant/scope/purpose、
 request digest 与精确钉，遗忘、撤销、digest 漂移或竞争持久记录一律失败闭合。
 task bearer 在任何管理变更前即被拒绝。
+
+公开备份归档携带 digest 绑定的 Memory/Skill 导出 sidecar，永不复制原始
+`authority.sqlite`。

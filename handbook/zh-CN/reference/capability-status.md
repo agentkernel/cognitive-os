@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:f654ef92ec9bcdca374b64e6ce1fcdc05377b6b10fff73496087b3a70c41ec36"
+fingerprint: "sha256:6e15c8c4bf2fb5a3b0021ca96e50cf54730f95471c721af15a53935b7984a4be"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -50,7 +50,7 @@ non_claims:
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
 | MCP 工具 | designed | post-1.0 fixture 适配器 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
-| 备份/恢复命令 | unavailable | 仅规划 API |
+| 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；Pi install→recover 为后续切片 |
 | Web UI / Console | unavailable | 外部仓库、仅设计 |
 | Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行 |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |

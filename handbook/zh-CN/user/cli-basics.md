@@ -9,10 +9,12 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
   - path: apps/admin-cli/src/personal_cli/daemon.rs
+  - path: apps/admin-cli/src/personal_cli/backup.rs
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t02_cli_parity.rs
-fingerprint: "sha256:26d0fc061a54ff710c01e830821b8d6967524ab0658c3321004e2f101ea2afad"
+  - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:926a94ec492b5631a1876f37e14d6bd49d6ed698d13e2d431dd4dcd9f1abc2c1"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -36,6 +38,8 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
+| `cognitive backup [--output <dir>]` | 写入排除 secret 的 digest 绑定归档（不含 authority SQLite / provider-config / bearer） |
+| `cognitive restore --archive <dir> [--preflight]` | 预检后从已验证归档覆盖 live 文件；`--preflight` 不变更 |
 
 两个诚实的怪癖（生成的 [CLI 参考](../reference/cli-cognitive.md)中同样标注）：内置
 usage 文本尚未列出 `resource`/`task`；所有动词都接受的 `--runtime-root <dir>` 是密封

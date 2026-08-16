@@ -238,6 +238,26 @@
 | Ubuntu supporting CI | run `31934786837` pass |
 | Windows | `not-run by owner-directed Linux-only route` |
 
+### D03-MERGE-01 — PR #225 merged; lease closed
+
+- Instrument: GitHub PR [#225](https://github.com/agentkernel/cognitive-os/pull/225)
+  merge to `main`.
+- Outcome: **merged** at `main@9e1404a1b262a0e8588dbc2d1daac08ce419bd33`.
+  Task lease `lease/personal/P2-T26/bounded-os-observation` closed 2026-08-16.
+  Local and remote task branch deleted. Claim ceiling `hypothesis`; no
+  Gate/release/Profile/B01/EVAL promotion.
+
+
+## D03-MERGE-01 — ready/merge/lease/branch/main
+
+- PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) merged at
+  `main@9e1404a1b262a0e8588dbc2d1daac08ce419bd33`.
+- Task lease `lease/personal/P2-T26/bounded-os-observation` closed into the
+  Parallel Lanes archive by the first P2-T27 commit.
+- Claim ceiling remains hypothesis/non-claim. No Gate, release, Profile, B01,
+  EVAL, or Agent-benefit promotion.
+
+
 
 
 

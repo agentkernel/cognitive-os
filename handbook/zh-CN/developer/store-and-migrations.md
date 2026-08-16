@@ -6,6 +6,8 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
+  - path: crates/cognitive-store/src/personal_backup.rs
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: crates/cognitive-store/src/migration.rs
@@ -20,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:234e4fe38aa4f5e5bf0fc41bb5e414e4e84ecf1abb63258b189f374ac1b46adc"
+fingerprint: "sha256:4ff805929ff7f093d32e21a2c163c2eb532460cb272213615e98b7a7b7cb4d5a"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -84,3 +86,11 @@ verified Task completion 不新增 migration 或专用 acceptance 表。canonica
 bytes 位于 Artifact CAS；两个 immediate 事务复用既有 governed-object/event/transition
 record 表，并在 candidate 与最终 acceptance CAS 更新前重查当前合同、精确 fixed state、
 最新 report、完整闭合 Effect 集合与 fencing。
+
+## 用户备份归档
+
+`write_personal_backup_archive` 把 config/data/state/artifact 文件复制进 digest
+绑定的目录归档，并写入 Memory/Skill 导出 sidecar。它跳过 `authority.sqlite`、
+secret 命名路径和 `provider-config.json`。恢复预检查 schema、完整性与 part
+digest，再从 staging 覆盖 live 文件并在失败时回滚快照。这不是 SQLite dump，也
+不声明 Gate/RTO/RPO。

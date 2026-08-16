@@ -86,3 +86,5 @@ message flows Pi → daemon Provider proxy → Provider; see [The Pi shell](./pi
 Bad signature/pin → nothing is installed; health failure → previous service
 restored; locked or missing keyring → `init` refuses; stale `daemon.lock` →
 `cognitive daemon stop` cleans it only after proving the process is gone.
+User-data backup is a separate verb (`cognitive backup` / `restore`); archives
+never contain the Provider key.

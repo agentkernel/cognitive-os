@@ -16,18 +16,23 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
+  - path: apps/kernel-server/src/personal/user_backup.rs
+    symbols: ["handle"]
+  - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: crates/cognitive-store/src/personal_backup.rs
-    symbols: ["plan_personal_backup_inventory"]
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:a9357b65c1bc7ec2680835dfdf72620e9132812878f1516f007a2128ff2eaf19"
+fingerprint: "sha256:10ffb13df2652d5bf9428e7d810431161d0c4d5daf2c9188273258fcbe7d5cb4"
 non_claims:
-  - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
+  - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
 
 # Operations and recovery
@@ -121,10 +126,15 @@ immediately and never rewrites the immutable descriptor. Ordinary Task callers
 can read the current least exposure set and record a selection receipt, but they
 cannot enable, disable, quarantine, or revoke Tools.
 
-## Backup and restore — `unavailable` as a user feature
+## Backup and restore — `partial`
 
-Inventory/export/restore-preflight planning code exists (secret paths are always
-excluded by design), but no `cognitive backup`/`restore` command or archive I/O is
-wired yet. Today's honest fallback: stop the daemon, copy the XDG state/config
-directories yourself, and remember that Provider keys are **not** in those files —
-after restoring on a new machine, re-run `cognitive init` to re-enter the key.
+`cognitive backup [--output <dir>]` writes a digest-bound directory archive of
+config/data/state/artifacts plus a Memory/Skill export sidecar. It never copies
+`authority.sqlite`, `provider-config.json`, bootstrap secrets, or bearer files.
+`cognitive restore --archive <dir>` (or `--archive-id`) runs schema/digest
+preflight, then overlays live files from a staging tree; a failure rolls the
+snapshot back. `--preflight` verifies without mutation. The same operations are
+available on the management channel as `POST /management/resource/v1/backup` and
+`.../restore`. After restore, re-enter the Provider key with `cognitive init`
+if the Secret Store item is missing. Managed Pi install→recover is still a later
+slice; this page does not claim RTO/RPO or Gate results.

@@ -90,3 +90,6 @@ Reuse reloads current authority facts, binds its deterministic record identity
 to principal/tenant/scope/purpose/request digest and exact pins, and fails
 closed on forget, revoke, digest mismatch, or a competing durable record.
 Task bearers are rejected before any management mutation.
+
+Public backup archives carry a digest-bound Memory/Skill export sidecar and
+never a raw `authority.sqlite` copy.

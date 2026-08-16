@@ -77,3 +77,4 @@ launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi
 
 签名/pin 不符 → 什么都不装；健康检查失败 → 恢复前一服务；密钥环锁定或缺失 →
 `init` 拒绝；过期 `daemon.lock` → `cognitive daemon stop` 只在证明进程已消失后清理。
+用户数据备份是独立动词（`cognitive backup` / `restore`）；归档从不包含 Provider key。
