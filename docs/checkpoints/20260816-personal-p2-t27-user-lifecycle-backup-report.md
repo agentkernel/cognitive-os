@@ -113,6 +113,13 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   rollback and stale-recover epoch are fail-closed negatives. Local Rust
   `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
 
+### D02-LINUX-01 — exact-revision `p2_t27_pi_lifecycle` (`74e3a225`)
+
+- Instrument: `DEV-LINUX-NATIVE-01` `cargo test -p admin-cli --test p2_t27_pi_lifecycle --locked`.
+- Outcome: **fail**. Rollback is a new monotonic activation (v2 + target
+  binding v1 → activation_version **3**), not a rewind to version 1. The
+  public test oracle is corrected to that durable contract.
+
 ### D02-LOCAL-01 — Windows GNU Rust tests
 
 - Instrument: local `cargo test` on `DEV-WIN-GNU-01`.
