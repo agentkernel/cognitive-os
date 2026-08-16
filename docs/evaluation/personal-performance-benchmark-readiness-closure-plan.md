@@ -112,7 +112,7 @@ informative work-package ID：
 |---|---|---|
 | BR-01 | P2-T21 | done |
 | BR-02 | P2-T22 | done |
-| BR-03 | P2-T23 | in-progress |
+| BR-03 | P2-T23 | in-progress (D01–D03 complete; ready/merge PR #222) |
 | BR-04 | P2-T24 | not-started |
 | BR-05 | P2-T25 | not-started |
 | BR-06 | P2-T26 | not-started |
@@ -172,6 +172,11 @@ test weakening、descriptor drift、timeout、orphan、oversize、exit-0-without
 restart unknown outcome 全部有 focused evidence。
 
 ### BR-03 — C2b Memory/Skill 真实消费与 session-2 恢复
+
+**Status (2026-08-16):** D01–D03 complete at `79764387` / Draft PR #222.
+Ubuntu supporting CI run `31922660543` green; exact-revision `DEV-LINUX-NATIVE-01`
+kernel-server bin 299/299, p4_t05 5/5, workspace tests 0-failed, Clippy
+`-D warnings`, fmt. Ready/merge remains. No EVAL/Gate/release/Profile claim.
 
 **实施：**
 

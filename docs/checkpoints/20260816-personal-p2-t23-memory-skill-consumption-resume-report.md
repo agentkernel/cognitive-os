@@ -145,5 +145,54 @@
 
 - Instrument: `apps/kernel-server/src/personal/resource_api.rs`
 - Outcome: authored. `GET /task/resource/v1/consumption` now also fails closed
-when the durable record's `context_request_digest` differs from the live
-ContextRequest, before any pin is returned.
+  when the durable record's `context_request_digest` differs from the live
+  ContextRequest, before any pin is returned.
+
+### D01-CI-04 / D02-CI-01 — Ubuntu supporting CI at `79764387`
+
+- Instrument: GitHub Actions run
+  [31922660543](https://github.com/agentkernel/cognitive-os/actions/runs/31922660543)
+  (`verify (ubuntu-latest)` + `required-ci`)
+- Outcome: `pass`. Workspace Rust tests, Clippy `-D warnings`, rustfmt,
+  handbook, consistency, and conformance steps green. Windows is
+  `not-run by owner-directed Linux-only route`.
+- Disposition: D01 public journey and D02 session-2/restart/forged-prompt
+  tests executed on Ubuntu. Next: exact-revision `DEV-LINUX-NATIVE-01`.
+
+## D03 — exact-revision linux-002 recall/isolation/lifecycle/cleanup matrix
+
+### D03-LINUX-01 — focused public consumption/resume tests
+
+- Instrument: `cargo test -p kernel-server --bin kernel-server --locked public_`
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`), worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t22-48fa7d0` at exact
+  `79764387c3b4d907cf53487122379a9866570dc0`
+- Outcome: `pass` — 8/8 including
+  `public_memory_skill_lifecycle_then_task_consumption_does_not_require_query_restatement`,
+  `public_consumption_rejects_cross_scope_forgotten_and_revoked_before_rank`,
+  `public_session_two_resumes_from_durable_state_after_restart_without_restatement`,
+  `public_forged_prompt_cannot_replace_durable_consumption_pins`.
+  Counters: recall=100% (GET returned exact pins), user restatement=0,
+  cross-scope/forgotten exposure=0.
+
+### D03-LINUX-02 — HTTP lifecycle and GET guards
+
+- Instrument: `cargo test -p kernel-server --test p4_t05_resource_api --locked`
+- Environment: same exact `79764387`
+- Outcome: `pass` — 5/5 including GET consumption restatement/channel guards
+  and Memory/Skill lifecycle restart.
+
+### D03-LINUX-03 — kernel-server bin, workspace, Clippy, fmt
+
+- Instrument: `cargo test -p kernel-server --bin kernel-server --locked`;
+  `cargo test --workspace --locked`;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`;
+  `cargo fmt --all -- --check`
+- Environment: same exact `79764387`
+- Outcome: `pass` — kernel-server bin 299/299; workspace tests 0-failed;
+  Clippy `-D warnings` green; fmt green.
+- Cleanup: `/tmp/p2-t23-79764387.bundle` removed. `B01-Desktop-Linux-002`
+  was not used (EVAL-004-only guest). Windows `not-run by owner-directed
+  Linux-only route`.
+- Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL,
+  or Agent-benefit promotion.
