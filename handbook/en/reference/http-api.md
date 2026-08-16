@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:096c5c2f28dd6bdf81e020d6cf9cc18ec27fd59f3c7dbea5eaea5dff7ad3f116"
+fingerprint: "sha256:e44b35164e4105cef91a558eb50779cd78bd5b028569910237d25f3baa90fba4"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."

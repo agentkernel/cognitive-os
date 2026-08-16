@@ -100,7 +100,6 @@ pub(crate) fn bind_observation_store(data_dir: PathBuf) {
 }
 
 #[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn record_authorization_decision(
     data_dir: &Path,
     task_ref: &str,
@@ -158,7 +157,6 @@ pub(crate) fn record_cache_sample(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn record_compaction_sample(
     data_dir: &Path,
@@ -835,14 +833,14 @@ fn project_o13(
     expect_digest: Option<&str>,
 ) -> Result<Value, ObservationResponse> {
     let cursor_sequence = parse_cursor(cursor)?;
-    if let Some(expected) = expect_digest {
-        if !expected.starts_with("sha256:") {
-            return Err(error(
-                400,
-                "TASK_OBSERVATION_DIGEST_INVALID",
-                "expect_digest must be a sha256 digest",
-            ));
-        }
+    if let Some(expected) = expect_digest
+        && !expected.starts_with("sha256:")
+    {
+        return Err(error(
+            400,
+            "TASK_OBSERVATION_DIGEST_INVALID",
+            "expect_digest must be a sha256 digest",
+        ));
     }
     let Some(store) = open_existing_authority_store(layout)? else {
         if cursor_sequence > 0 {
@@ -852,14 +850,14 @@ fn project_o13(
                 "requested audit cursor is beyond the retained high watermark",
             ));
         }
-        if let Some(expected) = expect_digest {
-            if expected != GENESIS_DIGEST {
-                return Err(error(
-                    409,
-                    "TASK_OBSERVATION_DIGEST_BREAK",
-                    "replay chain digest does not match expect_digest",
-                ));
-            }
+        if let Some(expected) = expect_digest
+            && expected != GENESIS_DIGEST
+        {
+            return Err(error(
+                409,
+                "TASK_OBSERVATION_DIGEST_BREAK",
+                "replay chain digest does not match expect_digest",
+            ));
         }
         return Ok(empty_o13(task_ref, 0, GENESIS_DIGEST));
     };
@@ -902,14 +900,14 @@ fn project_o13(
         ));
     }
     let chain_head = chain_head_digest(cursor_sequence, &window);
-    if let Some(expected) = expect_digest {
-        if expected != chain_head {
-            return Err(error(
-                409,
-                "TASK_OBSERVATION_DIGEST_BREAK",
-                "replay chain digest does not match expect_digest",
-            ));
-        }
+    if let Some(expected) = expect_digest
+        && expected != chain_head
+    {
+        return Err(error(
+            409,
+            "TASK_OBSERVATION_DIGEST_BREAK",
+            "replay chain digest does not match expect_digest",
+        ));
     }
     let related_ids = task_related_object_ids(&store, task_ref)?;
     let task_events: Vec<&CommittedEvent> = window
@@ -1070,10 +1068,10 @@ fn read_audit_window(
         None
     };
     for event in &window {
-        if let Some(prev) = previous {
-            if event.sequence != prev + 1 {
-                return Ok((window, true, truncated));
-            }
+        if let Some(prev) = previous
+            && event.sequence != prev + 1
+        {
+            return Ok((window, true, truncated));
         }
         previous = Some(event.sequence);
     }

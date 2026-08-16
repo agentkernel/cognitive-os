@@ -2,7 +2,8 @@
 
 - Task: `P2-T26`
 - Branch: `personal/P2-T26-bounded-os-observation`
-- PR: not opened yet
+- PR: [Draft PR #225](https://github.com/agentkernel/cognitive-os/pull/225)
+- HEAD: `36fcad8482258bbe48506fb61ee6a7995c858444`
 - Lease: `lease/personal/P2-T26/bounded-os-observation`
 - Change class: `implementation-only`
 - Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL, or
@@ -76,8 +77,23 @@
 
 ### D01-CI-01 — Ubuntu supporting CI
 
-- Instrument: GitHub Actions `verify (ubuntu-latest)` on the Draft PR head.
-- Initial status: `not-run` (PR not opened yet).
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31933795702`](https://github.com/agentkernel/cognitive-os/actions/runs/31933795702)
+  on Draft PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at
+  `36fcad84`.
+- Outcome: `fail` — Clippy `-D warnings` rejected duplicated
+  `#[allow(clippy::too_many_arguments)]` attributes and collapsible `if`
+  let-chains in `observation.rs`. Tests were not the failure. Superseded by
+  the Clippy-fix head.
+
+### D01-LINUX-01 — focused observation tests at `36fcad84`
+
+- Instrument: `DEV-LINUX-NATIVE-01` worktree
+  `/home/wuz/agent-kernel-worktrees/p2-t26-36fcad84`, rustc 1.97.1,
+  `CARGO_TARGET_DIR` reused from p2-t25 worktree.
+- Outcome: `pass` — `cargo test -p kernel-server --locked observation`:
+  lib observation units 9/9 plus related filters 26/26; HTTP
+  `p2_t26_observation_plane` 1/1. Clippy was not part of this command.
 
 ## D02 — O5 Effect history and O13 audit cursor/replay
 
@@ -123,6 +139,9 @@
 
 ### D02-CI-01 — Ubuntu supporting CI
 
-- Instrument: GitHub Actions `verify (ubuntu-latest)` on the Draft PR head
-  that also contains D01.
-- Initial status: `not-run` (PR not opened yet).
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31933795702`](https://github.com/agentkernel/cognitive-os/actions/runs/31933795702)
+  on Draft PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at
+  `36fcad84`.
+- Outcome: `fail` — same Clippy duplicated-attribute / collapsible-if
+  defects as D01-CI-01. Superseded by the Clippy-fix head.
