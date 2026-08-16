@@ -3986,13 +3986,7 @@ fn load_task_state(store: &SqliteAuthorityStore, task_ref: &str) -> String {
 fn load_loop_state(store: &SqliteAuthorityStore, task_ref: &str) -> String {
     let contract_row = store.load_task_contract(task_ref, 1).unwrap().unwrap();
     let contract = parse_execution_bound_contract(&contract_row.canonical_json).unwrap();
-    let loop_id = ObjectId::parse(
-        &contract
-            .loop_object_id
-            .expect("repair journey fixture pins a Loop")
-            .0,
-    )
-    .unwrap();
+    let loop_id = ObjectId::parse(&contract.loop_object_id.unwrap().0).unwrap();
     store
         .load_object(LifecycleDomain::Loop, &loop_id)
         .unwrap()

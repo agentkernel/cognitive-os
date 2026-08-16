@@ -320,6 +320,30 @@
   in-process because the bin test harness is not kernel-server `main`.
   Isolation spawn remains covered by `tests/p2_t16_registered_check.rs`.
 
+### D02-LINUX-05 — kernel-server tests at `f7172342`
+
+- Instrument: `cargo test -p kernel-server --test p2_t16_registered_check --locked`
+  then `cargo test -p kernel-server --bin kernel-server --locked`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `f7172342`
+- Outcome: `pass` — p2_t16 3/3; kernel-server bin 295/295 including both
+  complete-journey tests and hidden/public/out-of-scope negatives. First
+  full-bin attempt had 4 `p2_t17_a7_failure_first` failures that passed on
+  isolation re-run and on the immediate full-bin re-run (pre-existing
+  parallel flake, not journey assertions).
+
+### D02-CLIPPY-01 — workspace clippy at `f7172342` (superseded)
+
+- Instrument: `cargo clippy --workspace --all-targets --locked -- -D warnings`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `f7172342`
+- Outcome: `fail` — `clippy::expect_used` in `load_loop_state`. Assertions
+  were not weakened.
+
+### D02-IMPL-07 — replace expect with unwrap in the Loop helper
+
+- Instrument: `apps/kernel-server/src/personal/scheduler_authority/tests.rs`
+  `load_loop_state`
+- Outcome: authored. The module already allows `clippy::unwrap_used`.
+
 ### D02-IMPL-06 — keep timeout and output-ceiling fail-closed in the test oracle
 
 - Instrument: `apps/kernel-server/src/personal/registered_check/mod.rs`
