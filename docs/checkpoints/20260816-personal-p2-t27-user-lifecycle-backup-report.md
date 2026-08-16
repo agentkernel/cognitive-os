@@ -174,12 +174,14 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Outcome: **pass**. `personal_backup` **23/23** (includes destroy→restore
   equality, residue cleanup, and bounded duration); `admin-cli`
   `p2_t27_backup_restore` **2/2**; `admin-cli` `p2_t27_pi_lifecycle` **1/1**;
-  `kernel-server` `p2_t27_backup_restore` **1/1**; `cargo fmt --all -- --check`
-  **pass**; `cargo clippy --workspace --all-targets --locked -- -D warnings`
-  **pass**. Windows `not-run by owner-directed Linux-only route`.
-  `B01-Desktop-Linux-002` untouched. Cross-version migration remains
-  fail-closed (`SchemaIncompatible`). Restore wall time is a hypothesis-only
-  measurement, not an RTO SLO.
+  `kernel-server` `p2_t27_backup_restore` **1/1**; `p5_t05_identity_recover`
+  **3/3**; `p5_t05_upgrade_fencing` **4/4**; `--bins` kernel-server **329/329**;
+  workspace tests **0 failed**; `cargo fmt --all -- --check` **pass**;
+  `cargo clippy --workspace --all-targets --locked -- -D warnings` **pass**.
+  Residue `/tmp/cos-p2t27-*` count **0**. Windows `not-run by owner-directed
+  Linux-only route`. `B01-Desktop-Linux-002` untouched. Cross-version
+  migration remains fail-closed (`SchemaIncompatible`). Restore wall time is
+  a hypothesis-only measurement, not an RTO SLO.
 
 ### D03-CI-01 — Ubuntu supporting CI
 
@@ -187,4 +189,22 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   [`31939336791`](https://github.com/agentkernel/cognitive-os/actions/runs/31939336791)
   on Draft PR [#226](https://github.com/agentkernel/cognitive-os/pull/226) at
   `5a561fbf`.
-- Outcome: `not-run` (in progress).
+- Outcome: **pass** (`required-ci` green). Windows `not-run by owner-directed
+  Linux-only route`. Docs-only linux-record head `9468c3b2` Ubuntu
+  [`31939577639`](https://github.com/agentkernel/cognitive-os/actions/runs/31939577639)
+  also **pass**. Implementation evidence remains `5a561fbf`.
+
+### D03-ACCEPT-01 — formal acceptance mapping
+
+| Acceptance | Evidence |
+|---|---|
+| Public CLI/API backup/restore excluding secret/bearer/raw Provider/Pi/authority SQLite | D01 archive writer + `cognitive backup`/`restore` + management HTTP; `personal_backup` 23/23; CLI 2/2; HTTP 1/1 |
+| Preflight + transactional restore | schema/digest/completeness preflight; injected-fault rollback; `RestorePartialRefused` |
+| Fresh-root equality / RPO | destroy→restore byte-equal eligible files vs archive parts |
+| Migration / tamper / missing-part | `SchemaIncompatible`, `ArchiveTampered`, incomplete category |
+| Rollback / cleanup | snapshot rollback; no `restore-staging-*` / `restore-snapshot-*`; `/tmp/cos-p2t27-*` = 0 |
+| RTO | finite restore wall time on the hermetic fixture; **not** an SLO/Gate claim |
+| Managed Pi install→recover | D02 `p2_t27_pi_lifecycle` 1/1; `p5_t05_identity_recover` 3/3; `p5_t05_upgrade_fencing` 4/4 |
+| Exact-revision linux-002 | this D03 matrix at `5a561fbf` |
+| Ubuntu supporting CI | run `31939336791` pass |
+| Windows | `not-run by owner-directed Linux-only route` |
