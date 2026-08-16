@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:99648a9b7c58df9ecbdfa4ade291739da4362d513ab583e39736454e9de6dcbc"
+fingerprint: "sha256:3d8e78c2d0a1aeb0ec5881c93eb1268a3e99b335dd2f5077a6d3a661a0b57dad"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -74,6 +74,13 @@ document, sealed Context-source admission, Memory remember/review/forget, and
 Skill import/inspect/bind/supersede/revoke. Mutations require a management
 bearer; task bearers fail before handlers run. Successful creation responses
 use HTTP status `201`, and durable rows remain inspectable after restart.
+The task channel reads the latest daemon-authored Memory/Skill consumption
+through `GET /task/resource/v1/consumption?task_ref=…`: exact pins, session
+linkage, and `reuse_of` only. `query_text` and `skill_binding_id` are
+rejected as restatement. Forgotten, revoked, or digest-drifted pins fail
+closed before the response, and Memory/Skill bodies never appear. Session 2
+and post-restart GET read the same durable row; a caller `query_text` POST
+cannot replace those pins.
 
 ## Projections
 

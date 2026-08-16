@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:8a84aac67582960df0d276142a86f3a238746a68581a5705481382633ba69773"
+fingerprint: "sha256:f65b201b987d97a6d1763b4a14908abbf48e44bb8b2f5d1e912aec8dab8cd69a"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -77,7 +77,14 @@ metadata-first eligibility, exact Task-or-workspace scope/pin/digest checks,
 and current
 forget/revoke revalidation. The resulting fragments enter the sealed
 ContextView; an append-only v24 consumption record keyed by Task, epoch,
-ContextRequest and session supports cross-session reuse. The latest row is the
+ContextRequest and session supports cross-session reuse. The public task
+channel reads that record through `GET /task/resource/v1/consumption`
+without `query_text` or a caller-supplied Skill binding: it returns only
+redacted pins, session/`reuse_of` linkage, and `authorized_exact_pin`.
+Forgotten, revoked, or digest-drifted pins fail closed before any pin is
+returned. Session 2 and post-restart GET resume from that same durable row
+(`reuse_of` set, exact pins, no chat replay); `POST /task/resource/v1/consumption`
+with caller `query_text` cannot replace it. The latest row is the
 last appended record, not the lexicographically greatest hashed identity.
 Reuse reloads current authority facts, binds its deterministic record identity
 to principal/tenant/scope/purpose/request digest and exact pins, and fails

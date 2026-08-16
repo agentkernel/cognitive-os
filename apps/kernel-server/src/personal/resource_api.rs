@@ -15,7 +15,9 @@ use cognitive_domain::ObjectId;
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::authz::ObjectGovernance;
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
-use cognitive_kernel::memory_skill_consumption::MemorySkillConsumptionStore;
+use cognitive_kernel::memory_skill_consumption::{
+    MemoryConsumptionPin, MemorySkillConsumptionStore, SkillConsumptionPin,
+};
 use cognitive_kernel::ports::{
     ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
     MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
@@ -334,6 +336,155 @@ impl ResourceApi {
                     "memory_count": memory_candidates.len(),
                     "skill_binding_id": binding.binding_id.to_string(),
                 },
+                "authority_side_effects": false,
+            }),
+        )
+    }
+
+    pub(crate) fn handle_task_consumption_query(
+        &self,
+        method_path: &str,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let query = method_path
+            .split_once('?')
+            .map(|(_, rest)| rest)
+            .unwrap_or("");
+        if query_parameter(query, "query_text").is_some()
+            || query_parameter(query, "skill_binding_id").is_some()
+        {
+            return error(
+                400,
+                "RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN",
+                "session resume must read durable pins; query_text and skill_binding_id are restatement",
+            );
+        }
+        let Some(encoded_task_ref) =
+            query_parameter(query, "task_ref").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_TASK_REFERENCE_REQUIRED",
+                "task_ref is required",
+            );
+        };
+        let task_reference = match percent_decode_query(encoded_task_ref) {
+            Ok(value) if !value.is_empty() => value,
+            Ok(_) | Err(()) => {
+                return error(
+                    400,
+                    "RESOURCE_TASK_REFERENCE_REQUIRED",
+                    "task_ref is required",
+                );
+            }
+        };
+        let contract_epoch = match store.current_contract_epoch(&task_reference) {
+            Ok(epoch) if epoch > 0 => epoch,
+            Ok(_) => {
+                return error(
+                    404,
+                    "RESOURCE_TASK_NOT_FOUND",
+                    "task has no current contract",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Task authority store is unavailable",
+                );
+            }
+        };
+        let contract = match store.load_task_contract(&task_reference, contract_epoch) {
+            Ok(Some(contract)) => contract,
+            Ok(None) => {
+                return error(
+                    404,
+                    "RESOURCE_TASK_NOT_FOUND",
+                    "task contract is unavailable",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Task authority store is unavailable",
+                );
+            }
+        };
+        let context_request_id = match context_request_id_from_contract(&contract) {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let context_request = match store.load_context_request(&context_request_id) {
+            Ok(Some(request)) if request.task_ref == task_reference => request,
+            Ok(Some(_)) => {
+                return error(
+                    409,
+                    "RESOURCE_TASK_CONTEXT_MISMATCH",
+                    "task ContextRequest does not match the current task contract",
+                );
+            }
+            Ok(None) => {
+                return error(
+                    409,
+                    "RESOURCE_TASK_CONTEXT_MISSING",
+                    "task ContextRequest is unavailable",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Context authority store is unavailable",
+                );
+            }
+        };
+        let record = match store.load_latest_memory_skill_consumption(
+            &task_reference,
+            contract_epoch,
+            &context_request_id,
+        ) {
+            Ok(Some(record)) => record,
+            Ok(None) => {
+                return error(
+                    404,
+                    "RESOURCE_CONSUMPTION_NOT_FOUND",
+                    "no durable Memory/Skill consumption record exists for this Task",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                    "Memory/Skill consumption store is unavailable",
+                );
+            }
+        };
+        if record.context_request_digest != context_request.request_digest {
+            return error(
+                409,
+                "RESOURCE_CONSUMPTION_NOT_ELIGIBLE",
+                "durable Memory/Skill consumption request digest differs from the current request",
+            );
+        }
+        if let Err(response) = revalidate_redacted_consumption(store, &record) {
+            return response;
+        }
+        json_response(
+            200,
+            json!({
+                "kind": "task.resource.consumption",
+                "authority_source": "daemon-memory-skill-consumption",
+                "task_ref": record.task_ref,
+                "contract_epoch": record.contract_epoch,
+                "context_request_id": record.context_request_id.to_string(),
+                "context_request_digest": context_request.request_digest,
+                "session_ref": record.session_ref,
+                "reuse_of": record.reuse_of.as_ref().map(ObjectId::to_string),
+                "decision_class": "authorized_exact_pin",
+                "memory": record.memory.iter().map(redacted_memory_pin).collect::<Vec<_>>(),
+                "skill": record.skill.iter().map(redacted_skill_pin).collect::<Vec<_>>(),
                 "authority_side_effects": false,
             }),
         )
@@ -1266,6 +1417,158 @@ fn family_projection(family: &str) -> Value {
         "resources": [],
         "authority_side_effects": false,
     })
+}
+
+fn context_request_id_from_contract(
+    contract: &cognitive_kernel::ports::TaskContractRow,
+) -> Result<ObjectId, ResourceApiResponse> {
+    let document: Value = serde_json::from_str(&contract.canonical_json).map_err(|_| {
+        error(
+            409,
+            "RESOURCE_TASK_CONTEXT_MISSING",
+            "task contract ContextRequest binding is malformed",
+        )
+    })?;
+    let Some(identifier) = document
+        .pointer("/context_request_ref/id")
+        .and_then(Value::as_str)
+    else {
+        return Err(error(
+            409,
+            "RESOURCE_TASK_CONTEXT_MISSING",
+            "task contract has no ContextRequest binding",
+        ));
+    };
+    ObjectId::parse(identifier).map_err(|_| {
+        error(
+            409,
+            "RESOURCE_TASK_CONTEXT_MISSING",
+            "task contract ContextRequest id is invalid",
+        )
+    })
+}
+
+fn revalidate_redacted_consumption(
+    store: &SqliteAuthorityStore,
+    record: &cognitive_kernel::memory_skill_consumption::MemorySkillConsumptionRecord,
+) -> Result<(), ResourceApiResponse> {
+    let document: Value = serde_json::from_str(&record.canonical_json).map_err(|_| {
+        error(
+            503,
+            "RESOURCE_CONSUMPTION_UNAVAILABLE",
+            "durable Memory/Skill consumption payload is malformed",
+        )
+    })?;
+    let Some(resource_scope) = document.get("resource_scope").and_then(Value::as_str) else {
+        return Err(error(
+            503,
+            "RESOURCE_CONSUMPTION_UNAVAILABLE",
+            "durable Memory/Skill consumption scope is missing",
+        ));
+    };
+    let Some(purpose) = document.get("purpose").and_then(Value::as_str) else {
+        return Err(error(
+            503,
+            "RESOURCE_CONSUMPTION_UNAVAILABLE",
+            "durable Memory/Skill consumption purpose is missing",
+        ));
+    };
+    let live_memory = match store.list_eligible_memory_pins(
+        resource_scope,
+        &record.task_ref,
+        purpose,
+        now_unix_seconds(),
+    ) {
+        Ok(rows) => rows,
+        Err(_) => {
+            return Err(error(
+                503,
+                "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                "Memory eligibility could not be revalidated",
+            ));
+        }
+    };
+    for pin in &record.memory {
+        if !live_memory.iter().any(|live| live.pin == *pin) {
+            return Err(error(
+                409,
+                "RESOURCE_CONSUMPTION_NOT_ELIGIBLE",
+                "forgotten, expired, or digest-drifted Memory cannot be reused",
+            ));
+        }
+    }
+    let live_skill = match store.list_eligible_skill_pins(resource_scope, &record.task_ref) {
+        Ok(rows) => rows,
+        Err(_) => {
+            return Err(error(
+                503,
+                "RESOURCE_CONSUMPTION_UNAVAILABLE",
+                "Skill eligibility could not be revalidated",
+            ));
+        }
+    };
+    for pin in &record.skill {
+        if !live_skill.iter().any(|live| {
+            live.binding_id == pin.binding_id
+                && live.revision_id == pin.revision_id
+                && live.package_id == pin.package_id
+                && live.content_digest == pin.content_digest
+        }) {
+            return Err(error(
+                409,
+                "RESOURCE_CONSUMPTION_NOT_ELIGIBLE",
+                "revoked or digest-drifted Skill cannot be reused",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn redacted_memory_pin(pin: &MemoryConsumptionPin) -> Value {
+    json!({
+        "memory_id": pin.memory_id.to_string(),
+        "source_id": pin.source_id.to_string(),
+        "source_digest": pin.source_digest,
+    })
+}
+
+fn redacted_skill_pin(pin: &SkillConsumptionPin) -> Value {
+    json!({
+        "binding_id": pin.binding_id.to_string(),
+        "revision_id": pin.revision_id.to_string(),
+        "package_id": pin.package_id.to_string(),
+        "content_digest": pin.content_digest,
+    })
+}
+
+fn percent_decode_query(value: &str) -> Result<String, ()> {
+    let bytes = value.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' {
+            if index + 2 >= bytes.len() {
+                return Err(());
+            }
+            let high = hex_nibble(bytes[index + 1])?;
+            let low = hex_nibble(bytes[index + 2])?;
+            decoded.push((high << 4) | low);
+            index += 3;
+        } else {
+            decoded.push(bytes[index]);
+            index += 1;
+        }
+    }
+    String::from_utf8(decoded).map_err(|_| ())
+}
+
+fn hex_nibble(byte: u8) -> Result<u8, ()> {
+    match byte {
+        b'0'..=b'9' => Ok(byte - b'0'),
+        b'a'..=b'f' => Ok(byte - b'a' + 10),
+        b'A'..=b'F' => Ok(byte - b'A' + 10),
+        _ => Err(()),
+    }
 }
 
 fn query_parameter<'query>(query: &'query str, name: &str) -> Option<&'query str> {

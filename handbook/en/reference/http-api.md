@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:94fd259adb972d0019527b0c8d2e4cc7f994234160fd8948f9a34971942c590e"
+fingerprint: "sha256:f67fbbeba66ce2d5ea06597de7bd800ac5d28dda841e6c14cf59f412962b3da9"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -51,5 +51,6 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/watch` | task | Snapshot-first bounded Task watch with optional resume_from. |
 | `GET` | `/task/resource/v1/projection` | task | Task-bound Memory/Skill resource projection (requires task_ref); served through the `/task/resource/` prefix rewrite onto the shared resource handler. |
 | `GET` | `/task/resource/v1/watch` | task | Task-bound resource watch, served through the same prefix rewrite. |
+| `GET` | `/task/resource/v1/consumption` | task | Return the latest daemon-authored redacted Memory/Skill consumption pins for one task_ref; query_text and skill_binding_id are rejected as restatement; forgotten, revoked, or digest-drifted records fail closed without pins. |
 | `POST` | `/task/resource/v1/consumption` | task | Record a Task-trace Memory/Skill consumption bound to current authority facts. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:8b0bfd6d9c56216e0b9cdc9e9f6fbed31d69e72a81ffbac82f359cb5f2121a7e"
+fingerprint: "sha256:1bfcbe124952dfa81b6cba817c16beafaf4c5b30d0e4075cfc7d7ba46fa75bdc"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
