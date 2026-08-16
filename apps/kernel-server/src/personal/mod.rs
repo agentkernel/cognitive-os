@@ -8,6 +8,8 @@ mod auth;
 mod bounds;
 #[cfg_attr(not(test), allow(dead_code))]
 mod campaign_observation;
+#[cfg_attr(not(test), allow(dead_code))]
+mod capability_truth;
 mod fault_profile;
 mod headless_vault_doctor;
 mod lifecycle;

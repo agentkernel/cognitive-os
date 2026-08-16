@@ -99,6 +99,12 @@
       "note": "validation entry points and pins"
     },
     {
+      "id": "capability-truth-register",
+      "sources": ["apps/kernel-server/src/personal/capability_truth.rs"],
+      "docs": ["ref.capability-status"],
+      "note": "UJ1-UJ6 public-caller/oracle register; Web UI/Multi-Agent are scope-excluded"
+    },
+    {
       "id": "handbook-itself",
       "sources": ["handbook/**", "llms.txt", ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc"],
       "docs": ["meta.doc-standards", "meta.sync-policy", "ai.entry"],

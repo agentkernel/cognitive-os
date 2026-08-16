@@ -13,7 +13,9 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:49e67bb2e2a1c8ed741028faf9cbf4ee40e13dc832460e8cb28cfe6876f43f77"
+  - path: apps/kernel-server/src/personal/capability_truth.rs
+    symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
+fingerprint: "sha256:4b6359be6cec37b1cc447ee6ad0fefe2a4eb5f1e7079f1eae755d08728c13ae3"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -50,10 +52,11 @@ non_claims:
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
 | MCP 工具 | designed | post-1.0 fixture 适配器 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
-| 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；Pi install→recover 为后续切片 |
-| Web UI / Console | unavailable | 外部仓库、仅设计 |
+| 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
+| Web UI / Console | unavailable | 外部仓库、仅设计；UJ6 scope-excluded |
 | Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行 |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |
+| UJ1–UJ6 capability-truth 登记 | implemented | 冻结 public-caller/oracle/cleanup/evidence 行；Web UI/Multi-Agent 为 scope-excluded，不得阻塞 required arm；linux-002 命名 oracle 是产品证据，不是 EVAL/Gate |
 
 逐行细节与来源：见 [`_meta/source-map.json`](../../_meta/source-map.json) 所列
 user/developer 页面。
