@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:694c34328de5ccdc2a54c8df18e469322c91b69de53289f355c58a9a4a4ec531"
+fingerprint: "sha256:f43b60785ea64b6180ae29f910c7524667abf487881c0a82cd1f6329a5aca09e"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -54,6 +54,8 @@ cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成�
 不是需要复现的信号。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
 P2-T25 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 （lifecycle、selection 与钉住 HTTPS origin 登记表）。
+P2-T26 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t26_observation_plane.rs`
+（O2/O3/O4/O5/O13 观测平面、受控零值、审计游标负例与通道负例）。
 
 ## CI 在每个 PR 上强制什么
 

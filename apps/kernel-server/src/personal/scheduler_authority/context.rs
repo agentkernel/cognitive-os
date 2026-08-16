@@ -375,6 +375,20 @@ where
 
     let cache_key = context_cache_key(&resolved_view, command, &current_request, &current_contract);
     let cache_entry = context_cache_entry(&resolved_view);
+    let loss_digest = crate::personal::observation::loss_manifest_digest(
+        &resolved_view
+            .loss_declaration
+            .iter()
+            .map(|loss| {
+                format!(
+                    "{}\n{}\n{}",
+                    loss.source,
+                    loss.transform,
+                    loss.verification.as_deref().unwrap_or("")
+                )
+            })
+            .collect::<Vec<_>>(),
+    );
     let cache_telemetry = match context_cache.lookup_current(&cache_key) {
         ContextCacheLookup::Hit(cached_entry) => {
             if cached_entry != cache_entry {
@@ -383,6 +397,14 @@ where
                         .to_owned(),
                 ));
             }
+            crate::personal::observation::record_cache_on_bound_store(
+                &command.task_ref,
+                "revalidated",
+                current_contract.contract_epoch,
+                cached_entry.stable_prefix_segment_digests.len(),
+                cached_entry.delta_segment_digests.len(),
+                &loss_digest,
+            );
             ContextCacheTelemetry {
                 cache_hit: true,
                 stable_prefix_segment_count: cached_entry.stable_prefix_segment_digests.len(),
@@ -391,6 +413,14 @@ where
         }
         ContextCacheLookup::MissResolveFresh => {
             context_cache.insert(cache_key, cache_entry.clone());
+            crate::personal::observation::record_cache_on_bound_store(
+                &command.task_ref,
+                "miss",
+                current_contract.contract_epoch,
+                cache_entry.stable_prefix_segment_digests.len(),
+                cache_entry.delta_segment_digests.len(),
+                &loss_digest,
+            );
             ContextCacheTelemetry {
                 cache_hit: false,
                 stable_prefix_segment_count: cache_entry.stable_prefix_segment_digests.len(),
@@ -398,6 +428,17 @@ where
             }
         }
     };
+    if !resolved_view.loss_declaration.is_empty() {
+        crate::personal::observation::record_compaction_on_bound_store(
+            &command.task_ref,
+            current_contract.contract_epoch,
+            0,
+            0,
+            0,
+            0,
+            &loss_digest,
+        );
+    }
 
     Ok(GovernedContextResolution {
         resolved_view,
@@ -622,18 +663,38 @@ where
         // body materialization, ranking, rendering, or the Pi boundary.
         let current_authorization_snapshot =
             load_current_context_authorization_snapshot(store, command)?;
-        if authorize(
+        match authorize(
             &current_authorization_snapshot,
             &source_metadata.governance,
             &AccessRequest {
                 action: "read_body".to_owned(),
                 purpose: context_request.purpose.clone(),
             },
-        )
-        .is_err()
-        {
-            authorization_denied_after_discovery = true;
-            continue;
+        ) {
+            Ok(grant) => {
+                crate::personal::observation::record_authorization_on_bound_store(
+                    &command.task_ref,
+                    &source_metadata.governance.resource_scope,
+                    &context_request.purpose,
+                    grant.decided_at_epoch,
+                    "read_body",
+                    "grant",
+                    "",
+                );
+            }
+            Err(denied) => {
+                crate::personal::observation::record_authorization_on_bound_store(
+                    &command.task_ref,
+                    &source_metadata.governance.resource_scope,
+                    &context_request.purpose,
+                    current_authorization_snapshot.revocation_epoch,
+                    "read_body",
+                    "deny",
+                    denied.denial.code,
+                );
+                authorization_denied_after_discovery = true;
+                continue;
+            }
         }
         let source = store
             .load_workspace_context_source_body(&source_metadata.source_id)

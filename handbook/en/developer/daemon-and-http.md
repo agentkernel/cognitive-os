@@ -22,6 +22,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -31,7 +33,8 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-fingerprint: "sha256:88bea292154edd9a3adfed65c9897dac58c1139b074e9f702d543c4caee5b310"
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
+fingerprint: "sha256:92f14b0187e1195df7a48993bebcaa00da682c4515079e2501a18fa6bd030ba4"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -118,6 +121,18 @@ body. Ordinary task callers are denied
 (`RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN`). Disabling
 `native.registered-check.run` drops it from Agent exposure without inventing a
 ProcessRun family.
+
+The task channel reads bounded O2/O3/O4/O5/O13 observation through
+`GET /task/observation?family=o2|o3|o4|o5|o13&task_ref=…` (alias
+`GET /task/resource/v1/observation`). Empty collectors return `observed_zero`
+with a named negative control rather than a silent default-zero. Prompt, body,
+receipt, and capability query keys fail closed. O5 reuses the redacted
+Intent/Effect history already served by `GET /task/effects` and still omits
+raw parameters and receipts. O13 exports a durable audit cursor, event digest
+chain, and bounded replay; a stale cursor, missing event, digest break, or
+sequence gap fails closed. Management callers are denied
+(`RESOURCE_OBSERVATION_CHANNEL_FORBIDDEN`): this is a read plane, not a second
+authority API. Samples never include Context bodies or capability material.
 
 ## Projections
 

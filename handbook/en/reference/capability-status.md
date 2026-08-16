@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:6a41ef07afc8c06481a78467d1e17f7a2df6828999f726683b421e1292ab664f"
+fingerprint: "sha256:f654ef92ec9bcdca374b64e6ce1fcdc05377b6b10fff73496087b3a70c41ec36"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -43,7 +43,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Memory remember/forget/search/versions | implemented | no automatic harvesting |
 | Skill import/bind/revoke/explain | implemented | scripts never execute |
 | Governed Memory/Skill Context consumption | implemented | exact scope/pin/digest load, durable v24 records, session-2 reuse, and forget/revoke fail-closed; public HTTP lifecycle cycles remain separate |
-| Context request/view + caches | implemented | — |
+| Context request/view + caches | implemented | O2/O3/O4/O5/O13 bounded observation plane is task-channel read-only; empty collectors return named negative controls rather than silent zeros; O13 audit replay fails closed on stale cursor or digest break |
 | Artifact CAS | implemented | GC deferred (abandoned staging only) |
 | Six-family resource projection/watch | implemented | management+task channels only |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |

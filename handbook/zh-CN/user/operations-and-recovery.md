@@ -12,6 +12,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -23,7 +25,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:456de36d53b4dc08ee606fa574e5f4c312f174c9ea0252ccdd503d7331605a9f"
+fingerprint: "sha256:c1cdb4339fb64daf9255b44689cc6ab0e7fa208832cd235d5121f9f81cdff2c3"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -56,7 +58,9 @@ worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而
 Tool overlay 与钉住 HTTPS origin 文件位于 Personal data 目录
 （`personal-tool-lifecycle.json`、`personal-pinned-https.json`）。重启会重新加载；
 它们不是 Artifact CAS 对象。生产 HttpFetchReadOnly 在 management 以授权 campaign
-钉住精确 HTTPS origin 之前保持失败闭合。
+钉住精确 HTTPS origin 之前保持失败闭合。有界 O2/O3/O4/O5/O13 观测样本位于
+`personal-observation-plane.json`（O2–O4）与权威事件日志（O5/O13）并在重启后保留；
+空窗口返回带具名 negative control 的 `observed_zero`。
 
 ## 数据库安全 —— `implemented`
 

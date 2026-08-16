@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:6736290f7459c24acbf1bcd32696cc87da61ef84efe8e45e13090fbf2ce45d66"
+fingerprint: "sha256:00d3f4bb0b42cf089e48680a3cd47f8f059a8daaa9e282f16082fe9666c45e95"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -44,6 +44,11 @@ durable paper trail:
 
 This admission pipeline is `implemented` and is the only human approval point on
 the default path. `GET /task/watch` gives a bounded, snapshot-first event stream.
+Authenticated task callers can also read bounded O2/O3/O4/O5/O13 observation
+(`GET /task/observation?family=…&task_ref=…`) and Effect history
+(`GET /task/effects?task_ref=…`); empty observation windows return a named
+`observed_zero` rather than a silent count. O13 audit replay fails closed on a
+stale cursor or digest break.
 
 ## How execution is designed to run — and what runs today
 

@@ -12,6 +12,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -23,7 +25,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:456de36d53b4dc08ee606fa574e5f4c312f174c9ea0252ccdd503d7331605a9f"
+fingerprint: "sha256:c1cdb4339fb64daf9255b44689cc6ab0e7fa208832cd235d5121f9f81cdff2c3"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -64,7 +66,10 @@ Tool overlay and pinned HTTPS origin files live under the Personal data
 directory (`personal-tool-lifecycle.json`, `personal-pinned-https.json`). A
 restart reloads them; they are not Artifact CAS objects. Production
 HttpFetchReadOnly stays fail-closed until a management caller with an
-authorized campaign pins exact HTTPS origins.
+authorized campaign pins exact HTTPS origins. Bounded O2/O3/O4/O5/O13
+observation samples live in `personal-observation-plane.json` (O2–O4) and the
+authority event log (O5/O13) and survive restart; empty windows return
+`observed_zero` with a named negative control.
 
 ## Database safety — `implemented`
 

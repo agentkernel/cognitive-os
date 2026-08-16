@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:27bbbc85e9db44e6b2748c162d39d9d948a6973e07a50f6b38f10ec5d7b7063c"
+fingerprint: "sha256:2da9fd37a8d747fa12f8407ca5d37edcf281e09d18544a71bb5511ec07c7523f"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---

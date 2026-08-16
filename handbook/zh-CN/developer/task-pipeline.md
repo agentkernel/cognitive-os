@@ -20,7 +20,8 @@ tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:6a655a2ac22cd6f5ff5e424bab8391b695ae324dcd6fd2ffdb245c1cb1a3f7d4"
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
+fingerprint: "sha256:5254989333b2124c5a17ecb044ab2f8565f35b7315854dc59fbdf27225926923"
 non_claims:
   - 准入不会启动自主执行；该缺口记录于执行链状态页。
 ---
@@ -38,6 +39,7 @@ chain → SQLite，线上使用生成的 request/result DTO。
 | `admit` | `POST /task/admit` | 重算 preview digest（漂移 → `PreviewDigestMismatch`）→ `admit_interpretation` → 一个 fenced 合同 epoch-CAS 事务发布 TaskContract + `START` Loop + 硬 Budget + runnable 调度行 |
 | evidence | `GET /task/evidence?task_ref=...` | 从 SQLite authority 与 Artifact CAS 重建有界脱敏的生命周期、Effect 对账类别、current verification/Artifact 可用性、acceptance transition 与持久事件游标 |
 | effects | `GET /task/effects?task_ref=...` | 重建有界 Effect 历史（不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省、report refs），不含 receipt 或原始参数 |
+| observation | `GET /task/observation?family=o2\|o3\|o4\|o5\|o13&task_ref=...` | 有界 O2/O3/O4/O5/O13 只读平面；空 collector 返回 `observed_zero` 与具名 negative control；O5 复用脱敏 Effect 历史；O13 是持久审计游标回放；不泄漏 body/capability |
 | tool exposure | `GET /task/resource/v1/tool/exposure?task_ref=...` | 当前最窄 Agent 暴露集合与 `exposure_digest`；额外 prompt/body/receipt 查询键失败闭合 |
 | tool selection | `POST /task/resource/v1/tool/selection` | 有界收据：candidate_set_digest 必须等于当前暴露，所选 operation_id 必须已被暴露，禁止 prompt/body 重述 |
 | watch | `GET /task/watch` | 快照先行的有界流（进程本地 128 事件重放；过期 `resume_from` → `TASK_WATCH_RESUME_STALE`） |

@@ -22,6 +22,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -35,9 +37,10 @@ tests:
   - apps/kernel-server/tests/p2_t16_registered_check.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:634f09a7d378b2adba421037d3d626a67bc8922f8400d16b36b30b18286a947a"
+fingerprint: "sha256:918056c576c646959be709889f3a2949c1efe52c445ddd5851c2c6182f470406"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -115,6 +118,12 @@ non_claims:
 
 跨模块细节：调度闭合把 `RECONCILED/VERIFIED/VERIFY_FAILED` 视为已闭合，而管理面
 stop 把它们计为 pending——接线时须记住这一有意的保守不对称。
+O2/O3/O4/O5/O13 观测是 task 通道只读平面
+（`GET /task/observation?family=o2|o3|o4|o5|o13&task_ref=…`）。O2–O4 样本由 daemon
+写入 `personal-observation-plane.json`。O5 复用有界 `GET /task/effects` 历史。O13
+是持久审计游标回放，过期游标、缺失事件、digest 断裂与序列缺口失败闭合。空
+collector 返回带具名 negative control 的 `observed_zero`。这不是第二套 authority
+API，也不升格 Gate、release、Profile、B01 或 EVAL 结果。
 
 当上述任何一项变化时，须在同一 PR 内更新本页（以及
 [`user/tasks-and-execution`](../user/tasks-and-execution.md) 与

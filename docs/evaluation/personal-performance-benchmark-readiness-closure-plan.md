@@ -114,8 +114,8 @@ informative work-package ID：
 | BR-02 | P2-T22 | done |
 | BR-03 | P2-T23 | done |
 | BR-04 | P2-T24 | done (merged PR #223 at `main@2b803e0f`) |
-| BR-05 | P2-T25 | in-progress (D01 public lifecycle/exposure/selection) |
-| BR-06 | P2-T26 | not-started |
+| BR-05 | P2-T25 | done (merged PR #224 at `main@4b10db9a`) |
+| BR-06 | P2-T26 | in-progress (D01+D02 authored; Ubuntu CI pending) |
 | BR-07 | P2-T27 | not-started |
 | BR-08 | P2-T28 | not-started |
 

@@ -22,6 +22,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -35,9 +37,10 @@ tests:
   - apps/kernel-server/tests/p2_t16_registered_check.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:634f09a7d378b2adba421037d3d626a67bc8922f8400d16b36b30b18286a947a"
+fingerprint: "sha256:918056c576c646959be709889f3a2949c1efe52c445ddd5851c2c6182f470406"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -126,6 +129,14 @@ The remaining gaps are:
 Additional cross-module nuance: scheduler closure treats
 `RECONCILED/VERIFIED/VERIFY_FAILED` as closed, while management stop counts them
 as pending — a deliberate conservative asymmetry to keep in mind when wiring.
+O2/O3/O4/O5/O13 observation is a task-channel read plane
+(`GET /task/observation?family=o2|o3|o4|o5|o13&task_ref=…`). O2–O4 samples are
+daemon-authored redacted receipts in `personal-observation-plane.json`. O5
+reuses bounded `GET /task/effects` history. O13 is durable audit cursor/replay
+with fail-closed stale-cursor, missing-event, digest-break, and gap handling.
+Empty collectors return `observed_zero` with a named negative control. This is
+not a second authority API and does not promote Gate, release, Profile, B01,
+or EVAL results.
 
 When any of this changes, update this page (and
 [`user/tasks-and-execution`](../user/tasks-and-execution.md) +

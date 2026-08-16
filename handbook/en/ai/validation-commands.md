@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:694c34328de5ccdc2a54c8df18e469322c91b69de53289f355c58a9a4a4ec531"
+fingerprint: "sha256:f43b60785ea64b6180ae29f910c7524667abf487881c0a82cd1f6329a5aca09e"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -55,6 +55,9 @@ registered environment boundary, not a signal to reproduce. Remote/native valida
 consumes only pushed, immutable revisions — never a copied working tree.
 P2-T25 focused HTTP coverage is `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 (lifecycle, selection, and pinned HTTPS origin registry).
+P2-T26 focused HTTP coverage is `apps/kernel-server/tests/p2_t26_observation_plane.rs`
+(O2/O3/O4/O5/O13 observation plane, controlled zeros, audit cursor negatives,
+and channel negatives).
 
 ## What CI enforces on every PR
 
