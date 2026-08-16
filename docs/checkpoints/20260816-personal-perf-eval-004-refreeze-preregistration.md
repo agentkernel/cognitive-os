@@ -530,8 +530,27 @@ were not stopped.
 
 Redactor `evidence/` after B3: 21 files, `key_shaped_hits=0`.
 
+## B5 1 h soak (2026-08-16) — pass
+
+Instrument `b5_soak.py`
+`sha256:b38d12c2abcd836278a07efd899609d0774d092f2e385ffefc22160b486efd05`.
+60 one-minute blocks, each 20 health + six resource projections + one
+bounded watch: **1620 started, 1620 retained, 0 non-OK**. Daemon pid 238755.
+RSS 10 172 kB → 10 280 kB (**+108 kB / hour**). Elapsed 3540 s. No extra
+Provider Agent tasks. Evidence
+`sha256:a1b14083e76328da340c08a53396f2cdad28553b3c618b5eefbad7eabb3015fe`.
+Redactor `evidence/` 25 files, `key_shaped_hits=0`. Listeners
+`48181`/`48284`/`48383` untouched. Plan trigger for 8 h is met (clean 1 h).
+
+Paired soak blocks (plan every 5 min in 1 h) were **`not-run`**: B1/B2 already
+consumed the confirmatory Provider denominator; this 1 h cell is local
+leak/safety only.
+
 ## Unique next action
 
-Run `B5` 1 h local soak (20 health + six projections + one watch per minute).
-`B5` 8 h only if 1 h is clean. C1/C2 paired stays `not-run`. Do not bind or
-stop `48181`/`48284`/`48383`.
+`B5` 8 h local soak with hourly restart is running on the guest as pid
+**241537**, log `evidence/b5-8h.log`, instrument
+`sha256:f51eee640f426c7d200b1565786dd46817485c95d83956520b0cad5a60d248af`.
+Paired 10-minute soak blocks remain `not-run`. C1/C2 paired stays `not-run`.
+Do not bind or stop `48181`/`48284`/`48383`. Do not clear SecretStore `/12`
+until final cleanup after the 8 h cell.
