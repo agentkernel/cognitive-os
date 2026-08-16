@@ -7,12 +7,14 @@ status: implemented
 generated: true
 sources:
   - path: apps/kernel-server/src/personal/pi_runtime.rs
+  - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:dc1f420e1cdb3c9529622c3be2af0ded2bae68a69437630be03debfdcb03a7b4"
+fingerprint: "sha256:3c967a28b994e09c3715d42d215f2a4b20e8257554b1bd86619a6dcef654d5ae"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -51,6 +53,18 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |
 | `GET` | `/management/resource/v1/fault-profile` | management | Read the default-off task-scoped authorized fault profile. Missing records mean faults stay off. Ordinary task callers are denied. |
 | `POST` | `/management/resource/v1/fault-profile` | management | Persist a default-off or campaign-authorized fixed fault profile for one task_ref. Unauthorized campaigns and task-channel callers fail closed. No raw parameter or receipt is stored. |
+| `GET` | `/management/resource/v1/http-origin` | management | Read the task/campaign-scoped pinned HTTPS origin allowlist. Missing records leave production HttpFetchReadOnly empty (fail closed). Ordinary task callers are denied. |
+| `POST` | `/management/resource/v1/http-origin` | management | Pin exact HTTPS origins (host or host:port) for one task_ref under an authorized campaign. GET/HEAD only; no credentials, redirects, inherited proxy, or request body. Unauthorized campaigns and task-channel callers fail closed. |
+| `GET` | `/management/resource/v1/tool` | management | Project registered native Tools with overlay lifecycle, execution_readiness, and whether each is currently Agent-exposed. Overlay state never enters the immutable descriptor digest. |
+| `GET` | `/management/resource/v1/tool/discover` | management | Alias of the registered Tool lifecycle projection; stops the previous generic-authority fall-through on tool/discover. |
+| `POST` | `/management/resource/v1/tool/enable` | management | Enable one registered operation_id. Quarantined and revoked Tools fail closed. Task-channel callers are denied. |
+| `POST` | `/management/resource/v1/tool/disable` | management | Disable one registered operation_id. Agent exposure updates atomically with the overlay. |
+| `POST` | `/management/resource/v1/tool/quarantine` | management | Quarantine one registered operation_id. Enable remains blocked until a later non-quarantine overlay is out of scope for this surface. |
+| `POST` | `/management/resource/v1/tool/revoke` | management | Revoke one registered operation_id. Revocation is terminal for this overlay. |
+| `GET` | `/management/resource/v1/tool/exposure` | management | Read the current least Agent exposure set and digest for one task_ref. |
+| `GET` | `/task/resource/v1/tool` | task | Task-channel read of the same registered Tool lifecycle projection. |
+| `GET` | `/task/resource/v1/tool/exposure` | task | Return the least Agent-exposed Tool set and exposure_digest for one task_ref. Extra prompt/body/receipt query keys fail closed. |
+| `POST` | `/task/resource/v1/tool/selection` | task | Record a bounded Tool selection receipt: candidate_set_digest must equal the current exposure digest, the selected operation_id must be exposed, and prompt/body/receipt restatement is refused. |
 | `GET` | `/task/watch` | task | Snapshot-first bounded Task watch with optional resume_from. |
 | `GET` | `/task/resource/v1/projection` | task | Task-bound Memory/Skill resource projection (requires task_ref); served through the `/task/resource/` prefix rewrite onto the shared resource handler. |
 | `GET` | `/task/resource/v1/watch` | task | Task-bound resource watch, served through the same prefix rewrite. |

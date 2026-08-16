@@ -8,6 +8,10 @@ generated: false
 sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -19,7 +23,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
+fingerprint: "sha256:456de36d53b4dc08ee606fa574e5f4c312f174c9ea0252ccdd503d7331605a9f"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
 ---
@@ -49,6 +53,11 @@ worker 交接，仅修复当前已准入合同所缺 Loop/Budget/调度前置而
 重新发布 endpoint。随后才启动唯一周期调度 worker；顺序退出会在释放 daemon 状态前取
 消、唤醒并 join 它。
 
+Tool overlay 与钉住 HTTPS origin 文件位于 Personal data 目录
+（`personal-tool-lifecycle.json`、`personal-pinned-https.json`）。重启会重新加载；
+它们不是 Artifact CAS 对象。生产 HttpFetchReadOnly 在 management 以授权 campaign
+钉住精确 HTTPS origin 之前保持失败闭合。
+
 ## 数据库安全 —— `implemented`
 
 数据库位于 XDG state（`authority.sqlite`、`installation.sqlite`，WAL 模式、0600）。
@@ -65,7 +74,8 @@ digest 漂移或竞争记录会失败闭合，而不是让已遗忘事实复活�
 任何模型驱动同一序列——未配置执行器时，仍未知的结果会隔离（fail-safe）而非强行了结。
 原生 HTTP attempt 在出站前持久化，重启后在终态 receipt 出现前保持 indeterminate。
 workspace 变更使用持久原键 receipt；相同文件字节本身不是执行证明，重启会保守清理
-orphan staging。
+orphan staging。生产 HTTP fetch staging 还会咨询评测授权的钉住 origin 登记表；没有
+钉时白名单保持为空，请求失败闭合。
 
 成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`DRAFT` governed Task、
 `START` Loop、硬 Budget 与 runnable 调度行一起出现。提交前失败不会留下这些准入成员；
@@ -80,6 +90,11 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 完整闭合 Effect 集合、当前 epoch 与 Task CAS。两条 transition 之间崩溃会保留
 `CANDIDATE_COMPLETE`，供同一 evidence-bound acceptance 重试；重复 acceptance 不能写
 第二次完成。
+
+已登记原生 Tool 默认启用。management 会话可按 `operation_id` disable、quarantine
+或 revoke；Agent 暴露立即跟随该 overlay，且永不改写不可变 descriptor。普通 Task
+调用方可读取当前最窄暴露集合并记录选择收据，但不能 enable、disable、quarantine
+或 revoke Tool。
 
 ## 备份与恢复 —— 作为用户功能 `unavailable`
 

@@ -8,6 +8,10 @@ generated: false
 sources:
   - path: apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: crates/cognitive-store/src/personal_backup.rs
@@ -19,7 +23,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:3ca82909ab6bb659dfbb2d07b8a59ba2d8bb1e7156d19dc3dc2ff29d4f30b3fc"
+fingerprint: "sha256:456de36d53b4dc08ee606fa574e5f4c312f174c9ea0252ccdd503d7331605a9f"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore has no runnable command today."
 ---
@@ -56,6 +60,12 @@ and republishes the endpoint atomically. Only then does one periodic scheduler
 worker start; orderly exit cancels, wakes, and joins it before daemon state is
 released.
 
+Tool overlay and pinned HTTPS origin files live under the Personal data
+directory (`personal-tool-lifecycle.json`, `personal-pinned-https.json`). A
+restart reloads them; they are not Artifact CAS objects. Production
+HttpFetchReadOnly stays fail-closed until a management caller with an
+authorized campaign pins exact HTTPS origins.
+
 ## Database safety — `implemented`
 
 Databases live under XDG state (`authority.sqlite`, `installation.sqlite`, WAL
@@ -78,7 +88,9 @@ with no executor configured, still-unknown outcomes quarantine (fail-safe) rathe
 than resolve. Native HTTP attempts persist before egress and remain indeterminate
 after restart until a terminal receipt exists. Workspace mutations use durable
 original-key receipts; matching file bytes alone are not execution proof, and
-orphan staging is cleaned conservatively on restart.
+orphan staging is cleaned conservatively on restart. Production HTTP fetch
+staging also consults the campaign-authorized pinned origin registry; without
+a pin the allowlist stays empty and the request fails closed.
 
 A successful Task admission is also crash-atomic inside the authority database:
 the contract, `DRAFT` governed Task, `START` Loop, hard Budget, and runnable
@@ -97,6 +109,12 @@ rechecks the fixed Effect version, complete closed Effect set, current epoch and
 Task CAS in each candidate/acceptance transaction. A crash between the two
 transitions leaves `CANDIDATE_COMPLETE` for the same evidence-bound acceptance
 retry; duplicate acceptance cannot write a second completion.
+
+Registered native Tools start enabled. A management session can disable,
+quarantine, or revoke one by `operation_id`; Agent exposure follows that overlay
+immediately and never rewrites the immutable descriptor. Ordinary Task callers
+can read the current least exposure set and record a selection receipt, but they
+cannot enable, disable, quarantine, or revoke Tools.
 
 ## Backup and restore — `unavailable` as a user feature
 

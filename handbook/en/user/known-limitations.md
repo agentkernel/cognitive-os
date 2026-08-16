@@ -12,7 +12,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:0e6aa92cd06a6fff233a02ade6e632fccea528b5eae32455fec92d19b03e2481"
+fingerprint: "sha256:27bbbc85e9db44e6b2748c162d39d9d948a6973e07a50f6b38f10ec5d7b7063c"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---

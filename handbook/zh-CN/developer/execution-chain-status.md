@@ -18,6 +18,10 @@ sources:
     symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
   - path: apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+    symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -30,9 +34,10 @@ tests:
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - apps/kernel-server/tests/p2_t16_registered_check.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:0a1329d057acf8b695cbe25e7e4d0a35f01483774a8ecfb24dd66518df94982e"
+fingerprint: "sha256:634f09a7d378b2adba421037d3d626a67bc8922f8400d16b36b30b18286a947a"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -60,11 +65,13 @@ non_claims:
 | ProcessCheck 执行器 | implemented，生产调用 | 生产 router 会 staging 有界 process check；在 daemon 受监督进程 registry 接线前 dispatch 仍 fail closed（无环境进程观测） |
 | RegisteredCheckRun 执行器 | implemented，生产调用 | 调用载荷严格只有 `check_id`；daemon 不可变目录固定当前二进制 helper、argv、workspace-root cwd、空环境、超时、输出/进程/写入/网络边界与 descriptor digest。冻结目录绑定 `c2a.repair.typescript`（descriptor_version 2，含公开与 hidden 测试）与 `c2a.repair.rust`；oracle 是文件 digest 相等，因此削弱 hidden 测试即使源文件与公开测试完好也会失败。Intent/Effect 在 spawn 前进入持久 `EXECUTING`，原键状态跨重启保留，有界输出进入 CAS Evidence 并由登记的独立 verifier 校验 |
 | WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 payload + 期望 preimage 并 staging 进 mutation sink；句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
-| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，生产调用 | 生产 router 会 staging 钉住的 HTTPS target；已登记 origin 白名单默认为空，因此 origin 登记前 staging fail closed；attempted/completed 状态跨重启保留；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（dispatch 仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，生产调用 | 生产 router 用 task/campaign origin 登记表 staging 钉住的 HTTPS target；白名单默认为空，因此 management 钉住精确 HTTPS origin（`host` 或 `host:port`）之前 staging fail closed；attempted/completed 状态跨重启保留；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| 公开钉住 HTTPS origin 登记表 | implemented，HTTP 调用；生产咨询 | management `GET/POST /management/resource/v1/http-origin` 需 campaign 授权（`P2-T25` 或 `PERSONAL-PERF-EVAL-*`）；task 调用方被拒绝。钉从不携带凭据、header 或 body。生产 HttpFetchReadOnly 按 Intent `task_ref` 咨询该表 |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；fixed-Effect 与 RegisteredCheck verifier 只接受各自登记身份。RegisteredCheck 从 CAS Evidence 重校验精确 descriptor/file digest 和全部安全观察；通过的报告进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task。WorkspaceRead 配 fixed-Effect verifier 仍发布 `ACT -> VERIFY`。在 RegisteredCheck 收口的 Task 上，闭合的中间 WorkspaceWrite/Patch/Search Effect 则走登记边 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`，以便后续 tick 准入 RegisteredCheckRun；只有该 check 的独立 verification 可以完成 Task |
 | A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup 与持久请求/查询计数）；persist-before-dispatch Effect；默认关闭的授权故障点；持久变更后丢失应答时，重启只查询原键，以一次实际变更、零第二次 POST 完成对账；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
 | 公开 Effect 历史与默认关闭 fault profile | implemented，HTTP 调用；生产咨询 | task 通道 `GET /task/effects` 返回不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省，以及 report refs，不含 receipt/参数；management `POST/GET /management/resource/v1/fault-profile` 默认关闭且需 campaign 授权；task 调用方被拒绝。生产 native dispatch 在四个固定点咨询已持久化 profile；缺失、默认关闭与未授权文件内容永不注入。重启只查询原 idempotency key；replacement key 不能绑定第二条 Intent；Indeterminate/open Effect 永不完成 Task |
+| 公开 Tool lifecycle、Agent 暴露与选择收据 | implemented，HTTP 调用 | management `GET/POST /management/resource/v1/tool*` overlay `enabled`/`disabled`/`quarantined`/`revoked`，不改 descriptor digest；`agent_exposed` 跟随 overlay 与已装配 executor 就绪。task 调用方不能变更 lifecycle。`GET /task/resource/v1/tool/exposure` 返回最窄暴露集合与 digest；`POST /task/resource/v1/tool/selection` 仅对该 digest 且已暴露的 operation_id 记录收据。prompt/body/receipt 重述与过期/扩权 candidate digest 失败闭合 |
 | Task candidate + acceptance authority | implemented；公共 C1 native-proven | scheduler materialize/activate governed Task；随后只有最新当前 independent passed report、可重读 CAS evidence、未变 fixed state、闭合 Effect 集合与独立 daemon acceptance principal 才可提交两条登记 Task transition；缺报告、重复 acceptance、open Effect、被取代 report、缺失 CAS evidence 与 stale fixed post-state 均 fail closed |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 
@@ -83,7 +90,7 @@ non_claims:
    query 的 WorkspaceSearch、带 preimage 的 WorkspaceWrite/Patch、有界 ProcessCheck、
    origin 门控的 HttpFetchReadOnly 与仅含 `check_id` 的 RegisteredCheckRun 经持久
    Effect 协议从生产派发。ProcessCheck 在 daemon 受监督进程 registry 接线前 dispatch
-   fail closed，HttpFetchReadOnly 在 origin 登记前 staging fail closed——两者都不臆造
+   fail closed，HttpFetchReadOnly 在 campaign 授权 origin 被钉住前 staging fail closed——两者都不臆造
    输入、也不绕过 Effect 协议。
 2. **Task 完成已实现且公共 C1 已经 native 证明**：P2-T14 代码沿用已登记的
    `completion_claim` / `fixed_post_state` / `verification_report` /

@@ -162,6 +162,7 @@ pub(crate) struct ProductionNativeToolExecutorRouter {
     http_fetch: NativeHttpFetchReadOnlyExecutor<RustlsReadOnlyFetchTransport>,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
     fault_profile_data_dir: Option<PathBuf>,
+    origin_registry_data_dir: Option<PathBuf>,
 }
 
 impl ProductionNativeToolExecutorRouter {
@@ -237,11 +238,16 @@ impl ProductionNativeToolExecutorRouter {
             ),
             staged_families: Mutex::new(BTreeMap::new()),
             fault_profile_data_dir: None,
+            origin_registry_data_dir: None,
         })
     }
 
     pub(crate) fn bind_fault_profiles(&mut self, data_dir: PathBuf) {
         self.fault_profile_data_dir = Some(data_dir);
+    }
+
+    pub(crate) fn bind_origin_registry(&mut self, data_dir: PathBuf) {
+        self.origin_registry_data_dir = Some(data_dir);
     }
 
     pub(crate) fn authorized_fault_point(
@@ -335,11 +341,24 @@ impl ProductionNativeToolExecutorRouter {
                     resolved.intent.parameters_digest.clone(),
                     &request,
                 )?,
-                NativeOperationFamily::HttpFetchReadOnly => self.http_fetch.stage_request(
-                    resolved.intent.idempotency_key.clone(),
-                    resolved.intent.parameters_digest.clone(),
-                    &request,
-                )?,
+                NativeOperationFamily::HttpFetchReadOnly => {
+                    let pinned_origins = self
+                        .origin_registry_data_dir
+                        .as_ref()
+                        .map(|data_dir| {
+                            crate::personal::pinned_https::allowed_origins(
+                                data_dir,
+                                &resolved.authorization.task_ref,
+                            )
+                        })
+                        .unwrap_or_default();
+                    self.http_fetch.stage_request_with_origins(
+                        resolved.intent.idempotency_key.clone(),
+                        resolved.intent.parameters_digest.clone(),
+                        &request,
+                        &pinned_origins,
+                    )?
+                }
                 _ => return Err(NativeToolExecutionError::UnsupportedExecutionFamily),
             }
         }

@@ -520,6 +520,19 @@ pub fn validate_process_check(
     Ok(())
 }
 
+/// Host or `host:port` (1–65535). Rejects userinfo, empty host, and IPv6.
+pub fn valid_https_authority(authority: &str) -> bool {
+    if authority.is_empty() || authority.contains('@') {
+        return false;
+    }
+    match authority.rsplit_once(':') {
+        Some((host, port)) if !host.is_empty() && !host.contains(':') => {
+            port.parse::<u16>().is_ok_and(|parsed| parsed != 0)
+        }
+        _ => !authority.contains(':'),
+    }
+}
+
 /// Validate the read-only HTTP boundary. The actual network request belongs
 /// to P2-T06 and must use a daemon-owned client with no ambient credentials.
 pub fn validate_read_only_http_fetch(
@@ -536,11 +549,7 @@ pub fn validate_read_only_http_fetch(
     };
     let authority_end = remainder.find(['/', '?', '#']).unwrap_or(remainder.len());
     let authority = &remainder[..authority_end];
-    if scheme != "https"
-        || authority.is_empty()
-        || authority.contains('@')
-        || authority.contains(':')
-    {
+    if scheme != "https" || !valid_https_authority(authority) {
         return Err("HTTP Tool requires an HTTPS URL without userinfo".to_owned());
     }
     let path_and_suffix = &remainder[authority_end..];
@@ -970,12 +979,60 @@ mod tests {
         );
         assert!(
             validate_read_only_http_fetch(
+                "GET",
+                "https://localhost:8443/a",
+                &["https://localhost:8443".to_owned()],
+                1000
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_read_only_http_fetch(
+                "GET",
+                "https://user:pass@example.com/a",
+                &["https://user:pass@example.com".to_owned()],
+                1000
+            )
+            .is_err()
+        );
+        assert!(
+            validate_read_only_http_fetch(
+                "HEAD",
+                "https://example.com/a",
+                &["https://example.com".to_owned()],
+                1000
+            )
+            .is_ok()
+        );
+        assert!(
+            validate_read_only_http_fetch(
                 "POST",
                 "https://example.com/a",
                 &["https://example.com".to_owned()],
                 1000
             )
             .is_err()
+        );
+    }
+
+    #[test]
+    fn catalog_exposes_registered_check_and_http_fetch_without_process_run() {
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::RegisteredCheckRun)
+        );
+        assert!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .any(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        );
+        assert_eq!(
+            BUILTIN_TOOL_CATALOG
+                .iter()
+                .filter(|descriptor| descriptor.family == NativeOperationFamily::ProcessCheck)
+                .count(),
+            1
         );
     }
 }

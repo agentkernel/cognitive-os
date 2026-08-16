@@ -16,7 +16,7 @@
     },
     {
       "id": "daemon-http",
-      "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
+      "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/tool_lifecycle.rs", "apps/kernel-server/src/personal/pinned_https.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
       "docs": ["ref.http-api", "dev.daemon-http-surface", "user.operations-recovery", "ai.validation-commands"],
       "note": "routes, channels, auth, limits, readiness/doctor projections"
     },

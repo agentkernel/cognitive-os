@@ -16,7 +16,7 @@ tests:
   - crates/cognitive-store/tests/p4_t01_memory_store.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:e8b0a6c4ce53f21118d2e6507af4dee52216b1e2e96660d201cbc288ba85d27c"
+fingerprint: "sha256:bdc0cf93154976d7a59aaaab07dab4a7ef75256e3c8b97bf436c8583d97d5e5c"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---
@@ -32,7 +32,7 @@ store and daemon services; user-facing reach varies, so the honest label is
 |---|---|---|
 | **Memory** | admitted durable knowledge with scope, purpose, provenance, versions, expiry, forget/tombstone | `remember`/`forget`/explain via daemon routes; full-text search is a rebuildable FTS5 index behind authority filters; no automatic conversation harvesting |
 | **Skill** | immutable locally imported package/revision with bindings | import/bind/revoke/explain via daemon routes; scripts never execute by themselves |
-| **Tool** | six static native operations (workspace read/search/write/patch, process check, HTTP fetch) | catalog + validators implemented; the projection reports registration and execution readiness separately (`execution_ready` today only for workspace read + process check; other families are `registered_only`); execution requires the governed Effect path (see [Tasks and execution](./tasks-and-execution.md)) |
+| **Tool** | seven static native operations (workspace read/search/write/patch, process check, HTTP fetch, registered check) | catalog, overlay lifecycle, and validators implemented; the projection reports registration, overlay state, and execution readiness separately (assembled families report `execution_ready` when enabled); Agent exposure follows overlay plus readiness; HTTP fetch stays fail-closed until a campaign pins an HTTPS origin; execution requires the governed Effect path (see [Tasks and execution](./tasks-and-execution.md)) |
 | **Context** | per-Task authorized input request + resolved view with explicit losses | fully daemon-side: metadata-first filtering, per-body reauthorization, sealed views, digest-bound caches |
 | **Task** | raw intent → interpretation → preview → admitted contract | the four admission operations work over HTTP; watch is bounded and snapshot-first |
 | **Runtime/Process** | agent package, installation, registration, instance, sidecar session, process attempt | full Pi lifecycle via `admin-cli`; identities never merge |

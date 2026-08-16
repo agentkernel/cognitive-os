@@ -8,7 +8,7 @@ generated: true
 sources:
   - path: crates/cognitive-kernel/src/tool_registry.rs
   - path: handbook/_meta/annotations/tool-catalog.json
-fingerprint: "sha256:a8de1cde3037856c0d28b0c48009af79e29708fecb989609695d6bb2dd80f1d8"
+fingerprint: "sha256:7617f311d2cfcdb928028c8bbe35ac099baf613a27dca1a063933879783cb207"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -26,5 +26,5 @@ daemon 拥有的静态 7 项原生 Tool 目录（`BUILTIN_TOOL_CATALOG`）。没
 | `native.workspace.write` | WorkspaceMutation | `daemon.workspace` | 受治理的 workspace 写入；要求 persist-before-dispatch 的 Intent/Effect 路径。 |
 | `native.workspace.patch` | WorkspaceMutation | `daemon.workspace` | 受治理的 workspace patch（预执行校验器强制 patch 形状载荷）。 |
 | `native.process.check` | ProcessExecution | `daemon.process` | 有界的已注册检查命令执行，含超时、输出上限与监督。 |
-| `native.http.fetch` | NetworkRead | `daemon.http` | 只读 HTTPS GET/HEAD，仅限精确注册的 origin 白名单；不允许 userinfo、端口、query 或 fragment。 |
+| `native.http.fetch` | NetworkRead | `daemon.http` | 只读 HTTPS GET/HEAD，仅限精确注册的 origin 白名单；不允许 userinfo、query 或 fragment。显式端口是精确 origin 钉的一部分。 |
 | `native.registered-check.run` | ProcessExecution | `daemon.registered-check` | 仅按 check_id 运行 daemon 不可变登记的确定性检查；可执行文件、argv、cwd、环境、超时、输出、进程树、写入根、网络和 digest 边界全部固定。 |

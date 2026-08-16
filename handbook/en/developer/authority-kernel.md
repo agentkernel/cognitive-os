@@ -37,7 +37,9 @@ non_claims:
 # Authority kernel
 
 `cognitive-kernel` is the deterministic core: no HTTP, no SQLite, no model SDKs.
-Adapters implement its port traits; the reference adapter is `cognitive-store`.
+Native Tool pre-executor validators in this crate are pure (HTTPS origin shape
+allows an optional explicit port as part of the exact origin; userinfo, query,
+and fragment stay forbidden). Adapters implement its port traits; the reference adapter is `cognitive-store`.
 The daemon-private `MemorySkillConsumptionStore` port records exact Memory/Skill
 pins for Context loading; it does not grant client write authority or complete a
 Task.

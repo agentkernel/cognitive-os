@@ -8,10 +8,11 @@ generated: false
 sources:
   - path: package.json
   - path: tools/package.json
+  - path: tools/src/generate-handbook.mjs
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:9e0d8ffd79c6c972772ce0459f6a6edda9287ea6cc239fb313cc6b78672dbb22"
+fingerprint: "sha256:694c34328de5ccdc2a54c8df18e469322c91b69de53289f355c58a9a4a4ec531"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -51,6 +52,8 @@ cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成�
 
 绝不在本地 Windows GNU 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
 不是需要复现的信号。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
+P2-T25 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
+（lifecycle、selection 与钉住 HTTPS origin 登记表）。
 
 ## CI 在每个 PR 上强制什么
 

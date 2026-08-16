@@ -38,6 +38,8 @@ chain → SQLite, with generated request/result DTOs at the wire.
 | `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
 | evidence | `GET /task/evidence?task_ref=...` | reconstruct a bounded redacted lifecycle, Effect reconciliation class, current verification/Artifact availability, acceptance transition, and durable event cursor from SQLite authority plus Artifact CAS |
 | effects | `GET /task/effects?task_ref=...` | reconstruct bounded Effect history (opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent, report refs) without receipts or raw parameters |
+| tool exposure | `GET /task/resource/v1/tool/exposure?task_ref=...` | current least Agent-exposed Tool set and `exposure_digest`; extra prompt/body/receipt query keys fail closed |
+| tool selection | `POST /task/resource/v1/tool/selection` | bounded receipt: candidate_set_digest must equal current exposure, selected operation_id must be exposed, no prompt/body restatement |
 | watch | `GET /task/watch` | snapshot-first bounded stream (process-local 128-event replay; stale `resume_from` → `TASK_WATCH_RESUME_STALE`) |
 
 Contract versioning: minting with a `context_request_ref` produces schema
@@ -84,6 +86,9 @@ RegisteredCheckRun adds one production carrier whose payload is only `check_id`;
 its separate immutable registry fixes executable, argv, cwd, empty environment and
 all process/output/write/network bounds. The result is CAS Evidence and still
 requires the registered independent verifier.
+HttpFetchReadOnly stages only against a task/campaign-scoped pinned HTTPS origin
+registry (empty by default; GET/HEAD; no credentials, redirects, or inherited
+proxy). An explicit port is part of the exact origin pin.
 A later tick can admit RegisteredCheckRun after an intermediate WorkspaceWrite
 on a RegisteredCheck-terminated Task returns the Loop to `DECIDE` through
 registered edges; only that check's independent verification plus acceptance
