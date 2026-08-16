@@ -118,7 +118,10 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Instrument: `DEV-LINUX-NATIVE-01` `cargo test -p admin-cli --test p2_t27_pi_lifecycle --locked`.
 - Outcome: **fail**. Rollback is a new monotonic activation (v2 + target
   binding v1 → activation_version **3**), not a rewind to version 1. The
-  public test oracle is corrected to that durable contract.
+  public test oracle is corrected to that durable contract. Same revision:
+  `p5_t05_identity_recover` **3/3 pass**, `p5_t05_upgrade_fencing` **4/4
+  pass**, `cargo clippy -p admin-cli --all-targets --locked -- -D warnings`
+  **pass**.
 
 ### D02-LOCAL-01 — Windows GNU Rust tests
 
