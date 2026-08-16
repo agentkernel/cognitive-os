@@ -45,6 +45,7 @@ use super::scheduler_authority::{
 use super::task_api::TaskApi;
 use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
 use super::tool_lifecycle;
+use super::user_backup;
 use super::verification_executor::open_daemon_artifact_store;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
@@ -692,6 +693,19 @@ fn dispatch_http_route(
             authority,
         );
     }
+    if method_path.starts_with("POST /management/resource/v1/backup")
+        || method_path.starts_with("POST /management/resource/v1/backup/preflight")
+        || method_path.starts_with("POST /management/resource/v1/restore")
+    {
+        return handle_management_user_backup_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+        );
+    }
     if method_path.starts_with("GET /management/resource/")
         || method_path.starts_with("POST /management/resource/")
     {
@@ -734,6 +748,20 @@ fn dispatch_http_route(
         || method_path.starts_with("POST /task/resource/v1/observation")
     {
         return handle_task_observation_route(stream, &method_path, headers, layout, authority);
+    }
+    if method_path.starts_with("POST /task/resource/v1/backup")
+        || method_path.starts_with("POST /task/resource/v1/restore")
+        || method_path.starts_with("POST /task/backup")
+        || method_path.starts_with("POST /task/restore")
+    {
+        return handle_task_user_backup_forbidden(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+        );
     }
     if method_path.starts_with("GET /task/resource/v1/tool")
         || method_path.starts_with("POST /task/resource/v1/tool/")
@@ -1305,6 +1333,73 @@ fn handle_management_tool_lifecycle_route(
         body,
         layout,
         tool_lifecycle::ToolLifecycleChannel::Management,
+    );
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_management_user_backup_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = user_backup::handle(
+        method_path,
+        body,
+        layout,
+        user_backup::UserBackupChannel::Management,
+    );
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_user_backup_forbidden(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = user_backup::handle(
+        method_path,
+        body,
+        layout,
+        user_backup::UserBackupChannel::Task,
     );
     write_response(
         stream,

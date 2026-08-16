@@ -6,6 +6,8 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
+  - path: crates/cognitive-store/src/personal_backup.rs
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: crates/cognitive-store/src/migration.rs
@@ -20,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:234e4fe38aa4f5e5bf0fc41bb5e414e4e84ecf1abb63258b189f374ac1b46adc"
+fingerprint: "sha256:a8d9975ca40bbc06887300162bc04ede6b654564d5267d5a9877de5b2c414706"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -96,3 +98,13 @@ Canonical decision bytes live in Artifact CAS. Two immediate transactions reuse
 the existing governed-object/event/transition-record tables and recheck current
 contract, exact fixed state, newest report, complete closed Effect set, and
 fencing before the candidate and final acceptance CAS updates.
+
+## User backup archive
+
+`write_personal_backup_archive` copies config/data/state/artifact files into a
+digest-bound directory archive and writes a Memory/Skill export sidecar. It
+skips `authority.sqlite`, secret-named paths, and `provider-config.json`.
+Restore preflight checks schema, completeness, and part digests, then overlays
+live files from a staging tree with snapshot rollback. Focused tests record
+byte-equal restored files and a finite restore wall time as hypothesis-only
+facts. This is not a SQLite dump and does not claim Gate/RTO/RPO results.

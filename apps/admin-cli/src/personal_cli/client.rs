@@ -112,6 +112,26 @@ impl PersonalDaemonClient {
         self.get_task_authorized(&format!("/task/evidence?task_ref={encoded_task_ref}"))
     }
 
+    /// `POST /management/resource/v1/backup` writes a secret-excluding archive.
+    pub fn post_backup(&self) -> Result<String, PersonalDaemonClientError> {
+        self.post_authorized("/management/resource/v1/backup", "{}")
+    }
+
+    /// `POST /management/resource/v1/restore` restores one archive id.
+    pub fn post_restore(&self, archive_id: &str) -> Result<String, PersonalDaemonClientError> {
+        let body = serde_json::json!({ "archive_id": archive_id }).to_string();
+        self.post_authorized("/management/resource/v1/restore", &body)
+    }
+
+    /// `POST /management/resource/v1/backup/preflight` verifies one archive id.
+    pub fn post_backup_preflight(
+        &self,
+        archive_id: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        let body = serde_json::json!({ "archive_id": archive_id }).to_string();
+        self.post_authorized("/management/resource/v1/backup/preflight", &body)
+    }
+
     fn get_authorized(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
         self.get_with_token(path, &self.management_token, "management")
     }
@@ -142,6 +162,29 @@ impl PersonalDaemonClient {
             });
         }
         Err(PersonalDaemonClientError::Http { status, body })
+    }
+
+    fn post_authorized(&self, path: &str, body: &str) -> Result<String, PersonalDaemonClientError> {
+        let host = host_header_value(&self.endpoint);
+        let wire = format!(
+            "POST {path} HTTP/1.1\r\nHost: {host}\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            self.management_token,
+            body.len()
+        );
+        let response = http_exchange(&self.endpoint, &wire)?;
+        let (status, response_body) = split_http_response(&response)?;
+        if status == 200 {
+            return Ok(response_body);
+        }
+        if status == 401 || status == 403 {
+            return Err(PersonalDaemonClientError::Unauthorized {
+                detail: format!("management channel: {response_body}"),
+            });
+        }
+        Err(PersonalDaemonClientError::Http {
+            status,
+            body: response_body,
+        })
     }
 }
 

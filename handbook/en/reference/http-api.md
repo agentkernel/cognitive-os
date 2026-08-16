@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:69bd31484a814ef8950e5507d12c8c58e752bfe0dae0545b701e33aff283de59"
+fingerprint: "sha256:4059a03fae7a322928ef8993a652d7e1a5cc1d13201603a1d543b41b9d798b3c"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -76,4 +76,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/resource/v1/watch` | task | Task-bound resource watch, served through the same prefix rewrite. |
 | `GET` | `/task/resource/v1/consumption` | task | Return the latest daemon-authored redacted Memory/Skill consumption pins for one task_ref; query_text and skill_binding_id are rejected as restatement; forgotten, revoked, or digest-drifted records fail closed without pins. |
 | `POST` | `/task/resource/v1/consumption` | task | Record a Task-trace Memory/Skill consumption bound to current authority facts. |
+| `POST` | `/management/resource/v1/backup` | management | Write a secret-excluding Personal backup archive. Never copies authority SQLite, bootstrap secrets, bearer material, or provider-config. |
+| `POST` | `/management/resource/v1/backup/preflight` | management | Verify one archive_id (schema, part digests, completeness, secret/SQLite exclusion) without mutating live layout. |
+| `POST` | `/management/resource/v1/restore` | management | Preflight then transactionally restore one archive_id. Failure rolls live trees back; secrets and SQLite stay uncopied. |
+| `POST` | `/task/resource/v1/backup` | task | Forbidden: backup/restore are management-channel only. |
+| `POST` | `/task/resource/v1/restore` | task | Forbidden: backup/restore are management-channel only. |
+| `POST` | `/task/backup` | task | Forbidden alias of the management backup writer. |
+| `POST` | `/task/restore` | task | Forbidden alias of the management restore writer. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

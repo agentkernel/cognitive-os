@@ -30,6 +30,7 @@ mod skill_package;
 mod task_api;
 mod tool_executor;
 mod tool_lifecycle;
+mod user_backup;
 mod verification_executor;
 
 pub use bounds::PersonalResourceBounds;

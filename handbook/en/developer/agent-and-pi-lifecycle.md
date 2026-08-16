@@ -20,6 +20,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - crates/cognitive-runtime/tests/p5_t05_identity_recover.rs
+  - crates/cognitive-runtime/tests/p5_t05_upgrade_fencing.rs
+  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
 fingerprint: "sha256:4bd869c421b83273906dacdd582bbe5d72470992fef35994a78f2021e31ccd5a"
@@ -49,7 +52,7 @@ binds the exact package digest; activation flips a single active pointer under
 epoch CAS; `SidecarSession` binds a live process identity (`process_bound`),
 enforces pause/resume/stop/recover transitions with fencing, and reports redacted
 health. Upgrade/uninstall fence old epochs; recover/orphan negatives are tested.
-`admin-cli` (`install/register/activate/agent-*`) is the deterministic caller.
+`admin-cli` (`install/register/activate/activate-root/rollback/agent-*`) is the deterministic caller.
 
 ## Launch admission (shell host role)
 

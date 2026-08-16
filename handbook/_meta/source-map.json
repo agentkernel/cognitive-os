@@ -16,7 +16,7 @@
     },
     {
       "id": "daemon-http",
-      "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/tool_lifecycle.rs", "apps/kernel-server/src/personal/pinned_https.rs", "apps/kernel-server/src/personal/observation.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
+      "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/tool_lifecycle.rs", "apps/kernel-server/src/personal/pinned_https.rs", "apps/kernel-server/src/personal/observation.rs", "apps/kernel-server/src/personal/user_backup.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
       "docs": ["ref.http-api", "dev.daemon-http-surface", "user.operations-recovery", "ai.validation-commands"],
       "note": "routes, channels, auth, limits, readiness/doctor projections"
     },
@@ -42,7 +42,7 @@
       "id": "store",
       "sources": ["crates/cognitive-store/**"],
       "docs": ["dev.store-migrations", "dev.memory-skill", "user.operations-recovery"],
-      "note": "migration map, authority vs derived data, backup planning APIs"
+      "note": "migration map, authority vs derived data, backup archive I/O"
     },
     {
       "id": "secrets-provider",

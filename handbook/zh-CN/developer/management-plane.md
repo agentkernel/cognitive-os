@@ -20,7 +20,8 @@ sources:
 tests:
   - crates/cognitive-management/tests/m5_session_approval.rs
   - apps/admin-cli/tests/m5_deterministic_fallback.rs
-fingerprint: "sha256:a8c2ba8584756ff637925fa73f2e6cb2dad84949673d1d45b9407ca0be5a539a"
+  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
+fingerprint: "sha256:7f3c8b16d4b03bce656e63d84fb00f38d28e37a7556cbdb9db6c5b535b97f156"
 non_claims:
   - R0/R2/R3 审批流与治理台账的 daemon 生产接线未实现；只存在此处列出的部分。
 ---
@@ -50,7 +51,7 @@ non_claims:
 
 ## Agent 生命周期动词
 
-`admin-cli install/register/activate/agent-pause/agent-resume/agent-stop/
+`admin-cli install/register/activate/activate-root/rollback/agent-pause/agent-resume/agent-stop/
 agent-recover/agent-health/uninstall` 调用
 [Agent 与 Pi 生命周期](./agent-and-pi-lifecycle.md)所述运行时生命周期，全部会话把
 门。

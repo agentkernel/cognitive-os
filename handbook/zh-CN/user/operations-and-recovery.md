@@ -16,18 +16,23 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/six_resource_doctor.rs
   - path: apps/admin-cli/src/personal_cli/daemon.rs
+  - path: apps/kernel-server/src/personal/user_backup.rs
+    symbols: ["handle"]
+  - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: crates/cognitive-store/src/personal_backup.rs
-    symbols: ["plan_personal_backup_inventory"]
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:a9357b65c1bc7ec2680835dfdf72620e9132812878f1516f007a2128ff2eaf19"
+fingerprint: "sha256:2d8aee05329f7ebe5244f997dd7edf2980b60ede1859534ef701ba0a2485ea9c"
 non_claims:
-  - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复今天没有可运行的命令。"
+  - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
 
 # 运维与恢复
@@ -100,9 +105,15 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 调用方可读取当前最窄暴露集合并记录选择收据，但不能 enable、disable、quarantine
 或 revoke Tool。
 
-## 备份与恢复 —— 作为用户功能 `unavailable`
+## 备份与恢复 —— `partial`
 
-盘点/导出/恢复预检的规划代码已存在（secret 路径按设计恒排除），但尚无
-`cognitive backup`/`restore` 命令或归档 I/O 接线。今天诚实的替代做法：停止 daemon，
-自行复制 XDG state/config 目录，并记住 Provider key **不在**这些文件里——在新机器恢
-复后需重跑 `cognitive init` 重新录入 key。
+`cognitive backup [--output <dir>]` 写入 digest 绑定的目录归档（config/data/state/
+artifacts 与 Memory/Skill 导出 sidecar）。永不复制 `authority.sqlite`、
+`provider-config.json`、bootstrap secret 或 bearer。`cognitive restore --archive
+<dir>`（或 `--archive-id`）先做 schema/digest 预检，再从 staging 覆盖 live 文件；
+失败则回滚快照。`--preflight` 只校验不变更。management 通道提供相同操作：
+`POST /management/resource/v1/backup` 与 `.../restore`。恢复后若 Secret Store 中没有
+Provider key，需用 `cognitive init` 重新录入。公开 `admin-cli` 调用方覆盖 managed
+Pi install→activate-root→register→activate→pause/resume→upgrade/rollback→stop→
+recover→uninstall。聚焦测试把恢复后字节相等和有限墙钟记为 hypothesis-only
+事实；本页不声明 RTO/RPO 或 Gate 结果。

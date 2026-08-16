@@ -151,7 +151,7 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
-| Phase 2 - 单 Agent 任务闭环 | 28 | 25 | 1 | 0 | 2 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 28 | 26 | 1 | 0 | 1 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
@@ -159,7 +159,7 @@
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 1 | 2 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 8 | 8 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 7 | 7 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **88** | **78** | **1** | **1** | **8** | — |
+| **合计** | **88** | **79** | **1** | **1** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -585,8 +585,8 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T23 | Public Memory/Skill consumption and resume | P2-T19, P2-T21, P3-T01..T06, P4-T01..T06 | public remember/review/forget 与 import/inspect/bind/supersede/revoke；Context 在 rank/body load 前完成 scope/purpose/epoch/lifecycle/exact-pin 授权；durable redacted consumption 与 session-2 resume 不依赖 chat replay/user restatement | done | BR-03；merged PR [#222](https://github.com/agentkernel/cognitive-os/pull/222) at `main@795bfac8`. Ubuntu `31922660543`; linux-002 bin 299/299；无 EVAL/Gate/release/Profile claim |
 | P2-T24 | Effect fault and reconciliation observation | P2-T17, P2-T21, P2-T13, P2-T14, P2-T20 | default-off task/campaign-authorized fault profile；五个固定 fault point；task-channel bounded Effect history；restart 只按 original key query/reconcile；mutation count 仅 0/1，Indeterminate/open Effect 永不完成 Task | done | BR-04；merged PR [#223](https://github.com/agentkernel/cognitive-os/pull/223) at `main@2b803e0f`. Ubuntu `31925698730`; linux-002 bin 309/309；无 EVAL/Gate/release/Profile claim |
 | P2-T25 | Tool lifecycle and real invocation | P2-T10, P2-T15, P2-T16, P2-T20, P2-T21, P5-T03, P5-T04 | lifecycle 到 Agent exposure 原子传播；bounded selection receipt；immutable RegisteredCheckRun success；task/campaign-scoped pinned HTTPS GET/HEAD；descriptor drift、redirect、credential URL、oversize、duplicate/restart negatives | done | BR-05；merged PR #224 at `main@4b10db9a`. 不新增通用 ProcessRun、任意 argv/env/cwd/shell 或 credential capability |
-| P2-T26 | Bounded OS observation plane | P2-T23, P2-T24, P2-T25, P7-T04, P9-T06 | O2/O3/O4/O5/O13 authenticated bounded read plane：authorization、cache/compaction、queue/fairness/fence、Effect、audit chain/replay；每个 zero 有 denominator 与 active negative control | in-progress | BR-06；D03 matrix at `e083b259` / Draft PR [#225](https://github.com/agentkernel/cognitive-os/pull/225). Ubuntu `31934786837`; linux-002 observation 27/27, bins 329/329；无 EVAL/Gate/release/Profile claim |
-| P2-T27 | User lifecycle and backup/restore | P7-T02, P5-T01, P5-T02, P5-T05, P2-T23 | 真实 CLI/API backup/restore，排除 secret/bearer/raw Provider/Pi/authority DB copy；preflight + transactional restore；managed Pi install 到 recover 全生命周期 | not-started | BR-07；fresh-root equality、migration/tamper/missing-part/rollback/RTO/RPO/cleanup 与 Pi orphan/recovery；exact-revision `linux-002` |
+| P2-T26 | Bounded OS observation plane | P2-T23, P2-T24, P2-T25, P7-T04, P9-T06 | O2/O3/O4/O5/O13 authenticated bounded read plane：authorization、cache/compaction、queue/fairness/fence、Effect、audit chain/replay；每个 zero 有 denominator 与 active negative control | done | BR-06；merged PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at `main@9e1404a1`. Ubuntu `31934786837`; linux-002 observation 27/27, bins 329/329；无 EVAL/Gate/release/Profile claim |
+| P2-T27 | User lifecycle and backup/restore | P7-T02, P5-T01, P5-T02, P5-T05, P2-T23 | 真实 CLI/API backup/restore，排除 secret/bearer/raw Provider/Pi/authority DB copy；preflight + transactional restore；managed Pi install 到 recover 全生命周期 | in-progress | BR-07；D01 complete at `6eea42c4`; D02 complete at `cf7dd501`; D03 linux-002 matrix in progress |
 | P2-T28 | End-to-end journey and capability truth | P2-T21, P2-T22..P2-T27 | UJ1..UJ6 required rows逐项具备 public caller、mechanical oracle、cleanup、bounded evidence；覆盖 cold/warm、nested timing、Task terminal query、fault/restart、Memory/Skill、Tool、Pi lifecycle、backup/restore | not-started | BR-08；Web UI/Multi-Agent 明确 scope-excluded；完成不等于 EVAL-004 B0/B1 或任何 Gate/claim |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | done | 2026-08-11；ADR-0046 MVP: D01–D04 closed. Fixed matrix + non-claim report at `be7febb`; CI `31407542786`; owner `affirm all` → B02/B04/B05/B12 MVP `pass`. Closure: `docs/checkpoints/20260811-personal-p2-t08-runtime-spine-closure.md`; Draft PR #182. No GMVP-LINUX/B08/B09/release/Profile claim. |
 

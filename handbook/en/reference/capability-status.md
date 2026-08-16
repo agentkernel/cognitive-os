@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:f654ef92ec9bcdca374b64e6ce1fcdc05377b6b10fff73496087b3a70c41ec36"
+fingerprint: "sha256:49e67bb2e2a1c8ed741028faf9cbf4ee40e13dc832460e8cb28cfe6876f43f77"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -50,7 +50,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Non-Pi agents | designed | Codex fixture qualification only |
 | MCP tools | designed | post-1.0 fixture adapter |
 | Management fallback verbs | implemented | R0/R2/R3 approval flows partial |
-| Backup/restore command | unavailable | planning APIs only |
+| Backup/restore command | partial | secrets/bearer/provider-config/authority SQLite excluded; Memory/Skill as digest-bound sidecar; Pi install→recover is a later slice |
 | Web UI / Console | unavailable | external repository, design-only |
 | Windows/macOS product | unavailable | Linux x86_64 only; Windows installer templates + credential backend are authored and CI-validated but the B01-W install campaign has not run |
 | Performance campaign tooling | implemented | results are non-claim records in the plan |

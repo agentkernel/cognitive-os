@@ -53,12 +53,15 @@ pub use migration::{
     execute_sqlite_migration_plan,
 };
 pub use personal_backup::{
-    BackupExportKind, BackupExportUnit, BackupInventoryEntry, BackupRestoreCandidate,
-    PersonalBackupError, PersonalBackupExportPlan, PersonalBackupInventory,
+    BACKUP_ARCHIVE_SCHEMA, BACKUP_ARCHIVE_SCHEMA_VERSION, BackupArchiveReceipt, BackupExportKind,
+    BackupExportUnit, BackupInventoryEntry, BackupRestoreCandidate, BackupRestoreOptions,
+    BackupRestoreReceipt, PersonalBackupError, PersonalBackupExportPlan, PersonalBackupInventory,
     PersonalBackupRestorePreflight, PersonalLifecycleOperation, PersonalLifecyclePlan,
     UninstallTargetClass, abort_personal_lifecycle, commit_personal_lifecycle,
     plan_memory_skill_export, plan_personal_backup_inventory, plan_personal_lifecycle,
-    preflight_personal_backup_restore, validate_backup_inventory,
+    preflight_personal_backup_archive, preflight_personal_backup_restore,
+    restore_personal_backup_archive, restore_personal_backup_archive_with_options,
+    validate_backup_inventory, write_personal_backup_archive, write_personal_backup_archive_to,
 };
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,

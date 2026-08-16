@@ -24,6 +24,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/user_backup.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -34,7 +36,8 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:f9698e141f3e95f693a30984623a5c6713da9fa9adccd60744f92230c04df695"
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:764950e7fa55cae554b0ca34e631272f5a05344dd59654073373f2603d5f064d"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -133,6 +136,13 @@ chain, and bounded replay; a stale cursor, missing event, digest break, or
 sequence gap fails closed. Management callers are denied
 (`RESOURCE_OBSERVATION_CHANNEL_FORBIDDEN`): this is a read plane, not a second
 authority API. Samples never include Context bodies or capability material.
+
+Management `POST /management/resource/v1/backup` writes a secret-excluding
+directory archive; `POST .../backup/preflight` verifies one `archive_id`
+without mutation; `POST .../restore` overlays live files after snapshot and
+rolls back on failure. Archives never copy authority SQLite, bootstrap
+secrets, bearer files, or `provider-config.json`. Task-channel aliases are
+403 `RESOURCE_BACKUP_CHANNEL_FORBIDDEN`.
 
 ## Projections
 

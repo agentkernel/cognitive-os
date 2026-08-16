@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:42d4802cd40de0295a26a77ccf8fa4d4428509da7861aaef487df9f9af00e5c5"
+fingerprint: "sha256:ab4380fb9ef873715a6b3e0d8388d82c54f20367f6d7e047cdc686af962b8ec8"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -40,9 +40,13 @@ USAGE:
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
                           --task-ref <task-uri>
+  cognitive backup  [--runtime-root <dir>] [--endpoint <host:port>] [--output <dir>]
+  cognitive restore [--runtime-root <dir>] [--endpoint <host:port>]
+                    (--archive <dir> | --archive-id <id>) [--preflight]
 
 Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
+  - backup/restore never copy secret, bearer, provider-config, or authority SQLite
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state and passes only --extension
   - never advances Task/Effect/Verification authority state

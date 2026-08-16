@@ -9,10 +9,12 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
   - path: apps/admin-cli/src/personal_cli/daemon.rs
+  - path: apps/admin-cli/src/personal_cli/backup.rs
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t02_cli_parity.rs
-fingerprint: "sha256:26d0fc061a54ff710c01e830821b8d6967524ab0658c3321004e2f101ea2afad"
+  - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:926a94ec492b5631a1876f37e14d6bd49d6ed698d13e2d431dd4dcd9f1abc2c1"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -37,6 +39,8 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |
+| `cognitive backup [--output <dir>]` | write a secret-excluding digest-bound archive (no authority SQLite / provider-config / bearer) |
+| `cognitive restore --archive <dir> [--preflight]` | preflight then overlay live files from a verified archive; `--preflight` mutates nothing |
 
 Two honest quirks (also flagged in the generated
 [CLI reference](../reference/cli-cognitive.md)): the built-in usage text does not yet

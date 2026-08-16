@@ -20,6 +20,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - crates/cognitive-runtime/tests/p5_t05_identity_recover.rs
+  - crates/cognitive-runtime/tests/p5_t05_upgrade_fencing.rs
+  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
 fingerprint: "sha256:4bd869c421b83273906dacdd582bbe5d72470992fef35994a78f2021e31ccd5a"
@@ -46,7 +49,7 @@ non_claims:
 epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
 （`process_bound`），以 fencing 强制 pause/resume/stop/recover 迁移并报告脱敏健
 康。升级/卸载 fence 旧 epoch；recover/orphan 负例有测试。`admin-cli`
-（`install/register/activate/agent-*`）是确定性调用者。
+（`install/register/activate/activate-root/rollback/agent-*`）是确定性调用者。
 
 ## 启动准入（shell 宿主角色）
 

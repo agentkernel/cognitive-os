@@ -24,6 +24,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/user_backup.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -34,7 +36,8 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:f9698e141f3e95f693a30984623a5c6713da9fa9adccd60744f92230c04df695"
+  - apps/kernel-server/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:764950e7fa55cae554b0ca34e631272f5a05344dd59654073373f2603d5f064d"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -114,6 +117,12 @@ capability 查询键失败闭合。O5 复用 `GET /task/effects` 已提供的脱
 过期游标、缺失事件、digest 断裂或序列缺口失败闭合。management 调用方被拒绝
 （`RESOURCE_OBSERVATION_CHANNEL_FORBIDDEN`）：这是只读平面，不是第二套 authority
 API。样本不含 Context body 或 capability 材料。
+
+management 的 `POST /management/resource/v1/backup` 写入排除 secret 的目录归档；
+`POST .../backup/preflight` 校验一个 `archive_id` 且不改写；`POST .../restore`
+在快照后覆盖 live 文件，失败则回滚。归档永不复制 authority SQLite、bootstrap
+secret、bearer 或 `provider-config.json`。task 通道别名返回 403
+`RESOURCE_BACKUP_CHANNEL_FORBIDDEN`。
 
 ## 投影
 
