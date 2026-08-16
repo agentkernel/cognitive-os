@@ -464,15 +464,74 @@ Throughput stays in the 1.6–3.0 k rps band; p50 grows with concurrency
 `sha256:bb025851fbb177ea4ecf2a7f152399ef65c8e4c0f31df3271c072fb56c5f6e6e`.
 Redactor over `evidence/` after these cells: 19 files, `key_shaped_hits=0`.
 
-## B2 C0 confirmatory — in progress
+## B2 C0 confirmatory (2026-08-16) — pass (hypothesis / non-claim)
 
-`--stratum confirmatory --seeds 30 --replicas 1` (270 held-out paired
-blocks). Pid 217912 started after UJ3/T-GOV/MS-AUTH/B4 local cells.
-Old listeners `48181`/`48284`/`48383` still untouched.
+Held-out stratum `confirmatory`, 9 families × 30 seeds × 1 replica =
+**270 paired blocks, 540 started runs, 540 retained**. No overlap with B1
+pilot seeds. `retry=0`, 180 s timeout. Evidence
+`sha256:ed9d05313b39c64310b04a66a6eda9e16b541ce20e9e70bf1dc3e6e11cc5fc42`.
+Every arm `completed` (0 timeout, 0 process_error). Broker campaign totals
+after B2: accepted 373 / rejected 1 / upstream_ok 372 / upstream_err 1
+(includes B0+B1). Listeners `48181`/`48284`/`48383` untouched.
+
+| Endpoint | `P` pure Pi | `O` OS Pi |
+|---|---:|---:|
+| oracle completion | 247 / 270 = **91.5 %** | 241 / 270 = **89.3 %** |
+| wall time median | **4172.4 ms** | **5940.2 ms** |
+| wall MAD | 698.1 ms | 719.6 ms |
+| wall p95 (N>=100) | 16 298.8 ms | 17 106.5 ms |
+
+- paired completion difference `O − P`: **−2.2 pp**, 95 % clustered bootstrap
+  CI **[−5.19, +0.74] pp**;
+- McNemar exact, discordant pairs P-only 12 / O-only 6: **p = 0.2379**;
+- paired wall delta `O − P`: median **+1695.6 ms**, 95 % CI
+  **[1595.7, 1833.4] ms**; relative median **+43.9 %**;
+- broker local overhead: **0.4 ms** median, p95 1.0 ms;
+- Provider calls per `P` task: median 1, max 2.
+
+Per-family completion (descriptive; none claimed after Holm):
+
+| Family | `P` | `O` | delta |
+|---|---:|---:|---:|
+| `A1` | 30/30 | 29/30 | −3.3 pp |
+| `A4` | 30/30 | 30/30 | 0.0 pp |
+| `A5` | 28/30 | 27/30 | −3.3 pp |
+| `G1` | 30/30 | 30/30 | 0.0 pp |
+| `G2` | 30/30 | 30/30 | 0.0 pp |
+| `G3` | 30/30 | 30/30 | 0.0 pp |
+| `G4` | 30/30 | 30/30 | 0.0 pp |
+| `G6` | 20/30 | 21/30 | +3.3 pp |
+| `G9` | 19/30 | 14/30 | −16.7 pp |
+
+Six families remain saturated or near-saturated; `G6`/`G9` discriminate.
+CI on the completion delta contains 0. Wall overhead is the same sign and
+similar magnitude as B1 (+1790 ms / +43.9 %). Redactor `evidence/` after B2:
+19 files, `key_shaped_hits=0`. Independent reviewer `not_reviewed`. Not a
+Gate, release, Profile, B01, or Agent-benefit claim.
+
+## B3 fault, restart, Pi kill (2026-08-16) — partial
+
+Instrument `b3_faults.py`
+`sha256:3e3c4435452d20b62e8e0ae06e0d89173809fd80de662175a15a17f2b7af8ea6`.
+Evidence `sha256:2fae28caeba0ced6a378e84879de04afebc03085ae5e0395d579c71ff809b197`.
+Campaign daemon was restarted as part of this cell (new pid 238755 on
+`127.0.0.1:48286`). Broker pid 201300 and old listeners `48181`/`48284`/`48383`
+were not stopped.
+
+| Sub-cell | Started | Retained | Result |
+|---|---:|---:|---|
+| selected-model mismatch | 10 | 10 | **10/10 `PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH`**, HTTP 400, 30.7 ms p50 (25.0–37.0 ms), zero Provider dispatch |
+| daemon stop/start cleanup | 10 | 10 | stop 10/10 exit 0 (11.0 ms p50); start 10/10 exit 0 (86.0 ms p50); health refused while down 10/10; **0 orphans, 0 stale locks** |
+| Pi process kill | 10 | 10 | SIGKILL at 2 s, 10/10 returncode −9; stdout discarded |
+| client deadline | 0 | 0 | **`not-run`** — no frozen short-deadline runner copy in this freeze |
+| broker unavailable | 0 | 0 | **`not-run`** — frozen paired runner 180 s timeout would hold 10 P-arm samples ~30 min; EVAL-002 also saw uncontrolled O-arm timeouts |
+| Provider timeout / rate-limit / response-size | 0 | 0 | **`not-run`** — no controlled upstream fixture |
+| stale Task/epoch / `OUTCOME_UNKNOWN` | 0 | 0 | **`not-run`** — C1/C2 paired adapter absent |
+
+Redactor `evidence/` after B3: 21 files, `key_shaped_hits=0`.
 
 ## Unique next action
 
-Wait for B2 C0 confirmatory (270 blocks) to finish, append its denominator
-immediately, then execute `B3` fault/restart cells that do not require
-stopping the live paired daemon until B2 evidence is flushed. C1/C2 paired
-stays `not-run`. Do not bind or stop `48181`/`48284`/`48383`.
+Run `B5` 1 h local soak (20 health + six projections + one watch per minute).
+`B5` 8 h only if 1 h is clean. C1/C2 paired stays `not-run`. Do not bind or
+stop `48181`/`48284`/`48383`.
