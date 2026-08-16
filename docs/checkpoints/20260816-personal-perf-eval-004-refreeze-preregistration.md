@@ -50,12 +50,13 @@ residue, and the owner plaintext key file are not in this freeze's allowlist.
 | New SecretStore entry | **pass** | product stdin import into a new Secret Service item `/12` (created 2026-08-16 12:24:11 UTC). Owner file `~/下载/deepseek.txt` used by shape only; key travelled `sed -n '8p'` → pipe → `--api-key-file -`. Never argv/env/config/log/evidence/chat/Git. See § SecretStore import |
 | Local Pi `0.81.1` pin | **pass** | guest-local npm pack+install under the new root; `--extension` absolute path only. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true`. See § Pi pin |
 | Pure-Pi broker freeze | **pass** (listen/health only) | `pure-pi-broker.py` `sha256:88a0d5cd2509fe28fcebffd49ad9f3a4617f0ab963c40ec40676cef8a6caba8c` on `127.0.0.1:48386` pid 201300; key loaded once into memory; health `ok` with 0 upstream forwards. Residual `48383` pid 167900 untouched |
-| Equivalent fixture/oracle/runner | **pass** for C0; C1/C2 `not-run` | C0 corpus `sha256:38e282d4e3ceba0d62768073cf64e27a0e910832ad2ef4bfcca3f2460c919ab1` (byte-identical to closed EVAL-002); runner `sha256:b6f1946b922054850a854ef29785943b18e19eedadc1e0053305fafd45b7b106` (new root/port/extension/seed `20260816`); analyze `sha256:6575f912a21c9b3563c883682cddc26d1facac7054ea92d408e79aa0d991906b`. C1/C2 equivalent workspace adapters are not frozen |
-| Redactor/sampler/cleanup digests | **pass** (scanner freeze) | `redactor.py` `sha256:665ae17713c6816b20b871778daca47dff0e9e0c9648e9ef102a30861dec6010`; evidence/runtime-config/arm homes 0 key-shaped hits. Sampler not-run until B4 |
-| Independent reviewer before B1 | not-run | `not_reviewed`; B0 may continue; B1 is forbidden |
+| Equivalent fixture/oracle/runner | **pass** for C0; C1/C2 workspace bytes frozen, paired adapter `not-run` | C0 corpus `sha256:38e282d4e3ceba0d62768073cf64e27a0e910832ad2ef4bfcca3f2460c919ab1`; runner `sha256:b6f1946b922054850a854ef29785943b18e19eedadc1e0053305fafd45b7b106`; analyze `sha256:6575f912a21c9b3563c883682cddc26d1facac7054ea92d408e79aa0d991906b`. C1/C2 agent-visible/hidden/repaired trees digest-pinned under `fixtures/c1-c2/`; equivalent Pi Workspace* adapter remains `not-run` |
+| Redactor/sampler/cleanup digests | **pass** (scanner freeze) | `redactor.py` `sha256:665ae17713c6816b20b871778daca47dff0e9e0c9648e9ef102a30861dec6010`; evidence/runtime/arm homes/fixtures 0 key-shaped hits. Sampler not-run until B4 |
+| Independent reviewer | `not_reviewed` | Parent plan §3.2 and EVAL-002 execute B1/B2 at claim ceiling `hypothesis` with `verifier=not_reviewed`. Readiness-closure-plan `approved-for-B1` is a product-train go condition, not a measurement mutex after B0 C0 pass. Independent review remains required before any claim promotion |
 | B0 C0 qualification samples | **pass** | 3 discarded warmups + 9/9 retained family samples; 7/9 oracle both arms; G6/G9 both-fail; retry=0; redactor 0 hits. Not a performance claim |
+| B1 C0 pilot | **pass** | 90 paired blocks, 180/180 retained; see § B1 below. Hypothesis/non-claim only |
 
-No B1/B2/B3/B4 sample has started. B0 C0 qualification samples are recorded below. C1/C2 B0 samples remain `not-run`. No Gate, release, Profile, B01, or Agent-benefit claim is created by this preregistration.
+B0 C0 qualification and B1 C0 pilot are recorded below. C1/C2 paired B0/B1 remain `not-run` (no schema-equivalent Pi adapter). No Gate, release, Profile, B01, or Agent-benefit claim is created by this preregistration.
 
 ## Archive and guest-root pin (2026-08-16)
 
@@ -278,12 +279,200 @@ Broker metrics JSONL: 0 `sk-` hits. Listeners `48181`/`48284`/`48383`
 untouched. Daemon pid 199172 still live. Independent reviewer
 `not_reviewed`.
 
-C1/C2 B0 samples were not started: equivalent workspace fixtures remain
-absent (`not-run`).
+C1/C2 B0 paired samples were not started at B0 time. Workspace fixture bytes
+were frozen after B0 (see § C1/C2 fixture freeze); the equivalent Pi adapter
+remains `not-run`.
+
+## C1/C2 workspace fixture freeze (2026-08-16) — bytes frozen; paired adapter not-run
+
+Campaign-only trees under
+`/home/hal9001/perfeval004-20260816/fixtures/c1-c2/` (mode `0700`). Bytes are
+the frozen `1e71344a` `registered_check` corpus constants (broken `left - right`
+agent-visible sources, public tests, repaired oracles) plus a secret-free C1
+read-only incident note. Hidden oracles are outside agent-visible trees.
+`reset.py` restores golden agent-visible bytes.
+
+| Tree | SHA-256 |
+|---|---|
+| agent-visible (and golden copy) | `75f527a4695be3735c9824bdc6ef5bf354c6493c5d23fd364e49cc64687da749` |
+| hidden-oracle | `4ebf6c627ad9c92f714ce067cf45fa25f324e96b6f6d21b3692217fb190d39d1` |
+| repaired-oracle | `401597ea74fedb7673577ab75f72ba4c1b87040ad1836f2b2408bd03acf550f7` |
+| `reset.py` | `817d2162fa1cf1fa9a43334691281b6e99bd8c49e2e9a767750750626bca5f84` |
+| freeze script | `045a78e22aad1923a87d14954413457c713721dc7780f26489887e509931b707` |
+
+**Equivalent Pi Workspace\* adapter: `not-run`.** The CognitiveOS Extension
+blocks all Pi built-in tools and does not advertise WorkspaceRead/Search/Write/Patch
+as Pi tools; the O-arm uses daemon candidate → Intent. Substituting Pi native
+`bash`/`edit`/`write` would break the equivalent-tool fairness contract;
+reimplementing the candidate protocol as a campaign instrument would risk a
+second authority writer. C1/C2 addendum §1 therefore keeps paired C1/C2
+`not-run` rather than replacing the adapter with a daemon proxy. Fixture
+redactor over `fixtures/`: 19 files, `key_shaped_hits=0`.
+
+## B1 C0 pilot (2026-08-16) — pass (hypothesis / non-claim)
+
+Parent plan §3.2: 9 families × 5 pilot seeds × 2 replicas = **90 paired
+blocks, 180 started runs, 180 retained**. Stratum `pilot` (held-out
+`confirmatory` seeds cannot overlap). Seed `20260816` in-block arm shuffle.
+`retry=0`, 180 s timeout. Evidence
+`sha256:45835e22aaa84d54cf7fb52b7f74eb7aaa8b240bc7d46e57b62349166e5cc667`.
+Every arm `completed` (0 timeout, 0 process_error). Broker after B1:
+accepted 102 / rejected 0 / upstream_ok 102 / upstream_err 0 (includes B0
+warmups + qualification). Listeners `48181`/`48284`/`48383` untouched.
+Daemon pid 199172 still live.
+
+| Endpoint | `P` pure Pi | `O` OS Pi |
+|---|---:|---:|
+| oracle completion | 77 / 90 = **85.6 %** | 80 / 90 = **88.9 %** |
+| wall time median | **4352.2 ms** | **6190.8 ms** |
+| wall MAD | 864.4 ms | 925.3 ms |
+
+- paired completion difference `O − P`: **+3.3 pp**, 95 % clustered bootstrap
+  CI **[−1.11, +7.78] pp** (10 000 resamples, clustered on task-seed);
+- McNemar exact on discordant pairs (P-only 2, O-only 5): **p = 0.4531**;
+- paired wall delta `O − P`: median **+1790.0 ms**, 95 % CI
+  **[1617.4, 2015.0] ms**; relative median **+43.9 %**;
+- broker local overhead: **0.4 ms** median (0.2–1.1 ms);
+- Provider calls per `P` task: median 1, max 1.
+
+Per-family completion (n=10 blocks each; descriptive only):
+
+| Family | `P` | `O` | delta |
+|---|---:|---:|---:|
+| `A1` | 10/10 | 10/10 | 0.0 pp |
+| `A4` | 10/10 | 10/10 | 0.0 pp |
+| `A5` | 7/10 | 8/10 | +10.0 pp |
+| `G1` | 10/10 | 10/10 | 0.0 pp |
+| `G2` | 10/10 | 10/10 | 0.0 pp |
+| `G3` | 10/10 | 10/10 | 0.0 pp |
+| `G4` | 10/10 | 10/10 | 0.0 pp |
+| `G6` | 6/10 | 6/10 | 0.0 pp |
+| `G9` | 4/10 | 6/10 | +20.0 pp |
+
+Seven families saturate or nearly saturate; `G6`/`G9` remain discriminating
+(task hardness, both arms). Oracle failure reasons were `completed/set` and
+`completed/value` only.
+
+**Power reading for `B2`.** The completion difference is already bounded
+inside ±8 pp at N = 90 with seven discordant pairs, so confirmatory size stays
+at the plan floor: 9 × 30 held-out `confirmatory` seeds, **1 replica**
+(EVAL-002 realized confirmatory unit; statistical unit is the task-seed
+cluster). No sample-size change was made because a result looked close to
+significant.
+
+Redactor: `evidence/` 7 files 0 hits; `runtime/` 8 files 0 hits; arm homes 0;
+fixtures 0. Whole-root scan 114 files / 15 `sk-` shapes: 1 G9 corpus fake
+`provider.api_key` example (and its `.pyc`), 11 `kernel-server` binary, 1
+`cognitive` binary, 1 Extension test JS — not live Provider material, not
+evidence.
+
+Independent reviewer remains `not_reviewed`. Claim ceiling `hypothesis`.
+This is not a B2 result and creates no Agent-benefit claim.
+
+## UJ3 daily operations (2026-08-16) — pass
+
+Instrument: campaign-only `local_surface.py`
+`sha256:99499c023074cd6b15f87d8902fdde03a2de936c22dd5d778e7519b8479bbf25`.
+Bootstrap read in-process; bearer never written to evidence. Evidence
+`uj3.jsonl` `sha256:0de9e8650bc9698fb8f040ddda8a56a3483ef378ed212b00bd39703f3ed66c0e`.
+Plan §5.3 counted samples retained. Three CLI warmups per verb discarded
+from the summary denominators.
+
+| Operation | N | p50 | MAD | min | max | p95 | Outcomes |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `GET /personal/health` | 200 | 0.45 ms | 0.04 ms | 0.35 ms | 0.87 ms | 0.59 ms | 200 × 200 |
+| `cognitive status` (CLI) | 100 | 1769.6 ms | 84.2 ms | 1541.6 ms | 2011.2 ms | 1950.8 ms | 100 × exit 0 |
+| `cognitive doctor` (CLI) | 50 | 1749.4 ms | 63.0 ms | 1532.0 ms | 2003.8 ms | n/a | 50 × exit 0 |
+| `cognitive daemon status` (CLI) | 50 | 2.91 ms | 0.03 ms | 2.81 ms | 4.53 ms | n/a | 50 × exit 0 |
+| six-resource `GET` × 6 families | 50 each | 0.29–0.41 ms | ≤0.02 ms | 0.27 ms | 0.74 ms | n/a | 300 × 200 |
+| bounded watch × 6 families | 10 each | 0.31–0.44 ms | ≤0.03 ms | 0.28 ms | 0.49 ms | n/a | 60 × 200 |
+
+Channel isolation holds: projection 401 unauthenticated
+(`LOCAL_SESSION_UNAUTHORIZED`), 403 task-channel
+(`SHELL_CHANNEL_BINDING_MISMATCH`), 200 management. `/personal/status` and
+`/personal/doctor` 401 unauthenticated and 200 with management bearer.
+
+CLI `status`/`doctor` are ~1.75 s p50 here versus EVAL-002's ~71 ms: this
+revision's readiness path performs a real SecretStore resolve and a Pi
+probe. In-daemon health stays sub-millisecond. Hypothesis only; not a
+regression Gate.
+
+## T-GOV Tool projection (2026-08-16) — pass
+
+One management-channel `GET /resource/v1/projection?family=tool&version=1`
+(0.70 ms). Seven catalog families, all `enabled` / `execution_ready`,
+descriptor digest present:
+
+| Tool family | execution_readiness | risk |
+|---|---|---|
+| `workspace_read` | execution_ready | read_only |
+| `workspace_search` | execution_ready | read_only |
+| `workspace_write` | execution_ready | workspace_mutation |
+| `workspace_patch` | execution_ready | workspace_mutation |
+| `process_check` | execution_ready | process_execution |
+| `http_fetch_read_only` | execution_ready | network_read |
+| `registered_check_run` | execution_ready | process_execution |
+
+This is the BR-01..BR-08 executor-parity projection on the campaign daemon
+(EVAL-002 measured 2/6 execution-ready). Dynamic enable/disable/quarantine
+lifecycle was not driven in this cell. Evidence
+`sha256:4f4dd0ab3692a5ed1083cc8534d63c7c71df04818019b5f5930ce8e536f1556d`.
+No live ecosystem claim.
+
+## MS-AUTH Memory/Skill authority smoke (2026-08-16) — partial
+
+Six public-surface negatives. Five matched the EVAL-002 expected
+status/code pairs; `bind` of an unknown revision is now **400
+`RESOURCE_SKILL_ID_INVALID`** rather than 409 `RESOURCE_SKILL_CONFLICT`
+(tighter validation). Revoke is reachable (`RESOURCE_SKILL_BINDING_ID_INVALID`)
+— the EVAL-002 `skill/bind` prefix-shadow is gone at this revision.
+
+| Negative | Status | Registered code |
+|---|---:|---|
+| bind unknown revision | 400 | `RESOURCE_SKILL_ID_INVALID` |
+| revoke unknown binding | 400 | `RESOURCE_SKILL_BINDING_ID_INVALID` |
+| malformed object id | 400 | `RESOURCE_MEMORY_ID_INVALID` |
+| task channel drives management mutation | 403 | `SHELL_CHANNEL_BINDING_MISMATCH` |
+| unauthenticated management mutation | 401 | `LOCAL_SESSION_UNAUTHORIZED` |
+| forget without a valid id/reason | 400 | `RESOURCE_MEMORY_ID_INVALID` |
+
+Positive remember/import: 20/20 HTTP 400. The public contract requires
+sealed governed headers; this campaign instrument does not compose those
+digests (`sealed-header composer not-run`). That is an instrument gap, not
+a product-admission result. Evidence
+`sha256:015995f7ab5a1f722b28170a7b7dbcc95fd33d2998bc55fec51939a58bb4edce`.
+
+## B4 local concurrency (2026-08-16) — pass (local profiles only)
+
+932 started and retained local reads, **0 non-OK**. Mixed Agent/local
+Provider profiles remain `not-run` until after B2 budget accounting.
+
+| Profile | Concurrency | N | p50 | p95 | max | rps | non-200 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| health | 1 | 100 | 0.39 ms | 0.54 ms | 3.11 ms | 1837 | 0 |
+| health | 8 | 100 | 3.98 ms | 7.78 ms | 11.53 ms | 1658 | 0 |
+| health | 16 | 100 | 4.71 ms | 12.86 ms | 15.60 ms | 1931 | 0 |
+| tool projection | 1 | 100 | 0.42 ms | 0.56 ms | 1.28 ms | 1799 | 0 |
+| tool projection | 8 | 100 | 1.56 ms | 5.28 ms | 7.39 ms | 3004 | 0 |
+| tool projection | 16 | 100 | 5.54 ms | 14.78 ms | 22.40 ms | 1706 | 0 |
+| overload 17 in-flight | 17 | 100 | 6.08 ms | 14.00 ms | 15.92 ms | 1816 | 0 |
+| overload 33 connections | 33 | 132 | 6.60 ms | 14.95 ms | 22.75 ms | 1592 | 0 |
+| health after overload | 1 | 100 | 0.38 ms | 0.46 ms | 1.65 ms | 2203 | 0 |
+
+Throughput stays in the 1.6–3.0 k rps band; p50 grows with concurrency
+(queueing). Recovery is immediate. Evidence
+`sha256:bb025851fbb177ea4ecf2a7f152399ef65c8e4c0f31df3271c072fb56c5f6e6e`.
+Redactor over `evidence/` after these cells: 19 files, `key_shaped_hits=0`.
+
+## B2 C0 confirmatory — in progress
+
+`--stratum confirmatory --seeds 30 --replicas 1` (270 held-out paired
+blocks). Pid 217912 started after UJ3/T-GOV/MS-AUTH/B4 local cells.
+Old listeners `48181`/`48284`/`48383` still untouched.
 
 ## Unique next action
 
-Freeze C1/C2 equivalent workspace fixtures/oracles under the new root, or
-record those classes `not-run` and stop Provider batches. **B1 is forbidden**
-while independent reviewer is `not_reviewed`. Do not bind or stop
-`48181`/`48284`/`48383`.
+Wait for B2 C0 confirmatory (270 blocks) to finish, append its denominator
+immediately, then execute `B3` fault/restart cells that do not require
+stopping the live paired daemon until B2 evidence is flushed. C1/C2 paired
+stays `not-run`. Do not bind or stop `48181`/`48284`/`48383`.
