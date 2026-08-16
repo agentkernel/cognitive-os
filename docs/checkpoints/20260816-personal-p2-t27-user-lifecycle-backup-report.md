@@ -125,6 +125,14 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   pass**, `cargo clippy -p admin-cli --all-targets --locked -- -D warnings`
   **pass**.
 
+### D02-CI-01 — Ubuntu supporting CI (`cf7dd501`)
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [31938624514](https://github.com/agentkernel/cognitive-os/actions/runs/31938624514)
+  on Draft PR [#226](https://github.com/agentkernel/cognitive-os/pull/226).
+- Outcome: **pass** (`required-ci` green). Windows `not-run by owner-directed
+  Linux-only route`.
+
 ### D02-LINUX-02 — exact-revision `p2_t27_pi_lifecycle` (`cf7dd501`)
 
 - Instrument: `DEV-LINUX-NATIVE-01` `cargo test -p admin-cli --test p2_t27_pi_lifecycle --locked`.
