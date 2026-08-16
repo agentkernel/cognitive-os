@@ -68,7 +68,8 @@ HTTP 状态 `201`，持久行在重启后仍可检查。
 task 通道通过 `GET /task/resource/v1/consumption?task_ref=…` 读取 daemon 写入的
 最新 Memory/Skill 消费记录：只返回精确钉、session 关联和 `reuse_of`。
 `query_text` 与 `skill_binding_id` 视为用户重述并被拒绝。遗忘、撤销或 digest
-漂移的钉在响应前失败闭合，且绝不返回 Memory/Skill 正文。
+漂移的钉在响应前失败闭合，且绝不返回 Memory/Skill 正文。session 2 与重启后的
+GET 读取同一持久行；带调用方 `query_text` 的 POST 不能替换这些钉。
 
 ## 投影
 

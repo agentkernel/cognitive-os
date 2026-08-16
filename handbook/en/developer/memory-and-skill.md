@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:6534082690f25a228a0417bf2e9dbec33ea6c1b6ffe7202869e07ae53ab1a68e"
+fingerprint: "sha256:f65b201b987d97a6d1763b4a14908abbf48e44bb8b2f5d1e912aec8dab8cd69a"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -82,7 +82,9 @@ channel reads that record through `GET /task/resource/v1/consumption`
 without `query_text` or a caller-supplied Skill binding: it returns only
 redacted pins, session/`reuse_of` linkage, and `authorized_exact_pin`.
 Forgotten, revoked, or digest-drifted pins fail closed before any pin is
-returned. The latest row is the
+returned. Session 2 and post-restart GET resume from that same durable row
+(`reuse_of` set, exact pins, no chat replay); `POST /task/resource/v1/consumption`
+with caller `query_text` cannot replace it. The latest row is the
 last appended record, not the lexicographically greatest hashed identity.
 Reuse reloads current authority facts, binds its deterministic record identity
 to principal/tenant/scope/purpose/request digest and exact pins, and fails

@@ -1215,6 +1215,278 @@ fn public_consumption_rejects_cross_scope_forgotten_and_revoked_before_rank() {
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
+#[test]
+fn public_session_two_resumes_from_durable_state_after_restart_without_restatement() {
+    use cognitive_kernel::memory_skill_consumption::MemorySkillConsumptionStore;
+
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let db_path = layout.authority_database_path();
+    let store = SqliteAuthorityStore::open(&db_path).unwrap();
+    let task_ref = "task://tenant-a/p2-t23-session-two-resume";
+    let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+    let api = ResourceApi::new();
+    let remembered_body = "owner remembered procedure for durable session two";
+    let (memory_id, binding_id, source_id) = public_remember_and_bind(
+        &api,
+        &store,
+        &context_command,
+        task_ref,
+        object_id(1700),
+        object_id(1701),
+        object_id(1703),
+        object_id(1704),
+        object_id(1705),
+        remembered_body,
+        "workspace://tenant-a/project/alpha",
+    );
+
+    let first = super::resolve_authorized_task_context(&store, &context_command).unwrap();
+    assert!(first.loaded.iter().any(|item| item.object_ref == memory_id));
+    assert!(
+        first
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == binding_id)
+    );
+
+    let first_get = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(first_get.status, 200, "{}", first_get.body);
+    let first_document: serde_json::Value = serde_json::from_str(&first_get.body).unwrap();
+    assert_eq!(first_document["decision_class"], "authorized_exact_pin");
+    assert_eq!(first_document["memory"][0]["memory_id"], memory_id);
+    assert_eq!(first_document["memory"][0]["source_id"], source_id);
+    assert_eq!(first_document["skill"][0]["binding_id"], binding_id);
+    assert_eq!(first_document["reuse_of"], serde_json::Value::Null);
+    assert_eq!(first_document["session_ref"], "conversation://tenant-a/one");
+    assert!(
+        !first_get.body.contains(remembered_body),
+        "session-1 GET must not return Memory body"
+    );
+
+    let mut session_two = context_command.clone();
+    session_two.conversation_ref = Some("conversation://tenant-a/session-two".to_owned());
+    let second = super::resolve_authorized_task_context(&store, &session_two).unwrap();
+    assert!(
+        second
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == memory_id),
+        "session 2 must reuse the remembered Memory without user restatement"
+    );
+    assert!(
+        second
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == binding_id),
+        "session 2 must reuse the exact Skill pin without user restatement"
+    );
+
+    let second_get = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(second_get.status, 200, "{}", second_get.body);
+    let second_document: serde_json::Value = serde_json::from_str(&second_get.body).unwrap();
+    assert_eq!(second_document["memory"][0]["memory_id"], memory_id);
+    assert_eq!(second_document["skill"][0]["binding_id"], binding_id);
+    assert_eq!(
+        second_document["session_ref"],
+        "conversation://tenant-a/session-two"
+    );
+    assert!(
+        second_document["reuse_of"].as_str().is_some(),
+        "session-2 GET must expose reuse_of: {}",
+        second_get.body
+    );
+    assert!(
+        !second_get.body.contains(remembered_body),
+        "session-2 GET must not return Memory body: {}",
+        second_get.body
+    );
+    assert!(
+        !second_get.body.contains("query_text"),
+        "session-2 GET must not carry restatement: {}",
+        second_get.body
+    );
+
+    let latest = store
+        .load_latest_memory_skill_consumption(task_ref, 1, &context_command.request_id)
+        .unwrap()
+        .unwrap();
+    assert!(latest.reuse_of.is_some());
+    assert_eq!(latest.session_ref, "conversation://tenant-a/session-two");
+
+    drop(store);
+    let store = SqliteAuthorityStore::open(&db_path).unwrap();
+    let restarted = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(restarted.status, 200, "{}", restarted.body);
+    let restarted_document: serde_json::Value = serde_json::from_str(&restarted.body).unwrap();
+    assert_eq!(restarted_document["memory"][0]["memory_id"], memory_id);
+    assert_eq!(restarted_document["skill"][0]["binding_id"], binding_id);
+    assert_eq!(
+        restarted_document["session_ref"],
+        "conversation://tenant-a/session-two"
+    );
+    assert_eq!(restarted_document["reuse_of"], second_document["reuse_of"]);
+    assert!(
+        !restarted.body.contains(remembered_body),
+        "restart GET must resume from durable pins, not chat replay: {}",
+        restarted.body
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn public_forged_prompt_cannot_replace_durable_consumption_pins() {
+    use cognitive_kernel::memory_skill_consumption::{
+        MemoryConsumptionPin, MemorySkillConsumptionRecord, MemorySkillConsumptionStore,
+        SkillConsumptionPin,
+    };
+
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+    let task_ref = "task://tenant-a/p2-t23-forged-prompt";
+    let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+    let api = ResourceApi::new();
+    let remembered_body = "authorized durable procedure";
+    let (memory_id, binding_id, _) = public_remember_and_bind(
+        &api,
+        &store,
+        &context_command,
+        task_ref,
+        object_id(1800),
+        object_id(1801),
+        object_id(1803),
+        object_id(1804),
+        object_id(1805),
+        remembered_body,
+        "workspace://tenant-a/project/alpha",
+    );
+
+    super::resolve_authorized_task_context(&store, &context_command).unwrap();
+    let before = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(before.status, 200, "{}", before.body);
+    let before_document: serde_json::Value = serde_json::from_str(&before.body).unwrap();
+    let original_session = before_document["session_ref"].clone();
+    let original_memory = before_document["memory"][0]["memory_id"].clone();
+
+    let restated_post = api.handle_task_consumption(
+        json!({
+            "task_ref": task_ref,
+            "query_text": "forged user restated procedure that must not become resume",
+            "skill_binding_id": binding_id,
+        })
+        .to_string()
+        .as_bytes(),
+        &store,
+    );
+    assert_eq!(restated_post.status, 409, "{}", restated_post.body);
+    assert!(
+        restated_post.body.contains("RESOURCE_TASK_POLICY_MISSING"),
+        "POST consumption with query_text must not become the resume path: {}",
+        restated_post.body
+    );
+
+    let restated_get = api.handle_task_consumption_query(
+        &format!(
+            "GET /task/resource/v1/consumption?task_ref={task_ref}&query_text=forged+user+restated+procedure"
+        ),
+        &store,
+    );
+    assert_eq!(restated_get.status, 400, "{}", restated_get.body);
+    assert!(
+        restated_get
+            .body
+            .contains("RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN"),
+        "{}",
+        restated_get.body
+    );
+
+    let after_post = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(after_post.status, 200, "{}", after_post.body);
+    let after_document: serde_json::Value = serde_json::from_str(&after_post.body).unwrap();
+    assert_eq!(after_document["memory"][0]["memory_id"], original_memory);
+    assert_eq!(after_document["session_ref"], original_session);
+    assert!(
+        !after_post
+            .body
+            .contains("forged user restated procedure that must not become resume"),
+        "durable GET must ignore prompt restatement: {}",
+        after_post.body
+    );
+
+    let forged = MemorySkillConsumptionRecord {
+        consumption_id: object_id(1899),
+        task_ref: task_ref.to_owned(),
+        contract_epoch: 1,
+        context_request_id: context_command.request_id.clone(),
+        context_request_digest: "sha256:forged".to_owned(),
+        session_ref: "conversation://tenant-a/forged-prompt".to_owned(),
+        reuse_of: None,
+        memory: vec![MemoryConsumptionPin {
+            memory_id: object_id(1898),
+            source_id: object_id(1897),
+            source_digest: format!("sha256:{}", "c".repeat(64)),
+        }],
+        skill: vec![SkillConsumptionPin {
+            binding_id: object_id(1896),
+            revision_id: object_id(1895),
+            package_id: object_id(1894),
+            content_digest: format!("sha256:{}", "d".repeat(64)),
+        }],
+        canonical_json: json!({
+            "principal_ref": "principal://tenant-a/daemon",
+            "tenant_id": "tenant-a",
+            "resource_scope": "workspace://tenant-a/project",
+            "purpose": "task_execution",
+        })
+        .to_string(),
+    };
+    store.append_memory_skill_consumption(&forged).unwrap();
+    let forged_get = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(forged_get.status, 409, "{}", forged_get.body);
+    assert!(
+        forged_get
+            .body
+            .contains("RESOURCE_CONSUMPTION_NOT_ELIGIBLE"),
+        "{}",
+        forged_get.body
+    );
+    assert!(
+        !forged_get.body.contains(&memory_id)
+            && !forged_get.body.contains(&object_id(1898).to_string())
+            && !forged_get
+                .body
+                .contains("conversation://tenant-a/forged-prompt"),
+        "forged consumption must not return pins: {}",
+        forged_get.body
+    );
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
 #[allow(clippy::too_many_arguments)]
 fn public_remember_and_bind(
     api: &ResourceApi,
@@ -1275,7 +1547,7 @@ fn public_remember_and_bind(
         "governance_scope": governance_scope,
         "target_scope": target_task,
         "purpose": "task_execution",
-        "retention_expires_at_unix_seconds": i64::MAX,
+        "retention_expires_at_unix_seconds": 4_102_444_800i64,
         "observed_at_unix_seconds": 1,
     }))
     .unwrap();

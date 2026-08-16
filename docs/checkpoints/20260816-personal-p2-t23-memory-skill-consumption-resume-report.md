@@ -85,3 +85,44 @@
   bearer is 403; `query_text` is restatement-forbidden; unknown Task is
   `RESOURCE_TASK_NOT_FOUND`.
 - Initial status: `not-run` locally.
+
+### D01-CI-01 — Ubuntu supporting CI at `a1845730`
+
+- Instrument: GitHub Actions run `31921344719` (`verify (ubuntu-latest)` Test Rust workspace)
+- Outcome: `fail`. `295 passed; 2 failed`. Both D01 public-journey tests panicked in
+  `public_remember_and_bind` while sealing the MemoryCandidate:
+  `canonical encoding failed: unsafe-integer: 9223372036854775807` (`i64::MAX`
+  is outside I-JSON 2^53−1). HTTP guards in `p4_t05_resource_api` passed.
+- Disposition: repair the sealed retention timestamp to an I-JSON-safe far-future
+  value in the same change set as D02. Do not weaken assertions.
+
+## D02 — persist bounded consumption and resume session 2 from durable state
+
+### D02-TEST-01 — public session-2 GET after restart, zero restatement
+
+- Instrument:
+  `personal::scheduler_authority::tests::public_session_two_resumes_from_durable_state_after_restart_without_restatement`
+- Oracle: public remember/bind then resolve session 1; GET returns exact pins and
+  `reuse_of=null`. Session 2 changes only `conversation_ref`; resolve and GET
+  return the same pins with `reuse_of` set and no Memory body. Store close/reopen
+  GET still returns those pins without `query_text`.
+- Initial status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu
+  supporting CI is the first execution.
+
+### D02-TEST-02 — forged prompt and forged durable record
+
+- Instrument:
+  `personal::scheduler_authority::tests::public_forged_prompt_cannot_replace_durable_consumption_pins`
+- Oracle: POST consumption with caller `query_text` is not the resume path
+  (`RESOURCE_TASK_POLICY_MISSING` on this fixture); GET with `query_text` remains
+  restatement-forbidden; GET after the POST still returns the daemon pins. A
+  forged v24 row with a drifted request digest makes GET
+  `RESOURCE_CONSUMPTION_NOT_ELIGIBLE` without returning pins.
+- Initial status: `not-run` locally.
+
+### D02-IMPL-01 — GET digest revalidation
+
+- Instrument: `apps/kernel-server/src/personal/resource_api.rs`
+- Outcome: authored. `GET /task/resource/v1/consumption` now also fails closed
+when the durable record's `context_request_digest` differs from the live
+ContextRequest, before any pin is returned.

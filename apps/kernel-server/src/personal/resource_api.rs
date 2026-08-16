@@ -461,6 +461,13 @@ impl ResourceApi {
                 );
             }
         };
+        if record.context_request_digest != context_request.request_digest {
+            return error(
+                409,
+                "RESOURCE_CONSUMPTION_NOT_ELIGIBLE",
+                "durable Memory/Skill consumption request digest differs from the current request",
+            );
+        }
         if let Err(response) = revalidate_redacted_consumption(store, &record) {
             return response;
         }

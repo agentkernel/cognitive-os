@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:6534082690f25a228a0417bf2e9dbec33ea6c1b6ffe7202869e07ae53ab1a68e"
+fingerprint: "sha256:f65b201b987d97a6d1763b4a14908abbf48e44bb8b2f5d1e912aec8dab8cd69a"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -71,6 +71,8 @@ v24 只追加消费记录按 Task、epoch、ContextRequest 与 session 绑定，
 task 通道用 `GET /task/resource/v1/consumption` 读取该记录，不接受 `query_text`
 或调用方提供的 Skill binding，只返回脱敏精确钉、session/`reuse_of` 与
 `authorized_exact_pin`；遗忘、撤销或 digest 漂移的钉在返回任何 pin 前失败闭合。
+session 2 与重启后的 GET 都只从该持久行恢复（设置 `reuse_of`、精确钉、不重放
+chat）；带调用方 `query_text` 的 `POST /task/resource/v1/consumption` 不能替换它。
 最近一条是最后追加的行，而不是哈希身份字典序最大的行。
 复用必须重读当前权威事实；确定性记录身份绑定 principal/tenant/scope/purpose、
 request digest 与精确钉，遗忘、撤销、digest 漂移或竞争持久记录一律失败闭合。

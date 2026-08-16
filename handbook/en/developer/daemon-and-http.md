@@ -78,7 +78,9 @@ The task channel reads the latest daemon-authored Memory/Skill consumption
 through `GET /task/resource/v1/consumption?task_ref=…`: exact pins, session
 linkage, and `reuse_of` only. `query_text` and `skill_binding_id` are
 rejected as restatement. Forgotten, revoked, or digest-drifted pins fail
-closed before the response, and Memory/Skill bodies never appear.
+closed before the response, and Memory/Skill bodies never appear. Session 2
+and post-restart GET read the same durable row; a caller `query_text` POST
+cannot replace those pins.
 
 ## Projections
 
