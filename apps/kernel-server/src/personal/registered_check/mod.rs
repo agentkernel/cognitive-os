@@ -488,6 +488,10 @@ fn observe_registered_check_digest_oracle(
     let before = snapshot_workspace(canonical_workspace_root)?;
     let started = Instant::now();
     let outcome = run_registered_check_worker(&descriptor.check_id, canonical_workspace_root)?;
+    if outcome.bytes.len() > descriptor.output_limit_bytes {
+        return Err(RegisteredCheckError::OutputTooLarge);
+    }
+    let timed_out = started.elapsed() >= descriptor.timeout();
     let after = snapshot_workspace(canonical_workspace_root)?;
     Ok(RegisteredCheckObservation {
         exit_code: Some(if outcome.passed { 0 } else { 1 }),
@@ -495,7 +499,7 @@ fn observe_registered_check_digest_oracle(
         stderr: Vec::new(),
         elapsed_milliseconds: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
         observed_processes: 1,
-        timed_out: false,
+        timed_out,
         process_tree_escaped: false,
         observed_write_paths: changed_paths(&before, &after),
         network_attempted: false,

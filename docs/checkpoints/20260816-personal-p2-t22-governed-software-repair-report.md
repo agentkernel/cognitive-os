@@ -319,3 +319,11 @@
   `cfg(test)` invokes the same `run_registered_check_worker` digest oracle
   in-process because the bin test harness is not kernel-server `main`.
   Isolation spawn remains covered by `tests/p2_t16_registered_check.rs`.
+
+### D02-IMPL-06 — keep timeout and output-ceiling fail-closed in the test oracle
+
+- Instrument: `apps/kernel-server/src/personal/registered_check/mod.rs`
+  `observe_registered_check_digest_oracle`
+- Outcome: authored. The in-process path still applies the descriptor
+  timeout and `output_limit_bytes` so `cargo test --bin kernel-server`
+  does not warn unused `timeout` / `OutputTooLarge` under `-D warnings`.
