@@ -83,15 +83,18 @@
   injection; restart queries only the original key; mutation count is 1;
   replacement-key Intent is `DuplicateEffect`; a mismatched fault point is
   `FaultUnauthorized`; `acceptance_ref` stays absent.
-- Status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu supporting CI
-  is the first execution.
+- Status: `pass` on Ubuntu supporting CI run
+  [31925407318](https://github.com/agentkernel/cognitive-os/actions/runs/31925407318)
+  (workspace tests green; Clippy failed separately).
 
 ### D02-TEST-02 — dispatch-before keeps mutation 0 and Indeterminate
 
 - Instrument: `campaign_observation::p2_t24_d02_tests::dispatch_before_profile_keeps_mutation_zero_and_indeterminate`
 - Oracle: mutation count stays 0; restart outcome is Indeterminate; dispatch
   count stays 0; `acceptance_ref` stays absent.
-- Status: `not-run` locally.
+- Status: `pass` on Ubuntu supporting CI run
+  [31925407318](https://github.com/agentkernel/cognitive-os/actions/runs/31925407318)
+  (workspace tests green; Clippy failed separately).
 
 ### D02-TEST-03 — missing/default-off/unauthorized files never inject
 
@@ -99,7 +102,9 @@
   and `campaign_observation::p2_t24_d02_tests::missing_profile_cannot_authorize_injection`
 - Oracle: production consult returns `None` unless an authorized enabled
   profile names one of the four fixed points.
-- Status: `not-run` locally.
+- Status: `pass` on Ubuntu supporting CI run
+  [31925407318](https://github.com/agentkernel/cognitive-os/actions/runs/31925407318)
+  (workspace tests green; Clippy failed separately).
 
 ### D02-IMPL-01 — production native dispatch consults persisted profiles
 
@@ -110,3 +115,11 @@
 - Outcome: authored. Missing, default-off, and unauthorized file content never
   inject. P2-T17 test-only `CampaignAuthorization::authorized` remains
   `cfg!(test)`.
+
+### D02-CI-01 — Ubuntu supporting CI at `a2a92a02` (superseded)
+
+- Instrument: GitHub Actions run
+  [31925407318](https://github.com/agentkernel/cognitive-os/actions/runs/31925407318)
+- Outcome: workspace tests **pass**; Clippy `-D warnings` **fail** on
+  `clippy::question_mark` in `load_enabled_authorized_profile`.
+- Disposition: use `profile.fault_point?;` instead of an explicit `is_none` return.

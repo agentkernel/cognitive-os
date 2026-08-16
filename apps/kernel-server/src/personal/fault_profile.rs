@@ -379,9 +379,7 @@ pub(crate) fn load_enabled_authorized_profile(
     if !valid_campaign_id(&profile.campaign_id) || !valid_case_ref(&profile.case_ref) {
         return None;
     }
-    if profile.fault_point.is_none() {
-        return None;
-    }
+    profile.fault_point?;
     Some(profile)
 }
 
