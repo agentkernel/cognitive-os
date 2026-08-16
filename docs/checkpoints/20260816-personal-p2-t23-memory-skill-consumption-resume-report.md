@@ -107,6 +107,16 @@
   `now + 3600` retention, matching `p4_t05_resource_api`. Skill bind remains
   task-targeted.
 
+### D01-CI-03 — Ubuntu supporting CI at `e7f60547`
+
+- Instrument: GitHub Actions run `31922429302`
+- Outcome: `fail`. `296 passed; 3 failed`. Session-2 restart GET passed.
+  Remaining: second Skill import in one store collided on unique
+  `content_digest`; Memory review returns object ids not source body; forged
+  consumption append requires pin arrays in `canonical_json`.
+- Disposition: unique per-package Skill digests/paths; review asserts Memory
+  id; forged record carries matching pin payload plus drifted request digest.
+
 ## D02 — persist bounded consumption and resume session 2 from durable state
 
 ### D02-TEST-01 — public session-2 GET after restart, zero restatement

@@ -1008,8 +1008,8 @@ fn public_memory_skill_lifecycle_then_task_consumption_does_not_require_query_re
     );
     assert_eq!(review.status, 200, "{}", review.body);
     assert!(
-        review.body.contains(remembered_body),
-        "review is the management inspect of the admitted object, got {}",
+        review.body.contains(&memory_id),
+        "review must inspect the admitted Memory object, got {}",
         review.body
     );
 
@@ -1457,6 +1457,17 @@ fn public_forged_prompt_cannot_replace_durable_consumption_pins() {
             "tenant_id": "tenant-a",
             "resource_scope": "workspace://tenant-a/project",
             "purpose": "task_execution",
+            "memory": [{
+                "memory_id": object_id(1898).to_string(),
+                "source_id": object_id(1897).to_string(),
+                "source_digest": format!("sha256:{}", "c".repeat(64)),
+            }],
+            "skill": [{
+                "binding_id": object_id(1896).to_string(),
+                "revision_id": object_id(1895).to_string(),
+                "package_id": object_id(1894).to_string(),
+                "content_digest": format!("sha256:{}", "d".repeat(64)),
+            }],
         })
         .to_string(),
     };
@@ -1574,10 +1585,10 @@ fn public_remember_and_bind(
             "package_id": package_id.to_string(),
             "revision_id": revision_id.to_string(),
             "workspace_scope": context_command.resource_scope_prefix,
-            "local_source_path": "skills/p2-t23/SKILL.md",
-            "provenance_ref": "file://workspace/skills/p2-t23/SKILL.md",
-            "manifest_digest": format!("sha256:{}", "a".repeat(64)),
-            "content_digest": format!("sha256:{}", "b".repeat(64)),
+            "local_source_path": format!("skills/p2-t23/{package_id}/SKILL.md"),
+            "provenance_ref": format!("file://workspace/skills/p2-t23/{package_id}/SKILL.md"),
+            "manifest_digest": format!("sha256:{}{}", "a".repeat(32), package_id.to_string().replace('-', "")),
+            "content_digest": format!("sha256:{}{}", "b".repeat(32), package_id.to_string().replace('-', "")),
             "compatibility": "compatible",
             "instructions": "use only the reviewed public skill",
         })
