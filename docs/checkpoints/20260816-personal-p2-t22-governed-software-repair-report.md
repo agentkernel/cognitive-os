@@ -283,3 +283,39 @@
 - Outcome: authored. After returning the Loop to `DECIDE`, the daemon records
   a monotonic `advanced` progress fact bound to the closed Effect so the next
   candidate WIA receives `iteration = last + 1`.
+
+### D02-CI-03 — Ubuntu required CI at `de97b4d2` (superseded)
+
+- Instrument: GitHub Actions run
+  [31918058549](https://github.com/agentkernel/cognitive-os/actions/runs/31918058549)
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `fail` — same two journey failures as D02-LINUX-03
+  (`ambiguous durable Effect bindings`). Assertions were not weakened.
+
+### D02-LINUX-04 — journey tests at `12a91554` (superseded)
+
+- Instrument: `cargo test -p kernel-server --bin kernel-server --locked -- personal::scheduler_authority::tests::production_`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `12a91554`
+- Outcome: `fail` — 8/10 production_ tests pass. Ambiguous Effect bindings
+  are gone. The two complete-journey tests reached RegisteredCheckRun then
+  stayed `ACTIVE` with `production verifier did not pass`. `cargo test --bin
+  kernel-server` uses the libtest harness as `current_exe`, so the spawned
+  `--personal-registered-check-worker` child exits non-zero even when file
+  digests match. Assertions were not weakened.
+
+### D02-CI-04 — Ubuntu required CI at `12a91554` (superseded)
+
+- Instrument: GitHub Actions run
+  [31918385857](https://github.com/agentkernel/cognitive-os/actions/runs/31918385857)
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `fail` — same two journey failures as D02-LINUX-04. Assertions
+  were not weakened.
+
+### D02-IMPL-05 — in-process digest oracle under bin unit tests
+
+- Instrument: `apps/kernel-server/src/personal/registered_check/mod.rs`
+  `SystemRegisteredCheckRunner`
+- Outcome: authored. Production still spawns `current_exe` with env_clear.
+  `cfg(test)` invokes the same `run_registered_check_worker` digest oracle
+  in-process because the bin test harness is not kernel-server `main`.
+  Isolation spawn remains covered by `tests/p2_t16_registered_check.rs`.

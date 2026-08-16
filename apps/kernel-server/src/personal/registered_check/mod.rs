@@ -12,8 +12,10 @@ use cognitive_store::ArtifactStore;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
+#[cfg(not(test))]
 use std::io::Read;
 use std::path::{Path, PathBuf};
+#[cfg(not(test))]
 use std::process::{Command, Stdio};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
@@ -462,85 +464,130 @@ impl RegisteredCheckRunner for SystemRegisteredCheckRunner {
         RegisteredCheckRegistry::production().validate_exact(descriptor)?;
         let canonical_workspace_root = std::fs::canonicalize(workspace_root)
             .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
-        let before = snapshot_workspace(&canonical_workspace_root)?;
-        let executable = match descriptor.executable_identity {
-            RegisteredExecutableIdentity::CurrentKernelServer => std::env::current_exe()
-                .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?,
-        };
-        let mut command = Command::new(executable);
-        command
-            .args(&descriptor.argv_template)
-            .current_dir(&canonical_workspace_root)
-            .env_clear()
-            .envs(&descriptor.minimal_environment)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        let mut child = command
-            .spawn()
-            .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or_else(|| RegisteredCheckError::Infrastructure("stdout pipe missing".into()))?;
-        let stderr = child
-            .stderr
-            .take()
-            .ok_or_else(|| RegisteredCheckError::Infrastructure("stderr pipe missing".into()))?;
-        let output_ceiling = descriptor.output_limit_bytes;
-        let stdout_reader = std::thread::spawn(move || read_bounded_output(stdout, output_ceiling));
-        let stderr_reader = std::thread::spawn(move || read_bounded_output(stderr, output_ceiling));
-        let started = Instant::now();
-        let (status, timed_out) = loop {
-            if let Some(status) = child
-                .try_wait()
-                .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?
-            {
-                break (status, false);
-            }
-            if started.elapsed() >= descriptor.timeout() {
-                child
-                    .kill()
-                    .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
-                let status = child
-                    .wait()
-                    .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
-                break (status, true);
-            }
-            std::thread::sleep(Duration::from_millis(10));
-        };
-        let stdout = stdout_reader
-            .join()
-            .map_err(|_| RegisteredCheckError::Infrastructure("stdout reader panicked".into()))??;
-        let stderr = stderr_reader
-            .join()
-            .map_err(|_| RegisteredCheckError::Infrastructure("stderr reader panicked".into()))??;
-        if stdout.overflowed || stderr.overflowed {
-            return Err(RegisteredCheckError::OutputTooLarge);
+        // `cargo test --bin kernel-server` uses the libtest harness as
+        // current_exe, which does not honor `--personal-registered-check-worker`.
+        // The production binary still spawns that helper with env_clear; bin
+        // unit tests invoke the same digest oracle in-process. Isolation spawn
+        // remains covered by `tests/p2_t16_registered_check.rs`.
+        #[cfg(test)]
+        {
+            observe_registered_check_digest_oracle(descriptor, &canonical_workspace_root)
         }
-        let after = snapshot_workspace(&canonical_workspace_root)?;
-        Ok(RegisteredCheckObservation {
-            exit_code: status.code(),
-            stdout: stdout.bytes,
-            stderr: stderr.bytes,
-            elapsed_milliseconds: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
-            // 固定 helper 的实现不含子进程或网络 API；运行期仍保留可注入观察，
-            // 使任何未来实现一旦报告扩张即可 fail closed。
-            observed_processes: 1,
-            timed_out,
-            process_tree_escaped: false,
-            observed_write_paths: changed_paths(&before, &after),
-            network_attempted: false,
-            observed_file_digests: observed_oracle_files(descriptor, &canonical_workspace_root)?,
-        })
+        #[cfg(not(test))]
+        {
+            spawn_current_kernel_server_worker(descriptor, &canonical_workspace_root)
+        }
     }
 }
 
+#[cfg(test)]
+fn observe_registered_check_digest_oracle(
+    descriptor: &RegisteredCheckDescriptor,
+    canonical_workspace_root: &Path,
+) -> Result<RegisteredCheckObservation, RegisteredCheckError> {
+    let before = snapshot_workspace(canonical_workspace_root)?;
+    let started = Instant::now();
+    let outcome = run_registered_check_worker(&descriptor.check_id, canonical_workspace_root)?;
+    let after = snapshot_workspace(canonical_workspace_root)?;
+    Ok(RegisteredCheckObservation {
+        exit_code: Some(if outcome.passed { 0 } else { 1 }),
+        stdout: outcome.bytes,
+        stderr: Vec::new(),
+        elapsed_milliseconds: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+        observed_processes: 1,
+        timed_out: false,
+        process_tree_escaped: false,
+        observed_write_paths: changed_paths(&before, &after),
+        network_attempted: false,
+        observed_file_digests: observed_oracle_files(descriptor, canonical_workspace_root)?,
+    })
+}
+
+#[cfg(not(test))]
+fn spawn_current_kernel_server_worker(
+    descriptor: &RegisteredCheckDescriptor,
+    canonical_workspace_root: &Path,
+) -> Result<RegisteredCheckObservation, RegisteredCheckError> {
+    let before = snapshot_workspace(canonical_workspace_root)?;
+    let executable = match descriptor.executable_identity {
+        RegisteredExecutableIdentity::CurrentKernelServer => std::env::current_exe()
+            .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?,
+    };
+    let mut command = Command::new(executable);
+    command
+        .args(&descriptor.argv_template)
+        .current_dir(canonical_workspace_root)
+        .env_clear()
+        .envs(&descriptor.minimal_environment)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = command
+        .spawn()
+        .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| RegisteredCheckError::Infrastructure("stdout pipe missing".into()))?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| RegisteredCheckError::Infrastructure("stderr pipe missing".into()))?;
+    let output_ceiling = descriptor.output_limit_bytes;
+    let stdout_reader = std::thread::spawn(move || read_bounded_output(stdout, output_ceiling));
+    let stderr_reader = std::thread::spawn(move || read_bounded_output(stderr, output_ceiling));
+    let started = Instant::now();
+    let (status, timed_out) = loop {
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?
+        {
+            break (status, false);
+        }
+        if started.elapsed() >= descriptor.timeout() {
+            child
+                .kill()
+                .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
+            let status = child
+                .wait()
+                .map_err(|error| RegisteredCheckError::Infrastructure(error.to_string()))?;
+            break (status, true);
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    };
+    let stdout = stdout_reader
+        .join()
+        .map_err(|_| RegisteredCheckError::Infrastructure("stdout reader panicked".into()))??;
+    let stderr = stderr_reader
+        .join()
+        .map_err(|_| RegisteredCheckError::Infrastructure("stderr reader panicked".into()))??;
+    if stdout.overflowed || stderr.overflowed {
+        return Err(RegisteredCheckError::OutputTooLarge);
+    }
+    let after = snapshot_workspace(canonical_workspace_root)?;
+    Ok(RegisteredCheckObservation {
+        exit_code: status.code(),
+        stdout: stdout.bytes,
+        stderr: stderr.bytes,
+        elapsed_milliseconds: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+        // 固定 helper 的实现不含子进程或网络 API；运行期仍保留可注入观察，
+        // 使任何未来实现一旦报告扩张即可 fail closed。
+        observed_processes: 1,
+        timed_out,
+        process_tree_escaped: false,
+        observed_write_paths: changed_paths(&before, &after),
+        network_attempted: false,
+        observed_file_digests: observed_oracle_files(descriptor, canonical_workspace_root)?,
+    })
+}
+
+#[cfg(not(test))]
 struct BoundedRead {
     bytes: Vec<u8>,
     overflowed: bool,
 }
 
+#[cfg(not(test))]
 fn read_bounded_output(
     mut input: impl Read,
     maximum_bytes: usize,
