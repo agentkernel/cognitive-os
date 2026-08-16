@@ -7,13 +7,14 @@ status: implemented
 generated: true
 sources:
   - path: apps/kernel-server/src/personal/pi_runtime.rs
+  - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:15bd4d63f2b6c1729445ae44d455010d9ee16d61ffefcb0072ca171278a4ec24"
+fingerprint: "sha256:4a7ba9474fa0383a4e9628112660ef3446ce8b6790a1c28e728df48135a6e8ad"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -52,6 +53,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |
 | `GET` | `/management/resource/v1/fault-profile` | management | Read the default-off task-scoped authorized fault profile. Missing records mean faults stay off. Ordinary task callers are denied. |
 | `POST` | `/management/resource/v1/fault-profile` | management | Persist a default-off or campaign-authorized fixed fault profile for one task_ref. Unauthorized campaigns and task-channel callers fail closed. No raw parameter or receipt is stored. |
+| `GET` | `/management/resource/v1/http-origin` | management | Read the task/campaign-scoped pinned HTTPS origin allowlist. Missing records leave production HttpFetchReadOnly empty (fail closed). Ordinary task callers are denied. |
+| `POST` | `/management/resource/v1/http-origin` | management | Pin exact HTTPS origins (host or host:port) for one task_ref under an authorized campaign. GET/HEAD only; no credentials, redirects, inherited proxy, or request body. Unauthorized campaigns and task-channel callers fail closed. |
 | `GET` | `/management/resource/v1/tool` | management | Project registered native Tools with overlay lifecycle, execution_readiness, and whether each is currently Agent-exposed. Overlay state never enters the immutable descriptor digest. |
 | `GET` | `/management/resource/v1/tool/discover` | management | Alias of the registered Tool lifecycle projection; stops the previous generic-authority fall-through on tool/discover. |
 | `POST` | `/management/resource/v1/tool/enable` | management | Enable one registered operation_id. Quarantined and revoked Tools fail closed. Task-channel callers are denied. |

@@ -8,7 +8,7 @@ generated: true
 sources:
   - path: crates/cognitive-kernel/src/tool_registry.rs
   - path: handbook/_meta/annotations/tool-catalog.json
-fingerprint: "sha256:a8de1cde3037856c0d28b0c48009af79e29708fecb989609695d6bb2dd80f1d8"
+fingerprint: "sha256:7617f311d2cfcdb928028c8bbe35ac099baf613a27dca1a063933879783cb207"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -26,5 +26,5 @@ The static 7-entry native Tool catalog owned by the daemon (`BUILTIN_TOOL_CATALO
 | `native.workspace.write` | WorkspaceMutation | `daemon.workspace` | Governed workspace write; requires the persist-before-dispatch Intent/Effect path. |
 | `native.workspace.patch` | WorkspaceMutation | `daemon.workspace` | Governed workspace patch (patch-shaped payload enforced by the pre-executor validator). |
 | `native.process.check` | ProcessExecution | `daemon.process` | Bounded registered check-command execution with timeout, output caps, and supervision. |
-| `native.http.fetch` | NetworkRead | `daemon.http` | Read-only HTTPS GET/HEAD against an exact registered origin allowlist; no userinfo, port, query, or fragment. |
+| `native.http.fetch` | NetworkRead | `daemon.http` | Read-only HTTPS GET/HEAD against an exact registered origin allowlist; no userinfo, query, or fragment. An explicit port is part of the exact origin pin. |
 | `native.registered-check.run` | ProcessExecution | `daemon.registered-check` | Run one immutable daemon-registered deterministic check selected only by check_id; executable, argv, cwd, environment, timeout, output, process-tree, write-root, network and digest bounds are fixed. |

@@ -15,7 +15,7 @@ sources:
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:9fe314519366c94d7644e18bb0b2274f75394d8bd642bb36beebd7feb9bec88a"
+fingerprint: "sha256:b425fb4b775945adb18c8adb083d56f5561d4e8946c9ea791fffa2cdb849d4b2"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -50,8 +50,9 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md)。HTTP 路由生成还会读取
-`apps/kernel-server/src/personal/tool_lifecycle.rs`，使已标注的 Tool lifecycle
-路径无法腐烂。
+`apps/kernel-server/src/personal/tool_lifecycle.rs` 与
+`apps/kernel-server/src/personal/pinned_https.rs`，使已标注的 Tool lifecycle
+与钉住 HTTPS 路径无法腐烂。
 
 ## CI 矩阵
 

@@ -63,7 +63,7 @@ implementation and machine-contract sources only:
 | `ref.schemas` | `specs/schemas/*.json` (`$id`, title, description) |
 | `ref.cli-cognitive` | `COGNITIVE_USAGE` in `apps/admin-cli/src/personal_cli/mod.rs` + parsed verb set |
 | `ref.cli-admin` | `USAGE` in `apps/admin-cli/src/main.rs` + parsed verb set |
-| `ref.http-api` | route string literals in `apps/kernel-server/src/personal/{server.rs,task_api.rs,resource_api.rs,tool_lifecycle.rs}` cross-checked against `_meta/http-routes.json` annotations |
+| `ref.http-api` | route string literals in `apps/kernel-server/src/personal/{server.rs,task_api.rs,resource_api.rs,tool_lifecycle.rs,pinned_https.rs}` cross-checked against `_meta/http-routes.json` annotations |
 | `ref.env-vars` | `env::var*("...")` literals across `apps/**` and `packages/**` cross-checked against `_meta/env-vars.json` annotations |
 | `ref.config-files` | config file-name literals in `crates/cognitive-secret` and `apps/admin-cli` cross-checked against `_meta/config-files.json` annotations |
 | `ref.tool-catalog` | native tool ids/limits in `crates/cognitive-kernel/src/tool_registry.rs` |

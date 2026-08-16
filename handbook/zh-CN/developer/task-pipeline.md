@@ -74,6 +74,9 @@ fail indeterminate），workspace 变更完成则要求批准 workspace 外的�
 原始幂等键的持久 receipt。RegisteredCheckRun 新增一个生产载体，其载荷只有
 `check_id`；独立的不可变目录固定可执行文件、argv、cwd、空环境以及全部
 进程/输出/写入/网络边界。结果只形成 CAS Evidence，仍须登记的独立 verifier。
+HttpFetchReadOnly 只对 task/campaign 范围的钉住 HTTPS origin 登记表 staging
+（默认空；GET/HEAD；无凭据、不跟随重定向、不继承代理）。显式端口是精确 origin
+钉的一部分。
 中间 WorkspaceWrite 在 RegisteredCheck 收口的 Task 上经登记边把 Loop 送回 `DECIDE`
 后，后续 tick 可准入 RegisteredCheckRun；只有该 check 的独立 verification 与
 acceptance 能完成 Task。公共 C1 WorkspaceRead 配 fixed-Effect verifier 仍走

@@ -87,6 +87,7 @@ use std::sync::{
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::personal::pinned_https;
 use crate::personal::registered_check::{
     C2A_CHECK_ID, C2A_RUST_CHECK_ID, CHECK_EVIDENCE_SCHEMA, CHECK_TARGET_PREFIX,
     REGISTERED_CHECK_VERIFIER_REF, RepairCorpusFamily, broken_source_bytes, repaired_source_bytes,
@@ -4871,6 +4872,52 @@ fn production_router_stages_process_check_and_http_fetch_carriers() {
     http_resolved.candidate.target = "https://example.com/data".to_owned();
     assert!(matches!(
         router.stage_resolved(&http_resolved),
+        Err(NativeToolExecutionError::InvalidDescriptor(_))
+    ));
+
+    drop(store);
+    drop(router);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_router_stages_http_fetch_after_campaign_pin_and_rejects_drift() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    let database_path = layout.authority_database_path();
+    let authorization = persist_native_workspace_read_dispatch_fixture(&database_path);
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let resolved = resolve_native_worker_dispatch_with_families(
+        &store,
+        &authorization,
+        &ASSEMBLED_EXECUTOR_FAMILIES,
+    )
+    .unwrap();
+
+    let pin = pinned_https::handle(
+        "POST /management/resource/v1/http-origin",
+        br#"{"task_ref":"task://personal/sealed-worker-authorization","campaign_id":"P2-T25","origins":["https://example.com"]}"#,
+        &layout,
+    );
+    assert_eq!(pin.status, 200, "{}", pin.body);
+
+    let mut router = ProductionNativeToolExecutorRouter::open(1, workspace_root).unwrap();
+    router.bind_origin_registry(layout.data_dir().to_path_buf());
+
+    let mut http_resolved = resolved.clone();
+    http_resolved.native_tool.descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::HttpFetchReadOnly)
+        .unwrap()
+        .clone();
+    http_resolved.candidate.target = "https://example.com/data".to_owned();
+    router.stage_resolved(&http_resolved).unwrap();
+
+    let mut drifted = http_resolved.clone();
+    drifted.native_tool.descriptor.descriptor_digest = "sha256:drift".to_owned();
+    assert!(matches!(
+        router.stage_resolved(&drifted),
         Err(NativeToolExecutionError::InvalidDescriptor(_))
     ));
 

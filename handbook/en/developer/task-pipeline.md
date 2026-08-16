@@ -86,6 +86,9 @@ RegisteredCheckRun adds one production carrier whose payload is only `check_id`;
 its separate immutable registry fixes executable, argv, cwd, empty environment and
 all process/output/write/network bounds. The result is CAS Evidence and still
 requires the registered independent verifier.
+HttpFetchReadOnly stages only against a task/campaign-scoped pinned HTTPS origin
+registry (empty by default; GET/HEAD; no credentials, redirects, or inherited
+proxy). An explicit port is part of the exact origin pin.
 A later tick can admit RegisteredCheckRun after an intermediate WorkspaceWrite
 on a RegisteredCheck-terminated Task returns the Loop to `DECIDE` through
 registered edges; only that check's independent verification plus acceptance

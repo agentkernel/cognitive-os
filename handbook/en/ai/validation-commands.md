@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:de89648976f11217804f737f48a9d0d7e2c7b959acc66e3c3b9223b6f0026122"
+fingerprint: "sha256:694c34328de5ccdc2a54c8df18e469322c91b69de53289f355c58a9a4a4ec531"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -53,6 +53,8 @@ cargo run -p cognitive-contracts --bin contracts-codegen   # then git diff gener
 Never run these on the local Windows GNU host: the linker failure (exit 121) is a
 registered environment boundary, not a signal to reproduce. Remote/native validation
 consumes only pushed, immutable revisions — never a copied working tree.
+P2-T25 focused HTTP coverage is `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
+(lifecycle, selection, and pinned HTTPS origin registry).
 
 ## What CI enforces on every PR
 

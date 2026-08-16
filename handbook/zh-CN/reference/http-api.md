@@ -7,13 +7,14 @@ status: implemented
 generated: true
 sources:
   - path: apps/kernel-server/src/personal/pi_runtime.rs
+  - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:15bd4d63f2b6c1729445ae44d455010d9ee16d61ffefcb0072ca171278a4ec24"
+fingerprint: "sha256:4a7ba9474fa0383a4e9628112660ef3446ce8b6790a1c28e728df48135a6e8ad"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -52,6 +53,8 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/effects` | task | 返回一个 task_ref 的有界 Effect 历史：不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及 report refs。拒绝 receipt、原始参数和额外查询字段。 |
 | `GET` | `/management/resource/v1/fault-profile` | management | 读取默认关闭的 task 范围授权 fault profile。缺失记录表示故障注入保持关闭。普通 task 调用方被拒绝。 |
 | `POST` | `/management/resource/v1/fault-profile` | management | 为一个 task_ref 持久化默认关闭或评测授权的固定 fault profile。未授权 campaign 与 task 通道调用方失败闭合。不存储原始参数或 receipt。 |
+| `GET` | `/management/resource/v1/http-origin` | management | 读取 task/campaign 范围的钉住 HTTPS origin 白名单。缺失记录表示生产 HttpFetchReadOnly 白名单保持为空（失败闭合）。普通 task 调用方被拒绝。 |
+| `POST` | `/management/resource/v1/http-origin` | management | 在授权 campaign 下为一个 task_ref 钉住精确 HTTPS origin（host 或 host:port）。仅 GET/HEAD；无凭据、不跟随重定向、不继承代理、无请求体。未授权 campaign 与 task 通道调用方失败闭合。 |
 | `GET` | `/management/resource/v1/tool` | management | 投影已登记原生 Tool 的 overlay lifecycle、execution_readiness，以及当前是否对 Agent 暴露。overlay 状态永不进入不可变 descriptor digest。 |
 | `GET` | `/management/resource/v1/tool/discover` | management | 已登记 Tool lifecycle 投影的别名；阻止先前 tool/discover 落入通用 authority 处理器。 |
 | `POST` | `/management/resource/v1/tool/enable` | management | 启用一个已登记 operation_id。被隔离或撤销的 Tool 失败闭合。task 通道调用方被拒绝。 |

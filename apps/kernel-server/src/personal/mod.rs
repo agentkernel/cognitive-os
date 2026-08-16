@@ -16,6 +16,7 @@ mod operability_doctor;
 #[cfg(test)]
 mod p2_t17_a7_failure_first;
 mod pi_runtime;
+mod pinned_https;
 mod provider_proxy;
 mod readiness;
 mod registered_check;

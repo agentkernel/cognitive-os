@@ -611,7 +611,7 @@ fn required_task_ref_query(method_path: &str) -> Result<String, ToolLifecycleRes
         let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
         if key == "task_ref" {
             task_ref = Some(value);
-        } else if key != "task_ref" && !FORBIDDEN_SELECTION_KEYS.contains(&key) && key != "" {
+        } else if !key.is_empty() && !FORBIDDEN_SELECTION_KEYS.contains(&key) {
             return Err(error(
                 400,
                 "RESOURCE_TOOL_EXPOSURE_QUERY_FORBIDDEN",

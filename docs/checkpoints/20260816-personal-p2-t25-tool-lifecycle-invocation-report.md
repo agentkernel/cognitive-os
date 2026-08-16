@@ -70,7 +70,66 @@
   `load_file` is rejected.
 - Disposition: derive `Debug` on `ToolLifecycleResponse`.
 
-### D01-CI-02 — Ubuntu supporting CI after Debug derive
+### D01-CI-02 — Ubuntu supporting CI at `c1cfcc13` (superseded)
 
-- Instrument: pending after the compile-fix head is pushed.
+- Instrument: GitHub Actions run
+  [31929145967](https://github.com/agentkernel/cognitive-os/actions/runs/31929145967)
+- Outcome: `fail` — Clippy `-D warnings` rejected
+  `clippy::comparison_to_empty` in `tool_lifecycle.rs`
+  (`key != ""` in the exposure query parser).
+- Disposition: use `!key.is_empty()`.
+
+### D01-CI-03 — Ubuntu supporting CI after empty-comparison Clippy fix
+
+- Instrument: pending after the combined D01 Clippy fix + D02 head is pushed.
+- Initial status: `not-run`.
+
+## D02 — RegisteredCheckRun success under lifecycle, pinned read-only HTTPS
+
+### D02-TEST-01 — task channel cannot pin HTTPS origins
+
+- Instrument: `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
+  (`pinned_https_origin_registry_is_campaign_scoped_and_task_forbidden`)
+  plus `personal::pinned_https` unit tests.
+- Oracle: task bearer `POST /task/resource/v1/http-origin` returns 403
+  `RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN`; credential origins return 400
+  `RESOURCE_PINNED_HTTPS_ORIGIN_INVALID`; authorized campaign `P2-T25` can pin
+  `https://example.com` and `https://localhost:8443` (host:port).
+- Initial status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`).
+
+### D02-TEST-02 — disable RegisteredCheckRun drops Agent exposure
+
+- Instrument: same HTTP test.
+- Oracle: `POST /management/resource/v1/tool/disable` for
+  `native.registered-check.run` updates overlay; subsequent
+  `GET /task/resource/v1/tool/exposure` no longer lists that operation_id.
+  No ProcessRun family is added.
+- Initial status: `not-run` locally.
+
+### D02-IMPL-01 — production HttpFetchReadOnly consults the pin registry
+
+- Instrument: `pinned_https.rs`, `tool_executor/http_fetch.rs` /
+  `router.rs`, `scheduler_authority/dispatch.rs`,
+  `validate_read_only_http_fetch` now admits `host` or `host:port`.
+- Outcome: authored. Overlay file `$data_dir/personal-pinned-https.json`
+  schema `cognitiveos.personal.pinned-https/0.1`. Default allowlist empty.
+  Production staging uses Intent/`authorization.task_ref` pins; missing pin
+  stays fail closed. Dispatch remains GET-only; the validator still admits
+  HEAD. Unauthorized campaign `owner-local` is refused.
+
+### D02-TEST-03 — descriptor drift, redirect, oversize, duplicate/restart
+
+- Instrument: `production_router_stages_http_fetch_after_campaign_pin_and_rejects_drift`;
+  `http_fetch_refuses_redirect_status_without_following`; existing oversize
+  (`ResponseTooLarge` → `NotExecuted`) and original-key restart/duplicate
+  HttpFetch tests.
+- Oracle: campaign pin of `https://example.com` lets production staging
+  succeed; drifted descriptor digest fails closed; HTTP 302 is `NotExecuted`
+  and is not followed; oversize retains nothing; duplicate dispatch and
+  restart query the original key.
+- Initial status: `not-run` locally.
+
+### D02-CI-01 — Ubuntu supporting CI
+
+- Instrument: pending after the D02 head is pushed.
 - Initial status: `not-run`.

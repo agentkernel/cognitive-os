@@ -20,6 +20,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -29,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-fingerprint: "sha256:f7322a51f5cd84593b47366bca8c929c350e7d36edc87fe700d2fb9bdeb99bf2"
+fingerprint: "sha256:a96d18f175ecc7b34fa1bc76e941321a099c4a555dfb024b4f6fa15f178ba067"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -93,6 +95,13 @@ digest。task 通道不能变更 lifecycle。`GET /task/resource/v1/tool/exposur
 返回最窄 Agent 暴露集合与 digest；`POST /task/resource/v1/tool/selection` 仅在
 `candidate_set_digest` 匹配该 digest 且所选 operation 已被暴露时记录收据。
 prompt/body/receipt 重述失败闭合。
+
+management 的 `GET/POST /management/resource/v1/http-origin` 在授权 campaign
+（`P2-T25` 或 `PERSONAL-PERF-EVAL-*`）下为一个 `task_ref` 钉住精确 HTTPS origin
+（`host` 或 `host:port`）。默认白名单为空，因此生产 HttpFetchReadOnly 在有钉之前
+staging 失败闭合。钉只承认 GET/HEAD：无凭据、不跟随重定向、不继承代理、无请求体。
+普通 task 调用方被拒绝（`RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN`）。禁用
+`native.registered-check.run` 会把它从 Agent 暴露中去掉，且不发明 ProcessRun 族。
 
 ## 投影
 

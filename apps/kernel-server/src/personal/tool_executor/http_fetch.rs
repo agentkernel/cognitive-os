@@ -162,6 +162,46 @@ where
             u64::from(self.timeout_ms),
         )
         .map_err(NativeToolExecutionError::InvalidDescriptor)?;
+        self.stage_validated_request(idempotency_key, parameters_digest, request)
+    }
+
+    pub(crate) fn stage_request_with_origins(
+        &self,
+        idempotency_key: String,
+        parameters_digest: String,
+        request: &ValidatedNativeToolRequest,
+        allowed_origins: &[String],
+    ) -> Result<(), NativeToolExecutionError> {
+        validate_descriptor(&request.descriptor)?;
+        if request.descriptor.family != NativeOperationFamily::HttpFetchReadOnly {
+            return Err(NativeToolExecutionError::UnsupportedExecutionFamily);
+        }
+        if idempotency_key.is_empty() || parameters_digest.is_empty() {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "idempotency key and parameters digest are required".to_owned(),
+            ));
+        }
+        if !request.input.is_empty() {
+            return Err(NativeToolExecutionError::InvalidDescriptor(
+                "a read-only HTTP fetch does not accept a request body".to_owned(),
+            ));
+        }
+        validate_read_only_http_fetch(
+            "GET",
+            &request.target,
+            allowed_origins,
+            u64::from(self.timeout_ms),
+        )
+        .map_err(NativeToolExecutionError::InvalidDescriptor)?;
+        self.stage_validated_request(idempotency_key, parameters_digest, request)
+    }
+
+    fn stage_validated_request(
+        &self,
+        idempotency_key: String,
+        parameters_digest: String,
+        request: &ValidatedNativeToolRequest,
+    ) -> Result<(), NativeToolExecutionError> {
         let staged_request = StagedHttpFetchRequest {
             parameters_digest,
             target: request.target.clone(),
@@ -309,6 +349,20 @@ where
             timeout_ms: self.timeout_ms,
             maximum_response_bytes: staged_request.output_limit_bytes,
         }) {
+            Ok(response) if (300..400).contains(&response.status) => {
+                state.status = HttpFetchAttemptStatus::NotExecuted;
+                if let Err(error) = state_guard.write(&state) {
+                    return Ok(DispatchOutcome::Unknown {
+                        detail: format!(
+                            "redirect was refused but durable disposition failed: {error}"
+                        ),
+                    });
+                }
+                return Ok(DispatchOutcome::NotExecuted {
+                    reason: "read-only fetch refused to follow a redirect; nothing retained"
+                        .to_owned(),
+                });
+            }
             Ok(response) => response,
             // A policy refusal happens before egress, so non-execution is a
             // fact rather than an inference.

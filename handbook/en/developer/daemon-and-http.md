@@ -20,6 +20,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -29,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-fingerprint: "sha256:f7322a51f5cd84593b47366bca8c929c350e7d36edc87fe700d2fb9bdeb99bf2"
+fingerprint: "sha256:a96d18f175ecc7b34fa1bc76e941321a099c4a555dfb024b4f6fa15f178ba067"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -106,6 +108,16 @@ lifecycle. `GET /task/resource/v1/tool/exposure` returns the least Agent
 exposure set and digest; `POST /task/resource/v1/tool/selection` records a
 receipt only when `candidate_set_digest` matches that digest and the selected
 operation is exposed. Prompt/body/receipt restatement fails closed.
+
+Management `GET/POST /management/resource/v1/http-origin` pins exact HTTPS
+origins (`host` or `host:port`) for one `task_ref` under an authorized
+campaign (`P2-T25` or `PERSONAL-PERF-EVAL-*`). The default allowlist is empty,
+so production HttpFetchReadOnly staging fails closed until a pin exists. Pins
+admit GET/HEAD only: no credentials, redirects, inherited proxy, or request
+body. Ordinary task callers are denied
+(`RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN`). Disabling
+`native.registered-check.run` drops it from Agent exposure without inventing a
+ProcessRun family.
 
 ## Projections
 

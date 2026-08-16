@@ -20,6 +20,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/pinned_https.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -35,7 +37,7 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:5e8622c13b6545a71065267d132f52371bc9dcb2903627cc46607f78a159c265"
+fingerprint: "sha256:0d66236855fe5baf0b3e529b16aa0e7ac91570c1d5b1321535f5e6ef035983d5"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -64,7 +66,8 @@ verification → verified continuation or ceiling STOP.
 | ProcessCheck executor | implemented, production-called | the production router stages the bounded process check; dispatch fails closed until the daemon supervised-process registry is wired (no ambient process observation) |
 | RegisteredCheckRun executor | implemented, production-called | caller payload is exactly `check_id`; an immutable daemon registry fixes the current-binary helper, argv, workspace-root cwd, empty environment, timeout, output/process/write/network bounds and descriptor digest. The frozen catalog binds `c2a.repair.typescript` (descriptor_version 2, public + hidden tests) and `c2a.repair.rust`; oracle equality is file-digest, so gutting a hidden test fails even when source and public tests match. Intent/Effect reaches durable `EXECUTING` before spawn, original-key state survives restart, and bounded output becomes CAS Evidence for the registered independent verifier |
 | WorkspaceWrite / WorkspacePatch mutation executor | implemented, production-called | the production router carries the governed payload + expected preimage from the persisted Intent and stages it into the mutation sink; handle-anchored no-follow parent/target/staging operations; per-target OS lock closes the final CAS window; streamed write preimages, bounded patch preimages, durable key-bound attempts/receipts in a store outside the approved workspace, and orphan cleanup |
-| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, production-called | the production router stages the pinned HTTPS target; the registered-origin allowlist is empty by default so staging fails closed until an origin is registered; attempted/completed state survives restart; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| HttpFetchReadOnly executor over the single audited Rustls boundary (GET only at dispatch; no caller headers, no redirects, no inherited proxy, registered origins) | implemented, production-called | the production router stages the pinned HTTPS target using the task/campaign origin registry; the allowlist is empty by default so staging fails closed until management pins an exact HTTPS origin (`host` or `host:port`); attempted/completed state survives restart; loopback TLS proof remains in `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
+| Public pinned HTTPS origin registry | implemented, HTTP-called; production consult | management `GET/POST /management/resource/v1/http-origin` is campaign-authorized (`P2-T25` or `PERSONAL-PERF-EVAL-*`); task callers are denied. Pins never carry credentials, headers, or bodies. Production HttpFetchReadOnly consults the registry by Intent `task_ref` |
 | Fixed post-state + verification-request + Loop `ACT -> VERIFY` publication | implemented, production-called | after WorkspaceRead reconciliation, one fenced SQLite transaction validates the current closed Effect and commits both append-only rows with the registered Loop transition |
 | Independent verifier + continuation loop | implemented, production-called | criteria derive only from current Acceptance conditions; fixed-Effect and RegisteredCheck verifiers accept only their registered identity. RegisteredCheck revalidates exact descriptor/file digests and every safety observation from CAS Evidence; a passed report enters `VERIFY -> CONTINUE`, then checkpoint-bound one-time authority is consumed through `CONTINUE -> OBSERVE` without Task completion. WorkspaceRead with the fixed-Effect verifier still publishes `ACT -> VERIFY`. On a RegisteredCheck-terminated Task, a closed intermediate WorkspaceWrite/Patch/Search Effect instead walks `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` so a later tick can admit RegisteredCheckRun; only that check's independent verification may complete the Task |
 | A7 campaign loopback external-mutation observation | implemented, test-called only | campaign-owned idempotent fixture with bounded mutate/query/reset/cleanup and durable request/query counters; persist-before-dispatch Effect; default-off authorized fault points; a response dropped after durable mutation is reconciled by querying only the original key, with one applied mutation and no second POST; independent verification is bound, `acceptance_ref` stays absent. Local/fixture evidence is not a Gate, release, Profile, B01, or EVAL-003 result |
@@ -94,8 +97,8 @@ The remaining gaps are:
    persisted Intent), bounded ProcessCheck, origin-gated HttpFetchReadOnly, and
    `check_id`-only RegisteredCheckRun through the durable Effect protocol.
    ProcessCheck dispatch fails closed until the daemon supervised-process registry
-   is wired, and HttpFetchReadOnly staging fails closed until an origin is
-   registered — neither fabricates input or bypasses the Effect protocol.
+   is wired, and HttpFetchReadOnly staging fails closed until a campaign-authorized
+   origin is pinned — neither fabricates input or bypasses the Effect protocol.
 2. **Task completion is implemented and public C1 is native-proven**: the
    P2-T14 code reuses the registered `completion_claim` / `fixed_post_state` /
    `verification_report` / `acceptance_decision` slots; canonical decision

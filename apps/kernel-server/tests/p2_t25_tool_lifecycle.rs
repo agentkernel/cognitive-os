@@ -236,3 +236,125 @@ fn public_tool_lifecycle_propagates_to_agent_exposure_and_rejects_least_set_wide
     daemon.kill().unwrap();
     let _ = daemon.wait();
 }
+
+#[test]
+fn pinned_https_origin_registry_is_campaign_scoped_and_task_forbidden() {
+    let _guard = P2_T25_PROCESS_LOCK.lock().unwrap();
+    let port = free_port();
+    let root = runtime_root();
+    let mut daemon = spawn_personal(port, &root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &root);
+    let task_token = issue_token(port, &secret, "task");
+    let management_token = issue_token(port, &secret, "management");
+
+    let task_pin = send_json(
+        port,
+        "POST",
+        "/task/resource/v1/http-origin",
+        &task_token,
+        &json!({
+            "task_ref": "task://personal/p2-t25",
+            "campaign_id": "P2-T25",
+            "origins": ["https://example.com"]
+        }),
+    );
+    assert!(task_pin.starts_with("HTTP/1.1 403 "), "{task_pin}");
+    assert!(
+        task_pin.contains("RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN"),
+        "{task_pin}"
+    );
+
+    let credential = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/http-origin",
+        &management_token,
+        &json!({
+            "task_ref": "task://personal/p2-t25",
+            "campaign_id": "P2-T25",
+            "origins": ["https://user:pass@example.com"]
+        }),
+    );
+    assert!(credential.starts_with("HTTP/1.1 400 "), "{credential}");
+    assert!(
+        credential.contains("RESOURCE_PINNED_HTTPS_ORIGIN_INVALID"),
+        "{credential}"
+    );
+
+    let pin = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/http-origin",
+        &management_token,
+        &json!({
+            "task_ref": "task://personal/p2-t25",
+            "campaign_id": "P2-T25",
+            "origins": ["https://example.com"],
+            "methods": ["GET", "HEAD"]
+        }),
+    );
+    assert!(pin.starts_with("HTTP/1.1 200 "), "{pin}");
+    let pin_json = response_json(&pin);
+    assert_eq!(pin_json["origins"][0], "https://example.com");
+    assert_eq!(pin_json["authority_side_effects"], false);
+
+    let get = request(
+        port,
+        &format!(
+            "GET /management/resource/v1/http-origin?task_ref=task%3A%2F%2Fpersonal%2Fp2-t25 HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {management_token}\r\nConnection: close\r\n\r\n"
+        ),
+    );
+    assert!(get.starts_with("HTTP/1.1 200 "), "{get}");
+    assert!(get.contains("https://example.com"), "{get}");
+
+    let loopback = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/http-origin",
+        &management_token,
+        &json!({
+            "task_ref": "task://personal/p2-t25",
+            "campaign_id": "P2-T25",
+            "origins": ["https://localhost:8443"],
+            "methods": ["GET", "HEAD"]
+        }),
+    );
+    assert!(loopback.starts_with("HTTP/1.1 200 "), "{loopback}");
+    assert!(
+        response_json(&loopback)["origins"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|origin| origin == "https://localhost:8443"),
+        "{loopback}"
+    );
+
+    let disable_check = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/tool/disable",
+        &management_token,
+        &json!({"operation_id":"native.registered-check.run"}),
+    );
+    assert!(
+        disable_check.starts_with("HTTP/1.1 200 "),
+        "{disable_check}"
+    );
+    let exposure = request(
+        port,
+        &format!(
+            "GET /task/resource/v1/tool/exposure?task_ref=task%3A%2F%2Fpersonal%2Fp2-t25 HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {task_token}\r\nConnection: close\r\n\r\n"
+        ),
+    );
+    assert!(exposure.starts_with("HTTP/1.1 200 "), "{exposure}");
+    let exposed = response_json(&exposure)["exposed"].as_array().unwrap();
+    assert!(
+        exposed
+            .iter()
+            .all(|resource| resource["operation_id"] != "native.registered-check.run"),
+        "{exposure}"
+    );
+
+    daemon.kill().unwrap();
+    let _ = daemon.wait();
+}

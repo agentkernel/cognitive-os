@@ -36,7 +36,9 @@ non_claims:
 
 # 权威内核
 
-`cognitive-kernel` 是确定性内核：无 HTTP、无 SQLite、无模型 SDK。适配器实现其 port
+`cognitive-kernel` 是确定性内核：无 HTTP、无 SQLite、无模型 SDK。本 crate 内的原生
+Tool 预执行校验器是纯函数（HTTPS origin 形态允许把可选显式端口作为精确 origin 的
+一部分；userinfo、query 与 fragment 仍禁止）。适配器实现其 port
 trait；参考适配器是 `cognitive-store`。守护进程私有的
 `MemorySkillConsumptionStore` 端口只记录用于 Context 装载的精确 Memory/Skill 钉，
 不授予客户端写权限，也不完成 Task。

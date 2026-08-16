@@ -31,6 +31,7 @@ use super::bounds::{
 };
 use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
+use super::pinned_https;
 use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
 use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
@@ -257,6 +258,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
         detail: format!("assemble native Tool executor router: {error}"),
     })?;
     executor_router.bind_fault_profiles(config.layout.data_dir().to_path_buf());
+    executor_router.bind_origin_registry(config.layout.data_dir().to_path_buf());
     let executor_router = Arc::new(executor_router);
     let bootstrap_path = config.layout.local_bootstrap_secret_path();
     let authority = if bootstrap_path.exists() {
@@ -660,6 +662,18 @@ fn dispatch_http_route(
             authority_store,
         );
     }
+    if method_path.starts_with("GET /management/resource/v1/http-origin")
+        || method_path.starts_with("POST /management/resource/v1/http-origin")
+    {
+        return handle_management_pinned_https_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+        );
+    }
     if method_path.starts_with("GET /management/resource/v1/tool")
         || method_path.starts_with("POST /management/resource/v1/tool/")
     {
@@ -700,6 +714,13 @@ fn dispatch_http_route(
         || method_path.starts_with("GET /task/fault-profile")
     {
         return handle_task_fault_profile_forbidden(stream, headers, authority);
+    }
+    if method_path.starts_with("GET /task/resource/v1/http-origin")
+        || method_path.starts_with("POST /task/resource/v1/http-origin")
+        || method_path.starts_with("POST /task/http-origin")
+        || method_path.starts_with("GET /task/http-origin")
+    {
+        return handle_task_pinned_https_forbidden(stream, headers, authority);
     }
     if method_path.starts_with("GET /task/resource/v1/tool")
         || method_path.starts_with("POST /task/resource/v1/tool/")
@@ -1140,6 +1161,60 @@ fn handle_fault_profile_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let response = fault_profile::handle(method_path, body, layout, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_management_pinned_https_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = pinned_https::handle(method_path, body, layout);
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_pinned_https_forbidden(
+    stream: &mut TcpStream,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = pinned_https::task_channel_forbidden();
     write_response(
         stream,
         response.status,

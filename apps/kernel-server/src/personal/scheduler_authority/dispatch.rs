@@ -958,6 +958,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
     if let Some(data_dir) = authority_database_path.parent() {
         executor_router.bind_fault_profiles(data_dir.to_path_buf());
+        executor_router.bind_origin_registry(data_dir.to_path_buf());
     }
     run_private_scheduler_tick_with_store(
         &authority_store,

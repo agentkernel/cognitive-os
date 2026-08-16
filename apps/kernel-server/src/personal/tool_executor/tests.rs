@@ -4408,6 +4408,33 @@ fn http_fetch_staging_applies_the_registered_network_policy() {
 }
 
 #[test]
+fn http_fetch_refuses_redirect_status_without_following() {
+    let transport = Arc::new(ScriptedFetchTransport::responding(
+        302,
+        b"https://elsewhere.example/",
+    ));
+    let executor = scripted_fetch_executor(Arc::clone(&transport));
+    let target = format!("{FETCH_ORIGIN}/data");
+    executor
+        .stage_request(
+            "fetch-redirect".to_owned(),
+            "digest-1".to_owned(),
+            &staged_fetch_request(&target, 512),
+        )
+        .expect("stage read-only fetch");
+    assert!(matches!(
+        executor.dispatch(&http_fetch_call("fetch-redirect", "digest-1", &target, 7)),
+        Ok(DispatchOutcome::NotExecuted { .. })
+    ));
+    assert_eq!(transport.observed_urls(), vec![target]);
+    assert_eq!(executor.completed_output("fetch-redirect"), None);
+    assert_eq!(
+        executor.query_outcome("fetch-redirect"),
+        Ok(ExecutorQueryResult::NotExecuted)
+    );
+}
+
+#[test]
 fn http_fetch_requires_a_staged_digest_bound_request_before_egress() {
     let transport = Arc::new(ScriptedFetchTransport::responding(200, b"payload body"));
     let executor = scripted_fetch_executor(Arc::clone(&transport));
