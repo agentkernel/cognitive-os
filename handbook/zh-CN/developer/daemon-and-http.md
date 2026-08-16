@@ -34,7 +34,7 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:47b50f4796b7d1122c28188318702b6447082c09924226b29c1152efc085bbb7"
+fingerprint: "sha256:f9698e141f3e95f693a30984623a5c6713da9fa9adccd60744f92230c04df695"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

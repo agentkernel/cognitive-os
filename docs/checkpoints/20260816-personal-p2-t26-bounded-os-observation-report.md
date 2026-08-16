@@ -183,6 +183,15 @@
 
 - Instrument: `cargo test -p kernel-server --locked --bins` at `268cb4dc` on
   `DEV-LINUX-NATIVE-01`.
-- Initial status: started; 328 bin tests launched.
+- Outcome: **pass** — 328/328.
+
+### D03-IMPL-01 — overlay serialization and cross-task isolation
+
+- Instrument: `OVERLAY_LOCK` around overlay load/append/project, plus
+  `cross_task_samples_stay_isolated_under_concurrent_records`.
+- Outcome: authored. Concurrent O2 records for two task refs are retained;
+  each query returns only its own samples and no capability/receipt/parameter
+  /prompt keys. Linux revalidation of this head is pending.
+
 
 

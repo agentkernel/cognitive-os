@@ -44,6 +44,7 @@ const FORBIDDEN_KEYS: [&str; 8] = [
 ];
 
 static BOUND_DATA_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
+static OVERLAY_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct ObservationSample {
@@ -503,6 +504,9 @@ fn canonical_family(family: &str) -> Option<&'static str> {
 }
 
 fn project(data_dir: &Path, family: &str, task_ref: &str) -> Value {
+    let _guard = OVERLAY_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let file = load_file(data_dir).unwrap_or_else(|| ObservationFile {
         schema: OBSERVATION_SCHEMA.to_owned(),
         samples: Vec::new(),
@@ -1162,6 +1166,9 @@ fn append_sample(data_dir: &Path, sample: ObservationSample) {
     if sample.task_ref.is_empty() || sample.task_ref.len() > MAX_TASK_REF_CHARS {
         return;
     }
+    let _guard = OVERLAY_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut file = load_file(data_dir).unwrap_or_else(|| ObservationFile {
         schema: OBSERVATION_SCHEMA.to_owned(),
         samples: Vec::new(),
@@ -1563,5 +1570,64 @@ mod tests {
             second_body["chain_head_digest"]
         );
         assert_eq!(first_body["high_watermark"], second_body["high_watermark"]);
+    }
+
+    #[test]
+    fn cross_task_samples_stay_isolated_under_concurrent_records() {
+        let layout = layout();
+        let data_dir = layout.data_dir().to_path_buf();
+        std::thread::scope(|scope| {
+            let dir_a = data_dir.clone();
+            let dir_b = data_dir.clone();
+            scope.spawn(move || {
+                record_authorization_decision(
+                    &dir_a,
+                    "task://personal/p2-t26-a",
+                    "workspace",
+                    "read_body",
+                    3,
+                    "read_body",
+                    "deny",
+                    "CONTEXT_AUTH_DENIED",
+                );
+            });
+            scope.spawn(move || {
+                record_authorization_decision(
+                    &dir_b,
+                    "task://personal/p2-t26-b",
+                    "workspace",
+                    "read_body",
+                    3,
+                    "read_body",
+                    "grant",
+                    "CONTEXT_AUTH_GRANTED",
+                );
+            });
+        });
+
+        let left = handle(
+            "GET /task/observation?family=o2&task_ref=task%3A%2F%2Fpersonal%2Fp2-t26-a",
+            &layout,
+        );
+        let right = handle(
+            "GET /task/observation?family=o2&task_ref=task%3A%2F%2Fpersonal%2Fp2-t26-b",
+            &layout,
+        );
+        assert_eq!(left.status, 200, "{}", left.body);
+        assert_eq!(right.status, 200, "{}", right.body);
+        let left_body: Value = serde_json::from_str(&left.body).expect("json");
+        let right_body: Value = serde_json::from_str(&right.body).expect("json");
+        assert_eq!(left_body["deny_count"], 1);
+        assert_eq!(left_body["grant_count"], 0);
+        assert_eq!(right_body["grant_count"], 1);
+        assert_eq!(right_body["deny_count"], 0);
+        assert!(!left.body.contains("p2-t26-b"));
+        assert!(!right.body.contains("p2-t26-a"));
+        for body in [&left.body, &right.body] {
+            assert!(!body.contains("capability"));
+            assert!(!body.contains("\"receipt\""));
+            assert!(!body.contains("\"parameters\""));
+            assert!(!body.contains("\"prompt\""));
+        }
     }
 }
