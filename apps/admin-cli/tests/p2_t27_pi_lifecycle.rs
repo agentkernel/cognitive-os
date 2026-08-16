@@ -330,12 +330,6 @@ fn managed_pi_install_through_recover_upgrade_rollback_and_orphan() {
     assert_eq!(stale.code, 1, "{}", stale.stderr);
     assert_eq!(error_code(&stale), "STATE_CONFLICT");
 
-    let root_v2 = assert_ok(&harness.activate_root(Some(1)), "upgrade to v2");
-    assert_eq!(root_v2["activation_version"], 2);
-    let rolled = assert_ok(&harness.rollback(2, 1), "rollback to v1 package");
-    assert_eq!(rolled["activation_version"], 3);
-    assert_eq!(rolled["package_ref"], official_package_ref());
-
     let recovered = assert_ok(&harness.lifecycle("agent-recover", 3), "recover");
     assert_eq!(recovered["lifecycle_state"], "active");
     assert_eq!(recovered["fencing_epoch"], 4);
@@ -347,8 +341,14 @@ fn managed_pi_install_through_recover_upgrade_rollback_and_orphan() {
         activated["sidecar_session_id"]
     );
 
-    let stopped_again = assert_ok(&harness.lifecycle("agent-stop", 4), "stop before uninstall");
+    let stopped_again = assert_ok(&harness.lifecycle("agent-stop", 4), "stop after recover");
     assert_eq!(stopped_again["lifecycle_state"], "stopped");
+
+    let root_v2 = assert_ok(&harness.activate_root(Some(1)), "upgrade to v2");
+    assert_eq!(root_v2["activation_version"], 2);
+    let rolled = assert_ok(&harness.rollback(2, 1), "rollback to v1 package");
+    assert_eq!(rolled["activation_version"], 3);
+    assert_eq!(rolled["package_ref"], official_package_ref());
     let uninstalled = assert_ok(&harness.uninstall(3), "uninstall");
     assert_eq!(uninstalled["activation_version"], 3);
     assert_eq!(uninstalled["capability_grants"], 0);
