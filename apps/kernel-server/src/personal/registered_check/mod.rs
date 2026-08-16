@@ -23,7 +23,7 @@ use crate::personal::tool_executor::DurableExecutorStateStore;
 
 pub(crate) const REGISTERED_CHECK_VERIFIER_REF: &str = "verifier://personal/registered-check";
 pub(crate) const REGISTERED_CHECK_VERIFIER_VERSION: &str = "v1";
-const CHECK_TARGET_PREFIX: &str = "check://";
+pub(crate) const CHECK_TARGET_PREFIX: &str = "check://";
 const CHECK_DESCRIPTOR_DIGEST_DOMAIN: &str = "personal-registered-check-descriptor/0.1";
 const CHECK_FILE_DIGEST_DOMAIN: &str = "personal-registered-check-file/0.1";
 const CHECK_STATE_NAMESPACE: &str = "registered-check-run";

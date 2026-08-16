@@ -485,11 +485,18 @@ where
         ));
     }
     let snapshot = load_current_context_authorization_snapshot(store, &context_command)?;
+    let resource_scope = if resolved.native_tool.descriptor.family
+        == cognitive_kernel::tool_registry::NativeOperationFamily::RegisteredCheckRun
+    {
+        context_command.resource_scope_prefix.clone()
+    } else {
+        resolved.candidate.target.clone()
+    };
     let governance = ObjectGovernance {
         object_ref: resolved.candidate.target.clone(),
         tenant_id: Some(context_command.tenant_id),
         owner_ref: admission_command.authorization_subject_ref,
-        resource_scope: resolved.candidate.target.clone(),
+        resource_scope,
         conversation_ref: context_command.conversation_ref,
     };
     let grant = authorize(

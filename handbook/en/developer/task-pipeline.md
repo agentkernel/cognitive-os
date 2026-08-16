@@ -82,6 +82,11 @@ RegisteredCheckRun adds one production carrier whose payload is only `check_id`;
 its separate immutable registry fixes executable, argv, cwd, empty environment and
 all process/output/write/network bounds. The result is CAS Evidence and still
 requires the registered independent verifier.
+A later tick can admit RegisteredCheckRun after an intermediate WorkspaceWrite
+on a RegisteredCheck-terminated Task returns the Loop to `DECIDE` through
+registered edges; only that check's independent verification plus acceptance
+may complete the Task. Public C1 WorkspaceRead with the fixed-Effect verifier
+still completes through `ACT -> VERIFY`.
 None of these executor guarantees turns admission, a Tool receipt, or matching
 workspace bytes into Task completion. P2-T14 keeps that boundary: a public C1
 WorkspaceRead can complete only from current closed Effects, the exact fixed

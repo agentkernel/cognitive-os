@@ -563,6 +563,50 @@ where
         &governance_currency,
         &writer_lease,
     )?;
+    if registered_check_journey_returns_to_decide(
+        authority_store,
+        &dispatch.task_ref,
+        dispatch.contract_epoch,
+        resolved.native_tool.descriptor.family,
+    )? {
+        let current_loop = authority_store
+            .load_object(
+                LifecycleDomain::Loop,
+                &resolved.authorization.loop_object_id,
+            )
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+            .ok_or_else(|| {
+                SchedulerAuthorityError::LoopUnavailable(
+                    resolved.authorization.loop_object_id.to_string(),
+                )
+            })?;
+        if current_loop.state.as_str() != "ACT" {
+            return Err(SchedulerAuthorityError::LoopUnavailable(format!(
+                "{} is {} after intermediate Effect close",
+                resolved.authorization.loop_object_id, current_loop.state
+            )));
+        }
+        driver
+            .return_to_decide_after_closed_effect(
+                &resolved.authorization.loop_object_id,
+                current_loop.version,
+                &dispatch.task_ref,
+                &resolved.authorization.effect_object_id,
+                &writer_lease,
+            )
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+        scheduler_repository.release_lease(
+            &SchedulerWorkKey {
+                task_ref: dispatch.task_ref.clone(),
+                contract_epoch: dispatch.contract_epoch,
+            },
+            &dispatch.lease_owner,
+            dispatch.lease_epoch,
+            SchedulerState::Runnable,
+            released_at,
+        )?;
+        return Ok(SchedulerWorkerAttempt::EffectClosed(dispatch));
+    }
     let registered_check_artifact_uri = if resolved.native_tool.descriptor.family
         == cognitive_kernel::tool_registry::NativeOperationFamily::RegisteredCheckRun
     {
@@ -648,6 +692,36 @@ where
         released_at,
     )?;
     Ok(SchedulerWorkerAttempt::EffectClosed(dispatch))
+}
+
+/// A RegisteredCheck-terminated Task must not complete on an intermediate
+/// WorkspaceWrite/Patch/Search Effect. After that Effect closes, the Loop
+/// returns to `DECIDE` so a later tick can admit `check_id`-only
+/// RegisteredCheckRun. WorkspaceRead with the fixed-Effect verifier keeps the
+/// existing `ACT -> VERIFY` completion path.
+fn registered_check_journey_returns_to_decide<S>(
+    store: &S,
+    task_ref: &str,
+    contract_epoch: i64,
+    family: cognitive_kernel::tool_registry::NativeOperationFamily,
+) -> Result<bool, SchedulerAuthorityError>
+where
+    S: IntentChainStore,
+{
+    if family == cognitive_kernel::tool_registry::NativeOperationFamily::RegisteredCheckRun {
+        return Ok(false);
+    }
+    let contract_row = store
+        .load_task_contract(task_ref, contract_epoch)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::MissingContract(task_ref.to_owned()))?;
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json)?;
+    Ok(contract.conditions.iter().any(|condition| {
+        condition.kind
+            == cognitive_contracts::generated::task_contract::ContractConditionKind::Acceptance
+            && condition.verifier_ref.as_deref()
+                == Some(crate::personal::registered_check::REGISTERED_CHECK_VERIFIER_REF)
+    }))
 }
 
 /// Run row-local scheduler work without letting one malformed Task abort the
@@ -973,7 +1047,19 @@ pub(crate) fn run_private_scheduler_tick_with_store_and_proposer(
             })?;
             let context_command =
                 context_resolution_command_from_policy(policy, observed_wall_time.clone())?;
-            let admission_command = candidate_admission_command_from_policy(policy)?;
+            let mut admission_command = candidate_admission_command_from_policy(policy)?;
+            if authority_store
+                .load_candidate_admission_receipt_by_selected_candidate_id(
+                    &admission_command.candidate_id,
+                )
+                .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+                .is_some()
+            {
+                // A later governed step needs a fresh daemon-owned candidate
+                // identity; retry of an uncommitted first proposal keeps the
+                // policy-pinned id.
+                admission_command.candidate_id = next_object_id(&identifiers)?;
+            }
             propose_persist_and_admit_candidate(
                 authority_store,
                 &clock,

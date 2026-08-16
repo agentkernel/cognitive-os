@@ -18,6 +18,8 @@ sources:
     symbols: ["check_and_debit"]
   - path: crates/cognitive-kernel/src/recovery.rs
     symbols: ["RECOVERY_ORDER", "run_recovery"]
+  - path: crates/cognitive-kernel/src/harness.rs
+    symbols: ["return_to_decide_after_closed_effect"]
 contracts:
   - specs/transitions/effect.transitions.json
   - specs/transitions/task.transitions.json
@@ -27,7 +29,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:aad3d4ce637b7acdf656e0fe83dd4674925b6b38dc58dcef92be54c6c5b8413b"
+fingerprint: "sha256:cb25148a696a59a6ee541b5b2e6e9c8e3b3a78d7e417c2e1c9450a1bbd12636e"
 non_claims:
   - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
 ---
@@ -81,6 +83,9 @@ PROPOSED→AUTHORIZED→EXECUTING→…→COMMITTED，守卫只从持久重载�
 果用原键对账或隔离。四个提交 sink（executor、权威提交、准入+outbox、checkpoint）都
 在存储事务内复核写者 fencing epoch。验证入口同样是复合权威提交：当前闭合 Effect
 pin、其 verification request 与 Loop `ACT -> VERIFY` 要么一起持久化，要么一起回滚。
+非 RegisteredCheckRun 的中间闭合 Effect 在 RegisteredCheck 收口的 Task 上则从持久
+Effect/合同事实走 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`，以便准入下一
+candidate 而不完成 Task。
 Task 验收属于独立权威：candidate 与最终 acceptance transition 都先经同一 deterministic
 engine 准备，再由 SQLite 在事务内重查当前合同 epoch、完整闭合 Effect 集合、fixed
 post-state、最新 passed report 与 fencing；最终 principal 是 daemon-private acceptance

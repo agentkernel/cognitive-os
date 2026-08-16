@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:d820abb70555928a29c67500f37cfc1fe26e14415ca6f2514e9006ad2c3cb1b2"
+fingerprint: "sha256:8ee9f6aca66b572dcdfd31b21329a846e4b628d5859cb6e7d730f68c043017b9"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
@@ -54,7 +54,9 @@ fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的
 的公共 C1 completion 实现已 native 证明**：生产会派发无参数 WorkspaceRead、
 独立验证其固定的已对账 Effect，再只从当前 CAS-backed authority facts 推导 candidate
 与最终 acceptance。exact native `22c3f502` 到达 `COMPLETED`。open Effect、被取代
-report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。其他 Tool 请求载体仍未接线。因此已接纳
+report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。RegisteredCheck 收口的
+软件修复 Task 可在闭合的 WorkspaceWrite 后回到 Loop `DECIDE`，并只在 RegisteredCheckRun
+加独立 verification 之后完成。因此已接纳
 Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 

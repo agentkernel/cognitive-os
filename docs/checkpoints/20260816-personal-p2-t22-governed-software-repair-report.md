@@ -4,10 +4,10 @@
 - Branch: `personal/P2-T22-governed-software-repair`
 - Lease: `lease/personal/P2-T22/governed-software-repair`
 - Base: `origin/main` after P2-T21 merge `5d1f5c2643d82807eb96f2c615d460dbdca749c3` / PR #220
-- Change class: `implementation-only` (catalog freeze + failure-first tests; no
-  public contract). Mapped `execution-chain-status` pages updated bilingually
-  for the frozen TypeScript/Rust catalog and the write-alone D02 gap; fingerprints
-  refreshed in the same change set.
+- Change class: `implementation-only` (catalog freeze, sequential journey
+  wiring, and failure-first tests; no public contract). Mapped handbook
+  pages updated bilingually for the RegisteredCheck-terminated Loop return
+  to `DECIDE`; fingerprints refreshed in the same change set.
 - Claim ceiling: implementation evidence only; hypothesis/non-claim. No Gate,
   release, Profile, B01, EVAL, or Agent-benefit promotion.
 
@@ -129,3 +129,79 @@
 - Instrument: `cargo fmt --all -- --check`
 - Environment: local `DEV-WIN-GNU-01`
 - Outcome: `pass`
+
+### D01-CI-02 — Ubuntu required CI at `4a737884`
+
+- Instrument: GitHub Actions run
+  [31915159130](https://github.com/agentkernel/cognitive-os/actions/runs/31915159130)
+  (`resolve validation route`, `verify (ubuntu-latest)`, `required-ci`)
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `pass` at exact `4a737884d80a2a25b350f965ea9b92229e6ea356`
+- Note: Windows is `not-run by owner-directed Linux-only route`.
+  `B01-Desktop-Linux-002` untouched.
+
+### D01-LINUX-03 — Clippy deny-warnings + fmt at `4a737884`
+
+- Instrument: `cargo clippy --workspace --all-targets --locked -- -D warnings`
+  and `cargo fmt --all -- --check`
+- Environment: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`) at exact
+  `4a737884d80a2a25b350f965ea9b92229e6ea356`
+- Outcome: `pass` (rustc 1.97.1). Kernel-server bin tests at the prior
+  freeze revision `48fa7d04` were 290/290; D01-CI-02 is the supporting CI
+  for the Clippy flatten head.
+- Disposition: D01 freeze + failure-first tests accepted for this task.
+  D02 starts below.
+
+## D02 — write → RegisteredCheckRun → verifier → acceptance
+
+### D02-DOC-01 — lease expansion and snapshot
+
+- Instrument: `docs/plan/PARALLEL-LANES.md` Task/slice `P2-T22/D02` with
+  scheduler_authority glob, `crates/cognitive-kernel/src/harness.rs`, and
+  mapped handbook pages; `PROGRESS.md` Current snapshot; formal plan
+  evidence note
+- Outcome: `pass` (authored). Lease remains
+  `lease/personal/P2-T22/governed-software-repair`. D01 marked `done`.
+  BR-02 stays `in-progress` until D03 close.
+- Disposition: opens D02 production wiring.
+
+### D02-IMPL-01 — sequential governed journey
+
+- Instrument: `LoopDriver::return_to_decide_after_closed_effect`;
+  scheduler dispatch returns Loop `ACT -> OBSERVE -> RESOLVE -> ORIENT ->
+  DECIDE` after a closed intermediate mutation on a RegisteredCheck-terminated
+  Task; RegisteredCheckRun still verifies and may complete; WorkspaceRead
+  with the fixed-Effect verifier keeps `ACT -> VERIFY`. Admission mints a
+  fresh candidate id when a receipt already exists for the policy pin.
+  RegisteredCheckRun authorizes against `resource_scope_prefix` while the
+  executor target stays `check://<id>`.
+- Focused tests (must pass, not expected-fail): TypeScript and Rust
+  journeys complete after RegisteredCheck; write-alone leaves Loop at
+  `DECIDE` without check evidence; hidden-test gutting, public-test
+  weakening, and out-of-scope write fail closed.
+- Disposition: Ubuntu supporting CI + exact-revision Linux must confirm.
+  No generic ProcessRun. No CandidateParameters variant for the check.
+
+### D02-LOCAL-01 — cargo fmt (Windows GNU allowlist)
+
+- Instrument: `cargo fmt --all -- --check`
+- Environment: local `DEV-WIN-GNU-01`
+- Outcome: `pass`
+- Note: Rust build/test/Clippy are `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`).
+
+### D02-LOCAL-02 — check:consistency
+
+- Instrument: `pnpm run check:consistency`
+- Environment: local `DEV-WIN-GNU-01`
+- Outcome: `pass` (275 requirements, 55 error codes, 74 schemas, 89 vectors,
+  Personal plan/Gates, leases verified)
+
+### D02-LOCAL-03 — handbook + generator
+
+- Instrument: bilingual mapped handbook updates +
+  `node tools/src/fill-handbook-fingerprints.mjs` +
+  `pnpm run check:handbook` +
+  `node tools/src/generate-handbook.mjs --check`
+- Environment: local `DEV-WIN-GNU-01`
+- Outcome: `pass` — `check-handbook` OK (54×2 locales); generator `--check` OK
+  (18 pages byte-identical)

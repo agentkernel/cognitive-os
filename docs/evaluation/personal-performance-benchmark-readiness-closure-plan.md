@@ -152,6 +152,11 @@ missing CAS 全部 fail closed；Task 仅在 current verification + acceptance �
 
 ### BR-02 — C2a 完整软件修复 journey
 
+**Status (2026-08-16):** D01 corpus freeze is complete at `4a737884` / Draft PR #221.
+D02 production wiring (write → Loop `DECIDE` → RegisteredCheckRun → independent
+verifier → acceptance) is in progress on the same task branch and lease. D03
+linux-002 matrix remains open. No EVAL/Gate/release/Profile claim.
+
 **实施：**
 
 1. 建立固定、无 secret、可 reset 的小型 repo corpus。

@@ -84,7 +84,9 @@ pinned with its verification request in the same authority transaction that
 publishes Loop `ACT -> VERIFY`. Criteria now derive only from current
 TaskContract Acceptance conditions; the registered fixed-Effect verifier writes
 its immutable post-state observation into this CAS before a passed report can
-enter `VERIFY -> CONTINUE`. P2-T14 re-reads every report Artifact URI before
+enter `VERIFY -> CONTINUE`. A closed intermediate mutation that is not yet a
+RegisteredCheckRun on a RegisteredCheck-terminated Task returns the Loop to
+`DECIDE` without writing a verification report into CAS. P2-T14 re-reads every report Artifact URI before
 acceptance. Its daemon-authored completion claim and affirmative
 `acceptance_decision` are canonical CAS bytes referenced through the existing
 transition `StrongReference`; missing or digest-mismatched bytes fail before the
