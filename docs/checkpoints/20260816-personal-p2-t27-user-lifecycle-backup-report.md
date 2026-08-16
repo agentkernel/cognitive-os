@@ -167,12 +167,24 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Outcome: `not-run by owner-directed Linux-only route` /
   `RUST-LINK-DEV-WIN-GNU-01`.
 
-### D03-LINUX-01 — exact-revision matrix
+### D03-LINUX-01 — exact-revision matrix (`5a561fbf`)
 
-- Instrument: `DEV-LINUX-NATIVE-01` at a pushed revision.
-- Outcome: `not-run` (waiting for an immutable pushed head).
+- Instrument: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`, Rust 1.97.1)
+  at `5a561fbf`.
+- Outcome: **pass**. `personal_backup` **23/23** (includes destroy→restore
+  equality, residue cleanup, and bounded duration); `admin-cli`
+  `p2_t27_backup_restore` **2/2**; `admin-cli` `p2_t27_pi_lifecycle` **1/1**;
+  `kernel-server` `p2_t27_backup_restore` **1/1**; `cargo fmt --all -- --check`
+  **pass**; `cargo clippy --workspace --all-targets --locked -- -D warnings`
+  **pass**. Windows `not-run by owner-directed Linux-only route`.
+  `B01-Desktop-Linux-002` untouched. Cross-version migration remains
+  fail-closed (`SchemaIncompatible`). Restore wall time is a hypothesis-only
+  measurement, not an RTO SLO.
 
 ### D03-CI-01 — Ubuntu supporting CI
 
-- Instrument: GitHub Actions `verify (ubuntu-latest)` on the Draft PR head.
-- Outcome: `not-run` (waiting for the D03 head).
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31939336791`](https://github.com/agentkernel/cognitive-os/actions/runs/31939336791)
+  on Draft PR [#226](https://github.com/agentkernel/cognitive-os/pull/226) at
+  `5a561fbf`.
+- Outcome: `not-run` (in progress).
