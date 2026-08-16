@@ -70,7 +70,10 @@ must name an existing public caller file and a mechanical oracle file, plus
 cleanup and a bounded evidence schema. Web UI and Multi-Agent stay explicit
 `excluded` rows and cannot be marked required. The daemon-side register is
 `apps/kernel-server/src/personal/capability_truth.rs`. This freeze is not an
-EVAL-004, Gate, release, or Profile result.
+EVAL-004, Gate, release, or Profile result. The D02 hermetic public-caller
+smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`. Named UJ
+oracles run on exact-revision `DEV-LINUX-NATIVE-01`; Windows GNU is `not-run`
+for that Rust matrix.
 
 ## CI matrix
 

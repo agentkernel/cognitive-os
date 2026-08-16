@@ -65,6 +65,9 @@ P2-T28 D01 freeze is `tools/test/p2_t28_capability_truth.test.mjs` against
 Web UI/Multi-Agent stay explicit `excluded`). The matching daemon register is
 `apps/kernel-server/src/personal/capability_truth.rs` (Linux/CI only).
 P2-T28 D02 public-caller smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`.
+P2-T28 D03 exact-revision `DEV-LINUX-NATIVE-01` aggregate runs the named UJ
+oracles plus `cargo test -p kernel-server --bins`, `cargo test --workspace`,
+`cargo fmt --all -- --check`, and `cargo clippy --workspace --all-targets -- -D warnings`.
 
 ## What CI enforces on every PR
 

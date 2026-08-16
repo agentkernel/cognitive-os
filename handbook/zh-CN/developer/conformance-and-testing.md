@@ -64,7 +64,9 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 公开调用方文件和机械 oracle 文件，并给出 cleanup 与有界 evidence schema。Web UI 与
 Multi-Agent 保持显式 `excluded`，不得标为 required。daemon 侧登记表是
 `apps/kernel-server/src/personal/capability_truth.rs`。该冻结不是 EVAL-004、Gate、
-release 或 Profile 结果。
+release 或 Profile 结果。D02 密闭公开调用方冒烟是
+`apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`。命名 UJ oracle 在精确
+revision 的 `DEV-LINUX-NATIVE-01` 上执行；Windows GNU 对该 Rust 矩阵记 `not-run`。
 
 ## CI 矩阵
 

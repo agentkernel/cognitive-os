@@ -56,7 +56,7 @@ non_claims:
 | Web UI / Console | unavailable | 外部仓库、仅设计；UJ6 scope-excluded |
 | Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行 |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |
-| UJ1–UJ6 capability-truth 登记 | implemented | 冻结 public-caller/oracle/cleanup/evidence 行；Web UI/Multi-Agent 为 scope-excluded，不得阻塞 required arm |
+| UJ1–UJ6 capability-truth 登记 | implemented | 冻结 public-caller/oracle/cleanup/evidence 行；Web UI/Multi-Agent 为 scope-excluded，不得阻塞 required arm；linux-002 命名 oracle 是产品证据，不是 EVAL/Gate |
 
 逐行细节与来源：见 [`_meta/source-map.json`](../../_meta/source-map.json) 所列
 user/developer 页面。

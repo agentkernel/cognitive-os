@@ -56,7 +56,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | Web UI / Console | unavailable | external repository, design-only; UJ6 scope-excluded |
 | Windows/macOS product | unavailable | Linux x86_64 only; Windows installer templates + credential backend are authored and CI-validated but the B01-W install campaign has not run |
 | Performance campaign tooling | implemented | results are non-claim records in the plan |
-| UJ1–UJ6 capability-truth register | implemented | frozen public-caller/oracle/cleanup/evidence rows; Web UI/Multi-Agent scope-excluded and cannot block the required arm |
+| UJ1–UJ6 capability-truth register | implemented | frozen public-caller/oracle/cleanup/evidence rows; Web UI/Multi-Agent scope-excluded and cannot block the required arm; linux-002 named oracles are product evidence, not EVAL/Gate |
 
 Per-row detail and sources: the user and developer pages listed in
 [`_meta/source-map.json`](../../_meta/source-map.json).
