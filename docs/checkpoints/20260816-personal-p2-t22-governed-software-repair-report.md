@@ -205,3 +205,31 @@
 - Environment: local `DEV-WIN-GNU-01`
 - Outcome: `pass` — `check-handbook` OK (54×2 locales); generator `--check` OK
   (18 pages byte-identical)
+
+### D02-CI-01 — Ubuntu required CI at `40d96665` (superseded)
+
+- Instrument: GitHub Actions run
+  [31917596065](https://github.com/agentkernel/cognitive-os/actions/runs/31917596065)
+  / job `verify (ubuntu-latest)`
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `fail` — `crates/cognitive-kernel` did not compile:
+  `return_to_decide_after_closed_effect` returned
+  `Result<_, TransitionRejection>` instead of `Result<_, EffectError>`.
+  Tests did not run. `required-ci` failed because `VERIFY_RESULT=failure`.
+  Windows is `not-run by owner-directed Linux-only route`.
+
+### D02-LINUX-01 — exact-revision compile at `40d96665` (superseded)
+
+- Instrument: `cargo test -p kernel-server --test p2_t16_registered_check --locked`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `40d96665`
+- Outcome: `fail` — same `E0308` mismatched types in
+  `crates/cognitive-kernel/src/harness.rs` final `ORIENT -> DECIDE` commit.
+  Assertions were not weakened.
+
+### D02-IMPL-02 — wrap LoopDriver DECIDE commit in EffectError
+
+- Instrument: `crates/cognitive-kernel/src/harness.rs`
+  `return_to_decide_after_closed_effect`
+- Outcome: authored. Final `commit_transition` is now
+  `Ok(self.engine().commit_transition(&cmd)?)` matching `start_loop`.
+  Journey semantics unchanged.

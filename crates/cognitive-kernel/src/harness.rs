@@ -597,7 +597,7 @@ where
         decide_guards.insert("decision_inputs_fixed".to_owned());
         let mut decide_evidence = BTreeMap::new();
         decide_evidence.insert("orientation_record".to_owned(), effect_ref);
-        self.engine().commit_transition(&self.command(
+        Ok(self.engine().commit_transition(&self.command(
             loop_id,
             "ORIENT",
             "DECIDE",
@@ -607,7 +607,7 @@ where
             oriented.after_version,
             None,
             lease,
-        )?)
+        )?)?)
     }
 
     /// Atomically pin one closed Effect post-state, persist its verification
