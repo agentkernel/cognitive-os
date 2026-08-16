@@ -44,10 +44,22 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 
 ### D01-CI-01 — Ubuntu supporting CI
 
-- Instrument: GitHub Actions `verify (ubuntu-latest)` on the Draft PR head.
-- Outcome: `not-run` (Draft PR not yet opened at this cell).
+- Instrument: GitHub Actions `verify (ubuntu-latest)` on Draft PR
+  [#226](https://github.com/agentkernel/cognitive-os/pull/226).
+- Outcome at `0b8768f5`: **fail** — run
+  [31937184754](https://github.com/agentkernel/cognitive-os/actions/runs/31937184754).
+  `kernel-server` did not compile: `server.rs` called `user_backup::` without
+  `use super::user_backup`, and `map_store_error` shadowed the local `error`
+  helper (`E0433`/`E0618`). Fix follows on the same branch.
 
 ### D01-LINUX-01 — exact-revision store/CLI/HTTP cells
 
-- Instrument: `DEV-LINUX-NATIVE-01` at a pushed revision.
-- Outcome: `not-run` (waiting for an immutable pushed head).
+- Instrument: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`, Rust 1.97.1)
+  at `0b8768f5`.
+- Outcome: **partial**. `cargo test -p cognitive-store --locked personal_backup`
+  **22/22 pass** (P7-T02 planning tests retained; archive roundtrip, tamper,
+  missing-category, schema, injected-fault, daemon-lock, and fresh-layout
+  negatives included). `cargo test -p admin-cli --test p2_t27_backup_restore --locked`
+  **2/2 pass**. `cargo test -p kernel-server --test p2_t27_backup_restore --locked`
+  **fail** — same `E0433`/`E0618` compile errors as D01-CI-01. fmt/Clippy
+  `not-run` at this revision.

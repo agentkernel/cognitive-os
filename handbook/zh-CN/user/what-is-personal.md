@@ -12,7 +12,7 @@ sources:
   - path: docs/product/personal/linux-1.0-scope.md
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:6e06151a20cc8b939404236ee852d5cbe36418f6699701178110dccaceb2f98e"
+fingerprint: "sha256:0a41d9da85412b2a5e5f58703003ed87c21e9e20af80d9420b8b5fa42b740e42"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---

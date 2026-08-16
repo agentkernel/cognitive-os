@@ -149,8 +149,8 @@ fn parse_archive_id(body: &[u8]) -> Result<String, UserBackupResponse> {
     Ok(archive_id.to_owned())
 }
 
-fn map_store_error(error: cognitive_store::PersonalBackupError) -> UserBackupResponse {
-    let (status, code) = match error {
+fn map_store_error(store_error: cognitive_store::PersonalBackupError) -> UserBackupResponse {
+    let (status, code) = match store_error {
         cognitive_store::PersonalBackupError::ArchiveTampered
         | cognitive_store::PersonalBackupError::ArchiveSecretIncluded
         | cognitive_store::PersonalBackupError::RawSqliteCopyForbidden => {
@@ -171,7 +171,7 @@ fn map_store_error(error: cognitive_store::PersonalBackupError) -> UserBackupRes
         }
         _ => (400, "RESOURCE_BACKUP_REFUSED"),
     };
-    error(status, code, &error.to_string())
+    error(status, code, &store_error.to_string())
 }
 
 fn ok(value: serde_json::Value) -> UserBackupResponse {

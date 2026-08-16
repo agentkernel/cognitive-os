@@ -45,6 +45,7 @@ use super::scheduler_authority::{
 use super::task_api::TaskApi;
 use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
 use super::tool_lifecycle;
+use super::user_backup;
 use super::verification_executor::open_daemon_artifact_store;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
