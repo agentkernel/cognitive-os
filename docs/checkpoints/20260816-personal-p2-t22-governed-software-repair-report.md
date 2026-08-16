@@ -351,3 +351,71 @@
 - Outcome: authored. The in-process path still applies the descriptor
   timeout and `output_limit_bytes` so `cargo test --bin kernel-server`
   does not warn unused `timeout` / `OutputTooLarge` under `-D warnings`.
+
+### D02-LINUX-06 — clippy and fmt at `4a803070`
+
+- Instrument: `cargo test -p kernel-server --bin kernel-server --locked -- personal::scheduler_authority::tests::production_`
+  then `cargo clippy --workspace --all-targets --locked -- -D warnings`
+  then `cargo fmt --all -- --check`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `4a803070`
+- Outcome: `pass` — production_ 10/10; workspace Clippy `-D warnings` clean;
+  rustfmt check clean.
+
+### D02-CI-05 — Ubuntu required CI at `4a803070`
+
+- Instrument: GitHub Actions run
+  [31919267639](https://github.com/agentkernel/cognitive-os/actions/runs/31919267639)
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `pass` — `verify (ubuntu-latest)` including workspace Rust tests,
+  Clippy deny-warnings, rustfmt, handbook, consistency, and `required-ci`.
+  Windows is `not-run by owner-directed Linux-only route`.
+
+## D03 — exact-revision linux-002 matrix and task closure
+
+### D03-LINUX-01 — restart / unknown-outcome / resource / secret / cleanup
+
+- Instrument:
+  `cargo test -p kernel-server --bin kernel-server --locked -- personal::registered_check::`
+  (21/21); `personal::p2_t17_a7_failure_first` (15/15);
+  `cargo test -p kernel-server --test p2_t16_registered_check --locked` (3/3);
+  `personal::scheduler_authority::tests::production_` (10/10);
+  `private_tick_dispatches_admitted_workspace_read_through_production_router`
+  (1/1); then `cargo test --workspace --locked` (0 failed, kernel-server bin
+  295/295).
+- Environment: `DEV-LINUX-NATIVE-01` at exact `4a803070`
+- Outcome: `pass`. Matrix coverage:
+  - restart / unknown-outcome: `crash_mid_dispatch_is_indeterminate_after_restart_and_never_redispatched`,
+    `crash_after_dispatch_reconciles_artifact_under_original_key`,
+    A7 original-key replay / lost-response / success-before-receipt;
+  - resource / timeout / orphan / oversize: `timeout_output_orphan_write_and_network_boundaries_fail_closed`;
+  - descriptor drift: `descriptor_version_or_field_drift_is_rejected`;
+  - exit-0-without-verification: write-alone journey stays `ACTIVE` with no
+    check evidence; `nonzero_exit_is_evidence_but_cannot_pass_independent_verification`;
+  - secret: `frozen_repair_corpora_contain_no_secret_shaped_bytes`; fixture
+    tree scan found 0 secret-shaped hits (needles exist only in that negative);
+  - cleanup: passing tests call `fixture.cleanup()` / `remove_dir_all`; four
+    leftover `/tmp/cognitiveos-p2-t17-*-267145-*` dirs from the earlier A7
+    parallel flake were removed; older 2026-08-14 A7 leftovers were left
+    untouched as out-of-task residue.
+- C1 WorkspaceRead with the fixed-Effect verifier still completes (`ACT -> VERIFY`).
+- `B01-Desktop-Linux-002` was not used.
+
+### D03-LOCAL-01 — Windows GNU route
+
+- Instrument: owner-directed Linux-only product-validation route
+- Environment: `DEV-WIN-GNU-01`
+- Outcome: `not-run by owner-directed Linux-only route`
+
+### D03-ACCEPT-01 — whole-task acceptance mapping
+
+- TypeScript and Rust repair journeys complete after RegisteredCheckRun +
+  independent verifier + acceptance on one Task.
+- Hidden-test gutting, public-test weakening, and out-of-scope write fail
+  closed on the production journey.
+- Descriptor drift, timeout/orphan/oversize/network, restart unknown-outcome,
+  and exit-without-independent-verification fail closed on the registered-check
+  and A7 suites run at the same revision.
+- Public C1 WorkspaceRead is unchanged.
+- Ubuntu required CI green at `4a803070` (run `31919267639`).
+- Claim ceiling remains `hypothesis`; no Gate/release/Profile/B01/EVAL
+  promotion.
