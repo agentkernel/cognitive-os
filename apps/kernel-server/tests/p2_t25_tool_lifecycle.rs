@@ -347,7 +347,8 @@ fn pinned_https_origin_registry_is_campaign_scoped_and_task_forbidden() {
         ),
     );
     assert!(exposure.starts_with("HTTP/1.1 200 "), "{exposure}");
-    let exposed = response_json(&exposure)["exposed"].as_array().unwrap();
+    let exposure_json = response_json(&exposure);
+    let exposed = exposure_json["exposed"].as_array().unwrap();
     assert!(
         exposed
             .iter()

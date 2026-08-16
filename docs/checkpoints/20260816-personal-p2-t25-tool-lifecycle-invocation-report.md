@@ -81,8 +81,9 @@
 
 ### D01-CI-03 — Ubuntu supporting CI after empty-comparison Clippy fix
 
-- Instrument: pending after the combined D01 Clippy fix + D02 head is pushed.
-- Initial status: `not-run`.
+- Instrument: combined into the D02 head `4dfd4f89` (run
+  [31930110947](https://github.com/agentkernel/cognitive-os/actions/runs/31930110947)).
+- Outcome: superseded by D02-CI-01 / D02-LINUX-01 (integration test E0716).
 
 ## D02 — RegisteredCheckRun success under lifecycle, pinned read-only HTTPS
 
@@ -129,7 +130,25 @@
   restart query the original key.
 - Initial status: `not-run` locally.
 
-### D02-CI-01 — Ubuntu supporting CI
+### D02-CI-01 — Ubuntu supporting CI at `4dfd4f89` (superseded)
 
-- Instrument: pending after the D02 head is pushed.
+- Instrument: GitHub Actions run
+  [31930110947](https://github.com/agentkernel/cognitive-os/actions/runs/31930110947)
+- Outcome: `fail` (compile). Same E0716 as D02-LINUX-01: temporary
+  `response_json(&exposure)["exposed"]` dropped while borrowed.
+- Disposition: bind `exposure_json` before indexing.
+
+### D02-LINUX-01 — exact-revision `DEV-LINUX-NATIVE-01` at `4dfd4f89` (superseded)
+
+- Instrument: worktree `/home/wuz/agent-kernel-worktrees/p2-t25-4dfd4f89`,
+  rustc 1.97.1, `cargo test -p kernel-server --test p2_t25_tool_lifecycle --locked`
+- Outcome: `fail` compile E0716 in
+  `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs:350`.
+- Disposition: bind `exposure_json` before indexing. Clippy/fmt `not-run`
+  (compile failed first). Windows `not-run by owner-directed Linux-only route`.
+  `B01-Desktop-Linux-002` untouched.
+
+### D02-CI-02 — Ubuntu supporting CI after E0716 fix
+
+- Instrument: pending after the compile-fix head is pushed.
 - Initial status: `not-run`.
