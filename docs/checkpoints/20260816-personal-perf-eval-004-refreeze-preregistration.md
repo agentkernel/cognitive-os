@@ -46,6 +46,7 @@ residue, and the owner plaintext key file are not in this freeze's allowlist.
 | Source archive + SHA-256 | **pass** | `git archive --format=tar --prefix=cognitiveos-personal-1e71344a/` of `1e71344a`; 14,407,680 bytes; `sha256:a871f5d32f2cdc818a696b7908d1fce2bc4bb63ebf47a4d36185c570146be7e8` verified on Windows, `DEV-LINUX-NATIVE-01`, and the guest |
 | New campaign root/port | **pass** | `/home/hal9001/perfeval004-20260816` mode `0700`; port `127.0.0.1:48286` unused. Prior root `/home/hal9001/perfeval004` and listeners `48181`/`48284` left untouched |
 | Exact-source daemon/CLI binaries | **pass** | `DEV-LINUX-NATIVE-01` `cargo build --release --locked -p kernel-server -p admin-cli` from extracted archive, 1m40s, Rust 1.97.1. `kernel-server` 16,456,928 bytes `sha256:ecc1bf395d0d4368dfd4d32666cecaa2bb1bc5350f26fa2f52a7829aa1ce1e3e`; `cognitive` 10,313,952 bytes `sha256:760ad2c7f3cbd90906b15f3ccf2344e8b0fa82baefc0ee1486f24fa5aa15afe5`. Digests matched host `/home/wuz/eval004-refreeze-20260816/` and guest campaign root |
+| Campaign daemon on `48286` | **pass** | public `cognitive daemon start --runtime-root …/runtime --bind 127.0.0.1:48286 --kernel-server …/kernel-server`; pid 199172; lock live; bootstrap present (value not read). Public status: system/database/secret/daemon `ready`, provider `blocked` (`provider_config_missing`), pi `not_configured`, `first_conversation_ready: false`, `authority_side_effects: false`. Listeners `48181`/`48284` still present and untouched |
 | New SecretStore entry | not-run | owner-approved hidden/stdin path; never argv/env/log |
 | Pure-Pi broker freeze | not-run | loopback-only, memory-only key, no body/header log |
 | Equivalent fixture/oracle/runner | not-run | P/O tools, bytes, budget, timeout, retry=0 identical |
@@ -91,10 +92,25 @@ campaign root only; `/home/hal9001/perfeval004` was not read or modified.
 | `kernel-server` | 16,456,928 | `ecc1bf395d0d4368dfd4d32666cecaa2bb1bc5350f26fa2f52a7829aa1ce1e3e` |
 | `cognitive` | 10,313,952 | `760ad2c7f3cbd90906b15f3ccf2344e8b0fa82baefc0ee1486f24fa5aa15afe5` |
 
+## Campaign daemon start (2026-08-16)
+
+Public caller:
+
+`/home/hal9001/perfeval004-20260816/cognitive daemon start --runtime-root /home/hal9001/perfeval004-20260816/runtime --bind 127.0.0.1:48286 --kernel-server /home/hal9001/perfeval004-20260816/kernel-server`
+
+Result: `action=started`, pid `199172`, endpoint `127.0.0.1:48286`, lock
+`…/runtime/cognitiveos/daemon.lock`, `bootstrap_present=true` (value not read).
+`cognitive status` reports system/database/secret/daemon `ready`, provider
+`blocked` (`provider_config_missing`), pi `not_configured`,
+`first_conversation_ready: false`, `authority_side_effects: false`. Guest
+listeners are `48181`, `48284`, and `48286`; the first two were not stopped.
+
+No Provider sample, Task, Tool, Effect, or SecretStore mutation occurred.
+
 ## Unique next action
 
-Install a campaign-local runtime under `/home/hal9001/perfeval004-20260816`
-and start the daemon with the public `cognitive daemon start` caller on
-`127.0.0.1:48286` only. Then create a **new** campaign-only SecretStore item
-via the owner-approved hidden/stdin path. Do not start a Provider sample, do
-not reuse the 2026-08-15 SecretStore item, and do not bind `48284`/`48181`.
+Create a **new** campaign-only SecretStore item via the owner-approved
+hidden/stdin path, then pin local Pi `0.81.1` under the new root. Do not
+start a Provider sample, do not reuse the 2026-08-15 SecretStore item, and
+do not bind `48284`/`48181`. Independent reviewer remains `not_reviewed`
+(B0 may continue; B1 is forbidden).
