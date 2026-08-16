@@ -53,8 +53,9 @@ residue, and the owner plaintext key file are not in this freeze's allowlist.
 | Equivalent fixture/oracle/runner | **pass** for C0; C1/C2 `not-run` | C0 corpus `sha256:38e282d4e3ceba0d62768073cf64e27a0e910832ad2ef4bfcca3f2460c919ab1` (byte-identical to closed EVAL-002); runner `sha256:b6f1946b922054850a854ef29785943b18e19eedadc1e0053305fafd45b7b106` (new root/port/extension/seed `20260816`); analyze `sha256:6575f912a21c9b3563c883682cddc26d1facac7054ea92d408e79aa0d991906b`. C1/C2 equivalent workspace adapters are not frozen |
 | Redactor/sampler/cleanup digests | **pass** (scanner freeze) | `redactor.py` `sha256:665ae17713c6816b20b871778daca47dff0e9e0c9648e9ef102a30861dec6010`; evidence/runtime-config/arm homes 0 key-shaped hits. Sampler not-run until B4 |
 | Independent reviewer before B1 | not-run | `not_reviewed`; B0 may continue; B1 is forbidden |
+| B0 C0 qualification samples | **pass** | 3 discarded warmups + 9/9 retained family samples; 7/9 oracle both arms; G6/G9 both-fail; retry=0; redactor 0 hits. Not a performance claim |
 
-No B0/B1/B2/B3/B4 **sample** has started under this freeze (no Provider qualification run, no Task/Tool/Effect). No Gate, release, Profile, B01, or Agent-benefit claim is created by this preregistration.
+No B1/B2/B3/B4 sample has started. B0 C0 qualification samples are recorded below. C1/C2 B0 samples remain `not-run`. No Gate, release, Profile, B01, or Agent-benefit claim is created by this preregistration.
 
 ## Archive and guest-root pin (2026-08-16)
 
@@ -234,16 +235,55 @@ model id, `retry=0`, 180 s timeout, mechanical `ANSWER:` oracle, arm order
 randomized from seed `20260816`. Declared arm differences remain broker vs
 Extension/daemon proxy. C1/C2 equivalent workspace tool adapters, hidden
 oracles, and reset digests are **not** frozen; those classes stay
-`not-run`/`not_available` until a later B0 asset freeze. No Provider
-qualification sample has started.
+`not-run`/`not_available` until a later B0 asset freeze.
 
 Redactor over `evidence/`, `runtime/config/`, and both arm homes:
 `key_shaped_hits=0`.
 
+## B0 C0 warmups (2026-08-16) — discarded, not in denominator
+
+Three non-counted G1 pilot blocks (`start-index` 100, 3 replicas), 6 started
+runs, 6 retained, all `completed` with oracle pass on both arms. Evidence
+`sha256:6dd5ffc61b343c42433601b5196bf029af462ab7dd232015aeb30e1f68490cea`.
+These runs are excluded from the qualification denominator.
+
+## B0 C0 qualification (2026-08-16) — pass (path/fairness; not a performance claim)
+
+One pilot seed per C0 family (`start-index` 0, 1 replica, seed `20260816`
+in-block arm shuffle), `retry=0`, 180 s timeout. Evidence
+`sha256:2c72ef63ae0a83189dbd20c3fbd485e77a205af570172909bb9ac113b0d79d58`.
+9/9 blocks started and retained. Every arm `completed` (0 timeout, 0
+process_error). Broker: 9 qualification P-arm forwards, all `upstream_ok`
+(campaign total including warmups: accepted 12 / rejected 0 / upstream_ok 12
+/ upstream_err 0).
+
+| Family | Arm order | P oracle | O oracle | P wall ms | O wall ms |
+|---|---|---|---|---:|---:|
+| A5 | P,O | pass | pass | 10172 | 10666 |
+| G2 | O,P | pass | pass | 3351 | 4823 |
+| G6 | P,O | fail | fail | 12176 | 8483 |
+| G1 | P,O | pass | pass | 3304 | 4842 |
+| G3 | P,O | pass | pass | 7481 | 8973 |
+| G4 | P,O | pass | pass | 3482 | 5416 |
+| A1 | P,O | pass | pass | 3576 | 4967 |
+| G9 | O,P | fail | fail | 4433 | 10968 |
+| A4 | O,P | pass | pass | 4561 | 4941 |
+
+Oracle completion 7/9 on each arm; G6 and G9 failed **both** arms (task
+hardness, not an arm-specific instrument defect). This qualifies the C0
+paired path. It is not a B1/B2 result and creates no Agent-benefit claim.
+
+Redactor over `evidence/` after these cells: 4 files, `key_shaped_hits=0`.
+Broker metrics JSONL: 0 `sk-` hits. Listeners `48181`/`48284`/`48383`
+untouched. Daemon pid 199172 still live. Independent reviewer
+`not_reviewed`.
+
+C1/C2 B0 samples were not started: equivalent workspace fixtures remain
+absent (`not-run`).
+
 ## Unique next action
 
-Run B0 C0 non-counted warmups (3 per arm) then one qualification sample
-per C0 family with `retry=0`; retain every started sample. C1/C2 remain
-`not-run` (equivalent workspace fixtures absent). Independent reviewer
-remains `not_reviewed` (B1 forbidden). Do not bind or stop
+Freeze C1/C2 equivalent workspace fixtures/oracles under the new root, or
+record those classes `not-run` and stop Provider batches. **B1 is forbidden**
+while independent reviewer is `not_reviewed`. Do not bind or stop
 `48181`/`48284`/`48383`.

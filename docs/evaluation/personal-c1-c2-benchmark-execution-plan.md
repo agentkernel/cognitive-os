@@ -1,7 +1,7 @@
 # CognitiveOS Personal C1/C2 governed-task benchmark addendum
 
 - Campaign: `PERSONAL-PERF-EVAL-004`
-- Status: **2026-08-16 re-freeze in B0** at `main@1e71344a`; SecretStore `/12`, Pi `0.81.1`, broker `127.0.0.1:48386`, and C0 corpus/runner/redactor are pinned; C1/C2 fixtures `not-run`; no Provider sample started
+- Status: **2026-08-16 re-freeze in B0** at `main@1e71344a`; C0 qualification recorded (9/9 retained); C1/C2 fixtures `not-run`; B1 forbidden while reviewer `not_reviewed`
 - Full OS-only scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
 - Parent execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Scope: this document defines C1/C2 execution. The owner-authorized full
