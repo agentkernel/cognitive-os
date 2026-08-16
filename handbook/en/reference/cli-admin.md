@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/main.rs
-fingerprint: "sha256:3bc8b88e7994e54067130d4f13bb583be07d08c6016d8dd85bf54f0b5d1b3c9f"
+fingerprint: "sha256:6c7edb37443b51d3f565a6ec1af34bdc01bee458fb4b511f3a4ef2a4f42df618"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -32,6 +32,8 @@ USAGE:
   admin-cli install   --mode official --session <session.json> --installation-store <db> --staged-artifact <file> --dependency-lock <file> --node-version <semver> --signed-lock-ref <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256>
   admin-cli register  --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --adapter-digest <sha256> --protocol-digest <sha256> --policy-digest <sha256>
   admin-cli activate  --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
+  admin-cli activate-root --session <session.json> --installation-store <db> --installation-root <root> --package-ref <pkg://...> [--expected-activation-version <u64>] --compatibility-accepted yes --health-accepted yes
+  admin-cli rollback --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --target-activation-version <u64>
   admin-cli agent-pause   --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
   admin-cli agent-resume  --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
   admin-cli agent-stop    --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>

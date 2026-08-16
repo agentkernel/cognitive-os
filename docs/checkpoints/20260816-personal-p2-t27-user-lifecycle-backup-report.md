@@ -64,12 +64,26 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   **fail** — same `E0433`/`E0618` compile errors as D01-CI-01. fmt/Clippy
   `not-run` at this revision.
 
-### D01-CI-02 — Ubuntu supporting CI after compile fix
+### D01-CI-02 — Ubuntu supporting CI after compile/Clippy fixes
 
-- Instrument: GitHub Actions `verify (ubuntu-latest)` on `7d80b7a5` (run
-  [31937711577](https://github.com/agentkernel/cognitive-os/actions/runs/31937711577)).
-- Outcome: in progress at this cell. Rust workspace **build** passed; workspace
-  tests were running. Clippy is still required.
+- Instrument: GitHub Actions `verify (ubuntu-latest)` on `6eea42c4` (run
+  [31938000525](https://github.com/agentkernel/cognitive-os/actions/runs/31938000525)).
+- Outcome: **pass** (ubuntu-latest + required-ci). Workspace build/test,
+  Clippy `-D warnings`, rustfmt, handbook, consistency, and conformance
+  steps succeeded. The earlier fail at `0b8768f5` (run
+  [31937184754](https://github.com/agentkernel/cognitive-os/actions/runs/31937184754))
+  and Clippy fail at `7d80b7a5` (run
+  [31937711577](https://github.com/agentkernel/cognitive-os/actions/runs/31937711577))
+  are superseded. Windows remains `not-run by owner-directed Linux-only route`. Superseded by D01-CI-03.
+
+### D01-CI-03 — Ubuntu supporting CI after Clippy fix
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31938000525`](https://github.com/agentkernel/cognitive-os/actions/runs/31938000525)
+  on Draft PR [#226](https://github.com/agentkernel/cognitive-os/pull/226) at
+  `6eea42c4`.
+- Outcome: **pass**. `required-ci` green. Windows `not-run by owner-directed
+  Linux-only route`.
 
 ### D01-LINUX-02 — exact-revision revalidation after compile fix (`7d80b7a5`)
 

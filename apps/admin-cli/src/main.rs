@@ -30,12 +30,14 @@ use cognitive_runtime::{
     OFFICIAL_PI_INSTALLATION_ROOT, OFFICIAL_PI_PACKAGE, OFFICIAL_PI_VERSION,
     OfficialPiAcquisitionRequest, OfficialPiAgentActivationRequest,
     OfficialPiAgentLifecycleRequest, OfficialPiAgentRegistrationRequest, PackageInstallRequest,
-    PiInstallationLifecyclePrecondition, PiInstallationUninstallRequest,
-    acquire_official_pi_durable, activate_official_pi_agent_durable, install_package_durable,
+    PiInstallationLifecyclePrecondition, PiInstallationRootActivationRequest,
+    PiInstallationUninstallRequest, acquire_official_pi_durable,
+    activate_official_pi_agent_durable, activate_official_pi_root_durable, install_package_durable,
     observe_official_pi_agent_health_durable, package_artifact_digest,
     pause_official_pi_agent_durable, recover_official_pi_agent_durable,
     register_official_pi_agent_durable, resume_official_pi_agent_durable,
-    stop_official_pi_agent_durable, uninstall_official_pi_root_durable,
+    rollback_official_pi_root_durable, stop_official_pi_agent_durable,
+    uninstall_official_pi_root_durable,
 };
 use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator};
 use serde_json::{Value, json};
@@ -54,6 +56,8 @@ USAGE:
   admin-cli install   --mode official --session <session.json> --installation-store <db> --staged-artifact <file> --dependency-lock <file> --node-version <semver> --signed-lock-ref <ref> --adapter-digest <sha256> --sandbox-digest <sha256> --compatibility-digest <sha256>
   admin-cli register  --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --adapter-digest <sha256> --protocol-digest <sha256> --policy-digest <sha256>
   admin-cli activate  --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
+  admin-cli activate-root --session <session.json> --installation-store <db> --installation-root <root> --package-ref <pkg://...> [--expected-activation-version <u64>] --compatibility-accepted yes --health-accepted yes
+  admin-cli rollback --session <session.json> --installation-store <db> --installation-root <root> --expected-activation-version <u64> --target-activation-version <u64>
   admin-cli agent-pause   --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
   admin-cli agent-resume  --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
   admin-cli agent-stop    --session <session.json> --installation-store <db> --installation-root <root> --expected-fencing-epoch <u64> --protocol-digest <sha256>
@@ -112,6 +116,8 @@ fn run(args: &[String]) -> i32 {
         "install" => dispatch_install(&flags),
         "register" => dispatch_register(&flags),
         "activate" => dispatch_activate(&flags),
+        "activate-root" => dispatch_activate_root(&flags),
+        "rollback" => dispatch_rollback(&flags),
         "agent-pause" => dispatch_agent_lifecycle(&flags, "agent.pause"),
         "agent-resume" => dispatch_agent_lifecycle(&flags, "agent.resume"),
         "agent-stop" => dispatch_agent_lifecycle(&flags, "agent.stop"),
@@ -755,6 +761,108 @@ fn dispatch_activate(flags: &BTreeMap<String, String>) -> i32 {
             "sidecar_lifecycle_state": sidecar.lifecycle_state(),
             "sidecar_fencing_epoch": sidecar.fencing_epoch(),
             "protocol_digest": sidecar.protocol_digest(),
+            "capability_grants": authority.capability_grants(),
+            "effects_created": 0,
+            "tasks_completed": 0,
+        })),
+        Err(error) => fail_installer(error),
+    }
+}
+
+fn dispatch_activate_root(flags: &BTreeMap<String, String>) -> i32 {
+    let root = match required(flags, "installation-root") {
+        Ok(root) if root == OFFICIAL_PI_INSTALLATION_ROOT => root,
+        Ok(_) => return usage_error("--installation-root must be the versioned official Pi root"),
+        Err(message) => return usage_error(&message),
+    };
+    let official_package = format!("pkg://{OFFICIAL_PI_PACKAGE}@{OFFICIAL_PI_VERSION}");
+    let package_ref = match required(flags, "package-ref") {
+        Ok(value) if value == official_package => value,
+        Ok(_) => return usage_error("--package-ref must be the official Pi package reference"),
+        Err(message) => return usage_error(&message),
+    };
+    let expected_activation_version = match flags.get("expected-activation-version") {
+        Some(value) => match value.parse::<u64>() {
+            Ok(version) => Some(version),
+            Err(_) => return usage_error("--expected-activation-version must be a u64"),
+        },
+        None => None,
+    };
+    if flags.get("compatibility-accepted").map(String::as_str) != Some("yes") {
+        return usage_error("--compatibility-accepted must be yes");
+    }
+    if flags.get("health-accepted").map(String::as_str) != Some("yes") {
+        return usage_error("--health-accepted must be yes");
+    }
+    if let Err(code) = authorize_agent_management(flags, "agent.install", root) {
+        return code;
+    }
+    let authority = match open_installation_authority(flags) {
+        Ok(authority) => authority,
+        Err(code) => return code,
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    match activate_official_pi_root_durable(
+        &manager,
+        &PiInstallationRootActivationRequest {
+            installation_root: root.to_owned(),
+            package_ref: package_ref.to_owned(),
+            expected_activation_version,
+            compatibility_accepted: true,
+            health_accepted: true,
+        },
+    ) {
+        Ok(binding) => emit(&json!({
+            "installation_root": binding.installation_root(),
+            "activation_version": binding.activation_version(),
+            "package_ref": binding.package_ref(),
+            "capability_grants": authority.capability_grants(),
+            "effects_created": 0,
+            "tasks_completed": 0,
+        })),
+        Err(error) => fail_installer(error),
+    }
+}
+
+fn dispatch_rollback(flags: &BTreeMap<String, String>) -> i32 {
+    let root = match required(flags, "installation-root") {
+        Ok(root) if root == OFFICIAL_PI_INSTALLATION_ROOT => root,
+        Ok(_) => return usage_error("--installation-root must be the versioned official Pi root"),
+        Err(message) => return usage_error(&message),
+    };
+    let expected_version = match required(flags, "expected-activation-version") {
+        Ok(value) => match value.parse::<u64>() {
+            Ok(version) => version,
+            Err(_) => return usage_error("--expected-activation-version must be a u64"),
+        },
+        Err(message) => return usage_error(&message),
+    };
+    let target_version = match required(flags, "target-activation-version") {
+        Ok(value) => match value.parse::<u64>() {
+            Ok(version) => version,
+            Err(_) => return usage_error("--target-activation-version must be a u64"),
+        },
+        Err(message) => return usage_error(&message),
+    };
+    if let Err(code) = authorize_agent_management(flags, "agent.rollback", root) {
+        return code;
+    }
+    let authority = match open_installation_authority(flags) {
+        Ok(authority) => authority,
+        Err(code) => return code,
+    };
+    let manager = match authority.acquire_installation_manager() {
+        Ok(manager) => manager,
+        Err(error) => return fail_installer(error),
+    };
+    match rollback_official_pi_root_durable(&manager, root, expected_version, target_version) {
+        Ok(binding) => emit(&json!({
+            "installation_root": binding.installation_root(),
+            "activation_version": binding.activation_version(),
+            "package_ref": binding.package_ref(),
             "capability_grants": authority.capability_grants(),
             "effects_created": 0,
             "tasks_completed": 0,

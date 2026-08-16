@@ -20,7 +20,8 @@ sources:
 tests:
   - crates/cognitive-management/tests/m5_session_approval.rs
   - apps/admin-cli/tests/m5_deterministic_fallback.rs
-fingerprint: "sha256:a8c2ba8584756ff637925fa73f2e6cb2dad84949673d1d45b9407ca0be5a539a"
+  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
+fingerprint: "sha256:7f3c8b16d4b03bce656e63d84fb00f38d28e37a7556cbdb9db6c5b535b97f156"
 non_claims:
   - R0/R2/R3 approval flows and a durable governance-ledger production path are not implemented; only what is listed here exists.
 ---
@@ -57,7 +58,7 @@ are not implemented — hence `partial`.
 
 ## Agent lifecycle verbs
 
-`admin-cli install/register/activate/agent-pause/agent-resume/agent-stop/
+`admin-cli install/register/activate/activate-root/rollback/agent-pause/agent-resume/agent-stop/
 agent-recover/agent-health/uninstall` call the runtime lifecycle described in
 [Agent and Pi lifecycle](./agent-and-pi-lifecycle.md), all session-gated.
 
