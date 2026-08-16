@@ -546,11 +546,49 @@ Paired soak blocks (plan every 5 min in 1 h) were **`not-run`**: B1/B2 already
 consumed the confirmatory Provider denominator; this 1 h cell is local
 leak/safety only.
 
+## Remaining matrix dispositions (2026-08-17) — recorded while B5 8 h in progress
+
+These cells do not need the live campaign daemon (or must not share it with
+the started soak). Independent reviewer remains `not_reviewed` (claim
+ceiling, not a remaining-cell mutex). No product code was added.
+
+| Cell | Disposition | Note |
+|---|---|---|
+| UJ1 install→first response | **`not-run`** | Plan §5.1 reuses historical B01; this freeze does not reinstall or mutate the guest image |
+| UJ2 cold/warm conversation | **queued after B5 8 h** | Cold stratum would stop the soak daemon. Daemon-warm/Pi-cold is already the B1/B2 condition (fresh Pi per task). Pi-warm process reuse remains `not_available` |
+| UJ3 task-bound resource watch (plan N=20) | **queued with UJ4** | UJ3 recorded health/CLI/six-resource get/watch; the plan's 20 task-bound watches were not in that instrument |
+| UJ4 / O1 Task admission | **queued after B5 8 h** | Frozen `p9-t04-l4-t1-scenario-runner.mjs` extracted from the `1e71344a` archive, `sha256:8fe3f3c936f1e30b2c72202749c51ef312e4bdc887174a73890b16ad8c9246f3` (matches in-tree). 30 unique read-only Tasks; would contaminate soak RSS/watch |
+| UJ6 journey register | **queued at closure** | Final coverage matrix; not a live sample |
+| O2 Context decision surface | **`not_available`** | Addendum: no public redacted decision surface; SQLite/test helpers forbidden |
+| O3 cache/compaction | **`not_available`** | Addendum: no public cache observation surface |
+| O4 scheduler/fairness telemetry | **`not_available`** | Capability partial; no compliant public fairness/queue/fence telemetry |
+| O5 Effect history | **`not-run`** | C2a paired adapter absent; no public Effect-history campaign fixture |
+| O6 verifier/acceptance | **`not-run`** | C1/C2 paired adapter absent; UJ4 will record admission ≠ completion |
+| O10 management lifecycle | **covered by B3** | No independent O10 denominator; B3 already retained 10/10 public stop/start cycles |
+| O11 six-resource projection | **covered by UJ3** | 300 × HTTP 200 family GET; 60 × bounded watch |
+| O12 SecretStore fail-closed / redaction | **covered by B0** | SecretStore `/12` import + redactor 0 key-shaped hits on evidence/runtime/arms |
+| O13 bounded public replay | **`partial`** (UJ3) | Public bounded watch only; full audit chain internal |
+| O14 backup/restore | **`not_available`** | Addendum: no user CLI/API restore path |
+| T2 enable/disable/quarantine | **queued after B5 8 h** | P2-T25 public management routes exist at this revision (EVAL-002's fall-through is historical). Instrument staged at guest `t2_lifecycle.py` `sha256:d654a9ca572aaf23e494daf3a48878f4543e56745f236ea5fa0dfc1f802aede7` — not started |
+| T3 Tool selection pilot | **`not-run`** | Plan-optional; not in confirmatory |
+| T4–T5, T9 positives | **`not-run`** | C1/C2 equivalent Pi Workspace* adapter absent |
+| T6/T7 positives | **`not-run`** | Addendum: outside supported scope |
+| T6/T7 fail-closed negatives | **`not-run`** | No public Tool-dispatch surface independent of the C1/C2 paired adapter; starting a dispatch sample would invent a second caller |
+| T8 descriptor-drift deny | **`not-run`** | Same missing public dispatch surface |
+| T10 live MCP ecosystem | **`not-run`** | Fixture-only / no live ecosystem claim; T-GOV projection already recorded |
+| S4/S8 Agent Skill consumption | **`not-run`** | Plan: no equivalent governed-consumer paired path |
+| C1/C2 B0/B1/B2 paired | **`not-run`** | Workspace bytes frozen; equivalent Pi adapter absent |
+| B4 mixed Agent/local | **`not-run`** | Already recorded under B4 local-only pass |
+| B5 paired soak blocks | **`not-run`** | Already recorded; B1/B2 consumed the Provider confirmatory denominator |
+| B5 24 h | **conditional; default `not-run`** | Only if 8 h has an unresolved slope **and** owner budget |
+| B6 optimization replay | **`not-run`** | Not this campaign |
+
 ## Unique next action
 
-`B5` 8 h local soak with hourly restart is running on the guest as pid
-**241537**, log `evidence/b5-8h.log`, instrument
-`sha256:f51eee640f426c7d200b1565786dd46817485c95d83956520b0cad5a60d248af`.
-Paired 10-minute soak blocks remain `not-run`. C1/C2 paired stays `not-run`.
-Do not bind or stop `48181`/`48284`/`48383`. Do not clear SecretStore `/12`
-until final cleanup after the 8 h cell.
+Do **not** stop B5 8 h pid **241537**, campaign daemon `127.0.0.1:48286`, or
+broker `127.0.0.1:48386`. Wait for `CELL_DONE b5-8h` in `evidence/b5-8h.log`
+(480 minutes, hourly restart at minutes 60,120,…,420). Then, without
+touching `48181`/`48284`/`48383` or SecretStore `/12` until cleanup: UJ4
+(30 admissions) + UJ3 task-watch 20, T2 lifecycle smoke, UJ2 cold stratum
+with `--bind 127.0.0.1:48286`, UJ6 register, cleanup + secret scan, final
+assessment. Claim ceiling `hypothesis`.
