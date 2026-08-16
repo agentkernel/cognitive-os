@@ -64,6 +64,7 @@ P2-T28 D01 freeze is `tools/test/p2_t28_capability_truth.test.mjs` against
 `tools/fixtures/p2_t28_uj_matrix.json` (existing public callers/oracles;
 Web UI/Multi-Agent stay explicit `excluded`). The matching daemon register is
 `apps/kernel-server/src/personal/capability_truth.rs` (Linux/CI only).
+P2-T28 D02 public-caller smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`.
 
 ## What CI enforces on every PR
 

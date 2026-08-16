@@ -62,6 +62,7 @@ P2-T28 D01 冻结是 `tools/test/p2_t28_capability_truth.test.mjs`，对照
 `tools/fixtures/p2_t28_uj_matrix.json`（已存在的公开调用方/oracle；Web UI/
 Multi-Agent 保持显式 `excluded`）。对应 daemon 登记表是
 `apps/kernel-server/src/personal/capability_truth.rs`（仅 Linux/CI）。
+P2-T28 D02 公开调用方冒烟是 `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`。
 
 ## CI 在每个 PR 上强制什么
 
