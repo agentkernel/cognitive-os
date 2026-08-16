@@ -234,6 +234,27 @@
   `Ok(self.engine().commit_transition(&cmd)?)` matching `start_loop`.
   Journey semantics unchanged.
 
+### D02-LINUX-03 — journey tests at `de97b4d2` (superseded)
+
+- Instrument: `cargo test -p kernel-server --bin kernel-server --locked -- personal::scheduler_authority::tests::production_`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `de97b4d2`
+- Outcome: `fail` — 8/10 production_ tests pass, including hidden/public
+  gutting, out-of-scope write, and write-alone. The two complete-journey
+  tests stayed `ACTIVE` with
+  `ambiguous durable Effect bindings` after the second candidate was
+  admitted. `resolve_scheduler_work_for_task` still required exactly one
+  Intent per epoch. Assertions were not weakened.
+
+### D02-IMPL-04 — unconsumed WIA selects the current Intent
+
+- Instrument: `apps/kernel-server/src/personal/scheduler_authority/effect.rs`
+  `resolve_scheduler_work_for_task`
+- Outcome: authored. An unconsumed WIA binds the current Intent when several
+  share the epoch; multiple Intents without a current WIA leave the binding
+  unset so the next pass can admit another candidate. `select_single_effect_intent`
+  remains the fail-closed helper for the single-Intent and Effect-resolution
+  paths.
+
 ### D02-LINUX-02 — kernel-server tests at `0fce61df` (superseded)
 
 - Instrument: `cargo test -p kernel-server --test p2_t16_registered_check --locked`

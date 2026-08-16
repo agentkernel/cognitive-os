@@ -95,7 +95,8 @@ non_claims:
    收口的 Task 上，中间 mutation Effect 闭合后 Loop 经登记边回到 `DECIDE`；后续
    tick 在 workspace capability 下准入仅含 `check_id` 的 RegisteredCheckRun，只有
    该 check 的独立 verifier 与 acceptance 可将 Task 标为 `COMPLETED`。公共 C1
-   WorkspaceRead 配 fixed-Effect verifier 的路径不变。hidden-test 被掏空、公开
+   WorkspaceRead 配 fixed-Effect verifier 的路径不变。同一合同 epoch 上有多条
+   Intent 时，未消费 WIA 选出当前 Intent，而不是把集合判为 ambiguous。hidden-test 被掏空、公开
    测试被削弱、越界写全部 fail closed。D03 仍拥有 exact-revision linux-002
    restart/unknown-outcome/resource/secret/cleanup 矩阵。
 

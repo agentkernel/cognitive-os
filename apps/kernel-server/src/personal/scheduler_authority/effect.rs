@@ -115,20 +115,22 @@ where
     })
 }
 
-/// Reconstruct the sole dispatchable TaskBinding from durable task work.
+/// Reconstruct the dispatchable TaskBinding from durable task work.
 ///
 /// A scheduler row does not carry a mutable copy of contract or action
 /// identity. Each worker tick instead reads the current immutable contract
-/// epoch. Zero matching Intents is the first pre-admission pass; exactly one
-/// reconstructs the durable Effect binding. Ambiguous or internally
-/// inconsistent rows fail before lease acquisition, so recovery cannot guess
-/// which Effect a task should drive.
+/// epoch. Zero matching Intents is the first pre-admission pass. An
+/// unconsumed WIA selects its exact Intent when several exist for the same
+/// epoch, so a later RegisteredCheckRun can dispatch after a closed Write.
+/// Exactly one Intent without a current WIA still reconstructs the durable
+/// Effect binding. Multiple Intents without a current WIA leave the binding
+/// unset so the next pass can admit another candidate instead of guessing.
 pub(crate) fn resolve_scheduler_work_for_task<S>(
     store: &S,
     task_ref: &str,
 ) -> Result<ResolvedSchedulerWork, SchedulerAuthorityError>
 where
-    S: IntentChainStore + ProtocolStore,
+    S: IntentChainStore + ProtocolStore + WorkerAuthorizationStore,
 {
     if task_ref.is_empty() {
         return Err(SchedulerAuthorityError::EmptyTaskReference);
@@ -148,16 +150,40 @@ where
     let intent_rows = store
         .list_intents_for_task_binding(&task_binding)
         .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
-    let authority_binding = if intent_rows.is_empty() {
-        None
-    } else {
-        let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
-        let action_fingerprint = format!("{}:{}", intent_row.action, intent_row.parameters_digest);
+    let unconsumed_wia = store
+        .load_unconsumed_worker_iteration_authorization_for_task_binding(
+            &task_binding.task_ref,
+            task_binding.contract_epoch,
+        )
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+    let authority_binding = if let Some(authorization) = unconsumed_wia {
+        let intent_row = intent_rows
+            .iter()
+            .find(|intent_row| intent_row.intent_id == authorization.intent_id)
+            .ok_or_else(|| {
+                SchedulerAuthorityError::InconsistentEffectBinding(
+                    authorization.intent_id.as_str().to_owned(),
+                )
+            })?;
+        if intent_row.task_binding.as_ref() != Some(&task_binding) {
+            return Err(SchedulerAuthorityError::InconsistentEffectBinding(
+                intent_row.intent_id.as_str().to_owned(),
+            ));
+        }
         Some(SchedulerAuthorityBinding {
             task_ref: task_ref.to_owned(),
             contract_epoch,
-            action_fingerprint,
+            action_fingerprint: format!("{}:{}", intent_row.action, intent_row.parameters_digest),
         })
+    } else if intent_rows.len() == 1 {
+        let intent_row = select_single_effect_intent(&task_binding, &intent_rows)?;
+        Some(SchedulerAuthorityBinding {
+            task_ref: task_ref.to_owned(),
+            contract_epoch,
+            action_fingerprint: format!("{}:{}", intent_row.action, intent_row.parameters_digest),
+        })
+    } else {
+        None
     };
     Ok(ResolvedSchedulerWork {
         authority_binding,

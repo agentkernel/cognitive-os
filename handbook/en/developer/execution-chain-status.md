@@ -105,7 +105,8 @@ The remaining gaps are:
    `check_id`-only RegisteredCheckRun against the workspace capability, and
    only that check's independent verifier plus acceptance may `COMPLETED` the
    Task. Public C1 WorkspaceRead with the fixed-Effect verifier is unchanged.
-   Hidden-test gutting, public-test weakening, and out-of-scope writes fail
+   When several Intents share one contract epoch, an unconsumed WIA selects the
+   current Intent instead of treating the set as ambiguous. Hidden-test gutting, public-test weakening, and out-of-scope writes fail
    closed. D03 still owns the exact-revision linux-002
    restart/unknown-outcome/resource/secret/cleanup matrix.
 
