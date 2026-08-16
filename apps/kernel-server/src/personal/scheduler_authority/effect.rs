@@ -321,6 +321,11 @@ where
             resolved.effect_state.clone(),
         ));
     }
+    inject_authorized_fault(
+        executor_router,
+        &resolved.authorization.task_ref,
+        crate::personal::fault_profile::AuthorizedFaultPoint::DispatchBefore,
+    )?;
     executor_router
         .stage_resolved(resolved)
         .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
@@ -339,12 +344,32 @@ where
         executor_router,
         writer_lease,
     )?;
+    if matches!(
+        outcome,
+        cognitive_kernel::executor::DispatchOutcome::Executed { .. }
+    ) {
+        inject_authorized_fault(
+            executor_router,
+            &resolved.authorization.task_ref,
+            crate::personal::fault_profile::AuthorizedFaultPoint::MutationAfterReceiptBefore,
+        )?;
+    }
     let recorded = effect_protocol.record_outcome(
         &resolved.authorization.effect_object_id,
         executing.after_version,
         &outcome,
         writer_lease,
     )?;
+    if matches!(
+        outcome,
+        cognitive_kernel::executor::DispatchOutcome::Executed { .. }
+    ) {
+        inject_authorized_fault(
+            executor_router,
+            &resolved.authorization.task_ref,
+            crate::personal::fault_profile::AuthorizedFaultPoint::ReceiptAfterEffectCloseBefore,
+        )?;
+    }
     match outcome {
         cognitive_kernel::executor::DispatchOutcome::Executed { .. } => {
             let (_, query) = effect_protocol.reconcile(
@@ -543,6 +568,31 @@ where
         capability_set_version: snapshot.capability_set_version,
     };
     Ok((grant, currency))
+}
+
+pub(crate) fn inject_authorized_fault(
+    executor_router: &crate::personal::tool_executor::ProductionNativeToolExecutorRouter,
+    task_ref: &str,
+    point: crate::personal::fault_profile::AuthorizedFaultPoint,
+) -> Result<(), SchedulerAuthorityError> {
+    if executor_router.authorized_fault_point(task_ref) != Some(point) {
+        return Ok(());
+    }
+    let name = match point {
+        crate::personal::fault_profile::AuthorizedFaultPoint::DispatchBefore => "dispatch_before",
+        crate::personal::fault_profile::AuthorizedFaultPoint::MutationAfterReceiptBefore => {
+            "mutation_after_receipt_before"
+        }
+        crate::personal::fault_profile::AuthorizedFaultPoint::ReceiptAfterEffectCloseBefore => {
+            "receipt_after_effect_close_before"
+        }
+        crate::personal::fault_profile::AuthorizedFaultPoint::VerificationBefore => {
+            "verification_before"
+        }
+    };
+    Err(SchedulerAuthorityError::NativeExecution(format!(
+        "authorized campaign fault injected at {name}"
+    )))
 }
 
 /// Select exactly one immutable Intent and verify that its stored binding

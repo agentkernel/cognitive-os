@@ -161,6 +161,7 @@ pub(crate) struct ProductionNativeToolExecutorRouter {
         NativeProcessCheckExecutor<DaemonProcessSupervisor<FailClosedProcessObservationSource>>,
     http_fetch: NativeHttpFetchReadOnlyExecutor<RustlsReadOnlyFetchTransport>,
     staged_families: Mutex<BTreeMap<String, NativeOperationFamily>>,
+    fault_profile_data_dir: Option<PathBuf>,
 }
 
 impl ProductionNativeToolExecutorRouter {
@@ -235,6 +236,20 @@ impl ProductionNativeToolExecutorRouter {
                 state_store,
             ),
             staged_families: Mutex::new(BTreeMap::new()),
+            fault_profile_data_dir: None,
+        })
+    }
+
+    pub(crate) fn bind_fault_profiles(&mut self, data_dir: PathBuf) {
+        self.fault_profile_data_dir = Some(data_dir);
+    }
+
+    pub(crate) fn authorized_fault_point(
+        &self,
+        task_ref: &str,
+    ) -> Option<crate::personal::fault_profile::AuthorizedFaultPoint> {
+        self.fault_profile_data_dir.as_ref().and_then(|data_dir| {
+            crate::personal::fault_profile::authorized_injection_point(data_dir, task_ref)
         })
     }
 

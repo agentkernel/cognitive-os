@@ -19,7 +19,8 @@ contracts:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-fingerprint: "sha256:5da158c5909edc797e4eb232a72bd98fc695b01db85b056df3880568f9f81e96"
+  - apps/kernel-server/tests/p2_t24_effect_fault.rs
+fingerprint: "sha256:6a655a2ac22cd6f5ff5e424bab8391b695ae324dcd6fd2ffdb245c1cb1a3f7d4"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---
@@ -36,6 +37,7 @@ chain → SQLite, with generated request/result DTOs at the wire.
 | `preview` | `POST /task/preview` | local canonical digest over the typed draft (`cognitiveos.personal.task-contract-preview` domain); persists nothing |
 | `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
 | evidence | `GET /task/evidence?task_ref=...` | reconstruct a bounded redacted lifecycle, Effect reconciliation class, current verification/Artifact availability, acceptance transition, and durable event cursor from SQLite authority plus Artifact CAS |
+| effects | `GET /task/effects?task_ref=...` | reconstruct bounded Effect history (opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent, report refs) without receipts or raw parameters |
 | watch | `GET /task/watch` | snapshot-first bounded stream (process-local 128-event replay; stale `resume_from` → `TASK_WATCH_RESUME_STALE`) |
 
 Contract versioning: minting with a `context_request_ref` produces schema

@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:f67fbbeba66ce2d5ea06597de7bd800ac5d28dda841e6c14cf59f412962b3da9"
+fingerprint: "sha256:dc1f420e1cdb3c9529622c3be2af0ded2bae68a69437630be03debfdcb03a7b4"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -48,6 +48,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/preview` | task | Server-issued digest-bound contract preview; persists nothing. |
 | `POST` | `/task/admit` | task | Admit the exact preview digest and mint the TaskContract under epoch CAS. |
 | `GET` | `/task/evidence` | task | Reconstruct bounded redacted lifecycle, Effect reconciliation, verification, acceptance, and durable cursor evidence for one task_ref from authority and Artifact CAS. |
+| `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |
+| `GET` | `/management/resource/v1/fault-profile` | management | Read the default-off task-scoped authorized fault profile. Missing records mean faults stay off. Ordinary task callers are denied. |
+| `POST` | `/management/resource/v1/fault-profile` | management | Persist a default-off or campaign-authorized fixed fault profile for one task_ref. Unauthorized campaigns and task-channel callers fail closed. No raw parameter or receipt is stored. |
 | `GET` | `/task/watch` | task | Snapshot-first bounded Task watch with optional resume_from. |
 | `GET` | `/task/resource/v1/projection` | task | Task-bound Memory/Skill resource projection (requires task_ref); served through the `/task/resource/` prefix rewrite onto the shared resource handler. |
 | `GET` | `/task/resource/v1/watch` | task | Task-bound resource watch, served through the same prefix rewrite. |

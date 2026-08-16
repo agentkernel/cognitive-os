@@ -44,7 +44,8 @@ use cognitive_kernel::intent_chain::{
 };
 use cognitive_kernel::ports::{
     AuthorityStore, ContextRequestRow, ContextStore, ContinuationAuthorityStore, IntentChainStore,
-    ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore, TaskBinding,
+    IntentRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
+    StoredObject, TaskBinding,
 };
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{
@@ -120,6 +121,31 @@ struct DurableTaskCursor {
     terminal_transition_sequence: Option<i64>,
 }
 
+#[derive(Debug, Serialize)]
+struct BoundedEffectHistory {
+    schema_version: u8,
+    task_ref: String,
+    contract_epoch: i64,
+    effects: Vec<BoundedEffectHistoryEntry>,
+    effects_truncated: bool,
+    authority_side_effects: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct BoundedEffectHistoryEntry {
+    effect_ref: String,
+    original_key_digest: String,
+    stage: String,
+    outcome_class: String,
+    reconcile_class: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mutation_count: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    fixed_post_state_ref: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    report_ref: Option<String>,
+}
+
 /// Durable, daemon-issued local governance root. The authenticated principal
 /// is deliberately persisted beside the anchors so a later principal cannot
 /// borrow the first local root.
@@ -182,6 +208,12 @@ impl TaskApi {
                     || method_path.starts_with("GET /task/evidence ") =>
             {
                 self.evidence(method_path)
+            }
+            "GET"
+                if method_path.starts_with("GET /task/effects?")
+                    || method_path.starts_with("GET /task/effects ") =>
+            {
+                self.effect_history(method_path)
             }
             "GET" if method_path.starts_with("GET /task/watch") => self.watch(method_path),
             _ => TaskApiResponse {
@@ -566,6 +598,39 @@ impl TaskApi {
             Ok(None) => error(
                 404,
                 "TASK_EVIDENCE_NOT_FOUND",
+                "no durable TaskContract exists for task_ref",
+            ),
+            Err(response) => response,
+        }
+    }
+
+    fn effect_history(&self, method_path: &str) -> TaskApiResponse {
+        let task_ref = match required_effect_history_task_ref(method_path) {
+            Ok(task_ref) if UriRef::parse(&task_ref).is_ok() => task_ref,
+            Ok(_) => {
+                return error(
+                    400,
+                    "TASK_EFFECT_HISTORY_INVALID_TASK_REF",
+                    "task_ref must be a canonical URI",
+                );
+            }
+            Err(response) => return response,
+        };
+        let store = match SqliteAuthorityStore::open(&self.layout.authority_database_path()) {
+            Ok(store) => store,
+            Err(_) => {
+                return error(
+                    503,
+                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
+                    "durable authority store is unavailable",
+                );
+            }
+        };
+        match reconstruct_bounded_effect_history(&store, &task_ref) {
+            Ok(Some(history)) => ok(history),
+            Ok(None) => error(
+                404,
+                "TASK_EFFECT_HISTORY_NOT_FOUND",
                 "no durable TaskContract exists for task_ref",
             ),
             Err(response) => response,
@@ -1123,6 +1188,163 @@ fn classify_reconcile_state(effect_states: &[String]) -> &'static str {
     "must_reconcile"
 }
 
+fn reconstruct_bounded_effect_history(
+    store: &SqliteAuthorityStore,
+    task_ref: &str,
+) -> Result<Option<BoundedEffectHistory>, TaskApiResponse> {
+    let contract_epoch = store.current_contract_epoch(task_ref).map_err(|_| {
+        error(
+            503,
+            "TASK_EFFECT_HISTORY_READ_FAILED",
+            "current TaskContract epoch could not be read",
+        )
+    })?;
+    if contract_epoch == 0 {
+        return Ok(None);
+    }
+    let task_binding = TaskBinding {
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+    };
+    let intents = store
+        .list_intents_for_task_binding(&task_binding)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_EFFECT_HISTORY_READ_FAILED",
+                "durable Intent bindings could not be read",
+            )
+        })?;
+    let effects_truncated = intents.len() > MAX_OPAQUE_OPERATION_REFS;
+    let mut effects = Vec::new();
+    for intent in intents.iter().take(MAX_OPAQUE_OPERATION_REFS) {
+        let effect = store
+            .load_object(LifecycleDomain::Effect, &intent.effect_object_id)
+            .map_err(|_| {
+                error(
+                    503,
+                    "TASK_EFFECT_HISTORY_READ_FAILED",
+                    "durable Effect lifecycle could not be read",
+                )
+            })?;
+        effects.push(project_effect_history_entry(intent, effect.as_ref()));
+    }
+    Ok(Some(BoundedEffectHistory {
+        schema_version: 1,
+        task_ref: task_ref.to_owned(),
+        contract_epoch,
+        effects,
+        effects_truncated,
+        authority_side_effects: false,
+    }))
+}
+
+fn project_effect_history_entry(
+    intent: &IntentRow,
+    effect: Option<&StoredObject>,
+) -> BoundedEffectHistoryEntry {
+    let stage = effect
+        .map(|row| row.state.as_str().to_owned())
+        .unwrap_or_else(|| "MISSING".to_owned());
+    let body = effect.map(|row| &row.body);
+    let observed = body
+        .and_then(|value| value.get("observed_outcome"))
+        .and_then(Value::as_str);
+    BoundedEffectHistoryEntry {
+        effect_ref: format!("effect://{}", intent.effect_object_id),
+        original_key_digest: sha256_digest(intent.idempotency_key.as_bytes()),
+        outcome_class: outcome_class(&stage, observed).to_owned(),
+        reconcile_class: classify_reconcile_state(std::slice::from_ref(&stage)).to_owned(),
+        mutation_count: mutation_count_for_stage(&stage),
+        fixed_post_state_ref: opaque_report_ref(body.and_then(|value| {
+            value
+                .get("fixed_post_state_ref")
+                .or_else(|| value.pointer("/verification/fixed_post_state_ref"))
+        })),
+        report_ref: opaque_report_ref(body.and_then(|value| {
+            value
+                .get("reconciliation_report_ref")
+                .or_else(|| value.pointer("/verification/report_ref"))
+        })),
+        stage,
+    }
+}
+
+fn outcome_class(stage: &str, observed: Option<&str>) -> &'static str {
+    match stage {
+        "OUTCOME_UNKNOWN" | "EXECUTING" | "MISSING" => "indeterminate",
+        "NOT_EXECUTED" | "DENIED" | "PROPOSED" | "AUTHORIZED" => "not_executed",
+        "VERIFY_FAILED" => "failed",
+        "EXECUTED" | "RECONCILED" | "VERIFIED" => match observed {
+            Some("failed") => "failed",
+            Some("unknown") => "indeterminate",
+            _ => "executed",
+        },
+        _ => "indeterminate",
+    }
+}
+
+fn mutation_count_for_stage(stage: &str) -> Option<u8> {
+    match stage {
+        "NOT_EXECUTED" | "DENIED" | "PROPOSED" | "AUTHORIZED" => Some(0),
+        "EXECUTED" | "RECONCILED" | "VERIFIED" | "VERIFY_FAILED" => Some(1),
+        _ => None,
+    }
+}
+
+fn opaque_report_ref(value: Option<&Value>) -> Option<String> {
+    let reference = value.and_then(Value::as_str)?.trim();
+    if reference.is_empty() {
+        return None;
+    }
+    let lowered = reference.to_ascii_lowercase();
+    if lowered.contains("receipt") || lowered.contains("parameter") {
+        return None;
+    }
+    Some(reference.to_owned())
+}
+
+fn required_effect_history_task_ref(method_path: &str) -> Result<String, TaskApiResponse> {
+    let query = method_path
+        .split_whitespace()
+        .nth(1)
+        .and_then(|path| path.split_once('?').map(|(_, query)| query))
+        .ok_or_else(|| {
+            error(
+                400,
+                "TASK_EFFECT_HISTORY_TASK_REF_REQUIRED",
+                "task_ref query parameter is required",
+            )
+        })?;
+    let mut task_ref = None;
+    for pair in query.split('&').filter(|pair| !pair.is_empty()) {
+        let (name, value) = pair.split_once('=').unwrap_or((pair, ""));
+        if name != "task_ref" {
+            return Err(error(
+                400,
+                "TASK_EFFECT_HISTORY_QUERY_FORBIDDEN",
+                "effect history queries accept only task_ref; receipts and parameters are forbidden",
+            ));
+        }
+        let decoded = percent_decode(value)?;
+        if task_ref.replace(decoded).is_some() {
+            return Err(error(
+                400,
+                "TASK_EFFECT_HISTORY_TASK_REF_REQUIRED",
+                "exactly one non-empty task_ref query parameter is required",
+            ));
+        }
+    }
+    match task_ref.filter(|value| !value.trim().is_empty()) {
+        Some(task_ref) => Ok(task_ref),
+        None => Err(error(
+            400,
+            "TASK_EFFECT_HISTORY_TASK_REF_REQUIRED",
+            "exactly one non-empty task_ref query parameter is required",
+        )),
+    }
+}
+
 fn sha256_digest(bytes: &[u8]) -> String {
     format!("sha256:{:x}", Sha256::digest(bytes))
 }
@@ -1541,6 +1763,7 @@ fn persist_governance_root(
 #[allow(clippy::expect_used, clippy::panic)]
 mod evidence_tests {
     use super::*;
+    use cognitive_domain::{StateName, Version};
 
     #[test]
     fn evidence_query_decodes_one_canonical_task_reference() {
@@ -1615,6 +1838,79 @@ mod evidence_tests {
             "sqlite",
         ] {
             assert!(!serialized.to_ascii_lowercase().contains(forbidden_field));
+        }
+    }
+
+    #[test]
+    fn effect_history_query_rejects_receipt_and_parameter_restatement() {
+        for method_path in [
+            "GET /task/effects HTTP/1.1",
+            "GET /task/effects?receipt=receipt%3A%2F%2Fraw HTTP/1.1",
+            "GET /task/effects?task_ref=task%3A%2F%2Fpersonal%2Fexample&parameters=leak HTTP/1.1",
+            "GET /task/effects?task_ref=task%3A%2F%2Fa&task_ref=task%3A%2F%2Fb HTTP/1.1",
+        ] {
+            let response = required_effect_history_task_ref(method_path)
+                .expect_err("effect history must fail closed on forbidden queries");
+            assert_eq!(response.status, 400);
+        }
+        let task_ref = required_effect_history_task_ref(
+            "GET /task/effects?task_ref=task%3A%2F%2Fpersonal%2Fexample HTTP/1.1",
+        )
+        .expect("decode Task reference");
+        assert_eq!(task_ref, "task://personal/example");
+    }
+
+    #[test]
+    fn effect_history_projection_hashes_original_key_and_drops_receipts() {
+        let intent = IntentRow {
+            intent_id: ObjectId::parse("00000000-0000-7000-8000-000000000011").expect("intent id"),
+            idempotency_key: "raw-secret-original-key".to_owned(),
+            parameters_digest:
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned(),
+            action: "workspace.write".to_owned(),
+            target: "file:///workspace/out.txt".to_owned(),
+            effect_object_id: ObjectId::parse("00000000-0000-7000-8000-000000000012")
+                .expect("effect id"),
+            expected_state_version: Version::INITIAL,
+            grant_epoch: 1,
+            capability_set_version: 1,
+            task_binding: None,
+            canonical_json: "{\"parameters\":{\"payload\":\"leak\"}}".to_owned(),
+        };
+        let effect = StoredObject {
+            object_id: intent.effect_object_id.clone(),
+            domain: LifecycleDomain::Effect,
+            state: StateName::parse("OUTCOME_UNKNOWN").expect("state"),
+            version: Version::INITIAL,
+            body: json!({
+                "idempotency_key": "raw-secret-original-key",
+                "receipt_ref": "receipt://raw-bytes",
+                "parameters": {"payload": "leak"},
+                "observed_outcome": "unknown",
+                "reconciliation_report_ref": "report://fixed-post",
+            }),
+        };
+        let entry = project_effect_history_entry(&intent, Some(&effect));
+        let serialized = serde_json::to_string(&entry).expect("serialize history entry");
+        assert_eq!(entry.stage, "OUTCOME_UNKNOWN");
+        assert_eq!(entry.outcome_class, "indeterminate");
+        assert_eq!(entry.mutation_count, None);
+        assert_eq!(entry.report_ref.as_deref(), Some("report://fixed-post"));
+        assert_eq!(
+            entry.original_key_digest,
+            sha256_digest(b"raw-secret-original-key")
+        );
+        for forbidden in [
+            "raw-secret-original-key",
+            "receipt",
+            "parameters",
+            "payload",
+            "leak",
+        ] {
+            assert!(
+                !serialized.to_ascii_lowercase().contains(forbidden),
+                "history leaked {forbidden}: {serialized}"
+            );
         }
     }
 }

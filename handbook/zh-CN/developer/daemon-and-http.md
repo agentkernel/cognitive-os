@@ -16,12 +16,17 @@ sources:
   - path: apps/kernel-server/src/personal/provider_proxy.rs
   - path: apps/kernel-server/src/personal/route_observation.rs
     symbols: ["observation_response_headers"]
+  - path: apps/kernel-server/src/personal/fault_profile.rs
+    symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/task_api.rs
+    symbols: ["TaskApi"]
 tests:
   - apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:3d8e78c2d0a1aeb0ec5881c93eb1268a3e99b335dd2f5077a6d3a661a0b57dad"
+  - apps/kernel-server/tests/p2_t24_effect_fault.rs
+fingerprint: "sha256:8975d9ee42b7a4411a24a1ed653a23c41fbd07ce1b530b3955bc91d7ef327621"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -70,6 +75,13 @@ task 通道通过 `GET /task/resource/v1/consumption?task_ref=…` 读取 daemon
 `query_text` 与 `skill_binding_id` 视为用户重述并被拒绝。遗忘、撤销或 digest
 漂移的钉在响应前失败闭合，且绝不返回 Memory/Skill 正文。session 2 与重启后的
 GET 读取同一持久行；带调用方 `query_text` 的 POST 不能替换这些钉。
+
+management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
+`task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝
+（`RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`）。task 通道通过
+`GET /task/effects?task_ref=…` 读取有界 Effect 历史：不透明 original-key digest、
+stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及
+report refs。receipt、原始参数和额外查询字段失败闭合。
 
 ## 投影
 

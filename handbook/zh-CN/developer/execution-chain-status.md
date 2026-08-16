@@ -16,6 +16,8 @@ sources:
   - path: apps/kernel-server/src/personal/verification_executor.rs
   - path: apps/kernel-server/src/personal/campaign_observation.rs
     symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
+  - path: apps/kernel-server/src/personal/fault_profile.rs
+    symbols: ["handle"]
   - path: crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -27,8 +29,10 @@ tests:
   - apps/kernel-server/src/personal/scheduler_authority/tests.rs
   - apps/kernel-server/src/personal/tool_executor/tests.rs
   - apps/kernel-server/tests/p2_t16_registered_check.rs
+  - apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:533a2432e20eeb7e8efd0d8c31bcf2981f29094c8e2a9bc59b2e6a7ab8e38817"
+fingerprint: "sha256:0a1329d057acf8b695cbe25e7e4d0a35f01483774a8ecfb24dd66518df94982e"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -60,6 +64,7 @@ non_claims:
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；fixed-Effect 与 RegisteredCheck verifier 只接受各自登记身份。RegisteredCheck 从 CAS Evidence 重校验精确 descriptor/file digest 和全部安全观察；通过的报告进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task。WorkspaceRead 配 fixed-Effect verifier 仍发布 `ACT -> VERIFY`。在 RegisteredCheck 收口的 Task 上，闭合的中间 WorkspaceWrite/Patch/Search Effect 则走登记边 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`，以便后续 tick 准入 RegisteredCheckRun；只有该 check 的独立 verification 可以完成 Task |
 | A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup 与持久请求/查询计数）；persist-before-dispatch Effect；默认关闭的授权故障点；持久变更后丢失应答时，重启只查询原键，以一次实际变更、零第二次 POST 完成对账；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
+| 公开 Effect 历史与默认关闭 fault profile | implemented，HTTP 调用；生产咨询 | task 通道 `GET /task/effects` 返回不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省，以及 report refs，不含 receipt/参数；management `POST/GET /management/resource/v1/fault-profile` 默认关闭且需 campaign 授权；task 调用方被拒绝。生产 native dispatch 在四个固定点咨询已持久化 profile；缺失、默认关闭与未授权文件内容永不注入。重启只查询原 idempotency key；replacement key 不能绑定第二条 Intent；Indeterminate/open Effect 永不完成 Task |
 | Task candidate + acceptance authority | implemented；公共 C1 native-proven | scheduler materialize/activate governed Task；随后只有最新当前 independent passed report、可重读 CAS evidence、未变 fixed state、闭合 Effect 集合与独立 daemon acceptance principal 才可提交两条登记 Task transition；缺报告、重复 acceptance、open Effect、被取代 report、缺失 CAS evidence 与 stale fixed post-state 均 fail closed |
 | 启动恢复 | implemented | 对账已消费交接；当前已准入合同只幂等修复缺失的 Loop/Budget/调度前置，不替换既有权威 |
 

@@ -81,6 +81,25 @@ pub(crate) enum CampaignFaultPoint {
     VerificationBefore,
 }
 
+impl From<crate::personal::fault_profile::AuthorizedFaultPoint> for CampaignFaultPoint {
+    fn from(point: crate::personal::fault_profile::AuthorizedFaultPoint) -> Self {
+        match point {
+            crate::personal::fault_profile::AuthorizedFaultPoint::DispatchBefore => {
+                Self::DispatchBefore
+            }
+            crate::personal::fault_profile::AuthorizedFaultPoint::MutationAfterReceiptBefore => {
+                Self::MutationAfterReceiptBefore
+            }
+            crate::personal::fault_profile::AuthorizedFaultPoint::ReceiptAfterEffectCloseBefore => {
+                Self::ReceiptAfterEffectCloseBefore
+            }
+            crate::personal::fault_profile::AuthorizedFaultPoint::VerificationBefore => {
+                Self::VerificationBefore
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum FixtureMutationFault {
@@ -104,6 +123,7 @@ pub(crate) struct CampaignAuthorization {
     campaign_id: String,
     case_ref: String,
     faults_enabled: bool,
+    fault_point: Option<CampaignFaultPoint>,
 }
 
 impl CampaignAuthorization {
@@ -121,6 +141,28 @@ impl CampaignAuthorization {
             campaign_id: campaign_id.to_owned(),
             case_ref: case_ref.to_owned(),
             faults_enabled: true,
+            fault_point: None,
+        })
+    }
+
+    /// Production consult of a D01 persisted profile. Missing, default-off, and
+    /// unauthorized file content cannot enable injection.
+    pub(crate) fn from_persisted_profile(
+        data_dir: &Path,
+        task_ref: &str,
+    ) -> Result<Self, CampaignObservationError> {
+        let profile =
+            crate::personal::fault_profile::load_enabled_authorized_profile(data_dir, task_ref)
+                .ok_or(CampaignObservationError::FaultUnauthorized)?;
+        let fault_point = profile
+            .fault_point
+            .map(CampaignFaultPoint::from)
+            .ok_or(CampaignObservationError::FaultUnauthorized)?;
+        Ok(Self {
+            campaign_id: profile.campaign_id,
+            case_ref: profile.case_ref,
+            faults_enabled: true,
+            fault_point: Some(fault_point),
         })
     }
 
@@ -135,10 +177,15 @@ impl CampaignAuthorization {
     }
 
     fn verify(&self) -> Result<(), CampaignObservationError> {
-        if self.campaign_id != CAMPAIGN_ID || !valid_case_ref(&self.case_ref) {
-            return Err(CampaignObservationError::CampaignUnauthorized);
+        let persisted_ok =
+            crate::personal::fault_profile::campaign_is_authorized(&self.campaign_id)
+                && crate::personal::fault_profile::case_ref_is_authorized(&self.case_ref);
+        let test_fixture_ok = self.campaign_id == CAMPAIGN_ID && valid_case_ref(&self.case_ref);
+        if persisted_ok || test_fixture_ok {
+            Ok(())
+        } else {
+            Err(CampaignObservationError::CampaignUnauthorized)
         }
-        Ok(())
     }
 }
 
@@ -831,7 +878,7 @@ impl CampaignMutationObservationService {
                     state: StateName::parse("ACT")
                         .map_err(|error| infrastructure("parse Loop state", error))?,
                     version: Version::INITIAL,
-                    body: json!({"campaign_id": CAMPAIGN_ID, "run_ref": run_ref}),
+                    body: json!({"campaign_id": self.authorization.campaign_id, "run_ref": run_ref}),
                 },
                 admitted_at: admitted_at.clone(),
                 event: event(
@@ -854,7 +901,7 @@ impl CampaignMutationObservationService {
                         .map_err(|error| infrastructure("parse Effect state", error))?,
                     version: Version::INITIAL,
                     body: json!({
-                        "campaign_id": CAMPAIGN_ID,
+                        "campaign_id": self.authorization.campaign_id,
                         "case_ref": self.authorization.case_ref,
                         "expected_fixture_version": request.expected_fixture_version,
                         "delta": request.delta,
@@ -891,7 +938,7 @@ impl CampaignMutationObservationService {
                         contract_epoch: 1,
                     }),
                     canonical_json: json!({
-                        "campaign_id": CAMPAIGN_ID,
+                        "campaign_id": self.authorization.campaign_id,
                         "case_ref": self.authorization.case_ref,
                         "effect_object_id": effect_object_id.as_str(),
                         "parameters_digest": parameters_digest,
@@ -909,7 +956,7 @@ impl CampaignMutationObservationService {
             .map_err(duplicate_or_infrastructure("persist campaign Intent"))?;
         let state = RunState {
             schema: RUN_STATE_SCHEMA.to_owned(),
-            campaign_id: CAMPAIGN_ID.to_owned(),
+            campaign_id: self.authorization.campaign_id.clone(),
             case_ref: self.authorization.case_ref.clone(),
             run_ref: run_ref.clone(),
             requested_task_ref: request.task_ref,
@@ -955,7 +1002,25 @@ impl CampaignMutationObservationService {
         if !self.authorization.faults_enabled {
             return Err(CampaignObservationError::FaultUnauthorized);
         }
+        if self
+            .authorization
+            .fault_point
+            .is_some_and(|pinned| pinned != fault)
+        {
+            return Err(CampaignObservationError::FaultUnauthorized);
+        }
         self.dispatch_internal(run_ref, Some(fault), scheduler_lease_epoch)
+    }
+
+    pub(crate) fn dispatch_persisted_fault(
+        &self,
+        run_ref: &str,
+        scheduler_lease_epoch: i64,
+    ) -> Result<CampaignMutationObservation, CampaignObservationError> {
+        let Some(fault) = self.authorization.fault_point else {
+            return Err(CampaignObservationError::FaultUnauthorized);
+        };
+        self.dispatch(run_ref, fault, scheduler_lease_epoch)
     }
 
     pub(crate) fn dispatch_without_fault(
@@ -1361,6 +1426,47 @@ impl CampaignMutationObservationService {
             ))?;
         Err(CampaignObservationError::Infrastructure(
             "duplicate original-key Intent was accepted".to_owned(),
+        ))
+    }
+
+    /// A generated replacement key cannot bind a second Intent to the same Effect.
+    pub(crate) fn reject_replacement_key_intent(
+        &self,
+        run_ref: &str,
+    ) -> Result<(), CampaignObservationError> {
+        self.authorization.verify()?;
+        let state = self.read_run_state(run_ref)?;
+        let intent = self
+            .store
+            .load_intent_for_effect(&state.effect_object_id)
+            .map_err(|error| infrastructure("reload original Intent for replacement", error))?
+            .ok_or_else(|| {
+                CampaignObservationError::Infrastructure(
+                    "replacement probe has no original Intent".to_owned(),
+                )
+            })?;
+        let identifiers = UuidV7Generator;
+        let clock = SystemClock;
+        let recorded_at = clock
+            .now()
+            .map_err(|error| infrastructure("read replacement-intent clock", error))?;
+        let mut replacement = intent;
+        replacement.intent_id = next_object_id(&identifiers)?;
+        replacement.idempotency_key = "replacement-key".to_owned();
+        self.store
+            .insert_intent(
+                &replacement,
+                &event(
+                    &identifiers,
+                    &replacement.intent_id,
+                    LifecycleDomain::Effect,
+                    "campaign-intent.replacement-rejected",
+                    &recorded_at,
+                )?,
+            )
+            .map_err(duplicate_or_infrastructure("reject replacement-key Intent"))?;
+        Err(CampaignObservationError::Infrastructure(
+            "replacement-key Intent was accepted".to_owned(),
         ))
     }
 
@@ -2232,4 +2338,199 @@ fn duplicate_or_infrastructure(
 
 fn json_error(error: serde_json::Error) -> CampaignObservationError {
     infrastructure("serialize campaign JSON", error)
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
+mod p2_t24_d02_tests {
+    use super::*;
+    use crate::personal::fault_profile::{
+        AuthorizedFaultPoint, FaultProfileRecord, write_profile_record,
+    };
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_root(label: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "cognitiveos-p2-t24-{label}-{}-{nonce}",
+            std::process::id()
+        ))
+    }
+
+    fn open_fixture(root: &Path) -> CampaignExternalStateFixture {
+        CampaignExternalStateFixture::open(
+            root,
+            FixtureBounds {
+                maximum_records: 8,
+                maximum_absolute_delta: 10,
+            },
+        )
+        .unwrap()
+    }
+
+    fn write_enabled(
+        data_dir: &Path,
+        task_ref: &str,
+        point: AuthorizedFaultPoint,
+    ) -> FaultProfileRecord {
+        let record = FaultProfileRecord {
+            task_ref: task_ref.to_owned(),
+            campaign_id: "P2-T24".to_owned(),
+            case_ref: "BR-04-D02".to_owned(),
+            faults_enabled: true,
+            fault_point: Some(point),
+        };
+        write_profile_record(data_dir, record.clone()).expect("persist D02 profile");
+        record
+    }
+
+    fn persist_run(
+        service: &CampaignMutationObservationService,
+        task_ref: &str,
+        lease_epoch: i64,
+    ) -> PreparedCampaignMutation {
+        service
+            .persist_effect_before_dispatch(CampaignMutationRequest {
+                task_ref: task_ref.to_owned(),
+                expected_fixture_version: 0,
+                delta: 1,
+                scheduler_lease_epoch: lease_epoch,
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn missing_profile_cannot_authorize_injection() {
+        let root = unique_root("missing-profile");
+        let error =
+            CampaignAuthorization::from_persisted_profile(&root, "task://personal/p2-t24/missing")
+                .unwrap_err();
+        assert_eq!(error, CampaignObservationError::FaultUnauthorized);
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn persisted_profile_reconciles_original_key_once_after_restart() {
+        let root = unique_root("persisted-original-key");
+        let fixture_root = root.join("fixture");
+        let authority_root = root.join("authority");
+        std::fs::create_dir_all(&authority_root).unwrap();
+        let task_ref = "task://personal/p2-t24/original-key";
+        write_enabled(
+            &authority_root,
+            task_ref,
+            AuthorizedFaultPoint::MutationAfterReceiptBefore,
+        );
+        let fixture = open_fixture(&fixture_root);
+        let authorization =
+            CampaignAuthorization::from_persisted_profile(&authority_root, task_ref).unwrap();
+        let service = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization.clone(),
+            7,
+        )
+        .unwrap();
+        let prepared = persist_run(&service, task_ref, 11);
+        let original_key_digest = prepared.idempotency_key_digest.clone();
+        let injected = service
+            .dispatch_persisted_fault(&prepared.run_ref, 11)
+            .unwrap_err();
+        assert_eq!(
+            injected,
+            CampaignObservationError::InjectedCrash(CampaignFaultPoint::MutationAfterReceiptBefore)
+        );
+        assert_eq!(fixture.mutation_count().unwrap(), 1);
+        let mismatched =
+            service.dispatch(&prepared.run_ref, CampaignFaultPoint::DispatchBefore, 11);
+        assert_eq!(
+            mismatched.unwrap_err(),
+            CampaignObservationError::FaultUnauthorized
+        );
+        drop(service);
+
+        let restarted = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization,
+            7,
+        )
+        .unwrap();
+        assert_eq!(
+            restarted
+                .reject_replacement_key_intent(&prepared.run_ref)
+                .unwrap_err(),
+            CampaignObservationError::DuplicateEffect
+        );
+        let observation = restarted
+            .reconcile_after_restart(&prepared.run_ref, 11)
+            .unwrap();
+        assert_eq!(
+            observation.outcome_class,
+            CampaignOutcomeClass::ReconciledExecuted
+        );
+        assert_eq!(observation.idempotency_key_digest, original_key_digest);
+        assert_eq!(observation.mutation_count, 1);
+        assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 1);
+        assert_eq!(observation.acceptance_ref, None);
+        fixture.cleanup().unwrap();
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn dispatch_before_profile_keeps_mutation_zero_and_indeterminate() {
+        let root = unique_root("dispatch-before");
+        let fixture_root = root.join("fixture");
+        let authority_root = root.join("authority");
+        std::fs::create_dir_all(&authority_root).unwrap();
+        let task_ref = "task://personal/p2-t24/dispatch-before";
+        write_enabled(
+            &authority_root,
+            task_ref,
+            AuthorizedFaultPoint::DispatchBefore,
+        );
+        let fixture = open_fixture(&fixture_root);
+        let authorization =
+            CampaignAuthorization::from_persisted_profile(&authority_root, task_ref).unwrap();
+        let service = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization.clone(),
+            8,
+        )
+        .unwrap();
+        let prepared = persist_run(&service, task_ref, 12);
+        let injected = service
+            .dispatch_persisted_fault(&prepared.run_ref, 12)
+            .unwrap_err();
+        assert_eq!(
+            injected,
+            CampaignObservationError::InjectedCrash(CampaignFaultPoint::DispatchBefore)
+        );
+        assert_eq!(fixture.mutation_count().unwrap(), 0);
+        drop(service);
+
+        let restarted = CampaignMutationObservationService::open(
+            &authority_root,
+            fixture.endpoint(),
+            authorization,
+            8,
+        )
+        .unwrap();
+        let observation = restarted
+            .reconcile_after_restart(&prepared.run_ref, 12)
+            .unwrap();
+        assert_eq!(
+            observation.outcome_class,
+            CampaignOutcomeClass::Indeterminate
+        );
+        assert_eq!(observation.mutation_count, 0);
+        assert_eq!(observation.acceptance_ref, None);
+        assert_eq!(restarted.dispatch_count(&prepared.run_ref).unwrap(), 0);
+        fixture.cleanup().unwrap();
+        std::fs::remove_dir_all(&root).ok();
+    }
 }

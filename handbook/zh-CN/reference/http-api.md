@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:f67fbbeba66ce2d5ea06597de7bd800ac5d28dda841e6c14cf59f412962b3da9"
+fingerprint: "sha256:dc1f420e1cdb3c9529622c3be2af0ded2bae68a69437630be03debfdcb03a7b4"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -48,6 +48,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/preview` | task | 服务端签发的 digest 绑定合同预览；不持久化。 |
 | `POST` | `/task/admit` | task | 接纳精确 preview digest 并在 epoch CAS 下铸造 TaskContract。 |
 | `GET` | `/task/evidence` | task | 从 authority 与 Artifact CAS 为一个 task_ref 重建有界脱敏的生命周期、Effect 对账、verification、acceptance 与持久游标证据。 |
+| `GET` | `/task/effects` | task | 返回一个 task_ref 的有界 Effect 历史：不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及 report refs。拒绝 receipt、原始参数和额外查询字段。 |
+| `GET` | `/management/resource/v1/fault-profile` | management | 读取默认关闭的 task 范围授权 fault profile。缺失记录表示故障注入保持关闭。普通 task 调用方被拒绝。 |
+| `POST` | `/management/resource/v1/fault-profile` | management | 为一个 task_ref 持久化默认关闭或评测授权的固定 fault profile。未授权 campaign 与 task 通道调用方失败闭合。不存储原始参数或 receipt。 |
 | `GET` | `/task/watch` | task | 快照优先的有界 Task watch，支持可选 resume_from。 |
 | `GET` | `/task/resource/v1/projection` | task | Task 绑定的 Memory/Skill 资源投影（需要 task_ref）；经 `/task/resource/` 前缀重写复用共享 resource 处理器。 |
 | `GET` | `/task/resource/v1/watch` | task | Task 绑定的资源 watch，经同一前缀重写提供。 |
