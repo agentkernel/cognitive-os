@@ -12,10 +12,13 @@ sources:
   - path: tools/src/gen-matrix.mjs
   - path: tools/src/generate-handbook.mjs
   - path: tests/golden/README.md
+  - path: tools/src/p2_t28_uj_matrix.mjs
+    symbols: ["validateUjCapabilityTruthMatrix"]
 tests:
   - tools/test/check.test.mjs
+  - tools/test/p2_t28_capability_truth.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:23373611a640fdfca4dfb3a1746f4e535a6b69028ce44a9cfb3f25efe36a1e54"
+fingerprint: "sha256:fa3576dafe87d14837215beb718bc3a1a77c5ef0061a5ead86792da5a56ad830"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -59,6 +62,15 @@ also reads `apps/kernel-server/src/personal/tool_lifecycle.rs`,
 `apps/kernel-server/src/personal/pinned_https.rs`, and
 `apps/kernel-server/src/personal/observation.rs` so annotated Tool lifecycle,
 pinned-HTTPS, and observation-plane paths cannot rot.
+
+## UJ capability-truth freeze
+
+`tools/src/p2_t28_uj_matrix.mjs` freezes the BR-08 UJ1..UJ6 rows. Required rows
+must name an existing public caller file and a mechanical oracle file, plus
+cleanup and a bounded evidence schema. Web UI and Multi-Agent stay explicit
+`excluded` rows and cannot be marked required. The daemon-side register is
+`apps/kernel-server/src/personal/capability_truth.rs`. This freeze is not an
+EVAL-004, Gate, release, or Profile result.
 
 ## CI matrix
 

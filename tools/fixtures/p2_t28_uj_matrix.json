@@ -1,0 +1,150 @@
+{
+  "schema": "cognitiveos.personal.uj-capability-truth/0.1",
+  "claim_ceiling": "hypothesis",
+  "non_claims": [
+    "Not an EVAL-004 freeze, Gate, release, Profile, or B01 result.",
+    "Web UI and Multi-Agent are product-scope excluded for BR-08."
+  ],
+  "rows": [
+    {
+      "id": "UJ1-install-init-first-response",
+      "family": "UJ1",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/admin-cli/src/personal_cli/init.rs",
+      "mechanical_oracle": "apps/kernel-server/tests/p1_t05_personal_readiness.rs",
+      "cleanup": "hermetic runtime-root directories created by the oracle",
+      "evidence_schema": "readiness/doctor JSON: overall and first_conversation_ready; no secret material"
+    },
+    {
+      "id": "UJ2-cold-warm-nested-timing",
+      "family": "UJ2",
+      "required": true,
+      "scope": "required",
+      "public_caller": "packages/pi-cognitiveos/src/daemon-client.ts",
+      "mechanical_oracle": "apps/kernel-server/tests/p9_t07_route_observation.rs",
+      "cleanup": "loopback fake-daemon sockets closed by the oracle",
+      "evidence_schema": "opaque correlation id plus monotonic nested stages; no body/header capture"
+    },
+    {
+      "id": "UJ3-status-doctor-resource-restart-replay",
+      "family": "UJ3",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/admin-cli/src/personal_cli/mod.rs",
+      "mechanical_oracle": "apps/kernel-server/tests/p2_t26_observation_plane.rs",
+      "cleanup": "hermetic overlay and daemon lock released by the oracle",
+      "evidence_schema": "status/doctor/observation JSON with named zeros; stale cursor/digest fail closed"
+    },
+    {
+      "id": "UJ4-task-admission-execution-terminal-query",
+      "family": "UJ4",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/task_api.rs",
+      "mechanical_oracle": "apps/kernel-server/src/personal/scheduler_authority/tests.rs",
+      "cleanup": "in-process daemon fixtures dropped with the test process",
+      "evidence_schema": "admit outcome plus GET /task/evidence redacted terminal facts"
+    },
+    {
+      "id": "UJ5-fault-restart-deadline-cleanup",
+      "family": "UJ5",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs",
+      "mechanical_oracle": "apps/kernel-server/tests/p2_t24_effect_fault.rs",
+      "cleanup": "authorized fault profiles default-off; hermetic residue removed by the oracle",
+      "evidence_schema": "bounded Effect history, original-key reconcile, mutation count 0 or 1"
+    },
+    {
+      "id": "UJ6-memory",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/task_api.rs",
+      "mechanical_oracle": "apps/kernel-server/src/personal/scheduler_authority/tests.rs",
+      "cleanup": "forgotten units stay explainable and are not re-exposed",
+      "evidence_schema": "GET /task/resource/v1/consumption redacted pins; no query restatement"
+    },
+    {
+      "id": "UJ6-skill",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/server.rs",
+      "mechanical_oracle": "apps/kernel-server/tests/p4_t05_resource_api.rs",
+      "cleanup": "revoked bindings do not reappear on eligibility reads",
+      "evidence_schema": "import/inspect/bind/revoke over management channel; task channel isolated"
+    },
+    {
+      "id": "UJ6-read-search",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/scheduler_authority/dispatch.rs",
+      "mechanical_oracle": "apps/kernel-server/src/personal/scheduler_authority/tests.rs",
+      "cleanup": "workspace fixtures remain inside the hermetic root",
+      "evidence_schema": "WorkspaceRead/Search production sink reachability without raw workspace bytes"
+    },
+    {
+      "id": "UJ6-write-patch-check",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/registered_check/mod.rs",
+      "mechanical_oracle": "apps/kernel-server/tests/p2_t16_registered_check.rs",
+      "cleanup": "RegisteredCheckRun processes are supervisor-owned and reaped",
+      "evidence_schema": "check_id-only RegisteredCheckRun plus independent verification before completion"
+    },
+    {
+      "id": "UJ6-pi-lifecycle",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/admin-cli/src/main.rs",
+      "mechanical_oracle": "apps/admin-cli/tests/p2_t27_pi_lifecycle.rs",
+      "cleanup": "install root uninstalled; no orphan process binding",
+      "evidence_schema": "install→activate-root→register→activate→pause/resume→upgrade/rollback→stop→recover→uninstall"
+    },
+    {
+      "id": "UJ6-backup-restore",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/admin-cli/src/personal_cli/backup.rs",
+      "mechanical_oracle": "apps/admin-cli/tests/p2_t27_backup_restore.rs",
+      "cleanup": "no restore-staging-* or restore-snapshot-* trees; hermetic roots removed",
+      "evidence_schema": "secret-excluding archive; destroy→restore byte equality; SchemaIncompatible fail-closed"
+    },
+    {
+      "id": "UJ6-verified-completion",
+      "family": "UJ6",
+      "required": true,
+      "scope": "required",
+      "public_caller": "apps/kernel-server/src/personal/scheduler_authority/dispatch.rs",
+      "mechanical_oracle": "apps/kernel-server/src/personal/scheduler_authority/tests.rs",
+      "cleanup": "acceptance authority remains daemon-owned; no client completion",
+      "evidence_schema": "CAS-backed passed report plus distinct acceptance authority before COMPLETED"
+    },
+    {
+      "id": "UJ6-web-ui",
+      "family": "UJ6",
+      "required": false,
+      "scope": "excluded",
+      "public_caller": "",
+      "mechanical_oracle": "",
+      "cleanup": "",
+      "evidence_schema": "deferred with P7-T05; must not block BR-08"
+    },
+    {
+      "id": "UJ6-multi-agent",
+      "family": "UJ6",
+      "required": false,
+      "scope": "excluded",
+      "public_caller": "",
+      "mechanical_oracle": "",
+      "cleanup": "",
+      "evidence_schema": "deferred with P6-T01..T04/B11; must not block BR-08"
+    }
+  ]
+}

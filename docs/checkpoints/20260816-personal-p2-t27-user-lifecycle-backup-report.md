@@ -219,3 +219,12 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 | Ubuntu supporting CI | runs `31939336791` (`5a561fbf`) and `31939577639` (`9468c3b2`) pass |
 | Windows | `not-run by owner-directed Linux-only route` |
 
+### D03-MERGE-01 — PR #226 merged; lease closed
+
+- Instrument: GitHub PR [#226](https://github.com/agentkernel/cognitive-os/pull/226)
+  merge to `main`.
+- Outcome: **merged** at `main@70980131c34e514c8bfba681ca0ee7c8a8f92fdc`.
+  Task lease `lease/personal/P2-T27/user-lifecycle-backup` closed 2026-08-16.
+  Local and remote task branch deleted. Claim ceiling `hypothesis`; no
+  Gate/release/Profile/B01/EVAL promotion.
+

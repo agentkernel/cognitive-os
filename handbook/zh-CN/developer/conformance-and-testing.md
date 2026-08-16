@@ -12,10 +12,13 @@ sources:
   - path: tools/src/gen-matrix.mjs
   - path: tools/src/generate-handbook.mjs
   - path: tests/golden/README.md
+  - path: tools/src/p2_t28_uj_matrix.mjs
+    symbols: ["validateUjCapabilityTruthMatrix"]
 tests:
   - tools/test/check.test.mjs
+  - tools/test/p2_t28_capability_truth.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:23373611a640fdfca4dfb3a1746f4e535a6b69028ce44a9cfb3f25efe36a1e54"
+fingerprint: "sha256:fa3576dafe87d14837215beb718bc3a1a77c5ef0061a5ead86792da5a56ad830"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -54,6 +57,14 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 `apps/kernel-server/src/personal/pinned_https.rs` 与
 `apps/kernel-server/src/personal/observation.rs`，使已标注的 Tool lifecycle、
 钉住 HTTPS 与观测平面路径无法腐烂。
+
+## UJ capability-truth 冻结
+
+`tools/src/p2_t28_uj_matrix.mjs` 冻结 BR-08 的 UJ1..UJ6 行。必选行必须命名已存在的
+公开调用方文件和机械 oracle 文件，并给出 cleanup 与有界 evidence schema。Web UI 与
+Multi-Agent 保持显式 `excluded`，不得标为 required。daemon 侧登记表是
+`apps/kernel-server/src/personal/capability_truth.rs`。该冻结不是 EVAL-004、Gate、
+release 或 Profile 结果。
 
 ## CI 矩阵
 

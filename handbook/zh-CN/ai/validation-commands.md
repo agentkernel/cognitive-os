@@ -58,6 +58,10 @@ P2-T26 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t26_observation_pla
 （O2/O3/O4/O5/O13 观测平面、受控零值、审计游标负例与通道负例）。
 P2-T27 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t27_backup_restore.rs`
 （排除 secret 的 backup/restore、预检、篡改与 task 通道拒绝）。
+P2-T28 D01 冻结是 `tools/test/p2_t28_capability_truth.test.mjs`，对照
+`tools/fixtures/p2_t28_uj_matrix.json`（已存在的公开调用方/oracle；Web UI/
+Multi-Agent 保持显式 `excluded`）。对应 daemon 登记表是
+`apps/kernel-server/src/personal/capability_truth.rs`（仅 Linux/CI）。
 
 ## CI 在每个 PR 上强制什么
 
