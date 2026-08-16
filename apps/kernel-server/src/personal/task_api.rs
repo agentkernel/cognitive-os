@@ -209,6 +209,15 @@ impl TaskApi {
             {
                 self.evidence(method_path)
             }
+            "POST" if method_path.starts_with("POST /task/observation") => {
+                self.observation(method_path)
+            }
+            "GET"
+                if method_path.starts_with("GET /task/observation?")
+                    || method_path.starts_with("GET /task/observation ") =>
+            {
+                self.observation(method_path)
+            }
             "GET"
                 if method_path.starts_with("GET /task/effects?")
                     || method_path.starts_with("GET /task/effects ") =>
@@ -601,6 +610,15 @@ impl TaskApi {
                 "no durable TaskContract exists for task_ref",
             ),
             Err(response) => response,
+        }
+    }
+
+    fn observation(&self, method_path: &str) -> TaskApiResponse {
+        let response = super::observation::handle(method_path, &self.layout);
+        TaskApiResponse {
+            status: response.status,
+            body: response.body,
+            content_type: "application/json",
         }
     }
 

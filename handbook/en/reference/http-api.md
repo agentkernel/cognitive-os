@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: apps/kernel-server/src/personal/observation.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
@@ -14,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3c967a28b994e09c3715d42d215f2a4b20e8257554b1bd86619a6dcef654d5ae"
+fingerprint: "sha256:69bd31484a814ef8950e5507d12c8c58e752bfe0dae0545b701e33aff283de59"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -51,6 +52,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/admit` | task | Admit the exact preview digest and mint the TaskContract under epoch CAS. |
 | `GET` | `/task/evidence` | task | Reconstruct bounded redacted lifecycle, Effect reconciliation, verification, acceptance, and durable cursor evidence for one task_ref from authority and Artifact CAS. |
 | `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |
+| `GET` | `/task/observation` | task | Return bounded O2/O3/O4/O5/O13 observation for one task_ref. Empty collectors return observed_zero with a named negative control; prompt/body/receipt/capability query keys fail closed. O5 reuses redacted Effect history; O13 is durable audit cursor/replay with stale-cursor, digest-break, and gap negatives. Not a second authority API. |
+| `GET` | `/task/resource/v1/observation` | task | Alias of GET /task/observation on the task resource prefix. |
+| `POST` | `/task/resource/v1/observation` | task | Rejected: observation samples are daemon-authored; callers cannot write the plane. |
+| `GET` | `/management/resource/v1/observation` | management | Forbidden: observation is a task-channel read plane, not a management authority API. |
+| `POST` | `/management/resource/v1/observation` | management | Forbidden: observation is a task-channel read plane, not a management authority API. |
 | `GET` | `/management/resource/v1/fault-profile` | management | Read the default-off task-scoped authorized fault profile. Missing records mean faults stay off. Ordinary task callers are denied. |
 | `POST` | `/management/resource/v1/fault-profile` | management | Persist a default-off or campaign-authorized fixed fault profile for one task_ref. Unauthorized campaigns and task-channel callers fail closed. No raw parameter or receipt is stored. |
 | `GET` | `/management/resource/v1/http-origin` | management | Read the task/campaign-scoped pinned HTTPS origin allowlist. Missing records leave production HttpFetchReadOnly empty (fail closed). Ordinary task callers are denied. |

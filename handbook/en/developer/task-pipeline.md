@@ -20,7 +20,8 @@ tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
-fingerprint: "sha256:6a655a2ac22cd6f5ff5e424bab8391b695ae324dcd6fd2ffdb245c1cb1a3f7d4"
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
+fingerprint: "sha256:5254989333b2124c5a17ecb044ab2f8565f35b7315854dc59fbdf27225926923"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---
@@ -38,6 +39,7 @@ chain → SQLite, with generated request/result DTOs at the wire.
 | `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
 | evidence | `GET /task/evidence?task_ref=...` | reconstruct a bounded redacted lifecycle, Effect reconciliation class, current verification/Artifact availability, acceptance transition, and durable event cursor from SQLite authority plus Artifact CAS |
 | effects | `GET /task/effects?task_ref=...` | reconstruct bounded Effect history (opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent, report refs) without receipts or raw parameters |
+| observation | `GET /task/observation?family=o2\|o3\|o4\|o5\|o13&task_ref=...` | bounded O2/O3/O4/O5/O13 read plane; empty collectors return `observed_zero` plus a named negative control; O5 reuses redacted Effect history; O13 is durable audit cursor/replay; no body/capability leakage |
 | tool exposure | `GET /task/resource/v1/tool/exposure?task_ref=...` | current least Agent-exposed Tool set and `exposure_digest`; extra prompt/body/receipt query keys fail closed |
 | tool selection | `POST /task/resource/v1/tool/selection` | bounded receipt: candidate_set_digest must equal current exposure, selected operation_id must be exposed, no prompt/body restatement |
 | watch | `GET /task/watch` | snapshot-first bounded stream (process-local 128-event replay; stale `resume_from` → `TASK_WATCH_RESUME_STALE`) |

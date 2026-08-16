@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: apps/kernel-server/src/personal/observation.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
@@ -14,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3c967a28b994e09c3715d42d215f2a4b20e8257554b1bd86619a6dcef654d5ae"
+fingerprint: "sha256:69bd31484a814ef8950e5507d12c8c58e752bfe0dae0545b701e33aff283de59"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -51,6 +52,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/admit` | task | 接纳精确 preview digest 并在 epoch CAS 下铸造 TaskContract。 |
 | `GET` | `/task/evidence` | task | 从 authority 与 Artifact CAS 为一个 task_ref 重建有界脱敏的生命周期、Effect 对账、verification、acceptance 与持久游标证据。 |
 | `GET` | `/task/effects` | task | 返回一个 task_ref 的有界 Effect 历史：不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及 report refs。拒绝 receipt、原始参数和额外查询字段。 |
+| `GET` | `/task/observation` | task | 返回一个 task_ref 的有界 O2/O3/O4/O5/O13 观测。空 collector 返回带具名 negative control 的 observed_zero；prompt/body/receipt/capability 查询键失败闭合。O5 复用脱敏 Effect 历史；O13 是持久审计游标回放，含过期游标、digest 断裂与缺口负例。不是第二套 authority API。 |
+| `GET` | `/task/resource/v1/observation` | task | task 资源前缀上 GET /task/observation 的别名。 |
+| `POST` | `/task/resource/v1/observation` | task | 拒绝：观测样本由 daemon 写入；调用方不能写该平面。 |
+| `GET` | `/management/resource/v1/observation` | management | 禁止：观测是 task 通道只读平面，不是 management authority API。 |
+| `POST` | `/management/resource/v1/observation` | management | 禁止：观测是 task 通道只读平面，不是 management authority API。 |
 | `GET` | `/management/resource/v1/fault-profile` | management | 读取默认关闭的 task 范围授权 fault profile。缺失记录表示故障注入保持关闭。普通 task 调用方被拒绝。 |
 | `POST` | `/management/resource/v1/fault-profile` | management | 为一个 task_ref 持久化默认关闭或评测授权的固定 fault profile。未授权 campaign 与 task 通道调用方失败闭合。不存储原始参数或 receipt。 |
 | `GET` | `/management/resource/v1/http-origin` | management | 读取 task/campaign 范围的钉住 HTTPS origin 白名单。缺失记录表示生产 HttpFetchReadOnly 白名单保持为空（失败闭合）。普通 task 调用方被拒绝。 |

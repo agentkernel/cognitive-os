@@ -22,6 +22,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/observation.rs
+    symbols: ["handle"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -31,7 +33,8 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-fingerprint: "sha256:88bea292154edd9a3adfed65c9897dac58c1139b074e9f702d543c4caee5b310"
+  - apps/kernel-server/tests/p2_t26_observation_plane.rs
+fingerprint: "sha256:f9698e141f3e95f693a30984623a5c6713da9fa9adccd60744f92230c04df695"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -102,6 +105,15 @@ management 的 `GET/POST /management/resource/v1/http-origin` 在授权 campaign
 staging 失败闭合。钉只承认 GET/HEAD：无凭据、不跟随重定向、不继承代理、无请求体。
 普通 task 调用方被拒绝（`RESOURCE_PINNED_HTTPS_CHANNEL_FORBIDDEN`）。禁用
 `native.registered-check.run` 会把它从 Agent 暴露中去掉，且不发明 ProcessRun 族。
+
+task 通道通过 `GET /task/observation?family=o2|o3|o4|o5|o13&task_ref=…`（别名
+`GET /task/resource/v1/observation`）读取有界 O2/O3/O4/O5/O13 观测。空 collector 返回带具名
+negative control 的 `observed_zero`，而不是沉默的默认 0。prompt、body、receipt 与
+capability 查询键失败闭合。O5 复用 `GET /task/effects` 已提供的脱敏 Intent/Effect
+历史，仍不暴露原始参数或 receipt。O13 导出持久审计游标、事件 digest 链与有界回放；
+过期游标、缺失事件、digest 断裂或序列缺口失败闭合。management 调用方被拒绝
+（`RESOURCE_OBSERVATION_CHANNEL_FORBIDDEN`）：这是只读平面，不是第二套 authority
+API。样本不含 Context body 或 capability 材料。
 
 ## 投影
 

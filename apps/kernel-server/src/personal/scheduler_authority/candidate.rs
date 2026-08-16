@@ -269,25 +269,47 @@ where
     } else {
         proposed_candidate.target.clone()
     };
-    let authorization_grant = authorize(
+    let authorization_grant = match authorize(
         &authorization_snapshot,
         &ObjectGovernance {
             object_ref: proposed_candidate.target.clone(),
             tenant_id: Some(execution_context_command.tenant_id.clone()),
             owner_ref: admission_command.authorization_subject_ref.clone(),
-            resource_scope: authorization_resource,
+            resource_scope: authorization_resource.clone(),
             conversation_ref: execution_context_command.conversation_ref.clone(),
         },
         &AccessRequest {
             action: proposed_candidate.action.clone(),
             purpose: admission_command.authorization_purpose.clone(),
         },
-    )
-    .map_err(|error| {
-        SchedulerAuthorityError::CandidateAuthorizationUnavailable(format!(
-            "current candidate authorization denied: {error:?}"
-        ))
-    })?;
+    ) {
+        Ok(grant) => {
+            crate::personal::observation::record_authorization_on_bound_store(
+                &context_command.task_ref,
+                &authorization_resource,
+                &admission_command.authorization_purpose,
+                grant.decided_at_epoch,
+                &proposed_candidate.action,
+                "grant",
+                "",
+            );
+            grant
+        }
+        Err(denied) => {
+            crate::personal::observation::record_authorization_on_bound_store(
+                &context_command.task_ref,
+                &authorization_resource,
+                &admission_command.authorization_purpose,
+                authorization_snapshot.revocation_epoch,
+                &proposed_candidate.action,
+                "deny",
+                denied.denial.code,
+            );
+            return Err(SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+                format!("current candidate authorization denied: {denied:?}"),
+            ));
+        }
+    };
     let snapshot_id = next_object_id(identifiers)?;
     let authorization_canonical_json = json!({
         "snapshot_id": snapshot_id.as_str(),

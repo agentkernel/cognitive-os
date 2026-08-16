@@ -15,7 +15,7 @@ sources:
 tests:
   - tools/test/check.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:b425fb4b775945adb18c8adb083d56f5561d4e8946c9ea791fffa2cdb849d4b2"
+fingerprint: "sha256:23373611a640fdfca4dfb3a1746f4e535a6b69028ce44a9cfb3f25efe36a1e54"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -55,9 +55,10 @@ and more. `tools/src/gen-matrix.mjs --check` keeps
 (`pnpm run check:consistency`). The handbook adds its own checker
 (`check-handbook.mjs`) and generator drift gate — see
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md). HTTP route generation
-also reads `apps/kernel-server/src/personal/tool_lifecycle.rs` and
-`apps/kernel-server/src/personal/pinned_https.rs` so annotated Tool lifecycle
-and pinned-HTTPS paths cannot rot.
+also reads `apps/kernel-server/src/personal/tool_lifecycle.rs`,
+`apps/kernel-server/src/personal/pinned_https.rs`, and
+`apps/kernel-server/src/personal/observation.rs` so annotated Tool lifecycle,
+pinned-HTTPS, and observation-plane paths cannot rot.
 
 ## CI matrix
 

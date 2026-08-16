@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:6736290f7459c24acbf1bcd32696cc87da61ef84efe8e45e13090fbf2ce45d66"
+fingerprint: "sha256:00d3f4bb0b42cf089e48680a3cd47f8f059a8daaa9e282f16082fe9666c45e95"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
@@ -38,7 +38,10 @@ Task 不是"agent 说它做了什么"，而是带持久证据链的受治理对�
    调度行。之后改主意会 supersede 到新 epoch，并 fence 一切绑定旧 epoch 的事物。
 
 该准入流水线为 `implemented`，也是默认路径上唯一的人工确认点。`GET /task/watch`
-提供有界、快照先行的事件流。
+提供有界、快照先行的事件流。已认证的 task 调用方还可以读取有界 O2/O3/O4/O5/O13 观测
+（`GET /task/observation?family=…&task_ref=…`）和 Effect 历史
+（`GET /task/effects?task_ref=…`）；空观测窗口返回具名 `observed_zero`，而不是沉默计数。
+O13 审计回放在过期游标或 digest 断裂时失败闭合。
 
 ## 执行按设计如何运转——以及今天真正在跑什么
 

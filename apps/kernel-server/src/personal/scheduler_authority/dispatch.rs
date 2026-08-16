@@ -341,6 +341,13 @@ pub(crate) fn verify_scheduler_dispatch_current(
         || row.lease_owner.as_deref() != Some(dispatch.lease_owner.as_str())
         || row.lease_epoch != dispatch.lease_epoch
     {
+        crate::personal::observation::record_scheduler_on_bound_store(
+            &dispatch.task_ref,
+            "stale_fence_denial",
+            dispatch.contract_epoch,
+            1,
+            "pre_effect_lease_recheck",
+        );
         return Err(SchedulerAuthorityError::DispatchBindingMismatch(
             "scheduler lease was replaced before Effect dispatch".to_owned(),
         ));
@@ -959,6 +966,7 @@ pub(crate) fn run_private_scheduler_tick_with_provider_config(
     if let Some(data_dir) = authority_database_path.parent() {
         executor_router.bind_fault_profiles(data_dir.to_path_buf());
         executor_router.bind_origin_registry(data_dir.to_path_buf());
+        crate::personal::observation::bind_observation_store(data_dir.to_path_buf());
     }
     run_private_scheduler_tick_with_store(
         &authority_store,
@@ -1030,6 +1038,24 @@ pub(crate) fn run_private_scheduler_tick_with_store_and_proposer(
     let identifiers = UuidV7Generator;
     let mut scheduler_service = SchedulerService::new("personal-daemon-scheduler", 60)?;
     let scheduler_rows = scheduler_repository.list_recoverable()?;
+    for scheduler_row in &scheduler_rows {
+        if scheduler_row.state == SchedulerState::Runnable.as_str() {
+            crate::personal::observation::record_scheduler_on_bound_store(
+                &scheduler_row.task_ref,
+                "runnable_count",
+                scheduler_row.contract_epoch,
+                1,
+                "scheduler_tick",
+            );
+            crate::personal::observation::record_scheduler_on_bound_store(
+                &scheduler_row.task_ref,
+                "queue_wait",
+                scheduler_row.contract_epoch,
+                0,
+                "scheduler_tick",
+            );
+        }
+    }
 
     process_scheduler_rows_isolated(scheduler_rows, |scheduler_row| {
         if scheduler_row.cancel_requested {
@@ -1049,6 +1075,13 @@ pub(crate) fn run_private_scheduler_tick_with_store_and_proposer(
         let resolved_work =
             resolve_scheduler_work_for_task(authority_store, &scheduler_row.task_ref)?;
         if resolved_work.task_binding.contract_epoch != scheduler_row.contract_epoch {
+            crate::personal::observation::record_scheduler_on_bound_store(
+                &scheduler_row.task_ref,
+                "stale_fence_denial",
+                scheduler_row.contract_epoch,
+                1,
+                "epoch_mismatch",
+            );
             return Err(SchedulerAuthorityError::DispatchBindingMismatch(format!(
                 "runnable scheduler work {} at epoch {} is not the current contract epoch {}",
                 scheduler_row.task_ref,
@@ -1237,7 +1270,7 @@ where
         &snapshot.budget_id,
         writer_lease,
     )?;
-    complete_scheduler_admission(ceiling_dispatch, || {
+    let admission = complete_scheduler_admission(ceiling_dispatch, || {
         scheduler_service.claim_eligible(
             scheduler_repository,
             &SchedulerWorkKey {
@@ -1247,5 +1280,26 @@ where
             lease_epoch,
             observed_wall_time,
         )
-    })
+    })?;
+    match &admission {
+        SchedulerDispatchAdmission::Stopped(_) => {
+            crate::personal::observation::record_scheduler_on_bound_store(
+                &binding.task_ref,
+                "budget_stop",
+                binding.contract_epoch,
+                1,
+                "ceiling_admission",
+            );
+        }
+        SchedulerDispatchAdmission::Leased(_) => {
+            crate::personal::observation::record_scheduler_on_bound_store(
+                &binding.task_ref,
+                "lease_acquired",
+                binding.contract_epoch,
+                1,
+                "ceiling_admission",
+            );
+        }
+    }
+    Ok(admission)
 }

@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:6a41ef07afc8c06481a78467d1e17f7a2df6828999f726683b421e1292ab664f"
+fingerprint: "sha256:f654ef92ec9bcdca374b64e6ce1fcdc05377b6b10fff73496087b3a70c41ec36"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -43,7 +43,7 @@ non_claims:
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |
 | 受治理 Memory/Skill Context 消费 | implemented | 精确 scope/pin/digest 装载、v24 持久记录、第二会话复用，以及 forget/revoke 失败闭合；公开 HTTP 生命周期循环仍单独交付 |
-| Context request/view + 缓存 | implemented | — |
+| Context request/view + 缓存 | implemented | O2/O3/O4/O5/O13 有界观测平面为 task 通道只读；空 collector 返回具名 negative control 而不是沉默的 0；O13 审计回放在过期游标或 digest 断裂时失败闭合 |
 | Artifact CAS | implemented | GC 推迟（仅清理遗弃 staging） |
 | 六族资源投影/watch | implemented | 仅 management+task 通道 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |

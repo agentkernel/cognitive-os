@@ -19,9 +19,10 @@ generated: false
 2. **Classify new files**: any new tracked file must match a
    [`source-coverage.json`](./source-coverage.json) rule (HB009) — either an
    owning-doc rule or an excluded category with a reason. HTTP route generation
-   also consumes `apps/kernel-server/src/personal/tool_lifecycle.rs` and
-   `apps/kernel-server/src/personal/pinned_https.rs` so annotated Tool
-   lifecycle and pinned-HTTPS paths stay bidirectional with
+   also consumes `apps/kernel-server/src/personal/tool_lifecycle.rs`,
+   `apps/kernel-server/src/personal/pinned_https.rs`, and
+   `apps/kernel-server/src/personal/observation.rs` so annotated Tool
+   lifecycle, pinned-HTTPS, and observation-plane paths stay bidirectional with
    [`annotations/http-routes.json`](./annotations/http-routes.json).
 3. **User-visible changes** (CLI, config, errors, security, install, recovery)
    update the user + reference trees; **architectural changes** (data, protocol,

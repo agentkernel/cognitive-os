@@ -550,19 +550,41 @@ where
         resource_scope,
         conversation_ref: context_command.conversation_ref,
     };
-    let grant = authorize(
+    let grant = match authorize(
         &snapshot,
         &governance,
         &AccessRequest {
             action: resolved.candidate.action.clone(),
-            purpose: admission_command.authorization_purpose,
+            purpose: admission_command.authorization_purpose.clone(),
         },
-    )
-    .map_err(|error| {
-        SchedulerAuthorityError::CandidateAuthorizationUnavailable(format!(
-            "current native execution authorization denied: {error:?}"
-        ))
-    })?;
+    ) {
+        Ok(grant) => {
+            crate::personal::observation::record_authorization_on_bound_store(
+                &context_command.task_ref,
+                &governance.resource_scope,
+                &admission_command.authorization_purpose,
+                grant.decided_at_epoch,
+                &resolved.candidate.action,
+                "grant",
+                "",
+            );
+            grant
+        }
+        Err(denied) => {
+            crate::personal::observation::record_authorization_on_bound_store(
+                &context_command.task_ref,
+                &governance.resource_scope,
+                &admission_command.authorization_purpose,
+                snapshot.revocation_epoch,
+                &resolved.candidate.action,
+                "deny",
+                denied.denial.code,
+            );
+            return Err(SchedulerAuthorityError::CandidateAuthorizationUnavailable(
+                format!("current native execution authorization denied: {denied:?}"),
+            ));
+        }
+    };
     let currency = GovernanceCurrency {
         revocation_epoch: snapshot.revocation_epoch,
         capability_set_version: snapshot.capability_set_version,

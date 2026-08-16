@@ -274,6 +274,7 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     let _lock = lock;
     let authority = Arc::new(Mutex::new(authority));
     let task_api = Arc::new(Mutex::new(TaskApi::new(config.layout.clone())));
+    crate::personal::observation::bind_observation_store(config.layout.data_dir().to_path_buf());
     let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
     let active_connections = Arc::new(AtomicUsize::new(0));
     let in_flight = Arc::new(AtomicUsize::new(0));
@@ -674,6 +675,11 @@ fn dispatch_http_route(
             authority,
         );
     }
+    if method_path.starts_with("GET /management/resource/v1/observation")
+        || method_path.starts_with("POST /management/resource/v1/observation")
+    {
+        return handle_management_observation_forbidden(stream, headers, authority);
+    }
     if method_path.starts_with("GET /management/resource/v1/tool")
         || method_path.starts_with("POST /management/resource/v1/tool/")
     {
@@ -721,6 +727,13 @@ fn dispatch_http_route(
         || method_path.starts_with("GET /task/http-origin")
     {
         return handle_task_pinned_https_forbidden(stream, headers, authority);
+    }
+    if method_path.starts_with("GET /task/observation")
+        || method_path.starts_with("POST /task/observation")
+        || method_path.starts_with("GET /task/resource/v1/observation")
+        || method_path.starts_with("POST /task/resource/v1/observation")
+    {
+        return handle_task_observation_route(stream, &method_path, headers, layout, authority);
     }
     if method_path.starts_with("GET /task/resource/v1/tool")
         || method_path.starts_with("POST /task/resource/v1/tool/")
@@ -1215,6 +1228,59 @@ fn handle_task_pinned_https_forbidden(
     }
     drop(authority_guard);
     let response = pinned_https::task_channel_forbidden();
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_management_observation_forbidden(
+    stream: &mut TcpStream,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = super::observation::management_channel_forbidden();
+    write_response(
+        stream,
+        response.status,
+        "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_observation_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = super::observation::handle(method_path, layout);
     write_response(
         stream,
         response.status,

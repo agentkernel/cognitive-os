@@ -250,6 +250,10 @@ Product revision remains `492f9e9f6bc626e864efb9b7564823c1b20c0b7f`.
 | Exact-revision linux-002 | this D03 matrix at `492f9e9f` |
 | Ubuntu supporting CI | run `31930697492` pass |
 
-Unique remaining D03 action: ready/merge of PR #224.
-Claim ceiling: hypothesis/non-claim. No Gate, release, Profile, B01, EVAL,
-or Agent-benefit promotion.
+### D03-MERGE-01 — ready/merge
+
+- Instrument: GitHub PR [#224](https://github.com/agentkernel/cognitive-os/pull/224)
+- Outcome: **merged** at `main@4b10db9a64584bda42ae249bd1df289475bd6324`.
+  Lease `lease/personal/P2-T25/tool-lifecycle-invocation` closed. Remote task
+  branch deleted. Claim ceiling: hypothesis/non-claim. No Gate, release,
+  Profile, B01, EVAL, or Agent-benefit promotion.
